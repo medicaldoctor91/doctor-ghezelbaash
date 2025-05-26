@@ -38,7 +38,7 @@
     .hidden { display:none; }
   </style>
 
-  <!-- MedicalBusiness -->
+  <!-- Schemas -->
   <script type="application/ld+json">{
     "@context": "https://schema.org",
     "@type": "MedicalBusiness",
@@ -69,7 +69,6 @@
     ]
   }</script>
 
-  <!-- Person -->
   <script type="application/ld+json">{
     "@context": "https://schema.org",
     "@type": "Person",
@@ -84,7 +83,6 @@
     ]
   }</script>
 
-  <!-- WebSite -->
   <script type="application/ld+json">{
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -96,32 +94,7 @@
       "query-input": "required name=search_term_string"
     }
   }</script>
-
-  <!-- FAQ Schema -->
-  <script type="application/ld+json">{
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "فیلر لب روسی چقدر ماندگاری دارد؟",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "معمولاً بین ۶ تا ۱۲ ماه ماندگاری دارد و بسته به متد و برند متفاوت است."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "آیا بوتاکس درد دارد؟",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "با بی‌حسی موضعی انجام می‌شود و درد بسیار خفیف است."
-        }
-      }
-    ]
-  }</script>
 </head>
-
 <body>
 <main>
   <header>
@@ -145,7 +118,10 @@
 
   <section class="map">
     <h2>موقعیت ما</h2>
-    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3239.412316190024!2d47.0867301!3d34.3400139" allowfullscreen></iframe>
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3239.412316190024!2d47.0867301!3d34.3400139!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ffaede40c183d05%3A0xab65bafc00e6ee0f!2z2KfZhNiq2YXYtdmK2YbYp9iq2LTZitmF2KfYqNmK2KfYrNmK2Kk!5e0!3m2!1sfa!2sir!4v1716835353543!5m2!1sfa!2sir"
+      allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
   </section>
 
   <section class="links">
