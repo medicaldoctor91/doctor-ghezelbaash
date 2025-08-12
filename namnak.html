@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8">
+<title>Namnak Like</title>
+<script>
+  const qs = new URLSearchParams(location.search);
+  const id   = qs.get('id') || '108643';         // شناسهٔ مطلب
+  const type = qs.get('t')  || 'like';           // like یا dlike
+
+  const f = document.createElement('form');
+  f.method = 'post';
+  f.action = 'https://namnak.com/wp-admin/admin-ajax.php';
+
+  [['action','namnak_rating_post'], ['post_id', id], ['type', type]]
+    .forEach(([k,v]) => { const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=v; f.appendChild(i); });
+
+  document.body.appendChild(f);
+  f.submit();  // بلافاصله ارسال می‌کند
+</script>
