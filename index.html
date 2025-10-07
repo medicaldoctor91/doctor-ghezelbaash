@@ -64,13 +64,13 @@
   {
     "@context": "https://schema.org",
     "@graph": [
-
-      { "@type":["MedicalClinic","LocalBusiness","Organization"],
-        "@id":"https://www.kermanshahbeauty.xyz/#clinic",
-        "name":"کلینیک زیبایی / بوتاکس / فیلر / لیفت / کانتورینگ دکتر قزلباش کرمانشاه",
-        "alternateName":"کلینیک زیبایی دکتر قزلباش کرمانشاه",
-        "url":"https://www.instagram.com/doctor.ghezelbaash",
-        "sameAs":[
+      {
+        "@type": ["MedicalClinic", "LocalBusiness", "Organization"],
+        "@id": "https://github.ghezelbaash.ir/#clinic",
+        "name": "کلینیک زیبایی / بوتاکس / فیلر / لیفت / کانتورینگ دکتر قزلباش کرمانشاه",
+        "alternateName": "کلینیک زیبایی دکتر قزلباش کرمانشاه",
+        "url": "https://github.ghezelbaash.ir/",
+        "sameAs": [
           "https://www.instagram.com/doctor.ghezelbaash",
           "https://www.ghezelbaash.ir",
           "https://doctor.ghezelbaash.ir",
@@ -78,79 +78,135 @@
           "https://blog.ghezelbaash.ir",
           "https://ig.ghezelbaash.ir/"
         ],
-        "image":"https://github.ghezelbaash.ir/doctor.jpg",
-        "logo":{"@type":"ImageObject","url":"https://github.ghezelbaash.ir/logo.png"},
-        "telephone":"+989308209494","priceRange":"$$",
-        "address":{"@type":"PostalAddress","streetAddress":"ابتدای کوچه شهید قزوینی، میدان فردوسی، بین خیابان شهید جعفری و اشرفی اصفهانی","addressLocality":"کرمانشاه","addressRegion":"کرمانشاه","postalCode":"6718814367","addressCountry":"IR"},
-        "geo":{"@type":"GeoCoordinates","latitude":34.2946875,"longitude":47.0544375},
-        "hasMap":"https://www.google.com/maps?cid=12350483144643112463",
-        "medicalSpecialty":["Dermatology","CosmeticSurgery"],
-        "openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday"],"opens":"09:00","closes":"21:00"}],
-        "aggregateRating":{"@type":"AggregateRating","ratingValue":"4.8","reviewCount":"240"},
-        "areaServed":["کرمانشاه، ایران"],
-        "hasOfferCatalog":{"@type":"OfferCatalog","name":"خدمات زیبایی",
-          "itemListElement":[
-            {"@type":"Offer","itemOffered":{"@type":["Service","MedicalProcedure"],"name":"تزریق بوتاکس در کرمانشاه","areaServed":"کرمانشاه","provider":{"@id":"https://www.kermanshahbeauty.xyz/#clinic"}}},
-            {"@type":"Offer","itemOffered":{"@type":["Service","MedicalProcedure"],"name":"فیلر لب در کرمانشاه","areaServed":"کرمانشاه","provider":{"@id":"https://www.kermanshahbeauty.xyz/#clinic"}}},
-            {"@type":"Offer","itemOffered":{"@type":["Service","MedicalProcedure"],"name":"لیفت شقیقه در کرمانشاه","areaServed":"کرمانشاه","provider":{"@id":"https://www.kermanshahbeauty.xyz/#clinic"}}},
-            {"@type":"Offer","itemOffered":{"@type":["Service","MedicalProcedure"],"name":"کانتورینگ چانه در کرمانشاه","areaServed":"کرمانشاه","provider":{"@id":"https://www.kermanshahbeauty.xyz/#clinic"}}}
-          ]}
+        "image": {
+          "@type": "ImageObject",
+          "url": "https://github.ghezelbaash.ir/doctor.jpg",
+          "width": 1200,
+          "height": 630
+        },
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://github.ghezelbaash.ir/logo.png",
+          "width": 232,
+          "height": 232
+        },
+        "telephone": "+989308209494",
+        "priceRange": "$$",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "ابتدای کوچه شهید قزوینی، میدان فردوسی، بین خیابان شهید جعفری و اشرفی اصفهانی",
+          "addressLocality": "کرمانشاه",
+          "addressRegion": "کرمانشاه",
+          "postalCode": "6718814367",
+          "addressCountry": "IR"
+        },
+        "geo": {
+          "@type": "GeoCoordinates",
+          "latitude": 34.2946875,
+          "longitude": 47.0544375
+        },
+        "hasMap": "https://www.google.com/maps?cid=12350483144643112463",
+        "medicalSpecialty": ["Dermatology", "CosmeticSurgery"],
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        ],
+        "areaServed": ["کرمانشاه، ایران"]
       },
-
-      { "@type":"Person","@id":"https://www.instagram.com/doctor.ghezelbaash/#person",
-        "name":"دکتر سعید قزلباش","jobTitle":"پزشک زیبایی","url":"https://www.instagram.com/doctor.ghezelbaash",
-        "sameAs":["https://www.instagram.com/doctor.ghezelbaash","https://www.ghezelbaash.ir","https://doctor.ghezelbaash.ir"],
-        "worksFor":{"@id":"https://www.kermanshahbeauty.xyz/#clinic"},
-        "medicalSpecialty":["Dermatology","CosmeticSurgery"],
-        "knowsLanguage":["fa-IR","en"],
-        "hasCredential":{"@type":"EducationalOccupationalCredential","credentialCategory":"Medical License","recognizedBy":{"@type":"Organization","name":"وزارت بهداشت جمهوری اسلامی ایران"}}
+      {
+        "@type": "Person",
+        "@id": "https://github.ghezelbaash.ir/#doctor",
+        "name": "دکتر سعید قزلباش",
+        "jobTitle": "پزشک زیبایی",
+        "url": "https://github.ghezelbaash.ir/",
+        "sameAs": [
+          "https://www.instagram.com/doctor.ghezelbaash",
+          "https://www.ghezelbaash.ir",
+          "https://doctor.ghezelbaash.ir"
+        ],
+        "worksFor": {"@id": "https://github.ghezelbaash.ir/#clinic"},
+        "medicalSpecialty": ["Dermatology", "CosmeticSurgery"],
+        "knowsLanguage": ["fa-IR", "en"],
+        "hasCredential": {
+          "@type": "EducationalOccupationalCredential",
+          "credentialCategory": "Medical License",
+          "recognizedBy": {
+            "@type": "Organization",
+            "name": "وزارت بهداشت جمهوری اسلامی ایران"
+          }
+        }
       },
-
-      { "@type":"WebSite",
-        "@id":"https://github.ghezelbaash.ir/#website",
-        "url":"https://github.ghezelbaash.ir/",
-        "name":"کلینیک زیبایی دکتر قزلباش | کرمانشاه",
-        "inLanguage":"fa-IR",
-        "publisher":{"@id":"https://www.kermanshahbeauty.xyz/#clinic"},
-        "sameAs":[
+      {
+        "@type": "WebSite",
+        "@id": "https://github.ghezelbaash.ir/#website",
+        "url": "https://github.ghezelbaash.ir/",
+        "name": "کلینیک زیبایی دکتر قزلباش | کرمانشاه",
+        "inLanguage": "fa-IR",
+        "publisher": {"@id": "https://github.ghezelbaash.ir/#clinic"},
+        "sameAs": [
           "https://www.ghezelbaash.ir",
           "https://doctor.ghezelbaash.ir",
           "https://www.instagram.com/doctor.ghezelbaash",
           "https://blog.ghezelbaash.ir"
         ]
       },
-
-      { "@type":"WebPage","@id":"https://github.ghezelbaash.ir/#webpage",
-        "url":"https://github.ghezelbaash.ir/","name":"بوتاکس و فیلر لب در کرمانشاه — کلینیک زیبایی دکتر قزلباش",
-        "inLanguage":"fa-IR","isPartOf":{"@id":"https://github.ghezelbaash.ir/#website"},
-        "publisher":{"@id":"https://www.kermanshahbeauty.xyz/#clinic"},
-        "about":[{"@id":"https://www.kermanshahbeauty.xyz/#clinic"},{"@id":"https://www.instagram.com/doctor.ghezelbaash/#person"}],
-        "primaryImageOfPage":{"@type":"ImageObject","url":"https://github.ghezelbaash.ir/doctor.jpg"},
-        "datePublished":"2025-08-20",
-        "dateModified":"2025-08-31"
+      {
+        "@type": "WebPage",
+        "@id": "https://github.ghezelbaash.ir/#webpage",
+        "url": "https://github.ghezelbaash.ir/",
+        "name": "بوتاکس و فیلر لب در کرمانشاه — کلینیک زیبایی دکتر قزلباش",
+        "inLanguage": "fa-IR",
+        "isPartOf": {"@id": "https://github.ghezelbaash.ir/#website"},
+        "publisher": {"@id": "https://github.ghezelbaash.ir/#clinic"},
+        "about": [
+          {"@id": "https://github.ghezelbaash.ir/#clinic"},
+          {"@id": "https://github.ghezelbaash.ir/#doctor"}
+        ],
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": "https://github.ghezelbaash.ir/doctor.jpg",
+          "width": 1200,
+          "height": 630
+        },
+        "datePublished": "2023-08-15",
+        "dateModified": "2024-04-15"
       },
-
-      { "@type":"HowTo","name":"رزرو وقت کلینیک زیبایی در کرمانشاه","step":[
-          {"@type":"HowToStep","name":"ارتباط","text":"پیام در اینستاگرام @Doctor.Ghezelbaash یا تماس با ۰۹۳۰۸۲۰۹۴۹۴"},
-          {"@type":"HowToStep","name":"مشاوره","text":"بررسی سوابق، هدف زیبایی و تعیین تکنیک (بوتاکس/فیلر/لیفت)"},
-          {"@type":"HowToStep","name":"آماده‌سازی","text":"تعیین زمان، راهنمای مراقبت‌های قبل/بعد"},
-          {"@type":"HowToStep","name":"انجام درمان","text":"حضور در کلینیک دکتر قزلباش و اجرای پروتکل ایمنی"}
-      ]},
-
-      { "@type":"FAQPage","@id":"https://github.ghezelbaash.ir/#faq",
-        "mainEntity":[
-          {"@type":"Question","name":"نتیجه بوتاکس چند روزه ظاهر می‌شود؟","acceptedAnswer":{"@type":"Answer","text":"۳ تا ۷ روز نخست اثر اولیه و تا ۱۴ روز تثبیت می‌شود."}},
-          {"@type":"Question","name":"ماندگاری فیلر لب چقدر است؟","acceptedAnswer":{"@type":"Answer","text":"۶ تا ۱۲ ماه بسته به فیلر و متابولیسم فرد."}},
-          {"@type":"Question","name":"لیفت شقیقه با نخ PDO دوره نقاهت دارد؟","acceptedAnswer":{"@type":"Answer","text":"دوره کوتاه؛ پرهیز از سونا/ورزش سنگین تا ۴۸ ساعت."}},
-          {"@type":"Question","name":"هزینه خدمات چگونه تعیین می‌شود؟","acceptedAnswer":{"@type":"Answer","text":"بر حسب ناحیه، برند مواد، دوز تزریقی و پیچیدگی کیس."}},
-          {"@type":"Question","name":"آیا نتایج طبیعی است؟","acceptedAnswer":{"@type":"Answer","text":"هدف ما اصلاح تناسب با کمترین تغییر ظاهر و کبودی حداقلی است."}}
-      ]},
-
-      { "@type":"BreadcrumbList","@id":"https://github.ghezelbaash.ir/#breadcrumb",
-        "itemListElement":[
-          {"@type":"ListItem","position":1,"name":"کلینیک دکتر قزلباش","item":"https://github.ghezelbaash.ir/"},
-          {"@type":"ListItem","position":2,"name":"خدمات زیبایی در کرمانشاه","item":"https://github.ghezelbaash.ir/#services"}
-      ]}
+      {
+        "@type": "HowTo",
+        "@id": "https://github.ghezelbaash.ir/#howto",
+        "name": "رزرو وقت کلینیک زیبایی در کرمانشاه",
+        "publisher": {"@id": "https://github.ghezelbaash.ir/#clinic"},
+        "inLanguage": "fa-IR",
+        "step": [
+          {"@type": "HowToStep", "name": "ارتباط", "text": "پیام در اینستاگرام @Doctor.Ghezelbaash یا تماس با ۰۹۳۰۸۲۰۹۴۹۴"},
+          {"@type": "HowToStep", "name": "مشاوره", "text": "بررسی سوابق، هدف زیبایی و تعیین تکنیک (بوتاکس/فیلر/لیفت)"},
+          {"@type": "HowToStep", "name": "آماده‌سازی", "text": "تعیین زمان، راهنمای مراقبت‌های قبل/بعد"},
+          {"@type": "HowToStep", "name": "انجام درمان", "text": "حضور در کلینیک دکتر قزلباش و اجرای پروتکل ایمنی"}
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://github.ghezelbaash.ir/#faq",
+        "mainEntity": [
+          {"@type": "Question", "name": "نتیجه بوتاکس چند روزه ظاهر می‌شود؟", "acceptedAnswer": {"@type": "Answer", "text": "۳ تا ۷ روز نخست اثر اولیه و تا ۱۴ روز تثبیت می‌شود."}},
+          {"@type": "Question", "name": "ماندگاری فیلر لب چقدر است؟", "acceptedAnswer": {"@type": "Answer", "text": "۶ تا ۱۲ ماه بسته به فیلر و متابولیسم فرد."}},
+          {"@type": "Question", "name": "لیفت شقیقه با نخ PDO دوره نقاهت دارد؟", "acceptedAnswer": {"@type": "Answer", "text": "دوره کوتاه؛ پرهیز از سونا/ورزش سنگین تا ۴۸ ساعت."}},
+          {"@type": "Question", "name": "هزینه خدمات چگونه تعیین می‌شود؟", "acceptedAnswer": {"@type": "Answer", "text": "بر حسب ناحیه، برند مواد، دوز تزریقی و پیچیدگی کیس."}},
+          {"@type": "Question", "name": "آیا نتایج طبیعی است؟", "acceptedAnswer": {"@type": "Answer", "text": "هدف ما اصلاح تناسب با کمترین تغییر ظاهر و کبودی حداقلی است."}}
+        ]
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://github.ghezelbaash.ir/#breadcrumb",
+        "itemListElement": [
+          {"@type": "ListItem", "position": 1, "name": "کلینیک دکتر قزلباش", "item": "https://github.ghezelbaash.ir/"},
+          {"@type": "ListItem", "position": 2, "name": "خدمات زیبایی در کرمانشاه", "item": "https://github.ghezelbaash.ir/#services"}
+        ]
+      }
     ]
   }
   </script>
@@ -302,7 +358,7 @@
     </nav>
 
     <!-- Contact / NAP (همسان با @id کلینیک) -->
-    <section id="contact" class="mt-2 nap" itemscope itemtype="https://schema.org/MedicalClinic" itemid="https://www.kermanshahbeauty.xyz/#clinic">
+    <section id="contact" class="mt-2 nap" itemscope itemtype="https://schema.org/MedicalClinic" itemid="https://github.ghezelbaash.ir/#clinic">
       <h2>آدرس و تماس — کرمانشاه</h2>
       <p><strong>کلینیک زیبایی دکتر قزلباش</strong><br>
         <span itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">
@@ -353,7 +409,7 @@
     </nav>
 
     <footer class="tc mt-2">
-      <p>© ۲۰۲۵ | کلینیک زیبایی دکتر سعید قزلباش — <a href="https://www.instagram.com/doctor.ghezelbaash" target="_blank" rel="me noopener">@Doctor.Ghezelbaash</a></p>
+      <p>© ۲۰۲۴ | کلینیک زیبایی دکتر سعید قزلباش — <a href="https://www.instagram.com/doctor.ghezelbaash" target="_blank" rel="me noopener">@Doctor.Ghezelbaash</a></p>
     </footer>
   </div>
 </body>
