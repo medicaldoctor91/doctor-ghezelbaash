@@ -60,156 +60,229 @@
   </style>
 
   <!-- JSON-LD: گراف تقویت‌شده -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": ["MedicalClinic", "LocalBusiness", "Organization"],
-        "@id": "https://github.ghezelbaash.ir/#clinic",
-        "name": "کلینیک زیبایی / بوتاکس / فیلر / لیفت / کانتورینگ دکتر قزلباش کرمانشاه",
-        "alternateName": "کلینیک زیبایی دکتر قزلباش کرمانشاه",
-        "url": "https://github.ghezelbaash.ir/",
-        "sameAs": [
-          "https://www.instagram.com/doctor.ghezelbaash/",
-          "https://www.ghezelbaash.ir/",
-          "https://doctor.ghezelbaash.ir/",
-          "https://www.kermanshahbeauty.xyz",
-          "https://blog.ghezelbaash.ir/",
-          "https://ig.ghezelbaash.ir/"
-        ],
-        "image": {
-          "@type": "ImageObject",
-          "url": "https://github.ghezelbaash.ir/doctor.jpg",
-          "width": 1200,
-          "height": 630
+  <script type='application/ld+json'>
+{
+  "@context":"https://schema.org",
+  "@graph":[
+    {
+      "@type":["HealthAndBeautyBusiness","MedicalClinic","Physician"],
+      "@id":"https://www.ghezelbaash.ir/#org",
+      "name":"کلینیک زیبایی دکتر سعید قزلباش کرمانشاه",
+      "alternateName":["کلینیک زیبایی دکتر قزلباش","دکتر سعید قزلباش"],
+      "url":"https://www.ghezelbaash.ir/",
+      "description":"فیلر لب | ژل گونه | بوتاکس چشم‌گربه‌ای | لیفت شقیقه | کانتورینگ چانه در کرمانشاه",
+      "logo":{"@type":"ImageObject","url":"https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png","width":768,"height":768,"caption":"لوگوی رسمی کلینیک زیبایی دکتر سعید قزلباش | کرمانشاه | بوتاکس‌ فیلر (لب/گونه)‌ لیفت شقیقه‌ کانتورینگ چانه"},
+      "image":[{"@type":"ImageObject","url":"https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg","width":1000,"height":667,"caption":"پرتره دکتر سعید قزلباش – پزشک/جراح زیبایی صورت در کرمانشاه | تخصص: بوتاکس‌ فیلر لب و گونه‌ لیفت شقیقه‌ کانتورینگ چانه و زاویه‌سازی فک"}],
+      "telephone":"+989308209494",
+      "priceRange":"$$",
+      "address":{"@type":"PostalAddress","streetAddress":"بهترین کلینیک تخصصی زیبایی کرمانشاه","addressLocality":"کرمانشاه","addressRegion":"استان کرمانشاه","postalCode":"6713915699","addressCountry":{"@type":"Country","name":"IR"}},
+      "openingHoursSpecification":[{"@type":"OpeningHoursSpecification","dayOfWeek":["https://schema.org/Saturday","https://schema.org/Sunday","https://schema.org/Monday","https://schema.org/Tuesday","https://schema.org/Wednesday","https://schema.org/Thursday"],"opens":"09:00","closes":"20:30"}],
+      "areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},
+      "sameAs":["https://www.instagram.com/doctor.ghezelbaash/","https://doctor.ghezelbaash.ir/","https://www.kermanshahbeauty.xyz/","https://www.google.com/maps?cid=12350483144643112463","https://ig.ghezelbaash.ir/"],
+      "hasMap":"https://www.google.com/maps?cid=12350483144643112463",
+      "contactPoint":[
+        {
+          "@type": "ContactPoint",
+          "contactType": "customer service",
+          "telephone": "+989308209494",
+          "availableLanguage": ["fa-IR"],
+          "areaServed": "IR"
         },
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://github.ghezelbaash.ir/logo.png",
-          "width": 232,
-          "height": 232
+        {
+          "@type": "ContactPoint",
+          "contactType": "customer service (Instagram DM)",
+          "url": "https://www.instagram.com/doctor.ghezelbaash/",
+          "availableLanguage": ["fa-IR"],
+          "areaServed": "IR"
         },
-        "telephone": "+989308209494",
-        "priceRange": "$$",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "ابتدای کوچه شهید قزوینی، میدان فردوسی، بین خیابان شهید جعفری و اشرفی اصفهانی",
-          "addressLocality": "کرمانشاه",
-          "addressRegion": "کرمانشاه",
-          "postalCode": "6718814367",
-          "addressCountry": "IR"
-        },
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": 34.2946875,
-          "longitude": 47.0544375
-        },
-        "hasMap": "https://www.google.com/maps?cid=12350483144643112463",
-        "medicalSpecialty": ["Dermatology", "CosmeticSurgery"],
-        "openingHoursSpecification": [
-          {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
-            "opens": "09:00",
-            "closes": "21:00"
-          }
-        ],
-        "areaServed": ["کرمانشاه، ایران"]
-      },
-      {
-        "@type": "Person",
-        "@id": "https://github.ghezelbaash.ir/#doctor",
-        "name": "دکتر سعید قزلباش",
-        "jobTitle": "پزشک زیبایی",
-        "url": "https://github.ghezelbaash.ir/",
-        "sameAs": [
-          "https://www.instagram.com/doctor.ghezelbaash",
-          "https://www.ghezelbaash.ir",
-          "https://doctor.ghezelbaash.ir"
-        ],
-        "worksFor": {"@id": "https://github.ghezelbaash.ir/#clinic"},
-        "medicalSpecialty": ["Dermatology", "CosmeticSurgery"],
-        "knowsLanguage": ["fa-IR", "en"],
-        "hasCredential": {
-          "@type": "EducationalOccupationalCredential",
-          "credentialCategory": "Medical License",
-          "recognizedBy": {
-            "@type": "Organization",
-            "name": "وزارت بهداشت جمهوری اسلامی ایران"
-          }
+        {
+          "@type":"ContactPoint",
+          "contactType":"appointment",
+          "telephone":"+989308209494",
+          "availableLanguage":["fa"]
         }
-      },
-      {
-        "@type": "WebSite",
-        "@id": "https://github.ghezelbaash.ir/#website",
-        "url": "https://github.ghezelbaash.ir/",
-        "name": "کلینیک زیبایی دکتر قزلباش | کرمانشاه",
-        "inLanguage": "fa-IR",
-        "publisher": {"@id": "https://github.ghezelbaash.ir/#clinic"},
-        "sameAs": [
-          "https://www.ghezelbaash.ir/",
-          "https://doctor.ghezelbaash.ir/",
-          "https://www.instagram.com/doctor.ghezelbaash/",
-          "https://blog.ghezelbaash.ir/"
-        ]
-      },
-      {
-        "@type": "WebPage",
-        "@id": "https://github.ghezelbaash.ir/#webpage",
-        "url": "https://github.ghezelbaash.ir/",
-        "name": "بوتاکس و فیلر لب در کرمانشاه — کلینیک زیبایی دکتر قزلباش",
-        "inLanguage": "fa-IR",
-        "isPartOf": {"@id": "https://github.ghezelbaash.ir/#website"},
-        "publisher": {"@id": "https://github.ghezelbaash.ir/#clinic"},
-        "about": [
-          {"@id": "https://github.ghezelbaash.ir/#clinic"},
-          {"@id": "https://github.ghezelbaash.ir/#doctor"}
-        ],
-        "primaryImageOfPage": {
-          "@type": "ImageObject",
-          "url": "https://github.ghezelbaash.ir/doctor.jpg",
-          "width": 1200,
-          "height": 630
-        },
-        "datePublished": "2023-08-15",
-        "dateModified": "2024-04-15"
-      },
-      {
-        "@type": "HowTo",
-        "@id": "https://github.ghezelbaash.ir/#howto",
-        "name": "رزرو وقت کلینیک زیبایی در کرمانشاه",
-        "publisher": {"@id": "https://github.ghezelbaash.ir/#clinic"},
-        "inLanguage": "fa-IR",
-        "step": [
-          {"@type": "HowToStep", "name": "ارتباط", "text": "پیام در اینستاگرام @Doctor.Ghezelbaash یا تماس با ۰۹۳۰۸۲۰۹۴۹۴"},
-          {"@type": "HowToStep", "name": "مشاوره", "text": "بررسی سوابق، هدف زیبایی و تعیین تکنیک (بوتاکس/فیلر/لیفت)"},
-          {"@type": "HowToStep", "name": "آماده‌سازی", "text": "تعیین زمان، راهنمای مراقبت‌های قبل/بعد"},
-          {"@type": "HowToStep", "name": "انجام درمان", "text": "حضور در کلینیک دکتر قزلباش و اجرای پروتکل ایمنی"}
-        ]
-      },
-      {
-        "@type": "FAQPage",
-        "@id": "https://github.ghezelbaash.ir/#faq",
-        "mainEntity": [
-          {"@type": "Question", "name": "نتیجه بوتاکس چند روزه ظاهر می‌شود؟", "acceptedAnswer": {"@type": "Answer", "text": "۳ تا ۷ روز نخست اثر اولیه و تا ۱۴ روز تثبیت می‌شود."}},
-          {"@type": "Question", "name": "ماندگاری فیلر لب چقدر است؟", "acceptedAnswer": {"@type": "Answer", "text": "۶ تا ۱۲ ماه بسته به فیلر و متابولیسم فرد."}},
-          {"@type": "Question", "name": "لیفت شقیقه با نخ PDO دوره نقاهت دارد؟", "acceptedAnswer": {"@type": "Answer", "text": "دوره کوتاه؛ پرهیز از سونا/ورزش سنگین تا ۴۸ ساعت."}},
-          {"@type": "Question", "name": "هزینه خدمات چگونه تعیین می‌شود؟", "acceptedAnswer": {"@type": "Answer", "text": "بر حسب ناحیه، برند مواد، دوز تزریقی و پیچیدگی کیس."}},
-          {"@type": "Question", "name": "آیا نتایج طبیعی است؟", "acceptedAnswer": {"@type": "Answer", "text": "هدف ما اصلاح تناسب با کمترین تغییر ظاهر و کبودی حداقلی است."}}
-        ]
-      },
-      {
-        "@type": "BreadcrumbList",
-        "@id": "https://github.ghezelbaash.ir/#breadcrumb",
-        "itemListElement": [
-          {"@type": "ListItem", "position": 1, "name": "کلینیک دکتر قزلباش", "item": "https://github.ghezelbaash.ir/"},
-          {"@type": "ListItem", "position": 2, "name": "خدمات زیبایی در کرمانشاه", "item": "https://github.ghezelbaash.ir/#services"}
-        ]
-      }
-    ]
-  }
-  </script>
+      ],
+      "medicalSpecialty":["Dermatology","PlasticSurgery"],
+      "knowsAbout":["بوتاکس","فیلر لب","فیلر گونه","لیفت شقیقه","کانتورینگ چانه","زاویه‌سازی فک","چشم‌گربه‌ای","تزریق ژل","رفع خط اخم","رفع خطوط پنجه‌کلاغی","زیبایی غیرتهاجمی"],
+      "brand":{"@id":"https://www.ghezelbaash.ir/#brand"},
+      "location":{"@id":"https://www.ghezelbaash.ir/#place"},
+      "hasOfferCatalog":{"@id":"https://www.ghezelbaash.ir/#catalog"},
+      "availableService":[
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-forehead","name":"تزریق بوتاکس پیشانی","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-forehead"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-glabellar","name":"بوتاکس خط اخم (گلابلا)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-glabellar"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-crowfeet","name":"بوتاکس خطوط پنجه‌کلاغی","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-crowfeet"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-foxeye","name":"بوتاکس چشم‌گربه‌ای (Fox Eye)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-foxeye"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-masseter","name":"بوتاکس عضله ماستر (زاویه فک)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-masseter"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-lip","name":"فیلر لب","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-lip"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-cheek","name":"فیلر گونه","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-cheek"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-chin","name":"فیلر چانه","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-chin"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-jawline","name":"زاویه‌سازی فک با فیلر","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-jawline"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-nasolabial","name":"فیلر خط خنده (نازولبیال)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-nasolabial"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-teartrough","name":"فیلر زیر چشم (Tear Trough)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-teartrough"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-temple-lift","name":"لیفت شقیقه","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-temple-lift"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-chin-contouring","name":"کانتورینگ چانه","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-chin-contouring"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-browlift","name":"بوتاکس لیفت ابرو","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-browlift"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-lipflip","name":"بوتاکس لیپ‌فلیپ","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-lipflip"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-bunnylines","name":"بوتاکس خطوط خرگوشی (Bunny Lines)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-bunnylines"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-gummysmile","name":"بوتاکس لبخند لثه‌ای (Gummy Smile)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-gummysmile"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-hyperhidrosis","name":"بوتاکس تعریق بیش‌ازحد (Hyperhidrosis)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-hyperhidrosis"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-botox-nefertiti","name":"بوتاکس نفرتیتی (خط فک/گردن)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-botox-nefertiti"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-marionette","name":"فیلر خطوط ماریونت","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-marionette"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-smokerslines","name":"فیلر خطوط سیگاری (لب بالا)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-smokerslines"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-filler-nose","name":"فیلر غیرجراحی بینی","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-filler-nose"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]},
+        {"@type":["TherapeuticProcedure","Service"],"@id":"https://www.ghezelbaash.ir/#svc-skinbooster-face","name":"اسکין‌بوستر صورت (هیدراته‌سازی پوست)","procedureType":"NoninvasiveProcedure","provider":{"@id":"https://www.ghezelbaash.ir/#org"},"areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},"availableLanguage":["fa"],"brand":{"@id":"https://www.ghezelbaash.ir/#brand"},"mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},"offers":{"@id":"https://www.ghezelbaash.ir/#offer-skinbooster-face"},"potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]}
+      ],
+      "subjectOf":{"@id":"https://www.ghezelbaash.ir/#instagram"},
+      "mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},
+      "identifier":[{"@type":"PropertyValue","propertyID":"googleMapsCID","value":"12350483144643112463"}],
+      "accountablePerson":{"@id":"https://www.ghezelbaash.ir/#doctor"}
+    },
+    {
+      "@type":"WebSite",
+      "@id":"https://github.ghezelbaash.ir/#website",
+      "url":"https://github.ghezelbaash.ir/",
+      "name":"کلینیک زیبایی دکتر سعید قزلباش",
+      "publisher":{"@id":"https://www.ghezelbaash.ir/#org"},
+      "inLanguage":"fa-IR",
+      "potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://ghezelbaash.ir/search?q={search_term_string}"},"query-input":"required name=search_term_string"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}],
+      "isPartOf":{"@id":"https://www.ghezelbaash.ir/#website"},
+      "about":[{"@id":"https://www.ghezelbaash.ir/#org"},{"@id":"https://www.github.ghezelbaash.ir/#doctor"}],
+      "mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},
+      "creator":{"@id":"https://www.ghezelbaash.ir/#doctor"},
+      "accountablePerson":{"@id":"https://www.ghezelbaash.ir/#doctor"},
+      "copyrightHolder":{"@id":"https://www.ghezelbaash.ir/#org"}
+    },
+    {
+      "@type":"WebSite",
+      "@id":"https://www.ghezelbaash.ir/#website",
+      "url":"https://www.ghezelbaash.ir/",
+      "name":"کلینیک زیبایی دکتر سعید قزلباش",
+      "publisher":{"@id":"https://www.ghezelbaash.ir/#org"},
+      "inLanguage":"fa-IR",
+      "hasPart":{"@id":"https://github.ghezelbaash.ir/#website"},
+      "about":[{"@id":"https://www.ghezelbaash.ir/#org"},{"@id":"https://www.ghezelbaash.ir/#doctor"}],
+      "mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},
+      "creator":{"@id":"https://www.ghezelbaash.ir/#doctor"},
+      "accountablePerson":{"@id":"https://www.ghezelbaash.ir/#doctor"},
+      "copyrightHolder":{"@id":"https://www.ghezelbaash.ir/#org"},
+      "potentialAction":[{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]
+    },
+    {
+      "@type":"Person",
+      "@id":"https://www.ghezelbaash.ir/#doctor",
+      "name":"دکتر سعید قزلباش",
+      "jobTitle":"پزشک زیبایی و جراح زیبایی صورت",
+      "url":"https://www.instagram.com/doctor.ghezelbaash/",
+      "mainEntityOfPage":{"@id":"https://www.ghezelbaash.ir/about/"},
+      "image":{"@type":"ImageObject","url":"https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg","width":1000,"height":667,"caption":"عکس دکتر سعید قزلباش | پزشک زیبایی کرمانشاه | بوتاکس‌ فیلر لب/گونه‌ لیفت شقیقه‌ کانتورینگ چانه | خدمات زیبایی غیرتهاجمی"},
+      "sameAs":["https://www.instagram.com/doctor.ghezelbaash/","https://www.ghezelbaash.ir/about/","https://ig.ghezelbaash.ir/","https://doctor.ghezelbaash.ir/"],
+      "knowsLanguage":["fa-IR"],
+      "worksFor":{"@id":"https://www.ghezelbaash.ir/#org"},
+      "affiliation":{"@id":"https://www.ghezelbaash.ir/#org"},
+      "subjectOf":{"@id":"https://www.ghezelbaash.ir/#instagram"},
+      "knowsAbout":["بوتاکس","فیلر لب","فیلر گونه","لیفت شقیقه","کانتورینگ چانه","زاویه‌سازی فک","زیبایی غیرتهاجمی"],
+      "identifier":[{"@type":"PropertyValue","propertyID":"instagram","value":"doctor.ghezelbaash"}],
+      "mentions":[{"@id":"https://www.ghezelbaash.ir/#website"},{"@id":"https://github.ghezelbaash.ir/#website"},{"@id":"https://www.ghezelbaash.ir/#instagram"}],
+      "hasOccupation":{"@id":"https://www.ghezelbaash.ir/#occ-aesthetic-medicine"},
+      "hasRole":{"@id":"https://www.ghezelbaash.ir/#role-medical-director"}
+    },
+    {
+      "@type":"ProfilePage",
+      "@id":"https://www.ghezelbaash.ir/#instagram",
+      "url":"https://www.instagram.com/doctor.ghezelbaash/",
+      "name":"کلینیک زیبایی/بوتاکس/فیلر/لیفت/کانتورینگ دکتر قزلباش کرمانشاه",
+      "alternateName":["@doctor.ghezelbaash"],
+      "inLanguage":"fa-IR",
+      "primaryImageOfPage":{"@type":"ImageObject","url":"https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg","width":1000,"height":667,"caption":"پروفایل اینستاگرام دکتر سعید قزلباش | نمونه‌کار بوتاکس و فیلر‌ لیفت شقیقه‌ کانتورینگ چانه | کلینیک زیبایی کرمانشاه","representativeOfPage":true},
+      "identifier":{"@type":"PropertyValue","propertyID":"instagram","value":"doctor.ghezelbaash"},
+      "isPartOf":{"@type":"WebSite","name":"Instagram","url":"https://www.instagram.com/"},
+      "about":[{"@id":"https://www.ghezelbaash.ir/#org"},{"@id":"https://www.ghezelbaash.ir/#doctor"}],
+      "mainEntity":{"@id":"https://www.ghezelbaash.ir/#doctor"},
+      "publisher":{"@id":"https://www.ghezelbaash.ir/#org"},
+      "sameAs":["https://ig.ghezelbaash.ir/"],
+      "mentions":[{"@id":"https://www.ghezelbaash.ir/#website"},{"@id":"https://github.ghezelbaash.ir/#website"}],
+      "creator":{"@id":"https://www.ghezelbaash.ir/#doctor"},
+      "accountablePerson":{"@id":"https://www.ghezelbaash.ir/#doctor"},
+      "potentialAction":{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},
+      "thumbnailUrl":"https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg",
+      "isFamilyFriendly":true
+    },
+    {
+      "@type":"OfferCatalog",
+      "@id":"https://www.ghezelbaash.ir/#catalog",
+      "name":"کاتالوگ خدمات تزریقی و لیفت",
+      "publisher":{"@id":"https://www.ghezelbaash.ir/#org"},
+      "inLanguage":"fa-IR",
+      "itemListOrder":"https://schema.org/ItemListOrderAscending",
+      "numberOfItems":23,
+      "itemListElement":[
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-forehead","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-forehead"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-glabellar","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-glabellar"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-crowfeet","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-crowfeet"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-foxeye","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-foxeye"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-masseter","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-masseter"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-lip","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-lip"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-cheek","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-cheek"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-chin","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-chin"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-jawline","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-jawline"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-nasolabial","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-nasolabial"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-teartrough","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-teartrough"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-temple-lift","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-temple-lift"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-chin-contouring","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-chin-contouring"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-browlift","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-browlift"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-lipflip","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-lipflip"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-bunnylines","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-bunnylines"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-gummysmile","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-gummysmile"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-hyperhidrosis","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-hyperhidrosis"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-botox-nefertiti","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-botox-nefertiti"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-marionette","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-marionette"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-smokerslines","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-smokerslines"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-filler-nose","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-filler-nose"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}},
+        {"@type":"Offer","@id":"https://www.ghezelbaash.ir/#offer-skinbooster-face","itemOffered":{"@id":"https://www.ghezelbaash.ir/#svc-skinbooster-face"},"seller":{"@id":"https://www.ghezelbaash.ir/#org"}}
+      ]
+    },
+    {
+      "@type":"Brand",
+      "@id":"https://www.ghezelbaash.ir/#brand",
+      "name":"کلینیک زیبایی دکتر سعید قزلباش",
+      "url":"https://www.ghezelbaash.ir/",
+      "logo":{"@type":"ImageObject","url":"https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png","width":768,"height":768,"caption":"لوگوی رسمی کلینیک زیبایی دکتر سعید قزلباش | کرمانشاه"},
+      "sameAs":["https://www.instagram.com/doctor.ghezelbaash/"],
+      "mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"}
+    },
+    {
+      "@type":"Place",
+      "@id":"https://www.ghezelbaash.ir/#place",
+      "name":"کلینیک زیبایی دکتر سعید قزلباش کرمانشاه",
+      "alternateName":["کلینیک زیبایی دکتر قزلباش","Ghezelbaash Aesthetic Clinic Kermanshah"],
+      "disambiguatingDescription":"موجودیت مکانی رسمی کلینیک در شهر کرمانشاه. آدرس doctor.ghezelbaash.ir به پروفایل Google Maps کلینیک هدایت می‌شود تا مسیر معتبر نقشه حفظ شود‌ مختصات دقیق عمداٌ درج نشده است.",
+      "address":{"@type":"PostalAddress","addressLocality":"کرمانشاه","addressRegion":"استان کرمانشاه","postalCode":"6713915699","addressCountry":{"@type":"Country","name":"IR"}},
+      "containedInPlace":{"@type":"City","name":"کرمانشاه","addressCountry":"IR"},
+      "areaServed":{"@type":"AdministrativeArea","name":"استان کرمانشاه"},
+      "url":"https://doctor.ghezelbaash.ir/",
+      "hasMap":"https://www.google.com/maps?cid=12350483144643112463",
+      "image":{"@type":"ImageObject","url":"https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png","width":768,"height":768,"caption":"برند کلینیک زیبایی دکتر سعید قزلباش"},
+      "sameAs":["https://www.google.com/maps?cid=12350483144643112463","https://www.ghezelbaash.ir/","https://www.instagram.com/doctor.ghezelbaash/"],
+      "mentions":{"@id":"https://www.ghezelbaash.ir/#instagram"},
+      "identifier":[{"@type":"PropertyValue","propertyID":"googleMapsCID","value":"12350483144643112463"}],
+      "potentialAction":[{"@type":"ViewAction","target":"https://www.instagram.com/doctor.ghezelbaash/"},{"@type":"FollowAction","target":"https://www.instagram.com/doctor.ghezelbaash/"}]
+    },
+    {
+      "@type":"Occupation",
+      "@id":"https://www.ghezelbaash.ir/#occ-aesthetic-medicine",
+      "name":"Aesthetic Medicine",
+      "description":"زیبایی‌شناسی پزشکی غیرتهاجمی و تزریقی"
+    },
+    {
+      "@type":"OrganizationRole",
+      "@id":"https://www.ghezelbaash.ir/#role-medical-director",
+      "roleName":"پزشک زیبایی / مسئول فنی",
+      "member":{"@id":"https://www.ghezelbaash.ir/#doctor"},
+      "memberOf":{"@id":"https://www.ghezelbaash.ir/#org"}
+    }
+  ]
+}
+</script>
 </head>
 <body>
   <div class="wrap">
