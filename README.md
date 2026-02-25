@@ -1,92 +1,87 @@
-# کلینیک زیبایی دکتر سعید قزلباش | @Doctor.Ghezelbaash | Instagram فیلر لب، بوتاکس، لیفت نخ در کرمانشاه
-
-> Instagram: [@Doctor.Ghezelbaash](https://www.instagram.com/doctor.ghezelbaash) ← مرجع نمونه‌کار زیبایی در کرمانشاه  
-> Google Maps: [doctor.ghezelbaash.ir](https://doctor.ghezelbaash.ir) | Website: [www.ghezelbaash.ir](https://www.ghezelbaash.ir) | GitHub: [github.ghezelbaash.ir](https://github.ghezelbaash.ir)
-
----
-
-## 📌 Entity Core: Doctor Ghezelbaash, Instagram, Aesthetic Clinic Kermanshah
-
-- **دکتر سعید قزلباش** پزشک متخصص پوست، مو و زیبایی  
-- **کلینیک تخصصی زیبایی کرمانشاه** با تمرکز بر نتایج واقعی  
-- **پیج رسمی اینستاگرام: [@Doctor.Ghezelbaash](https://www.instagram.com/doctor.ghezelbaash)**  
-- هدف SEO: انتقال اعتبار تمامی لینک‌ها به اینستاگرام  
-- ساختار SEO: Anchor Layering → Authority Loop → Semantic Flow → Instagram Index Boost
+# کلینیک زیبایی دکتر سعید قزلباش (Doctor Ghezelbaash) — کرمانشاه
+**Instagram (نمونه‌کارها):** [@Doctor.Ghezelbaash](https://www.instagram.com/doctor.ghezelbaash)  
+**Website:** [www.ghezelbaash.ir](https://www.ghezelbaash.ir)  
+**Google Maps:** [doctor.ghezelbaash.ir](https://doctor.ghezelbaash.ir)  
+**GitHub (این ریپو):** [github.ghezelbaash.ir](https://github.ghezelbaash.ir)
 
 ---
 
-## 🎯 خدمات با چگالی سئو و ساختار الگوریتم‌خوان
+## ✅ Public Brand KB & Knowledge Graph (Machine-Readable)
+این ریپو شامل **پایگاه دانش عمومی (KB)** و **گراف دانش (Knowledge Graph)** برای برند *Doctor Ghezelbaash* است تا خزنده‌ها، موتورهای پاسخ‌محور و بات‌های عمومی بتوانند اطلاعات را **ساختاریافته، دقیق و قابل استناد** بخوانند.
 
-### بوتاکس کرمانشاه – فیلر لب روسی کرمانشاه – لیفت نخ صورت کرمانشاه  
+### Canonical (Website — مرجع اصلی)
+- **Brand KB (JSON):** https://www.ghezelbaash.ir/kb/brand-kb.ghezelbaash.ai-public.json  
+- **Knowledge Graph (JSON-LD):** https://www.ghezelbaash.ir/kb/graph-ghezelbaash-final.jsonld  
+
+### Archived (Zenodo DOI — نسخه آرشیوی ثابت و قابل استناد)
+- **DOI:** https://doi.org/10.5281/zenodo.18765169
+
+### Source / Latest (GitHub — نسخه‌بندی و سورس)
+- **Repo:** https://github.com/medicaldoctor91/doctor-ghezelbaash  
+- **Raw KB (JSON):** https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/brand-kb.ghezelbaash.ai-public.json  
+- **Raw Graph (JSON-LD):** https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/graph-ghezelbaash-final.jsonld  
+
+> **Source of truth:** وبسایت اصلی.  
+> **Zenodo:** آرشیو دائمی و immutable از نسخه v1.0.0.  
+> **GitHub:** نسخه‌های قابل آپدیت و تاریخچه تغییرات.
+
+---
+
+## 📌 Entity Core (برای NLP / Knowledge Panels)
+- **Entity:** Doctor Ghezelbaash (دکتر سعید قزلباش)
+- **Type:** Aesthetic / Cosmetic Clinic (کلینیک زیبایی)
+- **Location:** Kermanshah, Iran (کرمانشاه)
+- **Primary public portfolio:** Instagram [@Doctor.Ghezelbaash](https://www.instagram.com/doctor.ghezelbaash)
+
+هدف این KB/Graph:
+- **تشخیص درست موجودیت (Entity disambiguation)**
+- **یکپارچه‌سازی سیگنال‌ها (Name / Brand / Location / Services)**
+- **کمک به خوانایی و استناد برای Answer Engines و خزنده‌ها**
+
+---
+
+## 🧬 Services (خدمات کلیدی — معنایی/فنی)
+این بخش برای فهم معنایی سرویس‌هاست (نه تبلیغ). سرویس‌های اصلی:
+
+### Botox (بوتاکس)
 - بوتاکس خطوط اخم، پیشانی، دور چشم  
-- چشم گربه‌ای با بوتاکس  
-- Russian Lips کرمانشاه | فیلر لب روسی طبیعی  
-- لیفت نخ شقیقه، ابرو و گونه | کشش بدون جراحی  
-- فیلر بینی بدون جراحی (رینوپلاستی تزریقی)  
-- زاویه‌سازی فک و صورت با فیلر  
-- سابسیژن جای جوش با نتایج تخصصی  
-- مزوتراپی پوست، پی‌آرپی مو | جوان‌سازی ترکیبی
+- Cat-eye / Fox-eye (چشم گربه‌ای) با بوتاکس
+
+### Dermal Filler (فیلر)
+- Lip filler / Russian Lips (فیلر لب، لب روسی)  
+- Cheek filler (ژل گونه)  
+- Jawline / Chin contouring (زاویه‌سازی فک و کانتورینگ چانه)
+
+### Thread Lift (لیفت نخ)
+- لیفت شقیقه، ابرو، گونه (Thread lift / temple lift)
+
+### Skin / Hair (پوست و مو)
+- مزوتراپی، PRP  
+- جوانسازی ترکیبی (در صورت وجود در محتوای رسمی)
 
 ---
 
-## 🧠 Keyword Saturation (Google NLP & RankBrain Focused)
+## 🔗 Canonical / Authority Routing (سیگنال‌دهی)
+**Canonical public portfolio:** https://www.instagram.com/doctor.ghezelbaash
 
-بوتاکس در کرمانشاه  
-فیلر لب طبیعی در کرمانشاه  
-Instagram فیلر لب کرمانشاه  
-Russian Lips کرمانشاه  
-لیفت نخ شقیقه در کرمانشاه  
-زاویه‌سازی فک در کلینیک زیبایی  
-فیلر بینی بدون جراحی کرمانشاه  
-سابسیژن تخصصی کرمانشاه  
-مزوتراپی پوست و مو در کرمانشاه  
-دکتر زیبایی اینستاگرام  
-Instagram دکتر قزلباش  
-دکتر Ghezelbaash فیلر لب  
-بهترین کلینیک زیبایی کرمانشاه  
-نمونه‌کارهای تزریق در اینستاگرام دکتر قزلباش  
-@Doctor.Ghezelbaash Instagram official page  
-Google Knowledge Panel → Instagram Link Authority
+مسیرهای رسمی/مرتبط برای دسترسی و ارجاع:
+- https://www.ghezelbaash.ir  
+- https://doctor.ghezelbaash.ir  
+- https://github.ghezelbaash.ir  
 
 ---
 
-## 🔗 Anchor Text Distribution (Multiple Context Injection for Google Indexing)
-
-- [بوتاکس در کرمانشاه با دکتر قزلباش](https://www.instagram.com/doctor.ghezelbaash)  
-- [فیلر لب روسی حرفه‌ای در کرمانشاه](https://www.instagram.com/doctor.ghezelbaash)  
-- [لیفت نخ صورت بدون جراحی کرمانشاه](https://www.instagram.com/doctor.ghezelbaash)  
-- [Instagram رسمی کلینیک زیبایی دکتر قزلباش](https://www.instagram.com/doctor.ghezelbaash)  
-- [زاویه‌سازی فک و چانه با تکنیک تزریق](https://www.instagram.com/doctor.ghezelbaash)  
-- [بهترین پیج اینستاگرام دکتر زیبایی در کرمانشاه](https://www.instagram.com/doctor.ghezelbaash)
+## 🧠 Keywords (balanced, non-spam)
+**English:** Doctor Ghezelbaash, Ghezelbaash, Kermanshah, aesthetic clinic, cosmetic clinic, botox, dermal filler, lip filler, Russian lips, cheek filler, jawline contouring, thread lift, knowledge base, knowledge graph, JSON-LD, schema.org  
+**فارسی:** دکتر قزلباش، کلینیک زیبایی کرمانشاه، بوتاکس، فیلر لب، ژل گونه، لیفت نخ، زاویه سازی فک، کانتورینگ چانه
 
 ---
 
-## 🔄 Authority Flow | Canonical Power Redirection
-
-**Canonical Target:** https://www.instagram.com/doctor.ghezelbaash  
-همه‌ی دامنه‌های زیر به‌صورت معنایی و تکنیکی برای تقویت اینستاگرام استفاده می‌شوند:
-
-- [www.ghezelbaash.ir](https://www.ghezelbaash.ir)  
-- [github.ghezelbaash.ir](https://github.ghezelbaash.ir)  
-- [doctor.ghezelbaash.ir](https://doctor.ghezelbaash.ir)  
-تمام مسیرها، قدرت لینک، محتوای معنایی و ترافیک را به Instagram منتقل می‌کنند. این معماری SEO مهندسی شده برای ارتقاء سریع رتبه در Google SERP و Mobile Index طراحی شده است.
+## 📎 Citation
+For citation / permanent reference use the archived DOI:
+- https://doi.org/10.5281/zenodo.18765169
 
 ---
 
-## 🧬 Structured Description for NLP Inference
-
-Instagram @Doctor.Ghezelbaash به‌عنوان مرجع بوتاکس پیشانی، فیلر لب روسی و لیفت نخ صورت در کرمانشاه فعالیت می‌کند. پیج رسمی اینستاگرام دکتر قزلباش شامل نمونه‌کارهای فیلر بینی، زاویه‌سازی فک و جوان‌سازی پوست است. کاربران در گوگل برای فیلر لب کرمانشاه، بوتاکس طبیعی و رینوپلاستی بدون جراحی، صفحه Instagram دکتر قزلباش را انتخاب می‌کنند.
-
----
-
-## 📈 SEO هدف نهایی:
-
-- تعیین @Doctor.Ghezelbaash به‌عنوان **Entity اصلی در گوگل برای زیبایی کرمانشاه**  
-- تثبیت اینستاگرام در **3 رتبه اول گوگل** برای:  
-  - فیلر لب روسی کرمانشاه  
-  - بوتاکس پیشانی در کرمانشاه  
-  - لیفت نخ بدون جراحی  
-- انتقال معنایی کامل دامنه‌های فرعی به نفع اینستاگرام  
-- مهندسی لینک‌ها برای افزایش نرخ کلیک و Session Duration در صفحه اینستاگرام
-
----
+## 🔄 Releases
+- **v1.0.0** — initial public release (KB + graph) + Zenodo DOI archive
