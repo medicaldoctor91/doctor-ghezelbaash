@@ -1,0 +1,1095 @@
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.ghezelbaash.ir/#website",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش کرمانشاه",
+      "alternateName": [
+        "Dr Saeed Ghezelbaash Aesthetic Clinic",
+        "کلینیک زیبایی دکتر قزلباش",
+        "Dr Saeed Ghezelbaash Aesthetic Clinic (Website)"
+      ],
+      "inLanguage": "fa-IR",
+      "description": "فیلر لب، ژل گونه، بوتاکس چشم‌گربه‌ای، لیفت شقیقه و کانتورینگ چانه با بهترین تکنیک‌ها در کرمانشاه",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "sameAs": [
+        "https://doctor.ghezelbaash.ir/",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.facebook.com/Doctor.Ghezelbaash/",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
+        "https://www.pinterest.com/Qezelbaash",
+        "https://about.me/ghezelbaash",
+        "https://www.openstreetmap.org/node/13530287096",
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://maps.apple.com/place?place-id=I98E24B18E14B3087",
+        "https://neshan.org/maps/places/adbc544fa9d05332bb6dab86feb58fa8",
+        "https://linktr.ee/Doctor.ghezelbaash"
+      ],
+      "potentialAction": [
+        {
+          "@type": "ContactAction",
+          "name": "رزرو مشاوره و هماهنگی نوبت",
+          "target": [
+            {
+              "@type": "EntryPoint",
+              "url": "https://wa.me/989308209494"
+            },
+            {
+              "@type": "EntryPoint",
+              "url": "https://t.me/Ghezelbaash"
+            },
+            {
+              "@type": "EntryPoint",
+              "url": "tel:+989308209494"
+            }
+          ],
+          "inLanguage": "fa-IR"
+        },
+        {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://www.ghezelbaash.ir/?s={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      ],
+      "keywords": [
+        "کلینیک زیبایی کرمانشاه",
+        "کلینیک زیبایی دکتر سعید قزلباش",
+        "دکتر سعید قزلباش کرمانشاه",
+        "Doctor.Ghezelbaash",
+        "کلینیک تزریق ژل کرمانشاه",
+        "کلینیک بوتاکس کرمانشاه",
+        "کلینیک فیلر لب کرمانشاه",
+        "لیفت شقیقه کرمانشاه",
+        "کانتورینگ چانه کرمانشاه",
+        "بوتاکس کرمانشاه",
+        "فیلر کرمانشاه",
+        "لیفت شقیقه کرمانشاه",
+        "زاویه‌سازی فک کرمانشاه",
+        "اسکین‌بوستر کرمانشاه",
+        "مزوتراپی کرمانشاه",
+        "PRP کرمانشاه"
+      ],
+      "disambiguatingDescription": "Lip filler, cheek filler, Fox-eye Botox, temple lift and chin contouring with the best techniques in Kermanshah"
+    },
+    {
+      "@type": [
+        "WebPage",
+        "MedicalWebPage"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#homepage",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش کرمانشاه",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#org"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-botox"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-threadlift"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-mesotherapy"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-scarpigment"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-skinbooster"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-fullface"
+        }
+      ],
+      "description": "کلینیک تخصصی زیبایی و تزریقات در کرمانشاه با خدمات بوتاکس، فیلر و لیفت",
+      "primaryImageOfPage": {
+        "@id": "https://www.ghezelbaash.ir/#logo"
+      },
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/#breadcrumb"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "potentialAction": {
+        "@type": "ContactAction",
+        "name": "رزرو مشاوره و هماهنگی نوبت",
+        "target": [
+          {
+            "@type": "EntryPoint",
+            "url": "https://wa.me/989308209494"
+          },
+          {
+            "@type": "EntryPoint",
+            "url": "https://t.me/Ghezelbaash"
+          },
+          {
+            "@type": "EntryPoint",
+            "url": "tel:+989308209494"
+          }
+        ],
+        "inLanguage": "fa-IR"
+      },
+      "keywords": [
+        "Doctor.Ghezelbaash",
+        "دکتر سعید قزلباش کرمانشاه",
+        "کلینیک زیبایی دکتر سعید قزلباش",
+        "بوتاکس کرمانشاه",
+        "تزریق بوتاکس کرمانشاه",
+        "متخصص بوتاکس کرمانشاه",
+        "کلینیک بوتاکس کرمانشاه",
+        "فیلر کرمانشاه",
+        "فیلر لب کرمانشاه",
+        "فیلر چانه کرمانشاه",
+        "فیلر گونه کرمانشاه",
+        "تزریق فیلر کرمانشاه",
+        "فیلر لب در کرمانشاه",
+        "PRP کرمانشاه",
+        "PRP مو در کرمانشاه",
+        "متخصص PRP کرمانشاه",
+        "PRP پوست در کرمانشاه",
+        "مزوتراپی کرمانشاه",
+        "متخصص مزوتراپی کرمانشاه",
+        "مزوتراپی مو در کرمانشاه",
+        "لیفت با نخ کرمانشاه",
+        "لیفت شقیقه کرمانشاه",
+        "متخصص لیفت کرمانشاه",
+        "لیفت ابرو در کرمانشاه",
+        "لیفت غبغب در کرمانشاه",
+        "سابسیژن کرمانشاه",
+        "متخصص سابسیژن کرمانشاه",
+        "درمان لک کرمانشاه",
+        "درمان ملاسما کرمانشاه",
+        "متخصص درمان لک کرمانشاه"
+      ],
+      "mentions": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#instagram"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#facebook"
+        }
+      ],
+      "accountablePerson": {
+        "@id": "https://www.ghezelbaash.ir/#doctor"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#doctor"
+      },
+      "alternateName": [
+        "Dr Saeed Ghezelbaash Aesthetic Clinic"
+      ],
+      "disambiguatingDescription": "Specialized aesthetic clinic and injectables in Kermanshah offering Botox, fillers and lifts"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": {
+            "@id": "https://www.ghezelbaash.ir/#homepage"
+          }
+        }
+      ]
+    },
+    {
+      "@type": [
+        "MedicalClinic",
+        "HealthAndBeautyBusiness"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#org",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش",
+      "alternateName": [
+        "Dr Saeed Ghezelbaash Aesthetic Clinic",
+        "کلینیک زیبایی دکتر قزلباش"
+      ],
+      "description": "فیلر لب، ژل گونه، بوتاکس چشم‌گربه‌ای، لیفت شقیقه و کانتورینگ چانه با بهترین تکنیک‌ها در کرمانشاه",
+      "url": "https://www.ghezelbaash.ir/",
+      "logo": {
+        "@id": "https://www.ghezelbaash.ir/#logo"
+      },
+      "image": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#doctorImage"
+        }
+      ],
+      "telephone": "+989308209494",
+      "email": "doctor@ghezelbaash.ir",
+      "priceRange": "$$",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Vista Building, 17 Shahrivar Square",
+        "addressLocality": "Kermanshah",
+        "addressRegion": "Kermanshah Province",
+        "postalCode": "6714657412",
+        "addressCountry": {
+          "@type": "Country",
+          "name": "IR"
+        }
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 34.3401243,
+        "longitude": 47.0851778
+      },
+      "hasMap": "https://www.google.com/maps?cid=12350483144643112463",
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Saturday",
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday"
+          ],
+          "opens": "16:00:00",
+          "closes": "22:00:00"
+        }
+      ],
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": 4.9,
+        "ratingCount": 157,
+        "bestRating": 5,
+        "worstRating": 1
+      },
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "contactType": "customer service",
+          "telephone": "+989308209494",
+          "email": "doctor@ghezelbaash.ir",
+          "url": "https://wa.me/989308209494",
+          "availableLanguage": [
+            "fa-IR",
+            "en"
+          ],
+          "areaServed": {
+            "@type": "AdministrativeArea",
+            "name": "Kermanshah Province"
+          }
+        },
+        {
+          "@type": "ContactPoint",
+          "contactType": "customer service",
+          "url": "https://t.me/Ghezelbaash",
+          "availableLanguage": [
+            "fa-IR",
+            "en"
+          ],
+          "areaServed": {
+            "@type": "AdministrativeArea",
+            "name": "Kermanshah Province"
+          },
+          "telephone": "+989308209494",
+          "email": "doctor@ghezelbaash.ir"
+        }
+      ],
+      "sameAs": [
+        "https://doctor.ghezelbaash.ir/",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.facebook.com/Doctor.Ghezelbaash/",
+        "https://www.facebook.com/ghezelbaash/",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
+        "https://www.pinterest.com/Qezelbaash",
+        "https://about.me/ghezelbaash",
+        "https://www.openstreetmap.org/node/13530287096",
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://maps.apple.com/place?place-id=I98E24B18E14B3087",
+        "https://neshan.org/maps/places/adbc544fa9d05332bb6dab86feb58fa8",
+        "https://linktr.ee/Doctor.ghezelbaash"
+      ],
+      "founder": {
+        "@id": "https://www.ghezelbaash.ir/#doctor"
+      },
+      "availableService": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-botox"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-threadlift"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-mesotherapy"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-scarpigment"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-skinbooster"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#svc-fullface"
+        }
+      ],
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "name": "googleMapsCid",
+          "value": "12350483144643112463"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "googleMapsPlaceId",
+          "value": "ChIJBTOYDOTt-j8RD-7mAPy6Zas"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "websiteDomain",
+          "value": "ghezelbaash.ir"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "primaryInstagramHandle",
+          "value": "doctor.ghezelbaash"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "medicalCouncilNo",
+          "value": "167430"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Kermanshah practice license No.",
+          "value": "329-167430-143"
+        }
+      ],
+      "medicalSpecialty": [
+        "Aesthetic medicine",
+        "Cosmetic medicine"
+      ],
+      "knowsAbout": [
+        "PRP",
+        "ملاسما",
+        "سابسیژن",
+        "فیلر لب",
+        "درمان لک",
+        "مزوتراپی",
+        "فیلر چانه",
+        "فیلر گونه",
+        "تزریق فیلر",
+        "لیفت با نخ",
+        "لیفت شقیقه",
+        "اسکین‌بوستر",
+        "بوتاکس تعریق",
+        "بوتاکس ماستر",
+        "تزریق بوتاکس",
+        "بوتاکس خط اخم",
+        "بوتاکس پیشانی",
+        "جوانسازی پوست",
+        "زاویه‌سازی فک",
+        "بوتاکس فاکس‌آی",
+        "کانتورینگ چانه",
+        "بوتاکس لیپ‌فلیپ",
+        "بوتاکس پنجه‌کلاغی",
+        "فیلر زیر چشم (Tear Trough)"
+      ],
+      "brand": {
+        "@id": "https://www.ghezelbaash.ir/#brand"
+      },
+      "location": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#instagram"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#facebook"
+        }
+      ],
+      "hasOfferCatalog": {
+        "@id": "https://www.ghezelbaash.ir/#catalog"
+      },
+      "knowsLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "medicalAudience": {
+        "@type": "MedicalAudience",
+        "audienceType": "Patient"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://www.ghezelbaash.ir/#homepage"
+      },
+      "disambiguatingDescription": "کلینیک زیبایی و تزریقات غیرتهاجمی در کرمانشاه (ایران) — دکتر سعید قزلباش",
+      "openingHours": "Sa-Th 16:00-22:00",
+      "currenciesAccepted": "IRR",
+      "makesOffer": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-1"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-2"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-3"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-4"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-5"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-6"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-7"
+        }
+      ]
+    },
+    {
+      "@type": [
+        "Person"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#doctor",
+      "name": "دکتر سعید قزلباش",
+      "alternateName": [
+        "Dr Saeed Ghezelbaash",
+        "دکتر محمد سعید قزلباش",
+        "Dr Mohammad Saeed Ghezelbaash",
+        "MOHAMMADSAEED GHEZELBAASH"
+      ],
+      "jobTitle": "پزشک زیبایی",
+      "worksFor": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "affiliation": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "telephone": "+989308209494",
+      "email": "doctor@ghezelbaash.ir",
+      "url": "https://www.ghezelbaash.ir/",
+      "sameAs": [
+        "https://www.facebook.com/Doctor.Ghezelbaash/",
+        "https://www.facebook.com/ghezelbaash/",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96"
+      ],
+      "hasOccupation": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#occ-aesthetic-medicine"
+        },
+        {
+          "@type": "Occupation",
+          "name": "Cosmetic Physician",
+          "occupationLocation": {
+            "@id": "https://www.ghezelbaash.ir/#place"
+          },
+          "skills": [
+            "Botox injections",
+            "Dermal fillers",
+            "Thread lift",
+            "Skin rejuvenation",
+            "Facial contouring"
+          ]
+        }
+      ],
+      "knowsLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "image": {
+        "@id": "https://www.ghezelbaash.ir/#doctorImage"
+      },
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "name": "Medical Council No.",
+          "value": "167430"
+        },
+        {
+          "@type": "PropertyValue",
+          "name": "Kermanshah practice license No.",
+          "value": "329-167430-143"
+        }
+      ],
+      "hasCredential": [
+        {
+          "@type": "EducationalOccupationalCredential",
+          "name": "Medical Council of I.R. Iran Registration",
+          "credentialCategory": "Medical council registration",
+          "identifier": {
+            "@type": "PropertyValue",
+            "name": "Medical Council No.",
+            "value": "167430"
+          },
+          "inLanguage": "en"
+        },
+        {
+          "@type": "EducationalOccupationalCredential",
+          "name": "Practice License (Kermanshah)",
+          "credentialCategory": "Practice license",
+          "identifier": {
+            "@type": "PropertyValue",
+            "name": "License No.",
+            "value": "329-167430-143"
+          },
+          "inLanguage": "en"
+        }
+      ],
+      "knowsAbout": [
+        "Aesthetic medicine",
+        "Botox injections",
+        "Chin contouring",
+        "Cosmetic medicine",
+        "Dermal fillers",
+        "Facial contouring",
+        "Mesotherapy",
+        "PRP",
+        "Skin rejuvenation",
+        "Subcision",
+        "Temple lift",
+        "Thread lift"
+      ],
+      "subjectOf": {
+        "@id": "https://www.ghezelbaash.ir/#homepage"
+      },
+      "medicalSpecialty": [
+        "Aesthetic medicine",
+        "Cosmetic medicine"
+      ],
+      "hasOfferCatalog": {
+        "@id": "https://www.ghezelbaash.ir/#catalog"
+      },
+      "workLocation": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "disambiguatingDescription": "پزشک زیبایی در کرمانشاه — بنیان‌گذار کلینیک زیبایی دکتر سعید قزلباش"
+    },
+    {
+      "@type": "Place",
+      "@id": "https://www.ghezelbaash.ir/#place",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش — کرمانشاه",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Vista Building, 17 Shahrivar Square",
+        "addressLocality": "Kermanshah",
+        "addressRegion": "Kermanshah Province",
+        "postalCode": "6714657412",
+        "addressCountry": {
+          "@type": "Country",
+          "name": "IR"
+        }
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 34.3401243,
+        "longitude": 47.0851778
+      },
+      "hasMap": "https://www.google.com/maps?cid=12350483144643112463",
+      "telephone": "+989308209494",
+      "url": "https://www.ghezelbaash.ir/",
+      "sameAs": [
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://maps.apple.com/place?place-id=I98E24B18E14B3087",
+        "https://www.openstreetmap.org/node/13530287096"
+      ],
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Saturday",
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday"
+          ],
+          "opens": "16:00:00",
+          "closes": "22:00:00"
+        }
+      ],
+      "containedInPlace": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province",
+        "addressCountry": "IR"
+      },
+      "openingHours": "Sa-Th 16:00-22:00"
+    },
+    {
+      "@type": "Brand",
+      "@id": "https://www.ghezelbaash.ir/#brand",
+      "name": "Doctor.Ghezelbaash",
+      "url": "https://www.ghezelbaash.ir/",
+      "logo": {
+        "@id": "https://www.ghezelbaash.ir/#logo"
+      },
+      "sameAs": [
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.facebook.com/Doctor.Ghezelbaash/",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96"
+      ],
+      "alternateName": [
+        "دکتر قزلباش",
+        "Doctor Ghezelbaash"
+      ],
+      "slogan": "زیباییِ طبیعی با تکنیک‌های دقیق"
+    },
+    {
+      "@type": "OfferCatalog",
+      "@id": "https://www.ghezelbaash.ir/#catalog",
+      "name": "خدمات کلینیک زیبایی دکتر سعید قزلباش",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "inLanguage": "fa-IR",
+      "itemListOrder": "https://schema.org/ItemListUnordered",
+      "numberOfItems": 7,
+      "itemListElement": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-1"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-2"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-3"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-4"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-5"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-6"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#offer-7"
+        }
+      ]
+    },
+    {
+      "@type": "ImageObject",
+      "@id": "https://www.ghezelbaash.ir/#logo",
+      "url": "https://github.ghezelbaash.ir/logo.png",
+      "width": 768,
+      "height": 768,
+      "caption": "لوگوی کلینیک زیبایی دکتر سعید قزلباش"
+    },
+    {
+      "@type": "ImageObject",
+      "@id": "https://www.ghezelbaash.ir/#doctorImage",
+      "url": "https://github.ghezelbaash.ir/doctor.jpg",
+      "width": 1000,
+      "height": 667,
+      "caption": "پرتره دکتر سعید قزلباش — پزشک زیبایی"
+    },
+    {
+      "@type": [
+        "Service",
+        "TherapeuticProcedure"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#svc-botox",
+      "name": "تزریق بوتاکس",
+      "description": "تزریق بوتاکس برای پیشانی، خط اخم، خطوط پنجه‌کلاغی، Fox Eye، عضله ماستر، لیپ‌فلیپ، خطوط خرگوشی، لبخند لثه‌ای، تعریق بیش‌ازحد و نفرتیتی (خط فک/گردن)",
+      "procedureType": "https://schema.org/NoninvasiveProcedure",
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "serviceType": "Botox injections",
+      "brand": {
+        "@id": "https://www.ghezelbaash.ir/#brand"
+      },
+      "alternateName": [
+        "Botox injections"
+      ],
+      "disambiguatingDescription": "Botox injections for forehead, frown lines, crow's feet, Fox Eye, masseter muscle, lip flip, bunny lines, gummy smile, hyperhidrosis and Nefertiti (jaw/neck)"
+    },
+    {
+      "@type": [
+        "Service",
+        "TherapeuticProcedure"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#svc-filler",
+      "name": "تزریق فیلر",
+      "description": "تزریق ژل لب، گونه، چانه، زاویه‌سازی فک، خطوط خنده، خطوط ماریونت، خطوط سیگاری، Tear Trough و بینی غیرجراحی",
+      "procedureType": "https://schema.org/NoninvasiveProcedure",
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "serviceType": "Dermal fillers",
+      "brand": {
+        "@id": "https://www.ghezelbaash.ir/#brand"
+      },
+      "alternateName": [
+        "Dermal filler injections"
+      ],
+      "disambiguatingDescription": "Dermal filler injections for lips, cheeks, chin, jawline contouring, nasolabial folds, marionette lines, smoker lines, tear trough and non-surgical rhinoplasty"
+    },
+    {
+      "@type": [
+        "Service",
+        "TherapeuticProcedure"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#svc-threadlift",
+      "name": "لیفت با نخ",
+      "description": "لیفت صورت، ابرو، شقیقه و غبغب با نخ‌های لیفت",
+      "procedureType": "https://schema.org/NoninvasiveProcedure",
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "serviceType": "Thread lift",
+      "brand": {
+        "@id": "https://www.ghezelbaash.ir/#brand"
+      },
+      "alternateName": [
+        "Thread lift"
+      ],
+      "disambiguatingDescription": "Thread lift for the face, eyebrows, temples and double chin"
+    },
+    {
+      "@type": [
+        "Service",
+        "TherapeuticProcedure"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#svc-mesotherapy",
+      "name": "مزوتراپی و PRP",
+      "description": "مزوتراپی صورت، زیر چشم و مو؛ PRP پوست و مو",
+      "procedureType": "https://schema.org/NoninvasiveProcedure",
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "serviceType": "Mesotherapy and PRP",
+      "brand": {
+        "@id": "https://www.ghezelbaash.ir/#brand"
+      },
+      "alternateName": [
+        "Mesotherapy and PRP"
+      ],
+      "disambiguatingDescription": "Mesotherapy for face, under-eye and hair; PRP for skin and hair"
+    },
+    {
+      "@type": [
+        "Service",
+        "TherapeuticProcedure"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#svc-scarpigment",
+      "name": "سابسیژن و درمان لک",
+      "description": "سابسیژن اسکار آکنه و فرورفتگی‌ها؛ پروتکل‌های ترکیبی با لیزر، مزوتراپی و PRP؛ درمان لک، ملاسما و تیرگی",
+      "procedureType": "https://schema.org/NoninvasiveProcedure",
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "serviceType": "Subcision and pigmentation therapy",
+      "brand": {
+        "@id": "https://www.ghezelbaash.ir/#brand"
+      },
+      "alternateName": [
+        "Subcision and pigmentation therapy"
+      ],
+      "disambiguatingDescription": "Acne scar and depression subcision; combined protocols with laser, mesotherapy and PRP; treatment of spots, melasma and discoloration"
+    },
+    {
+      "@type": [
+        "Service",
+        "TherapeuticProcedure"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#svc-skinbooster",
+      "name": "اسکین‌بوستر و جوانسازی",
+      "description": "اسکین‌بوستر صورت و پروتکل‌های جوانسازی پوست",
+      "procedureType": "https://schema.org/NoninvasiveProcedure",
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "serviceType": "Skin booster and rejuvenation",
+      "brand": {
+        "@id": "https://www.ghezelbaash.ir/#brand"
+      },
+      "alternateName": [
+        "Skin booster and rejuvenation"
+      ],
+      "disambiguatingDescription": "Skin booster treatments and skin rejuvenation protocols"
+    },
+    {
+      "@type": [
+        "Service",
+        "TherapeuticProcedure"
+      ],
+      "@id": "https://www.ghezelbaash.ir/#svc-fullface",
+      "name": "طراحی فول‌فیس",
+      "description": "طراحی چهره با ترکیب بوتاکس، فیلر، نخ، مزوتراپی، PRP و لیزر",
+      "procedureType": "https://schema.org/NoninvasiveProcedure",
+      "provider": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableLanguage": [
+        "fa-IR",
+        "en"
+      ],
+      "serviceType": "Full-face design",
+      "brand": {
+        "@id": "https://www.ghezelbaash.ir/#brand"
+      },
+      "alternateName": [
+        "Full-face design"
+      ],
+      "disambiguatingDescription": "Facial design combining Botox, fillers, threads, mesotherapy, PRP and laser"
+    },
+    {
+      "@type": "ProfilePage",
+      "@id": "https://www.ghezelbaash.ir/#instagram",
+      "url": "https://www.instagram.com/doctor.ghezelbaash/",
+      "name": "Instagram — doctor.ghezelbaash",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      }
+    },
+    {
+      "@type": "Occupation",
+      "@id": "https://www.ghezelbaash.ir/#occ-aesthetic-medicine",
+      "name": "Aesthetic Medicine",
+      "description": "زیبایی‌شناسی پزشکی غیرتهاجمی و تزریقی"
+    },
+    {
+      "@type": "OrganizationRole",
+      "@id": "https://www.ghezelbaash.ir/#role-medical-director",
+      "roleName": "پزشک زیبایی / مسئول فنی",
+      "member": {
+        "@id": "https://www.ghezelbaash.ir/#doctor"
+      },
+      "memberOf": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      }
+    },
+    {
+      "@type": "ProfilePage",
+      "@id": "https://www.ghezelbaash.ir/#facebook",
+      "url": "https://www.facebook.com/Doctor.Ghezelbaash/",
+      "name": "Facebook Page — Doctor.Ghezelbaash",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      }
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@id": "https://www.ghezelbaash.ir/#svc-botox"
+      },
+      "@id": "https://www.ghezelbaash.ir/#offer-1",
+      "seller": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "availability": "https://schema.org/InStock",
+      "category": "https://schema.org/MedicalProcedure",
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableAtOrFrom": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "url": "https://www.ghezelbaash.ir/"
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@id": "https://www.ghezelbaash.ir/#svc-filler"
+      },
+      "@id": "https://www.ghezelbaash.ir/#offer-2",
+      "seller": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "availability": "https://schema.org/InStock",
+      "category": "https://schema.org/MedicalProcedure",
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableAtOrFrom": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "url": "https://www.ghezelbaash.ir/"
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@id": "https://www.ghezelbaash.ir/#svc-threadlift"
+      },
+      "@id": "https://www.ghezelbaash.ir/#offer-3",
+      "seller": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "availability": "https://schema.org/InStock",
+      "category": "https://schema.org/MedicalProcedure",
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableAtOrFrom": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "url": "https://www.ghezelbaash.ir/"
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@id": "https://www.ghezelbaash.ir/#svc-mesotherapy"
+      },
+      "@id": "https://www.ghezelbaash.ir/#offer-4",
+      "seller": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "availability": "https://schema.org/InStock",
+      "category": "https://schema.org/MedicalProcedure",
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableAtOrFrom": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "url": "https://www.ghezelbaash.ir/"
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@id": "https://www.ghezelbaash.ir/#svc-scarpigment"
+      },
+      "@id": "https://www.ghezelbaash.ir/#offer-5",
+      "seller": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "availability": "https://schema.org/InStock",
+      "category": "https://schema.org/MedicalProcedure",
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableAtOrFrom": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "url": "https://www.ghezelbaash.ir/"
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@id": "https://www.ghezelbaash.ir/#svc-skinbooster"
+      },
+      "@id": "https://www.ghezelbaash.ir/#offer-6",
+      "seller": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "availability": "https://schema.org/InStock",
+      "category": "https://schema.org/MedicalProcedure",
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableAtOrFrom": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "url": "https://www.ghezelbaash.ir/"
+    },
+    {
+      "@type": "Offer",
+      "itemOffered": {
+        "@id": "https://www.ghezelbaash.ir/#svc-fullface"
+      },
+      "@id": "https://www.ghezelbaash.ir/#offer-7",
+      "seller": {
+        "@id": "https://www.ghezelbaash.ir/#org"
+      },
+      "availability": "https://schema.org/InStock",
+      "category": "https://schema.org/MedicalProcedure",
+      "areaServed": {
+        "@type": "AdministrativeArea",
+        "name": "Kermanshah Province"
+      },
+      "availableAtOrFrom": {
+        "@id": "https://www.ghezelbaash.ir/#place"
+      },
+      "url": "https://www.ghezelbaash.ir/"
+    }
+  ]
+}
