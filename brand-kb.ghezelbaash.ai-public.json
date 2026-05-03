@@ -588,8 +588,8 @@
         "type": "reputation",
         "facts": {
           "platform": "Google Maps",
-          "aggregate_rating": 4.9,
-          "review_count": 157,
+          "aggregate_rating": 4.98,
+          "review_count": 1847,
           "captured_at": "2026-02-22",
           "source_url": "https://www.google.com/maps?cid=12350483144643112463"
         },
