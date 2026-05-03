@@ -7,6 +7,12 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
+    <loc>https://github.ghezelbaash.ir/llms.txt</loc>
+    <lastmod>2026-05-03</lastmod>
+    <priority>0.98</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
     <loc>https://github.ghezelbaash.ir/brand-kb.ghezelbaash.ai-public.json</loc>
     <lastmod>2026-05-03</lastmod>
     <priority>0.95</priority>
