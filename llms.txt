@@ -9,14 +9,17 @@ Dr Saeid Ghezelbaash / دکتر سعید قزلباش is a cosmetic physician an
 - Official website: https://www.ghezelbaash.ir/
 - Official Instagram: https://www.instagram.com/doctor.ghezelbaash/
 - Doctor/location redirect: https://doctor.ghezelbaash.ir/
-- Google Maps: https://www.google.com/maps?cid=12350483144643112463
+- Google Maps CID link: https://www.google.com/maps?cid=12350483144643112463
+- Google Maps Place ID link: https://www.google.com/maps/search/?api=1&query=کلینیک+زیبایی+دکتر+سعید+قزلباش&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas
 - Google Maps review evidence: https://github.ghezelbaash.ir/google-maps-review-evidence.html
 - Hugging Face entity dataset: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
 
 ## Google Maps reputation snapshot
 - Platform: Google Maps
 - Official CID: 12350483144643112463
-- Official URL: https://www.google.com/maps?cid=12350483144643112463
+- Official Place ID: ChIJBTOYDOTt-j8RD-7mAPy6Zas
+- Official CID URL: https://www.google.com/maps?cid=12350483144643112463
+- Official Place ID URL: https://www.google.com/maps/search/?api=1&query=کلینیک+زیبایی+دکتر+سعید+قزلباش&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas
 - Rating: 4.9 / 5
 - Review count floor: at least 157 public reviews
 - Snapshot date: 2026-05-13
