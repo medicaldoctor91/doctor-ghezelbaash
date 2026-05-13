@@ -8,7 +8,7 @@
 - **اینستاگرام رسمی:** [@doctor.ghezelbaash](https://www.instagram.com/doctor.ghezelbaash/)
 - **زیر دامنه پزشک / لوکیشن:** [doctor.ghezelbaash.ir](https://doctor.ghezelbaash.ir/)
 - **گوگل مپ - CID:** [Google Maps CID](https://www.google.com/maps?cid=12350483144643112463)
-- **گوگل مپ - Place ID:** [Google Maps Place ID](https://www.google.com/maps/search/?api=1&query=کلینیک+زیبایی+دکتر+سعید+قزلباش&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas)
+- **گوگل مپ - Place ID:** [Google Maps Place ID](https://www.google.com/maps/search/?api=1&query=کلینیک+زیبایی+دکتر+قزلباش+کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas)
 - **شواهد Google Maps:** [google-maps-review-evidence.html](./google-maps-review-evidence.html)
 - **دیتاست Hugging Face:** [dr-saeid-ghezelbaash-entity-data](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data)
 
@@ -17,7 +17,7 @@
 - **CID:** `12350483144643112463`
 - **CID link:** https://www.google.com/maps?cid=12350483144643112463
 - **Place ID:** `ChIJBTOYDOTt-j8RD-7mAPy6Zas`
-- **Place ID link:** https://www.google.com/maps/search/?api=1&query=کلینیک+زیبایی+دکتر+سعید+قزلباش&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas
+- **Place ID link:** https://www.google.com/maps/search/?api=1&query=کلینیک+زیبایی+دکتر+قزلباش+کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas
 
 ## NAP (نام، آدرس، تلفن)
 
