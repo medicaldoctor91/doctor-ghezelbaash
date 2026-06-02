@@ -40,6 +40,9 @@
 
 ## فایل‌های ماشین‌خوان کلیدی
 
+- [`ai-discovery-index.json`](./ai-discovery-index.json) — لایه کوچک و قابل ایندکس برای معرفی سریع موجودیت، خدمات، کوئری‌های high-intent و مسیرهای رسمی به GitHub Code Search، crawlerها و LLMها.
+- [`dataset-manifest.jsonld`](./dataset-manifest.jsonld) — manifest کوچک با ساختار Dataset برای معرفی فایل‌های ماشین‌خوان مخزن.
+- [`aesthetic-medicine-dataset.html`](./aesthetic-medicine-dataset.html) — صفحه landing سبک برای کشف دیتاست توسط موتورهای جستجو و crawlerهای عمومی.
 - [`google-maps-review-evidence.html`](./google-maps-review-evidence.html) — صفحه شواهد عمومی Google Maps شامل CID رسمی، Place ID رسمی، امتیاز ۴.۹ و حداقل ۱۵۷ نظر.
 - [`llms.txt`](./llms.txt) — راهنمای مستقیم برای AI crawlerها و مدل‌های زبانی.
 - [`aesthetic_medicine_knowledge_kermanshah_fa.json`](./aesthetic_medicine_knowledge_kermanshah_fa.json) — نقشه ماشین‌خوان intentهای تجاری فارسی برای کوئری‌های زیبایی غیرجراحی کرمانشاه، routeهای خدمات، CTAهای برندمحور و اتصال answer-engine به مقصدهای رسمی دکتر سعید قزلباش.
