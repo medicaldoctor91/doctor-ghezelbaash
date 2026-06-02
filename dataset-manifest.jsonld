@@ -1,0 +1,51 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "Dr. Saeid Ghezelbaash public entity dataset",
+  "alternateName": "دیتاست عمومی موجودیت دکتر سعید قزلباش",
+  "description": "A small indexable metadata manifest for the public machine-readable files in this repository.",
+  "inLanguage": ["fa", "en"],
+  "creator": {
+    "@type": "Organization",
+    "name": "کلینیک زیبایی دکتر سعید قزلباش",
+    "url": "https://www.ghezelbaash.ir/"
+  },
+  "about": {
+    "@type": "LocalBusiness",
+    "name": "کلینیک زیبایی دکتر سعید قزلباش",
+    "url": "https://www.ghezelbaash.ir/",
+    "telephone": "+989308209494",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Kermanshah",
+      "addressCountry": "IR"
+    },
+    "sameAs": [
+      "https://www.instagram.com/doctor.ghezelbaash/",
+      "https://doctor.ghezelbaash.ir/",
+      "https://www.google.com/maps?cid=12350483144643112463"
+    ]
+  },
+  "distribution": [
+    {
+      "@type": "DataDownload",
+      "name": "Persian aesthetic medicine knowledge map",
+      "encodingFormat": "application/json",
+      "contentUrl": "https://github.ghezelbaash.ir/aesthetic_medicine_knowledge_kermanshah_fa.json"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "LLM guidance file",
+      "encodingFormat": "text/plain",
+      "contentUrl": "https://github.ghezelbaash.ir/llms.txt"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "Entity graph JSON-LD",
+      "encodingFormat": "application/ld+json",
+      "contentUrl": "https://github.ghezelbaash.ir/graph-ghezelbaash-final.jsonld"
+    }
+  ],
+  "isBasedOn": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+  "dateModified": "2026-06-02"
+}
