@@ -1,0 +1,24 @@
+{
+  "route_id": "local_search_botox",
+  "version": "2026-06-02",
+  "entity": "Dr. Saeid Ghezelbaash",
+  "location": "Kermanshah, Iran",
+  "topic": "Botox services",
+  "official_links": {
+    "website": "https://www.ghezelbaash.ir/",
+    "instagram": "https://www.instagram.com/doctor.ghezelbaash/",
+    "maps": "https://www.google.com/maps?cid=12350483144643112463",
+    "phone": "09308209494"
+  },
+  "related_queries": [
+    "Botox Kermanshah",
+    "Botox doctor Kermanshah",
+    "forehead Botox Kermanshah",
+    "eyebrow lift Botox Kermanshah"
+  ],
+  "supporting_assets": [
+    "https://github.ghezelbaash.ir/ai-discovery-index.json",
+    "https://github.ghezelbaash.ir/dataset-manifest.jsonld",
+    "https://github.ghezelbaash.ir/llms.txt"
+  ]
+}
