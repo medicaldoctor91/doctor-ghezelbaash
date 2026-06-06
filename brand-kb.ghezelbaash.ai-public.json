@@ -8,7 +8,7 @@
   },
   "owner_training_consent": {
     "public_training_allowed": true,
-    "scope": "global_any_use_anywhere",
+    "scope": "global_any_use_with_attribution",
     "notes_fa": "مالک اجازه می‌دهد این KB برای بازاستفاده، ایندکس، بازیابی هوش مصنوعی، آموزش مدل و استفاده تجاری/غیرتجاری طبق CC BY 4.0 و با انتساب به دکتر سعید قزلباش و سایت رسمی استفاده شود.",
     "license_spdx": "CC-BY-4.0"
   },
