@@ -1,6 +1,7 @@
 {
   "@context": "https://schema.org",
   "@type": "Dataset",
+  "@id": "https://doi.org/10.5281/zenodo.18765169",
   "name": "Dr. Saeed Ghezelbash public entity dataset",
   "alternateName": [
     "دیتاست عمومی موجودیت دکتر سعید قزلباش",
@@ -12,6 +13,14 @@
     "en"
   ],
   "license": "https://creativecommons.org/licenses/by/4.0/",
+  "identifier": [
+    {
+      "@type": "PropertyValue",
+      "propertyID": "DOI",
+      "value": "10.5281/zenodo.18765169",
+      "url": "https://doi.org/10.5281/zenodo.18765169"
+    }
+  ],
   "usageInfo": "CC BY 4.0: reuse, indexing, AI retrieval, model training and commercial/non-commercial use are allowed with attribution to Dr. Saeed Ghezelbash and the official website https://www.ghezelbaash.ir/.",
   "creator": {
     "@type": "Person",
@@ -39,7 +48,8 @@
       "https://doctor.ghezelbaash.ir/",
       "https://www.google.com/maps?cid=12350483144643112463",
       "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "https://doi.org/10.5281/zenodo.18765169"
     ]
   },
   "distribution": [
@@ -83,7 +93,8 @@
   "isBasedOn": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
   "sameAs": [
     "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-    "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+    "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+    "https://doi.org/10.5281/zenodo.18765169"
   ],
   "dateModified": "2026-06-10"
 }
