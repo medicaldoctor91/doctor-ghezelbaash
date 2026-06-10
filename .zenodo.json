@@ -1,6 +1,7 @@
 {
   "title": "Dr. Saeed Ghezelbash Aesthetic Clinic Entity Dataset and Structured Data Hub",
   "upload_type": "dataset",
+  "publication_date": "2026-06-10",
   "description": "Public machine-readable entity dataset and structured-data hub for Dr. Saeed Ghezelbash / دکتر سعید قزلباش, an aesthetic medicine physician and clinic entity in Kermanshah, Iran. This repository contains canonical identity data, public NAP signals, sameAs links, Schema.org JSON-LD, AI-readable summaries, service-intent mappings, Google Maps identifiers, and supporting metadata for search engines, AI crawlers, knowledge graphs, and local aesthetic-medicine retrieval systems.",
   "creators": [
     {
@@ -36,17 +37,17 @@
     {
       "identifier": "https://www.ghezelbaash.ir/",
       "relation": "isSupplementTo",
-      "resource_type": "publication-website"
+      "resource_type": "other"
     },
     {
       "identifier": "https://www.instagram.com/doctor.ghezelbaash/",
       "relation": "isSupplementTo",
-      "resource_type": "publication-website"
+      "resource_type": "other"
     },
     {
       "identifier": "https://www.google.com/maps?cid=12350483144643112463",
       "relation": "references",
-      "resource_type": "publication-website"
+      "resource_type": "other"
     },
     {
       "identifier": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
