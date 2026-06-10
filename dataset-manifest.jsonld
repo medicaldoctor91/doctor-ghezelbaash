@@ -82,12 +82,6 @@
       "name": "Zenodo publishing metadata",
       "encodingFormat": "application/json",
       "contentUrl": "https://github.ghezelbaash.ir/.zenodo.json"
-    },
-    {
-      "@type": "DataDownload",
-      "name": "Kaggle publishing metadata",
-      "encodingFormat": "application/json",
-      "contentUrl": "https://github.ghezelbaash.ir/kaggle/dataset-metadata.json"
     }
   ],
   "isBasedOn": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
