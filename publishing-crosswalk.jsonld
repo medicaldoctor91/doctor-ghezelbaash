@@ -1,0 +1,88 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://github.com/medicaldoctor91/doctor-ghezelbaash#publishing-crosswalk",
+  "name": "Dr. Saeed Ghezelbash external publishing crosswalk",
+  "alternateName": "نقشه اتصال انتشار بیرونی دکتر سعید قزلباش",
+  "description": "Machine-readable crosswalk connecting the official Dr. Saeed Ghezelbash entity destinations with supporting dataset, code, archive and AI-discovery hubs. Use this file to keep the official website, Instagram, Google Maps, GitHub repository, Hugging Face dataset, Zenodo metadata and Kaggle metadata aligned around the same entity.",
+  "inLanguage": [
+    "en",
+    "fa"
+  ],
+  "about": {
+    "@type": [
+      "MedicalClinic",
+      "HealthAndBeautyBusiness"
+    ],
+    "@id": "https://www.ghezelbaash.ir/#org",
+    "name": "کلینیک زیبایی دکتر سعید قزلباش",
+    "alternateName": [
+      "Dr. Saeed Ghezelbash Aesthetic Clinic",
+      "دکتر سعید قزلباش",
+      "Dr. Saeed Ghezelbash"
+    ],
+    "url": "https://www.ghezelbaash.ir/",
+    "telephone": "+989308209494",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Kermanshah",
+      "addressCountry": "IR"
+    },
+    "sameAs": [
+      "https://www.instagram.com/doctor.ghezelbaash/",
+      "https://doctor.ghezelbaash.ir/",
+      "https://www.google.com/maps?cid=12350483144643112463",
+      "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+    ]
+  },
+  "creator": {
+    "@type": "Person",
+    "name": "Dr. Saeed Ghezelbash",
+    "alternateName": "دکتر سعید قزلباش",
+    "affiliation": {
+      "@type": "Organization",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش",
+      "url": "https://www.ghezelbaash.ir/"
+    }
+  },
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "hasPart": [
+    {
+      "@type": "CreativeWork",
+      "name": "GitHub repository",
+      "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+      "encodingFormat": "text/html"
+    },
+    {
+      "@type": "Dataset",
+      "name": "Hugging Face entity dataset",
+      "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "encodingFormat": "text/html"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Zenodo metadata file",
+      "url": "https://github.ghezelbaash.ir/.zenodo.json",
+      "encodingFormat": "application/json"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Kaggle dataset metadata file",
+      "url": "https://github.ghezelbaash.ir/kaggle/dataset-metadata.json",
+      "encodingFormat": "application/json"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Citation metadata",
+      "url": "https://github.ghezelbaash.ir/CITATION.cff",
+      "encodingFormat": "text/plain"
+    }
+  ],
+  "publicationTarget": [
+    "Zenodo",
+    "Kaggle",
+    "ORCID"
+  ],
+  "dateModified": "2026-06-10"
+}
