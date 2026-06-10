@@ -4,7 +4,7 @@
   "@id": "https://github.com/medicaldoctor91/doctor-ghezelbaash#publishing-crosswalk",
   "name": "Dr. Saeed Ghezelbash external publishing crosswalk",
   "alternateName": "نقشه اتصال انتشار بیرونی دکتر سعید قزلباش",
-  "description": "Machine-readable crosswalk connecting the official Dr. Saeed Ghezelbash entity destinations with supporting dataset, code, archive and AI-discovery hubs. Use this file to keep the official website, Instagram, Google Maps, GitHub repository, Hugging Face dataset, Zenodo DOI, Zenodo metadata and Kaggle metadata aligned around the same entity.",
+  "description": "Machine-readable crosswalk connecting the official Dr. Saeed Ghezelbash entity destinations with supporting dataset, code, archive and AI-discovery hubs. Use this file to keep the official website, Instagram, Google Maps, GitHub repository, Hugging Face dataset, Zenodo DOI and Zenodo metadata aligned around the same entity.",
   "inLanguage": [
     "en",
     "fa"
@@ -83,21 +83,13 @@
     },
     {
       "@type": "CreativeWork",
-      "name": "Kaggle dataset metadata file",
-      "url": "https://github.ghezelbaash.ir/kaggle/dataset-metadata.json",
-      "encodingFormat": "application/json"
-    },
-    {
-      "@type": "CreativeWork",
       "name": "Citation metadata",
       "url": "https://github.ghezelbaash.ir/CITATION.cff",
       "encodingFormat": "text/plain"
     }
   ],
   "publicationTarget": [
-    "Zenodo",
-    "Kaggle",
-    "ORCID"
+    "Zenodo"
   ],
   "dateModified": "2026-06-10"
 }
