@@ -1,20 +1,32 @@
 {
   "@context": "https://schema.org",
   "@type": "Dataset",
-  "name": "Dr. Saeid Ghezelbaash public entity dataset",
-  "alternateName": "دیتاست عمومی موجودیت دکتر سعید قزلباش",
-  "description": "A small indexable metadata manifest for the public machine-readable files in this repository.",
-  "inLanguage": ["fa", "en"],
+  "name": "Dr. Saeed Ghezelbash public entity dataset",
+  "alternateName": [
+    "دیتاست عمومی موجودیت دکتر سعید قزلباش",
+    "Dr. Saeed Ghezelbash Aesthetic Clinic Entity Dataset and Structured Data Hub"
+  ],
+  "description": "A small indexable metadata manifest for the public machine-readable files in this repository, built to support entity disambiguation, AI retrieval, local search and structured-data discovery for Dr. Saeed Ghezelbash / دکتر سعید قزلباش in Kermanshah, Iran.",
+  "inLanguage": [
+    "fa",
+    "en"
+  ],
   "license": "https://creativecommons.org/licenses/by/4.0/",
-  "usageInfo": "CC BY 4.0: reuse, indexing, AI retrieval, model training and commercial/non-commercial use are allowed with attribution to Dr. Saeid Ghezelbaash and the official website https://www.ghezelbaash.ir/.",
+  "usageInfo": "CC BY 4.0: reuse, indexing, AI retrieval, model training and commercial/non-commercial use are allowed with attribution to Dr. Saeed Ghezelbash and the official website https://www.ghezelbaash.ir/.",
   "creator": {
-    "@type": "Organization",
-    "name": "کلینیک زیبایی دکتر سعید قزلباش",
-    "url": "https://www.ghezelbaash.ir/"
+    "@type": "Person",
+    "name": "Dr. Saeed Ghezelbash",
+    "alternateName": "دکتر سعید قزلباش",
+    "affiliation": {
+      "@type": "Organization",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش",
+      "url": "https://www.ghezelbaash.ir/"
+    }
   },
   "about": {
     "@type": "LocalBusiness",
     "name": "کلینیک زیبایی دکتر سعید قزلباش",
+    "alternateName": "Dr. Saeed Ghezelbash Aesthetic Clinic",
     "url": "https://www.ghezelbaash.ir/",
     "telephone": "+989308209494",
     "address": {
@@ -25,7 +37,9 @@
     "sameAs": [
       "https://www.instagram.com/doctor.ghezelbaash/",
       "https://doctor.ghezelbaash.ir/",
-      "https://www.google.com/maps?cid=12350483144643112463"
+      "https://www.google.com/maps?cid=12350483144643112463",
+      "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
     ]
   },
   "distribution": [
@@ -46,8 +60,30 @@
       "name": "Entity graph JSON-LD",
       "encodingFormat": "application/ld+json",
       "contentUrl": "https://github.ghezelbaash.ir/graph-ghezelbaash-final.jsonld"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "Citation metadata",
+      "encodingFormat": "text/plain",
+      "contentUrl": "https://github.ghezelbaash.ir/CITATION.cff"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "Zenodo publishing metadata",
+      "encodingFormat": "application/json",
+      "contentUrl": "https://github.ghezelbaash.ir/.zenodo.json"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "Kaggle publishing metadata",
+      "encodingFormat": "application/json",
+      "contentUrl": "https://github.ghezelbaash.ir/kaggle/dataset-metadata.json"
     }
   ],
   "isBasedOn": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
-  "dateModified": "2026-06-06"
+  "sameAs": [
+    "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+    "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+  ],
+  "dateModified": "2026-06-10"
 }
