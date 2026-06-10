@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://github.ghezelbaash.ir/</loc>
-    <lastmod>2026-06-02</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
   </url>
@@ -14,7 +14,13 @@
   </url>
   <url>
     <loc>https://github.ghezelbaash.ir/dataset-manifest.jsonld</loc>
-    <lastmod>2026-06-02</lastmod>
+    <lastmod>2026-06-10</lastmod>
+    <priority>0.99</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://github.ghezelbaash.ir/publishing-crosswalk.jsonld</loc>
+    <lastmod>2026-06-10</lastmod>
     <priority>0.99</priority>
     <changefreq>weekly</changefreq>
   </url>
@@ -32,7 +38,7 @@
   </url>
   <url>
     <loc>https://github.ghezelbaash.ir/llms.txt</loc>
-    <lastmod>2026-05-13</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <priority>0.98</priority>
     <changefreq>weekly</changefreq>
   </url>
@@ -55,6 +61,24 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
+    <loc>https://github.ghezelbaash.ir/CITATION.cff</loc>
+    <lastmod>2026-06-10</lastmod>
+    <priority>0.94</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://github.ghezelbaash.ir/.zenodo.json</loc>
+    <lastmod>2026-06-10</lastmod>
+    <priority>0.94</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://github.ghezelbaash.ir/kaggle/dataset-metadata.json</loc>
+    <lastmod>2026-06-10</lastmod>
+    <priority>0.94</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
     <loc>https://github.ghezelbaash.ir/dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json</loc>
     <lastmod>2026-05-03</lastmod>
     <priority>0.90</priority>
@@ -74,7 +98,7 @@
   </url>
   <url>
     <loc>https://github.ghezelbaash.ir/README.md</loc>
-    <lastmod>2026-06-02</lastmod>
+    <lastmod>2026-06-10</lastmod>
     <priority>0.65</priority>
     <changefreq>weekly</changefreq>
   </url>
