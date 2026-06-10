@@ -73,12 +73,6 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/kaggle/dataset-metadata.json</loc>
-    <lastmod>2026-06-10</lastmod>
-    <priority>0.94</priority>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
     <loc>https://github.ghezelbaash.ir/dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json</loc>
     <lastmod>2026-05-03</lastmod>
     <priority>0.90</priority>
