@@ -26,6 +26,6 @@
     "Persian SEO",
     "Google Maps CID"
   ],
-  "subtitle": "Machine-readable public entity dataset for Dr. Saeed Ghezelbash / دکتر سعید قزلباش in Kermanshah, Iran.",
+  "subtitle": "Public entity data for Dr. Saeed Ghezelbash in Kermanshah.",
   "description": "Public machine-readable entity dataset for Dr. Saeed Ghezelbash / دکتر سعید قزلباش, an aesthetic medicine physician and clinic entity in Kermanshah, Iran. The dataset contains canonical identity data, public NAP signals, sameAs links, Schema.org JSON-LD, AI-readable summaries, service-intent mappings, Google Maps identifiers, and supporting metadata for search engines, AI crawlers, knowledge graphs, and local aesthetic-medicine retrieval systems. Primary destinations: https://www.ghezelbaash.ir/ and https://www.instagram.com/doctor.ghezelbaash/. Companion sources: https://github.com/medicaldoctor91/doctor-ghezelbaash and https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data."
 }
