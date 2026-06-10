@@ -3,6 +3,7 @@ message: "If you use this public entity dataset or structured-data repository, c
 title: "Dr. Saeed Ghezelbash Aesthetic Clinic Entity Dataset and Structured Data Hub"
 version: "1.0.0"
 date-released: 2026-06-10
+doi: "10.5281/zenodo.18765169"
 license: "CC-BY-4.0"
 repository-code: "https://github.com/medicaldoctor91/doctor-ghezelbaash"
 url: "https://www.ghezelbaash.ir/"
@@ -34,6 +35,12 @@ abstract: >-
   public NAP signals, sameAs links, Schema.org JSON-LD, AI-readable summaries, service-intent mappings, Google Maps identifiers,
   and supporting metadata for search engines, AI crawlers, knowledge graphs, and local aesthetic-medicine retrieval systems.
 identifiers:
+  - type: doi
+    value: "10.5281/zenodo.18765169"
+    description: "Zenodo DOI"
+  - type: url
+    value: "https://doi.org/10.5281/zenodo.18765169"
+    description: "Zenodo DOI URL"
   - type: url
     value: "https://www.ghezelbaash.ir/"
     description: "Official website"
