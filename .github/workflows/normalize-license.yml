@@ -25,7 +25,7 @@ jobs:
           text = text.replace('"license_spdx": "CC0-1.0"', '"license_spdx": "CC-BY-4.0"')
           text = text.replace(
               '"summary_en": "CC0-1.0: Free for any use (copy/modify/distribute/train models/commercial) without needing permission."',
-              '"summary_en": "CC BY 4.0: Free for reuse, indexing, AI retrieval, model training and commercial/non-commercial use with attribution to Dr. Saeid Ghezelbaash and https://www.ghezelbaash.ir/."'
+              '"summary_en": "CC BY 4.0: Free for reuse, indexing, AI retrieval, model training and commercial/non-commercial use with attribution to Dr. Saeed Ghezelbaash and https://www.ghezelbaash.ir/."'
           )
           text = text.replace(
               '"summary_fa": "اجازه برای هر استفاده‌ای (آموزش مدل‌های عمومی/تجاری/کپی/توزیع/تغییر) بدون نیاز به اجازه جداگانه."',
