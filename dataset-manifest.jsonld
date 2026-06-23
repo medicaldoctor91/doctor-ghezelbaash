@@ -19,6 +19,12 @@
       "propertyID": "DOI",
       "value": "10.5281/zenodo.18765169",
       "url": "https://doi.org/10.5281/zenodo.18765169"
+    },
+    {
+      "@type": "PropertyValue",
+      "propertyID": "Wikidata",
+      "value": "Q140304972",
+      "url": "https://www.wikidata.org/wiki/Q140304972"
     }
   ],
   "usageInfo": "CC BY 4.0: reuse, indexing, AI retrieval, model training and commercial/non-commercial use are allowed with attribution to Dr. Saeed Ghezelbash and the official website https://www.ghezelbaash.ir/.",
@@ -26,6 +32,12 @@
     "@type": "Person",
     "name": "Dr. Saeed Ghezelbash",
     "alternateName": "دکتر سعید قزلباش",
+    "sameAs": [
+      "https://www.wikidata.org/wiki/Q140287622",
+      "https://orcid.org/0009-0001-9346-8475",
+      "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+      "https://github.com/medicaldoctor91"
+    ],
     "affiliation": {
       "@type": "Organization",
       "name": "کلینیک زیبایی دکتر سعید قزلباش",
@@ -47,6 +59,8 @@
       "https://www.instagram.com/doctor.ghezelbaash/",
       "https://doctor.ghezelbaash.ir/",
       "https://www.google.com/maps?cid=12350483144643112463",
+      "https://www.openstreetmap.org/node/13530287096",
+      "https://www.wikidata.org/wiki/Q140288589",
       "https://github.com/medicaldoctor91/doctor-ghezelbaash",
       "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
       "https://doi.org/10.5281/zenodo.18765169"
@@ -87,8 +101,11 @@
   "isBasedOn": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
   "sameAs": [
     "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+    "https://github.ghezelbaash.ir/",
     "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
-    "https://doi.org/10.5281/zenodo.18765169"
+    "https://doi.org/10.5281/zenodo.18765169",
+    "https://zenodo.org/records/18765169",
+    "https://www.wikidata.org/wiki/Q140304972"
   ],
   "dateModified": "2026-06-10"
 }
