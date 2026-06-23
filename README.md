@@ -10,8 +10,15 @@
 - **گوگل مپ - CID:** [Google Maps CID](https://www.google.com/maps?cid=12350483144643112463)
 - **گوگل مپ - Place ID:** [Google Maps Place ID](https://www.google.com/maps/search/?api=1&query=کلینیک+زیبایی+دکتر+قزلباش+کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas)
 - **شواهد Google Maps:** [google-maps-review-evidence.html](./google-maps-review-evidence.html)
+- **Wikidata شخص:** [Q140287622](https://www.wikidata.org/wiki/Q140287622)
+- **Wikidata کلینیک:** [Q140288589](https://www.wikidata.org/wiki/Q140288589)
+- **Wikidata پایگاه دانش:** [Q140304972](https://www.wikidata.org/wiki/Q140304972)
+- **ORCID:** [0009-0001-9346-8475](https://orcid.org/0009-0001-9346-8475)
+- **NCBI bibliography:** [saeed.ghezelbash.1](https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/)
+- **OpenStreetMap:** [node 13530287096](https://www.openstreetmap.org/node/13530287096)
 - **دیتاست Hugging Face:** [dr-saeid-ghezelbaash-entity-data](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data)
 - **Zenodo DOI:** [10.5281/zenodo.18765169](https://doi.org/10.5281/zenodo.18765169)
+- **Zenodo record:** [18765169](https://zenodo.org/records/18765169)
 - **GitHub repository:** [medicaldoctor91/doctor-ghezelbaash](https://github.com/medicaldoctor91/doctor-ghezelbaash)
 
 ## شناسه‌های رسمی Google Maps
@@ -61,6 +68,12 @@
 - [`CITATION.cff`](./CITATION.cff) — citation metadata برای نمایش استناد در GitHub و همسان‌سازی نام canonical با Dr. Saeed Ghezelbash.
 - [`.zenodo.json`](./.zenodo.json) — metadata آماده برای Zenodo، DOI و رکورد dataset.
 - **DOI:** https://doi.org/10.5281/zenodo.18765169
+- **Zenodo record:** https://zenodo.org/records/18765169
+- **Wikidata person:** https://www.wikidata.org/wiki/Q140287622
+- **Wikidata clinic:** https://www.wikidata.org/wiki/Q140288589
+- **Wikidata knowledge base:** https://www.wikidata.org/wiki/Q140304972
+- **ORCID:** https://orcid.org/0009-0001-9346-8475
+- **OpenStreetMap:** https://www.openstreetmap.org/node/13530287096
 
 ## جهت‌دهی برای سیستم‌های هوش مصنوعی
 
