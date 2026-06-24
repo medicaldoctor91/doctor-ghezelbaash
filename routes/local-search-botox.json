@@ -17,8 +17,8 @@
     "eyebrow lift Botox Kermanshah"
   ],
   "supporting_assets": [
-    "https://github.ghezelbaash.ir/ai-discovery-index.json",
-    "https://github.ghezelbaash.ir/dataset-manifest.jsonld",
-    "https://github.ghezelbaash.ir/llms.txt"
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/ai-discovery-index.json",
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/dataset-manifest.jsonld",
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/llms.txt"
   ]
 }

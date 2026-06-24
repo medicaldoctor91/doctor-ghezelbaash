@@ -1,97 +1,97 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://github.ghezelbaash.ir/</loc>
+    <loc>https://github.com/medicaldoctor91/doctor-ghezelbaash</loc>
     <lastmod>2026-06-10</lastmod>
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/ai-discovery-index.json</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/ai-discovery-index.json</loc>
     <lastmod>2026-06-02</lastmod>
     <priority>1.0</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/dataset-manifest.jsonld</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/dataset-manifest.jsonld</loc>
     <lastmod>2026-06-10</lastmod>
     <priority>0.99</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/publishing-crosswalk.jsonld</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/publishing-crosswalk.jsonld</loc>
     <lastmod>2026-06-10</lastmod>
     <priority>0.99</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/aesthetic-medicine-dataset.html</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/aesthetic-medicine-dataset.html</loc>
     <lastmod>2026-06-02</lastmod>
     <priority>0.99</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/google-maps-review-evidence.html</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/google-maps-review-evidence.html</loc>
     <lastmod>2026-05-13</lastmod>
     <priority>0.99</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/llms.txt</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/llms.txt</loc>
     <lastmod>2026-06-10</lastmod>
     <priority>0.98</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/aesthetic_medicine_knowledge_kermanshah_fa.json</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/aesthetic_medicine_knowledge_kermanshah_fa.json</loc>
     <lastmod>2026-05-13</lastmod>
     <priority>0.97</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/brand-kb.ghezelbaash.ai-public.json</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/brand-kb.ghezelbaash.ai-public.json</loc>
     <lastmod>2026-05-03</lastmod>
     <priority>0.95</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/graph-ghezelbaash-final.jsonld</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/graph-ghezelbaash-final.jsonld</loc>
     <lastmod>2026-05-03</lastmod>
     <priority>0.95</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/CITATION.cff</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/CITATION.cff</loc>
     <lastmod>2026-06-10</lastmod>
     <priority>0.94</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/.zenodo.json</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/.zenodo.json</loc>
     <lastmod>2026-06-10</lastmod>
     <priority>0.94</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json</loc>
     <lastmod>2026-05-03</lastmod>
     <priority>0.90</priority>
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/logo.png</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png</loc>
     <lastmod>2026-05-03</lastmod>
     <priority>0.70</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/doctor.jpg</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg</loc>
     <lastmod>2026-05-03</lastmod>
     <priority>0.70</priority>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://github.ghezelbaash.ir/README.md</loc>
+    <loc>https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/README.md</loc>
     <lastmod>2026-06-10</lastmod>
     <priority>0.65</priority>
     <changefreq>weekly</changefreq>

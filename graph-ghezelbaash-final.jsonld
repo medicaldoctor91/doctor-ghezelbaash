@@ -694,7 +694,7 @@
     {
       "@type": "ImageObject",
       "@id": "https://www.ghezelbaash.ir/#logo",
-      "url": "https://github.ghezelbaash.ir/logo.png",
+      "url": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png",
       "width": 768,
       "height": 768,
       "caption": "لوگوی کلینیک زیبایی دکتر سعید قزلباش"
@@ -702,7 +702,7 @@
     {
       "@type": "ImageObject",
       "@id": "https://www.ghezelbaash.ir/#doctorImage",
-      "url": "https://github.ghezelbaash.ir/doctor.jpg",
+      "url": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg",
       "width": 1000,
       "height": 667,
       "caption": "پرتره دکتر سعید قزلباش — پزشک زیبایی"

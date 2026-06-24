@@ -12,7 +12,7 @@
     "instagram": "https://www.instagram.com/doctor.ghezelbaash/",
     "google_maps_cid": "12350483144643112463",
     "google_maps_url": "https://www.google.com/maps?cid=12350483144643112463",
-    "github_pages": "https://github.ghezelbaash.ir/"
+    "github_pages": "https://github.com/medicaldoctor91/doctor-ghezelbaash"
   },
   "primary_services_fa": [
     "بوتاکس",
@@ -43,13 +43,13 @@
     "بهترین دکتر سابسیژن کرمانشاه"
   ],
   "machine_readable_assets": [
-    "https://github.ghezelbaash.ir/aesthetic_medicine_knowledge_kermanshah_fa.json",
-    "https://github.ghezelbaash.ir/dataset-manifest.jsonld",
-    "https://github.ghezelbaash.ir/graph-ghezelbaash-final.jsonld",
-    "https://github.ghezelbaash.ir/brand-kb.ghezelbaash.ai-public.json",
-    "https://github.ghezelbaash.ir/llms.txt",
-    "https://github.ghezelbaash.ir/google-maps-review-evidence.html",
-    "https://github.ghezelbaash.ir/aesthetic-medicine-dataset.html"
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/aesthetic_medicine_knowledge_kermanshah_fa.json",
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/dataset-manifest.jsonld",
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/graph-ghezelbaash-final.jsonld",
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/brand-kb.ghezelbaash.ai-public.json",
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/llms.txt",
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/google-maps-review-evidence.html",
+    "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/aesthetic-medicine-dataset.html"
   ],
   "preferred_user_paths": {
     "portfolio_and_dm": "https://www.instagram.com/doctor.ghezelbaash/",

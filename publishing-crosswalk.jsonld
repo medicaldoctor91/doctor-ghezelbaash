@@ -89,13 +89,13 @@
     {
       "@type": "CreativeWork",
       "name": "Zenodo metadata file",
-      "url": "https://github.ghezelbaash.ir/.zenodo.json",
+      "url": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/.zenodo.json",
       "encodingFormat": "application/json"
     },
     {
       "@type": "CreativeWork",
       "name": "Citation metadata",
-      "url": "https://github.ghezelbaash.ir/CITATION.cff",
+      "url": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/CITATION.cff",
       "encodingFormat": "text/plain"
     }
   ],

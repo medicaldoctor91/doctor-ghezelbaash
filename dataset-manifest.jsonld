@@ -71,37 +71,37 @@
       "@type": "DataDownload",
       "name": "Persian aesthetic medicine knowledge map",
       "encodingFormat": "application/json",
-      "contentUrl": "https://github.ghezelbaash.ir/aesthetic_medicine_knowledge_kermanshah_fa.json"
+      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/aesthetic_medicine_knowledge_kermanshah_fa.json"
     },
     {
       "@type": "DataDownload",
       "name": "LLM guidance file",
       "encodingFormat": "text/plain",
-      "contentUrl": "https://github.ghezelbaash.ir/llms.txt"
+      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/llms.txt"
     },
     {
       "@type": "DataDownload",
       "name": "Entity graph JSON-LD",
       "encodingFormat": "application/ld+json",
-      "contentUrl": "https://github.ghezelbaash.ir/graph-ghezelbaash-final.jsonld"
+      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/graph-ghezelbaash-final.jsonld"
     },
     {
       "@type": "DataDownload",
       "name": "Citation metadata",
       "encodingFormat": "text/plain",
-      "contentUrl": "https://github.ghezelbaash.ir/CITATION.cff"
+      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/CITATION.cff"
     },
     {
       "@type": "DataDownload",
       "name": "Zenodo publishing metadata",
       "encodingFormat": "application/json",
-      "contentUrl": "https://github.ghezelbaash.ir/.zenodo.json"
+      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/.zenodo.json"
     }
   ],
   "isBasedOn": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
   "sameAs": [
     "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-    "https://github.ghezelbaash.ir/",
+    "https://github.com/medicaldoctor91/doctor-ghezelbaash",
     "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
     "https://doi.org/10.5281/zenodo.18765169",
     "https://zenodo.org/records/18765169",

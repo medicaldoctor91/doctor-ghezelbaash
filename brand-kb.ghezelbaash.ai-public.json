@@ -95,8 +95,8 @@
         "apple_maps": "https://maps.apple.com/place?place-id=I98E24B18E14B3087"
       },
       "brand_assets": {
-        "logo_png": "https://github.ghezelbaash.ir/logo.png",
-        "doctor_photo_jpg": "https://github.ghezelbaash.ir/doctor.jpg"
+        "logo_png": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png",
+        "doctor_photo_jpg": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg"
       },
       "facebook_handles": {
         "profile_url": "https://www.facebook.com/ghezelbaash/",
@@ -450,8 +450,8 @@
         "https://gadgetnews.net/927682/beauty-services-kermanshah-dr-saeed-ghazelbash/": "https://gadgetnews.net/927682/beauty-services-kermanshah-dr-saeed-ghazelbash",
         "https://gcorp.cc/en/dr/دکتر_سعید_قزلباش": "https://gcorp.cc/en/dr/دکتر_سعید_قزلباش",
         "https://ghezelbaash.blogspot.com/": "https://ghezelbaash.blogspot.com",
-        "https://github.ghezelbaash.ir/doctor.jpg": "https://github.ghezelbaash.ir/doctor.jpg",
-        "https://github.ghezelbaash.ir/logo.png": "https://github.ghezelbaash.ir/logo.png",
+        "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg",
+        "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png",
         "https://ig.ghezelbaash.ir/": "https://ig.ghezelbaash.ir",
         "https://jaraheto.net/10-of-the-best-botox-doctors-in-kermanshah/": "https://jaraheto.net/10-of-the-best-botox-doctors-in-kermanshah",
         "https://linktr.ee/Doctor.ghezelbaash": "https://linktr.ee/Doctor.ghezelbaash",
@@ -571,8 +571,8 @@
             "apple_maps": "https://maps.apple.com/place?place-id=I98E24B18E14B3087"
           },
           "brand_assets": {
-            "logo_png": "https://github.ghezelbaash.ir/logo.png",
-            "doctor_photo_jpg": "https://github.ghezelbaash.ir/doctor.jpg"
+            "logo_png": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png",
+            "doctor_photo_jpg": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg"
           },
           "facebook_handles": {
             "profile_url": "https://www.facebook.com/ghezelbaash/",
@@ -1508,7 +1508,7 @@
         {
           "@type": "ImageObject",
           "@id": "https://www.ghezelbaash.ir/#logo",
-          "url": "https://github.ghezelbaash.ir/logo.png",
+          "url": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png",
           "width": 768,
           "height": 768,
           "caption": "لوگوی کلینیک زیبایی دکتر سعید قزلباش"
@@ -1516,7 +1516,7 @@
         {
           "@type": "ImageObject",
           "@id": "https://www.ghezelbaash.ir/#doctorImage",
-          "url": "https://github.ghezelbaash.ir/doctor.jpg",
+          "url": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg",
           "width": 1000,
           "height": 667,
           "caption": "پرتره دکتر سعید قزلباش — پزشک زیبایی"
@@ -2132,11 +2132,11 @@
       },
       {
         "q": "لوگوی رسمی برند کجاست؟",
-        "a": "https://github.ghezelbaash.ir/logo.png"
+        "a": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png"
       },
       {
         "q": "عکس رسمی پزشک کجاست؟",
-        "a": "https://github.ghezelbaash.ir/doctor.jpg"
+        "a": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/doctor.jpg"
       },
       {
         "q": "برای رزرو/هماهنگی سریع چه راهی پیشنهاد می‌کنید؟",
@@ -2218,7 +2218,7 @@
       },
       {
         "q": "Where can I get the official logo?",
-        "a": "https://github.ghezelbaash.ir/logo.png"
+        "a": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/logo.png"
       }
     ],
     "aggressive_distribution_plan": {

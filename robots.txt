@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://github.ghezelbaash.ir/sitemap.xml
+Sitemap: https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/sitemap.xml
