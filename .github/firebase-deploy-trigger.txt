@@ -1,4 +1,4 @@
 Firebase Hosting deployment trigger
 
-Triggered after GitHub OIDC setup was completed from Google Cloud Shell.
-Timestamp: 2026-06-24T10:39:00Z
+Triggered after GitHub OIDC IAM repair completed from Google Cloud Shell.
+Timestamp: 2026-06-24T10:47:00Z
