@@ -60,26 +60,52 @@ jobs:
             echo "GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-missing}"
             echo "GOOGLE_GHA_CREDS_PATH=${GOOGLE_GHA_CREDS_PATH:-missing}"
             echo
-          } >> .github/diagnostics/firebase-deploy-status.md
+            echo 'Credential file metadata:'
+            if [ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" ] && [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
+              echo "credential_file_exists=yes"
+              python3 - <<'PY'
+import json, os
+p = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+with open(p, 'r', encoding='utf-8') as f:
+    data = json.load(f)
+for k in ['type','audience','subject_token_type','token_url','service_account_impersonation_url']:
+    v = data.get(k, 'missing')
+    print(f'{k}={v}')
+PY
+            else
+              echo "credential_file_exists=no"
+            fi
+            echo
+          } >> .github/diagnostics/firebase-deploy-status.md 2>&1
 
       - name: Install gcloud
-        if: steps.auth.outcome == 'success'
+        if: always()
         uses: google-github-actions/setup-gcloud@v2
+        continue-on-error: true
 
-      - name: Verify Google identity
-        id: gcloud_verify
-        if: steps.auth.outcome == 'success'
+      - name: Probe Google credentials
+        id: gcloud_probe
+        if: always()
         continue-on-error: true
         run: |
           set +e
           {
-            echo '## Google Identity'
+            echo '## Google Credential Probe'
+            echo 'gcloud version:'
+            gcloud --version
+            echo
+            echo 'gcloud auth list:'
             gcloud auth list --filter=status:ACTIVE
             echo
-            gcloud config list
+            echo 'print access token:'
+            gcloud auth print-access-token --verbosity=debug
+            echo "print_access_token_exit_code=$?"
             echo
-            gcloud projects describe ghezelbaash-kg --format='value(projectId,projectNumber,lifecycleState)'
+            echo 'project describe:'
+            gcloud projects describe ghezelbaash-kg --format='value(projectId,projectNumber,lifecycleState)' --verbosity=debug
+            echo "project_describe_exit_code=$?"
           } >> .github/diagnostics/firebase-deploy-status.md 2>&1
+          exit 0
 
       - name: Install Firebase CLI
         id: install_firebase
@@ -101,12 +127,13 @@ jobs:
           exit 0
 
       - name: Record final outcome
+        if: always()
         run: |
           {
             echo
             echo '## Step Outcomes'
             echo "auth=${{ steps.auth.outcome }}"
-            echo "gcloud_verify=${{ steps.gcloud_verify.outcome }}"
+            echo "gcloud_probe=${{ steps.gcloud_probe.outcome }}"
             echo "install_firebase=${{ steps.install_firebase.outcome }}"
             echo "firebase_deploy=${{ steps.firebase_deploy.outcome }}"
             echo
@@ -114,6 +141,7 @@ jobs:
           } >> .github/diagnostics/firebase-deploy-status.md
 
       - name: Commit diagnostic result
+        if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
