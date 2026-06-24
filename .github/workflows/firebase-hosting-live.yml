@@ -1,0 +1,30 @@
+name: Deploy Firebase Hosting (live)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-hosting-live
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy kg.ghezelbaash.ir to Firebase Hosting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Firebase Hosting live channel
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GHEZELBAASH_KG || secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ghezelbaash-kg
+          channelId: live
+          force: true
