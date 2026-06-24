@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: read
+  checks: write
+  pull-requests: write
 
 jobs:
   deploy:
@@ -19,6 +21,6 @@ jobs:
       - name: Deploy to Firebase Hosting live channel
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GHEZELBAASH_KG }}
           projectId: ghezelbaash-kg
           channelId: live
