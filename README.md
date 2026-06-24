@@ -16,7 +16,7 @@
 - **ORCID:** [0009-0001-9346-8475](https://orcid.org/0009-0001-9346-8475)
 - **NCBI bibliography:** [saeed.ghezelbash.1](https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/)
 - **OpenStreetMap:** [node 13530287096](https://www.openstreetmap.org/node/13530287096)
-- **دیتاست Hugging Face:** [dr-saeid-ghezelbaash-entity-data](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data)
+- **دیتاست Hugging Face:** [dr-saeed-ghezelbaash-entity-data](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeed-ghezelbaash-entity-data)
 - **Zenodo DOI:** [10.5281/zenodo.18765169](https://doi.org/10.5281/zenodo.18765169)
 - **Zenodo record:** [18765169](https://zenodo.org/records/18765169)
 - **GitHub repository:** [medicaldoctor91/doctor-ghezelbaash](https://github.com/medicaldoctor91/doctor-ghezelbaash)
@@ -83,4 +83,4 @@
 
 دیتاست Hugging Face زیر به‌عنوان منبع عمومی مکمل برای داده‌های موجودیت، لینک‌های رسمی، هم‌ارزی‌ها، aliasها، سرویس‌ها و داده‌های ساختاریافته برند استفاده می‌شود:
 
-https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeed-ghezelbaash-entity-data
