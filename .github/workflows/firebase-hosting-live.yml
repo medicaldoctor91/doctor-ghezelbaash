@@ -3,6 +3,13 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches: [ main ]
+    paths:
+      - '**/*.json'
+      - '**/*.jsonld'
+      - '**/*.html'
+      - 'sitemap.xml'
+      - 'robots.txt'
+      - '.github/workflows/firebase-hosting-live.yml'
   workflow_dispatch:
 
 permissions:
@@ -14,9 +21,10 @@ concurrency:
 
 jobs:
   deploy:
+    name: Deploy to Firebase Hosting
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
@@ -24,9 +32,9 @@ jobs:
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
-      - name: Install Firebase CLI
+      - name: Setup Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Deploy to Firebase Hosting
+      - name: Deploy Hosting
         run: |
           firebase deploy --only hosting --project ghezelbaash-kg --force
