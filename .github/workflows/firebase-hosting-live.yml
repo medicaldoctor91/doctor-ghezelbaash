@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: firebase-hosting-live
@@ -21,10 +22,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to Firebase Hosting live channel
-        uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GHEZELBAASH_KG || secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ghezelbaash-kg
-          channelId: live
-          force: true
+          workload_identity_provider: projects/71850730043/locations/global/workloadIdentityPools/github-actions/providers/doctor-ghezelbaash
+          service_account: github-firebase-hosting@ghezelbaash-kg.iam.gserviceaccount.com
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting live channel
+        run: firebase deploy --only hosting --project ghezelbaash-kg --force
