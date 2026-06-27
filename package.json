@@ -1,6 +1,6 @@
 {
   "name": "doctor-ghezelbaash-astro",
-  "version": "2.0.0-astro-migration",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,6 +11,6 @@
     "validate:dist": "node scripts/validate-dist.mjs"
   },
   "dependencies": {
-    "astro": "latest"
+    "astro": "^5.0.0"
   }
 }
