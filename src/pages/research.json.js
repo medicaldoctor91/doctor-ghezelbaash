@@ -3,7 +3,7 @@ import { site } from '../data/site.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.research_identifiers.astro.v1',
+    schema: 'ghezelbaash.research_identifiers.astro.v2',
     canonicalWebsite: site.canonicalBase + '/',
     bibliographyUrl: researchProfile.bibliographyUrl,
     orcid: researchProfile.orcid,
@@ -12,7 +12,9 @@ export function GET() {
       doi: item.doi,
       pmid: item.pmid,
       pmcid: item.pmcid,
-      pubmed: item.pubmed
+      pubmed: item.pubmed,
+      url: item.url || null,
+      reviewReport: item.reviewReport || null
     }))
   };
 
