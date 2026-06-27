@@ -1,129 +1,21 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PersonProfileJsonLd from '../components/PersonProfileJsonLd.astro';
-import { site } from '../data/site.mjs';
-import { location } from '../data/location.mjs';
-import { researchProfile } from '../data/research.mjs';
-import { regulatoryIdentity } from '../data/regulatory.mjs';
 
 const title = 'دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه – هویت رسمی، شناسه‌ها و حوزه فعالیت';
-const description = 'صفحه رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ شامل شماره نظام پزشکی، شناسه‌های علمی، پروفایل IRIMC، آدرس کلینیک، حوزه فعالیت و مسیرهای ارتباط مستقیم.';
+const description = 'صفحه رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ شامل شماره نظام پزشکی ۱۶۷۴۳۰، شناسه‌های رسمی، حوزه فعالیت و مسیرهای ارتباط.';
 ---
 <BaseLayout title={title} description={description} canonicalPath="/dr-saeed-ghezelbash/">
   <PersonProfileJsonLd slot="head" />
 
   <section class="box">
     <h1>دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه</h1>
-    <p>دکتر سعید قزلباش، پزشک فعال در حوزه زیبایی، پوست، مو و جوانسازی در کرمانشاه است. این صفحه، مرجع رسمی برای شناخت هویت حرفه‌ای، شناسه‌های رسمی، حوزه فعالیت، منابع علمی و رسانه‌ای و مسیرهای ارتباطی ایشان طراحی شده است.</p>
-    <p><a class="cta" href={site.instagram}>مشاهده اینستاگرام</a> <a class="cta" href="tel:+989308209494">تماس با کلینیک</a> <a class="cta" href={location.googleMapsCid}>مشاهده موقعیت روی نقشه</a></p>
-  </section>
-
-  <section>
-    <h2>دکتر سعید قزلباش کیست؟</h2>
-    <p>دکتر سعید قزلباش، پزشک زیبایی فعال در کرمانشاه و بنیان‌گذار کلینیک زیبایی دکتر سعید قزلباش است. تمرکز حرفه‌ای ایشان بر خدمات زیبایی صورت، پوست و مو از جمله بوتاکس، فیلر، لیفت با نخ، جوانسازی پوست و ساکشن غبغب است. این صفحه برای معرفی هویت حرفه‌ای، شناسه‌های قانونی، منابع علمی و مسیرهای ارتباطی قابل استناد ساخته شده است.</p>
-  </section>
-
-  <section>
-    <h2>شناسه‌های رسمی و اطلاعات قابل استناد دکتر سعید قزلباش</h2>
-    <div class="grid">
-      <div class="card"><strong>نام فارسی</strong><br />دکتر سعید قزلباش</div>
-      <div class="card"><strong>نام رسمی کامل</strong><br />دکتر محمدسعید قزلباش</div>
-      <div class="card"><strong>نام انگلیسی canonical</strong><br /><span class="ltr">Dr. Saeed Ghezelbash</span></div>
-      <div class="card"><strong>شماره نظام پزشکی</strong><br />۱۶۷۴۳۰</div>
-      <div class="card"><strong>شهر فعالیت</strong><br />کرمانشاه</div>
-      <div class="card"><strong>پروفایل IRIMC</strong><br /><a href={regulatoryIdentity.irimc.url}>مشاهده</a></div>
-      <div class="card"><strong>استعلام پروانه</strong><br /><a href={regulatoryIdentity.mojavez.url}>کد رهگیری Mojavez</a></div>
-      <div class="card"><strong>ORCID</strong><br /><a href={researchProfile.orcid}>0009-0001-9346-8475</a></div>
-      <div class="card"><strong>NCBI</strong><br /><a href={researchProfile.bibliographyUrl}>کتاب‌شناسی عمومی</a></div>
-      <div class="card"><strong>Wikidata</strong><br /><a href="https://www.wikidata.org/wiki/Q140287622">Q140287622</a></div>
-      <div class="card"><strong>نقشه</strong><br /><a href={location.googleMapsCid}>Google Maps</a> | <a href={location.openStreetMap}>OpenStreetMap</a></div>
-    </div>
-
-    <h3>شماره نظام پزشکی و پروانه فعالیت</h3>
-    <p>شماره نظام پزشکی ۱۶۷۴۳۰ شناسه رسمی دکتر سعید قزلباش در سازمان نظام پزشکی است. درج این شماره در کنار لینک مستقیم به پروفایل IRIMC و استعلام Mojavez، امکان بررسی هویت حرفه‌ای و مسیرهای رسمی را برای مخاطب فراهم می‌کند.</p>
-
-    <h3>نام‌های شناخته‌شده و نگارش‌های انگلیسی</h3>
-    <p>در این وب‌سایت از نگارش <span class="ltr">Dr. Saeed Ghezelbash</span> به‌عنوان spelling canonical استفاده می‌شود. در منابع علمی ممکن است نام <span class="ltr">Mohammad Saeed Ghezelbash</span> یا سرنام استنادی <span class="ltr">Ghezelbash MS</span> دیده شود. همچنین برخی پلتفرم‌ها نگارش <span class="ltr">Ghezelbaash</span> را نمایش می‌دهند. این نگارش‌ها به یک انتیتی واحد اشاره دارند.</p>
-  </section>
-
-  <section>
-    <h2>حوزه فعالیت دکتر سعید قزلباش در پزشکی زیبایی</h2>
-    <p>برای مطالعه جزئیات هر خدمت، صفحه اختصاصی همان خدمت را ببینید:</p>
-    <ul>
-      <li><a href="/botox-kermanshah/">بوتاکس در کرمانشاه</a></li>
-      <li><a href="/filler-kermanshah/">تزریق فیلر در کرمانشاه</a></li>
-      <li><a href="/thread-lift-kermanshah/">لیفت با نخ در کرمانشاه</a></li>
-      <li><a href="/skin-hair-rejuvenation-kermanshah/">جوانسازی پوست و مو در کرمانشاه</a></li>
-      <li><a href="/double-chin-liposuction-kermanshah/">ساکشن غبغب در کرمانشاه</a></li>
-    </ul>
-    <h3>ارتباط صفحه دکتر با خدمات زیبایی در کرمانشاه</h3>
-    <p>این صفحه، هویت پزشک و معیارهای اعتماد را توضیح می‌دهد. جزئیات هر خدمت، محدودیت‌ها، شرایط مناسب و مراقبت‌های پس از انجام، در صفحه اختصاصی همان خدمت شرح داده می‌شود تا صفحه شخصی با صفحات خدمات هم‌پوشانی محتوایی پیدا نکند.</p>
-  </section>
-
-  <section>
-    <h2>رویکرد دکتر سعید قزلباش در زیبایی، پوست و جوانسازی</h2>
-    <p>رویکرد این برند پزشکی بر مشاوره پیش از اقدام، انتخاب روش متناسب با نیاز فرد، توجه به ایمنی، تناسب چهره و پرهیز از وعده قطعی استوار است. نتیجه خدمات زیبایی می‌تواند بسته به شرایط فرد متفاوت باشد؛ بنابراین ارزیابی، توضیح محدودیت‌ها و مراقبت پس از انجام خدمت، بخش مهم فرآیند تصمیم‌گیری است.</p>
-  </section>
-
-  <section>
-    <h2>ارتباط دکتر سعید قزلباش با کلینیک زیبایی دکتر سعید قزلباش</h2>
-    <p><a href="/dr-saeed-ghezelbash-aesthetic-clinic/">کلینیک زیبایی دکتر سعید قزلباش</a> نقطه اصلی مراجعه و ارتباط برای خدمات زیبایی مرتبط با این برند پزشکی است. آدرس کلینیک: کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا.</p>
-  </section>
-
-  <section>
-    <h2>دکتر سعید قزلباش در منابع رسمی، علمی و رسانه‌ای</h2>
-    <h3>منابع رسمی و پروفایل‌های قابل استناد</h3>
-    <ul>
-      <li><a href={regulatoryIdentity.irimc.url}>پروفایل رسمی سازمان نظام پزشکی IRIMC</a></li>
-      <li><a href={regulatoryIdentity.mojavez.url}>استعلام پروانه از طریق Mojavez</a></li>
-      <li><a href="https://www.wikidata.org/wiki/Q140287622">شناسه Wikidata برای disambiguation</a></li>
-      <li><a href={location.googleMapsCid}>Google Maps Business Profile</a></li>
-      <li><a href={location.openStreetMap}>OpenStreetMap Node</a></li>
-    </ul>
-
-    <h3>پروفایل پژوهشی و مقالات علمی</h3>
-    <p>دکتر سعید قزلباش دارای شناسه ORCID و کتاب‌شناسی عمومی در NCBI است. این منابع برای تفکیک علمی نام و author disambiguation استفاده می‌شوند و نباید به‌عنوان معیار مستقیم برای سنجش نتایج خدمات زیبایی تفسیر شوند.</p>
-    <ul>
-      <li><a href={researchProfile.orcid}>صفحه ORCID</a></li>
-      <li><a href={researchProfile.bibliographyUrl}>کتاب‌شناسی NCBI</a></li>
-      <li><a href="https://www.mdpi.com/2227-9032/9/9/1169">مقاله MDPI</a></li>
-      <li><a href="https://www.mdpi.com/2227-9032/9/9/1169/review_report">گزارش داوری MDPI</a></li>
-    </ul>
-
-    <h3>گزارش‌ها، مصاحبه‌ها و حضور رسانه‌ای</h3>
-    <p>صفحه IranMedLabs با نشانی زیر به‌عنوان یک پوشش رسانه‌ای مرتبط با دکتر سعید قزلباش در حوزه پوست، مو و زیبایی در لایه ساختاری سایت ثبت شده است. چون در زمان این بازبینی، متن کامل صفحه از طریق ابزار fetch در دسترس نبود، در این صفحه فقط اصل وجود لینک و نقش آن به‌عنوان media interview / subjectOf ذکر می‌شود و از نقل عنوان یا جزئیات تأییدنشده پرهیز شده است.</p>
-    <p><a href="https://iranmedlabs.com/skin-and-hair-and-beauty/120049/">مشاهده صفحه IranMedLabs درباره دکتر سعید قزلباش</a></p>
-  </section>
-
-  <section>
-    <h2>چطور بهترین دکتر زیبایی در کرمانشاه را انتخاب کنیم؟</h2>
-    <p>واژه «بهترین» در پزشکی زیبایی یک گزاره ساده و قطعی نیست. انتخاب پزشک مناسب باید بر اساس معیارهای قابل بررسی انجام شود: شماره نظام پزشکی معتبر، پروفایل رسمی، آدرس مشخص، مسیر ارتباط شفاف، پرهیز از وعده قطعی، مشاوره پیش از اقدام، مراقبت پس از خدمت و امکان بررسی نمونه‌کار از مسیر رسمی.</p>
-    <p>این صفحه، اطلاعات مربوط به این معیارها را برای دکتر سعید قزلباش در دسترس قرار می‌دهد. تصمیم نهایی باید پس از مشاوره و ارزیابی فردی گرفته شود.</p>
+    <p>شماره نظام پزشکی: ۱۶۷۴۳۰</p>
+    <p><a href="/botox-kermanshah/">بوتاکس در کرمانشاه</a></p>
   </section>
 
   <section id="faq">
     <h2>پرسش‌های متداول درباره دکتر سعید قزلباش</h2>
-    <div class="card"><h3>دکتر سعید قزلباش کیست؟</h3><p>دکتر سعید قزلباش، پزشک زیبایی فعال در کرمانشاه و بنیان‌گذار کلینیک زیبایی دکتر سعید قزلباش است.</p></div>
-    <div class="card"><h3>شماره نظام پزشکی دکتر سعید قزلباش چیست؟</h3><p>شماره نظام پزشکی ایشان ۱۶۷۴۳۰ است.</p></div>
-    <div class="card"><h3>دکتر سعید قزلباش در کدام شهر فعالیت دارد؟</h3><p>ایشان در کرمانشاه فعالیت می‌کند.</p></div>
-    <div class="card"><h3>کلینیک دکتر سعید قزلباش کجاست؟</h3><p>آدرس کلینیک: کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا.</p></div>
-    <div class="card"><h3>حوزه فعالیت دکتر سعید قزلباش چیست؟</h3><p>حوزه فعالیت ایشان پزشکی زیبایی، پوست، مو و جوانسازی با تمرکز بر بوتاکس، فیلر، لیفت نخ، جوانسازی و ساکشن غبغب است.</p></div>
-    <div class="card"><h3>آیا دکتر سعید قزلباش پروفایل علمی یا پژوهشی دارد؟</h3><p>بله، ایشان دارای شناسه ORCID و کتاب‌شناسی NCBI است.</p></div>
-    <div class="card"><h3>برای مشاهده خدمات به کدام صفحات مراجعه کنم؟</h3><p>به صفحه خدمات و صفحات اختصاصی بوتاکس، فیلر، لیفت نخ، جوانسازی پوست و مو و ساکشن غبغب مراجعه کنید.</p></div>
-    <div class="card"><h3>برای ارتباط یا مشاهده نمونه‌کارها از چه مسیری اقدام کنم؟</h3><p>اینستاگرام رسمی، شماره تماس کلینیک و صفحه تماس سایت مسیرهای اصلی ارتباط هستند.</p></div>
-    <div class="card"><h3>آیا می‌توان دکتر سعید قزلباش را بهترین دکتر زیبایی کرمانشاه دانست؟</h3><p>بهترین بودن یک ادعای قطعی نیست و باید با معیارهای قابل بررسی سنجیده شود. این صفحه اطلاعات لازم برای ارزیابی آگاهانه را فراهم می‌کند.</p></div>
-  </section>
-
-  <section class="box">
-    <h2>راه‌های ارتباط با دکتر سعید قزلباش</h2>
-    <ul>
-      <li>اینستاگرام رسمی: <a href={site.instagram}>doctor.ghezelbaash</a></li>
-      <li>تلفن کلینیک: <a href="tel:+989308209494">۰۹۳۰۸۲۰۹۴۹۴ | ۹۸۹۳۰۸۲۰۹۴۹۴+</a></li>
-      <li>نقشه: <a href={location.googleMapsCid}>Google Maps</a> | <a href={location.openStreetMap}>OpenStreetMap</a></li>
-      <li><a href="/contact/">صفحه تماس</a></li>
-      <li><a href="/dr-saeed-ghezelbash-aesthetic-clinic/">صفحه کلینیک</a></li>
-      <li><a href="/services/">صفحه خدمات</a></li>
-      <li><a href="/kg/">داده‌های دانش‌نگار</a></li>
-    </ul>
+    <div class="card"><h3>دکتر سعید قزلباش کیست؟</h3><p>دکتر سعید قزلباش پزشک زیبایی فعال در کرمانشاه است.</p></div>
   </section>
 </BaseLayout>
