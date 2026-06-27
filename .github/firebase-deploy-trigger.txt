@@ -1,4 +1,0 @@
-Firebase Hosting deployment trigger
-
-Triggered diagnostic workflow after OIDC provider repair.
-Timestamp: 2026-06-24T11:20:00Z
