@@ -1,4 +1,4 @@
-name: Astro PR Build (Fixed)
+name: Astro PR Build
 
 on:
   pull_request:

@@ -1,16 +1,15 @@
 {
-  "name": "doctor-ghezelbaash-astro",
-  "version": "2.0.0",
-  "private": true,
+  "name": "doctor-ghezelbaash",
   "type": "module",
+  "version": "1.0.0",
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/prepare-public.mjs && astro build && node scripts/validate-dist.mjs",
-    "preview": "astro preview",
-    "check:public": "node scripts/prepare-public.mjs",
-    "validate:dist": "node scripts/validate-dist.mjs"
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^5.0.0"
+    "astro": "^4.16.0",
+    "@astrojs/sitemap": "^3.2.1"
   }
 }
