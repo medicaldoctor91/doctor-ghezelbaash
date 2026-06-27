@@ -35,7 +35,6 @@ const required = [
   'llms.txt',
   'routes.json',
   'seo-aeo-index.json',
-  'content-briefs.json',
   'services.json',
   'sameas.json',
   'brand-kb.ghezelbaash.ai-public.json',
@@ -67,7 +66,6 @@ for (const slug of [
   mustContain('sitemap.xml', `https://www.ghezelbaash.ir/${slug}/`);
   mustContain('routes.json', `/${slug}/`);
   mustContain('seo-aeo-index.json', `/${slug}/`);
-  mustContain('content-briefs.json', `/${slug}/`);
   mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow');
   mustContain(`${slug}/index.html`, 'BreadcrumbList');
   mustContain(`${slug}/index.html`, '#breadcrumb');
@@ -82,7 +80,6 @@ mustContain('index.html', 'twitter:card');
 mustContain('index.html', 'BreadcrumbList');
 mustContain('llms.txt', '/routes.json');
 mustContain('llms.txt', '/seo-aeo-index.json');
-mustContain('llms.txt', '/content-briefs.json');
 mustContain('llms.txt', '/regulatory.json');
 mustContain('llms.txt', '/research.json');
 mustContain('llms.txt', '/authority-signals.json');
@@ -94,10 +91,6 @@ mustContain('seo-aeo-index.json', 'ghezelbaash.seo_aeo_index.astro.v1');
 mustContain('seo-aeo-index.json', 'schemaTargets');
 mustContain('seo-aeo-index.json', 'MedicalBusiness');
 mustContain('seo-aeo-index.json', 'FAQPage');
-mustContain('content-briefs.json', 'ghezelbaash.content_briefs.astro.v1');
-mustContain('content-briefs.json', 'contentGeneratorInstruction');
-mustContain('content-briefs.json', 'requiredSections');
-mustContain('content-briefs.json', 'criteria-based');
 mustContain('sameas.json', 'Q140287622');
 mustContain('sameas.json', 'Q140288589');
 mustContain('sameas.json', 'Q140304972');
