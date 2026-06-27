@@ -33,6 +33,7 @@ const required = [
   'index.html',
   'sitemap.xml',
   'llms.txt',
+  'routes.json',
   'services.json',
   'sameas.json',
   'brand-kb.ghezelbaash.ai-public.json',
@@ -62,6 +63,7 @@ for (const slug of [
   'double-chin-liposuction-kermanshah'
 ]) {
   mustContain('sitemap.xml', `https://www.ghezelbaash.ir/${slug}/`);
+  mustContain('routes.json', `/${slug}/`);
   mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow">');
   mustContain(`${slug}/index.html`, 'BreadcrumbList');
   mustContain(`${slug}/index.html`, '#breadcrumb');
@@ -74,9 +76,14 @@ for (const slug of [
 mustContain('index.html', 'https://www.ghezelbaash.ir/doctor.jpg');
 mustContain('index.html', 'twitter:card');
 mustContain('index.html', 'BreadcrumbList');
+mustContain('llms.txt', '/routes.json');
 mustContain('llms.txt', '/regulatory.json');
 mustContain('llms.txt', '/research.json');
 mustContain('llms.txt', '/authority-signals.json');
+mustContain('routes.json', 'ghezelbaash.routes.astro.v1');
+mustContain('routes.json', 'services-hub');
+mustContain('routes.json', 'service');
+mustContain('routes.json', 'knowledge-graph');
 mustContain('sameas.json', 'Q140287622');
 mustContain('sameas.json', 'Q140288589');
 mustContain('sameas.json', 'Q140304972');
