@@ -1,5 +1,6 @@
 import { authoritySignals } from '../src/data/authoritySignals.mjs';
 import { externalProfiles } from '../src/data/externalProfiles.mjs';
+import { regulatoryIdentity } from '../src/data/regulatory.mjs';
 import { assertSourceContract } from '../src/lib/sourceClassifier.mjs';
 
 const requiredSignalKeys = [
@@ -47,6 +48,10 @@ const blockedSameAsTypes = ['mediaMention', 'mediaInterview', 'forumDiscussion',
 const errors = assertSourceContract({ authoritySignals, externalProfiles });
 const signalKeys = new Set(authoritySignals.map((signal) => signal.key));
 const signalUrls = new Set(authoritySignals.map((signal) => signal.url));
+const directIdentityUrls = new Set([
+  regulatoryIdentity.irimc.url,
+  regulatoryIdentity.mojavez.url
+]);
 
 for (const key of requiredSignalKeys) {
   if (!signalKeys.has(key)) errors.push(`missing required key: ${key}`);
@@ -77,7 +82,8 @@ for (const signal of authoritySignals) {
 for (const url of externalProfiles.verifiedSameAs || []) {
   const isWikidataSeed = url.includes('wikidata.org/wiki/Q');
   const hasSignal = signalUrls.has(url);
-  if (!isWikidataSeed && !hasSignal) {
+  const isDirectRegulatoryIdentity = directIdentityUrls.has(url);
+  if (!isWikidataSeed && !hasSignal && !isDirectRegulatoryIdentity) {
     errors.push(`verifiedSameAs without authority signal: ${url}`);
   }
 }
