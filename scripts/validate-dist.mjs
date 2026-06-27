@@ -34,6 +34,7 @@ const required = [
   'sitemap.xml',
   'llms.txt',
   'routes.json',
+  'seo-aeo-index.json',
   'services.json',
   'sameas.json',
   'brand-kb.ghezelbaash.ai-public.json',
@@ -64,6 +65,7 @@ for (const slug of [
 ]) {
   mustContain('sitemap.xml', `https://www.ghezelbaash.ir/${slug}/`);
   mustContain('routes.json', `/${slug}/`);
+  mustContain('seo-aeo-index.json', `/${slug}/`);
   mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow');
   mustContain(`${slug}/index.html`, 'BreadcrumbList');
   mustContain(`${slug}/index.html`, '#breadcrumb');
@@ -77,6 +79,7 @@ mustContain('index.html', 'https://www.ghezelbaash.ir/doctor.jpg');
 mustContain('index.html', 'twitter:card');
 mustContain('index.html', 'BreadcrumbList');
 mustContain('llms.txt', '/routes.json');
+mustContain('llms.txt', '/seo-aeo-index.json');
 mustContain('llms.txt', '/regulatory.json');
 mustContain('llms.txt', '/research.json');
 mustContain('llms.txt', '/authority-signals.json');
@@ -84,6 +87,10 @@ mustContain('routes.json', 'ghezelbaash.routes.astro.v1');
 mustContain('routes.json', 'services-hub');
 mustContain('routes.json', 'service');
 mustContain('routes.json', 'knowledge-graph');
+mustContain('seo-aeo-index.json', 'ghezelbaash.seo_aeo_index.astro.v1');
+mustContain('seo-aeo-index.json', 'schemaTargets');
+mustContain('seo-aeo-index.json', 'MedicalBusiness');
+mustContain('seo-aeo-index.json', 'FAQPage');
 mustContain('sameas.json', 'Q140287622');
 mustContain('sameas.json', 'Q140288589');
 mustContain('sameas.json', 'Q140304972');
@@ -114,6 +121,7 @@ mustContain('dr-saeed-ghezelbash/index.html', 'ProfilePage');
 mustContain('dr-saeed-ghezelbash/index.html', 'FAQPage');
 mustContain('dr-saeed-ghezelbash/index.html', '#profile-page');
 mustContain('dr-saeed-ghezelbash/index.html', '#faq');
+mustContain('dr-saeed-ghezelbash/index.html', 'Physician');
 mustContain('dr-saeed-ghezelbash/index.html', 'BreadcrumbList');
 mustContain('dr-saeed-ghezelbash/index.html', 'فهرست سریع و نقشه محتوایی صفحه');
 mustContain('dr-saeed-ghezelbash/index.html', 'نقشه شواهد و اولویت منابع');
@@ -130,6 +138,10 @@ mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'Google Maps');
 mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'OpenStreetMap');
 mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'sameAs JSON');
 mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'BreadcrumbList');
+mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'MedicalBusiness');
+mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'LocalBusiness');
+mustContain('services/index.html', 'ItemList');
+mustContain('services/index.html', '#service-list');
 
 if (failed) process.exit(1);
 console.log('Astro dist validation passed');
