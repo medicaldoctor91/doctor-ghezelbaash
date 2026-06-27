@@ -104,6 +104,14 @@ export const authoritySignals = [
     useAs: ['subjectOf', 'authoritySignal', 'serviceEvidence']
   },
   {
+    key: 'iranmedlabs-interview',
+    type: 'mediaInterview',
+    entity: 'personAndClinic',
+    publisher: 'IranMedLabs',
+    url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/',
+    useAs: ['subjectOf', 'authoritySignal', 'interviewEvidence']
+  },
+  {
     key: 'khabaronline-coverage',
     type: 'mediaMention',
     entity: 'clinic',
