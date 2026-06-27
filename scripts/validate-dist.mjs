@@ -60,6 +60,11 @@ for (const slug of [
 mustContain('sameas.json', 'Q140287622');
 mustContain('sameas.json', 'Q140288589');
 mustContain('sameas.json', 'Q140304972');
+mustContain('services.json', 'ghezelbaash.service_architecture.astro.v2.entity_hardened');
+mustContain('services.json', 'contentBlocksRequired');
+mustContain('services.json', 'supportingIntents');
+mustContain('services.json', 'machineSupportAssets');
+mustContain('services.json', 'regulatory.json');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v4.superset');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'publicationIdentifiers');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'authoritySignals');
