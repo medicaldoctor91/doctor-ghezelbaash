@@ -89,6 +89,10 @@ mustContain('dr-saeed-ghezelbash/index.html', '۱۶۷۴۳۰');
 mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs');
 mustContain('dr-saeed-ghezelbash/index.html', '/botox-kermanshah/');
 mustContain('dr-saeed-ghezelbash/index.html', 'پرسش‌های متداول درباره دکتر سعید قزلباش');
+mustContain('dr-saeed-ghezelbash/index.html', 'ProfilePage');
+mustContain('dr-saeed-ghezelbash/index.html', 'FAQPage');
+mustContain('dr-saeed-ghezelbash/index.html', '#profile-page');
+mustContain('dr-saeed-ghezelbash/index.html', '#faq');
 
 if (failed) process.exit(1);
 console.log('Astro dist validation passed');
