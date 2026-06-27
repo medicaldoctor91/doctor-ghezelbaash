@@ -28,7 +28,7 @@ export function buildWebPageSchema({
   pageType = 'WebPage'
 } = {}) {
   const canonical = absoluteUrl(canonicalPath);
-  return {
+  const schema = {
     '@type': pageType,
     '@id': `${canonical}#webpage`,
     url: canonical,
@@ -38,6 +38,12 @@ export function buildWebPageSchema({
     isPartOf: { '@id': absoluteUrl('/#website') },
     breadcrumb: { '@id': `${canonical}#breadcrumb` }
   };
+
+  if (pageType === 'ProfilePage') {
+    schema.mainEntity = { '@id': absoluteUrl('/#dr-saeed-ghezelbash') };
+  }
+
+  return schema;
 }
 
 export function buildFaqSchema({ canonicalPath = '/', faqItems = [] } = {}) {
@@ -86,7 +92,12 @@ export function buildPersonEntity() {
     },
     worksFor: { '@id': absoluteUrl('/#clinic') },
     affiliation: { '@id': absoluteUrl('/#clinic') },
-    knowsAbout: services.map((service) => service.shortTitle || service.title)
+    knowsAbout: services.map((service) => service.shortTitle || service.title),
+    subjectOf: [
+      { '@type': 'WebPage', name: 'NCBI bibliography', url: researchProfile.bibliographyUrl },
+      { '@type': 'WebPage', name: 'IranMedLabs media coverage', url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/' },
+      { '@type': 'WebPage', name: 'MDPI article', url: 'https://www.mdpi.com/2227-9032/9/9/1169' }
+    ]
   };
 }
 
