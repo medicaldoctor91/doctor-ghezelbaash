@@ -28,7 +28,7 @@ export function GET() {
     redirectPolicy: {
       nonWwwToWww: 'https://ghezelbaash.ir/* -> https://www.ghezelbaash.ir/*'
     },
-    stage: 'astro-migration'
+    stage: 'production-astro-main'
   };
 
   return new Response(JSON.stringify(body, null, 2) + '\n', {
