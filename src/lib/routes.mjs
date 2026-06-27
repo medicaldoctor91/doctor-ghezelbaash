@@ -17,8 +17,7 @@ export const coreRoutes = [
   { path: site.pages.contact, label: 'تماس و مسیر مراجعه', kind: 'contact', priority: '0.80' },
   { path: site.pages.evidence, label: 'شواهد و منابع', kind: 'evidence', priority: '0.72' },
   { path: site.pages.kg, label: 'گراف دانش', kind: 'knowledge-graph', priority: '0.72' },
-  { path: '/aesthetic-medicine-dataset.html', label: 'داده‌ست پزشکی زیبایی', kind: 'dataset', priority: '0.60' },
-  { path: '/google-maps-review-evidence.html', label: 'شواهد Google Maps', kind: 'evidence-asset', priority: '0.60' }
+  { path: '/aesthetic-medicine-dataset.html', label: 'داده‌ست پزشکی زیبایی', kind: 'dataset', priority: '0.60' }
 ];
 
 export const serviceRoutes = services.map((service) => ({
