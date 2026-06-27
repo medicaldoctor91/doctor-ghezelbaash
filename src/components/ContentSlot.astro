@@ -1,0 +1,8 @@
+---
+const { id, title, variant = 'section' } = Astro.props;
+const Tag = variant === 'box' ? 'section' : 'section';
+---
+<Tag id={id} class={variant === 'box' ? 'box' : undefined} data-content-slot={id}>
+  {title && <h2>{title}</h2>}
+  <slot />
+</Tag>
