@@ -11,9 +11,9 @@ export const location = {
   openStreetMap: 'https://www.openstreetmap.org/node/13530287096',
   openStreetMapNodeId: '13530287096',
   geo: {
-    latitude: 34.01243,
-    longitude: 47.08518,
-    source: 'Wikidata Q140288589 / OpenStreetMap node 13530287096'
+    latitude: 34.3401243,
+    longitude: 47.0851778,
+    source: 'root NAP baseline / Wikidata Q140288589 / OpenStreetMap node 13530287096'
   },
   napPolicy: {
     canonicalAddressSource: 'operator-confirmed in project conversation, aligned with Wikidata and About.me',
