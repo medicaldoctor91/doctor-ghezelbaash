@@ -1,21 +1,4 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import PersonProfileJsonLd from '../components/PersonProfileJsonLd.astro';
-
-const title = 'دکتر سعید قزلباش (Dr. Saeed Ghezelbash) – پزشک زیبایی در کرمانشاه | بوتاکس، فیلر، لیفت نخ | شماره نظام پزشکی ۱۶۷۴۳۰';
-const description = 'صفحه رسمی دکتر محمدسعید قزلباش، پزشک زیبایی در کرمانشاه. پروانه نظام پزشکی ۱۶۷۴۳۰. خدمات: بوتاکس، فیلر، لیفت نخ، جوانسازی پوست، ساکشن غبغب. آدرس کلینیک: میدان ۱۷ شهریور، ساختمان ویستا. شناسه‌های علمی: ORCID, NCBI.';
+import PersonLayout from '../layouts/PersonLayout.astro';
 ---
-<BaseLayout title={title} description={description} canonicalPath="/dr-saeed-ghezelbash/">
-  <PersonProfileJsonLd slot="head" />
-
-  <section class="box">
-    <h1>دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه – مرجع یکپارچه انتیتی</h1>
-    <p>شماره نظام پزشکی: ۱۶۷۴۳۰</p>
-    <p><a href="/botox-kermanshah/">بوتاکس در کرمانشاه</a></p>
-  </section>
-
-  <section id="faq">
-    <h2>پرسش‌های متداول درباره دکتر سعید قزلباش</h2>
-    <div class="card"><h3>دکتر سعید قزلباش کیست؟</h3><p>دکتر سعید قزلباش پزشک زیبایی فعال در کرمانشاه است.</p></div>
-  </section>
-</BaseLayout>
+<PersonLayout />
