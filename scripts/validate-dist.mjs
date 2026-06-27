@@ -93,6 +93,11 @@ mustContain('dr-saeed-ghezelbash/index.html', 'ProfilePage');
 mustContain('dr-saeed-ghezelbash/index.html', 'FAQPage');
 mustContain('dr-saeed-ghezelbash/index.html', '#profile-page');
 mustContain('dr-saeed-ghezelbash/index.html', '#faq');
+mustContain('dr-saeed-ghezelbash/index.html', 'فهرست سریع و نقشه محتوایی صفحه');
+mustContain('dr-saeed-ghezelbash/index.html', 'نقشه شواهد و اولویت منابع');
+mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs media coverage');
+mustContain('dr-saeed-ghezelbash/index.html', 'knowsAbout');
+mustContain('dr-saeed-ghezelbash/index.html', 'از نقل عنوان یا جزئیات تأییدنشده پرهیز شده است');
 
 if (failed) process.exit(1);
 console.log('Astro dist validation passed');
