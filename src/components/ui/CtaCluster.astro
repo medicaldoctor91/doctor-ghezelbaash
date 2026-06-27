@@ -1,0 +1,14 @@
+---
+const { actions = [], body } = Astro.props;
+---
+<div class="cta-cluster">
+  {body && <p>{body}</p>}
+  <p>
+    {actions.map((action, index) => (
+      <>
+        <a class={action.primary ? 'cta' : 'cta-secondary'} href={action.href}>{action.label}</a>
+        {index < actions.length - 1 && ' '}
+      </>
+    ))}
+  </p>
+</div>
