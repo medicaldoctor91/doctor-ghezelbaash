@@ -22,6 +22,7 @@ const removedLegacyRootAssets = [
   'ai-discovery-index.json',
   'llms.txt',
   'services.json',
+  'sitemap.xml',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld'
 ];
@@ -50,10 +51,12 @@ for (const file of [
 }
 
 for (const file of [
-  'public/robots.txt'
+  'public/robots.txt',
+  'public/CNAME',
+  '.firebaserc'
 ]) {
   if (fs.existsSync(path.join(root, file))) {
-    fail(`committed public duplicate must not exist: ${file}`);
+    fail(`committed duplicate or legacy config must not exist: ${file}`);
   }
 }
 
