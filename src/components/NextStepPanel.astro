@@ -1,0 +1,20 @@
+---
+const { title, body, items = [], links = [] } = Astro.props;
+---
+<section class="next-step-panel box">
+  {title && <h2>{title}</h2>}
+  {body && <p>{body}</p>}
+  <div class="next-step-grid">
+    {items.map((item) => (
+      <a class="next-step-card card" href={item.href}>
+        <strong>{item.title}</strong>
+        {item.body && <span>{item.body}</span>}
+      </a>
+    ))}
+  </div>
+  {links.length > 0 && (
+    <p class="next-step-links">
+      {links.map((link) => <a class="cta-secondary" href={link.href}>{link.label}</a>)}
+    </p>
+  )}
+</section>
