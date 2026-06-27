@@ -1,0 +1,118 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import PersonProfileJsonLd from '../components/PersonProfileJsonLd.astro';
+import PersonProfileContent from '../components/PersonProfileContent.astro';
+import PersonIranMedLabsInterview from '../components/PersonIranMedLabsInterview.astro';
+import PersonSeoAeoEnhancements from '../components/PersonSeoAeoEnhancements.astro';
+import CardGrid from '../components/ui/CardGrid.astro';
+import CtaCluster from '../components/ui/CtaCluster.astro';
+import Section from '../components/ui/Section.astro';
+import { site } from '../data/site.mjs';
+import { location } from '../data/location.mjs';
+import { regulatoryIdentity } from '../data/regulatory.mjs';
+import { services } from '../data/services.mjs';
+
+const title = 'دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه';
+const description = 'صفحه رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ شماره نظام پزشکی، کلینیک، خدمات زیبایی، آدرس، تماس و منابع قابل بررسی.';
+
+const identityItems = [
+  { title: 'نام شناخته‌شده', value: site.personFa },
+  { title: 'نام انگلیسی', value: site.personEn },
+  { title: 'شماره نظام پزشکی', value: regulatoryIdentity.irimc.medicalCouncilNumber },
+  { title: 'شهر فعالیت', value: 'کرمانشاه' },
+  { title: 'نشانی کلینیک', value: location.canonicalAddressFa },
+  { title: 'مسیر رسمی تماس', value: location.phoneDisplay }
+];
+
+const serviceItems = services.map((service) => ({
+  title: service.title,
+  href: `/${service.slug}/`,
+  body: service.description
+}));
+
+const evidenceItems = [
+  { title: 'هویت رسمی', href: '/evidence/', body: 'مسیرهای قابل بررسی برای نام، شماره نظام پزشکی، نشانی و منابع عمومی.' },
+  { title: 'کلینیک', href: '/dr-saeed-ghezelbash-aesthetic-clinic/', body: 'صفحه کانونیکال کلینیک، آدرس، نقشه، خدمات و مسیر تماس.' },
+  { title: 'گراف دانش', href: '/kg/', body: 'لایه machine-readable برای اتصال شخص، کلینیک، خدمات و منابع.' },
+  { title: 'تماس', href: '/contact/', body: 'شماره تماس، اینستاگرام رسمی، آدرس و Google Maps.' }
+];
+---
+<BaseLayout title={title} description={description} canonicalPath="/dr-saeed-ghezelbash/" pageType="ProfilePage" personEnhancements={false}>
+  <PersonProfileJsonLd slot="head" />
+
+  <section class="box hero-grid">
+    <div>
+      <p class="small">صفحه رسمی و کانونیکال پزشک</p>
+      <h1>دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه</h1>
+      <p class="lead">این صفحه برای معرفی تبلیغاتی کوتاه ساخته نشده؛ نقش آن این است که هویت پزشک، کلینیک، خدمات، مسیر تماس و منابع قابل بررسی را در یک مسیر روشن کنار هم بگذارد.</p>
+      <p>اگر کاربر پیش از بوتاکس، فیلر، لیفت نخ، جوانسازی یا ساکشن غبغب می‌خواهد بداند با چه پزشک و چه مسیر رسمی روبه‌روست، این صفحه نقطه شروع اعتماد است.</p>
+      <CtaCluster actions={[
+        { label: 'مشاهده خدمات', href: '/services/', primary: true },
+        { label: 'تماس و آدرس', href: '/contact/' },
+        { label: 'منابع قابل بررسی', href: '/evidence/' }
+      ]} />
+    </div>
+    <aside class="card">
+      <h2>اطلاعات سریع</h2>
+      <div class="fact-list">
+        {identityItems.slice(0, 4).map((item) => (
+          <div class="fact-item"><strong>{item.title}</strong><br />{item.value}</div>
+        ))}
+      </div>
+    </aside>
+  </section>
+
+  <Section
+    id="person-identity"
+    title="هویت رسمی، نشانی و مسیر احراز"
+    body={[
+      'در پزشکی زیبایی، اعتماد نباید فقط از تصویر یا ادعا ساخته شود. نام پزشک، شماره نظام پزشکی، نشانی فعالیت، مسیر تماس و منابع قابل بررسی باید کنار هم دیده شوند تا کاربر بتواند تصمیم خود را بر پایه اطلاعات روشن بگیرد.',
+      'این صفحه همین نقش را دارد: تبدیل نام دکتر سعید قزلباش به یک مسیر قابل بررسی که به کلینیک، خدمات، موقعیت مکانی و منابع عمومی متصل است.'
+    ]}
+  >
+    <CardGrid items={identityItems} />
+  </Section>
+
+  <Section
+    id="person-service-map"
+    title="خدمات زیبایی متصل به دکتر سعید قزلباش"
+    body={[
+      'صفحه پزشک جایگزین صفحات خدمات نیست؛ صفحه پزشک باید اعتماد و هویت بسازد، و صفحات خدمات باید تصمیم درمانی یا زیبایی را دقیق‌تر کنند.',
+      'برای هر خدمت، صفحه اختصاصی ساخته شده تا کاربر به جای خواندن متن پراکنده، مسیر مشخص همان خدمت را در کرمانشاه بررسی کند.'
+    ]}
+  >
+    <CardGrid items={serviceItems} />
+  </Section>
+
+  <Section
+    id="person-decision-criteria"
+    title="قبل از انتخاب پزشک زیبایی در کرمانشاه چه چیزهایی را بررسی کنیم؟"
+    variant="emphasis"
+    body={[
+      'عبارت‌هایی مثل بهترین دکتر زیبایی در کرمانشاه یا بهترین دکتر بوتاکس کرمانشاه زمانی ارزش دارند که به معیار قابل بررسی وصل شوند. ادعا به‌تنهایی کافی نیست؛ مسیر رسمی، هویت شفاف، توضیح محدودیت‌ها و امکان پیگیری اهمیت دارد.'
+    ]}
+  >
+    <ul>
+      <li>شماره نظام پزشکی و نام کامل پزشک قابل بررسی باشد.</li>
+      <li>آدرس، تلفن، نقشه و مسیر تماس رسمی روشن باشد.</li>
+      <li>خدمات به‌صورت صفحه‌های جداگانه و قابل فهم توضیح داده شده باشند.</li>
+      <li>پیش از اقدام، محدودیت‌ها، مراقبت‌ها و احتمال نیاز به پیگیری گفته شود.</li>
+      <li>نتیجه قطعی یا یکسان برای همه افراد وعده داده نشود.</li>
+    </ul>
+  </Section>
+
+  <Section
+    id="person-evidence-map"
+    title="مسیرهای پشتیبان برای بررسی بیشتر"
+    body={[
+      'برای اینکه صفحه پزشک فقط یک متن معرفی نباشد، باید به منابع و دارایی‌های قابل بررسی وصل باشد: صفحه کلینیک، صفحه شواهد، گراف دانش، نقشه و مسیر تماس.',
+      'این لایه‌ها هم برای کاربر انسانی مفیدند و هم برای موتور جست‌وجو و سیستم‌های پاسخ‌گو که باید ارتباط میان پزشک، کلینیک، شهر و خدمات را بفهمند.'
+    ]}
+  >
+    <CardGrid items={evidenceItems} />
+  </Section>
+
+  <PersonProfileContent />
+  <PersonIranMedLabsInterview />
+  <PersonSeoAeoEnhancements />
+</BaseLayout>
