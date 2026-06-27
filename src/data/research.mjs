@@ -7,10 +7,13 @@ export const researchProfile = {
       title: 'Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events',
       datePublished: '2021-09-06',
       doi: '10.3390/healthcare9091169',
+      url: 'https://www.mdpi.com/2227-9032/9/9/1169',
+      reviewReport: 'https://www.mdpi.com/2227-9032/9/9/1169/review_report',
       pubmed: 'https://pubmed.ncbi.nlm.nih.gov/34574943/',
       pmid: '34574943',
       pmcid: 'PMC8469763',
       authorNameVariant: 'Mohammad Saeed Ghezelbash',
+      citationNameVariant: 'Ghezelbash M.S.',
       entityUse: 'research-identity-disambiguation'
     },
     {
