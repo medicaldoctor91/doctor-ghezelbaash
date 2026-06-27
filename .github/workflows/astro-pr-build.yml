@@ -1,9 +1,8 @@
-name: Astro PR Build
+name: Astro PR Build (Fixed)
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -11,16 +10,27 @@ permissions:
 
 jobs:
   build:
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'astro')
+    if: startsWith(github.head_ref, 'astro') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout pull request
+      - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup Node
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
       - name: Build Astro site
         run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: astro-build
+          path: dist
