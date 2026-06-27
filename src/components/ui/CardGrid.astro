@@ -1,0 +1,14 @@
+---
+const { items = [], columns = 'auto' } = Astro.props;
+---
+<div class={`grid card-grid card-grid--${columns}`}>
+  {items.map((item) => (
+    <article class="card">
+      {item.kicker && <p class="small">{item.kicker}</p>}
+      {item.title && <h3>{item.href ? <a href={item.href}>{item.title}</a> : item.title}</h3>}
+      {item.body && <p>{item.body}</p>}
+      {item.value && <p><strong>{item.value}</strong></p>}
+    </article>
+  ))}
+  <slot />
+</div>
