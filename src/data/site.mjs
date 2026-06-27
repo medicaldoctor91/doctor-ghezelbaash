@@ -8,6 +8,7 @@ export const site = {
   phoneDisplay: '09308209494',
   phoneE164: '+989308209494',
   mapsCid: 'https://www.google.com/maps?cid=12350483144643112463',
+  mapsSearch: 'https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas',
   logo: '/logo.png',
   image: '/doctor.jpg',
   locale: 'fa-IR',
@@ -45,6 +46,7 @@ export const site = {
       'https://www.wikidata.org/wiki/Q140288589',
       'https://www.instagram.com/doctor.ghezelbaash/',
       'https://www.google.com/maps?cid=12350483144643112463',
+      'https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas',
       'https://www.openstreetmap.org/node/13530287096'
     ],
     kg: [
