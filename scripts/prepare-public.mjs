@@ -10,12 +10,10 @@ const filesToExposeAtWebRoot = [
   'robots.txt',
   'logo.png',
   'doctor.jpg',
-  'graph-ghezelbaash-final.jsonld',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld',
   'aesthetic_medicine_knowledge_kermanshah_fa.json',
   'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json',
-  'sameas.json',
   'nap.csv',
   'aesthetic-medicine-dataset.html',
   'google-maps-review-evidence.html'
