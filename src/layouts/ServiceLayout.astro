@@ -2,12 +2,14 @@
 import BaseLayout from './BaseLayout.astro';
 import { site } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
+import ServiceContentSections from '../components/ServiceContentSections.astro';
 
 const { service } = Astro.props;
 const canonicalPath = `/${service.slug}/`;
-const title = `${service.title} | ${site.personFa} | کرمانشاه`;
-const description = service.description;
+const title = service.metaTitle || `${service.title} | ${site.personFa} | کرمانشاه`;
+const description = service.metaDescription || service.description;
 const useCases = service.useCases || [];
+const contentSections = service.contentSections || [];
 const process = service.process || [];
 const decisionCriteria = service.decisionCriteria || [];
 const riskSignals = service.riskSignals || [];
@@ -16,7 +18,7 @@ const faq = service.faq || [];
 <BaseLayout title={title} description={description} canonicalPath={canonicalPath} robots="index,follow">
   <section class="box">
     <p class="small">صفحه کانونیکال خدمت در کرمانشاه</p>
-    <h1>{service.title}</h1>
+    <h1>{service.h1 || service.title}</h1>
     <p>{service.promise || service.description}</p>
     <p>
       <a class="cta" href={site.instagram}>هماهنگی از اینستاگرام رسمی</a>
@@ -27,7 +29,7 @@ const faq = service.faq || [];
 
   <section>
     <h2>پاسخ سریع برای تصمیم‌گیری</h2>
-    <p>{service.description}</p>
+    <p>{service.quickDecisionAnswer || service.description}</p>
     <div class="grid">
       <div class="card"><strong>پزشک</strong><br />{site.personFa}</div>
       <div class="card"><strong>شهر هدف</strong><br />کرمانشاه</div>
@@ -43,6 +45,8 @@ const faq = service.faq || [];
     </div>
   </section>
 
+  <ServiceContentSections sections={contentSections} />
+
   <section>
     <h2>مسیر حرفه‌ای قبل از اقدام</h2>
     <ol>
@@ -52,7 +56,7 @@ const faq = service.faq || [];
 
   <section id={service.bestIntentAnchor}>
     <h2>{service.bestIntentTitle}</h2>
-    <p>در جست‌وجوهای محلی مثل «{service.intentExamples[0]}» یا «{service.intentExamples[1]}»، ادعای بهترین بودن باید به معیارهای قابل بررسی وصل شود. معیارهای عملی برای انتخاب:</p>
+    <p>{service.bestIntentIntro || `در جست‌وجوهای محلی مثل «${service.intentExamples[0]}» یا «${service.intentExamples[1]}»، ادعای بهترین بودن باید به معیارهای قابل بررسی وصل شود. معیارهای عملی برای انتخاب:`}</p>
     <ul>
       {decisionCriteria.map((criterion) => <li>{criterion}</li>)}
     </ul>
@@ -67,6 +71,7 @@ const faq = service.faq || [];
 
   <section>
     <h2>ارتباط این خدمت با دکتر و کلینیک</h2>
+    <p>{service.doctorClinicConnection || 'برای تصمیم‌گیری دقیق‌تر، بهتر است هویت پزشک، صفحه کلینیک، مسیرهای تماس و منابع قابل بررسی را در کنار صفحه خدمت ببینید.'}</p>
     <div class="grid">
       <a class="card" href="/dr-saeed-ghezelbash/">صفحه دکتر سعید قزلباش</a>
       <a class="card" href="/dr-saeed-ghezelbash-aesthetic-clinic/">صفحه کلینیک زیبایی دکتر سعید قزلباش</a>
@@ -89,7 +94,7 @@ const faq = service.faq || [];
 
   <section class="box">
     <h2>اقدام بعدی</h2>
-    <p>برای تصمیم سریع‌تر، ابتدا صفحه پزشک و مسیرهای رسمی را بررسی کنید و سپس از کانال رسمی هماهنگ کنید.</p>
+    <p>{service.ctaText || 'برای تصمیم سریع‌تر، ابتدا صفحه پزشک و مسیرهای رسمی را بررسی کنید و سپس از کانال رسمی هماهنگ کنید.'}</p>
     <p>
       <a class="cta" href={site.instagram}>مشاهده اینستاگرام رسمی و هماهنگی</a>
       {' '}
