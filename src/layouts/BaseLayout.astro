@@ -2,6 +2,7 @@
 import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
 import GlobalJsonLd from '../components/GlobalJsonLd.astro';
 import PageJsonLd from '../components/PageJsonLd.astro';
+import PersonSeoAeoEnhancements from '../components/PersonSeoAeoEnhancements.astro';
 
 const {
   title = site.nameFa,
@@ -12,6 +13,7 @@ const {
 
 const canonical = absoluteUrl(canonicalPath);
 const ogImage = canonicalImage();
+const showPersonEnhancements = canonicalPath === '/dr-saeed-ghezelbash/';
 ---
 <!doctype html>
 <html lang="fa-IR" dir="rtl">
@@ -64,6 +66,7 @@ const ogImage = canonicalImage();
     </header>
     <main class="wrap">
       <slot />
+      {showPersonEnhancements && <PersonSeoAeoEnhancements />}
     </main>
     <footer class="wrap">
       <p>{site.nameFa} — {site.phoneDisplay} — <a href={site.instagram}>Instagram</a></p>
