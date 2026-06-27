@@ -24,6 +24,14 @@ function mustContain(relPath, needle) {
   return text;
 }
 
+function mustNotExist(relPath) {
+  const file = path.join(dist, relPath);
+  if (fs.existsSync(file)) {
+    console.error(`dist/${relPath} must not exist`);
+    failed = true;
+  }
+}
+
 if (!fs.existsSync(path.join(root, 'package-lock.json'))) {
   console.error('missing package-lock.json');
   failed = true;
@@ -57,6 +65,7 @@ const required = [
 ];
 
 for (const file of required) read(file);
+mustNotExist('google-maps-review-evidence.html');
 
 for (const slug of [
   'botox-kermanshah',
@@ -108,6 +117,9 @@ mustContain('graph-ghezelbaash-final.jsonld', '#clinic');
 mustContain('graph-ghezelbaash-final.jsonld', '/kg/#dataset');
 mustContain('graph-ghezelbaash-final.jsonld', 'MedicalClinic');
 mustContain('graph-ghezelbaash-final.jsonld', 'Dataset');
+mustContain('graph-ghezelbaash-final.jsonld', '6714657412');
+mustContain('graph-ghezelbaash-final.jsonld', 'AggregateRating');
+mustContain('graph-ghezelbaash-final.jsonld', 'ratingCount');
 mustContain('dataset-manifest.jsonld', '2026-06-28-website-first-source-contract');
 mustContain('dataset-manifest.jsonld', '/authority-signals.json');
 mustContain('dataset-manifest.jsonld', '/profile-links.json');
@@ -121,11 +133,13 @@ mustContain('services.json', 'contentBlocksRequired');
 mustContain('services.json', 'supportingIntents');
 mustContain('services.json', 'machineSupportAssets');
 mustContain('services.json', 'regulatory.json');
-mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v5.source_contract');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v6.reputation_integrated');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'publicationIdentifiers');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'authoritySignals');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'authorityPolicy');
 mustContain('brand-kb.ghezelbaash.ai-public.json', '167430');
+mustContain('brand-kb.ghezelbaash.ai-public.json', '6714657412');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'googleMapsReputation');
 mustContain('ai-discovery-index.json', 'ghezelbaash.ai_discovery_index.astro.v2.source_contract');
 mustContain('ai-discovery-index.json', '/profile-links.json');
 mustContain('ai-discovery-index.json', '/authority-signals.json');
@@ -133,6 +147,9 @@ mustContain('ai-discovery-index.json', '/graph-ghezelbaash-final.jsonld');
 mustContain('regulatory.json', '167430');
 mustContain('location.json', 'ساختمان ویستا');
 mustContain('location.json', 'mapProfiles');
+mustContain('location.json', '6714657412');
+mustContain('location.json', 'googleMapsReputation');
+mustContain('location.json', 'ratingCount');
 mustContain('research.json', '0009-0001-9346-8475');
 mustContain('research.json', '34574943');
 mustContain('dataset.json', '10.5281/zenodo.18765169');
