@@ -48,6 +48,8 @@ const required = [
   'profile-links.json',
   'service-taxonomy.json',
   'graph-ghezelbaash-final.jsonld',
+  'dataset-manifest.jsonld',
+  'publishing-crosswalk.jsonld',
   'dr-saeed-ghezelbash/index.html',
   'dr-saeed-ghezelbash-aesthetic-clinic/index.html',
   'robots.txt',
@@ -106,6 +108,14 @@ mustContain('graph-ghezelbaash-final.jsonld', '#clinic');
 mustContain('graph-ghezelbaash-final.jsonld', '/kg/#dataset');
 mustContain('graph-ghezelbaash-final.jsonld', 'MedicalClinic');
 mustContain('graph-ghezelbaash-final.jsonld', 'Dataset');
+mustContain('dataset-manifest.jsonld', '2026-06-28-website-first-source-contract');
+mustContain('dataset-manifest.jsonld', '/authority-signals.json');
+mustContain('dataset-manifest.jsonld', '/profile-links.json');
+mustContain('dataset-manifest.jsonld', '/link-graph.json');
+mustContain('publishing-crosswalk.jsonld', '2026-06-28-website-first-source-contract');
+mustContain('publishing-crosswalk.jsonld', 'canonicalMachineEndpoints');
+mustContain('publishing-crosswalk.jsonld', 'generated_website_endpoints');
+mustContain('publishing-crosswalk.jsonld', '/brand-kb.ghezelbaash.ai-public.json');
 mustContain('services.json', 'ghezelbaash.service_architecture.astro.v2.entity_hardened');
 mustContain('services.json', 'contentBlocksRequired');
 mustContain('services.json', 'supportingIntents');
