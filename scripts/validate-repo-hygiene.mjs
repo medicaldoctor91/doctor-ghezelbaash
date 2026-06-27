@@ -19,6 +19,9 @@ const removedLegacyRootAssets = [
   'sameas.json',
   'graph-ghezelbaash-final.jsonld',
   'brand-kb.ghezelbaash.ai-public.json',
+  'ai-discovery-index.json',
+  'llms.txt',
+  'services.json',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld'
 ];
@@ -26,26 +29,6 @@ const removedLegacyRootAssets = [
 for (const file of removedLegacyRootAssets) {
   if (fs.existsSync(path.join(root, file))) {
     fail(`legacy root asset must not exist: ${file}`);
-  }
-}
-
-const aiDiscoveryPointer = readIfExists('ai-discovery-index.json');
-if (aiDiscoveryPointer) {
-  if (!aiDiscoveryPointer.includes('ghezelbaash.legacy_pointer.v1')) {
-    fail('root ai-discovery-index.json must remain a legacy pointer only');
-  }
-  if (!aiDiscoveryPointer.includes('https://www.ghezelbaash.ir/ai-discovery-index.json')) {
-    fail('root ai-discovery-index.json must point to the canonical live endpoint');
-  }
-}
-
-const llmsPointer = readIfExists('llms.txt');
-if (llmsPointer) {
-  if (!llmsPointer.includes('Deprecated repository-root pointer')) {
-    fail('root llms.txt must remain a deprecated pointer only');
-  }
-  if (!llmsPointer.includes('https://www.ghezelbaash.ir/llms.txt')) {
-    fail('root llms.txt must point to the canonical live endpoint');
   }
 }
 
@@ -57,10 +40,20 @@ for (const file of [
   'ai-discovery-index.json',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld',
-  'llms.txt'
+  'llms.txt',
+  'services.json',
+  'sitemap.xml'
 ]) {
   if (preparePublic.includes(`'${file}'`) || preparePublic.includes(`"${file}"`)) {
     fail(`generated or deprecated asset must not be copied by prepare-public: ${file}`);
+  }
+}
+
+for (const file of [
+  'public/robots.txt'
+]) {
+  if (fs.existsSync(path.join(root, file))) {
+    fail(`committed public duplicate must not exist: ${file}`);
   }
 }
 
