@@ -6,11 +6,12 @@
     "build": "node scripts/prepare-public.mjs && astro build",
     "dev": "astro dev",
     "preview": "astro preview",
+    "validate:repo-hygiene": "node scripts/validate-repo-hygiene.mjs",
     "validate:source": "node scripts/validate-source-contract.mjs",
     "validate:dist": "node scripts/validate-dist.mjs",
     "validate:llms": "node scripts/validate-llms-assets.mjs",
     "validate:page-context": "node scripts/validate-page-context.mjs",
-    "check": "npm run validate:source && npm run build && npm run validate:dist && npm run validate:llms && npm run validate:page-context"
+    "check": "npm run validate:repo-hygiene && npm run validate:source && npm run build && npm run validate:dist && npm run validate:llms && npm run validate:page-context"
   },
   "dependencies": {
     "astro": "^4.16.0"
