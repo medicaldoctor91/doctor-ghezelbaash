@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/prepare-public.mjs && astro build",
+    "build": "node scripts/prepare-public.mjs && astro build && node scripts/validate-dist.mjs",
     "preview": "astro preview",
-    "check:public": "node scripts/prepare-public.mjs"
+    "check:public": "node scripts/prepare-public.mjs",
+    "validate:dist": "node scripts/validate-dist.mjs"
   },
   "dependencies": {
     "astro": "latest"
