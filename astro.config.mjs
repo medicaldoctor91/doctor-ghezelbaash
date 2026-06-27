@@ -5,12 +5,12 @@ export default defineConfig({
 
   output: 'static',
   trailingSlash: 'always',
+  compressHTML: true,
 
   build: {
-    inlineStylesheets: 'always',
     assets: '_astro',
-    compressHTML: true,
     format: 'directory',
+    inlineStylesheets: 'always',
   },
 
   vite: {
@@ -18,18 +18,6 @@ export default defineConfig({
       target: 'es2020',
       cssCodeSplit: true,
       minify: 'esbuild',
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            if (id.includes('graph-ghezelbaash-final.json')) {
-              return 'data-graph';
-            }
-            if (id.includes('services.json')) {
-              return 'data-services';
-            }
-          },
-        },
-      },
     },
     json: {
       stringify: true,
@@ -38,6 +26,4 @@ export default defineConfig({
       legalComments: 'none',
     },
   },
-
-  compressHTML: true,
 });
