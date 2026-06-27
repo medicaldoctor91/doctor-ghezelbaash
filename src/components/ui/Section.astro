@@ -1,0 +1,15 @@
+---
+const {
+  id,
+  eyebrow,
+  title,
+  body = [],
+  variant = 'default'
+} = Astro.props;
+---
+<section id={id} class={variant === 'emphasis' ? 'box section-block section-block--emphasis' : 'section-block'}>
+  {eyebrow && <p class="small">{eyebrow}</p>}
+  {title && <h2>{title}</h2>}
+  {body.map((paragraph) => <p>{paragraph}</p>)}
+  <slot />
+</section>
