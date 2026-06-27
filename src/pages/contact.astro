@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site.mjs';
+---
+<BaseLayout title="Contact" canonicalPath="/contact/">
+  <h1>Contact</h1>
+  <p>{site.phoneDisplay}</p>
+  <p><a href={site.instagram}>Instagram</a></p>
+</BaseLayout>
