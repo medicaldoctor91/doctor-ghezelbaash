@@ -1,0 +1,34 @@
+---
+import { site, absoluteUrl } from '../data/site.mjs';
+
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': absoluteUrl('/#website'),
+      url: absoluteUrl('/'),
+      name: site.nameFa,
+      inLanguage: 'fa-IR'
+    },
+    {
+      '@type': ['Person', 'Physician'],
+      '@id': absoluteUrl('/#dr-saeed-ghezelbash'),
+      name: site.personFa,
+      alternateName: [site.personEn, 'Dr Saeed Ghezelbash'],
+      url: absoluteUrl(site.pages.person),
+      sameAs: site.sameAs.person
+    },
+    {
+      '@type': ['MedicalClinic', 'LocalBusiness'],
+      '@id': absoluteUrl('/#clinic'),
+      name: site.nameFa,
+      alternateName: site.nameEn,
+      url: absoluteUrl(site.pages.clinic),
+      telephone: site.phoneE164,
+      sameAs: site.sameAs.clinic
+    }
+  ]
+};
+---
+<script type="application/ld+json" set:html={JSON.stringify(graph)} />
