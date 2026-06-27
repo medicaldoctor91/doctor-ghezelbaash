@@ -1,5 +1,5 @@
 ---
-import { site, absoluteUrl } from '../data/site.mjs';
+import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
 import GlobalJsonLd from '../components/GlobalJsonLd.astro';
 import PageJsonLd from '../components/PageJsonLd.astro';
 
@@ -11,6 +11,7 @@ const {
 } = Astro.props;
 
 const canonical = absoluteUrl(canonicalPath);
+const ogImage = canonicalImage();
 ---
 <!doctype html>
 <html lang="fa-IR" dir="rtl">
@@ -30,7 +31,12 @@ const canonical = absoluteUrl(canonicalPath);
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content="/doctor.jpg" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content={site.personFa} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     <GlobalJsonLd />
     <PageJsonLd title={title} description={description} canonicalPath={canonicalPath} />
     <style>
