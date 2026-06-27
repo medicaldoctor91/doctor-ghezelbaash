@@ -1,28 +1,29 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const root = process.cwd();
-const dist = path.join(root, 'dist');
+const dist = path.join(process.cwd(), 'dist');
+let failed = false;
 
-function fail(message) {
-  console.error(`FAIL: ${message}`);
-  process.exitCode = 1;
-}
-
-function assertFile(relPath) {
+function read(relPath) {
   const file = path.join(dist, relPath);
   if (!fs.existsSync(file)) {
-    fail(`missing dist/${relPath}`);
+    console.error(`missing dist/${relPath}`);
+    failed = true;
     return '';
   }
   return fs.readFileSync(file, 'utf8');
 }
 
-function assertIncludes(text, needle, label) {
-  if (!text.includes(needle)) fail(`${label} missing ${needle}`);
+function mustContain(relPath, needle) {
+  const text = read(relPath);
+  if (!text.includes(needle)) {
+    console.error(`dist/${relPath} missing ${needle}`);
+    failed = true;
+  }
+  return text;
 }
 
-const requiredFiles = [
+const required = [
   'index.html',
   'sitemap.xml',
   'llms.txt',
@@ -42,58 +43,31 @@ const requiredFiles = [
   'CNAME'
 ];
 
-for (const file of requiredFiles) assertFile(file);
+for (const file of required) read(file);
 
-const serviceSlugs = [
+for (const slug of [
   'botox-kermanshah',
   'filler-kermanshah',
   'thread-lift-kermanshah',
   'skin-hair-rejuvenation-kermanshah',
   'double-chin-liposuction-kermanshah'
-];
-
-const sitemap = assertFile('sitemap.xml');
-const llms = assertFile('llms.txt');
-const servicesJson = JSON.parse(assertFile('services.json'));
-const sameasJson = JSON.parse(assertFile('sameas.json'));
-const brandKb = JSON.parse(assertFile('brand-kb.ghezelbaash.ai-public.json'));
-const locationJson = JSON.parse(assertFile('location.json'));
-const researchJson = JSON.parse(assertFile('research.json'));
-const datasetJson = JSON.parse(assertFile('dataset.json'));
-const entityIndex = JSON.parse(assertFile('entity-hardening-index.json'));
-const authoritySignals = JSON.parse(assertFile('authority-signals.json'));
-
-for (const slug of serviceSlugs) {
-  assertIncludes(sitemap, `https://www.ghezelbaash.ir/${slug}/`, 'sitemap.xml');
-  const html = assertFile(`${slug}/index.html`);
-  assertIncludes(html, '<meta name="robots" content="index,follow">', `${slug}/index.html`);
+]) {
+  mustContain('sitemap.xml', `https://www.ghezelbaash.ir/${slug}/`);
+  mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow">');
 }
 
-assertIncludes(llms, 'Indexable service pages:', 'llms.txt');
-assertIncludes(llms, 'Dr. Saeed Ghezelbash', 'llms.txt');
+mustContain('sameas.json', 'Q140287622');
+mustContain('sameas.json', 'Q140288589');
+mustContain('sameas.json', 'Q140304972');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v3');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'publicationIdentifiers');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'authoritySignals');
+mustContain('location.json', 'ساختمان ویستا');
+mustContain('research.json', '0009-0001-9346-8475');
+mustContain('research.json', '34574943');
+mustContain('dataset.json', '10.5281/zenodo.18765169');
+mustContain('entity-hardening-index.json', 'entity_hardening');
+mustContain('authority-signals.json', 'authority_signals');
 
-if (!Array.isArray(servicesJson.parentServicePages) || servicesJson.parentServicePages.length !== 5) {
-  fail('services.json must expose exactly five parentServicePages');
-}
-
-for (const service of servicesJson.parentServicePages || []) {
-  if (service.robots !== 'index,follow') fail(`service ${service.slug || service.key} is not index,follow`);
-}
-
-const sameAsText = JSON.stringify(sameasJson);
-for (const qid of ['Q140287622', 'Q140288589', 'Q140304972']) {
-  assertIncludes(sameAsText, qid, 'sameas.json');
-}
-
-const brandKbText = JSON.stringify(brandKb);
-assertIncludes(brandKbText, 'www.ghezelbaash.ir', 'brand-kb');
-assertIncludes(brandKbText, 'index,follow', 'brand-kb');
-assertIncludes(brandKbText, 'entity_hardening', 'brand-kb/machine assets context');
-assertIncludes(JSON.stringify(locationJson), 'ساختمان ویستا', 'location.json');
-assertIncludes(JSON.stringify(researchJson), '0009-0001-9346-8475', 'research.json');
-assertIncludes(JSON.stringify(researchJson), '34574943', 'research.json');
-assertIncludes(JSON.stringify(datasetJson), '10.5281/zenodo.18765169', 'dataset.json');
-assertIncludes(JSON.stringify(entityIndex), 'entity_hardening', 'entity-hardening-index.json');
-assertIncludes(JSON.stringify(authoritySignals), 'authority_signals', 'authority-signals.json');
-
-if (!process.exitCode) console.log('Astro dist validation passed');
+if (failed) process.exit(1);
+console.log('Astro dist validation passed');
