@@ -1,34 +1,9 @@
-import { site, absoluteUrl } from '../data/site.mjs';
-import { services } from '../data/services.mjs';
+import { routeRegistry, priorityForPath } from '../lib/routes.mjs';
 
-const staticPaths = [
-  '/',
-  site.pages.person,
-  site.pages.clinic,
-  site.pages.services,
-  ...services.map((service) => `/${service.slug}/`),
-  site.pages.contact,
-  site.pages.evidence,
-  site.pages.kg,
-  '/aesthetic-medicine-dataset.html',
-  '/google-maps-review-evidence.html'
-];
+const urls = [...new Map(routeRegistry.map((route) => [route.path, route])).values()];
 
-const urls = [...new Set(staticPaths)];
-const servicePaths = new Set(services.map((service) => `/${service.slug}/`));
-
-function priorityForPath(path) {
-  if (path === '/') return '1.0';
-  if (path === site.pages.person) return '0.95';
-  if (path === site.pages.clinic || path === site.pages.services) return '0.90';
-  if (servicePaths.has(path)) return '0.86';
-  if (path === site.pages.contact) return '0.80';
-  if (path === site.pages.evidence || path === site.pages.kg) return '0.72';
-  return '0.60';
-}
-
-function renderUrl(path) {
-  return `  <url>\n    <loc>${absoluteUrl(path)}</loc>\n    <lastmod>2026-06-27</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priorityForPath(path)}</priority>\n  </url>`;
+function renderUrl(route) {
+  return `  <url>\n    <loc>${route.url}</loc>\n    <lastmod>2026-06-27</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priorityForPath(route.path)}</priority>\n  </url>`;
 }
 
 export function GET() {
