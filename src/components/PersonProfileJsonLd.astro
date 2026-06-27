@@ -58,12 +58,13 @@ const graph = {
         name: 'پزشک زیبایی',
         occupationLocation: { '@type': 'City', name: location.addressLocality }
       },
+      knowsAbout: ['پزشکی زیبایی', 'بوتاکس', 'فیلر', 'لیفت نخ', 'جوانسازی پوست و مو', 'ساکشن غبغب'],
       affiliation: { '@id': absoluteUrl('/#clinic') },
       worksFor: { '@id': absoluteUrl('/#clinic') },
       workLocation: { '@id': absoluteUrl('/#clinic') },
       subjectOf: [
         { '@type': 'WebPage', name: 'NCBI bibliography', url: researchProfile.bibliographyUrl },
-        { '@type': 'WebPage', name: 'IranMedLabs interview', url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/' },
+        { '@type': 'WebPage', name: 'IranMedLabs media coverage', url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/' },
         { '@type': 'WebPage', name: 'MDPI article', url: 'https://www.mdpi.com/2227-9032/9/9/1169' }
       ]
     },
