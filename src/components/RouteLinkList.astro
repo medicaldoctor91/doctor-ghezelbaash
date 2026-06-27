@@ -1,0 +1,11 @@
+---
+import { getRouteByPath } from '../lib/routes.mjs';
+
+const { paths = [], className = 'grid' } = Astro.props;
+const routes = paths.map((path) => getRouteByPath(path));
+---
+<div class={className} data-component="route-link-list">
+  {routes.map((route) => (
+    <a class="card" href={route.path} data-route-kind={route.kind}>{route.label}</a>
+  ))}
+</div>
