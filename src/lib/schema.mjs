@@ -1,9 +1,20 @@
 import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
+import { publicDataset } from '../data/dataset.mjs';
 import { regulatoryIdentity } from '../data/regulatory.mjs';
 import { researchProfile } from '../data/research.mjs';
 import { services } from '../data/services.mjs';
+import { authoritySignals } from '../data/authoritySignals.mjs';
 import { breadcrumbsForPath } from './routes.mjs';
+import {
+  getMapUrlsForClinic,
+  getSameAsForEntity,
+  getSubjectOfForEntity
+} from './sourceClassifier.mjs';
+
+function unique(values) {
+  return [...new Set(values.filter(Boolean))];
+}
 
 export function buildBreadcrumbList({ canonicalPath = '/', breadcrumbs } = {}) {
   const canonical = absoluteUrl(canonicalPath);
@@ -46,6 +57,34 @@ export function buildWebPageSchema({
   return schema;
 }
 
+export function buildWebsiteEntity() {
+  return {
+    '@type': 'WebSite',
+    '@id': absoluteUrl('/#website'),
+    url: absoluteUrl('/'),
+    name: site.nameFa,
+    alternateName: site.nameEn,
+    inLanguage: site.locale,
+    publisher: { '@id': absoluteUrl('/#clinic') }
+  };
+}
+
+export function buildOrganizationEntity() {
+  return {
+    '@type': 'Organization',
+    '@id': absoluteUrl('/#organization'),
+    name: site.nameEn,
+    alternateName: site.nameFa,
+    url: absoluteUrl('/'),
+    logo: canonicalImage(site.logo),
+    image: canonicalImage(),
+    sameAs: unique([
+      ...getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
+      ...getSameAsForEntity(authoritySignals, 'clinic', site.sameAs.clinic)
+    ])
+  };
+}
+
 export function buildFaqSchema({ canonicalPath = '/', faqItems = [] } = {}) {
   const canonical = absoluteUrl(canonicalPath);
   return {
@@ -70,7 +109,7 @@ export function buildPersonEntity() {
     alternateName: ['دکتر محمدسعید قزلباش', site.personEn, 'Mohammad Saeed Ghezelbash', 'Dr. Saeed Ghezelbaash'],
     url: absoluteUrl(site.pages.person),
     image: canonicalImage(),
-    sameAs: site.sameAs.person,
+    sameAs: getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
     identifier: [
       {
         '@type': 'PropertyValue',
@@ -92,18 +131,15 @@ export function buildPersonEntity() {
     },
     worksFor: { '@id': absoluteUrl('/#clinic') },
     affiliation: { '@id': absoluteUrl('/#clinic') },
+    workLocation: { '@id': absoluteUrl('/#clinic') },
     knowsAbout: services.map((service) => service.shortTitle || service.title),
-    subjectOf: [
-      { '@type': 'WebPage', name: 'NCBI bibliography', url: researchProfile.bibliographyUrl },
-      { '@type': 'WebPage', name: 'IranMedLabs media coverage', url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/' },
-      { '@type': 'WebPage', name: 'MDPI article', url: 'https://www.mdpi.com/2227-9032/9/9/1169' }
-    ]
+    subjectOf: getSubjectOfForEntity(authoritySignals, 'person')
   };
 }
 
 export function buildClinicEntity() {
   return {
-    '@type': ['MedicalBusiness', 'LocalBusiness'],
+    '@type': ['MedicalClinic', 'MedicalBusiness', 'LocalBusiness'],
     '@id': absoluteUrl('/#clinic'),
     name: site.nameFa,
     alternateName: [site.nameEn, 'کلینیک دکتر سعید قزلباش', 'کلینیک زیبایی دکتر قزلباش'],
@@ -111,7 +147,8 @@ export function buildClinicEntity() {
     image: canonicalImage(),
     logo: absoluteUrl(site.logo),
     telephone: location.telephone,
-    sameAs: site.sameAs.clinic,
+    sameAs: getSameAsForEntity(authoritySignals, 'clinic', site.sameAs.clinic),
+    subjectOf: getSubjectOfForEntity(authoritySignals, 'clinic'),
     founder: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
     employee: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
     address: {
@@ -131,8 +168,31 @@ export function buildClinicEntity() {
       name: location.addressLocality,
       addressCountry: location.addressCountry
     },
-    hasMap: location.googleMapsCid,
-    makesOffer: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) }))
+    hasMap: getMapUrlsForClinic(authoritySignals, location),
+    makesOffer: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) })),
+    availableService: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) }))
+  };
+}
+
+export function buildKnowledgeGraphDataset() {
+  return {
+    '@type': 'Dataset',
+    '@id': absoluteUrl('/kg/#dataset'),
+    name: publicDataset.name,
+    description: publicDataset.description,
+    url: absoluteUrl(site.pages.kg),
+    identifier: publicDataset.doi,
+    license: publicDataset.license,
+    datePublished: publicDataset.datePublished,
+    version: publicDataset.version,
+    creator: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+    sameAs: getSameAsForEntity(authoritySignals, 'knowledgeGraph', [
+      publicDataset.wikidata,
+      publicDataset.doiUrl,
+      publicDataset.zenodo,
+      publicDataset.huggingFace,
+      publicDataset.github
+    ])
   };
 }
 
@@ -175,6 +235,20 @@ export function buildServiceItemList({ canonicalPath = site.pages.services } = {
       url: absoluteUrl(`/${service.slug}/`),
       item: { '@id': absoluteUrl(`/${service.slug}/#service`) }
     }))
+  };
+}
+
+export function buildGlobalGraph() {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      buildWebsiteEntity(),
+      buildOrganizationEntity(),
+      buildPersonEntity(),
+      buildClinicEntity(),
+      buildKnowledgeGraphDataset(),
+      ...services.map((service) => buildServiceSchema({ service }))
+    ]
   };
 }
 
