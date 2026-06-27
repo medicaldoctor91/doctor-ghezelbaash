@@ -99,6 +99,10 @@ mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs media coverage');
 mustContain('dr-saeed-ghezelbash/index.html', 'knowsAbout');
 mustContain('dr-saeed-ghezelbash/index.html', 'مصاحبه ایران‌مدلبز با دکتر سعید قزلباش');
 mustContain('dr-saeed-ghezelbash/index.html', 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/');
+mustContain('dr-saeed-ghezelbash/index.html', 'پروفایل حرفه‌ای دکتر سعید قزلباش');
+mustContain('dr-saeed-ghezelbash/index.html', 'جزئیات هویت رسمی و نشانی فعالیت');
+mustContain('dr-saeed-ghezelbash/index.html', 'منابع قابل بررسی برای شناخت دکتر سعید قزلباش');
+mustContain('dr-saeed-ghezelbash/index.html', 'معیارهای انتخاب پزشک زیبایی در کرمانشاه');
 
 if (failed) process.exit(1);
 console.log('Astro dist validation passed');
