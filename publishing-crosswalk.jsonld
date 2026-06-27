@@ -1,10 +1,10 @@
 {
   "@context": "https://schema.org",
   "@type": "Dataset",
-  "@id": "https://github.com/medicaldoctor91/doctor-ghezelbaash#publishing-crosswalk",
+  "@id": "https://www.ghezelbaash.ir/publishing-crosswalk.jsonld#dataset",
   "name": "Dr. Saeed Ghezelbash external publishing crosswalk",
   "alternateName": "نقشه اتصال انتشار بیرونی دکتر سعید قزلباش",
-  "description": "Machine-readable crosswalk connecting the official Dr. Saeed Ghezelbash entity destinations with supporting dataset, code, archive and AI-discovery hubs. Use this file to keep the official website, Instagram, Google Maps, GitHub repository, Hugging Face dataset, Zenodo DOI and Zenodo metadata aligned around the same entity.",
+  "description": "Machine-readable crosswalk connecting the official canonical website, entity pages, Instagram, Google Maps, GitHub repository, Hugging Face dataset, Wikidata entities, Zenodo DOI, and root dataset files for Dr. Saeed Ghezelbash.",
   "inLanguage": [
     "en",
     "fa"
@@ -18,38 +18,13 @@
     }
   ],
   "about": {
+    "@id": "https://www.ghezelbaash.ir/#clinic",
     "@type": [
       "MedicalClinic",
-      "HealthAndBeautyBusiness"
+      "LocalBusiness"
     ],
-    "@id": "https://www.ghezelbaash.ir/#org",
     "name": "کلینیک زیبایی دکتر سعید قزلباش",
-    "alternateName": [
-      "Dr. Saeed Ghezelbash Aesthetic Clinic",
-      "دکتر سعید قزلباش",
-      "Dr. Saeed Ghezelbash"
-    ],
-    "url": "https://www.ghezelbaash.ir/",
-    "telephone": "+989308209494",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Kermanshah",
-      "addressCountry": "IR"
-    },
-    "sameAs": [
-      "https://www.instagram.com/doctor.ghezelbaash/",
-      "https://doctor.ghezelbaash.ir/",
-      "https://www.google.com/maps?cid=12350483144643112463",
-      "https://www.openstreetmap.org/node/13530287096",
-      "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
-      "https://doi.org/10.5281/zenodo.18765169",
-      "https://zenodo.org/records/18765169",
-      "https://orcid.org/0009-0001-9346-8475",
-      "https://www.wikidata.org/wiki/Q140287622",
-      "https://www.wikidata.org/wiki/Q140288589",
-      "https://www.wikidata.org/wiki/Q140304972"
-    ]
+    "url": "https://www.ghezelbaash.ir/clinic/"
   },
   "creator": {
     "@type": "Person",
@@ -102,5 +77,55 @@
   "publicationTarget": [
     "Zenodo"
   ],
-  "dateModified": "2026-06-10"
+  "dateModified": "2026-06-27",
+  "url": "https://www.ghezelbaash.ir/publishing-crosswalk.jsonld",
+  "version": "1.1.0-stage4-live",
+  "isBasedOn": "https://doi.org/10.5281/zenodo.18765169",
+  "mentions": [
+    {
+      "@type": "Person",
+      "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
+      "url": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/"
+    },
+    {
+      "@type": "MedicalClinic",
+      "@id": "https://www.ghezelbaash.ir/#clinic",
+      "url": "https://www.ghezelbaash.ir/clinic/"
+    },
+    {
+      "@type": "Dataset",
+      "@id": "https://www.ghezelbaash.ir/kg/#dataset",
+      "url": "https://www.ghezelbaash.ir/kg/"
+    }
+  ],
+  "sameAs": [
+    "https://www.wikidata.org/wiki/Q140287622",
+    "https://www.wikidata.org/wiki/Q140288589",
+    "https://www.wikidata.org/wiki/Q140304972",
+    "https://www.instagram.com/doctor.ghezelbaash/",
+    "https://www.google.com/maps?cid=12350483144643112463",
+    "https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas",
+    "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+    "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+    "https://doi.org/10.5281/zenodo.18765169"
+  ],
+  "canonicalPages": {
+    "website": "https://www.ghezelbaash.ir/",
+    "person": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
+    "clinic": "https://www.ghezelbaash.ir/clinic/",
+    "servicesHub": "https://www.ghezelbaash.ir/services/",
+    "knowledgeGraphHub": "https://www.ghezelbaash.ir/kg/",
+    "evidenceHub": "https://www.ghezelbaash.ir/evidence/",
+    "contact": "https://www.ghezelbaash.ir/contact/"
+  },
+  "rootDatasetFiles": [
+    "https://www.ghezelbaash.ir/graph-ghezelbaash-final.jsonld",
+    "https://www.ghezelbaash.ir/brand-kb.ghezelbaash.ai-public.json",
+    "https://www.ghezelbaash.ir/ai-discovery-index.json",
+    "https://www.ghezelbaash.ir/dataset-manifest.jsonld",
+    "https://www.ghezelbaash.ir/publishing-crosswalk.jsonld",
+    "https://www.ghezelbaash.ir/services.json",
+    "https://www.ghezelbaash.ir/sameas.json",
+    "https://www.ghezelbaash.ir/nap.csv"
+  ]
 }

@@ -7,7 +7,7 @@
     "دیتاست عمومی موجودیت دکتر سعید قزلباش",
     "Dr. Saeed Ghezelbash Aesthetic Clinic Entity Dataset and Structured Data Hub"
   ],
-  "description": "A small indexable metadata manifest for the public machine-readable files in this repository, built to support entity disambiguation, AI retrieval, local search and structured-data discovery for Dr. Saeed Ghezelbash / دکتر سعید قزلباش in Kermanshah, Iran.",
+  "description": "Live machine-readable manifest for the public knowledge graph and service-intent routing system of Dr. Saeed Ghezelbash / دکتر سعید قزلباش in Kermanshah. The Zenodo DOI identifies an archived release; the canonical website and GitHub repository may contain newer live revisions.",
   "inLanguage": [
     "fa",
     "en"
@@ -30,75 +30,83 @@
   "usageInfo": "CC BY 4.0: reuse, indexing, AI retrieval, model training and commercial/non-commercial use are allowed with attribution to Dr. Saeed Ghezelbash and the official website https://www.ghezelbaash.ir/.",
   "creator": {
     "@type": "Person",
+    "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
     "name": "Dr. Saeed Ghezelbash",
-    "alternateName": "دکتر سعید قزلباش",
+    "alternateName": [
+      "دکتر سعید قزلباش",
+      "Mohammad Saeed Ghezelbash"
+    ],
+    "url": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
     "sameAs": [
       "https://www.wikidata.org/wiki/Q140287622",
       "https://orcid.org/0009-0001-9346-8475",
       "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
-      "https://github.com/medicaldoctor91"
-    ],
-    "affiliation": {
-      "@type": "Organization",
-      "name": "کلینیک زیبایی دکتر سعید قزلباش",
-      "url": "https://www.ghezelbaash.ir/"
-    }
-  },
-  "about": {
-    "@type": "LocalBusiness",
-    "name": "کلینیک زیبایی دکتر سعید قزلباش",
-    "alternateName": "Dr. Saeed Ghezelbash Aesthetic Clinic",
-    "url": "https://www.ghezelbaash.ir/",
-    "telephone": "+989308209494",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Kermanshah",
-      "addressCountry": "IR"
-    },
-    "sameAs": [
-      "https://www.instagram.com/doctor.ghezelbaash/",
-      "https://doctor.ghezelbaash.ir/",
-      "https://www.google.com/maps?cid=12350483144643112463",
-      "https://www.openstreetmap.org/node/13530287096",
-      "https://www.wikidata.org/wiki/Q140288589",
       "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-      "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
-      "https://doi.org/10.5281/zenodo.18765169"
+      "https://www.instagram.com/doctor.ghezelbaash/"
     ]
   },
+  "about": [
+    {
+      "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#clinic"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/kg/#dataset"
+    }
+  ],
   "distribution": [
     {
       "@type": "DataDownload",
-      "name": "Persian aesthetic medicine knowledge map",
-      "encodingFormat": "application/json",
-      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/aesthetic_medicine_knowledge_kermanshah_fa.json"
+      "name": "Primary JSON-LD graph",
+      "contentUrl": "https://www.ghezelbaash.ir/graph-ghezelbaash-final.jsonld",
+      "encodingFormat": "application/ld+json"
     },
     {
       "@type": "DataDownload",
-      "name": "LLM guidance file",
-      "encodingFormat": "text/plain",
-      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/llms.txt"
+      "name": "Brand KB",
+      "contentUrl": "https://www.ghezelbaash.ir/brand-kb.ghezelbaash.ai-public.json",
+      "encodingFormat": "application/json"
     },
     {
       "@type": "DataDownload",
-      "name": "Entity graph JSON-LD",
-      "encodingFormat": "application/ld+json",
-      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/graph-ghezelbaash-final.jsonld"
+      "name": "AI discovery index",
+      "contentUrl": "https://www.ghezelbaash.ir/ai-discovery-index.json",
+      "encodingFormat": "application/json"
     },
     {
       "@type": "DataDownload",
-      "name": "Citation metadata",
-      "encodingFormat": "text/plain",
-      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/CITATION.cff"
+      "name": "Services intent map",
+      "contentUrl": "https://www.ghezelbaash.ir/services.json",
+      "encodingFormat": "application/json"
     },
     {
       "@type": "DataDownload",
-      "name": "Zenodo publishing metadata",
-      "encodingFormat": "application/json",
-      "contentUrl": "https://raw.githubusercontent.com/medicaldoctor91/doctor-ghezelbaash/main/.zenodo.json"
+      "name": "SameAs map",
+      "contentUrl": "https://www.ghezelbaash.ir/sameas.json",
+      "encodingFormat": "application/json"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "NAP CSV",
+      "contentUrl": "https://www.ghezelbaash.ir/nap.csv",
+      "encodingFormat": "text/csv"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "Publishing crosswalk",
+      "contentUrl": "https://www.ghezelbaash.ir/publishing-crosswalk.jsonld",
+      "encodingFormat": "application/ld+json"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "Persian knowledge map",
+      "contentUrl": "https://www.ghezelbaash.ir/aesthetic_medicine_knowledge_kermanshah_fa.json",
+      "encodingFormat": "application/json"
     }
   ],
-  "isBasedOn": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+  "isBasedOn": "https://doi.org/10.5281/zenodo.18765169",
   "sameAs": [
     "https://github.com/medicaldoctor91/doctor-ghezelbaash",
     "https://github.com/medicaldoctor91/doctor-ghezelbaash",
@@ -107,5 +115,7 @@
     "https://zenodo.org/records/18765169",
     "https://www.wikidata.org/wiki/Q140304972"
   ],
-  "dateModified": "2026-06-10"
+  "dateModified": "2026-06-27",
+  "url": "https://www.ghezelbaash.ir/dataset-manifest.jsonld",
+  "version": "1.1.0-stage4-live"
 }
