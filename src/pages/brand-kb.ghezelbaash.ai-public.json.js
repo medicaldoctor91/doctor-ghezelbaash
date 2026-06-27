@@ -1,9 +1,14 @@
 import { site, absoluteUrl } from '../data/site.mjs';
 import { services } from '../data/services.mjs';
+import { location } from '../data/location.mjs';
+import { publicDataset } from '../data/dataset.mjs';
+import { researchProfile } from '../data/research.mjs';
+import { authoritySignals } from '../data/authoritySignals.mjs';
+import { serviceTaxonomy } from '../data/serviceTaxonomy.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.brand_kb.astro.v2',
+    schema: 'ghezelbaash.brand_kb.astro.v3',
     dateModified: '2026-06-27',
     canonicalWebsite: site.canonicalBase + '/',
     canonicalPolicy: {
@@ -18,26 +23,34 @@ export function GET() {
       person: absoluteUrl('/#dr-saeed-ghezelbash'),
       clinic: absoluteUrl('/#clinic'),
       website: absoluteUrl('/#website'),
-      organization: absoluteUrl('/#organization')
+      organization: absoluteUrl('/#organization'),
+      dataset: absoluteUrl('/kg/#dataset')
     },
     person: {
       name_fa: site.personFa,
       name_en: site.personEn,
       canonicalPage: absoluteUrl(site.pages.person),
-      sameAs: site.sameAs.person
+      sameAs: site.sameAs.person,
+      research: {
+        orcid: researchProfile.orcid,
+        bibliographyUrl: researchProfile.bibliographyUrl,
+        publicationIdentifiers: researchProfile.publications.map((item) => ({ doi: item.doi, pmid: item.pmid, pmcid: item.pmcid }))
+      }
     },
     clinic: {
       name_fa: site.nameFa,
       name_en: site.nameEn,
       canonicalPage: absoluteUrl(site.pages.clinic),
-      sameAs: site.sameAs.clinic
+      sameAs: site.sameAs.clinic,
+      location: {
+        address: location.canonicalAddressFa,
+        telephone: location.telephone,
+        googleMaps: location.googleMapsCid,
+        googleMapsPlace: location.googleMapsPlace,
+        openStreetMap: location.openStreetMap
+      }
     },
-    conversionEndpoints: {
-      instagram: site.instagram,
-      phone_display: site.phoneDisplay,
-      phone_e164: site.phoneE164,
-      google_maps: site.mapsCid
-    },
+    dataset: publicDataset,
     servicePages: services.map((service) => ({
       key: service.key,
       slug: service.slug,
@@ -46,16 +59,24 @@ export function GET() {
       robots: 'index,follow',
       bestIntentAnchor: absoluteUrl(`/${service.slug}/#${service.bestIntentAnchor}`),
       bestIntentTitle: service.bestIntentTitle,
-      intentExamples: service.intentExamples
+      intentExamples: service.intentExamples,
+      taxonomy: serviceTaxonomy[service.key] || null
     })),
+    authoritySignals,
     machineAssets: {
       sitemap: absoluteUrl('/sitemap.xml'),
       robots: absoluteUrl('/robots.txt'),
       llms: absoluteUrl('/llms.txt'),
       services: absoluteUrl('/services.json'),
+      serviceTaxonomy: absoluteUrl('/service-taxonomy.json'),
+      sameAs: absoluteUrl('/sameas.json'),
+      location: absoluteUrl('/location.json'),
+      research: absoluteUrl('/research.json'),
+      dataset: absoluteUrl('/dataset.json'),
+      authoritySignals: absoluteUrl('/authority-signals.json'),
+      profileLinks: absoluteUrl('/profile-links.json'),
       aiDiscovery: absoluteUrl('/ai-discovery-index.json'),
       graph: absoluteUrl('/graph-ghezelbaash-final.jsonld'),
-      sameAs: absoluteUrl('/sameas.json'),
       nap: absoluteUrl('/nap.csv')
     }
   };
