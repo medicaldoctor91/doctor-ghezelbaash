@@ -28,7 +28,7 @@ export function buildWebPageSchema({
   pageType = 'WebPage'
 } = {}) {
   const canonical = absoluteUrl(canonicalPath);
-  return {
+  const schema = {
     '@type': pageType,
     '@id': `${canonical}#webpage`,
     url: canonical,
@@ -38,6 +38,12 @@ export function buildWebPageSchema({
     isPartOf: { '@id': absoluteUrl('/#website') },
     breadcrumb: { '@id': `${canonical}#breadcrumb` }
   };
+
+  if (pageType === 'ProfilePage') {
+    schema.mainEntity = { '@id': absoluteUrl('/#dr-saeed-ghezelbash') };
+  }
+
+  return schema;
 }
 
 export function buildFaqSchema({ canonicalPath = '/', faqItems = [] } = {}) {
