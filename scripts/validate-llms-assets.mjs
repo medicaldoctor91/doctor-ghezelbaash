@@ -18,16 +18,34 @@ if (!fs.existsSync(file)) {
     '/seo-aeo-index.json',
     '/page-context.json',
     '/link-graph.json',
+    '/graph-ghezelbaash-final.jsonld',
+    '/brand-kb.ghezelbaash.ai-public.json',
+    '/ai-discovery-index.json',
+    '/dataset-manifest.jsonld',
+    '/publishing-crosswalk.jsonld',
+    '/entity-hardening-index.json',
     '/services.json',
     '/service-taxonomy.json',
     '/sameas.json',
     '/regulatory.json',
     '/location.json',
     '/research.json',
+    '/dataset.json',
     '/authority-signals.json',
+    '/profile-links.json',
+    '/nap.csv',
     '/sitemap.xml'
   ]) {
     if (!text.includes(requiredAsset)) fail(`llms.txt missing ${requiredAsset}`);
+  }
+
+  for (const requiredLine of [
+    'Canonical site:',
+    'Best-intent routing policy:',
+    'Machine-readable root assets:',
+    'Dataset policy:'
+  ]) {
+    if (!text.includes(requiredLine)) fail(`llms.txt missing section: ${requiredLine}`);
   }
 }
 
