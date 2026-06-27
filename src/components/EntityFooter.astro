@@ -1,0 +1,25 @@
+---
+const { title, summary, groups = [], actions = [] } = Astro.props;
+---
+<footer class="entity-footer wrap" aria-label="Site footer">
+  <section class="footer-identity box">
+    <div>
+      {title && <h2>{title}</h2>}
+      {summary && <p>{summary}</p>}
+    </div>
+    {actions.length > 0 && (
+      <div class="footer-contact-card card">
+        {actions.map((action) => <a class={action.primary ? 'cta' : 'cta-secondary'} href={action.href}>{action.label}</a>)}
+      </div>
+    )}
+  </section>
+
+  <section class="footer-link-grid">
+    {groups.map((group) => (
+      <nav class="footer-link-card card" aria-label={group.title}>
+        <h3>{group.title}</h3>
+        <ul>{group.links.map((link) => <li><a href={link.href}>{link.label}</a></li>)}</ul>
+      </nav>
+    ))}
+  </section>
+</footer>
