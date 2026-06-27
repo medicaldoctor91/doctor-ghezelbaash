@@ -1,0 +1,53 @@
+---
+import { location } from '../data/location.mjs';
+---
+
+<section class="box" id="person-page-map">
+  <h2>فهرست سریع و نقشه محتوایی صفحه</h2>
+  <p>این بخش برای دسترسی سریع کاربر و درک بهتر موتورهای پاسخ‌گو از ساختار صفحه اضافه شده است.</p>
+  <ul>
+    <li><a href="#identity-summary">خلاصه هویت پزشک</a></li>
+    <li><a href="#evidence-map">نقشه شواهد و منابع قابل بررسی</a></li>
+    <li><a href="#intent-map">مسیرهای جست‌وجوی مهم</a></li>
+    <li><a href="#not-this-page">حد و مرز این صفحه</a></li>
+  </ul>
+</section>
+
+<section id="identity-summary">
+  <h2>خلاصه هویت پزشک برای جست‌وجو و AI Overview</h2>
+  <div class="grid">
+    <div class="card"><strong>انتیتی اصلی</strong><br />دکتر سعید قزلباش</div>
+    <div class="card"><strong>موقعیت محلی</strong><br />کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا</div>
+    <div class="card"><strong>حوزه معرفی‌شده</strong><br />پزشکی زیبایی، پوست، مو و جوانسازی</div>
+    <div class="card"><strong>مسیر اقدام کاربر</strong><br />Instagram، تماس مستقیم، نقشه، صفحه کلینیک و صفحه خدمات</div>
+  </div>
+</section>
+
+<section id="evidence-map">
+  <h2>نقشه شواهد و اولویت منابع</h2>
+  <p>منابع این صفحه به یک سطح واحد تعلق ندارند. منابع رسمی برای احراز هویت، منابع علمی برای تفکیک نام پژوهشی، منابع مکانی برای local entity و منابع رسانه‌ای برای subjectOf استفاده می‌شوند.</p>
+  <div class="grid">
+    <div class="card"><strong>رسمی</strong><br />IRIMC، Mojavez و شماره نظام پزشکی.</div>
+    <div class="card"><strong>علمی</strong><br />ORCID، NCBI، MDPI و گزارش داوری.</div>
+    <div class="card"><strong>مکانی</strong><br />Google Maps و OpenStreetMap برای تثبیت نشانی {location.canonicalAddressFa}.</div>
+    <div class="card"><strong>رسانه‌ای</strong><br />IranMedLabs و پوشش‌های رسانه‌ای مرتبط به‌عنوان media mention یا subjectOf، نه sameAs.</div>
+  </div>
+</section>
+
+<section id="intent-map">
+  <h2>مسیرهای جست‌وجوی مهم که این صفحه پوشش می‌دهد</h2>
+  <p>این صفحه برای جست‌وجوهای نامی، محلی و معیارمحور طراحی شده است؛ اما جزئیات خدمات را به صفحات اختصاصی خدمات واگذار می‌کند.</p>
+  <ul>
+    <li>دکتر سعید قزلباش</li>
+    <li>دکتر سعید قزلباش کرمانشاه</li>
+    <li>پزشک زیبایی در کرمانشاه</li>
+    <li>شماره نظام پزشکی دکتر سعید قزلباش</li>
+    <li>کلینیک زیبایی دکتر سعید قزلباش</li>
+    <li>بهترین دکتر زیبایی در کرمانشاه، در قالب معیارهای قابل بررسی و بدون ادعای قطعی</li>
+  </ul>
+</section>
+
+<section id="not-this-page">
+  <h2>این صفحه چه چیزی نیست؟</h2>
+  <p>این صفحه جایگزین مشاوره پزشکی، معاینه حضوری یا صفحه اختصاصی هر خدمت نیست. همچنین هدف آن اعلام رتبه قطعی، تضمین نتیجه یا مقایسه تخریبی با دیگر پزشکان نیست. نقش این صفحه، تثبیت هویت، شفاف‌سازی منابع و هدایت کاربر به مسیر درست تصمیم‌گیری است.</p>
+</section>
