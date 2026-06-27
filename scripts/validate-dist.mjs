@@ -88,7 +88,7 @@ mustContain('dr-saeed-ghezelbash/index.html', 'دکتر سعید قزلباش | 
 mustContain('dr-saeed-ghezelbash/index.html', '۱۶۷۴۳۰');
 mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs');
 mustContain('dr-saeed-ghezelbash/index.html', '/botox-kermanshah/');
-mustContain('dr-saeed-ghezelbash/index.html', 'پرسش‌های پرتکرار درباره دکتر سعید قزلباش');
+mustContain('dr-saeed-ghezelbash/index.html', 'پرسش‌های متداول درباره دکتر سعید قزلباش');
 mustContain('dr-saeed-ghezelbash/index.html', 'ProfilePage');
 mustContain('dr-saeed-ghezelbash/index.html', 'FAQPage');
 mustContain('dr-saeed-ghezelbash/index.html', '#profile-page');
