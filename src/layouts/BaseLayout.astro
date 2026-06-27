@@ -1,10 +1,11 @@
 ---
 import { site, absoluteUrl } from '../data/site.mjs';
 import GlobalJsonLd from '../components/GlobalJsonLd.astro';
+import PageJsonLd from '../components/PageJsonLd.astro';
 
 const {
   title = site.nameFa,
-  description = 'وب‌سایت رسمی و گراف دانش عمومی دکتر سعید قزلباش و کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه.',
+  description = 'Canonical public website and knowledge graph for Dr. Saeed Ghezelbash.',
   canonicalPath = '/',
   robots = 'index,follow'
 } = Astro.props;
@@ -31,6 +32,7 @@ const canonical = absoluteUrl(canonicalPath);
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content="/doctor.jpg" />
     <GlobalJsonLd />
+    <PageJsonLd title={title} description={description} canonicalPath={canonicalPath} />
     <style>
       :root{--brand:#8b0000;--ink:#151515;--muted:#5f5f5f;--line:#ead7d7;--soft:#fff7f7;--bg:#fff}
       *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif;line-height:1.95}
