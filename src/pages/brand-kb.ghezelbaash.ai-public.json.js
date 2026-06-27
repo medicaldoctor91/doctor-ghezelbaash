@@ -3,14 +3,15 @@ import { services } from '../data/services.mjs';
 import { location } from '../data/location.mjs';
 import { publicDataset } from '../data/dataset.mjs';
 import { researchProfile } from '../data/research.mjs';
-import { authoritySignals } from '../data/authoritySignals.mjs';
+import { authoritySignalPolicy, authoritySignals } from '../data/authoritySignals.mjs';
 import { serviceTaxonomy } from '../data/serviceTaxonomy.mjs';
 import { regulatoryIdentity } from '../data/regulatory.mjs';
+import { getSameAsForEntity, getUrlsByUse } from '../lib/sourceClassifier.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.brand_kb.astro.v4.superset',
-    dateModified: '2026-06-27',
+    schema: 'ghezelbaash.brand_kb.astro.v5.source_contract',
+    dateModified: '2026-06-28',
     canonicalWebsite: site.canonicalBase + '/',
     canonicalPolicy: {
       primaryDomain: 'www.ghezelbaash.ir',
@@ -32,7 +33,7 @@ export function GET() {
       name_en: site.personEn,
       full_name_en: regulatoryIdentity.irimc.canonicalName,
       canonicalPage: absoluteUrl(site.pages.person),
-      sameAs: site.sameAs.person,
+      sameAs: getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
       identifiers: {
         wikidata: 'Q140287622',
         orcid: researchProfile.orcid.replace('https://orcid.org/', ''),
@@ -43,23 +44,33 @@ export function GET() {
       research: {
         orcid: researchProfile.orcid,
         bibliographyUrl: researchProfile.bibliographyUrl,
-        publicationIdentifiers: researchProfile.publications.map((item) => ({ doi: item.doi, pmid: item.pmid, pmcid: item.pmcid, url: item.url || item.pubmed, reviewReport: item.reviewReport || null }))
+        publicationIdentifiers: researchProfile.publications.map((item) => ({
+          doi: item.doi,
+          pmid: item.pmid,
+          pmcid: item.pmcid,
+          url: item.url || item.pubmed,
+          reviewReport: item.reviewReport || null
+        }))
       }
     },
     clinic: {
       name_fa: site.nameFa,
       name_en: site.nameEn,
       canonicalPage: absoluteUrl(site.pages.clinic),
-      sameAs: site.sameAs.clinic,
+      sameAs: getSameAsForEntity(authoritySignals, 'clinic', site.sameAs.clinic),
       location: {
         address: location.canonicalAddressFa,
         telephone: location.telephone,
         googleMaps: location.googleMapsCid,
         googleMapsPlace: location.googleMapsPlace,
         openStreetMap: location.openStreetMap,
+        mapProfiles: getUrlsByUse(authoritySignals, 'clinic', 'hasMap'),
         latitude: location.geo.latitude,
         longitude: location.geo.longitude
       }
+    },
+    knowledgeGraph: {
+      sameAs: getSameAsForEntity(authoritySignals, 'knowledgeGraph', site.sameAs.kg)
     },
     regulatory: regulatoryIdentity,
     dataset: publicDataset,
@@ -74,6 +85,7 @@ export function GET() {
       intentExamples: service.intentExamples,
       taxonomy: serviceTaxonomy[service.key] || null
     })),
+    authorityPolicy: authoritySignalPolicy,
     authoritySignals,
     machineAssets: {
       sitemap: absoluteUrl('/sitemap.xml'),
@@ -89,6 +101,9 @@ export function GET() {
       profileLinks: absoluteUrl('/profile-links.json'),
       aiDiscovery: absoluteUrl('/ai-discovery-index.json'),
       graph: absoluteUrl('/graph-ghezelbaash-final.jsonld'),
+      pageContext: absoluteUrl('/page-context.json'),
+      linkGraph: absoluteUrl('/link-graph.json'),
+      entityHardening: absoluteUrl('/entity-hardening-index.json'),
       nap: absoluteUrl('/nap.csv')
     }
   };
