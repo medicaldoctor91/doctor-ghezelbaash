@@ -57,6 +57,11 @@ for (const slug of [
   mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow">');
 }
 
+mustContain('index.html', 'https://www.ghezelbaash.ir/doctor.jpg');
+mustContain('index.html', 'twitter:card');
+mustContain('llms.txt', '/regulatory.json');
+mustContain('llms.txt', '/research.json');
+mustContain('llms.txt', '/authority-signals.json');
 mustContain('sameas.json', 'Q140287622');
 mustContain('sameas.json', 'Q140288589');
 mustContain('sameas.json', 'Q140304972');
