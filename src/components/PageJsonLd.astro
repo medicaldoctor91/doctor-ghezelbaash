@@ -1,5 +1,6 @@
 ---
-import { buildPageGraph } from '../lib/schema.mjs';
+import { buildFaqSchema, buildPageGraph, buildServiceSchema } from '../lib/schema.mjs';
+import { getRouteByPath } from '../lib/routes.mjs';
 
 const {
   title,
@@ -10,13 +11,21 @@ const {
   extraGraph = []
 } = Astro.props;
 
+const route = getRouteByPath(canonicalPath);
+const routeGraph = route.kind === 'service' && route.service
+  ? [
+      buildServiceSchema({ service: route.service, canonicalPath }),
+      buildFaqSchema({ canonicalPath, faqItems: route.service.faq || [] })
+    ]
+  : [];
+
 const graph = buildPageGraph({
   title,
   description,
   canonicalPath,
   pageType,
   breadcrumbs,
-  extraGraph
+  extraGraph: [...routeGraph, ...extraGraph]
 });
 ---
 <script type="application/ld+json" set:html={JSON.stringify(graph)} />
