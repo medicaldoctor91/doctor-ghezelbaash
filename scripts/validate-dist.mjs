@@ -81,6 +81,8 @@ mustContain('research.json', '34574943');
 mustContain('dataset.json', '10.5281/zenodo.18765169');
 mustContain('entity-hardening-index.json', 'entity_hardening');
 mustContain('authority-signals.json', 'authority_signals');
+mustContain('authority-signals.json', 'iranmedlabs-interview');
+mustContain('authority-signals.json', 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/');
 
 if (failed) process.exit(1);
 console.log('Astro dist validation passed');
