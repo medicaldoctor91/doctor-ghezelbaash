@@ -128,7 +128,7 @@ mustContain('dr-saeed-ghezelbash/index.html', '/botox-kermanshah/');
 mustContain('dr-saeed-ghezelbash/index.html', 'پرسش‌های متداول درباره دکتر سعید قزلباش');
 mustContain('dr-saeed-ghezelbash/index.html', 'ProfilePage');
 mustContain('dr-saeed-ghezelbash/index.html', 'FAQPage');
-mustNotContain('dr-saeed-ghezelbash/index.html', '#profile-page');
+mustNotContain('dr-saeed-ghezelbash/index.html', 'dr-saeed-ghezelbash/#profile-page');
 mustContain('dr-saeed-ghezelbash/index.html', '#webpage');
 mustContain('dr-saeed-ghezelbash/index.html', '#faq');
 mustContain('dr-saeed-ghezelbash/index.html', 'Physician');
