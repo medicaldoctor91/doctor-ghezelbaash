@@ -15,9 +15,20 @@ const staticPaths = [
 ];
 
 const urls = [...new Set(staticPaths)];
+const servicePaths = new Set(services.map((service) => `/${service.slug}/`));
+
+function priorityForPath(path) {
+  if (path === '/') return '1.0';
+  if (path === site.pages.person) return '0.95';
+  if (path === site.pages.clinic || path === site.pages.services) return '0.90';
+  if (servicePaths.has(path)) return '0.86';
+  if (path === site.pages.contact) return '0.80';
+  if (path === site.pages.evidence || path === site.pages.kg) return '0.72';
+  return '0.60';
+}
 
 function renderUrl(path) {
-  return `  <url>\n    <loc>${absoluteUrl(path)}</loc>\n    <lastmod>2026-06-27</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${path === '/' ? '1.0' : '0.8'}</priority>\n  </url>`;
+  return `  <url>\n    <loc>${absoluteUrl(path)}</loc>\n    <lastmod>2026-06-27</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${priorityForPath(path)}</priority>\n  </url>`;
 }
 
 export function GET() {
