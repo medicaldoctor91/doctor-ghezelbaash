@@ -1,0 +1,18 @@
+---
+const { title = 'مسیرهای قابل بررسی', body, items = [] } = Astro.props;
+---
+<section class="evidence-panel">
+  <div>
+    <p class="small">لایه اعتماد و بررسی</p>
+    <h2>{title}</h2>
+    {body && <p>{body}</p>}
+  </div>
+  <div class="evidence-grid">
+    {items.map((item) => (
+      <a class="evidence-link" href={item.href}>
+        <strong>{item.title}</strong>
+        {item.body && <span>{item.body}</span>}
+      </a>
+    ))}
+  </div>
+</section>
