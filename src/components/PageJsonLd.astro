@@ -1,5 +1,12 @@
 ---
-import { buildFaqSchema, buildPageGraph, buildServiceSchema } from '../lib/schema.mjs';
+import {
+  buildClinicEntity,
+  buildFaqSchema,
+  buildPageGraph,
+  buildPersonEntity,
+  buildServiceItemList,
+  buildServiceSchema
+} from '../lib/schema.mjs';
 import { getRouteByPath } from '../lib/routes.mjs';
 
 const {
@@ -12,12 +19,26 @@ const {
 } = Astro.props;
 
 const route = getRouteByPath(canonicalPath);
-const routeGraph = route.kind === 'service' && route.service
-  ? [
-      buildServiceSchema({ service: route.service, canonicalPath }),
-      buildFaqSchema({ canonicalPath, faqItems: route.service.faq || [] })
-    ]
-  : [];
+const routeGraph = [];
+
+if (route.kind === 'person') {
+  routeGraph.push(buildPersonEntity());
+}
+
+if (route.kind === 'clinic') {
+  routeGraph.push(buildClinicEntity(), buildPersonEntity());
+}
+
+if (route.kind === 'services-hub') {
+  routeGraph.push(buildServiceItemList({ canonicalPath }));
+}
+
+if (route.kind === 'service' && route.service) {
+  routeGraph.push(
+    buildServiceSchema({ service: route.service, canonicalPath }),
+    buildFaqSchema({ canonicalPath, faqItems: route.service.faq || [] })
+  );
+}
 
 const graph = buildPageGraph({
   title,
