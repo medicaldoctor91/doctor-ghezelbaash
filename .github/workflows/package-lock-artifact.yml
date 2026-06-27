@@ -9,7 +9,7 @@ on:
       - .github/workflows/package-lock-artifact.yml
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: package-lock-artifact
@@ -44,3 +44,15 @@ jobs:
         with:
           name: package-lock-json
           path: package-lock.json
+
+      - name: Commit package lock when changed
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "Add package lock for reproducible Astro build"
+          git push
