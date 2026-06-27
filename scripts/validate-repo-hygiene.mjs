@@ -24,7 +24,8 @@ const removedLegacyRootAssets = [
   'services.json',
   'sitemap.xml',
   'dataset-manifest.jsonld',
-  'publishing-crosswalk.jsonld'
+  'publishing-crosswalk.jsonld',
+  'google-maps-review-evidence.html'
 ];
 
 for (const file of removedLegacyRootAssets) {
@@ -43,7 +44,8 @@ for (const file of [
   'publishing-crosswalk.jsonld',
   'llms.txt',
   'services.json',
-  'sitemap.xml'
+  'sitemap.xml',
+  'google-maps-review-evidence.html'
 ]) {
   if (preparePublic.includes(`'${file}'`) || preparePublic.includes(`"${file}"`)) {
     fail(`generated or deprecated asset must not be copied by prepare-public: ${file}`);
