@@ -13,8 +13,7 @@ const filesToExposeAtWebRoot = [
   'aesthetic_medicine_knowledge_kermanshah_fa.json',
   'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json',
   'nap.csv',
-  'aesthetic-medicine-dataset.html',
-  'google-maps-review-evidence.html'
+  'aesthetic-medicine-dataset.html'
 ];
 
 for (const file of filesToExposeAtWebRoot) {
