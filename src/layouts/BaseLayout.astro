@@ -13,7 +13,9 @@ const {
   description = 'Canonical public website and knowledge graph for Dr. Saeed Ghezelbash.',
   canonicalPath = '/',
   robots = 'index,follow',
-  breadcrumbs
+  breadcrumbs,
+  pageType = 'WebPage',
+  extraGraph = []
 } = Astro.props;
 
 const canonical = absoluteUrl(canonicalPath);
@@ -45,7 +47,7 @@ const showPersonEnhancements = canonicalPath === '/dr-saeed-ghezelbash/';
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
     <GlobalJsonLd />
-    <PageJsonLd title={title} description={description} canonicalPath={canonicalPath} breadcrumbs={breadcrumbs} />
+    <PageJsonLd title={title} description={description} canonicalPath={canonicalPath} pageType={pageType} breadcrumbs={breadcrumbs} extraGraph={extraGraph} />
     <style>
       :root{--brand:#8b0000;--ink:#151515;--muted:#5f5f5f;--line:#ead7d7;--soft:#fff7f7;--bg:#fff}
       *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif;line-height:1.95}
