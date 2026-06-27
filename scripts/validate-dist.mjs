@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const dist = path.join(process.cwd(), 'dist');
+const root = process.cwd();
+const dist = path.join(root, 'dist');
 let failed = false;
 
 function read(relPath) {
@@ -23,6 +24,11 @@ function mustContain(relPath, needle) {
   return text;
 }
 
+if (!fs.existsSync(path.join(root, 'package-lock.json'))) {
+  console.error('missing package-lock.json');
+  failed = true;
+}
+
 const required = [
   'index.html',
   'sitemap.xml',
@@ -41,6 +47,7 @@ const required = [
   'service-taxonomy.json',
   'graph-ghezelbaash-final.jsonld',
   'dr-saeed-ghezelbash/index.html',
+  'dr-saeed-ghezelbash-aesthetic-clinic/index.html',
   'robots.txt',
   'CNAME'
 ];
@@ -56,10 +63,17 @@ for (const slug of [
 ]) {
   mustContain('sitemap.xml', `https://www.ghezelbaash.ir/${slug}/`);
   mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow">');
+  mustContain(`${slug}/index.html`, 'BreadcrumbList');
+  mustContain(`${slug}/index.html`, '#breadcrumb');
+  mustContain(`${slug}/index.html`, '#service');
+  mustContain(`${slug}/index.html`, 'Service');
+  mustContain(`${slug}/index.html`, 'FAQPage');
+  mustContain(`${slug}/index.html`, 'خدمات زیبایی در کرمانشاه');
 }
 
 mustContain('index.html', 'https://www.ghezelbaash.ir/doctor.jpg');
 mustContain('index.html', 'twitter:card');
+mustContain('index.html', 'BreadcrumbList');
 mustContain('llms.txt', '/regulatory.json');
 mustContain('llms.txt', '/research.json');
 mustContain('llms.txt', '/authority-signals.json');
@@ -93,6 +107,7 @@ mustContain('dr-saeed-ghezelbash/index.html', 'ProfilePage');
 mustContain('dr-saeed-ghezelbash/index.html', 'FAQPage');
 mustContain('dr-saeed-ghezelbash/index.html', '#profile-page');
 mustContain('dr-saeed-ghezelbash/index.html', '#faq');
+mustContain('dr-saeed-ghezelbash/index.html', 'BreadcrumbList');
 mustContain('dr-saeed-ghezelbash/index.html', 'فهرست سریع و نقشه محتوایی صفحه');
 mustContain('dr-saeed-ghezelbash/index.html', 'نقشه شواهد و اولویت منابع');
 mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs media coverage');
@@ -103,6 +118,11 @@ mustContain('dr-saeed-ghezelbash/index.html', 'پروفایل حرفه‌ای د
 mustContain('dr-saeed-ghezelbash/index.html', 'جزئیات هویت رسمی و نشانی فعالیت');
 mustContain('dr-saeed-ghezelbash/index.html', 'منابع قابل بررسی برای شناخت دکتر سعید قزلباش');
 mustContain('dr-saeed-ghezelbash/index.html', 'معیارهای انتخاب پزشک زیبایی در کرمانشاه');
+mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه');
+mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'Google Maps');
+mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'OpenStreetMap');
+mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'sameAs JSON');
+mustContain('dr-saeed-ghezelbash-aesthetic-clinic/index.html', 'BreadcrumbList');
 
 if (failed) process.exit(1);
 console.log('Astro dist validation passed');
