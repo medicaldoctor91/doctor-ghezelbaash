@@ -3,12 +3,15 @@ import { site } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
 import { researchProfile } from '../data/research.mjs';
 import { regulatoryIdentity } from '../data/regulatory.mjs';
+import { services } from '../data/services.mjs';
 ---
 
 <section class="box" id="person-profile-content">
+  <p class="small">پروفایل حرفه‌ای و مسیر اعتماد</p>
   <h2>پروفایل حرفه‌ای دکتر سعید قزلباش</h2>
-  <p>دکتر سعید قزلباش پزشک فعال در حوزه زیبایی در کرمانشاه است. این صفحه برای معرفی یکپارچه هویت حرفه‌ای، مسیرهای رسمی احراز هویت، منابع پژوهشی، نشانی کلینیک و ارتباط با صفحات خدمات ساخته شده است.</p>
-  <p>نقش این صفحه، تمرکز بر شخص دکتر سعید قزلباش است؛ بنابراین جزئیات کامل هر خدمت در صفحه اختصاصی همان خدمت آمده و این صفحه بیشتر به هویت، شواهد، منابع و مسیر تصمیم‌گیری کاربر می‌پردازد.</p>
+  <p>دکتر سعید قزلباش پزشک فعال در حوزه زیبایی در کرمانشاه است. نقش این صفحه، تمرکز دادن همه سیگنال‌های مهم در یک مسیر واحد است: نام، شماره نظام پزشکی، نشانی، تماس، خدمات، منابع پژوهشی، نقشه، sameAs و مسیر هماهنگی رسمی.</p>
+  <p>برای کاربر، این صفحه باید تصمیم را کوتاه‌تر کند. برای موتور جست‌وجو و سیستم‌های پاسخ‌گو، این صفحه باید انتیتی شخص را با کلینیک، شهر، خدمات و منابع قابل بررسی پیوند دهد.</p>
+  <p><a class="cta" href={site.instagram}>مشاهده اینستاگرام رسمی و هماهنگی</a></p>
 </section>
 
 <section id="official-identity-details">
@@ -17,42 +20,49 @@ import { regulatoryIdentity } from '../data/regulatory.mjs';
     <div class="card"><strong>نام اصلی قابل جست‌وجو</strong><br />دکتر سعید قزلباش</div>
     <div class="card"><strong>نام رسمی کامل</strong><br />دکتر محمدسعید قزلباش</div>
     <div class="card"><strong>نام انگلیسی معیار</strong><br /><span class="ltr">Dr. Saeed Ghezelbash</span></div>
-    <div class="card"><strong>شماره نظام پزشکی</strong><br />۱۶۷۴۳۰</div>
+    <div class="card"><strong>شماره نظام پزشکی</strong><br />{regulatoryIdentity.irimc.medicalCouncilNumber}</div>
     <div class="card"><strong>شهر و نشانی</strong><br />{location.canonicalAddressFa}</div>
-    <div class="card"><strong>تلفن</strong><br /><a href="tel:+989308209494">۰۹۳۰۸۲۰۹۴۹۴</a></div>
+    <div class="card"><strong>تلفن</strong><br /><a href="tel:+989308209494">{location.phoneDisplay}</a></div>
   </div>
-  <p>برای کاربر، مهم‌ترین مزیت این بخش امکان بررسی سریع هویت و مسیر ارتباط است. برای موتور جست‌وجو و سیستم‌های پاسخ‌گو نیز این بخش نام، شهر، نشانی، شماره نظام و منبع رسمی را در کنار هم قرار می‌دهد.</p>
+  <p>این بخش برای تثبیت NAP، احراز هویت و کاهش ابهام نامی ساخته شده است. هر صفحه خدمات باید به این هویت برگردد تا قدرت topical و local سایت حفظ شود.</p>
 </section>
 
 <section id="service-route-summary">
-  <h2>ارتباط دکتر سعید قزلباش با صفحات خدمات</h2>
-  <p>صفحه پزشک نباید جایگزین صفحات خدمات شود. کاربر برای تصمیم‌گیری دقیق‌تر باید از این صفحه به صفحه خدمت مرتبط هدایت شود.</p>
-  <ul>
-    <li><a href="/botox-kermanshah/">بوتاکس در کرمانشاه</a></li>
-    <li><a href="/filler-kermanshah/">فیلر در کرمانشاه</a></li>
-    <li><a href="/thread-lift-kermanshah/">لیفت نخ در کرمانشاه</a></li>
-    <li><a href="/skin-hair-rejuvenation-kermanshah/">جوانسازی پوست و مو در کرمانشاه</a></li>
-    <li><a href="/double-chin-liposuction-kermanshah/">ساکشن غبغب در کرمانشاه</a></li>
-  </ul>
+  <h2>خدمات متصل به دکتر سعید قزلباش</h2>
+  <p>صفحه پزشک نباید جایگزین صفحات خدمات شود. مدل سودمندتر این است که صفحه پزشک اعتماد بسازد و صفحات خدمات کاربر آماده اقدام را به مسیر مشخص برسانند.</p>
+  <div class="grid">
+    {services.map((service) => (
+      <article class="card">
+        <h3><a href={`/${service.slug}/`}>{service.title}</a></h3>
+        <p>{service.description}</p>
+      </article>
+    ))}
+  </div>
 </section>
 
 <section id="profile-source-links">
   <h2>منابع قابل بررسی برای شناخت دکتر سعید قزلباش</h2>
-  <p>این صفحه از چند دسته منبع استفاده می‌کند: منابع رسمی برای احراز هویت، منابع علمی برای تفکیک نام پژوهشی، منابع مکانی برای local entity و منابع رسانه‌ای برای subjectOf.</p>
-  <ul>
-    <li><a href={regulatoryIdentity.irimc.url}>پروفایل IRIMC</a></li>
-    <li><a href={regulatoryIdentity.mojavez.url}>استعلام Mojavez</a></li>
-    <li><a href={researchProfile.orcid}>شناسه ORCID</a></li>
-    <li><a href={researchProfile.bibliographyUrl}>کتاب‌شناسی NCBI</a></li>
-    <li><a href="https://www.wikidata.org/wiki/Q140287622">Wikidata Q140287622</a></li>
-    <li><a href={location.googleMapsCid}>Google Maps</a></li>
-    <li><a href={location.openStreetMap}>OpenStreetMap</a></li>
-    <li><a href="https://iranmedlabs.com/skin-and-hair-and-beauty/120049/">IranMedLabs</a></li>
-  </ul>
+  <p>منابع این صفحه در چهار گروه استفاده می‌شوند: منابع رسمی برای احراز هویت، منابع علمی برای تفکیک نام پژوهشی، منابع مکانی برای local entity و منابع رسانه‌ای برای subjectOf.</p>
+  <div class="grid">
+    <a class="card" href={regulatoryIdentity.irimc.url}>پروفایل IRIMC</a>
+    <a class="card" href={regulatoryIdentity.mojavez.url}>استعلام Mojavez</a>
+    <a class="card" href={researchProfile.orcid}>شناسه ORCID</a>
+    <a class="card" href={researchProfile.bibliographyUrl}>کتاب‌شناسی NCBI</a>
+    <a class="card" href="https://www.wikidata.org/wiki/Q140287622">Wikidata Q140287622</a>
+    <a class="card" href={location.googleMapsCid}>Google Maps</a>
+    <a class="card" href={location.openStreetMap}>OpenStreetMap</a>
+    <a class="card" href="https://iranmedlabs.com/skin-and-hair-and-beauty/120049/">IranMedLabs</a>
+  </div>
 </section>
 
 <section id="profile-decision-criteria">
   <h2>معیارهای انتخاب پزشک زیبایی در کرمانشاه</h2>
-  <p>انتخاب پزشک زیبایی نباید فقط بر اساس شعار یا رتبه‌بندی ساده انجام شود. معیارهای قابل بررسی شامل هویت رسمی، شماره نظام پزشکی، نشانی روشن، توضیح محدودیت‌ها، مسیر ارتباط، نمونه‌کار قابل بررسی و مشاوره پیش از اقدام است.</p>
-  <p>این صفحه این معیارها را برای دکتر سعید قزلباش در یک مسیر قابل بررسی قرار می‌دهد و کاربر را برای مطالعه جزئیات خدمات به صفحات اختصاصی هدایت می‌کند.</p>
+  <p>انتخاب پزشک زیبایی نباید فقط بر اساس شعار، قیمت یا رتبه‌بندی ساده انجام شود. معیارهای قابل بررسی شامل هویت رسمی، شماره نظام پزشکی، نشانی روشن، توضیح محدودیت‌ها، مسیر ارتباط، نمونه‌کار قابل بررسی و مشاوره پیش از اقدام است.</p>
+  <ul>
+    <li>هویت رسمی و شماره نظام پزشکی قابل بررسی باشد.</li>
+    <li>آدرس و مسیر تماس شفاف باشد.</li>
+    <li>درمان بر اساس فرم چهره و وضعیت فرد توضیح داده شود.</li>
+    <li>محدودیت‌ها، مراقبت‌ها و احتمال نیاز به پیگیری پنهان نشود.</li>
+    <li>صفحات خدمات به‌صورت جداگانه و قابل فهم ساخته شده باشند.</li>
+  </ul>
 </section>
