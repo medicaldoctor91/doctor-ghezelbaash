@@ -1,19 +1,24 @@
-# Legacy Firebase redirect policy
+# Deprecated Firebase deployment note
 
-Canonical website:
+Canonical production website:
 
 ```text
 https://www.ghezelbaash.ir/
 ```
 
-Firebase Hosting is not the canonical public website for this project.
+The canonical deployment path for this project is the Astro static build deployed through GitHub Pages Actions.
 
-If `kg.ghezelbaash.ir` remains active, it should behave only as a redirect layer:
+Firebase Hosting is not canonical and must not be used as a competing public mirror for the main website.
+
+Current policy:
+
+- GitHub Pages Actions is the production deployment path.
+- Firebase operational workflows and `firebase.json` are intentionally removed from the repository.
+- If any Firebase or `kg.ghezelbaash.ir` surface remains active outside this repository, it should only redirect users and crawlers toward the canonical website or the canonical `/kg/` page.
+- Do not restore Firebase deployment files unless there is a deliberate redirect-only migration plan.
+
+Redirect-only target, if needed:
 
 ```text
 https://kg.ghezelbaash.ir/* -> https://www.ghezelbaash.ir/kg/
 ```
-
-The workflow `.github/workflows/firebase-hosting-live.yml` is manual-only and deploys the redirect-only `firebase.json`.
-
-Do not use Firebase as a competing mirror of the canonical website.
