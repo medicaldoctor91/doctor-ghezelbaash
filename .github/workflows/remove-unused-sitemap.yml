@@ -1,0 +1,39 @@
+name: Remove unused sitemap dependency
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  remove-sitemap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Remove unused dependency
+        run: npm uninstall @astrojs/sitemap --no-audit --no-fund
+
+      - name: Build and validate
+        run: npm run build
+
+      - name: Commit dependency cleanup
+        run: |
+          if [ -z "$(git status --porcelain -- package.json package-lock.json)" ]; then
+            echo "No dependency changes detected"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "Remove unused Astro sitemap dependency"
+          git push
