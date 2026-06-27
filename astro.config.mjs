@@ -1,19 +1,10 @@
 import { defineConfig } from 'astro/config';
-import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://www.ghezelbaash.ir',
 
   output: 'static',
   trailingSlash: 'always',
-
-  integrations: [
-    sitemap({
-      changefreq: 'weekly',
-      priority: 0.9,
-      lastmod: new Date(),
-    }),
-  ],
 
   build: {
     inlineStylesheets: 'always',
