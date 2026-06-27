@@ -30,6 +30,13 @@ const requiredFiles = [
   'sameas.json',
   'brand-kb.ghezelbaash.ai-public.json',
   'ai-discovery-index.json',
+  'entity-hardening-index.json',
+  'location.json',
+  'research.json',
+  'dataset.json',
+  'authority-signals.json',
+  'profile-links.json',
+  'service-taxonomy.json',
   'graph-ghezelbaash-final.jsonld',
   'robots.txt',
   'CNAME'
@@ -50,6 +57,11 @@ const llms = assertFile('llms.txt');
 const servicesJson = JSON.parse(assertFile('services.json'));
 const sameasJson = JSON.parse(assertFile('sameas.json'));
 const brandKb = JSON.parse(assertFile('brand-kb.ghezelbaash.ai-public.json'));
+const locationJson = JSON.parse(assertFile('location.json'));
+const researchJson = JSON.parse(assertFile('research.json'));
+const datasetJson = JSON.parse(assertFile('dataset.json'));
+const entityIndex = JSON.parse(assertFile('entity-hardening-index.json'));
+const authoritySignals = JSON.parse(assertFile('authority-signals.json'));
 
 for (const slug of serviceSlugs) {
   assertIncludes(sitemap, `https://www.ghezelbaash.ir/${slug}/`, 'sitemap.xml');
@@ -76,5 +88,12 @@ for (const qid of ['Q140287622', 'Q140288589', 'Q140304972']) {
 const brandKbText = JSON.stringify(brandKb);
 assertIncludes(brandKbText, 'www.ghezelbaash.ir', 'brand-kb');
 assertIncludes(brandKbText, 'index,follow', 'brand-kb');
+assertIncludes(brandKbText, 'entity_hardening', 'brand-kb/machine assets context');
+assertIncludes(JSON.stringify(locationJson), 'ساختمان ویستا', 'location.json');
+assertIncludes(JSON.stringify(researchJson), '0009-0001-9346-8475', 'research.json');
+assertIncludes(JSON.stringify(researchJson), '34574943', 'research.json');
+assertIncludes(JSON.stringify(datasetJson), '10.5281/zenodo.18765169', 'dataset.json');
+assertIncludes(JSON.stringify(entityIndex), 'entity_hardening', 'entity-hardening-index.json');
+assertIncludes(JSON.stringify(authoritySignals), 'authority_signals', 'authority-signals.json');
 
 if (!process.exitCode) console.log('Astro dist validation passed');
