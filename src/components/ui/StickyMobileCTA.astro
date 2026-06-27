@@ -1,0 +1,7 @@
+---
+const { primaryHref = '/contact/', primaryLabel = 'تماس و آدرس', secondaryHref, secondaryLabel } = Astro.props;
+---
+<div class="sticky-mobile-cta" aria-label="اقدام سریع موبایل">
+  <a class="cta" href={primaryHref}>{primaryLabel}</a>
+  {secondaryHref && <a class="cta-secondary" href={secondaryHref}>{secondaryLabel}</a>}
+</div>
