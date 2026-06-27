@@ -10,21 +10,23 @@ export default defineConfig({
   integrations: [
     sitemap({
       changefreq: 'weekly',
-      priority: 0.8,
+      priority: 0.9,
       lastmod: new Date(),
     }),
   ],
 
   build: {
-    inlineStylesheets: 'auto',
+    inlineStylesheets: 'always',
     assets: '_astro',
     compressHTML: true,
+    format: 'directory',
   },
 
   vite: {
     build: {
       target: 'es2020',
       cssCodeSplit: true,
+      minify: 'esbuild',
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -41,5 +43,10 @@ export default defineConfig({
     json: {
       stringify: true,
     },
+    esbuild: {
+      legalComments: 'none',
+    },
   },
+
+  compressHTML: true,
 });
