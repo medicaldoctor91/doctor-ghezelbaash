@@ -1,4 +1,5 @@
 import { site, absoluteUrl } from '../data/site.mjs';
+import { location } from '../data/location.mjs';
 import { breadcrumbsForPath } from './routes.mjs';
 
 export function buildBreadcrumbList({ canonicalPath = '/', breadcrumbs } = {}) {
@@ -49,6 +50,33 @@ export function buildFaqSchema({ canonicalPath = '/', faqItems = [] } = {}) {
         text: answer
       }
     }))
+  };
+}
+
+export function buildServiceSchema({ service, canonicalPath = `/${service.slug}/` } = {}) {
+  const canonical = absoluteUrl(canonicalPath);
+
+  return {
+    '@type': 'Service',
+    '@id': `${canonical}#service`,
+    name: service.title,
+    alternateName: [service.shortTitle, ...(service.intentExamples || [])].filter(Boolean),
+    description: service.description,
+    serviceType: service.shortTitle || service.title,
+    url: canonical,
+    provider: { '@id': absoluteUrl('/#clinic') },
+    areaServed: {
+      '@type': 'City',
+      name: location.addressLocality || 'Kermanshah',
+      addressCountry: site.country
+    },
+    audience: {
+      '@type': 'Audience',
+      audienceType: 'کاربران جست‌وجوی خدمات زیبایی در کرمانشاه'
+    },
+    subjectOf: {
+      '@id': `${canonical}#webpage`
+    }
   };
 }
 
