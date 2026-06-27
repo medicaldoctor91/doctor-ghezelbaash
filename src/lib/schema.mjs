@@ -1,5 +1,8 @@
-import { site, absoluteUrl } from '../data/site.mjs';
+import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
+import { regulatoryIdentity } from '../data/regulatory.mjs';
+import { researchProfile } from '../data/research.mjs';
+import { services } from '../data/services.mjs';
 import { breadcrumbsForPath } from './routes.mjs';
 
 export function buildBreadcrumbList({ canonicalPath = '/', breadcrumbs } = {}) {
@@ -53,6 +56,75 @@ export function buildFaqSchema({ canonicalPath = '/', faqItems = [] } = {}) {
   };
 }
 
+export function buildPersonEntity() {
+  return {
+    '@type': ['Person', 'Physician'],
+    '@id': absoluteUrl('/#dr-saeed-ghezelbash'),
+    name: site.personFa,
+    alternateName: ['دکتر محمدسعید قزلباش', site.personEn, 'Mohammad Saeed Ghezelbash', 'Dr. Saeed Ghezelbaash'],
+    url: absoluteUrl(site.pages.person),
+    image: canonicalImage(),
+    sameAs: site.sameAs.person,
+    identifier: [
+      {
+        '@type': 'PropertyValue',
+        propertyID: 'IRIMC',
+        value: regulatoryIdentity.irimc.medicalCouncilNumber,
+        url: regulatoryIdentity.irimc.url
+      },
+      {
+        '@type': 'PropertyValue',
+        propertyID: 'ORCID',
+        value: researchProfile.orcid.replace('https://orcid.org/', ''),
+        url: researchProfile.orcid
+      }
+    ],
+    hasOccupation: {
+      '@type': 'Occupation',
+      name: 'پزشک زیبایی',
+      occupationLocation: { '@type': 'City', name: location.addressLocality }
+    },
+    worksFor: { '@id': absoluteUrl('/#clinic') },
+    affiliation: { '@id': absoluteUrl('/#clinic') },
+    knowsAbout: services.map((service) => service.shortTitle || service.title)
+  };
+}
+
+export function buildClinicEntity() {
+  return {
+    '@type': ['MedicalBusiness', 'LocalBusiness'],
+    '@id': absoluteUrl('/#clinic'),
+    name: site.nameFa,
+    alternateName: [site.nameEn, 'کلینیک دکتر سعید قزلباش', 'کلینیک زیبایی دکتر قزلباش'],
+    url: absoluteUrl(site.pages.clinic),
+    image: canonicalImage(),
+    logo: absoluteUrl(site.logo),
+    telephone: location.telephone,
+    sameAs: site.sameAs.clinic,
+    founder: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+    employee: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: location.streetAddressFa,
+      addressLocality: location.addressLocality,
+      addressRegion: location.addressRegion,
+      addressCountry: location.addressCountry
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: location.geo.latitude,
+      longitude: location.geo.longitude
+    },
+    areaServed: {
+      '@type': 'City',
+      name: location.addressLocality,
+      addressCountry: location.addressCountry
+    },
+    hasMap: location.googleMapsCid,
+    makesOffer: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) }))
+  };
+}
+
 export function buildServiceSchema({ service, canonicalPath = `/${service.slug}/` } = {}) {
   const canonical = absoluteUrl(canonicalPath);
 
@@ -77,6 +149,21 @@ export function buildServiceSchema({ service, canonicalPath = `/${service.slug}/
     subjectOf: {
       '@id': `${canonical}#webpage`
     }
+  };
+}
+
+export function buildServiceItemList({ canonicalPath = site.pages.services } = {}) {
+  return {
+    '@type': 'ItemList',
+    '@id': `${absoluteUrl(canonicalPath)}#service-list`,
+    name: 'فهرست خدمات زیبایی دکتر سعید قزلباش در کرمانشاه',
+    itemListElement: services.map((service, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: service.title,
+      url: absoluteUrl(`/${service.slug}/`),
+      item: { '@id': absoluteUrl(`/${service.slug}/#service`) }
+    }))
   };
 }
 
