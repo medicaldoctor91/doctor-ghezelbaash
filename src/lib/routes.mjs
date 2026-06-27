@@ -4,6 +4,8 @@ import { services } from '../data/services.mjs';
 export function normalizePath(path = '/') {
   if (!path || path === '') return '/';
   const withLeadingSlash = path.startsWith('/') ? path : `/${path}`;
+  if (withLeadingSlash === '/') return '/';
+  if (/\.[a-z0-9]+$/i.test(withLeadingSlash)) return withLeadingSlash;
   return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`;
 }
 
@@ -27,11 +29,14 @@ export const serviceRoutes = services.map((service) => ({
   service
 }));
 
-export const routeRegistry = [...coreRoutes, ...serviceRoutes].map((route) => ({
-  ...route,
-  path: normalizePath(route.path),
-  url: absoluteUrl(route.path)
-}));
+export const routeRegistry = [...coreRoutes, ...serviceRoutes].map((route) => {
+  const path = normalizePath(route.path);
+  return {
+    ...route,
+    path,
+    url: absoluteUrl(path)
+  };
+});
 
 export const navRoutes = [
   '/',
