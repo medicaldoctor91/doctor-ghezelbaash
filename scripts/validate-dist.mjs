@@ -40,6 +40,7 @@ const required = [
   'profile-links.json',
   'service-taxonomy.json',
   'graph-ghezelbaash-final.jsonld',
+  'dr-saeed-ghezelbash/index.html',
   'robots.txt',
   'CNAME'
 ];
@@ -83,6 +84,11 @@ mustContain('entity-hardening-index.json', 'entity_hardening');
 mustContain('authority-signals.json', 'authority_signals');
 mustContain('authority-signals.json', 'iranmedlabs-interview');
 mustContain('authority-signals.json', 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/');
+mustContain('dr-saeed-ghezelbash/index.html', 'دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه');
+mustContain('dr-saeed-ghezelbash/index.html', '۱۶۷۴۳۰');
+mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs');
+mustContain('dr-saeed-ghezelbash/index.html', '/botox-kermanshah/');
+mustContain('dr-saeed-ghezelbash/index.html', 'پرسش‌های متداول درباره دکتر سعید قزلباش');
 
 if (failed) process.exit(1);
 console.log('Astro dist validation passed');
