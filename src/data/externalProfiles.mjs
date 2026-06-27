@@ -10,11 +10,18 @@ export const externalProfiles = {
     'https://github.com/medicaldoctor91/doctor-ghezelbaash',
     'https://www.instagram.com/doctor.ghezelbaash/',
     'https://www.google.com/maps?cid=12350483144643112463',
+    'https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas',
     'https://www.openstreetmap.org/node/13530287096',
     'https://about.me/ghezelbaash',
     'https://linktr.ee/Doctor.ghezelbaash',
+    'https://huggingface.co/doctor-ghezelbaash',
     'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data',
-    'https://doi.org/10.5281/zenodo.18765169'
+    'https://doi.org/10.5281/zenodo.18765169',
+    'https://zenodo.org/records/18765169',
+    'https://nshn.ir/ad_br33tY5eHiu',
+    'https://balad.ir/p/2dnVakli9ZKaBd',
+    'https://yandex.com/maps/org/63459342435/',
+    'https://app.foursquare.com/share/venue/6987eef061c23b4962a08398'
   ],
   observedButNeedsDirectVerification: [
     { platform: 'Telegram', url: 'https://t.me/ghezelbaash' },
@@ -26,7 +33,7 @@ export const externalProfiles = {
     { platform: 'YouTube', source: 'Linktree social list' }
   ],
   policy: {
-    sameAs: 'Use only directly verified profile URLs that represent the same person, clinic or public dataset entity.',
+    sameAs: 'Use only directly verified profile, map, repository or dataset URLs that represent the same person, clinic or public dataset entity.',
     authoritySignals: 'Use broader mentions, media pages, directories and coverage sources as subjectOf or authoritySignal, not as sameAs.'
   }
 };
