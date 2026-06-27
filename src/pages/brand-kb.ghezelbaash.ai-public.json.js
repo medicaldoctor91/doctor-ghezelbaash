@@ -5,10 +5,11 @@ import { publicDataset } from '../data/dataset.mjs';
 import { researchProfile } from '../data/research.mjs';
 import { authoritySignals } from '../data/authoritySignals.mjs';
 import { serviceTaxonomy } from '../data/serviceTaxonomy.mjs';
+import { regulatoryIdentity } from '../data/regulatory.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.brand_kb.astro.v3',
+    schema: 'ghezelbaash.brand_kb.astro.v4.superset',
     dateModified: '2026-06-27',
     canonicalWebsite: site.canonicalBase + '/',
     canonicalPolicy: {
@@ -29,12 +30,20 @@ export function GET() {
     person: {
       name_fa: site.personFa,
       name_en: site.personEn,
+      full_name_en: regulatoryIdentity.irimc.canonicalName,
       canonicalPage: absoluteUrl(site.pages.person),
       sameAs: site.sameAs.person,
+      identifiers: {
+        wikidata: 'Q140287622',
+        orcid: researchProfile.orcid.replace('https://orcid.org/', ''),
+        irimc_license_number: regulatoryIdentity.irimc.medicalCouncilNumber,
+        irimc_profile: regulatoryIdentity.irimc.url,
+        mojavez_track: regulatoryIdentity.mojavez.url
+      },
       research: {
         orcid: researchProfile.orcid,
         bibliographyUrl: researchProfile.bibliographyUrl,
-        publicationIdentifiers: researchProfile.publications.map((item) => ({ doi: item.doi, pmid: item.pmid, pmcid: item.pmcid }))
+        publicationIdentifiers: researchProfile.publications.map((item) => ({ doi: item.doi, pmid: item.pmid, pmcid: item.pmcid, url: item.url || item.pubmed, reviewReport: item.reviewReport || null }))
       }
     },
     clinic: {
@@ -47,9 +56,12 @@ export function GET() {
         telephone: location.telephone,
         googleMaps: location.googleMapsCid,
         googleMapsPlace: location.googleMapsPlace,
-        openStreetMap: location.openStreetMap
+        openStreetMap: location.openStreetMap,
+        latitude: location.geo.latitude,
+        longitude: location.geo.longitude
       }
     },
+    regulatory: regulatoryIdentity,
     dataset: publicDataset,
     servicePages: services.map((service) => ({
       key: service.key,
