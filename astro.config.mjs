@@ -23,11 +23,23 @@ export default defineConfig({
 
   vite: {
     build: {
+      target: 'es2020',
+      cssCodeSplit: true,
       rollupOptions: {
         output: {
-          manualChunks: undefined,
+          manualChunks(id) {
+            if (id.includes('graph-ghezelbaash-final.json')) {
+              return 'data-graph';
+            }
+            if (id.includes('services.json')) {
+              return 'data-services';
+            }
+          },
         },
       },
+    },
+    json: {
+      stringify: true,
     },
   },
 });
