@@ -42,7 +42,7 @@ export function GET() {
     schema: 'ghezelbaash.service_architecture.astro.v2.entity_hardened',
     dateModified: '2026-06-27',
     canonicalWebsite: site.canonicalBase + '/',
-    stage: 'astro-migration-indexable-services-entity-hardened',
+    stage: 'production-indexable-services-entity-hardened',
     indexingPolicy: {
       servicePages: 'index,follow',
       includeServicePagesInSitemap: true,
