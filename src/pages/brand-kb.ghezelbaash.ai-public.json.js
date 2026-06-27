@@ -1,6 +1,7 @@
 import { site, absoluteUrl } from '../data/site.mjs';
 import { services } from '../data/services.mjs';
 import { location } from '../data/location.mjs';
+import { googleMapsReputation } from '../data/reputation.mjs';
 import { publicDataset } from '../data/dataset.mjs';
 import { researchProfile } from '../data/research.mjs';
 import { authoritySignalPolicy, authoritySignals } from '../data/authoritySignals.mjs';
@@ -10,7 +11,7 @@ import { getSameAsForEntity, getUrlsByUse } from '../lib/sourceClassifier.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.brand_kb.astro.v5.source_contract',
+    schema: 'ghezelbaash.brand_kb.astro.v6.reputation_integrated',
     dateModified: '2026-06-28',
     canonicalWebsite: site.canonicalBase + '/',
     canonicalPolicy: {
@@ -60,14 +61,21 @@ export function GET() {
       sameAs: getSameAsForEntity(authoritySignals, 'clinic', site.sameAs.clinic),
       location: {
         address: location.canonicalAddressFa,
+        streetAddress: location.streetAddressFa,
+        addressLocality: location.addressLocality,
+        addressRegion: location.addressRegion,
+        postalCode: location.postalCode,
+        addressCountry: location.addressCountry,
         telephone: location.telephone,
+        priceRange: location.priceRange,
         googleMaps: location.googleMapsCid,
         googleMapsPlace: location.googleMapsPlace,
         openStreetMap: location.openStreetMap,
         mapProfiles: getUrlsByUse(authoritySignals, 'clinic', 'hasMap'),
         latitude: location.geo.latitude,
         longitude: location.geo.longitude
-      }
+      },
+      googleMapsReputation
     },
     knowledgeGraph: {
       sameAs: getSameAsForEntity(authoritySignals, 'knowledgeGraph', site.sameAs.kg)
