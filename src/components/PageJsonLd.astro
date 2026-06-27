@@ -1,5 +1,5 @@
 ---
-import { site, absoluteUrl, routeLabel } from '../data/site.mjs';
+import { buildPageGraph } from '../lib/schema.mjs';
 
 const {
   title,
@@ -10,37 +10,13 @@ const {
   extraGraph = []
 } = Astro.props;
 
-const canonical = absoluteUrl(canonicalPath);
-const defaultBreadcrumbs = canonicalPath === '/'
-  ? [{ name: routeLabel('/'), path: '/' }]
-  : [{ name: routeLabel('/'), path: '/' }, { name: routeLabel(canonicalPath), path: canonicalPath }];
-const items = breadcrumbs || defaultBreadcrumbs;
-
-const graph = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': pageType,
-      '@id': `${canonical}#webpage`,
-      url: canonical,
-      name: title,
-      description,
-      inLanguage: site.locale,
-      isPartOf: { '@id': absoluteUrl('/#website') },
-      breadcrumb: { '@id': `${canonical}#breadcrumb` }
-    },
-    {
-      '@type': 'BreadcrumbList',
-      '@id': `${canonical}#breadcrumb`,
-      itemListElement: items.map((item, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        name: item.name,
-        item: absoluteUrl(item.path)
-      }))
-    },
-    ...extraGraph
-  ]
-};
+const graph = buildPageGraph({
+  title,
+  description,
+  canonicalPath,
+  pageType,
+  breadcrumbs,
+  extraGraph
+});
 ---
 <script type="application/ld+json" set:html={JSON.stringify(graph)} />
