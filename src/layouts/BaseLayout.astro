@@ -3,6 +3,7 @@ import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
 import GlobalJsonLd from '../components/GlobalJsonLd.astro';
 import PageJsonLd from '../components/PageJsonLd.astro';
 import PersonSeoAeoEnhancements from '../components/PersonSeoAeoEnhancements.astro';
+import PersonIranMedLabsInterview from '../components/PersonIranMedLabsInterview.astro';
 
 const {
   title = site.nameFa,
@@ -66,6 +67,7 @@ const showPersonEnhancements = canonicalPath === '/dr-saeed-ghezelbash/';
     </header>
     <main class="wrap">
       <slot />
+      {showPersonEnhancements && <PersonIranMedLabsInterview />}
       {showPersonEnhancements && <PersonSeoAeoEnhancements />}
     </main>
     <footer class="wrap">
