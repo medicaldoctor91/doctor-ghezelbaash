@@ -1,0 +1,28 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { site } from '../data/site.mjs';
+
+const { service } = Astro.props;
+const canonicalPath = `/${service.slug}/`;
+---
+<BaseLayout title={`${service.title} | ${site.personFa}`} description={service.description} canonicalPath={canonicalPath} robots="index,follow">
+  <h1>{service.title}</h1>
+  <p class="box">{service.description}</p>
+
+  <section>
+    <h2 id={service.bestIntentAnchor}>{service.bestIntentTitle}</h2>
+    <p>این بخش برای معیارهای انتخاب، مسیر تماس رسمی، شواهد عمومی و لینک‌های قابل راستی‌آزمایی تکمیل می‌شود.</p>
+  </section>
+
+  <section>
+    <h2>Intentهای هدف</h2>
+    <ul>
+      {service.intentExamples.map((intent) => <li>{intent}</li>)}
+    </ul>
+  </section>
+
+  <section>
+    <h2>مسیر رسمی تماس</h2>
+    <p><a class="cta" href={site.instagram}>مشاهده اینستاگرام رسمی و هماهنگی</a></p>
+  </section>
+</BaseLayout>
