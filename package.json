@@ -10,7 +10,6 @@
     "check:public": "node scripts/prepare-public.mjs"
   },
   "dependencies": {
-    "@astrojs/sitemap": "latest",
     "astro": "latest"
   }
 }
