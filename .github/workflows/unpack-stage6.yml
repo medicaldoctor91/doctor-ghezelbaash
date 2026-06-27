@@ -18,7 +18,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Remove old generated folders and files
+      - name: Prepare clean unpack directory
+        run: |
+          rm -rf __stage6_unpack
+          mkdir __stage6_unpack
+
+      - name: Unpack stage6.zip without workflow files
+        run: |
+          if [ ! -f "stage6.zip" ]; then
+            echo "stage6.zip not found in repository root."
+            exit 1
+          fi
+
+          unzip -o stage6.zip -d __stage6_unpack
+
+          rm -rf __stage6_unpack/.github
+          rm -rf __stage6_unpack/__MACOSX
+
+      - name: Remove old generated site folders
         run: |
           rm -rf \
             dr-saeed-ghezelbash \
@@ -37,15 +54,11 @@ jobs:
             routes \
             docs
 
-      - name: Unpack stage6.zip
+      - name: Copy unpacked files into repository root
         run: |
-          if [ ! -f "stage6.zip" ]; then
-            echo "stage6.zip not found in repository root."
-            exit 1
-          fi
-
-          unzip -o stage6.zip -d .
-          rm stage6.zip
+          cp -a __stage6_unpack/. .
+          rm -rf __stage6_unpack
+          rm -f stage6.zip
 
       - name: Commit unpacked Stage 6 files
         run: |
