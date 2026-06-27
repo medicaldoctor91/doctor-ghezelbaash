@@ -1,0 +1,17 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { services } from '../data/services.mjs';
+---
+<BaseLayout title="خدمات زیبایی در کرمانشاه | دکتر سعید قزلباش" canonicalPath="/services/">
+  <h1>خدمات زیبایی در کرمانشاه</h1>
+  <p class="box">هاب خدمات اصلی سایت. هر خدمت یک صفحه canonical و indexable دارد.</p>
+  <div class="grid">
+    {services.map((service) => (
+      <article class="card">
+        <h2><a href={`/${service.slug}/`}>{service.title}</a></h2>
+        <p>{service.description}</p>
+        <p><a href={`/${service.slug}/#${service.bestIntentAnchor}`}>{service.bestIntentTitle}</a></p>
+      </article>
+    ))}
+  </div>
+</BaseLayout>

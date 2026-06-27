@@ -1,0 +1,108 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+const dist = path.join(process.cwd(), 'dist');
+let failed = false;
+
+function read(relPath) {
+  const file = path.join(dist, relPath);
+  if (!fs.existsSync(file)) {
+    console.error(`missing dist/${relPath}`);
+    failed = true;
+    return '';
+  }
+  return fs.readFileSync(file, 'utf8');
+}
+
+function mustContain(relPath, needle) {
+  const text = read(relPath);
+  if (!text.includes(needle)) {
+    console.error(`dist/${relPath} missing ${needle}`);
+    failed = true;
+  }
+  return text;
+}
+
+const required = [
+  'index.html',
+  'sitemap.xml',
+  'llms.txt',
+  'services.json',
+  'sameas.json',
+  'brand-kb.ghezelbaash.ai-public.json',
+  'ai-discovery-index.json',
+  'entity-hardening-index.json',
+  'regulatory.json',
+  'location.json',
+  'research.json',
+  'dataset.json',
+  'authority-signals.json',
+  'profile-links.json',
+  'service-taxonomy.json',
+  'graph-ghezelbaash-final.jsonld',
+  'dr-saeed-ghezelbash/index.html',
+  'robots.txt',
+  'CNAME'
+];
+
+for (const file of required) read(file);
+
+for (const slug of [
+  'botox-kermanshah',
+  'filler-kermanshah',
+  'thread-lift-kermanshah',
+  'skin-hair-rejuvenation-kermanshah',
+  'double-chin-liposuction-kermanshah'
+]) {
+  mustContain('sitemap.xml', `https://www.ghezelbaash.ir/${slug}/`);
+  mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow">');
+}
+
+mustContain('index.html', 'https://www.ghezelbaash.ir/doctor.jpg');
+mustContain('index.html', 'twitter:card');
+mustContain('llms.txt', '/regulatory.json');
+mustContain('llms.txt', '/research.json');
+mustContain('llms.txt', '/authority-signals.json');
+mustContain('sameas.json', 'Q140287622');
+mustContain('sameas.json', 'Q140288589');
+mustContain('sameas.json', 'Q140304972');
+mustContain('services.json', 'ghezelbaash.service_architecture.astro.v2.entity_hardened');
+mustContain('services.json', 'contentBlocksRequired');
+mustContain('services.json', 'supportingIntents');
+mustContain('services.json', 'machineSupportAssets');
+mustContain('services.json', 'regulatory.json');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v4.superset');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'publicationIdentifiers');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'authoritySignals');
+mustContain('brand-kb.ghezelbaash.ai-public.json', '167430');
+mustContain('regulatory.json', '167430');
+mustContain('location.json', 'ساختمان ویستا');
+mustContain('research.json', '0009-0001-9346-8475');
+mustContain('research.json', '34574943');
+mustContain('dataset.json', '10.5281/zenodo.18765169');
+mustContain('entity-hardening-index.json', 'entity_hardening');
+mustContain('authority-signals.json', 'authority_signals');
+mustContain('authority-signals.json', 'iranmedlabs-interview');
+mustContain('authority-signals.json', 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/');
+mustContain('dr-saeed-ghezelbash/index.html', 'دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه');
+mustContain('dr-saeed-ghezelbash/index.html', '۱۶۷۴۳۰');
+mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs');
+mustContain('dr-saeed-ghezelbash/index.html', '/botox-kermanshah/');
+mustContain('dr-saeed-ghezelbash/index.html', 'پرسش‌های متداول درباره دکتر سعید قزلباش');
+mustContain('dr-saeed-ghezelbash/index.html', 'ProfilePage');
+mustContain('dr-saeed-ghezelbash/index.html', 'FAQPage');
+mustContain('dr-saeed-ghezelbash/index.html', '#profile-page');
+mustContain('dr-saeed-ghezelbash/index.html', '#faq');
+mustContain('dr-saeed-ghezelbash/index.html', 'فهرست سریع و نقشه محتوایی صفحه');
+mustContain('dr-saeed-ghezelbash/index.html', 'نقشه شواهد و اولویت منابع');
+mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs media coverage');
+mustContain('dr-saeed-ghezelbash/index.html', 'knowsAbout');
+mustContain('dr-saeed-ghezelbash/index.html', 'مصاحبه ایران‌مدلبز با دکتر سعید قزلباش');
+mustContain('dr-saeed-ghezelbash/index.html', 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/');
+mustContain('dr-saeed-ghezelbash/index.html', 'پروفایل حرفه‌ای دکتر سعید قزلباش');
+mustContain('dr-saeed-ghezelbash/index.html', 'جزئیات هویت رسمی و نشانی فعالیت');
+mustContain('dr-saeed-ghezelbash/index.html', 'منابع قابل بررسی برای شناخت دکتر سعید قزلباش');
+mustContain('dr-saeed-ghezelbash/index.html', 'معیارهای انتخاب پزشک زیبایی در کرمانشاه');
+
+if (failed) process.exit(1);
+console.log('Astro dist validation passed');

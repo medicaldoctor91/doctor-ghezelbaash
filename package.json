@@ -1,0 +1,16 @@
+{
+  "name": "doctor-ghezelbaash-astro",
+  "version": "2.0.0-astro-migration",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "node scripts/prepare-public.mjs && astro build && node scripts/validate-dist.mjs",
+    "preview": "astro preview",
+    "check:public": "node scripts/prepare-public.mjs",
+    "validate:dist": "node scripts/validate-dist.mjs"
+  },
+  "dependencies": {
+    "astro": "latest"
+  }
+}

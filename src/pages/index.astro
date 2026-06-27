@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site.mjs';
+import { services } from '../data/services.mjs';
+---
+<BaseLayout title={`${site.personFa} | ${site.nameFa}`} canonicalPath="/">
+  <h1>{site.personFa}</h1>
+  <p class="box">وب‌سایت رسمی، مسیرهای canonical و گراف دانش عمومی {site.personFa} و {site.nameFa} در کرمانشاه.</p>
+
+  <section>
+    <h2>مسیرهای اصلی</h2>
+    <div class="grid">
+      <a class="card" href="/dr-saeed-ghezelbash/">صفحه شخص</a>
+      <a class="card" href="/dr-saeed-ghezelbash-aesthetic-clinic/">صفحه کلینیک</a>
+      <a class="card" href="/services/">خدمات</a>
+      <a class="card" href="/kg/">گراف دانش</a>
+    </div>
+  </section>
+
+  <section>
+    <h2>خدمات اصلی</h2>
+    <ul>
+      {services.map((service) => <li><a href={`/${service.slug}/`}>{service.title}</a></li>)}
+    </ul>
+  </section>
+</BaseLayout>

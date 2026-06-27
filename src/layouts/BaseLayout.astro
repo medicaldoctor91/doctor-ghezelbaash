@@ -1,0 +1,79 @@
+---
+import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
+import GlobalJsonLd from '../components/GlobalJsonLd.astro';
+import PageJsonLd from '../components/PageJsonLd.astro';
+import PersonSeoAeoEnhancements from '../components/PersonSeoAeoEnhancements.astro';
+import PersonIranMedLabsInterview from '../components/PersonIranMedLabsInterview.astro';
+import PersonProfileContent from '../components/PersonProfileContent.astro';
+
+const {
+  title = site.nameFa,
+  description = 'Canonical public website and knowledge graph for Dr. Saeed Ghezelbash.',
+  canonicalPath = '/',
+  robots = 'index,follow'
+} = Astro.props;
+
+const canonical = absoluteUrl(canonicalPath);
+const ogImage = canonicalImage();
+const showPersonEnhancements = canonicalPath === '/dr-saeed-ghezelbash/';
+---
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="fa-IR" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={canonical} />
+    <link rel="icon" href="/logo.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fa_IR" />
+    <meta property="og:site_name" content={site.nameFa} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content={site.personFa} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <GlobalJsonLd />
+    <PageJsonLd title={title} description={description} canonicalPath={canonicalPath} />
+    <style>
+      :root{--brand:#8b0000;--ink:#151515;--muted:#5f5f5f;--line:#ead7d7;--soft:#fff7f7;--bg:#fff}
+      *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif;line-height:1.95}
+      .wrap{max-width:1040px;margin:auto;padding:18px}.top{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:5}
+      nav a{display:inline-block;margin:.25rem;padding:.25rem .55rem;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--brand);font-size:.92rem}
+      h1,h2,h3{color:var(--brand);line-height:1.55}h1{font-size:1.65rem}h2{font-size:1.25rem;margin-top:2rem}h3{font-size:1.05rem}
+      .box{border:1px solid var(--line);background:var(--soft);border-radius:14px;padding:1rem;margin:1rem 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
+      .card{border:1px solid var(--line);border-radius:14px;padding:1rem;background:#fff}.cta{display:inline-block;background:var(--brand);color:#fff;text-decoration:none;border-radius:10px;padding:.65rem 1rem;font-weight:bold}
+      .small{font-size:.92rem;color:var(--muted)}footer{border-top:1px solid var(--line);margin-top:2rem;padding:1.2rem 0;color:var(--muted)}ul{padding-right:1.2rem}.ltr{direction:ltr;text-align:left}
+    </style>
+    <slot name="head" />
+  </head>
+  <body>
+    <header class="top">
+      <nav class="wrap" aria-label="ناوبری اصلی">
+        <a href="/">خانه</a>
+        <a href="/dr-saeed-ghezelbash/">دکتر سعید قزلباش</a>
+        <a href="/dr-saeed-ghezelbash-aesthetic-clinic/">کلینیک</a>
+        <a href="/services/">خدمات</a>
+        <a href="/kg/">KG</a>
+        <a href="/contact/">تماس</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <slot />
+      {showPersonEnhancements && <PersonProfileContent />}
+      {showPersonEnhancements && <PersonIranMedLabsInterview />}
+      {showPersonEnhancements && <PersonSeoAeoEnhancements />}
+    </main>
+    <footer class="wrap">
+      <p>{site.nameFa} — {site.phoneDisplay} — <a href={site.instagram}>Instagram</a></p>
+    </footer>
+  </body>
+</html>

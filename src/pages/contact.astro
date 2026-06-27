@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site.mjs';
+import { location } from '../data/location.mjs';
+---
+<BaseLayout title="Contact" canonicalPath="/contact/">
+  <h1>Contact</h1>
+  <p>{location.phoneDisplay}</p>
+  <p>{location.canonicalAddressFa}</p>
+  <p><a href={site.instagram}>Instagram</a></p>
+  <p><a href={location.googleMapsCid}>Google Maps</a></p>
+</BaseLayout>
