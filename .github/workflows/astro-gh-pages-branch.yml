@@ -1,4 +1,4 @@
-name: Disabled gh-pages fallback
+name: Disabled fallback workflow
 
 on:
   workflow_dispatch:
