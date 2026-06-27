@@ -32,6 +32,7 @@ const required = [
   'brand-kb.ghezelbaash.ai-public.json',
   'ai-discovery-index.json',
   'entity-hardening-index.json',
+  'regulatory.json',
   'location.json',
   'research.json',
   'dataset.json',
@@ -59,9 +60,11 @@ for (const slug of [
 mustContain('sameas.json', 'Q140287622');
 mustContain('sameas.json', 'Q140288589');
 mustContain('sameas.json', 'Q140304972');
-mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v3');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v4.superset');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'publicationIdentifiers');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'authoritySignals');
+mustContain('brand-kb.ghezelbaash.ai-public.json', '167430');
+mustContain('regulatory.json', '167430');
 mustContain('location.json', 'ساختمان ویستا');
 mustContain('research.json', '0009-0001-9346-8475');
 mustContain('research.json', '34574943');
