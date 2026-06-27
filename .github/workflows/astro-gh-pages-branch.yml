@@ -10,4 +10,4 @@ jobs:
   disabled:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "gh-pages fallback deployment is disabled. Canonical deployment remains GitHub Pages Actions from main."
+      - run: echo disabled
