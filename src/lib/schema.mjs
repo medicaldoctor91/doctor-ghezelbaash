@@ -92,7 +92,12 @@ export function buildPersonEntity() {
     },
     worksFor: { '@id': absoluteUrl('/#clinic') },
     affiliation: { '@id': absoluteUrl('/#clinic') },
-    knowsAbout: services.map((service) => service.shortTitle || service.title)
+    knowsAbout: services.map((service) => service.shortTitle || service.title),
+    subjectOf: [
+      { '@type': 'WebPage', name: 'NCBI bibliography', url: researchProfile.bibliographyUrl },
+      { '@type': 'WebPage', name: 'IranMedLabs media coverage', url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/' },
+      { '@type': 'WebPage', name: 'MDPI article', url: 'https://www.mdpi.com/2227-9032/9/9/1169' }
+    ]
   };
 }
 
