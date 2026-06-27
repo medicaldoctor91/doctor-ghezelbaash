@@ -1,0 +1,37 @@
+name: Package Lock Artifact
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Generate package-lock.json
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org/
+
+      - name: Verify package-lock.json
+        run: |
+          test -f package-lock.json
+          if grep -E "applied-caas|internal\.api\.openai|artifactory" package-lock.json; then
+            echo "Invalid registry URL found"
+            exit 1
+          fi
+
+      - name: Upload package lock artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-lock-json
+          path: package-lock.json
