@@ -1,19 +1,45 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Knowledge Graph" canonicalPath="/kg/">
-  <h1>Knowledge Graph</h1>
-  <p>Canonical public knowledge graph hub.</p>
-  <ul>
-    <li><a href="/graph-ghezelbaash-final.jsonld">graph JSON-LD</a></li>
-    <li><a href="/brand-kb.ghezelbaash.ai-public.json">brand KB</a></li>
-    <li><a href="/entity-hardening-index.json">entity hardening index</a></li>
-    <li><a href="/dataset.json">dataset JSON</a></li>
-    <li><a href="/services.json">services JSON</a></li>
-    <li><a href="/service-taxonomy.json">service taxonomy JSON</a></li>
-    <li><a href="/sameas.json">sameAs JSON</a></li>
-    <li><a href="/location.json">location JSON</a></li>
-    <li><a href="/authority-signals.json">authority signals JSON</a></li>
-    <li><a href="/profile-links.json">profile links JSON</a></li>
-  </ul>
+<BaseLayout title="گراف دانش دکتر سعید قزلباش | Knowledge Graph Hub" description="هاب گراف دانش عمومی دکتر سعید قزلباش، کلینیک زیبایی دکتر سعید قزلباش و داده‌های machine-readable سایت." canonicalPath="/kg/">
+  <section class="box">
+    <p class="small">Knowledge Graph hub</p>
+    <h1>گراف دانش عمومی دکتر سعید قزلباش</h1>
+    <p>این صفحه برای خوانش انسانی و ماشینی ساخته شده است: فایل‌های JSON، JSON-LD، sameAs، location، services و brand knowledge base در یک مسیر رسمی قرار می‌گیرند.</p>
+  </section>
+
+  <section>
+    <h2>دارایی‌های اصلی</h2>
+    <div class="grid">
+      <a class="card" href="/graph-ghezelbaash-final.jsonld"><strong>Graph JSON-LD</strong><br />graph-ghezelbaash-final.jsonld</a>
+      <a class="card" href="/brand-kb.ghezelbaash.ai-public.json"><strong>Brand KB</strong><br />brand-kb.ghezelbaash.ai-public.json</a>
+      <a class="card" href="/entity-hardening-index.json"><strong>Entity hardening</strong><br />entity-hardening-index.json</a>
+      <a class="card" href="/dataset.json"><strong>Dataset</strong><br />dataset.json</a>
+      <a class="card" href="/services.json"><strong>Services</strong><br />services.json</a>
+      <a class="card" href="/sameas.json"><strong>sameAs</strong><br />sameas.json</a>
+    </div>
+  </section>
+
+  <section>
+    <h2>لایه‌های پشتیبان</h2>
+    <ul>
+      <li><a href="/location.json">location.json</a></li>
+      <li><a href="/regulatory.json">regulatory.json</a></li>
+      <li><a href="/research.json">research.json</a></li>
+      <li><a href="/authority-signals.json">authority-signals.json</a></li>
+      <li><a href="/profile-links.json">profile-links.json</a></li>
+      <li><a href="/service-taxonomy.json">service-taxonomy.json</a></li>
+      <li><a href="/llms.txt">llms.txt</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>مسیرهای انسانی مرتبط</h2>
+    <div class="grid">
+      <a class="card" href="/dr-saeed-ghezelbash/">صفحه پزشک</a>
+      <a class="card" href="/dr-saeed-ghezelbash-aesthetic-clinic/">صفحه کلینیک</a>
+      <a class="card" href="/services/">خدمات</a>
+      <a class="card" href="/evidence/">شواهد</a>
+    </div>
+  </section>
 </BaseLayout>
