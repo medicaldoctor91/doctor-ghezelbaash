@@ -2,10 +2,12 @@
 import BaseLayout from './BaseLayout.astro';
 import { site } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
+import { services } from '../data/services.mjs';
 import ServiceContentSections from '../components/ServiceContentSections.astro';
 import Hero from '../components/ui/Hero.astro';
 import TrustStrip from '../components/ui/TrustStrip.astro';
 import EvidencePanel from '../components/ui/EvidencePanel.astro';
+import NextStepPanel from '../components/NextStepPanel.astro';
 
 const { service } = Astro.props;
 const canonicalPath = `/${service.slug}/`;
@@ -28,6 +30,20 @@ const evidenceItems = [
   { title: 'صفحه کلینیک', href: '/dr-saeed-ghezelbash-aesthetic-clinic/', body: 'آدرس، نقشه و اطلاعات محلی.' },
   { title: 'همه خدمات', href: '/services/', body: 'مسیر انتخاب خدمت مناسب.' },
   { title: 'منابع', href: '/evidence/', body: 'لینک‌ها و دارایی‌های قابل بررسی.' }
+];
+const relatedServices = services
+  .filter((item) => item.slug !== service.slug)
+  .slice(0, 3)
+  .map((item) => ({
+    title: item.shortTitle || item.title,
+    href: `/${item.slug}/`,
+    body: item.description
+  }));
+const nextStepItems = [
+  { title: 'بررسی هویت پزشک', href: '/dr-saeed-ghezelbash/', body: 'برای دیدن مسیر رسمی پزشک و منابع مرتبط.' },
+  { title: 'مشاهده کلینیک', href: '/dr-saeed-ghezelbash-aesthetic-clinic/', body: 'برای آدرس، نقشه و مسیر مراجعه.' },
+  { title: 'تماس و هماهنگی', href: '/contact/', body: 'برای شماره، نقشه و مسیر ارتباطی.' },
+  ...relatedServices
 ];
 ---
 <BaseLayout title={title} description={description} canonicalPath={canonicalPath} robots="index,follow">
@@ -113,10 +129,13 @@ const evidenceItems = [
     </p>
   </section>
 
-  <section>
-    <h2>Intentهای هدف این صفحه</h2>
-    <ul>
-      {service.intentExamples.map((intent) => <li>{intent}</li>)}
-    </ul>
-  </section>
+  <NextStepPanel
+    title="بعد از این صفحه چه چیزی را بررسی کنید؟"
+    body="برای تصمیم دقیق‌تر، مسیرهای زیر را بررسی کنید یا به صفحه‌های مرتبط بروید."
+    items={nextStepItems}
+    links={[
+      { label: 'همه خدمات', href: '/services/' },
+      { label: 'منابع و شواهد', href: '/evidence/' }
+    ]}
+  />
 </BaseLayout>
