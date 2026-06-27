@@ -1,43 +1,13 @@
-name: Publish Astro to gh-pages branch
+name: Disabled gh-pages fallback
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: gh-pages-branch
-  cancel-in-progress: true
+  contents: read
 
 jobs:
-  publish:
+  disabled:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit --no-fund
-          else
-            npm install --no-audit --no-fund
-          fi
-      - name: Build Astro site
-        run: npm run build
-      - name: Ensure GitHub Pages markers
-        run: |
-          touch dist/.nojekyll
-          echo "www.ghezelbaash.ir" > dist/CNAME
-      - name: Publish dist to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          publish_branch: gh-pages
-          force_orphan: true
-          cname: www.ghezelbaash.ir
+      - run: echo "gh-pages fallback deployment is disabled. Canonical deployment remains GitHub Pages Actions from main."
