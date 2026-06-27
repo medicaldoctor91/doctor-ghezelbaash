@@ -1,5 +1,6 @@
 import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
+import { googleMapsReputation } from '../data/reputation.mjs';
 import { publicDataset } from '../data/dataset.mjs';
 import { regulatoryIdentity } from '../data/regulatory.mjs';
 import { researchProfile } from '../data/research.mjs';
@@ -14,6 +15,27 @@ import {
 
 function unique(values) {
   return [...new Set(values.filter(Boolean))];
+}
+
+function buildPostalAddress() {
+  return {
+    '@type': 'PostalAddress',
+    streetAddress: location.streetAddressFa,
+    addressLocality: location.addressLocality,
+    addressRegion: location.addressRegion,
+    postalCode: location.postalCode,
+    addressCountry: location.addressCountry
+  };
+}
+
+function buildAggregateRating() {
+  return {
+    '@type': 'AggregateRating',
+    ratingValue: googleMapsReputation.ratingValue,
+    ratingCount: googleMapsReputation.ratingCount,
+    bestRating: googleMapsReputation.bestRating,
+    worstRating: googleMapsReputation.worstRating
+  };
 }
 
 export function buildBreadcrumbList({ canonicalPath = '/', breadcrumbs } = {}) {
@@ -78,6 +100,8 @@ export function buildOrganizationEntity() {
     url: absoluteUrl('/'),
     logo: canonicalImage(site.logo),
     image: canonicalImage(),
+    telephone: location.telephone,
+    address: buildPostalAddress(),
     sameAs: unique([
       ...getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
       ...getSameAsForEntity(authoritySignals, 'clinic', site.sameAs.clinic)
@@ -109,6 +133,9 @@ export function buildPersonEntity() {
     alternateName: ['دکتر محمدسعید قزلباش', site.personEn, 'Mohammad Saeed Ghezelbash', 'Dr. Saeed Ghezelbaash'],
     url: absoluteUrl(site.pages.person),
     image: canonicalImage(),
+    telephone: location.telephone,
+    address: buildPostalAddress(),
+    priceRange: location.priceRange,
     sameAs: getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
     identifier: [
       {
@@ -147,17 +174,13 @@ export function buildClinicEntity() {
     image: canonicalImage(),
     logo: absoluteUrl(site.logo),
     telephone: location.telephone,
+    priceRange: location.priceRange,
+    aggregateRating: buildAggregateRating(),
     sameAs: getSameAsForEntity(authoritySignals, 'clinic', site.sameAs.clinic),
     subjectOf: getSubjectOfForEntity(authoritySignals, 'clinic'),
     founder: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
     employee: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: location.streetAddressFa,
-      addressLocality: location.addressLocality,
-      addressRegion: location.addressRegion,
-      addressCountry: location.addressCountry
-    },
+    address: buildPostalAddress(),
     geo: {
       '@type': 'GeoCoordinates',
       latitude: location.geo.latitude,
@@ -169,6 +192,20 @@ export function buildClinicEntity() {
       addressCountry: location.addressCountry
     },
     hasMap: getMapUrlsForClinic(authoritySignals, location),
+    identifier: [
+      {
+        '@type': 'PropertyValue',
+        propertyID: 'Google Maps CID',
+        value: googleMapsReputation.cid,
+        url: googleMapsReputation.cidUrl
+      },
+      {
+        '@type': 'PropertyValue',
+        propertyID: 'Google Maps Place ID',
+        value: googleMapsReputation.placeId,
+        url: googleMapsReputation.placeIdUrl
+      }
+    ],
     makesOffer: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) })),
     availableService: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) }))
   };
