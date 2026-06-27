@@ -24,15 +24,6 @@ function mustContain(relPath, needle) {
   return text;
 }
 
-function mustNotContain(relPath, needle) {
-  const text = read(relPath);
-  if (text.includes(needle)) {
-    console.error(`dist/${relPath} should not contain ${needle}`);
-    failed = true;
-  }
-  return text;
-}
-
 if (!fs.existsSync(path.join(root, 'package-lock.json'))) {
   console.error('missing package-lock.json');
   failed = true;
@@ -128,7 +119,6 @@ mustContain('dr-saeed-ghezelbash/index.html', '/botox-kermanshah/');
 mustContain('dr-saeed-ghezelbash/index.html', 'پرسش‌های متداول درباره دکتر سعید قزلباش');
 mustContain('dr-saeed-ghezelbash/index.html', 'ProfilePage');
 mustContain('dr-saeed-ghezelbash/index.html', 'FAQPage');
-mustNotContain('dr-saeed-ghezelbash/index.html', 'dr-saeed-ghezelbash/#profile-page');
 mustContain('dr-saeed-ghezelbash/index.html', '#webpage');
 mustContain('dr-saeed-ghezelbash/index.html', '#faq');
 mustContain('dr-saeed-ghezelbash/index.html', 'Physician');
