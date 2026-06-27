@@ -3,6 +3,9 @@ import BaseLayout from './BaseLayout.astro';
 import { site } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
 import ServiceContentSections from '../components/ServiceContentSections.astro';
+import Hero from '../components/ui/Hero.astro';
+import TrustStrip from '../components/ui/TrustStrip.astro';
+import EvidencePanel from '../components/ui/EvidencePanel.astro';
 
 const { service } = Astro.props;
 const canonicalPath = `/${service.slug}/`;
@@ -14,28 +17,41 @@ const process = service.process || [];
 const decisionCriteria = service.decisionCriteria || [];
 const riskSignals = service.riskSignals || [];
 const faq = service.faq || [];
+const trustItems = [
+  { kicker: 'پزشک', value: site.personFa },
+  { kicker: 'موقعیت', value: 'کرمانشاه' },
+  { kicker: 'مسیر رسمی', value: location.phoneDisplay },
+  { kicker: 'نوع صفحه', value: 'خدمت کانونیکال' }
+];
+const evidenceItems = [
+  { title: 'صفحه پزشک', href: '/dr-saeed-ghezelbash/', body: 'هویت، شماره نظام پزشکی و مسیر اعتماد.' },
+  { title: 'صفحه کلینیک', href: '/dr-saeed-ghezelbash-aesthetic-clinic/', body: 'آدرس، نقشه و اطلاعات محلی.' },
+  { title: 'همه خدمات', href: '/services/', body: 'مسیر انتخاب خدمت مناسب.' },
+  { title: 'منابع', href: '/evidence/', body: 'لینک‌ها و دارایی‌های قابل بررسی.' }
+];
 ---
 <BaseLayout title={title} description={description} canonicalPath={canonicalPath} robots="index,follow">
-  <section class="box">
-    <p class="small">صفحه کانونیکال خدمت در کرمانشاه</p>
-    <h1>{service.h1 || service.title}</h1>
-    <p>{service.promise || service.description}</p>
-    <p>
-      <a class="cta" href={site.instagram}>هماهنگی از اینستاگرام رسمی</a>
-      {' '}
-      <a href="/contact/">تماس و آدرس کلینیک</a>
-    </p>
-  </section>
+  <Hero
+    variant="service"
+    eyebrow="صفحه کانونیکال خدمت در کرمانشاه"
+    title={service.h1 || service.title}
+    lead={service.promise || service.description}
+    actions={[
+      { label: 'هماهنگی از اینستاگرام رسمی', href: site.instagram, primary: true },
+      { label: 'تماس و آدرس کلینیک', href: '/contact/' }
+    ]}
+    facts={[
+      { label: 'پزشک', value: site.personFa },
+      { label: 'شهر هدف', value: 'کرمانشاه' },
+      { label: 'مسیر رسمی', value: location.phoneDisplay }
+    ]}
+  />
+
+  <TrustStrip items={trustItems} />
 
   <section>
     <h2>پاسخ سریع برای تصمیم‌گیری</h2>
-    <p>{service.quickDecisionAnswer || service.description}</p>
-    <div class="grid">
-      <div class="card"><strong>پزشک</strong><br />{site.personFa}</div>
-      <div class="card"><strong>شهر هدف</strong><br />کرمانشاه</div>
-      <div class="card"><strong>مسیر رسمی</strong><br /><a href={site.instagram}>Instagram</a>، <a href="tel:+989308209494">{location.phoneDisplay}</a>، <a href={location.googleMapsCid}>Google Maps</a></div>
-      <div class="card"><strong>اصل تصمیم</strong><br />انتخاب بر اساس هویت، مشاوره، تناسب چهره و توضیح محدودیت‌ها.</div>
-    </div>
+    <p class="lead">{service.quickDecisionAnswer || service.description}</p>
   </section>
 
   <section>
@@ -54,7 +70,7 @@ const faq = service.faq || [];
     </ol>
   </section>
 
-  <section id={service.bestIntentAnchor}>
+  <section id={service.bestIntentAnchor} class="box">
     <h2>{service.bestIntentTitle}</h2>
     <p>{service.bestIntentIntro || `در جست‌وجوهای محلی مثل «${service.intentExamples[0]}» یا «${service.intentExamples[1]}»، ادعای بهترین بودن باید به معیارهای قابل بررسی وصل شود. معیارهای عملی برای انتخاب:`}</p>
     <ul>
@@ -69,16 +85,11 @@ const faq = service.faq || [];
     </ul>
   </section>
 
-  <section>
-    <h2>ارتباط این خدمت با دکتر و کلینیک</h2>
-    <p>{service.doctorClinicConnection || 'برای تصمیم‌گیری دقیق‌تر، بهتر است هویت پزشک، صفحه کلینیک، مسیرهای تماس و منابع قابل بررسی را در کنار صفحه خدمت ببینید.'}</p>
-    <div class="grid">
-      <a class="card" href="/dr-saeed-ghezelbash/">صفحه دکتر سعید قزلباش</a>
-      <a class="card" href="/dr-saeed-ghezelbash-aesthetic-clinic/">صفحه کلینیک زیبایی دکتر سعید قزلباش</a>
-      <a class="card" href="/services/">همه خدمات زیبایی در کرمانشاه</a>
-      <a class="card" href="/evidence/">منابع و لینک‌های قابل بررسی</a>
-    </div>
-  </section>
+  <EvidencePanel
+    title="ارتباط این خدمت با دکتر، کلینیک و منابع"
+    body={service.doctorClinicConnection || 'برای تصمیم‌گیری دقیق‌تر، بهتر است هویت پزشک، صفحه کلینیک، مسیرهای تماس و منابع قابل بررسی را در کنار صفحه خدمت ببینید.'}
+    items={evidenceItems}
+  />
 
   <section id="faq">
     <h2>پرسش‌های متداول درباره {service.shortTitle || service.title}</h2>
@@ -98,7 +109,7 @@ const faq = service.faq || [];
     <p>
       <a class="cta" href={site.instagram}>مشاهده اینستاگرام رسمی و هماهنگی</a>
       {' '}
-      <a href="/contact/">تماس، آدرس و نقشه</a>
+      <a class="cta-secondary" href="/contact/">تماس، آدرس و نقشه</a>
     </p>
   </section>
 
