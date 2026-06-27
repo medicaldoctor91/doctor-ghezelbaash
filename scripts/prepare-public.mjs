@@ -11,7 +11,6 @@ const filesToExposeAtWebRoot = [
   'logo.png',
   'doctor.jpg',
   'graph-ghezelbaash-final.jsonld',
-  'brand-kb.ghezelbaash.ai-public.json',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld',
   'aesthetic_medicine_knowledge_kermanshah_fa.json',
