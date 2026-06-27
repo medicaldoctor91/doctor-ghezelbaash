@@ -1,0 +1,82 @@
+---
+import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
+import { location } from '../data/location.mjs';
+import { researchProfile } from '../data/research.mjs';
+import { regulatoryIdentity } from '../data/regulatory.mjs';
+
+const canonicalUrl = absoluteUrl('/dr-saeed-ghezelbash/');
+
+const faqItems = [
+  ['دکتر سعید قزلباش کیست؟', 'دکتر سعید قزلباش، پزشک زیبایی فعال در کرمانشاه و بنیان‌گذار کلینیک زیبایی دکتر سعید قزلباش است.'],
+  ['شماره نظام پزشکی دکتر سعید قزلباش چیست؟', 'شماره نظام پزشکی دکتر سعید قزلباش ۱۶۷۴۳۰ است.'],
+  ['دکتر سعید قزلباش در کدام شهر فعالیت دارد؟', 'دکتر سعید قزلباش در کرمانشاه فعالیت می‌کند.'],
+  ['کلینیک دکتر سعید قزلباش کجاست؟', 'کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا قرار دارد.'],
+  ['حوزه فعالیت دکتر سعید قزلباش چیست؟', 'حوزه فعالیت دکتر سعید قزلباش پزشکی زیبایی، پوست، مو و جوانسازی با تمرکز بر خدماتی مانند بوتاکس، فیلر، لیفت نخ، جوانسازی و ساکشن غبغب است.'],
+  ['آیا دکتر سعید قزلباش پروفایل علمی یا پژوهشی دارد؟', 'بله. دکتر سعید قزلباش دارای شناسه ORCID و کتاب‌شناسی NCBI است.'],
+  ['برای مشاهده خدمات دکتر سعید قزلباش به کدام صفحات مراجعه کنم؟', 'برای مشاهده خدمات، به صفحه خدمات و صفحات اختصاصی بوتاکس، فیلر، لیفت نخ، جوانسازی پوست و مو و ساکشن غبغب مراجعه کنید.'],
+  ['برای ارتباط یا مشاهده نمونه‌کارها از چه مسیری اقدام کنم؟', 'اینستاگرام رسمی، شماره تماس کلینیک و صفحه تماس سایت مسیرهای اصلی ارتباط هستند.'],
+  ['آیا می‌توان دکتر سعید قزلباش را بهترین دکتر زیبایی کرمانشاه دانست؟', 'بهترین بودن یک ادعای قطعی نیست و باید با معیارهای قابل بررسی مانند شماره نظام پزشکی معتبر، هویت رسمی، آدرس مشخص، مشاوره فردی و نمونه‌کار قابل بررسی سنجیده شود.']
+];
+
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'ProfilePage',
+      '@id': `${canonicalUrl}#profile-page`,
+      url: canonicalUrl,
+      name: 'دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه',
+      inLanguage: site.locale,
+      isPartOf: { '@id': absoluteUrl('/#website') },
+      mainEntity: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') }
+    },
+    {
+      '@type': ['Person', 'Physician'],
+      '@id': absoluteUrl('/#dr-saeed-ghezelbash'),
+      name: site.personFa,
+      alternateName: ['دکتر محمدسعید قزلباش', site.personEn, 'Mohammad Saeed Ghezelbash', 'Ghezelbash MS', 'Dr. Saeed Ghezelbaash'],
+      description: 'پزشک زیبایی در کرمانشاه با تمرکز بر خدمات زیبایی، پوست، مو و جوانسازی.',
+      image: canonicalImage(),
+      url: canonicalUrl,
+      sameAs: site.sameAs.person,
+      identifier: [
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'IRIMC',
+          value: regulatoryIdentity.irimc.medicalCouncilNumber,
+          url: regulatoryIdentity.irimc.url
+        },
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'ORCID',
+          value: researchProfile.orcid.replace('https://orcid.org/', ''),
+          url: researchProfile.orcid
+        }
+      ],
+      hasOccupation: {
+        '@type': 'Occupation',
+        name: 'پزشک زیبایی',
+        occupationLocation: { '@type': 'City', name: location.addressLocality }
+      },
+      affiliation: { '@id': absoluteUrl('/#clinic') },
+      worksFor: { '@id': absoluteUrl('/#clinic') },
+      workLocation: { '@id': absoluteUrl('/#clinic') },
+      subjectOf: [
+        { '@type': 'WebPage', name: 'NCBI bibliography', url: researchProfile.bibliographyUrl },
+        { '@type': 'WebPage', name: 'IranMedLabs interview', url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/' },
+        { '@type': 'WebPage', name: 'MDPI article', url: 'https://www.mdpi.com/2227-9032/9/9/1169' }
+      ]
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${canonicalUrl}#faq`,
+      mainEntity: faqItems.map(([question, answer]) => ({
+        '@type': 'Question',
+        name: question,
+        acceptedAnswer: { '@type': 'Answer', text: answer }
+      }))
+    }
+  ]
+};
+---
+<script type="application/ld+json" set:html={JSON.stringify(graph)} />
