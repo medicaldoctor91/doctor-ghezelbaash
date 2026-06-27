@@ -64,6 +64,46 @@ export const authoritySignals = [
     useAs: ['externalProfile', 'authoritySignal']
   },
   {
+    key: 'doctor-yab-profile',
+    type: 'medicalDirectoryProfile',
+    entity: 'personAndClinic',
+    publisher: 'DoctorYab',
+    url: 'https://doctor-yab.ir/Search/43609',
+    useAs: ['directoryProfile', 'authoritySignal', 'napCorroboration']
+  },
+  {
+    key: 'doctoreto-profile',
+    type: 'medicalDirectoryProfile',
+    entity: 'personAndClinic',
+    publisher: 'Doctoreto',
+    url: 'https://doctoreto.com/doctor/GPezBJ',
+    useAs: ['directoryProfile', 'authoritySignal', 'napCorroboration']
+  },
+  {
+    key: 'meidane-business-profile',
+    type: 'localBusinessDirectoryProfile',
+    entity: 'clinicAndServices',
+    publisher: 'Meidane',
+    url: 'https://meidane.com/b/13478',
+    useAs: ['directoryProfile', 'authoritySignal', 'napCorroboration']
+  },
+  {
+    key: 'ninisite-coverage',
+    type: 'mediaMention',
+    entity: 'clinicAndServices',
+    publisher: 'NiniSite',
+    url: 'https://www.ninisite.com/article/18112/',
+    useAs: ['subjectOf', 'authoritySignal', 'serviceEvidence']
+  },
+  {
+    key: 'pezeshk-yab-coverage',
+    type: 'mediaMention',
+    entity: 'clinicAndServices',
+    publisher: 'PezeshkYab',
+    url: 'https://pezeshk-yab.com/blog/dr-saeed-qezlbash-kermanshah/',
+    useAs: ['subjectOf', 'authoritySignal', 'serviceEvidence']
+  },
+  {
     key: 'khabaronline-coverage',
     type: 'mediaMention',
     entity: 'clinic',
