@@ -7,6 +7,9 @@ import PersonSeoAeoEnhancements from '../components/PersonSeoAeoEnhancements.ast
 import CardGrid from '../components/ui/CardGrid.astro';
 import CtaCluster from '../components/ui/CtaCluster.astro';
 import Section from '../components/ui/Section.astro';
+import Hero from '../components/ui/Hero.astro';
+import TrustStrip from '../components/ui/TrustStrip.astro';
+import EvidencePanel from '../components/ui/EvidencePanel.astro';
 import { site } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
 import { regulatoryIdentity } from '../data/regulatory.mjs';
@@ -36,31 +39,39 @@ const evidenceItems = [
   { title: 'گراف دانش', href: '/kg/', body: 'لایه machine-readable برای اتصال شخص، کلینیک، خدمات و منابع.' },
   { title: 'تماس', href: '/contact/', body: 'شماره تماس، اینستاگرام رسمی، آدرس و Google Maps.' }
 ];
+
+const trustItems = [
+  { kicker: 'شماره نظام پزشکی', value: regulatoryIdentity.irimc.medicalCouncilNumber },
+  { kicker: 'شهر فعالیت', value: 'کرمانشاه' },
+  { kicker: 'کلینیک', value: site.nameFa },
+  { kicker: 'مسیر رسمی', value: location.phoneDisplay }
+];
 ---
 <BaseLayout title={title} description={description} canonicalPath="/dr-saeed-ghezelbash/" pageType="ProfilePage" personEnhancements={false}>
   <PersonProfileJsonLd slot="head" />
 
-  <section class="box hero-grid">
-    <div>
-      <p class="small">صفحه رسمی و کانونیکال پزشک</p>
-      <h1>دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه</h1>
-      <p class="lead">این صفحه برای معرفی تبلیغاتی کوتاه ساخته نشده؛ نقش آن این است که هویت پزشک، کلینیک، خدمات، مسیر تماس و منابع قابل بررسی را در یک مسیر روشن کنار هم بگذارد.</p>
-      <p>اگر کاربر پیش از بوتاکس، فیلر، لیفت نخ، جوانسازی یا ساکشن غبغب می‌خواهد بداند با چه پزشک و چه مسیر رسمی روبه‌روست، این صفحه نقطه شروع اعتماد است.</p>
-      <CtaCluster actions={[
-        { label: 'مشاهده خدمات', href: '/services/', primary: true },
-        { label: 'تماس و آدرس', href: '/contact/' },
-        { label: 'منابع قابل بررسی', href: '/evidence/' }
-      ]} />
-    </div>
-    <aside class="card">
-      <h2>اطلاعات سریع</h2>
-      <div class="fact-list">
-        {identityItems.slice(0, 4).map((item) => (
-          <div class="fact-item"><strong>{item.title}</strong><br />{item.value}</div>
-        ))}
-      </div>
-    </aside>
-  </section>
+  <Hero
+    variant="person"
+    eyebrow="صفحه رسمی و کانونیکال پزشک"
+    title="دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه"
+    lead="این صفحه برای معرفی تبلیغاتی کوتاه ساخته نشده؛ نقش آن این است که هویت پزشک، کلینیک، خدمات، مسیر تماس و منابع قابل بررسی را در یک مسیر روشن کنار هم بگذارد."
+    body={[
+      'اگر کاربر پیش از بوتاکس، فیلر، لیفت نخ، جوانسازی یا ساکشن غبغب می‌خواهد بداند با چه پزشک و چه مسیر رسمی روبه‌روست، این صفحه نقطه شروع اعتماد است.'
+    ]}
+    actions={[
+      { label: 'مشاهده خدمات', href: '/services/', primary: true },
+      { label: 'تماس و آدرس', href: '/contact/' },
+      { label: 'منابع قابل بررسی', href: '/evidence/' }
+    ]}
+    facts={[
+      { label: 'نام', value: site.personFa },
+      { label: 'شماره نظام پزشکی', value: regulatoryIdentity.irimc.medicalCouncilNumber },
+      { label: 'شهر', value: 'کرمانشاه' },
+      { label: 'کلینیک', value: site.nameFa }
+    ]}
+  />
+
+  <TrustStrip items={trustItems} />
 
   <Section
     id="person-identity"
@@ -101,16 +112,11 @@ const evidenceItems = [
     </ul>
   </Section>
 
-  <Section
-    id="person-evidence-map"
+  <EvidencePanel
     title="مسیرهای پشتیبان برای بررسی بیشتر"
-    body={[
-      'برای اینکه صفحه پزشک فقط یک متن معرفی نباشد، باید به منابع و دارایی‌های قابل بررسی وصل باشد: صفحه کلینیک، صفحه شواهد، گراف دانش، نقشه و مسیر تماس.',
-      'این لایه‌ها هم برای کاربر انسانی مفیدند و هم برای موتور جست‌وجو و سیستم‌های پاسخ‌گو که باید ارتباط میان پزشک، کلینیک، شهر و خدمات را بفهمند.'
-    ]}
-  >
-    <CardGrid items={evidenceItems} />
-  </Section>
+    body="برای اینکه صفحه پزشک فقط یک متن معرفی نباشد، باید به منابع و دارایی‌های قابل بررسی وصل باشد: صفحه کلینیک، صفحه شواهد، گراف دانش، نقشه و مسیر تماس."
+    items={evidenceItems}
+  />
 
   <PersonProfileContent />
   <PersonIranMedLabsInterview />
