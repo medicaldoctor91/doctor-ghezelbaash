@@ -1,5 +1,6 @@
 ---
 import { site } from '../data/site.mjs';
+import { services } from '../data/services.mjs';
 import { navRoutes } from '../lib/routes.mjs';
 import { buildSeoMeta } from '../lib/seo.mjs';
 import GlobalJsonLd from '../components/GlobalJsonLd.astro';
@@ -9,6 +10,7 @@ import PersonSeoAeoEnhancements from '../components/PersonSeoAeoEnhancements.ast
 import PersonIranMedLabsInterview from '../components/PersonIranMedLabsInterview.astro';
 import PersonProfileContent from '../components/PersonProfileContent.astro';
 import StickyMobileCTA from '../components/ui/StickyMobileCTA.astro';
+import EntityFooter from '../components/EntityFooter.astro';
 
 const {
   title = site.nameFa,
@@ -25,6 +27,32 @@ const seo = buildSeoMeta({ title, description, canonicalPath, robots });
 const showPersonEnhancements = personEnhancements === 'auto'
   ? canonicalPath === '/dr-saeed-ghezelbash/'
   : Boolean(personEnhancements);
+
+const footerGroups = [
+  {
+    title: 'مسیرهای اصلی',
+    links: [
+      { href: '/', label: 'خانه' },
+      { href: '/dr-saeed-ghezelbash/', label: 'صفحه پزشک' },
+      { href: '/dr-saeed-ghezelbash-aesthetic-clinic/', label: 'صفحه کلینیک' },
+      { href: '/services/', label: 'همه خدمات' },
+      { href: '/contact/', label: 'تماس' },
+    ],
+  },
+  {
+    title: 'خدمات',
+    links: services.map((service) => ({ href: `/${service.slug}/`, label: service.shortTitle || service.title })),
+  },
+  {
+    title: 'منابع',
+    links: [
+      { href: '/evidence/', label: 'شواهد' },
+      { href: '/kg/', label: 'گراف دانش' },
+      { href: '/llms.txt', label: 'llms.txt' },
+      { href: '/sitemap.xml', label: 'sitemap.xml' },
+    ],
+  },
+];
 ---
 <!doctype html>
 <html lang="fa-IR" dir="rtl">
@@ -69,8 +97,8 @@ const showPersonEnhancements = personEnhancements === 'auto'
       .evidence-panel{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:1rem;align-items:start;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(135deg,#fff,#fff7f7);padding:1rem;margin:1.4rem 0;box-shadow:var(--shadow)}.evidence-panel h2{margin-top:.15rem}.evidence-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.75rem}.evidence-link{display:block;text-decoration:none;border:1px solid var(--line);border-radius:14px;background:#fff;padding:.85rem}.evidence-link span{display:block;color:var(--muted);font-size:.9rem;margin-top:.25rem}
       .hero-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.6fr);gap:1rem;align-items:start}.fact-list{display:grid;gap:.55rem}.fact-item{border-bottom:1px solid var(--line);padding:.45rem 0}.fact-item:last-child{border-bottom:0}
       .breadcrumbs{margin:.5rem 0 1rem;color:var(--muted);font-size:.9rem}.breadcrumbs ol{display:flex;flex-wrap:wrap;gap:.35rem;list-style:none;padding:0;margin:0}.breadcrumbs li::after{content:'›';padding-inline:.35rem;color:var(--muted)}.breadcrumbs li:last-child::after{content:''}.breadcrumbs a{color:var(--brand);text-decoration:none;border:0;margin:0;padding:0}.breadcrumbs span{color:var(--muted)}
-      footer{border-top:1px solid var(--line);margin-top:2rem;padding:1.2rem 0 4.2rem;color:var(--muted)}ul{padding-right:1.2rem}.sticky-mobile-cta{display:none}
-      @media(max-width:760px){.wrap{padding:14px}.hero-panel,.hero-grid,.evidence-panel{grid-template-columns:1fr}.grid{grid-template-columns:1fr}nav.wrap{padding-inline:14px}.top{position:sticky}.sticky-mobile-cta{position:fixed;display:flex;gap:.5rem;align-items:center;justify-content:center;left:.75rem;right:.75rem;bottom:.75rem;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:18px;padding:.55rem;z-index:9;box-shadow:0 16px 40px rgba(0,0,0,.12);backdrop-filter:blur(10px)}.sticky-mobile-cta .cta,.sticky-mobile-cta .cta-secondary{flex:1;text-align:center;margin:0;padding:.55rem .65rem;font-size:.92rem}}
+      .entity-footer{margin-top:2rem;padding-bottom:4.2rem}.footer-link-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.85rem}.footer-link-card ul{list-style:none;padding:0;margin:0}.footer-link-card li{margin:.35rem 0}.footer-contact-card{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;justify-content:flex-start}.footer-bottom{border-top:1px solid var(--line);margin-top:1rem;color:var(--muted)}footer{color:var(--muted)}ul{padding-right:1.2rem}.sticky-mobile-cta{display:none}
+      @media(max-width:760px){.wrap{padding:14px}.hero-panel,.hero-grid,.evidence-panel{grid-template-columns:1fr}.grid,.footer-link-grid{grid-template-columns:1fr}nav.wrap{padding-inline:14px}.top{position:sticky}.sticky-mobile-cta{position:fixed;display:flex;gap:.5rem;align-items:center;justify-content:center;left:.75rem;right:.75rem;bottom:.75rem;background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:18px;padding:.55rem;z-index:9;box-shadow:0 16px 40px rgba(0,0,0,.12);backdrop-filter:blur(10px)}.sticky-mobile-cta .cta,.sticky-mobile-cta .cta-secondary{flex:1;text-align:center;margin:0;padding:.55rem .65rem;font-size:.92rem}}
     </style>
     <slot name="head" />
   </head>
@@ -88,8 +116,14 @@ const showPersonEnhancements = personEnhancements === 'auto'
       {showPersonEnhancements && <PersonSeoAeoEnhancements />}
     </main>
     <StickyMobileCTA primaryHref="/contact/" primaryLabel="تماس و آدرس" secondaryHref={site.instagram} secondaryLabel="اینستاگرام" />
-    <footer class="wrap">
-      <p>{site.nameFa} — {site.phoneDisplay} — <a href={site.instagram}>Instagram</a></p>
-    </footer>
+    <EntityFooter
+      title={site.nameFa}
+      summary={`${site.personFa} — مسیرهای اصلی سایت، خدمات، منابع و تماس.`}
+      actions={[
+        { label: 'Instagram رسمی', href: site.instagram, primary: true },
+        { label: 'تماس', href: '/contact/' }
+      ]}
+      groups={footerGroups}
+    />
   </body>
 </html>
