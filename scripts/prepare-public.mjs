@@ -17,10 +17,8 @@ const filesToExposeAtWebRoot = [
   'publishing-crosswalk.jsonld',
   'aesthetic_medicine_knowledge_kermanshah_fa.json',
   'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json',
-  'services.json',
   'sameas.json',
   'nap.csv',
-  'llms.txt',
   'aesthetic-medicine-dataset.html',
   'google-maps-review-evidence.html'
 ];
