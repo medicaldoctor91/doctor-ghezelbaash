@@ -1,8 +1,5 @@
 ---
-import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
-import { location } from '../data/location.mjs';
-import { researchProfile } from '../data/research.mjs';
-import { regulatoryIdentity } from '../data/regulatory.mjs';
+import { absoluteUrl } from '../data/site.mjs';
 
 const canonicalUrl = absoluteUrl('/dr-saeed-ghezelbash/');
 
@@ -20,53 +17,6 @@ const faqItems = [
 const graph = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'ProfilePage',
-      '@id': `${canonicalUrl}#profile-page`,
-      url: canonicalUrl,
-      name: 'دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه',
-      inLanguage: site.locale,
-      isPartOf: { '@id': absoluteUrl('/#website') },
-      mainEntity: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') }
-    },
-    {
-      '@type': ['Person', 'Physician'],
-      '@id': absoluteUrl('/#dr-saeed-ghezelbash'),
-      name: site.personFa,
-      alternateName: ['دکتر محمدسعید قزلباش', site.personEn, 'Mohammad Saeed Ghezelbash', 'Ghezelbash MS', 'Dr. Saeed Ghezelbaash'],
-      description: 'پزشک زیبایی در کرمانشاه با تمرکز بر خدمات زیبایی، پوست، مو و جوانسازی.',
-      image: canonicalImage(),
-      url: canonicalUrl,
-      sameAs: site.sameAs.person,
-      identifier: [
-        {
-          '@type': 'PropertyValue',
-          propertyID: 'IRIMC',
-          value: regulatoryIdentity.irimc.medicalCouncilNumber,
-          url: regulatoryIdentity.irimc.url
-        },
-        {
-          '@type': 'PropertyValue',
-          propertyID: 'ORCID',
-          value: researchProfile.orcid.replace('https://orcid.org/', ''),
-          url: researchProfile.orcid
-        }
-      ],
-      hasOccupation: {
-        '@type': 'Occupation',
-        name: 'پزشک زیبایی',
-        occupationLocation: { '@type': 'City', name: location.addressLocality }
-      },
-      knowsAbout: ['پزشکی زیبایی', 'بوتاکس', 'فیلر', 'لیفت نخ', 'جوانسازی پوست و مو', 'ساکشن غبغب'],
-      affiliation: { '@id': absoluteUrl('/#clinic') },
-      worksFor: { '@id': absoluteUrl('/#clinic') },
-      workLocation: { '@id': absoluteUrl('/#clinic') },
-      subjectOf: [
-        { '@type': 'WebPage', name: 'NCBI bibliography', url: researchProfile.bibliographyUrl },
-        { '@type': 'WebPage', name: 'IranMedLabs media coverage', url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/' },
-        { '@type': 'WebPage', name: 'MDPI article', url: 'https://www.mdpi.com/2227-9032/9/9/1169' }
-      ]
-    },
     {
       '@type': 'FAQPage',
       '@id': `${canonicalUrl}#faq`,
