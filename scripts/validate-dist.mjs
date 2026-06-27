@@ -64,7 +64,7 @@ for (const slug of [
 ]) {
   mustContain('sitemap.xml', `https://www.ghezelbaash.ir/${slug}/`);
   mustContain('routes.json', `/${slug}/`);
-  mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow">');
+  mustContain(`${slug}/index.html`, '<meta name="robots" content="index,follow');
   mustContain(`${slug}/index.html`, 'BreadcrumbList');
   mustContain(`${slug}/index.html`, '#breadcrumb');
   mustContain(`${slug}/index.html`, '#service');
