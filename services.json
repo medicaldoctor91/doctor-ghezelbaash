@@ -1,8 +1,8 @@
 {
-  "schema": "ghezelbaash.service_architecture.v3",
+  "schema": "ghezelbaash.service_architecture.v4",
   "dateModified": "2026-06-27",
   "canonicalWebsite": "https://www.ghezelbaash.ir/",
-  "stage": "stage4-full-repo-alignment",
+  "stage": "stage6-entity-only-paths-ai-overview-ready",
   "policy": {
     "servicePagesIndexing": "Parent service pages remain noindex,follow until final visible content is approved. They are intentionally not listed in sitemap.xml yet.",
     "bestIntentPolicy": "Persian best-intent queries are preserved and mapped to dedicated anchors inside each parent service page.",
@@ -11,7 +11,15 @@
       "central-lip-lift-kermanshah",
       "fat-injection-kermanshah"
     ],
-    "supportingConceptPolicy": "Central lip lift supports lip filler decision intent inside /filler-kermanshah/. Fat injection supports filler-volume and fat-removal/fat-transfer contouring context inside /filler-kermanshah/ and /double-chin-liposuction-kermanshah/."
+    "supportingConceptPolicy": "Central lip lift supports lip filler decision intent inside /filler-kermanshah/. Fat injection supports filler-volume and fat-removal/fat-transfer contouring context inside /filler-kermanshah/ and /double-chin-liposuction-kermanshah/.",
+    "legacyEntityPathPolicy": "Legacy legacy person entity path and legacy clinic entity path folders are intentionally removed in Stage 6. Canonical entity pages are /dr-saeed-ghezelbash/ and /dr-saeed-ghezelbash-aesthetic-clinic/.",
+    "aiOverviewPolicy": "Each parent service page must become snippet-eligible only after visible content exists for definition, candidate, procedure overview, duration/results, aftercare, side effects, cost factors, best-doctor criteria, FAQ, and conversion CTAs.",
+    "indexReleaseGate": [
+      "Remove noindex only after visible Persian content is approved.",
+      "Add the service URL to sitemap.xml only after noindex is removed.",
+      "Add direct homepage/services/clinic links only after the page is index-ready.",
+      "Structured data must not describe a section that is absent from the visible HTML."
+    ]
   },
   "parentServicePages": [
     {
@@ -35,6 +43,9 @@
         "gummy-smile-botox",
         "underarm-sweating-botox",
         "masseter-botox",
+        "botox-procedure",
+        "botox-results-timeline",
+        "botox-duration",
         "botox-aftercare",
         "botox-side-effects",
         "botox-cost",
@@ -48,6 +59,27 @@
         "بوتاکس لبخند لثه‌ای",
         "بوتاکس تعریق زیر بغل",
         "بوتاکس ماسِتر"
+      ],
+      "htmlStatus": "draft-noindex-structural-skeleton",
+      "aiOverviewBlocksRequired": [
+        "quick_answer_summary",
+        "candidate_criteria",
+        "use_cases_or_subservices",
+        "patient_facing_process",
+        "results_timeline_or_duration",
+        "aftercare",
+        "side_effects_and_risk_signals",
+        "cost_factors",
+        "best_doctor_selection_criteria_kermanshah",
+        "faq",
+        "instagram_phone_maps_cta"
+      ],
+      "releaseChecklist": [
+        "visible H1/H2 structure matches services.json anchors",
+        "best-intent H2 exists and answers best doctor/service query",
+        "FAQ visible on page before FAQ schema is enabled",
+        "noindex removed only after content completion",
+        "URL added to sitemap only after noindex removal"
       ]
     },
     {
@@ -69,15 +101,17 @@
         "filler-candidate",
         "lip-filler",
         "natural-lip-filler",
+        "central-lip-lift-vs-lip-filler",
         "cheek-filler",
         "chin-filler",
         "jawline-filler",
         "under-eye-filler",
         "temple-filler",
         "nasolabial-filler",
-        "central-lip-lift-vs-lip-filler",
         "fat-injection-vs-filler",
         "full-face-filler-design",
+        "filler-procedure",
+        "filler-duration",
         "filler-aftercare",
         "filler-side-effects",
         "filler-cost",
@@ -93,6 +127,27 @@
         "فیلر زیر چشم",
         "سانترال لب به‌عنوان مقایسه فرم‌دهی لب",
         "تزریق چربی به‌عنوان مقایسه حجم‌دهی صورت"
+      ],
+      "htmlStatus": "draft-noindex-structural-skeleton",
+      "aiOverviewBlocksRequired": [
+        "quick_answer_summary",
+        "candidate_criteria",
+        "use_cases_or_subservices",
+        "patient_facing_process",
+        "results_timeline_or_duration",
+        "aftercare",
+        "side_effects_and_risk_signals",
+        "cost_factors",
+        "best_doctor_selection_criteria_kermanshah",
+        "faq",
+        "instagram_phone_maps_cta"
+      ],
+      "releaseChecklist": [
+        "visible H1/H2 structure matches services.json anchors",
+        "best-intent H2 exists and answers best doctor/service query",
+        "FAQ visible on page before FAQ schema is enabled",
+        "noindex removed only after content completion",
+        "URL added to sitemap only after noindex removal"
       ]
     },
     {
@@ -115,6 +170,9 @@
         "eyebrow-thread-lift",
         "jawline-thread-lift",
         "neck-thread-lift",
+        "thread-lift-procedure",
+        "thread-lift-results",
+        "thread-lift-duration",
         "thread-lift-aftercare",
         "thread-lift-side-effects",
         "thread-lift-cost",
@@ -128,6 +186,27 @@
         "لیفت ابرو",
         "لیفت خط فک",
         "لیفت گردن"
+      ],
+      "htmlStatus": "draft-noindex-structural-skeleton",
+      "aiOverviewBlocksRequired": [
+        "quick_answer_summary",
+        "candidate_criteria",
+        "use_cases_or_subservices",
+        "patient_facing_process",
+        "results_timeline_or_duration",
+        "aftercare",
+        "side_effects_and_risk_signals",
+        "cost_factors",
+        "best_doctor_selection_criteria_kermanshah",
+        "faq",
+        "instagram_phone_maps_cta"
+      ],
+      "releaseChecklist": [
+        "visible H1/H2 structure matches services.json anchors",
+        "best-intent H2 exists and answers best doctor/service query",
+        "FAQ visible on page before FAQ schema is enabled",
+        "noindex removed only after content completion",
+        "URL added to sitemap only after noindex removal"
       ]
     },
     {
@@ -159,6 +238,7 @@
         "acne-scar-treatment",
         "scar-laser",
         "hifu",
+        "rejuvenation-treatment-plan",
         "rejuvenation-aftercare",
         "rejuvenation-side-effects",
         "rejuvenation-cost",
@@ -176,6 +256,27 @@
         "لیزر جای زخم",
         "هایفو",
         "اسکین بوستر"
+      ],
+      "htmlStatus": "draft-noindex-structural-skeleton",
+      "aiOverviewBlocksRequired": [
+        "quick_answer_summary",
+        "candidate_criteria",
+        "use_cases_or_subservices",
+        "patient_facing_process",
+        "results_timeline_or_duration",
+        "aftercare",
+        "side_effects_and_risk_signals",
+        "cost_factors",
+        "best_doctor_selection_criteria_kermanshah",
+        "faq",
+        "instagram_phone_maps_cta"
+      ],
+      "releaseChecklist": [
+        "visible H1/H2 structure matches services.json anchors",
+        "best-intent H2 exists and answers best doctor/service query",
+        "FAQ visible on page before FAQ schema is enabled",
+        "noindex removed only after content completion",
+        "URL added to sitemap only after noindex removal"
       ]
     },
     {
@@ -196,7 +297,9 @@
         "neck-contouring",
         "jawline-neck-definition",
         "fat-removal-and-fat-transfer",
+        "double-chin-procedure",
         "double-chin-recovery",
+        "double-chin-results",
         "double-chin-side-effects",
         "double-chin-cost",
         "double-chin-vs-hifu-vs-thread",
@@ -209,6 +312,27 @@
         "کانتورینگ گردن",
         "خط فک",
         "تفاوت تخلیه چربی غبغب و تزریق چربی"
+      ],
+      "htmlStatus": "draft-noindex-structural-skeleton",
+      "aiOverviewBlocksRequired": [
+        "quick_answer_summary",
+        "candidate_criteria",
+        "use_cases_or_subservices",
+        "patient_facing_process",
+        "results_timeline_or_duration",
+        "aftercare",
+        "side_effects_and_risk_signals",
+        "cost_factors",
+        "best_doctor_selection_criteria_kermanshah",
+        "faq",
+        "instagram_phone_maps_cta"
+      ],
+      "releaseChecklist": [
+        "visible H1/H2 structure matches services.json anchors",
+        "best-intent H2 exists and answers best doctor/service query",
+        "FAQ visible on page before FAQ schema is enabled",
+        "noindex removed only after content completion",
+        "URL added to sitemap only after noindex removal"
       ]
     }
   ],
@@ -242,5 +366,22 @@
     "بهترین + خدمت + کرمانشاه",
     "بهترین دکتر + خدمت + کرمانشاه",
     "بهترین کلینیک + خدمت + کرمانشاه"
-  ]
+  ],
+  "canonicalEntityPages": {
+    "person": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+    "clinic": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
+    "website": "https://www.ghezelbaash.ir/",
+    "knowledgeGraph": "https://www.ghezelbaash.ir/kg/"
+  },
+  "bestIntentExecutionMap": {
+    "patternFamilies": [
+      "بهترین + خدمت + کرمانشاه",
+      "بهترین دکتر + خدمت + کرمانشاه",
+      "بهترین کلینیک + خدمت + کرمانشاه",
+      "راهنمای انتخاب + دکتر/کلینیک + خدمت + کرمانشاه"
+    ],
+    "implementation": "Each parent service page owns one dedicated best-intent anchor and visible H2. The answer should rank selection criteria that match the doctor/clinic entity: medical-license verifiability, clear clinic entity, official Instagram portfolio, Google Maps entity, follow-up route, anatomy-based planning, and public identifiers.",
+    "doNotCreateStandaloneBestPagesYet": true,
+    "reason": "Standalone 'best' pages would dilute authority and risk cannibalization before parent pages are content-complete."
+  }
 }

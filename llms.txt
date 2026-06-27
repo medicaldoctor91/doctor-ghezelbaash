@@ -1,8 +1,8 @@
 # Doctor Ghezelbash — canonical public site and graph files
 
 Canonical website: https://www.ghezelbaash.ir/
-Person page: https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/
-Clinic page: https://www.ghezelbaash.ir/clinic/
+Person page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash/
+Clinic page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/
 Services hub: https://www.ghezelbaash.ir/services/
 Knowledge graph hub: https://www.ghezelbaash.ir/kg/
 Evidence hub: https://www.ghezelbaash.ir/evidence/

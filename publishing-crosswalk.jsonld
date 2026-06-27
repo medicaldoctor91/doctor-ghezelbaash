@@ -24,7 +24,7 @@
       "LocalBusiness"
     ],
     "name": "کلینیک زیبایی دکتر سعید قزلباش",
-    "url": "https://www.ghezelbaash.ir/clinic/"
+    "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/"
   },
   "creator": {
     "@type": "Person",
@@ -79,18 +79,18 @@
   ],
   "dateModified": "2026-06-27",
   "url": "https://www.ghezelbaash.ir/publishing-crosswalk.jsonld",
-  "version": "1.1.0-stage4-live",
+  "version": "2026-06-27-stage6",
   "isBasedOn": "https://doi.org/10.5281/zenodo.18765169",
   "mentions": [
     {
       "@type": "Person",
       "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
-      "url": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/"
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/"
     },
     {
       "@type": "MedicalClinic",
       "@id": "https://www.ghezelbaash.ir/#clinic",
-      "url": "https://www.ghezelbaash.ir/clinic/"
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/"
     },
     {
       "@type": "Dataset",
@@ -111,8 +111,8 @@
   ],
   "canonicalPages": {
     "website": "https://www.ghezelbaash.ir/",
-    "person": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-    "clinic": "https://www.ghezelbaash.ir/clinic/",
+    "person": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+    "clinic": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
     "servicesHub": "https://www.ghezelbaash.ir/services/",
     "knowledgeGraphHub": "https://www.ghezelbaash.ir/kg/",
     "evidenceHub": "https://www.ghezelbaash.ir/evidence/",

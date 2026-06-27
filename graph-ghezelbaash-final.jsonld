@@ -29,10 +29,10 @@
       ],
       "hasPart": [
         {
-          "@id": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/#webpage"
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/#webpage"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/clinic/#webpage"
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#webpage"
         },
         {
           "@id": "https://www.ghezelbaash.ir/services/#webpage"
@@ -42,8 +42,12 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/evidence/#webpage"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/contact/#webpage"
         }
-      ]
+      ],
+      "dateModified": "2026-06-27"
     },
     {
       "@type": [
@@ -87,8 +91,8 @@
         "@id": "https://www.ghezelbaash.ir/#breadcrumb-home"
       },
       "significantLink": [
-        "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-        "https://www.ghezelbaash.ir/clinic/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "https://www.ghezelbaash.ir/services/",
         "https://www.ghezelbaash.ir/kg/",
         "https://www.ghezelbaash.ir/evidence/",
@@ -125,9 +129,9 @@
         "دکتر محمدسعید قزلباش",
         "Ghezelbash MS"
       ],
-      "url": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
       "mainEntityOfPage": {
-        "@id": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/#webpage"
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/#webpage"
       },
       "jobTitle": "پزشک",
       "worksFor": {
@@ -196,9 +200,9 @@
         "Dr. Saeed Ghezelbaash Aesthetic Clinic",
         "کلینیک زیبایی دکتر قزلباش"
       ],
-      "url": "https://www.ghezelbaash.ir/clinic/",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
       "mainEntityOfPage": {
-        "@id": "https://www.ghezelbaash.ir/clinic/#webpage"
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#webpage"
       },
       "description": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه با تمرکز بر بوتاکس، فیلر، لیفت نخ، جوانسازی پوست و مو و ساکشن غبغب.",
       "telephone": "+989308209494",
@@ -330,7 +334,7 @@
         "en"
       ],
       "license": "https://creativecommons.org/licenses/by/4.0/",
-      "version": "live-stage2-graph-polish",
+      "version": "2026-06-27-stage6-live",
       "dateModified": "2026-06-27",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
@@ -406,12 +410,13 @@
           "contentUrl": "https://www.ghezelbaash.ir/llms.txt",
           "encodingFormat": "text/plain"
         }
-      ]
+      ],
+      "about": []
     },
     {
       "@type": "ProfilePage",
-      "@id": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/#webpage",
-      "url": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/#webpage",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
       "name": "درباره دکتر سعید قزلباش",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#website"
@@ -423,8 +428,8 @@
     },
     {
       "@type": "MedicalWebPage",
-      "@id": "https://www.ghezelbaash.ir/clinic/#webpage",
-      "url": "https://www.ghezelbaash.ir/clinic/",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#webpage",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
       "name": "کلینیک زیبایی دکتر سعید قزلباش",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#website"
@@ -2606,8 +2611,8 @@
       ],
       "significantLink": [
         "https://www.ghezelbaash.ir/services/",
-        "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-        "https://www.ghezelbaash.ir/clinic/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "https://www.ghezelbaash.ir/contact/",
         "https://www.instagram.com/doctor.ghezelbaash/"
       ],
@@ -2722,8 +2727,8 @@
       ],
       "significantLink": [
         "https://www.ghezelbaash.ir/services/",
-        "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-        "https://www.ghezelbaash.ir/clinic/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "https://www.ghezelbaash.ir/contact/",
         "https://www.instagram.com/doctor.ghezelbaash/"
       ],
@@ -2821,8 +2826,8 @@
       ],
       "significantLink": [
         "https://www.ghezelbaash.ir/services/",
-        "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-        "https://www.ghezelbaash.ir/clinic/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "https://www.ghezelbaash.ir/contact/",
         "https://www.instagram.com/doctor.ghezelbaash/"
       ],
@@ -2933,8 +2938,8 @@
       ],
       "significantLink": [
         "https://www.ghezelbaash.ir/services/",
-        "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-        "https://www.ghezelbaash.ir/clinic/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "https://www.ghezelbaash.ir/contact/",
         "https://www.instagram.com/doctor.ghezelbaash/"
       ],
@@ -3021,8 +3026,8 @@
       ],
       "significantLink": [
         "https://www.ghezelbaash.ir/services/",
-        "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-        "https://www.ghezelbaash.ir/clinic/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "https://www.ghezelbaash.ir/contact/",
         "https://www.instagram.com/doctor.ghezelbaash/"
       ],
@@ -4668,6 +4673,214 @@
           "@type": "PropertyValue",
           "name": "intent-family",
           "value": "best-service-doctor-kermanshah"
+        }
+      ]
+    },
+    {
+      "@type": "DefinedTermSet",
+      "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset",
+      "name": "Best doctor/service search-intent map for aesthetic services in Kermanshah",
+      "inLanguage": "fa-IR",
+      "hasDefinedTerm": [
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین بوتاکس کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/botox-kermanshah/#best-botox-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر بوتاکس کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/botox-kermanshah/#best-botox-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین کلینیک بوتاکس کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/botox-kermanshah/#best-botox-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین پزشک بوتاکس در کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/botox-kermanshah/#best-botox-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین فیلر کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/#best-filler-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر فیلر کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/#best-filler-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر فیلر لب کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/#best-filler-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین ژل لب کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/#best-filler-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر زاویه سازی فک کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/#best-filler-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین فیلر زیر چشم کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/#best-filler-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین لیفت نخ کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#best-thread-lift-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر لیفت نخ کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#best-thread-lift-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر لیفت صورت با نخ کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#best-thread-lift-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر لیفت شقیقه کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#best-thread-lift-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین جوانسازی پوست کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/skin-hair-rejuvenation-kermanshah/#best-rejuvenation-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر جوانسازی پوست کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/skin-hair-rejuvenation-kermanshah/#best-rejuvenation-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر پی آر پی مو کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/skin-hair-rejuvenation-kermanshah/#best-rejuvenation-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر مزوتراپی کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/skin-hair-rejuvenation-kermanshah/#best-rejuvenation-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر سابسیژن کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/skin-hair-rejuvenation-kermanshah/#best-rejuvenation-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر درمان ملاسما کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/skin-hair-rejuvenation-kermanshah/#best-rejuvenation-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر هایفو کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/skin-hair-rejuvenation-kermanshah/#best-rejuvenation-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین ساکشن غبغب کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/double-chin-liposuction-kermanshah/#best-double-chin-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر ساکشن غبغب کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/double-chin-liposuction-kermanshah/#best-double-chin-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین دکتر رفع غبغب کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/double-chin-liposuction-kermanshah/#best-double-chin-doctor-kermanshah"
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "بهترین کلینیک ساکشن غبغب کرمانشاه",
+          "inDefinedTermSet": {
+            "@id": "https://www.ghezelbaash.ir/services/#best-intent-termset"
+          },
+          "url": "https://www.ghezelbaash.ir/double-chin-liposuction-kermanshah/#best-double-chin-doctor-kermanshah"
         }
       ]
     }

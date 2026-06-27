@@ -19,8 +19,8 @@ This package polishes the graph and machine-readable files for the new static si
 ## Canonical paths
 
 - Website: https://www.ghezelbaash.ir/
-- Person: https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/
-- Clinic: https://www.ghezelbaash.ir/clinic/
+- Person: https://www.ghezelbaash.ir/dr-saeed-ghezelbash/
+- Clinic: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/
 - Services hub: https://www.ghezelbaash.ir/services/
 - KG hub: https://www.ghezelbaash.ir/kg/
 - Evidence: https://www.ghezelbaash.ir/evidence/

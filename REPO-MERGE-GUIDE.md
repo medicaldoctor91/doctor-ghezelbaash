@@ -16,7 +16,7 @@ Do not move or rename root dataset files. They are intentionally preserved for Z
 6. Enforce HTTPS.
 7. Configure redirects outside GitHub Pages:
    - `https://ghezelbaash.ir/*` -> `https://www.ghezelbaash.ir/*`
-   - `https://doctor.ghezelbaash.ir/*` -> `https://www.ghezelbaash.ir/clinic/`
+   - `https://doctor.ghezelbaash.ir/*` -> `https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/`
    - `https://kg.ghezelbaash.ir/*` -> `https://www.ghezelbaash.ir/kg/`
 
 ## Indexing
@@ -40,3 +40,8 @@ Do not submit service pages to sitemap until their content is complete.
 ## Firebase
 
 Firebase is manual redirect-only legacy infrastructure. It should not be used as a competing canonical mirror.
+
+
+## Stage 6 merge note
+
+Use this package as the new baseline. The legacy person/clinic folders are intentionally absent. Do not recreate them unless you explicitly want legacy redirect stubs. Canonical entity pages are `dr-saeed-ghezelbash/` and `dr-saeed-ghezelbash-aesthetic-clinic/`.

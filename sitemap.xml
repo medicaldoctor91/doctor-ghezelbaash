@@ -7,13 +7,13 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/</loc>
+    <loc>https://www.ghezelbaash.ir/dr-saeed-ghezelbash/</loc>
     <lastmod>2026-06-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.ghezelbaash.ir/clinic/</loc>
+    <loc>https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/</loc>
     <lastmod>2026-06-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -46,12 +46,12 @@
     <loc>https://www.ghezelbaash.ir/aesthetic-medicine-dataset.html</loc>
     <lastmod>2026-06-27</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.ghezelbaash.ir/google-maps-review-evidence.html</loc>
     <lastmod>2026-06-27</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
 </urlset>

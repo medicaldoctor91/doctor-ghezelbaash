@@ -36,7 +36,7 @@
       "دکتر سعید قزلباش",
       "Mohammad Saeed Ghezelbash"
     ],
-    "url": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
+    "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
     "sameAs": [
       "https://www.wikidata.org/wiki/Q140287622",
       "https://orcid.org/0009-0001-9346-8475",
@@ -117,5 +117,5 @@
   ],
   "dateModified": "2026-06-27",
   "url": "https://www.ghezelbaash.ir/dataset-manifest.jsonld",
-  "version": "1.1.0-stage4-live"
+  "version": "2026-06-27-stage6-live"
 }

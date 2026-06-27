@@ -1,9 +1,9 @@
 {
   "title": "Dr. Saeed Ghezelbash Aesthetic Clinic Entity Dataset and Structured Data Hub",
   "upload_type": "dataset",
-  "publication_date": "2026-06-10",
+  "publication_date": "2026-06-27",
   "doi": "10.5281/zenodo.18765169",
-  "description": "Public machine-readable entity dataset and structured-data hub for Dr. Saeed Ghezelbash / دکتر سعید قزلباش, an aesthetic medicine physician and clinic entity in Kermanshah, Iran. This repository contains canonical identity data, public NAP signals, sameAs links, Schema.org JSON-LD, AI-readable summaries, service-intent mappings, Google Maps identifiers, and supporting metadata for search engines, AI crawlers, knowledge graphs, and local aesthetic-medicine retrieval systems.",
+  "description": "Live structured-data repository and static public website for Dr. Saeed Ghezelbash / دکتر سعید قزلباش and Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran. The Zenodo DOI identifies an archived release; the canonical website and GitHub repository may contain newer live revisions. Root dataset file paths are preserved for discovery continuity. Stage 6 removes legacy about/clinic folders from the live website package and keeps canonical entity pages at /dr-saeed-ghezelbash/ and /dr-saeed-ghezelbash-aesthetic-clinic/.",
   "creators": [
     {
       "name": "Ghezelbash, Saeed",
@@ -37,23 +37,18 @@
   "related_identifiers": [
     {
       "identifier": "https://doi.org/10.5281/zenodo.18765169",
-      "relation": "isIdenticalTo",
+      "relation": "isBasedOn",
       "resource_type": "dataset"
     },
     {
       "identifier": "https://www.ghezelbaash.ir/",
-      "relation": "isSupplementTo",
-      "resource_type": "other"
+      "relation": "isDocumentedBy",
+      "resource_type": "website"
     },
     {
-      "identifier": "https://www.instagram.com/doctor.ghezelbaash/",
+      "identifier": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
       "relation": "isSupplementTo",
-      "resource_type": "other"
-    },
-    {
-      "identifier": "https://www.google.com/maps?cid=12350483144643112463",
-      "relation": "references",
-      "resource_type": "other"
+      "resource_type": "software"
     },
     {
       "identifier": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
@@ -61,12 +56,22 @@
       "resource_type": "dataset"
     },
     {
-      "identifier": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-      "relation": "isSourceOf",
-      "resource_type": "dataset"
+      "identifier": "https://www.wikidata.org/wiki/Q140287622",
+      "relation": "isSupplementTo",
+      "resource_type": "other"
+    },
+    {
+      "identifier": "https://www.wikidata.org/wiki/Q140288589",
+      "relation": "isSupplementTo",
+      "resource_type": "other"
+    },
+    {
+      "identifier": "https://www.wikidata.org/wiki/Q140304972",
+      "relation": "isSupplementTo",
+      "resource_type": "other"
     }
   ],
   "communities": [],
   "language": "eng",
-  "version": "1.0.0"
+  "version": "1.1.0-stage6-live"
 }

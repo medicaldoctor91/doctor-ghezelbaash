@@ -34,7 +34,7 @@ Status: pass with one correction.
 Status: pass.
 
 - Canonical spelling: `Saeed`.
-- Canonical page: `/about-dr-saeed-ghezelbash/`.
+- Canonical page: `/dr-saeed-ghezelbash/`.
 - SameAs includes Wikidata, ORCID, NCBI, IRIMC, LinkedIn, GitHub, Instagram.
 - `knowsAbout` preserves best-service Kermanshah intent clusters.
 
@@ -42,7 +42,7 @@ Status: pass.
 
 Status: pass.
 
-- Canonical page: `/clinic/`.
+- Canonical page: `/dr-saeed-ghezelbash-aesthetic-clinic/`.
 - Uses Google Maps CID, Place ID, OSM, Instagram and Wikidata.
 - Offers point to the five service parent pages.
 

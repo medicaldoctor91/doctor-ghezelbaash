@@ -36,8 +36,8 @@ Preserved:
 ## Canonical decisions
 
 - Canonical website: https://www.ghezelbaash.ir/
-- Person page: https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/
-- Clinic page: https://www.ghezelbaash.ir/clinic/
+- Person page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash/
+- Clinic page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/
 - KG hub: https://www.ghezelbaash.ir/kg/
 - Saeed spelling is canonical.
 - Legacy external paths containing `saeid` are preserved only where those external URLs already exist.

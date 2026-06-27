@@ -1,3 +1,20 @@
+
+## 2026-06-27 — Stage 6 entity-path cleanup
+
+- Removed legacy live folders the legacy about/clinic entity folders from the package.
+- Kept canonical entity pages at `/dr-saeed-ghezelbash/` and `/dr-saeed-ghezelbash-aesthetic-clinic/`.
+- Replaced internal references to legacy entity paths across HTML, JSON, JSON-LD, Markdown, sitemap, and LLM files.
+- Strengthened `services.json` with AI Overview release gates and best-intent execution policy.
+- Preserved root dataset paths for Zenodo/GitHub/AI discovery continuity.
+
+## Stage 5 — Entity-path and AI Overview structure review
+
+- Changed canonical Person path to `/dr-saeed-ghezelbash/`.
+- Changed canonical Clinic path to `/dr-saeed-ghezelbash-aesthetic-clinic/`.
+- Kept legacy `/dr-saeed-ghezelbash/` and `/dr-saeed-ghezelbash-aesthetic-clinic/` as noindex redirect stubs.
+- Updated sitemap, internal links, graph references, sameAs map, llms, README, and service references.
+- Preserved root dataset paths for Zenodo/GitHub discovery.
+
 # Changelog
 
 ## v1.1.0-structure-stage1 — 2026-06-27

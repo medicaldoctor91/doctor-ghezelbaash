@@ -1,55 +1,19 @@
-# Firebase Hosting auto-deploy for kg.ghezelbaash.ir
+# Legacy Firebase redirect policy
 
-This repository is configured for Firebase Hosting with:
-
-- Firebase project: `ghezelbaash-kg`
-- Hosting public directory: repository root (`.`)
-- Production domain: `kg.ghezelbaash.ir`
-- GitHub branch for production deploys: `main`
-
-## What the workflow does
-
-After this PR is merged, every push to `main` runs GitHub Actions and deploys the current repository state to the Firebase Hosting live channel.
-
-The workflow file is:
+Canonical website:
 
 ```text
-.github/workflows/firebase-hosting-live.yml
+https://www.ghezelbaash.ir/
 ```
 
-## Required GitHub secret
+Firebase Hosting is not the canonical public website for this project.
 
-Create one repository secret with either of these names:
+If `kg.ghezelbaash.ir` remains active, it should behave only as a redirect layer:
 
 ```text
-FIREBASE_SERVICE_ACCOUNT_GHEZELBAASH_KG
+https://kg.ghezelbaash.ir/* -> https://www.ghezelbaash.ir/kg/
 ```
 
-or:
+The workflow `.github/workflows/firebase-hosting-live.yml` is manual-only and deploys the redirect-only `firebase.json`.
 
-```text
-FIREBASE_SERVICE_ACCOUNT
-```
-
-The value must be the complete Firebase service account JSON for the Firebase project `ghezelbaash-kg`.
-
-## Mobile setup path
-
-1. Open GitHub repository: `medicaldoctor91/doctor-ghezelbaash`
-2. Go to `Settings`
-3. Go to `Secrets and variables`
-4. Open `Actions`
-5. Tap `New repository secret`
-6. Name: `FIREBASE_SERVICE_ACCOUNT_GHEZELBAASH_KG`
-7. Value: paste the full service account JSON
-8. Save
-9. Merge the PR
-10. Any later commit to `main` deploys automatically
-
-## Firebase service account source
-
-Use a Firebase service account that has permission to deploy Firebase Hosting for `ghezelbaash-kg`. Keep the JSON private and only store it in GitHub Actions secrets, not in the repository.
-
-## Manual deploy trigger
-
-The workflow also supports manual runs from GitHub Actions through `workflow_dispatch`.
+Do not use Firebase as a competing mirror of the canonical website.

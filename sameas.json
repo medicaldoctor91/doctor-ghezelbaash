@@ -1,5 +1,5 @@
 {
-  "schema": "ghezelbaash.sameas.v1",
+  "schema": "ghezelbaash.sameas.v2",
   "dateModified": "2026-06-27",
   "canonicalWebsite": "https://www.ghezelbaash.ir/",
   "entities": {
@@ -10,7 +10,7 @@
         "Dr. Saeed Ghezelbash",
         "Mohammad Saeed Ghezelbash"
       ],
-      "canonicalPage": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
+      "canonicalPage": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
       "sameAs": [
         "https://www.wikidata.org/wiki/Q140287622",
         "https://orcid.org/0009-0001-9346-8475",
@@ -27,7 +27,7 @@
         "کلینیک زیبایی دکتر سعید قزلباش",
         "Dr. Saeed Ghezelbash Aesthetic Clinic"
       ],
-      "canonicalPage": "https://www.ghezelbaash.ir/clinic/",
+      "canonicalPage": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
       "sameAs": [
         "https://www.wikidata.org/wiki/Q140288589",
         "https://www.instagram.com/doctor.ghezelbaash/",
@@ -53,7 +53,8 @@
   },
   "redirectPolicy": {
     "nonWwwToWww": "https://ghezelbaash.ir/* -> https://www.ghezelbaash.ir/*",
-    "doctorSubdomain": "https://doctor.ghezelbaash.ir/* -> https://www.ghezelbaash.ir/clinic/",
+    "doctorSubdomain": "https://doctor.ghezelbaash.ir/* -> https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
     "kgSubdomain": "https://kg.ghezelbaash.ir/* -> https://www.ghezelbaash.ir/kg/"
-  }
+  },
+  "stage": "stage6-entity-path-cleanup"
 }

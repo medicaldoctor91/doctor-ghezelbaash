@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this public entity dataset or structured-data repository, cite it as below."
 title: "Dr. Saeed Ghezelbash Aesthetic Clinic Entity Dataset and Structured Data Hub"
-version: "1.1.0-stage4-live"
+version: "1.1.0-stage6-live"
 date-released: 2026-06-27
 doi: "10.5281/zenodo.18765169"
 license: "CC-BY-4.0"
@@ -57,5 +57,5 @@ identifiers:
     value: "https://github.com/medicaldoctor91/doctor-ghezelbaash"
     description: "GitHub structured-data repository"
 
-# Live canonical person page: https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/
+# Live canonical person page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash/
 # The DOI identifies an archived release; the live repository may contain newer revisions.

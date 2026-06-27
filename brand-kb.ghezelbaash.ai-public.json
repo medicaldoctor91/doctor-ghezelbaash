@@ -345,7 +345,7 @@
     "sameAs": [
       "https://about.me/ghezelbaash",
       "https://doctor-yab.ir/Search/43609/دکتر-سعید-قزلباش/",
-      "https://www.ghezelbaash.ir/clinic/",
+      "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
       "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ",
       "https://gcorp.cc/en/dr/دکتر_سعید_قزلباش",
       "https://ghezelbaash.blogspot.com/",
@@ -445,7 +445,7 @@
         "https://about.me/ghezelbaash": "https://about.me/ghezelbaash",
         "https://balad.ir/p/2dnVakli9ZKaBd": "https://balad.ir/p/2dnVakli9ZKaBd",
         "https://doctor-yab.ir/Search/43609/دکتر-سعید-قزلباش/": "https://doctor-yab.ir/Search/43609/دکتر-سعید-قزلباش",
-        "https://www.ghezelbaash.ir/clinic/": "https://www.ghezelbaash.ir/clinic",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/": "https://www.ghezelbaash.ir/clinic",
         "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ": "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ",
         "https://g.co/kgs/4UKgxXq": "https://g.co/kgs/4UKgxXq",
         "https://gadgetnews.net/927682/beauty-services-kermanshah-dr-saeed-ghazelbash/": "https://gadgetnews.net/927682/beauty-services-kermanshah-dr-saeed-ghazelbash",
@@ -499,7 +499,7 @@
       ],
       "whatsapp_url": "https://wa.me/989308209494",
       "telegram_url": "https://t.me/Ghezelbaash",
-      "doctor_subsite_url": "https://www.ghezelbaash.ir/clinic/"
+      "doctor_subsite_url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/"
     },
     "fact_cards": [
       {
@@ -832,7 +832,7 @@
             "@id": "https://www.ghezelbaash.ir/#org"
           },
           "sameAs": [
-            "https://www.ghezelbaash.ir/clinic/",
+            "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
             "https://www.instagram.com/doctor.ghezelbaash/",
             "https://www.facebook.com/Doctor.Ghezelbaash/",
             "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
@@ -1120,7 +1120,7 @@
             }
           ],
           "sameAs": [
-            "https://www.ghezelbaash.ir/clinic/",
+            "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
             "https://www.instagram.com/doctor.ghezelbaash/",
             "https://www.facebook.com/Doctor.Ghezelbaash/",
             "https://www.facebook.com/ghezelbaash/",
@@ -1958,7 +1958,7 @@
         "https://www.khabaronline.ir/news/2068552",
         "https://www.khabaronline.ir/news/2068552/کلینیک-زیبایی-دکتر-سعید-قزلباش-در-کرمانشاه",
         "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ",
-        "https://www.ghezelbaash.ir/clinic/",
+        "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "https://ig.ghezelbaash.ir/",
         "https://ghezelbaash.blogspot.com/",
         "https://wikialpha.info/wiki/کلینیک_زیبایی_دکتر_سعید_قزلباش_-_کرمانشاه"
@@ -2752,7 +2752,7 @@
       "https://www.khabaronline.ir/news/2068552",
       "https://www.khabaronline.ir/news/2068552/کلینیک-زیبایی-دکتر-سعید-قزلباش-در-کرمانشاه",
       "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ",
-      "https://www.ghezelbaash.ir/clinic/",
+      "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
       "https://www.kermanshahbeauty.xyz/",
       "https://ig.ghezelbaash.ir/",
       "https://ghezelbaash.blogspot.com/",
@@ -2922,7 +2922,7 @@
       "person": {
         "name": "دکتر سعید قزلباش",
         "name_en": "Dr. Saeed Ghezelbash",
-        "url": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
+        "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
         "wikidata": "https://www.wikidata.org/wiki/Q140287622",
         "orcid": "https://orcid.org/0009-0001-9346-8475",
         "ncbi": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
@@ -2930,7 +2930,7 @@
       },
       "clinic": {
         "name": "کلینیک زیبایی دکتر سعید قزلباش",
-        "url": "https://www.ghezelbaash.ir/clinic/",
+        "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "wikidata": "https://www.wikidata.org/wiki/Q140288589",
         "google_maps_cid": "https://www.google.com/maps?cid=12350483144643112463",
         "osm": "https://www.openstreetmap.org/node/13530287096"
@@ -3505,7 +3505,7 @@
     "canonical_entities": {
       "person": {
         "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
-        "url": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
+        "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
         "wikidata": "https://www.wikidata.org/wiki/Q140287622",
         "orcid": "https://orcid.org/0009-0001-9346-8475",
         "ncbi": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
@@ -3513,7 +3513,7 @@
       },
       "clinic": {
         "@id": "https://www.ghezelbaash.ir/#clinic",
-        "url": "https://www.ghezelbaash.ir/clinic/",
+        "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
         "wikidata": "https://www.wikidata.org/wiki/Q140288589",
         "instagram": "https://www.instagram.com/doctor.ghezelbaash/",
         "googleMapsCid": "https://www.google.com/maps?cid=12350483144643112463",
@@ -3775,8 +3775,8 @@
     ],
     "centralLipLiftStandalonePage": false,
     "fatInjectionStandalonePage": false,
-    "aboutPersonPath": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-    "clinicPath": "https://www.ghezelbaash.ir/clinic/",
+    "aboutPersonPath": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+    "clinicPath": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
     "kgPath": "https://www.ghezelbaash.ir/kg/"
   },
   "graph_line_review_stage": {
@@ -3792,8 +3792,8 @@
   "current_live_version": "1.1.0-stage4",
   "canonical_website": "https://www.ghezelbaash.ir/",
   "canonical_pages": {
-    "person": "https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/",
-    "clinic": "https://www.ghezelbaash.ir/clinic/",
+    "person": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash/",
+    "clinic": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
     "services": "https://www.ghezelbaash.ir/services/",
     "kg": "https://www.ghezelbaash.ir/kg/",
     "evidence": "https://www.ghezelbaash.ir/evidence/",

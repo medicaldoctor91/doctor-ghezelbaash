@@ -7,8 +7,8 @@ This repository contains the live static website files and public knowledge grap
 ## Live entity pages
 
 - Home: https://www.ghezelbaash.ir/
-- Person: https://www.ghezelbaash.ir/about-dr-saeed-ghezelbash/
-- Clinic: https://www.ghezelbaash.ir/clinic/
+- Person: https://www.ghezelbaash.ir/dr-saeed-ghezelbash/
+- Clinic: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/
 - Services hub: https://www.ghezelbaash.ir/services/
 - Knowledge graph hub: https://www.ghezelbaash.ir/kg/
 - Evidence hub: https://www.ghezelbaash.ir/evidence/
@@ -87,3 +87,8 @@ These are routed to dedicated anchors inside each parent service page through `s
 Canonical public host: GitHub Pages on `https://www.ghezelbaash.ir/`.
 
 Firebase hosting, if used, should function only as a redirect layer for legacy `kg.ghezelbaash.ir` paths, not as a competing canonical public website.
+
+
+## Stage 6 baseline
+
+Legacy the legacy about/clinic entity folders folders are removed from the live package. Canonical entity pages are `/dr-saeed-ghezelbash/` and `/dr-saeed-ghezelbash-aesthetic-clinic/`. Service pages remain draft/noindex until final visible content is approved.
