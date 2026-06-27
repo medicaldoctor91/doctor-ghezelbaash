@@ -1,15 +1,38 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
-<BaseLayout title="Evidence" canonicalPath="/evidence/">
-  <h1>Evidence</h1>
-  <p>Canonical evidence hub.</p>
-  <ul>
-    <li><a href="/authority-signals.json">authority signals JSON</a></li>
-    <li><a href="/profile-links.json">profile links JSON</a></li>
-    <li><a href="/research.json">research JSON</a></li>
-    <li><a href="/location.json">location JSON</a></li>
-    <li><a href="/google-maps-review-evidence.html">Google Maps evidence snapshot</a></li>
-    <li><a href="/aesthetic-medicine-dataset.html">Dataset page</a></li>
-  </ul>
+<BaseLayout title="شواهد و منابع قابل بررسی | دکتر سعید قزلباش" description="هاب شواهد، منابع هویتی، پژوهشی، مکانی و داده‌های عمومی مرتبط با دکتر سعید قزلباش و کلینیک زیبایی دکتر سعید قزلباش." canonicalPath="/evidence/">
+  <section class="box">
+    <p class="small">Evidence hub</p>
+    <h1>شواهد و منابع قابل بررسی</h1>
+    <p>این صفحه برای جدا کردن ادعا از منبع ساخته شده است. کاربر و موتور جست‌وجو باید بتوانند مسیرهای هویتی، مکانی، علمی و داده‌ای دکتر سعید قزلباش را در یک نقطه ببینند.</p>
+  </section>
+
+  <section>
+    <h2>دسته‌بندی منابع</h2>
+    <div class="grid">
+      <a class="card" href="/regulatory.json"><strong>هویت رسمی</strong><br />regulatory.json</a>
+      <a class="card" href="/profile-links.json"><strong>پروفایل‌ها</strong><br />profile-links.json</a>
+      <a class="card" href="/research.json"><strong>پژوهش</strong><br />research.json</a>
+      <a class="card" href="/location.json"><strong>موقعیت مکانی</strong><br />location.json</a>
+      <a class="card" href="/authority-signals.json"><strong>سیگنال‌های اعتبار</strong><br />authority-signals.json</a>
+      <a class="card" href="/sameas.json"><strong>sameAs</strong><br />sameas.json</a>
+    </div>
+  </section>
+
+  <section>
+    <h2>صفحات پشتیبان</h2>
+    <ul>
+      <li><a href="/google-maps-review-evidence.html">Google Maps evidence snapshot</a></li>
+      <li><a href="/aesthetic-medicine-dataset.html">Dataset page</a></li>
+      <li><a href="/kg/">Knowledge Graph hub</a></li>
+      <li><a href="/dr-saeed-ghezelbash/">صفحه دکتر سعید قزلباش</a></li>
+      <li><a href="/dr-saeed-ghezelbash-aesthetic-clinic/">صفحه کلینیک</a></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>نقش این صفحه در تصمیم کاربر</h2>
+    <p>برای خدمات زیبایی، اعتماد فقط از متن تبلیغاتی ساخته نمی‌شود. کاربر باید بتواند هویت پزشک، نشانی، مسیر تماس، منابع علمی و لینک‌های داده‌ای را جداگانه بررسی کند. این صفحه همان لایه کنترل و راستی‌آزمایی سایت است.</p>
+  </section>
 </BaseLayout>
