@@ -16,11 +16,14 @@ const {
   robots,
   breadcrumbs,
   pageType = 'WebPage',
-  extraGraph = []
+  extraGraph = [],
+  personEnhancements = 'auto'
 } = Astro.props;
 
 const seo = buildSeoMeta({ title, description, canonicalPath, robots });
-const showPersonEnhancements = canonicalPath === '/dr-saeed-ghezelbash/';
+const showPersonEnhancements = personEnhancements === 'auto'
+  ? canonicalPath === '/dr-saeed-ghezelbash/'
+  : Boolean(personEnhancements);
 ---
 <!doctype html>
 <html lang="fa-IR" dir="rtl">
@@ -51,15 +54,17 @@ const showPersonEnhancements = canonicalPath === '/dr-saeed-ghezelbash/';
     <GlobalJsonLd />
     <PageJsonLd title={seo.title} description={seo.description} canonicalPath={canonicalPath} pageType={pageType} breadcrumbs={breadcrumbs} extraGraph={extraGraph} />
     <style>
-      :root{--brand:#8b0000;--ink:#151515;--muted:#5f5f5f;--line:#ead7d7;--soft:#fff7f7;--bg:#fff}
+      :root{--brand:#8b0000;--brand-2:#5f0000;--ink:#151515;--muted:#5f5f5f;--line:#ead7d7;--soft:#fff7f7;--bg:#fff;--shadow:0 10px 30px rgba(139,0,0,.06)}
       *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,Arial,sans-serif;line-height:1.95}
-      .wrap{max-width:1040px;margin:auto;padding:18px}.top{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:5}
-      nav a{display:inline-block;margin:.25rem;padding:.25rem .55rem;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--brand);font-size:.92rem}
-      h1,h2,h3{color:var(--brand);line-height:1.55}h1{font-size:1.65rem}h2{font-size:1.25rem;margin-top:2rem}h3{font-size:1.05rem}
-      .box{border:1px solid var(--line);background:var(--soft);border-radius:14px;padding:1rem;margin:1rem 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
-      .card{border:1px solid var(--line);border-radius:14px;padding:1rem;background:#fff}.cta{display:inline-block;background:var(--brand);color:#fff;text-decoration:none;border-radius:10px;padding:.65rem 1rem;font-weight:bold}
+      a{color:var(--brand)}.wrap{max-width:1040px;margin:auto;padding:18px}.top{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:5;box-shadow:0 1px 0 rgba(139,0,0,.03)}
+      nav a{display:inline-block;margin:.25rem;padding:.25rem .55rem;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--brand);font-size:.92rem;background:#fff}
+      h1,h2,h3{color:var(--brand);line-height:1.55}h1{font-size:1.75rem}h2{font-size:1.3rem;margin-top:2rem}h3{font-size:1.05rem}.lead{font-size:1.06rem;color:#252525}.muted{color:var(--muted)}
+      .box{border:1px solid var(--line);background:var(--soft);border-radius:16px;padding:1rem;margin:1rem 0;box-shadow:var(--shadow)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.85rem}
+      .card{border:1px solid var(--line);border-radius:16px;padding:1rem;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.025)}.card h3{margin-top:0}.section-block{margin:1.5rem 0}.section-block--emphasis{padding:1.1rem}
+      .cta,.cta-secondary{display:inline-block;text-decoration:none;border-radius:10px;padding:.65rem 1rem;font-weight:bold;margin:.15rem 0}.cta{background:var(--brand);color:#fff}.cta-secondary{border:1px solid var(--line);color:var(--brand);background:#fff}
+      .cta-cluster{margin:1rem 0}.hero-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.6fr);gap:1rem;align-items:start}.fact-list{display:grid;gap:.55rem}.fact-item{border-bottom:1px solid var(--line);padding:.45rem 0}.fact-item:last-child{border-bottom:0}
       .breadcrumbs{margin:.5rem 0 1rem;color:var(--muted);font-size:.9rem}.breadcrumbs ol{display:flex;flex-wrap:wrap;gap:.35rem;list-style:none;padding:0;margin:0}.breadcrumbs li::after{content:'›';padding-inline:.35rem;color:var(--muted)}.breadcrumbs li:last-child::after{content:''}.breadcrumbs a{color:var(--brand);text-decoration:none;border:0;margin:0;padding:0}.breadcrumbs span{color:var(--muted)}
-      .small{font-size:.92rem;color:var(--muted)}footer{border-top:1px solid var(--line);margin-top:2rem;padding:1.2rem 0;color:var(--muted)}ul{padding-right:1.2rem}.ltr{direction:ltr;text-align:left}
+      .small{font-size:.92rem;color:var(--muted)}footer{border-top:1px solid var(--line);margin-top:2rem;padding:1.2rem 0;color:var(--muted)}ul{padding-right:1.2rem}.ltr{direction:ltr;text-align:left}@media(max-width:760px){.hero-grid{grid-template-columns:1fr}h1{font-size:1.55rem}.wrap{padding:14px}}
     </style>
     <slot name="head" />
   </head>
