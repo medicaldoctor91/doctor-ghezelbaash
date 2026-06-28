@@ -17,6 +17,16 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function normalizedPath(path = '/') {
+  if (path === '/') return '/';
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
+function serviceForPath(path = '/') {
+  const normalized = normalizedPath(path);
+  return services.find((service) => normalized === `/${service.slug}/`);
+}
+
 function buildPostalAddress() {
   return {
     '@type': 'PostalAddress',
@@ -28,6 +38,14 @@ function buildPostalAddress() {
   };
 }
 
+function buildGeoCoordinates() {
+  return {
+    '@type': 'GeoCoordinates',
+    latitude: location.geo.latitude,
+    longitude: location.geo.longitude
+  };
+}
+
 function buildAggregateRating() {
   return {
     '@type': 'AggregateRating',
@@ -36,6 +54,51 @@ function buildAggregateRating() {
     bestRating: googleMapsReputation.bestRating,
     worstRating: googleMapsReputation.worstRating
   };
+}
+
+function buildMedicalIdentifier() {
+  return {
+    '@type': 'PropertyValue',
+    propertyID: 'IRIMC',
+    value: regulatoryIdentity.irimc.medicalCouncilNumber,
+    url: regulatoryIdentity.irimc.url
+  };
+}
+
+function buildOrcidIdentifier() {
+  return {
+    '@type': 'PropertyValue',
+    propertyID: 'ORCID',
+    value: researchProfile.orcid.replace('https://orcid.org/', ''),
+    url: researchProfile.orcid
+  };
+}
+
+function mainEntityForPath(canonicalPath = '/') {
+  const normalized = normalizedPath(canonicalPath);
+  const service = serviceForPath(normalized);
+
+  if (normalized === '/') return { '@id': absoluteUrl('/#clinic') };
+  if (normalized === normalizedPath(site.pages.person)) return { '@id': absoluteUrl('/#dr-saeed-ghezelbash') };
+  if (normalized === normalizedPath(site.pages.clinic)) return { '@id': absoluteUrl('/#clinic') };
+  if (normalized === normalizedPath(site.pages.services)) return { '@id': `${absoluteUrl(site.pages.services)}#service-list` };
+  if (service) return { '@id': `${absoluteUrl(`/${service.slug}/`)}#service` };
+  return null;
+}
+
+function aboutForPath(canonicalPath = '/') {
+  const normalized = normalizedPath(canonicalPath);
+  const service = serviceForPath(normalized);
+  const base = [
+    { '@id': absoluteUrl('/#clinic') },
+    { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+    { '@id': absoluteUrl('/#physician') }
+  ];
+
+  if (service) return [{ '@id': `${absoluteUrl(`/${service.slug}/`)}#service` }, ...base];
+  if (normalized === normalizedPath(site.pages.person)) return [{ '@id': absoluteUrl('/#dr-saeed-ghezelbash') }, { '@id': absoluteUrl('/#physician') }];
+  if (normalized === normalizedPath(site.pages.clinic)) return [{ '@id': absoluteUrl('/#clinic') }, { '@id': absoluteUrl('/#physician') }];
+  return base;
 }
 
 export function buildBreadcrumbList({ canonicalPath = '/', breadcrumbs } = {}) {
@@ -61,6 +124,7 @@ export function buildWebPageSchema({
   pageType = 'WebPage'
 } = {}) {
   const canonical = absoluteUrl(canonicalPath);
+  const mainEntity = mainEntityForPath(canonicalPath);
   const schema = {
     '@type': pageType,
     '@id': `${canonical}#webpage`,
@@ -69,12 +133,11 @@ export function buildWebPageSchema({
     description,
     inLanguage: site.locale,
     isPartOf: { '@id': absoluteUrl('/#website') },
-    breadcrumb: { '@id': `${canonical}#breadcrumb` }
+    breadcrumb: { '@id': `${canonical}#breadcrumb` },
+    about: aboutForPath(canonicalPath)
   };
 
-  if (pageType === 'ProfilePage') {
-    schema.mainEntity = { '@id': absoluteUrl('/#dr-saeed-ghezelbash') };
-  }
+  if (mainEntity) schema.mainEntity = mainEntity;
 
   return schema;
 }
@@ -87,7 +150,12 @@ export function buildWebsiteEntity() {
     name: site.nameFa,
     alternateName: site.nameEn,
     inLanguage: site.locale,
-    publisher: { '@id': absoluteUrl('/#clinic') }
+    publisher: { '@id': absoluteUrl('/#clinic') },
+    about: [
+      { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+      { '@id': absoluteUrl('/#physician') },
+      { '@id': absoluteUrl('/#clinic') }
+    ]
   };
 }
 
@@ -133,20 +201,8 @@ export function buildPersonEntity() {
     mainEntityOfPage: { '@id': `${absoluteUrl(site.pages.person)}#webpage` },
     image: canonicalImage(),
     sameAs: getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
-    identifier: [
-      {
-        '@type': 'PropertyValue',
-        propertyID: 'IRIMC',
-        value: regulatoryIdentity.irimc.medicalCouncilNumber,
-        url: regulatoryIdentity.irimc.url
-      },
-      {
-        '@type': 'PropertyValue',
-        propertyID: 'ORCID',
-        value: researchProfile.orcid.replace('https://orcid.org/', ''),
-        url: researchProfile.orcid
-      }
-    ],
+    identifier: [buildMedicalIdentifier(), buildOrcidIdentifier()],
+    hasCredential: buildMedicalIdentifier(),
     hasOccupation: {
       '@type': 'Occupation',
       name: 'پزشک زیبایی',
@@ -156,6 +212,34 @@ export function buildPersonEntity() {
     affiliation: { '@id': absoluteUrl('/#clinic') },
     workLocation: { '@id': absoluteUrl('/#clinic') },
     knowsAbout: services.map((service) => service.shortTitle || service.title),
+    subjectOf: getSubjectOfForEntity(authoritySignals, 'person')
+  };
+}
+
+export function buildPhysicianEntity() {
+  return {
+    '@type': 'Physician',
+    '@id': absoluteUrl('/#physician'),
+    name: site.personFa,
+    alternateName: ['دکتر محمدسعید قزلباش', site.personEn, 'Mohammad Saeed Ghezelbash', 'Dr. Saeed Ghezelbaash'],
+    url: absoluteUrl(site.pages.person),
+    mainEntityOfPage: { '@id': `${absoluteUrl(site.pages.person)}#webpage` },
+    image: canonicalImage(),
+    medicalSpecialty: 'Aesthetic medicine',
+    occupationalCategory: 'Physician; aesthetic medicine',
+    telephone: location.telephone,
+    priceRange: location.priceRange,
+    address: buildPostalAddress(),
+    geo: buildGeoCoordinates(),
+    hasMap: getMapUrlsForClinic(authoritySignals, location),
+    sameAs: getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
+    identifier: [buildMedicalIdentifier(), buildOrcidIdentifier()],
+    employee: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+    founder: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+    parentOrganization: { '@id': absoluteUrl('/#clinic') },
+    containedInPlace: { '@id': absoluteUrl('/#clinic') },
+    availableService: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) })),
+    makesOffer: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) })),
     subjectOf: getSubjectOfForEntity(authoritySignals, 'person')
   };
 }
@@ -177,12 +261,9 @@ export function buildClinicEntity() {
     subjectOf: getSubjectOfForEntity(authoritySignals, 'clinic'),
     founder: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
     employee: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+    member: { '@id': absoluteUrl('/#physician') },
     address: buildPostalAddress(),
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: location.geo.latitude,
-      longitude: location.geo.longitude
-    },
+    geo: buildGeoCoordinates(),
     areaServed: {
       '@type': 'City',
       name: location.addressLocality,
@@ -279,6 +360,7 @@ export function buildGlobalGraph() {
       buildWebsiteEntity(),
       buildOrganizationEntity(),
       buildPersonEntity(),
+      buildPhysicianEntity(),
       buildClinicEntity(),
       buildKnowledgeGraphDataset(),
       ...services.map((service) => buildServiceSchema({ service }))
