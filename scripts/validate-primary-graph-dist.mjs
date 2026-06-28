@@ -17,6 +17,18 @@ if (!fs.existsSync(file)) {
     '/kg/#catalog',
     'EducationalOccupationalCredential',
     '/kg/credential#irimc-167430',
+    '/kg/credential#medical-degree-kums-2018',
+    '/kg/credential#mcc-eca-doctor-of-medicine-2020',
+    '/kg/organization#kermanshah-university-medical-school',
+    '/kg/organization#medical-council-of-canada',
+    'Kermanshah University of Medical Sciences School of Medicine',
+    'Medical Council of Canada',
+    'Medical Degree',
+    'Doctor of Medicine',
+    'Educational Credential Assessment',
+    '2020-09-17',
+    'Canadian immigration purposes',
+    'credentialEvidenceBoundary',
     '/kg/place#kermanshah',
     '/kg/medical-specialty#aesthetic-medicine',
     'Primary graph governance policy',
@@ -73,6 +85,10 @@ if (!fs.existsSync(file)) {
 
   for (const retired of ['dataset-manifest.jsonld', 'publishing-crosswalk.jsonld', 'research-graph.jsonld']) {
     if (text.includes(`/${retired}`)) fail(`primary graph should not reference retired endpoint ${retired}`);
+  }
+
+  for (const privateNeedle of ['E94583066IMM', '1962-87530', 'E0217736', '1991-05-29', 'medicaldoctor91@gmail.com', 'Yazdan Alley', 'Delgosha street']) {
+    if (text.includes(privateNeedle)) fail(`primary graph leaked private credential data: ${privateNeedle}`);
   }
 }
 
