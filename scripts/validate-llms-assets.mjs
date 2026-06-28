@@ -25,6 +25,7 @@ if (!fs.existsSync(file)) {
     '/publishing-crosswalk.jsonld',
     '/entity-hardening-index.json',
     '/aesthetic_medicine_knowledge_kermanshah_fa.json',
+    '/local-competitive-landscape.json',
     '/services.json',
     '/service-taxonomy.json',
     '/sameas.json',
