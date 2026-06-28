@@ -112,6 +112,8 @@ export function GET() {
       pageContext: absoluteUrl('/page-context.json'),
       linkGraph: absoluteUrl('/link-graph.json'),
       entityHardening: absoluteUrl('/entity-hardening-index.json'),
+      aestheticKnowledge: absoluteUrl('/aesthetic_medicine_knowledge_kermanshah_fa.json'),
+      localLandscape: absoluteUrl('/local-competitive-landscape.json'),
       nap: absoluteUrl('/nap.csv')
     }
   };
