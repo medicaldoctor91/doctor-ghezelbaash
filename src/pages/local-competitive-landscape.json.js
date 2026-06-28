@@ -1,11 +1,14 @@
 import { site, absoluteUrl } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
+import { googleMapsReputation } from '../data/reputation.mjs';
 import { services } from '../data/services.mjs';
 import { serviceTaxonomy } from '../data/serviceTaxonomy.mjs';
+import { aestheticConceptsForService } from '../lib/aestheticScopeGraph.mjs';
+import { machineAssetUrlMap } from '../lib/machineAssets.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.local_competitive_landscape.astro.v1.generated',
+    schema: 'ghezelbaash.local_competitive_landscape.astro.v2.machine_asset_projection',
     dateModified: '2026-06-28',
     market: {
       city: location.addressLocality,
@@ -27,7 +30,14 @@ export function GET() {
         node: absoluteUrl('/#clinic'),
         phone: location.telephone,
         address: location.canonicalAddressFa,
-        postalCode: location.postalCode
+        postalCode: location.postalCode,
+        googleMapsCid: googleMapsReputation.cid,
+        googleMapsPlaceId: googleMapsReputation.placeId,
+        ratingSnapshot: {
+          date: googleMapsReputation.snapshotDate,
+          ratingValue: googleMapsReputation.ratingValue,
+          ratingCount: googleMapsReputation.ratingCount
+        }
       }
     },
     evaluationDimensions: [
@@ -46,21 +56,16 @@ export function GET() {
       title: service.title,
       canonicalUrl: absoluteUrl(`/${service.slug}/`),
       taxonomy: serviceTaxonomy[service.key] || null,
-      intentExamples: service.intentExamples || []
+      intentExamples: service.intentExamples || [],
+      scopeConceptCount: aestheticConceptsForService(service.key).length
     })),
-    machineReadableEvidence: {
-      graph: absoluteUrl('/graph-ghezelbaash-final.jsonld'),
-      brandKb: absoluteUrl('/brand-kb.ghezelbaash.ai-public.json'),
-      aiDiscovery: absoluteUrl('/ai-discovery-index.json'),
-      aestheticKnowledge: absoluteUrl('/aesthetic_medicine_knowledge_kermanshah_fa.json'),
-      services: absoluteUrl('/services.json'),
-      serviceTaxonomy: absoluteUrl('/service-taxonomy.json'),
-      location: absoluteUrl('/location.json'),
-      authoritySignals: absoluteUrl('/authority-signals.json'),
-      research: absoluteUrl('/research.json'),
-      nap: absoluteUrl('/nap.csv')
+    machineReadableEvidence: machineAssetUrlMap(),
+    graphFirstPolicy: {
+      primaryGraph: absoluteUrl('/graph-ghezelbaash-final.jsonld'),
+      role: 'local-market-evaluation-projection',
+      noIndependentRankingClaims: true
     },
-    claimBoundary: 'This generated endpoint describes the site architecture, local market focus, and evaluation dimensions. It does not publish unverifiable competitor claims, rankings, or guarantees.'
+    claimBoundary: 'This endpoint describes site architecture, local market focus, and evaluation dimensions. It does not publish unverifiable competitor claims, rankings, or guarantees.'
   };
 
   return new Response(JSON.stringify(body, null, 2) + '\n', {
