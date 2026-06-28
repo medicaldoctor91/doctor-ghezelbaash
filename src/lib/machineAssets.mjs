@@ -11,7 +11,6 @@ export const machineAssets = [
   { name: 'Regulatory identity', path: '/regulatory.json', format: 'application/json', role: 'thin-projection' },
   { name: 'Dataset summary', path: '/dataset.json', format: 'application/json', role: 'thin-projection' },
   { name: 'Research profile', path: '/research.json', format: 'application/json', role: 'thin-projection' },
-  { name: 'Research graph', path: '/research-graph.jsonld', format: 'application/ld+json', role: 'thin-projection' },
   { name: 'Services intent map', path: '/services.json', format: 'application/json', role: 'thin-projection' },
   { name: 'Service taxonomy', path: '/service-taxonomy.json', format: 'application/json', role: 'thin-projection' },
   { name: 'Aesthetic knowledge projection', path: '/aesthetic_medicine_knowledge_kermanshah_fa.json', format: 'application/json', role: 'thin-projection' },
