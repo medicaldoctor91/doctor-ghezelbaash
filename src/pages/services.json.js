@@ -1,7 +1,12 @@
 import { site, absoluteUrl } from '../data/site.mjs';
 import { services } from '../data/services.mjs';
 import { serviceTaxonomy } from '../data/serviceTaxonomy.mjs';
-import { aestheticScopePolicy, aestheticServiceConcepts } from '../data/aestheticScope.mjs';
+import { aestheticScopePolicy } from '../data/aestheticScope.mjs';
+import {
+  aestheticConceptProjection,
+  aestheticConceptsForService,
+  aestheticScopeByCategory
+} from '../lib/aestheticScopeGraph.mjs';
 
 const contentBlocksRequired = [
   'summary_answer',
@@ -40,16 +45,18 @@ const machineSupportAssets = [
 ];
 
 export function GET() {
+  const broadAestheticConcepts = Object.values(aestheticScopeByCategory()).flat();
   const body = {
-    schema: 'ghezelbaash.service_architecture.astro.v3.broad_scope',
+    schema: 'ghezelbaash.service_architecture.astro.v4.aesthetic_scope_builder',
     dateModified: '2026-06-28',
     canonicalWebsite: site.canonicalBase + '/',
-    stage: 'production-indexable-services-broad-scope-graph',
+    stage: 'production-indexable-services-broad-scope-graph-builder',
     indexingPolicy: {
       servicePages: 'index,follow',
       includeServicePagesInSitemap: true,
-      keepFiveParentServicePages: true,
-      broadScopeConceptsInSchemaGraph: true
+      keepCurrentPublicServicePages: true,
+      broadScopeConceptsInSchemaGraph: true,
+      nonOfficialConceptsAreKnowledgeScopeOnly: true
     },
     intentPolicy: {
       preserveLocalCommercialIntent: true,
@@ -61,13 +68,11 @@ export function GET() {
     contentBlocksRequired,
     validationChecklist,
     machineSupportAssets: machineSupportAssets.map((path) => absoluteUrl(path)),
-    broadAestheticConcepts: aestheticServiceConcepts.map((concept) => ({
-      ...concept,
-      node: absoluteUrl(`/kg/aesthetic-scope#${concept.key}`)
-    })),
+    broadAestheticConcepts,
+    broadAestheticConceptsByCategory: aestheticScopeByCategory(),
     parentServicePages: services.map((service) => {
       const taxonomy = serviceTaxonomy[service.key] || null;
-      const scopeConcepts = aestheticServiceConcepts.filter((concept) => concept.pillar === service.key);
+      const scopeConcepts = aestheticConceptsForService(service.key).map(aestheticConceptProjection);
       return {
         key: service.key,
         slug: service.slug,
@@ -86,8 +91,14 @@ export function GET() {
         bestIntentTitle: service.bestIntentTitle,
         intentExamples: service.intentExamples,
         taxonomy,
-        supportingIntents: [...(taxonomy ? taxonomy.childIntents : []), ...scopeConcepts.map((concept) => concept.nameFa), ...scopeConcepts.map((concept) => concept.nameEn)],
+        supportingIntents: [
+          ...(taxonomy ? taxonomy.childIntents : []),
+          ...scopeConcepts.map((concept) => concept.nameFa),
+          ...scopeConcepts.map((concept) => concept.nameEn),
+          ...scopeConcepts.flatMap((concept) => [...(concept.aliasesFa || []), ...(concept.aliasesEn || [])])
+        ].filter(Boolean),
         serviceType: taxonomy ? taxonomy.serviceType : service.title,
+        scopeConcepts,
         requiredPageBlocks: contentBlocksRequired,
         validationChecklist,
         machineSupportAssets: machineSupportAssets.map((path) => absoluteUrl(path))
