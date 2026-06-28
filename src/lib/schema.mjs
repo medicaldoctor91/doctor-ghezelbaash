@@ -100,12 +100,8 @@ export function buildOrganizationEntity() {
     url: absoluteUrl('/'),
     logo: canonicalImage(site.logo),
     image: canonicalImage(),
-    telephone: location.telephone,
-    address: buildPostalAddress(),
-    sameAs: unique([
-      ...getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
-      ...getSameAsForEntity(authoritySignals, 'clinic', site.sameAs.clinic)
-    ])
+    parentOrganization: { '@id': absoluteUrl('/#clinic') },
+    sameAs: getSameAsForEntity(authoritySignals, 'clinic', site.sameAs.clinic)
   };
 }
 
@@ -127,15 +123,15 @@ export function buildFaqSchema({ canonicalPath = '/', faqItems = [] } = {}) {
 
 export function buildPersonEntity() {
   return {
-    '@type': ['Person', 'Physician'],
+    '@type': 'Person',
     '@id': absoluteUrl('/#dr-saeed-ghezelbash'),
     name: site.personFa,
     alternateName: ['دکتر محمدسعید قزلباش', site.personEn, 'Mohammad Saeed Ghezelbash', 'Dr. Saeed Ghezelbaash'],
+    honorificPrefix: 'Dr.',
+    jobTitle: 'پزشک زیبایی',
     url: absoluteUrl(site.pages.person),
+    mainEntityOfPage: { '@id': `${absoluteUrl(site.pages.person)}#webpage` },
     image: canonicalImage(),
-    telephone: location.telephone,
-    address: buildPostalAddress(),
-    priceRange: location.priceRange,
     sameAs: getSameAsForEntity(authoritySignals, 'person', site.sameAs.person),
     identifier: [
       {
@@ -170,7 +166,8 @@ export function buildClinicEntity() {
     '@id': absoluteUrl('/#clinic'),
     name: site.nameFa,
     alternateName: [site.nameEn, 'کلینیک دکتر سعید قزلباش', 'کلینیک زیبایی دکتر قزلباش'],
-    url: absoluteUrl(site.pages.clinic),
+    url: absoluteUrl('/'),
+    mainEntityOfPage: { '@id': `${absoluteUrl(site.pages.clinic)}#webpage` },
     image: canonicalImage(),
     logo: absoluteUrl(site.logo),
     telephone: location.telephone,
