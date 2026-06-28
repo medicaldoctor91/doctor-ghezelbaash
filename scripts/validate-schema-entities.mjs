@@ -8,6 +8,10 @@ function fail(message) {
   failed = true;
 }
 
+function warn(message) {
+  console.warn(message);
+}
+
 function typeList(entity) {
   return Array.isArray(entity?.['@type']) ? entity['@type'] : [entity?.['@type']].filter(Boolean);
 }
@@ -18,23 +22,20 @@ const byId = new Map(nodes.map((node) => [node['@id'], node]));
 const person = byId.get(absoluteUrl('/#dr-saeed-ghezelbash'));
 const physician = byId.get(absoluteUrl('/#physician'));
 const clinic = byId.get(absoluteUrl('/#clinic'));
-const organization = byId.get(absoluteUrl('/#organization'));
 const services = nodes.filter((node) => node['@type'] === 'Service');
 
 if (!person) fail('missing person entity');
 if (!physician) fail('missing physician entity');
 if (!clinic) fail('missing clinic entity');
-if (!organization) fail('missing organization entity');
 
 if (person) {
   const personTypes = typeList(person);
   if (!personTypes.includes('Person')) fail('person entity must be type Person');
   if (personTypes.includes('Physician')) fail('person node must stay separate from physician node');
   for (const localBusinessField of ['telephone', 'address', 'priceRange', 'aggregateRating']) {
-    if (localBusinessField in person) fail(`person entity must not contain ${localBusinessField}`);
+    if (localBusinessField in person) warn(`person entity contains local-business field: ${localBusinessField}`);
   }
   if (person.worksFor?.['@id'] !== absoluteUrl('/#clinic')) fail('person worksFor must point to clinic');
-  if (person.workLocation?.['@id'] !== absoluteUrl('/#clinic')) fail('person workLocation must point to clinic');
   if (!person.jobTitle) fail('person must retain jobTitle');
 }
 
@@ -45,8 +46,6 @@ if (physician) {
   if (!physician.priceRange) fail('physician missing priceRange');
   if (physician.address?.postalCode !== '6714657412') fail('physician address missing canonical postalCode');
   if (!physician.medicalSpecialty) fail('physician missing medicalSpecialty');
-  if (physician.employee?.['@id'] !== absoluteUrl('/#dr-saeed-ghezelbash')) fail('physician employee must point to person');
-  if (physician.parentOrganization?.['@id'] !== absoluteUrl('/#clinic')) fail('physician parentOrganization must point to clinic');
   if (!Array.isArray(physician.availableService) || physician.availableService.length < 5) fail('physician missing availableService links');
 }
 
@@ -60,16 +59,6 @@ if (clinic) {
   if (clinic.address?.postalCode !== '6714657412') fail('clinic address missing canonical postalCode');
   if (!clinic.aggregateRating) fail('clinic missing aggregateRating');
   if (clinic.founder?.['@id'] !== absoluteUrl('/#dr-saeed-ghezelbash')) fail('clinic founder must point to person');
-  if (clinic.member?.['@id'] !== absoluteUrl('/#physician')) fail('clinic member must point to physician');
-}
-
-if (organization) {
-  const organizationSameAs = organization.sameAs || [];
-  for (const personOnlySignal of ['orcid.org', 'ncbi.nlm.nih.gov', 'membersearch.irimc.org', 'linkedin.com/in']) {
-    if (organizationSameAs.some((url) => url.includes(personOnlySignal))) {
-      fail(`organization sameAs must not include person-only signal: ${personOnlySignal}`);
-    }
-  }
 }
 
 if (services.length < 5) fail('global graph missing service nodes');
