@@ -3,6 +3,11 @@ import { aestheticServiceConcepts } from '../src/data/aestheticScope.mjs';
 import { researchProfile } from '../src/data/research.mjs';
 import { services as officialServices } from '../src/data/services.mjs';
 import { buildGlobalGraph } from '../src/lib/globalGraph.mjs';
+import {
+  officialOfferCatalogId,
+  officialOfferId,
+  officialServiceId
+} from '../src/lib/officialOfferGraph.mjs';
 
 let failed = false;
 
@@ -46,11 +51,15 @@ const clinic = byId.get(absoluteUrl('/#clinic'));
 const dataset = byId.get(absoluteUrl('/kg/#dataset'));
 const researchCollection = byId.get(absoluteUrl('/research/#collection'));
 const termSet = byId.get(absoluteUrl('/kg/aesthetic-scope#term-set'));
+const offerCatalog = byId.get(officialOfferCatalogId());
 const serviceNodes = nodes.filter((node) => node['@type'] === 'Service');
+const offerNodes = nodes.filter((node) => node['@type'] === 'Offer');
 const definedTerms = nodes.filter((node) => node['@type'] === 'DefinedTerm');
 const scholarlyArticles = nodes.filter((node) => node['@type'] === 'ScholarlyArticle');
 const scholarlyArticleIds = researchProfile.publications.map((publication) => absoluteUrl(`/research/#${publication.key}`));
 const conceptIds = aestheticServiceConcepts.map((concept) => absoluteUrl(`/kg/aesthetic-scope#${concept.key}`));
+const officialServiceIds = officialServices.map(officialServiceId);
+const officialOfferIds = officialServices.map(officialOfferId);
 const requiredConceptKeys = [
   'botox-masseter',
   'hyaluronic-acid-filler',
@@ -70,6 +79,7 @@ if (!clinic) fail('missing clinic entity');
 if (!dataset) fail('missing knowledge graph dataset');
 if (!researchCollection) fail('missing research collection entity');
 if (!termSet) fail('missing aesthetic scope term set');
+if (!offerCatalog) fail('missing official offer catalog');
 
 if (person) {
   const personTypes = typeList(person);
@@ -96,6 +106,7 @@ if (physician) {
   if (!physician.medicalSpecialty) fail('physician missing medicalSpecialty');
   if (!Array.isArray(physician.availableService) || physician.availableService.length !== officialServices.length) fail('physician availableService must stay limited to official services');
   if (!Array.isArray(physician.makesOffer) || physician.makesOffer.length !== officialServices.length) fail('physician makesOffer must stay limited to official services');
+  if (physician.hasOfferCatalog?.['@id'] !== officialOfferCatalogId()) fail('physician must point to official offer catalog');
   if (!Array.isArray(physician.knowsAbout) || physician.knowsAbout.length < aestheticServiceConcepts.length) fail('physician missing broad aesthetic knowsAbout concepts');
 }
 
@@ -111,6 +122,7 @@ if (clinic) {
   if (clinic.founder?.['@id'] !== absoluteUrl('/#dr-saeed-ghezelbash')) fail('clinic founder must point to person');
   if (!Array.isArray(clinic.availableService) || clinic.availableService.length !== officialServices.length) fail('clinic availableService must stay limited to official services');
   if (!Array.isArray(clinic.makesOffer) || clinic.makesOffer.length !== officialServices.length) fail('clinic makesOffer must stay limited to official services');
+  if (clinic.hasOfferCatalog?.['@id'] !== officialOfferCatalogId()) fail('clinic must point to official offer catalog');
 }
 
 if (dataset) {
@@ -166,6 +178,25 @@ for (const service of serviceNodes) {
   if (service.provider?.['@id'] !== absoluteUrl('/#clinic')) {
     fail(`service provider must be clinic: ${service['@id'] || service.name}`);
   }
+  if (officialServiceIds.includes(service['@id']) && !officialOfferIds.includes(service.offers?.['@id'])) {
+    fail(`official service must point to its offer: ${service['@id']}`);
+  }
+}
+
+if (offerCatalog) {
+  if (offerCatalog['@type'] !== 'OfferCatalog') fail('official offer catalog must be OfferCatalog');
+  const catalogOfferIds = refIds((offerCatalog.itemListElement || []).map((item) => item.item));
+  for (const offerId of officialOfferIds) {
+    if (!catalogOfferIds.includes(offerId)) fail(`official offer catalog missing offer: ${offerId}`);
+  }
+}
+
+if (offerNodes.length !== officialServices.length) fail('Offer nodes must match official services only');
+for (const offer of offerNodes) {
+  if (!officialOfferIds.includes(offer['@id'])) fail(`unexpected offer node: ${offer['@id']}`);
+  if (!officialServiceIds.includes(offer.itemOffered?.['@id'])) fail(`offer itemOffered must be official service only: ${offer['@id']}`);
+  if (offer.offeredBy?.['@id'] !== absoluteUrl('/#clinic')) fail(`offer offeredBy must be clinic: ${offer['@id']}`);
+  if (!propertyValues(offer, 'offerStatus').includes('official-current-service')) fail(`offer missing official-current-service status: ${offer['@id']}`);
 }
 
 if (failed) process.exit(1);
