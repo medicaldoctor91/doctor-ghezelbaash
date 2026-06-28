@@ -25,7 +25,8 @@ const removedLegacyRootAssets = [
   'sitemap.xml',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld',
-  'google-maps-review-evidence.html'
+  'google-maps-review-evidence.html',
+  'aesthetic_medicine_knowledge_kermanshah_fa.json'
 ];
 
 for (const file of removedLegacyRootAssets) {
@@ -46,7 +47,8 @@ for (const file of [
   'services.json',
   'sitemap.xml',
   'google-maps-review-evidence.html',
-  'nap.csv'
+  'nap.csv',
+  'aesthetic_medicine_knowledge_kermanshah_fa.json'
 ]) {
   if (preparePublic.includes(`'${file}'`) || preparePublic.includes(`"${file}"`)) {
     fail(`generated or deprecated asset must not be copied by prepare-public: ${file}`);
