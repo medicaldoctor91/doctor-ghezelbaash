@@ -57,6 +57,7 @@ const required = [
   'profile-links.json',
   'service-taxonomy.json',
   'aesthetic_medicine_knowledge_kermanshah_fa.json',
+  'local-competitive-landscape.json',
   'graph-ghezelbaash-final.jsonld',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld',
@@ -92,6 +93,7 @@ mustContain('index.html', 'twitter:card');
 mustContain('llms.txt', '/routes.json');
 mustContain('llms.txt', '/seo-aeo-index.json');
 mustContain('llms.txt', '/authority-signals.json');
+mustContain('llms.txt', '/local-competitive-landscape.json');
 mustContain('routes.json', 'ghezelbaash.routes.astro.v1');
 mustContain('routes.json', 'services-hub');
 mustContain('routes.json', 'service');
@@ -107,6 +109,11 @@ mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'canonicalIdentit
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'servicePillars');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'researchSignals');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', '6714657412');
+mustContain('local-competitive-landscape.json', 'ghezelbaash.local_competitive_landscape.astro.v1.generated');
+mustContain('local-competitive-landscape.json', 'evaluationDimensions');
+mustContain('local-competitive-landscape.json', 'servicePillarCoverage');
+mustContain('local-competitive-landscape.json', 'machineReadableEvidence');
+mustContain('local-competitive-landscape.json', '6714657412');
 mustContain('graph-ghezelbaash-final.jsonld', '#dr-saeed-ghezelbash');
 mustContain('graph-ghezelbaash-final.jsonld', '#physician');
 mustContain('graph-ghezelbaash-final.jsonld', '#clinic');
