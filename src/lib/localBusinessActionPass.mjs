@@ -55,6 +55,22 @@ function ratingFor(itemId) {
   };
 }
 
+function clinicOpeningHours() {
+  return {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: [
+      'https://schema.org/Saturday',
+      'https://schema.org/Sunday',
+      'https://schema.org/Monday',
+      'https://schema.org/Tuesday',
+      'https://schema.org/Wednesday',
+      'https://schema.org/Thursday'
+    ],
+    opens: '16:00',
+    closes: '22:00'
+  };
+}
+
 export function applyLocalBusinessActionPass(nodes) {
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
   const clinicId = absoluteUrl('/#clinic');
@@ -65,11 +81,13 @@ export function applyLocalBusinessActionPass(nodes) {
   if (clinic) {
     clinic.priceRange = clinic.priceRange || location.priceRange;
     clinic.aggregateRating = clinic.aggregateRating || ratingFor(clinicId);
+    clinic.openingHoursSpecification = clinic.openingHoursSpecification || clinicOpeningHours();
     clinic.potentialAction = appendUnique(clinic.potentialAction, actions);
   }
 
   if (physician) {
     physician.priceRange = physician.priceRange || location.priceRange;
+    physician.openingHoursSpecification = physician.openingHoursSpecification || clinicOpeningHours();
     physician.potentialAction = appendUnique(physician.potentialAction, actions);
   }
 
