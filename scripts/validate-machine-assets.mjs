@@ -40,8 +40,6 @@ const sourceByPath = {
   '/sitemap.xml': 'src/pages/sitemap.xml.js',
   '/ai-discovery-index.json': 'src/pages/ai-discovery-index.json.js',
   '/entity-hardening-index.json': 'src/pages/entity-hardening-index.json.js',
-  '/publishing-crosswalk.jsonld': 'src/pages/publishing-crosswalk.jsonld.js',
-  '/dataset-manifest.jsonld': 'src/pages/dataset-manifest.jsonld.js',
   '/local-competitive-landscape.json': 'src/pages/local-competitive-landscape.json.js',
   '/aesthetic-medicine-dataset.html': 'src/pages/aesthetic-medicine-dataset.html.js'
 };
@@ -68,7 +66,7 @@ if (primaryAssets.length !== 1 || primaryAssets[0].path !== '/graph-ghezelbaash-
 }
 
 const auditAssets = machineAssets.filter((asset) => asset.role === 'audit-thin-or-merge');
-for (const requiredAuditPath of ['/ai-discovery-index.json', '/entity-hardening-index.json', '/publishing-crosswalk.jsonld', '/dataset-manifest.jsonld', '/local-competitive-landscape.json']) {
+for (const requiredAuditPath of ['/ai-discovery-index.json', '/entity-hardening-index.json', '/local-competitive-landscape.json']) {
   if (!auditAssets.some((asset) => asset.path === requiredAuditPath)) fail(`missing audit classification for ${requiredAuditPath}`);
 }
 
@@ -84,9 +82,14 @@ if (!knowledgeEndpoint.includes('../lib/aestheticScopeGraph.mjs')) fail('aesthet
 const servicesEndpoint = fs.readFileSync('src/pages/services.json.js', 'utf8');
 if (!servicesEndpoint.includes('../lib/aestheticScopeGraph.mjs')) fail('services endpoint must use src/lib/aestheticScopeGraph.mjs');
 
+const retiredSources = new Set([
+  'src/pages/dataset-manifest.jsonld.js',
+  'src/pages/publishing-crosswalk.jsonld.js'
+]);
 const pageSources = fs.readdirSync('src/pages').filter((name) => name.endsWith('.json.js') || name.endsWith('.jsonld.js') || name.endsWith('.txt.js') || name.endsWith('.csv.js') || name.endsWith('.xml.js') || name.endsWith('.html.js'));
 for (const fileName of pageSources) {
   const sourcePath = `src/pages/${fileName}`;
+  if (retiredSources.has(sourcePath)) fail(`retired JSON-LD endpoint still exists: ${sourcePath}`);
   if (!seenSources.has(sourcePath)) fail(`unclassified machine-readable endpoint source: ${sourcePath}`);
 }
 
