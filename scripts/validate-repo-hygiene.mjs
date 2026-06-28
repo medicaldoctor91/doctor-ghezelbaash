@@ -18,6 +18,7 @@ function readIfExists(relPath) {
 const removedLegacyRootAssets = [
   'sameas.json',
   'graph-ghezelbaash-final.jsonld',
+  'research-graph.jsonld',
   'brand-kb.ghezelbaash.ai-public.json',
   'ai-discovery-index.json',
   'llms.txt',
@@ -42,6 +43,7 @@ const preparePublic = readIfExists('scripts/prepare-public.mjs') || '';
 for (const file of [
   'sameas.json',
   'graph-ghezelbaash-final.jsonld',
+  'research-graph.jsonld',
   'brand-kb.ghezelbaash.ai-public.json',
   'ai-discovery-index.json',
   'dataset-manifest.jsonld',
