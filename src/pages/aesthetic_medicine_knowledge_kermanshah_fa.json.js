@@ -5,14 +5,19 @@ import { regulatoryIdentity } from '../data/regulatory.mjs';
 import { researchProfile } from '../data/research.mjs';
 import { services } from '../data/services.mjs';
 import { serviceTaxonomy } from '../data/serviceTaxonomy.mjs';
-import { aestheticServiceConcepts } from '../data/aestheticScope.mjs';
+import { aestheticScopePolicy } from '../data/aestheticScope.mjs';
+import {
+  aestheticConceptProjection,
+  aestheticConceptsForService,
+  aestheticScopeByCategory
+} from '../lib/aestheticScopeGraph.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.aesthetic_knowledge.astro.v3.broad_scope',
+    schema: 'ghezelbaash.aesthetic_knowledge.astro.v4.aesthetic_scope_builder',
     language: ['fa', 'en'],
     dateModified: '2026-06-28',
-    generatedFrom: ['site', 'location', 'regulatoryIdentity', 'researchProfile', 'services', 'serviceTaxonomy', 'aestheticServiceConcepts', 'googleMapsReputation'],
+    generatedFrom: ['site', 'location', 'regulatoryIdentity', 'researchProfile', 'services', 'serviceTaxonomy', 'aestheticScopeGraph', 'googleMapsReputation'],
     canonicalIdentity: {
       person: {
         nameFa: site.personFa,
@@ -54,6 +59,7 @@ export function GET() {
         aiDiscoveryEndpoint: absoluteUrl('/ai-discovery-index.json')
       }
     },
+    broadScopePolicy: aestheticScopePolicy,
     servicePillars: services.map((service) => ({
       key: service.key,
       slug: service.slug,
@@ -63,12 +69,10 @@ export function GET() {
       bestIntentTitle: service.bestIntentTitle,
       intentExamples: service.intentExamples,
       taxonomy: serviceTaxonomy[service.key] || null,
-      scopeConcepts: aestheticServiceConcepts.filter((concept) => concept.pillar === service.key)
+      scopeConcepts: aestheticConceptsForService(service.key).map(aestheticConceptProjection)
     })),
-    broadAestheticConcepts: aestheticServiceConcepts.map((concept) => ({
-      ...concept,
-      node: absoluteUrl(`/kg/aesthetic-scope#${concept.key}`)
-    })),
+    broadAestheticConcepts: Object.values(aestheticScopeByCategory()).flat(),
+    broadAestheticConceptsByCategory: aestheticScopeByCategory(),
     machineReadableAssets: {
       llms: absoluteUrl('/llms.txt'),
       routes: absoluteUrl('/routes.json'),
@@ -81,6 +85,7 @@ export function GET() {
       location: absoluteUrl('/location.json'),
       regulatory: absoluteUrl('/regulatory.json'),
       research: absoluteUrl('/research.json'),
+      researchGraph: absoluteUrl('/research-graph.jsonld'),
       dataset: absoluteUrl('/dataset.json'),
       authoritySignals: absoluteUrl('/authority-signals.json'),
       profileLinks: absoluteUrl('/profile-links.json'),
@@ -90,11 +95,13 @@ export function GET() {
     researchSignals: {
       orcid: researchProfile.orcid,
       bibliographyUrl: researchProfile.bibliographyUrl,
+      graph: absoluteUrl('/research-graph.jsonld'),
       publications: researchProfile.publications.map((publication) => ({
         title: publication.title,
         doi: publication.doi,
         pmid: publication.pmid,
         pmcid: publication.pmcid,
+        graphNode: absoluteUrl(`/research/#${publication.key}`),
         url: publication.url || publication.pubmed || publication.doiUrl || null
       }))
     }
