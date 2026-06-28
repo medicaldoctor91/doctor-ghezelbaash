@@ -2,8 +2,8 @@ import { site } from '../data/site.mjs';
 import { breadcrumbsForPath, normalizePath, routeRegistry, serviceRoutes } from './routes.mjs';
 
 export function schemaTargetsForKind(kind) {
-  if (kind === 'person') return ['WebPage', 'BreadcrumbList', 'Person', 'Physician'];
-  if (kind === 'clinic') return ['WebPage', 'BreadcrumbList', 'MedicalBusiness', 'LocalBusiness', 'Person'];
+  if (kind === 'person') return ['ProfilePage', 'BreadcrumbList', 'Person'];
+  if (kind === 'clinic') return ['WebPage', 'BreadcrumbList', 'MedicalClinic', 'MedicalBusiness', 'LocalBusiness'];
   if (kind === 'services-hub') return ['WebPage', 'BreadcrumbList', 'ItemList'];
   if (kind === 'service') return ['WebPage', 'BreadcrumbList', 'Service', 'FAQPage'];
   return ['WebPage', 'BreadcrumbList'];
@@ -16,7 +16,7 @@ export function conversionTargetForKind(kind) {
 }
 
 export function localIntentForKind(kind) {
-  return ['person', 'clinic', 'services-hub', 'service', 'contact'].includes(kind);
+  return ['clinic', 'services-hub', 'service', 'contact'].includes(kind);
 }
 
 function uniquePaths(paths) {
