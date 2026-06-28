@@ -1,6 +1,10 @@
 import { absoluteUrl } from '../data/site.mjs';
 import { buildGlobalGraph as buildSchemaGlobalGraph } from './schema.mjs';
 import {
+  buildAestheticScopeTermSet,
+  buildAestheticScopeTerms
+} from './aestheticScopeGraph.mjs';
+import {
   buildResearchCollectionEntity,
   buildScholarlyArticleEntities,
   scholarlyArticleReferences
@@ -72,7 +76,12 @@ export function buildGlobalGraph() {
     ]);
   }
 
-  mergeNodeList(nodes, [buildResearchCollectionEntity(), ...buildScholarlyArticleEntities()]);
+  mergeNodeList(nodes, [
+    buildAestheticScopeTermSet(),
+    ...buildAestheticScopeTerms(),
+    buildResearchCollectionEntity(),
+    ...buildScholarlyArticleEntities()
+  ]);
 
   return {
     ...baseGraph,
