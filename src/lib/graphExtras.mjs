@@ -5,3 +5,5 @@ export function buildGraphExtras() {
 export function applyGraphExtras(nodes) {
   return nodes;
 }
+
+export const graphExtrasVersion = 'v1';
