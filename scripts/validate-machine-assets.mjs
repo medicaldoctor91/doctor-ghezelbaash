@@ -21,7 +21,6 @@ const sourceByPath = {
   '/brand-kb.ghezelbaash.ai-public.json': 'src/pages/brand-kb.ghezelbaash.ai-public.json.js',
   '/services.json': 'src/pages/services.json.js',
   '/research.json': 'src/pages/research.json.js',
-  '/research-graph.jsonld': 'src/pages/research-graph.jsonld.js',
   '/aesthetic_medicine_knowledge_kermanshah_fa.json': 'src/pages/aesthetic_medicine_knowledge_kermanshah_fa.json.js',
   '/location.json': 'src/pages/location.json.js',
   '/nap.csv': 'src/pages/nap.csv.js',
@@ -65,6 +64,11 @@ if (primaryAssets.length !== 1 || primaryAssets[0].path !== '/graph-ghezelbaash-
   fail('there must be exactly one primary graph asset: /graph-ghezelbaash-final.jsonld');
 }
 
+const standaloneJsonLdAssets = machineAssets.filter((asset) => asset.format === 'application/ld+json');
+if (standaloneJsonLdAssets.length !== 1 || standaloneJsonLdAssets[0].path !== '/graph-ghezelbaash-final.jsonld') {
+  fail('the primary graph must be the only standalone public JSON-LD asset');
+}
+
 const auditAssets = machineAssets.filter((asset) => asset.role === 'audit-thin-or-merge');
 for (const requiredAuditPath of ['/ai-discovery-index.json', '/entity-hardening-index.json', '/local-competitive-landscape.json']) {
   if (!auditAssets.some((asset) => asset.path === requiredAuditPath)) fail(`missing audit classification for ${requiredAuditPath}`);
@@ -72,9 +76,6 @@ for (const requiredAuditPath of ['/ai-discovery-index.json', '/entity-hardening-
 
 const graphEndpoint = fs.readFileSync('src/pages/graph-ghezelbaash-final.jsonld.js', 'utf8');
 if (!graphEndpoint.includes('../lib/globalGraph.mjs')) fail('global graph endpoint must use src/lib/globalGraph.mjs');
-
-const researchEndpoint = fs.readFileSync('src/pages/research-graph.jsonld.js', 'utf8');
-if (!researchEndpoint.includes('../lib/researchGraph.mjs')) fail('research graph endpoint must stay a thin projection from src/lib/researchGraph.mjs');
 
 const knowledgeEndpoint = fs.readFileSync('src/pages/aesthetic_medicine_knowledge_kermanshah_fa.json.js', 'utf8');
 if (!knowledgeEndpoint.includes('../lib/aestheticScopeGraph.mjs')) fail('aesthetic knowledge endpoint must use src/lib/aestheticScopeGraph.mjs');
@@ -84,7 +85,8 @@ if (!servicesEndpoint.includes('../lib/aestheticScopeGraph.mjs')) fail('services
 
 const retiredSources = new Set([
   'src/pages/dataset-manifest.jsonld.js',
-  'src/pages/publishing-crosswalk.jsonld.js'
+  'src/pages/publishing-crosswalk.jsonld.js',
+  'src/pages/research-graph.jsonld.js'
 ]);
 const pageSources = fs.readdirSync('src/pages').filter((name) => name.endsWith('.json.js') || name.endsWith('.jsonld.js') || name.endsWith('.txt.js') || name.endsWith('.csv.js') || name.endsWith('.xml.js') || name.endsWith('.html.js'));
 for (const fileName of pageSources) {
