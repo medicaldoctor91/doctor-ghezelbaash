@@ -52,6 +52,7 @@ const required = [
   'regulatory.json',
   'location.json',
   'research.json',
+  'research-graph.jsonld',
   'dataset.json',
   'authority-signals.json',
   'profile-links.json',
@@ -94,6 +95,7 @@ mustContain('index.html', 'twitter:card');
 mustContain('llms.txt', '/routes.json');
 mustContain('llms.txt', '/seo-aeo-index.json');
 mustContain('llms.txt', '/authority-signals.json');
+mustContain('llms.txt', '/research-graph.jsonld');
 mustContain('llms.txt', '/local-competitive-landscape.json');
 mustContain('routes.json', 'ghezelbaash.routes.astro.v1');
 mustContain('routes.json', 'services-hub');
@@ -121,6 +123,15 @@ mustContain('local-competitive-landscape.json', 'evaluationDimensions');
 mustContain('local-competitive-landscape.json', 'servicePillarCoverage');
 mustContain('local-competitive-landscape.json', 'machineReadableEvidence');
 mustContain('local-competitive-landscape.json', '6714657412');
+mustContain('research.json', 'ghezelbaash.research_identifiers.astro.v3.graph_linked');
+mustContain('research.json', '/research-graph.jsonld');
+mustContain('research.json', '0009-0001-9346-8475');
+mustContain('research.json', '34574943');
+mustContain('research-graph.jsonld', 'ScholarlyArticle');
+mustContain('research-graph.jsonld', 'CollectionPage');
+mustContain('research-graph.jsonld', '10.3390/healthcare9091169');
+mustContain('research-graph.jsonld', '10.4103/2008-7802.182734');
+mustContain('research-graph.jsonld', '#dr-saeed-ghezelbash');
 mustContain('graph-ghezelbaash-final.jsonld', '#dr-saeed-ghezelbash');
 mustContain('graph-ghezelbaash-final.jsonld', '#physician');
 mustContain('graph-ghezelbaash-final.jsonld', '#clinic');
@@ -146,6 +157,7 @@ mustContain('services.json', 'broadScopeConceptsInSchemaGraph');
 mustContain('services.json', 'skin-booster');
 mustContain('services.json', 'supportingIntents');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v6.reputation_integrated');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'research-graph.jsonld');
 mustContain('brand-kb.ghezelbaash.ai-public.json', 'authoritySignals');
 mustContain('brand-kb.ghezelbaash.ai-public.json', '167430');
 mustContain('brand-kb.ghezelbaash.ai-public.json', '6714657412');
@@ -159,8 +171,6 @@ mustContain('nap.csv', 'postal_code');
 mustContain('nap.csv', '6714657412');
 mustContain('nap.csv', 'google_maps_place_id');
 mustContain('nap.csv', 'ChIJBTOYDOTt-j8RD-7mAPy6Zas');
-mustContain('research.json', '0009-0001-9346-8475');
-mustContain('research.json', '34574943');
 mustContain('dataset.json', '10.5281/zenodo.18765169');
 mustContain('entity-hardening-index.json', 'entity_hardening');
 mustContain('authority-signals.json', 'authority_signals');
