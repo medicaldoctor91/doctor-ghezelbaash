@@ -4,6 +4,11 @@ import { researchProfile } from '../src/data/research.mjs';
 import { services as officialServices } from '../src/data/services.mjs';
 import { buildGlobalGraph } from '../src/lib/globalGraph.mjs';
 import {
+  entityCrosswalkDatasetId,
+  entityRelationTermSetId,
+  wikidataLikeRelationMappings
+} from '../src/lib/entityCrosswalk.mjs';
+import {
   officialOfferCatalogId,
   officialOfferId,
   officialServiceId
@@ -52,6 +57,8 @@ const dataset = byId.get(absoluteUrl('/kg/#dataset'));
 const researchCollection = byId.get(absoluteUrl('/research/#collection'));
 const termSet = byId.get(absoluteUrl('/kg/aesthetic-scope#term-set'));
 const offerCatalog = byId.get(officialOfferCatalogId());
+const crosswalkDataset = byId.get(entityCrosswalkDatasetId());
+const relationTermSet = byId.get(entityRelationTermSetId());
 const serviceNodes = nodes.filter((node) => node['@type'] === 'Service');
 const offerNodes = nodes.filter((node) => node['@type'] === 'Offer');
 const definedTerms = nodes.filter((node) => node['@type'] === 'DefinedTerm');
@@ -60,6 +67,7 @@ const scholarlyArticleIds = researchProfile.publications.map((publication) => ab
 const conceptIds = aestheticServiceConcepts.map((concept) => absoluteUrl(`/kg/aesthetic-scope#${concept.key}`));
 const officialServiceIds = officialServices.map(officialServiceId);
 const officialOfferIds = officialServices.map(officialOfferId);
+const blockedSameAsHosts = ['iranmedlabs.com', 'ninisite.com', 'rokna.net', 'namnak.com', 'khabaronline.ir', 'gadgetnews.net', 'niniban.com'];
 const requiredConceptKeys = [
   'botox-masseter',
   'hyaluronic-acid-filler',
@@ -80,6 +88,17 @@ if (!dataset) fail('missing knowledge graph dataset');
 if (!researchCollection) fail('missing research collection entity');
 if (!termSet) fail('missing aesthetic scope term set');
 if (!offerCatalog) fail('missing official offer catalog');
+if (!crosswalkDataset) fail('missing entity crosswalk dataset');
+if (!relationTermSet) fail('missing entity relation term set');
+
+for (const node of nodes) {
+  const sameAsValues = Array.isArray(node.sameAs) ? node.sameAs : [node.sameAs].filter(Boolean);
+  for (const sameAsUrl of sameAsValues) {
+    if (blockedSameAsHosts.some((host) => sameAsUrl.includes(host))) {
+      fail(`blocked media/editorial/forum URL leaked into sameAs for ${node['@id'] || node.name}: ${sameAsUrl}`);
+    }
+  }
+}
 
 if (person) {
   const personTypes = typeList(person);
@@ -127,9 +146,45 @@ if (clinic) {
 
 if (dataset) {
   const citationIds = refIds(dataset.citation);
+  const hasPartIds = refIds(dataset.hasPart);
   for (const articleId of scholarlyArticleIds) {
     if (!citationIds.includes(articleId)) fail(`dataset citation missing scholarly article: ${articleId}`);
   }
+  for (const requiredPartId of [
+    entityCrosswalkDatasetId(),
+    entityRelationTermSetId(),
+    absoluteUrl('/kg/aesthetic-scope#term-set'),
+    officialOfferCatalogId(),
+    absoluteUrl('/research/#collection'),
+    ...officialServiceIds
+  ]) {
+    if (!hasPartIds.includes(requiredPartId)) fail(`knowledge graph dataset missing hasPart: ${requiredPartId}`);
+  }
+}
+
+if (crosswalkDataset) {
+  if (!typeList(crosswalkDataset).includes('Dataset')) fail('entity crosswalk node must be Dataset');
+  if (crosswalkDataset.isPartOf?.['@id'] !== absoluteUrl('/kg/#dataset')) fail('entity crosswalk dataset must be part of main dataset');
+  const crosswalkHasPartIds = refIds(crosswalkDataset.hasPart);
+  for (const requiredPartId of [entityRelationTermSetId(), absoluteUrl('/kg/aesthetic-scope#term-set'), officialOfferCatalogId(), absoluteUrl('/research/#collection')]) {
+    if (!crosswalkHasPartIds.includes(requiredPartId)) fail(`entity crosswalk dataset missing hasPart: ${requiredPartId}`);
+  }
+  if (!String(crosswalkDataset.measurementTechnique || '').includes('Schema.org relationship crosswalk')) fail('entity crosswalk missing measurementTechnique');
+}
+
+if (relationTermSet) {
+  if (relationTermSet['@type'] !== 'DefinedTermSet') fail('entity relation set must be DefinedTermSet');
+  if (!Array.isArray(relationTermSet.hasDefinedTerm) || relationTermSet.hasDefinedTerm.length !== wikidataLikeRelationMappings.length) fail('relation term set must include every relationship mapping');
+}
+
+for (const mapping of wikidataLikeRelationMappings) {
+  const relationNode = byId.get(absoluteUrl(`/kg/entity-crosswalk#${mapping.key}`));
+  if (!relationNode) {
+    fail(`missing relation mapping term: ${mapping.key}`);
+    continue;
+  }
+  if (relationNode.inDefinedTermSet?.['@id'] !== entityRelationTermSetId()) fail(`relation term missing relation set: ${mapping.key}`);
+  if (relationNode.alternateName !== mapping.schemaProperty) fail(`relation term schema property mismatch: ${mapping.key}`);
 }
 
 if (researchCollection) {
@@ -162,7 +217,7 @@ if (termSet) {
 }
 
 if (aestheticServiceConcepts.length < 100) fail('aesthetic service concept source has not been expanded enough');
-if (definedTerms.length < aestheticServiceConcepts.length) fail('global graph missing broad DefinedTerm nodes');
+if (definedTerms.length < aestheticServiceConcepts.length + wikidataLikeRelationMappings.length) fail('global graph missing broad DefinedTerm nodes');
 
 for (const conceptKey of requiredConceptKeys) {
   const conceptNode = byId.get(absoluteUrl(`/kg/aesthetic-scope#${conceptKey}`));
