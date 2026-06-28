@@ -18,6 +18,10 @@ import {
   buildScholarlyArticleEntities,
   scholarlyArticleReferences
 } from './researchGraph.mjs';
+import {
+  applySchemaPropertyExpansion,
+  buildSchemaPropertyExpansionNodes
+} from './schemaPropertyExpansion.mjs';
 
 function refKey(value) {
   if (!value) return null;
@@ -108,12 +112,14 @@ export function buildGlobalGraph() {
     buildOfficialOfferCatalogEntity(),
     ...buildOfficialOfferEntities(),
     ...buildEntityCrosswalkGraphNodes(),
+    ...buildSchemaPropertyExpansionNodes(),
     buildResearchCollectionEntity(),
     ...buildScholarlyArticleEntities()
   ]);
 
   attachOfficialOfferCatalog(nodes);
   applyEntityCrosswalk(nodes);
+  applySchemaPropertyExpansion(nodes);
 
   return {
     ...baseGraph,
