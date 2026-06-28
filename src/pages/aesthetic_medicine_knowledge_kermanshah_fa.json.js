@@ -14,7 +14,7 @@ import {
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.aesthetic_knowledge.astro.v4.aesthetic_scope_builder',
+    schema: 'ghezelbaash.aesthetic_knowledge.astro.v5.primary_graph_research',
     language: ['fa', 'en'],
     dateModified: '2026-06-28',
     generatedFrom: ['site', 'location', 'regulatoryIdentity', 'researchProfile', 'services', 'serviceTaxonomy', 'aestheticScopeGraph', 'googleMapsReputation'],
@@ -85,7 +85,6 @@ export function GET() {
       location: absoluteUrl('/location.json'),
       regulatory: absoluteUrl('/regulatory.json'),
       research: absoluteUrl('/research.json'),
-      researchGraph: absoluteUrl('/research-graph.jsonld'),
       dataset: absoluteUrl('/dataset.json'),
       authoritySignals: absoluteUrl('/authority-signals.json'),
       profileLinks: absoluteUrl('/profile-links.json'),
@@ -95,7 +94,8 @@ export function GET() {
     researchSignals: {
       orcid: researchProfile.orcid,
       bibliographyUrl: researchProfile.bibliographyUrl,
-      graph: absoluteUrl('/research-graph.jsonld'),
+      graph: absoluteUrl('/graph-ghezelbaash-final.jsonld'),
+      collectionNode: absoluteUrl('/research/#collection'),
       publications: researchProfile.publications.map((publication) => ({
         title: publication.title,
         doi: publication.doi,
