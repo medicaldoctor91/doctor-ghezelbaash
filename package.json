@@ -14,11 +14,12 @@
     "validate:research-consolidation": "node scripts/validate-research-consolidation.mjs",
     "validate:primary-graph-completion": "node scripts/validate-primary-graph-completion.mjs",
     "validate:primary-graph-relations": "node scripts/validate-primary-graph-relations.mjs",
+    "validate:primary-graph-page-clusters": "node scripts/validate-primary-graph-page-clusters.mjs",
     "validate:dist": "node scripts/validate-dist.mjs",
     "validate:primary-graph-dist": "node scripts/validate-primary-graph-dist.mjs",
     "validate:llms": "node scripts/validate-llms-assets.mjs",
     "validate:page-context": "node scripts/validate-page-context.mjs",
-    "check": "npm run validate:repo-hygiene && npm run validate:source && npm run validate:machine-assets && npm run validate:schema-entities && npm run validate:schema-property-expansion && npm run validate:research-consolidation && npm run validate:primary-graph-completion && npm run validate:primary-graph-relations && npm run build && npm run validate:dist && npm run validate:primary-graph-dist && npm run validate:llms && npm run validate:page-context"
+    "check": "npm run validate:repo-hygiene && npm run validate:source && npm run validate:machine-assets && npm run validate:schema-entities && npm run validate:schema-property-expansion && npm run validate:research-consolidation && npm run validate:primary-graph-completion && npm run validate:primary-graph-relations && npm run validate:primary-graph-page-clusters && npm run build && npm run validate:dist && npm run validate:primary-graph-dist && npm run validate:llms && npm run validate:page-context"
   },
   "dependencies": {
     "astro": "^4.16.0"
