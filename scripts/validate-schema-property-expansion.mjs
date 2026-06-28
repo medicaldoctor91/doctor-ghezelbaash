@@ -1,4 +1,5 @@
 import { absoluteUrl } from '../src/data/site.mjs';
+import { publicDataset } from '../src/data/dataset.mjs';
 import { services } from '../src/data/services.mjs';
 import { buildGlobalGraph } from '../src/lib/globalGraph.mjs';
 import {
@@ -15,6 +16,12 @@ function fail(message) {
 
 function refId(value) {
   return value?.['@id'];
+}
+
+function propertyValues(entity, propertyID) {
+  return (Array.isArray(entity?.additionalProperty) ? entity.additionalProperty : [entity?.additionalProperty].filter(Boolean))
+    .filter((property) => property?.propertyID === propertyID)
+    .map((property) => property.value);
 }
 
 const graph = buildGlobalGraph();
@@ -58,10 +65,21 @@ if (clinic) {
 if (website && refId(website.image) !== graphDoctorImageId()) fail('website image must point to doctor ImageObject');
 
 if (dataset) {
+  const hasPartText = JSON.stringify(dataset.hasPart || []);
   if (!Array.isArray(dataset.distribution) || dataset.distribution.length < 20) fail('dataset missing machine asset DataDownload distribution');
   if (refId(dataset.isBasedOn) !== absoluteUrl('/graph-ghezelbaash-final.jsonld')) fail('dataset must be based on global graph');
   if (dataset.spatialCoverage?.name !== 'Kermanshah') fail('dataset missing Kermanshah spatialCoverage');
   if (!Array.isArray(dataset.keywords) || !dataset.keywords.includes('aesthetic medicine Kermanshah')) fail('dataset missing expanded keywords');
+  if (!dataset.keywords.includes('dataset manifest')) fail('dataset missing dataset manifest keyword');
+  if (!dataset.keywords.includes('publishing crosswalk')) fail('dataset missing publishing crosswalk keyword');
+  if (!hasPartText.includes('Canonical website')) fail('dataset hasPart missing canonical website work');
+  if (!hasPartText.includes('Repository context')) fail('dataset hasPart missing repository context');
+  if (!hasPartText.includes('External archived DOI record')) fail('dataset hasPart missing external DOI archive');
+  if (!hasPartText.includes(publicDataset.doiUrl)) fail('dataset hasPart missing DOI URL');
+  if (!hasPartText.includes(publicDataset.huggingFace)) fail('dataset hasPart missing Hugging Face mirror');
+  if (!propertyValues(dataset, 'jsonLdConsolidationPolicy').some((value) => String(value).includes('Dataset manifest and publishing crosswalk'))) {
+    fail('dataset missing JSON-LD consolidation policy');
+  }
 }
 
 if (serviceNodes.length < services.length) fail('missing service nodes for channel validation');
