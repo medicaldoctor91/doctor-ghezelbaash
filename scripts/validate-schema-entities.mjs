@@ -22,11 +22,14 @@ const byId = new Map(nodes.map((node) => [node['@id'], node]));
 const person = byId.get(absoluteUrl('/#dr-saeed-ghezelbash'));
 const physician = byId.get(absoluteUrl('/#physician'));
 const clinic = byId.get(absoluteUrl('/#clinic'));
+const termSet = byId.get(absoluteUrl('/kg/aesthetic-scope#term-set'));
 const services = nodes.filter((node) => node['@type'] === 'Service');
+const definedTerms = nodes.filter((node) => node['@type'] === 'DefinedTerm');
 
 if (!person) fail('missing person entity');
 if (!physician) fail('missing physician entity');
 if (!clinic) fail('missing clinic entity');
+if (!termSet) fail('missing aesthetic scope term set');
 
 if (person) {
   const personTypes = typeList(person);
@@ -37,6 +40,7 @@ if (person) {
   }
   if (person.worksFor?.['@id'] !== absoluteUrl('/#clinic')) fail('person worksFor must point to clinic');
   if (!person.jobTitle) fail('person must retain jobTitle');
+  if (!Array.isArray(person.knowsAbout) || person.knowsAbout.length < 20) fail('person missing broad knowsAbout concepts');
 }
 
 if (physician) {
@@ -47,6 +51,7 @@ if (physician) {
   if (physician.address?.postalCode !== '6714657412') fail('physician address missing canonical postalCode');
   if (!physician.medicalSpecialty) fail('physician missing medicalSpecialty');
   if (!Array.isArray(physician.availableService) || physician.availableService.length < 5) fail('physician missing availableService links');
+  if (!Array.isArray(physician.knowsAbout) || physician.knowsAbout.length < 20) fail('physician missing broad knowsAbout concepts');
 }
 
 if (clinic) {
@@ -60,6 +65,13 @@ if (clinic) {
   if (!clinic.aggregateRating) fail('clinic missing aggregateRating');
   if (clinic.founder?.['@id'] !== absoluteUrl('/#dr-saeed-ghezelbash')) fail('clinic founder must point to person');
 }
+
+if (termSet) {
+  if (termSet['@type'] !== 'DefinedTermSet') fail('aesthetic scope node must be DefinedTermSet');
+  if (!Array.isArray(termSet.hasDefinedTerm) || termSet.hasDefinedTerm.length < 30) fail('aesthetic scope term set has too few terms');
+}
+
+if (definedTerms.length < 30) fail('global graph missing broad DefinedTerm nodes');
 
 if (services.length < 5) fail('global graph missing service nodes');
 for (const service of services) {
