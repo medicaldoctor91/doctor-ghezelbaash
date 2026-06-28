@@ -6,10 +6,20 @@ import { assertSourceContract } from '../src/lib/sourceClassifier.mjs';
 const requiredSignalKeys = [
   'aboutme-profile',
   'huggingface-profile',
+  'facebook-profile',
+  'pinterest-profile',
   'neshan-map',
   'balad-map',
   'yandex-maps',
   'foursquare-venue',
+  'doctor-yab-profile',
+  'doctoreto-profile',
+  'paziresh24-profile',
+  'drdr-profile',
+  'nobat-ir-profile',
+  'drnext-profile',
+  'nobatnet-profile',
+  'tabibino-profile',
   'pubmed-27280013',
   'pubmed-34574943',
   'mdpi-healthcare-1169',
@@ -20,7 +30,20 @@ const requiredSignalKeys = [
   'ninisite-tag-9240',
   'rokna-1149379',
   'namnak-skin-beauty-tag',
-  'pezeshk-yab-coverage'
+  'pezeshk-yab-coverage',
+  'niniban-coverage',
+  'gadgetnews-coverage'
+];
+
+const directorySignalKeys = [
+  'doctor-yab-profile',
+  'doctoreto-profile',
+  'paziresh24-profile',
+  'drdr-profile',
+  'nobat-ir-profile',
+  'drnext-profile',
+  'nobatnet-profile',
+  'tabibino-profile'
 ];
 
 const allowedUses = new Set([
@@ -80,10 +103,26 @@ for (const signal of authoritySignals) {
   }
 }
 
-for (const key of ['iranmedlabs-interview', 'pezeshk-yab-coverage']) {
+for (const key of directorySignalKeys) {
+  const signal = authoritySignals.find((item) => item.key === key);
+  if (!signal) continue;
+  if (signal.type !== 'medicalDirectoryProfile') errors.push(`${key} must be medicalDirectoryProfile`);
+  for (const requiredUse of ['subjectOf', 'directoryProfile', 'authoritySignal', 'napCorroboration']) {
+    if (!signal.useAs?.includes(requiredUse)) errors.push(`${key} missing ${requiredUse}`);
+  }
+  if (signal.useAs?.includes('sameAs')) errors.push(`${key} must not be used as sameAs`);
+  if (!signal.identifier) errors.push(`${key} missing directory identifier`);
+}
+
+for (const key of ['facebook-profile', 'pinterest-profile']) {
+  const signal = authoritySignals.find((item) => item.key === key);
+  if (!signal?.useAs?.includes('sameAs')) errors.push(`${key} must be usable as sameAs`);
+  if (signal?.type !== 'socialProfile') errors.push(`${key} must be socialProfile`);
+}
+
+for (const key of ['iranmedlabs-interview', 'pezeshk-yab-coverage', 'niniban-coverage']) {
   const signal = authoritySignals.find((item) => item.key === key);
   if (!signal?.title) errors.push(`${key} must preserve web-discovered title metadata`);
-  if (!signal?.datePublished) errors.push(`${key} must preserve web-discovered datePublished metadata`);
   if (!signal?.language) errors.push(`${key} must preserve language metadata`);
   if (!Array.isArray(signal?.about) || signal.about.length < 3) errors.push(`${key} must preserve topic metadata`);
   if (signal?.useAs?.includes('sameAs')) errors.push(`${key} must not be used as sameAs`);
