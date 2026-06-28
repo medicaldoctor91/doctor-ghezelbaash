@@ -52,6 +52,7 @@ export function GET() {
     '- /dataset-manifest.jsonld',
     '- /dataset.json',
     '- /publishing-crosswalk.jsonld',
+    '- /aesthetic_medicine_knowledge_kermanshah_fa.json',
     '- /services.json',
     '- /service-taxonomy.json',
     '- /sameas.json',
