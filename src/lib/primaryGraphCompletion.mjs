@@ -1,4 +1,5 @@
 import { publicDataset } from '../data/dataset.mjs';
+import { medicalEducationProfile } from '../data/education.mjs';
 import { location } from '../data/location.mjs';
 import { regulatoryIdentity } from '../data/regulatory.mjs';
 import { site, absoluteUrl } from '../data/site.mjs';
@@ -11,6 +12,22 @@ export function dataCatalogId() {
 
 export function medicalCredentialId() {
   return absoluteUrl('/kg/credential#irimc-167430');
+}
+
+export function medicalDegreeCredentialId() {
+  return absoluteUrl('/kg/credential#medical-degree-kums-2018');
+}
+
+export function mccCredentialAssessmentId() {
+  return absoluteUrl('/kg/credential#mcc-eca-doctor-of-medicine-2020');
+}
+
+export function medicalSchoolId() {
+  return absoluteUrl('/kg/organization#kermanshah-university-medical-school');
+}
+
+export function medicalCouncilOfCanadaId() {
+  return absoluteUrl('/kg/organization#medical-council-of-canada');
 }
 
 export function kermanshahPlaceId() {
@@ -70,7 +87,9 @@ function canonicalPageNodes() {
       about: [
         { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
         { '@id': absoluteUrl('/#physician') },
-        { '@id': absoluteUrl('/research/#collection') }
+        { '@id': absoluteUrl('/research/#collection') },
+        { '@id': medicalDegreeCredentialId() },
+        { '@id': mccCredentialAssessmentId() }
       ],
       publisher: { '@id': absoluteUrl('/#clinic') }
     },
@@ -116,11 +135,93 @@ function canonicalPageNodes() {
       about: [
         { '@id': absoluteUrl('/kg/#dataset') },
         { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
-        { '@id': absoluteUrl('/#clinic') }
+        { '@id': absoluteUrl('/#clinic') },
+        { '@id': medicalDegreeCredentialId() },
+        { '@id': mccCredentialAssessmentId() }
       ],
       publisher: { '@id': absoluteUrl('/#clinic') }
     },
     ...servicePageNodes
+  ];
+}
+
+function buildEducationNodes() {
+  const { medicalDegree, canadianCredentialAssessment } = medicalEducationProfile;
+
+  return [
+    {
+      '@type': ['CollegeOrUniversity', 'EducationalOrganization'],
+      '@id': medicalSchoolId(),
+      name: medicalDegree.institution.name,
+      alternateName: medicalDegree.institution.parentName,
+      address: {
+        '@type': 'PostalAddress',
+        addressCountry: medicalDegree.institution.addressCountry
+      }
+    },
+    {
+      '@type': 'Organization',
+      '@id': medicalCouncilOfCanadaId(),
+      name: canadianCredentialAssessment.recognizedBy.name,
+      url: canadianCredentialAssessment.recognizedBy.url,
+      sameAs: [canadianCredentialAssessment.recognizedBy.url]
+    },
+    {
+      '@type': 'EducationalOccupationalCredential',
+      '@id': medicalDegreeCredentialId(),
+      name: medicalDegree.name,
+      credentialCategory: medicalDegree.credentialCategory,
+      educationalLevel: medicalDegree.educationalLevel,
+      competencyRequired: medicalDegree.fieldOfStudy,
+      dateIssued: medicalDegree.dateAwarded,
+      recognizedBy: { '@id': medicalSchoolId() },
+      about: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+      additionalProperty: [
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'countryOfStudy',
+          value: medicalDegree.countryOfStudy
+        },
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'credentialEvidenceBoundary',
+          value: medicalDegree.evidenceBoundary
+        }
+      ]
+    },
+    {
+      '@type': 'EducationalOccupationalCredential',
+      '@id': mccCredentialAssessmentId(),
+      name: canadianCredentialAssessment.name,
+      credentialCategory: canadianCredentialAssessment.credentialCategory,
+      educationalLevel: canadianCredentialAssessment.equivalency,
+      dateIssued: canadianCredentialAssessment.dateIssued,
+      recognizedBy: { '@id': medicalCouncilOfCanadaId() },
+      about: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+      assesses: { '@id': medicalDegreeCredentialId() },
+      additionalProperty: [
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'assessedCredential',
+          value: canadianCredentialAssessment.assessedCredential
+        },
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'canadianEquivalency',
+          value: canadianCredentialAssessment.equivalency
+        },
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'assessmentPurpose',
+          value: canadianCredentialAssessment.purpose
+        },
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'credentialEvidenceBoundary',
+          value: canadianCredentialAssessment.evidenceBoundary
+        }
+      ]
+    }
   ];
 }
 
@@ -140,7 +241,9 @@ export function buildPrimaryGraphCompletionNodes() {
         { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
         { '@id': absoluteUrl('/#physician') },
         { '@id': absoluteUrl('/#clinic') },
-        { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') }
+        { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') },
+        { '@id': medicalDegreeCredentialId() },
+        { '@id': mccCredentialAssessmentId() }
       ]
     },
     {
@@ -161,6 +264,7 @@ export function buildPrimaryGraphCompletionNodes() {
       },
       about: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') }
     },
+    ...buildEducationNodes(),
     {
       '@type': 'City',
       '@id': kermanshahPlaceId(),
@@ -203,6 +307,13 @@ function appendRefs(currentValue, additions = []) {
   return merged;
 }
 
+function educationCredentialRefs() {
+  return [
+    { '@id': medicalDegreeCredentialId() },
+    { '@id': mccCredentialAssessmentId() }
+  ];
+}
+
 export function applyPrimaryGraphCompletion(nodes) {
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
   const website = byId.get(absoluteUrl('/#website'));
@@ -215,6 +326,7 @@ export function applyPrimaryGraphCompletion(nodes) {
   const credentialRef = { '@id': medicalCredentialId() };
   const placeRef = { '@id': kermanshahPlaceId() };
   const specialtyRef = { '@id': aestheticMedicineSpecialtyId() };
+  const educationRefs = educationCredentialRefs();
 
   if (website) {
     website.hasPart = appendRefs(website.hasPart, canonicalPageNodes().map((page) => ({ '@id': page['@id'] })));
@@ -222,15 +334,17 @@ export function applyPrimaryGraphCompletion(nodes) {
   }
 
   if (person) {
-    person.hasCredential = appendRefs(person.hasCredential, [credentialRef]);
+    person.hasCredential = appendRefs(person.hasCredential, [credentialRef, ...educationRefs]);
     person.knowsAbout = appendRefs(person.knowsAbout, [specialtyRef]);
     person.workLocation = { '@id': absoluteUrl('/#clinic') };
+    person.alumniOf = appendRefs(person.alumniOf, [{ '@id': medicalSchoolId() }]);
   }
 
   if (physician) {
-    physician.hasCredential = appendRefs(physician.hasCredential, [credentialRef]);
+    physician.hasCredential = appendRefs(physician.hasCredential, [credentialRef, ...educationRefs]);
     physician.medicalSpecialty = appendRefs(physician.medicalSpecialty, [specialtyRef]);
     physician.areaServed = placeRef;
+    physician.alumniOf = appendRefs(physician.alumniOf, [{ '@id': medicalSchoolId() }]);
   }
 
   if (clinic) {
@@ -250,6 +364,12 @@ export function applyPrimaryGraphCompletion(nodes) {
       { '@id': absoluteUrl('/#clinic') },
       { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') }
     ];
+    dataset.hasPart = appendRefs(dataset.hasPart, [
+      { '@id': medicalDegreeCredentialId() },
+      { '@id': mccCredentialAssessmentId() },
+      { '@id': medicalSchoolId() },
+      { '@id': medicalCouncilOfCanadaId() }
+    ]);
   }
 
   if (termSet) {
