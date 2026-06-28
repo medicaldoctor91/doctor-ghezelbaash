@@ -19,7 +19,6 @@ if (!fs.existsSync(file)) {
     '/page-context.json',
     '/link-graph.json',
     '/graph-ghezelbaash-final.jsonld',
-    '/research-graph.jsonld',
     '/brand-kb.ghezelbaash.ai-public.json',
     '/ai-discovery-index.json',
     '/entity-hardening-index.json',
@@ -40,7 +39,7 @@ if (!fs.existsSync(file)) {
     if (!text.includes(requiredAsset)) fail(`llms.txt missing ${requiredAsset}`);
   }
 
-  for (const retiredAsset of ['/dataset-manifest.jsonld', '/publishing-crosswalk.jsonld']) {
+  for (const retiredAsset of ['/dataset-manifest.jsonld', '/publishing-crosswalk.jsonld', '/research-graph.jsonld']) {
     if (text.includes(retiredAsset)) fail(`llms.txt still includes retired asset: ${retiredAsset}`);
   }
 
