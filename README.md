@@ -38,31 +38,42 @@ This repository contains the Astro static website and the public machine-readabl
 - Hugging Face dataset: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
 - Zenodo DOI archived release: https://doi.org/10.5281/zenodo.18765169
 
-## Root public assets intentionally preserved
+## Public machine-readable assets
 
-These files stay at repository root for continuity with existing machine references, archived dataset references, GitHub discovery, Hugging Face references, and Zenodo-linked material:
+The canonical entity graph is the primary JSON-LD source of truth:
 
-- `CNAME`
-- `robots.txt`
-- `logo.png`
-- `doctor.jpg`
-- `graph-ghezelbaash-final.jsonld`
-- `dataset-manifest.jsonld`
-- `publishing-crosswalk.jsonld`
-- `aesthetic_medicine_knowledge_kermanshah_fa.json`
-- `dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json`
-- `sameas.json`
-- `nap.csv`
-- `aesthetic-medicine-dataset.html`
-- `google-maps-review-evidence.html`
+- `https://www.ghezelbaash.ir/graph-ghezelbaash-final.jsonld`
+
+Standalone JSON-LD projections are intentionally limited:
+
+- `https://www.ghezelbaash.ir/graph-ghezelbaash-final.jsonld`
+- `https://www.ghezelbaash.ir/research-graph.jsonld`
+
+Dataset manifest and publishing crosswalk semantics are consolidated into the Dataset node inside the primary graph. They are not maintained as separate public JSON-LD endpoints.
+
+Other generated machine-readable projections remain secondary to the graph:
+
 - `brand-kb.ghezelbaash.ai-public.json`
-- `llms.txt`
 - `ai-discovery-index.json`
+- `entity-hardening-index.json`
+- `aesthetic_medicine_knowledge_kermanshah_fa.json`
+- `local-competitive-landscape.json`
 - `services.json`
-- `.zenodo.json`
-- `CITATION.cff`
-
-Do not move or rename these files without a deliberate versioned migration.
+- `service-taxonomy.json`
+- `sameas.json`
+- `location.json`
+- `regulatory.json`
+- `research.json`
+- `dataset.json`
+- `authority-signals.json`
+- `profile-links.json`
+- `nap.csv`
+- `llms.txt`
+- `routes.json`
+- `seo-aeo-index.json`
+- `page-context.json`
+- `link-graph.json`
+- `sitemap.xml`
 
 ## Deployment
 
@@ -72,4 +83,4 @@ Canonical deployment is the Astro static build through GitHub Pages Actions:
 .github/workflows/astro-pages.yml
 ```
 
-The build validates the generated site, route registry, SEO/AEO index, internal link graph, and page context before deploying the `dist` artifact.
+The build validates the generated site, machine-readable asset architecture, schema entities, schema property expansion, generated dist, llms.txt, and page context before deploying the `dist` artifact.
