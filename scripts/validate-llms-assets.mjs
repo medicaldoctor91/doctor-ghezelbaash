@@ -22,8 +22,6 @@ if (!fs.existsSync(file)) {
     '/research-graph.jsonld',
     '/brand-kb.ghezelbaash.ai-public.json',
     '/ai-discovery-index.json',
-    '/dataset-manifest.jsonld',
-    '/publishing-crosswalk.jsonld',
     '/entity-hardening-index.json',
     '/aesthetic_medicine_knowledge_kermanshah_fa.json',
     '/local-competitive-landscape.json',
@@ -42,10 +40,15 @@ if (!fs.existsSync(file)) {
     if (!text.includes(requiredAsset)) fail(`llms.txt missing ${requiredAsset}`);
   }
 
+  for (const retiredAsset of ['/dataset-manifest.jsonld', '/publishing-crosswalk.jsonld']) {
+    if (text.includes(retiredAsset)) fail(`llms.txt still includes retired asset: ${retiredAsset}`);
+  }
+
   for (const requiredLine of [
     'Canonical site:',
     'Best-intent routing policy:',
     'Machine-readable root assets:',
+    'JSON-LD consolidation policy:',
     'Dataset policy:'
   ]) {
     if (!text.includes(requiredLine)) fail(`llms.txt missing section: ${requiredLine}`);
