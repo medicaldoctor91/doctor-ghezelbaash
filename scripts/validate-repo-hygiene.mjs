@@ -28,6 +28,7 @@ const removedLegacyRootAssets = [
   'publishing-crosswalk.jsonld',
   'google-maps-review-evidence.html',
   'aesthetic_medicine_knowledge_kermanshah_fa.json',
+  'aesthetic-medicine-dataset.html',
   'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json'
 ];
 
@@ -52,6 +53,7 @@ for (const file of [
   'google-maps-review-evidence.html',
   'nap.csv',
   'aesthetic_medicine_knowledge_kermanshah_fa.json',
+  'aesthetic-medicine-dataset.html',
   'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json'
 ]) {
   if (preparePublic.includes(`'${file}'`) || preparePublic.includes(`"${file}"`)) {
