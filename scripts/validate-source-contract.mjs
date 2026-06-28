@@ -6,8 +6,12 @@ import { assertSourceContract } from '../src/lib/sourceClassifier.mjs';
 const requiredSignalKeys = [
   'aboutme-profile',
   'huggingface-profile',
-  'facebook-profile',
+  'instagram-clinic-person',
+  'facebook-clinic-profile',
+  'facebook-person-clinic-profile',
   'pinterest-profile',
+  'linkedin-person',
+  'linktree-profile',
   'neshan-map',
   'balad-map',
   'yandex-maps',
@@ -45,6 +49,16 @@ const directorySignalKeys = [
   'nobatnet-profile',
   'tabibino-profile'
 ];
+
+const socialSignalExpectations = {
+  'instagram-clinic-person': { entity: 'personAndClinic', url: 'https://www.instagram.com/doctor.ghezelbaash/' },
+  'facebook-clinic-profile': { entity: 'clinic', url: 'https://www.facebook.com/Doctor.Ghezelbaash/' },
+  'facebook-person-clinic-profile': { entity: 'personAndClinic', url: 'https://www.facebook.com/Ghezelbaash/' },
+  'pinterest-profile': { entity: 'personAndClinic', url: 'https://www.pinterest.com/qezelbaash/' },
+  'linktree-profile': { entity: 'personAndClinic', url: 'https://linktr.ee/Doctor.ghezelbaash' },
+  'aboutme-profile': { entity: 'personAndClinic', url: 'https://about.me/ghezelbaash' },
+  'linkedin-person': { entity: 'person', url: 'https://www.linkedin.com/in/saeed-ghezelbash-93310a96/' }
+};
 
 const allowedUses = new Set([
   'sameAs',
@@ -114,10 +128,14 @@ for (const key of directorySignalKeys) {
   if (!signal.identifier) errors.push(`${key} missing directory identifier`);
 }
 
-for (const key of ['facebook-profile', 'pinterest-profile']) {
+for (const [key, expectation] of Object.entries(socialSignalExpectations)) {
   const signal = authoritySignals.find((item) => item.key === key);
-  if (!signal?.useAs?.includes('sameAs')) errors.push(`${key} must be usable as sameAs`);
-  if (signal?.type !== 'socialProfile') errors.push(`${key} must be socialProfile`);
+  if (!signal) continue;
+  if (!signal.useAs?.includes('sameAs')) errors.push(`${key} must be usable as sameAs`);
+  if (!signal.useAs?.includes('externalProfile')) errors.push(`${key} must be externalProfile`);
+  if (!['socialProfile', 'publicProfile'].includes(signal.type)) errors.push(`${key} must be a direct social/public profile`);
+  if (signal.entity !== expectation.entity) errors.push(`${key} entity must be ${expectation.entity}`);
+  if (signal.url !== expectation.url) errors.push(`${key} url mismatch`);
 }
 
 for (const key of ['iranmedlabs-interview', 'pezeshk-yab-coverage', 'niniban-coverage']) {
