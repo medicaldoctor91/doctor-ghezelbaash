@@ -201,7 +201,7 @@ mustContain('location.json', 'googleMapsReputation');
 mustContain('nap.csv', 'postal_code');
 mustContain('nap.csv', '6714657412');
 mustContain('nap.csv', 'google_maps_place_id');
-mustContain('nap.csv', 'ChIJBTOYDOTt-j8RD-7d9f67418de58361c02f73832882b');
+mustContain('nap.csv', 'ChIJBTOYDOTt-j8RD-7mAPy6Zas');
 mustContain('dataset.json', '10.5281/zenodo.18765169');
 mustContain('entity-hardening-index.json', 'entity_hardening');
 mustContain('authority-signals.json', 'authority_signals');
