@@ -3,9 +3,10 @@ import { site, absoluteUrl } from '../data/site.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.research_identifiers.astro.v3.graph_linked',
+    schema: 'ghezelbaash.research_identifiers.astro.v4.primary_graph_consolidated',
     canonicalWebsite: site.canonicalBase + '/',
-    researchGraph: absoluteUrl('/research-graph.jsonld'),
+    primaryGraph: absoluteUrl('/graph-ghezelbaash-final.jsonld'),
+    researchCollection: absoluteUrl('/research/#collection'),
     bibliographyUrl: researchProfile.bibliographyUrl,
     orcid: researchProfile.orcid,
     identifiers: researchProfile.publications.map((item) => ({
