@@ -5,13 +5,14 @@ import { regulatoryIdentity } from '../data/regulatory.mjs';
 import { researchProfile } from '../data/research.mjs';
 import { services } from '../data/services.mjs';
 import { serviceTaxonomy } from '../data/serviceTaxonomy.mjs';
+import { aestheticServiceConcepts } from '../data/aestheticScope.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.aesthetic_knowledge.astro.v2.generated',
+    schema: 'ghezelbaash.aesthetic_knowledge.astro.v3.broad_scope',
     language: ['fa', 'en'],
     dateModified: '2026-06-28',
-    generatedFrom: ['site', 'location', 'regulatoryIdentity', 'researchProfile', 'services', 'serviceTaxonomy', 'googleMapsReputation'],
+    generatedFrom: ['site', 'location', 'regulatoryIdentity', 'researchProfile', 'services', 'serviceTaxonomy', 'aestheticServiceConcepts', 'googleMapsReputation'],
     canonicalIdentity: {
       person: {
         nameFa: site.personFa,
@@ -61,7 +62,12 @@ export function GET() {
       canonicalUrl: absoluteUrl(`/${service.slug}/`),
       bestIntentTitle: service.bestIntentTitle,
       intentExamples: service.intentExamples,
-      taxonomy: serviceTaxonomy[service.key] || null
+      taxonomy: serviceTaxonomy[service.key] || null,
+      scopeConcepts: aestheticServiceConcepts.filter((concept) => concept.pillar === service.key)
+    })),
+    broadAestheticConcepts: aestheticServiceConcepts.map((concept) => ({
+      ...concept,
+      node: absoluteUrl(`/kg/aesthetic-scope#${concept.key}`)
     })),
     machineReadableAssets: {
       llms: absoluteUrl('/llms.txt'),
