@@ -8,8 +8,7 @@ fs.mkdirSync(publicDir, { recursive: true });
 const filesToExposeAtWebRoot = [
   'CNAME',
   'logo.png',
-  'doctor.jpg',
-  'aesthetic-medicine-dataset.html'
+  'doctor.jpg'
 ];
 
 for (const file of filesToExposeAtWebRoot) {
