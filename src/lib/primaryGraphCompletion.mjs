@@ -235,7 +235,6 @@ export function applyPrimaryGraphCompletion(nodes) {
 
   if (clinic) {
     clinic.areaServed = placeRef;
-    clinic.parentOrganization = { '@id': absoluteUrl('/#organization') };
   }
 
   if (dataset) {
