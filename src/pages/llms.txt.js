@@ -53,6 +53,7 @@ export function GET() {
     '- /dataset.json',
     '- /publishing-crosswalk.jsonld',
     '- /aesthetic_medicine_knowledge_kermanshah_fa.json',
+    '- /local-competitive-landscape.json',
     '- /services.json',
     '- /service-taxonomy.json',
     '- /sameas.json',
