@@ -19,7 +19,8 @@ const requiredSignalKeys = [
   'ninisite-discussion-16693096',
   'ninisite-tag-9240',
   'rokna-1149379',
-  'namnak-skin-beauty-tag'
+  'namnak-skin-beauty-tag',
+  'pezeshk-yab-coverage'
 ];
 
 const allowedUses = new Set([
@@ -77,6 +78,15 @@ for (const signal of authoritySignals) {
   if (signal.useAs?.includes('hasMap') && !['clinic', 'personAndClinic', 'clinicAndServices'].includes(signal.entity)) {
     errors.push(`invalid hasMap entity for ${signal.key}: ${signal.entity}`);
   }
+}
+
+for (const key of ['iranmedlabs-interview', 'pezeshk-yab-coverage']) {
+  const signal = authoritySignals.find((item) => item.key === key);
+  if (!signal?.title) errors.push(`${key} must preserve web-discovered title metadata`);
+  if (!signal?.datePublished) errors.push(`${key} must preserve web-discovered datePublished metadata`);
+  if (!signal?.language) errors.push(`${key} must preserve language metadata`);
+  if (!Array.isArray(signal?.about) || signal.about.length < 3) errors.push(`${key} must preserve topic metadata`);
+  if (signal?.useAs?.includes('sameAs')) errors.push(`${key} must not be used as sameAs`);
 }
 
 for (const url of externalProfiles.verifiedSameAs || []) {
