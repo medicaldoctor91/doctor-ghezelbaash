@@ -5,6 +5,12 @@ import {
   buildAestheticScopeTerms
 } from './aestheticScopeGraph.mjs';
 import {
+  buildOfficialOfferCatalogEntity,
+  buildOfficialOfferEntities,
+  officialOfferCatalogId,
+  officialOfferId
+} from './officialOfferGraph.mjs';
+import {
   buildResearchCollectionEntity,
   buildScholarlyArticleEntities,
   scholarlyArticleReferences
@@ -49,6 +55,23 @@ function mergeNodeList(nodes, additions) {
   return byId;
 }
 
+function attachOfficialOfferCatalog(nodes) {
+  const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
+  const catalogReference = { '@id': officialOfferCatalogId() };
+  const clinic = byId.get(absoluteUrl('/#clinic'));
+  const physician = byId.get(absoluteUrl('/#physician'));
+
+  if (clinic) clinic.hasOfferCatalog = catalogReference;
+  if (physician) physician.hasOfferCatalog = catalogReference;
+
+  for (const node of nodes) {
+    if (node['@type'] !== 'Service' || !node.url) continue;
+    const servicePath = new URL(node.url).pathname;
+    const offerId = absoluteUrl(`${servicePath.replace(/\/$/, '')}/#offer`);
+    node.offers = { '@id': offerId };
+  }
+}
+
 export function buildGlobalGraph() {
   const baseGraph = buildSchemaGlobalGraph();
   const nodes = JSON.parse(JSON.stringify(baseGraph['@graph'] || []));
@@ -79,9 +102,13 @@ export function buildGlobalGraph() {
   mergeNodeList(nodes, [
     buildAestheticScopeTermSet(),
     ...buildAestheticScopeTerms(),
+    buildOfficialOfferCatalogEntity(),
+    ...buildOfficialOfferEntities(),
     buildResearchCollectionEntity(),
     ...buildScholarlyArticleEntities()
   ]);
+
+  attachOfficialOfferCatalog(nodes);
 
   return {
     ...baseGraph,
