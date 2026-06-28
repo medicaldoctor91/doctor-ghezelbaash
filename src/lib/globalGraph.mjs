@@ -15,6 +15,10 @@ import {
   officialOfferCatalogId
 } from './officialOfferGraph.mjs';
 import {
+  applyPrimaryGraphCompletion,
+  buildPrimaryGraphCompletionNodes
+} from './primaryGraphCompletion.mjs';
+import {
   buildResearchCollectionEntity,
   buildScholarlyArticleEntities,
   scholarlyArticleReferences
@@ -142,6 +146,7 @@ export function buildGlobalGraph() {
     ...buildOfficialOfferEntities(),
     ...buildEntityCrosswalkGraphNodes(),
     ...buildSchemaPropertyExpansionNodes(),
+    ...buildPrimaryGraphCompletionNodes(),
     buildResearchCollectionEntity(),
     ...buildScholarlyArticleEntities()
   ]);
@@ -149,6 +154,7 @@ export function buildGlobalGraph() {
   attachOfficialOfferCatalog(nodes);
   applyEntityCrosswalk(nodes);
   applySchemaPropertyExpansion(nodes);
+  applyPrimaryGraphCompletion(nodes);
 
   return {
     ...baseGraph,
