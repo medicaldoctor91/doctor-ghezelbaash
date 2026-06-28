@@ -40,16 +40,11 @@ This repository contains the Astro static website and the public machine-readabl
 
 ## Public machine-readable assets
 
-The canonical entity graph is the primary JSON-LD source of truth:
+The canonical entity graph is the only standalone public JSON-LD source of truth:
 
 - `https://www.ghezelbaash.ir/graph-ghezelbaash-final.jsonld`
 
-Standalone JSON-LD projections are intentionally limited:
-
-- `https://www.ghezelbaash.ir/graph-ghezelbaash-final.jsonld`
-- `https://www.ghezelbaash.ir/research-graph.jsonld`
-
-Dataset manifest and publishing crosswalk semantics are consolidated into the Dataset node inside the primary graph. They are not maintained as separate public JSON-LD endpoints.
+Dataset manifest, publishing crosswalk, and research graph semantics are consolidated into the Dataset, Person, Physician, CollectionPage, and ScholarlyArticle nodes inside the primary graph. They are not maintained as separate public JSON-LD endpoints.
 
 Other generated machine-readable projections remain secondary to the graph:
 
@@ -83,4 +78,4 @@ Canonical deployment is the Astro static build through GitHub Pages Actions:
 .github/workflows/astro-pages.yml
 ```
 
-The build validates the generated site, machine-readable asset architecture, schema entities, schema property expansion, generated dist, llms.txt, and page context before deploying the `dist` artifact.
+The build validates the generated site, machine-readable asset architecture, schema entities, schema property expansion, research consolidation, generated dist, llms.txt, and page context before deploying the `dist` artifact.
