@@ -1,7 +1,10 @@
 import { site, absoluteUrl, canonicalImage } from '../data/site.mjs';
 import { location } from '../data/location.mjs';
 import { publicDataset } from '../data/dataset.mjs';
-import { machineAssetDataDownloads } from './machineAssets.mjs';
+import {
+  machineAssetCreativeWorks,
+  machineAssetDataDownloads
+} from './machineAssets.mjs';
 
 export function graphContactPointId() {
   return absoluteUrl('/#contact-point');
@@ -80,6 +83,19 @@ function appendRefs(currentValue, additions = []) {
   return uniqueRefs([...current, ...additions]);
 }
 
+function publishingCrosswalkWorks() {
+  return [
+    { '@type': 'CreativeWork', name: 'Canonical website', url: site.canonicalBase + '/', encodingFormat: 'text/html' },
+    { '@type': 'CreativeWork', name: 'Person page', url: absoluteUrl(site.pages.person), encodingFormat: 'text/html' },
+    { '@type': 'CreativeWork', name: 'Clinic page', url: absoluteUrl(site.pages.clinic), encodingFormat: 'text/html' },
+    { '@type': 'CreativeWork', name: 'Knowledge graph hub', url: absoluteUrl(site.pages.kg), encodingFormat: 'text/html' },
+    ...machineAssetCreativeWorks(),
+    { '@type': 'CreativeWork', name: 'Repository context', url: publicDataset.github, encodingFormat: 'text/html' },
+    { '@type': 'Dataset', name: 'External archived DOI record', url: publicDataset.doiUrl, encodingFormat: 'text/html' },
+    { '@type': 'Dataset', name: 'External dataset mirror', url: publicDataset.huggingFace, encodingFormat: 'text/html' }
+  ];
+}
+
 export function applySchemaPropertyExpansion(nodes) {
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
   const person = byId.get(absoluteUrl('/#dr-saeed-ghezelbash'));
@@ -114,7 +130,9 @@ export function applySchemaPropertyExpansion(nodes) {
   }
 
   if (dataset) {
+    dataset.description = `${dataset.description || 'Public website machine-readable dataset.'} The dataset node also carries the former dataset manifest and publishing crosswalk semantics inside the primary graph.`;
     dataset.distribution = machineAssetDataDownloads();
+    dataset.hasPart = appendRefs(dataset.hasPart, publishingCrosswalkWorks());
     dataset.isBasedOn = { '@id': absoluteUrl('/graph-ghezelbaash-final.jsonld') };
     dataset.spatialCoverage = {
       '@type': 'City',
@@ -127,8 +145,17 @@ export function applySchemaPropertyExpansion(nodes) {
       'aesthetic medicine Kermanshah',
       'medical aesthetics knowledge graph',
       'local SEO entity graph',
+      'dataset manifest',
+      'publishing crosswalk',
       publicDataset.doi
     ];
+    dataset.additionalProperty = appendRefs(dataset.additionalProperty, [
+      {
+        '@type': 'PropertyValue',
+        propertyID: 'jsonLdConsolidationPolicy',
+        value: 'Dataset manifest and publishing crosswalk semantics are carried by the primary graph dataset node.'
+      }
+    ]);
   }
 
   const serviceNodes = nodes.filter((node) => node['@type'] === 'Service');
