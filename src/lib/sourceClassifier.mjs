@@ -18,6 +18,36 @@ function uniqueByValue(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
+function optionalWebPageFields(signal) {
+  const fields = {};
+
+  if (signal.datePublished) fields.datePublished = signal.datePublished;
+  if (signal.dateModified) fields.dateModified = signal.dateModified;
+  if (signal.language) fields.inLanguage = signal.language;
+  if (signal.identifier) {
+    fields.identifier = {
+      '@type': 'PropertyValue',
+      propertyID: signal.publisher,
+      value: signal.identifier,
+      url: signal.url
+    };
+  }
+  if (signal.publisher) {
+    fields.publisher = {
+      '@type': 'Organization',
+      name: signal.publisher
+    };
+  }
+  if (Array.isArray(signal.about) && signal.about.length) {
+    fields.about = signal.about.map((name) => ({
+      '@type': 'Thing',
+      name
+    }));
+  }
+
+  return fields;
+}
+
 export function entityMatches(signal, entity) {
   return ENTITY_ALIASES[entity]?.has(signal.entity) || signal.entity === entity;
 }
@@ -52,7 +82,8 @@ export function getSubjectOfForEntity(signals, entity) {
     .map((signal) => ({
       '@type': 'WebPage',
       name: signal.title || `${signal.publisher} ${signal.type}`,
-      url: signal.url
+      url: signal.url,
+      ...optionalWebPageFields(signal)
     }));
 }
 
