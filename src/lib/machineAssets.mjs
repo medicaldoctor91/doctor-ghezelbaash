@@ -24,8 +24,6 @@ export const machineAssets = [
   { name: 'XML sitemap', path: '/sitemap.xml', format: 'application/xml', role: 'discovery' },
   { name: 'NAP CSV', path: '/nap.csv', format: 'text/csv', role: 'export' },
   { name: 'Entity hardening index', path: '/entity-hardening-index.json', format: 'application/json', role: 'audit-thin-or-merge' },
-  { name: 'Publishing crosswalk', path: '/publishing-crosswalk.jsonld', format: 'application/ld+json', role: 'audit-thin-or-merge' },
-  { name: 'Dataset manifest', path: '/dataset-manifest.jsonld', format: 'application/ld+json', role: 'audit-thin-or-merge' },
   { name: 'Local competitive landscape', path: '/local-competitive-landscape.json', format: 'application/json', role: 'audit-thin-or-merge' },
   { name: 'Dataset landing page', path: '/aesthetic-medicine-dataset.html', format: 'text/html', role: 'landing' }
 ];
