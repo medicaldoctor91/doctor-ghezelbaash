@@ -19,6 +19,10 @@ import {
   buildPrimaryGraphCompletionNodes
 } from './primaryGraphCompletion.mjs';
 import {
+  applyPrimaryGraphRelations,
+  buildPrimaryGraphRelationNodes
+} from './primaryGraphRelations.mjs';
+import {
   buildResearchCollectionEntity,
   buildScholarlyArticleEntities,
   scholarlyArticleReferences
@@ -147,6 +151,7 @@ export function buildGlobalGraph() {
     ...buildEntityCrosswalkGraphNodes(),
     ...buildSchemaPropertyExpansionNodes(),
     ...buildPrimaryGraphCompletionNodes(),
+    ...buildPrimaryGraphRelationNodes(),
     buildResearchCollectionEntity(),
     ...buildScholarlyArticleEntities()
   ]);
@@ -155,6 +160,7 @@ export function buildGlobalGraph() {
   applyEntityCrosswalk(nodes);
   applySchemaPropertyExpansion(nodes);
   applyPrimaryGraphCompletion(nodes);
+  applyPrimaryGraphRelations(nodes);
 
   return {
     ...baseGraph,
