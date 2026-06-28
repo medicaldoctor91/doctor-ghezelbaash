@@ -43,7 +43,30 @@ if (!fs.existsSync(file)) {
     'روانشناسی زیباجو',
     'سابسیژن',
     'PezeshkYab',
-    'IranMedLabs'
+    'IranMedLabs',
+    'Doctoreto',
+    'DoctorYab',
+    'Paziresh24',
+    'DrDr',
+    'Nobat.ir',
+    'DrNext',
+    'Nobat.net',
+    'Tabibino',
+    'GPezBJ',
+    '43609',
+    '92014',
+    'dr-doctor.ghezelbaash',
+    '27bdey',
+    '62116',
+    '265252',
+    'https://www.facebook.com/Doctor.Ghezelbaash/',
+    'https://www.pinterest.com/qezelbaash/',
+    'https://www.paziresh24.com/dr/',
+    'https://drdr.ir/dr/92014/',
+    'https://drnext.ir/doctor/27bdey',
+    'https://nobat.net/doctor/62116',
+    'https://tabibino.com/doctor/265252/',
+    'https://gadgetnews.net/927682/beauty-services-kermanshah-dr-saeed-ghazelbash/'
   ]) {
     if (!text.includes(needle)) fail(`primary graph dist missing ${needle}`);
   }
