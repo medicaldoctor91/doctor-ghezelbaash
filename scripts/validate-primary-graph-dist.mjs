@@ -35,7 +35,15 @@ if (!fs.existsSync(file)) {
     'ProfilePage',
     'CollectionPage',
     '/services/#webpage',
-    '/kg/#webpage'
+    '/kg/#webpage',
+    'دکتر سعید قزلباش؛ دروغ بزرگ جوانسازی و فریب زیباجویان',
+    'کلینیک زیبایی دکتر سعید قزلباش کرمانشاه',
+    '2026-06-27',
+    '2025-06-30',
+    'روانشناسی زیباجو',
+    'سابسیژن',
+    'PezeshkYab',
+    'IranMedLabs'
   ]) {
     if (!text.includes(needle)) fail(`primary graph dist missing ${needle}`);
   }
