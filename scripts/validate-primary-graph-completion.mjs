@@ -146,16 +146,16 @@ if (physician) {
   }
   if (!refIds(physician.alumniOf).includes(medicalSchoolId())) fail('physician missing medical school alumniOf');
   if (!refIds(physician.medicalSpecialty).includes(aestheticMedicineSpecialtyId())) fail('physician missing aesthetic specialty reference');
-  if (refId(physician.areaServed) !== kermanshahPlaceId()) fail('physician areaServed must be Kermanshah place');
+  if (!refIds(physician.areaServed).includes(kermanshahPlaceId())) fail('physician areaServed must include Kermanshah place');
 }
 
 if (clinic) {
-  if (refId(clinic.areaServed) !== kermanshahPlaceId()) fail('clinic areaServed must be Kermanshah place');
+  if (!refIds(clinic.areaServed).includes(kermanshahPlaceId())) fail('clinic areaServed must include Kermanshah place');
 }
 
 if (dataset) {
   if (refId(dataset.includedInDataCatalog) !== dataCatalogId()) fail('dataset must be included in DataCatalog');
-  if (refId(dataset.spatialCoverage) !== kermanshahPlaceId()) fail('dataset spatialCoverage must point to Kermanshah place');
+  if (!refIds(dataset.spatialCoverage).includes(kermanshahPlaceId())) fail('dataset spatialCoverage must include Kermanshah place');
   if (dataset.isAccessibleForFree !== true) fail('dataset must mark isAccessibleForFree true');
   const mainEntityIds = refIds(dataset.mainEntity);
   for (const requiredEntity of [absoluteUrl('/#dr-saeed-ghezelbash'), absoluteUrl('/#physician'), absoluteUrl('/#clinic'), absoluteUrl('/kg/aesthetic-scope#term-set')]) {
@@ -175,7 +175,7 @@ for (const service of services) {
   const pageNode = byId.get(`${absoluteUrl(`/${service.slug}/`)}#webpage`);
   if (!serviceNode) fail(`missing service node: ${service.slug}`);
   if (!pageNode) fail(`missing service page node: ${service.slug}`);
-  if (serviceNode && refId(serviceNode.serviceArea) !== kermanshahPlaceId()) fail(`service missing Kermanshah serviceArea: ${service.slug}`);
+  if (serviceNode && !refIds(serviceNode.serviceArea).includes(kermanshahPlaceId())) fail(`service missing Kermanshah serviceArea: ${service.slug}`);
   if (serviceNode && refId(serviceNode.availableAtOrFrom) !== absoluteUrl('/#clinic')) fail(`service missing clinic availableAtOrFrom: ${service.slug}`);
   if (pageNode && !typeList(pageNode).includes('WebPage')) fail(`service page node must be WebPage: ${service.slug}`);
   if (pageNode && refId(pageNode.mainEntity) !== absoluteUrl(`/${service.slug}/#service`)) fail(`service page mainEntity mismatch: ${service.slug}`);
