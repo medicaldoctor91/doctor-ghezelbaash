@@ -66,9 +66,10 @@ if (website && refId(website.image) !== graphDoctorImageId()) fail('website imag
 
 if (dataset) {
   const hasPartText = JSON.stringify(dataset.hasPart || []);
+  const spatialCoverageId = refId(dataset.spatialCoverage);
   if (!Array.isArray(dataset.distribution) || dataset.distribution.length < 20) fail('dataset missing machine asset DataDownload distribution');
   if (refId(dataset.isBasedOn) !== absoluteUrl('/graph-ghezelbaash-final.jsonld')) fail('dataset must be based on global graph');
-  if (dataset.spatialCoverage?.name !== 'Kermanshah') fail('dataset missing Kermanshah spatialCoverage');
+  if (dataset.spatialCoverage?.name !== 'Kermanshah' && spatialCoverageId !== absoluteUrl('/kg/place#kermanshah')) fail('dataset missing Kermanshah spatialCoverage');
   if (!Array.isArray(dataset.keywords) || !dataset.keywords.includes('aesthetic medicine Kermanshah')) fail('dataset missing expanded keywords');
   if (!dataset.keywords.includes('dataset manifest')) fail('dataset missing dataset manifest keyword');
   if (!dataset.keywords.includes('publishing crosswalk')) fail('dataset missing publishing crosswalk keyword');
