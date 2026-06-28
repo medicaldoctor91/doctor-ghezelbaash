@@ -57,6 +57,7 @@ const required = [
   'profile-links.json',
   'service-taxonomy.json',
   'aesthetic_medicine_knowledge_kermanshah_fa.json',
+  'aesthetic-medicine-dataset.html',
   'local-competitive-landscape.json',
   'graph-ghezelbaash-final.jsonld',
   'dataset-manifest.jsonld',
@@ -104,6 +105,10 @@ mustContain('sameas.json', 'ghezelbaash.sameas.astro.v3.source_contract');
 mustContain('sameas.json', 'Q140287622');
 mustContain('sameas.json', 'Q140288589');
 mustContain('sameas.json', 'Q140304972');
+mustContain('aesthetic-medicine-dataset.html', 'Dataset reference');
+mustContain('aesthetic-medicine-dataset.html', '/aesthetic_medicine_knowledge_kermanshah_fa.json');
+mustContain('aesthetic-medicine-dataset.html', '/local-competitive-landscape.json');
+mustContain('aesthetic-medicine-dataset.html', '/graph-ghezelbaash-final.jsonld');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'ghezelbaash.aesthetic_knowledge.astro.v2.generated');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'canonicalIdentity');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'servicePillars');
