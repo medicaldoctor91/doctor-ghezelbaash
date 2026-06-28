@@ -21,7 +21,7 @@ const personPages = defineCollection({
     description: z.string(),
     canonicalPath: z.string(),
     personName: z.string(),
-    schemaTargets: z.array(z.string()).default(['ProfilePage', 'Person', 'Physician', 'BreadcrumbList']),
+    schemaTargets: z.array(z.string()).default(['ProfilePage', 'Person', 'BreadcrumbList']),
     draft: z.boolean().default(false),
   }),
 });
