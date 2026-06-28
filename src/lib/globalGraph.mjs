@@ -19,6 +19,10 @@ import {
   buildPrimaryGraphCompletionNodes
 } from './primaryGraphCompletion.mjs';
 import {
+  applyPrimaryGraphPageClusters,
+  buildPrimaryGraphPageClusterNodes
+} from './primaryGraphPageClusters.mjs';
+import {
   applyPrimaryGraphRelations,
   buildPrimaryGraphRelationNodes
 } from './primaryGraphRelations.mjs';
@@ -152,6 +156,7 @@ export function buildGlobalGraph() {
     ...buildSchemaPropertyExpansionNodes(),
     ...buildPrimaryGraphCompletionNodes(),
     ...buildPrimaryGraphRelationNodes(),
+    ...buildPrimaryGraphPageClusterNodes(),
     buildResearchCollectionEntity(),
     ...buildScholarlyArticleEntities()
   ]);
@@ -161,6 +166,7 @@ export function buildGlobalGraph() {
   applySchemaPropertyExpansion(nodes);
   applyPrimaryGraphCompletion(nodes);
   applyPrimaryGraphRelations(nodes);
+  applyPrimaryGraphPageClusters(nodes);
 
   return {
     ...baseGraph,
