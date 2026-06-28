@@ -1,6 +1,7 @@
 import { site, absoluteUrl } from '../data/site.mjs';
 import { services } from '../data/services.mjs';
 import { serviceTaxonomy } from '../data/serviceTaxonomy.mjs';
+import { aestheticScopePolicy, aestheticServiceConcepts } from '../data/aestheticScope.mjs';
 
 const contentBlocksRequired = [
   'summary_answer',
@@ -34,23 +35,21 @@ const machineSupportAssets = [
   '/regulatory.json',
   '/authority-signals.json',
   '/service-taxonomy.json',
+  '/aesthetic_medicine_knowledge_kermanshah_fa.json',
   '/entity-hardening-index.json'
 ];
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.service_architecture.astro.v2.entity_hardened',
-    dateModified: '2026-06-27',
+    schema: 'ghezelbaash.service_architecture.astro.v3.broad_scope',
+    dateModified: '2026-06-28',
     canonicalWebsite: site.canonicalBase + '/',
-    stage: 'production-indexable-services-entity-hardened',
+    stage: 'production-indexable-services-broad-scope-graph',
     indexingPolicy: {
       servicePages: 'index,follow',
       includeServicePagesInSitemap: true,
       keepFiveParentServicePages: true,
-      doNotCreateStandaloneSupportingConceptPagesYet: [
-        'central-lip-lift-kermanshah',
-        'fat-injection-kermanshah'
-      ]
+      broadScopeConceptsInSchemaGraph: true
     },
     intentPolicy: {
       preserveLocalCommercialIntent: true,
@@ -58,11 +57,17 @@ export function GET() {
       avoidUnsupportedRankingClaims: true,
       connectServiceIntentToPersonClinicLocationAndEvidence: true
     },
+    broadScopePolicy: aestheticScopePolicy,
     contentBlocksRequired,
     validationChecklist,
     machineSupportAssets: machineSupportAssets.map((path) => absoluteUrl(path)),
+    broadAestheticConcepts: aestheticServiceConcepts.map((concept) => ({
+      ...concept,
+      node: absoluteUrl(`/kg/aesthetic-scope#${concept.key}`)
+    })),
     parentServicePages: services.map((service) => {
       const taxonomy = serviceTaxonomy[service.key] || null;
+      const scopeConcepts = aestheticServiceConcepts.filter((concept) => concept.pillar === service.key);
       return {
         key: service.key,
         slug: service.slug,
@@ -81,7 +86,7 @@ export function GET() {
         bestIntentTitle: service.bestIntentTitle,
         intentExamples: service.intentExamples,
         taxonomy,
-        supportingIntents: taxonomy ? taxonomy.childIntents : [],
+        supportingIntents: [...(taxonomy ? taxonomy.childIntents : []), ...scopeConcepts.map((concept) => concept.nameFa), ...scopeConcepts.map((concept) => concept.nameEn)],
         serviceType: taxonomy ? taxonomy.serviceType : service.title,
         requiredPageBlocks: contentBlocksRequired,
         validationChecklist,
