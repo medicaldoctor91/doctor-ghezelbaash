@@ -23,10 +23,12 @@ const removedLegacyRootAssets = [
   'llms.txt',
   'services.json',
   'sitemap.xml',
+  'robots.txt',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld',
   'google-maps-review-evidence.html',
-  'aesthetic_medicine_knowledge_kermanshah_fa.json'
+  'aesthetic_medicine_knowledge_kermanshah_fa.json',
+  'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json'
 ];
 
 for (const file of removedLegacyRootAssets) {
@@ -46,9 +48,11 @@ for (const file of [
   'llms.txt',
   'services.json',
   'sitemap.xml',
+  'robots.txt',
   'google-maps-review-evidence.html',
   'nap.csv',
-  'aesthetic_medicine_knowledge_kermanshah_fa.json'
+  'aesthetic_medicine_knowledge_kermanshah_fa.json',
+  'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json'
 ]) {
   if (preparePublic.includes(`'${file}'`) || preparePublic.includes(`"${file}"`)) {
     fail(`generated or deprecated asset must not be copied by prepare-public: ${file}`);
