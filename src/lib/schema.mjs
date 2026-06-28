@@ -5,6 +5,7 @@ import { publicDataset } from '../data/dataset.mjs';
 import { regulatoryIdentity } from '../data/regulatory.mjs';
 import { researchProfile } from '../data/research.mjs';
 import { services } from '../data/services.mjs';
+import { aestheticServiceConcepts } from '../data/aestheticScope.mjs';
 import { authoritySignals } from '../data/authoritySignals.mjs';
 import { breadcrumbsForPath } from './routes.mjs';
 import {
@@ -25,6 +26,18 @@ function normalizedPath(path = '/') {
 function serviceForPath(path = '/') {
   const normalized = normalizedPath(path);
   return services.find((service) => normalized === `/${service.slug}/`);
+}
+
+function serviceByKey(key) {
+  return services.find((service) => service.key === key);
+}
+
+function conceptId(concept) {
+  return absoluteUrl(`/kg/aesthetic-scope#${concept.key}`);
+}
+
+function conceptReferences() {
+  return aestheticServiceConcepts.map((concept) => ({ '@id': conceptId(concept) }));
 }
 
 function buildPostalAddress() {
@@ -92,12 +105,13 @@ function aboutForPath(canonicalPath = '/') {
   const base = [
     { '@id': absoluteUrl('/#clinic') },
     { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
-    { '@id': absoluteUrl('/#physician') }
+    { '@id': absoluteUrl('/#physician') },
+    { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') }
   ];
 
   if (service) return [{ '@id': `${absoluteUrl(`/${service.slug}/`)}#service` }, ...base];
-  if (normalized === normalizedPath(site.pages.person)) return [{ '@id': absoluteUrl('/#dr-saeed-ghezelbash') }, { '@id': absoluteUrl('/#physician') }];
-  if (normalized === normalizedPath(site.pages.clinic)) return [{ '@id': absoluteUrl('/#clinic') }, { '@id': absoluteUrl('/#physician') }];
+  if (normalized === normalizedPath(site.pages.person)) return [{ '@id': absoluteUrl('/#dr-saeed-ghezelbash') }, { '@id': absoluteUrl('/#physician') }, { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') }];
+  if (normalized === normalizedPath(site.pages.clinic)) return [{ '@id': absoluteUrl('/#clinic') }, { '@id': absoluteUrl('/#physician') }, { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') }];
   return base;
 }
 
@@ -154,7 +168,8 @@ export function buildWebsiteEntity() {
     about: [
       { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
       { '@id': absoluteUrl('/#physician') },
-      { '@id': absoluteUrl('/#clinic') }
+      { '@id': absoluteUrl('/#clinic') },
+      { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') }
     ]
   };
 }
@@ -211,7 +226,10 @@ export function buildPersonEntity() {
     worksFor: { '@id': absoluteUrl('/#clinic') },
     affiliation: { '@id': absoluteUrl('/#clinic') },
     workLocation: { '@id': absoluteUrl('/#clinic') },
-    knowsAbout: services.map((service) => service.shortTitle || service.title),
+    knowsAbout: [
+      ...services.map((service) => service.shortTitle || service.title),
+      ...conceptReferences()
+    ],
     subjectOf: getSubjectOfForEntity(authoritySignals, 'person')
   };
 }
@@ -240,6 +258,7 @@ export function buildPhysicianEntity() {
     containedInPlace: { '@id': absoluteUrl('/#clinic') },
     availableService: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) })),
     makesOffer: services.map((service) => ({ '@id': absoluteUrl(`/${service.slug}/#service`) })),
+    knowsAbout: conceptReferences(),
     subjectOf: getSubjectOfForEntity(authoritySignals, 'person')
   };
 }
@@ -311,16 +330,54 @@ export function buildKnowledgeGraphDataset() {
   };
 }
 
+export function buildAestheticScopeTermSet() {
+  return {
+    '@type': 'DefinedTermSet',
+    '@id': absoluteUrl('/kg/aesthetic-scope#term-set'),
+    name: 'Aesthetic medicine service and knowledge scope for Dr. Saeed Ghezelbash',
+    inLanguage: ['fa-IR', 'en'],
+    about: [
+      { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+      { '@id': absoluteUrl('/#physician') },
+      { '@id': absoluteUrl('/#clinic') }
+    ],
+    hasDefinedTerm: conceptReferences()
+  };
+}
+
+export function buildAestheticScopeTerms() {
+  return aestheticServiceConcepts.map((concept) => {
+    const parentService = serviceByKey(concept.pillar);
+    return {
+      '@type': 'DefinedTerm',
+      '@id': conceptId(concept),
+      name: concept.nameFa,
+      alternateName: [concept.nameEn, concept.key],
+      termCode: concept.key,
+      inDefinedTermSet: { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') },
+      isPartOf: { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') },
+      about: [
+        { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
+        { '@id': absoluteUrl('/#physician') },
+        { '@id': absoluteUrl('/#clinic') }
+      ],
+      subjectOf: parentService ? { '@id': `${absoluteUrl(`/${parentService.slug}/`)}#webpage` } : { '@id': absoluteUrl('/services/#webpage') }
+    };
+  });
+}
+
 export function buildServiceSchema({ service, canonicalPath = `/${service.slug}/` } = {}) {
   const canonical = absoluteUrl(canonicalPath);
+  const childConcepts = aestheticServiceConcepts.filter((concept) => concept.pillar === service.key);
 
   return {
     '@type': 'Service',
     '@id': `${canonical}#service`,
     name: service.title,
-    alternateName: [service.shortTitle, ...(service.intentExamples || [])].filter(Boolean),
+    alternateName: [service.shortTitle, ...(service.intentExamples || []), ...childConcepts.map((concept) => concept.nameFa), ...childConcepts.map((concept) => concept.nameEn)].filter(Boolean),
     description: service.description,
     serviceType: service.shortTitle || service.title,
+    category: childConcepts.map((concept) => ({ '@id': conceptId(concept) })),
     url: canonical,
     provider: { '@id': absoluteUrl('/#clinic') },
     areaServed: {
@@ -363,6 +420,8 @@ export function buildGlobalGraph() {
       buildPhysicianEntity(),
       buildClinicEntity(),
       buildKnowledgeGraphDataset(),
+      buildAestheticScopeTermSet(),
+      ...buildAestheticScopeTerms(),
       ...services.map((service) => buildServiceSchema({ service }))
     ]
   };
