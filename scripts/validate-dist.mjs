@@ -59,6 +59,7 @@ const required = [
   'graph-ghezelbaash-final.jsonld',
   'dataset-manifest.jsonld',
   'publishing-crosswalk.jsonld',
+  'nap.csv',
   'dr-saeed-ghezelbash/index.html',
   'dr-saeed-ghezelbash-aesthetic-clinic/index.html',
   'robots.txt',
@@ -125,6 +126,10 @@ mustContain('location.json', 'ساختمان ویستا');
 mustContain('location.json', 'mapProfiles');
 mustContain('location.json', '6714657412');
 mustContain('location.json', 'googleMapsReputation');
+mustContain('nap.csv', 'postal_code');
+mustContain('nap.csv', '6714657412');
+mustContain('nap.csv', 'google_maps_place_id');
+mustContain('nap.csv', 'ChIJBTOYDOTt-j8RD-7mAPy6Zas');
 mustContain('research.json', '0009-0001-9346-8475');
 mustContain('research.json', '34574943');
 mustContain('dataset.json', '10.5281/zenodo.18765169');
