@@ -5,6 +5,10 @@ import {
   buildAestheticScopeTerms
 } from './aestheticScopeGraph.mjs';
 import {
+  applyEntityCrosswalk,
+  buildEntityCrosswalkGraphNodes
+} from './entityCrosswalk.mjs';
+import {
   buildOfficialOfferCatalogEntity,
   buildOfficialOfferEntities,
   officialOfferCatalogId
@@ -103,11 +107,13 @@ export function buildGlobalGraph() {
     ...buildAestheticScopeTerms(),
     buildOfficialOfferCatalogEntity(),
     ...buildOfficialOfferEntities(),
+    ...buildEntityCrosswalkGraphNodes(),
     buildResearchCollectionEntity(),
     ...buildScholarlyArticleEntities()
   ]);
 
   attachOfficialOfferCatalog(nodes);
+  applyEntityCrosswalk(nodes);
 
   return {
     ...baseGraph,
