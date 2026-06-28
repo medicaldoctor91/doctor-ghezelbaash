@@ -8,7 +8,7 @@ import { machineAssetUrlMap } from '../lib/machineAssets.mjs';
 
 export function GET() {
   const body = {
-    schema: 'ghezelbaash.local_competitive_landscape.astro.v2.machine_asset_projection',
+    schema: 'ghezelbaash.local_competitive_landscape.astro.v1.generated',
     dateModified: '2026-06-28',
     market: {
       city: location.addressLocality,
