@@ -235,8 +235,12 @@ export const authoritySignals = [
     type: 'mediaInterview',
     entity: 'personAndClinic',
     publisher: 'IranMedLabs',
+    title: 'دکتر سعید قزلباش؛ دروغ بزرگ جوانسازی و فریب زیباجویان',
     url: 'https://iranmedlabs.com/skin-and-hair-and-beauty/120049/',
     identifier: '120049',
+    datePublished: '2026-06-27',
+    language: 'fa-IR',
+    about: ['پزشکی زیبایی', 'روانشناسی زیباجو', 'جوانسازی', 'انتخاب بیمار', 'بوتاکس', 'فیلر', 'مزوژل'],
     useAs: ['subjectOf', 'authoritySignal', 'interviewEvidence']
   },
   {
@@ -288,7 +292,12 @@ export const authoritySignals = [
     type: 'mediaMention',
     entity: 'clinicAndServices',
     publisher: 'PezeshkYab',
+    title: 'کلینیک زیبایی دکتر سعید قزلباش کرمانشاه',
     url: 'https://pezeshk-yab.com/blog/dr-saeed-qezlbash-kermanshah/',
+    identifier: 'dr-saeed-qezlbash-kermanshah',
+    datePublished: '2025-06-30',
+    language: 'fa-IR',
+    about: ['کلینیک زیبایی در کرمانشاه', 'بوتاکس', 'فیلر', 'لیفت صورت', 'زاویه سازی فک و چانه', 'مزوتراپی مو', 'سابسیژن', 'PRP'],
     useAs: ['subjectOf', 'authoritySignal', 'serviceEvidence']
   },
   {
