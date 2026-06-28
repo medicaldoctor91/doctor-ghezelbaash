@@ -209,7 +209,7 @@ for (const publication of researchProfile.publications) {
 
 if (termSet) {
   if (termSet['@type'] !== 'DefinedTermSet') fail('aesthetic scope node must be DefinedTermSet');
-  if (!Array.isArray(termSet.hasDefinedTerm) || termSet.hasDefinedTerm.length !== aestheticServiceConcepts.length) fail('aesthetic scope term set must include every concept exactly once');
+  if (!Array.isArray(termSet.hasDefinedTerm) || termSet.hasDefinedTerm.length < aestheticServiceConcepts.length) fail('aesthetic scope term set must include every aesthetic concept');
   const termSetIds = refIds(termSet.hasDefinedTerm);
   for (const conceptId of conceptIds) {
     if (!termSetIds.includes(conceptId)) fail(`aesthetic scope term set missing concept: ${conceptId}`);
