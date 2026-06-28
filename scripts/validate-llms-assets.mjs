@@ -19,6 +19,7 @@ if (!fs.existsSync(file)) {
     '/page-context.json',
     '/link-graph.json',
     '/graph-ghezelbaash-final.jsonld',
+    '/research-graph.jsonld',
     '/brand-kb.ghezelbaash.ai-public.json',
     '/ai-discovery-index.json',
     '/dataset-manifest.jsonld',
