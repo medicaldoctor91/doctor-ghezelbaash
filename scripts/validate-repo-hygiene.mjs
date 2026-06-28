@@ -45,7 +45,8 @@ for (const file of [
   'llms.txt',
   'services.json',
   'sitemap.xml',
-  'google-maps-review-evidence.html'
+  'google-maps-review-evidence.html',
+  'nap.csv'
 ]) {
   if (preparePublic.includes(`'${file}'`) || preparePublic.includes(`"${file}"`)) {
     fail(`generated or deprecated asset must not be copied by prepare-public: ${file}`);
