@@ -7,8 +7,7 @@ import {
 import {
   buildOfficialOfferCatalogEntity,
   buildOfficialOfferEntities,
-  officialOfferCatalogId,
-  officialOfferId
+  officialOfferCatalogId
 } from './officialOfferGraph.mjs';
 import {
   buildResearchCollectionEntity,
