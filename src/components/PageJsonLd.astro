@@ -4,6 +4,7 @@ import {
   buildFaqSchema,
   buildPageGraph,
   buildPersonEntity,
+  buildPhysicianEntity,
   buildServiceItemList,
   buildServiceSchema
 } from '../lib/schema.mjs';
@@ -22,11 +23,11 @@ const route = getRouteByPath(canonicalPath);
 const routeGraph = [];
 
 if (route.kind === 'person') {
-  routeGraph.push(buildPersonEntity());
+  routeGraph.push(buildPersonEntity(), buildPhysicianEntity());
 }
 
 if (route.kind === 'clinic') {
-  routeGraph.push(buildClinicEntity(), buildPersonEntity());
+  routeGraph.push(buildClinicEntity(), buildPhysicianEntity());
 }
 
 if (route.kind === 'services-hub') {
