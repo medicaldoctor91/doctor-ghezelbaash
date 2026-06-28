@@ -1,3 +1,4 @@
+import { researchProfile } from '../data/research.mjs';
 import { absoluteUrl } from '../data/site.mjs';
 import { buildGlobalGraph as buildSchemaGlobalGraph } from './schema.mjs';
 import {
@@ -45,6 +46,34 @@ function appendUniqueReferences(currentValue, additions = []) {
   return merged;
 }
 
+function orcidIdentifier() {
+  return {
+    '@type': 'PropertyValue',
+    propertyID: 'ORCID',
+    value: researchProfile.orcid.replace('https://orcid.org/', ''),
+    url: researchProfile.orcid
+  };
+}
+
+function ncbiIdentifier() {
+  return {
+    '@type': 'PropertyValue',
+    propertyID: 'NCBI Bibliography',
+    value: 'saeed.ghezelbash.1',
+    url: researchProfile.bibliographyUrl
+  };
+}
+
+function appendResearchIdentity(entity) {
+  if (!entity) return;
+  entity.sameAs = appendUniqueReferences(entity.sameAs, [researchProfile.orcid, researchProfile.bibliographyUrl]);
+  entity.identifier = appendUniqueReferences(entity.identifier, [orcidIdentifier(), ncbiIdentifier()]);
+  entity.subjectOf = appendUniqueReferences(entity.subjectOf, [
+    { '@id': absoluteUrl('/research/#collection') },
+    ...scholarlyArticleReferences()
+  ]);
+}
+
 function mergeNodeList(nodes, additions) {
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
 
@@ -88,13 +117,8 @@ export function buildGlobalGraph() {
   const physician = byId.get(absoluteUrl('/#physician'));
   const dataset = byId.get(absoluteUrl('/kg/#dataset'));
 
-  if (person) {
-    person.subjectOf = appendUniqueReferences(person.subjectOf, researchReferences);
-  }
-
-  if (physician) {
-    physician.subjectOf = appendUniqueReferences(physician.subjectOf, researchReferences);
-  }
+  appendResearchIdentity(person);
+  appendResearchIdentity(physician);
 
   if (dataset) {
     dataset.citation = appendUniqueReferences(dataset.citation, researchReferences);
@@ -102,7 +126,12 @@ export function buildGlobalGraph() {
       { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
       { '@id': absoluteUrl('/#physician') },
       { '@id': absoluteUrl('/#clinic') },
-      { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') }
+      { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') },
+      { '@id': absoluteUrl('/research/#collection') }
+    ]);
+    dataset.mentions = appendUniqueReferences(dataset.mentions, [
+      { '@id': absoluteUrl('/research/#collection') },
+      ...researchReferences
     ]);
   }
 
