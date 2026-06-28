@@ -100,7 +100,24 @@ if (!fs.existsSync(file)) {
     'https://drnext.ir/doctor/27bdey',
     'https://nobat.net/doctor/62116',
     'https://tabibino.com/doctor/265252/',
-    'https://gadgetnews.net/927682/beauty-services-kermanshah-dr-saeed-ghazelbash/'
+    'https://gadgetnews.net/927682/beauty-services-kermanshah-dr-saeed-ghazelbash/',
+    '/kg/policy#primary-graph-final-layer',
+    '/kg/expertise#term-set',
+    '/kg/evidence#identity-sameas-list',
+    '/kg/evidence#medical-directory-list',
+    '/kg/evidence#local-map-list',
+    '/kg/evidence#research-authority-list',
+    '/kg/evidence#media-coverage-list',
+    '/kg/occupation#aesthetic-physician',
+    '/kg/occupation#medical-researcher',
+    '/kg/audience#aesthetic-consultation-kermanshah',
+    '/kg/place#kermanshah-aesthetic-medicine-market',
+    'FAQPage',
+    'Question',
+    'acceptedAnswer',
+    'disambiguatingDescription',
+    'eligibleRegion',
+    'seller'
   ]) {
     if (!text.includes(needle)) fail(`primary graph dist missing ${needle}`);
   }
