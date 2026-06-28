@@ -10,7 +10,6 @@ const filesToExposeAtWebRoot = [
   'robots.txt',
   'logo.png',
   'doctor.jpg',
-  'aesthetic_medicine_knowledge_kermanshah_fa.json',
   'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json',
   'aesthetic-medicine-dataset.html'
 ];
