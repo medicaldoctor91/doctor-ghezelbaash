@@ -1,34 +1,5 @@
 import fs from 'node:fs';
-
-const assets = [
-  ['primary', '/graph-ghezelbaash-final.jsonld', 'src/pages/graph-ghezelbaash-final.jsonld.js'],
-  ['thin', '/brand-kb.ghezelbaash.ai-public.json', 'src/pages/brand-kb.ghezelbaash.ai-public.json.js'],
-  ['thin', '/services.json', 'src/pages/services.json.js'],
-  ['thin', '/research.json', 'src/pages/research.json.js'],
-  ['thin', '/research-graph.jsonld', 'src/pages/research-graph.jsonld.js'],
-  ['thin', '/aesthetic_medicine_knowledge_kermanshah_fa.json', 'src/pages/aesthetic_medicine_knowledge_kermanshah_fa.json.js'],
-  ['thin', '/location.json', 'src/pages/location.json.js'],
-  ['export', '/nap.csv', 'src/pages/nap.csv.js'],
-  ['thin', '/sameas.json', 'src/pages/sameas.json.js'],
-  ['thin', '/authority-signals.json', 'src/pages/authority-signals.json.js'],
-  ['thin', '/regulatory.json', 'src/pages/regulatory.json.js'],
-  ['thin', '/profile-links.json', 'src/pages/profile-links.json.js'],
-  ['thin', '/service-taxonomy.json', 'src/pages/service-taxonomy.json.js'],
-  ['thin', '/dataset.json', 'src/pages/dataset.json.js'],
-  ['discovery', '/routes.json', 'src/pages/routes.json.js'],
-  ['discovery', '/page-context.json', 'src/pages/page-context.json.js'],
-  ['discovery', '/link-graph.json', 'src/pages/link-graph.json.js'],
-  ['discovery', '/seo-aeo-index.json', 'src/pages/seo-aeo-index.json.js'],
-  ['discovery', '/llms.txt', 'src/pages/llms.txt.js'],
-  ['discovery', '/robots.txt', 'src/pages/robots.txt.js'],
-  ['discovery', '/sitemap.xml', 'src/pages/sitemap.xml.js'],
-  ['audit', '/ai-discovery-index.json', 'src/pages/ai-discovery-index.json.js'],
-  ['audit', '/entity-hardening-index.json', 'src/pages/entity-hardening-index.json.js'],
-  ['audit', '/publishing-crosswalk.jsonld', 'src/pages/publishing-crosswalk.jsonld.js'],
-  ['audit', '/dataset-manifest.jsonld', 'src/pages/dataset-manifest.jsonld.js'],
-  ['audit', '/local-competitive-landscape.json', 'src/pages/local-competitive-landscape.json.js'],
-  ['landing', '/aesthetic-medicine-dataset.html', 'src/pages/aesthetic-medicine-dataset.html.js']
-];
+import { machineAssets } from '../src/lib/machineAssets.mjs';
 
 let failed = false;
 function fail(message) {
@@ -36,30 +7,72 @@ function fail(message) {
   failed = true;
 }
 
+const roleMap = {
+  'primary-graph': 'primary',
+  'thin-projection': 'thin',
+  export: 'export',
+  discovery: 'discovery',
+  'audit-thin-or-merge': 'audit'
+};
+
+const sourceByPath = {
+  '/graph-ghezelbaash-final.jsonld': 'src/pages/graph-ghezelbaash-final.jsonld.js',
+  '/brand-kb.ghezelbaash.ai-public.json': 'src/pages/brand-kb.ghezelbaash.ai-public.json.js',
+  '/services.json': 'src/pages/services.json.js',
+  '/research.json': 'src/pages/research.json.js',
+  '/research-graph.jsonld': 'src/pages/research-graph.jsonld.js',
+  '/aesthetic_medicine_knowledge_kermanshah_fa.json': 'src/pages/aesthetic_medicine_knowledge_kermanshah_fa.json.js',
+  '/location.json': 'src/pages/location.json.js',
+  '/nap.csv': 'src/pages/nap.csv.js',
+  '/sameas.json': 'src/pages/sameas.json.js',
+  '/authority-signals.json': 'src/pages/authority-signals.json.js',
+  '/regulatory.json': 'src/pages/regulatory.json.js',
+  '/profile-links.json': 'src/pages/profile-links.json.js',
+  '/service-taxonomy.json': 'src/pages/service-taxonomy.json.js',
+  '/dataset.json': 'src/pages/dataset.json.js',
+  '/routes.json': 'src/pages/routes.json.js',
+  '/page-context.json': 'src/pages/page-context.json.js',
+  '/link-graph.json': 'src/pages/link-graph.json.js',
+  '/seo-aeo-index.json': 'src/pages/seo-aeo-index.json.js',
+  '/llms.txt': 'src/pages/llms.txt.js',
+  '/robots.txt': 'src/pages/robots.txt.js',
+  '/sitemap.xml': 'src/pages/sitemap.xml.js',
+  '/ai-discovery-index.json': 'src/pages/ai-discovery-index.json.js',
+  '/entity-hardening-index.json': 'src/pages/entity-hardening-index.json.js',
+  '/publishing-crosswalk.jsonld': 'src/pages/publishing-crosswalk.jsonld.js',
+  '/dataset-manifest.jsonld': 'src/pages/dataset-manifest.jsonld.js',
+  '/local-competitive-landscape.json': 'src/pages/local-competitive-landscape.json.js',
+  '/aesthetic-medicine-dataset.html': 'src/pages/aesthetic-medicine-dataset.html.js'
+};
+
 const seenPaths = new Set();
 const seenSources = new Set();
 
-for (const [role, publicPath, sourcePath] of assets) {
-  if (!['primary', 'thin', 'export', 'discovery', 'audit', 'landing'].includes(role)) fail(`unknown role: ${role}`);
-  if (seenPaths.has(publicPath)) fail(`duplicate public machine asset path: ${publicPath}`);
-  if (seenSources.has(sourcePath)) fail(`duplicate machine asset source: ${sourcePath}`);
-  seenPaths.add(publicPath);
-  seenSources.add(sourcePath);
-  if (!fs.existsSync(sourcePath)) fail(`missing source for machine asset ${publicPath}: ${sourcePath}`);
+for (const asset of machineAssets) {
+  const role = roleMap[asset.role];
+  const sourcePath = sourceByPath[asset.path];
+
+  if (!role) fail(`unknown machine asset role: ${asset.role} for ${asset.path}`);
+  if (!sourcePath) fail(`machine asset missing source mapping: ${asset.path}`);
+  if (seenPaths.has(asset.path)) fail(`duplicate public machine asset path: ${asset.path}`);
+  if (sourcePath && seenSources.has(sourcePath)) fail(`duplicate machine asset source: ${sourcePath}`);
+  seenPaths.add(asset.path);
+  if (sourcePath) seenSources.add(sourcePath);
+  if (sourcePath && !fs.existsSync(sourcePath)) fail(`missing source for machine asset ${asset.path}: ${sourcePath}`);
 }
 
-const primaryAssets = assets.filter(([role]) => role === 'primary');
-if (primaryAssets.length !== 1 || primaryAssets[0][1] !== '/graph-ghezelbaash-final.jsonld') {
+const primaryAssets = machineAssets.filter((asset) => asset.role === 'primary-graph');
+if (primaryAssets.length !== 1 || primaryAssets[0].path !== '/graph-ghezelbaash-final.jsonld') {
   fail('there must be exactly one primary graph asset: /graph-ghezelbaash-final.jsonld');
 }
 
-const auditAssets = assets.filter(([role]) => role === 'audit');
+const auditAssets = machineAssets.filter((asset) => asset.role === 'audit-thin-or-merge');
 for (const requiredAuditPath of ['/ai-discovery-index.json', '/entity-hardening-index.json', '/publishing-crosswalk.jsonld', '/dataset-manifest.jsonld', '/local-competitive-landscape.json']) {
-  if (!auditAssets.some(([, publicPath]) => publicPath === requiredAuditPath)) fail(`missing audit classification for ${requiredAuditPath}`);
+  if (!auditAssets.some((asset) => asset.path === requiredAuditPath)) fail(`missing audit classification for ${requiredAuditPath}`);
 }
 
 const graphEndpoint = fs.readFileSync('src/pages/graph-ghezelbaash-final.jsonld.js', 'utf8');
-if (!graphEndpoint.includes("../lib/globalGraph.mjs")) fail('global graph endpoint must use src/lib/globalGraph.mjs');
+if (!graphEndpoint.includes('../lib/globalGraph.mjs')) fail('global graph endpoint must use src/lib/globalGraph.mjs');
 
 const researchEndpoint = fs.readFileSync('src/pages/research-graph.jsonld.js', 'utf8');
 if (!researchEndpoint.includes('../lib/researchGraph.mjs')) fail('research graph endpoint must stay a thin projection from src/lib/researchGraph.mjs');
