@@ -9,6 +9,7 @@ export const machineAssets = [
   { name: 'Profile links', path: '/profile-links.json', format: 'application/json', role: 'thin-projection' },
   { name: 'Location profile', path: '/location.json', format: 'application/json', role: 'thin-projection' },
   { name: 'Regulatory identity', path: '/regulatory.json', format: 'application/json', role: 'thin-projection' },
+  { name: 'Dataset summary', path: '/dataset.json', format: 'application/json', role: 'thin-projection' },
   { name: 'Research profile', path: '/research.json', format: 'application/json', role: 'thin-projection' },
   { name: 'Research graph', path: '/research-graph.jsonld', format: 'application/ld+json', role: 'thin-projection' },
   { name: 'Services intent map', path: '/services.json', format: 'application/json', role: 'thin-projection' },
@@ -18,11 +19,15 @@ export const machineAssets = [
   { name: 'Page context', path: '/page-context.json', format: 'application/json', role: 'discovery' },
   { name: 'Internal link graph', path: '/link-graph.json', format: 'application/json', role: 'discovery' },
   { name: 'SEO AEO index', path: '/seo-aeo-index.json', format: 'application/json', role: 'discovery' },
+  { name: 'LLM discovery text', path: '/llms.txt', format: 'text/plain', role: 'discovery' },
+  { name: 'Robots policy', path: '/robots.txt', format: 'text/plain', role: 'discovery' },
+  { name: 'XML sitemap', path: '/sitemap.xml', format: 'application/xml', role: 'discovery' },
   { name: 'NAP CSV', path: '/nap.csv', format: 'text/csv', role: 'export' },
   { name: 'Entity hardening index', path: '/entity-hardening-index.json', format: 'application/json', role: 'audit-thin-or-merge' },
   { name: 'Publishing crosswalk', path: '/publishing-crosswalk.jsonld', format: 'application/ld+json', role: 'audit-thin-or-merge' },
   { name: 'Dataset manifest', path: '/dataset-manifest.jsonld', format: 'application/ld+json', role: 'audit-thin-or-merge' },
-  { name: 'Local competitive landscape', path: '/local-competitive-landscape.json', format: 'application/json', role: 'audit-thin-or-merge' }
+  { name: 'Local competitive landscape', path: '/local-competitive-landscape.json', format: 'application/json', role: 'audit-thin-or-merge' },
+  { name: 'Dataset landing page', path: '/aesthetic-medicine-dataset.html', format: 'text/html', role: 'landing' }
 ];
 
 export function machineAssetDataDownloads() {
