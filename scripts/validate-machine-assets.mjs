@@ -12,6 +12,7 @@ const roleMap = {
   'thin-projection': 'thin',
   export: 'export',
   discovery: 'discovery',
+  landing: 'landing',
   'audit-thin-or-merge': 'audit'
 };
 
