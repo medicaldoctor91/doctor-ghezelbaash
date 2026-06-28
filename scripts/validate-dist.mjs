@@ -33,6 +33,14 @@ function mustNotContain(relPath, needle) {
   return text;
 }
 
+function mustNotExist(relPath) {
+  const file = path.join(dist, relPath);
+  if (fs.existsSync(file)) {
+    console.error(`dist/${relPath} must not exist`);
+    failed = true;
+  }
+}
+
 if (!fs.existsSync(path.join(root, 'package-lock.json'))) {
   console.error('missing package-lock.json');
   failed = true;
@@ -61,8 +69,6 @@ const required = [
   'aesthetic-medicine-dataset.html',
   'local-competitive-landscape.json',
   'graph-ghezelbaash-final.jsonld',
-  'dataset-manifest.jsonld',
-  'publishing-crosswalk.jsonld',
   'nap.csv',
   'dr-saeed-ghezelbash/index.html',
   'dr-saeed-ghezelbash-aesthetic-clinic/index.html',
@@ -71,6 +77,8 @@ const required = [
 ];
 
 for (const file of required) read(file);
+mustNotExist('dataset-manifest.jsonld');
+mustNotExist('publishing-crosswalk.jsonld');
 
 for (const slug of [
   'botox-kermanshah',
@@ -97,6 +105,9 @@ mustContain('llms.txt', '/seo-aeo-index.json');
 mustContain('llms.txt', '/authority-signals.json');
 mustContain('llms.txt', '/research-graph.jsonld');
 mustContain('llms.txt', '/local-competitive-landscape.json');
+mustContain('llms.txt', 'JSON-LD consolidation policy');
+mustNotContain('llms.txt', '/dataset-manifest.jsonld');
+mustNotContain('llms.txt', '/publishing-crosswalk.jsonld');
 mustContain('routes.json', 'ghezelbaash.routes.astro.v1');
 mustContain('routes.json', 'services-hub');
 mustContain('routes.json', 'service');
@@ -196,8 +207,12 @@ mustContain('graph-ghezelbaash-final.jsonld', 'isPartOf');
 mustContain('graph-ghezelbaash-final.jsonld', 'hasMap');
 mustContain('graph-ghezelbaash-final.jsonld', 'subjectOf');
 mustContain('graph-ghezelbaash-final.jsonld', 'identifier');
-mustContain('dataset-manifest.jsonld', '2026-06-28-website-first-source-contract');
-mustContain('publishing-crosswalk.jsonld', 'generated_website_endpoints');
+mustContain('graph-ghezelbaash-final.jsonld', 'dataset manifest');
+mustContain('graph-ghezelbaash-final.jsonld', 'publishing crosswalk');
+mustContain('graph-ghezelbaash-final.jsonld', 'Repository context');
+mustContain('graph-ghezelbaash-final.jsonld', 'External archived DOI record');
+mustContain('graph-ghezelbaash-final.jsonld', 'External dataset mirror');
+mustContain('graph-ghezelbaash-final.jsonld', 'jsonLdConsolidationPolicy');
 mustContain('services.json', 'ghezelbaash.service_architecture.astro.v4.aesthetic_scope_builder');
 mustContain('services.json', 'broadAestheticConcepts');
 mustContain('services.json', 'broadAestheticConceptsByCategory');
