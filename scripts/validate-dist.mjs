@@ -60,7 +60,6 @@ const required = [
   'regulatory.json',
   'location.json',
   'research.json',
-  'research-graph.jsonld',
   'dataset.json',
   'authority-signals.json',
   'profile-links.json',
@@ -77,8 +76,7 @@ const required = [
 ];
 
 for (const file of required) read(file);
-mustNotExist('dataset-manifest.jsonld');
-mustNotExist('publishing-crosswalk.jsonld');
+for (const retired of ['dataset-manifest.jsonld', 'publishing-crosswalk.jsonld', 'research-graph.jsonld']) mustNotExist(retired);
 
 for (const slug of [
   'botox-kermanshah',
@@ -100,14 +98,14 @@ for (const slug of [
 
 mustContain('index.html', 'https://www.ghezelbaash.ir/doctor.jpg');
 mustContain('index.html', 'twitter:card');
-mustContain('llms.txt', '/routes.json');
-mustContain('llms.txt', '/seo-aeo-index.json');
+mustContain('llms.txt', '/graph-ghezelbaash-final.jsonld');
 mustContain('llms.txt', '/authority-signals.json');
-mustContain('llms.txt', '/research-graph.jsonld');
 mustContain('llms.txt', '/local-competitive-landscape.json');
 mustContain('llms.txt', 'JSON-LD consolidation policy');
 mustNotContain('llms.txt', '/dataset-manifest.jsonld');
 mustNotContain('llms.txt', '/publishing-crosswalk.jsonld');
+mustNotContain('llms.txt', '/research-graph.jsonld');
+
 mustContain('routes.json', 'ghezelbaash.routes.astro.v1');
 mustContain('routes.json', 'services-hub');
 mustContain('routes.json', 'service');
@@ -118,11 +116,13 @@ mustContain('sameas.json', 'ghezelbaash.sameas.astro.v3.source_contract');
 mustContain('sameas.json', 'Q140287622');
 mustContain('sameas.json', 'Q140288589');
 mustContain('sameas.json', 'Q140304972');
+
 mustContain('aesthetic-medicine-dataset.html', 'Dataset reference');
 mustContain('aesthetic-medicine-dataset.html', '/aesthetic_medicine_knowledge_kermanshah_fa.json');
 mustContain('aesthetic-medicine-dataset.html', '/local-competitive-landscape.json');
 mustContain('aesthetic-medicine-dataset.html', '/graph-ghezelbaash-final.jsonld');
-mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'ghezelbaash.aesthetic_knowledge.astro.v4.aesthetic_scope_builder');
+
+mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'ghezelbaash.aesthetic_knowledge.astro.v5.primary_graph_research');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'broadAestheticConcepts');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'broadAestheticConceptsByCategory');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'skin-booster');
@@ -135,84 +135,95 @@ mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'knowledge-scope-
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'canonicalIdentity');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'servicePillars');
 mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'researchSignals');
-mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', '6714657412');
+mustContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'graph-ghezelbaash-final.jsonld');
+mustNotContain('aesthetic_medicine_knowledge_kermanshah_fa.json', 'research-graph.jsonld');
+
 mustContain('local-competitive-landscape.json', 'ghezelbaash.local_competitive_landscape.astro.v1.generated');
 mustContain('local-competitive-landscape.json', 'evaluationDimensions');
 mustContain('local-competitive-landscape.json', 'servicePillarCoverage');
 mustContain('local-competitive-landscape.json', 'machineReadableEvidence');
 mustContain('local-competitive-landscape.json', '6714657412');
-mustContain('research.json', 'ghezelbaash.research_identifiers.astro.v3.graph_linked');
-mustContain('research.json', '/research-graph.jsonld');
+
+mustContain('research.json', 'ghezelbaash.research_identifiers.astro.v4.primary_graph_consolidated');
+mustContain('research.json', '/graph-ghezelbaash-final.jsonld');
+mustContain('research.json', '/research/#collection');
 mustContain('research.json', '0009-0001-9346-8475');
 mustContain('research.json', '34574943');
-mustContain('research-graph.jsonld', 'ScholarlyArticle');
-mustContain('research-graph.jsonld', 'CollectionPage');
-mustContain('research-graph.jsonld', '10.3390/healthcare9091169');
-mustContain('research-graph.jsonld', '10.4103/2008-7802.182734');
-mustContain('research-graph.jsonld', '#dr-saeed-ghezelbash');
-mustContain('graph-ghezelbaash-final.jsonld', '#dr-saeed-ghezelbash');
-mustContain('graph-ghezelbaash-final.jsonld', '#physician');
-mustContain('graph-ghezelbaash-final.jsonld', '#clinic');
-mustContain('graph-ghezelbaash-final.jsonld', '/kg/#dataset');
-mustContain('graph-ghezelbaash-final.jsonld', '/kg/aesthetic-scope#term-set');
-mustContain('graph-ghezelbaash-final.jsonld', 'DefinedTermSet');
-mustContain('graph-ghezelbaash-final.jsonld', 'DefinedTerm');
-mustContain('graph-ghezelbaash-final.jsonld', 'botox-masseter');
-mustContain('graph-ghezelbaash-final.jsonld', 'skin-booster');
-mustContain('graph-ghezelbaash-final.jsonld', 'full-face-contouring');
-mustContain('graph-ghezelbaash-final.jsonld', 'mesogel');
-mustContain('graph-ghezelbaash-final.jsonld', 'hydrogel-injection');
-mustContain('graph-ghezelbaash-final.jsonld', 'profhilo');
-mustContain('graph-ghezelbaash-final.jsonld', 'exosome-hair');
-mustContain('graph-ghezelbaash-final.jsonld', 'blepharoplasty');
-mustContain('graph-ghezelbaash-final.jsonld', 'rhinoplasty');
-mustContain('graph-ghezelbaash-final.jsonld', 'body-liposuction');
-mustContain('graph-ghezelbaash-final.jsonld', 'hyaluronidase-filler-dissolving');
-mustContain('graph-ghezelbaash-final.jsonld', 'knowledge-scope');
-mustContain('graph-ghezelbaash-final.jsonld', 'offerStatus');
-mustContain('graph-ghezelbaash-final.jsonld', 'Person');
-mustContain('graph-ghezelbaash-final.jsonld', 'Physician');
-mustContain('graph-ghezelbaash-final.jsonld', 'MedicalClinic');
-mustContain('graph-ghezelbaash-final.jsonld', 'LocalBusiness');
-mustContain('graph-ghezelbaash-final.jsonld', 'Dataset');
-mustContain('graph-ghezelbaash-final.jsonld', '6714657412');
-mustContain('graph-ghezelbaash-final.jsonld', 'medicalSpecialty');
-mustContain('graph-ghezelbaash-final.jsonld', 'ScholarlyArticle');
-mustContain('graph-ghezelbaash-final.jsonld', 'CollectionPage');
-mustContain('graph-ghezelbaash-final.jsonld', '/research/#healthcare-2021-1169');
-mustContain('graph-ghezelbaash-final.jsonld', '/research/#ijpm-2016-77');
-mustContain('graph-ghezelbaash-final.jsonld', '10.3390/healthcare9091169');
-mustContain('graph-ghezelbaash-final.jsonld', '10.4103/2008-7802.182734');
-mustContain('graph-ghezelbaash-final.jsonld', 'PMID');
-mustContain('graph-ghezelbaash-final.jsonld', 'PMCID');
-mustContain('graph-ghezelbaash-final.jsonld', 'citation');
-mustContain('graph-ghezelbaash-final.jsonld', 'OfferCatalog');
-mustContain('graph-ghezelbaash-final.jsonld', 'official-offer-catalog');
-mustContain('graph-ghezelbaash-final.jsonld', 'official-current-service');
-mustContain('graph-ghezelbaash-final.jsonld', 'itemOffered');
-mustContain('graph-ghezelbaash-final.jsonld', 'hasOfferCatalog');
-mustContain('graph-ghezelbaash-final.jsonld', 'botox-kermanshah/#offer');
-mustContain('graph-ghezelbaash-final.jsonld', 'filler-kermanshah/#offer');
-mustContain('graph-ghezelbaash-final.jsonld', 'thread-lift-kermanshah/#offer');
-mustContain('graph-ghezelbaash-final.jsonld', 'skin-hair-rejuvenation-kermanshah/#offer');
-mustContain('graph-ghezelbaash-final.jsonld', 'double-chin-liposuction-kermanshah/#offer');
-mustContain('graph-ghezelbaash-final.jsonld', 'entity-crosswalk#dataset');
-mustContain('graph-ghezelbaash-final.jsonld', 'entity-crosswalk#relation-set');
-mustContain('graph-ghezelbaash-final.jsonld', 'Wikidata-like Schema.org relationship crosswalk');
-mustContain('graph-ghezelbaash-final.jsonld', 'Schema.org relationship crosswalk');
-mustContain('graph-ghezelbaash-final.jsonld', 'sameAsPolicy');
-mustContain('graph-ghezelbaash-final.jsonld', 'knowledge-only service concept');
-mustContain('graph-ghezelbaash-final.jsonld', 'hasPart');
-mustContain('graph-ghezelbaash-final.jsonld', 'isPartOf');
-mustContain('graph-ghezelbaash-final.jsonld', 'hasMap');
-mustContain('graph-ghezelbaash-final.jsonld', 'subjectOf');
-mustContain('graph-ghezelbaash-final.jsonld', 'identifier');
-mustContain('graph-ghezelbaash-final.jsonld', 'dataset manifest');
-mustContain('graph-ghezelbaash-final.jsonld', 'publishing crosswalk');
-mustContain('graph-ghezelbaash-final.jsonld', 'Repository context');
-mustContain('graph-ghezelbaash-final.jsonld', 'External archived DOI record');
-mustContain('graph-ghezelbaash-final.jsonld', 'External dataset mirror');
-mustContain('graph-ghezelbaash-final.jsonld', 'jsonLdConsolidationPolicy');
+mustNotContain('research.json', '/research-graph.jsonld');
+
+const graphFile = 'graph-ghezelbaash-final.jsonld';
+for (const requiredGraphNeedle of [
+  '#dr-saeed-ghezelbash',
+  '#physician',
+  '#clinic',
+  '/kg/#dataset',
+  '/kg/aesthetic-scope#term-set',
+  'DefinedTermSet',
+  'DefinedTerm',
+  'botox-masseter',
+  'skin-booster',
+  'full-face-contouring',
+  'mesogel',
+  'hydrogel-injection',
+  'profhilo',
+  'exosome-hair',
+  'blepharoplasty',
+  'rhinoplasty',
+  'body-liposuction',
+  'hyaluronidase-filler-dissolving',
+  'knowledge-scope',
+  'offerStatus',
+  'Person',
+  'Physician',
+  'MedicalClinic',
+  'LocalBusiness',
+  'Dataset',
+  '6714657412',
+  'medicalSpecialty',
+  'ScholarlyArticle',
+  'CollectionPage',
+  '/research/#collection',
+  '/research/#healthcare-2021-1169',
+  '/research/#ijpm-2016-77',
+  '10.3390/healthcare9091169',
+  '10.4103/2008-7802.182734',
+  'ORCID',
+  '0009-0001-9346-8475',
+  'NCBI Bibliography',
+  'PMID',
+  'PMCID',
+  'citation',
+  'OfferCatalog',
+  'official-offer-catalog',
+  'official-current-service',
+  'itemOffered',
+  'hasOfferCatalog',
+  'botox-kermanshah/#offer',
+  'filler-kermanshah/#offer',
+  'thread-lift-kermanshah/#offer',
+  'skin-hair-rejuvenation-kermanshah/#offer',
+  'double-chin-liposuction-kermanshah/#offer',
+  'entity-crosswalk#dataset',
+  'entity-crosswalk#relation-set',
+  'Wikidata-like Schema.org relationship crosswalk',
+  'Schema.org relationship crosswalk',
+  'sameAsPolicy',
+  'knowledge-only service concept',
+  'hasPart',
+  'isPartOf',
+  'hasMap',
+  'subjectOf',
+  'identifier',
+  'dataset manifest',
+  'publishing crosswalk',
+  'Repository context',
+  'External archived DOI record',
+  'External dataset mirror',
+  'jsonLdConsolidationPolicy'
+]) {
+  mustContain(graphFile, requiredGraphNeedle);
+}
+
 mustContain('services.json', 'ghezelbaash.service_architecture.astro.v4.aesthetic_scope_builder');
 mustContain('services.json', 'broadAestheticConcepts');
 mustContain('services.json', 'broadAestheticConceptsByCategory');
@@ -223,11 +234,14 @@ mustContain('services.json', 'mesogel');
 mustContain('services.json', 'blepharoplasty');
 mustContain('services.json', 'knowledge-scope-only');
 mustContain('services.json', 'supportingIntents');
-mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v6.reputation_integrated');
-mustContain('brand-kb.ghezelbaash.ai-public.json', 'research-graph.jsonld');
-mustContain('brand-kb.ghezelbaash.ai-public.json', 'authoritySignals');
+
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'ghezelbaash.brand_kb.astro.v7.primary_graph_research');
+mustContain('brand-kb.ghezelbaash.ai-public.json', 'graph-ghezelbaash-final.jsonld');
+mustContain('brand-kb.ghezelbaash.ai-public.json', '0009-0001-9346-8475');
 mustContain('brand-kb.ghezelbaash.ai-public.json', '167430');
 mustContain('brand-kb.ghezelbaash.ai-public.json', '6714657412');
+mustNotContain('brand-kb.ghezelbaash.ai-public.json', 'research-graph.jsonld');
+
 mustContain('ai-discovery-index.json', 'ghezelbaash.ai_discovery_index.astro.v3.machine_asset_projection');
 mustContain('ai-discovery-index.json', 'primaryGraph');
 mustContain('ai-discovery-index.json', 'graph-ghezelbaash-final.jsonld');
@@ -244,6 +258,7 @@ mustContain('dataset.json', '10.5281/zenodo.18765169');
 mustContain('entity-hardening-index.json', 'entity_hardening');
 mustContain('authority-signals.json', 'authority_signals');
 mustContain('authority-signals.json', 'iranmedlabs-interview');
+
 mustContain('dr-saeed-ghezelbash/index.html', 'دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه');
 mustContain('dr-saeed-ghezelbash/index.html', '۱۶۷۴۳۰');
 mustContain('dr-saeed-ghezelbash/index.html', 'IranMedLabs');
