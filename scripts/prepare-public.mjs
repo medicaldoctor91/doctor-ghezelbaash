@@ -7,10 +7,8 @@ fs.mkdirSync(publicDir, { recursive: true });
 
 const filesToExposeAtWebRoot = [
   'CNAME',
-  'robots.txt',
   'logo.png',
   'doctor.jpg',
-  'dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json',
   'aesthetic-medicine-dataset.html'
 ];
 
