@@ -1,7 +1,9 @@
-import { buildGlobalGraph } from '../lib/schema.mjs';
+import { buildGlobalGraph } from '../lib/globalGraph.mjs';
 
 export function GET() {
-  return new Response(JSON.stringify(buildGlobalGraph(), null, 2) + '\n', {
+  const graph = buildGlobalGraph();
+
+  return new Response(JSON.stringify(graph, null, 2) + '\n', {
     headers: { 'Content-Type': 'application/ld+json; charset=utf-8' }
   });
 }
