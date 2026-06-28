@@ -45,11 +45,13 @@ export function GET() {
       research: {
         orcid: researchProfile.orcid,
         bibliographyUrl: researchProfile.bibliographyUrl,
+        graph: absoluteUrl('/research-graph.jsonld'),
         publicationIdentifiers: researchProfile.publications.map((item) => ({
           doi: item.doi,
           pmid: item.pmid,
           pmcid: item.pmcid,
           url: item.url || item.pubmed,
+          graphNode: absoluteUrl(`/research/#${item.key}`),
           reviewReport: item.reviewReport || null
         }))
       }
@@ -104,6 +106,7 @@ export function GET() {
       sameAs: absoluteUrl('/sameas.json'),
       location: absoluteUrl('/location.json'),
       research: absoluteUrl('/research.json'),
+      researchGraph: absoluteUrl('/research-graph.jsonld'),
       dataset: absoluteUrl('/dataset.json'),
       authoritySignals: absoluteUrl('/authority-signals.json'),
       profileLinks: absoluteUrl('/profile-links.json'),
