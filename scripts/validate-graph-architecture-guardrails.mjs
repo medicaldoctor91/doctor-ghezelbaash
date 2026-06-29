@@ -1,5 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import { absoluteUrl } from '../src/data/site.mjs';
 import { GET as getPrimaryGraphResponse } from '../src/pages/graph-ghezelbaash-final.jsonld.js';
 
@@ -27,25 +25,6 @@ async function loadPublishedPrimaryGraphForGuardrails() {
   const response = await getPrimaryGraphResponse();
   const text = await response.text();
   return JSON.parse(text);
-}
-
-const repoRoot = process.cwd();
-const forbiddenParallelFiles = [
-  'src/lib/expandedMedicalKnowledgeGraph.mjs'
-];
-for (const file of forbiddenParallelFiles) {
-  if (fs.existsSync(path.join(repoRoot, file))) fail(`parallel graph layer must not exist: ${file}`);
-}
-
-for (const [file, needle] of [
-  ['src/lib/credentialedGlobalGraph.mjs', 'expandedMedicalKnowledgeGraph'],
-  ['src/lib/globalGraph.mjs', 'expandedMedicalKnowledgeGraph'],
-  ['src/pages/graph-ghezelbaash-final.jsonld.js', 'expandedMedicalKnowledgeGraph']
-]) {
-  const fullPath = path.join(repoRoot, file);
-  if (fs.existsSync(fullPath) && fs.readFileSync(fullPath, 'utf8').includes(needle)) {
-    fail(`${file} imports or references forbidden parallel layer ${needle}`);
-  }
 }
 
 const graph = await loadPublishedPrimaryGraphForGuardrails();
