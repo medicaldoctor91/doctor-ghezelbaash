@@ -10,6 +10,10 @@ const ADDITIONAL_PROPERTY_ALLOWED_TYPES = new Set([
   'QualitativeValue',
   'QuantitativeValue'
 ]);
+const DROPPED_PROPERTY_IDS = new Set([
+  'credentialEvidenceBoundary',
+  'assessmentPurpose'
+]);
 
 function refs(value) {
   return Array.isArray(value) ? value : [value].filter(Boolean);
@@ -44,10 +48,31 @@ function allowsAdditionalProperty(node) {
   return typeList(node).some((type) => ADDITIONAL_PROPERTY_ALLOWED_TYPES.has(type));
 }
 
+function isCleanPropertyValue(value) {
+  if (!value || typeof value !== 'object') return true;
+  if (value['@type'] !== 'PropertyValue') return true;
+  if (DROPPED_PROPERTY_IDS.has(value.propertyID)) return false;
+  if (Object.prototype.hasOwnProperty.call(value, 'value') && (value.value === undefined || value.value === null || value.value === '')) return false;
+  return true;
+}
+
+function cleanPropertyValues(node, property) {
+  if (!node?.[property]) return;
+  const cleaned = refs(node[property]).filter(isCleanPropertyValue);
+  if (!cleaned.length) {
+    delete node[property];
+  } else {
+    node[property] = Array.isArray(node[property]) ? cleaned : cleaned[0];
+  }
+}
+
 function moveUnsupportedAdditionalProperty(node) {
-  if (!node?.additionalProperty || allowsAdditionalProperty(node)) return;
+  if (!node?.additionalProperty) return;
+  cleanPropertyValues(node, 'additionalProperty');
+  if (!node.additionalProperty || allowsAdditionalProperty(node)) return;
   node.identifier = appendRefs(node.identifier, refs(node.additionalProperty));
   delete node.additionalProperty;
+  cleanPropertyValues(node, 'identifier');
 }
 
 function normalizeMedicalSpecialty(entity) {
@@ -61,7 +86,10 @@ function normalizeMedicalSpecialty(entity) {
 export function applySchemaOrgCompliancePass(nodes) {
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
 
-  for (const node of nodes) moveUnsupportedAdditionalProperty(node);
+  for (const node of nodes) {
+    cleanPropertyValues(node, 'identifier');
+    moveUnsupportedAdditionalProperty(node);
+  }
 
   normalizeMedicalSpecialty(byId.get(absoluteUrl('/#physician')));
   normalizeMedicalSpecialty(byId.get(absoluteUrl('/#clinic')));
