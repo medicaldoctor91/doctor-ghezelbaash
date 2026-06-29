@@ -100,6 +100,14 @@ if (!fs.existsSync(file)) {
       }
     });
 
+    for (const node of nodes.filter((item) => refs(item['@type']).includes('MedicalProcedure'))) {
+      for (const bodyLocation of refs(node.bodyLocation)) {
+        if (typeof bodyLocation !== 'string') {
+          fail(`dist MedicalProcedure.bodyLocation must be Text on ${node['@id']}`);
+        }
+      }
+    }
+
     const forbiddenSameAsByNode = new Map([
       ['https://www.ghezelbaash.ir/kg/medical-condition#acne-scar', 'https://www.wikidata.org/wiki/Q206060'],
       ['https://www.ghezelbaash.ir/kg/medical-procedure#prp-hair-restoration', 'https://www.wikidata.org/wiki/Q613879'],
