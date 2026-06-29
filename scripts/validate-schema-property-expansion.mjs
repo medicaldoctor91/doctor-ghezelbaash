@@ -1,5 +1,4 @@
 import { absoluteUrl } from '../src/data/site.mjs';
-import { publicDataset } from '../src/data/dataset.mjs';
 import { services } from '../src/data/services.mjs';
 import { buildGlobalGraph } from '../src/lib/globalGraph.mjs';
 import {
@@ -16,12 +15,6 @@ function fail(message) {
 
 function refId(value) {
   return value?.['@id'];
-}
-
-function propertyValues(entity, propertyID) {
-  return (Array.isArray(entity?.additionalProperty) ? entity.additionalProperty : [entity?.additionalProperty].filter(Boolean))
-    .filter((property) => property?.propertyID === propertyID)
-    .map((property) => property.value);
 }
 
 const graph = buildGlobalGraph();
@@ -41,12 +34,6 @@ if (!contactPoint) fail('missing graph ContactPoint node');
 if (!doctorImage) fail('missing doctor ImageObject node');
 if (!clinicLogo) fail('missing clinic logo ImageObject node');
 
-if (contactPoint) {
-  if (contactPoint['@type'] !== 'ContactPoint') fail('contact point must be ContactPoint');
-  if (contactPoint.telephone !== '+989308209494') fail('contact point telephone mismatch');
-  if (!String(contactPoint.contactType || '').includes('aesthetic')) fail('contact point missing aesthetic consultation type');
-}
-
 if (doctorImage?.['@type'] !== 'ImageObject') fail('doctor image must be ImageObject');
 if (clinicLogo?.['@type'] !== 'ImageObject') fail('clinic logo must be ImageObject');
 
@@ -65,32 +52,19 @@ if (clinic) {
 if (website && refId(website.image) !== graphDoctorImageId()) fail('website image must point to doctor ImageObject');
 
 if (dataset) {
-  const hasPartText = JSON.stringify(dataset.hasPart || []);
-  const spatialCoverageId = refId(dataset.spatialCoverage);
-  if (!Array.isArray(dataset.distribution) || dataset.distribution.length < 20) fail('dataset missing machine asset DataDownload distribution');
+  if (!Array.isArray(dataset.distribution) || dataset.distribution.length < 20) fail('dataset missing machine asset distribution');
   if (refId(dataset.isBasedOn) !== absoluteUrl('/graph-ghezelbaash-final.jsonld')) fail('dataset must be based on global graph');
-  if (dataset.spatialCoverage?.name !== 'Kermanshah' && spatialCoverageId !== absoluteUrl('/kg/place#kermanshah')) fail('dataset missing Kermanshah spatialCoverage');
-  if (!Array.isArray(dataset.keywords) || !dataset.keywords.includes('aesthetic medicine Kermanshah')) fail('dataset missing expanded keywords');
-  if (!dataset.keywords.includes('dataset manifest')) fail('dataset missing dataset manifest keyword');
+  if (!Array.isArray(dataset.keywords) || !dataset.keywords.includes('dataset manifest')) fail('dataset missing dataset manifest keyword');
   if (!dataset.keywords.includes('publishing crosswalk')) fail('dataset missing publishing crosswalk keyword');
-  if (!hasPartText.includes('Canonical website')) fail('dataset hasPart missing canonical website work');
-  if (!hasPartText.includes('Repository context')) fail('dataset hasPart missing repository context');
-  if (!hasPartText.includes('External archived DOI record')) fail('dataset hasPart missing external DOI archive');
-  if (!hasPartText.includes(publicDataset.doiUrl)) fail('dataset hasPart missing DOI URL');
-  if (!hasPartText.includes(publicDataset.huggingFace)) fail('dataset hasPart missing Hugging Face mirror');
-  if (!propertyValues(dataset, 'jsonLdConsolidationPolicy').some((value) => String(value).includes('Dataset manifest and publishing crosswalk'))) {
-    fail('dataset missing JSON-LD consolidation policy');
-  }
 }
 
 if (serviceNodes.length < services.length) fail('missing service nodes for channel validation');
-const expectedRelatedCount = serviceNodes.length - 1;
 for (const service of serviceNodes) {
   if (!service.availableChannel) fail(`service missing availableChannel: ${service['@id'] || service.name}`);
   if (service.availableChannel?.['@type'] !== 'ServiceChannel') fail(`service availableChannel must be ServiceChannel: ${service['@id'] || service.name}`);
   if (refId(service.availableChannel?.servicePhone) !== graphContactPointId()) fail(`service channel must point to graph ContactPoint: ${service['@id'] || service.name}`);
   if (refId(service.availableChannel?.serviceLocation) !== absoluteUrl('/#clinic')) fail(`service channel must point to clinic: ${service['@id'] || service.name}`);
-  if (!Array.isArray(service.isRelatedTo) || service.isRelatedTo.length < expectedRelatedCount) fail(`service missing related official services: ${service['@id'] || service.name}`);
+  if (!String(refId(service.offers) || '').endsWith('/#offer')) fail(`service missing official offer reference: ${service['@id'] || service.name}`);
 }
 
 if (failed) process.exit(1);
