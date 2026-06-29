@@ -13,6 +13,10 @@ function refs(value) {
   return Array.isArray(value) ? value : [value].filter(Boolean);
 }
 
+function typeList(entity) {
+  return refs(entity?.['@type']);
+}
+
 function visit(value, callback) {
   if (!value || typeof value !== 'object') return;
   if (Array.isArray(value)) {
@@ -39,6 +43,12 @@ if (!fs.existsSync(file)) {
   if (graph) {
     const nodes = graph['@graph'] || [];
     const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
+    const possibleTreatmentAllowedTypes = new Set([
+      'Drug',
+      'DrugClass',
+      'LifestyleModification',
+      'MedicalTherapy'
+    ]);
 
     const requiredNeedles = [
       '/kg/medical-knowledge#term-set',
@@ -104,10 +114,23 @@ if (!fs.existsSync(file)) {
       if (node.isRelatedTo) fail(`dist graph must not emit isRelatedTo: ${node['@id'] || node.name}`);
     }
 
-    for (const node of nodes.filter((item) => refs(item['@type']).includes('MedicalProcedure'))) {
+    for (const node of nodes.filter((item) => typeList(item).includes('MedicalProcedure'))) {
       for (const bodyLocation of refs(node.bodyLocation)) {
         if (typeof bodyLocation !== 'string') {
           fail(`dist MedicalProcedure.bodyLocation must be Text on ${node['@id']}`);
+        }
+      }
+    }
+
+    for (const node of nodes.filter((item) => typeList(item).includes('MedicalCondition'))) {
+      for (const treatmentRef of refs(node.possibleTreatment)) {
+        const treatment = byId.get(treatmentRef?.['@id']);
+        if (!treatment) {
+          fail(`dist possibleTreatment target missing for ${node['@id']}: ${treatmentRef?.['@id']}`);
+          continue;
+        }
+        if (!typeList(treatment).some((type) => possibleTreatmentAllowedTypes.has(type))) {
+          fail(`dist possibleTreatment target has invalid Schema.org type for ${node['@id']}: ${treatment['@id']}`);
         }
       }
     }
