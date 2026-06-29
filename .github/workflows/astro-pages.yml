@@ -45,10 +45,27 @@ jobs:
             npm install --no-audit --no-fund
           fi
 
-      - name: Build and validate Astro site
+      - name: Validate source, schema, and authority layers
         run: |
           set -euo pipefail
-          npm run check
+          npm run validate:source
+          npm run validate:schema
+          npm run validate:authority
+
+      - name: Validate primary graph layers
+        run: |
+          set -euo pipefail
+          npm run validate:primary-graph
+
+      - name: Build Astro site
+        run: |
+          set -euo pipefail
+          npm run build
+
+      - name: Validate dist artifacts
+        run: |
+          set -euo pipefail
+          npm run validate:dist
 
       - name: Publish dist to gh-pages branch
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
