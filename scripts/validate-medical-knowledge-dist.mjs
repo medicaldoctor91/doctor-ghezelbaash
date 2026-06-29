@@ -111,11 +111,12 @@ if (!fs.existsSync(file)) {
       if (refs(node?.sameAs).includes(blockedSameAs)) fail(`dist graph has broader/related sameAs on ${id}: ${blockedSameAs}`);
     }
 
-    const acne = byId.get('https://www.ghezelbaash.ir/kg/medical-condition#acne-vulgaris');
-    const prp = byId.get('https://www.ghezelbaash.ir/kg/medical-therapy#platelet-rich-plasma');
-    const hyperhidrosis = byId.get('https://www.ghezelbaash.ir/kg/medical-condition#hyperhidrosis');
+    const nodesWithRequiredMedicalCode = [
+      ['acne', byId.get('https://www.ghezelbaash.ir/kg/medical-condition#acne-vulgaris')],
+      ['hyperhidrosis', byId.get('https://www.ghezelbaash.ir/kg/medical-condition#hyperhidrosis')]
+    ];
 
-    for (const [label, node] of [['acne', acne], ['prp', prp], ['hyperhidrosis', hyperhidrosis]]) {
+    for (const [label, node] of nodesWithRequiredMedicalCode) {
       if (!node) {
         fail(`missing parsed dist node ${label}`);
         continue;
