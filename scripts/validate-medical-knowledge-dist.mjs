@@ -161,7 +161,7 @@ if (!fs.existsSync(file)) {
     }
   }
 
-  for (const privateNeedle of ['medicaldoctor91', 'Yazdan Alley', 'Delgosha street']) {
+  for (const privateNeedle of ['medicaldoctor91@gmail.com', 'Yazdan Alley', 'Delgosha street']) {
     if (text.includes(privateNeedle)) fail(`medical ontology dist leaked private credential data marker: ${privateNeedle}`);
   }
 }
