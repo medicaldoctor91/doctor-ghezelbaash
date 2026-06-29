@@ -12,7 +12,12 @@
     "validate:authority": "node scripts/run-validation-phase.mjs authority",
     "validate:primary-graph": "node scripts/run-validation-phase.mjs primary-graph",
     "validate:dist": "node scripts/run-validation-phase.mjs dist",
-    "check": "npm run validate && npm run build && npm run validate:dist"
+    "astro:check": "npx --yes --package @astrojs/check --package typescript astro check",
+    "validate:html": "npx --yes html-validate \"dist/**/*.html\"",
+    "format:check": "npx --yes prettier --check \"**/*.{js,mjs,json,md,yml,yaml,css}\"",
+    "format:fix": "npx --yes prettier --write \"**/*.{js,mjs,json,md,yml,yaml,css}\"",
+    "quality:ci": "npm run astro:check && npm run build && npm run validate:html && npm run validate:dist",
+    "check": "npm run validate && npm run quality:ci"
   },
   "dependencies": {
     "astro": "^4.16.0"
