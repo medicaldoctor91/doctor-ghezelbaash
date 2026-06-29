@@ -1,5 +1,6 @@
 import { absoluteUrl } from '../src/data/site.mjs';
 import { researchProfile } from '../src/data/research.mjs';
+import { services } from '../src/data/services.mjs';
 import { buildGlobalGraph } from '../src/lib/globalGraph.mjs';
 import { scholarlyArticleId } from '../src/lib/researchGraph.mjs';
 import {
@@ -135,10 +136,7 @@ const protectedAestheticAboutIds = [
   absoluteUrl('/kg/medical-procedure#dermal-filler-injection'),
   absoluteUrl('/kg/medical-procedure#thread-lift'),
   absoluteUrl('/kg/medical-procedure#submental-liposuction'),
-  absoluteUrl('/botox-kermanshah/#service'),
-  absoluteUrl('/filler-kermanshah/#service'),
-  absoluteUrl('/thread-lift-kermanshah/#service'),
-  absoluteUrl('/double-chin-liposuction-kermanshah/#service')
+  ...services.map((service) => absoluteUrl(`/${service.slug}/#service`))
 ];
 const requiredArticleAestheticMentions = articleAestheticMentionUrls();
 
