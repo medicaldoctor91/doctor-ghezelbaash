@@ -1,10 +1,10 @@
 // Primary graph source contract: ../lib/globalGraph.mjs
-import { buildCredentialedGlobalGraph } from '../lib/credentialedGlobalGraph.mjs';
+import { buildGlobalGraph } from '../lib/globalGraph.mjs';
 import { applyLocalBusinessActionPass as enrichLocalGraph } from '../lib/localBusinessActionPass.mjs';
 import { applySchemaOrgCompliancePass as cleanGraphNodes } from '../lib/schemaOrgCompliancePass.mjs';
 
 export function GET() {
-  const graph = buildCredentialedGlobalGraph();
+  const graph = buildGlobalGraph();
   cleanGraphNodes(graph['@graph'] || []);
   enrichLocalGraph(graph['@graph'] || []);
 
