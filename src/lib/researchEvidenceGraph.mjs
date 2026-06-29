@@ -208,10 +208,12 @@ function buildEvidenceTermSet(definition) {
 }
 
 function buildEvidenceTerm(definition) {
+  const isDefinedTerm = definition.type === 'DefinedTerm';
   return node(definition.path, definition.type, {
     name: definition.name,
     alternateName: definition.alternateName,
-    ...(definition.inSet ? { inDefinedTermSet: ref(definition.inSet), isPartOf: ref(definition.inSet) } : {}),
+    ...(isDefinedTerm && definition.inSet ? { inDefinedTermSet: ref(definition.inSet), isPartOf: ref(definition.inSet) } : {}),
+    ...(!isDefinedTerm && definition.inSet ? { subjectOf: ref(definition.inSet) } : {}),
     ...(definition.related ? { isRelatedTo: ids(definition.related) } : {})
   });
 }
@@ -285,7 +287,7 @@ export function applyResearchEvidenceGraph(nodes) {
     article.about = appendUnique(article.about, links);
     article.mentions = appendUnique(article.mentions, links);
     article.keywords = appendUnique(article.keywords, links.map((item) => item['@id']));
-    article.isPartOf = appendUnique(article.isPartOf, [ref('/research/#collection')]);
+    if (!article.isPartOf) article.isPartOf = ref('/research/#collection');
     article.subjectOf = appendUnique(article.subjectOf, [ref('/kg/research-evidence#term-set')]);
   }
 
