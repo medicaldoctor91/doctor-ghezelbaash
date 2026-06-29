@@ -48,6 +48,13 @@ import {
   buildMedicalKnowledgeGraphNodes
 } from './medicalKnowledgeGraph.mjs';
 
+const POSSIBLE_TREATMENT_ALLOWED_TYPES = new Set([
+  'Drug',
+  'DrugClass',
+  'LifestyleModification',
+  'MedicalTherapy'
+]);
+
 function refKey(value) {
   if (!value) return null;
   if (typeof value === 'string') return value;
@@ -76,6 +83,13 @@ function appendUniqueReferences(currentValue, additions = []) {
   }
 
   return merged;
+}
+
+function appendType(node, type) {
+  if (!node) return;
+  const types = typeList(node);
+  if (types.includes(type)) return;
+  node['@type'] = types.length === 1 ? [types[0], type] : [...types, type];
 }
 
 function orcidIdentifier() {
@@ -145,7 +159,6 @@ function normalizeMedicalProcedureBodyLocation(nodes) {
 
   for (const node of nodes) {
     if (!typeList(node).includes('MedicalProcedure') || !node.bodyLocation) continue;
-    const anatomyRefs = refs(node.bodyLocation).filter((item) => item && typeof item === 'object' && item['@id']);
     const textLocations = refs(node.bodyLocation).map((item) => {
       if (typeof item === 'string') return item;
       const anatomyNode = byId.get(item?.['@id']);
@@ -153,9 +166,31 @@ function normalizeMedicalProcedureBodyLocation(nodes) {
     }).filter(Boolean);
 
     node.bodyLocation = [...new Set(textLocations)];
-    node.subjectOf = appendUniqueReferences(node.subjectOf, anatomyRefs.map((item) => byId.get(item['@id']))
-      .filter((item) => typeList(item).includes('CreativeWork') || typeList(item).includes('Event'))
-      .map((item) => ({ '@id': item['@id'] })));
+  }
+}
+
+function normalizePossibleTreatmentRanges(nodes) {
+  const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
+
+  for (const node of nodes) {
+    if (!typeList(node).includes('MedicalCondition') || !node.possibleTreatment) continue;
+
+    const treatmentRefs = refs(node.possibleTreatment).filter((treatmentRef) => {
+      const target = byId.get(treatmentRef?.['@id']);
+      const targetTypes = typeList(target);
+      if (targetTypes.some((type) => POSSIBLE_TREATMENT_ALLOWED_TYPES.has(type))) return true;
+      if (targetTypes.includes('MedicalProcedure')) {
+        appendType(target, 'MedicalTherapy');
+        return true;
+      }
+      return false;
+    });
+
+    if (treatmentRefs.length) {
+      node.possibleTreatment = treatmentRefs;
+    } else {
+      delete node.possibleTreatment;
+    }
   }
 }
 
@@ -243,6 +278,7 @@ export function buildGlobalGraph() {
   applyMedicalKnowledgeGraph(nodes);
   applyResearchEvidenceGraph(nodes);
   normalizeMedicalProcedureBodyLocation(nodes);
+  normalizePossibleTreatmentRanges(nodes);
   normalizeSchemaOrgDomainRange(nodes);
 
   return {
