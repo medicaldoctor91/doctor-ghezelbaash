@@ -55,8 +55,12 @@ function refKey(value) {
   return String(value);
 }
 
+function refs(value) {
+  return Array.isArray(value) ? value : [value].filter(Boolean);
+}
+
 function appendUniqueReferences(currentValue, additions = []) {
-  const current = Array.isArray(currentValue) ? currentValue : [currentValue].filter(Boolean);
+  const current = refs(currentValue);
   const seen = new Set(current.map(refKey));
   const merged = [...current];
 
@@ -132,6 +136,23 @@ function attachOfficialOfferCatalog(nodes) {
   }
 }
 
+function normalizeMedicalProcedureBodyLocation(nodes) {
+  const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
+
+  for (const node of nodes) {
+    if (!refs(node['@type']).includes('MedicalProcedure') || !node.bodyLocation) continue;
+    const anatomyRefs = refs(node.bodyLocation).filter((item) => item && typeof item === 'object' && item['@id']);
+    const textLocations = refs(node.bodyLocation).map((item) => {
+      if (typeof item === 'string') return item;
+      const anatomyNode = byId.get(item?.['@id']);
+      return anatomyNode?.name || anatomyNode?.alternateName?.[0] || null;
+    }).filter(Boolean);
+
+    node.bodyLocation = [...new Set(textLocations)];
+    node.isRelatedTo = appendUniqueReferences(node.isRelatedTo, anatomyRefs);
+  }
+}
+
 export function buildGlobalGraph() {
   const baseGraph = buildSchemaGlobalGraph();
   const nodes = JSON.parse(JSON.stringify(baseGraph['@graph'] || []));
@@ -189,6 +210,7 @@ export function buildGlobalGraph() {
   applyPrimaryGraphFinalLayer(nodes);
   applyMedicalKnowledgeGraph(nodes);
   applyResearchEvidenceGraph(nodes);
+  normalizeMedicalProcedureBodyLocation(nodes);
 
   return {
     ...baseGraph,
