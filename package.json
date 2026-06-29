@@ -6,11 +6,12 @@
     "build": "node scripts/prepare-public.mjs && astro build",
     "dev": "astro dev",
     "preview": "astro preview",
-    "validate:source": "node scripts/validate-repo-hygiene.mjs && node scripts/validate-source-contract.mjs && node scripts/validate-machine-assets.mjs",
-    "validate:schema": "node scripts/validate-schema-entities.mjs && node scripts/validate-schema-property-expansion.mjs",
-    "validate:authority": "node scripts/validate-research-consolidation.mjs && node scripts/validate-research-evidence-graph.mjs && node scripts/validate-credential-authority-graph.mjs",
-    "validate:primary-graph": "node scripts/validate-primary-graph-completion.mjs && node scripts/validate-primary-graph-relations.mjs && node scripts/validate-primary-graph-page-clusters.mjs && node scripts/validate-primary-graph-final-layer.mjs && node scripts/validate-medical-knowledge-graph.mjs && node scripts/validate-graph-architecture-guardrails.mjs",
-    "validate:dist": "node scripts/validate-dist.mjs && node scripts/validate-primary-graph-dist.mjs && node scripts/validate-medical-knowledge-dist.mjs && node scripts/validate-research-evidence-dist.mjs && node scripts/validate-credential-authority-dist.mjs && node scripts/validate-llms-assets.mjs && node scripts/validate-page-context.mjs",
+    "validate": "node scripts/run-validation-phase.mjs all",
+    "validate:source": "node scripts/run-validation-phase.mjs source",
+    "validate:schema": "node scripts/run-validation-phase.mjs schema",
+    "validate:authority": "node scripts/run-validation-phase.mjs authority",
+    "validate:primary-graph": "node scripts/run-validation-phase.mjs primary-graph",
+    "validate:dist": "node scripts/run-validation-phase.mjs dist",
     "check": "npm run validate:source && npm run validate:schema && npm run validate:authority && npm run validate:primary-graph && npm run build && npm run validate:dist"
   },
   "dependencies": {
