@@ -2,7 +2,10 @@ import { absoluteUrl } from '../src/data/site.mjs';
 import { researchProfile } from '../src/data/research.mjs';
 import { buildGlobalGraph } from '../src/lib/globalGraph.mjs';
 import { scholarlyArticleId } from '../src/lib/researchGraph.mjs';
-import { publicationEvidenceLinkMap } from '../src/lib/researchEvidenceGraph.mjs';
+import {
+  articleAestheticMentionUrls,
+  publicationEvidenceLinkMap
+} from '../src/lib/researchEvidenceGraph.mjs';
 
 let failed = false;
 
@@ -86,27 +89,32 @@ for (const [path, expectedType] of requiredEvidenceNodes) {
   if (!refs(node['@type']).includes(expectedType)) fail(`research evidence node ${id} missing type ${expectedType}`);
 }
 
+const researchEvidenceCoreIds = [
+  absoluteUrl('/kg/research-evidence#term-set'),
+  absoluteUrl('/kg/research#medical-research-literacy'),
+  absoluteUrl('/kg/research#scientific-publication'),
+  absoluteUrl('/kg/research#clinical-reasoning')
+];
+
+const aestheticBridgeIds = [
+  absoluteUrl('/kg/medical-knowledge#aesthetic-medicine'),
+  absoluteUrl('/kg/research#evidence-based-aesthetic-medicine'),
+  absoluteUrl('/kg/medical-knowledge#physician-led-assessment'),
+  absoluteUrl('/kg/medical-knowledge#patient-selection'),
+  absoluteUrl('/kg/research#risk-communication')
+];
+
 for (const entity of [person, physician].filter(Boolean)) {
-  for (const id of [
-    absoluteUrl('/kg/research-evidence#term-set'),
-    absoluteUrl('/kg/research#medical-research-literacy'),
-    absoluteUrl('/kg/research#scientific-publication'),
-    absoluteUrl('/kg/research#clinical-reasoning')
-  ]) {
-    if (!hasRef(entity, 'knowsAbout', id)) fail(`${entity['@id']} missing research evidence knowsAbout ${id}`);
+  for (const id of [...researchEvidenceCoreIds, ...aestheticBridgeIds]) {
+    if (!hasRef(entity, 'knowsAbout', id)) fail(`${entity['@id']} missing research/aesthetic knowsAbout ${id}`);
   }
 }
 
 if (!collection) fail('missing research collection');
 if (collection) {
-  for (const id of [
-    absoluteUrl('/kg/research-evidence#term-set'),
-    absoluteUrl('/kg/research#medical-research-literacy'),
-    absoluteUrl('/kg/research#scientific-publication'),
-    absoluteUrl('/kg/research#clinical-reasoning')
-  ]) {
+  for (const id of [...researchEvidenceCoreIds, ...aestheticBridgeIds]) {
     if (!hasRef(collection, 'about', id) && !hasRef(collection, 'mentions', id) && !hasRef(collection, 'hasPart', id)) {
-      fail(`research collection missing research evidence reference ${id}`);
+      fail(`research collection missing research/aesthetic reference ${id}`);
     }
   }
 }
@@ -116,17 +124,23 @@ if (dataset) {
   if (!hasRef(dataset, 'hasPart', absoluteUrl('/kg/research-evidence#term-set'))) fail('dataset.hasPart missing research evidence term set');
   if (!hasRef(dataset, 'mentions', absoluteUrl('/kg/research-topic#major-depressive-disorder'))) fail('dataset.mentions missing MDD research topic');
   if (!hasRef(dataset, 'mentions', absoluteUrl('/kg/research-topic#bipolar-i-disorder'))) fail('dataset.mentions missing bipolar research topic');
+  for (const id of aestheticBridgeIds) {
+    if (!hasRef(dataset, 'about', id) && !hasRef(dataset, 'mentions', id)) fail(`dataset missing research/aesthetic bridge ${id}`);
+  }
 }
 
 const articleTopicMap = publicationEvidenceLinkMap();
-const forbiddenAestheticTopicIds = [
-  absoluteUrl('/kg/medical-knowledge#aesthetic-medicine'),
-  absoluteUrl('/kg/aesthetic-scope#term-set'),
+const protectedAestheticAboutIds = [
   absoluteUrl('/kg/medical-procedure#cosmetic-botulinum-toxin-injection'),
   absoluteUrl('/kg/medical-procedure#dermal-filler-injection'),
   absoluteUrl('/kg/medical-procedure#thread-lift'),
-  absoluteUrl('/kg/medical-procedure#submental-liposuction')
+  absoluteUrl('/kg/medical-procedure#submental-liposuction'),
+  absoluteUrl('/botox-kermanshah/#service'),
+  absoluteUrl('/filler-kermanshah/#service'),
+  absoluteUrl('/thread-lift-kermanshah/#service'),
+  absoluteUrl('/double-chin-liposuction-kermanshah/#service')
 ];
+const requiredArticleAestheticMentions = articleAestheticMentionUrls();
 
 for (const publication of researchProfile.publications) {
   const article = byId.get(scholarlyArticleId(publication));
@@ -140,10 +154,14 @@ for (const publication of researchProfile.publications) {
     if (!hasRef(article, 'about', id) && !hasRef(article, 'mentions', id)) fail(`article ${publication.key} missing evidence topic ${id}`);
   }
 
-  for (const forbiddenId of forbiddenAestheticTopicIds) {
-    if (hasRef(article, 'about', forbiddenId) || hasRef(article, 'mentions', forbiddenId)) {
-      fail(`article ${publication.key} must not overclaim aesthetic topic ${forbiddenId}`);
+  for (const protectedId of protectedAestheticAboutIds) {
+    if (hasRef(article, 'about', protectedId)) {
+      fail(`article ${publication.key} must not use about for non-primary aesthetic service/procedure topic ${protectedId}`);
     }
+  }
+
+  for (const id of requiredArticleAestheticMentions) {
+    if (!hasRef(article, 'mentions', id)) fail(`article ${publication.key} missing aesthetic/research mention ${id}`);
   }
 
   if (!hasRef(article, 'subjectOf', absoluteUrl('/kg/research-evidence#term-set'))) fail(`article ${publication.key} missing subjectOf research evidence set`);
