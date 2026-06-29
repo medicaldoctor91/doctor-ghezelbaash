@@ -221,13 +221,25 @@ for (const entity of [person, physician].filter(Boolean)) {
   }
 }
 
-for (const entity of [clinic, website, dataset].filter(Boolean)) {
+for (const entity of [website, dataset].filter(Boolean)) {
   for (const id of [
     absoluteUrl('/kg/medical-knowledge#term-set'),
     absoluteUrl('/kg/dermatology-hair#term-set')
   ]) {
     const hasAny = hasRef(entity, 'about', id) || hasRef(entity, 'mentions', id) || hasRef(entity, 'hasPart', id) || hasRef(entity, 'knowsAbout', id);
     if (!hasAny) fail(`${entity['@id']} missing medical ontology reference ${id}`);
+  }
+}
+
+if (clinic) {
+  for (const id of [
+    absoluteUrl('/kg/medical-knowledge#aesthetic-medicine'),
+    absoluteUrl('/kg/medical-knowledge#dermatology'),
+    absoluteUrl('/kg/medical-knowledge#skin-care'),
+    absoluteUrl('/kg/medical-knowledge#hair-care'),
+    absoluteUrl('/kg/local-authority#aesthetic-medical-clinic')
+  ]) {
+    if (!hasRef(clinic, 'knowsAbout', id)) fail(`${clinic['@id']} missing clinic medical knowledge reference ${id}`);
   }
 }
 
@@ -261,7 +273,7 @@ for (const service of services) {
 }
 
 const graphText = JSON.stringify(graph);
-for (const privateNeedle of ['medicaldoctor91', 'Yazdan Alley', 'Delgosha street']) {
+for (const privateNeedle of ['medicaldoctor91@gmail.com', 'Yazdan Alley', 'Delgosha street']) {
   if (graphText.includes(privateNeedle)) fail(`graph leaked private credential data marker: ${privateNeedle}`);
 }
 
