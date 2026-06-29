@@ -6,13 +6,13 @@
     "build": "node scripts/prepare-public.mjs && astro build",
     "dev": "astro dev",
     "preview": "astro preview",
-    "validate": "node scripts/run-validation-phase.mjs all",
+    "validate": "node scripts/run-validation-phase.mjs",
     "validate:source": "node scripts/run-validation-phase.mjs source",
     "validate:schema": "node scripts/run-validation-phase.mjs schema",
     "validate:authority": "node scripts/run-validation-phase.mjs authority",
     "validate:primary-graph": "node scripts/run-validation-phase.mjs primary-graph",
     "validate:dist": "node scripts/run-validation-phase.mjs dist",
-    "check": "npm run validate:source && npm run validate:schema && npm run validate:authority && npm run validate:primary-graph && npm run build && npm run validate:dist"
+    "check": "npm run validate && npm run build && npm run validate:dist"
   },
   "dependencies": {
     "astro": "^4.16.0"
