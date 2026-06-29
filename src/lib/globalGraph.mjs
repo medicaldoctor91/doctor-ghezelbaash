@@ -27,9 +27,9 @@ import {
   applyPrimaryGraphFinalLayer
 } from './primaryGraphFinalLayer.mjs';
 import {
-  applyPrimaryGraphPageClusters,
-  buildPrimaryGraphPageClusterNodes
-} from './primaryGraphPageClusters.mjs';
+  applyPrimaryGraphPages,
+  buildPrimaryGraphPageNodes
+} from './primaryGraphPages.mjs';
 import {
   applyPrimaryGraphRelations,
   buildPrimaryGraphRelationNodes
@@ -264,7 +264,7 @@ export function buildGlobalGraph() {
     ...buildSchemaPropertyExpansionNodes(),
     ...buildPrimaryGraphCompletionNodes(),
     ...buildPrimaryGraphRelationNodes(),
-    ...buildPrimaryGraphPageClusterNodes(),
+    ...buildPrimaryGraphPageNodes(),
     ...buildPrimaryGraphFinalLayerNodes(),
     ...buildMedicalKnowledgeGraphNodes(),
     ...buildResearchEvidenceGraphNodes(),
@@ -278,7 +278,7 @@ export function buildGlobalGraph() {
   applySchemaPropertyExpansion(nodes);
   applyPrimaryGraphCompletion(nodes);
   applyPrimaryGraphRelations(nodes);
-  applyPrimaryGraphPageClusters(nodes);
+  applyPrimaryGraphPages(nodes);
   applyPrimaryGraphFinalLayer(nodes);
   applyMedicalKnowledgeGraph(nodes);
   applyResearchEvidenceGraph(nodes);
