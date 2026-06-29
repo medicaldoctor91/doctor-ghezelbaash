@@ -59,6 +59,10 @@ function refs(value) {
   return Array.isArray(value) ? value : [value].filter(Boolean);
 }
 
+function typeList(node) {
+  return refs(node?.['@type']);
+}
+
 function appendUniqueReferences(currentValue, additions = []) {
   const current = refs(currentValue);
   const seen = new Set(current.map(refKey));
@@ -140,7 +144,7 @@ function normalizeMedicalProcedureBodyLocation(nodes) {
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
 
   for (const node of nodes) {
-    if (!refs(node['@type']).includes('MedicalProcedure') || !node.bodyLocation) continue;
+    if (!typeList(node).includes('MedicalProcedure') || !node.bodyLocation) continue;
     const anatomyRefs = refs(node.bodyLocation).filter((item) => item && typeof item === 'object' && item['@id']);
     const textLocations = refs(node.bodyLocation).map((item) => {
       if (typeof item === 'string') return item;
@@ -149,7 +153,35 @@ function normalizeMedicalProcedureBodyLocation(nodes) {
     }).filter(Boolean);
 
     node.bodyLocation = [...new Set(textLocations)];
-    node.isRelatedTo = appendUniqueReferences(node.isRelatedTo, anatomyRefs);
+    node.subjectOf = appendUniqueReferences(node.subjectOf, anatomyRefs.map((item) => byId.get(item['@id']))
+      .filter((item) => typeList(item).includes('CreativeWork') || typeList(item).includes('Event'))
+      .map((item) => ({ '@id': item['@id'] })));
+  }
+}
+
+function normalizeSchemaOrgDomainRange(nodes) {
+  for (const node of nodes) {
+    const types = typeList(node);
+
+    if (node.isRelatedTo) {
+      delete node.isRelatedTo;
+    }
+
+    if (node.about && !types.some((type) => ['Certification', 'CommunicateAction', 'CreativeWork', 'Dataset', 'DefinedTerm', 'DefinedTermSet', 'Event', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
+      delete node.about;
+    }
+
+    if (node.mentions && !types.some((type) => ['CreativeWork', 'Dataset', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
+      delete node.mentions;
+    }
+
+    if (node.hasPart && !types.some((type) => ['CreativeWork', 'Dataset', 'DefinedTermSet', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
+      delete node.hasPart;
+    }
+
+    if (node.isPartOf && !types.some((type) => ['CreativeWork', 'Dataset', 'DefinedTerm', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
+      delete node.isPartOf;
+    }
   }
 }
 
@@ -211,6 +243,7 @@ export function buildGlobalGraph() {
   applyMedicalKnowledgeGraph(nodes);
   applyResearchEvidenceGraph(nodes);
   normalizeMedicalProcedureBodyLocation(nodes);
+  normalizeSchemaOrgDomainRange(nodes);
 
   return {
     ...baseGraph,
