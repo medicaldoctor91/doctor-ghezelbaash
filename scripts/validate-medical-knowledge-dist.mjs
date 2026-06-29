@@ -112,6 +112,7 @@ if (!fs.existsSync(file)) {
 
     for (const node of nodes) {
       if (node.isRelatedTo) fail(`dist graph must not emit isRelatedTo: ${node['@id'] || node.name}`);
+      if (typeList(node).includes('DefinedTerm') && node.isPartOf) fail(`dist DefinedTerm must use inDefinedTermSet, not direct isPartOf: ${node['@id']}`);
     }
 
     for (const node of nodes.filter((item) => typeList(item).includes('MedicalProcedure'))) {
@@ -160,8 +161,8 @@ if (!fs.existsSync(file)) {
     }
   }
 
-  for (const privateNeedle of ['E94583066IMM', '1962-87530', 'E0217736', '1991-05-29', 'medicaldoctor91@gmail.com', 'Yazdan Alley', 'Delgosha street']) {
-    if (text.includes(privateNeedle)) fail(`medical ontology dist leaked private credential data: ${privateNeedle}`);
+  for (const privateNeedle of ['medicaldoctor91', 'Yazdan Alley', 'Delgosha street']) {
+    if (text.includes(privateNeedle)) fail(`medical ontology dist leaked private credential data marker: ${privateNeedle}`);
   }
 }
 
