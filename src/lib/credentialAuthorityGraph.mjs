@@ -1,4 +1,4 @@
-import { absoluteUrl } from '../data/site.mjs';
+import { absoluteUrl, site } from '../data/site.mjs';
 
 function ref(path) {
   return { '@id': absoluteUrl(path) };
@@ -115,7 +115,7 @@ export function applyCredentialAuthorityGraph(nodes) {
   const physician = byId.get(absoluteUrl('/#physician'));
   const dataset = byId.get(absoluteUrl('/kg/#dataset'));
   const website = byId.get(absoluteUrl('/#website'));
-  const personPage = byId.get(`${absoluteUrl('/about/') || absoluteUrl('/')}#webpage`);
+  const personPage = byId.get(`${absoluteUrl(site.pages.person)}#webpage`);
 
   const credentialRefs = [
     ref('/kg/credential#mcc-doctor-of-medicine-equivalency'),
