@@ -147,6 +147,14 @@ for (const node of nodes.filter(isMedicalOntologyNode)) {
   }
 }
 
+for (const node of nodes.filter((item) => refs(item['@type']).includes('MedicalProcedure'))) {
+  for (const bodyLocation of refs(node.bodyLocation)) {
+    if (typeof bodyLocation !== 'string') {
+      fail(`MedicalProcedure.bodyLocation must be Text on ${node['@id']}`);
+    }
+  }
+}
+
 const forbiddenSameAsByNode = new Map([
   [absoluteUrl('/kg/medical-condition#acne-scar'), ['https://www.wikidata.org/wiki/Q206060']],
   [absoluteUrl('/kg/medical-condition#atrophic-acne-scar'), ['https://www.wikidata.org/wiki/Q206060']],
