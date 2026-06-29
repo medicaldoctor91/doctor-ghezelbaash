@@ -45,6 +45,13 @@ const graph = buildGlobalGraph();
 const nodes = graph?.['@graph'] || [];
 const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
 
+const possibleTreatmentAllowedTypes = new Set([
+  'Drug',
+  'DrugClass',
+  'LifestyleModification',
+  'MedicalTherapy'
+]);
+
 const forbiddenPlanningKeys = new Set([
   'status',
   'risk',
@@ -159,6 +166,19 @@ for (const node of nodes.filter((item) => typeList(item).includes('MedicalProced
   for (const bodyLocation of refs(node.bodyLocation)) {
     if (typeof bodyLocation !== 'string') {
       fail(`MedicalProcedure.bodyLocation must be Text on ${node['@id']}`);
+    }
+  }
+}
+
+for (const node of nodes.filter((item) => typeList(item).includes('MedicalCondition'))) {
+  for (const treatmentRef of refs(node.possibleTreatment)) {
+    const treatment = byId.get(treatmentRef?.['@id']);
+    if (!treatment) {
+      fail(`possibleTreatment target missing for ${node['@id']}: ${treatmentRef?.['@id']}`);
+      continue;
+    }
+    if (!typeList(treatment).some((type) => possibleTreatmentAllowedTypes.has(type))) {
+      fail(`possibleTreatment target has invalid Schema.org type for ${node['@id']}: ${treatment['@id']}`);
     }
   }
 }
