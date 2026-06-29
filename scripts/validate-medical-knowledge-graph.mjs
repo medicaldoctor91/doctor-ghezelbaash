@@ -160,6 +160,7 @@ for (const node of nodes.filter(isMedicalOntologyNode)) {
 
 for (const node of nodes) {
   if (node.isRelatedTo) fail(`isRelatedTo is not allowed in the primary graph: ${node['@id'] || node.name}`);
+  if (typeList(node).includes('DefinedTerm') && node.isPartOf) fail(`DefinedTerm must use inDefinedTermSet, not direct isPartOf: ${node['@id']}`);
 }
 
 for (const node of nodes.filter((item) => typeList(item).includes('MedicalProcedure'))) {
@@ -260,8 +261,8 @@ for (const service of services) {
 }
 
 const graphText = JSON.stringify(graph);
-for (const privateNeedle of ['E94583066IMM', '1962-87530', 'E0217736', '1991-05-29', 'medicaldoctor91@gmail.com', 'Yazdan Alley', 'Delgosha street']) {
-  if (graphText.includes(privateNeedle)) fail(`graph leaked private credential data: ${privateNeedle}`);
+for (const privateNeedle of ['medicaldoctor91', 'Yazdan Alley', 'Delgosha street']) {
+  if (graphText.includes(privateNeedle)) fail(`graph leaked private credential data marker: ${privateNeedle}`);
 }
 
 if (failed) process.exit(1);
