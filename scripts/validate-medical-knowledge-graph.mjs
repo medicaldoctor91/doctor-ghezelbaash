@@ -26,6 +26,10 @@ function hasRef(entity, property, id) {
   return refIds(entity?.[property]).includes(id);
 }
 
+function typeList(entity) {
+  return refs(entity?.['@type']);
+}
+
 function visit(value, callback) {
   if (!value || typeof value !== 'object') return;
   if (Array.isArray(value)) {
@@ -147,7 +151,11 @@ for (const node of nodes.filter(isMedicalOntologyNode)) {
   }
 }
 
-for (const node of nodes.filter((item) => refs(item['@type']).includes('MedicalProcedure'))) {
+for (const node of nodes) {
+  if (node.isRelatedTo) fail(`isRelatedTo is not allowed in the primary graph: ${node['@id'] || node.name}`);
+}
+
+for (const node of nodes.filter((item) => typeList(item).includes('MedicalProcedure'))) {
   for (const bodyLocation of refs(node.bodyLocation)) {
     if (typeof bodyLocation !== 'string') {
       fail(`MedicalProcedure.bodyLocation must be Text on ${node['@id']}`);
@@ -221,7 +229,7 @@ for (const service of services) {
   }
 
   for (const linkedId of expectedLinks) {
-    if (!hasRef(serviceNode, 'isRelatedTo', linkedId)) fail(`service ${service.slug} missing ontology isRelatedTo ${linkedId}`);
+    if (!hasRef(serviceNode, 'category', linkedId)) fail(`service ${service.slug} missing ontology category ${linkedId}`);
   }
 
   if (pageNode) {
