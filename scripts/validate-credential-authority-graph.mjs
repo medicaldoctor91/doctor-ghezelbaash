@@ -15,9 +15,9 @@ const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => B
 const personId = absoluteUrl('/#dr-saeed-ghezelbash');
 const physicianId = absoluteUrl('/#physician');
 const datasetId = absoluteUrl('/kg/#dataset');
-const medicalDegreeId = absoluteUrl('/kg/credential#medical-degree-kums-2018');
+const medicalDegreeId = absoluteUrl('/kg/credential#medical-degree');
 const mccEquivalencyId = absoluteUrl('/kg/credential#mcc-doctor-of-medicine-equivalency');
-const schoolId = absoluteUrl('/kg/organization#kermanshah-university-medical-school');
+const schoolId = absoluteUrl('/kg/organization#kermanshah-university-medical-sciences-school-of-medicine');
 const mccId = absoluteUrl('/kg/organization#medical-council-of-canada');
 
 const person = byId.get(personId);
