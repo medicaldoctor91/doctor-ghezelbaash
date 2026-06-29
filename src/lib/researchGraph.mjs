@@ -52,7 +52,7 @@ export function buildResearchPersonEntity() {
 
 export function buildResearchCollectionEntity() {
   return {
-    '@type': 'CollectionPage',
+    '@type': ['CollectionPage', 'WebPage', 'CreativeWork'],
     '@id': absoluteUrl('/research/#collection'),
     name: 'Research identifiers and scholarly works for Dr. Saeed Ghezelbash',
     url: absoluteUrl('/research.json'),
