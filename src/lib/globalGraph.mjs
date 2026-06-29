@@ -214,7 +214,7 @@ function normalizeSchemaOrgDomainRange(nodes) {
       delete node.hasPart;
     }
 
-    if (node.isPartOf && !types.some((type) => ['CreativeWork', 'Dataset', 'DefinedTerm', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
+    if (node.isPartOf && !types.some((type) => ['CreativeWork', 'Dataset', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
       delete node.isPartOf;
     }
   }
