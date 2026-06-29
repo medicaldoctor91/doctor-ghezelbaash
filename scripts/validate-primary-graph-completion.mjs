@@ -91,7 +91,8 @@ if (catalog) {
 }
 
 if (credential) {
-  if (credential['@type'] !== 'EducationalOccupationalCredential') fail('credential must be EducationalOccupationalCredential');
+  if (!typeList(credential).includes('EducationalOccupationalCredential')) fail('credential must be EducationalOccupationalCredential');
+  if (!typeList(credential).includes('CreativeWork')) fail('credential must be CreativeWork for about retention');
   if (credential.identifier?.value !== '167430') fail('credential missing medical council number');
   if (refId(credential.about) !== absoluteUrl('/#dr-saeed-ghezelbash')) fail('credential must be about person');
 }
