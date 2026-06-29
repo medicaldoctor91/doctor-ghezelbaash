@@ -1,9 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { absoluteUrl } from '../src/data/site.mjs';
-import { buildCredentialedGlobalGraph } from '../src/lib/credentialedGlobalGraph.mjs';
-import { applyLocalBusinessActionPass } from '../src/lib/localBusinessActionPass.mjs';
-import { applySchemaOrgCompliancePass } from '../src/lib/schemaOrgCompliancePass.mjs';
+import { GET as getPrimaryGraphResponse } from '../src/pages/graph-ghezelbaash-final.jsonld.js';
 
 let failed = false;
 function fail(message) {
@@ -25,12 +23,10 @@ function visit(value, callback, pathLabel = '$') {
   callback(value, pathLabel);
   for (const [key, child] of Object.entries(value)) visit(child, callback, `${pathLabel}.${key}`);
 }
-function buildPublicGraphForGuardrails() {
-  const graph = buildCredentialedGlobalGraph();
-  const nodes = graph['@graph'] || [];
-  applySchemaOrgCompliancePass(nodes);
-  applyLocalBusinessActionPass(nodes);
-  return graph;
+async function loadPublishedPrimaryGraphForGuardrails() {
+  const response = await getPrimaryGraphResponse();
+  const text = await response.text();
+  return JSON.parse(text);
 }
 
 const repoRoot = process.cwd();
@@ -52,7 +48,7 @@ for (const [file, needle] of [
   }
 }
 
-const graph = buildPublicGraphForGuardrails();
+const graph = await loadPublishedPrimaryGraphForGuardrails();
 const nodes = graph['@graph'] || [];
 const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
 
@@ -70,7 +66,7 @@ for (const entity of [person, physician].filter(Boolean)) {
 const forbiddenPlanningKeys = new Set(['risk', 'action', 'pending', 'addNow', 'addLater']);
 visit(graph, (item, pathLabel) => {
   for (const key of Object.keys(item)) {
-    if (forbiddenPlanningKeys.has(key)) fail(`planning metadata leaked into graph at ${pathLabel}: ${key}`);
+    if (forbiddenPlanningKeys.has(key)) fail(`planning metadata leaked into published primary graph at ${pathLabel}: ${key}`);
   }
 });
 
