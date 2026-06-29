@@ -100,6 +100,10 @@ if (!fs.existsSync(file)) {
       }
     });
 
+    for (const node of nodes) {
+      if (node.isRelatedTo) fail(`dist graph must not emit isRelatedTo: ${node['@id'] || node.name}`);
+    }
+
     for (const node of nodes.filter((item) => refs(item['@type']).includes('MedicalProcedure'))) {
       for (const bodyLocation of refs(node.bodyLocation)) {
         if (typeof bodyLocation !== 'string') {
