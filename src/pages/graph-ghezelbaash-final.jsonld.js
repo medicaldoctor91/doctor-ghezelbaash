@@ -1,3 +1,4 @@
+// Primary graph source contract: ../lib/globalGraph.mjs
 import { buildCredentialedGlobalGraph } from '../lib/credentialedGlobalGraph.mjs';
 import { applyLocalBusinessActionPass as enrichLocalGraph } from '../lib/localBusinessActionPass.mjs';
 import { applySchemaOrgCompliancePass as cleanGraphNodes } from '../lib/schemaOrgCompliancePass.mjs';
