@@ -37,10 +37,12 @@ function typeList(entity) {
 function propertyValues(entity, propertyID) {
   return refs(entity?.additionalProperty)
     .filter((property) => property?.propertyID === propertyID)
-    .map((property) => property.value);
+    .map((property) => property.value)
+    .filter((value) => value !== undefined && value !== null && value !== '');
 }
 
 const graph = buildGlobalGraph();
+const graphText = JSON.stringify(graph);
 const nodes = graph?.['@graph'] || [];
 const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
 const catalog = byId.get(dataCatalogId());
@@ -57,6 +59,21 @@ const physician = byId.get(absoluteUrl('/#physician'));
 const clinic = byId.get(absoluteUrl('/#clinic'));
 const dataset = byId.get(absoluteUrl('/kg/#dataset'));
 const termSet = byId.get(absoluteUrl('/kg/aesthetic-scope#term-set'));
+
+for (const forbiddenNeedle of [
+  'E0217736',
+  'E94583066IMM',
+  '1962-87530',
+  'MyIntealth',
+  'EICS',
+  'ECA ID',
+  'MCC candidate code',
+  'Canadian immigration purposes',
+  'immigration validity',
+  'LMCC'
+]) {
+  if (graphText.includes(forbiddenNeedle)) fail(`non-authority MCC workflow wording leaked into completion graph: ${forbiddenNeedle}`);
+}
 
 if (!catalog) fail('missing DataCatalog node');
 if (!credential) fail('missing medical credential node');
@@ -90,20 +107,21 @@ if (mcc) {
 }
 
 if (medicalDegree) {
-  if (medicalDegree['@type'] !== 'EducationalOccupationalCredential') fail('medical degree must be EducationalOccupationalCredential');
+  if (!typeList(medicalDegree).includes('EducationalOccupationalCredential')) fail('medical degree must be EducationalOccupationalCredential');
   if (medicalDegree.name !== 'Medical Degree') fail('medical degree name mismatch');
   if (medicalDegree.dateIssued !== '2018') fail('medical degree graduation year mismatch');
   if (refId(medicalDegree.recognizedBy) !== medicalSchoolId()) fail('medical degree must be recognized by medical school');
-  if (!propertyValues(medicalDegree, 'credentialEvidenceBoundary').some((value) => String(value).includes('Birth date'))) fail('medical degree must declare privacy boundary');
+  if (!propertyValues(medicalDegree, 'countryOfStudy').includes('IR')) fail('medical degree must preserve countryOfStudy');
 }
 
 if (mccAssessment) {
-  if (mccAssessment['@type'] !== 'EducationalOccupationalCredential') fail('MCC assessment must be EducationalOccupationalCredential');
+  if (!typeList(mccAssessment).includes('EducationalOccupationalCredential')) fail('MCC assessment must be EducationalOccupationalCredential');
   if (mccAssessment.dateIssued !== '2020-09-17') fail('MCC assessment date mismatch');
   if (mccAssessment.educationalLevel !== 'Doctor of Medicine') fail('MCC equivalency mismatch');
   if (refId(mccAssessment.recognizedBy) !== medicalCouncilOfCanadaId()) fail('MCC assessment must be recognized by MCC');
   if (refId(mccAssessment.assesses) !== medicalDegreeCredentialId()) fail('MCC assessment must assess medical degree');
-  if (!propertyValues(mccAssessment, 'credentialEvidenceBoundary').some((value) => String(value).includes('ECA ID'))) fail('MCC assessment must declare private identifier boundary');
+  if (!propertyValues(mccAssessment, 'assessedCredential').includes('Medical Degree')) fail('MCC assessment must preserve assessedCredential');
+  if (!propertyValues(mccAssessment, 'canadianEquivalency').includes('Doctor of Medicine')) fail('MCC assessment must preserve Canadian Doctor of Medicine equivalency');
 }
 
 if (place) {
