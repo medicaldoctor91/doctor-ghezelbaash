@@ -23,7 +23,6 @@ const phases = {
     ['graph architecture guardrails', 'scripts/validate-graph-architecture-guardrails.mjs']
   ],
   dist: [
-    ['primary graph dist', 'scripts/validate-primary-graph-dist.mjs'],
     ['medical knowledge dist', 'scripts/validate-medical-knowledge-dist.mjs'],
     ['research evidence dist', 'scripts/validate-research-evidence-dist.mjs'],
     ['credential authority dist', 'scripts/validate-credential-authority-dist.mjs'],
