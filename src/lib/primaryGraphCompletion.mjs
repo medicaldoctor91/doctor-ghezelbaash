@@ -167,7 +167,7 @@ function buildEducationNodes() {
       sameAs: [canadianCredentialAssessment.recognizedBy.url]
     },
     {
-      '@type': 'EducationalOccupationalCredential',
+      '@type': ['EducationalOccupationalCredential', 'CreativeWork'],
       '@id': medicalDegreeCredentialId(),
       name: medicalDegree.name,
       credentialCategory: medicalDegree.credentialCategory,
@@ -190,7 +190,7 @@ function buildEducationNodes() {
       ]
     },
     {
-      '@type': 'EducationalOccupationalCredential',
+      '@type': ['EducationalOccupationalCredential', 'CreativeWork'],
       '@id': mccCredentialAssessmentId(),
       name: canadianCredentialAssessment.name,
       credentialCategory: canadianCredentialAssessment.credentialCategory,
@@ -247,7 +247,7 @@ export function buildPrimaryGraphCompletionNodes() {
       ]
     },
     {
-      '@type': 'EducationalOccupationalCredential',
+      '@type': ['EducationalOccupationalCredential', 'CreativeWork'],
       '@id': medicalCredentialId(),
       name: 'Iran Medical Council practice license 167430',
       credentialCategory: regulatoryIdentity.irimc.licenseType,
