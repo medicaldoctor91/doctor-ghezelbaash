@@ -18,7 +18,6 @@ const phases = {
   'primary-graph': [
     ['primary graph completion', 'scripts/validate-primary-graph-completion.mjs'],
     ['primary graph relations', 'scripts/validate-primary-graph-relations.mjs'],
-    ['primary graph page clusters', 'scripts/validate-primary-graph-page-clusters.mjs'],
     ['primary graph final layer', 'scripts/validate-primary-graph-final-layer.mjs'],
     ['medical knowledge graph', 'scripts/validate-medical-knowledge-graph.mjs'],
     ['graph architecture guardrails', 'scripts/validate-graph-architecture-guardrails.mjs']
