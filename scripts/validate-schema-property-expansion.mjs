@@ -84,12 +84,13 @@ if (dataset) {
 }
 
 if (serviceNodes.length < services.length) fail('missing service nodes for channel validation');
+const expectedRelatedCount = serviceNodes.length - 1;
 for (const service of serviceNodes) {
   if (!service.availableChannel) fail(`service missing availableChannel: ${service['@id'] || service.name}`);
   if (service.availableChannel?.['@type'] !== 'ServiceChannel') fail(`service availableChannel must be ServiceChannel: ${service['@id'] || service.name}`);
   if (refId(service.availableChannel?.servicePhone) !== graphContactPointId()) fail(`service channel must point to graph ContactPoint: ${service['@id'] || service.name}`);
   if (refId(service.availableChannel?.serviceLocation) !== absoluteUrl('/#clinic')) fail(`service channel must point to clinic: ${service['@id'] || service.name}`);
-  if (!Array.isArray(service.isRelatedTo) || service.isRelatedTo.length < services.length - 1) fail(`service missing related official services: ${service['@id'] || service.name}`);
+  if (!Array.isArray(service.isRelatedTo) || service.isRelatedTo.length < expectedRelatedCount) fail(`service missing related official services: ${service['@id'] || service.name}`);
 }
 
 if (failed) process.exit(1);
