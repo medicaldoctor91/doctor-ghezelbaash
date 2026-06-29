@@ -36,6 +36,10 @@ import {
   scholarlyArticleReferences
 } from './researchGraph.mjs';
 import {
+  applyResearchEvidenceGraph,
+  buildResearchEvidenceGraphNodes
+} from './researchEvidenceGraph.mjs';
+import {
   applySchemaPropertyExpansion,
   buildSchemaPropertyExpansionNodes
 } from './schemaPropertyExpansion.mjs';
@@ -149,10 +153,12 @@ export function buildGlobalGraph() {
       { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') },
       { '@id': absoluteUrl('/kg/medical-knowledge#term-set') },
       { '@id': absoluteUrl('/kg/dermatology-hair#term-set') },
-      { '@id': absoluteUrl('/research/#collection') }
+      { '@id': absoluteUrl('/research/#collection') },
+      { '@id': absoluteUrl('/kg/research-evidence#term-set') }
     ]);
     dataset.mentions = appendUniqueReferences(dataset.mentions, [
       { '@id': absoluteUrl('/research/#collection') },
+      { '@id': absoluteUrl('/kg/research-evidence#term-set') },
       ...researchReferences
     ]);
   }
@@ -169,6 +175,7 @@ export function buildGlobalGraph() {
     ...buildPrimaryGraphPageClusterNodes(),
     ...buildPrimaryGraphFinalLayerNodes(),
     ...buildMedicalKnowledgeGraphNodes(),
+    ...buildResearchEvidenceGraphNodes(),
     buildResearchCollectionEntity(),
     ...buildScholarlyArticleEntities()
   ]);
@@ -181,6 +188,7 @@ export function buildGlobalGraph() {
   applyPrimaryGraphPageClusters(nodes);
   applyPrimaryGraphFinalLayer(nodes);
   applyMedicalKnowledgeGraph(nodes);
+  applyResearchEvidenceGraph(nodes);
 
   return {
     ...baseGraph,
