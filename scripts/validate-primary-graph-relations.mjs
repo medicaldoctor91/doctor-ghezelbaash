@@ -102,18 +102,20 @@ for (const entity of [person, physician, clinic, termSet, offerCatalog, crosswal
 
 if (person) {
   if (!refs(person.knowsLanguage).includes('fa-IR') || !refs(person.knowsLanguage).includes('en')) fail('person missing knowsLanguage fa-IR/en');
-  if (!refIds(person.mentions).includes(dataCatalogId())) fail('person mentions missing DataCatalog');
+  if (!refIds(person.hasCredential).includes(medicalCredentialId())) fail('person hasCredential missing medical credential');
+  if (refId(person.worksFor) !== absoluteUrl('/#clinic')) fail('person worksFor must point to clinic');
 }
 
 if (physician) {
   if (!refs(physician.knowsLanguage).includes('fa-IR') || !refs(physician.knowsLanguage).includes('en')) fail('physician missing knowsLanguage fa-IR/en');
-  if (!refIds(physician.mentions).includes(medicalCredentialId())) fail('physician mentions missing credential');
+  if (!refIds(physician.hasCredential).includes(medicalCredentialId())) fail('physician hasCredential missing medical credential');
+  if (!refIds(physician.medicalSpecialty).includes(aestheticMedicineSpecialtyId())) fail('physician medicalSpecialty missing aesthetic medicine');
 }
 
 if (clinic) {
-  for (const id of [absoluteUrl('/#dr-saeed-ghezelbash'), absoluteUrl('/#physician'), kermanshahPlaceId(), officialOfferCatalogId()]) {
-    if (!refIds(clinic.mentions).includes(id)) fail(`clinic mentions missing ${id}`);
-  }
+  if (refId(clinic.founder) !== absoluteUrl('/#dr-saeed-ghezelbash')) fail('clinic founder must be person');
+  if (!refIds(clinic.areaServed).includes(kermanshahPlaceId())) fail('clinic areaServed missing Kermanshah');
+  if (refId(clinic.hasOfferCatalog) !== officialOfferCatalogId()) fail('clinic hasOfferCatalog must be official offer catalog');
 }
 
 if (dataset) {
@@ -133,9 +135,8 @@ if (dataset) {
 
 if (catalog) {
   if (refId(catalog.mainEntity) !== absoluteUrl('/kg/#dataset')) fail('catalog mainEntity must be dataset');
-  for (const id of [absoluteUrl('/kg/#dataset'), entityCrosswalkDatasetId(), officialOfferCatalogId(), absoluteUrl('/kg/aesthetic-scope#term-set'), absoluteUrl('/research/#collection')]) {
-    if (!refIds(catalog.hasPart).includes(id)) fail(`catalog hasPart missing ${id}`);
-  }
+  if (refId(catalog.dataset) !== absoluteUrl('/kg/#dataset')) fail('catalog dataset must point to primary dataset');
+  if (!Array.isArray(catalog.distribution) || catalog.distribution.length < 20) fail('catalog missing machine asset distribution');
 }
 
 for (const service of services) {
@@ -146,9 +147,9 @@ for (const service of services) {
   }
   if (!refIds(serviceNode.subjectOf).includes(primaryGraphId)) fail(`service subjectOf missing primary graph: ${service.slug}`);
   if (!refIds(serviceNode.subjectOf).includes(primaryGraphGovernancePolicyId())) fail(`service subjectOf missing policy: ${service.slug}`);
-  for (const id of [absoluteUrl('/#clinic'), absoluteUrl('/#physician'), officialOfferCatalogId(), kermanshahPlaceId()]) {
-    if (!refIds(serviceNode.mentions).includes(id)) fail(`service mentions missing ${id}: ${service.slug}`);
-  }
+  if (refId(serviceNode.provider) !== absoluteUrl('/#clinic')) fail(`service provider must be clinic: ${service.slug}`);
+  if (refId(serviceNode.availableAtOrFrom) !== absoluteUrl('/#clinic')) fail(`service availableAtOrFrom must be clinic: ${service.slug}`);
+  if (!refIds(serviceNode.serviceArea).includes(kermanshahPlaceId())) fail(`service serviceArea missing Kermanshah: ${service.slug}`);
 }
 
 if (failed) process.exit(1);
