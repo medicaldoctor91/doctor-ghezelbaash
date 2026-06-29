@@ -10,6 +10,10 @@ import {
   buildEntityCrosswalkGraphNodes
 } from './entityCrosswalk.mjs';
 import {
+  applyCredentialAuthorityGraph,
+  buildCredentialAuthorityGraphNodes
+} from './credentialAuthorityGraph.mjs';
+import {
   buildOfficialOfferCatalogEntity,
   buildOfficialOfferEntities,
   officialOfferCatalogId
@@ -264,6 +268,7 @@ export function buildGlobalGraph() {
     ...buildPrimaryGraphFinalLayerNodes(),
     ...buildMedicalKnowledgeGraphNodes(),
     ...buildResearchEvidenceGraphNodes(),
+    ...buildCredentialAuthorityGraphNodes(),
     buildResearchCollectionEntity(),
     ...buildScholarlyArticleEntities()
   ]);
@@ -277,6 +282,7 @@ export function buildGlobalGraph() {
   applyPrimaryGraphFinalLayer(nodes);
   applyMedicalKnowledgeGraph(nodes);
   applyResearchEvidenceGraph(nodes);
+  applyCredentialAuthorityGraph(nodes);
   normalizeMedicalProcedureBodyLocation(nodes);
   normalizePossibleTreatmentRanges(nodes);
   normalizeSchemaOrgDomainRange(nodes);
