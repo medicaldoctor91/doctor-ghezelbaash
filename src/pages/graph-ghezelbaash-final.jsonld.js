@@ -1,9 +1,9 @@
-import { buildGlobalGraph } from '../lib/globalGraph.mjs';
+import { buildCredentialedGlobalGraph } from '../lib/credentialedGlobalGraph.mjs';
 import { applyLocalBusinessActionPass as enrichLocalGraph } from '../lib/localBusinessActionPass.mjs';
 import { applySchemaOrgCompliancePass as cleanGraphNodes } from '../lib/schemaOrgCompliancePass.mjs';
 
 export function GET() {
-  const graph = buildGlobalGraph();
+  const graph = buildCredentialedGlobalGraph();
   cleanGraphNodes(graph['@graph'] || []);
   enrichLocalGraph(graph['@graph'] || []);
 
