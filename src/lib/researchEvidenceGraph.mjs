@@ -1,5 +1,6 @@
 import { absoluteUrl } from '../data/site.mjs';
 import { researchProfile } from '../data/research.mjs';
+import { services } from '../data/services.mjs';
 import { scholarlyArticleId, scholarlyArticleReferences } from './researchGraph.mjs';
 
 function ref(path) {
@@ -188,9 +189,32 @@ const publicationEvidenceLinks = {
   ]
 };
 
+const researchAestheticBridgePaths = [
+  '/kg/medical-knowledge#aesthetic-medicine',
+  '/kg/research#evidence-based-aesthetic-medicine',
+  '/kg/medical-knowledge#physician-led-assessment',
+  '/kg/medical-knowledge#patient-selection',
+  '/kg/research#clinical-reasoning',
+  '/kg/research#risk-communication',
+  '/kg/medical-knowledge#contraindications-precautions',
+  '/kg/medical-knowledge#post-procedure-care',
+  '/kg/medical-procedure#term-set',
+  '/kg/medical-material#term-set'
+];
+
+const aestheticProcedureMentionPaths = [
+  '/kg/medical-procedure#cosmetic-botulinum-toxin-injection',
+  '/kg/medical-procedure#dermal-filler-injection',
+  '/kg/medical-procedure#thread-lift',
+  '/kg/medical-procedure#submental-liposuction',
+  '/kg/medical-therapy#platelet-rich-plasma'
+];
+
 const allResearchEvidencePaths = [
   ...researchTopicDefinitions.map((definition) => definition.path),
-  ...Object.values(publicationEvidenceLinks).flat()
+  ...Object.values(publicationEvidenceLinks).flat(),
+  ...researchAestheticBridgePaths,
+  ...aestheticProcedureMentionPaths
 ];
 
 function buildEvidenceTermSet(definition) {
@@ -222,6 +246,18 @@ export function researchEvidenceReferences(paths = allResearchEvidencePaths) {
   return ids([...new Set(paths)]);
 }
 
+export function researchAestheticBridgeReferences() {
+  return ids(researchAestheticBridgePaths);
+}
+
+export function aestheticServiceReferences() {
+  return services.map((service) => ref(`/${service.slug}/#service`));
+}
+
+export function articleAestheticMentionReferences() {
+  return ids([...researchAestheticBridgePaths, ...aestheticProcedureMentionPaths]).concat(aestheticServiceReferences());
+}
+
 export function publicationEvidenceReferences(publicationKey) {
   return ids(publicationEvidenceLinks[publicationKey] || []);
 }
@@ -233,6 +269,10 @@ export function publicationEvidenceLinkMap() {
       linkedPaths.map((linkedPath) => absoluteUrl(linkedPath))
     ])
   );
+}
+
+export function articleAestheticMentionUrls() {
+  return articleAestheticMentionReferences().map((item) => item['@id']);
 }
 
 export function buildResearchEvidenceGraphNodes() {
@@ -256,14 +296,22 @@ export function applyResearchEvidenceGraph(nodes) {
     ref('/kg/research#clinical-reasoning')
   ];
 
+  const aestheticBridge = researchAestheticBridgeReferences();
+  const aestheticArticleMentions = articleAestheticMentionReferences();
+  const serviceRefs = aestheticServiceReferences();
+
   for (const entity of [person, physician].filter(Boolean)) {
-    entity.knowsAbout = appendUnique(entity.knowsAbout, researchEvidenceCore);
+    entity.knowsAbout = appendUnique(entity.knowsAbout, [...researchEvidenceCore, ...aestheticBridge]);
     entity.subjectOf = appendUnique(entity.subjectOf, [ref('/research/#collection'), ...scholarlyArticleReferences()]);
   }
 
   if (researchCollection) {
-    researchCollection.about = appendUnique(researchCollection.about, researchEvidenceCore);
-    researchCollection.mentions = appendUnique(researchCollection.mentions, researchEvidenceReferences());
+    researchCollection.about = appendUnique(researchCollection.about, [...researchEvidenceCore, ...aestheticBridge]);
+    researchCollection.mentions = appendUnique(researchCollection.mentions, [
+      ...researchEvidenceReferences(),
+      ...aestheticArticleMentions,
+      ...serviceRefs
+    ]);
     researchCollection.hasPart = appendUnique(researchCollection.hasPart, [
       ...scholarlyArticleReferences(),
       ref('/kg/research-evidence#term-set'),
@@ -272,12 +320,30 @@ export function applyResearchEvidenceGraph(nodes) {
   }
 
   if (dataset) {
-    dataset.about = appendUnique(dataset.about, researchEvidenceCore);
-    dataset.mentions = appendUnique(dataset.mentions, researchEvidenceReferences());
+    dataset.about = appendUnique(dataset.about, [...researchEvidenceCore, ...aestheticBridge]);
+    dataset.mentions = appendUnique(dataset.mentions, [
+      ...researchEvidenceReferences(),
+      ...aestheticArticleMentions,
+      ...serviceRefs
+    ]);
     dataset.hasPart = appendUnique(dataset.hasPart, [
       ref('/kg/research-evidence#term-set'),
       ...researchEvidenceReferences()
     ]);
+  }
+
+  for (const service of services) {
+    const serviceNode = byId.get(absoluteUrl(`/${service.slug}/#service`));
+    const pageNode = byId.get(absoluteUrl(`/${service.slug}/#webpage`));
+    if (serviceNode) serviceNode.category = appendUnique(serviceNode.category, aestheticBridge);
+    if (pageNode) {
+      pageNode.about = appendUnique(pageNode.about, aestheticBridge);
+      pageNode.mentions = appendUnique(pageNode.mentions, [
+        ...researchEvidenceCore,
+        ...aestheticBridge,
+        ref('/research/#collection')
+      ]);
+    }
   }
 
   for (const publication of researchProfile.publications) {
@@ -285,7 +351,7 @@ export function applyResearchEvidenceGraph(nodes) {
     if (!article) continue;
     const links = publicationEvidenceReferences(publication.key);
     article.about = appendUnique(article.about, links);
-    article.mentions = appendUnique(article.mentions, links);
+    article.mentions = appendUnique(article.mentions, [...links, ...aestheticArticleMentions]);
     article.keywords = appendUnique(article.keywords, links.map((item) => item['@id']));
     if (!article.isPartOf) article.isPartOf = ref('/research/#collection');
     article.subjectOf = appendUnique(article.subjectOf, [ref('/kg/research-evidence#term-set')]);
