@@ -34,13 +34,14 @@ const phases = {
   ]
 };
 
-const orderedPhases = ['source', 'schema', 'authority', 'primary-graph', 'dist'];
-const requestedPhase = process.argv[2] || 'all';
-const selectedPhases = requestedPhase === 'all' ? orderedPhases : [requestedPhase];
+const prebuildPhases = ['source', 'schema', 'authority', 'primary-graph'];
+const allPhases = [...prebuildPhases, 'dist'];
+const requestedPhase = process.argv[2] || 'prebuild';
+const selectedPhases = requestedPhase === 'prebuild' ? prebuildPhases : requestedPhase === 'all' ? allPhases : [requestedPhase];
 
 if (!selectedPhases.every((phase) => phases[phase])) {
   console.error(`Unknown validation phase: ${requestedPhase}`);
-  console.error(`Available phases: all, ${orderedPhases.join(', ')}`);
+  console.error(`Available phases: prebuild, all, ${allPhases.join(', ')}`);
   process.exit(1);
 }
 
