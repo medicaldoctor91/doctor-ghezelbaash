@@ -3,23 +3,27 @@ name: Deploy Astro Pages
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: primary-check
+  group: astro-pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  check:
+  build-and-validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout repository without external actions
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           git init .
           git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git fetch --depth=1 origin "${GITHUB_SHA}"
@@ -27,12 +31,14 @@ jobs:
 
       - name: Show build environment
         run: |
+          set -euo pipefail
           node --version
           npm --version
-          test -f package-lock.json && echo "package-lock.json found" || echo "package-lock.json not found; using npm install fallback"
+          test -f package-lock.json && echo "package-lock.json found; using npm ci" || echo "package-lock.json not found; using npm install fallback"
 
       - name: Install dependencies
         run: |
+          set -euo pipefail
           if [ -f package-lock.json ]; then
             npm ci --no-audit --no-fund
           else
@@ -40,4 +46,25 @@ jobs:
           fi
 
       - name: Build and validate Astro site
-        run: npm run check
+        run: |
+          set -euo pipefail
+          npm run check
+
+      - name: Publish dist to gh-pages branch
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -d dist
+          publish_dir="$(mktemp -d)"
+          cp -a dist/. "${publish_dir}/"
+          cd "${publish_dir}"
+          git init .
+          git checkout -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Deploy Astro site"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin gh-pages
