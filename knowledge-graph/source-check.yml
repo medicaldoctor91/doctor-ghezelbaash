@@ -11,9 +11,14 @@ checks:
 current:
   terms_ok: true
   pages_deferred: true
-  sources_pending: true
+  sources_pending: partial
+
+reference_ids:
+  - fda_dermal_fillers
+  - regulator_neuromodulator_notice
+  - regulator_archive_fat_reduction
 
 future:
-  - add_references
+  - add_references_to_terms
   - review_pages
   - run_validation
