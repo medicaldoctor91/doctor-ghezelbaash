@@ -1,14 +1,16 @@
 import { absoluteUrl } from '../data/site.mjs';
 import { advancedKnowledgeScopeTerms } from '../data/advancedKnowledgeScope.mjs';
+import { procedureKnowledgeScopeTerms } from '../data/procedureKnowledgeScope.mjs';
 
 const termSetId = absoluteUrl('/kg/advanced-knowledge-scope#term-set');
+const allAdvancedKnowledgeTerms = [...advancedKnowledgeScopeTerms, ...procedureKnowledgeScopeTerms];
 
 export function advancedKnowledgeTermId(term) {
   return absoluteUrl(`/kg/advanced-knowledge-scope#${term.key}`);
 }
 
 export function advancedKnowledgeTermReferences() {
-  return advancedKnowledgeScopeTerms.map((term) => ({ '@id': advancedKnowledgeTermId(term) }));
+  return allAdvancedKnowledgeTerms.map((term) => ({ '@id': advancedKnowledgeTermId(term) }));
 }
 
 export function buildAdvancedKnowledgeTermSet() {
@@ -27,7 +29,7 @@ export function buildAdvancedKnowledgeTermSet() {
 }
 
 export function buildAdvancedKnowledgeTerms() {
-  return advancedKnowledgeScopeTerms.map((term) => ({
+  return allAdvancedKnowledgeTerms.map((term) => ({
     '@type': 'DefinedTerm',
     '@id': advancedKnowledgeTermId(term),
     name: term.nameFa,
