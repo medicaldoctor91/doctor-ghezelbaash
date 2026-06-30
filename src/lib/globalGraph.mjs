@@ -6,6 +6,11 @@ import {
   buildAestheticScopeTerms
 } from './aestheticScopeGraph.mjs';
 import {
+  buildAdvancedKnowledgeTermSet,
+  buildAdvancedKnowledgeTerms,
+  advancedKnowledgeTermReferences
+} from './advancedKnowledgeScopeGraph.mjs';
+import {
   applyEntityCrosswalk,
   buildEntityCrosswalkGraphNodes
 } from './entityCrosswalk.mjs';
@@ -229,12 +234,21 @@ export function buildGlobalGraph() {
   const nodes = JSON.parse(JSON.stringify(baseGraph['@graph'] || []));
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
   const researchReferences = scholarlyArticleReferences();
+  const advancedKnowledgeReferences = advancedKnowledgeTermReferences();
   const person = byId.get(absoluteUrl('/#dr-saeed-ghezelbash'));
   const physician = byId.get(absoluteUrl('/#physician'));
   const dataset = byId.get(absoluteUrl('/kg/#dataset'));
 
   appendResearchIdentity(person);
   appendResearchIdentity(physician);
+
+  if (person) {
+    person.knowsAbout = appendUniqueReferences(person.knowsAbout, advancedKnowledgeReferences);
+  }
+
+  if (physician) {
+    physician.knowsAbout = appendUniqueReferences(physician.knowsAbout, advancedKnowledgeReferences);
+  }
 
   if (dataset) {
     dataset.citation = appendUniqueReferences(dataset.citation, researchReferences);
@@ -243,12 +257,14 @@ export function buildGlobalGraph() {
       { '@id': absoluteUrl('/#physician') },
       { '@id': absoluteUrl('/#clinic') },
       { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') },
+      { '@id': absoluteUrl('/kg/advanced-knowledge-scope#term-set') },
       { '@id': absoluteUrl('/kg/medical-knowledge#term-set') },
       { '@id': absoluteUrl('/kg/dermatology-hair#term-set') },
       { '@id': absoluteUrl('/research/#collection') },
       { '@id': absoluteUrl('/kg/research-evidence#term-set') }
     ]);
     dataset.mentions = appendUniqueReferences(dataset.mentions, [
+      { '@id': absoluteUrl('/kg/advanced-knowledge-scope#term-set') },
       { '@id': absoluteUrl('/research/#collection') },
       { '@id': absoluteUrl('/kg/research-evidence#term-set') },
       ...researchReferences
@@ -258,6 +274,8 @@ export function buildGlobalGraph() {
   mergeNodeList(nodes, [
     buildAestheticScopeTermSet(),
     ...buildAestheticScopeTerms(),
+    buildAdvancedKnowledgeTermSet(),
+    ...buildAdvancedKnowledgeTerms(),
     buildOfficialOfferCatalogEntity(),
     ...buildOfficialOfferEntities(),
     ...buildEntityCrosswalkGraphNodes(),
