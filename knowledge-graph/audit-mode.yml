@@ -33,6 +33,8 @@ report_only:
     - doctor_missing_scope_knowledge
     - website_missing_author
     - website_missing_creator
+    - safety_topic_as_offer
+    - body_topic_as_service
 
 notes:
   - per_page_author_is_deferred
@@ -40,3 +42,4 @@ notes:
   - future_pages_get_page_specific_author_after_content_exists
   - term_category_is_report_only_until_non_service_taxonomy_is_normalized
   - spine_audits_are_report_only_until_phase_4_results_are_reviewed
+  - phase_6_topics_are_knowledge_scope_only_until_service_approval
