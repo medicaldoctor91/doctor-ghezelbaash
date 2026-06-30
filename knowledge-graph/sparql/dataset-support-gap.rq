@@ -1,0 +1,9 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?dataset WHERE {
+  ?dataset a schema:Dataset .
+  FILTER NOT EXISTS { ?dataset schema:creator ?creator . }
+  FILTER NOT EXISTS { ?dataset schema:license ?license . }
+  FILTER NOT EXISTS { ?dataset schema:identifier ?identifier . }
+  FILTER NOT EXISTS { ?dataset schema:sameAs ?sameAs . }
+}
