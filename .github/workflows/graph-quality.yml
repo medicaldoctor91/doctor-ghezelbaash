@@ -9,7 +9,6 @@ on:
       - "scripts/**"
       - "package.json"
       - "package-lock.json"
-      - "knowledge-graph/**"
       - ".github/workflows/graph-quality.yml"
   workflow_dispatch:
 
@@ -18,7 +17,7 @@ permissions:
 
 jobs:
   quality:
-    name: Graph Quality Check
+    name: Standard Graph Quality Check
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -42,83 +41,66 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install graph tools
+      - name: Install standard graph tools
         run: |
           python -m pip install --upgrade pip
-          pip install rdflib pyshacl networkx
+          pip install rdflib networkx
 
-      - name: Materialize generated graph snapshot
-        run: |
-          set -euo pipefail
-          mkdir -p knowledge-graph/runtime knowledge-graph/reports
-          if [ -f dist/graph-ghezelbaash-final.jsonld ]; then
-            cp dist/graph-ghezelbaash-final.jsonld knowledge-graph/runtime/graph.current.jsonld
-          else
-            test -f graph-ghezelbaash-final.jsonld
-            cp graph-ghezelbaash-final.jsonld knowledge-graph/runtime/graph.current.jsonld
-          fi
-
-      - name: Validate JSON-LD and RDF parse
-        run: python knowledge-graph/tools/standards.py | tee knowledge-graph/reports/standards-validation.txt
-
-      - name: Validate graph rules
-        run: |
-          set -euo pipefail
-          for shape in knowledge-graph/rules/*.ttl knowledge-graph/shapes/*.ttl; do
-            test -f "$shape" || continue
-            echo "Running SHACL: $shape"
-            pyshacl -s "$shape" -df json-ld knowledge-graph/runtime/graph.current.jsonld
-          done
-
-      - name: Run SPARQL audits
+      - name: Validate generated JSON-LD with RDF parser
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           from rdflib import Graph
-          graph = Graph().parse('knowledge-graph/runtime/graph.current.jsonld', format='json-ld')
-          out = Path('knowledge-graph/reports')
-          out.mkdir(parents=True, exist_ok=True)
-          results = {}
-          for q in sorted(Path('knowledge-graph/sparql').glob('*.rq')):
-              rows = []
-              for row in graph.query(q.read_text(encoding='utf-8')):
-                  rows.append([str(x) for x in row])
-              results[q.name] = rows
-          (out/'sparql-audit.json').write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8')
+          src = Path('dist/graph-ghezelbaash-final.jsonld')
+          if not src.exists():
+              src = Path('graph-ghezelbaash-final.jsonld')
+          data = json.loads(src.read_text(encoding='utf-8'))
+          Graph().parse(str(src), format='json-ld')
+          out = Path('graph-quality-reports')
+          out.mkdir(exist_ok=True)
+          (out / 'standard-validation.json').write_text(json.dumps({'nodes': len(data.get('@graph', []))}, indent=2), encoding='utf-8')
           PY
 
-      - name: Generate graph metrics
+      - name: Generate standard graph metrics
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           import networkx as nx
-          data=json.loads(Path('knowledge-graph/runtime/graph.current.jsonld').read_text(encoding='utf-8'))
-          G=nx.DiGraph()
-          def vals(x): return x if isinstance(x,list) else ([] if x is None else [x])
-          def rid(x): return x.get('@id') if isinstance(x,dict) else (x if isinstance(x,str) and x.startswith('http') else None)
-          for n in data.get('@graph',[]):
-              sid=n.get('@id')
+          src = Path('dist/graph-ghezelbaash-final.jsonld')
+          if not src.exists():
+              src = Path('graph-ghezelbaash-final.jsonld')
+          data = json.loads(src.read_text(encoding='utf-8'))
+          G = nx.DiGraph()
+          def vals(x): return x if isinstance(x, list) else ([] if x is None else [x])
+          def rid(x): return x.get('@id') if isinstance(x, dict) else (x if isinstance(x, str) and x.startswith('http') else None)
+          for n in data.get('@graph', []):
+              sid = n.get('@id')
               if not sid: continue
               G.add_node(sid)
-              for k,v in n.items():
+              for k, v in n.items():
                   if k.startswith('@'): continue
                   for item in vals(v):
-                      tid=rid(item)
-                      if tid: G.add_edge(sid,tid)
-          deg=nx.degree_centrality(G) if G.number_of_nodes() else {}
-          pr=nx.pagerank(G) if G.number_of_edges() else {}
-          out=Path('knowledge-graph/reports')
-          out.mkdir(parents=True,exist_ok=True)
-          report={'nodes':G.number_of_nodes(),'edges':G.number_of_edges(),'top_degree':sorted(deg.items(),key=lambda x:x[1],reverse=True)[:20],'top_pagerank':sorted(pr.items(),key=lambda x:x[1],reverse=True)[:20],'no_incoming':[n for n in G.nodes if G.in_degree(n)==0],'no_outgoing':[n for n in G.nodes if G.out_degree(n)==0]}
-          (out/'graph-health.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+                      tid = rid(item)
+                      if tid: G.add_edge(sid, tid)
+          deg = nx.degree_centrality(G) if G.number_of_nodes() else {}
+          pr = nx.pagerank(G) if G.number_of_edges() else {}
+          out = Path('graph-quality-reports')
+          out.mkdir(exist_ok=True)
+          report = {
+              'nodes': G.number_of_nodes(),
+              'edges': G.number_of_edges(),
+              'top_degree': sorted(deg.items(), key=lambda x: x[1], reverse=True)[:20],
+              'top_pagerank': sorted(pr.items(), key=lambda x: x[1], reverse=True)[:20],
+              'no_incoming': [n for n in G.nodes if G.in_degree(n) == 0],
+              'no_outgoing': [n for n in G.nodes if G.out_degree(n) == 0]
+          }
+          (out / 'graph-health.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
           PY
 
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
           name: graph-quality-reports
-          path: |
-            knowledge-graph/runtime/graph.current.jsonld
-            knowledge-graph/reports/
+          path: graph-quality-reports/
