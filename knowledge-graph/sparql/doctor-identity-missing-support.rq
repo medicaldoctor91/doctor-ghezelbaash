@@ -1,0 +1,8 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?doctor WHERE {
+  BIND(<https://www.ghezelbaash.ir/#dr-saeed-ghezelbash> AS ?doctor)
+  FILTER NOT EXISTS { ?doctor schema:sameAs ?sameAs . }
+  FILTER NOT EXISTS { ?doctor schema:identifier ?identifier . }
+  FILTER NOT EXISTS { ?doctor schema:subjectOf ?source . }
+}
