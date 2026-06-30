@@ -1,6 +1,0 @@
-version: 1
-baseline:
-  source_branch: "main"
-  source_file: "graph-ghezelbaash-final.jsonld"
-  source_blob_sha: "ba471e4c3e5523d18b60eb1b8f9ea27ffb9fab74"
-  nodes: 269
