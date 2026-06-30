@@ -1,0 +1,6 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?service WHERE {
+  ?service a schema:Service .
+  FILTER(STRSTARTS(STR(?service), "https://www.ghezelbaash.ir/kg/advanced-knowledge-scope#"))
+}
