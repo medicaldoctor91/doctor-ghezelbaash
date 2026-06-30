@@ -1,0 +1,19 @@
+version: 1
+status: active
+phase: 8
+
+checks:
+  - source_before_page
+  - source_before_assertion
+  - no_auto_expansion
+  - report_only_first
+
+current:
+  terms_ok: true
+  pages_deferred: true
+  sources_pending: true
+
+future:
+  - add_references
+  - review_pages
+  - run_validation
