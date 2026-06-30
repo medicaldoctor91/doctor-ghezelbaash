@@ -1,0 +1,40 @@
+version: 1
+policy:
+  new_claims_require_source: true
+  no_invented_claims: true
+  semantic_autofix: false
+
+claim_groups:
+  identity:
+    status: protected
+    required_support:
+      - sameAs
+      - identifier
+      - source
+      - provenance
+  clinic_location:
+    status: protected
+    required_support:
+      - address
+      - geo
+      - map_url
+      - source
+  service_availability:
+    status: protected
+    required_support:
+      - provider
+      - service_page
+      - offer_or_description
+  dataset_provenance:
+    status: protected
+    required_support:
+      - creator
+      - publisher
+      - license_or_distribution
+      - sameAs
+
+forbidden:
+  - invented_credentials
+  - invented_medical_claims
+  - unverified_sameAs
+  - merging_person_and_clinic
