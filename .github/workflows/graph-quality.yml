@@ -46,6 +46,24 @@ jobs:
           pyshacl -s knowledge-graph/shapes/mapping.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
           pyshacl -s knowledge-graph/shapes/evidence.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
 
+      - name: Run SPARQL audits
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from rdflib import Graph
+          graph = Graph().parse('knowledge-graph/runtime/graph.current.jsonld', format='json-ld')
+          out = Path('knowledge-graph/reports')
+          out.mkdir(parents=True, exist_ok=True)
+          results = {}
+          for q in sorted(Path('knowledge-graph/sparql').glob('*.rq')):
+              rows = []
+              for row in graph.query(q.read_text(encoding='utf-8')):
+                  rows.append([str(x) for x in row])
+              results[q.name] = rows
+          (out/'sparql-audit.json').write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding='utf-8')
+          PY
+
       - name: Generate graph metrics
         run: |
           python - <<'PY'
