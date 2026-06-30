@@ -1,3 +1,28 @@
 version: 1
 status: active
 purpose: page_layer
+
+page_groups:
+  - pillar_pages
+  - child_pages
+  - service_pages
+  - knowledge_pages
+  - faq_pages
+  - evidence_pages
+
+rules:
+  - pages_are_not_services
+  - services_are_not_limited_by_page_count
+  - topics_are_not_limited_by_page_count
+  - clinic_publishes_site_pages
+  - page_assertions_need_support
+
+model:
+  page_type: MedicalWebPage
+  required_when_published:
+    - author
+    - reviewedBy
+    - publisher
+    - mainEntity_or_about
+  pillar_to_child_relation: hasPart
+  child_to_pillar_relation: isPartOf
