@@ -39,7 +39,7 @@ jobs:
           cp graph-ghezelbaash-final.jsonld knowledge-graph/runtime/graph.current.jsonld
 
       - name: Validate JSON-LD and RDF parse
-        run: python knowledge-graph/tools/standards.py
+        run: python knowledge-graph/tools/standards.py | tee knowledge-graph/reports/standards-validation.txt
 
       - name: Validate graph rules
         run: |
