@@ -1,0 +1,11 @@
+version: 1
+entities:
+  person:
+    id: "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+    qid: "Q140287622"
+  clinic:
+    id: "https://www.ghezelbaash.ir/#clinic"
+    qid: "Q140288589"
+  dataset:
+    id: "https://www.ghezelbaash.ir/kg/#dataset"
+    qid: "Q140304972"
