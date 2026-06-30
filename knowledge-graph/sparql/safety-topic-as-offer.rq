@@ -1,7 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?offer ?item WHERE {
-  ?offer a schema:Offer .
-  ?offer schema:itemOffered ?item .
-  FILTER(CONTAINS(STR(?item), "risk") || CONTAINS(STR(?item), "enzyme") || CONTAINS(STR(?item), "complication") || CONTAINS(STR(?item), "correction"))
-}
