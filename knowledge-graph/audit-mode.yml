@@ -1,0 +1,29 @@
+version: 1
+status: active
+
+blocking:
+  shacl:
+    - identity
+    - schemaorg
+    - mapping
+    - evidence
+    - identity_lock
+    - scope_boundary
+
+report_only:
+  sparql:
+    - missing_provider
+    - missing_mainentity
+    - no_incoming
+    - knowledge_term_as_offer
+    - qid_use
+    - page_missing_author
+    - page_missing_reviewer
+    - page_missing_publisher
+    - page_author_not_doctor
+    - page_reviewer_not_doctor
+    - page_publisher_not_clinic
+
+notes:
+  - page_authorship_audits_are_report_only_until_pages_are_published
+  - future_published_medical_pages_should_have_author_reviewer_publisher_and_mainEntity_or_about
