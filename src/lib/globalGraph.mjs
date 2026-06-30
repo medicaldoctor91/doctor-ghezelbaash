@@ -1,68 +1,18 @@
 import { researchProfile } from '../data/research.mjs';
 import { absoluteUrl } from '../data/site.mjs';
 import { buildGlobalGraph as buildSchemaGlobalGraph } from './schema.mjs';
-import {
-  buildAestheticScopeTermSet,
-  buildAestheticScopeTerms
-} from './aestheticScopeGraph.mjs';
-import {
-  buildAdvancedKnowledgeTermSet,
-  buildAdvancedKnowledgeTerms,
-  advancedKnowledgeTermReferences
-} from './advancedKnowledgeScopeGraph.mjs';
-import {
-  applyEntityCrosswalk,
-  buildEntityCrosswalkGraphNodes
-} from './entityCrosswalk.mjs';
-import {
-  applyCredentialAuthorityGraph,
-  buildCredentialAuthorityGraphNodes
-} from './credentialAuthorityGraph.mjs';
-import {
-  buildOfficialOfferCatalogEntity,
-  buildOfficialOfferEntities,
-  officialOfferCatalogId
-} from './officialOfferGraph.mjs';
-import {
-  applyPrimaryGraphCompletion,
-  buildPrimaryGraphCompletionNodes
-} from './primaryGraphCompletion.mjs';
-import {
-  buildPrimaryGraphFinalLayerNodes,
-  applyPrimaryGraphFinalLayer
-} from './primaryGraphFinalLayer.mjs';
-import {
-  applyPrimaryGraphPages,
-  buildPrimaryGraphPageNodes
-} from './primaryGraphPages.mjs';
-import {
-  applyPrimaryGraphRelations,
-  buildPrimaryGraphRelationNodes
-} from './primaryGraphRelations.mjs';
-import {
-  buildResearchCollectionEntity,
-  buildScholarlyArticleEntities,
-  scholarlyArticleReferences
-} from './researchGraph.mjs';
-import {
-  applyResearchEvidenceGraph,
-  buildResearchEvidenceGraphNodes
-} from './researchEvidenceGraph.mjs';
-import {
-  applySchemaPropertyExpansion,
-  buildSchemaPropertyExpansionNodes
-} from './schemaPropertyExpansion.mjs';
-import {
-  applyMedicalKnowledgeGraph,
-  buildMedicalKnowledgeGraphNodes
-} from './medicalKnowledgeGraph.mjs';
-
-const POSSIBLE_TREATMENT_ALLOWED_TYPES = new Set([
-  'Drug',
-  'DrugClass',
-  'LifestyleModification',
-  'MedicalTherapy'
-]);
+import { buildAestheticScopeTermSet, buildAestheticScopeTerms } from './aestheticScopeGraph.mjs';
+import { applyEntityCrosswalk, buildEntityCrosswalkGraphNodes } from './entityCrosswalk.mjs';
+import { applyCredentialAuthorityGraph, buildCredentialAuthorityGraphNodes } from './credentialAuthorityGraph.mjs';
+import { buildOfficialOfferCatalogEntity, buildOfficialOfferEntities, officialOfferCatalogId } from './officialOfferGraph.mjs';
+import { applyPrimaryGraphCompletion, buildPrimaryGraphCompletionNodes } from './primaryGraphCompletion.mjs';
+import { buildPrimaryGraphFinalLayerNodes, applyPrimaryGraphFinalLayer } from './primaryGraphFinalLayer.mjs';
+import { applyPrimaryGraphPages, buildPrimaryGraphPageNodes } from './primaryGraphPages.mjs';
+import { applyPrimaryGraphRelations, buildPrimaryGraphRelationNodes } from './primaryGraphRelations.mjs';
+import { buildResearchCollectionEntity, buildScholarlyArticleEntities, scholarlyArticleReferences } from './researchGraph.mjs';
+import { applyResearchEvidenceGraph, buildResearchEvidenceGraphNodes } from './researchEvidenceGraph.mjs';
+import { applySchemaPropertyExpansion, buildSchemaPropertyExpansionNodes } from './schemaPropertyExpansion.mjs';
+import { applyMedicalKnowledgeGraph, buildMedicalKnowledgeGraphNodes } from './medicalKnowledgeGraph.mjs';
 
 function refKey(value) {
   if (!value) return null;
@@ -75,30 +25,17 @@ function refs(value) {
   return Array.isArray(value) ? value : [value].filter(Boolean);
 }
 
-function typeList(node) {
-  return refs(node?.['@type']);
-}
-
 function appendUniqueReferences(currentValue, additions = []) {
   const current = refs(currentValue);
   const seen = new Set(current.map(refKey));
   const merged = [...current];
-
   for (const addition of additions) {
     const key = refKey(addition);
     if (!key || seen.has(key)) continue;
     seen.add(key);
     merged.push(addition);
   }
-
   return merged;
-}
-
-function appendType(node, type) {
-  if (!node) return;
-  const types = typeList(node);
-  if (types.includes(type)) return;
-  node['@type'] = types.length === 1 ? [types[0], type] : [...types, type];
 }
 
 function orcidIdentifier() {
@@ -131,19 +68,15 @@ function appendResearchIdentity(entity) {
 
 function mergeNodeList(nodes, additions) {
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
-
-  for (const addition of additions) {
+  for (const addition of additions.filter(Boolean)) {
     const id = addition['@id'];
     if (!id || !byId.has(id)) {
       nodes.push(addition);
       if (id) byId.set(id, addition);
       continue;
     }
-
     Object.assign(byId.get(id), addition);
   }
-
-  return byId;
 }
 
 function attachOfficialOfferCatalog(nodes) {
@@ -151,81 +84,12 @@ function attachOfficialOfferCatalog(nodes) {
   const catalogReference = { '@id': officialOfferCatalogId() };
   const clinic = byId.get(absoluteUrl('/#clinic'));
   const physician = byId.get(absoluteUrl('/#physician'));
-
   if (clinic) clinic.hasOfferCatalog = catalogReference;
   if (physician) physician.hasOfferCatalog = catalogReference;
-
   for (const node of nodes) {
     if (node['@type'] !== 'Service' || !node.url) continue;
     const servicePath = new URL(node.url).pathname;
-    const offerId = absoluteUrl(`${servicePath.replace(/\/$/, '')}/#offer`);
-    node.offers = { '@id': offerId };
-  }
-}
-
-function normalizeMedicalProcedureBodyLocation(nodes) {
-  const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
-
-  for (const node of nodes) {
-    if (!typeList(node).includes('MedicalProcedure') || !node.bodyLocation) continue;
-    const textLocations = refs(node.bodyLocation).map((item) => {
-      if (typeof item === 'string') return item;
-      const anatomyNode = byId.get(item?.['@id']);
-      return anatomyNode?.name || anatomyNode?.alternateName?.[0] || null;
-    }).filter(Boolean);
-
-    node.bodyLocation = [...new Set(textLocations)];
-  }
-}
-
-function normalizePossibleTreatmentRanges(nodes) {
-  const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
-
-  for (const node of nodes) {
-    if (!typeList(node).includes('MedicalCondition') || !node.possibleTreatment) continue;
-
-    const treatmentRefs = refs(node.possibleTreatment).filter((treatmentRef) => {
-      const target = byId.get(treatmentRef?.['@id']);
-      const targetTypes = typeList(target);
-      if (targetTypes.some((type) => POSSIBLE_TREATMENT_ALLOWED_TYPES.has(type))) return true;
-      if (targetTypes.includes('MedicalProcedure')) {
-        appendType(target, 'MedicalTherapy');
-        return true;
-      }
-      return false;
-    });
-
-    if (treatmentRefs.length) {
-      node.possibleTreatment = treatmentRefs;
-    } else {
-      delete node.possibleTreatment;
-    }
-  }
-}
-
-function normalizeSchemaOrgDomainRange(nodes) {
-  for (const node of nodes) {
-    const types = typeList(node);
-
-    if (node.isRelatedTo) {
-      delete node.isRelatedTo;
-    }
-
-    if (node.about && !types.some((type) => ['Certification', 'CommunicateAction', 'CreativeWork', 'Dataset', 'DefinedTerm', 'DefinedTermSet', 'Event', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
-      delete node.about;
-    }
-
-    if (node.mentions && !types.some((type) => ['CreativeWork', 'Dataset', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
-      delete node.mentions;
-    }
-
-    if (node.hasPart && !types.some((type) => ['CreativeWork', 'Dataset', 'DefinedTermSet', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
-      delete node.hasPart;
-    }
-
-    if (node.isPartOf && !types.some((type) => ['CreativeWork', 'Dataset', 'ScholarlyArticle', 'WebPage', 'WebSite'].includes(type))) {
-      delete node.isPartOf;
-    }
+    node.offers = { '@id': absoluteUrl(`${servicePath.replace(/\/$/, '')}/#offer`) };
   }
 }
 
@@ -234,21 +98,12 @@ export function buildGlobalGraph() {
   const nodes = JSON.parse(JSON.stringify(baseGraph['@graph'] || []));
   const byId = new Map(nodes.map((node) => [node['@id'], node]).filter(([id]) => Boolean(id)));
   const researchReferences = scholarlyArticleReferences();
-  const advancedKnowledgeReferences = advancedKnowledgeTermReferences();
   const person = byId.get(absoluteUrl('/#dr-saeed-ghezelbash'));
   const physician = byId.get(absoluteUrl('/#physician'));
   const dataset = byId.get(absoluteUrl('/kg/#dataset'));
 
   appendResearchIdentity(person);
   appendResearchIdentity(physician);
-
-  if (person) {
-    person.knowsAbout = appendUniqueReferences(person.knowsAbout, advancedKnowledgeReferences);
-  }
-
-  if (physician) {
-    physician.knowsAbout = appendUniqueReferences(physician.knowsAbout, advancedKnowledgeReferences);
-  }
 
   if (dataset) {
     dataset.citation = appendUniqueReferences(dataset.citation, researchReferences);
@@ -257,14 +112,12 @@ export function buildGlobalGraph() {
       { '@id': absoluteUrl('/#physician') },
       { '@id': absoluteUrl('/#clinic') },
       { '@id': absoluteUrl('/kg/aesthetic-scope#term-set') },
-      { '@id': absoluteUrl('/kg/advanced-knowledge-scope#term-set') },
       { '@id': absoluteUrl('/kg/medical-knowledge#term-set') },
       { '@id': absoluteUrl('/kg/dermatology-hair#term-set') },
       { '@id': absoluteUrl('/research/#collection') },
       { '@id': absoluteUrl('/kg/research-evidence#term-set') }
     ]);
     dataset.mentions = appendUniqueReferences(dataset.mentions, [
-      { '@id': absoluteUrl('/kg/advanced-knowledge-scope#term-set') },
       { '@id': absoluteUrl('/research/#collection') },
       { '@id': absoluteUrl('/kg/research-evidence#term-set') },
       ...researchReferences
@@ -274,8 +127,6 @@ export function buildGlobalGraph() {
   mergeNodeList(nodes, [
     buildAestheticScopeTermSet(),
     ...buildAestheticScopeTerms(),
-    buildAdvancedKnowledgeTermSet(),
-    ...buildAdvancedKnowledgeTerms(),
     buildOfficialOfferCatalogEntity(),
     ...buildOfficialOfferEntities(),
     ...buildEntityCrosswalkGraphNodes(),
@@ -301,12 +152,6 @@ export function buildGlobalGraph() {
   applyMedicalKnowledgeGraph(nodes);
   applyResearchEvidenceGraph(nodes);
   applyCredentialAuthorityGraph(nodes);
-  normalizeMedicalProcedureBodyLocation(nodes);
-  normalizePossibleTreatmentRanges(nodes);
-  normalizeSchemaOrgDomainRange(nodes);
 
-  return {
-    ...baseGraph,
-    '@graph': nodes
-  };
+  return { ...baseGraph, '@graph': nodes };
 }
