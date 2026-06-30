@@ -42,6 +42,12 @@ report_only:
     - advanced_term_missing_service_page
     - advanced_term_missing_citation
     - advanced_page_claim_before_source
+    - doctor_identity_missing_support
+    - location_missing_support
+    - doctor_clinic_relation_missing_support
+    - service_claim_missing_support
+    - dataset_support_gap
+    - regulatory_identity_missing_support
 
 notes:
   - per_page_author_is_deferred
@@ -52,3 +58,4 @@ notes:
   - phase_6_topics_are_knowledge_scope_only_until_service_approval
   - phase_7_routes_advanced_topics_to_existing_service_pages
   - phase_8_sources_are_report_only_until_references_are_added
+  - phase_8_core_claims_need_evidence_paths
