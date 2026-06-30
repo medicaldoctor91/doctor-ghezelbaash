@@ -1,0 +1,6 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?clinic WHERE {
+  BIND(<https://www.ghezelbaash.ir/#clinic> AS ?clinic)
+  FILTER NOT EXISTS { ?clinic schema:hasOfferCatalog ?catalog . }
+}
