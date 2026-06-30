@@ -1,0 +1,7 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?term WHERE {
+  ?term a schema:DefinedTerm .
+  FILTER(STRSTARTS(STR(?term), "https://www.ghezelbaash.ir/kg/aesthetic-scope#"))
+  FILTER NOT EXISTS { <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash> schema:knowsAbout ?term . }
+}
