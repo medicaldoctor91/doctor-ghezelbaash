@@ -38,6 +38,9 @@ jobs:
           mkdir -p knowledge-graph/runtime knowledge-graph/reports
           cp graph-ghezelbaash-final.jsonld knowledge-graph/runtime/graph.current.jsonld
 
+      - name: Validate JSON-LD and RDF parse
+        run: python knowledge-graph/tools/standards.py
+
       - name: Validate graph rules
         run: |
           set -euo pipefail
