@@ -10,19 +10,30 @@ page_groups:
   - faq_pages
   - evidence_pages
 
+current_phase:
+  page_creation: deferred
+  per_page_author: deferred
+  site_level_author: active
+
 rules:
   - pages_are_not_services
   - services_are_not_limited_by_page_count
   - topics_are_not_limited_by_page_count
   - clinic_publishes_site_pages
   - page_assertions_need_support
+  - root_website_can_identify_doctor_as_site_author
 
 model:
-  page_type: MedicalWebPage
-  required_when_published:
-    - author
-    - reviewedBy
-    - publisher
-    - mainEntity_or_about
+  root_website:
+    type: WebSite
+    current_relations:
+      - author
+      - creator
+  future_medical_page:
+    page_type: MedicalWebPage
+    add_when_content_exists:
+      - author
+      - publisher
+      - mainEntity_or_about
   pillar_to_child_relation: hasPart
   child_to_pillar_relation: isPartOf
