@@ -8,7 +8,6 @@ import {
   buildServiceItemList,
   buildServiceSchema
 } from '../lib/schema.mjs';
-import { absoluteUrl } from '../data/site.mjs';
 import { getRouteByPath } from '../lib/routes.mjs';
 
 const {
@@ -22,15 +21,6 @@ const {
 
 const route = getRouteByPath(canonicalPath);
 const routeGraph = [];
-
-if (canonicalPath === '/') {
-  routeGraph.push({
-    '@type': 'WebSite',
-    '@id': absoluteUrl('/#website'),
-    author: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
-    creator: { '@id': absoluteUrl('/#dr-saeed-ghezelbash') }
-  });
-}
 
 if (route.kind === 'person') {
   routeGraph.push(buildPersonEntity(), buildPhysicianEntity());
