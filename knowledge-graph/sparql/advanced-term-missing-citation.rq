@@ -1,0 +1,7 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?term WHERE {
+  ?term a schema:DefinedTerm .
+  FILTER(STRSTARTS(STR(?term), "https://www.ghezelbaash.ir/kg/advanced-knowledge-scope#"))
+  FILTER NOT EXISTS { ?term schema:citation ?citation . }
+}
