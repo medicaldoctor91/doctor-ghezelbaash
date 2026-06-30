@@ -48,6 +48,9 @@ report_only:
     - service_claim_missing_support
     - dataset_support_gap
     - regulatory_identity_missing_support
+    - clinic_local_identity_gap
+    - clinic_offer_catalog_gap
+    - clinic_dataset_about_gap
 
 notes:
   - per_page_author_is_deferred
@@ -55,7 +58,9 @@ notes:
   - future_pages_get_page_specific_author_after_content_exists
   - term_category_is_report_only_until_non_service_taxonomy_is_normalized
   - spine_audits_are_report_only_until_phase_4_results_are_reviewed
-  - phase_6_topics_are_knowledge_scope_only_until_service_approval
+  - knowledge_scope_expansion_was_started_early_and_is_not_phase_6
+  - phase_6_is_clinic_cluster
+  - phase_6_clinic_cluster_must_be_completed_before_phase_9_or_graph_theory_optimization
   - phase_7_routes_advanced_topics_to_existing_service_pages
   - phase_8_sources_are_report_only_until_references_are_added
   - phase_8_core_claims_need_evidence_paths
