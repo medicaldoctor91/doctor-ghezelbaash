@@ -1,0 +1,6 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?site WHERE {
+  ?site a schema:WebSite .
+  FILTER NOT EXISTS { ?site schema:creator <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash> . }
+}
