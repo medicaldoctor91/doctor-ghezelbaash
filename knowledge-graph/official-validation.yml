@@ -1,0 +1,36 @@
+version: 1
+status: active
+phase: "3.5"
+
+purpose: "Separate official/standard validation from project-specific graph guardrails."
+
+pre_deploy_blocking:
+  standards:
+    - json_syntax
+    - jsonld_structure
+    - rdf_jsonld_parse
+    - shacl_w3c_validation
+  implementation:
+    - github_actions
+    - python_json
+    - rdflib_jsonld
+    - pyshacl
+
+project_guardrails:
+  role: "secondary"
+  purpose: "Protect identity, scope, evidence, authorship, and graph architecture."
+  must_not_replace_official_validation: true
+
+post_deploy_required:
+  manual_or_api:
+    - google_rich_results_test
+    - schema_markup_validator
+    - search_console_url_inspection
+  condition: "Only after pages are publicly deployed and Search Console access exists."
+
+principles:
+  - official_validation_first
+  - custom_guardrails_second
+  - no_graph_expansion_until_pre_deploy_validation_is_green
+  - google_tools_require_public_urls
+  - search_console_api_requires_verified_property_and_oauth
