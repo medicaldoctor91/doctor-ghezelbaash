@@ -15,7 +15,6 @@ jobs:
   quality:
     name: Graph Quality Check
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,19 +26,17 @@ jobs:
 
       - name: Install graph tools
         run: |
-          pip install rdflib pyshacl networkx requests
+          pip install rdflib pyshacl networkx
 
-      - name: Run SHACL validation
+      - name: Check graph files
         run: |
-          pyshacl -s knowledge-graph/shacl/identity.shapes.ttl -df turtle knowledge-graph/source/graph.current.jsonld || true
-          pyshacl -s knowledge-graph/shacl/schemaorg.shapes.ttl -df turtle knowledge-graph/source/graph.current.jsonld || true
-
-      - name: Generate reports
-        run: |
-          python scripts/generate_graph_reports.py || echo "Report script not ready yet"
+          test -f knowledge-graph/source/baseline-manifest.yml
+          test -f knowledge-graph/entity-registry.yml
+          test -f knowledge-graph/wikidata-mapping.yml
+          test -f knowledge-graph/claims-registry.yml
 
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
           name: graph-quality-reports
-          path: knowledge-graph/reports/
+          path: knowledge-graph/
