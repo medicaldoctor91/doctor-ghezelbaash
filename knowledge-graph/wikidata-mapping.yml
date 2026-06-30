@@ -1,0 +1,26 @@
+version: 1
+protected_qids:
+  Q140287622:
+    owner: person
+    expected_ids:
+      - "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      - "https://www.ghezelbaash.ir/#physician"
+    allowed_predicates:
+      - sameAs
+  Q140288589:
+    owner: clinic
+    expected_ids:
+      - "https://www.ghezelbaash.ir/#clinic"
+      - "https://www.ghezelbaash.ir/#organization"
+    allowed_predicates:
+      - sameAs
+  Q140304972:
+    owner: dataset
+    expected_ids:
+      - "https://www.ghezelbaash.ir/kg/#dataset"
+    allowed_predicates:
+      - sameAs
+rules:
+  - qid_must_match_owner
+  - qid_must_not_move_between_core_entities
+  - qid_removal_requires_manual_reason
