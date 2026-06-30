@@ -37,6 +37,8 @@ report_only:
     - body_topic_as_service
     - advanced_topic_as_service
     - advanced_topic_as_offer
+    - advanced_term_not_in_set
+    - doctor_missing_advanced_knowledge
 
 notes:
   - per_page_author_is_deferred
