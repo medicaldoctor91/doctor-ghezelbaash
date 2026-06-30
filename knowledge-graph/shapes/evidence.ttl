@@ -1,0 +1,11 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+
+<#ClaimSupportShape>
+  a sh:NodeShape ;
+  sh:targetClass schema:Claim ;
+  sh:or (
+    [ sh:property [ sh:path schema:citation ; sh:minCount 1 ] ]
+    [ sh:property [ sh:path schema:subjectOf ; sh:minCount 1 ] ]
+    [ sh:property [ sh:path schema:isBasedOn ; sh:minCount 1 ] ]
+  ) .
