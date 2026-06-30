@@ -1,0 +1,7 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+
+<#SameAsShape>
+  a sh:NodeShape ;
+  sh:targetSubjectsOf schema:sameAs ;
+  sh:property [ sh:path schema:sameAs ; sh:minCount 1 ] .
