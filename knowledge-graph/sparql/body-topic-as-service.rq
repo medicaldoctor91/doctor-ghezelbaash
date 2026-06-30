@@ -1,6 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?service WHERE {
-  ?service a schema:Service .
-  FILTER(CONTAINS(STR(?service), "calf") || CONTAINS(STR(?service), "hip") || CONTAINS(STR(?service), "buttock") || CONTAINS(STR(?service), "penile") || CONTAINS(STR(?service), "vaginal"))
-}
