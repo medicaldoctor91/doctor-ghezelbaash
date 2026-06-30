@@ -4,10 +4,9 @@ on:
   push:
     branches: [main]
     paths:
+      - "graph-ghezelbaash-final.jsonld"
       - "knowledge-graph/**"
       - ".github/workflows/graph-quality.yml"
-      - "src/lib/globalGraph.mjs"
-      - "src/data/**"
   workflow_dispatch:
 
 permissions:
@@ -22,31 +21,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install graph tools
         run: |
-          set -euo pipefail
-          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+          python -m pip install --upgrade pip
           pip install rdflib pyshacl networkx
 
-      - name: Materialize graph snapshot
+      - name: Materialize root graph snapshot
         run: |
           set -euo pipefail
+          test -f graph-ghezelbaash-final.jsonld
           mkdir -p knowledge-graph/runtime knowledge-graph/reports
-          node --input-type=module <<'NODE'
-          import { writeFileSync } from 'node:fs';
-          import { buildGlobalGraph } from './src/lib/globalGraph.mjs';
-          writeFileSync('knowledge-graph/runtime/graph.current.jsonld', JSON.stringify(buildGlobalGraph(), null, 2));
-          NODE
+          cp graph-ghezelbaash-final.jsonld knowledge-graph/runtime/graph.current.jsonld
 
       - name: Validate graph rules
         run: |
@@ -55,6 +45,33 @@ jobs:
           pyshacl -s knowledge-graph/shapes/schemaorg.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
           pyshacl -s knowledge-graph/shapes/mapping.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
           pyshacl -s knowledge-graph/shapes/evidence.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
+
+      - name: Generate graph metrics
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import networkx as nx
+          data=json.loads(Path('knowledge-graph/runtime/graph.current.jsonld').read_text(encoding='utf-8'))
+          G=nx.DiGraph()
+          def vals(x): return x if isinstance(x,list) else ([] if x is None else [x])
+          def rid(x): return x.get('@id') if isinstance(x,dict) else (x if isinstance(x,str) and x.startswith('http') else None)
+          for n in data.get('@graph',[]):
+              sid=n.get('@id')
+              if not sid: continue
+              G.add_node(sid)
+              for k,v in n.items():
+                  if k.startswith('@'): continue
+                  for item in vals(v):
+                      tid=rid(item)
+                      if tid: G.add_edge(sid,tid)
+          deg=nx.degree_centrality(G) if G.number_of_nodes() else {}
+          pr=nx.pagerank(G) if G.number_of_edges() else {}
+          out=Path('knowledge-graph/reports')
+          out.mkdir(parents=True,exist_ok=True)
+          report={'nodes':G.number_of_nodes(),'edges':G.number_of_edges(),'top_degree':sorted(deg.items(),key=lambda x:x[1],reverse=True)[:20],'top_pagerank':sorted(pr.items(),key=lambda x:x[1],reverse=True)[:20],'no_incoming':[n for n in G.nodes if G.in_degree(n)==0],'no_outgoing':[n for n in G.nodes if G.out_degree(n)==0]}
+          (out/'graph-health.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
 
       - name: Upload reports
         uses: actions/upload-artifact@v4
