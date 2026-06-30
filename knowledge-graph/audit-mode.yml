@@ -23,7 +23,10 @@ report_only:
     - page_author_not_doctor
     - page_reviewer_not_doctor
     - page_publisher_not_clinic
+    - page_topic_missing
+    - term_category_missing
 
 notes:
   - page_authorship_audits_are_report_only_until_pages_are_published
   - future_published_medical_pages_should_have_author_reviewer_publisher_and_mainEntity_or_about
+  - term_category_is_report_only_until_non_service_taxonomy_is_normalized
