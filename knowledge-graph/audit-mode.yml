@@ -31,9 +31,12 @@ report_only:
     - page_service_mainentity_gap
     - scope_term_not_in_set
     - doctor_missing_scope_knowledge
+    - website_missing_author
+    - website_missing_creator
 
 notes:
-  - page_authorship_audits_are_report_only_until_pages_are_published
-  - future_published_medical_pages_should_have_author_reviewer_publisher_and_mainEntity_or_about
+  - per_page_author_is_deferred
+  - root_website_author_is_active
+  - future_pages_get_page_specific_author_after_content_exists
   - term_category_is_report_only_until_non_service_taxonomy_is_normalized
   - spine_audits_are_report_only_until_phase_4_results_are_reviewed
