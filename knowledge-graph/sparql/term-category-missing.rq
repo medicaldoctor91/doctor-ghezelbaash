@@ -1,0 +1,6 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?term WHERE {
+  ?term a schema:DefinedTerm .
+  FILTER NOT EXISTS { ?term schema:category ?category . }
+}
