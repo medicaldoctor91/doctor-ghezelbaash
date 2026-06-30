@@ -1,9 +1,9 @@
 name: Deploy Astro Pages
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    # Site build is currently postponed.
+    # Manually trigger when you are ready to work on the website again.
 
 permissions:
   contents: read
@@ -34,7 +34,6 @@ jobs:
           set -euo pipefail
           node --version
           npm --version
-          test -f package-lock.json && echo "package-lock.json found; using npm ci" || echo "package-lock.json not found; using npm install fallback"
 
       - name: Install dependencies
         run: |
