@@ -39,6 +39,7 @@ report_only:
     - advanced_topic_as_offer
     - advanced_term_not_in_set
     - doctor_missing_advanced_knowledge
+    - advanced_term_missing_service_page
 
 notes:
   - per_page_author_is_deferred
@@ -47,3 +48,4 @@ notes:
   - term_category_is_report_only_until_non_service_taxonomy_is_normalized
   - spine_audits_are_report_only_until_phase_4_results_are_reviewed
   - phase_6_topics_are_knowledge_scope_only_until_service_approval
+  - phase_7_routes_advanced_topics_to_existing_service_pages
