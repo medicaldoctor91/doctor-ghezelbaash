@@ -41,10 +41,11 @@ jobs:
       - name: Validate graph rules
         run: |
           set -euo pipefail
-          pyshacl -s knowledge-graph/rules/identity.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
-          pyshacl -s knowledge-graph/shapes/schemaorg.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
-          pyshacl -s knowledge-graph/shapes/mapping.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
-          pyshacl -s knowledge-graph/shapes/evidence.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
+          for shape in knowledge-graph/rules/*.ttl knowledge-graph/shapes/*.ttl; do
+            test -f "$shape" || continue
+            echo "Running SHACL: $shape"
+            pyshacl -s "$shape" -df json-ld knowledge-graph/runtime/graph.current.jsonld
+          done
 
       - name: Run SPARQL audits
         run: |
