@@ -35,6 +35,8 @@ report_only:
     - website_missing_creator
     - safety_topic_as_offer
     - body_topic_as_service
+    - advanced_topic_as_service
+    - advanced_topic_as_offer
 
 notes:
   - per_page_author_is_deferred
