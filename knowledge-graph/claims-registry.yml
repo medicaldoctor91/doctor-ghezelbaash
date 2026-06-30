@@ -3,38 +3,43 @@ policy:
   new_claims_require_source: true
   no_invented_claims: true
   semantic_autofix: false
+  important_claims_need_one_support_path: true
+
+support_paths:
+  - source
+  - citation
+  - evidence_node
+  - dataset_provenance
+  - valid_sameAs
+  - valid_identifier
 
 claim_groups:
-  identity:
+  doctor_identity:
     status: protected
-    required_support:
-      - sameAs
-      - identifier
-      - source
-      - provenance
-  clinic_location:
+    required_support: [sameAs, identifier, source, provenance]
+  clinic_identity:
     status: protected
-    required_support:
-      - address
-      - geo
-      - map_url
-      - source
+    required_support: [sameAs, identifier, source, provenance]
   service_availability:
     status: protected
-    required_support:
-      - provider
-      - service_page
-      - offer_or_description
+    required_support: [provider, service_page, offer_or_description]
+  doctor_clinic_relation:
+    status: protected
+    required_support: [worksFor, affiliation, employee, founder, source]
+  clinic_location:
+    status: protected
+    required_support: [address, geo, map_url, source]
   dataset_provenance:
     status: protected
-    required_support:
-      - creator
-      - publisher
-      - license_or_distribution
-      - sameAs
+    required_support: [creator, publisher, license_or_distribution, sameAs]
+  regulatory_identity:
+    status: protected
+    required_support: [identifier, propertyID, value, url]
 
 forbidden:
   - invented_credentials
   - invented_medical_claims
   - unverified_sameAs
   - merging_person_and_clinic
+  - unsupported_service_claims
+  - unsupported_location_claims
