@@ -1,0 +1,7 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?offer ?item WHERE {
+  ?offer a schema:Offer .
+  ?offer schema:itemOffered ?item .
+  FILTER(STRSTARTS(STR(?item), "https://www.ghezelbaash.ir/kg/advanced-knowledge-scope#"))
+}
