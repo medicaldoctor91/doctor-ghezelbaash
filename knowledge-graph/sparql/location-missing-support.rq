@@ -1,0 +1,8 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?place WHERE {
+  BIND(<https://www.ghezelbaash.ir/#clinic> AS ?place)
+  FILTER NOT EXISTS { ?place schema:address ?address . }
+  FILTER NOT EXISTS { ?place schema:geo ?geo . }
+  FILTER NOT EXISTS { ?place schema:hasMap ?map . }
+}
