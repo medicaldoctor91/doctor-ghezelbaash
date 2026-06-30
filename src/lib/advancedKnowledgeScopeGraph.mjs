@@ -1,12 +1,25 @@
 import { absoluteUrl } from '../data/site.mjs';
+import { services } from '../data/services.mjs';
 import { advancedKnowledgeScopeTerms } from '../data/advancedKnowledgeScope.mjs';
 import { procedureKnowledgeScopeTerms } from '../data/procedureKnowledgeScope.mjs';
 
 const termSetId = absoluteUrl('/kg/advanced-knowledge-scope#term-set');
+const datasetId = absoluteUrl('/kg/advanced-knowledge-scope#dataset');
 const allAdvancedKnowledgeTerms = [...advancedKnowledgeScopeTerms, ...procedureKnowledgeScopeTerms];
 
+function serviceForPillar(pillar) {
+  return services.find((service) => service.key === pillar);
+}
+
+function pageRefs(term) {
+  const service = serviceForPillar(term.pillar);
+  const refs = [{ '@id': datasetId }];
+  if (service) refs.push({ '@id': absoluteUrl('/' + service.slug + '/#webpage') });
+  return refs;
+}
+
 export function advancedKnowledgeTermId(term) {
-  return absoluteUrl(`/kg/advanced-knowledge-scope#${term.key}`);
+  return absoluteUrl('/kg/advanced-knowledge-scope#' + term.key);
 }
 
 export function advancedKnowledgeTermReferences() {
@@ -17,7 +30,7 @@ export function buildAdvancedKnowledgeTermSet() {
   return {
     '@type': 'DefinedTermSet',
     '@id': termSetId,
-    name: 'Advanced aesthetic medicine safety and knowledge scope for Dr. Saeed Ghezelbash',
+    name: 'Advanced knowledge scope for Dr. Saeed Ghezelbash',
     inLanguage: ['fa-IR', 'en'],
     about: [
       { '@id': absoluteUrl('/#dr-saeed-ghezelbash') },
@@ -43,6 +56,6 @@ export function buildAdvancedKnowledgeTerms() {
       { '@id': absoluteUrl('/#physician') },
       { '@id': absoluteUrl('/#clinic') }
     ],
-    subjectOf: { '@id': absoluteUrl('/kg/advanced-knowledge-scope#dataset') }
+    subjectOf: pageRefs(term)
   }));
 }
