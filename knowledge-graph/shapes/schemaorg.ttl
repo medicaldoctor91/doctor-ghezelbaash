@@ -1,0 +1,12 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+
+<#ServiceShape>
+  a sh:NodeShape ;
+  sh:targetClass schema:Service ;
+  sh:property [ sh:path schema:provider ; sh:minCount 1 ] .
+
+<#WebPageShape>
+  a sh:NodeShape ;
+  sh:targetClass schema:MedicalWebPage ;
+  sh:property [ sh:path schema:mainEntity ; sh:minCount 1 ] .
