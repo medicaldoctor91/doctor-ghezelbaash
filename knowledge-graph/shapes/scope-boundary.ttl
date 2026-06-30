@@ -4,8 +4,7 @@
 <#KnowledgeTermShape>
   a sh:NodeShape ;
   sh:targetClass schema:DefinedTerm ;
-  sh:property [ sh:path schema:inDefinedTermSet ; sh:minCount 1 ] ;
-  sh:property [ sh:path schema:category ; sh:minCount 1 ] .
+  sh:property [ sh:path schema:inDefinedTermSet ; sh:minCount 1 ] .
 
 <#ServiceShape>
   a sh:NodeShape ;
