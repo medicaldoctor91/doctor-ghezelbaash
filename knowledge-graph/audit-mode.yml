@@ -25,8 +25,15 @@ report_only:
     - page_publisher_not_clinic
     - page_topic_missing
     - term_category_missing
+    - service_not_linked_from_clinic
+    - service_not_linked_from_physician
+    - service_missing_subject_page
+    - page_service_mainentity_gap
+    - scope_term_not_in_set
+    - doctor_missing_scope_knowledge
 
 notes:
   - page_authorship_audits_are_report_only_until_pages_are_published
   - future_published_medical_pages_should_have_author_reviewer_publisher_and_mainEntity_or_about
   - term_category_is_report_only_until_non_service_taxonomy_is_normalized
+  - spine_audits_are_report_only_until_phase_4_results_are_reviewed
