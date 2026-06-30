@@ -1,0 +1,26 @@
+version: 1
+status: active
+
+objective:
+  - strengthen_current_graph
+  - keep_wikidata_mapping_correct
+  - complete_identity_clinic_service_evidence_dataset_layers
+  - use_standard_validation_tools_first
+  - rewrite_with_graph_theory_only_after_semantic_validation
+
+execution_rules:
+  - baseline_must_remain_unchanged
+  - current_graph_is_working_graph
+  - official_and_standard_tools_before_custom_policy
+  - no_identity_merge_for_metric_gain
+  - no_sameAs_without_certainty
+  - no_claim_without_support_path
+  - no_graph_theory_optimization_before_semantic_stability
+
+fast_plan:
+  step_1: clean_active_audits_and_restore_phase_order
+  step_2: validate_jsonld_rdf_shacl_and_sparql_in_github_actions
+  step_3: finish_wikidata_identity_mapping_for_doctor_clinic_dataset
+  step_4: complete_clinic_and_service_clusters
+  step_5: build_evidence_and_provenance_paths_for_core_claims
+  step_6: run_metrics_then_rewrite_batches_with_diff_reports
