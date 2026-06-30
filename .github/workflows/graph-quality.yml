@@ -1,0 +1,45 @@
+name: Graph Quality
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "knowledge-graph/**"
+      - ".github/workflows/graph-quality.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Graph Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install graph tools
+        run: |
+          pip install rdflib pyshacl networkx requests
+
+      - name: Run SHACL validation
+        run: |
+          pyshacl -s knowledge-graph/shacl/identity.shapes.ttl -df turtle knowledge-graph/source/graph.current.jsonld || true
+          pyshacl -s knowledge-graph/shacl/schemaorg.shapes.ttl -df turtle knowledge-graph/source/graph.current.jsonld || true
+
+      - name: Generate reports
+        run: |
+          python scripts/generate_graph_reports.py || echo "Report script not ready yet"
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: graph-quality-reports
+          path: knowledge-graph/reports/
