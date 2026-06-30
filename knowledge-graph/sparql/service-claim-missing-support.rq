@@ -1,0 +1,9 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?service WHERE {
+  ?service a schema:Service .
+  FILTER NOT EXISTS { ?service schema:provider ?provider . }
+  FILTER NOT EXISTS { ?service schema:subjectOf ?page . }
+  FILTER NOT EXISTS { ?service schema:offers ?offer . }
+  FILTER NOT EXISTS { ?service schema:description ?description . }
+}
