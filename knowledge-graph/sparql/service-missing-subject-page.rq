@@ -1,0 +1,6 @@
+PREFIX schema: <https://schema.org/>
+
+SELECT ?service WHERE {
+  ?service a schema:Service .
+  FILTER NOT EXISTS { ?service schema:subjectOf ?page . }
+}
