@@ -6,6 +6,8 @@ on:
     paths:
       - "knowledge-graph/**"
       - ".github/workflows/graph-quality.yml"
+      - "src/lib/globalGraph.mjs"
+      - "src/data/**"
   workflow_dispatch:
 
 permissions:
@@ -15,28 +17,49 @@ jobs:
   quality:
     name: Graph Quality Check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Install graph tools
+      - name: Install dependencies
         run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
           pip install rdflib pyshacl networkx
 
-      - name: Check graph files
+      - name: Materialize graph snapshot
         run: |
-          test -f knowledge-graph/source/baseline-manifest.yml
-          test -f knowledge-graph/entity-registry.yml
-          test -f knowledge-graph/wikidata-mapping.yml
-          test -f knowledge-graph/claims-registry.yml
+          set -euo pipefail
+          mkdir -p knowledge-graph/runtime knowledge-graph/reports
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          import { buildGlobalGraph } from './src/lib/globalGraph.mjs';
+          writeFileSync('knowledge-graph/runtime/graph.current.jsonld', JSON.stringify(buildGlobalGraph(), null, 2));
+          NODE
+
+      - name: Validate graph rules
+        run: |
+          set -euo pipefail
+          pyshacl -s knowledge-graph/rules/identity.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
+          pyshacl -s knowledge-graph/shapes/schemaorg.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
+          pyshacl -s knowledge-graph/shapes/mapping.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
+          pyshacl -s knowledge-graph/shapes/evidence.ttl -df json-ld knowledge-graph/runtime/graph.current.jsonld
 
       - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
           name: graph-quality-reports
-          path: knowledge-graph/
+          path: |
+            knowledge-graph/runtime/graph.current.jsonld
+            knowledge-graph/reports/
