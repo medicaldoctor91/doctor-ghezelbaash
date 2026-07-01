@@ -3,49 +3,34 @@ import { services } from '../data/services.mjs';
 
 export function normalizePath(path = '/') {
   if (!path || path === '') return '/';
-  const withLeadingSlash = path.startsWith('/') ? path : `/${path}`;
-  if (withLeadingSlash === '/') return '/';
-  if (/\.[a-z0-9]+$/i.test(withLeadingSlash)) return withLeadingSlash;
-  return withLeadingSlash.endsWith('/') ? withLeadingSlash : `${withLeadingSlash}/`;
+  const value = path.startsWith('/') ? path : `/${path}`;
+  if (value === '/') return '/';
+  return value.endsWith('/') ? value : `${value}/`;
 }
 
 export const coreRoutes = [
   { path: '/', label: 'خانه', kind: 'home', priority: '1.0' },
-  { path: site.pages.person, label: 'دکتر سعید قزلباش', kind: 'person', priority: '0.95' },
-  { path: site.pages.clinic, label: 'کلینیک زیبایی دکتر سعید قزلباش', kind: 'clinic', priority: '0.90' },
-  { path: site.pages.services, label: 'خدمات زیبایی در کرمانشاه', kind: 'services-hub', priority: '0.90' },
-  { path: site.pages.contact, label: 'تماس و مسیر مراجعه', kind: 'contact', priority: '0.80' },
-  { path: site.pages.evidence, label: 'شواهد و منابع', kind: 'evidence', priority: '0.72' },
-  { path: site.pages.kg, label: 'گراف دانش', kind: 'knowledge-graph', priority: '0.72' },
-  { path: '/aesthetic-medicine-dataset.html', label: 'داده‌ست پزشکی زیبایی', kind: 'dataset', priority: '0.60' }
+  { path: '/about/', label: 'درباره دکتر و کلینیک', kind: 'profile', priority: '0.95' },
+  { path: '/services/', label: 'خدمات زیبایی', kind: 'services-hub', priority: '0.90' },
+  { path: '/contact/', label: 'تماس و مسیر مراجعه', kind: 'contact', priority: '0.85' }
 ];
 
 export const serviceRoutes = services.map((service) => ({
   path: `/${service.slug}/`,
   label: service.title,
   kind: 'service',
-  priority: '0.86',
+  priority: '0.90',
   service
 }));
 
 export const routeRegistry = [...coreRoutes, ...serviceRoutes].map((route) => {
   const path = normalizePath(route.path);
-  return {
-    ...route,
-    path,
-    url: absoluteUrl(path)
-  };
+  return { ...route, path, url: absoluteUrl(path) };
 });
 
-export const navRoutes = [
-  '/',
-  site.pages.person,
-  site.pages.clinic,
-  site.pages.services,
-  site.pages.evidence,
-  site.pages.kg,
-  site.pages.contact
-].map((path) => routeRegistry.find((route) => route.path === normalizePath(path))).filter(Boolean);
+export const navRoutes = ['/', '/about/', '/services/', '/contact/']
+  .map((path) => routeRegistry.find((route) => route.path === normalizePath(path)))
+  .filter(Boolean);
 
 export function getRouteByPath(path = '/') {
   const normalized = normalizePath(path);
@@ -69,15 +54,13 @@ export function priorityForPath(path = '/') {
 export function breadcrumbsForPath(path = '/') {
   const route = getRouteByPath(path);
   if (route.path === '/') return [{ name: route.label, path: '/' }];
-
   if (route.kind === 'service') {
     return [
       { name: routeLabelForPath('/'), path: '/' },
-      { name: routeLabelForPath(site.pages.services), path: site.pages.services },
+      { name: routeLabelForPath('/services/'), path: '/services/' },
       { name: route.label, path: route.path }
     ];
   }
-
   return [
     { name: routeLabelForPath('/'), path: '/' },
     { name: route.label, path: route.path }
