@@ -1,29 +1,28 @@
 import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://www.ghezelbaash.ir',
-
   output: 'static',
   trailingSlash: 'always',
   compressHTML: true,
-
+  integrations: [sitemap()],
   build: {
     assets: '_astro',
     format: 'directory',
-    inlineStylesheets: 'always',
+    inlineStylesheets: 'always'
   },
-
   vite: {
     build: {
-      target: 'es2020',
+      target: 'es2022',
       cssCodeSplit: true,
-      minify: 'esbuild',
+      minify: 'esbuild'
     },
     json: {
-      stringify: true,
+      stringify: true
     },
     esbuild: {
-      legalComments: 'none',
-    },
-  },
+      legalComments: 'none'
+    }
+  }
 });
