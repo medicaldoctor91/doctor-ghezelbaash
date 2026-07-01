@@ -2,45 +2,21 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { services } from '../data/services.mjs';
 ---
-<BaseLayout title="خدمات زیبایی در کرمانشاه | دکتر سعید قزلباش" description="هاب خدمات زیبایی دکتر سعید قزلباش در کرمانشاه؛ بوتاکس، فیلر، لیفت نخ، جوانسازی پوست و مو و ساکشن غبغب با مسیرهای اختصاصی و قابل بررسی." canonicalPath="/services/">
+<BaseLayout title="Services | Dr. Saeed Ghezelbaash" description="Services hub." canonicalPath="/services/">
   <section class="box">
-    <p class="small">هاب تجاری و کانونیکال خدمات</p>
-    <h1>خدمات زیبایی در کرمانشاه</h1>
-    <p>این صفحه نقطه ورود کاربرانی است که هنوز بین چند خدمت مردد هستند. هر خدمت صفحه اختصاصی دارد تا تصمیم کاربر از جست‌وجوی عمومی به مسیر مشخص پزشک، کلینیک، تماس و شواهد برسد.</p>
-    <p><a class="cta" href="/contact/">تماس و هماهنگی</a></p>
+    <p class="small">Services</p>
+    <h1>Services</h1>
+    <p>Four final pillar routes.</p>
+    <p><a class="cta" href="/contact/">Contact</a></p>
   </section>
-
   <section>
-    <h2>مسیرهای اصلی خدمات</h2>
     <div class="grid">
       {services.map((service) => (
         <article class="card">
           <h3><a href={`/${service.slug}/`}>{service.title}</a></h3>
           <p>{service.description}</p>
-          <p><a href={`/${service.slug}/#${service.bestIntentAnchor}`}>{service.bestIntentTitle}</a></p>
         </article>
       ))}
-    </div>
-  </section>
-
-  <section>
-    <h2>منطق انتخاب خدمت</h2>
-    <ul>
-      <li>اگر هدف کاهش خطوط حرکتی صورت است، صفحه بوتاکس را ببینید.</li>
-      <li>اگر هدف حجم‌دهی یا فرم‌دهی ناحیه‌ای است، صفحه فیلر را بررسی کنید.</li>
-      <li>اگر مسئله افتادگی خفیف تا متوسط است، صفحه لیفت نخ نقطه شروع بهتری است.</li>
-      <li>اگر مسئله کیفیت پوست، مو، لک یا جای جوش است، صفحه جوانسازی پوست و مو را ببینید.</li>
-      <li>اگر تمرکز روی زیر چانه و فرم خط فک است، صفحه ساکشن غبغب را بررسی کنید.</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>مسیر اعتماد قبل از اقدام</h2>
-    <div class="grid">
-      <a class="card" href="/dr-saeed-ghezelbash/">بررسی صفحه دکتر سعید قزلباش</a>
-      <a class="card" href="/dr-saeed-ghezelbash-aesthetic-clinic/">بررسی صفحه کلینیک</a>
-      <a class="card" href="/evidence/">مشاهده منابع و شواهد</a>
-      <a class="card" href="/contact/">تماس، آدرس و نقشه</a>
     </div>
   </section>
 </BaseLayout>
