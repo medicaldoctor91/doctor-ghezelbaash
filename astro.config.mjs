@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   site: 'https://www.ghezelbaash.ir',
@@ -13,6 +14,7 @@ export default defineConfig({
     inlineStylesheets: 'always'
   },
   vite: {
+    plugins: [tailwindcss()],
     build: {
       target: 'es2022',
       cssCodeSplit: true,
