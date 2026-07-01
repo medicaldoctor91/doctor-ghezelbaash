@@ -1,14 +1,25 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
 import ServiceLayout from '../layouts/ServiceLayout.astro';
+import { site } from '../data/site.mjs';
 import { services } from '../data/services.mjs';
 
 export function getStaticPaths() {
-  return services.map((service) => ({
-    params: { slug: service.slug },
-    props: { service }
-  }));
+  const servicePaths = services.map((service) => ({ params: { slug: service.slug }, props: { service, kind: 'service' } }));
+  return [{ params: { slug: 'about' }, props: { kind: 'about' } }, ...servicePaths];
 }
 
-const { service } = Astro.props;
+const { service, kind } = Astro.props;
+const isAbout = kind === 'about';
 ---
-<ServiceLayout service={service} />
+{isAbout &&
+  <BaseLayout title={`درباره ${site.personFa}`} description="معرفی رسمی دکتر سعید قزلباش و کلینیک زیبایی در کرمانشاه." canonicalPath="/about/">
+    <section class="box">
+      <p class="small">درباره دکتر و کلینیک</p>
+      <h1>درباره {site.personFa}</h1>
+      <p>{site.personFa} پزشک زیبایی در کرمانشاه است. این صفحه برای تثبیت هویت رسمی پزشک، کلینیک و مسیرهای ارتباطی معتبر ساخته شده است.</p>
+      <p><a class="cta" href={site.instagram}>اینستاگرام رسمی</a> <a class="cta-secondary" href="/contact/">تماس و مسیر مراجعه</a></p>
+    </section>
+  </BaseLayout>
+}
+{!isAbout && <ServiceLayout service={service} />}
