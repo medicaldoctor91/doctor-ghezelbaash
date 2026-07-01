@@ -1,25 +1,31 @@
 {
-  "name": "doctor-ghezelbaash-astro",
-  "version": "2.0.0",
+  "name": "doctor-ghezelbaash-astrowind-shell",
+  "version": "3.0.0",
+  "description": "AstroWind-style static SEO shell for Dr. Saeed Ghezelbaash.",
   "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
-    "build": "node scripts/prepare-public.mjs && astro build",
     "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
     "preview": "astro preview",
-    "validate": "node scripts/run-validation-phase.mjs",
-    "validate:source": "node scripts/run-validation-phase.mjs source",
-    "validate:schema": "node scripts/run-validation-phase.mjs schema",
-    "validate:authority": "node scripts/run-validation-phase.mjs authority",
-    "validate:primary-graph": "node scripts/run-validation-phase.mjs primary-graph",
-    "validate:dist": "node scripts/run-validation-phase.mjs dist",
-    "astro:check": "npx --yes --package @astrojs/check --package typescript astro check",
-    "validate:html": "npx --yes html-validate \"dist/**/*.html\"",
-    "format:check": "npx --yes prettier --check \"**/*.{js,mjs,json,md,yml,yaml,css}\"",
-    "format:fix": "npx --yes prettier --write \"**/*.{js,mjs,json,md,yml,yaml,css}\"",
-    "quality:ci": "npm run astro:check && npm run build && npm run validate:html && npm run validate:dist",
-    "check": "npm run validate && npm run quality:ci"
+    "check": "astro check && astro build"
   },
   "dependencies": {
-    "astro": "^4.16.0"
+    "@astrojs/sitemap": "^3.7.3",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@tailwindcss/vite": "^4.3.0",
+    "astro": "^6.4.2",
+    "astro-seo": "^1.1.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "prettier": "^3.8.3",
+    "prettier-plugin-astro": "^0.14.1"
   }
 }
