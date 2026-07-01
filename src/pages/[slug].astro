@@ -13,12 +13,12 @@ const { service, kind } = Astro.props;
 const isAbout = kind === 'about';
 ---
 {isAbout &&
-  <BaseLayout title={`درباره ${site.personFa}`} description="معرفی رسمی دکتر سعید قزلباش و کلینیک زیبایی در کرمانشاه." canonicalPath="/about/">
+  <BaseLayout title={`درباره ${site.personFa}`} description="معرفی رسمی دکتر سعید قزلباش." canonicalPath="/about/">
     <section class="box">
-      <p class="small">درباره دکتر و کلینیک</p>
+      <p class="small">درباره</p>
       <h1>درباره {site.personFa}</h1>
-      <p>{site.personFa} پزشک زیبایی در کرمانشاه است. این صفحه برای تثبیت هویت رسمی پزشک، کلینیک و مسیرهای ارتباطی معتبر ساخته شده است.</p>
-      <p><a class="cta" href={site.instagram}>اینستاگرام رسمی</a> <a class="cta-secondary" href="/contact/">تماس و مسیر مراجعه</a></p>
+      <p>{site.personFa} پزشک زیبایی در کرمانشاه است.</p>
+      <p><a class="cta" href={site.instagram}>اینستاگرام</a> <a class="cta-secondary" href="/contact/">تماس</a></p>
     </section>
   </BaseLayout>
 }
