@@ -3,15 +3,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { site } from '../data/site.mjs';
 import { services } from '../data/services.mjs';
 ---
-<BaseLayout title={`${site.personFa} | AstroWind`} description="AstroWind 7 shell on main." canonicalPath="/">
+<BaseLayout title={`${site.personFa} | کرمانشاه`} description="وب‌سایت رسمی دکتر سعید قزلباش." canonicalPath="/">
   <section class="box">
-    <p class="small">AstroWind 7</p>
+    <p class="small">AstroWind + Astro 7</p>
     <h1>{site.personFa}</h1>
-    <p>سایت روی main به dependency-set آخرین AstroWind و Astro 7 منتقل شده است.</p>
-    <p><a class="cta" href="/services/">مشاهده خدمات</a></p>
+    <p>سایت روی main به AstroWind و Astro 7 منتقل شد.</p>
+    <p><a class="cta" href="/services/">خدمات</a> <a class="cta-secondary" href="/about/">درباره</a></p>
   </section>
   <section>
-    <h2>خدمات اصلی</h2>
+    <h2>خدمات</h2>
     <div class="grid">
       {services.map((service) => (
         <article class="card">
