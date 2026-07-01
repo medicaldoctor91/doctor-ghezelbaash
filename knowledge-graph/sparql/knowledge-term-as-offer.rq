@@ -1,6 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?term WHERE {
-  ?term a schema:DefinedTerm .
-  ?offer schema:itemOffered ?term .
-}

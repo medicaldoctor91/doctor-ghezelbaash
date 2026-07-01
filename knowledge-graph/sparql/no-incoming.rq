@@ -1,5 +1,0 @@
-SELECT ?node WHERE {
-  ?node ?p ?o .
-  FILTER(isIRI(?node))
-  FILTER NOT EXISTS { ?s ?p2 ?node . }
-}

@@ -1,6 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?page WHERE {
-  ?page a schema:MedicalWebPage .
-  FILTER NOT EXISTS { ?page schema:publisher ?publisher . }
-}

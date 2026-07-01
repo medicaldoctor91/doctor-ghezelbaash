@@ -1,8 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?page WHERE {
-  ?page a schema:MedicalWebPage .
-  ?page schema:about ?service .
-  ?service a schema:Service .
-  FILTER NOT EXISTS { ?page schema:mainEntity ?service . }
-}

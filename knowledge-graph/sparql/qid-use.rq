@@ -1,6 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?entity ?qid WHERE {
-  ?entity schema:sameAs ?qid .
-  FILTER(CONTAINS(STR(?qid), "wikidata.org/wiki/Q140"))
-}

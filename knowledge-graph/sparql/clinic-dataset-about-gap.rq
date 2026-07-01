@@ -1,6 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?dataset WHERE {
-  BIND(<https://www.ghezelbaash.ir/kg/#dataset> AS ?dataset)
-  FILTER NOT EXISTS { ?dataset schema:about <https://www.ghezelbaash.ir/#clinic> . }
-}

@@ -1,7 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?page ?author WHERE {
-  ?page a schema:MedicalWebPage .
-  ?page schema:author ?author .
-  FILTER(?author != <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash>)
-}

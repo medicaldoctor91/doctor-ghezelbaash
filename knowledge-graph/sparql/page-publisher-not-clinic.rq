@@ -1,7 +1,0 @@
-PREFIX schema: <https://schema.org/>
-
-SELECT ?page ?publisher WHERE {
-  ?page a schema:MedicalWebPage .
-  ?page schema:publisher ?publisher .
-  FILTER(?publisher != <https://www.ghezelbaash.ir/#clinic>)
-}
