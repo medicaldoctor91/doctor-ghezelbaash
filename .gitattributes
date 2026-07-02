@@ -1,5 +1,0 @@
-*.json linguist-detectable=true
-*.jsonld linguist-detectable=true
-*.html linguist-detectable=true
-*.txt linguist-detectable=true
-*.md linguist-detectable=true
