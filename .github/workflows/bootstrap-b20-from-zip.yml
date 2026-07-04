@@ -3,9 +3,7 @@ name: Bootstrap B20 source from ZIP
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-  workflows: write
+permissions: write-all
 
 jobs:
   bootstrap:
