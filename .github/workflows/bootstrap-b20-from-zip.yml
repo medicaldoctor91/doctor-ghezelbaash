@@ -15,15 +15,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Verify ZIP exists
+      - name: Locate B20 ZIP
         run: |
-          test -f b20-source-no-mp4.zip || (echo "Upload b20-source-no-mp4.zip to the repository root first." && exit 1)
+          ZIP=""
+          for candidate in ghezelbaash-b20-github-source-no-mp4.zip b20-source-no-mp4.zip; do
+            if [ -f "$candidate" ]; then
+              ZIP="$candidate"
+              break
+            fi
+          done
+          test -n "$ZIP" || (echo "Upload ghezelbaash-b20-github-source-no-mp4.zip to the repository root first." && exit 1)
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
 
       - name: Extract source package
         run: |
           rm -rf /tmp/b20-source
           mkdir -p /tmp/b20-source
-          unzip -q b20-source-no-mp4.zip -d /tmp/b20-source
+          unzip -q "$ZIP" -d /tmp/b20-source
           ROOT="/tmp/b20-source"
           if [ ! -f "$ROOT/package.json" ]; then
             CANDIDATE=$(find "$ROOT" -mindepth 1 -maxdepth 1 -type d | head -n 1)
@@ -38,10 +46,11 @@ jobs:
         run: |
           rsync -a --delete \
             --exclude='.git/' \
+            --exclude='ghezelbaash-b20-github-source-no-mp4.zip' \
             --exclude='b20-source-no-mp4.zip' \
             --exclude='.github/workflows/bootstrap-b20-from-zip.yml' \
             "$ROOT/" ./
-          rm -f b20-source-no-mp4.zip
+          rm -f ghezelbaash-b20-github-source-no-mp4.zip b20-source-no-mp4.zip
 
       - name: Commit B20 source
         run: |
