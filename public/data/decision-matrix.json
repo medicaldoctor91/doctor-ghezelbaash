@@ -1,0 +1,430 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://www.ghezelbaash.ir/data/decision-matrix.json#dataset",
+  "url": "https://www.ghezelbaash.ir/data/decision-matrix.json",
+  "name": "Style 3 clinical decision routing matrix",
+  "description": "ماتریس تصمیم برای routing تشخیصی بین دغدغه، مکانیسم احتمالی، گزینه مناسب، گزینه نامناسب، red flag و anchor هدف. این فایل تشخیص یا نسخه درمانی نیست.",
+  "version": "2026.7-b4-style3-evidence-decision-replay",
+  "dateModified": "2026-07-03",
+  "inLanguage": "fa-IR",
+  "decisionPolicy": {
+    "defaultOutcome": "consultation-first",
+    "ruleType": "screening-and-routing-not-diagnosis",
+    "certainty": "probabilistic/educational",
+    "sourceFiles": ["public/data/evidence-map.json", "public/data/video-manifest.json", "src/data/content/*.html"],
+    "noGuessingRule": "If mechanism is unclear, route to diagnostic hub or clinic consultation instead of choosing a treatment."
+  },
+  "routes": [
+    {
+      "id": "dynamic-wrinkles-muscle-driven",
+      "userConcern": "چین دینامیک، خط اخم، پیشانی، پنجه‌کلاغی یا فعالیت عضله",
+      "mechanismHypothesis": "muscle-movement",
+      "primaryPage": "/botox-kermanshah/",
+      "primaryService": "botox",
+      "suitableOptions": ["botulinum-toxin-assessment"],
+      "poorFitOptions": ["filler-for-muscle-line", "subcision-for-dynamic-line"],
+      "notFirstLineWhen": ["static-line-dominant", "volume-loss-dominant", "skin-laxity-dominant"],
+      "redFlags": [
+        "pregnancy-breastfeeding-screen",
+        "neuromuscular-history-screen",
+        "ptosis-risk-screen",
+        "forehead-brow-support-screen"
+      ],
+      "evidenceRefs": ["claim-botox-dynamic-lines-label-alignment", "claim-botox-static-line-not-complete-erasure"],
+      "videoRefs": ["botox-vs-subcision-dynamic-static-scar"],
+      "targetAnchors": [
+        "/botox-kermanshah/#botox-muscle-vs-tissue",
+        "/botox-kermanshah/#botox-dynamic-vs-static-lines"
+      ],
+      "escalation": "doctor-assessment-before-injection",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "static-line-or-fibrotic-scar-not-botox",
+      "userConcern": "خط ثابت، فرورفتگی، اسکار فیبروتیک یا چسبندگی زیرپوستی",
+      "mechanismHypothesis": "tissue-change-or-fibrotic-tethering",
+      "primaryPage": "/aesthetic-concerns-kermanshah/",
+      "primaryService": "diagnostic-hub",
+      "suitableOptions": ["scar-type-assessment", "subcision-assessment-if-tethered"],
+      "poorFitOptions": ["botox-as-filler", "botox-for-fibrotic-scar"],
+      "notFirstLineWhen": ["active-acne-unstable", "pigment-only-without-texture-change"],
+      "redFlags": ["fibrotic-adhesion-screen", "active-acne-first", "PIH-after-inflammation"],
+      "evidenceRefs": ["claim-botox-subcision-boundary-fibrotic-scar", "claim-subcision-fibrotic-tethering"],
+      "videoRefs": ["botox-vs-subcision-dynamic-static-scar", "aesthetic-subcision-technique-guide"],
+      "targetAnchors": [
+        "/aesthetic-concerns-kermanshah/#subcision-acne-scar",
+        "/botox-kermanshah/#botox-dynamic-vs-static-lines"
+      ],
+      "escalation": "scar-type-exam",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "under-eye-filler-risk-zone",
+      "userConcern": "گودی، سایه یا تیرگی زیر چشم",
+      "mechanismHypothesis": "volume-shadow-puff-skin-thickness-mix",
+      "primaryPage": "/filler-kermanshah/",
+      "primaryService": "filler",
+      "suitableOptions": ["under-eye-assessment", "midface-assessment-first"],
+      "poorFitOptions": ["filler-for-puff-dominant", "filler-for-pigment-only"],
+      "notFirstLineWhen": ["malar-edema-dominant", "thin-skin-high-risk", "pigment-only"],
+      "redFlags": ["malar-edema-risk", "tyndall-risk", "under-eye-puffiness-dominant"],
+      "evidenceRefs": ["claim-filler-under-eye-risk-zone", "claim-filler-before-after-context"],
+      "videoRefs": ["filler-under-eye-transformation", "filler-under-eye-before-after"],
+      "targetAnchors": ["/filler-kermanshah/#under-eye-filler", "/filler-kermanshah/#filler-risk-akhtsas-zyr-eye"],
+      "escalation": "under-eye-risk-consultation",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "nose-filler-or-rhinoplasty-boundary",
+      "userConcern": "قوز یا ناهمواری بینی و درخواست فیلر بینی",
+      "mechanismHypothesis": "optical-contour-correction-not-size-reduction",
+      "primaryPage": "/filler-kermanshah/",
+      "primaryService": "filler",
+      "suitableOptions": ["nose-filler-risk-assessment", "surgical-rhinoplasty-boundary-discussion"],
+      "poorFitOptions": ["filler-to-make-nose-small", "enzyme-nose-shrinking-claim"],
+      "notFirstLineWhen": ["expectation-small-nose", "high-risk-vascular-anatomy", "need-true-size-reduction"],
+      "redFlags": ["nose-filler-risk-zone", "vascular-occlusion-symptom", "vision-change-after-filler"],
+      "evidenceRefs": ["claim-nose-filler-not-rhinoplasty", "claim-filler-vascular-occlusion-readiness"],
+      "videoRefs": ["filler-nose-before-after", "filler-nonsurgical-rhinoplasty-boundary"],
+      "targetAnchors": [
+        "/filler-kermanshah/#nose-filler",
+        "/filler-kermanshah/#filler-nose-rhinoplasty-saf-tr-dydh-shdn-kvchk-shdn-frgh-dard"
+      ],
+      "escalation": "nose-risk-consent-and-assessment",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "filler-correction-or-hyalase",
+      "userConcern": "فیلر قبلی بد، مهاجرت فیلر، توده یا نیاز به اصلاح",
+      "mechanismHypothesis": "material-layer-placement-and-complication",
+      "primaryPage": "/filler-kermanshah/",
+      "primaryService": "filler-correction",
+      "suitableOptions": ["material-history", "hyaluronidase-if-HA-and-indicated"],
+      "poorFitOptions": ["more-filler-without-cause", "hyalase-as-magic-eraser"],
+      "notFirstLineWhen": ["unknown-material", "active-vascular-symptoms-require-urgent-care"],
+      "redFlags": ["unknown-injected-material", "vascular-occlusion-symptom", "acute-pain-blanching-livedo"],
+      "evidenceRefs": ["claim-hyaluronidase-not-magic-eraser", "claim-filler-vascular-occlusion-readiness"],
+      "videoRefs": [],
+      "targetAnchors": [
+        "/filler-kermanshah/#hyaluronidase-filler-correction",
+        "/filler-kermanshah/#filler-correction-filler-bd-filler-byshtr-hl"
+      ],
+      "escalation": "urgent-if-vascular-symptoms",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "mild-moderate-laxity-thread-lift",
+      "userConcern": "افتادگی خفیف تا متوسط، jowl، ابرو یا کشش محدود",
+      "mechanismHypothesis": "skin-laxity-vector-and-tissue-weight",
+      "primaryPage": "/thread-lift-kermanshah/",
+      "primaryService": "thread-lift",
+      "suitableOptions": ["thread-lift-candidacy-assessment"],
+      "poorFitOptions": ["thread-as-surgery", "thread-for-excess-skin-severe-laxity"],
+      "notFirstLineWhen": ["severe-laxity", "excess-skin-dominant", "heavy-face-thread-risk"],
+      "redFlags": [
+        "severe-laxity-surgery-boundary",
+        "thread-infection-warning",
+        "thread-dimpling-warning",
+        "future-surgery-after-thread"
+      ],
+      "evidenceRefs": ["claim-thread-lift-candidate-limited", "claim-thread-lift-complications-visible"],
+      "videoRefs": ["thread-lift-cat-eye-before-after"],
+      "targetAnchors": [
+        "/thread-lift-kermanshah/#thread-lift-decision-quick-before-lift-thread-7-grh-baz-shvnd",
+        "/thread-lift-kermanshah/#thread-lift-complications-lift-thread-kbvd-nyst-gah-bdkhvandn-face-complication-asl"
+      ],
+      "escalation": "thread-candidate-exam",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "thread-material-selection",
+      "userConcern": "انتخاب PDO، PLLA، PCL یا تعداد نخ",
+      "mechanismHypothesis": "material-design-after-diagnosis",
+      "primaryPage": "/thread-lift-kermanshah/",
+      "primaryService": "thread-lift",
+      "suitableOptions": ["material-choice-after-face-reading"],
+      "poorFitOptions": ["brand-or-count-first-decision"],
+      "notFirstLineWhen": ["unknown-laxity-grade", "surgery-expectation"],
+      "redFlags": ["brand-led-decision-warning", "excess-skin-dominant"],
+      "evidenceRefs": ["claim-thread-material-name-not-decision"],
+      "videoRefs": ["home-workshop-thread-lift-training", "home-workshop-thread-lift-advanced"],
+      "targetAnchors": ["/thread-lift-kermanshah/#thread-lift-before-antkhab-thread-4-question-response-dashth-bashd"],
+      "escalation": "doctor-assessment-before-thread-plan",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "hyperpigmentation-melasma-pih",
+      "userConcern": "لک، ملاسما، لک بعد جوش یا تیرگی مقاوم",
+      "mechanismHypothesis": "pigment-inflammation-trigger-control",
+      "primaryPage": "/aesthetic-concerns-kermanshah/",
+      "primaryService": "pigment-management",
+      "suitableOptions": ["pigment-type-assessment", "trigger-control", "sun-protection-first"],
+      "poorFitOptions": ["aggressive-procedure-without-diagnosis", "subcision-for-pigment-only"],
+      "notFirstLineWhen": ["active-irritation", "melasma-unstable", "unknown-pigment-type"],
+      "redFlags": ["melasma-trigger-active", "PIH-after-inflammation", "recent-tan-or-sunburn"],
+      "evidenceRefs": [
+        "claim-pih-not-acne-scar",
+        "claim-melasma-procedure-caution",
+        "claim-mesoneedling-pigment-risk-warning"
+      ],
+      "videoRefs": ["aesthetic-mesoneedling-dark-spots-warning"],
+      "targetAnchors": ["/aesthetic-concerns-kermanshah/#hyperpigmentation-treatment"],
+      "escalation": "pigment-diagnosis-before-procedure",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "active-acne-before-scar",
+      "userConcern": "جوش فعال همراه با درخواست درمان جای جوش",
+      "mechanismHypothesis": "active-inflammation-before-scar-repair",
+      "primaryPage": "/aesthetic-concerns-kermanshah/",
+      "primaryService": "active-acne-treatment",
+      "suitableOptions": ["acne-control-first", "scar-treatment-after-stability"],
+      "poorFitOptions": ["subcision-during-unstable-acne", "punch-before-inflammatory-control"],
+      "notFirstLineWhen": ["active-nodular-acne", "skin-barrier-unstable"],
+      "redFlags": ["active-acne-first", "unstable-skin-barrier"],
+      "evidenceRefs": ["claim-acne-active-before-scar-treatment"],
+      "videoRefs": [],
+      "targetAnchors": [
+        "/aesthetic-concerns-kermanshah/#active-acne-treatment",
+        "/aesthetic-concerns-kermanshah/#acne-scar-treatment"
+      ],
+      "escalation": "control-active-acne-before-scar-procedure",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "subcision-fibrotic-tethering",
+      "userConcern": "جای جوش فرورفته، rolling scar یا گیر زیرپوستی",
+      "mechanismHypothesis": "fibrotic-tethering",
+      "primaryPage": "/aesthetic-concerns-kermanshah/",
+      "primaryService": "subcision",
+      "suitableOptions": ["subcision-assessment", "combination-treatment-if-goals-separated"],
+      "poorFitOptions": ["subcision-for-pigment-only", "subcision-for-active-acne"],
+      "notFirstLineWhen": ["PIH-only", "active-acne", "ice-pick-dominant-without-tethering"],
+      "redFlags": ["fibrotic-adhesion-screen", "keloid-history", "active-acne-first"],
+      "evidenceRefs": ["claim-subcision-fibrotic-tethering", "claim-subcision-combination-goal-separated"],
+      "videoRefs": ["aesthetic-subcision-technique-guide"],
+      "targetAnchors": ["/aesthetic-concerns-kermanshah/#subcision-acne-scar"],
+      "escalation": "scar-typing-exam",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "skin-booster-profihilo-jalupro",
+      "userConcern": "کیفیت پوست، خشکی، کدری، خطوط سطحی یا انتخاب جالپرو/پروفایلو",
+      "mechanismHypothesis": "skin-quality-hydration-elasticity",
+      "primaryPage": "/aesthetic-concerns-kermanshah/",
+      "primaryService": "skin-booster",
+      "suitableOptions": ["skin-quality-assessment", "jalupro-or-profhilo-after-goal-definition"],
+      "poorFitOptions": ["skin-booster-as-filler", "brand-better-question"],
+      "notFirstLineWhen": ["volume-loss-dominant", "sagging-dominant", "deep-fold-dominant"],
+      "redFlags": ["skin-booster-not-volume-goal", "brand-led-decision-warning"],
+      "evidenceRefs": ["claim-skin-booster-not-filler-classic", "claim-jalupro-profhilo-not-better-question"],
+      "videoRefs": ["aesthetic-jalupro-vs-profhilo-skin-boosters"],
+      "targetAnchors": ["/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters"],
+      "escalation": "skin-quality-consultation",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "prp-mesotherapy-skin-hair",
+      "userConcern": "PRP یا مزوتراپی پوست و مو",
+      "mechanismHypothesis": "material-target-diagnosis-first",
+      "primaryPage": "/aesthetic-concerns-kermanshah/",
+      "primaryService": "prp-mesotherapy",
+      "suitableOptions": ["diagnosis-before-injection", "material-purpose-disclosure"],
+      "poorFitOptions": ["cocktail-without-material", "PRP-for-all-hair-loss"],
+      "notFirstLineWhen": ["unknown-hair-loss-cause", "active-inflammatory-skin"],
+      "redFlags": [
+        "hair-loss-diagnosis-before-injection",
+        "PRP-contraindication-screen",
+        "mesotherapy-material-unknown"
+      ],
+      "evidenceRefs": ["claim-prp-mesotherapy-diagnosis-before-injection"],
+      "videoRefs": [],
+      "targetAnchors": [
+        "/aesthetic-concerns-kermanshah/#prp-skin-hair",
+        "/aesthetic-concerns-kermanshah/#mesotherapy-skin-hair"
+      ],
+      "escalation": "diagnosis-and-history-first",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "submental-fullness-cause-first",
+      "userConcern": "غبغب، پری زیر چانه یا افتادگی گردن",
+      "mechanismHypothesis": "fat-laxity-chin-neck-separation",
+      "primaryPage": "/aesthetic-concerns-kermanshah/",
+      "primaryService": "submental-evaluation",
+      "suitableOptions": ["submental-cause-assessment", "liposuction-if-fat-dominant", "thread-if-laxity-selected"],
+      "poorFitOptions": ["one-treatment-for-all-submental", "thread-for-fat-dominant-only"],
+      "notFirstLineWhen": ["chin-retrusion-dominant", "severe-neck-laxity"],
+      "redFlags": ["submental-chin-neck-separation", "severe-laxity-surgery-boundary"],
+      "evidenceRefs": ["claim-submental-fat-laxity-chin-separation"],
+      "videoRefs": [],
+      "targetAnchors": [
+        "/aesthetic-concerns-kermanshah/#submental-liposuction",
+        "/thread-lift-kermanshah/#thread-lift-submental-area"
+      ],
+      "escalation": "cause-based-exam",
+      "certainty": "screening-only"
+    },
+    {
+      "id": "clinic-selection-and-trust",
+      "userConcern": "انتخاب کلینیک زیبایی، اعتماد محلی، پزشک مسئول و مسیر تماس",
+      "mechanismHypothesis": "local-trust-verification",
+      "primaryPage": "/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "primaryService": "clinic-consultation",
+      "suitableOptions": ["verify-doctor-identity", "verify-address-contact", "read-service-boundaries"],
+      "poorFitOptions": ["best-claim-without-criteria", "instagram-only-trust"],
+      "notFirstLineWhen": ["hidden-doctor-identity", "unclear-contact-path"],
+      "redFlags": ["no-unverifiable-superlative", "consultation-required"],
+      "evidenceRefs": ["claim-clinic-page-trust-not-best-claim", "claim-service-pages-megapillar-clinic-connected"],
+      "videoRefs": ["clinic-patient-experience-review"],
+      "targetAnchors": [
+        "/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-best-aesthetic-clinic-kermanshah",
+        "/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-visit-kermanshah"
+      ],
+      "escalation": "clinic-contact-and-consultation",
+      "certainty": "navigation-and-trust-routing"
+    },
+    {
+      "id": "before-after-video-interpretation",
+      "userConcern": "دیدن نمونه‌کار و قبل/بعد و تصمیم بر اساس ویدئو",
+      "mechanismHypothesis": "media-context-not-guarantee",
+      "primaryPage": "/",
+      "primaryService": "media-education",
+      "suitableOptions": ["use-video-as-context", "read-clinical-note", "consultation-before-decision"],
+      "poorFitOptions": ["copying-result", "treatment-choice-from-video-only"],
+      "notFirstLineWhen": ["expecting-guarantee", "ignoring-anatomy-differences"],
+      "redFlags": ["before-after-not-guarantee", "unrealistic-expectation"],
+      "evidenceRefs": ["claim-before-after-videos-not-guarantee", "claim-style3-video-decision-linkage"],
+      "videoRefs": [
+        "home-workshop-thread-lift-training",
+        "home-workshop-thread-lift-advanced",
+        "clinic-patient-experience-review",
+        "botox-vs-subcision-dynamic-static-scar",
+        "filler-under-eye-transformation",
+        "filler-under-eye-before-after",
+        "filler-nose-before-after",
+        "filler-nonsurgical-rhinoplasty-boundary",
+        "thread-lift-cat-eye-before-after",
+        "aesthetic-subcision-technique-guide",
+        "aesthetic-mesoneedling-dark-spots-warning",
+        "aesthetic-jalupro-vs-profhilo-skin-boosters"
+      ],
+      "targetAnchors": ["/data/video-manifest.json"],
+      "escalation": "interpret-with-clinical-context",
+      "certainty": "media-governance"
+    }
+  ],
+  "serviceMap": {
+    "botox": {
+      "page": "/botox-kermanshah/",
+      "mechanism": "muscle-movement / gland activity",
+      "bestFitRoutes": ["dynamic-wrinkles-muscle-driven"],
+      "poorFitSignals": ["volume-loss", "fibrotic-tethering", "static-line-only"],
+      "evidenceRefs": ["claim-botox-dynamic-lines-label-alignment"]
+    },
+    "filler": {
+      "page": "/filler-kermanshah/",
+      "mechanism": "volume-support-contour-shadow",
+      "bestFitRoutes": [
+        "under-eye-filler-risk-zone",
+        "nose-filler-or-rhinoplasty-boundary",
+        "filler-correction-or-hyalase"
+      ],
+      "poorFitSignals": ["muscle-line-only", "severe-laxity", "pigment-only"],
+      "evidenceRefs": ["claim-filler-under-eye-risk-zone", "claim-filler-vascular-occlusion-readiness"]
+    },
+    "thread-lift": {
+      "page": "/thread-lift-kermanshah/",
+      "mechanism": "vector-lift-in-selected-laxity",
+      "bestFitRoutes": ["mild-moderate-laxity-thread-lift", "thread-material-selection"],
+      "poorFitSignals": ["excess-skin-severe", "surgery-expectation", "fat-dominant-submental"],
+      "evidenceRefs": ["claim-thread-lift-candidate-limited"]
+    },
+    "aesthetic-concerns": {
+      "page": "/aesthetic-concerns-kermanshah/",
+      "mechanism": "diagnostic-hub-for-unclear-concerns",
+      "bestFitRoutes": [
+        "hyperpigmentation-melasma-pih",
+        "active-acne-before-scar",
+        "subcision-fibrotic-tethering",
+        "skin-booster-profihilo-jalupro",
+        "prp-mesotherapy-skin-hair",
+        "submental-fullness-cause-first"
+      ],
+      "poorFitSignals": ["method-name-before-diagnosis"],
+      "evidenceRefs": [
+        "claim-pih-not-acne-scar",
+        "claim-subcision-fibrotic-tethering",
+        "claim-skin-booster-not-filler-classic"
+      ]
+    },
+    "clinic-consultation": {
+      "page": "/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "mechanism": "local-trust-and-doctor-led-consultation",
+      "bestFitRoutes": ["clinic-selection-and-trust", "before-after-video-interpretation"],
+      "poorFitSignals": ["best-claim-without-evidence", "remote-final-diagnosis"],
+      "evidenceRefs": ["claim-clinic-page-trust-not-best-claim"]
+    }
+  },
+  "redFlagFamilies": [
+    "pregnancy-breastfeeding-screen",
+    "neuromuscular-history-screen",
+    "active-infection-at-site",
+    "allergy-history-screen",
+    "blood-thinner-history",
+    "immune-suppression-screen",
+    "unrealistic-expectation",
+    "body-dysmorphic-concern",
+    "recent-procedure-same-area",
+    "unknown-injected-material",
+    "vascular-occlusion-symptom",
+    "acute-pain-blanching-livedo",
+    "vision-change-after-filler",
+    "skin-necrosis-risk",
+    "malar-edema-risk",
+    "tyndall-risk",
+    "nose-filler-risk-zone",
+    "glabella-filler-risk-zone",
+    "under-eye-puffiness-dominant",
+    "active-acne-first",
+    "unstable-skin-barrier",
+    "melasma-trigger-active",
+    "PIH-after-inflammation",
+    "recent-tan-or-sunburn",
+    "keloid-history",
+    "hypertrophic-scar-history",
+    "ice-pick-scar-punch-screen",
+    "rolling-scar-tethering-screen",
+    "fibrotic-adhesion-screen",
+    "severe-laxity-surgery-boundary",
+    "excess-skin-dominant",
+    "heavy-face-thread-risk",
+    "thread-infection-warning",
+    "thread-dimpling-warning",
+    "thread-extrusion-warning",
+    "asymmetry-baseline-document",
+    "dental-procedure-after-thread",
+    "future-surgery-after-thread",
+    "masseter-chewing-function",
+    "dry-eye-crows-feet-screen",
+    "ptosis-risk-screen",
+    "forehead-brow-support-screen",
+    "DAO-smile-function",
+    "lip-speech-drinking-function",
+    "gummy-smile-skeletal-dental",
+    "submental-chin-neck-separation",
+    "hair-loss-diagnosis-before-injection",
+    "PRP-contraindication-screen",
+    "mesotherapy-material-unknown",
+    "skin-booster-not-volume-goal",
+    "brand-led-decision-warning",
+    "before-after-not-guarantee"
+  ],
+  "counts": {
+    "routes": 15,
+    "serviceMapEntries": 5,
+    "redFlagFamilies": 52,
+    "videoLinkedRoutes": 11
+  }
+}

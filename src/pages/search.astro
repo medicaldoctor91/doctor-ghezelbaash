@@ -1,0 +1,339 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import BreadcrumbTrail from '~/components/common/BreadcrumbTrail.astro';
+
+const metadata = {
+  title: 'جست‌وجوی داخلی سایت دکتر سعید قزلباش',
+  canonical: 'https://www.ghezelbaash.ir/search/',
+  robots: { index: false, follow: true },
+  description:
+    'جست‌وجوی داخلی در سطح صفحه، بخش، پاسخ و مسیر تصمیم‌گیری برای سایت دکتر سعید قزلباش و کلینیک زیبایی در کرمانشاه.',
+};
+
+const breadcrumbs = [{ name: 'خانه', href: '/' }, { name: 'جست‌وجوی داخلی' }];
+
+const quickQueries = [
+  'بوتاکس خط اخم',
+  'فیلر زیر چشم',
+  'لیفت نخ غبغب',
+  'جای جوش و اسکار',
+  'آدرس کلینیک',
+  'عوارض و مراقبت',
+];
+---
+
+<Layout metadata={metadata}>
+  <BreadcrumbTrail items={breadcrumbs} />
+
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+    <div
+      class="rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8 shadow-sm dark:bg-slate-900 dark:border-primary/30"
+    >
+      <p class="text-sm font-bold text-primary mb-3">جست‌وجوی داخلی</p>
+      <h1 class="text-4xl font-bold tracking-tight mb-4">جست‌وجو در صفحات، پاسخ‌ها و مسیرهای تصمیم‌گیری</h1>
+      <p class="text-muted leading-8 mb-6">
+        جست‌وجو در سطح صفحه، بخش، پاسخ مستقیم و مسیر تصمیم‌گیری انجام می‌شود. مسیر رسمی جست‌وجو
+        <code class="rounded bg-white/70 px-1.5 py-0.5 text-sm dark:bg-slate-950">/search/?q=</code> است.
+      </p>
+
+      <form id="site-search-form" class="flex flex-col gap-3 md:flex-row" role="search" action="/search/" method="get">
+        <label class="sr-only" for="site-search-input">عبارت جست‌وجو</label>
+        <input
+          id="site-search-input"
+          class="min-h-12 flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-base outline-none focus:border-primary dark:border-slate-700 dark:bg-slate-950"
+          name="q"
+          type="search"
+          autocomplete="off"
+          enterkeyhint="search"
+          placeholder="مثلاً فیلر زیر چشم، خط اخم، غبغب، جای جوش، ماندگاری بوتاکس"
+        />
+        <button class="rounded-xl bg-primary px-6 py-3 font-bold text-white hover:opacity-90" type="submit"
+          >جست‌وجو</button
+        >
+      </form>
+
+      <div class="mt-4 flex flex-wrap gap-2" aria-label="پیشنهادهای سریع جست‌وجو">
+        {
+          quickQueries.map((query) => (
+            <a
+              class="rounded-full border border-primary/20 bg-white px-3 py-1.5 text-sm font-medium hover:border-primary hover:text-primary dark:bg-slate-950"
+              href={`/search/?q=${encodeURIComponent(query)}`}
+              data-search-chip={query}
+            >
+              {query}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 pb-12">
+    <div
+      class="rounded-2xl border border-gray-200 bg-white p-6 md:p-8 shadow-sm dark:bg-slate-900 dark:border-slate-800"
+    >
+      <div class="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight">نتایج</h2>
+          <p id="site-search-status" class="mt-2 text-sm text-muted">برای شروع، یک عبارت وارد کنید.</p>
+        </div>
+        <p class="text-xs text-muted">منبع: /data/search-index.json</p>
+      </div>
+      <div id="site-search-results" class="space-y-4"></div>
+      <noscript>
+        <p
+          class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm leading-7 dark:border-slate-800 dark:bg-slate-800"
+        >
+          برای استفاده از جست‌وجوی داخلی، JavaScript لازم است. مسیرهای اصلی سایت از منوی بالا و فایل /llms.txt قابل
+          دسترسی هستند.
+        </p>
+      </noscript>
+    </div>
+  </section>
+
+  <script is:inline>
+    const digitMap = new Map(Array.from('۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩').map((digit, index) => [digit, String(index % 10)]));
+
+    const normalizePersian = (value) =>
+      String(value || '')
+        .replace(/[۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩]/g, (digit) => digitMap.get(digit) || digit)
+        .replace(/[يى]/g, 'ی')
+        .replace(/[ك]/g, 'ک')
+        .replace(/[ۀة]/g, 'ه')
+        .replace(/[ؤ]/g, 'و')
+        .replace(/[أإآٱ]/g, 'ا')
+        .replace(/[ئ]/g, 'ی')
+        .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, '')
+        .replace(/\u200c|\u200d|\ufeff/g, ' ')
+        .toLowerCase()
+        .replace(/[^0-9a-zA-Zآ-ی]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const typeLabels = {
+      page: 'صفحه',
+      section: 'بخش',
+      answer: 'پاسخ مستقیم',
+      'decision-route': 'مسیر تصمیم',
+    };
+
+    const input = document.getElementById('site-search-input');
+    const form = document.getElementById('site-search-form');
+    const status = document.getElementById('site-search-status');
+    const results = document.getElementById('site-search-results');
+    const chips = Array.from(document.querySelectorAll('[data-search-chip]'));
+
+    let indexRecords = [];
+    let synonymGroups = [];
+    let stopWords = new Set();
+    let isIndexReady = false;
+
+    const escapeHtml = (value) =>
+      String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    const getRecordText = (record) =>
+      record.searchText ||
+      normalizePersian([record.pageTitle, record.sectionTitle, record.body, ...(record.keywords || [])].join(' '));
+
+    const getFieldText = (record, field) => normalizePersian(record[field] || '');
+
+    const buildExpandedTerms = (query) => {
+      const normalizedQuery = normalizePersian(query);
+      const rawTerms = normalizedQuery
+        .split(' ')
+        .filter((term) => term.length > 1 && !stopWords.has(term))
+        .slice(0, 10);
+      const synonymTerms = new Set();
+      const phraseExpansions = new Set();
+
+      for (const group of synonymGroups) {
+        const normalizedTerms = (group.terms || []).map(normalizePersian).filter(Boolean);
+        const matched = normalizedTerms.some(
+          (term) =>
+            normalizedQuery.includes(term) || rawTerms.some((rawTerm) => term === rawTerm || term.includes(rawTerm))
+        );
+        if (!matched) continue;
+        for (const term of normalizedTerms) {
+          phraseExpansions.add(term);
+          for (const token of term.split(' ')) {
+            if (token.length > 1 && !stopWords.has(token) && !rawTerms.includes(token)) synonymTerms.add(token);
+          }
+        }
+      }
+
+      return {
+        normalizedQuery,
+        rawTerms,
+        synonymTerms: Array.from(synonymTerms).slice(0, 36),
+        phraseExpansions: Array.from(phraseExpansions).slice(0, 32),
+      };
+    };
+
+    const scoreRecord = (record, queryParts) => {
+      const { normalizedQuery, rawTerms, synonymTerms, phraseExpansions } = queryParts;
+      const searchText = getRecordText(record);
+      const titleText = getFieldText(record, 'pageTitle');
+      const sectionText = getFieldText(record, 'sectionTitle');
+      const bodyText = getFieldText(record, 'body');
+      const keywordText = normalizePersian((record.keywords || []).join(' '));
+      let score = Number(record.boost || 0);
+
+      if (!rawTerms.length && !synonymTerms.length) return 0;
+
+      if (normalizedQuery && sectionText.includes(normalizedQuery)) score += 90;
+      if (normalizedQuery && titleText.includes(normalizedQuery)) score += 70;
+      if (normalizedQuery && bodyText.includes(normalizedQuery)) score += 52;
+      if (normalizedQuery && searchText.includes(normalizedQuery)) score += 32;
+
+      const allRawTermsMatched = rawTerms.length > 1 && rawTerms.every((term) => searchText.includes(term));
+      if (allRawTermsMatched) score += 54 + rawTerms.length * 9;
+
+      for (const term of rawTerms) {
+        if (sectionText.includes(term)) score += 31;
+        if (titleText.includes(term)) score += 23;
+        if (keywordText.includes(term)) score += 18;
+        if (bodyText.includes(term)) score += 11;
+        if (searchText.includes(term)) score += 7;
+      }
+
+      for (const phrase of phraseExpansions) {
+        if (phrase.length < 2 || phrase === normalizedQuery) continue;
+        if (sectionText.includes(phrase)) score += 10;
+        else if (titleText.includes(phrase)) score += 8;
+        else if (searchText.includes(phrase)) score += 4;
+      }
+
+      for (const term of synonymTerms) {
+        if (sectionText.includes(term)) score += 5;
+        if (titleText.includes(term)) score += 4;
+        if (keywordText.includes(term)) score += 3;
+        if (bodyText.includes(term)) score += 2;
+        if (searchText.includes(term)) score += 1;
+      }
+
+      if (record.type === 'answer') score += 12;
+      if (record.type === 'page') score += 8;
+      if (record.type === 'decision-route') score += 7;
+
+      return score;
+    };
+
+    const pickDiverseResults = (scoredRecords) => {
+      const pathCounts = new Map();
+      const seenUrls = new Set();
+      const selected = [];
+
+      for (const item of scoredRecords) {
+        const record = item.record;
+        if (!record.url || seenUrls.has(record.url)) continue;
+        const path = record.path || record.url;
+        const currentCount = pathCounts.get(path) || 0;
+        const cap = record.type === 'page' ? 2 : 5;
+        if (currentCount >= cap) continue;
+        pathCounts.set(path, currentCount + 1);
+        seenUrls.add(record.url);
+        selected.push(item);
+        if (selected.length >= 16) break;
+      }
+
+      return selected;
+    };
+
+    const renderResults = (query) => {
+      if (!isIndexReady) {
+        status.textContent = 'ایندکس جست‌وجو در حال بارگذاری است.';
+        return;
+      }
+
+      const queryParts = buildExpandedTerms(query);
+
+      if (!queryParts.rawTerms.length && !queryParts.synonymTerms.length) {
+        status.textContent = 'برای شروع، یک عبارت وارد کنید.';
+        results.innerHTML = '';
+        return;
+      }
+
+      const scored = indexRecords
+        .map((record) => ({ record, score: scoreRecord(record, queryParts) }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+      const matches = pickDiverseResults(scored);
+
+      status.textContent = matches.length
+        ? `${matches.length} نتیجه برتر برای «${query}»`
+        : `برای «${query}» نتیجه‌ای پیدا نشد. عبارت کوتاه‌تر، نام ناحیه یا مترادف را امتحان کنید.`;
+
+      results.innerHTML = matches
+        .map(({ record }) => {
+          const label = typeLabels[record.type] || 'نتیجه';
+          const body = String(record.body || '').slice(0, 300);
+          const keywords = (record.keywords || []).slice(0, 5);
+          return `<article class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-slate-800 dark:bg-slate-800">
+              <div class="mb-2 flex flex-wrap items-center gap-2">
+                <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-primary dark:bg-slate-900">${escapeHtml(label)}</span>
+                <span class="text-xs text-muted">${escapeHtml(record.pageTitle || '')}</span>
+              </div>
+              <h3 class="text-lg font-bold"><a class="hover:text-primary" href="${escapeHtml(record.url)}">${escapeHtml(record.sectionTitle || record.pageTitle || '')}</a></h3>
+              <p class="mt-2 text-sm leading-7 text-muted">${escapeHtml(body)}${body.length >= 300 ? '…' : ''}</p>
+              ${
+                keywords.length
+                  ? `<div class="mt-3 flex flex-wrap gap-1.5">${keywords
+                      .map(
+                        (keyword) =>
+                          `<span class="rounded-full bg-white px-2 py-1 text-[11px] text-muted dark:bg-slate-900">${escapeHtml(keyword)}</span>`
+                      )
+                      .join('')}</div>`
+                  : ''
+              }
+            </article>`;
+        })
+        .join('');
+    };
+
+    const setQueryFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get('q') || '';
+      input.value = query;
+      renderResults(query);
+    };
+
+    fetch('/data/search-index.json')
+      .then((response) => response.json())
+      .then((payload) => {
+        indexRecords = Array.isArray(payload.records) ? payload.records : [];
+        synonymGroups = Array.isArray(payload.synonymGroups) ? payload.synonymGroups : [];
+        stopWords = new Set((payload.stopWords || []).map(normalizePersian));
+        isIndexReady = true;
+        setQueryFromUrl();
+      })
+      .catch(() => {
+        status.textContent = 'ایندکس جست‌وجو در دسترس نیست.';
+      });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const query = input.value.trim();
+      const url = query ? `/search/?q=${encodeURIComponent(query)}` : '/search/';
+      window.history.replaceState({}, '', url);
+      renderResults(query);
+    });
+
+    input.addEventListener('input', () => renderResults(input.value));
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', (event) => {
+        event.preventDefault();
+        const query = chip.getAttribute('data-search-chip') || '';
+        input.value = query;
+        window.history.replaceState({}, '', `/search/?q=${encodeURIComponent(query)}`);
+        renderResults(query);
+      });
+    });
+  </script>
+</Layout>

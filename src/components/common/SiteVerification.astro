@@ -1,0 +1,9 @@
+---
+import { SITE } from 'astrowind:config';
+
+const envVerification =
+  import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION || import.meta.env.PUBLIC_SITE_VERIFICATION || '';
+const verificationId = SITE.googleSiteVerificationId || envVerification;
+---
+
+{verificationId && <meta name="google-site-verification" content={verificationId} />}

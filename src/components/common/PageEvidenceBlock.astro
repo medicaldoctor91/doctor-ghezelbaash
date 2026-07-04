@@ -1,0 +1,38 @@
+---
+import { getPageGovernance } from '~/data/pageGovernance';
+
+export interface Props {
+  path?: string;
+}
+
+const { path = Astro.url.pathname } = Astro.props;
+const page = getPageGovernance(path);
+---
+
+<section id="visible-evidence-block" class="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+  <div class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <p class="mb-2 text-sm font-bold text-primary">Visible evidence layer</p>
+    <h2 class="text-2xl font-bold tracking-tight md:text-3xl">مبنای قابل بررسی این صفحه</h2>
+    <p class="mt-3 text-sm leading-7 text-muted">
+      این بخش claimهای حساس صفحه را به منبع یا لایه داده‌ای قابل بررسی وصل می‌کند تا متن visible با گراف، evidence-map و
+      مسیر تصمیم‌گیری هم‌خوان بماند.
+    </p>
+    <div class="mt-5 grid gap-4 md:grid-cols-2">
+      {
+        page.evidence.map((item) => (
+          <a
+            class="rounded-2xl border border-gray-200 p-4 hover:border-primary hover:bg-primary/5 dark:border-slate-800 dark:hover:border-primary/60"
+            href={item.href}
+            target={item.href.startsWith('http') ? '_blank' : undefined}
+            rel={item.href.startsWith('http') ? 'noopener' : undefined}
+          >
+            <span class="block text-xs font-bold text-primary">
+              {item.topic} · {item.evidenceType}
+            </span>
+            <strong class="mt-2 block text-base text-default">{item.name}</strong>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>

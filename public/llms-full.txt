@@ -1,0 +1,315 @@
+# راهنمای کامل ماشین‌خوان سایت دکتر سعید قزلباش
+
+Version: 2026.7-b6-final-audit-graph-hygiene
+Canonical host: https://www.ghezelbaash.ir/  
+Language: fa-IR  
+Primary entity: دکتر سعید قزلباش  
+Primary local entity: کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه
+
+## Canonical pages
+
+- https://www.ghezelbaash.ir/ — Person/ProfilePage hub for Dr. Saeed Ghezelbash.
+- https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/ — Clinic/local entity hub with visible FAQ.
+- https://www.ghezelbaash.ir/botox-kermanshah/ — Botox decision megapillar.
+- https://www.ghezelbaash.ir/filler-kermanshah/ — Filler decision megapillar.
+- https://www.ghezelbaash.ir/thread-lift-kermanshah/ — Thread lift decision megapillar.
+- https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/ — Diagnostic hub for aesthetic concerns.
+- https://www.ghezelbaash.ir/search/ — Utility search page; noindex, not in sitemap.
+
+## Machine-readable datasets
+
+- /data/index.json — central manifest for canonical pages, data assets, canonical policy, dataset counts, hashes, and retrieval order.
+- /graph.json — full entity graph and service graph.
+- /data/answers.json — 52 structured answer units mapped to visible page sections and direct-answer blocks.
+- /data/evidence-map.json — mapped claims with source/status governance.
+- /data/decision-matrix.json — concern-to-service routing and suitability screening matrix.
+- /data/search-index.json — section-level internal retrieval index with Persian normalization, synonym expansion, SearchAction target /search/?q=, and video records.
+- /data/video-manifest.json — placement manifest for self-hosted videos, thumbnails, page anchors, intent coverage, medical wording safety notes, and active VideoObject ids.
+- /video-sitemap.xml — video sitemap for embedded self-hosted videos, grouped by canonical page.
+
+## Entity rules
+
+1. Start data discovery from /data/index.json when a complete machine-readable inventory is needed.
+2. Treat the root URL as the primary page for the person entity, not as a generic homepage.
+3. Treat /dr-saeed-ghezelbash-aesthetic-clinic/ as the clinic/local business page and use #clinic-faq-kermanshah for visible clinic FAQs.
+4. Treat the four service/concern URLs as topical authority pillars.
+5. Use answers.json for direct Q&A extraction.
+6. Use evidence-map.json to distinguish externally evidenced identity/local claims from internally evidenced content-scope claims.
+7. Use decision-matrix.json only for content routing and suitability screening, not definitive clinical eligibility.
+
+## High-signal answer units
+
+### نگاه دکتر قزلباش به زیبایی از کجا شروع می‌شود؟
+Page: https://www.ghezelbaash.ir/  
+Answer: در این صفحه، زیبایی از تزریق یا نام روش شروع نمی‌شود؛ نقطه شروع، دیدن صورت، ظرفیت پوست، منشأ خواسته مراجعه‌کننده و تشخیص تصمیمی است که هم از نظر زیبایی و هم از نظر پزشکی قابل دفاع باشد.
+
+### چرا برای همه صورت‌ها نمی‌شود یک نسخه پیچید؟
+Page: https://www.ghezelbaash.ir/  
+Answer: چون بوتاکس، فیلر، لیفت نخ یا درمان پوستی فقط ابزار هستند. تصمیم درست به صورت، پوست، سابقه، انتظار و محدودیت هر فرد وابسته است و اجرای سفارش بدون تشخیص می‌تواند چهره را مصنوعی یا دور از خودش کند.
+
+### سابقه پژوهشی دکتر قزلباش چه ارتباطی با پزشکی زیبایی دارد؟
+Page: https://www.ghezelbaash.ir/  
+Answer: این صفحه سابقه پژوهشی را به‌عنوان رزومه تزئینی مطرح نمی‌کند؛ آن را تمرین دیدن انسان پشت علامت می‌داند، یعنی توجه به تصویر ذهنی، انتظار، اضطراب، سبک تصمیم‌گیری و زمینه روان‌شناختی درخواست زیبایی.
+
+### آموزش پزشکان زیبایی در نگاه دکتر قزلباش روی چه چیزی تأکید دارد؟
+Page: https://www.ghezelbaash.ir/  
+Answer: روی قضاوت بالینی قبل از تکنیک. پزشک باید بداند برای چه کسی، با چه انتظاری، در چه حدی و گاهی چرا نباید کاری انجام دهد؛ نه اینکه فقط مجری سفارش یا تکنیک‌فروش باشد.
+
+### زیبایی خوب از نظر این صفحه چه ویژگی دارد؟
+Page: https://www.ghezelbaash.ir/  
+Answer: زیبایی خوب چهره را از خود فرد دور نمی‌کند. هدف، اغراق، شبیه‌سازی یا رؤیافروشی نیست؛ هدف این است که چهره آرام‌تر، متناسب‌تر و برای همان فرد قابل‌پذیرش‌تر شود.
+
+### نمونه‌کارها و ارتباط مستقیم از کجا انجام می‌شود؟
+Page: https://www.ghezelbaash.ir/  
+Answer: مسیر فعال‌تر برای دیدن نمونه‌کارها، فضای روزمره کلینیک و شروع ارتباط مستقیم، اینستاگرام رسمی دکتر سعید قزلباش است؛ تصمیم درمانی اما فقط بعد از بررسی حضوری نهایی می‌شود.
+
+### آیا هر مراجعه‌کننده‌ای کاندید تزریق است؟
+Page: https://www.ghezelbaash.ir/  
+Answer: نه. کاندید بودن به سن، کیفیت پوست، آناتومی صورت، سابقه درمان، داروها، انتظار مراجعه‌کننده و ریسک‌پذیری بافت بستگی دارد. گاهی انجام ندادن، تصمیم پزشکی دقیق‌تری است.
+
+### چرا معاینه قبل از انتخاب روش مهم است؟
+Page: https://www.ghezelbaash.ir/  
+Answer: چون نام روش به‌تنهایی کافی نیست. بوتاکس، فیلر یا لیفت نخ هرکدام می‌توانند برای یک نفر منطقی، برای نفر دوم کم‌اثر و برای نفر سوم نامناسب باشند. تشخیص، قبل از تجویز قرار می‌گیرد.
+
+### بوتاکس چه زمانی انتخاب منطقی‌تری است؟
+Page: https://www.ghezelbaash.ir/botox-kermanshah/  
+Answer: وقتی مشکل اصلی از حرکت بیش‌ازحد عضله یا فعالیت غده باشد، بوتاکس می‌تواند بررسی شود. اگر مسئله از افتادگی پوست، کمبود حجم یا انتظار غیرواقعی باشد، تزریق می‌تواند تصمیم غلطی باشد.
+
+### آیا بوتاکس چروک‌های ثابت را کامل از بین می‌برد؟
+Page: https://www.ghezelbaash.ir/botox-kermanshah/  
+Answer: بوتاکس بیشتر روی چروک دینامیک اثر دارد. خطی که در حالت استراحت هم عمیق مانده، معمولاً به پوست، کلاژن، حجم یا آسیب نوری هم مربوط است و ممکن است به‌تنهایی با بوتاکس کامل اصلاح نشود.
+
+### چرا دوز و برند بوتاکس برای همه یکسان نیست؟
+Page: https://www.ghezelbaash.ir/botox-kermanshah/  
+Answer: قدرت عضله، سابقه تزریق، ناحیه، ریسک افتادگی، ضخامت پوست و محصول استفاده‌شده نتیجه را تغییر می‌دهد؛ بنابراین دوز ثابت برای همه بیماران تصمیم پزشکی دقیقی نیست.
+
+### بوتاکس پیشانی چه ریسکی دارد؟
+Page: https://www.ghezelbaash.ir/botox-kermanshah/  
+Answer: اگر پیشانی تنها عضله‌ای باشد که ابرو را بالا نگه می‌دارد، صاف‌کردن بیش از حد آن می‌تواند چشم یا ابرو را سنگین‌تر نشان دهد.
+
+### بوتاکس ماستر یا تعریق برای همه مناسب است؟
+Page: https://www.ghezelbaash.ir/botox-kermanshah/  
+Answer: خیر. ماستر باید واقعاً عضلانی باشد و تعریق هم باید از نظر علت بررسی شود. بوتاکس وقتی منطقی است که مکانیسم مشکل با کاهش فعالیت عضله یا غده هم‌خوان باشد.
+
+### بعد از بوتاکس چه چیزی مهم است؟
+Page: https://www.ghezelbaash.ir/botox-kermanshah/  
+Answer: پیروی از مراقبت‌های اولیه، پرهیز از دستکاری ناحیه و مراجعه برای ارزیابی نتیجه در زمان مناسب مهم است؛ اما جزئیات نهایی باید بر اساس معاینه و دستور پزشک باشد.
+
+### بوتاکس زیر بغل یا ماستر از نظر تصمیم‌گیری چه فرقی با بوتاکس صورت دارد؟
+Page: https://www.ghezelbaash.ir/botox-kermanshah/  
+Answer: در همه این کاربردها اول باید مکانیسم درست باشد. در صورت، مسئله معمولاً حرکت عضله است؛ در تعریق، فعالیت غده مطرح می‌شود؛ و در ماستر باید مشخص شود پهنای فک واقعاً عضلانی است یا نه.
+
+### چرا قیمت یا برند نباید اولین سؤال بوتاکس باشد؟
+Page: https://www.ghezelbaash.ir/botox-kermanshah/  
+Answer: چون دوز، ناحیه تزریق، قدرت عضله، ریسک افتادگی و سابقه بیمار قبل از برند یا قیمت اهمیت دارند. اگر علت خط یا مشکل درست خوانده نشود، حتی برند خوب هم نتیجه درست نمی‌سازد.
+
+### فیلر چه زمانی کمک می‌کند؟
+Page: https://www.ghezelbaash.ir/filler-kermanshah/  
+Answer: فیلر وقتی می‌تواند کمک کند که مشکل واقعاً از کمبود حجم، سایه قابل اصلاح، نسبت قابل تغییر یا حمایت بافتی باشد. اگر علت از پوست اضافه، افتادگی شدید، چربی یا انتظار اشتباه باشد، حجم بیشتر الزاماً بهتر نیست.
+
+### فیلر و بوتاکس چه تفاوتی دارند؟
+Page: https://www.ghezelbaash.ir/filler-kermanshah/  
+Answer: بوتاکس حرکت عضله را کم می‌کند، اما فیلر حجم، سایه، کانتور یا حمایت بافتی را تغییر می‌دهد. سؤال درست این است که مشکل از حرکت است یا حجم و ساختار.
+
+### چرا فیلر زیر چشم ناحیه حساسی است؟
+Page: https://www.ghezelbaash.ir/filler-kermanshah/  
+Answer: گودی زیر چشم ممکن است از حجم، پف، تیرگی، پوست نازک یا افت میدفیس باشد. اگر علت درست خوانده نشود، فیلر می‌تواند پف یا نارضایتی ایجاد کند.
+
+### انسداد عروقی فیلر چرا مهم است؟
+Page: https://www.ghezelbaash.ir/filler-kermanshah/  
+Answer: انسداد عروقی یکی از ریسک‌های جدی فیلر است و به شناخت آناتومی، انتخاب ناحیه، عمق تزریق و آمادگی برای اقدام فوری وابسته است.
+
+### آیا هیالاز همیشه راه‌حل ساده اصلاح فیلر است؟
+Page: https://www.ghezelbaash.ir/filler-kermanshah/  
+Answer: هیالورونیداز برای فیلرهای هیالورونیک‌اسید در موارد منتخب استفاده می‌شود، اما تصمیم به اصلاح به نوع ماده، ناحیه، عارضه، سابقه تزریق و وضعیت بیمار وابسته است.
+
+### عدد سی‌سی فیلر قبل از معاینه قابل تعیین است؟
+Page: https://www.ghezelbaash.ir/filler-kermanshah/  
+Answer: عدد سی‌سی بعد از فهمیدن علت، ناحیه، کیفیت پوست، حجم واقعی و انتظار بیمار معنا پیدا می‌کند؛ قبل از آن فقط یک تخمین خام است.
+
+### آیا فیلر لب، زیر چشم، گونه و چانه یک منطق مشترک دارند؟
+Page: https://www.ghezelbaash.ir/filler-kermanshah/  
+Answer: منطق مشترک آن‌ها اضافه کردن حجم یا حمایت بافتی است، اما هر ناحیه ریسک و معیار انتخاب متفاوت دارد. زیر چشم، بینی و گلابلا حساس‌ترند و بدون معاینه نباید درباره تزریق آن‌ها تصمیم قطعی گرفت.
+
+### چرا اصلاح فیلر قبلی همیشه ساده نیست؟
+Page: https://www.ghezelbaash.ir/filler-kermanshah/  
+Answer: چون باید معلوم شود فیلر قبلی از چه جنسی بوده، در چه لایه‌ای قرار دارد، مهاجرت کرده یا نه، و آیا با هیالورونیداز قابل اصلاح است یا نیاز به مسیر دیگری دارد.
+
+### لیفت نخ برای چه کسانی مناسب‌تر است؟
+Page: https://www.ghezelbaash.ir/thread-lift-kermanshah/  
+Answer: وقتی افتادگی خفیف تا متوسط باشد، پوست اضافه غالب نباشد، بافت هنوز نخ‌پذیر باشد و بیمار انتظار جراحی از نخ نداشته باشد، لیفت نخ می‌تواند بررسی شود.
+
+### آیا لیفت نخ جای جراحی لیفت صورت را می‌گیرد؟
+Page: https://www.ghezelbaash.ir/thread-lift-kermanshah/  
+Answer: خیر. نخ پوست اضافه را حذف نمی‌کند و افتادگی شدید یا گردن شل را مثل جراحی اصلاح نمی‌کند. نخ ابزار محدودی برای کاندید مناسب است.
+
+### تفاوت نخ PDO، PLLA و PCL چیست؟
+Page: https://www.ghezelbaash.ir/thread-lift-kermanshah/  
+Answer: این نخ‌ها از نظر جنس، رفتار بافتی و طراحی درمان متفاوت‌اند، اما انتخاب از اسم نخ شروع نمی‌شود؛ ابتدا باید صورت، پوست، چربی، افتادگی و انتظار بیمار بررسی شود.
+
+### آیا غبغب با لیفت نخ حل می‌شود؟
+Page: https://www.ghezelbaash.ir/thread-lift-kermanshah/  
+Answer: غبغب همیشه از یک علت نیست. ممکن است چربی، شلی پوست، چانه عقب یا گردن نقش داشته باشد؛ بنابراین قبل از نخ باید علت غبغب جدا شود.
+
+### عوارض لیفت نخ فقط کبودی است؟
+Page: https://www.ghezelbaash.ir/thread-lift-kermanshah/  
+Answer: خیر. فرورفتگی، عدم تقارن، لمس یا دیده‌شدن نخ، درد، عفونت یا نتیجه غیرطبیعی هم ممکن است مطرح شود و به انتخاب بیمار، تکنیک و مراقبت بستگی دارد.
+
+### ماندگاری لیفت نخ چگونه باید فهمیده شود؟
+Page: https://www.ghezelbaash.ir/thread-lift-kermanshah/  
+Answer: دوام نخ با دوام اثر زیبایی یکی نیست. نوع نخ، کیفیت پوست، وزن بافت، سبک زندگی و طراحی درمان روی ماندگاری اثر دارند.
+
+### چرا تعداد نخ معیار اصلی تصمیم‌گیری نیست؟
+Page: https://www.ghezelbaash.ir/thread-lift-kermanshah/  
+Answer: تعداد نخ بعد از تشخیص معنا دارد. شدت افتادگی، وزن بافت، پوست اضافه، چربی صورت، جهت افت و انتظار بیمار تعیین می‌کند که نخ اصلاً انتخاب مناسبی هست یا نه.
+
+### چه زمانی بهتر است لیفت نخ عقب بیفتد یا انجام نشود؟
+Page: https://www.ghezelbaash.ir/thread-lift-kermanshah/  
+Answer: وقتی افتادگی شدید، پوست اضافه زیاد، گردن شل، صورت بسیار سنگین، چانه عقب یا انتظار مشابه جراحی وجود دارد، لیفت نخ ممکن است انتخاب اول نباشد یا باید در برنامه ترکیبی بررسی شود.
+
+### چرا درمان زیبایی نباید با اسم روش شروع شود؟
+Page: https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/  
+Answer: چون یک ظاهر مشابه می‌تواند علت‌های متفاوت داشته باشد. چروک، افتادگی، کاهش حجم، لک، اسکار، ریزش مو یا غبغب هرکدام مسیر تصمیم جدا دارند.
+
+### لک جوش با جای جوش چه تفاوتی دارد؟
+Page: https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/  
+Answer: لک جوش تغییر رنگ پوست است، اما جای جوش یا اسکار معمولاً با تغییر سطح و فرورفتگی/برآمدگی همراه است. درمان این دو یکسان نیست.
+
+### آیا تا وقتی جوش فعال است می‌شود جای جوش را درمان کرد؟
+Page: https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/  
+Answer: معمولاً اول باید التهاب و جوش فعال کنترل شود؛ چون پوست ناپایدار می‌تواند لک و اسکار جدید بسازد و درمان‌های اسکار را پیچیده کند.
+
+### PRP یا مزوتراپی مو برای همه ریزش‌ها مناسب است؟
+Page: https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/  
+Answer: خیر. ریزش مو باید از نظر الگو، زمان شروع، داروها، بیماری‌های زمینه‌ای، کمبودها و وضعیت پوست سر بررسی شود؛ بعد درمان‌هایی مثل PRP یا مزوتراپی مطرح می‌شوند.
+
+### غبغب همیشه با لیپوساکشن حل می‌شود؟
+Page: https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/  
+Answer: نه. غبغب ممکن است از چربی، پوست، چانه عقب یا گردن باشد. لیپوساکشن وقتی منطقی است که چربی زیرچانه عامل اصلی باشد و بیمار کاندید مناسب باشد.
+
+### این صفحه چه ارتباطی با بوتاکس، فیلر و لیفت نخ دارد؟
+Page: https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/  
+Answer: این صفحه نقطه تشخیص است: اگر مشکل از عضله باشد به بوتاکس، اگر از حجم و سایه باشد به فیلر، و اگر از افتادگی بافت باشد به لیفت نخ وصل می‌شود.
+
+### سابسیژن چه زمانی برای جای جوش مطرح می‌شود؟
+Page: https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/  
+Answer: وقتی اسکار آکنه حالت فرورفته یا چسبندگی زیرپوستی داشته باشد، سابسیژن می‌تواند در برنامه درمانی مطرح شود. اما نوع اسکار، جوش فعال، لک، ضخامت پوست و سابقه درمان باید قبل از تصمیم بررسی شود.
+
+### جوانسازی پوست با حجم‌دهی چه تفاوتی دارد؟
+Page: https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/  
+Answer: جوانسازی کیفیت پوست روی بافت، شفافیت، رطوبت، لک و خطوط سطحی تمرکز دارد؛ اما فیلر حجم و حمایت بافتی اضافه می‌کند. اگر این دو اشتباه گرفته شوند، نتیجه ممکن است طبیعی یا کافی نباشد.
+
+### کلینیک زیبایی دکتر سعید قزلباش کجاست؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا قرار دارد. این آدرس در صفحه کلینیک همراه با مسیر تماس و امکان بررسی موقعیت روی نقشه معرفی شده است تا مراجعه‌کننده قبل از مراجعه، مکان، مسیر و هویت مرکز را روشن ببیند.
+
+### برای نوبت، تماس و هماهنگی مراجعه چه مسیری وجود دارد؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: برای هماهنگی مراجعه، شماره ۰۹۳۰۸۲۰۹۴۹۴ مسیر تماس مستقیم کلینیک است. ساعت کاری در متن صفحه از شنبه تا پنجشنبه، ۱۶:۰۰ تا ۲۲:۰۰ ثبت شده است. مسیر اینستاگرام رسمی دکتر سعید قزلباش هم برای شروع ارتباط و مشاهده فضای کاری معرفی شده، اما تصمیم درمانی فقط بعد از بررسی حضوری قابل نهایی‌شدن است.
+
+### پزشک مسئول کلینیک کیست و چرا این موضوع مهم است؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: پزشک مسئول کلینیک، دکتر سعید قزلباش است؛ با نام کامل دکتر محمدسعید قزلباش و کد نظام پزشکی ۱۶۷۴۳۰. برای یک کلینیک زیبایی، اتصال تصمیم درمانی به پزشک مشخص، قابل‌پیگیری و دارای هویت بیرونی، از خود نام خدمت مهم‌تر است؛ چون بوتاکس، فیلر یا لیفت نخ باید به تشخیص و مسئولیت پزشکی وصل باشند، نه به یک برند بی‌هویت.
+
+### چه خدماتی در کلینیک زیبایی دکتر سعید قزلباش انجام می‌شود؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: خدمات کلینیک در چهار مسیر اصلی سازمان‌دهی شده‌اند: بوتاکس برای مشکلات وابسته به فعالیت عضله، فیلر برای حجم و فرم، لیفت نخ برای افتادگی‌های منتخب و مسیر مشکلات زیبایی برای جوش، لک، جای جوش، ریزش مو، غبغب و مواردی که هنوز نام درمانشان مشخص نیست. این چینش کمک می‌کند کاربر اول مسئله را درست بفهمد و بعد سراغ روش مناسب برود.
+
+### اگر کسی دنبال بهترین کلینیک زیبایی در کرمانشاه باشد، چه معیارهایی باید ببیند؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: به‌جای تکیه بر ادعای «بهترین»، معیار عملی این است: پزشک مسئول مشخص باشد، هویت و کد نظام پزشکی قابل پیگیری باشد، آدرس و مسیر تماس پنهان نباشد، خدمات به‌صورت تشخیصی توضیح داده شوند، محدودیت‌ها و موارد نامناسب هم گفته شوند و کاربر به صفحه‌های تصمیم‌گیری برای بوتاکس، فیلر، لیفت نخ و مشکلات زیبایی هدایت شود. این صفحه دقیقاً برای همین ارزیابی ساخته شده است، بدون اینکه جای معاینه را بگیرد.
+
+### از کجا بفهمم بوتاکس، فیلر، لیفت نخ یا درمان پوستی برای من مناسب‌تر است؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: اگر مشکل با حرکت عضله ایجاد می‌شود، مسیر بوتاکس بررسی می‌شود؛ اگر مسئله حجم، فرم یا تناسب باشد، فیلر مطرح می‌شود؛ اگر افت بافت خفیف تا متوسط نقش اصلی داشته باشد، لیفت نخ ممکن است بررسی شود؛ و اگر مسئله جوش، لک، جای جوش، مو، تیرگی، منافذ یا غبغب باشد، مسیر مشکلات زیبایی نقطه شروع دقیق‌تری است. انتخاب نهایی به معاینه، سابقه، داروها، کیفیت پوست و انتظار فرد وابسته است.
+
+### اگر ندانم دقیقاً چه درمانی لازم دارم، از کدام صفحه شروع کنم؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: اگر فقط می‌دانید از لک، جوش، جای جوش، ریزش مو، تیرگی زیر چشم، منافذ باز، غبغب، افتادگی یا به‌هم‌خوردن تناسب صورت ناراضی هستید، شروع بهتر صفحه مشکلات و دغدغه‌های زیبایی است. آن مسیر کمک می‌کند نام درمان از تشخیص جلو نزند و گزینه‌هایی مثل بوتاکس، فیلر، لیفت نخ، PRP، مزوتراپی، سابسیژن یا لیپوساکشن غبغب در جای درست دیده شوند.
+
+### بوتاکس در این کلینیک برای چه درخواست‌هایی بررسی می‌شود؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: بوتاکس برای خط اخم، خطوط پیشانی، چروک دور چشم، لبخند لثه‌ای، لیپ فلیپ، تعریق موضعی و مواردی مثل عضله ماستر زمانی بررسی می‌شود که نقش عضله یا فعالیت غده در مشکل روشن باشد. هر خطی با بوتاکس بهتر نمی‌شود؛ خط ثابت، افتادگی پوست یا کمبود حجم ممکن است مسیر دیگری بخواهد.
+
+### فیلر در کلینیک چه زمانی انتخاب قابل‌دفاع‌تری است؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: فیلر وقتی مطرح می‌شود که مسئله به حجم ازدست‌رفته، فرم، حمایت بافتی یا تناسب چهره مربوط باشد؛ مثل لب، زیر چشم، گونه، چانه، زاویه فک، خط خنده، شقیقه یا اصلاح فیلر قبلی. اما فیلر فقط «پر کردن» نیست؛ ناحیه، عمق تزریق، سابقه قبلی، ریسک عروقی و تناسب کلی صورت باید قبل از تصمیم دیده شود.
+
+### لیفت نخ در این کلینیک برای چه افرادی بررسی می‌شود؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: لیفت نخ بیشتر برای افتادگی خفیف تا متوسط، خط فک، شقیقه، ابرو، میدفیس، گردن یا غبغب بررسی می‌شود؛ اما اگر شلی پوست زیاد باشد، حجم ازدست‌رفته نقش اصلی داشته باشد یا انتظار فرد از توان نخ جلوتر باشد، ممکن است انتخاب مناسبی نباشد. در این مسیر، ظرفیت بافت قبل از تعداد نخ اهمیت دارد.
+
+### چه زمانی ممکن است انجام ندادن درمان تصمیم درست‌تری باشد؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: وقتی توقع نتیجه با توان واقعی روش هماهنگ نیست، شرح حال یا داروها ریسک را بالا می‌برند، علت مشکل درست مشخص نشده، عفونت یا التهاب فعال وجود دارد، یا مراجعه‌کننده فقط از روی عکس و ترند تصمیم گرفته، انجام ندادن یا عقب‌انداختن درمان می‌تواند تصمیم دقیق‌تری باشد. این پیام در صفحه کلینیک عمداً واضح آمده است تا انتخاب روش از معاینه جلو نزند.
+
+### قیمت بوتاکس، فیلر یا لیفت نخ در کرمانشاه چطور مشخص می‌شود؟
+Page: https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/  
+Answer: قیمت بدون معاینه عدد قابل اتکایی نیست، چون به ناحیه، مقدار مورد نیاز، پیچیدگی کار، سابقه درمان قبلی، نوع محصول یا نخ و ریسک ناحیه بستگی دارد. صفحه کلینیک مسیر تماس را مشخص می‌کند، اما عدد نهایی وقتی معنا دارد که اول معلوم شود اصلاً کدام روش برای فرد منطقی است و چه حجمی از درمان لازم است.
+
+## Retrieval policy
+
+For direct answers, prefer answer units that point to visible FAQ sections. For clinic/contact/location answers, prefer the clinic page FAQ, then Google Maps/OpenStreetMap source references. For service selection, prefer decision-matrix routes, then the relevant pillar page. For identity verification, prefer the root page plus evidence-map external source registry.
+
+## Semantic anchor migration
+
+Version: 2026.7-b1-semantic-anchor-migration
+
+Generic numeric section ids have been replaced with page-scoped semantic anchors derived from visible section headings. This migration precedes video placement and graph projection.
+
+
+## Video placement replay
+
+Version: 2026.7-b4-style3-evidence-decision-replay
+
+- Visible embedded videos: 12
+- Pages with videos: 6
+- Video manifest: /data/video-manifest.json
+- Search index video records: 12
+- VideoObject and video sitemap are intentionally deferred to B5.
+- Subcision wording rule: use fibrotic scar / tethering / subcutaneous adhesion wording; do not describe subcision as a broad treatment for every depressed scar pattern.
+
+
+## Style 3 evidence and decision replay
+
+Version: 2026.7-b4-style3-evidence-decision-replay
+
+- Evidence claims: 93
+- Evidence sources: 32
+- Decision routes: 15
+- Service map entries: 5
+- Red-flag families: 52
+- Policy: decision-matrix is routing/screening, not diagnosis.
+
+
+## Video graph projection replay
+
+Version: 2026.7-b5-videoobject-sitemap-graph-replay
+
+- VideoObject nodes: 12
+- Video sitemap: /video-sitemap.xml
+- Full video registry: /data/video-manifest.json
+- Full graph projection: /graph.json#video-index
+- On-page JSON-LD policy: each canonical page renders only the videos embedded on that page.
+
+
+## Final graph hygiene replay
+
+Version: 2026.7-b6-final-audit-graph-hygiene
+
+- Removed internal sameAs references: 32
+- Policy: sameAs is reserved for external identity equivalence; internal references use subjectOf, mentions, url, about, hasPart, and isPartOf.
+
+
+## video-performance-hardening
+
+Version: 2026.7-recovered-b7-video-performance-hardening
+
+Embedded videos use preload=none, explicit layout dimensions, self-hosted MP4 faststart delivery, immutable /videos cache headers, and synced VideoObject contentSize/hash metadata.
+
+
+## B12-B17 authority layers
+
+Version: 2026.7-b12-b17-authority-layer
+
+Visible freshness/reviewer blocks, answer-first entity definitions, visible evidence blocks, and video transcript/segment layers are now rendered on the six canonical pages and synced to the search index, graph, answer layer, video manifest, and AI resolver authority corpus. Transcript text and segment summaries are now doctor-reviewed, visible, graph-projected, and connected to the page decision path. CSP enforcement is deferred pending report-only testing after deployment.

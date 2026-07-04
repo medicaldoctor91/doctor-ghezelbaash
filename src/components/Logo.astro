@@ -1,0 +1,20 @@
+---
+import { SITE } from 'astrowind:config';
+---
+
+<span class="flex items-center gap-2">
+  <img
+    src="/assets/brand/doctor-ghezelbaash-logo-192.webp"
+    alt="لوگوی دکتر سعید قزلباش"
+    width="40"
+    height="40"
+    class="h-10 w-10 rounded-full object-cover"
+    loading="eager"
+    decoding="async"
+  />
+  <span
+    class="self-center ml-2 rtl:ml-0 rtl:mr-2 text-xl md:text-lg font-bold text-gray-900 whitespace-nowrap dark:text-white"
+  >
+    {SITE?.name}
+  </span>
+</span>

@@ -1,9 +1,23 @@
+# dependencies
 node_modules/
-.astro/
+
+# build output
 dist/
+.astro/
+
+# environment
 .env
 .env.*
-npm-debug.log*
+!.env.example
+
+# OS/editor
 .DS_Store
-.idea/
+Thumbs.db
 .vscode/
+.idea/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
