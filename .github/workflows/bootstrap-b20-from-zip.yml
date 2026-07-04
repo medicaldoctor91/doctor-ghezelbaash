@@ -45,6 +45,8 @@ jobs:
           set -e
           cp -a "$FOUND_ROOT/." ./
           test -f package.json || (echo "package.json missing after copy" && exit 1)
+          # Remove conflicting workflow file that triggers workflows permission error
+          rm -f .github/workflows/deploy.yml || true
 
       - name: Commit B20 source
         run: |
