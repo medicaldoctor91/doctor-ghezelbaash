@@ -1,0 +1,56 @@
+name: Bootstrap B20 source from ZIP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify ZIP exists
+        run: |
+          test -f b20-source-no-mp4.zip || (echo "Upload b20-source-no-mp4.zip to the repository root first." && exit 1)
+
+      - name: Extract source package
+        run: |
+          rm -rf /tmp/b20-source
+          mkdir -p /tmp/b20-source
+          unzip -q b20-source-no-mp4.zip -d /tmp/b20-source
+          ROOT="/tmp/b20-source"
+          if [ ! -f "$ROOT/package.json" ]; then
+            CANDIDATE=$(find "$ROOT" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            if [ -n "$CANDIDATE" ] && [ -f "$CANDIDATE/package.json" ]; then
+              ROOT="$CANDIDATE"
+            fi
+          fi
+          test -f "$ROOT/package.json" || (echo "Could not find package.json in extracted ZIP." && exit 1)
+          echo "ROOT=$ROOT" >> "$GITHUB_ENV"
+
+      - name: Replace repository contents with B20 source
+        run: |
+          rsync -a --delete \
+            --exclude='.git/' \
+            --exclude='b20-source-no-mp4.zip' \
+            --exclude='.github/workflows/bootstrap-b20-from-zip.yml' \
+            "$ROOT/" ./
+          rm -f b20-source-no-mp4.zip
+
+      - name: Commit B20 source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Bootstrap B20 clean Astro source"
+            git push
+          fi
