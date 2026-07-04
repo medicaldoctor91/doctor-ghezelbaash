@@ -1,0 +1,52 @@
+name: Import video ZIP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-videos:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract video ZIP
+        run: |
+          set -e
+          FOUND=""
+          for zipfile in *.zip; do
+            if [ ! -f "$zipfile" ]; then
+              continue
+            fi
+            if unzip -l "$zipfile" | grep -q '\.mp4'; then
+              FOUND="$zipfile"
+              break
+            fi
+          done
+          test -n "$FOUND" || (echo "No ZIP containing MP4 files found in repository root." && exit 1)
+          echo "Using video ZIP: $FOUND"
+          rm -rf /tmp/video-import
+          mkdir -p /tmp/video-import
+          unzip -q -o "$FOUND" -d /tmp/video-import
+          mkdir -p public/videos
+          find /tmp/video-import -type f -name '*.mp4' -exec cp {} public/videos/ \;
+          rm -f ./*.zip
+          test -n "$(find public/videos -maxdepth 1 -type f -name '*.mp4' -print -quit)" || (echo "No MP4 copied to public/videos." && exit 1)
+
+      - name: Commit videos
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/videos .
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Add B20 video assets"
+            git push
+          fi
