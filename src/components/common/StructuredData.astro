@@ -15,6 +15,13 @@ const siteUrl = SITE?.site || 'https://www.ghezelbaash.ir';
 const pageMedia = getPageMedia(pathname);
 const pageImageUrl = `${siteUrl}${pageMedia.ogImagePath}`;
 const pageImageId = `${siteUrl}${pathname === '/' ? '' : pathname}#primary-image`;
+const timezoneOffset = '+03:30';
+const doctorNodeId = 'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash';
+const clinicNodeId = 'https://www.ghezelbaash.ir/#clinic';
+const patientReviewVideoId =
+  'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review';
+const servicePriceRange = 'هزینه خدمات پس از معاینه، نوع خدمت و طرح درمان تعیین می‌شود';
+const latestSchemaDate = '2026-07-06T00:00:00+03:30';
 
 const pageImageObject = {
   '@type': 'ImageObject',
@@ -40,8 +47,8 @@ const isEntityHubPage = pathname === '/' || pathname === '/dr-saeed-ghezelbash-a
 const pageUrlPrefix = `${siteUrl}${pathname === '/' ? '/' : pathname}`;
 const rootNodeIds = new Set([
   'https://www.ghezelbaash.ir/#website',
-  'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash',
-  'https://www.ghezelbaash.ir/#clinic',
+  doctorNodeId,
+  clinicNodeId,
   'https://www.ghezelbaash.ir/#contact-point',
   'https://www.ghezelbaash.ir/#credential-irimc-167430',
 ]);
@@ -74,9 +81,52 @@ const compactClinicIds = new Set([
   ...pillarServiceNodeIds,
 ]);
 
+const dateTimeKeys = new Set(['dateAdded', 'dateCreated', 'dateModified', 'datePublished', 'uploadDate']);
+
 const getNodeTypes = (node: JsonLdNode) => {
   const type = node['@type'];
   return Array.isArray(type) ? type.map(String) : type ? [String(type)] : [];
+};
+
+const compactTypes = (types: string[]) => (types.length === 1 ? types[0] : types);
+
+const normalizeDateTime = (value: unknown) => {
+  if (typeof value !== 'string') return value;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return `${value}T00:00:00${timezoneOffset}`;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(value)) {
+    return `${value}${timezoneOffset}`;
+  }
+
+  return value;
+};
+
+const normalizeDateFields = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map((item) => normalizeDateFields(item));
+  if (!value || typeof value !== 'object') return value;
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+      key,
+      dateTimeKeys.has(key) ? normalizeDateTime(entry) : normalizeDateFields(entry),
+    ])
+  );
+};
+
+const normalizeWebPageTypes = (node: JsonLdNode) => {
+  const nodeId = String(node['@id'] || '');
+  if (!nodeId.endsWith('#webpage')) return node;
+
+  const types = getNodeTypes(node).filter((type) => type !== 'ProfilePage');
+  const safeTypes = types.length ? types : ['WebPage'];
+
+  return {
+    ...node,
+    '@type': compactTypes(safeTypes),
+  };
 };
 
 const isQuestion = (node: JsonLdNode) => getNodeTypes(node).includes('Question');
@@ -129,18 +179,46 @@ const aggregateRating =
       }
     : undefined;
 
+const homeProfilePageNode =
+  pathname === '/'
+    ? {
+        '@type': 'ProfilePage',
+        '@id': 'https://www.ghezelbaash.ir/#profilepage',
+        url: 'https://www.ghezelbaash.ir/',
+        name: 'دکتر سعید قزلباش',
+        inLanguage: 'fa-IR',
+        dateModified: latestSchemaDate,
+        mainEntity: {
+          '@id': doctorNodeId,
+          '@type': ['Person', 'IndividualPhysician', 'Physician'],
+          name: 'دکتر سعید قزلباش',
+        },
+      }
+    : undefined;
+
 const enrichNode = (node: JsonLdNode) => {
-  const nodeId = String(node['@id'] || '');
-  if (nodeId === 'https://www.ghezelbaash.ir/#clinic') {
+  const normalizedNode = normalizeDateFields(normalizeWebPageTypes(node)) as JsonLdNode;
+  const nodeId = String(normalizedNode['@id'] || '');
+
+  if (nodeId === doctorNodeId) {
     return {
-      ...node,
+      ...normalizedNode,
+      image: normalizedNode.image ?? { '@id': pageImageId },
+      priceRange: normalizedNode.priceRange ?? servicePriceRange,
+    };
+  }
+
+  if (nodeId === clinicNodeId) {
+    return {
+      ...normalizedNode,
       logo: logoObject,
       image: isEntityHubPage ? pageImageObject : logoObject,
+      priceRange: normalizedNode.priceRange ?? servicePriceRange,
       hasMap: googleMapsRating.googleMapsUrl,
       ...(aggregateRating ? { aggregateRating } : {}),
       sameAs: Array.from(
         new Set([
-          ...((Array.isArray(node.sameAs) ? node.sameAs : []) as string[]),
+          ...((Array.isArray(normalizedNode.sameAs) ? normalizedNode.sameAs : []) as string[]),
           googleMapsRating.googleMapsUrl,
           googleMapsRating.googleMapsSearchUrl,
         ])
@@ -150,29 +228,56 @@ const enrichNode = (node: JsonLdNode) => {
 
   if (nodeId === 'https://www.ghezelbaash.ir/#website') {
     return {
-      ...node,
+      ...normalizedNode,
       logo: logoObject,
-      publisher: node.publisher ?? { '@id': 'https://www.ghezelbaash.ir/#clinic' },
+      publisher: normalizedNode.publisher ?? { '@id': clinicNodeId },
     };
   }
 
   if (nodeId.endsWith('#webpage')) {
     return {
-      ...node,
+      ...normalizedNode,
       image: { '@id': pageImageId },
       primaryImageOfPage: { '@id': pageImageId },
       thumbnailUrl: pageImageUrl,
+      dateModified: normalizedNode.dateModified ?? latestSchemaDate,
     };
+  }
+
+  if (isVideoObject(normalizedNode)) {
+    const dateAdded = normalizedNode.dateAdded;
+    const cleanVideo = {
+      ...normalizedNode,
+      uploadDate: normalizedNode.uploadDate ?? (typeof dateAdded === 'string' ? normalizeDateTime(dateAdded) : latestSchemaDate),
+      dateModified: normalizedNode.dateModified ?? latestSchemaDate,
+    };
+
+    if (nodeId === patientReviewVideoId) {
+      return {
+        ...cleanVideo,
+        name: 'ویدئوی رضایت زیباجو از خدمات زیبایی دکتر قزلباش',
+        description:
+          'ویدئوی رضایت زیباجو از تجربه دریافت خدمات زیبایی در کلینیک دکتر سعید قزلباش؛ نمونه‌ای انسانی از اعتماد مراجعان و کیفیت تجربه مراجعه، در کنار امتیاز ۵ از ۵ گوگل‌مپ بر اساس ۱۶۳ نظر ثبت‌شده.',
+        about: [
+          { '@id': clinicNodeId },
+          { '@id': doctorNodeId },
+          { '@id': 'https://www.ghezelbaash.ir/#clinic-google-maps-rating' },
+        ],
+        keywords: ['رضایت زیباجو', 'دکتر سعید قزلباش', 'کلینیک زیبایی کرمانشاه', 'Google Maps rating'],
+      };
+    }
+
+    return cleanVideo;
   }
 
   if (nodeId.endsWith('#service')) {
     return {
-      ...node,
+      ...normalizedNode,
       image: { '@id': pageImageId },
     };
   }
 
-  return node;
+  return normalizedNode;
 };
 
 const compactGraph = graph
@@ -182,10 +287,12 @@ const compactGraph = graph
     }
   : undefined;
 
+const extraNodes = [pageImageObject, ...(homeProfilePageNode ? [homeProfilePageNode] : [])];
+
 const enrichedGraph = compactGraph
   ? {
       ...compactGraph,
-      '@graph': [...compactGraph['@graph'], pageImageObject],
+      '@graph': [...compactGraph['@graph'], ...extraNodes],
     }
   : undefined;
 
