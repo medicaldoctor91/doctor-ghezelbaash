@@ -1,0 +1,29 @@
+name: Extract Site ZIP from Root
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '*.zip'
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract ZIP file from root
+        run: |
+          ZIP_FILE=$(ls *.zip 2>/dev/null | head -n 1)
+          
+          if [ -n "$ZIP_FILE" ]; then
+            echo "Found ZIP file: $ZIP_FILE"
+            echo "Extracting to root..."
+            unzip -o "$ZIP_FILE"
+            rm -f "$ZIP_FILE"
+            echo "Extraction complete. ZIP file removed."
+          else
+            echo "No .zip file found in repository root."
+          fi
