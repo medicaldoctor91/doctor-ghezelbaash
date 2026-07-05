@@ -1,0 +1,66 @@
+name: Regenerate package lock
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/regenerate-lockfile.yml'
+      - 'package.json'
+      - '.npmrc'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regenerate-package-lock
+  cancel-in-progress: false
+
+jobs:
+  regenerate-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          registry-url: https://registry.npmjs.org/
+
+      - name: Force public npm registry
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config get registry
+
+      - name: Regenerate package-lock.json
+        run: |
+          rm -f package-lock.json
+          npm install --package-lock-only --registry=https://registry.npmjs.org/ --no-audit --no-fund
+
+      - name: Assert lockfile does not contain private registry
+        run: |
+          if grep -R "packages.applied-caas-gateway1.internal.api.openai.org" package-lock.json; then
+            echo "Private registry URL still exists in package-lock.json" >&2
+            exit 1
+          fi
+          if grep -R "artifactory/api/npm/npm-public" package-lock.json; then
+            echo "Artifactory path still exists in package-lock.json" >&2
+            exit 1
+          fi
+
+      - name: Commit regenerated lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- package-lock.json; then
+            echo "package-lock.json already clean"
+            exit 0
+          fi
+          git add package-lock.json
+          git commit -m "Regenerate lockfile with public npm registry"
+          git push
