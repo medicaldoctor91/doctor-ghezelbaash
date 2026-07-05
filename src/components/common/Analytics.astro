@@ -12,10 +12,10 @@ const scriptType = partytown ? 'text/partytown' : undefined;
 
 <script is:inline id="ga-init" data-id={id} type={id ? scriptType : undefined}>
   if (document.getElementById('ga-init').dataset.id) {
-    var d = document.getElementById('ga-init').dataset.id;
+    const d = document.getElementById('ga-init').dataset.id;
     window.dataLayer = window.dataLayer || [];
-    window.gtag = function () {
-      dataLayer.push(arguments);
+    window.gtag = function (...args) {
+      window.dataLayer.push(args);
     };
     window.gtag('js', new Date());
     window.gtag('config', d);
