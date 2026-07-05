@@ -185,33 +185,13 @@ const homeProfilePageNode =
         '@type': 'ProfilePage',
         '@id': 'https://www.ghezelbaash.ir/#profilepage',
         url: 'https://www.ghezelbaash.ir/',
-        name: 'پروفایل دکتر سعید قزلباش',
+        name: 'دکتر سعید قزلباش',
         inLanguage: 'fa-IR',
         dateModified: latestSchemaDate,
         mainEntity: {
           '@id': doctorNodeId,
           '@type': ['Person', 'IndividualPhysician', 'Physician'],
           name: 'دکتر سعید قزلباش',
-        },
-      }
-    : undefined;
-
-const clinicProfilePageNode =
-  pathname === '/dr-saeed-ghezelbash-aesthetic-clinic/'
-    ? {
-        '@type': 'ProfilePage',
-        '@id': 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#profilepage',
-        url: 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/',
-        name: 'پروفایل کلینیک زیبایی دکتر سعید قزلباش',
-        inLanguage: 'fa-IR',
-        dateModified: latestSchemaDate,
-        mainEntity: {
-          '@id': clinicNodeId,
-          '@type': ['Organization', 'LocalBusiness', 'MedicalClinic'],
-          name: 'کلینیک زیبایی دکتر سعید قزلباش',
-          url: 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/',
-          image: { '@id': pageImageId },
-          sameAs: [googleMapsRating.googleMapsUrl, googleMapsRating.googleMapsSearchUrl],
         },
       }
     : undefined;
@@ -307,11 +287,7 @@ const compactGraph = graph
     }
   : undefined;
 
-const extraNodes = [
-  pageImageObject,
-  ...(homeProfilePageNode ? [homeProfilePageNode] : []),
-  ...(clinicProfilePageNode ? [clinicProfilePageNode] : []),
-];
+const extraNodes = [pageImageObject, ...(homeProfilePageNode ? [homeProfilePageNode] : [])];
 
 const enrichedGraph = compactGraph
   ? {
