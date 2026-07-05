@@ -1,0 +1,87 @@
+name: Sync video manifest metadata
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/sync-video-manifest.yml'
+      - 'public/videos/**/*.mp4'
+      - 'public/videos/thumbnails/*'
+      - 'public/data/video-manifest.json'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Sync video manifest byteSize and sha256
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const crypto = require('crypto');
+          const path = require('path');
+
+          const manifestPath = 'public/data/video-manifest.json';
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          let videoUpdates = 0;
+          let thumbnailUpdates = 0;
+
+          for (const video of manifest.videos || []) {
+            const videoPath = path.join('public/videos', video.file);
+            if (!fs.existsSync(videoPath)) {
+              throw new Error(`Missing video file: ${videoPath}`);
+            }
+            const videoBuffer = fs.readFileSync(videoPath);
+            const videoSize = videoBuffer.length;
+            const videoSha = crypto.createHash('sha256').update(videoBuffer).digest('hex');
+            if (video.byteSize !== videoSize || video.sha256 !== videoSha) {
+              video.byteSize = videoSize;
+              video.sha256 = videoSha;
+              videoUpdates += 1;
+            }
+
+            if (video.thumbnailUrl) {
+              const thumbnailName = new URL(video.thumbnailUrl).pathname.split('/').pop();
+              const thumbnailPath = path.join('public/videos/thumbnails', thumbnailName);
+              if (!fs.existsSync(thumbnailPath)) {
+                throw new Error(`Missing thumbnail file: ${thumbnailPath}`);
+              }
+              const thumbnailBuffer = fs.readFileSync(thumbnailPath);
+              const thumbnailSize = thumbnailBuffer.length;
+              const thumbnailSha = crypto.createHash('sha256').update(thumbnailBuffer).digest('hex');
+              if (video.thumbnailByteSize !== thumbnailSize || video.thumbnailSha256 !== thumbnailSha) {
+                video.thumbnailByteSize = thumbnailSize;
+                video.thumbnailSha256 = thumbnailSha;
+                thumbnailUpdates += 1;
+              }
+            }
+          }
+
+          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+          console.log(`videoUpdates=${videoUpdates}`);
+          console.log(`thumbnailUpdates=${thumbnailUpdates}`);
+          NODE
+
+      - name: Commit synced manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/video-manifest.json
+          if git diff --cached --quiet; then
+            echo "Video manifest already synced."
+            exit 0
+          fi
+          git commit -m "Sync video manifest metadata"
+          git push
