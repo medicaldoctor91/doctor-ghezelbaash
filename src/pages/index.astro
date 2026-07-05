@@ -1,0 +1,61 @@
+---
+import PageEntityDefinitionBlock from '~/components/common/PageEntityDefinitionBlock.astro';
+import PageFreshnessBlock from '~/components/common/PageFreshnessBlock.astro';
+import PageResolverAuthorityBlock from '~/components/common/PageResolverAuthorityBlock.astro';
+import PageVideoTranscriptBlock from '~/components/common/PageVideoTranscriptBlock.astro';
+import PageEvidenceBlock from '~/components/common/PageEvidenceBlock.astro';
+import Layout from '~/layouts/PageLayout.astro';
+import Hero from '~/components/widgets/Hero.astro';
+import ContentContactBox from '~/components/common/ContentContactBox.astro';
+import PageMediaBlock from '~/components/common/PageMediaBlock.astro';
+import { contactData } from '~/data/contact';
+import { getPageMedia } from '~/data/pageMedia';
+import homeContent from '~/data/content/home-dr-saeed-ghezelbaash-final.html?raw';
+
+const pageMedia = getPageMedia('/');
+const contentHtml = homeContent.replace(/<h1\b[^>]*>[\s\S]*?<\/h1>/i, '').trim();
+
+const metadata = {
+  title: 'دکتر سعید قزلباش؛ زیبایی را نمی‌شود از روی منو سفارش داد',
+  ignoreTitleTemplate: true,
+  canonical: 'https://www.ghezelbaash.ir/',
+  description:
+    'صفحه رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ معرفی نگاه تشخیص‌محور به پزشکی زیبایی، هویت پزشک، مسیر کلینیک، پژوهش، آموزش پزشکان و خدمات اصلی.',
+  openGraph: { images: [{ url: pageMedia.ogImagePath, width: 1200, height: 630 }] },
+};
+---
+
+<Layout metadata={metadata}>
+  <Hero
+    tagline="هاب هویت پزشک"
+    title="دکتر سعید قزلباش؛ زیبایی را نمی‌شود از روی منو سفارش داد"
+    subtitle="پزشکی زیبایی وقتی منفعت واقعی می‌سازد که از تشخیص شروع شود؛ نه از سفارش روش، نام محصول یا عجله برای تغییر."
+    actions={[
+      { variant: 'primary', text: 'درباره کلینیک', href: '/dr-saeed-ghezelbash-aesthetic-clinic/' },
+      { text: 'تماس با کلینیک', href: `tel:${contactData.phone}` },
+    ]}
+    image={{ src: pageMedia.heroImage, alt: pageMedia.heroAlt }}
+  />
+
+  <PageEntityDefinitionBlock path="/" />
+  <PageFreshnessBlock path="/" />
+  <PageResolverAuthorityBlock path="/" />
+  <PageMediaBlock
+    path="/"
+    title="تصاویر و لایه رسانه‌ای صفحه خانه"
+    subtitle="پرتره پزشک، فضای واقعی کار و تصویر تیم در این بخش کنار متن اصلی قرار می‌گیرند تا هویت صفحه خانه فقط متنی نباشد."
+  />
+  <section class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <article
+      class="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:font-bold prose-headings:tracking-tight prose-headings:leading-tight prose-h2:mt-12 prose-h2:text-3xl prose-h3:mt-8 prose-h3:text-2xl prose-p:leading-9 prose-li:leading-8 prose-a:text-primary hover:prose-a:text-secondary prose-blockquote:border-primary prose-blockquote:text-muted prose-table:text-right"
+      set:html={contentHtml}
+    />
+  </section>
+
+  <PageVideoTranscriptBlock path="/" />
+  <PageEvidenceBlock path="/" />
+  <ContentContactBox
+    title="مسیر رسمی تماس، نمونه‌کارها و مراجعه"
+    subtitle="اگر بعد از خواندن صفحه خانه می‌خواهید وارد مسیر عملی شوید، از تماس مستقیم، اینستاگرام رسمی و مسیریابی ثبت‌شده استفاده کنید."
+  />
+</Layout>

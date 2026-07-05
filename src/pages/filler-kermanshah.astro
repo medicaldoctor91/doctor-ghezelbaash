@@ -1,0 +1,149 @@
+---
+import PageEntityDefinitionBlock from '~/components/common/PageEntityDefinitionBlock.astro';
+import PageFreshnessBlock from '~/components/common/PageFreshnessBlock.astro';
+import PageResolverAuthorityBlock from '~/components/common/PageResolverAuthorityBlock.astro';
+import PageVideoTranscriptBlock from '~/components/common/PageVideoTranscriptBlock.astro';
+import PageEvidenceBlock from '~/components/common/PageEvidenceBlock.astro';
+import Layout from '~/layouts/PageLayout.astro';
+import BreadcrumbTrail from '~/components/common/BreadcrumbTrail.astro';
+import Hero from '~/components/widgets/Hero.astro';
+import CallToAction from '~/components/widgets/CallToAction.astro';
+import ContentContactBox from '~/components/common/ContentContactBox.astro';
+import PageFaq from '~/components/common/PageFaq.astro';
+import contentHtml from '~/data/content/filler-kermanshah.html?raw';
+import { contactData } from '~/data/contact';
+import GoogleMapsRatingBadge from '~/components/common/GoogleMapsRatingBadge.astro';
+import PageMediaBlock from '~/components/common/PageMediaBlock.astro';
+import PageTrustBlock from '~/components/common/PageTrustBlock.astro';
+import { getPageMedia } from '~/data/pageMedia';
+
+const pageMedia = getPageMedia('/filler-kermanshah/');
+
+const metadata = {
+  title: 'تزریق فیلر در کرمانشاه؛ لب، زیر چشم، فک و ریسک‌ها',
+  canonical: 'https://www.ghezelbaash.ir/filler-kermanshah/',
+  description:
+    'راهنمای تزریق فیلر در کرمانشاه؛ تشخیص کمبود حجم، فیلر لب، زیر چشم، گونه، چانه، خط فک، اصلاح فیلر و ریسک انسداد عروقی.',
+  openGraph: { images: [{ url: pageMedia.ogImagePath, width: 1200, height: 630 }] },
+};
+
+const intentLinks = [
+  {
+    title: 'تشخیص قبل از تزریق',
+    href: '#filler-diagnosis-before-injection',
+    description: 'فیلر برای علت تزریق می‌شود، نه فقط برای اسم ناحیه.',
+  },
+  {
+    title: 'لب، زیر چشم و گونه',
+    href: '#lip-filler',
+    description: 'زیرموضوع‌های اصلی فیلر با مسیر مستقل در همین راهنما.',
+  },
+  { title: 'چانه و خط فک', href: '#chin-filler', description: 'Intentهای کانتورینگ با تمرکز بر نسبت، حجم و افتادگی.' },
+  {
+    title: 'انسداد عروقی و اصلاح فیلر',
+    href: '#filler-vascular-occlusion',
+    description: 'ریسک‌های جدی و اصلاح فیلر با هیالاز، با توضیح قابل مشاهده برای کاربر.',
+  },
+];
+
+const breadcrumbs = [
+  { name: 'خانه', href: '/' },
+  { name: 'درباره کلینیک', href: '/dr-saeed-ghezelbash-aesthetic-clinic/' },
+  { name: 'تزریق فیلر در کرمانشاه' },
+];
+---
+
+<Layout metadata={metadata}>
+  <BreadcrumbTrail items={breadcrumbs} />
+
+  <Hero
+    tagline="مگاپیلار فیلر"
+    title="فیلر صورت را همیشه بهتر نمی‌کند؛ از لب و زیر چشم تا فک، بینی، بدن و خطر انسداد عروقی"
+    subtitle="راهنمای تصمیم‌گیری برای فیلر؛ از تشخیص کمبود حجم و سایه تا انتخاب ناحیه، محدودیت‌ها، عوارض و خطرات تزریق در مسیرهای حساس صورت."
+    actions={[
+      { variant: 'primary', text: 'تماس برای هماهنگی', href: `tel:${contactData.phone}` },
+      { text: 'نمونه‌کارها', href: contactData.instagram, target: '_blank' },
+    ]}
+    image={{ src: pageMedia.heroImage, alt: pageMedia.heroAlt }}
+  />
+
+  <!-- Rating badge for filler page -->
+  <section id="google-maps-rating" class="max-w-5xl mx-auto px-4 sm:px-6 pb-4">
+    <GoogleMapsRatingBadge />
+  </section>
+
+  <PageFreshnessBlock path="/filler-kermanshah/" />
+  <PageResolverAuthorityBlock path="/filler-kermanshah/" />
+
+  <PageMediaBlock path="/filler-kermanshah/" />
+
+  <PageEntityDefinitionBlock path="/filler-kermanshah/" />
+
+  <section id="page-context" class="max-w-5xl mx-auto px-4 sm:px-6 pb-8">
+    <div
+      class="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 shadow-sm dark:bg-slate-900 dark:border-slate-800"
+    >
+      <p class="text-muted leading-8">
+        مسیر صفحه: <a class="hover:text-primary" href="/">خانه</a>
+        <span class="px-1">—</span>
+        <a class="hover:text-primary" href="/dr-saeed-ghezelbash-aesthetic-clinic/">درباره کلینیک</a>
+        <span class="px-1">—</span>
+        <span class="font-semibold text-default">تزریق فیلر در کرمانشاه</span>
+      </p>
+    </div>
+  </section>
+
+  <section id="intent-hub" class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <div
+      class="rounded-2xl border border-primary/20 bg-primary/5 p-6 md:p-8 shadow-sm dark:bg-slate-900 dark:border-primary/30"
+    >
+      <h2 class="text-3xl font-bold tracking-tight mb-4">نقشه سریع مسیرهای تصمیم‌گیری این صفحه</h2>
+      <p class="text-muted leading-8 mb-6">
+        این بخش مسیرهای اصلی تصمیم‌گیری کاربر را مرتب می‌کند؛ هر مسیر به بخش مرتبط همان صفحه وصل است تا کاربر سریع‌تر به
+        پاسخ قابل‌اقدام برسد.
+      </p>
+      <div class="grid gap-4 md:grid-cols-2">
+        {
+          intentLinks.map((item) => (
+            <a
+              class="rounded-xl bg-white p-4 shadow-sm hover:bg-gray-50 dark:bg-slate-800 dark:hover:bg-slate-700"
+              href={item.href}
+            >
+              <strong>{item.title}</strong>
+              <span class="block text-sm text-muted mt-2">{item.description}</span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section id="page-main-content" class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <article
+      class="prose prose-lg max-w-none dark:prose-invert prose-headings:scroll-mt-24 prose-a:text-primary prose-table:text-sm prose-th:text-right prose-td:text-right leading-8"
+      set:html={contentHtml}
+    />
+  </section>
+
+  <PageVideoTranscriptBlock path="/filler-kermanshah/" />
+
+  <PageEvidenceBlock path="/filler-kermanshah/" />
+
+  <PageFaq />
+
+  <PageTrustBlock pageTitle="تزریق فیلر در کرمانشاه" />
+
+  <ContentContactBox
+    title="در فیلر، تشخیص علت مهم‌تر از تعداد سی‌سی است"
+    subtitle="برای هماهنگی نوبت، مشاهده نمونه‌کارها یا مسیریابی به کلینیک، از مسیرهای رسمی ثبت‌شده در سایت استفاده کنید."
+  />
+
+  <CallToAction
+    title="قدم بعدی: هماهنگی از مسیر رسمی کلینیک"
+    subtitle="اطلاعات این صفحه جایگزین معاینه و تصمیم پزشکی نیست. برای بررسی شرایط فردی، با کلینیک هماهنگ کنید."
+    actions={[
+      { variant: 'primary', text: 'تماس با کلینیک', href: `tel:${contactData.phone}` },
+      { text: 'مسیریابی', href: contactData.googleMap, target: '_blank' },
+    ]}
+  />
+</Layout>

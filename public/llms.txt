@@ -1,0 +1,76 @@
+# راهنمای ناوبری سایت دکتر سعید قزلباش
+
+> این فایل برای خزنده‌های هوش مصنوعی و سیستم‌های پاسخ‌گو تهیه شده است تا ساختار و محتوای سایت را بهتر درک کنند.
+
+## کلینیک و انتیتی اصلی
+
+[دکتر سعید قزلباش](/) – پزشک زیبایی در کرمانشاه.  
+[کلینیک زیبایی دکتر سعید قزلباش](/dr-saeed-ghezelbash-aesthetic-clinic/) – صفحه‌ٔ هاب کلینیک، شامل آدرس، شماره تماس، نقشه و معرفی کلینیک.
+
+## خدمات و زیرخدمات
+
+### بوتاکس و نورومدولاتور
+
+- [بوتاکس در کرمانشاه](/botox-kermanshah/) – راهنمای تشخیص، انتخاب ناحیه و مراقبت‌های قبل و بعد.
+
+### فیلر، ژل و کانتورینگ
+
+- [تزریق فیلر در کرمانشاه](/filler-kermanshah/) – تصمیم‌گیری برای فیلر لب، زیر چشم و کانتورینگ و مراقبت‌ها.
+
+### لیفت نخ و نخ‌های زیبایی
+
+- [لیفت نخ در کرمانشاه](/thread-lift-kermanshah/) – معرفی انواع نخ، معیارهای انتخاب و مراقبت‌های بعد.
+
+### پوست، مو، اسکار، جوانسازی و غبغب
+
+- [درمان مشکلات زیبایی](/aesthetic-concerns-kermanshah/) – تشخیص عارضه‌های پوستی و مو و انتخاب راهکارهای درمانی.
+
+## داده‌های ماشین‌خوان و منابع
+
+- فهرست مرکزی داده‌ها: [/data/index.json](/data/index.json)  
+- لایه پاسخ‌های ساختاریافته: [/data/answers.json](/data/answers.json)  
+- گراف سایت: [/graph.json](/graph.json)  
+- دیتاست انتیتی: [/data/ghezelbaash-entity-dataset.json](/data/ghezelbaash-entity-dataset.json)  
+- کاتالوگ خدمات: [/data/treatments.json](/data/treatments.json)  
+- نگاشت شناسه‌ها (crosswalk): [/data/entity-crosswalk.json](/data/entity-crosswalk.json)  
+- امتیاز گوگل‌مپ: [/data/google-maps-rating.json](/data/google-maps-rating.json)  
+- نگاشت شواهد و ادعاها: [/data/evidence-map.json](/data/evidence-map.json)  
+- ماتریس تصمیم و مسیر انتخاب خدمت: [/data/decision-matrix.json](/data/decision-matrix.json)  
+- ایندکس جست‌وجوی داخلی و هدف SearchAction: [/data/search-index.json](/data/search-index.json)  
+- مانیفست جای‌گذاری ویدئوها: [/data/video-manifest.json](/data/video-manifest.json)  
+- نقشه سایت ویدئوها: [/video-sitemap.xml](/video-sitemap.xml)  
+- لایه تهاجمی resolver authority: [/data/ai-resolver-authority-corpus.json](/data/ai-resolver-authority-corpus.json)  
+- نسخهٔ کامل ناوبری: [/llms-full.txt](/llms-full.txt)  
+
+## مسیرهای اعتماد و تماس
+
+- نظرات بیماران و امتیاز کلی: در گراف سایت و فایل google-maps-rating.json ثبت شده است.  
+- راه‌های تماس رسمی: تلفن ثابت، نمونه‌کارها و مسیر نقشه در تمام صفحات قابل دسترسی است.  
+- آدرس و مسیریابی: پیوند به گوگل‌مپ در فایل گراف و صفحات.
+- Semantic anchors: active (`2026.7-b1-semantic-anchor-migration`)
+- Video placement: active (`2026.7-b2-b3-video-placement-scar-safe`); VideoObject/video sitemap در مرحله بعدی انجام می‌شود.
+
+- Style 3 evidence/decision: active (`2026.7-b4-style3-evidence-decision-replay`)
+
+- VideoObject + video sitemap projection: active (`2026.7-b5-videoobject-sitemap-graph-replay`)
+
+- Final graph hygiene: active (`2026.7-b6-final-audit-graph-hygiene`); internal sameAs cleaned.
+
+
+## video-performance-hardening
+
+Version: 2026.7-recovered-b7-video-performance-hardening
+
+Embedded videos use preload=none, explicit layout dimensions, self-hosted MP4 faststart delivery, immutable /videos cache headers, and synced VideoObject contentSize/hash metadata.
+
+
+## B12-B17 authority layers
+
+Version: 2026.7-b12-b17-authority-layer
+
+- Visible freshness/reviewer blocks: active on all six canonical pages.
+- Answer-first entity definition blocks: active on all six canonical pages.
+- Video transcript/segment layer: active for 12 videos; text and segment summaries are doctor-reviewed and graph-projected.
+- Visible evidence blocks: active on all six canonical pages.
+- AI resolver authority corpus: /data/ai-resolver-authority-corpus.json.
+- CSP enforcement: deferred; feasibility audit documented in SECURITY_HEADER_CSP_FEASIBILITY.md.

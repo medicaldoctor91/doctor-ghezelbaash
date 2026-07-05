@@ -1,0 +1,389 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import BreadcrumbTrail from '~/components/common/BreadcrumbTrail.astro';
+import VideoWatchStructuredData from '~/components/common/VideoWatchStructuredData.astro';
+import { getAllWatchVideos } from '~/data/videoCatalog';
+
+export function getStaticPaths() {
+  return getAllWatchVideos().map((video) => ({
+    params: { slug: video.slug },
+    props: { video },
+  }));
+}
+
+const { video } = Astro.props;
+
+const metadata = {
+  title: video.watchTitle,
+  ignoreTitleTemplate: true,
+  canonical: video.watchUrl,
+  description: video.description,
+  openGraph: {
+    type: 'video.other',
+    images: [{ url: video.thumbnailUrl, width: video.layoutWidth, height: video.layoutHeight }],
+  },
+};
+
+const breadcrumbItems = [
+  { name: 'خانه', href: '/' },
+  { name: 'ویدئوها', href: '/videos/' },
+  { name: video.shortTitle },
+];
+---
+
+<Layout metadata={metadata}>
+  <VideoWatchStructuredData video={video} />
+
+  <BreadcrumbTrail items={breadcrumbItems} />
+
+  <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div class="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <p class="text-sm font-bold text-primary">Dedicated watch page</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight md:text-5xl">{video.title}</h1>
+      <p class="mt-4 max-w-4xl text-base leading-8 text-muted">{video.description}</p>
+
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a class="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white hover:bg-secondary" href="#watch-video-player">
+          رفتن مستقیم به پخش ویدئو
+        </a>
+        <a class="rounded-xl border border-gray-300 px-5 py-3 text-sm font-bold text-default hover:border-primary hover:text-primary dark:border-slate-700" href={video.sourceSectionPath}>
+          جایگاه ویدئو در صفحه مادر
+        </a>
+        <a class="rounded-xl border border-gray-300 px-5 py-3 text-sm font-bold text-default hover:border-primary hover:text-primary dark:border-slate-700" href="/videos/">
+          کتابخانه ویدئویی
+        </a>
+      </div>
+
+      <dl class="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="rounded-2xl border border-gray-200 p-4 dark:border-slate-800">
+          <dt class="text-xs font-bold text-primary">ویدئوی اصلی صفحه</dt>
+          <dd class="mt-2 text-sm font-semibold text-default">بله؛ این صفحه برای همین یک ویدئو ساخته شده است.</dd>
+        </div>
+        <div class="rounded-2xl border border-gray-200 p-4 dark:border-slate-800">
+          <dt class="text-xs font-bold text-primary">صفحه مادر</dt>
+          <dd class="mt-2 text-sm font-semibold text-default">{video.sourcePageLabel}</dd>
+        </div>
+        <div class="rounded-2xl border border-gray-200 p-4 dark:border-slate-800">
+          <dt class="text-xs font-bold text-primary">مدت ویدئو</dt>
+          <dd class="mt-2 text-sm font-semibold text-default">{video.duration}</dd>
+        </div>
+        <div class="rounded-2xl border border-gray-200 p-4 dark:border-slate-800">
+          <dt class="text-xs font-bold text-primary">فایل ویدئو</dt>
+          <dd class="mt-2 text-sm font-semibold text-default">{video.bytesLabel}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-4 pb-10 sm:px-6 lg:px-8">
+    <div class="grid gap-8 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.95fr)]">
+      <div class="space-y-8">
+        <section class="overflow-hidden rounded-3xl border border-gray-200 bg-black shadow-sm dark:border-slate-800">
+          <video
+            id="watch-video-player"
+            class="aspect-video w-full"
+            controls
+            playsinline
+            preload="metadata"
+            poster={video.thumbnailUrl}
+            width={video.width}
+            height={video.height}
+          >
+            <source src={video.contentUrl} type="video/mp4" />
+            <track kind="chapters" src={video.chapterTrackPath} srclang="fa" label="بخش‌های ویدئو" default />
+            مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
+          </video>
+          <noscript>
+            <div class="bg-white p-4 text-sm leading-7 text-slate-900">
+              برای مشاهده مستقیم فایل ویدئو می‌توانید از
+              <a href={video.contentUrl} class="font-semibold text-primary">لینک MP4</a>
+              استفاده کنید.
+            </div>
+          </noscript>
+        </section>
+
+        <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p class="text-sm font-bold text-primary">Key moments</p>
+              <h2 class="mt-2 text-2xl font-bold tracking-tight">بخش‌بندی زمانی و لینک‌پذیر ویدئو</h2>
+            </div>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-muted dark:bg-slate-800">
+              {video.segments.length} برش زمانی مستقل
+            </span>
+          </div>
+
+          <p class="mt-4 text-sm leading-7 text-muted">
+            هر بخش با URL مستقل زمانی ساخته شده تا هم کاربر و هم موتور جست‌وجو به قطعه‌ی دقیق‌تری از همین ویدئو برسند.
+          </p>
+
+          <div class="mt-6 space-y-4">
+            {video.segments.map((segment) => (
+              <article id={segment.anchorId} class="rounded-2xl border border-gray-200 p-5 dark:border-slate-800">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div class="max-w-3xl">
+                    <h3 class="text-lg font-bold">{segment.name}</h3>
+                    <p class="mt-2 text-sm leading-7 text-muted">{segment.description}</p>
+                    <p class="mt-4 text-xs font-semibold text-primary">
+                      {segment.startOffset}s تا {segment.endOffset}s
+                    </p>
+                  </div>
+
+                  <div class="flex flex-wrap gap-3">
+                    <a
+                      href={segment.watchHashPath}
+                      data-video-seek-link={segment.startOffset}
+                      class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-secondary"
+                    >
+                      {segment.label}
+                    </a>
+                    <a
+                      href={segment.watchHashPath}
+                      class="rounded-xl border border-gray-300 px-4 py-2 text-sm font-bold text-default hover:border-primary hover:text-primary dark:border-slate-700"
+                    >
+                      URL همین بخش
+                    </a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p class="text-sm font-bold text-primary">Transcript layer</p>
+              <h2 class="mt-2 text-2xl font-bold tracking-tight">متن قابل‌خزش ویدئو</h2>
+            </div>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-muted dark:bg-slate-800">
+              {video.transcriptKind}
+            </span>
+          </div>
+          <p class="mt-3 text-sm leading-7 text-muted">{video.transcriptNotice}</p>
+          <p class="mt-5 text-base leading-9 text-default">{video.transcript}</p>
+        </section>
+
+        <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p class="text-sm font-bold text-primary">Entity alignment</p>
+              <h2 class="mt-2 text-2xl font-bold tracking-tight">این ویدئو در کدام ساختار دانشی سایت می‌نشیند؟</h2>
+            </div>
+            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-muted dark:bg-slate-800">
+              دکتر سعید قزلباش · کلینیک زیبایی
+            </span>
+          </div>
+
+          <div class="mt-6 grid gap-4 md:grid-cols-2">
+            <a href="/" class="rounded-2xl border border-gray-200 p-5 hover:border-primary hover:bg-primary/5 dark:border-slate-800">
+              <strong class="block text-base text-default">صفحه هویتی دکتر سعید قزلباش</strong>
+              <span class="mt-2 block text-sm leading-7 text-muted">
+                این ویدئو به کتابخانه ویدئویی سایت متصل است و به موجودیت اصلی پزشک در سایت برمی‌گردد.
+              </span>
+            </a>
+            <a
+              href="/dr-saeed-ghezelbash-aesthetic-clinic/"
+              class="rounded-2xl border border-gray-200 p-5 hover:border-primary hover:bg-primary/5 dark:border-slate-800"
+            >
+              <strong class="block text-base text-default">صفحه کلینیک و تجربه مراجعه</strong>
+              <span class="mt-2 block text-sm leading-7 text-muted">
+                برای پیوند دادن ویدئو به کسب‌وکار، موقعیت، و تجربه مراجعه، این صفحه مرجع مکمل است.
+              </span>
+            </a>
+          </div>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <a
+              href={video.sourceSectionPath}
+              class="rounded-2xl border border-gray-200 p-5 hover:border-primary hover:bg-primary/5 dark:border-slate-800"
+            >
+              <strong class="block text-base text-default">جایگاه اصلی این ویدئو در صفحه مادر</strong>
+              <span class="mt-2 block text-sm leading-7 text-muted">
+                همین ویدئو در متن موضوعی خودش هم حضور دارد تا ارتباط ویدئو با متن مادر و نیت جست‌وجو حفظ شود.
+              </span>
+            </a>
+            <a href="/videos/" class="rounded-2xl border border-gray-200 p-5 hover:border-primary hover:bg-primary/5 dark:border-slate-800">
+              <strong class="block text-base text-default">هاب ویدئوهای سایت</strong>
+              <span class="mt-2 block text-sm leading-7 text-muted">
+                همه ویدئوها از یک کتابخانه مرکزی هم discover می‌شوند تا خوشه ویدئویی مستقل شکل بگیرد.
+              </span>
+            </a>
+          </div>
+        </section>
+
+        {video.relatedVideos.length > 0 && (
+          <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p class="text-sm font-bold text-primary">Related videos</p>
+                <h2 class="mt-2 text-2xl font-bold tracking-tight">ویدئوهای نزدیک و مکمل</h2>
+              </div>
+              <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-muted dark:bg-slate-800">
+                پیوند خوشه‌ای داخل کتابخانه ویدئویی
+              </span>
+            </div>
+
+            <div class="mt-6 grid gap-5 lg:grid-cols-3">
+              {video.relatedVideos.map((item) => (
+                <article class="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-800">
+                  <a href={item.watchPath} class="block">
+                    <img
+                      src={item.thumbnailUrl}
+                      alt={item.title}
+                      loading="lazy"
+                      width="640"
+                      height="360"
+                      class="aspect-video w-full object-cover"
+                    />
+                  </a>
+                  <div class="p-5">
+                    <p class="text-xs font-bold text-primary">{item.sourcePageLabel}</p>
+                    <h3 class="mt-2 text-lg font-bold">
+                      <a href={item.watchPath} class="hover:text-primary">{item.shortTitle}</a>
+                    </h3>
+                    <p class="mt-3 text-sm leading-7 text-muted">{item.reason}</p>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                      <a href={item.watchPath} class="text-sm font-semibold text-primary hover:text-secondary">
+                        دیدن watch page
+                      </a>
+                      <a href={item.sourceSectionUrl.replace('https://www.ghezelbaash.ir', '')} class="text-sm font-semibold text-primary hover:text-secondary">
+                        جایگاه در صفحه مادر
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+
+      <aside class="space-y-6">
+        <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-bold text-primary">Watch page signals</p>
+          <h2 class="mt-2 text-xl font-bold tracking-tight">سیگنال‌های فنی همین صفحه</h2>
+          <dl class="mt-5 space-y-4 text-sm leading-7">
+            <div>
+              <dt class="font-bold text-default">عنوان یکتا</dt>
+              <dd class="text-muted">{video.watchTitle}</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-default">آدرس canonical</dt>
+              <dd class="break-words text-muted">{video.watchUrl}</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-default">Thumbnail ثابت</dt>
+              <dd class="break-words text-muted">{video.thumbnailUrl}</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-default">فایل ویدئو</dt>
+              <dd class="break-words text-muted">{video.contentUrl}</dd>
+            </div>
+            <div>
+              <dt class="font-bold text-default">فایل chapters</dt>
+              <dd class="break-words text-muted">{video.chapterTrackUrl}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-bold text-primary">Discovery links</p>
+          <h2 class="mt-2 text-xl font-bold tracking-tight">مسیرهای مرتبط</h2>
+          <div class="mt-5 space-y-3">
+            <a
+              href={video.sourceSectionPath}
+              class="block rounded-2xl border border-gray-200 p-4 hover:border-primary hover:bg-primary/5 dark:border-slate-800"
+            >
+              <strong class="block text-base text-default">جایگاه این ویدئو در صفحه مادر</strong>
+              <span class="mt-2 block text-sm leading-7 text-muted">{video.sourcePageLabel}</span>
+            </a>
+
+            {video.crossLinks.map((link) => (
+              <a
+                href={link.url}
+                class="block rounded-2xl border border-gray-200 p-4 hover:border-primary hover:bg-primary/5 dark:border-slate-800"
+              >
+                <strong class="block text-base text-default">{link.label}</strong>
+                <span class="mt-2 block text-sm leading-7 text-muted">لینک مرتبط با محتوای همین ویدئو</span>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-bold text-primary">Keywords</p>
+          <h2 class="mt-2 text-xl font-bold tracking-tight">کلیدواژه‌های همین ویدئو</h2>
+          <div class="mt-5 flex flex-wrap gap-2">
+            {video.keywords.map((keyword) => (
+              <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-muted dark:bg-slate-800">
+                {keyword}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <p class="text-sm font-bold text-primary">Sequential navigation</p>
+          <h2 class="mt-2 text-xl font-bold tracking-tight">ناوبری بین watch pageها</h2>
+          <div class="mt-5 space-y-3">
+            {video.previousVideo && (
+              <a href={video.previousVideo.watchPath} class="block rounded-2xl border border-gray-200 p-4 hover:border-primary hover:bg-primary/5 dark:border-slate-800">
+                <strong class="block text-base text-default">ویدئوی قبلی</strong>
+                <span class="mt-2 block text-sm leading-7 text-muted">{video.previousVideo.title}</span>
+              </a>
+            )}
+            {video.nextVideo && (
+              <a href={video.nextVideo.watchPath} class="block rounded-2xl border border-gray-200 p-4 hover:border-primary hover:bg-primary/5 dark:border-slate-800">
+                <strong class="block text-base text-default">ویدئوی بعدی</strong>
+                <span class="mt-2 block text-sm leading-7 text-muted">{video.nextVideo.title}</span>
+              </a>
+            )}
+          </div>
+        </section>
+      </aside>
+    </div>
+  </section>
+
+  <script is:inline>
+    const player = document.getElementById('watch-video-player');
+    const seekLinks = Array.from(document.querySelectorAll('[data-video-seek-link]'));
+
+    if (player instanceof HTMLVideoElement) {
+      const syncPlayerToUrl = () => {
+        const url = new URL(window.location.href);
+        const start = Number(url.searchParams.get('t') || '0');
+
+        if (Number.isFinite(start) && start >= 0) {
+          player.currentTime = start;
+        }
+      };
+
+      const seekTo = (start) => {
+        player.currentTime = Number.isFinite(start) ? start : 0;
+        void player.play();
+        player.focus();
+      };
+
+      if (player.readyState >= 1) {
+        syncPlayerToUrl();
+      } else {
+        player.addEventListener('loadedmetadata', syncPlayerToUrl, { once: true });
+      }
+
+      for (const link of seekLinks) {
+        link.addEventListener('click', (event) => {
+          const start = Number(link.getAttribute('data-video-seek-link') || '0');
+          if (!Number.isFinite(start)) return;
+          event.preventDefault();
+
+          const href = link.getAttribute('href') || window.location.pathname;
+          window.history.replaceState({}, '', href);
+          seekTo(start);
+        });
+      }
+
+      window.addEventListener('popstate', syncPlayerToUrl);
+    }
+  </script>
+</Layout>
