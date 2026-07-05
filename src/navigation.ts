@@ -14,6 +14,7 @@ export const headerData = {
         { text: 'درمان مشکلات زیبایی', href: getPermalink('/aesthetic-concerns-kermanshah') },
       ],
     },
+    { text: 'ویدئوها', href: getPermalink('/videos') },
   ],
   actions: [
     { text: 'تماس', href: `tel:${contactData.phone}` },
@@ -29,6 +30,7 @@ export const footerData = {
         { text: 'خانه', href: getPermalink('/') },
         { text: 'درباره کلینیک', href: getPermalink('/dr-saeed-ghezelbash-aesthetic-clinic') },
         { text: 'درمان مشکلات زیبایی', href: getPermalink('/aesthetic-concerns-kermanshah') },
+        { text: 'ویدئوها', href: getPermalink('/videos') },
       ],
     },
     {
