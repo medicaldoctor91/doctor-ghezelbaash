@@ -1,0 +1,141 @@
+name: Apply pre-deploy maintenance fixes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/apply-predeploy-maintenance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Apply maintenance changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -f .github/workflows/extract-site-zip.yml
+          printf '22.12.0\n' > .node-version
+          grep -qxF '.node-version' .prettierignore || printf '\n.node-version\n' >> .prettierignore
+
+          cat > eslint.config.mjs <<'EOF'
+          import js from '@eslint/js';
+          import globals from 'globals';
+          import tseslint from 'typescript-eslint';
+          import astro from 'eslint-plugin-astro';
+
+          export default [
+            {
+              ignores: [
+                'dist/**',
+                '.astro/**',
+                'node_modules/**',
+                'public/data/**',
+                'public/graph.json',
+                'public/videos/**',
+                'src/data/content/**',
+                'src/data/schema/**',
+                'package-lock.json',
+              ],
+            },
+            js.configs.recommended,
+            ...tseslint.configs.recommended,
+            ...astro.configs['flat/recommended'],
+            {
+              files: ['**/*.{js,mjs,cjs,ts,astro}'],
+              languageOptions: {
+                globals: {
+                  ...globals.browser,
+                  ...globals.node,
+                },
+              },
+              rules: {
+                'no-console': 'off',
+                '@typescript-eslint/no-explicit-any': 'off',
+                '@typescript-eslint/no-unused-vars': [
+                  'warn',
+                  {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_',
+                  },
+                ],
+              },
+            },
+          ];
+          EOF
+
+          npm install @fontsource-variable/vazirmatn --save --no-audit --no-fund
+
+          node <<'NODE'
+          const fs = require('fs');
+
+          function replaceFile(file, transform) {
+            const before = fs.readFileSync(file, 'utf8');
+            const after = transform(before);
+            if (after !== before) fs.writeFileSync(file, after);
+          }
+
+          replaceFile('src/components/CustomStyles.astro', (source) => {
+            let output = source;
+            if (!output.includes("@fontsource-variable/vazirmatn")) {
+              output = output.replace("import '@fontsource-variable/inter';", "import '@fontsource-variable/vazirmatn';\nimport '@fontsource-variable/inter';");
+            }
+            output = output.replaceAll("--aw-font-sans: 'Inter Variable';", "--aw-font-sans: 'Vazirmatn Variable', 'Inter Variable';");
+            output = output.replaceAll("--aw-font-serif: 'Inter Variable';", "--aw-font-serif: 'Vazirmatn Variable', 'Inter Variable';");
+            output = output.replaceAll("--aw-font-heading: 'Inter Variable';", "--aw-font-heading: 'Vazirmatn Variable', 'Inter Variable';");
+            return output;
+          });
+
+          replaceFile('src/components/common/Analytics.astro', (source) => source.replace(
+            `    var d = document.getElementById('ga-init').dataset.id;\n    window.dataLayer = window.dataLayer || [];\n    window.gtag = function () {\n      dataLayer.push(arguments);\n    };`,
+            `    const d = document.getElementById('ga-init').dataset.id;\n    window.dataLayer = window.dataLayer || [];\n    window.gtag = function (...args) {\n      window.dataLayer.push(args);\n    };`
+          ));
+
+          replaceFile('src/navigation.ts', (source) => {
+            let output = source;
+            if (!output.includes("{ text: 'ویدئوها', href: getPermalink('/videos') }")) {
+              output = output.replace(
+                `    },\n  ],\n  actions:`,
+                `    },\n    { text: 'ویدئوها', href: getPermalink('/videos') },\n  ],\n  actions:`
+              );
+            }
+            if (!output.includes("{ text: 'ویدئوها', href: getPermalink('/videos') },\n      ],\n    },\n    {\n      title: 'مگاپیلارهای خدمات'")) {
+              output = output.replace(
+                `        { text: 'درمان مشکلات زیبایی', href: getPermalink('/aesthetic-concerns-kermanshah') },\n      ],\n    },\n    {\n      title: 'مگاپیلارهای خدمات',`,
+                `        { text: 'درمان مشکلات زیبایی', href: getPermalink('/aesthetic-concerns-kermanshah') },\n        { text: 'ویدئوها', href: getPermalink('/videos') },\n      ],\n    },\n    {\n      title: 'مگاپیلارهای خدمات',`
+              );
+            }
+            return output;
+          });
+          NODE
+
+          npx prettier -w .
+          npm run check
+          npm run build
+
+          rm -f .github/workflows/apply-predeploy-maintenance.yml
+
+      - name: Commit maintenance changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No maintenance changes to commit."
+            exit 0
+          fi
+          git commit -m "Apply pre-deploy maintenance fixes"
+          git push
