@@ -1,0 +1,193 @@
+name: Apply safe MedicalProcedure schema
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/apply-medicalprocedure-schema.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Add MedicalProcedure to existing service nodes
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+
+          const doctorId = 'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash';
+          const clinicId = 'https://www.ghezelbaash.ir/#clinic';
+
+          const targets = {
+            'https://www.ghezelbaash.ir/botox-kermanshah/#service': {
+              pageId: 'https://www.ghezelbaash.ir/botox-kermanshah/#webpage',
+              procedureType: 'https://schema.org/PercutaneousProcedure',
+              bodyLocation: ['پیشانی', 'خط اخم', 'دور چشم', 'عضله ماستر', 'تعریق موضعی', 'چانه و گردن بر اساس ارزیابی پزشک'],
+              howPerformed:
+                'تزریق کنترل‌شده بوتولینوم توکسین در نقاط انتخاب‌شده عضلات هدف، پس از ارزیابی حالت چهره، خطوط دینامیک، تقارن صورت و سابقه پزشکی فرد انجام می‌شود.',
+              preparation:
+                'پیش از تزریق، ناحیه هدف، سابقه دارویی، سابقه حساسیت، انتظار فرد و مناسب‌بودن بوتاکس برای نوع خط یا مشکل بررسی می‌شود.',
+              followup:
+                'پس از تزریق، مراقبت‌های کوتاه‌مدت، زمان تقریبی مشاهده اثر و نیاز احتمالی به بررسی نتیجه بر اساس پاسخ فردی توضیح داده می‌شود.',
+            },
+            'https://www.ghezelbaash.ir/filler-kermanshah/#service': {
+              pageId: 'https://www.ghezelbaash.ir/filler-kermanshah/#webpage',
+              procedureType: 'https://schema.org/PercutaneousProcedure',
+              bodyLocation: ['لب', 'گونه', 'زیر چشم', 'چانه', 'خط فک', 'خط خنده', 'بینی بدون جراحی بر اساس ارزیابی پزشک'],
+              howPerformed:
+                'تزریق فیلر پوستی در لایه و ناحیه مناسب، با هدف اصلاح فرم، حجم یا کانتور و با توجه به آناتومی، تقارن، ریسک عروقی و نیاز واقعی فرد انجام می‌شود.',
+              preparation:
+                'پیش از تزریق فیلر، فرم صورت، سابقه تزریق قبلی، داروهای مصرفی، ریسک کبودی یا حساسیت و مرز بین نیاز به فیلر، بوتاکس یا روش‌های دیگر بررسی می‌شود.',
+              followup:
+                'پس از تزریق، مراقبت‌های کوتاه‌مدت، علائم هشدار، زمان خوابیدن ورم و زمان مناسب بررسی نتیجه نهایی به فرد توضیح داده می‌شود.',
+            },
+            'https://www.ghezelbaash.ir/thread-lift-kermanshah/#service': {
+              pageId: 'https://www.ghezelbaash.ir/thread-lift-kermanshah/#webpage',
+              procedureType: 'https://schema.org/PercutaneousProcedure',
+              bodyLocation: ['صورت', 'گونه', 'خط فک', 'شقیقه', 'ابرو', 'غبغب و گردن بر اساس ارزیابی پزشک'],
+              howPerformed:
+                'لیفت نخ با طراحی مسیر کشش و قرار دادن نخ‌های قابل جذب در بافت هدف انجام می‌شود تا در افراد مناسب، افتادگی خفیف تا متوسط با رویکرد غیرجراحی بهبود یابد.',
+              preparation:
+                'پیش از لیفت نخ، شدت افتادگی، کیفیت پوست، کمبود حجم، سابقه درمان‌های قبلی، انتظار فرد و مناسب‌بودن نخ نسبت به روش‌های جایگزین بررسی می‌شود.',
+              followup:
+                'پس از لیفت نخ، محدودیت‌های حرکتی کوتاه‌مدت، مراقبت از ناحیه، زمان فروکش‌کردن تورم و زمان بررسی نتیجه بر اساس شرایط فرد توضیح داده می‌شود.',
+            },
+          };
+
+          const provider = [{ '@id': doctorId }, { '@id': clinicId }];
+          const areaServed = {
+            '@type': 'City',
+            name: 'Kermanshah',
+            alternateName: 'کرمانشاه',
+            containedInPlace: {
+              '@type': 'AdministrativeArea',
+              name: 'Kermanshah Province',
+              alternateName: 'استان کرمانشاه',
+            },
+          };
+
+          function ensureTypes(node) {
+            const raw = node['@type'];
+            const types = Array.isArray(raw) ? raw.map(String) : raw ? [String(raw)] : [];
+            for (const type of ['Service', 'MedicalProcedure']) {
+              if (!types.includes(type)) types.push(type);
+            }
+            node['@type'] = types;
+          }
+
+          function patchNode(node, config) {
+            ensureTypes(node);
+            node.procedureType = config.procedureType;
+            node.bodyLocation = config.bodyLocation;
+            node.howPerformed = config.howPerformed;
+            node.preparation = config.preparation;
+            node.followup = config.followup;
+            node.provider = provider;
+            node.areaServed = node.areaServed || areaServed;
+            node.mainEntityOfPage = { '@id': config.pageId };
+            return true;
+          }
+
+          function visit(value, seen = new Set()) {
+            if (!value || typeof value !== 'object' || seen.has(value)) return 0;
+            seen.add(value);
+            let count = 0;
+            if (!Array.isArray(value) && typeof value['@id'] === 'string' && targets[value['@id']]) {
+              patchNode(value, targets[value['@id']]);
+              count += 1;
+            }
+            if (Array.isArray(value)) {
+              for (const item of value) count += visit(item, seen);
+            } else {
+              for (const item of Object.values(value)) count += visit(item, seen);
+            }
+            return count;
+          }
+
+          function patchFile(file) {
+            if (!fs.existsSync(file)) return 0;
+            const source = fs.readFileSync(file, 'utf8');
+            const json = JSON.parse(source);
+            const count = visit(json);
+            fs.writeFileSync(file, `${JSON.stringify(json, null, 2)}\n`);
+            return count;
+          }
+
+          const files = ['src/data/schema/ghezelbaash-page-graphs.json', 'public/graph.json'];
+          let total = 0;
+          for (const file of files) {
+            const count = patchFile(file);
+            console.log(`${file}: patched ${count} service node(s)`);
+            total += count;
+          }
+          if (total < 3) {
+            throw new Error(`Expected at least 3 patched service nodes across schema files; got ${total}`);
+          }
+          NODE
+
+      - name: Validate graph and build
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+          node <<'NODE'
+          const fs = require('fs');
+          const ids = [
+            'https://www.ghezelbaash.ir/botox-kermanshah/#service',
+            'https://www.ghezelbaash.ir/filler-kermanshah/#service',
+            'https://www.ghezelbaash.ir/thread-lift-kermanshah/#service',
+          ];
+          const files = ['src/data/schema/ghezelbaash-page-graphs.json', 'public/graph.json'];
+          function visit(value, hits = new Map(), seen = new Set()) {
+            if (!value || typeof value !== 'object' || seen.has(value)) return hits;
+            seen.add(value);
+            if (!Array.isArray(value) && typeof value['@id'] === 'string' && ids.includes(value['@id'])) {
+              const types = Array.isArray(value['@type']) ? value['@type'] : [value['@type']];
+              if (!types.includes('Service') || !types.includes('MedicalProcedure')) {
+                throw new Error(`${value['@id']} does not preserve Service + MedicalProcedure`);
+              }
+              if (!value.provider || !value.mainEntityOfPage || !value.howPerformed || !value.preparation || !value.followup) {
+                throw new Error(`${value['@id']} is missing required safe MedicalProcedure fields`);
+              }
+              hits.set(value['@id'], true);
+            }
+            if (Array.isArray(value)) for (const item of value) visit(item, hits, seen);
+            else for (const item of Object.values(value)) visit(item, hits, seen);
+            return hits;
+          }
+          for (const file of files) {
+            const json = JSON.parse(fs.readFileSync(file, 'utf8'));
+            const hits = visit(json);
+            for (const id of ids) {
+              if (!hits.has(id)) throw new Error(`${file} missing patched node ${id}`);
+            }
+            console.log(`${file}: validated ${hits.size} MedicalProcedure service node(s)`);
+          }
+          NODE
+          rm -f .github/workflows/apply-medicalprocedure-schema.yml
+
+      - name: Commit MedicalProcedure schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No MedicalProcedure changes to commit."
+            exit 0
+          fi
+          git commit -m "Add safe MedicalProcedure schema to service nodes"
+          git push
