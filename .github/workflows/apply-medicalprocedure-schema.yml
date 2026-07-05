@@ -96,7 +96,6 @@ jobs:
             node.provider = provider;
             node.areaServed = node.areaServed || areaServed;
             node.mainEntityOfPage = { '@id': config.pageId };
-            return true;
           }
 
           function visit(value, seen = new Set()) {
