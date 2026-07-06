@@ -3,6 +3,4 @@ import { getFaqQuestionsForPathname } from '~/data/schema/schemaProjection';
 const questions = getFaqQuestionsForPathname(Astro.url.pathname);
 ---
 
-<div id="faq">
-  {questions.map((question) => <div>{question.name}: {question.text}</div>)}
-</div>
+{questions.length > 0 && <div id="faq">{questions.map((question) => <div>{question.name}: {question.text}</div>)}</div>}
