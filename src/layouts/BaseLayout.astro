@@ -1,0 +1,53 @@
+---
+import JsonLd from '@components/JsonLd.astro';
+import { SITE } from '@data/site';
+import { jsonLdGraph } from '@data/schema';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const title = Astro.props.title ?? SITE.title;
+const description = Astro.props.description ?? SITE.description;
+const canonical = new URL(Astro.url.pathname, SITE.url).toString();
+---
+
+<!doctype html>
+<html lang={SITE.language} dir={SITE.dir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:locale" content={SITE.locale} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={`${SITE.url}/og.svg`} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${SITE.url}/og.svg`} />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <JsonLd graph={jsonLdGraph} />
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+  </body>
+</html>
