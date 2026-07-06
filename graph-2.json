@@ -8,7 +8,7 @@
       "alternateName": ["Dr. Saeed Ghezelbash", "Dr. Mohammad Saeed Ghezelbash"],
       "honorificPrefix": "دکتر",
       "jobTitle": "پزشک متخصص زیبایی غیرجراحی",
-      "medicalSpecialty": "Aesthetic Medicine / Non-Surgical Procedures",
+      "medicalSpecialty": "Aesthetic Medicine / Non-Surgical Cosmetic Medicine",
       "worksFor": { "@id": "https://www.ghezelbaash.ir/#clinic" },
       "practicesAt": { "@id": "https://www.ghezelbaash.ir/#clinic" },
       "workLocation": { "@id": "https://www.ghezelbaash.ir/#clinic" },
@@ -34,27 +34,105 @@
         "https://www.instagram.com/doctor.ghezelbaash/",
         "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/"
       ],
-      "subjectOf": [
-        { "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-orcid" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-ncbi" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-1" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-2" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-mdpi" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-profile" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-dataset" }
+      "subjectOf": {
+        "@type": "DefinedTermSet",
+        "name": "شواهد و مدارک اتوریتی دکتر سعید قزلباش",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "شواهد آکادمیک و پژوهشی",
+            "hasDefinedTerm": [
+              { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-1" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-2" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-mdpi" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-ncbi" }
+            ]
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "شواهد حرفه‌ای و هویتی",
+            "hasDefinedTerm": [
+              { "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-orcid" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-profile" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-dataset" }
+            ]
+          }
+        ]
+      },
+      "knowsAbout": {
+        "@type": "DefinedTermSet",
+        "name": "حوزه‌های تخصصی دکتر سعید قزلباش",
+        "description": "دانش تخصصی و مهارت‌های پزشک در زیبایی غیرجراحی با تمرکز بر ایمنی، تکنیک و نتایج مبتنی بر شواهد",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "بوتاکس و نورومدولاتور",
+            "description": "کاربردهای پیشرفته بوتاکس در صورت و بدن با تاکید بر ایمنی و نتایج طبیعی",
+            "hasDefinedTerm": [
+              { "@type": "DefinedTerm", "name": "بوتاکس پیشانی و خط اخم" },
+              { "@type": "DefinedTerm", "name": "بوتاکس دور چشم" },
+              { "@type": "DefinedTerm", "name": "بوتاکس فک و ماستر" },
+              { "@type": "DefinedTerm", "name": "بوتاکس لبخند لثه‌ای" }
+            ]
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "تزریق فیلر و کانتورینگ صورت",
+            "description": "تکنیک‌های پیشرفته فیلر و طراحی هارمونی صورت",
+            "hasDefinedTerm": [
+              { "@type": "DefinedTerm", "name": "فیلر لب و اصلاح فرم" },
+              { "@type": "DefinedTerm", "name": "فیلر زیر چشم و گونه" },
+              { "@type": "DefinedTerm", "name": "فیلر خط خنده و چانه" },
+              { "@type": "DefinedTerm", "name": "کانتورینگ فول فیس" }
+            ]
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "لیفت نخ و جوانسازی غیرجراحی",
+            "description": "تکنیک‌های لیفت نخ PDO و COG برای صورت و گردن",
+            "hasDefinedTerm": [
+              { "@type": "DefinedTerm", "name": "لیفت نخ غبغب و خط فک" },
+              { "@type": "DefinedTerm", "name": "لیفت نخ ابرو و شقیقه" }
+            ]
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "ایمنی و ارزیابی بیمار",
+            "description": "ارزیابی پیش از درمان، ایمنی آناتومیک و مدیریت ریسک تزریق",
+            "hasDefinedTerm": [
+              { "@type": "DefinedTerm", "name": "ارزیابی آناتومیک صورت" },
+              { "@type": "DefinedTerm", "name": "ایمنی تزریق و انتخاب بیمار" },
+              { "@type": "DefinedTerm", "name": "مدیریت عوارض و اصلاح فیلر" }
+            ]
+          }
+        ]
+      },
+      "hasExpertiseIn": [
+        { "@id": "https://www.ghezelbaash.ir/#expertise-botox" },
+        { "@id": "https://www.ghezelbaash.ir/#expertise-filler" },
+        { "@id": "https://www.ghezelbaash.ir/#expertise-thread-lift" },
+        { "@id": "https://www.ghezelbaash.ir/#expertise-safety-assessment" }
       ],
-      "knowsAbout": [
-        "بوتاکس و کاربردهای زیبایی و درمانی آن در صورت و بدن",
-        "تزریق فیلرهای هیالورونیک اسید و تکنیک‌های پیشرفته کانتورینگ صورت",
-        "لیفت نخ PDO، COG و تکنیک‌های جوانسازی غیرجراحی صورت و گردن",
-        "درمان جای جوش، اسکار آکنه و لک‌های پوستی با روش‌های ترکیبی",
-        "PRP و مزوتراپی برای جوانسازی پوست و درمان ریزش مو",
-        "ایمنی تزریق، ارزیابی آناتومیک صورت و انتخاب بیمار مناسب",
-        "مدیریت عوارض تزریق و اصلاح فیلر با هیالاز",
-        "طراحی پلن درمانی شخصی‌سازی‌شده و مشاوره پیش از درمان"
-      ],
-      "description": "دکتر سعید قزلباش، پزشک متخصص زیبایی غیرجراحی در کرمانشاه. تمرکز بر ارائه خدمات علمی، ایمن و باکیفیت در حوزه بوتاکس، فیلر، لیفت نخ، PRP و جوانسازی پوست و مو با رویکرد مبتنی بر شواهد."
+      "description": "دکتر سعید قزلباش، پزشک متخصص زیبایی غیرجراحی در کرمانشاه با تمرکز بر ایمنی، تکنیک پیشرفته و نتایج مبتنی بر شواهد علمی."
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#service-attribution-principle",
+      "@type": "DefinedTermSet",
+      "name": "اصل attribution خدمات به انتیتی پزشک",
+      "description": "تمام خدمات و اعتبار تخصصی به انتیتی پزشک (#dr-saeed-ghezelbash) نسبت داده می‌شود. پزشک ارائه‌دهنده اصلی است و کلینیک نهاد عملیاتی.",
+      "hasDefinedTerm": [
+        {
+          "@type": "DefinedTerm",
+          "name": "Provider Ordering Rule",
+          "description": "در تمام آرایه‌های provider، انتیتی پزشک همیشه در موقعیت اول و کلینیک در موقعیت دوم قرار می‌گیرد."
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "Authority Transfer Rule",
+          "description": "سیگنال‌های تخصصی، اعتبار و دانش خدمات به انتیتی پزشک منتقل می‌شود تا پزشک مرجع اصلی شناخته شود."
+        }
+      ]
     }
   ]
 }
