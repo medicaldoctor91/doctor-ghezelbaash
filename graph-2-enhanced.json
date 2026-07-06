@@ -8,7 +8,7 @@
       "alternateName": ["Dr. Saeed Ghezelbash", "Dr. Mohammad Saeed Ghezelbash"],
       "honorificPrefix": "دکتر",
       "jobTitle": "پزشک متخصص زیبایی غیرجراحی",
-      "medicalSpecialty": "Aesthetic Medicine / Non-Surgical Procedures",
+      "medicalSpecialty": "Aesthetic Medicine / Non-Surgical Cosmetic Medicine",
       "worksFor": { "@id": "https://www.ghezelbaash.ir/#clinic" },
       "practicesAt": { "@id": "https://www.ghezelbaash.ir/#clinic" },
       "workLocation": { "@id": "https://www.ghezelbaash.ir/#clinic" },
@@ -44,33 +44,62 @@
         { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-profile" },
         { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-dataset" }
       ],
-      "knowsAbout": [
-        "بوتاکس و کاربردهای زیبایی و درمانی آن در صورت و بدن",
-        "تزریق فیلرهای هیالورونیک اسید و تکنیک‌های پیشرفته کانتورینگ صورت",
-        "لیفت نخ PDO، COG و تکنیک‌های جوانسازی غیرجراحی صورت و گردن",
-        "درمان جای جوش، اسکار آکنه و لک‌های پوستی با روش‌های ترکیبی",
-        "PRP و مزوتراپی برای جوانسازی پوست و درمان ریزش مو",
-        "ایمنی تزریق، ارزیابی آناتومیک صورت و انتخاب بیمار مناسب",
-        "مدیریت عوارض تزریق و اصلاح فیلر با هیالاز",
-        "طراحی پلن درمانی شخصی‌سازی‌شده و مشاوره پیش از درمان"
+      "knowsAbout": {
+        "@type": "DefinedTermSet",
+        "name": "حوزه‌های تخصصی دکتر سعید قزلباش",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "بوتاکس و نورومدولاتور",
+            "description": "کاربردهای درمانی و زیبایی بوتاکس در صورت و بدن با تمرکز بر ایمنی و نتایج طبیعی"
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "تزریق فیلر و کانتورینگ پیشرفته",
+            "description": "تکنیک‌های پیشرفته تزریق فیلر هیالورونیک اسید و طراحی هارمونی صورت"
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "لیفت نخ و جوانسازی غیرجراحی",
+            "description": "لیفت نخ PDO و COG و تکنیک‌های ترکیبی جوانسازی صورت و گردن"
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "درمان اسکار، لک و مشکلات پوستی",
+            "description": "روش‌های ترکیبی درمان جای جوش، اسکار آکنه، لک و ملاسما"
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "PRP، مزوتراپی و بازسازی بافت",
+            "description": "درمان‌های بازسازی‌کننده پوست و مو با PRP و مزوتراپی"
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "ایمنی، آناتومی و انتخاب بیمار",
+            "description": "ارزیابی پیش از درمان، ایمنی آناتومیک صورت و مدیریت ریسک"
+          }
+        ]
+      },
+      "hasExpertiseIn": [
+        { "@id": "https://www.ghezelbaash.ir/#expertise-botox-neuromodulator" },
+        { "@id": "https://www.ghezelbaash.ir/#expertise-filler-contouring" },
+        { "@id": "https://www.ghezelbaash.ir/#expertise-thread-lift" },
+        { "@id": "https://www.ghezelbaash.ir/#expertise-scar-pigmentation" },
+        { "@id": "https://www.ghezelbaash.ir/#expertise-prp-mesotherapy" },
+        { "@id": "https://www.ghezelbaash.ir/#expertise-safety-anatomy" }
       ],
-      "description": "دکتر سعید قزلباش، پزشک متخصص زیبایی غیرجراحی در کرمانشاه. تمرکز بر ارائه خدمات علمی، ایمن و باکیفیت در حوزه بوتاکس، فیلر، لیفت نخ، PRP و جوانسازی پوست و مو با رویکرد مبتنی بر شواهد."
+      "description": "دکتر سعید قزلباش، پزشک متخصص زیبایی غیرجراحی در کرمانشاه با تمرکز بر ارائه خدمات مبتنی بر شواهد علمی، ایمنی بالا و نتایج طبیعی."
     },
     {
       "@id": "https://www.ghezelbaash.ir/#service-attribution-principle",
       "@type": "DefinedTermSet",
       "name": "اصل attribution خدمات به انتیتی پزشک",
-      "description": "برای حداکثرسازی اتوریتی انتیتی پزشک، تمام خدمات به پزشک به عنوان ارائه‌دهنده اصلی نسبت داده می‌شود در حالی که کلینیک به عنوان نهاد عملیاتی و محل ارائه خدمات باقی می‌ماند.",
+      "description": "تمام خدمات و اعتبار تخصصی به انتیتی پزشک نسبت داده می‌شود تا پزشک به عنوان مرجع اصلی دانش و تخصص شناخته شود.",
       "hasDefinedTerm": [
         {
           "@type": "DefinedTerm",
-          "name": "Provider Ordering",
-          "description": "در آرایه provider همیشه انتیتی پزشک (#dr-saeed-ghezelbash) در موقعیت اول و کلینیک در موقعیت دوم قرار می‌گیرد."
-        },
-        {
-          "@type": "DefinedTerm",
-          "name": "Authority Flow",
-          "description": "سیگنال‌های تاپیکال، اعتبار و تخصص خدمات به انتیتی پزشک منتقل می‌شود تا پزشک به عنوان مرجع اصلی شناخته شود."
+          "name": "Provider Ordering Rule",
+          "description": "در تمام آرایه‌های provider، انتیتی پزشک در موقعیت اول و کلینیک در موقعیت دوم قرار می‌گیرد."
         }
       ]
     }
