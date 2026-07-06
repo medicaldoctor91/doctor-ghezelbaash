@@ -1,8 +1,0 @@
----
-import { buildStructuredDataForPathname } from '~/data/schema/schemaProjection';
-
-const structuredData = buildStructuredDataForPathname(Astro.url.pathname);
-const jsonLd = JSON.stringify(structuredData).replace(/</g, '\\u003c');
----
-
-{structuredData['@graph'].length > 0 && <script type="application/ld+json" set:html={jsonLd} />}
