@@ -34,16 +34,39 @@
         "https://www.instagram.com/doctor.ghezelbaash/",
         "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/"
       ],
-      "subjectOf": [
-        { "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-orcid" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-ncbi" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-1" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-2" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-mdpi" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-profile" },
-        { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-dataset" }
-      ],
+      "subjectOf": {
+        "@type": "DefinedTermSet",
+        "name": "شواهد و مدارک اتوریتی دکتر سعید قزلباش",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "شواهد آکادمیک و پژوهشی",
+            "hasDefinedTerm": [
+              { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-1" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-2" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-mdpi" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-ncbi" }
+            ]
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "شواهد حرفه‌ای و هویتی",
+            "hasDefinedTerm": [
+              { "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-orcid" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-profile" },
+              { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-dataset" }
+            ]
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "شواهد عمومی و رسانه‌ای",
+            "hasDefinedTerm": [
+              { "@id": "https://www.ghezelbaash.ir/#evidence-instagram" }
+            ]
+          }
+        ]
+      },
       "knowsAbout": {
         "@type": "DefinedTermSet",
         "name": "حوزه‌های تخصصی و دانش دکتر سعید قزلباش",
@@ -64,7 +87,7 @@
           {
             "@type": "DefinedTerm",
             "name": "تزریق فیلر و کانتورینگ صورت",
-            "description": "تکنیک‌های پیشرفته تزریق فیلر و طراحی هارمونی و کانتورینگ صورت",
+            "description": "تکنیک‌های پیشرفته تزریق فیلر هیالورونیک اسید و طراحی هارمونی صورت",
             "hasDefinedTerm": [
               { "@type": "DefinedTerm", "name": "فیلر لب و اصلاح فرم لب" },
               { "@type": "DefinedTerm", "name": "فیلر زیر چشم و گونه" },
@@ -96,7 +119,7 @@
           {
             "@type": "DefinedTerm",
             "name": "ایمنی، ارزیابی و انتخاب بیمار",
-            "description": "دانش ارزیابی پیش از درمان، ایمنی آناتومیک و مدیریت ریسک",
+            "description": "دانش ارزیابی پیش از درمان، ایمنی آناتومیک صورت و مدیریت ریسک",
             "hasDefinedTerm": [
               { "@type": "DefinedTerm", "name": "ارزیابی آناتومیک صورت" },
               { "@type": "DefinedTerm", "name": "ایمنی تزریق و انتخاب بیمار" },
