@@ -1,40 +1,84 @@
 ---
-import pageGraphs from '~/data/schema/ghezelbaash-page-graphs.json';
+import fs from 'node:fs';
+import path from 'node:path';
 
-type JsonLdNode = {
-  '@id'?: string;
-  '@type'?: string | string[];
-  name?: string;
-  acceptedAnswer?: { text?: string };
-  mainEntity?: { '@id': string }[];
-  [key: string]: unknown;
+type JsonLdNode = Record<string, any>;
+type MasterGraphDocument = { '@context'?: string; '@graph'?: JsonLdNode[] };
+
+const SITE_URL = 'https://www.ghezelbaash.ir';
+
+const normalizePathname = (pathname: string): string => {
+  if (!pathname || pathname === '/') return '/';
+  return pathname.endsWith('/') ? pathname : `${pathname}/`;
 };
 
-type PageGraphMap = Record<string, { '@graph': JsonLdNode[] }>;
+const pageUrlForPathname = (pathname: string): string => {
+  const normalized = normalizePathname(pathname);
+  return `${SITE_URL}${normalized === '/' ? '' : normalized}`;
+};
 
-const graphs = pageGraphs as PageGraphMap;
+const getNodeId = (node: JsonLdNode | undefined): string | undefined =>
+  typeof node?.['@id'] === 'string' ? node['@id'] : undefined;
+
+const getRefId = (value: unknown): string | undefined => {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && typeof (value as JsonLdNode)['@id'] === 'string') {
+    return (value as JsonLdNode)['@id'];
+  }
+  return undefined;
+};
+
+const asArray = <T,>(value: T | T[] | undefined): T[] => {
+  if (typeof value === 'undefined') return [];
+  return Array.isArray(value) ? value : [value];
+};
+
+const readMasterGraph = (): JsonLdNode[] => {
+  const graphPath = path.join(process.cwd(), 'public', 'graph.json');
+  const document = JSON.parse(fs.readFileSync(graphPath, 'utf-8')) as MasterGraphDocument;
+  return Array.isArray(document['@graph']) ? document['@graph'] : [];
+};
+
 const rawPath = Astro.url.pathname;
-const pathname = rawPath === '/' ? '/' : rawPath.endsWith('/') ? rawPath : `${rawPath}/`;
-const graph = graphs[pathname]?.['@graph'] ?? [];
-const faqId = `https://www.ghezelbaash.ir${pathname}#faq`;
-const faqPage = graph.find((node) => node['@id'] === faqId);
-const questionIds = Array.isArray(faqPage?.mainEntity) ? faqPage.mainEntity.map((item) => item['@id']) : [];
+const pathname = normalizePathname(rawPath);
+const pageUrl = pageUrlForPathname(pathname);
+const graph = readMasterGraph();
+const index = new Map(
+  graph
+    .map((node) => [getNodeId(node), node] as const)
+    .filter((entry): entry is readonly [string, JsonLdNode] => Boolean(entry[0]))
+);
+
+const faqCandidates =
+  pathname === '/dr-saeed-ghezelbash-aesthetic-clinic/'
+    ? [`${pageUrl}#clinic-faq-kermanshah`, `${pageUrl}#faq`]
+    : [`${pageUrl}#faq`];
+
+const faqPage = faqCandidates.map((id) => index.get(id)).find(Boolean);
+const questionIds = asArray(faqPage?.mainEntity as unknown)
+  .map((item) => getRefId(item))
+  .filter((id): id is string => Boolean(id));
 const questions = questionIds
-  .map((id) => graph.find((node) => node['@id'] === id))
+  .map((id) => index.get(id))
   .filter((node): node is JsonLdNode => Boolean(node?.name && node?.acceptedAnswer?.text));
 ---
 
 {
   questions.length > 0 && (
-    <section id="faq" class="max-w-5xl mx-auto px-4 sm:px-6 py-10">
-      <div class="rounded-2xl border border-gray-200 bg-white p-6 md:p-8 shadow-sm dark:bg-slate-900 dark:border-slate-800">
-        <h2 class="text-3xl font-bold tracking-tight mb-4">پرسش‌های متداول</h2>
-        <div class="space-y-5">
+    <section id="faq" class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+      <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <p class="text-sm font-semibold text-primary-600 dark:text-primary-400">پرسش‌های پرتکرار</p>
+        <h2 class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">
+          پاسخ‌های کوتاه قبل از تصمیم
+        </h2>
+        <div class="mt-6 space-y-4">
           {questions.map((question) => (
-            <details class="rounded-xl bg-gray-50 p-4 open:bg-gray-100 dark:bg-slate-800 dark:open:bg-slate-700">
-              <summary class="cursor-pointer font-bold">{question.name}</summary>
-              <p class="mt-3 text-muted leading-8">{question.acceptedAnswer?.text}</p>
-            </details>
+            <article class="rounded-2xl bg-slate-50 p-4 dark:bg-slate-950">
+              <h3 class="font-semibold text-slate-900 dark:text-white">{question.name}</h3>
+              <p class="mt-2 text-sm leading-7 text-slate-700 dark:text-slate-300">
+                {question.acceptedAnswer?.text}
+              </p>
+            </article>
           ))}
         </div>
       </div>
