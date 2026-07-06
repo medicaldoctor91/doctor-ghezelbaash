@@ -1,0 +1,152 @@
+---
+import { DOCTOR, FAQ, KEY_TOPICS, NAV_ITEMS, SERVICES, SITE } from '@data/site';
+
+const authorityLinks = [
+  { label: 'ORCID', href: 'https://orcid.org/0009-0001-9346-8475' },
+  { label: 'PubMed bibliography', href: 'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/' },
+  { label: 'Zenodo DOI', href: 'https://doi.org/10.5281/zenodo.18765169' },
+  { label: 'Wikidata', href: 'https://www.wikidata.org/wiki/Q140287622' },
+  { label: 'GitHub', href: SITE.github },
+];
+---
+
+<header class="site-header">
+  <a class="brand" href="/" aria-label="صفحه اصلی دکتر سعید قزلباش">
+    <span class="brand-mark">دق</span>
+    <span>
+      <strong>دکتر سعید قزلباش</strong>
+      <small>پزشک زیبایی در کرمانشاه</small>
+    </span>
+  </a>
+
+  <nav aria-label="ناوبری اصلی">
+    {NAV_ITEMS.map((item) => <a href={item.href}>{item.label}</a>)}
+  </nav>
+
+  <a class="header-cta" href={`tel:${SITE.phone}`}>تماس فوری</a>
+</header>
+
+<section class="hero section-pad" id="top" aria-labelledby="hero-title">
+  <div class="hero-content">
+    <p class="eyebrow">مرجع رسمی تصمیم‌گیری برای خدمات زیبایی در کرمانشاه</p>
+    <h1 id="hero-title">دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه</h1>
+    <p class="lead">
+      معرفی یک‌صفحه‌ای دکتر سعید قزلباش، کلینیک زیبایی، خدمات بوتاکس، فیلر، لیفت با نخ و
+      تحلیل دغدغه‌های زیبایی صورت؛ با تمرکز بر تصمیم‌سازی شفاف، زیبایی طبیعی، پرهیز از اغراق
+      و مسیر مستقیم تماس و مراجعه.
+    </p>
+
+    <div class="hero-actions">
+      <a class="button primary" href={`tel:${SITE.phone}`}>تماس: {SITE.displayPhone}</a>
+      <a class="button secondary" href={SITE.mapUrl} rel="noopener noreferrer" target="_blank">مسیریابی در گوگل‌مپ</a>
+      <a class="button ghost" href={SITE.instagram} rel="noopener noreferrer" target="_blank">اینستاگرام</a>
+    </div>
+
+    <ul class="topic-chips" aria-label="موضوعات اصلی صفحه">
+      {KEY_TOPICS.map((topic) => <li>{topic}</li>)}
+    </ul>
+  </div>
+
+  <aside class="hero-card" aria-label="خلاصه اعتماد">
+    <span>Entity-first SEO</span>
+    <strong>پزشک + کلینیک + خدمات + شهر</strong>
+    <p>
+      این ساختار برای تثبیت موجودیت دکتر، ارتباط محلی کرمانشاه، پوشش خدمات اصلی و پاسخ‌دهی
+      مستقیم به پرسش‌های پرتکرار طراحی شده است.
+    </p>
+  </aside>
+</section>
+
+<section class="section-pad two-column" id="doctor" aria-labelledby="doctor-title">
+  <div>
+    <p class="eyebrow">معرفی پزشک</p>
+    <h2 id="doctor-title">{DOCTOR.name}</h2>
+    <p>{DOCTOR.description}</p>
+    <p>
+      مزیت این صفحه، تمرکز بر «تصمیم درست» است: تشخیص اینکه مسئله صورت از حرکت عضله،
+      کاهش حجم، افتادگی بافت، کیفیت پوست یا ترکیبی از این عوامل می‌آید. بنابراین انتخاب بین
+      بوتاکس، فیلر، لیفت با نخ یا حتی پرهیز از مداخله باید بر اساس تحلیل چهره انجام شود.
+    </p>
+  </div>
+
+  <div class="info-card" id="clinic">
+    <h3>{DOCTOR.clinicName}</h3>
+    <dl>
+      <div><dt>شهر</dt><dd>{SITE.city}</dd></div>
+      <div><dt>تماس</dt><dd><a href={`tel:${SITE.phone}`}>{SITE.displayPhone}</a></dd></div>
+      <div><dt>مسیر</dt><dd><a href={SITE.mapUrl} target="_blank" rel="noopener noreferrer">Google Maps</a></dd></div>
+      <div><dt>شبکه اجتماعی</dt><dd><a href={SITE.instagram} target="_blank" rel="noopener noreferrer">@Doctor.Ghezelbaash</a></dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="section-pad" id="services" aria-labelledby="services-title">
+  <div class="section-heading">
+    <p class="eyebrow">خدمات اصلی</p>
+    <h2 id="services-title">خدمات زیبایی با ساختار قابل تبدیل به صفحات مستقل</h2>
+    <p>
+      هر خدمت در این نسخه یک anchor مستقل دارد؛ بنابراین صفحه هم یک pillar کامل است و هم بعداً
+      می‌تواند بدون از دست دادن ساختار، به چند صفحه اختصاصی برای هر intent تبدیل شود.
+    </p>
+  </div>
+
+  <div class="service-grid">
+    {SERVICES.map((service) => (
+      <article class="service-card" id={service.slug}>
+        <p class="eyebrow">{service.eyebrow}</p>
+        <h3>{service.title}</h3>
+        <p>{service.summary}</p>
+        <ul>{service.points.map((point) => <li>{point}</li>)}</ul>
+        <p class="intent-line"><strong>پوشش معنایی:</strong> {service.intentTerms.join('، ')}</p>
+      </article>
+    ))}
+  </div>
+</section>
+
+<section class="section-pad authority" aria-labelledby="authority-title">
+  <div class="section-heading">
+    <p class="eyebrow">اعتماد، هویت و منابع entity</p>
+    <h2 id="authority-title">تقویت اعتبار پزشک بدون شلوغ‌کردن صفحه</h2>
+    <p>
+      صفحه به‌جای تکیه بر ادعاهای کلی، هویت دیجیتال پزشک و کلینیک را از مسیرهای قابل ارجاع
+      متصل می‌کند: نقشه، اینستاگرام، پروفایل‌های پژوهشی، و شناسه‌های ساختاریافته.
+    </p>
+  </div>
+
+  <div class="authority-links">
+    {authorityLinks.map((link) => <a href={link.href} rel="noopener noreferrer" target="_blank">{link.label}</a>)}
+  </div>
+</section>
+
+<section class="section-pad faq" id="faq" aria-labelledby="faq-title">
+  <div class="section-heading">
+    <p class="eyebrow">پاسخ‌های پرتکرار</p>
+    <h2 id="faq-title">پرسش‌هایی که برای کاربر و موتور پاسخ مهم‌اند</h2>
+  </div>
+
+  <div class="faq-list">
+    {FAQ.map((item) => (
+      <details>
+        <summary>{item.question}</summary>
+        <p>{item.answer}</p>
+      </details>
+    ))}
+  </div>
+</section>
+
+<section class="section-pad contact" id="contact" aria-labelledby="contact-title">
+  <div>
+    <p class="eyebrow">تماس و مسیر مراجعه</p>
+    <h2 id="contact-title">ارتباط مستقیم با کلینیک زیبایی دکتر سعید قزلباش</h2>
+    <p>
+      برای هماهنگی مراجعه، دریافت مسیر یا دنبال‌کردن محتوای آموزشی و نمونه توضیحات، از مسیرهای زیر استفاده کنید.
+    </p>
+  </div>
+
+  <div class="contact-actions">
+    <a class="button primary" href={`tel:${SITE.phone}`}>تماس با {SITE.displayPhone}</a>
+    <a class="button secondary" href={SITE.mapUrl} target="_blank" rel="noopener noreferrer">بازکردن Google Maps</a>
+    <a class="button ghost" href={SITE.osmUrl} target="_blank" rel="noopener noreferrer">OpenStreetMap</a>
+    <a class="button ghost" href={SITE.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>
+  </div>
+</section>
