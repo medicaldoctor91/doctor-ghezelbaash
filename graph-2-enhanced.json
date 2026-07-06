@@ -1,78 +1,78 @@
-{"@context": "https://schema.org", "@graph": [{
-  "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
-  "@type": ["Person", "Physician", "IndividualPhysician"],
-  "name": "دکتر سعید قزلباش",
-  "alternateName": ["Dr. Saeed Ghezelbash", "Dr. Mohammad Saeed Ghezelbash", "Saeed Qezelbash"],
-  "honorificPrefix": "دکتر",
-  "jobTitle": "پزشک متخصص زیبایی غیرجراحی",
-  "medicalSpecialty": "Plastic Surgery / Aesthetic Medicine",
-  "worksFor": {
-    "@id": "https://www.ghezelbaash.ir/#clinic"
-  },
-  "practicesAt": {
-    "@id": "https://www.ghezelbaash.ir/#clinic"
-  },
-  "workLocation": {
-    "@id": "https://www.ghezelbaash.ir/#clinic"
-  },
-  "hasCredential": [
+{
+  "@context": "https://schema.org",
+  "@graph": [
     {
-      "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430",
-      "@type": "EducationalOccupationalCredential",
-      "credentialCategory": "Medical License",
-      "identifier": "167430",
-      "recognizedBy": {
-        "@id": "https://www.irimc.org/"
-      }
+      "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
+      "@type": ["Person", "Physician", "IndividualPhysician"],
+      "name": "دکتر سعید قزلباش",
+      "alternateName": ["Dr. Saeed Ghezelbash", "Dr. Mohammad Saeed Ghezelbash"],
+      "honorificPrefix": "دکتر",
+      "jobTitle": "پزشک متخصص زیبایی غیرجراحی",
+      "medicalSpecialty": "Aesthetic Medicine / Non-Surgical Procedures",
+      "worksFor": { "@id": "https://www.ghezelbaash.ir/#clinic" },
+      "practicesAt": { "@id": "https://www.ghezelbaash.ir/#clinic" },
+      "workLocation": { "@id": "https://www.ghezelbaash.ir/#clinic" },
+      "hasCredential": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430",
+          "@type": "EducationalOccupationalCredential",
+          "name": "کد نظام پزشکی ۱۶۷۴۳۰",
+          "identifier": "167430",
+          "recognizedBy": { "@id": "https://www.irimc.org/" }
+        }
+      ],
+      "sameAs": [
+        "https://www.wikidata.org/entity/Q140287622",
+        "https://orcid.org/0009-0001-9346-8475",
+        "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+        "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+        "https://pubmed.ncbi.nlm.nih.gov/34574943/",
+        "https://www.mdpi.com/2227-9032/9/9/1169",
+        "https://huggingface.co/Ghezelbaash",
+        "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+        "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/"
+      ],
+      "subjectOf": [
+        { "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor" },
+        { "@id": "https://www.ghezelbaash.ir/#evidence-orcid" },
+        { "@id": "https://www.ghezelbaash.ir/#evidence-ncbi" },
+        { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-1" },
+        { "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-2" },
+        { "@id": "https://www.ghezelbaash.ir/#evidence-mdpi" },
+        { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-profile" },
+        { "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-dataset" }
+      ],
+      "knowsAbout": [
+        "بوتاکس و کاربردهای زیبایی و درمانی آن در صورت و بدن",
+        "تزریق فیلرهای هیالورونیک اسید و تکنیک‌های پیشرفته کانتورینگ صورت",
+        "لیفت نخ PDO، COG و تکنیک‌های جوانسازی غیرجراحی صورت و گردن",
+        "درمان جای جوش، اسکار آکنه و لک‌های پوستی با روش‌های ترکیبی",
+        "PRP و مزوتراپی برای جوانسازی پوست و درمان ریزش مو",
+        "ایمنی تزریق، ارزیابی آناتومیک صورت و انتخاب بیمار مناسب",
+        "مدیریت عوارض تزریق و اصلاح فیلر با هیالاز",
+        "طراحی پلن درمانی شخصی‌سازی‌شده و مشاوره پیش از درمان"
+      ],
+      "description": "دکتر سعید قزلباش، پزشک متخصص زیبایی غیرجراحی در کرمانشاه. تمرکز بر ارائه خدمات علمی، ایمن و باکیفیت در حوزه بوتاکس، فیلر، لیفت نخ، PRP و جوانسازی پوست و مو با رویکرد مبتنی بر شواهد."
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#service-attribution-principle",
+      "@type": "DefinedTermSet",
+      "name": "اصل attribution خدمات به انتیتی پزشک",
+      "description": "برای حداکثرسازی اتوریتی انتیتی پزشک، تمام خدمات به پزشک به عنوان ارائه‌دهنده اصلی نسبت داده می‌شود در حالی که کلینیک به عنوان نهاد عملیاتی و محل ارائه خدمات باقی می‌ماند.",
+      "hasDefinedTerm": [
+        {
+          "@type": "DefinedTerm",
+          "name": "Provider Ordering",
+          "description": "در آرایه provider همیشه انتیتی پزشک (#dr-saeed-ghezelbash) در موقعیت اول و کلینیک در موقعیت دوم قرار می‌گیرد."
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "Authority Flow",
+          "description": "سیگنال‌های تاپیکال، اعتبار و تخصص خدمات به انتیتی پزشک منتقل می‌شود تا پزشک به عنوان مرجع اصلی شناخته شود."
+        }
+      ]
     }
-  ],
-  "sameAs": [
-    "https://www.wikidata.org/entity/Q140287622",
-    "https://orcid.org/0009-0001-9346-8475",
-    "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
-    "https://pubmed.ncbi.nlm.nih.gov/27280013/",
-    "https://pubmed.ncbi.nlm.nih.gov/34574943/",
-    "https://www.mdpi.com/2227-9032/9/9/1169",
-    "https://huggingface.co/Ghezelbaash",
-    "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
-    "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
-    "https://www.instagram.com/doctor.ghezelbaash/",
-    "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/"
-  ],
-  "subjectOf": [
-    {
-      "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#evidence-orcid"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#evidence-ncbi-bibliography"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-1"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#evidence-pubmed-2"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#evidence-mdpi"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-profile"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#evidence-huggingface-dataset"
-    }
-  ],
-  "knowsAbout": [
-    "بوتاکس و نورومدولاتور",
-    "تزریق فیلر و کانتورینگ صورت",
-    "لیفت نخ و تکنیک‌های جوانسازی غیرجراحی",
-    "درمان مشکلات زیبایی پوست و مو",
-    "ایمنی تزریق و انتخاب بیمار",
-    "مدیریت عوارض و ریسک در زیبایی غیرجراحی",
-    "ارزیابی آناتومیک صورت پیش از درمان"
-  ],
-  "description": "دکتر سعید قزلباش، پزشک متخصص زیبایی غیرجراحی در کرمانشاه. ارائه‌دهنده خدمات بوتاکس، فیلر، لیفت نخ، PRP، مزوتراپی و جوانسازی پوست با رویکرد علمی و ایمن."
-}]}
+  ]
+}
