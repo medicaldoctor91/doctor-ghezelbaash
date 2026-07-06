@@ -1,0 +1,9 @@
+---
+import Sections from '@components/Sections.astro';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import { SITE } from '@data/site';
+---
+
+<BaseLayout title={SITE.title} description={SITE.description}>
+  <Sections />
+</BaseLayout>
