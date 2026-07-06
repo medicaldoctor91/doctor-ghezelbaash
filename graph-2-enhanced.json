@@ -94,12 +94,22 @@
       "@id": "https://www.ghezelbaash.ir/#service-attribution-principle",
       "@type": "DefinedTermSet",
       "name": "اصل attribution خدمات به انتیتی پزشک",
-      "description": "تمام خدمات و اعتبار تخصصی به انتیتی پزشک نسبت داده می‌شود تا پزشک به عنوان مرجع اصلی دانش و تخصص شناخته شود.",
+      "description": "برای حداکثرسازی اتوریتی انتیتی پزشک، تمام خدمات به پزشک به عنوان ارائه‌دهنده اصلی نسبت داده می‌شود در حالی که کلینیک به عنوان نهاد عملیاتی و محل ارائه خدمات باقی می‌ماند. این اصل باید در تمام بخش‌های گراف رعایت شود.",
       "hasDefinedTerm": [
         {
           "@type": "DefinedTerm",
           "name": "Provider Ordering Rule",
-          "description": "در تمام آرایه‌های provider، انتیتی پزشک در موقعیت اول و کلینیک در موقعیت دوم قرار می‌گیرد."
+          "description": "در تمام آرایه‌های provider، انتیتی پزشک (#dr-saeed-ghezelbash) همیشه در موقعیت اول قرار می‌گیرد و کلینیک (#clinic) در موقعیت دوم."
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "Authority Transfer Rule",
+          "description": "تمام سیگنال‌های تخصصی، اعتبار و تاپیکال خدمات به انتیتی پزشک منتقل می‌شود تا پزشک به عنوان مرجع اصلی دانش و تخصص شناخته شود."
+        },
+        {
+          "@type": "DefinedTerm",
+          "name": "Implementation Note",
+          "description": "این اصل باید هنگام تولید یا به‌روزرسانی هر Offer یا Service در گراف رعایت شود."
         }
       ]
     }
