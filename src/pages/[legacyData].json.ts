@@ -1,5 +1,6 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import { buildAeoDataIndex, getAeoDataContentType, normalizeAeoDataDocument } from '~/utils/aeoDataEndpoint';
 import { jsonResponse } from '~/utils/jsonLd';
 
@@ -20,7 +21,7 @@ const legacyAliases = [
 ] as const;
 
 type LegacyAlias = (typeof legacyAliases)[number];
-type AeoEntry = Awaited<ReturnType<typeof getCollection<'aeoData'>>>[number];
+type AeoEntry = CollectionEntry<'aeoData'>;
 
 const aliasHints: Record<LegacyAlias, string[]> = {
   'brand-kb.ghezelbaash.ai-public': ['brand', 'kb', 'knowledge', 'entity', 'dataset'],
