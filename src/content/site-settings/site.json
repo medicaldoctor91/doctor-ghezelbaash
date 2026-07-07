@@ -1,0 +1,38 @@
+{
+  "name": "کلینیک زیبایی دکتر سعید قزلباش",
+  "site": "https://www.ghezelbaash.ir",
+  "base": "/",
+  "trailingSlash": true,
+  "language": "fa-IR",
+  "textDirection": "rtl",
+  "googleSiteVerificationId": "8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ",
+  "metadata": {
+    "title": {
+      "default": "دکتر سعید قزلباش | کلینیک زیبایی در کرمانشاه",
+      "template": "%s | دکتر سعید قزلباش"
+    },
+    "description": "وب‌سایت رسمی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ معرفی خدمات بوتاکس، فیلر، لیفت نخ و درمان مشکلات زیبایی با مسیر رسمی تماس و هماهنگی.",
+    "openGraph": {
+      "siteName": "کلینیک زیبایی دکتر سعید قزلباش",
+      "images": [
+        {
+          "url": "~/assets/images/og/home.jpg",
+          "width": 1200,
+          "height": 630
+        }
+      ],
+      "type": "website"
+    },
+    "twitter": {
+      "cardType": "summary_large_image"
+    }
+  },
+  "ui": {
+    "theme": "light"
+  },
+  "analytics": {
+    "vendors": {
+      "googleAnalytics": {}
+    }
+  }
+}

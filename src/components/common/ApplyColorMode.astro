@@ -1,0 +1,47 @@
+---
+import { UI } from '~/site.config';
+---
+
+<script is:inline define:vars={{ defaultTheme: UI.theme || 'system' }}>
+  const getStoredTheme = () => {
+    try {
+      return localStorage.theme;
+    } catch {
+      return undefined;
+    }
+  };
+
+  const hasStoredTheme = () => {
+    try {
+      return 'theme' in localStorage;
+    } catch {
+      return false;
+    }
+  };
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    const matches = document.querySelectorAll('[data-aw-toggle-color-scheme] > input');
+    matches.forEach((elem) => {
+      elem.checked = theme !== 'dark';
+    });
+  }
+
+  const storedTheme = getStoredTheme();
+
+  if ((defaultTheme && defaultTheme.endsWith(':only')) || (!storedTheme && defaultTheme !== 'system')) {
+    applyTheme(defaultTheme.replace(':only', ''));
+  } else if (
+    storedTheme === 'dark' ||
+    (!hasStoredTheme() && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  ) {
+    applyTheme('dark');
+  } else {
+    applyTheme('light');
+  }
+</script>

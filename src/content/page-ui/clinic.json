@@ -1,0 +1,45 @@
+{
+  "path": "/dr-saeed-ghezelbash-aesthetic-clinic/",
+  "contentEntry": "clinic",
+  "layout": "standard",
+  "showBreadcrumbs": true,
+  "showRating": true,
+  "showFaq": false,
+  "showTrust": false,
+  "showIntentHub": false,
+  "breadcrumbs": [
+    {
+      "name": "خانه",
+      "href": "/"
+    },
+    {
+      "name": "دکتر و کلینیک"
+    }
+  ],
+  "hero": {
+    "tagline": "هاب مکانی و سازمانی کلینیک",
+    "title": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه",
+    "subtitle": "آدرس، تماس، پزشک مسئول، مسیرهای رسمی مراجعه و چهار مگاپیلار خدمات در این صفحه یک‌جا جمع شده‌اند.",
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "دیدن نمونه‌کارها و رضایت زیباجوها",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "تماس برای هماهنگی",
+        "hrefSource": "phone"
+      }
+    ]
+  },
+  "mediaBlock": {
+    "title": "تصاویر تکمیلی فضای کلینیک",
+    "subtitle": "فضای انتظار و نمای تکمیلی کلینیک در این بخش آمده‌اند تا صفحه کلینیک فقط یک آدرس متنی نباشد و حضور واقعی مکان دیده شود."
+  },
+  "contactBox": {
+    "title": "نمونه‌کارها، رضایت زیباجوها و مسیر مراجعه",
+    "subtitle": "اگر می‌خواهید قبل از تماس، نمونه‌کارها و رضایت زیباجوها را ببینید، از اینستاگرام رسمی دکتر قزلباش شروع کنید. برای مراجعه حضوری هم مسیر و شماره تماس در همین بخش آمده است."
+  }
+}

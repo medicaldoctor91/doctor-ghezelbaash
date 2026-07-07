@@ -1,0 +1,815 @@
+{
+  "@context": "https://schema.org",
+  "path": "/dr-saeed-ghezelbash-aesthetic-clinic/",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.ghezelbaash.ir/#website",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "وب‌سایت رسمی دکتر سعید قزلباش",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.ghezelbaash.ir/search/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": ["Person", "IndividualPhysician", "Physician"],
+      "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "دکتر سعید قزلباش",
+      "alternateName": [
+        "دکتر محمدسعید قزلباش",
+        "دکتر محمد سعید قزلباش",
+        "دکتر قزلباش",
+        "Dr. Saeed Ghezelbash",
+        "Dr. Saeed Ghezelbaash",
+        "Dr. Mohammad Saeed Ghezelbash",
+        "Dr. Mohammad Saeed Ghezelbaash",
+        "Mohammad Saeed Ghezelbash",
+        "دکتر سعید قزلباش",
+        "سعید قزلباش",
+        "محمد سعید قزلباش",
+        "محمدسعید قزلباش",
+        "Dr. Mohammad Saeed Ghazlbash",
+        "Saeed Ghezelbash",
+        "Saeed Ghezelbaash",
+        "Mohammad Saeed Ghazlbash",
+        "Mohammadsaeed Ghezelbash",
+        "Saeed Qezlbash"
+      ],
+      "jobTitle": "پزشک زیبایی در کرمانشاه",
+      "description": "دکتر سعید قزلباش، پزشک زیبایی فعال در کرمانشاه، با تمرکز بر تصمیم‌گیری پزشک‌محور در بوتاکس، فیلر، لیفت نخ و درمان مشکلات زیبایی.",
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "propertyID": "IRIMC",
+          "value": "167430",
+          "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "ORCID",
+          "value": "0009-0001-9346-8475",
+          "url": "https://orcid.org/0009-0001-9346-8475"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Wikidata",
+          "value": "Q140287622",
+          "url": "https://www.wikidata.org/entity/Q140287622"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "NCBI Bibliography",
+          "value": "saeed.ghezelbash.1",
+          "url": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Hugging Face",
+          "value": "Ghezelbaash",
+          "url": "https://huggingface.co/Ghezelbaash"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "MINC",
+          "name": "Medical Identification Number for Canada",
+          "value": "CAMD-0224-1997"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Hugging Face Profile",
+          "value": "Ghezelbaash",
+          "url": "https://huggingface.co/Ghezelbaash",
+          "name": "Personal Hugging Face profile"
+        }
+      ],
+      "sameAs": [
+        "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+        "https://orcid.org/0009-0001-9346-8475",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.wikidata.org/entity/Q140287622",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/",
+        "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+        "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+        "https://www.facebook.com/Ghezelbaash/",
+        "https://www.pinterest.com/qezelbaash/",
+        "https://about.me/ghezelbaash",
+        "https://linktr.ee/Doctor.ghezelbaash",
+        "https://huggingface.co/Ghezelbaash"
+      ],
+      "worksFor": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "hasCredential": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430"
+        }
+      ],
+      "medicalSpecialty": ["Aesthetic medicine", "https://schema.org/PlasticSurgery"],
+      "knowsAbout": [
+        "بوتاکس",
+        "تزریق فیلر",
+        "لیفت نخ",
+        "درمان مشکلات زیبایی",
+        "تشخیص پزشک‌محور پیش از درمان زیبایی",
+        "ایمنی تزریق و انتخاب بیمار",
+        {
+          "@id": "https://www.ghezelbaash.ir/#aesthetic-authority-topic-map"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/data/ghezelbaash-entity-dataset.json#dataset"
+        },
+        "پزشکی زیبایی غیرجراحی",
+        "ارزیابی بیمار پیش از تزریق",
+        "مدیریت ریسک تزریق در صورت",
+        "بوتاکس در کرمانشاه",
+        "بوتاکس خط اخم",
+        "بوتاکس پیشانی",
+        "بوتاکس دور چشم",
+        "لیپ فلیپ با بوتاکس",
+        "بوتاکس لبخند لثه‌ای",
+        "بوتاکس ماستر",
+        "بوتاکس تعریق",
+        "تزریق فیلر در کرمانشاه",
+        "فیلر لب",
+        "فیلر زیر چشم",
+        "فیلر گونه",
+        "فیلر خط خنده",
+        "فیلر چانه",
+        "فیلر زاویه فک و خط فک",
+        "فیلر شقیقه",
+        "فیلر بینی",
+        "فیلر اسکار آکنه",
+        "هیالاز و اصلاح فیلر",
+        "لیفت نخ در کرمانشاه",
+        "لیفت نخ غبغب",
+        "لیفت نخ خط فک",
+        "لیفت نخ ابرو",
+        "درمان مشکلات زیبایی در کرمانشاه",
+        "درمان جوش فعال",
+        "درمان لک پوستی",
+        "درمان جای جوش و اسکار آکنه",
+        "سابسیژن جای جوش",
+        "پانچ اسکار",
+        "PRP پوست و مو",
+        "مزوتراپی پوست و مو",
+        "جالپرو و پروفایلو",
+        "درمان ریزش مو",
+        "لیپوساکشن غبغب",
+        "کانتورینگ صورت",
+        "جوانسازی پوست و مو در کرمانشاه",
+        "ساکشن و لیپوساکشن غبغب در کرمانشاه",
+        "تزریق بوتاکس",
+        "لیفت ابرو با بوتاکس",
+        "بوتاکس بینی",
+        "بوتاکس چانه",
+        "بوتاکس گردن",
+        "بوتاکس نفرتیتی",
+        "بوتاکس عضله ماستر",
+        "بوتاکس تعریق موضعی",
+        "بوتاکس زیر بغل",
+        "بوتاکس کف دست",
+        "بوتاکس کف پا",
+        "بوتاکس میگرن",
+        "فیلر پوستی",
+        "فیلر هیالورونیک اسید",
+        "اصلاح عدم تقارن لب",
+        "فیلر زاویه فک",
+        "فیلر خط ماریونت",
+        "فیلر پیشانی",
+        "فیلر دست",
+        "فیلر گردن",
+        "اصلاح فرم بینی با فیلر",
+        "کانتورینگ فول‌فیس",
+        "هارمونی صورت",
+        "کانتورینگ گونه",
+        "کانتورینگ چانه",
+        "کانتورینگ نیم‌رخ",
+        "لیفت صورت با نخ",
+        "لیفت ابرو با نخ",
+        "لیفت شقیقه با نخ",
+        "لیفت گونه با نخ",
+        "لیفت خط فک با نخ",
+        "لیفت گردن با نخ",
+        "نخ PDO",
+        "نخ کاگ",
+        "PRP صورت",
+        "PRP مو",
+        "PRP زیر چشم",
+        "PRP جای جوش",
+        "مزوتراپی صورت",
+        "مزوتراپی مو",
+        "مزوتراپی لک",
+        "مزوتراپی زیر چشم",
+        "مزوتراپی غبغب",
+        "مزوتراپی چربی موضعی",
+        "میکرونیدلینگ",
+        "آر اف فرکشنال",
+        "اسکین‌بوستر",
+        "مزوژل",
+        "مزوژل زیر چشم",
+        "تزریق هیدروژل",
+        "پروفایلو",
+        "جالپرو",
+        "سونه‌کاس",
+        "پروسترولین",
+        "اگزوزوم پوست",
+        "اگزوزوم مو",
+        "درمان جای جوش",
+        "درمان لک و ملاسما",
+        "پیلینگ شیمیایی",
+        "جوانسازی با لیزر",
+        "سفت کردن پوست",
+        "تحریک کلاژن",
+        "درمان منافذ باز",
+        "پاکسازی پوست",
+        "درمان ریزش مو",
+        "درمان ریزش موی الگوی مردانه و زنانه",
+        "کانتورینگ زیر چانه",
+        "فرم‌دهی گردن و خط فک",
+        "برداشت چربی موضعی",
+        "تزریق چربی صورت",
+        "تزریق چربی دست",
+        "بلفاروپلاستی",
+        "فیس لیفت",
+        "لیفت گردن",
+        "لیفت ابرو",
+        "لیفت شقیقه",
+        "رینوپلاستی",
+        "اتوپلاستی",
+        "بوکال فت",
+        "لیپوساکشن صورت",
+        "لیپوساکشن بدن",
+        "ابدومینوپلاستی",
+        "ماموپلاستی",
+        "پروتز سینه",
+        "لیفت سینه",
+        "جراحی ژنیکوماستی",
+        "ایمپلنت چانه",
+        "جراحی زاویه فک",
+        "مشاوره زیبایی",
+        "مراقبت بعد از تزریق",
+        "عوارض تزریق",
+        "اصلاح فیلر",
+        "حل کردن فیلر با هیالورونیداز",
+        "instance of",
+        "exact identity",
+        "external identifier",
+        "described by source",
+        "main subject",
+        "cites work",
+        "part of",
+        "has part",
+        "provider",
+        "founder",
+        "member / employee",
+        "located at",
+        "map link",
+        "service catalog",
+        "actual offer",
+        "knowledge-only service concept",
+        "Aesthetic medicine",
+        "مشاوره پزشکی زیبایی",
+        "انتخاب بیمار",
+        "ایمنی آناتومی صورت",
+        "طراحی نتیجه طبیعی",
+        "ارتباط ریسک",
+        "پزشکی زیبایی مبتنی بر شواهد",
+        "سواد پژوهشی",
+        "مرجعیت محلی زیبایی در کرمانشاه",
+        "یکپارچگی نام، نشانی و تلفن",
+        "مسیر تماس رسمی",
+        "تزریقات زیبایی",
+        "نورومدولاتورها",
+        "فیلرها",
+        "نخ‌های لیفت",
+        "جوانسازی پوست",
+        "جوانسازی مو",
+        "ایمنی و اصلاح عوارض",
+        "دانش مجاور جراحی زیبایی",
+        "Dermatology",
+        "Skin care",
+        "Hair care",
+        "Physician-led assessment",
+        "Patient selection",
+        "Evidence-based aesthetic medicine",
+        "Post-procedure care",
+        "Contraindications and precautions",
+        "Medical research literacy",
+        "Scientific publication",
+        "Clinical reasoning",
+        "Risk communication",
+        "Kermanshah physician",
+        "Aesthetic medical clinic",
+        "Dynamic facial lines",
+        "Static facial lines",
+        "Enlarged pores",
+        "Sunscreen",
+        "Skin",
+        "Hair",
+        "Hair follicle",
+        "Scalp",
+        "Face",
+        "Forehead",
+        "Periocular area",
+        "Glabella",
+        "Lips",
+        "Cheek",
+        "Chin",
+        "Jawline",
+        "Submental region",
+        "Nasolabial fold",
+        "Masseter muscle",
+        "Sebaceous gland",
+        "Alopecia",
+        "Androgenetic alopecia",
+        "Alopecia areata",
+        "Telogen effluvium",
+        "Hair thinning",
+        "Dandruff",
+        {
+          "@id": "https://www.ghezelbaash.ir/#extended-aesthetic-knowledge-map"
+        }
+      ]
+    },
+    {
+      "@type": ["MedicalClinic", "MedicalOrganization", "LocalBusiness", "PhysiciansOffice"],
+      "@id": "https://www.ghezelbaash.ir/#clinic",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش",
+      "description": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ مرکز ارائه خدمات زیبایی غیرجراحی با مسیر تماس، آدرس، گوگل‌مپ و چهار مگاپیلار تصمیم‌گیری خدمات.",
+      "telephone": "+989308209494",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "میدان ۱۷ شهریور، ساختمان ویستا",
+        "addressLocality": "Kermanshah",
+        "addressRegion": "Kermanshah Province",
+        "postalCode": "6714657412",
+        "addressCountry": "IR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 34.3401243,
+        "longitude": 47.0851778
+      },
+      "hasMap": "https://www.google.com/maps?cid=12350483144643112463",
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "https://schema.org/Saturday",
+          "https://schema.org/Sunday",
+          "https://schema.org/Monday",
+          "https://schema.org/Tuesday",
+          "https://schema.org/Wednesday",
+          "https://schema.org/Thursday"
+        ],
+        "opens": "16:00",
+        "closes": "22:00"
+      },
+      "priceRange": "درمان‌های انتخابی پزشکی زیبایی؛ هزینه پس از معاینه و تصمیم درمانی مشخص می‌شود",
+      "sameAs": [
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.wikidata.org/entity/Q140288589",
+        "https://www.openstreetmap.org/node/13530287096",
+        "https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas",
+        "https://www.facebook.com/Doctor.Ghezelbaash/",
+        "https://www.facebook.com/Ghezelbaash/",
+        "https://www.pinterest.com/qezelbaash/",
+        "https://about.me/ghezelbaash",
+        "https://linktr.ee/Doctor.ghezelbaash",
+        "https://nshn.ir/ad_br33tY5eHiu",
+        "https://balad.ir/p/2dnVakli9ZKaBd",
+        "https://yandex.com/maps/org/63459342435/",
+        "https://app.foursquare.com/share/venue/6987eef061c23b4962a08398",
+        "https://huggingface.co/doctor-ghezelbaash"
+      ],
+      "founder": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "employee": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "medicalSpecialty": ["https://schema.org/PlasticSurgery", "Aesthetic medicine"],
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه",
+        "alternateName": "Kermanshah"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": 5,
+        "ratingCount": 163,
+        "reviewCount": 163,
+        "bestRating": 5,
+        "worstRating": 1,
+        "url": "https://www.google.com/maps?cid=12350483144643112463"
+      }
+    },
+    {
+      "@type": "ContactPoint",
+      "@id": "https://www.ghezelbaash.ir/#contact-point",
+      "telephone": "+989308209494",
+      "contactType": "رزرو و هماهنگی مراجعه",
+      "areaServed": "IR",
+      "availableLanguage": ["fa-IR", "fa"]
+    },
+    {
+      "@type": ["CreativeWork", "EducationalOccupationalCredential"],
+      "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430",
+      "name": "کد نظام پزشکی ۱۶۷۴۳۰",
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "IRIMC",
+        "value": "167430",
+        "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+      },
+      "recognizedBy": {
+        "@type": "Organization",
+        "name": "سازمان نظام پزشکی جمهوری اسلامی ایران",
+        "url": "https://irimc.org/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "دکتر و کلینیک"
+        }
+      ]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#webpage",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه",
+      "description": "صفحه کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ آدرس، تماس، ساعت کاری، پزشک مسئول و مسیرهای اصلی خدمات زیبایی.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#breadcrumb"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "video": [
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review"
+        }
+      ],
+      "associatedMedia": [
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review"
+        }
+      ],
+      "abstract": "کلینیک زیبایی دکتر سعید قزلباش هاب مکانی و سازمانی خدمات زیبایی غیرجراحی در کرمانشاه است که مسیر تماس، آدرس، نقشه، پزشک مسئول و چهار مگاپیلار درمانی را در یک منبع قابل پیگیری جمع می‌کند."
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-kermanshah",
+      "name": "پرسش‌های پرتکرار دکتر و کلینیک زیبایی در کرمانشاه",
+      "mainEntity": [
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-address-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-appointment-contact-hours"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-doctor-responsible-license"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-services-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-best-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-treatment-selection"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-unknown-treatment"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-botox-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-filler-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-thread-lift-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-when-not-to-treat"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-price-kermanshah"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#webpage"
+      }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.ghezelbaash.ir/botox-kermanshah/#service",
+      "url": "https://www.ghezelbaash.ir/botox-kermanshah/",
+      "name": "بوتاکس در کرمانشاه",
+      "description": "راهنمای پزشک‌محور بوتاکس؛ تشخیص عضله، دوز، عوارض، ماندگاری و مراقبت.",
+      "provider": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "serviceType": "پزشکی زیبایی",
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه"
+      }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#service",
+      "url": "https://www.ghezelbaash.ir/filler-kermanshah/",
+      "name": "تزریق فیلر در کرمانشاه",
+      "description": "راهنمای فیلر؛ تشخیص کمبود حجم، لب، زیر چشم، فک، چانه و ریسک انسداد عروقی.",
+      "provider": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "serviceType": "پزشکی زیبایی",
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه"
+      }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#service",
+      "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+      "name": "لیفت نخ در کرمانشاه",
+      "description": "راهنمای لیفت نخ؛ کاندید مناسب، PDO/PLLA/PCL، غبغب، عوارض و مراقبت.",
+      "provider": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "serviceType": "پزشکی زیبایی",
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه"
+      }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#service",
+      "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+      "name": "درمان مشکلات زیبایی در کرمانشاه",
+      "description": "هاب تشخیصی برای لک، جوش، جای جوش، مو، غبغب، کانتورینگ و انتخاب مسیر درمان.",
+      "provider": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "serviceType": "پزشکی زیبایی",
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه"
+      }
+    },
+    {
+      "@type": ["ProfilePage", "WebPage"],
+      "@id": "https://www.ghezelbaash.ir/#webpage",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+      "description": "هاب هویتی رسمی دکتر سعید قزلباش، اتصال به نظام پزشکی، ORCID، کلینیک زیبایی، اینستاگرام و چهار مگاپیلار خدمات.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "abstract": "دکتر سعید قزلباش پزشک زیبایی فعال در کرمانشاه است که محتوای این سایت را حول تشخیص، انتخاب درست بیمار و تصمیم‌گیری قبل از تکنیک سازمان‌دهی می‌کند."
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review",
+      "name": "ویدئوی رضایت زیباجو از خدمات زیبایی دکتر قزلباش",
+      "description": "ویدئویی کوتاه از رضایت زیباجو از خدمات زیبایی دکتر قزلباش؛ بدون ادعای تضمین نتیجه و فقط برای نمایش بازخورد مراجعه‌کننده.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/patient-satisfaction-review-dr-saeed-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT20S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/patient-satisfaction-review-dr-saeed-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "این ویدئو نقش رضایت زیباجو، مسیر تماس و هویت واقعی کلینیک را در تصمیم‌گیری زیبایی نشان می‌دهد. تمرکز متن روی این است که کاربر باید بتواند پزشک مسئول، مکان، مسیر رسمی تماس و محدودیت‌های تصمیم درمانی را قبل از مراجعه تشخیص دهد.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "هویت مکان",
+          "startOffset": 0,
+          "endOffset": 8,
+          "description": "کلینیک و مسیر تماس به پزشک مسئول وصل می‌شود.",
+          "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/?t=0#video-clinic-patient-experience-review"
+        },
+        {
+          "@type": "Clip",
+          "name": "رضایت زیباجو",
+          "startOffset": 8,
+          "endOffset": 16,
+          "description": "تصمیم زیبایی به محیط واقعی و فرایند ارزیابی وابسته می‌شود.",
+          "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/?t=8#video-clinic-patient-experience-review"
+        },
+        {
+          "@type": "Clip",
+          "name": "اعتماد قابل پیگیری",
+          "startOffset": 16,
+          "endOffset": 20,
+          "description": "هویت بیرونی و مسیرهای رسمی برای کاهش ابهام برجسته می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/?t=16#video-clinic-patient-experience-review"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review"
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-address-kermanshah",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش کجاست؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا قرار دارد. این آدرس در صفحه کلینیک همراه با مسیر تماس و امکان بررسی موقعیت روی نقشه معرفی شده است تا مراجعه‌کننده قبل از مراجعه، مکان، مسیر و هویت مرکز را روشن ببیند."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-appointment-contact-hours",
+      "name": "برای نوبت، تماس و هماهنگی مراجعه چه مسیری وجود دارد؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "برای هماهنگی مراجعه، شماره ۰۹۳۰۸۲۰۹۴۹۴ مسیر تماس مستقیم کلینیک است. ساعت کاری در متن صفحه از شنبه تا پنجشنبه، ۱۶:۰۰ تا ۲۲:۰۰ ثبت شده است. مسیر اینستاگرام رسمی دکتر سعید قزلباش هم برای شروع ارتباط و مشاهده فضای کاری معرفی شده، اما تصمیم درمانی فقط بعد از بررسی حضوری قابل نهایی‌شدن است."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-best-aesthetic-clinic-kermanshah",
+      "name": "اگر کسی دنبال بهترین کلینیک زیبایی در کرمانشاه باشد، چه معیارهایی باید ببیند؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "به‌جای تکیه بر ادعای «بهترین»، معیار عملی این است: پزشک مسئول مشخص باشد، هویت و کد نظام پزشکی قابل پیگیری باشد، آدرس و مسیر تماس پنهان نباشد، خدمات به‌صورت تشخیصی توضیح داده شوند، محدودیت‌ها و موارد نامناسب هم گفته شوند و کاربر به صفحه‌های تصمیم‌گیری برای بوتاکس، فیلر، لیفت نخ و مشکلات زیبایی هدایت شود. این صفحه دقیقاً برای همین ارزیابی ساخته شده است، بدون اینکه جای معاینه را بگیرد."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-botox-kermanshah",
+      "name": "بوتاکس در این کلینیک برای چه درخواست‌هایی بررسی می‌شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "بوتاکس برای خط اخم، خطوط پیشانی، چروک دور چشم، لبخند لثه‌ای، لیپ فلیپ، تعریق موضعی و مواردی مثل عضله ماستر زمانی بررسی می‌شود که نقش عضله یا فعالیت غده در مشکل روشن باشد. هر خطی با بوتاکس بهتر نمی‌شود؛ خط ثابت، افتادگی پوست یا کمبود حجم ممکن است مسیر دیگری بخواهد."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-doctor-responsible-license",
+      "name": "پزشک مسئول کلینیک کیست و چرا این موضوع مهم است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "پزشک مسئول کلینیک، دکتر سعید قزلباش است؛ با نام کامل دکتر محمدسعید قزلباش و کد نظام پزشکی ۱۶۷۴۳۰. برای یک کلینیک زیبایی، اتصال تصمیم درمانی به پزشک مشخص، قابل‌پیگیری و دارای هویت بیرونی، از خود نام خدمت مهم‌تر است؛ چون بوتاکس، فیلر یا لیفت نخ باید به تشخیص و مسئولیت پزشکی وصل باشند، نه به یک برند بی‌هویت."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-filler-kermanshah",
+      "name": "فیلر در کلینیک چه زمانی انتخاب قابل‌دفاع‌تری است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "فیلر وقتی مطرح می‌شود که مسئله به حجم ازدست‌رفته، فرم، حمایت بافتی یا تناسب چهره مربوط باشد؛ مثل لب، زیر چشم، گونه، چانه، زاویه فک، خط خنده، شقیقه یا اصلاح فیلر قبلی. اما فیلر فقط «پر کردن» نیست؛ ناحیه، عمق تزریق، سابقه قبلی، ریسک عروقی و تناسب کلی صورت باید قبل از تصمیم دیده شود."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-price-kermanshah",
+      "name": "قیمت بوتاکس، فیلر یا لیفت نخ در کرمانشاه چطور مشخص می‌شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "قیمت بدون معاینه عدد قابل اتکایی نیست، چون به ناحیه، مقدار مورد نیاز، پیچیدگی کار، سابقه درمان قبلی، نوع محصول یا نخ و ریسک ناحیه بستگی دارد. صفحه کلینیک مسیر تماس را مشخص می‌کند، اما عدد نهایی وقتی معنا دارد که اول معلوم شود اصلاً کدام روش برای فرد منطقی است و چه حجمی از درمان لازم است."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-services-kermanshah",
+      "name": "چه خدماتی در کلینیک زیبایی دکتر سعید قزلباش انجام می‌شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "خدمات کلینیک در چهار مسیر اصلی سازمان‌دهی شده‌اند: بوتاکس برای مشکلات وابسته به فعالیت عضله، فیلر برای حجم و فرم، لیفت نخ برای افتادگی‌های منتخب و مسیر مشکلات زیبایی برای جوش، لک، جای جوش، ریزش مو، غبغب و مواردی که هنوز نام درمانشان مشخص نیست. این چینش کمک می‌کند کاربر اول مسئله را درست بفهمد و بعد سراغ روش مناسب برود."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-thread-lift-kermanshah",
+      "name": "لیفت نخ در این کلینیک برای چه افرادی بررسی می‌شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "لیفت نخ بیشتر برای افتادگی خفیف تا متوسط، خط فک، شقیقه، ابرو، میدفیس، گردن یا غبغب بررسی می‌شود؛ اما اگر شلی پوست زیاد باشد، حجم ازدست‌رفته نقش اصلی داشته باشد یا انتظار فرد از توان نخ جلوتر باشد، ممکن است انتخاب مناسبی نباشد. در این مسیر، ظرفیت بافت قبل از تعداد نخ اهمیت دارد."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-treatment-selection",
+      "name": "از کجا بفهمم بوتاکس، فیلر، لیفت نخ یا درمان پوستی برای من مناسب‌تر است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "اگر مشکل با حرکت عضله ایجاد می‌شود، مسیر بوتاکس بررسی می‌شود؛ اگر مسئله حجم، فرم یا تناسب باشد، فیلر مطرح می‌شود؛ اگر افت بافت خفیف تا متوسط نقش اصلی داشته باشد، لیفت نخ ممکن است بررسی شود؛ و اگر مسئله جوش، لک، جای جوش، مو، تیرگی، منافذ یا غبغب باشد، مسیر مشکلات زیبایی نقطه شروع دقیق‌تری است. انتخاب نهایی به معاینه، سابقه، داروها، کیفیت پوست و انتظار فرد وابسته است."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-unknown-treatment",
+      "name": "اگر ندانم دقیقاً چه درمانی لازم دارم، از کدام صفحه شروع کنم؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "اگر فقط می‌دانید از لک، جوش، جای جوش، ریزش مو، تیرگی زیر چشم، منافذ باز، غبغب، افتادگی یا به‌هم‌خوردن تناسب صورت ناراضی هستید، شروع بهتر صفحه مشکلات و دغدغه‌های زیبایی است. آن مسیر کمک می‌کند نام درمان از تشخیص جلو نزند و گزینه‌هایی مثل بوتاکس، فیلر، لیفت نخ، PRP، مزوتراپی، سابسیژن یا لیپوساکشن غبغب در جای درست دیده شوند."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-faq-when-not-to-treat",
+      "name": "چه زمانی ممکن است انجام ندادن درمان تصمیم درست‌تری باشد؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "وقتی توقع نتیجه با توان واقعی روش هماهنگ نیست، شرح حال یا داروها ریسک را بالا می‌برند، علت مشکل درست مشخص نشده، عفونت یا التهاب فعال وجود دارد، یا مراجعه‌کننده فقط از روی عکس و ترند تصمیم گرفته، انجام ندادن یا عقب‌انداختن درمان می‌تواند تصمیم دقیق‌تری باشد. این پیام در صفحه کلینیک عمداً واضح آمده است تا انتخاب روش از معاینه جلو نزند."
+      }
+    }
+  ],
+  "derivedFrom": "src/content/page-structured-data/clinic.json",
+  "profile": "page-scoped-json-ld-embed"
+}

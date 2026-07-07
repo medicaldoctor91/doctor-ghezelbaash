@@ -1,0 +1,36 @@
+---
+import { getGoogleMapsRating } from '~/utils/contentData';
+import { getUiCopy } from '~/utils/uiCopy';
+
+export interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+const googleMapsRating = await getGoogleMapsRating();
+const uiCopy = await getUiCopy<{
+  googleMapsRatingBadge: { ariaPrefix: string; ariaSuffix: string; title: string; description: string };
+}>();
+---
+
+<a
+  href={googleMapsRating.googleMapsUrl}
+  target="_blank"
+  rel="noopener noreferrer"
+  class:list={[
+    'group block rounded-2xl border border-amber-200 bg-amber-50/70 p-4 shadow-sm transition hover:border-amber-300 hover:bg-amber-50 dark:border-amber-400/30 dark:bg-amber-950/20',
+    { 'p-3': compact },
+  ]}
+  aria-label={`${uiCopy.googleMapsRatingBadge.ariaPrefix} ${googleMapsRating.displayText} ${uiCopy.googleMapsRatingBadge.ariaSuffix}`}
+>
+  <span class="flex items-center gap-2 text-sm font-semibold text-amber-700 dark:text-amber-300">
+    <span aria-hidden="true">★★★★★</span>
+    <span>{uiCopy.googleMapsRatingBadge.title}</span>
+  </span>
+  <strong class:list={['mt-2 block text-gray-900 dark:text-white', compact ? 'text-base' : 'text-xl']}>
+    {googleMapsRating.displayText}
+  </strong>
+  <span class="mt-2 block text-sm leading-7 text-muted">
+    {uiCopy.googleMapsRatingBadge.description}
+  </span>
+</a>

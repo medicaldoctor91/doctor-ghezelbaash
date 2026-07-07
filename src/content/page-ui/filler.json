@@ -1,0 +1,89 @@
+{
+  "path": "/filler-kermanshah/",
+  "contentEntry": "filler-kermanshah",
+  "layout": "service",
+  "showBreadcrumbs": true,
+  "showRating": true,
+  "showFaq": true,
+  "showTrust": true,
+  "showIntentHub": true,
+  "breadcrumbs": [
+    {
+      "name": "خانه",
+      "href": "/"
+    },
+    {
+      "name": "دکتر و کلینیک",
+      "href": "/dr-saeed-ghezelbash-aesthetic-clinic/"
+    },
+    {
+      "name": "تزریق فیلر در کرمانشاه"
+    }
+  ],
+  "hero": {
+    "tagline": "مگاپیلار فیلر",
+    "title": "فیلر صورت را همیشه بهتر نمی‌کند؛ از لب و زیر چشم تا فک، بینی، بدن و خطر انسداد عروقی",
+    "subtitle": "راهنمای تصمیم‌گیری برای فیلر؛ از تشخیص کمبود حجم و سایه تا انتخاب ناحیه، محدودیت‌ها، عوارض و خطرات تزریق در مسیرهای حساس صورت.",
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "نمونه‌کارهای فیلر در اینستاگرام",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "تماس برای هماهنگی",
+        "hrefSource": "phone"
+      }
+    ]
+  },
+  "intentHub": {
+    "title": "نقشه سریع مسیرهای تصمیم‌گیری این صفحه",
+    "description": "این بخش مسیرهای اصلی تصمیم‌گیری کاربر را مرتب می‌کند؛ هر مسیر به بخش مرتبط همان صفحه وصل است تا کاربر سریع‌تر به پاسخ قابل‌اقدام برسد.",
+    "links": [
+      {
+        "title": "تشخیص قبل از تزریق",
+        "href": "#filler-diagnosis-before-injection",
+        "description": "فیلر برای علت تزریق می‌شود، نه فقط برای اسم ناحیه."
+      },
+      {
+        "title": "لب، زیر چشم و گونه",
+        "href": "#lip-filler",
+        "description": "زیرموضوع‌های اصلی فیلر با مسیر مستقل در همین راهنما."
+      },
+      {
+        "title": "چانه و خط فک",
+        "href": "#chin-filler",
+        "description": "Intentهای کانتورینگ با تمرکز بر نسبت، حجم و افتادگی."
+      },
+      {
+        "title": "انسداد عروقی و اصلاح فیلر",
+        "href": "#filler-vascular-occlusion",
+        "description": "ریسک‌های جدی و اصلاح فیلر با هیالاز، با توضیح قابل مشاهده برای کاربر."
+      }
+    ]
+  },
+  "pageTrustTitle": "تزریق فیلر در کرمانشاه",
+  "contactBox": {
+    "title": "در فیلر، تشخیص علت مهم‌تر از تعداد سی‌سی است",
+    "subtitle": "برای هماهنگی نوبت، مشاهده نمونه‌کارها یا مسیریابی به کلینیک، از مسیرهای رسمی ثبت‌شده در سایت استفاده کنید."
+  },
+  "cta": {
+    "title": "قدم بعدی: هماهنگی از مسیر رسمی کلینیک",
+    "subtitle": "اطلاعات این صفحه جایگزین معاینه و تصمیم پزشکی نیست. برای بررسی شرایط فردی، با کلینیک هماهنگ کنید.",
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "دیدن نمونه‌کارها در اینستاگرام",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "تماس برای هماهنگی",
+        "hrefSource": "phone"
+      }
+    ]
+  }
+}

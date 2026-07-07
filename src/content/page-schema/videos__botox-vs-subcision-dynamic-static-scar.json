@@ -1,0 +1,120 @@
+{
+  "@context": "https://schema.org",
+  "path": "/videos/botox-vs-subcision-dynamic-static-scar/",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ویدئوها",
+          "item": "https://www.ghezelbaash.ir/videos/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "بوتاکس، چین دینامیک و سابسیژن",
+          "item": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/"
+        }
+      ]
+    },
+    {
+      "@type": "ImageObject",
+      "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#thumbnail",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/thumbnails/botox-vs-subcision-scars-explaining-dr-ghezelbash.jpg",
+      "url": "https://www.ghezelbaash.ir/videos/thumbnails/botox-vs-subcision-scars-explaining-dr-ghezelbash.jpg",
+      "caption": "بوتاکس یا سابسیژن؟ مرز چین دینامیک با اسکار فیبروتیک",
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#webpage",
+      "url": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/",
+      "name": "بوتاکس، چین دینامیک و سابسیژن | صفحه اختصاصی ویدئو",
+      "description": "توضیح تفاوت تصمیمی بین مشکل وابسته به حرکت عضله و مشکل بافتی مانند اسکار فیبروتیک یا چسبندگی زیرپوستی که ممکن است مسیر درمانی دیگری مانند سابسیژن بخواهد.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#video"
+      },
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#breadcrumb"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ]
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#video",
+      "name": "بوتاکس یا سابسیژن؟ مرز چین دینامیک با اسکار فیبروتیک",
+      "description": "توضیح تفاوت تصمیمی بین مشکل وابسته به حرکت عضله و مشکل بافتی مانند اسکار فیبروتیک یا چسبندگی زیرپوستی که ممکن است مسیر درمانی دیگری مانند سابسیژن بخواهد.",
+      "thumbnailUrl": [
+        "https://www.ghezelbaash.ir/videos/thumbnails/botox-vs-subcision-scars-explaining-dr-ghezelbash.jpg"
+      ],
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT56S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-scars-explaining-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/",
+      "url": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#segment-1",
+          "name": "تعریف مسئله",
+          "startOffset": 0,
+          "endOffset": 18,
+          "description": "تفاوت فرورفتگی ساده با چسبندگی فیبروتیک زیرپوستی مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/?t=0"
+        },
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#segment-2",
+          "name": "منطق آزادسازی",
+          "startOffset": 18,
+          "endOffset": 36,
+          "description": "سابسیژن به‌عنوان آزادسازی tethering توضیح داده می‌شود، نه درمان عمومی همه اسکارها.",
+          "url": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/?t=18"
+        },
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/#segment-3",
+          "name": "حدود تصمیم",
+          "startOffset": 36,
+          "endOffset": 56,
+          "description": "نیاز به معاینه و ترکیب احتمالی با مسیرهای دیگر یادآوری می‌شود.",
+          "url": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/?t=36"
+        }
+      ],
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": ["https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/"]
+      }
+    }
+  ],
+  "derivedFrom": "src/content/page-structured-data/videos__botox-vs-subcision-dynamic-static-scar.json",
+  "profile": "page-scoped-json-ld-embed"
+}

@@ -1,0 +1,35 @@
+{
+  "siteUrl": "https://www.ghezelbaash.ir",
+  "pageLabels": {
+    "/": "صفحه خانه",
+    "/dr-saeed-ghezelbash-aesthetic-clinic/": "صفحه کلینیک",
+    "/botox-kermanshah/": "صفحه بوتاکس",
+    "/filler-kermanshah/": "صفحه فیلر",
+    "/thread-lift-kermanshah/": "صفحه لیفت نخ",
+    "/aesthetic-concerns-kermanshah/": "صفحه مشکلات زیبایی"
+  },
+  "watchTitleSuffix": "صفحه اختصاصی ویدئو",
+  "segmentLabelPrefix": "پخش از ثانیه",
+  "relatedReasons": {
+    "samePage": "هم‌خانواده در همان صفحه مادر",
+    "keywordOverlap": "هم‌پوشانی مفهومی و کلیدواژه‌ای",
+    "sharedCrossLink": "هم‌مسیر در لینک‌دهی محتوایی",
+    "fallback": "ویدئوی مکمل در کتابخانه ویدئویی"
+  },
+  "videosIndex": {
+    "metadata": {
+      "title": "کتابخانه ویدئوهای آموزشی و نمونه‌کار کلینیک دکتر سعید قزلباش",
+      "canonical": "https://www.ghezelbaash.ir/videos/",
+      "description": "کتابخانه ویدئوهای آموزشی، نمونه‌کار، توضیح درمان و مسیرهای تصمیم‌گیری کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه."
+    },
+    "breadcrumbs": [
+      {
+        "name": "خانه",
+        "href": "/"
+      },
+      {
+        "name": "کتابخانه ویدئوها"
+      }
+    ]
+  }
+}

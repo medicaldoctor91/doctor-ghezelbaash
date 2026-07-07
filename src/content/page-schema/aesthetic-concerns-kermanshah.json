@@ -1,0 +1,887 @@
+{
+  "@context": "https://schema.org",
+  "path": "/aesthetic-concerns-kermanshah/",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.ghezelbaash.ir/#website",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "وب‌سایت رسمی دکتر سعید قزلباش",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.ghezelbaash.ir/search/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": ["Person", "IndividualPhysician", "Physician"],
+      "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "دکتر سعید قزلباش",
+      "alternateName": [
+        "دکتر محمدسعید قزلباش",
+        "دکتر محمد سعید قزلباش",
+        "دکتر قزلباش",
+        "Dr. Saeed Ghezelbash",
+        "Dr. Saeed Ghezelbaash",
+        "Dr. Mohammad Saeed Ghezelbash",
+        "Dr. Mohammad Saeed Ghezelbaash",
+        "Mohammad Saeed Ghezelbash",
+        "دکتر سعید قزلباش",
+        "سعید قزلباش",
+        "محمد سعید قزلباش",
+        "محمدسعید قزلباش",
+        "Dr. Mohammad Saeed Ghazlbash",
+        "Saeed Ghezelbash",
+        "Saeed Ghezelbaash",
+        "Mohammad Saeed Ghazlbash",
+        "Mohammadsaeed Ghezelbash",
+        "Saeed Qezlbash"
+      ],
+      "jobTitle": "پزشک زیبایی در کرمانشاه",
+      "description": "دکتر سعید قزلباش، پزشک زیبایی فعال در کرمانشاه، با تمرکز بر تصمیم‌گیری پزشک‌محور در بوتاکس، فیلر، لیفت نخ و درمان مشکلات زیبایی.",
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "propertyID": "IRIMC",
+          "value": "167430",
+          "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "ORCID",
+          "value": "0009-0001-9346-8475",
+          "url": "https://orcid.org/0009-0001-9346-8475"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Wikidata",
+          "value": "Q140287622",
+          "url": "https://www.wikidata.org/entity/Q140287622"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "NCBI Bibliography",
+          "value": "saeed.ghezelbash.1",
+          "url": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Hugging Face",
+          "value": "Ghezelbaash",
+          "url": "https://huggingface.co/Ghezelbaash"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "MINC",
+          "name": "Medical Identification Number for Canada",
+          "value": "CAMD-0224-1997"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Hugging Face Profile",
+          "value": "Ghezelbaash",
+          "url": "https://huggingface.co/Ghezelbaash",
+          "name": "Personal Hugging Face profile"
+        }
+      ],
+      "sameAs": [
+        "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+        "https://orcid.org/0009-0001-9346-8475",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.wikidata.org/entity/Q140287622",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/",
+        "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+        "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+        "https://www.facebook.com/Ghezelbaash/",
+        "https://www.pinterest.com/qezelbaash/",
+        "https://about.me/ghezelbaash",
+        "https://linktr.ee/Doctor.ghezelbaash",
+        "https://huggingface.co/Ghezelbaash"
+      ],
+      "worksFor": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "hasCredential": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430"
+        }
+      ],
+      "medicalSpecialty": ["Aesthetic medicine", "https://schema.org/PlasticSurgery"],
+      "knowsAbout": [
+        "بوتاکس",
+        "تزریق فیلر",
+        "لیفت نخ",
+        "درمان مشکلات زیبایی",
+        "تشخیص پزشک‌محور پیش از درمان زیبایی",
+        "ایمنی تزریق و انتخاب بیمار",
+        {
+          "@id": "https://www.ghezelbaash.ir/#aesthetic-authority-topic-map"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/data/ghezelbaash-entity-dataset.json#dataset"
+        },
+        "پزشکی زیبایی غیرجراحی",
+        "ارزیابی بیمار پیش از تزریق",
+        "مدیریت ریسک تزریق در صورت",
+        "بوتاکس در کرمانشاه",
+        "بوتاکس خط اخم",
+        "بوتاکس پیشانی",
+        "بوتاکس دور چشم",
+        "لیپ فلیپ با بوتاکس",
+        "بوتاکس لبخند لثه‌ای",
+        "بوتاکس ماستر",
+        "بوتاکس تعریق",
+        "تزریق فیلر در کرمانشاه",
+        "فیلر لب",
+        "فیلر زیر چشم",
+        "فیلر گونه",
+        "فیلر خط خنده",
+        "فیلر چانه",
+        "فیلر زاویه فک و خط فک",
+        "فیلر شقیقه",
+        "فیلر بینی",
+        "فیلر اسکار آکنه",
+        "هیالاز و اصلاح فیلر",
+        "لیفت نخ در کرمانشاه",
+        "لیفت نخ غبغب",
+        "لیفت نخ خط فک",
+        "لیفت نخ ابرو",
+        "درمان مشکلات زیبایی در کرمانشاه",
+        "درمان جوش فعال",
+        "درمان لک پوستی",
+        "درمان جای جوش و اسکار آکنه",
+        "سابسیژن جای جوش",
+        "پانچ اسکار",
+        "PRP پوست و مو",
+        "مزوتراپی پوست و مو",
+        "جالپرو و پروفایلو",
+        "درمان ریزش مو",
+        "لیپوساکشن غبغب",
+        "کانتورینگ صورت",
+        "جوانسازی پوست و مو در کرمانشاه",
+        "ساکشن و لیپوساکشن غبغب در کرمانشاه",
+        "تزریق بوتاکس",
+        "لیفت ابرو با بوتاکس",
+        "بوتاکس بینی",
+        "بوتاکس چانه",
+        "بوتاکس گردن",
+        "بوتاکس نفرتیتی",
+        "بوتاکس عضله ماستر",
+        "بوتاکس تعریق موضعی",
+        "بوتاکس زیر بغل",
+        "بوتاکس کف دست",
+        "بوتاکس کف پا",
+        "بوتاکس میگرن",
+        "فیلر پوستی",
+        "فیلر هیالورونیک اسید",
+        "اصلاح عدم تقارن لب",
+        "فیلر زاویه فک",
+        "فیلر خط ماریونت",
+        "فیلر پیشانی",
+        "فیلر دست",
+        "فیلر گردن",
+        "اصلاح فرم بینی با فیلر",
+        "کانتورینگ فول‌فیس",
+        "هارمونی صورت",
+        "کانتورینگ گونه",
+        "کانتورینگ چانه",
+        "کانتورینگ نیم‌رخ",
+        "لیفت صورت با نخ",
+        "لیفت ابرو با نخ",
+        "لیفت شقیقه با نخ",
+        "لیفت گونه با نخ",
+        "لیفت خط فک با نخ",
+        "لیفت گردن با نخ",
+        "نخ PDO",
+        "نخ کاگ",
+        "PRP صورت",
+        "PRP مو",
+        "PRP زیر چشم",
+        "PRP جای جوش",
+        "مزوتراپی صورت",
+        "مزوتراپی مو",
+        "مزوتراپی لک",
+        "مزوتراپی زیر چشم",
+        "مزوتراپی غبغب",
+        "مزوتراپی چربی موضعی",
+        "میکرونیدلینگ",
+        "آر اف فرکشنال",
+        "اسکین‌بوستر",
+        "مزوژل",
+        "مزوژل زیر چشم",
+        "تزریق هیدروژل",
+        "پروفایلو",
+        "جالپرو",
+        "سونه‌کاس",
+        "پروسترولین",
+        "اگزوزوم پوست",
+        "اگزوزوم مو",
+        "درمان جای جوش",
+        "درمان لک و ملاسما",
+        "پیلینگ شیمیایی",
+        "جوانسازی با لیزر",
+        "سفت کردن پوست",
+        "تحریک کلاژن",
+        "درمان منافذ باز",
+        "پاکسازی پوست",
+        "درمان ریزش مو",
+        "درمان ریزش موی الگوی مردانه و زنانه",
+        "کانتورینگ زیر چانه",
+        "فرم‌دهی گردن و خط فک",
+        "برداشت چربی موضعی",
+        "تزریق چربی صورت",
+        "تزریق چربی دست",
+        "بلفاروپلاستی",
+        "فیس لیفت",
+        "لیفت گردن",
+        "لیفت ابرو",
+        "لیفت شقیقه",
+        "رینوپلاستی",
+        "اتوپلاستی",
+        "بوکال فت",
+        "لیپوساکشن صورت",
+        "لیپوساکشن بدن",
+        "ابدومینوپلاستی",
+        "ماموپلاستی",
+        "پروتز سینه",
+        "لیفت سینه",
+        "جراحی ژنیکوماستی",
+        "ایمپلنت چانه",
+        "جراحی زاویه فک",
+        "مشاوره زیبایی",
+        "مراقبت بعد از تزریق",
+        "عوارض تزریق",
+        "اصلاح فیلر",
+        "حل کردن فیلر با هیالورونیداز",
+        "instance of",
+        "exact identity",
+        "external identifier",
+        "described by source",
+        "main subject",
+        "cites work",
+        "part of",
+        "has part",
+        "provider",
+        "founder",
+        "member / employee",
+        "located at",
+        "map link",
+        "service catalog",
+        "actual offer",
+        "knowledge-only service concept",
+        "Aesthetic medicine",
+        "مشاوره پزشکی زیبایی",
+        "انتخاب بیمار",
+        "ایمنی آناتومی صورت",
+        "طراحی نتیجه طبیعی",
+        "ارتباط ریسک",
+        "پزشکی زیبایی مبتنی بر شواهد",
+        "سواد پژوهشی",
+        "مرجعیت محلی زیبایی در کرمانشاه",
+        "یکپارچگی نام، نشانی و تلفن",
+        "مسیر تماس رسمی",
+        "تزریقات زیبایی",
+        "نورومدولاتورها",
+        "فیلرها",
+        "نخ‌های لیفت",
+        "جوانسازی پوست",
+        "جوانسازی مو",
+        "ایمنی و اصلاح عوارض",
+        "دانش مجاور جراحی زیبایی",
+        "Dermatology",
+        "Skin care",
+        "Hair care",
+        "Physician-led assessment",
+        "Patient selection",
+        "Evidence-based aesthetic medicine",
+        "Post-procedure care",
+        "Contraindications and precautions",
+        "Medical research literacy",
+        "Scientific publication",
+        "Clinical reasoning",
+        "Risk communication",
+        "Kermanshah physician",
+        "Aesthetic medical clinic",
+        "Dynamic facial lines",
+        "Static facial lines",
+        "Enlarged pores",
+        "Sunscreen",
+        "Skin",
+        "Hair",
+        "Hair follicle",
+        "Scalp",
+        "Face",
+        "Forehead",
+        "Periocular area",
+        "Glabella",
+        "Lips",
+        "Cheek",
+        "Chin",
+        "Jawline",
+        "Submental region",
+        "Nasolabial fold",
+        "Masseter muscle",
+        "Sebaceous gland",
+        "Alopecia",
+        "Androgenetic alopecia",
+        "Alopecia areata",
+        "Telogen effluvium",
+        "Hair thinning",
+        "Dandruff"
+      ]
+    },
+    {
+      "@type": ["MedicalClinic", "MedicalOrganization", "LocalBusiness", "PhysiciansOffice"],
+      "@id": "https://www.ghezelbaash.ir/#clinic",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش",
+      "description": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ مرکز ارائه خدمات زیبایی غیرجراحی با مسیر تماس، آدرس، گوگل‌مپ و چهار مگاپیلار تصمیم‌گیری خدمات.",
+      "telephone": "+989308209494",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "میدان ۱۷ شهریور، ساختمان ویستا",
+        "addressLocality": "Kermanshah",
+        "addressRegion": "Kermanshah Province",
+        "postalCode": "6714657412",
+        "addressCountry": "IR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 34.3401243,
+        "longitude": 47.0851778
+      },
+      "hasMap": "https://www.google.com/maps?cid=12350483144643112463",
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "https://schema.org/Saturday",
+          "https://schema.org/Sunday",
+          "https://schema.org/Monday",
+          "https://schema.org/Tuesday",
+          "https://schema.org/Wednesday",
+          "https://schema.org/Thursday"
+        ],
+        "opens": "16:00",
+        "closes": "22:00"
+      },
+      "priceRange": "درمان‌های انتخابی پزشکی زیبایی؛ هزینه پس از معاینه و تصمیم درمانی مشخص می‌شود",
+      "sameAs": [
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.wikidata.org/entity/Q140288589",
+        "https://www.openstreetmap.org/node/13530287096",
+        "https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas",
+        "https://www.facebook.com/Doctor.Ghezelbaash/",
+        "https://www.facebook.com/Ghezelbaash/",
+        "https://www.pinterest.com/qezelbaash/",
+        "https://about.me/ghezelbaash",
+        "https://linktr.ee/Doctor.ghezelbaash",
+        "https://nshn.ir/ad_br33tY5eHiu",
+        "https://balad.ir/p/2dnVakli9ZKaBd",
+        "https://yandex.com/maps/org/63459342435/",
+        "https://app.foursquare.com/share/venue/6987eef061c23b4962a08398",
+        "https://huggingface.co/doctor-ghezelbaash"
+      ],
+      "founder": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "employee": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "medicalSpecialty": ["https://schema.org/PlasticSurgery", "Aesthetic medicine"],
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه",
+        "alternateName": "Kermanshah"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": 5,
+        "ratingCount": 163,
+        "reviewCount": 163,
+        "bestRating": 5,
+        "worstRating": 1,
+        "url": "https://www.google.com/maps?cid=12350483144643112463"
+      }
+    },
+    {
+      "@type": "ContactPoint",
+      "@id": "https://www.ghezelbaash.ir/#contact-point",
+      "telephone": "+989308209494",
+      "contactType": "رزرو و هماهنگی مراجعه",
+      "areaServed": "IR",
+      "availableLanguage": ["fa-IR", "fa"]
+    },
+    {
+      "@type": ["CreativeWork", "EducationalOccupationalCredential"],
+      "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430",
+      "name": "کد نظام پزشکی ۱۶۷۴۳۰",
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "IRIMC",
+        "value": "167430",
+        "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+      },
+      "recognizedBy": {
+        "@type": "Organization",
+        "name": "سازمان نظام پزشکی جمهوری اسلامی ایران",
+        "url": "https://irimc.org/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "دکتر و کلینیک",
+          "item": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "درمان مشکلات زیبایی در کرمانشاه"
+        }
+      ]
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#service",
+      "name": "درمان مشکلات زیبایی در کرمانشاه",
+      "description": "هاب تشخیصی مشکلات زیبایی؛ لک، جوش، جای جوش، ریزش مو، جوانسازی، غبغب و کانتورینگ صورت.",
+      "provider": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "serviceType": "پزشکی زیبایی",
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه"
+      },
+      "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/"
+    },
+    {
+      "@type": ["MedicalWebPage", "WebPage"],
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#webpage",
+      "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+      "name": "درمان مشکلات زیبایی در کرمانشاه",
+      "description": "هاب تشخیصی مشکلات زیبایی؛ لک، جوش، جای جوش، ریزش مو، جوانسازی، غبغب و کانتورینگ صورت.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#service"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "lastReviewed": "2026-07-02",
+      "medicalAudience": {
+        "@type": "MedicalAudience",
+        "medicalAudienceType": "Patient"
+      },
+      "specialty": {
+        "@type": "MedicalSpecialty",
+        "name": "Aesthetic medicine"
+      },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": ["h1", "p.text-xl"]
+      },
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#breadcrumb"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-active-acne-treatment"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-hyperpigmentation-treatment"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-acne-scar-treatment"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-subcision-acne-scar"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-punch-acne-scar"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-prp-skin-hair"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-mesotherapy-skin-hair"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-jalupro-profhilo-skin-boosters"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-hair-loss-treatment"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-submental-liposuction"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#entity-facial-contouring"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/data/ghezelbaash-entity-dataset.json#dataset"
+        }
+      ],
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "video": [
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-subcision-technique-guide"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-mesoneedling-dark-spots-warning"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+        }
+      ],
+      "associatedMedia": [
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-subcision-technique-guide"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-mesoneedling-dark-spots-warning"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+        }
+      ],
+      "abstract": "صفحه درمان مشکلات زیبایی در کرمانشاه نقطه شروع برای کاربرانی است که هنوز نام درمان درست را نمی‌دانند و باید مسئله‌هایی مثل لک، جای جوش، ریزش مو، غبغب، منافذ یا کیفیت پوست را قبل از انتخاب روش تفکیک کنند.",
+      "potentialAction": {
+        "@type": "ContactAction",
+        "target": "+989308209494",
+        "name": "هماهنگی مراجعه با کلینیک"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq",
+      "name": "پرسش‌های متداول درمان مشکلات زیبایی در کرمانشاه",
+      "mainEntity": [
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-1"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-2"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-3"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-4"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-5"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-6"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-q7"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-q8"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#webpage"
+      }
+    },
+    {
+      "@type": ["ProfilePage", "WebPage"],
+      "@id": "https://www.ghezelbaash.ir/#webpage",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+      "description": "هاب هویتی رسمی دکتر سعید قزلباش، اتصال به نظام پزشکی، ORCID، کلینیک زیبایی، اینستاگرام و چهار مگاپیلار خدمات.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "abstract": "دکتر سعید قزلباش پزشک زیبایی فعال در کرمانشاه است که محتوای این سایت را حول تشخیص، انتخاب درست بیمار و تصمیم‌گیری قبل از تکنیک سازمان‌دهی می‌کند."
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-subcision-technique-guide",
+      "name": "سابسیژن جای جوش؛ آزادسازی چسبندگی فیبروتیک زیر پوست",
+      "description": "ویدئوی آموزشی درباره منطق سابسیژن برای آزادسازی گیر و چسبندگی فیبروتیک زیرپوستی در موارد منتخب جای جوش، نه پرکردن همه چاله‌ها.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/proper-subcision-technique-guide-dr-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT36S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/proper-subcision-technique-guide-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-subcision-technique-guide",
+      "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-subcision-technique-guide",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "در این ویدئو، منطق سابسیژن به‌عنوان آزادسازی چسبندگی فیبروتیک زیر پوست توضیح داده می‌شود. تأکید متن بر این است که سابسیژن پرکننده همه فرورفتگی‌ها نیست و فقط وقتی معنا دارد که tethering یا rolling/tethered scar در معاینه مطرح باشد. تصمیم نهایی باید بین نوع اسکار، عمق چسبندگی، کیفیت پوست و ریسک‌های فردی تفکیک شود.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "تعریف مسئله",
+          "startOffset": 0,
+          "endOffset": 11,
+          "description": "تفاوت فرورفتگی ساده با چسبندگی فیبروتیک زیرپوستی مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=0#video-aesthetic-subcision-technique-guide"
+        },
+        {
+          "@type": "Clip",
+          "name": "منطق آزادسازی",
+          "startOffset": 11,
+          "endOffset": 22,
+          "description": "سابسیژن به‌عنوان آزادسازی tethering توضیح داده می‌شود، نه درمان عمومی همه اسکارها.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=11#video-aesthetic-subcision-technique-guide"
+        },
+        {
+          "@type": "Clip",
+          "name": "حدود تصمیم",
+          "startOffset": 22,
+          "endOffset": 35,
+          "description": "نیاز به معاینه و ترکیب احتمالی با مسیرهای دیگر یادآوری می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=22#video-aesthetic-subcision-technique-guide"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-subcision-technique-guide"
+      }
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-mesoneedling-dark-spots-warning",
+      "name": "چرا مزونیدلینگ می‌تواند لک را بدتر کند؟",
+      "description": "توضیح هشدارمحور درباره اینکه لک، ملاسما و PIH نباید بدون تشخیص نوع لک و محرک‌ها با درمان‌های تحریک‌کننده جلو برده شوند.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/why-mesoneedling-makes-dark-spots-worse-dr-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT48S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/why-mesoneedling-makes-dark-spots-worse-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-mesoneedling-dark-spots-warning",
+      "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-mesoneedling-dark-spots-warning",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "این ویدئو با رویکرد هشدارمحور توضیح می‌دهد که لک، ملاسما و PIH قبل از هر درمان تحریک‌کننده باید از نظر نوع ضایعه، زمینه التهابی، آفتاب، دارو و سابقه بدترشدن بررسی شوند. پیام اصلی این است که مزونیدلینگ یا روش‌های مشابه اگر بدون تشخیص انتخاب شوند، در برخی افراد می‌توانند لک را تشدید کنند.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "تفکیک لک",
+          "startOffset": 0,
+          "endOffset": 16,
+          "description": "نوع لک و زمینه التهابی قبل از انتخاب روش جدا می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=0#video-aesthetic-mesoneedling-dark-spots-warning"
+        },
+        {
+          "@type": "Clip",
+          "name": "ریسک تحریک",
+          "startOffset": 16,
+          "endOffset": 32,
+          "description": "توضیح داده می‌شود که تحریک بی‌موقع می‌تواند PIH یا لک را بدتر کند.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=16#video-aesthetic-mesoneedling-dark-spots-warning"
+        },
+        {
+          "@type": "Clip",
+          "name": "مسیر امن‌تر",
+          "startOffset": 32,
+          "endOffset": 48,
+          "description": "تصمیم باید با تشخیص نوع لک، کنترل محرک‌ها و ارزیابی پوست شروع شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=32#video-aesthetic-mesoneedling-dark-spots-warning"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-mesoneedling-dark-spots-warning"
+      }
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-jalupro-vs-profhilo-skin-boosters",
+      "name": "جالپرو یا پروفایلو؟ تصمیم از نیاز پوست شروع می‌شود",
+      "description": "مقایسه آموزشی جالپرو و پروفایلو با تأکید بر اینکه اسکین‌بوسترها جای فیلر کلاسیک نیستند و هدفشان کیفیت پوست است، نه تغییر فرم صورت.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/jalupro-vs-profhilo-skin-boosters-compared-dr-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT1M2S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/jalupro-vs-profhilo-skin-boosters-compared-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-jalupro-vs-profhilo-skin-boosters",
+      "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-jalupro-vs-profhilo-skin-boosters",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "در این ویدئو، جالپرو و پروفایلو به‌عنوان مسیرهای بهبود کیفیت پوست توضیح داده می‌شوند، نه جایگزین فیلر کلاسیک برای تغییر فرم صورت. متن ویدئو روی این تفاوت تمرکز دارد که اسکین‌بوسترها بیشتر به کیفیت، آبرسانی و بافت پوست مربوط‌اند، در حالی که فیلر کلاسیک برای حجم و فرم استفاده می‌شود.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "تعریف اسکین‌بوستر",
+          "startOffset": 0,
+          "endOffset": 20,
+          "description": "هدف اصلی جالپرو و پروفایلو از فیلر کلاسیک جدا می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=0#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+        },
+        {
+          "@type": "Clip",
+          "name": "انتخاب براساس نیاز پوست",
+          "startOffset": 20,
+          "endOffset": 40,
+          "description": "کیفیت پوست، آبرسانی و بافت از حجم‌دهی و کانتورینگ تفکیک می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=20#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+        },
+        {
+          "@type": "Clip",
+          "name": "مرز با فیلر",
+          "startOffset": 40,
+          "endOffset": 62,
+          "description": "انتظار تغییر فرم صورت از اسکین‌بوستر کنترل می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=40#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-q7",
+      "name": "سابسیژن چه زمانی برای جای جوش مطرح می‌شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "وقتی اسکار آکنه حالت فرورفته یا چسبندگی زیرپوستی داشته باشد، سابسیژن می‌تواند در برنامه درمانی مطرح شود. اما نوع اسکار، جوش فعال، لک، ضخامت پوست و سابقه درمان باید قبل از تصمیم بررسی شود."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-q8",
+      "name": "جوانسازی پوست با حجم‌دهی چه تفاوتی دارد؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "جوانسازی کیفیت پوست روی بافت، شفافیت، رطوبت، لک و خطوط سطحی تمرکز دارد؛ اما فیلر حجم و حمایت بافتی اضافه می‌کند. اگر این دو اشتباه گرفته شوند، نتیجه ممکن است طبیعی یا کافی نباشد."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-1",
+      "name": "چرا درمان زیبایی نباید با اسم روش شروع شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "چون یک ظاهر مشابه می‌تواند علت‌های متفاوت داشته باشد. چروک، افتادگی، کاهش حجم، لک، اسکار، ریزش مو یا غبغب هرکدام مسیر تصمیم جدا دارند."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-2",
+      "name": "لک جوش با جای جوش چه تفاوتی دارد؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "لک جوش تغییر رنگ پوست است، اما جای جوش یا اسکار معمولاً با تغییر سطح و فرورفتگی/برآمدگی همراه است. درمان این دو یکسان نیست."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-3",
+      "name": "آیا تا وقتی جوش فعال است می‌شود جای جوش را درمان کرد؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "معمولاً اول باید التهاب و جوش فعال کنترل شود؛ چون پوست ناپایدار می‌تواند لک و اسکار جدید بسازد و درمان‌های اسکار را پیچیده کند."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-4",
+      "name": "PRP یا مزوتراپی مو برای همه ریزش‌ها مناسب است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "خیر. ریزش مو باید از نظر الگو، زمان شروع، داروها، بیماری‌های زمینه‌ای، کمبودها و وضعیت پوست سر بررسی شود؛ بعد درمان‌هایی مثل PRP یا مزوتراپی مطرح می‌شوند."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-5",
+      "name": "غبغب همیشه با لیپوساکشن حل می‌شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "نه. غبغب ممکن است از چربی، پوست، چانه عقب یا گردن باشد. لیپوساکشن وقتی منطقی است که چربی زیرچانه عامل اصلی باشد و بیمار کاندید مناسب باشد."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#faq-question-6",
+      "name": "این صفحه چه ارتباطی با بوتاکس، فیلر و لیفت نخ دارد؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "این صفحه نقطه تشخیص است: اگر مشکل از عضله باشد به بوتاکس، اگر از حجم و سایه باشد به فیلر، و اگر از افتادگی بافت باشد به لیفت نخ وصل می‌شود."
+      }
+    }
+  ],
+  "derivedFrom": "src/content/page-structured-data/aesthetic-concerns-kermanshah.json",
+  "profile": "page-scoped-json-ld-embed"
+}

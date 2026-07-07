@@ -1,0 +1,146 @@
+{
+  "headerData": {
+    "links": [
+      {
+        "text": "خانه",
+        "href": "/"
+      },
+      {
+        "text": "دکتر و کلینیک",
+        "href": "/dr-saeed-ghezelbash-aesthetic-clinic/"
+      },
+      {
+        "text": "خدمات",
+        "links": [
+          {
+            "text": "بوتاکس در کرمانشاه",
+            "href": "/botox-kermanshah/"
+          },
+          {
+            "text": "تزریق فیلر در کرمانشاه",
+            "href": "/filler-kermanshah/"
+          },
+          {
+            "text": "لیفت نخ در کرمانشاه",
+            "href": "/thread-lift-kermanshah/"
+          },
+          {
+            "text": "درمان مشکلات زیبایی",
+            "href": "/aesthetic-concerns-kermanshah/"
+          }
+        ]
+      },
+      {
+        "text": "ویدئوها",
+        "href": "/videos/"
+      }
+    ],
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "نمونه‌کارها در اینستاگرام",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "تماس",
+        "hrefSource": "phone"
+      }
+    ]
+  },
+  "footerData": {
+    "links": [
+      {
+        "title": "مسیرهای اصلی",
+        "links": [
+          {
+            "text": "خانه",
+            "href": "/"
+          },
+          {
+            "text": "دکتر و کلینیک",
+            "href": "/dr-saeed-ghezelbash-aesthetic-clinic/"
+          },
+          {
+            "text": "ویدئوها",
+            "href": "/videos/"
+          }
+        ]
+      },
+      {
+        "title": "خدمات زیبایی",
+        "links": [
+          {
+            "text": "بوتاکس در کرمانشاه",
+            "href": "/botox-kermanshah/"
+          },
+          {
+            "text": "تزریق فیلر در کرمانشاه",
+            "href": "/filler-kermanshah/"
+          },
+          {
+            "text": "لیفت نخ در کرمانشاه",
+            "href": "/thread-lift-kermanshah/"
+          },
+          {
+            "text": "درمان مشکلات زیبایی",
+            "href": "/aesthetic-concerns-kermanshah/"
+          }
+        ]
+      },
+      {
+        "title": "راه‌های ارتباطی",
+        "links": [
+          {
+            "text": "نمونه‌کارها و رضایت زیباجوها در اینستاگرام",
+            "hrefSource": "instagram",
+            "target": "_blank"
+          },
+          {
+            "textSource": "phoneDisplay",
+            "hrefSource": "phone"
+          },
+          {
+            "textSource": "address",
+            "hrefSource": "googleMap",
+            "target": "_blank"
+          },
+          {
+            "textSource": "openingHours",
+            "href": "/dr-saeed-ghezelbash-aesthetic-clinic/"
+          }
+        ]
+      }
+    ],
+    "secondaryLinks": [
+      {
+        "text": "اینستاگرام دکتر قزلباش",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "text": "تماس با کلینیک",
+        "hrefSource": "phone"
+      },
+      {
+        "text": "مسیریابی",
+        "hrefSource": "googleMap",
+        "target": "_blank"
+      }
+    ],
+    "socialLinks": [
+      {
+        "ariaLabel": "اینستاگرام رسمی دکتر قزلباش",
+        "icon": "tabler:brand-instagram",
+        "hrefSource": "instagram"
+      },
+      {
+        "ariaLabel": "موقعیت کلینیک در گوگل‌مپ",
+        "icon": "tabler:map-pin",
+        "hrefSource": "googleMap"
+      }
+    ],
+    "footNote": "© کلینیک زیبایی دکتر سعید قزلباش — کرمانشاه. اطلاعات سایت جایگزین معاینه و تشخیص پزشکی نیست."
+  }
+}

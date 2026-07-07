@@ -1,0 +1,71 @@
+{
+  "pageId": "aesthetic_concerns",
+  "path": "/aesthetic-concerns-kermanshah/",
+  "title": "درمان مشکلات زیبایی در کرمانشاه؛ تشخیص مسئله قبل از درمان",
+  "canonicalEntity": "درمان مشکلات زیبایی در کرمانشاه",
+  "category": "هاب تشخیص مسئله برای لک، جای جوش، مو، غبغب و کیفیت پوست",
+  "definition": "صفحه درمان مشکلات زیبایی در کرمانشاه نقطه شروع برای کاربرانی است که هنوز نام درمان درست را نمی‌دانند و باید مسئله‌هایی مثل لک، جای جوش، ریزش مو، غبغب، منافذ یا کیفیت پوست را قبل از انتخاب روش تفکیک کنند.",
+  "decisionFrame": "این صفحه جلوی پرش مستقیم از دغدغه به نام درمان را می‌گیرد؛ مثلاً لک با ملاسما یا PIH یکی نیست، جای جوش فرورفته همیشه یک مکانیسم ندارد و سابسیژن فقط وقتی منطق دارد که چسبندگی فیبروتیک زیرپوستی نقش داشته باشد.",
+  "adjacentEntities": [
+    {
+      "label": "لک و ملاسما",
+      "href": "#pigmentation-melasma"
+    },
+    {
+      "label": "جای جوش و tethering",
+      "href": "#acne-scar-subcision"
+    },
+    {
+      "label": "مزونیدلینگ و لک",
+      "href": "#video-aesthetic-mesoneedling-dark-spots-warning"
+    },
+    {
+      "label": "سابسیژن",
+      "href": "#video-aesthetic-subcision-technique-guide"
+    },
+    {
+      "label": "اسکین‌بوستر",
+      "href": "#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+    },
+    {
+      "label": "فیلر زیر چشم",
+      "href": "/filler-kermanshah/#under-eye-filler"
+    }
+  ],
+  "evidence": [
+    {
+      "topic": "PIH",
+      "name": "Postinflammatory hyperpigmentation review",
+      "href": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2921758/",
+      "evidenceType": "مرور بالینی"
+    },
+    {
+      "topic": "facial hyperpigmentation",
+      "name": "Management of facial hyperpigmentation in skin of colour",
+      "href": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9165630/",
+      "evidenceType": "مرور بالینی"
+    },
+    {
+      "topic": "سابسیژن",
+      "name": "Subcision acne scar review focused on tethered/rolling scars",
+      "href": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9868281/",
+      "evidenceType": "مرور بالینی"
+    },
+    {
+      "topic": "اسکین‌بوستر",
+      "name": "Systematic review of Profhilo efficacy and safety",
+      "href": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13038071/",
+      "evidenceType": "مرور نظام‌مند"
+    }
+  ],
+  "reviewedAt": "2026-07-04",
+  "reviewedAtPersian": "۱۳ تیر ۱۴۰۵",
+  "reviewedBy": "دکتر سعید قزلباش",
+  "reviewerCredential": "کد نظام پزشکی ۱۶۷۴۳۰",
+  "reviewScope": [
+    "visible content alignment",
+    "medical wording safety",
+    "entity graph consistency",
+    "video/evidence layer"
+  ]
+}

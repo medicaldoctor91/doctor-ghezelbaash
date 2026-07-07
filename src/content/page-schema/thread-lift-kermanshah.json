@@ -1,0 +1,757 @@
+{
+  "@context": "https://schema.org",
+  "path": "/thread-lift-kermanshah/",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.ghezelbaash.ir/#website",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "وب‌سایت رسمی دکتر سعید قزلباش",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.ghezelbaash.ir/search/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": ["Person", "IndividualPhysician", "Physician"],
+      "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "دکتر سعید قزلباش",
+      "alternateName": [
+        "دکتر محمدسعید قزلباش",
+        "دکتر محمد سعید قزلباش",
+        "دکتر قزلباش",
+        "Dr. Saeed Ghezelbash",
+        "Dr. Saeed Ghezelbaash",
+        "Dr. Mohammad Saeed Ghezelbash",
+        "Dr. Mohammad Saeed Ghezelbaash",
+        "Mohammad Saeed Ghezelbash",
+        "دکتر سعید قزلباش",
+        "سعید قزلباش",
+        "محمد سعید قزلباش",
+        "محمدسعید قزلباش",
+        "Dr. Mohammad Saeed Ghazlbash",
+        "Saeed Ghezelbash",
+        "Saeed Ghezelbaash",
+        "Mohammad Saeed Ghazlbash",
+        "Mohammadsaeed Ghezelbash",
+        "Saeed Qezlbash"
+      ],
+      "jobTitle": "پزشک زیبایی در کرمانشاه",
+      "description": "دکتر سعید قزلباش، پزشک زیبایی فعال در کرمانشاه، با تمرکز بر تصمیم‌گیری پزشک‌محور در بوتاکس، فیلر، لیفت نخ و درمان مشکلات زیبایی.",
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "propertyID": "IRIMC",
+          "value": "167430",
+          "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "ORCID",
+          "value": "0009-0001-9346-8475",
+          "url": "https://orcid.org/0009-0001-9346-8475"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Wikidata",
+          "value": "Q140287622",
+          "url": "https://www.wikidata.org/entity/Q140287622"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "NCBI Bibliography",
+          "value": "saeed.ghezelbash.1",
+          "url": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Hugging Face",
+          "value": "Ghezelbaash",
+          "url": "https://huggingface.co/Ghezelbaash"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "MINC",
+          "name": "Medical Identification Number for Canada",
+          "value": "CAMD-0224-1997"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Hugging Face Profile",
+          "value": "Ghezelbaash",
+          "url": "https://huggingface.co/Ghezelbaash",
+          "name": "Personal Hugging Face profile"
+        }
+      ],
+      "sameAs": [
+        "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+        "https://orcid.org/0009-0001-9346-8475",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.wikidata.org/entity/Q140287622",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/",
+        "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+        "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+        "https://www.facebook.com/Ghezelbaash/",
+        "https://www.pinterest.com/qezelbaash/",
+        "https://about.me/ghezelbaash",
+        "https://linktr.ee/Doctor.ghezelbaash",
+        "https://huggingface.co/Ghezelbaash"
+      ],
+      "worksFor": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "hasCredential": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430"
+        }
+      ],
+      "medicalSpecialty": ["Aesthetic medicine", "https://schema.org/PlasticSurgery"],
+      "knowsAbout": [
+        "بوتاکس",
+        "تزریق فیلر",
+        "لیفت نخ",
+        "درمان مشکلات زیبایی",
+        "تشخیص پزشک‌محور پیش از درمان زیبایی",
+        "ایمنی تزریق و انتخاب بیمار",
+        {
+          "@id": "https://www.ghezelbaash.ir/#aesthetic-authority-topic-map"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/data/ghezelbaash-entity-dataset.json#dataset"
+        },
+        "پزشکی زیبایی غیرجراحی",
+        "ارزیابی بیمار پیش از تزریق",
+        "مدیریت ریسک تزریق در صورت",
+        "بوتاکس در کرمانشاه",
+        "بوتاکس خط اخم",
+        "بوتاکس پیشانی",
+        "بوتاکس دور چشم",
+        "لیپ فلیپ با بوتاکس",
+        "بوتاکس لبخند لثه‌ای",
+        "بوتاکس ماستر",
+        "بوتاکس تعریق",
+        "تزریق فیلر در کرمانشاه",
+        "فیلر لب",
+        "فیلر زیر چشم",
+        "فیلر گونه",
+        "فیلر خط خنده",
+        "فیلر چانه",
+        "فیلر زاویه فک و خط فک",
+        "فیلر شقیقه",
+        "فیلر بینی",
+        "فیلر اسکار آکنه",
+        "هیالاز و اصلاح فیلر",
+        "لیفت نخ در کرمانشاه",
+        "لیفت نخ غبغب",
+        "لیفت نخ خط فک",
+        "لیفت نخ ابرو",
+        "درمان مشکلات زیبایی در کرمانشاه",
+        "درمان جوش فعال",
+        "درمان لک پوستی",
+        "درمان جای جوش و اسکار آکنه",
+        "سابسیژن جای جوش",
+        "پانچ اسکار",
+        "PRP پوست و مو",
+        "مزوتراپی پوست و مو",
+        "جالپرو و پروفایلو",
+        "درمان ریزش مو",
+        "لیپوساکشن غبغب",
+        "کانتورینگ صورت",
+        "جوانسازی پوست و مو در کرمانشاه",
+        "ساکشن و لیپوساکشن غبغب در کرمانشاه",
+        "تزریق بوتاکس",
+        "لیفت ابرو با بوتاکس",
+        "بوتاکس بینی",
+        "بوتاکس چانه",
+        "بوتاکس گردن",
+        "بوتاکس نفرتیتی",
+        "بوتاکس عضله ماستر",
+        "بوتاکس تعریق موضعی",
+        "بوتاکس زیر بغل",
+        "بوتاکس کف دست",
+        "بوتاکس کف پا",
+        "بوتاکس میگرن",
+        "فیلر پوستی",
+        "فیلر هیالورونیک اسید",
+        "اصلاح عدم تقارن لب",
+        "فیلر زاویه فک",
+        "فیلر خط ماریونت",
+        "فیلر پیشانی",
+        "فیلر دست",
+        "فیلر گردن",
+        "اصلاح فرم بینی با فیلر",
+        "کانتورینگ فول‌فیس",
+        "هارمونی صورت",
+        "کانتورینگ گونه",
+        "کانتورینگ چانه",
+        "کانتورینگ نیم‌رخ",
+        "لیفت صورت با نخ",
+        "لیفت ابرو با نخ",
+        "لیفت شقیقه با نخ",
+        "لیفت گونه با نخ",
+        "لیفت خط فک با نخ",
+        "لیفت گردن با نخ",
+        "نخ PDO",
+        "نخ کاگ",
+        "PRP صورت",
+        "PRP مو",
+        "PRP زیر چشم",
+        "PRP جای جوش",
+        "مزوتراپی صورت",
+        "مزوتراپی مو",
+        "مزوتراپی لک",
+        "مزوتراپی زیر چشم",
+        "مزوتراپی غبغب",
+        "مزوتراپی چربی موضعی",
+        "میکرونیدلینگ",
+        "آر اف فرکشنال",
+        "اسکین‌بوستر",
+        "مزوژل",
+        "مزوژل زیر چشم",
+        "تزریق هیدروژل",
+        "پروفایلو",
+        "جالپرو",
+        "سونه‌کاس",
+        "پروسترولین",
+        "اگزوزوم پوست",
+        "اگزوزوم مو",
+        "درمان جای جوش",
+        "درمان لک و ملاسما",
+        "پیلینگ شیمیایی",
+        "جوانسازی با لیزر",
+        "سفت کردن پوست",
+        "تحریک کلاژن",
+        "درمان منافذ باز",
+        "پاکسازی پوست",
+        "درمان ریزش مو",
+        "درمان ریزش موی الگوی مردانه و زنانه",
+        "کانتورینگ زیر چانه",
+        "فرم‌دهی گردن و خط فک",
+        "برداشت چربی موضعی",
+        "تزریق چربی صورت",
+        "تزریق چربی دست",
+        "بلفاروپلاستی",
+        "فیس لیفت",
+        "لیفت گردن",
+        "لیفت ابرو",
+        "لیفت شقیقه",
+        "رینوپلاستی",
+        "اتوپلاستی",
+        "بوکال فت",
+        "لیپوساکشن صورت",
+        "لیپوساکشن بدن",
+        "ابدومینوپلاستی",
+        "ماموپلاستی",
+        "پروتز سینه",
+        "لیفت سینه",
+        "جراحی ژنیکوماستی",
+        "ایمپلنت چانه",
+        "جراحی زاویه فک",
+        "مشاوره زیبایی",
+        "مراقبت بعد از تزریق",
+        "عوارض تزریق",
+        "اصلاح فیلر",
+        "حل کردن فیلر با هیالورونیداز",
+        "instance of",
+        "exact identity",
+        "external identifier",
+        "described by source",
+        "main subject",
+        "cites work",
+        "part of",
+        "has part",
+        "provider",
+        "founder",
+        "member / employee",
+        "located at",
+        "map link",
+        "service catalog",
+        "actual offer",
+        "knowledge-only service concept",
+        "Aesthetic medicine",
+        "مشاوره پزشکی زیبایی",
+        "انتخاب بیمار",
+        "ایمنی آناتومی صورت",
+        "طراحی نتیجه طبیعی",
+        "ارتباط ریسک",
+        "پزشکی زیبایی مبتنی بر شواهد",
+        "سواد پژوهشی",
+        "مرجعیت محلی زیبایی در کرمانشاه",
+        "یکپارچگی نام، نشانی و تلفن",
+        "مسیر تماس رسمی",
+        "تزریقات زیبایی",
+        "نورومدولاتورها",
+        "فیلرها",
+        "نخ‌های لیفت",
+        "جوانسازی پوست",
+        "جوانسازی مو",
+        "ایمنی و اصلاح عوارض",
+        "دانش مجاور جراحی زیبایی",
+        "Dermatology",
+        "Skin care",
+        "Hair care",
+        "Physician-led assessment",
+        "Patient selection",
+        "Evidence-based aesthetic medicine",
+        "Post-procedure care",
+        "Contraindications and precautions",
+        "Medical research literacy",
+        "Scientific publication",
+        "Clinical reasoning",
+        "Risk communication",
+        "Kermanshah physician",
+        "Aesthetic medical clinic",
+        "Dynamic facial lines",
+        "Static facial lines",
+        "Enlarged pores",
+        "Sunscreen",
+        "Skin",
+        "Hair",
+        "Hair follicle",
+        "Scalp",
+        "Face",
+        "Forehead",
+        "Periocular area",
+        "Glabella",
+        "Lips",
+        "Cheek",
+        "Chin",
+        "Jawline",
+        "Submental region",
+        "Nasolabial fold",
+        "Masseter muscle",
+        "Sebaceous gland",
+        "Alopecia",
+        "Androgenetic alopecia",
+        "Alopecia areata",
+        "Telogen effluvium",
+        "Hair thinning",
+        "Dandruff"
+      ]
+    },
+    {
+      "@type": ["MedicalClinic", "MedicalOrganization", "LocalBusiness", "PhysiciansOffice"],
+      "@id": "https://www.ghezelbaash.ir/#clinic",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش",
+      "description": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ مرکز ارائه خدمات زیبایی غیرجراحی با مسیر تماس، آدرس، گوگل‌مپ و چهار مگاپیلار تصمیم‌گیری خدمات.",
+      "telephone": "+989308209494",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "میدان ۱۷ شهریور، ساختمان ویستا",
+        "addressLocality": "Kermanshah",
+        "addressRegion": "Kermanshah Province",
+        "postalCode": "6714657412",
+        "addressCountry": "IR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 34.3401243,
+        "longitude": 47.0851778
+      },
+      "hasMap": "https://www.google.com/maps?cid=12350483144643112463",
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "https://schema.org/Saturday",
+          "https://schema.org/Sunday",
+          "https://schema.org/Monday",
+          "https://schema.org/Tuesday",
+          "https://schema.org/Wednesday",
+          "https://schema.org/Thursday"
+        ],
+        "opens": "16:00",
+        "closes": "22:00"
+      },
+      "priceRange": "درمان‌های انتخابی پزشکی زیبایی؛ هزینه پس از معاینه و تصمیم درمانی مشخص می‌شود",
+      "sameAs": [
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.wikidata.org/entity/Q140288589",
+        "https://www.openstreetmap.org/node/13530287096",
+        "https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas",
+        "https://www.facebook.com/Doctor.Ghezelbaash/",
+        "https://www.facebook.com/Ghezelbaash/",
+        "https://www.pinterest.com/qezelbaash/",
+        "https://about.me/ghezelbaash",
+        "https://linktr.ee/Doctor.ghezelbaash",
+        "https://nshn.ir/ad_br33tY5eHiu",
+        "https://balad.ir/p/2dnVakli9ZKaBd",
+        "https://yandex.com/maps/org/63459342435/",
+        "https://app.foursquare.com/share/venue/6987eef061c23b4962a08398",
+        "https://huggingface.co/doctor-ghezelbaash"
+      ],
+      "founder": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "employee": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "medicalSpecialty": ["https://schema.org/PlasticSurgery", "Aesthetic medicine"],
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه",
+        "alternateName": "Kermanshah"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": 5,
+        "ratingCount": 163,
+        "reviewCount": 163,
+        "bestRating": 5,
+        "worstRating": 1,
+        "url": "https://www.google.com/maps?cid=12350483144643112463"
+      }
+    },
+    {
+      "@type": "ContactPoint",
+      "@id": "https://www.ghezelbaash.ir/#contact-point",
+      "telephone": "+989308209494",
+      "contactType": "رزرو و هماهنگی مراجعه",
+      "areaServed": "IR",
+      "availableLanguage": ["fa-IR", "fa"]
+    },
+    {
+      "@type": ["CreativeWork", "EducationalOccupationalCredential"],
+      "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430",
+      "name": "کد نظام پزشکی ۱۶۷۴۳۰",
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "IRIMC",
+        "value": "167430",
+        "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+      },
+      "recognizedBy": {
+        "@type": "Organization",
+        "name": "سازمان نظام پزشکی جمهوری اسلامی ایران",
+        "url": "https://irimc.org/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "دکتر و کلینیک",
+          "item": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "لیفت نخ در کرمانشاه"
+        }
+      ]
+    },
+    {
+      "@type": ["Service", "MedicalProcedure"],
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#service",
+      "name": "لیفت نخ در کرمانشاه",
+      "description": "راهنمای لیفت نخ در کرمانشاه؛ کاندید مناسب، جنس نخ، غبغب، عوارض، مراقبت و محدودیت‌ها.",
+      "provider": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "serviceType": "پزشکی زیبایی",
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه"
+      },
+      "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/"
+    },
+    {
+      "@type": ["MedicalWebPage", "WebPage"],
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#webpage",
+      "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+      "name": "لیفت نخ در کرمانشاه",
+      "description": "راهنمای لیفت نخ در کرمانشاه؛ کاندید مناسب، جنس نخ، غبغب، عوارض، مراقبت و محدودیت‌ها.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#service"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "lastReviewed": "2026-07-02",
+      "medicalAudience": {
+        "@type": "MedicalAudience",
+        "medicalAudienceType": "Patient"
+      },
+      "specialty": {
+        "@type": "MedicalSpecialty",
+        "name": "Aesthetic medicine"
+      },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": ["h1", "p.text-xl"]
+      },
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#breadcrumb"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#entity-thread-lift-submental-area"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#entity-pdo-thread"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#entity-plla-thread"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#entity-pcl-thread"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#entity-silhouette-thread"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#entity-thread-jawline-lift"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#entity-thread-brow-lift"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/data/ghezelbaash-entity-dataset.json#dataset"
+        }
+      ],
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "video": [
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#video-thread-lift-cat-eye-before-after"
+        }
+      ],
+      "associatedMedia": [
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#video-thread-lift-cat-eye-before-after"
+        }
+      ],
+      "abstract": "لیفت نخ در پزشکی زیبایی، استفاده از نخ‌های قابل جذب یا محرک بافت برای جابه‌جایی محدود یا حمایت بافت در افتادگی‌های منتخب است؛ نتیجه آن به انتخاب کاندید، کیفیت پوست، مسیر نخ و انتظار واقع‌بینانه وابسته است.",
+      "potentialAction": {
+        "@type": "ContactAction",
+        "target": "+989308209494",
+        "name": "هماهنگی مراجعه با کلینیک"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq",
+      "name": "پرسش‌های متداول لیفت نخ در کرمانشاه",
+      "mainEntity": [
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-1"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-2"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-3"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-4"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-5"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-6"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-q7"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-q8"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#webpage"
+      }
+    },
+    {
+      "@type": ["ProfilePage", "WebPage"],
+      "@id": "https://www.ghezelbaash.ir/#webpage",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+      "description": "هاب هویتی رسمی دکتر سعید قزلباش، اتصال به نظام پزشکی، ORCID، کلینیک زیبایی، اینستاگرام و چهار مگاپیلار خدمات.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "abstract": "دکتر سعید قزلباش پزشک زیبایی فعال در کرمانشاه است که محتوای این سایت را حول تشخیص، انتخاب درست بیمار و تصمیم‌گیری قبل از تکنیک سازمان‌دهی می‌کند."
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#video-thread-lift-cat-eye-before-after",
+      "name": "قبل و بعد لیفت نخ چشم گربه‌ای؛ عکس و ویدئو را با احتیاط بخوانید",
+      "description": "نمونه کوتاه قبل/بعد در زمینه لیفت نخ چشم گربه‌ای با تأکید بر اینکه نور، زاویه، ورم و انتخاب کاندید روی برداشت از نتیجه اثر می‌گذارند.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/cat-eye-thread-lift-before-after-dr-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT6S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/cat-eye-thread-lift-before-after-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#video-thread-lift-cat-eye-before-after",
+      "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#video-thread-lift-cat-eye-before-after",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "این ویدئو لیفت نخ را از زاویه انتخاب درست کاندید توضیح می‌دهد. پیام اصلی این است که نخ برای هر افتادگی یا هر انتظار درمانی مناسب نیست؛ کیفیت پوست، شدت افتادگی، حجم ازدست‌رفته، مسیر کشش و مراقبت بعد از درمان باید قبل از تصمیم دیده شوند.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "انتخاب کاندید",
+          "startOffset": 0,
+          "endOffset": 1,
+          "description": "شدت افتادگی، کیفیت پوست و انتظار فرد بررسی می‌شود.",
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/?t=0#video-thread-lift-cat-eye-before-after"
+        },
+        {
+          "@type": "Clip",
+          "name": "مرز توان نخ",
+          "startOffset": 1,
+          "endOffset": 3,
+          "description": "لیفت نخ با جراحی یا حجم‌دهی اشتباه گرفته نمی‌شود.",
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/?t=1#video-thread-lift-cat-eye-before-after"
+        },
+        {
+          "@type": "Clip",
+          "name": "مراقبت و ریسک",
+          "startOffset": 3,
+          "endOffset": 5,
+          "description": "مراقبت پس از نخ و محدودیت‌های نتیجه یادآوری می‌شود.",
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/?t=3#video-thread-lift-cat-eye-before-after"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#video-thread-lift-cat-eye-before-after"
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-q7",
+      "name": "چرا تعداد نخ معیار اصلی تصمیم‌گیری نیست؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "تعداد نخ بعد از تشخیص معنا دارد. شدت افتادگی، وزن بافت، پوست اضافه، چربی صورت، جهت افت و انتظار بیمار تعیین می‌کند که نخ اصلاً انتخاب مناسبی هست یا نه."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-q8",
+      "name": "چه زمانی بهتر است لیفت نخ عقب بیفتد یا انجام نشود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "وقتی افتادگی شدید، پوست اضافه زیاد، گردن شل، صورت بسیار سنگین، چانه عقب یا انتظار مشابه جراحی وجود دارد، لیفت نخ ممکن است انتخاب اول نباشد یا باید در برنامه ترکیبی بررسی شود."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-1",
+      "name": "لیفت نخ برای چه کسانی مناسب‌تر است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "وقتی افتادگی خفیف تا متوسط باشد، پوست اضافه غالب نباشد، بافت هنوز نخ‌پذیر باشد و بیمار انتظار جراحی از نخ نداشته باشد، لیفت نخ می‌تواند بررسی شود."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-2",
+      "name": "آیا لیفت نخ جای جراحی لیفت صورت را می‌گیرد؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "خیر. نخ پوست اضافه را حذف نمی‌کند و افتادگی شدید یا گردن شل را مثل جراحی اصلاح نمی‌کند. نخ ابزار محدودی برای کاندید مناسب است."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-3",
+      "name": "تفاوت نخ PDO، PLLA و PCL چیست؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "این نخ‌ها از نظر جنس، رفتار بافتی و طراحی درمان متفاوت‌اند، اما انتخاب از اسم نخ شروع نمی‌شود؛ ابتدا باید صورت، پوست، چربی، افتادگی و انتظار بیمار بررسی شود."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-4",
+      "name": "آیا غبغب با لیفت نخ حل می‌شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "غبغب همیشه از یک علت نیست. ممکن است چربی، شلی پوست، چانه عقب یا گردن نقش داشته باشد؛ بنابراین قبل از نخ باید علت غبغب جدا شود."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-5",
+      "name": "عوارض لیفت نخ فقط کبودی است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "خیر. فرورفتگی، عدم تقارن، لمس یا دیده‌شدن نخ، درد، عفونت یا نتیجه غیرطبیعی هم ممکن است مطرح شود و به انتخاب بیمار، تکنیک و مراقبت بستگی دارد."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#faq-question-6",
+      "name": "ماندگاری لیفت نخ چگونه باید فهمیده شود؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "دوام نخ با دوام اثر زیبایی یکی نیست. نوع نخ، کیفیت پوست، وزن بافت، سبک زندگی و طراحی درمان روی ماندگاری اثر دارند."
+      }
+    }
+  ],
+  "derivedFrom": "src/content/page-structured-data/thread-lift-kermanshah.json",
+  "profile": "page-scoped-json-ld-embed"
+}

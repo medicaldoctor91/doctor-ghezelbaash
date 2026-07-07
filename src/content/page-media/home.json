@@ -1,0 +1,15 @@
+{
+  "path": "/",
+  "title": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+  "heroImageKey": "doctorPortrait",
+  "heroAlt": "پرتره دکتر سعید قزلباش",
+  "supportImageKey": "doctorExam",
+  "supportAlt": "دکتر در حال معاینه و مشاوره در کلینیک",
+  "galleryImageKey": "doctorWithStaff",
+  "galleryAlt": "دکتر سعید قزلباش در کنار تیم کلینیک",
+  "imageCaption": "تصویر اصلی هویت پزشک روی صفحه خانه.",
+  "supportCaption": "تصویر مشاوره و معاینه برای نشان دادن رویکرد ارزیابی پیش از تصمیم.",
+  "galleryCaption": "تصویر تکمیلی از پزشک و تیم برای تقویت هویت حرفه‌ای صفحه خانه.",
+  "ogImagePath": "~/assets/images/og/home.jpg",
+  "videoLabel": "ویدئوهای آموزشی صفحه خانه در همین بخش همراه با متن و لینک اختصاصی ارائه شده‌اند."
+}

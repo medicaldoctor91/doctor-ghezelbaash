@@ -1,0 +1,89 @@
+{
+  "path": "/aesthetic-concerns-kermanshah/",
+  "contentEntry": "aesthetic-concerns-kermanshah",
+  "layout": "service",
+  "showBreadcrumbs": true,
+  "showRating": true,
+  "showFaq": true,
+  "showTrust": true,
+  "showIntentHub": true,
+  "breadcrumbs": [
+    {
+      "name": "خانه",
+      "href": "/"
+    },
+    {
+      "name": "دکتر و کلینیک",
+      "href": "/dr-saeed-ghezelbash-aesthetic-clinic/"
+    },
+    {
+      "name": "درمان مشکلات زیبایی در کرمانشاه"
+    }
+  ],
+  "hero": {
+    "tagline": "مگاپیلار تشخیص مشکل",
+    "title": "درمان مشکلات زیبایی؛ از لک، جوش و جای جوش تا ریزش مو، افتادگی پوست، غبغب و کانتورینگ صورت",
+    "subtitle": "نقطه شروع برای کاربرانی که هنوز نمی‌دانند مشکل اصلی از عضله، حجم، پوست، لک، اسکار، مو، غبغب یا افتادگی است.",
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "نمونه‌کارها و رضایت زیباجوها",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "تماس برای هماهنگی",
+        "hrefSource": "phone"
+      }
+    ]
+  },
+  "intentHub": {
+    "title": "نقشه سریع مسیرهای تصمیم‌گیری این صفحه",
+    "description": "این بخش مسیرهای اصلی تصمیم‌گیری کاربر را مرتب می‌کند؛ هر مسیر به بخش مرتبط همان صفحه وصل است تا کاربر سریع‌تر به پاسخ قابل‌اقدام برسد.",
+    "links": [
+      {
+        "title": "تشخیص قبل از روش",
+        "href": "#aesthetic-diagnostic-hub",
+        "description": "این صفحه نقش Diagnostic Hub دارد و روش را از مشکل جدا می‌کند."
+      },
+      {
+        "title": "لک، جوش و جای جوش",
+        "href": "#active-acne-treatment",
+        "description": "مسیرهای جداگانه برای آکنه، لک، اسکار، سابسیژن و پانچ."
+      },
+      {
+        "title": "مو و جوانسازی پوست",
+        "href": "#prp-skin-hair",
+        "description": "PRP، مزوتراپی، جالپرو/پروفایلو و کیفیت پوست با مسیر تشخیصی."
+      },
+      {
+        "title": "غبغب و کانتورینگ",
+        "href": "#submental-liposuction",
+        "description": "تفکیک چربی، پوست، چانه و نسبت‌های صورت پیش از انتخاب درمان."
+      }
+    ]
+  },
+  "pageTrustTitle": "درمان مشکلات زیبایی در کرمانشاه",
+  "contactBox": {
+    "title": "درمان زیبایی را با اسم روش شروع نکنید؛ اول مشکل را درست بخوانید",
+    "subtitle": "برای هماهنگی نوبت، مشاهده نمونه‌کارها یا مسیریابی به کلینیک، از مسیرهای رسمی ثبت‌شده در سایت استفاده کنید."
+  },
+  "cta": {
+    "title": "قدم بعدی: هماهنگی از مسیر رسمی کلینیک",
+    "subtitle": "اطلاعات این صفحه جایگزین معاینه و تصمیم پزشکی نیست. برای بررسی شرایط فردی، با کلینیک هماهنگ کنید.",
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "دیدن نمونه‌کارها در اینستاگرام",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "تماس برای هماهنگی",
+        "hrefSource": "phone"
+      }
+    ]
+  }
+}

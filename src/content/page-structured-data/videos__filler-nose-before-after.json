@@ -1,0 +1,151 @@
+{
+  "path": "/videos/filler-nose-before-after/",
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ویدئوها",
+          "item": "https://www.ghezelbaash.ir/videos/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "فیلر بینی",
+          "item": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/"
+        }
+      ]
+    },
+    {
+      "@type": "ImageObject",
+      "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#thumbnail",
+      "url": "https://www.ghezelbaash.ir/videos/thumbnails/nose-filler-before-after-results-dr-ghezelbash.jpg",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/thumbnails/nose-filler-before-after-results-dr-ghezelbash.jpg",
+      "caption": "فیلر بینی؛ صاف‌تر دیده‌شدن با کوچک‌شدن فرق دارد",
+      "width": 720,
+      "height": 1280,
+      "inLanguage": "fa-IR"
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#webpage",
+      "url": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/",
+      "name": "فیلر بینی | صفحه اختصاصی ویدئو",
+      "headline": "فیلر بینی؛ صاف‌تر دیده‌شدن با کوچک‌شدن فرق دارد",
+      "description": "نمونه کوتاه برای توضیح مرز فیلر بینی: هدف می‌تواند اصلاح دیداری بعضی ناهمواری‌ها باشد، نه کوچک‌کردن واقعی بینی.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#breadcrumb"
+      },
+      "primaryImageOfPage": {
+        "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#thumbnail"
+      },
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/nose-filler-before-after-results-dr-ghezelbash.jpg",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#video"
+      },
+      "relatedLink": [
+        "https://www.ghezelbaash.ir/filler-kermanshah/",
+        "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after",
+        "https://www.ghezelbaash.ir/filler-kermanshah/#filler-nose-rhinoplasty-saf-tr-dydh-shdn-kvchk-shdn-frgh-dard",
+        "https://www.ghezelbaash.ir/videos/filler-nonsurgical-rhinoplasty-boundary/",
+        "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/",
+        "https://www.ghezelbaash.ir/videos/filler-under-eye-before-after/"
+      ]
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#video",
+      "name": "فیلر بینی؛ صاف‌تر دیده‌شدن با کوچک‌شدن فرق دارد",
+      "headline": "فیلر بینی؛ صاف‌تر دیده‌شدن با کوچک‌شدن فرق دارد",
+      "description": "نمونه کوتاه برای توضیح مرز فیلر بینی: هدف می‌تواند اصلاح دیداری بعضی ناهمواری‌ها باشد، نه کوچک‌کردن واقعی بینی.",
+      "thumbnailUrl": [
+        "https://www.ghezelbaash.ir/videos/thumbnails/nose-filler-before-after-results-dr-ghezelbash.jpg"
+      ],
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "duration": "PT8S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/nose-filler-before-after-results-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/",
+      "url": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/",
+      "inLanguage": "fa-IR",
+      "width": 720,
+      "height": 1280,
+      "encodingFormat": "video/mp4",
+      "contentSize": "902169",
+      "isFamilyFriendly": true,
+      "mainEntityOfPage": {
+        "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#webpage"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "keywords": "فیلر بینی, قبل و بعد فیلر بینی, رینوپلاستی غیرجراحی, کرمانشاه",
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": ["https://www.ghezelbaash.ir/videos/filler-nose-before-after/"]
+      },
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#segment-1",
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 2,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/?t=0"
+        },
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#segment-2",
+          "name": "ریسک و تناسب",
+          "startOffset": 2,
+          "endOffset": 4,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/?t=2"
+        },
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/#segment-3",
+          "name": "مرز انتظار",
+          "startOffset": 4,
+          "endOffset": 7,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/?t=4"
+        }
+      ]
+    }
+  ]
+}

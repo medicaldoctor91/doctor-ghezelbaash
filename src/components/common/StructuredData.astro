@@ -1,0 +1,9 @@
+---
+import { getPageSchemaByPath } from '~/utils/pageSchema';
+import { safeJson } from '~/utils/jsonLd';
+
+const graph = await getPageSchemaByPath(Astro.url.pathname);
+const jsonLd = graph ? safeJson(graph) : '';
+---
+
+{graph && <script type="application/ld+json" is:inline set:html={jsonLd} />}

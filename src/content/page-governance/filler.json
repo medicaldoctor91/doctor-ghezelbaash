@@ -1,0 +1,71 @@
+{
+  "pageId": "filler",
+  "path": "/filler-kermanshah/",
+  "title": "تزریق فیلر در کرمانشاه؛ تعریف و مسیر تصمیم",
+  "canonicalEntity": "تزریق فیلر در کرمانشاه",
+  "category": "مسیر حجم‌دهی، فرم‌دهی و اصلاح تناسب با فیلر هیالورونیک اسید",
+  "definition": "تزریق فیلر در پزشکی زیبایی، استفاده هدفمند از مواد پرکننده برای اصلاح حجم، فرم، حمایت بافتی یا تناسب چهره است؛ تصمیم درست به ناحیه، عمق، ریسک عروقی و سابقه تزریق قبلی وابسته است.",
+  "decisionFrame": "این صفحه فیلر را به‌عنوان ابزار پرکردن ساده معرفی نمی‌کند؛ ابتدا مسئله حجم، فرم، ریسک ناحیه، سابقه قبلی و مرز با درمان‌های دیگر مثل بوتاکس یا لیفت نخ بررسی می‌شود.",
+  "adjacentEntities": [
+    {
+      "label": "فیلر لب",
+      "href": "#lip-filler"
+    },
+    {
+      "label": "فیلر زیر چشم",
+      "href": "#under-eye-filler"
+    },
+    {
+      "label": "فیلر بینی",
+      "href": "#nose-filler"
+    },
+    {
+      "label": "ریسک عروقی",
+      "href": "#filler-vascular-risk"
+    },
+    {
+      "label": "بوتاکس برای عضله",
+      "href": "/botox-kermanshah/"
+    },
+    {
+      "label": "لیفت نخ برای افتادگی منتخب",
+      "href": "/thread-lift-kermanshah/"
+    }
+  ],
+  "evidence": [
+    {
+      "topic": "ریسک عروقی فیلر",
+      "name": "Guideline for HA filler-induced vascular occlusion",
+      "href": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8211329/",
+      "evidenceType": "راهنمای بالینی"
+    },
+    {
+      "topic": "استفاده از هیالورونیداز",
+      "name": "Guideline for safe use of hyaluronidase",
+      "href": "https://jcadonline.com/guideline-hyaluronidase-aesthetic/",
+      "evidenceType": "راهنمای بالینی"
+    },
+    {
+      "topic": "هویت پزشک",
+      "name": "استعلام نظام پزشکی",
+      "href": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+      "evidenceType": "هویت رسمی"
+    },
+    {
+      "topic": "نمونه‌کار",
+      "name": "Instagram رسمی نمونه‌کارها",
+      "href": "https://www.instagram.com/doctor.ghezelbaash/",
+      "evidenceType": "نمونه‌کار و حضور بیرونی"
+    }
+  ],
+  "reviewedAt": "2026-07-04",
+  "reviewedAtPersian": "۱۳ تیر ۱۴۰۵",
+  "reviewedBy": "دکتر سعید قزلباش",
+  "reviewerCredential": "کد نظام پزشکی ۱۶۷۴۳۰",
+  "reviewScope": [
+    "visible content alignment",
+    "medical wording safety",
+    "entity graph consistency",
+    "video/evidence layer"
+  ]
+}

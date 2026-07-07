@@ -1,0 +1,120 @@
+{
+  "@context": "https://schema.org",
+  "path": "/videos/clinic-patient-experience-review/",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ویدئوها",
+          "item": "https://www.ghezelbaash.ir/videos/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "رضایت زیباجو",
+          "item": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/"
+        }
+      ]
+    },
+    {
+      "@type": "ImageObject",
+      "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#thumbnail",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/thumbnails/patient-satisfaction-review-dr-saeed-ghezelbash.jpg",
+      "url": "https://www.ghezelbaash.ir/videos/thumbnails/patient-satisfaction-review-dr-saeed-ghezelbash.jpg",
+      "caption": "ویدئوی رضایت زیباجو از خدمات زیبایی دکتر قزلباش",
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#webpage",
+      "url": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/",
+      "name": "رضایت زیباجو | صفحه اختصاصی ویدئو",
+      "description": "ویدئویی کوتاه از رضایت زیباجو از خدمات زیبایی دکتر قزلباش؛ بدون ادعای تضمین نتیجه و فقط برای نمایش بازخورد مراجعه‌کننده.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#video"
+      },
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#breadcrumb"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ]
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#video",
+      "name": "ویدئوی رضایت زیباجو از خدمات زیبایی دکتر قزلباش",
+      "description": "ویدئویی کوتاه از رضایت زیباجو از خدمات زیبایی دکتر قزلباش؛ بدون ادعای تضمین نتیجه و فقط برای نمایش بازخورد مراجعه‌کننده.",
+      "thumbnailUrl": [
+        "https://www.ghezelbaash.ir/videos/thumbnails/patient-satisfaction-review-dr-saeed-ghezelbash.jpg"
+      ],
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT20S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/patient-satisfaction-review-dr-saeed-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/",
+      "url": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#segment-1",
+          "name": "هویت مکان",
+          "startOffset": 0,
+          "endOffset": 8,
+          "description": "کلینیک و مسیر تماس به پزشک مسئول وصل می‌شود.",
+          "url": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/?t=0"
+        },
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#segment-2",
+          "name": "رضایت زیباجو",
+          "startOffset": 8,
+          "endOffset": 16,
+          "description": "تصمیم زیبایی به محیط واقعی و فرایند ارزیابی وابسته می‌شود.",
+          "url": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/?t=8"
+        },
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/#segment-3",
+          "name": "اعتماد قابل پیگیری",
+          "startOffset": 16,
+          "endOffset": 20,
+          "description": "هویت بیرونی و مسیرهای رسمی برای کاهش ابهام برجسته می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/?t=16"
+        }
+      ],
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": ["https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/"]
+      }
+    }
+  ],
+  "derivedFrom": "src/content/page-structured-data/videos__clinic-patient-experience-review.json",
+  "profile": "page-scoped-json-ld-embed"
+}

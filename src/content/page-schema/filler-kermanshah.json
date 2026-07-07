@@ -1,0 +1,946 @@
+{
+  "@context": "https://schema.org",
+  "path": "/filler-kermanshah/",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://www.ghezelbaash.ir/#website",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "وب‌سایت رسمی دکتر سعید قزلباش",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.ghezelbaash.ir/search/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": ["Person", "IndividualPhysician", "Physician"],
+      "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "دکتر سعید قزلباش",
+      "alternateName": [
+        "دکتر محمدسعید قزلباش",
+        "دکتر محمد سعید قزلباش",
+        "دکتر قزلباش",
+        "Dr. Saeed Ghezelbash",
+        "Dr. Saeed Ghezelbaash",
+        "Dr. Mohammad Saeed Ghezelbash",
+        "Dr. Mohammad Saeed Ghezelbaash",
+        "Mohammad Saeed Ghezelbash",
+        "دکتر سعید قزلباش",
+        "سعید قزلباش",
+        "محمد سعید قزلباش",
+        "محمدسعید قزلباش",
+        "Dr. Mohammad Saeed Ghazlbash",
+        "Saeed Ghezelbash",
+        "Saeed Ghezelbaash",
+        "Mohammad Saeed Ghazlbash",
+        "Mohammadsaeed Ghezelbash",
+        "Saeed Qezlbash"
+      ],
+      "jobTitle": "پزشک زیبایی در کرمانشاه",
+      "description": "دکتر سعید قزلباش، پزشک زیبایی فعال در کرمانشاه، با تمرکز بر تصمیم‌گیری پزشک‌محور در بوتاکس، فیلر، لیفت نخ و درمان مشکلات زیبایی.",
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "propertyID": "IRIMC",
+          "value": "167430",
+          "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "ORCID",
+          "value": "0009-0001-9346-8475",
+          "url": "https://orcid.org/0009-0001-9346-8475"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Wikidata",
+          "value": "Q140287622",
+          "url": "https://www.wikidata.org/entity/Q140287622"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "NCBI Bibliography",
+          "value": "saeed.ghezelbash.1",
+          "url": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Hugging Face",
+          "value": "Ghezelbaash",
+          "url": "https://huggingface.co/Ghezelbaash"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "MINC",
+          "name": "Medical Identification Number for Canada",
+          "value": "CAMD-0224-1997"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Hugging Face Profile",
+          "value": "Ghezelbaash",
+          "url": "https://huggingface.co/Ghezelbaash",
+          "name": "Personal Hugging Face profile"
+        }
+      ],
+      "sameAs": [
+        "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+        "https://orcid.org/0009-0001-9346-8475",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.wikidata.org/entity/Q140287622",
+        "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/",
+        "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+        "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+        "https://www.facebook.com/Ghezelbaash/",
+        "https://www.pinterest.com/qezelbaash/",
+        "https://about.me/ghezelbaash",
+        "https://linktr.ee/Doctor.ghezelbaash",
+        "https://huggingface.co/Ghezelbaash"
+      ],
+      "worksFor": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "hasCredential": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430"
+        }
+      ],
+      "medicalSpecialty": ["Aesthetic medicine", "https://schema.org/PlasticSurgery"],
+      "knowsAbout": [
+        "بوتاکس",
+        "تزریق فیلر",
+        "لیفت نخ",
+        "درمان مشکلات زیبایی",
+        "تشخیص پزشک‌محور پیش از درمان زیبایی",
+        "ایمنی تزریق و انتخاب بیمار",
+        {
+          "@id": "https://www.ghezelbaash.ir/#aesthetic-authority-topic-map"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/data/ghezelbaash-entity-dataset.json#dataset"
+        },
+        "پزشکی زیبایی غیرجراحی",
+        "ارزیابی بیمار پیش از تزریق",
+        "مدیریت ریسک تزریق در صورت",
+        "بوتاکس در کرمانشاه",
+        "بوتاکس خط اخم",
+        "بوتاکس پیشانی",
+        "بوتاکس دور چشم",
+        "لیپ فلیپ با بوتاکس",
+        "بوتاکس لبخند لثه‌ای",
+        "بوتاکس ماستر",
+        "بوتاکس تعریق",
+        "تزریق فیلر در کرمانشاه",
+        "فیلر لب",
+        "فیلر زیر چشم",
+        "فیلر گونه",
+        "فیلر خط خنده",
+        "فیلر چانه",
+        "فیلر زاویه فک و خط فک",
+        "فیلر شقیقه",
+        "فیلر بینی",
+        "فیلر اسکار آکنه",
+        "هیالاز و اصلاح فیلر",
+        "لیفت نخ در کرمانشاه",
+        "لیفت نخ غبغب",
+        "لیفت نخ خط فک",
+        "لیفت نخ ابرو",
+        "درمان مشکلات زیبایی در کرمانشاه",
+        "درمان جوش فعال",
+        "درمان لک پوستی",
+        "درمان جای جوش و اسکار آکنه",
+        "سابسیژن جای جوش",
+        "پانچ اسکار",
+        "PRP پوست و مو",
+        "مزوتراپی پوست و مو",
+        "جالپرو و پروفایلو",
+        "درمان ریزش مو",
+        "لیپوساکشن غبغب",
+        "کانتورینگ صورت",
+        "جوانسازی پوست و مو در کرمانشاه",
+        "ساکشن و لیپوساکشن غبغب در کرمانشاه",
+        "تزریق بوتاکس",
+        "لیفت ابرو با بوتاکس",
+        "بوتاکس بینی",
+        "بوتاکس چانه",
+        "بوتاکس گردن",
+        "بوتاکس نفرتیتی",
+        "بوتاکس عضله ماستر",
+        "بوتاکس تعریق موضعی",
+        "بوتاکس زیر بغل",
+        "بوتاکس کف دست",
+        "بوتاکس کف پا",
+        "بوتاکس میگرن",
+        "فیلر پوستی",
+        "فیلر هیالورونیک اسید",
+        "اصلاح عدم تقارن لب",
+        "فیلر زاویه فک",
+        "فیلر خط ماریونت",
+        "فیلر پیشانی",
+        "فیلر دست",
+        "فیلر گردن",
+        "اصلاح فرم بینی با فیلر",
+        "کانتورینگ فول‌فیس",
+        "هارمونی صورت",
+        "کانتورینگ گونه",
+        "کانتورینگ چانه",
+        "کانتورینگ نیم‌رخ",
+        "لیفت صورت با نخ",
+        "لیفت ابرو با نخ",
+        "لیفت شقیقه با نخ",
+        "لیفت گونه با نخ",
+        "لیفت خط فک با نخ",
+        "لیفت گردن با نخ",
+        "نخ PDO",
+        "نخ کاگ",
+        "PRP صورت",
+        "PRP مو",
+        "PRP زیر چشم",
+        "PRP جای جوش",
+        "مزوتراپی صورت",
+        "مزوتراپی مو",
+        "مزوتراپی لک",
+        "مزوتراپی زیر چشم",
+        "مزوتراپی غبغب",
+        "مزوتراپی چربی موضعی",
+        "میکرونیدلینگ",
+        "آر اف فرکشنال",
+        "اسکین‌بوستر",
+        "مزوژل",
+        "مزوژل زیر چشم",
+        "تزریق هیدروژل",
+        "پروفایلو",
+        "جالپرو",
+        "سونه‌کاس",
+        "پروسترولین",
+        "اگزوزوم پوست",
+        "اگزوزوم مو",
+        "درمان جای جوش",
+        "درمان لک و ملاسما",
+        "پیلینگ شیمیایی",
+        "جوانسازی با لیزر",
+        "سفت کردن پوست",
+        "تحریک کلاژن",
+        "درمان منافذ باز",
+        "پاکسازی پوست",
+        "درمان ریزش مو",
+        "درمان ریزش موی الگوی مردانه و زنانه",
+        "کانتورینگ زیر چانه",
+        "فرم‌دهی گردن و خط فک",
+        "برداشت چربی موضعی",
+        "تزریق چربی صورت",
+        "تزریق چربی دست",
+        "بلفاروپلاستی",
+        "فیس لیفت",
+        "لیفت گردن",
+        "لیفت ابرو",
+        "لیفت شقیقه",
+        "رینوپلاستی",
+        "اتوپلاستی",
+        "بوکال فت",
+        "لیپوساکشن صورت",
+        "لیپوساکشن بدن",
+        "ابدومینوپلاستی",
+        "ماموپلاستی",
+        "پروتز سینه",
+        "لیفت سینه",
+        "جراحی ژنیکوماستی",
+        "ایمپلنت چانه",
+        "جراحی زاویه فک",
+        "مشاوره زیبایی",
+        "مراقبت بعد از تزریق",
+        "عوارض تزریق",
+        "اصلاح فیلر",
+        "حل کردن فیلر با هیالورونیداز",
+        "instance of",
+        "exact identity",
+        "external identifier",
+        "described by source",
+        "main subject",
+        "cites work",
+        "part of",
+        "has part",
+        "provider",
+        "founder",
+        "member / employee",
+        "located at",
+        "map link",
+        "service catalog",
+        "actual offer",
+        "knowledge-only service concept",
+        "Aesthetic medicine",
+        "مشاوره پزشکی زیبایی",
+        "انتخاب بیمار",
+        "ایمنی آناتومی صورت",
+        "طراحی نتیجه طبیعی",
+        "ارتباط ریسک",
+        "پزشکی زیبایی مبتنی بر شواهد",
+        "سواد پژوهشی",
+        "مرجعیت محلی زیبایی در کرمانشاه",
+        "یکپارچگی نام، نشانی و تلفن",
+        "مسیر تماس رسمی",
+        "تزریقات زیبایی",
+        "نورومدولاتورها",
+        "فیلرها",
+        "نخ‌های لیفت",
+        "جوانسازی پوست",
+        "جوانسازی مو",
+        "ایمنی و اصلاح عوارض",
+        "دانش مجاور جراحی زیبایی",
+        "Dermatology",
+        "Skin care",
+        "Hair care",
+        "Physician-led assessment",
+        "Patient selection",
+        "Evidence-based aesthetic medicine",
+        "Post-procedure care",
+        "Contraindications and precautions",
+        "Medical research literacy",
+        "Scientific publication",
+        "Clinical reasoning",
+        "Risk communication",
+        "Kermanshah physician",
+        "Aesthetic medical clinic",
+        "Dynamic facial lines",
+        "Static facial lines",
+        "Enlarged pores",
+        "Sunscreen",
+        "Skin",
+        "Hair",
+        "Hair follicle",
+        "Scalp",
+        "Face",
+        "Forehead",
+        "Periocular area",
+        "Glabella",
+        "Lips",
+        "Cheek",
+        "Chin",
+        "Jawline",
+        "Submental region",
+        "Nasolabial fold",
+        "Masseter muscle",
+        "Sebaceous gland",
+        "Alopecia",
+        "Androgenetic alopecia",
+        "Alopecia areata",
+        "Telogen effluvium",
+        "Hair thinning",
+        "Dandruff"
+      ]
+    },
+    {
+      "@type": ["MedicalClinic", "MedicalOrganization", "LocalBusiness", "PhysiciansOffice"],
+      "@id": "https://www.ghezelbaash.ir/#clinic",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "name": "کلینیک زیبایی دکتر سعید قزلباش",
+      "description": "کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ مرکز ارائه خدمات زیبایی غیرجراحی با مسیر تماس، آدرس، گوگل‌مپ و چهار مگاپیلار تصمیم‌گیری خدمات.",
+      "telephone": "+989308209494",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "میدان ۱۷ شهریور، ساختمان ویستا",
+        "addressLocality": "Kermanshah",
+        "addressRegion": "Kermanshah Province",
+        "postalCode": "6714657412",
+        "addressCountry": "IR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 34.3401243,
+        "longitude": 47.0851778
+      },
+      "hasMap": "https://www.google.com/maps?cid=12350483144643112463",
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "https://schema.org/Saturday",
+          "https://schema.org/Sunday",
+          "https://schema.org/Monday",
+          "https://schema.org/Tuesday",
+          "https://schema.org/Wednesday",
+          "https://schema.org/Thursday"
+        ],
+        "opens": "16:00",
+        "closes": "22:00"
+      },
+      "priceRange": "درمان‌های انتخابی پزشکی زیبایی؛ هزینه پس از معاینه و تصمیم درمانی مشخص می‌شود",
+      "sameAs": [
+        "https://www.google.com/maps?cid=12350483144643112463",
+        "https://www.instagram.com/doctor.ghezelbaash/",
+        "https://www.wikidata.org/entity/Q140288589",
+        "https://www.openstreetmap.org/node/13530287096",
+        "https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas",
+        "https://www.facebook.com/Doctor.Ghezelbaash/",
+        "https://www.facebook.com/Ghezelbaash/",
+        "https://www.pinterest.com/qezelbaash/",
+        "https://about.me/ghezelbaash",
+        "https://linktr.ee/Doctor.ghezelbaash",
+        "https://nshn.ir/ad_br33tY5eHiu",
+        "https://balad.ir/p/2dnVakli9ZKaBd",
+        "https://yandex.com/maps/org/63459342435/",
+        "https://app.foursquare.com/share/venue/6987eef061c23b4962a08398",
+        "https://huggingface.co/doctor-ghezelbaash"
+      ],
+      "founder": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "employee": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "medicalSpecialty": ["https://schema.org/PlasticSurgery", "Aesthetic medicine"],
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه",
+        "alternateName": "Kermanshah"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": 5,
+        "ratingCount": 163,
+        "reviewCount": 163,
+        "bestRating": 5,
+        "worstRating": 1,
+        "url": "https://www.google.com/maps?cid=12350483144643112463"
+      }
+    },
+    {
+      "@type": "ContactPoint",
+      "@id": "https://www.ghezelbaash.ir/#contact-point",
+      "telephone": "+989308209494",
+      "contactType": "رزرو و هماهنگی مراجعه",
+      "areaServed": "IR",
+      "availableLanguage": ["fa-IR", "fa"]
+    },
+    {
+      "@type": ["CreativeWork", "EducationalOccupationalCredential"],
+      "@id": "https://www.ghezelbaash.ir/#credential-irimc-167430",
+      "name": "کد نظام پزشکی ۱۶۷۴۳۰",
+      "identifier": {
+        "@type": "PropertyValue",
+        "propertyID": "IRIMC",
+        "value": "167430",
+        "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+      },
+      "recognizedBy": {
+        "@type": "Organization",
+        "name": "سازمان نظام پزشکی جمهوری اسلامی ایران",
+        "url": "https://irimc.org/"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "دکتر و کلینیک",
+          "item": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "تزریق فیلر در کرمانشاه"
+        }
+      ]
+    },
+    {
+      "@type": ["Service", "MedicalProcedure"],
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#service",
+      "name": "تزریق فیلر در کرمانشاه",
+      "description": "راهنمای تزریق فیلر در کرمانشاه؛ تشخیص حجم، فیلر لب و زیر چشم، کانتورینگ، اصلاح فیلر و ریسک انسداد عروقی.",
+      "provider": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ],
+      "serviceType": "پزشکی زیبایی",
+      "areaServed": {
+        "@type": "City",
+        "name": "کرمانشاه"
+      },
+      "url": "https://www.ghezelbaash.ir/filler-kermanshah/"
+    },
+    {
+      "@type": ["MedicalWebPage", "WebPage"],
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage",
+      "url": "https://www.ghezelbaash.ir/filler-kermanshah/",
+      "name": "تزریق فیلر در کرمانشاه",
+      "description": "راهنمای تزریق فیلر در کرمانشاه؛ تشخیص حجم، فیلر لب و زیر چشم، کانتورینگ، اصلاح فیلر و ریسک انسداد عروقی.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#service"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "lastReviewed": "2026-07-02",
+      "medicalAudience": {
+        "@type": "MedicalAudience",
+        "medicalAudienceType": "Patient"
+      },
+      "specialty": {
+        "@type": "MedicalSpecialty",
+        "name": "Aesthetic medicine"
+      },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": ["h1", "p.text-xl"]
+      },
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#breadcrumb"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-lip-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-under-eye-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-cheek-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-nasolabial-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-chin-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-jawline-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-temple-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-nose-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-acne-scar-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-hyaluronidase-filler-correction"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#entity-filler-vascular-occlusion"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/data/ghezelbaash-entity-dataset.json#dataset"
+        }
+      ],
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "video": [
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-transformation"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-before-after"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nonsurgical-rhinoplasty-boundary"
+        }
+      ],
+      "associatedMedia": [
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-transformation"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-before-after"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nonsurgical-rhinoplasty-boundary"
+        }
+      ],
+      "abstract": "تزریق فیلر در پزشکی زیبایی، استفاده هدفمند از مواد پرکننده برای اصلاح حجم، فرم، حمایت بافتی یا تناسب چهره است؛ تصمیم درست به ناحیه، عمق، ریسک عروقی و سابقه تزریق قبلی وابسته است.",
+      "potentialAction": {
+        "@type": "ContactAction",
+        "target": "+989308209494",
+        "name": "هماهنگی مراجعه با کلینیک"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq",
+      "name": "پرسش‌های متداول تزریق فیلر در کرمانشاه",
+      "mainEntity": [
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-1"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-2"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-3"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-4"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-5"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-6"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-q7"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-q8"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage"
+      }
+    },
+    {
+      "@type": ["ProfilePage", "WebPage"],
+      "@id": "https://www.ghezelbaash.ir/#webpage",
+      "url": "https://www.ghezelbaash.ir/",
+      "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+      "description": "هاب هویتی رسمی دکتر سعید قزلباش، اتصال به نظام پزشکی، ORCID، کلینیک زیبایی، اینستاگرام و چهار مگاپیلار خدمات.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "dateModified": "2026-07-04T00:00:00+03:30",
+      "abstract": "دکتر سعید قزلباش پزشک زیبایی فعال در کرمانشاه است که محتوای این سایت را حول تشخیص، انتخاب درست بیمار و تصمیم‌گیری قبل از تکنیک سازمان‌دهی می‌کند."
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-transformation",
+      "name": "فیلر زیر چشم؛ تغییر ظاهری وقتی علت درست خوانده شود",
+      "description": "نمونه ویدئویی کوتاه برای توضیح اینکه زیر چشم فقط با پرکردن ساده تصمیم‌گیری نمی‌شود و علت گودی، سایه، پف یا افت میدفیس باید جدا شود.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/under-eye-filler-transformation-dr-saeed-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT8S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/under-eye-filler-transformation-dr-saeed-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-transformation",
+      "url": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-transformation",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "این ویدئو فیلر را به‌عنوان تصمیم مبتنی بر ناحیه، تناسب و ریسک توضیح می‌دهد، نه تزریق صرف برای پرکردن. پیام اصلی این است که زیر چشم، بینی، لب یا کانتورینگ هرکدام ریسک، عمق، مرز ایمنی و انتظار متفاوت دارند و تصمیم باید با معاینه، سابقه تزریق قبلی و نسبت اجزای صورت سنجیده شود.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 2,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=0#video-filler-under-eye-transformation"
+        },
+        {
+          "@type": "Clip",
+          "name": "ریسک و تناسب",
+          "startOffset": 2,
+          "endOffset": 5,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=2#video-filler-under-eye-transformation"
+        },
+        {
+          "@type": "Clip",
+          "name": "مرز انتظار",
+          "startOffset": 5,
+          "endOffset": 8,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=5#video-filler-under-eye-transformation"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-transformation"
+      }
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-before-after",
+      "name": "قبل و بعد فیلر زیر چشم؛ نتیجه را بدون معاینه تعمیم ندهید",
+      "description": "نمونه کوتاه قبل/بعد برای صفحه فیلر زیر چشم با تأکید بر اینکه عکس یا ویدئو جای معاینه و تشخیص علت را نمی‌گیرد.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/under-eye-filler-before-after-dr-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT8S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/under-eye-filler-before-after-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-before-after",
+      "url": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-before-after",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "این ویدئو فیلر را به‌عنوان تصمیم مبتنی بر ناحیه، تناسب و ریسک توضیح می‌دهد، نه تزریق صرف برای پرکردن. پیام اصلی این است که زیر چشم، بینی، لب یا کانتورینگ هرکدام ریسک، عمق، مرز ایمنی و انتظار متفاوت دارند و تصمیم باید با معاینه، سابقه تزریق قبلی و نسبت اجزای صورت سنجیده شود.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 2,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=0#video-filler-under-eye-before-after"
+        },
+        {
+          "@type": "Clip",
+          "name": "ریسک و تناسب",
+          "startOffset": 2,
+          "endOffset": 5,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=2#video-filler-under-eye-before-after"
+        },
+        {
+          "@type": "Clip",
+          "name": "مرز انتظار",
+          "startOffset": 5,
+          "endOffset": 8,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=5#video-filler-under-eye-before-after"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-before-after"
+      }
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after",
+      "name": "فیلر بینی؛ صاف‌تر دیده‌شدن با کوچک‌شدن فرق دارد",
+      "description": "نمونه کوتاه برای توضیح مرز فیلر بینی: هدف می‌تواند اصلاح دیداری بعضی ناهمواری‌ها باشد، نه کوچک‌کردن واقعی بینی.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/nose-filler-before-after-results-dr-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT8S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/nose-filler-before-after-results-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after",
+      "url": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "این ویدئو فیلر را به‌عنوان تصمیم مبتنی بر ناحیه، تناسب و ریسک توضیح می‌دهد، نه تزریق صرف برای پرکردن. پیام اصلی این است که زیر چشم، بینی، لب یا کانتورینگ هرکدام ریسک، عمق، مرز ایمنی و انتظار متفاوت دارند و تصمیم باید با معاینه، سابقه تزریق قبلی و نسبت اجزای صورت سنجیده شود.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 2,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=0#video-filler-nose-before-after"
+        },
+        {
+          "@type": "Clip",
+          "name": "ریسک و تناسب",
+          "startOffset": 2,
+          "endOffset": 4,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=2#video-filler-nose-before-after"
+        },
+        {
+          "@type": "Clip",
+          "name": "مرز انتظار",
+          "startOffset": 4,
+          "endOffset": 7,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=4#video-filler-nose-before-after"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after"
+      }
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nonsurgical-rhinoplasty-boundary",
+      "name": "رینوپلاستی غیرجراحی؛ مرز نتیجه تصویری و محدودیت واقعی",
+      "description": "ویدئوی کوتاه قبل/بعد برای نشان‌دادن اینکه نتیجه تصویری فیلر بینی باید در کنار محدودیت‌ها، ریسک و تفاوت آن با جراحی خوانده شود.",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/nonsurgical-rhinoplasty-before-after-result-dr-ghezelbash.jpg",
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT7S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/nonsurgical-rhinoplasty-before-after-result-dr-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nonsurgical-rhinoplasty-boundary",
+      "url": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nonsurgical-rhinoplasty-boundary",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "transcript": "این ویدئو فیلر را به‌عنوان تصمیم مبتنی بر ناحیه، تناسب و ریسک توضیح می‌دهد، نه تزریق صرف برای پرکردن. پیام اصلی این است که زیر چشم، بینی، لب یا کانتورینگ هرکدام ریسک، عمق، مرز ایمنی و انتظار متفاوت دارند و تصمیم باید با معاینه، سابقه تزریق قبلی و نسبت اجزای صورت سنجیده شود.",
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 2,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=0#video-filler-nonsurgical-rhinoplasty-boundary"
+        },
+        {
+          "@type": "Clip",
+          "name": "ریسک و تناسب",
+          "startOffset": 2,
+          "endOffset": 4,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=2#video-filler-nonsurgical-rhinoplasty-boundary"
+        },
+        {
+          "@type": "Clip",
+          "name": "مرز انتظار",
+          "startOffset": 4,
+          "endOffset": 7,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=4#video-filler-nonsurgical-rhinoplasty-boundary"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage"
+      },
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nonsurgical-rhinoplasty-boundary"
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-q7",
+      "name": "آیا فیلر لب، زیر چشم، گونه و چانه یک منطق مشترک دارند؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "منطق مشترک آن‌ها اضافه کردن حجم یا حمایت بافتی است، اما هر ناحیه ریسک و معیار انتخاب متفاوت دارد. زیر چشم، بینی و گلابلا حساس‌ترند و بدون معاینه نباید درباره تزریق آن‌ها تصمیم قطعی گرفت."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-q8",
+      "name": "چرا اصلاح فیلر قبلی همیشه ساده نیست؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "چون باید معلوم شود فیلر قبلی از چه جنسی بوده، در چه لایه‌ای قرار دارد، مهاجرت کرده یا نه، و آیا با هیالورونیداز قابل اصلاح است یا نیاز به مسیر دیگری دارد."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-1",
+      "name": "فیلر چه زمانی کمک می‌کند؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "فیلر وقتی می‌تواند کمک کند که مشکل واقعاً از کمبود حجم، سایه قابل اصلاح، نسبت قابل تغییر یا حمایت بافتی باشد. اگر علت از پوست اضافه، افتادگی شدید، چربی یا انتظار اشتباه باشد، حجم بیشتر الزاماً بهتر نیست."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-2",
+      "name": "فیلر و بوتاکس چه تفاوتی دارند؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "بوتاکس حرکت عضله را کم می‌کند، اما فیلر حجم، سایه، کانتور یا حمایت بافتی را تغییر می‌دهد. سؤال درست این است که مشکل از حرکت است یا حجم و ساختار."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-3",
+      "name": "چرا فیلر زیر چشم ناحیه حساسی است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "گودی زیر چشم ممکن است از حجم، پف، تیرگی، پوست نازک یا افت میدفیس باشد. اگر علت درست خوانده نشود، فیلر می‌تواند پف یا نارضایتی ایجاد کند."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-4",
+      "name": "انسداد عروقی فیلر چرا مهم است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "انسداد عروقی یکی از ریسک‌های جدی فیلر است و به شناخت آناتومی، انتخاب ناحیه، عمق تزریق و آمادگی برای اقدام فوری وابسته است."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-5",
+      "name": "آیا هیالاز همیشه راه‌حل ساده اصلاح فیلر است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "هیالورونیداز برای فیلرهای هیالورونیک‌اسید در موارد منتخب استفاده می‌شود، اما تصمیم به اصلاح به نوع ماده، ناحیه، عارضه، سابقه تزریق و وضعیت بیمار وابسته است."
+      }
+    },
+    {
+      "@type": "Question",
+      "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#faq-question-6",
+      "name": "عدد سی‌سی فیلر قبل از معاینه قابل تعیین است؟",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "عدد سی‌سی بعد از فهمیدن علت، ناحیه، کیفیت پوست، حجم واقعی و انتظار بیمار معنا پیدا می‌کند؛ قبل از آن فقط یک تخمین خام است."
+      }
+    }
+  ],
+  "derivedFrom": "src/content/page-structured-data/filler-kermanshah.json",
+  "profile": "page-scoped-json-ld-embed"
+}

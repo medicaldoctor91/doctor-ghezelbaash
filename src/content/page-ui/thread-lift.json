@@ -1,0 +1,89 @@
+{
+  "path": "/thread-lift-kermanshah/",
+  "contentEntry": "thread-lift-kermanshah",
+  "layout": "service",
+  "showBreadcrumbs": true,
+  "showRating": true,
+  "showFaq": true,
+  "showTrust": true,
+  "showIntentHub": true,
+  "breadcrumbs": [
+    {
+      "name": "خانه",
+      "href": "/"
+    },
+    {
+      "name": "دکتر و کلینیک",
+      "href": "/dr-saeed-ghezelbash-aesthetic-clinic/"
+    },
+    {
+      "name": "لیفت نخ در کرمانشاه"
+    }
+  ],
+  "hero": {
+    "tagline": "مگاپیلار لیفت نخ",
+    "title": "لیفت نخ صورت را جراحی نمی‌کند؛ راهنمای تصمیم از نخ PDO و PLLA تا هایفو، غبغب و اسکالپترا",
+    "subtitle": "راهنمای پزشک‌محور برای فهم اینکه لیفت نخ چه کاری می‌کند، چه کاری نمی‌کند، چه کسی کاندید است و چه زمانی باید از نخ عبور کرد.",
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "نمونه‌کارهای لیفت نخ در اینستاگرام",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "تماس برای هماهنگی",
+        "hrefSource": "phone"
+      }
+    ]
+  },
+  "intentHub": {
+    "title": "نقشه سریع مسیرهای تصمیم‌گیری این صفحه",
+    "description": "این بخش مسیرهای اصلی تصمیم‌گیری کاربر را مرتب می‌کند؛ هر مسیر به بخش مرتبط همان صفحه وصل است تا کاربر سریع‌تر به پاسخ قابل‌اقدام برسد.",
+    "links": [
+      {
+        "title": "کاندید مناسب نخ",
+        "href": "#thread-lift-candidate-selection",
+        "description": "اول باید صورت نخ‌پذیر باشد؛ تعداد نخ آخرین سؤال است."
+      },
+      {
+        "title": "نخ یا جراحی/هایفو/RF",
+        "href": "#thread-lift-vs-surgery",
+        "description": "مسیرهای مقایسه‌ای بدون وعده غیرواقعی."
+      },
+      {
+        "title": "PDO، PLLA، PCL",
+        "href": "#pdo-thread",
+        "description": "تفاوت جنس نخ‌ها و نقش آن‌ها در تصمیم‌گیری درمان."
+      },
+      {
+        "title": "غبغب، عوارض و مراقبت",
+        "href": "#thread-lift-submental-area",
+        "description": "بخش‌های تصمیمی مهم برای کاربر و موتور جست‌وجو."
+      }
+    ]
+  },
+  "pageTrustTitle": "لیفت نخ در کرمانشاه",
+  "contactBox": {
+    "title": "لیفت نخ فقط وقتی منطقی است که صورت واقعاً نخ‌پذیر باشد",
+    "subtitle": "برای هماهنگی نوبت، مشاهده نمونه‌کارها یا مسیریابی به کلینیک، از مسیرهای رسمی ثبت‌شده در سایت استفاده کنید."
+  },
+  "cta": {
+    "title": "قدم بعدی: هماهنگی از مسیر رسمی کلینیک",
+    "subtitle": "اطلاعات این صفحه جایگزین معاینه و تصمیم پزشکی نیست. برای بررسی شرایط فردی، با کلینیک هماهنگ کنید.",
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "دیدن نمونه‌کارها در اینستاگرام",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "تماس برای هماهنگی",
+        "hrefSource": "phone"
+      }
+    ]
+  }
+}

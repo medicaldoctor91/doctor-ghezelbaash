@@ -1,0 +1,120 @@
+{
+  "@context": "https://schema.org",
+  "path": "/videos/filler-under-eye-transformation/",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "خانه",
+          "item": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "ویدئوها",
+          "item": "https://www.ghezelbaash.ir/videos/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "فیلر زیر چشم",
+          "item": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/"
+        }
+      ]
+    },
+    {
+      "@type": "ImageObject",
+      "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#thumbnail",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/thumbnails/under-eye-filler-transformation-dr-saeed-ghezelbash.jpg",
+      "url": "https://www.ghezelbaash.ir/videos/thumbnails/under-eye-filler-transformation-dr-saeed-ghezelbash.jpg",
+      "caption": "فیلر زیر چشم؛ تغییر ظاهری وقتی علت درست خوانده شود",
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#webpage",
+      "url": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/",
+      "name": "فیلر زیر چشم | صفحه اختصاصی ویدئو",
+      "description": "نمونه ویدئویی کوتاه برای توضیح اینکه زیر چشم فقط با پرکردن ساده تصمیم‌گیری نمی‌شود و علت گودی، سایه، پف یا افت میدفیس باید جدا شود.",
+      "inLanguage": "fa-IR",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#website"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#video"
+      },
+      "breadcrumb": {
+        "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#breadcrumb"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinic"
+        }
+      ]
+    },
+    {
+      "@type": "VideoObject",
+      "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#video",
+      "name": "فیلر زیر چشم؛ تغییر ظاهری وقتی علت درست خوانده شود",
+      "description": "نمونه ویدئویی کوتاه برای توضیح اینکه زیر چشم فقط با پرکردن ساده تصمیم‌گیری نمی‌شود و علت گودی، سایه، پف یا افت میدفیس باید جدا شود.",
+      "thumbnailUrl": [
+        "https://www.ghezelbaash.ir/videos/thumbnails/under-eye-filler-transformation-dr-saeed-ghezelbash.jpg"
+      ],
+      "uploadDate": "2026-07-03T00:00:00+03:30",
+      "duration": "PT8S",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/under-eye-filler-transformation-dr-saeed-ghezelbash.mp4",
+      "embedUrl": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/",
+      "url": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/",
+      "inLanguage": "fa-IR",
+      "publisher": {
+        "@id": "https://www.ghezelbaash.ir/#clinic"
+      },
+      "creator": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+      },
+      "hasPart": [
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#segment-1",
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 2,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/?t=0"
+        },
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#segment-2",
+          "name": "ریسک و تناسب",
+          "startOffset": 2,
+          "endOffset": 5,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/?t=2"
+        },
+        {
+          "@type": "Clip",
+          "@id": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/#segment-3",
+          "name": "مرز انتظار",
+          "startOffset": 5,
+          "endOffset": 8,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/?t=5"
+        }
+      ],
+      "potentialAction": {
+        "@type": "WatchAction",
+        "target": ["https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/"]
+      }
+    }
+  ],
+  "derivedFrom": "src/content/page-structured-data/videos__filler-under-eye-transformation.json",
+  "profile": "page-scoped-json-ld-embed"
+}

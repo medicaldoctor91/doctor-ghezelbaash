@@ -1,0 +1,36 @@
+{
+  "path": "/",
+  "contentEntry": "home",
+  "layout": "home",
+  "showBreadcrumbs": false,
+  "showRating": false,
+  "showFaq": false,
+  "showTrust": false,
+  "showIntentHub": false,
+  "hero": {
+    "tagline": "هاب هویت پزشک",
+    "title": "دکتر سعید قزلباش؛ زیبایی را نمی‌شود از روی منو سفارش داد",
+    "subtitle": "پزشکی زیبایی وقتی منفعت واقعی می‌سازد که از تشخیص شروع شود؛ نه از سفارش روش، نام محصول یا عجله برای تغییر.",
+    "actions": [
+      {
+        "variant": "primary",
+        "text": "نمونه‌کارها در اینستاگرام",
+        "hrefSource": "instagram",
+        "target": "_blank"
+      },
+      {
+        "variant": "secondary",
+        "text": "دکتر و کلینیک",
+        "href": "/dr-saeed-ghezelbash-aesthetic-clinic/"
+      }
+    ]
+  },
+  "mediaBlock": {
+    "title": "تصاویر و ویدئوهای صفحه خانه",
+    "subtitle": "پرتره پزشک، فضای واقعی کار و تصویر تیم در این بخش کنار متن اصلی قرار می‌گیرند تا هویت صفحه خانه فقط متنی نباشد."
+  },
+  "contactBox": {
+    "title": "نمونه‌کارها و مسیر ارتباط با دکتر قزلباش",
+    "subtitle": "برای دیدن نمونه‌کارها و رضایت زیباجوها، اینستاگرام رسمی دکتر قزلباش مسیر اصلی است. برای هماهنگی مراجعه هم می‌توانید تماس بگیرید یا صفحه دکتر و کلینیک را ببینید."
+  }
+}

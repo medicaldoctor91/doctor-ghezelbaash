@@ -1,0 +1,109 @@
+---
+import Layout from '~/layouts/PageLayout.astro';
+import BreadcrumbTrail from '~/components/common/BreadcrumbTrail.astro';
+import { getEntry } from 'astro:content';
+import { groupWatchVideosByPage } from '~/utils/videoCatalog';
+
+const groups = await groupWatchVideosByPage();
+const allVideos = groups.flatMap((group) => group.videos);
+const videoUi = await getEntry('videoUi', 'watch');
+if (!videoUi) throw new Error('Missing src/content/video-ui/watch.json content collection entry.');
+
+const metadata = {
+  ...videoUi.data.videosIndex.metadata,
+  ignoreTitleTemplate: true,
+  openGraph: {
+    type: 'website',
+    images: [{ url: '~/assets/images/og/home.jpg', width: 1200, height: 630 }],
+  },
+};
+
+const breadcrumbs = videoUi.data.videosIndex.breadcrumbs;
+---
+
+<Layout metadata={metadata}>
+  <BreadcrumbTrail items={breadcrumbs} />
+
+  <section class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <p class="text-sm font-bold text-primary">کتابخانه ویدئوها</p>
+      <h1 class="mt-2 text-4xl font-bold tracking-tight md:text-5xl">کتابخانه ویدئویی دکتر سعید قزلباش</h1>
+      <p class="mt-4 max-w-4xl text-base leading-8 text-muted">
+        این بخش ویدئوهای مرتبط با خدمات زیبایی، نمونه‌ها و رضایت زیباجوها را کنار هم نشان می‌دهد تا قبل از تماس، مسیرها
+        و نمونه‌های مرتبط را راحت‌تر ببینید.
+      </p>
+
+      <dl class="mt-8 grid gap-4 md:grid-cols-3">
+        <div class="rounded-2xl border border-gray-200 p-4 dark:border-slate-800">
+          <dt class="text-xs font-bold text-primary">تعداد ویدئوها</dt>
+          <dd class="mt-2 text-sm font-semibold text-default">{allVideos.length} ویدئو در کتابخانه</dd>
+        </div>
+        <div class="rounded-2xl border border-gray-200 p-4 dark:border-slate-800">
+          <dt class="text-xs font-bold text-primary">دسته‌بندی‌ها</dt>
+          <dd class="mt-2 text-sm font-semibold text-default">{groups.length} دسته موضوعی مرتبط با خدمات</dd>
+        </div>
+        <div class="rounded-2xl border border-gray-200 p-4 dark:border-slate-800">
+          <dt class="text-xs font-bold text-primary">ارتباط با خدمات</dt>
+          <dd class="mt-2 text-sm font-semibold text-default">هر ویدئو به موضوع و خدمت مرتبط خودش وصل است.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+    <div class="space-y-8">
+      {
+        groups.map((group) => (
+          <section class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="text-sm font-bold text-primary">دسته‌بندی موضوعی</p>
+                <h2 class="mt-2 text-2xl font-bold tracking-tight">{group.pageLabel}</h2>
+                <p class="mt-2 text-sm leading-7 text-muted">{group.videos.length} ویدئو در این دسته قرار دارد.</p>
+              </div>
+              <a class="text-sm font-semibold text-primary hover:text-secondary" href={group.pagePath}>
+                رفتن به صفحه مرتبط
+              </a>
+            </div>
+
+            <div class="mt-6 grid gap-5 lg:grid-cols-2">
+              {group.videos.map((video) => (
+                <article class="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-800">
+                  <a href={video.watchPath} class="block">
+                    <img
+                      src={video.thumbnailUrl}
+                      alt={video.title}
+                      loading="lazy"
+                      width={video.layoutWidth}
+                      height={video.layoutHeight}
+                      class="aspect-video w-full object-cover"
+                    />
+                  </a>
+                  <div class="p-5">
+                    <p class="text-xs font-bold text-primary">
+                      {video.duration} · {video.sourcePageLabel}
+                    </p>
+                    <h3 class="mt-2 text-xl font-bold">
+                      <a href={video.watchPath} class="hover:text-primary">
+                        {video.title}
+                      </a>
+                    </h3>
+                    <p class="mt-3 text-sm leading-7 text-muted">{video.description}</p>
+                    <div class="mt-4 flex flex-wrap gap-3">
+                      <a href={video.watchPath} class="text-sm font-semibold text-primary hover:text-secondary">
+                        دیدن ویدئو
+                      </a>
+                      <a href={video.sourceSectionPath} class="text-sm font-semibold text-primary hover:text-secondary">
+                        صفحه مرتبط
+                      </a>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </section>
+</Layout>
