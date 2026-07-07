@@ -3,7 +3,7 @@ path: "/kg/"
 title: "گراف دانش دکتر سعید قزلباش | Knowledge Graph Hub"
 canonical: "https://www.ghezelbaash.ir/kg/"
 description: "هاب انسانی و ماشین‌خوان گراف دانش دکتر سعید قزلباش، شامل گراف JSON-LD، فیدهای داده، llms.txt، سرویس‌ها، sameAs و مسیرهای اصلی هویت پزشک و کلینیک."
-ogImagePath: "/images/og-default.jpg"
+ogImagePath: "~/assets/images/og/home.jpg"
 ---
 
 ## دارایی‌های اصلی گراف دانش
