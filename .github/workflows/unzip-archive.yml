@@ -1,41 +1,40 @@
-name: Unzip Project Archive
+name: Unzip Cloudflare Ready Archive
 
 on:
   workflow_dispatch:
     inputs:
       zip_path:
-        description: "Path to the ZIP file inside the repository"
+        description: "Repository path of the ZIP file to extract"
         required: true
-        default: "ghezelbaash-reviewed-debug-ui-content(3).zip"
+        default: "ghezelbaash-github-cloudflare-ready.zip"
       target_dir:
-        description: "Directory to extract into; use . for repository root"
+        description: "Extraction target. Use . for repository root"
         required: true
         default: "."
-      delete_zip:
-        description: "Delete the ZIP after successful extraction"
+      replace_repo_contents:
+        description: "Replace repository contents with the extracted Astro project, keeping .git and .github/workflows"
         required: true
         type: boolean
-        default: false
-      strip_single_root:
-        description: "If ZIP contains one top-level folder, copy its contents instead of the folder itself"
+        default: true
+      delete_zip:
+        description: "Delete the ZIP after successful extraction"
         required: true
         type: boolean
         default: true
   push:
     paths:
-      - "*.zip"
-      - "**/*.zip"
+      - "ghezelbaash-github-cloudflare-ready.zip"
 
 permissions:
   contents: write
 
 concurrency:
-  group: unzip-archive-${{ github.ref }}
+  group: unzip-cloudflare-ready-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   unzip:
-    name: Extract ZIP and commit files
+    name: Extract ZIP and commit project files
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip unzip]') }}
 
@@ -45,7 +44,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve ZIP settings
+      - name: Resolve inputs
         shell: bash
         run: |
           set -euo pipefail
@@ -53,35 +52,27 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ZIP_PATH="${{ inputs.zip_path }}"
             TARGET_DIR="${{ inputs.target_dir }}"
+            REPLACE_REPO_CONTENTS="${{ inputs.replace_repo_contents }}"
             DELETE_ZIP="${{ inputs.delete_zip }}"
-            STRIP_SINGLE_ROOT="${{ inputs.strip_single_root }}"
           else
-            ZIP_PATH="$(find . -type f -name '*.zip' -not -path './.git/*' -not -path './node_modules/*' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2- | sed 's#^\./##')"
+            ZIP_PATH="ghezelbaash-github-cloudflare-ready.zip"
             TARGET_DIR="."
-            DELETE_ZIP="false"
-            STRIP_SINGLE_ROOT="true"
+            REPLACE_REPO_CONTENTS="true"
+            DELETE_ZIP="true"
           fi
 
-          if [ -z "${ZIP_PATH}" ]; then
-            echo "No ZIP file found. Nothing to extract."
-            echo "SKIP_UNZIP=true" >> "$GITHUB_ENV"
-            exit 0
+          if [ ! -f "$ZIP_PATH" ]; then
+            echo "::error::ZIP file not found in repository: $ZIP_PATH"
+            echo "Upload the ZIP to the repository root first, then run this workflow again."
+            exit 1
           fi
 
-          if [ ! -f "${ZIP_PATH}" ]; then
-            echo "ZIP file not found: ${ZIP_PATH}"
-            echo "SKIP_UNZIP=true" >> "$GITHUB_ENV"
-            exit 0
-          fi
+          echo "ZIP_PATH=$ZIP_PATH" >> "$GITHUB_ENV"
+          echo "TARGET_DIR=$TARGET_DIR" >> "$GITHUB_ENV"
+          echo "REPLACE_REPO_CONTENTS=$REPLACE_REPO_CONTENTS" >> "$GITHUB_ENV"
+          echo "DELETE_ZIP=$DELETE_ZIP" >> "$GITHUB_ENV"
 
-          echo "ZIP_PATH=${ZIP_PATH}" >> "$GITHUB_ENV"
-          echo "TARGET_DIR=${TARGET_DIR}" >> "$GITHUB_ENV"
-          echo "DELETE_ZIP=${DELETE_ZIP}" >> "$GITHUB_ENV"
-          echo "STRIP_SINGLE_ROOT=${STRIP_SINGLE_ROOT}" >> "$GITHUB_ENV"
-          echo "SKIP_UNZIP=false" >> "$GITHUB_ENV"
-
-      - name: Extract archive safely
-        if: env.SKIP_UNZIP != 'true'
+      - name: Extract ZIP safely
         shell: bash
         run: |
           set -euo pipefail
@@ -97,8 +88,8 @@ jobs:
           repo = pathlib.Path(os.environ["GITHUB_WORKSPACE"]).resolve()
           zip_path = (repo / os.environ["ZIP_PATH"]).resolve()
           target_dir = (repo / os.environ["TARGET_DIR"]).resolve()
-          delete_zip = os.environ.get("DELETE_ZIP", "false").lower() == "true"
-          strip_single_root = os.environ.get("STRIP_SINGLE_ROOT", "true").lower() == "true"
+          replace_repo_contents = os.environ.get("REPLACE_REPO_CONTENTS", "true").lower() == "true"
+          delete_zip = os.environ.get("DELETE_ZIP", "true").lower() == "true"
 
           def inside(path: pathlib.Path, base: pathlib.Path) -> bool:
               try:
@@ -108,42 +99,56 @@ jobs:
                   return False
 
           if not inside(zip_path, repo):
-              sys.exit(f"Refusing to read ZIP outside repository: {zip_path}")
-
+              sys.exit(f"Refusing ZIP outside repository: {zip_path}")
+          if not inside(target_dir, repo):
+              sys.exit(f"Refusing target outside repository: {target_dir}")
           if not zip_path.is_file():
               sys.exit(f"ZIP file not found: {zip_path}")
 
-          target_dir.mkdir(parents=True, exist_ok=True)
-
-          if not inside(target_dir, repo):
-              sys.exit(f"Refusing to extract outside repository: {target_dir}")
-
           with tempfile.TemporaryDirectory() as tmp:
               tmp_dir = pathlib.Path(tmp).resolve()
+              extract_dir = tmp_dir / "extract"
+              extract_dir.mkdir()
 
               with zipfile.ZipFile(zip_path) as archive:
                   for item in archive.infolist():
                       pure = pathlib.PurePosixPath(item.filename)
-                      parts = pure.parts
-
-                      if pure.is_absolute() or ".." in parts:
+                      if pure.is_absolute() or ".." in pure.parts:
                           sys.exit(f"Unsafe ZIP path blocked: {item.filename}")
-
-                      destination = (tmp_dir / pathlib.Path(*parts)).resolve()
-                      if not inside(destination, tmp_dir):
+                      destination = (extract_dir / pathlib.Path(*pure.parts)).resolve()
+                      if not inside(destination, extract_dir):
                           sys.exit(f"Unsafe ZIP path blocked: {item.filename}")
+                  archive.extractall(extract_dir)
 
-                  archive.extractall(tmp_dir)
+              candidates = [p for p in extract_dir.iterdir() if p.name not in {"__MACOSX", ".DS_Store"}]
+              source_dir = extract_dir
+              if len(candidates) == 1 and candidates[0].is_dir():
+                  source_dir = candidates[0]
 
-              entries = [entry for entry in tmp_dir.iterdir()]
-              source_dir = tmp_dir
+              if not (source_dir / "package.json").is_file():
+                  nested = list(source_dir.glob("*/package.json"))
+                  if len(nested) == 1:
+                      source_dir = nested[0].parent
 
-              if strip_single_root and len(entries) == 1 and entries[0].is_dir():
-                  source_dir = entries[0]
+              if not (source_dir / "package.json").is_file():
+                  sys.exit("Could not find package.json in extracted archive; refusing to import non-project ZIP.")
+
+              if replace_repo_contents and target_dir == repo:
+                  keep = {".git", ".github"}
+                  for child in repo.iterdir():
+                      if child.name in keep or child.resolve() == zip_path:
+                          continue
+                      if child.is_dir():
+                          shutil.rmtree(child)
+                      else:
+                          child.unlink()
+
+              target_dir.mkdir(parents=True, exist_ok=True)
 
               for child in source_dir.iterdir():
+                  if child.name == ".git":
+                      continue
                   destination = target_dir / child.name
-
                   if child.is_dir():
                       shutil.copytree(child, destination, dirs_exist_ok=True)
                   else:
@@ -153,11 +158,10 @@ jobs:
           if delete_zip:
               zip_path.unlink(missing_ok=True)
 
-          print(f"Extracted {zip_path.relative_to(repo)} into {target_dir.relative_to(repo) if target_dir != repo else '.'}")
+          print(f"Imported {zip_path.name} into {target_dir.relative_to(repo) if target_dir != repo else '.'}")
           PY
 
-      - name: Commit extracted files
-        if: env.SKIP_UNZIP != 'true'
+      - name: Commit extracted project
         shell: bash
         run: |
           set -euo pipefail
@@ -168,9 +172,9 @@ jobs:
           git add -A
 
           if git diff --cached --quiet; then
-            echo "No file changes after extraction."
+            echo "No changes to commit."
             exit 0
           fi
 
-          git commit -m "Unzip project archive [skip unzip]"
+          git commit -m "Import Cloudflare-ready Astro project [skip unzip]"
           git push
