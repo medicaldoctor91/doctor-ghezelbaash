@@ -24,6 +24,7 @@ on:
   push:
     paths:
       - "ghezelbaash-github-cloudflare-ready.zip"
+      - ".github/workflows/unzip-archive.yml"
 
 permissions:
   contents: write
