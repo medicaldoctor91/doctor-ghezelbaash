@@ -1,0 +1,176 @@
+name: Unzip Project Archive
+
+on:
+  workflow_dispatch:
+    inputs:
+      zip_path:
+        description: "Path to the ZIP file inside the repository"
+        required: true
+        default: "ghezelbaash-reviewed-debug-ui-content(3).zip"
+      target_dir:
+        description: "Directory to extract into; use . for repository root"
+        required: true
+        default: "."
+      delete_zip:
+        description: "Delete the ZIP after successful extraction"
+        required: true
+        type: boolean
+        default: false
+      strip_single_root:
+        description: "If ZIP contains one top-level folder, copy its contents instead of the folder itself"
+        required: true
+        type: boolean
+        default: true
+  push:
+    paths:
+      - "*.zip"
+      - "**/*.zip"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: unzip-archive-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unzip:
+    name: Extract ZIP and commit files
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip unzip]') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve ZIP settings
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ZIP_PATH="${{ inputs.zip_path }}"
+            TARGET_DIR="${{ inputs.target_dir }}"
+            DELETE_ZIP="${{ inputs.delete_zip }}"
+            STRIP_SINGLE_ROOT="${{ inputs.strip_single_root }}"
+          else
+            ZIP_PATH="$(find . -type f -name '*.zip' -not -path './.git/*' -not -path './node_modules/*' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2- | sed 's#^\./##')"
+            TARGET_DIR="."
+            DELETE_ZIP="false"
+            STRIP_SINGLE_ROOT="true"
+          fi
+
+          if [ -z "${ZIP_PATH}" ]; then
+            echo "No ZIP file found. Nothing to extract."
+            echo "SKIP_UNZIP=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          if [ ! -f "${ZIP_PATH}" ]; then
+            echo "ZIP file not found: ${ZIP_PATH}"
+            echo "SKIP_UNZIP=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          echo "ZIP_PATH=${ZIP_PATH}" >> "$GITHUB_ENV"
+          echo "TARGET_DIR=${TARGET_DIR}" >> "$GITHUB_ENV"
+          echo "DELETE_ZIP=${DELETE_ZIP}" >> "$GITHUB_ENV"
+          echo "STRIP_SINGLE_ROOT=${STRIP_SINGLE_ROOT}" >> "$GITHUB_ENV"
+          echo "SKIP_UNZIP=false" >> "$GITHUB_ENV"
+
+      - name: Extract archive safely
+        if: env.SKIP_UNZIP != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PY'
+          import os
+          import pathlib
+          import shutil
+          import sys
+          import tempfile
+          import zipfile
+
+          repo = pathlib.Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+          zip_path = (repo / os.environ["ZIP_PATH"]).resolve()
+          target_dir = (repo / os.environ["TARGET_DIR"]).resolve()
+          delete_zip = os.environ.get("DELETE_ZIP", "false").lower() == "true"
+          strip_single_root = os.environ.get("STRIP_SINGLE_ROOT", "true").lower() == "true"
+
+          def inside(path: pathlib.Path, base: pathlib.Path) -> bool:
+              try:
+                  path.resolve().relative_to(base.resolve())
+                  return True
+              except ValueError:
+                  return False
+
+          if not inside(zip_path, repo):
+              sys.exit(f"Refusing to read ZIP outside repository: {zip_path}")
+
+          if not zip_path.is_file():
+              sys.exit(f"ZIP file not found: {zip_path}")
+
+          target_dir.mkdir(parents=True, exist_ok=True)
+
+          if not inside(target_dir, repo):
+              sys.exit(f"Refusing to extract outside repository: {target_dir}")
+
+          with tempfile.TemporaryDirectory() as tmp:
+              tmp_dir = pathlib.Path(tmp).resolve()
+
+              with zipfile.ZipFile(zip_path) as archive:
+                  for item in archive.infolist():
+                      pure = pathlib.PurePosixPath(item.filename)
+                      parts = pure.parts
+
+                      if pure.is_absolute() or ".." in parts:
+                          sys.exit(f"Unsafe ZIP path blocked: {item.filename}")
+
+                      destination = (tmp_dir / pathlib.Path(*parts)).resolve()
+                      if not inside(destination, tmp_dir):
+                          sys.exit(f"Unsafe ZIP path blocked: {item.filename}")
+
+                  archive.extractall(tmp_dir)
+
+              entries = [entry for entry in tmp_dir.iterdir()]
+              source_dir = tmp_dir
+
+              if strip_single_root and len(entries) == 1 and entries[0].is_dir():
+                  source_dir = entries[0]
+
+              for child in source_dir.iterdir():
+                  destination = target_dir / child.name
+
+                  if child.is_dir():
+                      shutil.copytree(child, destination, dirs_exist_ok=True)
+                  else:
+                      destination.parent.mkdir(parents=True, exist_ok=True)
+                      shutil.copy2(child, destination)
+
+          if delete_zip:
+              zip_path.unlink(missing_ok=True)
+
+          print(f"Extracted {zip_path.relative_to(repo)} into {target_dir.relative_to(repo) if target_dir != repo else '.'}")
+          PY
+
+      - name: Commit extracted files
+        if: env.SKIP_UNZIP != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No file changes after extraction."
+            exit 0
+          fi
+
+          git commit -m "Unzip project archive [skip unzip]"
+          git push
