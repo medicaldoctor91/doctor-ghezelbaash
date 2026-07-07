@@ -1,0 +1,140 @@
+---
+import type { WatchVideoEntry } from '~/data/videoCatalog';
+
+export interface Props {
+  video: WatchVideoEntry;
+}
+
+const { video } = Astro.props;
+
+const pageUrl = video.watchUrl;
+const breadcrumbId = `${pageUrl}#breadcrumb`;
+const pageId = `${pageUrl}#webpage`;
+const imageId = `${pageUrl}#thumbnail`;
+const videoId = `${pageUrl}#video`;
+
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'BreadcrumbList',
+      '@id': breadcrumbId,
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'خانه',
+          item: 'https://www.ghezelbaash.ir/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'ویدئوها',
+          item: 'https://www.ghezelbaash.ir/videos/',
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: video.shortTitle,
+          item: pageUrl,
+        },
+      ],
+    },
+    {
+      '@type': 'ImageObject',
+      '@id': imageId,
+      url: video.thumbnailUrl,
+      contentUrl: video.thumbnailUrl,
+      caption: video.title,
+      width: video.layoutWidth,
+      height: video.layoutHeight,
+      inLanguage: 'fa-IR',
+    },
+    {
+      '@type': 'WebPage',
+      '@id': pageId,
+      url: pageUrl,
+      name: video.watchTitle,
+      headline: video.title,
+      description: video.description,
+      inLanguage: 'fa-IR',
+      isPartOf: {
+        '@id': 'https://www.ghezelbaash.ir/#website',
+      },
+      about: [
+        { '@id': 'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash' },
+        { '@id': 'https://www.ghezelbaash.ir/#clinic' },
+      ],
+      breadcrumb: {
+        '@id': breadcrumbId,
+      },
+      primaryImageOfPage: {
+        '@id': imageId,
+      },
+      thumbnailUrl: video.thumbnailUrl,
+      mainEntity: {
+        '@id': videoId,
+      },
+      relatedLink: Array.from(
+        new Set([
+          video.pageUrl,
+          video.sourceSectionUrl,
+          ...video.crossLinks.map((link) => new URL(link.url, 'https://www.ghezelbaash.ir').toString()),
+          ...video.relatedVideos.map((item) => item.watchUrl),
+        ])
+      ),
+    },
+    {
+      '@type': 'VideoObject',
+      '@id': videoId,
+      name: video.title,
+      headline: video.title,
+      description: video.description,
+      thumbnailUrl: [video.thumbnailUrl],
+      uploadDate: video.dateAdded,
+      dateModified: video.dateModified,
+      duration: video.duration,
+      contentUrl: video.contentUrl,
+      embedUrl: pageUrl,
+      url: pageUrl,
+      inLanguage: 'fa-IR',
+      width: video.width,
+      height: video.height,
+      encodingFormat: 'video/mp4',
+      contentSize: String(video.byteSize),
+      isFamilyFriendly: true,
+      mainEntityOfPage: {
+        '@id': pageId,
+      },
+      publisher: {
+        '@id': 'https://www.ghezelbaash.ir/#clinic',
+      },
+      creator: {
+        '@id': 'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash',
+      },
+      about: [
+        { '@id': 'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash' },
+        { '@id': 'https://www.ghezelbaash.ir/#clinic' },
+      ],
+      keywords: video.keywords.join(', '),
+      potentialAction: {
+        '@type': 'WatchAction',
+        target: [pageUrl],
+      },
+      hasPart: video.segments.map((segment) => ({
+        '@type': 'Clip',
+        '@id': `${pageUrl}#${segment.anchorId}`,
+        name: segment.name,
+        startOffset: segment.startOffset,
+        endOffset: segment.endOffset,
+        description: segment.description,
+        url: segment.watchUrl,
+      })),
+    },
+  ],
+};
+
+const jsonLd = JSON.stringify(graph).replace(/</g, '\u003c');
+---
+
+<script type="application/ld+json" is:inline set:html={jsonLd} />

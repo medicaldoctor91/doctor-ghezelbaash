@@ -1,107 +1,96 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { defineConfig } from 'astro/config';
-import sitemap, { ChangeFreqEnum } from '@astrojs/sitemap';
+
+import { unified } from '@astrojs/markdown-remark';
+
+import sitemap from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
-import siteSettings from './src/content/site-settings/site.json';
+import mdx from '@astrojs/mdx';
+import partytown from '@astrojs/partytown';
+import icon from 'astro-icon';
+import compress from 'astro-compress';
+import type { AstroIntegration } from 'astro';
+
+import astrowind from './vendor/integration';
+
+import { readingTimeRemarkPlugin, responsiveTablesRehypePlugin } from './src/utils/frontmatter';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const toIsoDateTime = (date: string) => (/^\d{4}-\d{2}-\d{2}$/.test(date) ? `${date}T00:00:00+03:30` : date);
-
-const readJson = <T>(filePath: string): T => JSON.parse(fs.readFileSync(filePath, 'utf8')) as T;
-
-type GovernanceEntry = {
-  path: string;
-  reviewedAt: string;
-};
-
-type VideoManifest = {
-  dateModified?: string;
-  videos?: Array<{
-    watchPagePath?: string;
-    dateModified?: string;
-  }>;
-};
-
-const governanceDir = path.resolve(__dirname, 'src/content/page-governance');
-const governanceByPath = new Map<string, GovernanceEntry>();
-
-for (const fileName of fs.readdirSync(governanceDir)) {
-  if (!fileName.endsWith('.json')) continue;
-  const entry = readJson<GovernanceEntry>(path.join(governanceDir, fileName));
-  governanceByPath.set(entry.path, entry);
-}
-
-const videoManifest = readJson<VideoManifest>(path.resolve(__dirname, 'src/content/aeo-data/video-manifest.json'));
-const videoDateByPath = new Map<string, string>();
-
-if (videoManifest.dateModified) {
-  videoDateByPath.set('/videos/', videoManifest.dateModified);
-}
-
-for (const video of videoManifest.videos ?? []) {
-  if (video.watchPagePath)
-    videoDateByPath.set(video.watchPagePath, video.dateModified ?? videoManifest.dateModified ?? '');
-}
-
-const normalizePathname = (url: string): string => {
-  const pathname = new URL(url).pathname;
-  return pathname.endsWith('/') ? pathname : `${pathname}/`;
-};
-
-const getSitemapDates = (url: string): string | undefined => {
-  const pathname = normalizePathname(url);
-  const date = governanceByPath.get(pathname)?.reviewedAt ?? videoDateByPath.get(pathname);
-  return date ? toIsoDateTime(date) : undefined;
-};
-
-const getSitemapPriority = (url: string): number => {
-  const pathname = normalizePathname(url);
-
-  if (pathname === '/') return 1;
-  if (governanceByPath.has(pathname)) return 0.9;
-  if (pathname === '/videos/') return 0.7;
-  if (pathname.startsWith('/videos/')) return 0.55;
-
-  return 0.5;
-};
-
-const getSitemapChangefreq = (url: string): ChangeFreqEnum => {
-  const pathname = normalizePathname(url);
-
-  if (pathname === '/') return ChangeFreqEnum.WEEKLY;
-  if (governanceByPath.has(pathname) || pathname === '/videos/') return ChangeFreqEnum.MONTHLY;
-
-  return ChangeFreqEnum.YEARLY;
-};
+const hasExternalScripts = false;
+const whenExternalScripts = (items: (() => AstroIntegration) | (() => AstroIntegration)[] = []) =>
+  hasExternalScripts ? (Array.isArray(items) ? items.map((item) => item()) : [items()]) : [];
 
 export default defineConfig({
-  site: siteSettings.site,
-  base: siteSettings.base,
-  trailingSlash: siteSettings.trailingSlash ? 'always' : 'never',
   output: 'static',
 
   integrations: [
     sitemap({
       filter: (page) => !page.endsWith('/search/'),
-      serialize: (item) => {
-        const lastmod = getSitemapDates(item.url);
-
-        return {
-          ...item,
-          ...(lastmod ? { lastmod } : {}),
-          changefreq: getSitemapChangefreq(item.url),
-          priority: getSitemapPriority(item.url),
-        };
+    }),
+    mdx(),
+    icon({
+      include: {
+        tabler: ['*'],
+        'flat-color-icons': [
+          'template',
+          'gallery',
+          'approval',
+          'document',
+          'advertising',
+          'currency-exchange',
+          'voice-presentation',
+          'business-contact',
+          'database',
+        ],
       },
+    }),
+
+    ...whenExternalScripts(() =>
+      partytown({
+        config: { forward: ['dataLayer.push'] },
+      })
+    ),
+
+    compress({
+      CSS: true,
+      HTML: {
+        'html-minifier-terser': {
+          removeAttributeQuotes: false,
+        },
+      },
+      Image: false,
+      JavaScript: true,
+      SVG: false,
+      Logger: 1,
+    }),
+
+    astrowind({
+      config: './src/config.yaml',
     }),
   ],
 
   image: {
+    // Astro's default Sharp service handles local images.
+    //
+    // Most remote CDN images (Unsplash, Cloudinary, Imgix…) are routed by
+    // src/components/common/Image.astro through `unpic`, which rewrites the
+    // URL with CDN-side query parameters and serves it straight from the
+    // provider — Astro never downloads it, so they don't need to be listed.
+    //
+    // `domains` only matters for remote URLs that fall through to Astro's
+    // native <Image /> (i.e. providers Unpic can't detect, like Pixabay).
+    // Listed entries are authorized to be processed by Sharp.
     domains: ['cdn.pixabay.com'],
+  },
+
+  markdown: {
+    processor: unified({
+      remarkPlugins: [readingTimeRemarkPlugin],
+      rehypePlugins: [responsiveTablesRehypePlugin],
+    }),
   },
 
   vite: {

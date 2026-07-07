@@ -1,0 +1,61 @@
+---
+import { contactData } from '~/data/contact';
+import GoogleMapsRatingBadge from '~/components/common/GoogleMapsRatingBadge.astro';
+
+export interface Props {
+  id?: string;
+  title?: string;
+  subtitle?: string;
+  showRatingBadge?: boolean;
+}
+
+const {
+  id,
+  title = 'مسیر رسمی تماس و مشاهده نمونه‌کارها',
+  subtitle = 'برای هماهنگی نوبت، مشاهده نمونه‌کارهای دکتر سعید قزلباش یا مسیریابی به کلینیک، از لینک‌های رسمی زیر استفاده کنید.',
+  showRatingBadge = true,
+} = Astro.props;
+---
+
+<section {...id ? { id } : {}} class="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+  <div class="rounded-2xl border border-gray-200 bg-white p-6 md:p-8 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+    <h2 class="text-3xl font-bold tracking-tight mb-3">{title}</h2>
+    <p class="text-muted leading-8 mb-6">{subtitle}</p>
+
+    <div class:list={['grid gap-4', showRatingBadge ? 'md:grid-cols-4' : 'md:grid-cols-3']}>
+      <a
+        class="rounded-xl bg-gray-50 p-4 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700"
+        href={`tel:${contactData.phone}`}
+      >
+        <strong>تماس با کلینیک</strong>
+        <span class="block text-sm text-muted mt-2">{contactData.phoneDisplay}</span>
+      </a>
+
+      <a
+        class="rounded-xl bg-gray-50 p-4 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700"
+        href={contactData.instagram}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <strong>نمونه‌کارها در اینستاگرام</strong>
+        <span class="block text-sm text-muted mt-2">@doctor.ghezelbaash</span>
+      </a>
+
+      <a
+        class="rounded-xl bg-gray-50 p-4 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700"
+        href={contactData.googleMap}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <strong>مسیریابی در گوگل‌مپ</strong>
+        <span class="block text-sm text-muted mt-2">{contactData.address}</span>
+      </a>
+
+      {showRatingBadge && <GoogleMapsRatingBadge compact />}
+    </div>
+
+    <p class="text-sm text-muted leading-7 mt-5">
+      ساعت کاری ثبت‌شده در اطلاعات سایت: {contactData.openingHours}
+    </p>
+  </div>
+</section>

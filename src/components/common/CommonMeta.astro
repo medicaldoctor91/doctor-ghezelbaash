@@ -1,0 +1,71 @@
+---
+import { getAsset } from '~/utils/permalinks';
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="manifest" href={getAsset('/site.webmanifest')} />
+<link rel="sitemap" href={getAsset('/sitemap-index.xml')} />
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Entity Registry Graph"
+  href={getAsset('/graph.json')}
+/>
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Data Registry Index"
+  href={getAsset('/data/index.json')}
+/>
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Evidence Map"
+  href={getAsset('/data/evidence-map.json')}
+/>
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Decision Matrix"
+  href={getAsset('/data/decision-matrix.json')}
+/>
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Answer Units"
+  href={getAsset('/data/answers.json')}
+/>
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Entity Crosswalk"
+  href={getAsset('/data/entity-crosswalk.json')}
+/>
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Entity Dataset"
+  href={getAsset('/data/ghezelbaash-entity-dataset.json')}
+/>
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Treatments List"
+  href={getAsset('/data/treatments.json')}
+/>
+<link
+  rel="alternate"
+  type="application/ld+json"
+  title="Ghezelbaash Video Manifest"
+  href={getAsset('/data/video-manifest.json')}
+/>
+<link
+  rel="alternate"
+  type="application/json"
+  title="Ghezelbaash Search Index"
+  href={getAsset('/data/search-index.json')}
+/>
+
+<link rel="alternate" type="text/plain" title="Ghezelbaash LLMs Guide" href={getAsset('/llms.txt')} />
+<link rel="alternate" type="text/plain" title="Ghezelbaash Full LLMs Guide" href={getAsset('/llms-full.txt')} />

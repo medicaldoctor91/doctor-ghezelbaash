@@ -1,0 +1,69 @@
+---
+import PageEntityDefinitionBlock from '~/components/common/PageEntityDefinitionBlock.astro';
+import PageFreshnessBlock from '~/components/common/PageFreshnessBlock.astro';
+import PageVideoTranscriptBlock from '~/components/common/PageVideoTranscriptBlock.astro';
+import PageEvidenceBlock from '~/components/common/PageEvidenceBlock.astro';
+import Layout from '~/layouts/PageLayout.astro';
+import Hero from '~/components/widgets/Hero.astro';
+import BreadcrumbTrail from '~/components/common/BreadcrumbTrail.astro';
+import ContentContactBox from '~/components/common/ContentContactBox.astro';
+import GoogleMapsRatingBadge from '~/components/common/GoogleMapsRatingBadge.astro';
+import PageMediaBlock from '~/components/common/PageMediaBlock.astro';
+import { contactData } from '~/data/contact';
+import { getPageMedia } from '~/data/pageMedia';
+import clinicContent from '~/data/content/clinic-page.html?raw';
+
+const pageMedia = getPageMedia('/dr-saeed-ghezelbash-aesthetic-clinic/');
+const contentHtml = clinicContent.replace(/<h1\b[^>]*>[\s\S]*?<\/h1>/i, '').trim();
+
+const metadata = {
+  title: 'کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه',
+  canonical: 'https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/',
+  description:
+    'معرفی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ آدرس، تماس، ساعت کاری، پزشک مسئول، مسیرهای رسمی مراجعه و چهار مسیر اصلی خدمات زیبایی.',
+  openGraph: { images: [{ url: pageMedia.ogImagePath, width: 1200, height: 630 }] },
+};
+
+const breadcrumbs = [{ name: 'خانه', href: '/' }, { name: 'درباره کلینیک' }];
+---
+
+<Layout metadata={metadata}>
+  <BreadcrumbTrail items={breadcrumbs} />
+
+  <Hero
+    tagline="هاب مکانی و سازمانی کلینیک"
+    title="کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه"
+    subtitle="آدرس، تماس، پزشک مسئول، مسیرهای رسمی مراجعه و چهار مگاپیلار خدمات در این صفحه یک‌جا جمع شده‌اند."
+    actions={[
+      { variant: 'primary', text: 'تماس برای هماهنگی', href: `tel:${contactData.phone}` },
+      { text: 'مسیریابی در گوگل‌مپ', href: contactData.googleMap, target: '_blank' },
+    ]}
+    image={{ src: pageMedia.heroImage, alt: pageMedia.heroAlt }}
+  />
+
+  <section id="google-maps-rating" class="mx-auto max-w-5xl px-4 pb-4 sm:px-6">
+    <GoogleMapsRatingBadge />
+  </section>
+
+  <PageEntityDefinitionBlock path="/dr-saeed-ghezelbash-aesthetic-clinic/" />
+  <PageFreshnessBlock path="/dr-saeed-ghezelbash-aesthetic-clinic/" />
+<PageMediaBlock
+    path="/dr-saeed-ghezelbash-aesthetic-clinic/"
+    title="تصاویر تکمیلی فضای کلینیک"
+    subtitle="فضای انتظار و نمای تکمیلی کلینیک در این بخش آمده‌اند تا صفحه کلینیک فقط یک آدرس متنی نباشد و حضور واقعی مکان دیده شود."
+  />
+
+  <section class="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <article
+      class="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:font-bold prose-headings:tracking-tight prose-headings:leading-tight prose-h2:mt-12 prose-h2:text-3xl prose-h3:mt-8 prose-h3:text-2xl prose-p:leading-9 prose-li:leading-8 prose-a:text-primary hover:prose-a:text-secondary prose-blockquote:border-primary prose-blockquote:text-muted prose-table:text-right"
+      set:html={contentHtml}
+    />
+  </section>
+
+  <PageVideoTranscriptBlock path="/dr-saeed-ghezelbash-aesthetic-clinic/" />
+  <PageEvidenceBlock path="/dr-saeed-ghezelbash-aesthetic-clinic/" />
+  <ContentContactBox
+    title="مسیرهای رسمی مراجعه به کلینیک"
+    subtitle="برای تماس، مشاهده نمونه‌کارها و مسیریابی حضوری، از همین مسیرهای رسمی ثبت‌شده استفاده کنید."
+  />
+</Layout>

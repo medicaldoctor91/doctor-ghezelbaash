@@ -1,0 +1,3711 @@
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "@id": "https://www.ghezelbaash.ir/data/treatments.json",
+  "name": "فهرست ماشین‌خوان خدمات و زیرخدمات قابل ارائه دکتر سعید قزلباش",
+  "description": "این فایل داده، سرویس‌ها و زیرسرویس‌های واقعی قابل ارائه را به مسیرهای زنده چهار مگاپیلار سایت نگاشت می‌کند.",
+  "numberOfItems": 122,
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-001",
+        "name": "بوتاکس در کرمانشاه",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/",
+          "servicePhone": "+989308209494"
+        },
+        "sameAs": ["https://www.ghezelbaash.ir/botox-kermanshah/#service"],
+        "subjectOf": {
+          "@id": "https://www.ghezelbaash.ir/botox-kermanshah/#webpage"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-002",
+        "name": "تزریق بوتاکس",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-003",
+        "name": "بوتاکس خط اخم",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-frown-lines",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-frown-lines",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-004",
+        "name": "بوتاکس پیشانی",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-forehead-lines",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-forehead-lines",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 5,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-005",
+        "name": "بوتاکس دور چشم و پنجه‌کلاغی",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-crows-feet",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-crows-feet",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 6,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-006",
+        "name": "لیفت ابرو با بوتاکس",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-lift-brow-botox-guaranteed-nyst-tail-brow-upper-nmy-rvd",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-lift-brow-botox-guaranteed-nyst-tail-brow-upper-nmy-rvd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 7,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-007",
+        "name": "بوتاکس بینی و بانی‌لاین",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-nose-kvchk",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-nose-kvchk",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 8,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-008",
+        "name": "بوتاکس لبخند لثه‌ای",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-gummy-smile",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-gummy-smile",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 9,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-009",
+        "name": "لیپ فلیپ با بوتاکس",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-lip-flip",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-lip-flip",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 10,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-010",
+        "name": "بوتاکس خطوط بارکدی لب",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-khtvt-barkd-lip-flj-nknyd-line-mvd-muscle-nyst",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-khtvt-barkd-lip-flj-nknyd-line-mvd-muscle-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 11,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-011",
+        "name": "بوتاکس چانه",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-chin-sngfrsh-mshkl-skin-nyst-gah-dhan-bsth-shdn-chin",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-chin-sngfrsh-mshkl-skin-nyst-gah-dhan-bsth-shdn-chin",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 12,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-012",
+        "name": "بوتاکس گردن",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-nfrtyt-lift-neck-jay-injection-by-mhasbh-nyst",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-nfrtyt-lift-neck-jay-injection-by-mhasbh-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 13,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-013",
+        "name": "نفرتیتی لیفت با بوتاکس",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-nfrtyt-lift-neck-jay-injection-by-mhasbh-nyst",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-nfrtyt-lift-neck-jay-injection-by-mhasbh-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 14,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-014",
+        "name": "بوتاکس تراپکس و شانه",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-traptox-neck-kshydh-tr-shanh-work",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-traptox-neck-kshydh-tr-shanh-work",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 15,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-015",
+        "name": "بوتاکس عضله ماستر",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-masseter",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-masseter",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 16,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-016",
+        "name": "بوتاکس تعریق موضعی",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-hyperhidrosis",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-hyperhidrosis",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 17,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-017",
+        "name": "بوتاکس زیر بغل",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-zyrbghl-mntghy-tryn-pathway-botox-trygh",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-zyrbghl-mntghy-tryn-pathway-botox-trygh",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 18,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-018",
+        "name": "بوتاکس کف دست",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-kf-hand-khshk-tr-shdn-mmkn-zf-grftn-hmrah",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-kf-hand-khshk-tr-shdn-mmkn-zf-grftn-hmrah",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 19,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-019",
+        "name": "بوتاکس کف پا",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-kf-pa-drd-injection-mlkrd-rah-rftn-dst-km-ngyryd",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-kf-pa-drd-injection-mlkrd-rah-rftn-dst-km-ngyryd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 20,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-020",
+        "name": "بوتاکس میگرن",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-migraine",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-migraine",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 21,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-021",
+        "name": "مزوبوتاکس و اسکین بوتاکس",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-mzvbvtaks-hman-botox-mmvl",
+        "category": "بوتاکس و نورومدولاتور",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#botox-mzvbvtaks-hman-botox-mmvl",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 22,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-022",
+        "name": "تزریق فیلر در کرمانشاه",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/",
+          "servicePhone": "+989308209494"
+        },
+        "sameAs": ["https://www.ghezelbaash.ir/filler-kermanshah/#service"],
+        "subjectOf": {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 23,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-023",
+        "name": "فیلر پوستی",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 24,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-024",
+        "name": "فیلر هیالورونیک اسید",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-hyaluronic-acid-eligible-hl-bvdn-yn-by-khyal-risk-nshdn",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-hyaluronic-acid-eligible-hl-bvdn-yn-by-khyal-risk-nshdn",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 25,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-025",
+        "name": "فیلر لب",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#lip-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#lip-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 26,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-026",
+        "name": "اصلاح عدم تقارن لب با فیلر",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-candidate-namnasb-vght-cheek-brjsth-tr",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-candidate-namnasb-vght-cheek-brjsth-tr",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 27,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-027",
+        "name": "فیلر زیر چشم",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#under-eye-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#under-eye-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 28,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-028",
+        "name": "فیلر گونه",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#cheek-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#cheek-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 29,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-029",
+        "name": "فیلر چانه",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#chin-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#chin-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 30,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-030",
+        "name": "فیلر زاویه فک و خط فک",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#jawline-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#jawline-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 31,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-031",
+        "name": "فیلر خط خنده",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#nasolabial-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#nasolabial-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 32,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-032",
+        "name": "فیلر خط ماریونت",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-khtvt-maryvnt-pr-nknyd-bbynyd-face-ghmgyn-shdh",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-khtvt-maryvnt-pr-nknyd-bbynyd-face-ghmgyn-shdh",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 33,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-033",
+        "name": "فیلر شقیقه",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#temple-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#temple-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 34,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-034",
+        "name": "فیلر بینی",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#nose-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#nose-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 35,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-035",
+        "name": "فیلر پیشانی و گلابلا",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-forehead-glabla-area-jay-injection-simple-rvtyn-nyst",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-forehead-glabla-area-jay-injection-simple-rvtyn-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 36,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-036",
+        "name": "فیلر دست",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#hand-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#hand-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 37,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-037",
+        "name": "فیلر گردن",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 38,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-038",
+        "name": "فیلر اسکار آکنه",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#acne-scar-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#acne-scar-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 39,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-039",
+        "name": "هیالاز و اصلاح فیلر",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#hyaluronidase-filler-correction",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#hyaluronidase-filler-correction",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 40,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-040",
+        "name": "حل کردن فیلر با هیالورونیداز",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#hyaluronidase-filler-correction",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#hyaluronidase-filler-correction",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 41,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-041",
+        "name": "کانتورینگ فول‌فیس",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-injection-fat-kantvryng-face-tool-dghygh-frm-dh-nyst",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-injection-fat-kantvryng-face-tool-dghygh-frm-dh-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 42,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-042",
+        "name": "هارمونی صورت",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-injection-fat-kantvryng-face-tool-dghygh-frm-dh-nyst",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-injection-fat-kantvryng-face-tool-dghygh-frm-dh-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 43,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-043",
+        "name": "کانتورینگ گونه",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#cheek-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#cheek-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 44,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-044",
+        "name": "کانتورینگ چانه",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#chin-filler",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#chin-filler",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 45,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-045",
+        "name": "کانتورینگ نیم‌رخ",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-chin-surgery-chin-prvfayl-sy-s-simple-nknyd",
+        "category": "فیلر، ژل و کانتورینگ",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#filler-chin-surgery-chin-prvfayl-sy-s-simple-nknyd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 46,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-046",
+        "name": "لیفت نخ در کرمانشاه",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+          "servicePhone": "+989308209494"
+        },
+        "sameAs": ["https://www.ghezelbaash.ir/thread-lift-kermanshah/#service"],
+        "subjectOf": {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#webpage"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 47,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-047",
+        "name": "لیفت صورت با نخ",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 48,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-048",
+        "name": "لیفت نخ ابرو",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-brow-lift",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-brow-lift",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 49,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-049",
+        "name": "لیفت شقیقه با نخ",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-brow-lift-temporal-lift-brow-upper-brdn-enough-nyst-eye",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-brow-lift-temporal-lift-brow-upper-brdn-enough-nyst-eye",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 50,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-050",
+        "name": "لیفت گونه با نخ",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-cheek-khal-shdh-kshydn-zybatrsh-nmy-knd",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-cheek-khal-shdh-kshydn-zybatrsh-nmy-knd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 51,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-051",
+        "name": "لیفت میدفیس با نخ",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-midface-vst-face-ghlt-khvandh-lower-face-mistake-treatment",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-midface-vst-face-ghlt-khvandh-lower-face-mistake-treatment",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 52,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-052",
+        "name": "لیفت خط فک با نخ",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-jawline-lift",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-jawline-lift",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 53,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-053",
+        "name": "لیفت نخ Jowl",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-jowl-avyzan-shdn-exclude-jaw-kshsh-simple-krd",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-jowl-avyzan-shdn-exclude-jaw-kshsh-simple-krd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 54,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-054",
+        "name": "لیفت نخ غبغب",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-submental-area",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-submental-area",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 55,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-055",
+        "name": "لیفت گردن با نخ",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-neck-lax-how-many-thread-shbyh-surgery-krd",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-neck-lax-how-many-thread-shbyh-surgery-krd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 56,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-056",
+        "name": "لیفت نخ بینی",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-nose-thread-surgery-bz-mvard-change-mhdvd-my-gyrd",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-nose-thread-surgery-bz-mvard-change-mhdvd-my-gyrd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 57,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-057",
+        "name": "لیفت نخ لب و گوشه لب",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-lip-gvshh-lip-smile-thread-upper-kshyd",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-lip-gvshh-lip-smile-thread-upper-kshyd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 58,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-058",
+        "name": "لیفت نخ بدن",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-body-face-sngyn-tr-vdh-lift-realistic-skht-tr-my",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-body-face-sngyn-tr-vdh-lift-realistic-skht-tr-my",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 59,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-059",
+        "name": "نخ PDO",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#pdo-thread",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#pdo-thread",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 60,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-060",
+        "name": "نخ PLLA",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#plla-thread",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#plla-thread",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 61,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-061",
+        "name": "نخ PCL",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#pcl-thread",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#pcl-thread",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 62,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-062",
+        "name": "نخ Silhouette",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#silhouette-thread",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#silhouette-thread",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 63,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-063",
+        "name": "نخ کاگ و نخ خاردار",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-shkl-thread-smooth-thread-pych-dar-thread-khardar-thread-mkhrvt",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-shkl-thread-smooth-thread-pych-dar-thread-khardar-thread-mkhrvt",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 64,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-064",
+        "name": "نخ جوانسازی و کلاژن‌ساز",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-jvansaz-thread-klazhn-saz-thread-hjm-dhndh-khanvadh-how-many",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-jvansaz-thread-klazhn-saz-thread-hjm-dhndh-khanvadh-how-many",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 65,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-065",
+        "name": "ارزیابی اسکالپترا",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-sculptra-thread-nyst-collagen-my-sazd-face-msl-thread-nmy",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-sculptra-thread-nyst-collagen-my-sazd-face-msl-thread-nmy",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 66,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-066",
+        "name": "ارزیابی نخ مایع",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-may-thread-nyst-madh-ash-mlvm-nbashd-decision-doctor-nyst",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-may-thread-nyst-madh-ash-mlvm-nbashd-decision-doctor-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 67,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-067",
+        "name": "آنزیم لیپولیز غبغب",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-anzym-lypvlyz-submental-fat-hdf-my-gyrd-skin-excess",
+        "category": "لیفت نخ و نخ‌های زیبایی",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#thread-lift-anzym-lypvlyz-submental-fat-hdf-my-gyrd-skin-excess",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 68,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-068",
+        "name": "درمان مشکلات زیبایی در کرمانشاه",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+          "servicePhone": "+989308209494"
+        },
+        "sameAs": ["https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#service"],
+        "subjectOf": {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#webpage"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 69,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-069",
+        "name": "مشاوره پزشکی زیبایی",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-diagnostic-hub",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-diagnostic-hub",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 70,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-070",
+        "name": "درمان جوش فعال",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#active-acne-treatment",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#active-acne-treatment",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 71,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-071",
+        "name": "درمان جوش کومدونال و التهابی",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-acne-kvmdvnal-acne-inflammation-yky-nyst-treatment-yky-bashd",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-acne-kvmdvnal-acne-inflammation-yky-nyst-treatment-yky-bashd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 72,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-072",
+        "name": "مزوتراپی جوش",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-acne-skin-mlthb-jay-azmvn-kvktl-nyst",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-acne-skin-mlthb-jay-azmvn-kvktl-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 73,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-073",
+        "name": "درمان لک پوستی",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#hyperpigmentation-treatment",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#hyperpigmentation-treatment",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 74,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-074",
+        "name": "درمان لک و ملاسما",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-melasma-pigment-mghavm-treatment-thajm-sban-nknyd",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-melasma-pigment-mghavm-treatment-thajm-sban-nknyd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 75,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-075",
+        "name": "درمان لک آفتاب",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-pigment-aftab-vght-light-skin-aram-ghan-krdh-tyrh-tr",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-pigment-aftab-vght-light-skin-aram-ghan-krdh-tyrh-tr",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 76,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-076",
+        "name": "درمان لک بعد جوش یا PIH",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-pigment-after-acne-pih-inflammation-rfth-rng-mandh",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-pigment-after-acne-pih-inflammation-rfth-rng-mandh",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 77,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-077",
+        "name": "مزوتراپی لک",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-pigment-thryk-nknyd-nvsh-mlvm-nyst",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-pigment-thryk-nknyd-nvsh-mlvm-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 78,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-078",
+        "name": "پیلینگ شیمیایی",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-pylyng-method-anrzhy-mhvr-treatment-pigment-nystnd-mgr-candidate-drst",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-pylyng-method-anrzhy-mhvr-treatment-pigment-nystnd-mgr-candidate-drst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 79,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-079",
+        "name": "درمان جای جوش و اسکار آکنه",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#acne-scar-treatment",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#acne-scar-treatment",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 80,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-080",
+        "name": "سابسیژن جای جوش",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#subcision-acne-scar",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#subcision-acne-scar",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 81,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-081",
+        "name": "پانچ اسکار",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#punch-acne-scar",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#punch-acne-scar",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 82,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-082",
+        "name": "میکرونیدلینگ",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-subcision-filler-prp-lyzr-mykrvnydlyng-combination-vght-mna-dard-hdf",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-subcision-filler-prp-lyzr-mykrvnydlyng-combination-vght-mna-dard-hdf",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 83,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-083",
+        "name": "آر اف فرکشنال",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-subcision-filler-prp-lyzr-mykrvnydlyng-combination-vght-mna-dard-hdf",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-subcision-filler-prp-lyzr-mykrvnydlyng-combination-vght-mna-dard-hdf",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 84,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-084",
+        "name": "جوانسازی با لیزر",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-subcision-filler-prp-lyzr-mykrvnydlyng-combination-vght-mna-dard-hdf",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-subcision-filler-prp-lyzr-mykrvnydlyng-combination-vght-mna-dard-hdf",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 85,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-085",
+        "name": "درمان منافذ باز",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mnafz-tissue-nahmvar-skin-smooth-nmy-knym-rftar-skin-correction",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mnafz-tissue-nahmvar-skin-smooth-nmy-knym-rftar-skin-correction",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 86,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-086",
+        "name": "پاکسازی پوست",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-diagnostic-hub",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-diagnostic-hub",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 87,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-087",
+        "name": "PRP پوست و مو",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#prp-skin-hair",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#prp-skin-hair",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 88,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-088",
+        "name": "PRP صورت",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-prp-skin-help-touchup-lift-hjm-dh",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-prp-skin-help-touchup-lift-hjm-dh",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 89,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-089",
+        "name": "PRP مو",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-prp-hair-loss-mvy-injection-response-nmy-dhd",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-prp-hair-loss-mvy-injection-response-nmy-dhd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 90,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-090",
+        "name": "PRP زیر چشم",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#prp-skin-hair",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#prp-skin-hair",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 91,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-091",
+        "name": "PRP جای جوش",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-prp-filler-scar-acne-nghsh-help-treatment-asl-mistake-ngyryd",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-prp-filler-scar-acne-nghsh-help-treatment-asl-mistake-ngyryd",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 92,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-092",
+        "name": "مزوتراپی پوست و مو",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#mesotherapy-skin-hair",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#mesotherapy-skin-hair",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 93,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-093",
+        "name": "مزوتراپی پوست",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-skin-vght-hdf-quality-skin-prkrdn-face",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-skin-vght-hdf-quality-skin-prkrdn-face",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 94,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-094",
+        "name": "مزوتراپی مو",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-hair-injection-before-diagnosis-hair-loss-pathway-kvtah-nmy",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-hair-injection-before-diagnosis-hair-loss-pathway-kvtah-nmy",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 95,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-095",
+        "name": "مزوتراپی زیر چشم",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#mesotherapy-skin-hair",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#mesotherapy-skin-hair",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 96,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-096",
+        "name": "مزوتراپی غبغب",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-lypvsakshn-submental-lypvlyz-injection-yky-nyst",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-lypvsakshn-submental-lypvlyz-injection-yky-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 97,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-097",
+        "name": "اسکین‌بوستر",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-askyn-bvstr-chyst-asm-ghshng-nyst-dsth-treatment",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-askyn-bvstr-chyst-asm-ghshng-nyst-dsth-treatment",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 98,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-098",
+        "name": "مزوژل",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 99,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-099",
+        "name": "مزوژل زیر چشم",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 100,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-100",
+        "name": "تزریق هیدروژل",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 101,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-101",
+        "name": "جالپرو",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-jalprv-quality-skin-hdf-zavyh-saz-lift",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-jalprv-quality-skin-hdf-zavyh-saz-lift",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 102,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-102",
+        "name": "پروفایلو",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-profhilo-ha-dard-filler-klasyk-nyst",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-profhilo-ha-dard-filler-klasyk-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 103,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-103",
+        "name": "سونه‌کاس",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 104,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-104",
+        "name": "پروسترولین",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#jalupro-profhilo-skin-boosters",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 105,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-105",
+        "name": "اگزوزوم پوست",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#skin-rejuvenation",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#skin-rejuvenation",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 106,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-106",
+        "name": "اگزوزوم مو",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#hair-loss-treatment",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#hair-loss-treatment",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 107,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-107",
+        "name": "درمان ریزش مو",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#hair-loss-treatment",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#hair-loss-treatment",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 108,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-108",
+        "name": "درمان ریزش موی الگوی مردانه و زنانه",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-prp-hair-help-ahtmal-brkh-algv-answer-guaranteed-hair-loss",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-prp-hair-help-ahtmal-brkh-algv-answer-guaranteed-hair-loss",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 109,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-109",
+        "name": "کاشت مو؛ ارزیابی کاندید",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-kasht-hair-vght-bank-hair-cause-hair-loss-expectation-patient",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-kasht-hair-vght-bank-hair-cause-hair-loss-expectation-patient",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 110,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-110",
+        "name": "لیپوساکشن غبغب",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#submental-liposuction",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#submental-liposuction",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 111,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-111",
+        "name": "ساکشن غبغب در کرمانشاه",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#submental-liposuction",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#submental-liposuction",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 112,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-112",
+        "name": "کانتورینگ زیر چانه",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#submental-liposuction",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#submental-liposuction",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 113,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-113",
+        "name": "فرم‌دهی گردن و خط فک",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#facial-contouring",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#facial-contouring",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 114,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-114",
+        "name": "برداشت چربی موضعی زیر چانه",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#submental-liposuction",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#submental-liposuction",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 115,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-115",
+        "name": "تزریق چربی صورت",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-injection-fat-face-duration-mzyt-nyst",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-injection-fat-face-duration-mzyt-nyst",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 116,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-116",
+        "name": "تزریق چربی دست",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-injection-fat-mvard-eligible-review",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#aesthetic-injection-fat-mvard-eligible-review",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 117,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-117",
+        "name": "کانتورینگ صورت",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#facial-contouring",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#facial-contouring",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 118,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/#service-118",
+        "name": "جوانسازی پوست و مو در کرمانشاه",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#skin-rejuvenation",
+        "category": "پوست، مو، اسکار، جوانسازی و غبغب",
+        "serviceType": "پزشکی زیبایی غیرجراحی",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه",
+          "alternateName": "Kermanshah"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#skin-rejuvenation",
+          "servicePhone": "+989308209494"
+        }
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 119,
+      "item": {
+        "@type": "Service",
+        "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#service",
+        "name": "درمان مشکلات زیبایی در کرمانشاه",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه"
+        },
+        "description": "هاب تشخیصی مشکلات زیبایی؛ لک، جوش، جای جوش، ریزش مو، جوانسازی، غبغب و کانتورینگ صورت.",
+        "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+        "serviceType": "پزشکی زیبایی",
+        "mainEntityOfPage": {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#webpage"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+          "servicePhone": "+989308209494"
+        },
+        "subjectOf": {
+          "@id": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#webpage"
+        },
+        "sameAs": ["https://www.ghezelbaash.ir/#service-068"]
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 120,
+      "item": {
+        "@type": ["Service", "MedicalProcedure"],
+        "@id": "https://www.ghezelbaash.ir/botox-kermanshah/#service",
+        "name": "بوتاکس در کرمانشاه",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه"
+        },
+        "description": "راهنمای پزشک‌محور بوتاکس در کرمانشاه؛ تشخیص عضله، کاربردها، ریسک‌ها، عوارض، ماندگاری و مراقبت.",
+        "url": "https://www.ghezelbaash.ir/botox-kermanshah/",
+        "serviceType": "پزشکی زیبایی",
+        "mainEntityOfPage": {
+          "@id": "https://www.ghezelbaash.ir/botox-kermanshah/#webpage"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/botox-kermanshah/",
+          "servicePhone": "+989308209494"
+        },
+        "subjectOf": {
+          "@id": "https://www.ghezelbaash.ir/botox-kermanshah/#webpage"
+        },
+        "sameAs": ["https://www.ghezelbaash.ir/#service-001"]
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 121,
+      "item": {
+        "@type": ["Service", "MedicalProcedure"],
+        "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#service",
+        "name": "تزریق فیلر در کرمانشاه",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه"
+        },
+        "description": "راهنمای تزریق فیلر در کرمانشاه؛ تشخیص حجم، فیلر لب و زیر چشم، کانتورینگ، اصلاح فیلر و ریسک انسداد عروقی.",
+        "url": "https://www.ghezelbaash.ir/filler-kermanshah/",
+        "serviceType": "پزشکی زیبایی",
+        "mainEntityOfPage": {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/filler-kermanshah/",
+          "servicePhone": "+989308209494"
+        },
+        "subjectOf": {
+          "@id": "https://www.ghezelbaash.ir/filler-kermanshah/#webpage"
+        },
+        "sameAs": ["https://www.ghezelbaash.ir/#service-022"]
+      }
+    },
+    {
+      "@type": "ListItem",
+      "position": 122,
+      "item": {
+        "@type": ["Service", "MedicalProcedure"],
+        "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#service",
+        "name": "لیفت نخ در کرمانشاه",
+        "provider": [
+          {
+            "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash"
+          },
+          {
+            "@id": "https://www.ghezelbaash.ir/#clinic"
+          }
+        ],
+        "areaServed": {
+          "@type": "City",
+          "name": "کرمانشاه"
+        },
+        "description": "راهنمای لیفت نخ در کرمانشاه؛ کاندید مناسب، جنس نخ، غبغب، عوارض، مراقبت و محدودیت‌ها.",
+        "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+        "serviceType": "پزشکی زیبایی",
+        "mainEntityOfPage": {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#webpage"
+        },
+        "availableChannel": {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+          "servicePhone": "+989308209494"
+        },
+        "subjectOf": {
+          "@id": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#webpage"
+        },
+        "sameAs": ["https://www.ghezelbaash.ir/#service-046"]
+      }
+    }
+  ],
+  "dateModified": "2026-07-02"
+}

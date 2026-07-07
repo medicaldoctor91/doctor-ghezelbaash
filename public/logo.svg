@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">لوگوی کلینیک زیبایی دکتر سعید قزلباش</title>
+  <desc id="desc">لوگوی متنی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه</desc>
+  <rect width="1024" height="1024" rx="210" fill="#f8fafc"/>
+  <circle cx="512" cy="330" r="164" fill="#0f172a"/>
+  <path d="M250 700c76-112 170-168 282-168 111 0 198 56 261 168" fill="none" stroke="#0f172a" stroke-width="54" stroke-linecap="round"/>
+  <text x="512" y="870" text-anchor="middle" font-family="Tahoma, Arial, sans-serif" font-size="58" font-weight="700" fill="#0f172a">دکتر سعید قزلباش</text>
+</svg>

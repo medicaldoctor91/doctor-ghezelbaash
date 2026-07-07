@@ -1,0 +1,604 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://www.ghezelbaash.ir/data/index.json#dataset",
+  "url": "https://www.ghezelbaash.ir/data/index.json",
+  "name": "Machine-readable data manifest for Dr. Saeed Ghezelbaash website",
+  "alternateName": "فهرست مرکزی داده‌های ماشین‌خوان سایت دکتر سعید قزلباش",
+  "description": "Central machine-readable manifest for the Dr. Saeed Ghezelbash authority site.",
+  "version": "2026.7-structured-data-layer",
+  "dateModified": "2026-07-07",
+  "inLanguage": "fa-IR",
+  "publisher": {
+    "@type": "Person",
+    "@id": "https://www.ghezelbaash.ir/#person",
+    "name": "دکتر سعید قزلباش"
+  },
+  "site": {
+    "@id": "https://www.ghezelbaash.ir/#website",
+    "name": "کلینیک زیبایی دکتر سعید قزلباش",
+    "canonicalHost": "https://www.ghezelbaash.ir/",
+    "language": "fa-IR",
+    "textDirection": "rtl",
+    "primaryEntity": "https://www.ghezelbaash.ir/#person",
+    "localEntity": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#kermanshah-aesthetic-clinic"
+  },
+  "canonicalPolicy": {
+    "host": "https://www.ghezelbaash.ir",
+    "pages": "trailing-slash",
+    "files": "no-trailing-slash",
+    "sitemap": "https://www.ghezelbaash.ir/sitemap-index.xml",
+    "robots": "https://www.ghezelbaash.ir/robots.txt"
+  },
+  "canonicalPages": [
+    {
+      "id": "home-person-hub",
+      "url": "https://www.ghezelbaash.ir/",
+      "role": "primary-person-profile-page",
+      "entity": "دکتر سعید قزلباش",
+      "indexable": true
+    },
+    {
+      "id": "clinic-local-hub",
+      "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "role": "clinic-local-entity-hub",
+      "entity": "کلینیک زیبایی دکتر سعید قزلباش",
+      "indexable": true
+    },
+    {
+      "id": "botox-pillar",
+      "url": "https://www.ghezelbaash.ir/botox-kermanshah/",
+      "role": "service-decision-megapillar",
+      "topic": "botox",
+      "indexable": true
+    },
+    {
+      "id": "filler-pillar",
+      "url": "https://www.ghezelbaash.ir/filler-kermanshah/",
+      "role": "service-decision-megapillar",
+      "topic": "filler",
+      "indexable": true
+    },
+    {
+      "id": "thread-lift-pillar",
+      "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+      "role": "service-decision-megapillar",
+      "topic": "thread-lift",
+      "indexable": true
+    },
+    {
+      "id": "aesthetic-concerns-pillar",
+      "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+      "role": "diagnostic-concern-hub",
+      "topic": "aesthetic-concerns",
+      "indexable": true
+    },
+    {
+      "id": "search-utility",
+      "url": "https://www.ghezelbaash.ir/search/",
+      "role": "utility-search-page",
+      "indexable": false,
+      "sitemap": false,
+      "searchParameter": "q",
+      "searchActionTarget": "https://www.ghezelbaash.ir/search/?q={search_term_string}"
+    }
+  ],
+  "assets": [
+    {
+      "id": "data-manifest",
+      "name": "Central data manifest",
+      "url": "https://www.ghezelbaash.ir/data/index.json",
+      "path": "public/data/index.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "coverage": [
+        "canonical-policy",
+        "dataset-discovery",
+        "machine-readable-assets",
+        "B12-B17-authority-layers"
+      ],
+      "notes": "Data index synced after B12-B17 authority layer. Self hash intentionally omitted because manifest is self-referential.",
+      "integrityNote": "Self hash is intentionally omitted because the manifest is self-referential.",
+      "byteSize": 19957,
+      "recordCount": 17
+    },
+    {
+      "id": "entity-graph",
+      "name": "Full entity and service graph",
+      "url": "https://www.ghezelbaash.ir/graph.json",
+      "path": "public/graph.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 1170134,
+      "sha256": "03a0c4c2e7af85ece058f6d36af6f53440a470845626d5a7b0f4ae61ba7c9271",
+      "coverage": [
+        "person",
+        "clinic",
+        "services",
+        "sameAs",
+        "VideoObject",
+        "video-transcript-segments",
+        "Dataset",
+        "monitoring-kit"
+      ],
+      "notes": "Graph registry with B12-B17 authority layers.",
+      "recordCount": 386
+    },
+    {
+      "id": "answer-layer",
+      "name": "Structured answer units",
+      "url": "https://www.ghezelbaash.ir/data/answers.json",
+      "path": "public/data/answers.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 178486,
+      "sha256": "6d9ee74b2f2579ee75694867f49c5fd7f1a22db6d9256959207a68a4f4bb4402",
+      "coverage": [
+        "AEO",
+        "FAQ",
+        "direct-answer",
+        "intent-map",
+        "answer-first-definitions"
+      ],
+      "dependsOn": [
+        "entity-graph",
+        "evidence-map"
+      ],
+      "notes": "Answer units: 58",
+      "recordCount": 58
+    },
+    {
+      "id": "evidence-map",
+      "name": "Evidence and claim governance map",
+      "url": "https://www.ghezelbaash.ir/data/evidence-map.json",
+      "path": "public/data/evidence-map.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 117140,
+      "sha256": "20b6b99d137473fd8155c0a682529f3ad74f6505fe22b7ec2fce916691abb845",
+      "coverage": [
+        "claims",
+        "sources",
+        "review-status",
+        "visible-evidence",
+        "video-transcript-governance",
+        "AI-monitoring"
+      ],
+      "notes": "Evidence claims: 100; sources: 41",
+      "recordCount": 100,
+      "sourceCount": 41
+    },
+    {
+      "id": "decision-matrix",
+      "name": "Concern to service routing matrix",
+      "url": "https://www.ghezelbaash.ir/data/decision-matrix.json",
+      "path": "public/data/decision-matrix.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 21708,
+      "sha256": "637e368111f02cee86ca7fda6f8dd0aaf6722f9529f2011517b46302b7a97c8c",
+      "coverage": [
+        "suitability-screening",
+        "concern-routing",
+        "red-flags",
+        "video-assisted-routes"
+      ],
+      "dependsOn": [
+        "answer-layer",
+        "evidence-map"
+      ],
+      "notes": "Routes: 15",
+      "recordCount": 15
+    },
+    {
+      "id": "search-index",
+      "name": "Compact internal section-level search index",
+      "url": "https://www.ghezelbaash.ir/data/search-index.json",
+      "path": "public/data/search-index.json",
+      "type": "application/json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 2691127,
+      "sha256": "7087d170770a1b66d81199c20d5b2be4cf809ae2110c7608c2efbc604885124e",
+      "coverage": [
+        "section-retrieval",
+        "answer-first-definitions",
+        "visible-evidence",
+        "video-transcripts",
+        "Persian-normalization"
+      ],
+      "dependsOn": [
+        "answer-layer",
+        "decision-matrix"
+      ],
+      "notes": "Search records: 1440",
+      "recordCount": 1440
+    },
+    {
+      "id": "entity-dataset",
+      "name": "Entity dataset",
+      "url": "https://www.ghezelbaash.ir/data/ghezelbaash-entity-dataset.json",
+      "path": "public/data/ghezelbaash-entity-dataset.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 144347,
+      "sha256": "30d169d22476293ecfd6826d6fe3253422368974628da7c1d4a22e721ad22146",
+      "coverage": [
+        "entity-authority",
+        "site-pages",
+        "services",
+        "external-identity"
+      ],
+      "notes": "Entity dataset synced with external identity governance.",
+      "recordCount": 32
+    },
+    {
+      "id": "entity-crosswalk",
+      "name": "External identifier crosswalk",
+      "url": "https://www.ghezelbaash.ir/data/entity-crosswalk.json",
+      "path": "public/data/entity-crosswalk.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 6629,
+      "sha256": "fa244ecae1c3049fa62b03d04fd54de9723d7edf5275ba9de0abdb8931fba007",
+      "coverage": [
+        "sameAs",
+        "external-ids",
+        "entity-reconciliation"
+      ],
+      "notes": "External identity crosswalk now separates person, clinic organization, and dataset/repository layers.",
+      "recordCount": 2
+    },
+    {
+      "id": "treatments-catalog",
+      "name": "Treatment and service catalog",
+      "url": "https://www.ghezelbaash.ir/data/treatments.json",
+      "path": "public/data/treatments.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-03",
+      "byteSize": 130463,
+      "sha256": "11f10650dd4efc77c6aaeebf240ea61b6a9bcbb3804dbc280eee8b7fa130c5f0",
+      "coverage": [
+        "services",
+        "treatments",
+        "offer-catalog"
+      ],
+      "notes": "Items: 122"
+    },
+    {
+      "id": "google-maps-rating",
+      "name": "Google Maps rating snapshot",
+      "url": "https://www.ghezelbaash.ir/data/google-maps-rating.json",
+      "path": "public/data/google-maps-rating.json",
+      "type": "application/json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-03",
+      "byteSize": 662,
+      "sha256": "3b4745bafe0980add4e2567a3b0c78b52f314a78e255b6afc5900e6a7b78e14c",
+      "coverage": [
+        "local-trust",
+        "rating-snapshot",
+        "maps"
+      ],
+      "notes": "Rating: 5 / count: 163"
+    },
+    {
+      "id": "llms-navigation",
+      "name": "Compact AI crawler navigation guide",
+      "url": "https://www.ghezelbaash.ir/llms.txt",
+      "path": "public/llms.txt",
+      "type": "text/plain",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 4703,
+      "sha256": "a5284f929fe2e823eda1f52320d78d3653679ca503e14363257a3cc601402a53",
+      "coverage": [
+        "AI-crawler-navigation",
+        "data-discovery",
+        "B12-B17-authority-layers"
+      ],
+      "notes": "Compact crawler navigation with B12-B17 authority layers"
+    },
+    {
+      "id": "llms-full-navigation",
+      "name": "Full AI crawler navigation guide",
+      "url": "https://www.ghezelbaash.ir/llms-full.txt",
+      "path": "public/llms-full.txt",
+      "type": "text/plain",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "byteSize": 31492,
+      "sha256": "94b0ba2e3be1d6873e18311204610f3c59689ed8c7d0574fc90927a043461b7c",
+      "coverage": [
+        "AI-crawler-navigation",
+        "answer-extraction",
+        "B12-B17-authority-layers"
+      ],
+      "dependsOn": [
+        "answer-layer",
+        "evidence-map",
+        "decision-matrix",
+        "search-index"
+      ],
+      "notes": "Full crawler navigation with B12-B17 authority layer summary"
+    },
+    {
+      "id": "robots",
+      "name": "Robots directives",
+      "url": "https://www.ghezelbaash.ir/robots.txt",
+      "path": "public/robots.txt",
+      "type": "text/plain",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-03",
+      "byteSize": 311,
+      "sha256": "6928e4277b5a005f2eaf0b0155cc68e1a174fb530f395b1a30e1c1657f046471",
+      "coverage": [
+        "crawler-access",
+        "sitemap-discovery"
+      ]
+    },
+    {
+      "id": "video-manifest",
+      "name": "Video placement and transcript manifest",
+      "url": "https://www.ghezelbaash.ir/data/video-manifest.json",
+      "path": "public/data/video-manifest.json",
+      "type": "application/ld+json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-04",
+      "coverage": [
+        "video-placement",
+        "VideoObject",
+        "transcript-layer",
+        "clip-segments"
+      ],
+      "dependsOn": [
+        "search-index"
+      ],
+      "notes": "Videos: 12; transcripts: 12",
+      "recordCount": 12,
+      "byteSize": 62095,
+      "sha256": "ff2ce91a731d5dd41414ca3ed846338bcbf0aa4be6b5f24b4b27dbbe25e61563",
+      "transcriptCount": 12
+    },
+    {
+      "id": "video-sitemap",
+      "name": "Video sitemap",
+      "url": "https://www.ghezelbaash.ir/video-sitemap.xml",
+      "path": "public/video-sitemap.xml",
+      "type": "application/xml",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-03",
+      "coverage": [
+        "video-discovery",
+        "self-hosted-video",
+        "VideoObject"
+      ],
+      "dependsOn": [
+        "video-manifest"
+      ],
+      "notes": "Video sitemap URLs: 6; videos: 12",
+      "recordCount": 12,
+      "byteSize": 14512,
+      "sha256": "72f45f903da15c1eddbc752ab5f23799a0072b74006869185cf3b293659551ed"
+    },
+    {
+      "id": "video-performance-profile",
+      "name": "Video performance hardening profile",
+      "path": "public/data/video-manifest.json",
+      "url": "https://www.ghezelbaash.ir/data/video-manifest.json",
+      "type": "application/json",
+      "encoding": "utf-8",
+      "indexable": false,
+      "lastModified": "2026-07-03",
+      "coverage": [
+        "video-performance",
+        "asset-delivery",
+        "layout-stability"
+      ],
+      "byteSize": 36979,
+      "sha256": "37a6da82461d985f4c3554a79ed542f4923de285da2753fccad92d15dcb06f18"
+    }
+  ],
+  "counts": {
+    "answers": {
+      "answerUnits": 58
+    },
+    "evidence": {
+      "claims": 99,
+      "sourceRegistry": 41
+    },
+    "decision": {
+      "routes": 15,
+      "serviceMapEntries": 5
+    },
+    "search": {
+      "records": 1440
+    },
+    "treatments": {
+      "items": 122
+    },
+    "crosswalk": {
+      "entities": 2,
+      "serviceCatalogEntries": 0
+    },
+    "entityDataset": {
+      "services": 122,
+      "sitePages": 6
+    },
+    "rating": {
+      "ratingValue": 5,
+      "ratingCount": 163,
+      "enabledInSchema": true
+    },
+    "graph": {
+      "nodes": 385
+    },
+    "searchIndexRecords": 1440,
+    "videos": 12,
+    "videoTranscripts": 12,
+    "videoSegments": 36,
+    "searchRecords": 1440,
+    "evidenceClaims": 99,
+    "evidenceSources": 41,
+    "decisionRoutes": 15,
+    "graphNodes": 385,
+    "videoObjects": 12,
+    "monitoringPromptSets": 4
+  },
+  "preferredRetrievalOrder": [
+    "data-manifest",
+    "answer-layer",
+    "evidence-map",
+    "decision-matrix",
+    "search-index",
+    "entity-graph",
+    "video-manifest",
+    "canonical-pages"
+  ],
+  "governance": {
+    "primarySourceOfTruth": [
+      "src/config.yaml",
+      "public/data/index.json",
+      "public/data/answers.json",
+      "public/data/evidence-map.json",
+      "public/data/decision-matrix.json",
+      "public/graph.json"
+    ],
+    "doNotTreatAsRankingClaim": [
+      "google-site-verification"
+    ],
+    "medicalEligibilityPolicy": "decision-matrix routes are for content routing and screening language only; definitive suitability remains clinical-assessment-required.",
+    "stalenessPolicy": "Assets that represent answer, evidence, decision, rating, or service data should update dateModified when content changes."
+  },
+  "anchorMigration": {
+    "version": "2026.7-b1-semantic-anchor-migration",
+    "dateModified": "2026-07-03",
+    "status": "semantic-anchor-migration-applied",
+    "migratedAnchors": 1261,
+    "pages": {
+      "/": 9,
+      "/botox-kermanshah/": 254,
+      "/filler-kermanshah/": 291,
+      "/thread-lift-kermanshah/": 518,
+      "/aesthetic-concerns-kermanshah/": 189
+    },
+    "policy": "Replace generic numeric anchors with heading-derived semantic anchors before video placement and graph projection."
+  },
+  "videoLayer": {
+    "version": "2026.7-b2-b3-video-placement-scar-safe",
+    "status": "placed-visible-manifested-no-videoobject-yet",
+    "videos": 12,
+    "pagesWithVideos": 6,
+    "manifest": "https://www.ghezelbaash.ir/data/video-manifest.json",
+    "nextPlannedStep": "B4 Style 3 evidence/decision, then B5 VideoObject + video sitemap + graph projection"
+  },
+  "style3Layer": {
+    "status": "active",
+    "evidenceClaims": 93,
+    "evidenceSources": 32,
+    "decisionRoutes": 15,
+    "decisionServiceMapEntries": 5,
+    "redFlagFamilies": 52
+  },
+  "graphProjectionPolicy": {
+    "version": "2026.7-b5-videoobject-sitemap-graph-replay",
+    "principle": "On-page JSON-LD contains only page-scoped VideoObject nodes and compact entity/page/service nodes; full evidence and decision data remain in external machine-readable datasets.",
+    "videoObjectCount": 12,
+    "videoSitemap": "https://www.ghezelbaash.ir/video-sitemap.xml",
+    "sourceFiles": [
+      "public/data/video-manifest.json",
+      "public/data/evidence-map.json",
+      "public/data/decision-matrix.json"
+    ],
+    "projectionFiles": [
+      "public/graph.json",
+      "src/data/schema/ghezelbaash-page-graphs.json",
+      "public/video-sitemap.xml"
+    ]
+  },
+  "finalAuditLayer": {
+    "status": "graph-hygiene-applied",
+    "removedInternalSameAs": "all-internal-sameAs-removed-recursively",
+    "policy": "sameAs is reserved for external identity equivalence; internal relationships use subjectOf, mentions, url, about, hasPart, isPartOf.",
+    "sameAsPolicy": "sameAs is reserved for external identity equivalence; internal relationships use subjectOf, mentions, url, about, hasPart, isPartOf."
+  },
+  "performanceHardening": {
+    "version": "2026.7-recovered-b7-video-performance-hardening",
+    "scope": [
+      "embedded videos",
+      "video delivery headers",
+      "video manifest",
+      "VideoObject contentSize/hash sync"
+    ],
+    "videoPreload": "none",
+    "videoHeaders": "Cache-Control immutable and Accept-Ranges for /videos/*",
+    "layout": "width/height attributes + aspect ratio class on all video tags"
+  },
+  "graphCompletenessProjection": {
+    "version": "2026.8-graph-completeness-projection",
+    "status": "active",
+    "principle": "The public graph linked from the document head should include the important page-scoped JSON-LD nodes and public machine-readable datasets, while avoiding unsafe sameAs misuse or ungrounded medical claims.",
+    "sourceFiles": [
+      "src/data/schema/ghezelbaash-page-graphs.json",
+      "public/data/*.json"
+    ],
+    "projectionTarget": "public/graph.json",
+    "addedPageStructuredNodes": 47,
+    "addedPublicDataNodes": 5,
+    "excluded": "No visible content changes; no broad claim expansion beyond existing page graph and public dataset registry."
+  },
+  "headDiscoveryLinks": {
+    "status": "active",
+    "version": "2026.10-data-discovery-links",
+    "policy": "The head exposes the public graph and supporting machine-readable public data files through rel=alternate links. These links are discovery aids for crawlers and AI/retrieval systems; rich-result eligibility still relies on page-scoped on-page JSON-LD and visible page content.",
+    "linkedFiles": [
+      "/graph.json",
+      "/data/index.json",
+      "/data/evidence-map.json",
+      "/data/decision-matrix.json",
+      "/data/answers.json",
+      "/data/entity-crosswalk.json",
+      "/data/ghezelbaash-entity-dataset.json",
+      "/data/treatments.json",
+      "/data/video-manifest.json",
+      "/data/search-index.json"
+    ]
+  },
+  "externalIdentityGovernance": {
+    "version": "2026.11-external-identity-dataset-governance",
+    "personWikidata": "https://www.wikidata.org/entity/Q140287622",
+    "clinicWikidata": "https://www.wikidata.org/entity/Q140288589",
+    "repositoryWikidata": "https://www.wikidata.org/entity/Q140304972",
+    "personHuggingFace": "https://huggingface.co/Ghezelbaash",
+    "clinicHuggingFaceOrganization": "https://huggingface.co/doctor-ghezelbaash",
+    "entityDataset": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+    "headLinkPolicy": "Only local machine-readable alternate representations are linked from head with rel=alternate. External identity/dataset URLs are modeled in graph/evidence/crosswalk, not as site-wide alternate head links."
+  },
+  "recordCount": 17,
+  "coverage": [
+    "structured-data-layer"
+  ]
+}

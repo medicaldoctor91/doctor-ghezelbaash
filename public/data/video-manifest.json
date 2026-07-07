@@ -1,0 +1,1022 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "@id": "https://www.ghezelbaash.ir/data/video-manifest.json#dataset",
+  "url": "https://www.ghezelbaash.ir/data/video-manifest.json",
+  "name": "Video placement manifest for Dr. Saeed Ghezelbash website",
+  "description": "مانیفست جای‌گذاری ویدئوهای self-hosted در صفحات indexable سایت، همراه با anchor، intent، هشدار تصمیمی و فایل‌های poster.",
+  "version": "2026.7-b13-video-transcript-segment-layer",
+  "dateModified": "2026-07-04",
+  "inLanguage": "fa-IR",
+  "governance": {
+    "scope": "Recovered B2-B6: visible video placement, scar/subcision terminology safety, Style 3 evidence/decision, VideoObject JSON-LD, video sitemap, and graph projection.",
+    "notIncludedYet": [],
+    "medicalTerminologyRule": "Subcision wording must use fibrotic scar / tethering / subcutaneous adhesion wording; no broad claim that subcision treats every depressed scar pattern."
+  },
+  "videos": [
+    {
+      "id": "home-workshop-thread-lift-training",
+      "file": "thread-lift-training-workshop-dr-ghezelbash.mp4",
+      "pagePath": "/",
+      "sectionAnchor": "#home-workshop-video-1",
+      "embedAnchor": "#video-home-workshop-thread-lift-training",
+      "title": "ویدئوی ورکشاپ آموزشی؛ تصمیم قبل از تکنیک",
+      "shortTitle": "ورکشاپ آموزشی ۱",
+      "description": "بخشی از فضای آموزشی دکتر قزلباش با تمرکز بر خواندن صورت، انتخاب بیمار و تصمیم‌گیری قبل از اجرای تکنیک.",
+      "placement": "بعد از توضیح ویدیوی ورکشاپ اول در صفحه خانه",
+      "role": "doctor-education-video",
+      "intent": "آموزش پزشک‌محور و تقویت هویت تشخیص‌محور صفحه خانه",
+      "keywords": [
+        "دکتر سعید قزلباش",
+        "آموزش پزشکان زیبایی",
+        "ورکشاپ لیفت نخ",
+        "تصمیم قبل از تکنیک",
+        "کرمانشاه"
+      ],
+      "clinicalNote": "این ویدئو به‌عنوان نشانه‌ای از نگاه آموزشی و تصمیم‌محور استفاده شده و وعده نتیجه درمانی برای بیمار نیست.",
+      "relatedAnchors": [
+        "#home-doctor-training-clinic-not-menu",
+        "#home-workshop-video-1"
+      ],
+      "crossLinks": [
+        {
+          "label": "لیفت نخ در کرمانشاه",
+          "url": "/thread-lift-kermanshah/"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 30.567,
+      "duration": "PT31S",
+      "byteSize": 3254259,
+      "sha256": "61d81b09804f32f954346e2f1c666b30b3f06a775dac131e73bcc7e3232d73a8",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/thread-lift-training-workshop-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/thread-lift-training-workshop-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/#video-home-workshop-thread-lift-training",
+      "pageUrl": "https://www.ghezelbaash.ir/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 80341,
+      "thumbnailSha256": "40574c0e0019311fd8ec3493e0c6b7528d77426b190fbd0139947d13e98d06bb",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/#video-home-workshop-thread-lift-training",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/home-workshop-thread-lift-training/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو لیفت نخ را از زاویه انتخاب درست کاندید توضیح می‌دهد. پیام اصلی این است که نخ برای هر افتادگی یا هر انتظار درمانی مناسب نیست؛ کیفیت پوست، شدت افتادگی، حجم ازدست‌رفته، مسیر کشش و مراقبت بعد از درمان باید قبل از تصمیم دیده شوند.",
+      "segments": [
+        {
+          "name": "انتخاب کاندید",
+          "startOffset": 0,
+          "endOffset": 10,
+          "description": "شدت افتادگی، کیفیت پوست و انتظار فرد بررسی می‌شود.",
+          "url": "https://www.ghezelbaash.ir/?t=0#video-home-workshop-thread-lift-training"
+        },
+        {
+          "name": "مرز توان نخ",
+          "startOffset": 10,
+          "endOffset": 20,
+          "description": "لیفت نخ با جراحی یا حجم‌دهی اشتباه گرفته نمی‌شود.",
+          "url": "https://www.ghezelbaash.ir/?t=10#video-home-workshop-thread-lift-training"
+        },
+        {
+          "name": "مراقبت و ریسک",
+          "startOffset": 20,
+          "endOffset": 30,
+          "description": "مراقبت پس از نخ و محدودیت‌های نتیجه یادآوری می‌شود.",
+          "url": "https://www.ghezelbaash.ir/?t=20#video-home-workshop-thread-lift-training"
+        }
+      ],
+      "watchPagePath": "/videos/home-workshop-thread-lift-training/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/home-workshop-thread-lift-training/"
+    },
+    {
+      "id": "home-workshop-thread-lift-advanced",
+      "file": "thread-lift-workshop-trin-dr-ghezelbash.mp4",
+      "pagePath": "/",
+      "sectionAnchor": "#home-workshop-video-2",
+      "embedAnchor": "#video-home-workshop-thread-lift-advanced",
+      "title": "ویدئوی ورکشاپ آموزشی؛ آناتومی، مشاهده و انتخاب درست",
+      "shortTitle": "ورکشاپ آموزشی ۲",
+      "description": "نمونه‌ای از فضای آموزشی که نشان می‌دهد تصمیم در پزشکی زیبایی از مشاهده، آناتومی و انتخاب درست بیمار شروع می‌شود.",
+      "placement": "بعد از توضیح ویدیوی ورکشاپ دوم در صفحه خانه",
+      "role": "doctor-education-video",
+      "intent": "تقویت هویت آموزشی و فاصله گرفتن از تکنیک‌فروشی",
+      "keywords": [
+        "آموزش زیبایی",
+        "آناتومی صورت",
+        "لیفت نخ",
+        "دکتر قزلباش",
+        "تشخیص قبل از درمان"
+      ],
+      "clinicalNote": "این ویدئو برای نمایش رویکرد آموزشی است و به معنی مناسب‌بودن لیفت نخ برای همه افراد نیست.",
+      "relatedAnchors": [
+        "#home-doctor-training-clinic-not-menu",
+        "#home-workshop-video-2"
+      ],
+      "crossLinks": [
+        {
+          "label": "لیفت نخ در کرمانشاه",
+          "url": "/thread-lift-kermanshah/"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 38.9,
+      "duration": "PT39S",
+      "byteSize": 10369159,
+      "sha256": "08a265a1c5366d99fef4b00d56c08d36ba046cc24ba8dcb40c779a96d1a6df2d",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/thread-lift-workshop-trin-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/thread-lift-workshop-trin-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/#video-home-workshop-thread-lift-advanced",
+      "pageUrl": "https://www.ghezelbaash.ir/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 75511,
+      "thumbnailSha256": "32c4f8a97b3be13fbdd5fe44a23631a980fa3d83e323bbbac81347adb45ccfe7",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/#video-home-workshop-thread-lift-advanced",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/home-workshop-thread-lift-advanced/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو لیفت نخ را از زاویه انتخاب درست کاندید توضیح می‌دهد. پیام اصلی این است که نخ برای هر افتادگی یا هر انتظار درمانی مناسب نیست؛ کیفیت پوست، شدت افتادگی، حجم ازدست‌رفته، مسیر کشش و مراقبت بعد از درمان باید قبل از تصمیم دیده شوند.",
+      "segments": [
+        {
+          "name": "انتخاب کاندید",
+          "startOffset": 0,
+          "endOffset": 12,
+          "description": "شدت افتادگی، کیفیت پوست و انتظار فرد بررسی می‌شود.",
+          "url": "https://www.ghezelbaash.ir/?t=0#video-home-workshop-thread-lift-advanced"
+        },
+        {
+          "name": "مرز توان نخ",
+          "startOffset": 12,
+          "endOffset": 24,
+          "description": "لیفت نخ با جراحی یا حجم‌دهی اشتباه گرفته نمی‌شود.",
+          "url": "https://www.ghezelbaash.ir/?t=12#video-home-workshop-thread-lift-advanced"
+        },
+        {
+          "name": "مراقبت و ریسک",
+          "startOffset": 24,
+          "endOffset": 38,
+          "description": "مراقبت پس از نخ و محدودیت‌های نتیجه یادآوری می‌شود.",
+          "url": "https://www.ghezelbaash.ir/?t=24#video-home-workshop-thread-lift-advanced"
+        }
+      ],
+      "watchPagePath": "/videos/home-workshop-thread-lift-advanced/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/home-workshop-thread-lift-advanced/"
+    },
+    {
+      "id": "clinic-patient-experience-review",
+      "file": "patient-satisfaction-review-dr-saeed-ghezelbash.mp4",
+      "pagePath": "/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "sectionAnchor": "#clinic-visit-kermanshah",
+      "embedAnchor": "#video-clinic-patient-experience-review",
+      "title": "ویدئوی تجربه مراجعه؛ نشانه‌ای از حضور واقعی کلینیک",
+      "shortTitle": "تجربه مراجعه",
+      "description": "یک ویدئوی کوتاه از تجربه مراجعه که برای تقویت لایه اعتماد، حضور واقعی و قابل‌پیگیری بودن کلینیک استفاده شده است.",
+      "placement": "بعد از بخش مراجعه به کلینیک و قبل از پزشک مسئول",
+      "role": "local-trust-video",
+      "intent": "تقویت اعتماد محلی بدون استفاده از Review/AggregateRating جدید",
+      "keywords": [
+        "کلینیک زیبایی کرمانشاه",
+        "تجربه مراجعه",
+        "دکتر سعید قزلباش",
+        "اعتماد محلی"
+      ],
+      "clinicalNote": "این ویدئو فقط تجربه مشاهده‌ای است و به‌عنوان تضمین نتیجه، امتیازدهی ساختاریافته یا ادعای رضایت عمومی استفاده نشده است.",
+      "relatedAnchors": [
+        "#clinic-visit-kermanshah",
+        "#consultation-first-treatment-decision"
+      ],
+      "crossLinks": [
+        {
+          "label": "تماس و مراجعه به کلینیک",
+          "url": "/dr-saeed-ghezelbash-aesthetic-clinic/#clinic-visit-kermanshah"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 20.133,
+      "duration": "PT20S",
+      "byteSize": 4849103,
+      "sha256": "946fdf1e8f4996808fcfca958b206e7b31755ad0fecef0efc26e10a9ae9e9f74",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/patient-satisfaction-review-dr-saeed-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/patient-satisfaction-review-dr-saeed-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review",
+      "pageUrl": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 33319,
+      "thumbnailSha256": "3c7d552d6d240c125471cf16e25bab7730d9b79734e7d4e8a76d8ad1fae4c66c",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/#video-clinic-patient-experience-review",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو نقش تجربه مراجعه، مسیر تماس و هویت واقعی کلینیک را در تصمیم‌گیری زیبایی نشان می‌دهد. تمرکز متن روی این است که کاربر باید بتواند پزشک مسئول، مکان، مسیر رسمی تماس و محدودیت‌های تصمیم درمانی را قبل از مراجعه تشخیص دهد.",
+      "segments": [
+        {
+          "name": "هویت مکان",
+          "startOffset": 0,
+          "endOffset": 8,
+          "description": "کلینیک و مسیر تماس به پزشک مسئول وصل می‌شود.",
+          "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/?t=0#video-clinic-patient-experience-review"
+        },
+        {
+          "name": "تجربه مراجعه",
+          "startOffset": 8,
+          "endOffset": 16,
+          "description": "تصمیم زیبایی به محیط واقعی و فرایند ارزیابی وابسته می‌شود.",
+          "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/?t=8#video-clinic-patient-experience-review"
+        },
+        {
+          "name": "اعتماد قابل پیگیری",
+          "startOffset": 16,
+          "endOffset": 20,
+          "description": "هویت بیرونی و مسیرهای رسمی برای کاهش ابهام برجسته می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/dr-saeed-ghezelbash-aesthetic-clinic/?t=16#video-clinic-patient-experience-review"
+        }
+      ],
+      "watchPagePath": "/videos/clinic-patient-experience-review/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/clinic-patient-experience-review/"
+    },
+    {
+      "id": "botox-vs-subcision-dynamic-static-scar",
+      "file": "botox-vs-subcision-scars-explaining-dr-ghezelbash.mp4",
+      "pagePath": "/botox-kermanshah/",
+      "sectionAnchor": "#botox-muscle-vs-tissue",
+      "embedAnchor": "#video-botox-vs-subcision-dynamic-static-scar",
+      "title": "بوتاکس یا سابسیژن؟ مرز چین دینامیک با اسکار فیبروتیک",
+      "shortTitle": "بوتاکس، چین دینامیک و سابسیژن",
+      "description": "توضیح تفاوت تصمیمی بین مشکل وابسته به حرکت عضله و مشکل بافتی مانند اسکار فیبروتیک یا چسبندگی زیرپوستی که ممکن است مسیر درمانی دیگری مانند سابسیژن بخواهد.",
+      "placement": "بعد از بخش مشکل از عضله است یا از بافت در صفحه بوتاکس",
+      "role": "diagnostic-boundary-video",
+      "intent": "جلوگیری از مسیر اشتباه کاربر: بوتاکس برای عضله/چین دینامیک، نه پرکردن یا آزادسازی اسکار فیبروتیک",
+      "keywords": [
+        "بوتاکس",
+        "سابسیژن",
+        "چین دینامیک",
+        "اسکار فیبروتیک",
+        "چسبندگی زیرپوستی",
+        "جای جوش"
+      ],
+      "clinicalNote": "بوتاکس برای کنترل فعالیت عضله و چین دینامیک بررسی می‌شود؛ اگر مسئله خط ثابت، فرورفتگی، اسکار فیبروتیک یا چسبندگی زیرپوستی باشد، باید مسیر بافتی مثل ارزیابی سابسیژن جداگانه بررسی شود.",
+      "relatedAnchors": [
+        "#botox-muscle-vs-tissue",
+        "#botox-dynamic-vs-static-lines"
+      ],
+      "crossLinks": [
+        {
+          "label": "سابسیژن جای جوش",
+          "url": "/aesthetic-concerns-kermanshah/#subcision-acne-scar"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 56.033,
+      "duration": "PT56S",
+      "byteSize": 25450420,
+      "sha256": "370cc0458eb066c82d06b4d5e09f0aba01d2a2b540efc715042834b7699f5d89",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-scars-explaining-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/botox-vs-subcision-scars-explaining-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/botox-kermanshah/#video-botox-vs-subcision-dynamic-static-scar",
+      "pageUrl": "https://www.ghezelbaash.ir/botox-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 77299,
+      "thumbnailSha256": "ede8921b4c8353b59ad466b72b9070a11be70e12b16fbace1738544e5db05dbe",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/botox-kermanshah/#video-botox-vs-subcision-dynamic-static-scar",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "در این ویدئو، منطق سابسیژن به‌عنوان آزادسازی چسبندگی فیبروتیک زیر پوست توضیح داده می‌شود. تأکید متن بر این است که سابسیژن پرکننده همه فرورفتگی‌ها نیست و فقط وقتی معنا دارد که tethering یا rolling/tethered scar در معاینه مطرح باشد. تصمیم نهایی باید بین نوع اسکار، عمق چسبندگی، کیفیت پوست و ریسک‌های فردی تفکیک شود.",
+      "segments": [
+        {
+          "name": "تعریف مسئله",
+          "startOffset": 0,
+          "endOffset": 18,
+          "description": "تفاوت فرورفتگی ساده با چسبندگی فیبروتیک زیرپوستی مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/botox-kermanshah/?t=0#video-botox-vs-subcision-dynamic-static-scar"
+        },
+        {
+          "name": "منطق آزادسازی",
+          "startOffset": 18,
+          "endOffset": 36,
+          "description": "سابسیژن به‌عنوان آزادسازی tethering توضیح داده می‌شود، نه درمان عمومی همه اسکارها.",
+          "url": "https://www.ghezelbaash.ir/botox-kermanshah/?t=18#video-botox-vs-subcision-dynamic-static-scar"
+        },
+        {
+          "name": "حدود تصمیم",
+          "startOffset": 36,
+          "endOffset": 56,
+          "description": "نیاز به معاینه و ترکیب احتمالی با مسیرهای دیگر یادآوری می‌شود.",
+          "url": "https://www.ghezelbaash.ir/botox-kermanshah/?t=36#video-botox-vs-subcision-dynamic-static-scar"
+        }
+      ],
+      "watchPagePath": "/videos/botox-vs-subcision-dynamic-static-scar/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/botox-vs-subcision-dynamic-static-scar/"
+    },
+    {
+      "id": "filler-under-eye-transformation",
+      "file": "under-eye-filler-transformation-dr-saeed-ghezelbash.mp4",
+      "pagePath": "/filler-kermanshah/",
+      "sectionAnchor": "#under-eye-filler",
+      "embedAnchor": "#video-filler-under-eye-transformation",
+      "title": "فیلر زیر چشم؛ تغییر ظاهری وقتی علت درست خوانده شود",
+      "shortTitle": "فیلر زیر چشم",
+      "description": "نمونه ویدئویی کوتاه برای توضیح اینکه زیر چشم فقط با پرکردن ساده تصمیم‌گیری نمی‌شود و علت گودی، سایه، پف یا افت میدفیس باید جدا شود.",
+      "placement": "بعد از شروع بخش فیلر زیر چشم",
+      "role": "before-after-context-video",
+      "intent": "توضیح تصمیم‌گیری زیر چشم و ریسک برداشت اشتباه از نتیجه تصویری",
+      "keywords": [
+        "فیلر زیر چشم",
+        "گودی زیر چشم",
+        "تیرگی زیر چشم",
+        "پف زیر چشم",
+        "فیلر کرمانشاه"
+      ],
+      "clinicalNote": "این ویدئو نمونه مشاهده‌ای است؛ نتیجه فیلر زیر چشم به علت گودی، ضخامت پوست، پف، افت میدفیس و ریسک‌های اختصاصی ناحیه وابسته است.",
+      "relatedAnchors": [
+        "#under-eye-filler",
+        "#filler-risk-akhtsas-zyr-eye"
+      ],
+      "crossLinks": [
+        {
+          "label": "ریسک‌های اختصاصی زیر چشم",
+          "url": "/filler-kermanshah/#filler-risk-akhtsas-zyr-eye"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 8.467,
+      "duration": "PT8S",
+      "byteSize": 547161,
+      "sha256": "bdc874d4cfdb774032b52fb1d1e45023b91101eb7d8bf6b53936a21c2ec87934",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/under-eye-filler-transformation-dr-saeed-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/under-eye-filler-transformation-dr-saeed-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-transformation",
+      "pageUrl": "https://www.ghezelbaash.ir/filler-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 42537,
+      "thumbnailSha256": "7ffbfb9b0b2c7b8a5f5a655a2add2c1c1e47904b828988f29e9bd015971d29ec",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-transformation",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو فیلر را به‌عنوان تصمیم مبتنی بر ناحیه، تناسب و ریسک توضیح می‌دهد، نه تزریق صرف برای پرکردن. پیام اصلی این است که زیر چشم، بینی، لب یا کانتورینگ هرکدام ریسک، عمق، مرز ایمنی و انتظار متفاوت دارند و تصمیم باید با معاینه، سابقه تزریق قبلی و نسبت اجزای صورت سنجیده شود.",
+      "segments": [
+        {
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 8,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=0#video-filler-under-eye-transformation"
+        },
+        {
+          "name": "ریسک و تناسب",
+          "startOffset": 8,
+          "endOffset": 16,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=8#video-filler-under-eye-transformation"
+        },
+        {
+          "name": "مرز انتظار",
+          "startOffset": 16,
+          "endOffset": 8,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=16#video-filler-under-eye-transformation"
+        }
+      ],
+      "watchPagePath": "/videos/filler-under-eye-transformation/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/filler-under-eye-transformation/"
+    },
+    {
+      "id": "filler-under-eye-before-after",
+      "file": "under-eye-filler-before-after-dr-ghezelbash.mp4",
+      "pagePath": "/filler-kermanshah/",
+      "sectionAnchor": "#under-eye-filler",
+      "embedAnchor": "#video-filler-under-eye-before-after",
+      "title": "قبل و بعد فیلر زیر چشم؛ نتیجه را بدون معاینه تعمیم ندهید",
+      "shortTitle": "قبل و بعد زیر چشم",
+      "description": "نمونه کوتاه قبل/بعد برای صفحه فیلر زیر چشم با تأکید بر اینکه عکس یا ویدئو جای معاینه و تشخیص علت را نمی‌گیرد.",
+      "placement": "در ادامه بخش فیلر زیر چشم، نزدیک به جمع‌بندی تصمیمی",
+      "role": "before-after-caution-video",
+      "intent": "افزودن نمونه بصری با هشدار ضدتعمیم و ضدگارانتی",
+      "keywords": [
+        "قبل و بعد فیلر زیر چشم",
+        "فیلر زیر چشم",
+        "نمونه فیلر",
+        "دکتر قزلباش"
+      ],
+      "clinicalNote": "قبل/بعد فقط نمونه مشاهده‌ای است و برای همه قابل تعمیم نیست؛ زیر چشم از نواحی حساس فیلر است و باید با معاینه تصمیم‌گیری شود.",
+      "relatedAnchors": [
+        "#under-eye-filler",
+        "#filler-jm-bnd-decision-filler-zyr-eye"
+      ],
+      "crossLinks": [
+        {
+          "label": "جمع‌بندی تصمیمی فیلر زیر چشم",
+          "url": "/filler-kermanshah/#filler-jm-bnd-decision-filler-zyr-eye"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 8.467,
+      "duration": "PT8S",
+      "byteSize": 477659,
+      "sha256": "e4ed3d5bb7503c50c2071d261bb4f1231a8801ef7398475a27b8aece5b8154f9",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/under-eye-filler-before-after-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/under-eye-filler-before-after-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-before-after",
+      "pageUrl": "https://www.ghezelbaash.ir/filler-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 51104,
+      "thumbnailSha256": "61ba64cc4ea837d4c411cf77df5a20158a195cfcbc8e1546e2ca338b06208e9c",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-under-eye-before-after",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/filler-under-eye-before-after/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو فیلر را به‌عنوان تصمیم مبتنی بر ناحیه، تناسب و ریسک توضیح می‌دهد، نه تزریق صرف برای پرکردن. پیام اصلی این است که زیر چشم، بینی، لب یا کانتورینگ هرکدام ریسک، عمق، مرز ایمنی و انتظار متفاوت دارند و تصمیم باید با معاینه، سابقه تزریق قبلی و نسبت اجزای صورت سنجیده شود.",
+      "segments": [
+        {
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 8,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=0#video-filler-under-eye-before-after"
+        },
+        {
+          "name": "ریسک و تناسب",
+          "startOffset": 8,
+          "endOffset": 16,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=8#video-filler-under-eye-before-after"
+        },
+        {
+          "name": "مرز انتظار",
+          "startOffset": 16,
+          "endOffset": 8,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=16#video-filler-under-eye-before-after"
+        }
+      ],
+      "watchPagePath": "/videos/filler-under-eye-before-after/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/filler-under-eye-before-after/"
+    },
+    {
+      "id": "filler-nose-before-after",
+      "file": "nose-filler-before-after-results-dr-ghezelbash.mp4",
+      "pagePath": "/filler-kermanshah/",
+      "sectionAnchor": "#nose-filler",
+      "embedAnchor": "#video-filler-nose-before-after",
+      "title": "فیلر بینی؛ صاف‌تر دیده‌شدن با کوچک‌شدن فرق دارد",
+      "shortTitle": "فیلر بینی",
+      "description": "نمونه کوتاه برای توضیح مرز فیلر بینی: هدف می‌تواند اصلاح دیداری بعضی ناهمواری‌ها باشد، نه کوچک‌کردن واقعی بینی.",
+      "placement": "بعد از شروع بخش فیلر بینی",
+      "role": "before-after-caution-video",
+      "intent": "جلوگیری از برداشت غلط درباره کوچک‌شدن بینی با فیلر",
+      "keywords": [
+        "فیلر بینی",
+        "قبل و بعد فیلر بینی",
+        "رینوپلاستی غیرجراحی",
+        "کرمانشاه"
+      ],
+      "clinicalNote": "فیلر بینی بینی را کوچک نمی‌کند و ناحیه بینی از نظر عروقی حساس است؛ تصمیم باید بعد از معاینه و ارزیابی ریسک انجام شود.",
+      "relatedAnchors": [
+        "#nose-filler",
+        "#filler-nose-rhinoplasty-saf-tr-dydh-shdn-kvchk-shdn-frgh-dard"
+      ],
+      "crossLinks": [
+        {
+          "label": "فیلر بینی یا رینوپلاستی",
+          "url": "/filler-kermanshah/#filler-nose-rhinoplasty-saf-tr-dydh-shdn-kvchk-shdn-frgh-dard"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 7.6,
+      "duration": "PT8S",
+      "byteSize": 902169,
+      "sha256": "bf19f4d6a9ea4506e98e7be2c885d1bdccd56e6559e938bae402c3d71dcc6269",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/nose-filler-before-after-results-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/nose-filler-before-after-results-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after",
+      "pageUrl": "https://www.ghezelbaash.ir/filler-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 26617,
+      "thumbnailSha256": "5fd225667cfa8a60b8fc22b8c7d84f8b882005d5a88c0cb6ad35449689c94b5d",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nose-before-after",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو فیلر را به‌عنوان تصمیم مبتنی بر ناحیه، تناسب و ریسک توضیح می‌دهد، نه تزریق صرف برای پرکردن. پیام اصلی این است که زیر چشم، بینی، لب یا کانتورینگ هرکدام ریسک، عمق، مرز ایمنی و انتظار متفاوت دارند و تصمیم باید با معاینه، سابقه تزریق قبلی و نسبت اجزای صورت سنجیده شود.",
+      "segments": [
+        {
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 8,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=0#video-filler-nose-before-after"
+        },
+        {
+          "name": "ریسک و تناسب",
+          "startOffset": 8,
+          "endOffset": 16,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=8#video-filler-nose-before-after"
+        },
+        {
+          "name": "مرز انتظار",
+          "startOffset": 16,
+          "endOffset": 7,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=16#video-filler-nose-before-after"
+        }
+      ],
+      "watchPagePath": "/videos/filler-nose-before-after/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/filler-nose-before-after/"
+    },
+    {
+      "id": "filler-nonsurgical-rhinoplasty-boundary",
+      "file": "nonsurgical-rhinoplasty-before-after-result-dr-ghezelbash.mp4",
+      "pagePath": "/filler-kermanshah/",
+      "sectionAnchor": "#filler-nose-rhinoplasty-saf-tr-dydh-shdn-kvchk-shdn-frgh-dard",
+      "embedAnchor": "#video-filler-nonsurgical-rhinoplasty-boundary",
+      "title": "رینوپلاستی غیرجراحی؛ مرز نتیجه تصویری و محدودیت واقعی",
+      "shortTitle": "مرز فیلر بینی و رینوپلاستی",
+      "description": "ویدئوی کوتاه قبل/بعد برای نشان‌دادن اینکه نتیجه تصویری فیلر بینی باید در کنار محدودیت‌ها، ریسک و تفاوت آن با جراحی خوانده شود.",
+      "placement": "بعد از بخش فیلر بینی یا رینوپلاستی",
+      "role": "before-after-caution-video",
+      "intent": "توضیح مرز non-surgical rhinoplasty بدون وعده کوچک‌کردن یا جایگزینی جراحی",
+      "keywords": [
+        "رینوپلاستی غیرجراحی",
+        "فیلر بینی",
+        "قبل و بعد بینی",
+        "محدودیت فیلر"
+      ],
+      "clinicalNote": "این ویدئو جایگزین ارزیابی جراحی یا معاینه نیست؛ صاف‌تر دیده‌شدن با کوچک‌شدن واقعی بینی تفاوت دارد.",
+      "relatedAnchors": [
+        "#filler-nose-rhinoplasty-saf-tr-dydh-shdn-kvchk-shdn-frgh-dard",
+        "#nose-filler"
+      ],
+      "crossLinks": [
+        {
+          "label": "فیلر بینی",
+          "url": "/filler-kermanshah/#nose-filler"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 7.308,
+      "duration": "PT7S",
+      "byteSize": 478079,
+      "sha256": "b7d94f79571d12e134d91ee791f05100fa230ec8a4123eea81feb81523c54935",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/nonsurgical-rhinoplasty-before-after-result-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/nonsurgical-rhinoplasty-before-after-result-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nonsurgical-rhinoplasty-boundary",
+      "pageUrl": "https://www.ghezelbaash.ir/filler-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 43771,
+      "thumbnailSha256": "fe3397c72c0538fd90247fc583d66243ad0a69fe6fe24c5b494bccf3a2a337c5",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/filler-kermanshah/#video-filler-nonsurgical-rhinoplasty-boundary",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/filler-nonsurgical-rhinoplasty-boundary/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو فیلر را به‌عنوان تصمیم مبتنی بر ناحیه، تناسب و ریسک توضیح می‌دهد، نه تزریق صرف برای پرکردن. پیام اصلی این است که زیر چشم، بینی، لب یا کانتورینگ هرکدام ریسک، عمق، مرز ایمنی و انتظار متفاوت دارند و تصمیم باید با معاینه، سابقه تزریق قبلی و نسبت اجزای صورت سنجیده شود.",
+      "segments": [
+        {
+          "name": "تعریف ناحیه",
+          "startOffset": 0,
+          "endOffset": 8,
+          "description": "ناحیه هدف و مسئله اصلی قبل از تزریق مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=0#video-filler-nonsurgical-rhinoplasty-boundary"
+        },
+        {
+          "name": "ریسک و تناسب",
+          "startOffset": 8,
+          "endOffset": 16,
+          "description": "ریسک عروقی، سابقه قبلی و تناسب کلی صورت وارد تصمیم می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=8#video-filler-nonsurgical-rhinoplasty-boundary"
+        },
+        {
+          "name": "مرز انتظار",
+          "startOffset": 16,
+          "endOffset": 7,
+          "description": "محدودیت فیلر و مواردی که به روش دیگری نیاز دارند توضیح داده می‌شود.",
+          "url": "https://www.ghezelbaash.ir/filler-kermanshah/?t=16#video-filler-nonsurgical-rhinoplasty-boundary"
+        }
+      ],
+      "watchPagePath": "/videos/filler-nonsurgical-rhinoplasty-boundary/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/filler-nonsurgical-rhinoplasty-boundary/"
+    },
+    {
+      "id": "thread-lift-cat-eye-before-after",
+      "file": "cat-eye-thread-lift-before-after-dr-ghezelbash.mp4",
+      "pagePath": "/thread-lift-kermanshah/",
+      "sectionAnchor": "#thread-lift-photo-before-after-lift-thread-my-tvand-gvl-bznd-light",
+      "embedAnchor": "#video-thread-lift-cat-eye-before-after",
+      "title": "قبل و بعد لیفت نخ چشم گربه‌ای؛ عکس و ویدئو را با احتیاط بخوانید",
+      "shortTitle": "لیفت نخ چشم گربه‌ای",
+      "description": "نمونه کوتاه قبل/بعد در زمینه لیفت نخ چشم گربه‌ای با تأکید بر اینکه نور، زاویه، ورم و انتخاب کاندید روی برداشت از نتیجه اثر می‌گذارند.",
+      "placement": "بعد از بخش عکس قبل و بعد لیفت نخ",
+      "role": "before-after-caution-video",
+      "intent": "تقویت هشدار موجود درباره تفسیر محتاطانه قبل/بعد در لیفت نخ",
+      "keywords": [
+        "لیفت نخ چشم گربه‌ای",
+        "قبل و بعد لیفت نخ",
+        "cat eye thread lift",
+        "لیفت نخ کرمانشاه"
+      ],
+      "clinicalNote": "این ویدئو تضمین نتیجه نیست؛ لیفت نخ برای همه افراد مناسب نیست و نتیجه به افتادگی، کیفیت پوست، جهت کشش و انتخاب بیمار وابسته است.",
+      "relatedAnchors": [
+        "#thread-lift-photo-before-after-lift-thread-my-tvand-gvl-bznd-light",
+        "#thread-brow-lift"
+      ],
+      "crossLinks": [
+        {
+          "label": "لیفت نخ ابرو",
+          "url": "/thread-lift-kermanshah/#thread-brow-lift"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 5.867,
+      "duration": "PT6S",
+      "byteSize": 801209,
+      "sha256": "caba561b5d4ca94ff36ce1f278cc3d3124784f4c01b3e4cf92c850f629df196f",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/cat-eye-thread-lift-before-after-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/cat-eye-thread-lift-before-after-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#video-thread-lift-cat-eye-before-after",
+      "pageUrl": "https://www.ghezelbaash.ir/thread-lift-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 58492,
+      "thumbnailSha256": "a8440354172a0355e163a36b14adac313c38ddc2952d890ca749463b843a2ef6",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/thread-lift-kermanshah/#video-thread-lift-cat-eye-before-after",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/thread-lift-cat-eye-before-after/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو لیفت نخ را از زاویه انتخاب درست کاندید توضیح می‌دهد. پیام اصلی این است که نخ برای هر افتادگی یا هر انتظار درمانی مناسب نیست؛ کیفیت پوست، شدت افتادگی، حجم ازدست‌رفته، مسیر کشش و مراقبت بعد از درمان باید قبل از تصمیم دیده شوند.",
+      "segments": [
+        {
+          "name": "انتخاب کاندید",
+          "startOffset": 0,
+          "endOffset": 8,
+          "description": "شدت افتادگی، کیفیت پوست و انتظار فرد بررسی می‌شود.",
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/?t=0#video-thread-lift-cat-eye-before-after"
+        },
+        {
+          "name": "مرز توان نخ",
+          "startOffset": 8,
+          "endOffset": 16,
+          "description": "لیفت نخ با جراحی یا حجم‌دهی اشتباه گرفته نمی‌شود.",
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/?t=8#video-thread-lift-cat-eye-before-after"
+        },
+        {
+          "name": "مراقبت و ریسک",
+          "startOffset": 16,
+          "endOffset": 5,
+          "description": "مراقبت پس از نخ و محدودیت‌های نتیجه یادآوری می‌شود.",
+          "url": "https://www.ghezelbaash.ir/thread-lift-kermanshah/?t=16#video-thread-lift-cat-eye-before-after"
+        }
+      ],
+      "watchPagePath": "/videos/thread-lift-cat-eye-before-after/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/thread-lift-cat-eye-before-after/"
+    },
+    {
+      "id": "aesthetic-subcision-technique-guide",
+      "file": "proper-subcision-technique-guide-dr-ghezelbash.mp4",
+      "pagePath": "/aesthetic-concerns-kermanshah/",
+      "sectionAnchor": "#subcision-acne-scar",
+      "embedAnchor": "#video-aesthetic-subcision-technique-guide",
+      "title": "سابسیژن جای جوش؛ آزادسازی چسبندگی فیبروتیک زیر پوست",
+      "shortTitle": "سابسیژن و چسبندگی فیبروتیک",
+      "description": "ویدئوی آموزشی درباره منطق سابسیژن برای آزادسازی گیر و چسبندگی فیبروتیک زیرپوستی در موارد منتخب جای جوش، نه پرکردن همه چاله‌ها.",
+      "placement": "بعد از شروع بخش سابسیژن جای جوش",
+      "role": "clinical-education-video",
+      "intent": "توضیح دقیق منطق سابسیژن و جلوگیری از تعمیم غلط به همه انواع اسکار یا لک",
+      "keywords": [
+        "سابسیژن",
+        "اسکار فیبروتیک",
+        "چسبندگی زیرپوستی",
+        "rolling scar",
+        "جای جوش"
+      ],
+      "clinicalNote": "سابسیژن برای آزادسازی چسبندگی فیبروتیک زیرپوستی در موارد منتخب مطرح می‌شود؛ برای لک بعد جوش، جوش فعال یا همه انواع اسکار تصمیم یکسانی ندارد.",
+      "relatedAnchors": [
+        "#subcision-acne-scar",
+        "#aesthetic-subcision-rolling-scar-mntghy-tr-pigment-after-acne"
+      ],
+      "crossLinks": [
+        {
+          "label": "بوتاکس و مرز چین دینامیک",
+          "url": "/botox-kermanshah/#botox-dynamic-vs-static-lines"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 35.8,
+      "duration": "PT36S",
+      "byteSize": 8249511,
+      "sha256": "1bd937a45f9747a7b12262c0572a0364a4116f9506f594eb097b531cd6ecda3a",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/proper-subcision-technique-guide-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/proper-subcision-technique-guide-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-subcision-technique-guide",
+      "pageUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 56244,
+      "thumbnailSha256": "9f6b16f9c4e04dcd0f32459c085916422378b987f17581b36c7e4c9cefd9c3db",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-subcision-technique-guide",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/aesthetic-subcision-technique-guide/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "در این ویدئو، منطق سابسیژن به‌عنوان آزادسازی چسبندگی فیبروتیک زیر پوست توضیح داده می‌شود. تأکید متن بر این است که سابسیژن پرکننده همه فرورفتگی‌ها نیست و فقط وقتی معنا دارد که tethering یا rolling/tethered scar در معاینه مطرح باشد. تصمیم نهایی باید بین نوع اسکار، عمق چسبندگی، کیفیت پوست و ریسک‌های فردی تفکیک شود.",
+      "segments": [
+        {
+          "name": "تعریف مسئله",
+          "startOffset": 0,
+          "endOffset": 11,
+          "description": "تفاوت فرورفتگی ساده با چسبندگی فیبروتیک زیرپوستی مشخص می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=0#video-aesthetic-subcision-technique-guide"
+        },
+        {
+          "name": "منطق آزادسازی",
+          "startOffset": 11,
+          "endOffset": 22,
+          "description": "سابسیژن به‌عنوان آزادسازی tethering توضیح داده می‌شود، نه درمان عمومی همه اسکارها.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=11#video-aesthetic-subcision-technique-guide"
+        },
+        {
+          "name": "حدود تصمیم",
+          "startOffset": 22,
+          "endOffset": 35,
+          "description": "نیاز به معاینه و ترکیب احتمالی با مسیرهای دیگر یادآوری می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=22#video-aesthetic-subcision-technique-guide"
+        }
+      ],
+      "watchPagePath": "/videos/aesthetic-subcision-technique-guide/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/aesthetic-subcision-technique-guide/"
+    },
+    {
+      "id": "aesthetic-mesoneedling-dark-spots-warning",
+      "file": "why-mesoneedling-makes-dark-spots-worse-dr-ghezelbash.mp4",
+      "pagePath": "/aesthetic-concerns-kermanshah/",
+      "sectionAnchor": "#hyperpigmentation-treatment",
+      "embedAnchor": "#video-aesthetic-mesoneedling-dark-spots-warning",
+      "title": "چرا مزونیدلینگ می‌تواند لک را بدتر کند؟",
+      "shortTitle": "مزونیدلینگ و لک",
+      "description": "توضیح هشدارمحور درباره اینکه لک، ملاسما و PIH نباید بدون تشخیص نوع لک و محرک‌ها با درمان‌های تحریک‌کننده جلو برده شوند.",
+      "placement": "در بخش لک پوستی و قبل از تصمیم‌های مزوتراپی/مزونیدلینگ",
+      "role": "risk-warning-video",
+      "intent": "تقویت پیام پرهیز از تحریک لک و انتخاب درمان بدون تشخیص",
+      "keywords": [
+        "مزونیدلینگ",
+        "لک پوستی",
+        "ملاسما",
+        "PIH",
+        "لک بعد جوش",
+        "تیرگی پوست"
+      ],
+      "clinicalNote": "در لک مقاوم، ملاسما یا PIH، تحریک بی‌محاسبه پوست می‌تواند نتیجه را بدتر کند؛ نوع لک و محرک‌ها باید قبل از درمان مشخص شوند.",
+      "relatedAnchors": [
+        "#hyperpigmentation-treatment",
+        "#aesthetic-mesotherapy-pigment-thryk-nknyd-nvsh-mlvm-nyst"
+      ],
+      "crossLinks": [
+        {
+          "label": "مزوتراپی لک",
+          "url": "/aesthetic-concerns-kermanshah/#aesthetic-mesotherapy-pigment-thryk-nknyd-nvsh-mlvm-nyst"
+        }
+      ],
+      "width": 360,
+      "height": 640,
+      "durationSeconds": 48.2,
+      "duration": "PT48S",
+      "byteSize": 3254469,
+      "sha256": "420a7036392fafdb4f0f7a44c6520af13d1b5251f9e127d912bd3ad73e776870",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/why-mesoneedling-makes-dark-spots-worse-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/why-mesoneedling-makes-dark-spots-worse-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-mesoneedling-dark-spots-warning",
+      "pageUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 57254,
+      "thumbnailSha256": "aa392996cb6f58acf8e8187bcb880c09c18471f6f67d90ebc14c09d914338c70",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-mesoneedling-dark-spots-warning",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/aesthetic-mesoneedling-dark-spots-warning/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 360,
+      "layoutHeight": 640,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "این ویدئو با رویکرد هشدارمحور توضیح می‌دهد که لک، ملاسما و PIH قبل از هر درمان تحریک‌کننده باید از نظر نوع ضایعه، زمینه التهابی، آفتاب، دارو و سابقه بدترشدن بررسی شوند. پیام اصلی این است که مزونیدلینگ یا روش‌های مشابه اگر بدون تشخیص انتخاب شوند، در برخی افراد می‌توانند لک را تشدید کنند.",
+      "segments": [
+        {
+          "name": "تفکیک لک",
+          "startOffset": 0,
+          "endOffset": 16,
+          "description": "نوع لک و زمینه التهابی قبل از انتخاب روش جدا می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=0#video-aesthetic-mesoneedling-dark-spots-warning"
+        },
+        {
+          "name": "ریسک تحریک",
+          "startOffset": 16,
+          "endOffset": 32,
+          "description": "توضیح داده می‌شود که تحریک بی‌موقع می‌تواند PIH یا لک را بدتر کند.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=16#video-aesthetic-mesoneedling-dark-spots-warning"
+        },
+        {
+          "name": "مسیر امن‌تر",
+          "startOffset": 32,
+          "endOffset": 48,
+          "description": "تصمیم باید با تشخیص نوع لک، کنترل محرک‌ها و ارزیابی پوست شروع شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=32#video-aesthetic-mesoneedling-dark-spots-warning"
+        }
+      ],
+      "watchPagePath": "/videos/aesthetic-mesoneedling-dark-spots-warning/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/aesthetic-mesoneedling-dark-spots-warning/"
+    },
+    {
+      "id": "aesthetic-jalupro-vs-profhilo-skin-boosters",
+      "file": "jalupro-vs-profhilo-skin-boosters-compared-dr-ghezelbash.mp4",
+      "pagePath": "/aesthetic-concerns-kermanshah/",
+      "sectionAnchor": "#jalupro-profhilo-skin-boosters",
+      "embedAnchor": "#video-aesthetic-jalupro-vs-profhilo-skin-boosters",
+      "title": "جالپرو یا پروفایلو؟ تصمیم از نیاز پوست شروع می‌شود",
+      "shortTitle": "جالپرو و پروفایلو",
+      "description": "مقایسه آموزشی جالپرو و پروفایلو با تأکید بر اینکه اسکین‌بوسترها جای فیلر کلاسیک نیستند و هدفشان کیفیت پوست است، نه تغییر فرم صورت.",
+      "placement": "بعد از شروع بخش جالپرو، پروفایلو و جوانسازهای تزریقی",
+      "role": "clinical-education-video",
+      "intent": "تقویت تمایز اسکین‌بوستر با فیلر و جلوگیری از انتخاب بر اساس اسم برند",
+      "keywords": [
+        "جالپرو",
+        "پروفایلو",
+        "اسکین بوستر",
+        "کیفیت پوست",
+        "جوانسازی پوست"
+      ],
+      "clinicalNote": "انتخاب بین جالپرو، پروفایلو یا سایر اسکین‌بوسترها به نیاز پوست، کیفیت بافت و هدف درمان وابسته است؛ این گروه جای فیلر کلاسیک برای تغییر فرم صورت نیست.",
+      "relatedAnchors": [
+        "#jalupro-profhilo-skin-boosters",
+        "#aesthetic-profhilo-ha-dard-filler-klasyk-nyst"
+      ],
+      "crossLinks": [
+        {
+          "label": "پروفایلو فیلر کلاسیک نیست",
+          "url": "/aesthetic-concerns-kermanshah/#aesthetic-profhilo-ha-dard-filler-klasyk-nyst"
+        }
+      ],
+      "width": 720,
+      "height": 1280,
+      "durationSeconds": 62.467,
+      "duration": "PT1M2S",
+      "byteSize": 11461280,
+      "sha256": "68fd55b1c84581210e1e47283b3d89473d4efe418017e4351cb823f5cd5fcd76",
+      "contentUrl": "https://www.ghezelbaash.ir/videos/jalupro-vs-profhilo-skin-boosters-compared-dr-ghezelbash.mp4",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/videos/thumbnails/jalupro-vs-profhilo-skin-boosters-compared-dr-ghezelbash.jpg",
+      "embedUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-jalupro-vs-profhilo-skin-boosters",
+      "pageUrl": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/",
+      "dateAdded": "2026-07-03",
+      "thumbnailByteSize": 66262,
+      "thumbnailSha256": "e77e96ab05866c87ae778390416b5079c8df710385b6f07458cf95c602d0933a",
+      "structuredDataStatus": "active-videoobject-page-graph-and-video-sitemap",
+      "schemaNodeId": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/#video-aesthetic-jalupro-vs-profhilo-skin-boosters",
+      "videoSitemapUrl": "https://www.ghezelbaash.ir/videos/aesthetic-jalupro-vs-profhilo-skin-boosters/",
+      "dateModified": "2026-07-04",
+      "preloadPolicy": "none",
+      "deliveryProfile": "self-hosted-mp4-faststart-cache-immutable",
+      "layoutWidth": 720,
+      "layoutHeight": 1280,
+      "transcriptStatus": "doctor-reviewed-visible-transcript-and-graph-projected",
+      "transcriptKind": "doctor-reviewed-video-transcript-layer",
+      "transcriptNotice": "متن و بخش‌بندی این ویدئو پس از بازبینی محتوایی تأیید شده و برای فهم سریع‌تر کاربر، ایندکس‌پذیری بهتر و اتصال ویدئو به مسیر تصمیم‌گیری صفحه ارائه شده است.",
+      "transcript": "در این ویدئو، جالپرو و پروفایلو به‌عنوان مسیرهای بهبود کیفیت پوست توضیح داده می‌شوند، نه جایگزین فیلر کلاسیک برای تغییر فرم صورت. متن ویدئو روی این تفاوت تمرکز دارد که اسکین‌بوسترها بیشتر به کیفیت، آبرسانی و بافت پوست مربوط‌اند، در حالی که فیلر کلاسیک برای حجم و فرم استفاده می‌شود.",
+      "segments": [
+        {
+          "name": "تعریف اسکین‌بوستر",
+          "startOffset": 0,
+          "endOffset": 20,
+          "description": "هدف اصلی جالپرو و پروفایلو از فیلر کلاسیک جدا می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=0#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+        },
+        {
+          "name": "انتخاب براساس نیاز پوست",
+          "startOffset": 20,
+          "endOffset": 40,
+          "description": "کیفیت پوست، آبرسانی و بافت از حجم‌دهی و کانتورینگ تفکیک می‌شوند.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=20#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+        },
+        {
+          "name": "مرز با فیلر",
+          "startOffset": 40,
+          "endOffset": 62,
+          "description": "انتظار تغییر فرم صورت از اسکین‌بوستر کنترل می‌شود.",
+          "url": "https://www.ghezelbaash.ir/aesthetic-concerns-kermanshah/?t=40#video-aesthetic-jalupro-vs-profhilo-skin-boosters"
+        }
+      ],
+      "watchPagePath": "/videos/aesthetic-jalupro-vs-profhilo-skin-boosters/",
+      "watchPageUrl": "https://www.ghezelbaash.ir/videos/aesthetic-jalupro-vs-profhilo-skin-boosters/"
+    }
+  ],
+  "counts": {
+    "videos": 12,
+    "pagesWithVideos": 6,
+    "home": 2,
+    "clinic": 1,
+    "botox": 1,
+    "filler": 4,
+    "threadLift": 1,
+    "aestheticConcerns": 3,
+    "transcripts": 12,
+    "watchPages": 12
+  },
+  "structuredDataProjection": {
+    "status": "active",
+    "schemaType": "VideoObject",
+    "videoObjectCount": 12,
+    "videoSitemap": "https://www.ghezelbaash.ir/video-sitemap.xml",
+    "projectionTargets": [
+      "public/graph.json",
+      "src/data/schema/ghezelbaash-page-graphs.json",
+      "dist/*.html JSON-LD",
+      "dist/videos/*/index.html JSON-LD"
+    ],
+    "onPagePolicy": "Only videos embedded on the current canonical source page are projected into that source page JSON-LD; dedicated watch pages emit their own VideoObject graph.",
+    "transcriptLayer": "active-doctor-reviewed-transcript-layer",
+    "watchPages": "active-dedicated-watch-pages"
+  },
+  "performanceHardening": {
+    "version": "2026.7-recovered-b7-video-performance-hardening",
+    "videoPreload": "none",
+    "layoutStability": "width/height attributes and 9:16 aspect-ratio class on all embedded videos",
+    "delivery": "mp4 faststart remux applied; long-term immutable caching headers added for /videos/*",
+    "thumbnailCaching": "immutable caching headers added for /videos/thumbnails/*",
+    "optimizedVideoCount": 12
+  }
+}
