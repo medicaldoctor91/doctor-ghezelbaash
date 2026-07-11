@@ -1,0 +1,40 @@
+---
+import { Menu, Phone, ListTree, AtSign, MapPin } from '@lucide/astro';
+import { site } from '../data/site';
+interface NavItem { label: string; href: string; }
+interface Props { navigation: NavItem[]; }
+const { navigation } = Astro.props;
+const homeAnchor = (id: string) => Astro.url.pathname === '/' ? `#${id}` : `${site.url}#${id}`;
+---
+<header class="site-header">
+  <nav class="container site-header-grid" aria-label="ناوبری اصلی">
+    <a href={homeAnchor('top')} class="site-brand" aria-label="بازگشت به ابتدای صفحه">
+      <span class="site-brand-mark" aria-hidden="true">ق</span>
+      <span>
+        <strong>{site.name}</strong>
+        <small>پزشکی زیبایی، پوست و مو · کرمانشاه</small>
+      </span>
+    </a>
+
+    <div class="site-navigation">
+      {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+      <a href={homeAnchor('video-knowledge-hub')}>ویدئوها</a>
+      <a href={homeAnchor('content-table')}><ListTree size={17}/> فهرست کامل</a>
+    </div>
+
+    <div class="site-header-actions">
+      <a href={`tel:${site.phone}`} class="heal-button heal-button-primary header-phone"><Phone size={18}/> تماس</a>
+      <details class="header-menu">
+        <summary><Menu aria-hidden="true"/><span class="sr-only">بازکردن منوی صفحه</span></summary>
+        <nav aria-label="منوی موبایل">
+          <a href={homeAnchor('video-knowledge-hub')}>مرکز دانش ویدئویی</a>
+          <a href={homeAnchor('content-table')}><ListTree size={17}/> فهرست کامل محتوا</a>
+          {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+          <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={17}/> مسیریابی کلینیک</a>
+          <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={17}/> اینستاگرام رسمی</a>
+          <a href={`tel:${site.phone}`}><Phone size={17}/> تماس با کلینیک</a>
+        </nav>
+      </details>
+    </div>
+  </nav>
+</header>

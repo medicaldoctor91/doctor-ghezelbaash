@@ -1,0 +1,93 @@
+---
+import { createMarkdownProcessor } from '@astrojs/markdown-remark';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ConversionDock from '../components/ConversionDock.astro';
+import ContentTable from '../components/content/ContentTable.astro';
+import TopicNavigator from '../components/content/TopicNavigator.astro';
+import EntityAuthorityPanel from '../components/entity/EntityAuthorityPanel.astro';
+import ServiceCoverageMatrix from '../components/entity/ServiceCoverageMatrix.astro';
+import VideoKnowledgeHub from '../components/media/VideoKnowledgeHub.astro';
+import { getHeadings, rawContent } from '../content/landing.md';
+import { buildGroupedToc, buildProcedureAnchorMap, choosePrimaryNavigation } from '../lib/content';
+import { stabilizeHeadings } from '../domain/anchor-utils';
+import { buildGooglePageGraph } from '../compilers/google-page-graph';
+import {
+  rehypeAccessibleTables,
+  rehypeExternalLinks,
+  rehypeHeadingAnchors,
+  rehypeSemanticSections,
+} from '../lib/markdown-plugins.mjs';
+
+const raw = rawContent();
+const headings = stabilizeHeadings(getHeadings());
+const groups = buildGroupedToc(headings);
+const navigation = choosePrimaryNavigation(headings);
+const graph = buildGooglePageGraph(headings, raw);
+const procedureLinks = buildProcedureAnchorMap(headings);
+const h2Offsets = [...raw.matchAll(/^##\s+/gm)].map((match) => match.index ?? -1).filter((offset) => offset >= 0);
+const firstH2 = h2Offsets[0] ?? -1;
+const secondH2 = h2Offsets[1] ?? -1;
+const introMarkdown = firstH2 >= 0 ? raw.slice(0, firstH2) : raw;
+const featuredAnswerMarkdown = firstH2 >= 0
+  ? raw.slice(firstH2, secondH2 >= 0 ? secondH2 : undefined)
+  : '';
+const sectionsMarkdown = secondH2 >= 0 ? raw.slice(secondH2) : '';
+
+const commonMarkdownOptions = { gfm: true, smartypants: false, syntaxHighlight: false };
+const introProcessor = await createMarkdownProcessor({
+  ...commonMarkdownOptions,
+  rehypePlugins: [rehypeExternalLinks, rehypeHeadingAnchors, [rehypeSemanticSections, { mode: 'intro' }]],
+});
+const sectionsProcessor = await createMarkdownProcessor({
+  ...commonMarkdownOptions,
+  rehypePlugins: [rehypeExternalLinks, rehypeHeadingAnchors, [rehypeSemanticSections, { mode: 'sections' }], rehypeAccessibleTables],
+});
+const introHtml = (await introProcessor.render(introMarkdown)).code;
+const featuredAnswerHtml = featuredAnswerMarkdown ? (await sectionsProcessor.render(featuredAnswerMarkdown)).code : '';
+const sectionsHtml = sectionsMarkdown ? (await sectionsProcessor.render(sectionsMarkdown)).code : '';
+---
+<SiteLayout graph={graph}>
+  <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
+  <div id="top"></div>
+  <Header navigation={navigation} />
+  <main id="main-content" class="landing-shell">
+    <article class="container page-article" aria-label="راهنمای جامع تصمیم‌گیری در پزشکی زیبایی" data-entity="doctor-saeed-ghezelbaash">
+      <div class="medical-content article-lead" set:html={introHtml}></div>
+      <div class="medical-content article-featured-answer-hub" set:html={featuredAnswerHtml}></div>
+      <section class="authority-stack" aria-label="هویت، پوشش و مسیرهای اصلی صفحه">
+        <TopicNavigator groups={groups} />
+        <EntityAuthorityPanel />
+        <ServiceCoverageMatrix procedureLinks={procedureLinks} />
+        <VideoKnowledgeHub />
+      </section>
+      <div class="content-layout">
+        <ContentTable groups={groups} />
+        <div class="medical-content article-sections" set:html={sectionsHtml}></div>
+      </div>
+    </article>
+  </main>
+  <ConversionDock />
+  <Footer />
+  <script is:inline>
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest?.('.video-facade-button');
+      if (!button) return;
+      const shell = button.closest('.video-facade-shell');
+      if (!shell) return;
+      const video = document.createElement('video');
+      video.controls = true; video.autoplay = true; video.playsInline = true; video.preload = 'metadata';
+      video.poster = button.dataset.videoPoster || '';
+      const source = document.createElement('source');
+      source.src = button.dataset.videoSrc || ''; source.type = 'video/mp4'; video.append(source);
+      if (button.dataset.videoTrack) {
+        const track = document.createElement('track');
+        track.kind = 'chapters'; track.src = button.dataset.videoTrack; track.srclang = 'fa'; track.label = 'فصل‌بندی فارسی'; track.default = true;
+        video.append(track);
+      }
+      shell.replaceChildren(video);
+      video.play().catch(() => {});
+    }, { passive: true });
+  </script>
+</SiteLayout>

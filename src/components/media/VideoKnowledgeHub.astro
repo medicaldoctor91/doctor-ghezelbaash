@@ -1,0 +1,79 @@
+---
+import { Clock3, Film, PlayCircle, Tags } from '@lucide/astro';
+// @ts-expect-error Shared ESM media data.
+import { videos } from '~/domain/media.mjs';
+
+const formatDuration = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const rest = seconds % 60;
+  return minutes ? `${minutes}:${String(rest).padStart(2, '0')}` : `${rest} ثانیه`;
+};
+
+const grouped = [
+  {
+    id: 'video-group-clinical-education',
+    title: 'آموزش، تشخیص و منطق تصمیم',
+    description: 'ویدئوهای توضیحی و آموزشی درباره انتخاب بیمار، آناتومی، مکانیسم و مرز ابزار.',
+    videos: videos.filter((video: { id: string }) => [
+      'home-workshop-thread-lift-training',
+      'home-workshop-thread-lift-advanced',
+      'botox-vs-subcision-dynamic-static-scar',
+      'proper-subcision-technique-guide',
+      'jalupro-vs-profhilo-skin-boosters',
+      'mesoneedling-dark-spots-warning',
+    ].includes(video.id)),
+  },
+  {
+    id: 'video-group-results-boundaries',
+    title: 'نتیجه، مقایسه و مرز جراحی',
+    description: 'نمونه‌ها و توضیحاتی که نتیجهٔ ظاهری را به تشخیص، محدودیت روش و مرز ارجاع متصل می‌کنند.',
+    videos: videos.filter((video: { id: string }) => [
+      'filler-under-eye-transformation',
+      'filler-under-eye-before-after',
+      'cat-eye-thread-lift-before-after',
+      'nonsurgical-rhinoplasty-boundary',
+      'nose-filler-before-after',
+    ].includes(video.id)),
+  },
+  {
+    id: 'video-group-clinic-entity',
+    title: 'انتیتی کلینیک و تجربهٔ مراجعه',
+    description: 'رسانهٔ متصل به محل فعالیت پزشک و تجربهٔ قابل‌پیگیری مراجعه به کلینیک در کرمانشاه.',
+    videos: videos.filter((video: { id: string }) => video.id === 'clinic-patient-experience-review'),
+  },
+];
+---
+<section id="video-knowledge-hub" class="video-knowledge-hub authority-panel" aria-labelledby="video-knowledge-hub-title">
+  <header class="panel-heading">
+    <span class="eyebrow"><Film size={18} />مرکز دانش ویدئویی صفحه</span>
+    <h2 id="video-knowledge-hub-title">۱۲ ویدئو؛ هر رسانه متصل به موضوع، خدمت و مرز تصمیم خودش</h2>
+    <p>این فهرست، مسیر مستقیم به تمام ویدئوهای قابل‌نمایش همین لندینگ است. هر ویدئو در بخش بالینی مرتبط خود قرار دارد و به انتیتی پزشک، کلینیک و موضوع درمانی همان بخش متصل شده است.</p>
+  </header>
+
+  <div class="video-hub-groups">
+    {grouped.map((group) => (
+      <section class="video-hub-group" id={group.id} aria-labelledby={`${group.id}-title`}>
+        <header>
+          <h3 id={`${group.id}-title`}>{group.title}</h3>
+          <p>{group.description}</p>
+        </header>
+        <div class="video-hub-grid">
+          {group.videos.map((video: { id: string; title: string; description: string; durationSeconds: number; tags: string[]; thumbnail: string }) => (
+            <article class="video-hub-card">
+              <a href={`/videos/${video.id}/`} aria-label={`دیدن ویدئو، متن و فصل‌بندی: ${video.title}`}>
+                <img src={video.thumbnail} alt="" width="360" height="640" loading="lazy" decoding="async" />
+                <span class="video-hub-play" aria-hidden="true"><PlayCircle size={28} /></span>
+                <div>
+                  <h4>{video.title}</h4>
+                  <p>{video.description}</p>
+                  <span class="video-hub-meta"><Clock3 size={15} />{formatDuration(video.durationSeconds)}</span>
+                  <span class="video-hub-tags"><Tags size={15} />{video.tags.join(' · ')}</span>
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</section>

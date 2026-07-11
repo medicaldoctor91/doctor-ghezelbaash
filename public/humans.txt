@@ -1,0 +1,21 @@
+/* SITE */
+Name: سایت رسمی دکتر سعید قزلباش
+Canonical: https://www.ghezelbaash.ir/
+Language: Persian / fa-IR
+Direction: RTL
+Architecture: Astro static single-page
+
+/* ENTITIES */
+Physician: دکتر محمدسعید قزلباش / دکتر سعید قزلباش
+Medical registration: IRIMC 167430
+IRIMC profile: https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e
+ORCID: https://orcid.org/0009-0001-9346-8475
+Clinic: کلینیک زیبایی دکتر سعید قزلباش
+Relationship: physician practices at clinic
+
+/* LOCATION */
+Address: کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا
+Google Maps CID: 12350483144643112463
+Google Place ID: ChIJBTOYDOTt-j8RD-7mAPy6Zas
+Contact: +989308209494
+Instagram: https://www.instagram.com/doctor.ghezelbaash/

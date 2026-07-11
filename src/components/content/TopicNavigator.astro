@@ -1,0 +1,14 @@
+---
+import type { TocGroup } from '../../lib/content';
+interface Props { groups: TocGroup[]; }
+const { groups } = Astro.props;
+---
+<nav class="topic-navigator" aria-label="مسیرهای اصلی محتوای لندینگ">
+  <strong>از مسئلهٔ خودتان وارد شوید</strong>
+  <div class="topic-navigator-links">
+    {groups.map((group) => {
+      const first = group.sections[0];
+      return first && <a href={`#${first.slug}`} data-topic-group={group.id}>{group.shortLabel}</a>;
+    })}
+  </div>
+</nav>

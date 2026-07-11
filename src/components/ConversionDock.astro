@@ -1,0 +1,18 @@
+---
+import { AtSign, MapPinned, Phone } from '@lucide/astro';
+import { site } from '../data/site';
+---
+<nav id="conversion-dock" class="conversion-dock" aria-label="تماس، نمونه‌کار و مسیریابی">
+  <a href={`tel:${site.phone}`} aria-label="تماس مستقیم با کلینیک دکتر سعید قزلباش">
+    <Phone aria-hidden="true" />
+    <span>تماس</span>
+  </a>
+  <a href={site.instagram} target="_blank" rel="me noopener noreferrer external" aria-label="بازکردن صفحه اصلی اینستاگرام رسمی دکتر سعید قزلباش">
+    <AtSign aria-hidden="true" />
+    <span>اینستاگرام</span>
+  </a>
+  <a href={site.maps} target="_blank" rel="noopener noreferrer external" aria-label="نظرهای عمومی و مسیریابی کلینیک در Google Maps">
+    <MapPinned aria-hidden="true" />
+    <span>نقشه و نظرها</span>
+  </a>
+</nav>

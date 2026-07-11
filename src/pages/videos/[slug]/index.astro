@@ -1,0 +1,417 @@
+---
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import SiteLayout from '~/layouts/SiteLayout.astro';
+import Header from '~/components/Header.astro';
+import Footer from '~/components/Footer.astro';
+import ConversionDock from '~/components/ConversionDock.astro';
+import { site } from '~/domain/entities';
+// @ts-expect-error Canonical ESM media catalogue.
+import { videos } from '~/domain/media.mjs';
+// @ts-expect-error Editorial copy keyed by canonical video ID.
+import { videoPageDetails } from '~/domain/video-pages.mjs';
+import { readMediaChapters } from '~/lib/media';
+// @ts-expect-error Shared canonical URL registry.
+import { videoClipId, videoEntityId, videoHubPageId, videoHubUrl, videoWatchUrl, videoWebPageId } from '~/domain/url-architecture.mjs';
+
+export const prerender = true;
+export function getStaticPaths() {
+  return videos.map((video: any) => ({ params: { slug: video.id }, props: { video } }));
+}
+
+const { video } = Astro.props;
+const details = videoPageDetails[video.id];
+if (!details) throw new Error(`Missing editorial video-page data for ${video.id}`);
+
+const canonical = videoWatchUrl(site.url, video.id);
+const hubCanonical = videoHubUrl(site.url);
+const canonicalVideoId = videoEntityId(site.url, video.id);
+const canonicalPageId = videoWebPageId(site.url, video.id);
+const canonicalHubPageId = videoHubPageId(site.url);
+const chapters = readMediaChapters(video.chapterTrack);
+const topicRelated = videos
+  .filter((candidate: any) => candidate.id !== video.id && candidate.tags.some((tag: string) => video.tags.includes(tag)));
+const relatedVideos = [
+  ...topicRelated,
+  ...videos.filter((candidate: any) => candidate.id !== video.id && !topicRelated.some((item: any) => item.id === candidate.id)),
+].slice(0, 3);
+const thumbnailUrl = new URL(video.thumbnail.replace(/^\//, ''), site.url).href;
+const contentUrl = new URL(`videos/${video.file}`, site.url).href;
+const editorialAbstract = [details.summary, ...details.takeaways, details.boundary].join(' ');
+const education = details.education;
+const workshopSeriesId = `${hubCanonical}#thread-lift-professional-workshop-series`;
+const workshopVideos = videos.filter((candidate: any) => Boolean(videoPageDetails[candidate.id]?.education));
+const workshopTeaches = [...new Set(workshopVideos.flatMap((candidate: any) => videoPageDetails[candidate.id].education.teaches))];
+
+const graph = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': education ? ['VideoObject', 'LearningResource'] : 'VideoObject',
+      '@id': canonicalVideoId,
+      name: video.title,
+      description: video.description,
+      abstract: editorialAbstract,
+      thumbnailUrl,
+      contentUrl,
+      uploadDate: site.datePublished,
+      dateModified: site.dateModified,
+      duration: video.duration,
+      inLanguage: site.language,
+      isFamilyFriendly: true,
+      width: video.width,
+      height: video.height,
+      keywords: video.tags,
+      creator: { '@id': `${site.url}#person` },
+      author: { '@id': `${site.url}#person` },
+      accountablePerson: { '@id': `${site.url}#person` },
+      copyrightHolder: { '@id': `${site.url}#person` },
+      sourceOrganization: { '@id': `${site.url}#clinic` },
+      publisher: { '@id': `${site.url}#clinic` },
+      ...(education ? {
+        learningResourceType: education.learningResourceType,
+        educationalUse: education.educationalUse,
+        educationalLevel: education.educationalLevel,
+        teaches: education.teaches,
+        audience: {
+          '@type': 'EducationalAudience',
+          '@id': `${canonical}#professional-audience`,
+          audienceType: education.audienceType,
+          educationalRole: education.educationalRole,
+        },
+        isPartOf: [
+          { '@id': canonicalHubPageId },
+          { '@id': workshopSeriesId },
+        ],
+      } : {
+        isPartOf: { '@id': canonicalHubPageId },
+      }),
+      mainEntityOfPage: { '@id': canonicalPageId },
+      potentialAction: {
+        '@type': 'WatchAction',
+        target: canonical,
+      },
+      hasPart: chapters.map((chapter: any) => ({
+        '@type': 'Clip',
+        '@id': videoClipId(site.url, video.id, chapter.index),
+        name: `${video.title}: ${chapter.name}`,
+        startOffset: chapter.startOffset,
+        endOffset: chapter.endOffset,
+        url: `${canonical}#t=${chapter.startOffset}`,
+      })),
+    },
+    {
+      '@type': 'ImageObject',
+      '@id': `${canonical}#thumbnail`,
+      contentUrl: thumbnailUrl,
+      url: thumbnailUrl,
+      caption: video.title,
+      width: video.width,
+      height: video.height,
+      inLanguage: site.language,
+    },
+    {
+      '@type': 'MedicalWebPage',
+      '@id': canonicalPageId,
+      url: canonical,
+      name: video.title,
+      description: video.description,
+      inLanguage: site.language,
+      datePublished: site.datePublished,
+      dateModified: site.dateModified,
+      isPartOf: { '@id': `${site.url}#website` },
+      mainEntity: { '@id': canonicalVideoId },
+      primaryImageOfPage: { '@id': `${canonical}#thumbnail` },
+      breadcrumb: { '@id': `${canonical}#breadcrumb` },
+      author: { '@id': `${site.url}#person` },
+      reviewedBy: { '@id': `${site.url}#person` },
+      publisher: { '@id': `${site.url}#clinic` },
+      about: [
+        { '@id': `${site.url}#person` },
+        { '@id': `${site.url}#clinic` },
+        ...(education ? [{ '@id': workshopSeriesId }] : []),
+      ],
+      audience: [
+        {
+          '@type': 'PeopleAudience',
+          audienceType: details.audience,
+        },
+        ...(education ? [{
+          '@type': 'EducationalAudience',
+          '@id': `${canonical}#professional-audience`,
+          audienceType: education.audienceType,
+          educationalRole: education.educationalRole,
+        }] : []),
+      ],
+      significantLink: [
+        new URL(details.relatedPath.replace(/^\//, ''), site.url).href,
+        hubCanonical,
+      ],
+      citation: details.sources.map((source: { url: string }) => source.url),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${canonical}#breadcrumb`,
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'راهنمای اصلی پزشکی زیبایی',
+          item: site.url,
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'مرکز ویدئوهای آموزشی',
+          item: hubCanonical,
+        },
+        {
+          '@type': 'ListItem',
+          position: 3,
+          name: video.title,
+          item: canonical,
+        },
+      ],
+    },
+    ...(education ? [
+      {
+        '@type': 'CreativeWorkSeries',
+        '@id': workshopSeriesId,
+        name: 'مجموعه آموزش حرفه‌ای لیفت نخ برای پزشکان',
+        description: 'گزیده‌های آموزشی دکتر سعید قزلباش درباره ارزیابی چهره، انتخاب کاندید، طراحی بردار و مرز توان لیفت نخ.',
+        inLanguage: site.language,
+        creator: { '@id': `${site.url}#person` },
+        publisher: { '@id': `${site.url}#clinic` },
+        learningResourceType: 'مجموعه گزیده‌های ورکشاپ حرفه‌ای پزشکی',
+        educationalUse: 'آموزش حرفه‌ای پزشکی و تصمیم‌گیری بالینی',
+        teaches: workshopTeaches,
+        audience: {
+          '@type': 'EducationalAudience',
+          audienceType: 'پزشکان و فراگیران پزشکی زیبایی',
+          educationalRole: 'professional',
+        },
+        hasPart: workshopVideos.map((item: any) => ({
+          '@id': `${site.url}videos/${item.id}/#video`,
+        })),
+      },
+      {
+        '@type': ['Person', 'IndividualPhysician'],
+        '@id': `${site.url}#person`,
+        name: site.legalName,
+        alternateName: [site.name, site.latinName],
+        url: site.url,
+        jobTitle: 'پزشک، پژوهشگر و مدرس پزشکی زیبایی',
+        sameAs: [site.orcidUrl, site.instagram, site.doctorWikidata],
+        hasOccupation: [
+          {
+            '@type': 'Occupation',
+            name: 'پزشک',
+            occupationalCategory: 'پزشک دارای دکترای حرفه‌ای پزشکی',
+          },
+          {
+            '@type': 'Occupation',
+            name: 'مدرس پزشکی زیبایی',
+            description: 'آموزش حرفه‌ای پزشکان با تمرکز بر آناتومی، انتخاب بیمار، تصمیم پیش از تکنیک و مرز ارجاع.',
+            skills: ['آناتومی صورت', 'انتخاب کاندید', 'تصمیم‌گیری بالینی', 'مدیریت مرز درمان و ارجاع'],
+          },
+        ],
+        subjectOf: workshopVideos.map((item: any) => ({
+          '@id': `${site.url}videos/${item.id}/#video`,
+        })),
+      },
+    ] : []),
+  ],
+};
+---
+<SiteLayout graph={graph} title={`${video.title} | دکتر سعید قزلباش`} description={video.description} canonical={canonical}>
+  <a class="skip-link" href="#video-content">رفتن به محتوای ویدئو</a>
+  <Header navigation={[
+    { label: 'همه ویدئوها', href: '/videos/' },
+    { label: 'راهنمای اصلی', href: site.url },
+  ]} />
+
+  <main id="video-content" class="watch-page">
+    <article class="container watch-card">
+      <nav aria-label="مسیر صفحه" class="watch-breadcrumb">
+        <a href={site.url}>خانه</a>
+        <span aria-hidden="true">←</span>
+        <a href="/videos/">ویدئوها</a>
+        <span aria-hidden="true">←</span>
+        <span aria-current="page">{video.title}</span>
+      </nav>
+
+      <header class="watch-header">
+        <p class="eyebrow">ویدئوی آموزشی و بالینی دکتر سعید قزلباش</p>
+        <h1>{video.title}</h1>
+        <p class="watch-lead">{video.description}</p>
+        <ul class="watch-meta" aria-label="مشخصات ویدئو">
+          <li>مدت: حدود {video.durationSeconds} ثانیه</li>
+          <li>زبان: فارسی</li>
+          <li>بازبینی پزشکی: دکتر سعید قزلباش</li>
+          <li>به‌روزرسانی: <time datetime={site.dateModified}>{site.dateModified}</time></li>
+        </ul>
+      </header>
+
+      <figure class="watch-player">
+        <video id="clinical-video" controls preload="metadata" playsinline poster={video.thumbnail} width={video.width} height={video.height} aria-describedby="video-context-note">
+          <source src={`/videos/${video.file}`} type="video/mp4" />
+          <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />
+          مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند. <a href={`/videos/${video.file}`}>دریافت فایل ویدئو</a>
+        </video>
+        <figcaption id="video-context-note">این ویدئو برای آموزش عمومی منتشر شده و جایگزین معاینه، تشخیص یا توصیه شخصی نیست.</figcaption>
+      </figure>
+
+      <section class="watch-section" aria-labelledby="summary-title">
+        <p class="eyebrow">خلاصه تحریریه‌ای</p>
+        <h2 id="summary-title">این ویدئو چه می‌گوید؟</h2>
+        <p>{details.summary}</p>
+        <p class="watch-transcript-note"><strong>درباره متن:</strong> متن این صفحه خلاصه تحریریه‌ای محتوای ویدئو است، نه پیاده‌سازی کلمه‌به‌کلمه صوت. برای جلوگیری از انتساب نادرست، ویژگی Transcript در Schema فقط زمانی اضافه می‌شود که رونوشت انسانی یا زیرنویس دقیق در دسترس باشد.</p>
+      </section>
+
+      {education && (
+        <section class="watch-section watch-education-context" aria-labelledby="education-context-title">
+          <p class="eyebrow">زمینهٔ ضبط ویدئو</p>
+          <h2 id="education-context-title">این بخش از چه نوع آموزشی است؟</h2>
+          <p>{education.context}</p>
+          <ul class="watch-checklist" aria-label="موضوعات آموزشی این بخش">
+            {education.teaches.map((item: string) => <li>{item}</li>)}
+          </ul>
+        </section>
+      )}
+
+      <section class="watch-section" aria-labelledby="chapters-title">
+        <h2 id="chapters-title">فصل‌بندی دقیق ویدئو</h2>
+        <p>هر فصل بر اساس مدت واقعی فایل MP4 تنظیم شده است. با انتخاب هر فصل، پخش از همان نقطه شروع می‌شود.</p>
+        {chapters.length > 0 && (
+          <ol class="chapter-list">
+            {chapters.map((chapter: any) => (
+              <li id={`chapter-${chapter.index}`}>
+                <a class="chapter-jump" href={`#t=${chapter.startOffset}`} data-start={chapter.startOffset}>
+                  {chapter.name}
+                </a>
+                <span>{chapter.startOffset.toFixed(3)}–{chapter.endOffset.toFixed(3)} ثانیه</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <div class="watch-content-grid">
+        <section class="watch-section" aria-labelledby="takeaways-title">
+          <h2 id="takeaways-title">نکات کلیدی</h2>
+          <ul class="watch-checklist">
+            {details.takeaways.map((item: string) => <li>{item}</li>)}
+          </ul>
+        </section>
+
+        <section class="watch-section watch-boundary" aria-labelledby="boundary-title">
+          <h2 id="boundary-title">مرز تصمیم و ایمنی</h2>
+          <p>{details.boundary}</p>
+        </section>
+      </div>
+
+      <section class="watch-section" aria-labelledby="audience-title">
+        <h2 id="audience-title">این ویدئو برای چه کسی مفید است؟</h2>
+        <p>{details.audience}</p>
+        <a class="watch-primary-link" href={details.relatedPath}>{details.relatedLabel}</a>
+      </section>
+
+      <section class="watch-section" aria-labelledby="questions-title">
+        <h2 id="questions-title">پرسش‌های مرتبط</h2>
+        <div class="watch-faq">
+          {details.questions.map(([question, answer]: [string, string]) => (
+            <details>
+              <summary>{question}</summary>
+              <p>{answer}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      <section class="watch-section" aria-labelledby="sources-title">
+        <h2 id="sources-title">منابع و مطالعه بیشتر</h2>
+        <p>این منابع برای بررسی مستقل نکات عمومی و مرزهای ایمنی مرتبط با موضوع صفحه انتخاب شده‌اند.</p>
+        <ul class="watch-sources">
+          {details.sources.map((source: { name: string; url: string }) => (
+            <li><a href={source.url} rel="external noopener" target="_blank">{source.name}</a></li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="watch-section watch-review" aria-labelledby="review-title">
+        <h2 id="review-title">نویسنده و بازبین پزشکی</h2>
+        <p>این صفحه توسط تیم محتوای سایت دکتر سعید قزلباش تنظیم و از نظر مرز ادعا، ایمنی و سازگاری با موضوع ویدئو توسط <strong>دکتر محمدسعید قزلباش، شماره نظام پزشکی ۱۶۷۴۳۰</strong> بازبینی شده است.</p>
+        <div class="watch-review-links">
+          <a href={site.irimcVerification} rel="external noopener" target="_blank">بررسی شماره نظام پزشکی</a>
+          <a href={site.orcidUrl} rel="external noopener" target="_blank">شناسه پژوهشگر ORCID</a>
+          <a href={site.instagram} rel="me external noopener" target="_blank">اینستاگرام رسمی</a>
+        </div>
+      </section>
+
+      {relatedVideos.length > 0 && (
+        <section class="watch-section" aria-labelledby="related-videos-title">
+          <h2 id="related-videos-title">ویدئوهای مرتبط</h2>
+          <div class="watch-related-grid">
+            {relatedVideos.map((item: any) => (
+              <article>
+                <a href={`/videos/${item.id}/`}>
+                  <img src={item.thumbnail} alt="" width="180" height="320" loading="lazy" decoding="async" />
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>{item.description}</small>
+                  </span>
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <aside class="watch-return">
+        <strong>مسیر بعدی</strong>
+        <span>
+          <a href="/videos/">مشاهده همه ویدئوهای آموزشی</a>
+          <a href={site.url}>بازگشت به راهنمای جامع دکتر سعید قزلباش</a>
+        </span>
+      </aside>
+    </article>
+  </main>
+
+  <ConversionDock />
+  <Footer />
+
+  <script is:inline>
+    (() => {
+      const video = document.getElementById('clinical-video');
+      if (!(video instanceof HTMLVideoElement)) return;
+
+      const seekFromHash = () => {
+        const match = location.hash.match(/^#t=(\d+(?:\.\d+)?)$/);
+        if (!match) return;
+        const target = Number(match[1]);
+        if (!Number.isFinite(target)) return;
+        const seek = () => {
+          video.currentTime = Math.min(target, Number.isFinite(video.duration) ? Math.max(0, video.duration - 0.05) : target);
+        };
+        if (video.readyState >= 1) seek();
+        else video.addEventListener('loadedmetadata', seek, { once: true });
+      };
+
+      document.querySelectorAll('.chapter-jump').forEach((link) => {
+        link.addEventListener('click', (event) => {
+          const target = event.currentTarget;
+          if (!(target instanceof HTMLAnchorElement)) return;
+          const start = Number(target.dataset.start);
+          if (!Number.isFinite(start)) return;
+          event.preventDefault();
+          history.replaceState(null, '', `#t=${start}`);
+          video.currentTime = start;
+          video.play().catch(() => {});
+        });
+      });
+
+      window.addEventListener('hashchange', seekFromHash);
+      seekFromHash();
+    })();
+  </script>
+</SiteLayout>

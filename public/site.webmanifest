@@ -1,0 +1,67 @@
+{
+  "id": "/",
+  "name": "دکتر سعید قزلباش | پزشکی زیبایی در کرمانشاه",
+  "short_name": "دکتر قزلباش",
+  "description": "راهنمای جامع تصمیم‌گیری در پزشکی زیبایی، پوست و مو؛ خدمات غیرجراحی، کم‌تهاجمی، جراحی‌های مرتبط و مرز ارجاع.",
+  "lang": "fa-IR",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#005b99",
+  "categories": [
+    "medical",
+    "health",
+    "lifestyle"
+  ],
+  "shortcuts": [
+    {
+      "name": "فهرست کامل محتوا",
+      "short_name": "فهرست",
+      "url": "/#content-table"
+    },
+    {
+      "name": "هویت پزشک و کلینیک",
+      "short_name": "هویت",
+      "url": "/#entity-authority-panel"
+    },
+    {
+      "name": "پوشش خدمات و جراحی",
+      "short_name": "خدمات",
+      "url": "/#service-coverage-panel"
+    },
+    {
+      "name": "مرکز دانش ویدئویی",
+      "short_name": "ویدئوها",
+      "url": "/#video-knowledge-hub"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/assets/brand/doctor-ghezelbaash-logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/brand/doctor-ghezelbaash-logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/assets/brand/doctor-ghezelbaash-logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/brand/doctor-ghezelbaash-logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

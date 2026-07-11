@@ -1,0 +1,78 @@
+---
+import '../styles/global.css';
+import { site } from '../domain/entities';
+
+interface Props {
+  graph: Record<string, unknown>;
+  title: string;
+  description: string;
+  canonical: string;
+}
+
+const { graph, title, description, canonical } = Astro.props;
+const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).href;
+---
+<!doctype html>
+<html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#005b99" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content="Dr. Saeed Ghezelbaash" />
+    <meta name="creator" content="Dr. Saeed Ghezelbaash" />
+    <meta name="publisher" content="Dr. Saeed Ghezelbaash Aesthetic Clinic" />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={canonical} />
+    <link rel="author" href={`${site.url}#person`} />
+    <link rel="author" href={site.orcidUrl} title="ORCID research profile" />
+    <link rel="me" href={site.orcidUrl} />
+    <link rel="me" href={site.instagram} />
+    <link rel="me" href={site.githubProfile} />
+    <link rel="me" href={site.huggingFaceProfile} />
+    <link rel="alternate" type="text/plain" href="/.well-known/ai.txt" title="AI discovery policy" />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM resource index" />
+    <link rel="alternate" type="application/json" href="/ai/summary.json" title="AI summary" />
+    <link rel="alternate" type="application/json" href="/ai/faq.json" title="AI FAQ" />
+    <link rel="alternate" type="application/json" href="/knowledge-manifest.json" title="Knowledge artifact manifest" />
+    <link rel="alternate" type="application/ld+json" href="/graph/core.jsonld" title="Canonical physician and clinic entity graph" />
+    <link rel="alternate" type="application/json" href="/graph-summary.json" title="Knowledge graph summary" />
+    <link rel="alternate" type="application/ld+json" href="/research.jsonld" title="Research identity and scholarly works" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="DC.title" content={title} />
+    <meta name="DC.creator" content="Dr. Saeed Ghezelbaash" />
+    <meta name="DC.publisher" content="Dr. Saeed Ghezelbaash Aesthetic Clinic" />
+    <meta name="DC.language" content="en" />
+    <meta name="DC.type" content="Collection" />
+    <meta name="DC.identifier" content={canonical} />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="Dr. Saeed Ghezelbaash" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={absolute(site.ogImage)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Dr. Saeed Ghezelbaash — official medical and knowledge resources" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={absolute(site.ogImage)} />
+  </head>
+  <body class="knowledge-body">
+    <slot />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(graph)} />
+  </body>
+</html>

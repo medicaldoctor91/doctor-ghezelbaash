@@ -1,0 +1,58 @@
+---
+import { CheckCircle2, SearchCheck, Route, ShieldCheck, Layers3 } from '@lucide/astro';
+// @ts-expect-error Shared ESM product data.
+import { procedures } from '../../data/knowledge.mjs';
+// @ts-expect-error Shared ESM authority data.
+import { granularConcepts } from '../../data/authority.mjs';
+interface Props { procedureLinks: Record<string, string>; }
+const { procedureLinks } = Astro.props;
+const groups = [
+  {
+    relationship: 'offered',
+    title: 'خدمات و مسیرهایی که صریحاً ارائه می‌شوند',
+    description: 'خدمات umbrella و ریزدانه‌ای که سایت زندهٔ رسمی آن‌ها را به کلینیک و پزشک متصل می‌کند.',
+    icon: CheckCircle2,
+  },
+  {
+    relationship: 'evaluated',
+    title: 'حوزه‌هایی که ارزیابی می‌شوند',
+    description: 'موضوعاتی که تشخیص، انتخاب روش یا تعیین تناسب آن‌ها به معاینه وابسته است.',
+    icon: SearchCheck,
+  },
+  {
+    relationship: 'referral-context',
+    title: 'جراحی‌ها و حوزه‌های تخصصی مرتبط',
+    description: 'پوشش جراحی حذف نمی‌شود؛ برای مقایسه، شناخت مرز روش و ارجاع صحیح حفظ و تقویت می‌شود.',
+    icon: Route,
+  },
+];
+const fa = new Intl.NumberFormat('fa-IR');
+---
+<section id="service-coverage-panel" class="coverage-matrix" aria-labelledby="coverage-matrix-title" data-coverage-model="offered-evaluated-referral">
+  <header>
+    <p class="eyebrow">پوشش کامل خدمات، تصمیم و مرز جراحی</p>
+    <h2 id="coverage-matrix-title" class="section-display-title">هر روش در جایگاه واقعی خودش به پزشک و کلینیک متصل است</h2>
+    <p>ساختار صفحه هم خدمات قابل ارائه را پوشش می‌دهد، هم حوزه‌های نیازمند ارزیابی را، و هم جراحی‌های مرتبطی را که برای تصمیم درست و اتوریتی پزشکی باید در نقشهٔ دانش حضور داشته باشند.</p>
+    <p class="coverage-summary"><Layers3 size={19}/> {fa.format(procedures.length)} مسیر اصلی و {fa.format(granularConcepts.length)} موضوع درمانی با مرز روشنِ ارائه، ارزیابی یا ارجاع در این راهنما پوشش داده شده‌اند.</p>
+  </header>
+  <div class="coverage-grid">
+    {groups.map((group) => {
+      const Icon = group.icon;
+      const umbrellaItems = procedures.filter((procedure: { relationship: string }) => procedure.relationship === group.relationship);
+      const granularItems = granularConcepts.filter((concept: { relationship: string }) => concept.relationship === group.relationship);
+      return (
+        <article class={`coverage-card coverage-${group.relationship}`}>
+          <div class="coverage-card-title"><Icon aria-hidden="true"/><h3>{group.title}</h3></div>
+          <p>{group.description}</p>
+          <p class="coverage-count">{fa.format(umbrellaItems.length)} مسیر اصلی · {fa.format(granularItems.length)} مفهوم ریزدانه</p>
+          <ul>{umbrellaItems.map((item: { id: string; name: string }) => <li><a href={procedureLinks[item.id] ?? '#top'}>{item.name}</a></li>)}</ul>
+          <details class="coverage-details">
+            <summary>نمایش پوشش ریزدانه</summary>
+            <ul>{granularItems.map((item: { id: string; name: string; parentProcedureId: string }) => <li><a href={procedureLinks[item.parentProcedureId] ?? '#top'}>{item.name}</a></li>)}</ul>
+          </details>
+        </article>
+      );
+    })}
+  </div>
+  <p class="coverage-principle"><ShieldCheck size={19}/> اصل داده: پوشش علمی و ارجاعی حذف نمی‌شود؛ نوع رابطه صریح می‌ماند تا گراف هم گسترده باشد و هم دقیق.</p>
+</section>
