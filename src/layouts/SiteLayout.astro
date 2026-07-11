@@ -8,6 +8,7 @@ interface Props {
   description?: string;
   canonical?: string;
   robots?: string;
+  ogType?: 'website' | 'article';
 }
 const {
   graph,
@@ -15,11 +16,15 @@ const {
   description = site.description,
   canonical = site.url,
   robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
+  ogType = 'article',
 } = Astro.props;
 const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).href;
+const ogPrefix = ogType === 'article'
+  ? 'og: https://ogp.me/ns# article: https://ogp.me/ns/article#'
+  : 'og: https://ogp.me/ns#';
 ---
 <!doctype html>
-<html lang={site.language} dir={site.direction} prefix="og: https://ogp.me/ns# article: https://ogp.me/ns/article#">
+<html lang={site.language} dir={site.direction} prefix={ogPrefix}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -70,7 +75,7 @@ const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).hr
     <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta property="og:type" content="article" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:locale" content="fa_IR" />
     <meta property="og:site_name" content={site.clinicName} />
     <meta property="og:title" content={title} />
@@ -80,10 +85,14 @@ const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).hr
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="دکتر سعید قزلباش؛ پزشکی زیبایی در کرمانشاه" />
-    <meta property="article:author" content={`${site.url}#person`} />
-    <meta property="article:publisher" content={`${site.url}#clinic`} />
-    <meta property="article:published_time" content={`${site.datePublished}T00:00:00+03:30`} />
-    <meta property="article:modified_time" content={`${site.dateModified}T00:00:00+03:30`} />
+    {ogType === 'article' && (
+      <>
+        <meta property="article:author" content={`${site.url}#person`} />
+        <meta property="article:publisher" content={`${site.url}#clinic`} />
+        <meta property="article:published_time" content={`${site.datePublished}T00:00:00+03:30`} />
+        <meta property="article:modified_time" content={`${site.dateModified}T00:00:00+03:30`} />
+      </>
+    )}
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
