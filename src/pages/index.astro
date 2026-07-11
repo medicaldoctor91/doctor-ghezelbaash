@@ -48,7 +48,7 @@ const introHtml = (await introProcessor.render(introMarkdown)).code;
 const featuredAnswerHtml = featuredAnswerMarkdown ? (await sectionsProcessor.render(featuredAnswerMarkdown)).code : '';
 const sectionsHtml = sectionsMarkdown ? (await sectionsProcessor.render(sectionsMarkdown)).code : '';
 ---
-<SiteLayout graph={graph}>
+<SiteLayout graph={graph} ogType="website">
   <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
   <div id="top"></div>
   <Header navigation={navigation} />
