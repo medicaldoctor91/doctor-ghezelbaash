@@ -1,6 +1,7 @@
 import { getHeadings } from '../content/landing.md';
 import { buildProcedureAnchorMap } from '../lib/content';
 import { site } from '../data/site';
+import { physicianClinicRelationship } from '../domain/entity-identity';
 // @ts-expect-error Shared ESM product data.
 import { procedures } from '../data/knowledge.mjs';
 // @ts-expect-error Shared ESM authority data.
@@ -79,7 +80,7 @@ export function GET() {
       evaluated: 'موضوع در کلینیک ارزیابی می‌شود؛ روش نهایی به معاینه و نتیجه ارزیابی وابسته است.',
       'referral-context': 'روش جراحی یا تخصصی برای مقایسه، تعیین مرز درمان و ارجاع صحیح پوشش داده می‌شود و به‌عنوان خدمت کلینیک ادعا نشده است.',
     },
-    providers: { physician: `${site.url}#person`, clinic: `${site.url}#clinic`, relationship: 'practicesAt' },
+    providers: { physician: `${site.url}#person`, clinic: `${site.url}#clinic`, relationship: physicianClinicRelationship },
     statistics: {
       umbrellaCount: umbrella.length,
       granularCount: granular.length,

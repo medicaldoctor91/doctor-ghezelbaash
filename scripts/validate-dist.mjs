@@ -81,13 +81,20 @@ if (jsonLd[0]) {
     check(personNodes.length === 1, 'Person ID is not unique');
     check(clinicNodes.length === 1, 'Clinic ID is not unique');
     if (personNodes[0]) {
-      check((personNodes[0].sameAs ?? []).includes('https://www.instagram.com/doctor.ghezelbaash/'), 'Person sameAs is missing Instagram');
-      check((personNodes[0].identifier ?? []).some((item) => item?.propertyID === 'Instagram' && item?.url === 'https://www.instagram.com/doctor.ghezelbaash/'), 'Person identifier is missing Instagram');
+      check(!(personNodes[0].sameAs ?? []).includes('https://www.instagram.com/doctor.ghezelbaash/'), 'Person sameAs must not claim the clinic/local Instagram identity');
+      check(!(personNodes[0].identifier ?? []).some((item) => item?.propertyID === 'Instagram'), 'Person identifier must not claim the clinic/local Instagram identity');
+      check((personNodes[0].identifier ?? []).some((item) => item?.propertyID === 'GoogleKnowledgeGraphMID' && item?.value === '/g/11nqdfk76c'), 'Person identifier is missing Google Knowledge Graph MID /g/11nqdfk76c');
+      check((personNodes[0].identifier ?? []).some((item) => item?.propertyID === 'GoogleCloudEnterpriseKnowledgeGraphMID' && item?.value === 'C-02KY8SVQ2'), 'Person identifier is missing Cloud Enterprise Knowledge Graph MID C-02KY8SVQ2');
+      check(personNodes[0].worksFor?.['@id'] === 'https://www.ghezelbaash.ir/#clinic', 'Person.worksFor must point to the canonical Clinic');
+      check(personNodes[0].workLocation?.['@id'] === 'https://www.ghezelbaash.ir/#clinic', 'Person.workLocation must point to the canonical Clinic');
     }
     if (clinicNodes[0]) {
       check((clinicNodes[0].sameAs ?? []).includes('https://www.instagram.com/doctor.ghezelbaash/'), 'Clinic sameAs is missing Instagram');
       check((clinicNodes[0].sameAs ?? []).includes('https://www.wikidata.org/entity/Q140288589'), 'Clinic sameAs is missing its Wikidata entity');
       check((clinicNodes[0].identifier ?? []).some((item) => item?.propertyID === 'Wikidata' && item?.value === 'Q140288589'), 'Clinic identifier is missing Wikidata Q140288589');
+      check((clinicNodes[0].identifier ?? []).some((item) => item?.propertyID === 'GoogleLocalKnowledgeGraphMID' && item?.value === '/g/11r3rzdtb3'), 'Clinic identifier is missing Google Local Knowledge Graph MID /g/11r3rzdtb3');
+      check(clinicNodes[0].employee?.['@id'] === 'https://www.ghezelbaash.ir/#person', 'Clinic.employee must point to the canonical Person');
+      check(clinicNodes[0].geo?.latitude === 34.3400698 && clinicNodes[0].geo?.longitude === 47.0852334, 'Clinic geo must match the canonical Google Maps coordinates');
     }
     check(Buffer.byteLength(jsonLd[0][1]) < 400_000, 'inline JSON-LD exceeds 400KB');
     check(html.indexOf(jsonLd[0][0]) > html.indexOf('</main>'), 'inline JSON-LD must be after main content');
@@ -105,12 +112,14 @@ const graphCatalogPath = join(root, 'graph', 'catalog.jsonld');
 const coreGraphPath = join(root, 'graph', 'core.jsonld');
 const aiPolicyPath = join(root, '.well-known', 'ai.txt');
 const aiSummaryPath = join(root, 'ai', 'summary.json');
+const identityCrosswalkPath = join(root, 'identity-crosswalk.json');
 const aiFaqPath = join(root, 'ai', 'faq.json');
 const searchPath = join(root, 'search', 'chunks-000.jsonl');
 const fullTextPath = join(root, 'llms-full.txt');
 check(existsSync(aiPolicyPath), '/.well-known/ai.txt missing');
 check(existsSync(aiSummaryPath), '/ai/summary.json missing');
 check(existsSync(aiFaqPath), '/ai/faq.json missing');
+check(existsSync(identityCrosswalkPath), '/identity-crosswalk.json missing');
 check(existsSync(searchPath), '/search/chunks-000.jsonl missing');
 check(existsSync(fullTextPath), '/llms-full.txt missing');
 check(existsSync(graphManifestPath), '/graph.json missing');
@@ -133,6 +142,7 @@ const graphSummary = JSON.parse(readFileSync(graphSummaryPath, 'utf8'));
 const graphCatalog = JSON.parse(readFileSync(graphCatalogPath, 'utf8'));
 const aiPolicy = readFileSync(aiPolicyPath, 'utf8');
 const aiSummary = JSON.parse(readFileSync(aiSummaryPath, 'utf8'));
+const identityCrosswalk = JSON.parse(readFileSync(identityCrosswalkPath, 'utf8'));
 const aiFaq = JSON.parse(readFileSync(aiFaqPath, 'utf8'));
 const searchCorpus = readFileSync(searchPath, 'utf8');
 const fullText = readFileSync(fullTextPath, 'utf8');
@@ -215,6 +225,11 @@ check(aiSummary.entities?.dataset?.wikidata === 'https://www.wikidata.org/entity
 check(aiSummary.discovery?.faq === 'https://www.ghezelbaash.ir/ai/faq.json', 'AI summary FAQ discovery URL mismatch');
 check(context.entities?.clinic?.wikidata === 'https://www.wikidata.org/entity/Q140288589', 'context clinic Wikidata mismatch');
 check(context.entities?.dataset?.wikidata === 'https://www.wikidata.org/entity/Q140304972', 'context dataset Wikidata mismatch');
+check(identityCrosswalk.entities?.physician?.identifiers?.googleKnowledgeGraph?.value === '/g/11nqdfk76c', 'identity crosswalk physician Google MID mismatch');
+check(identityCrosswalk.entities?.physician?.identifiers?.googleCloudKnowledgeGraph?.value === 'C-02KY8SVQ2', 'identity crosswalk physician Cloud MID mismatch');
+check(identityCrosswalk.entities?.clinic?.identifiers?.googleLocalKnowledgeGraph?.value === '/g/11r3rzdtb3', 'identity crosswalk clinic Local MID mismatch');
+check(identityCrosswalk.relationship?.predicate === 'worksFor' && identityCrosswalk.relationship?.inverse?.predicate === 'employee', 'identity crosswalk physician-clinic inverse relationship mismatch');
+check(identityCrosswalk.socialIdentityAssignment?.sameAsEntity === 'https://www.ghezelbaash.ir/#clinic', 'identity crosswalk Instagram entity assignment mismatch');
 check(Array.isArray(aiFaq.questions) && aiFaq.questions.length > 0, 'AI FAQ contains no questions');
 check(aiFaq.questionCount === aiFaq.questions.length, 'AI FAQ questionCount mismatch');
 check(aiFaq.questions.every((item) => item.question && item.answer && item.url), 'AI FAQ has incomplete records');
