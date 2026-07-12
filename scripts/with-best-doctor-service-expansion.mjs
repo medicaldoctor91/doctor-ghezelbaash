@@ -1,0 +1,70 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { renderExpandedBestDoctorMarkdown } from '../src/domain/best-doctor-service-expansion.mjs';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const landingPath = join(root, 'src', 'content', 'landing.md');
+const startMarker = '<!-- GENERATED:BEST_DOCTOR_SERVICE_EXPANSION:START -->';
+const endMarker = '<!-- GENERATED:BEST_DOCTOR_SERVICE_EXPANSION:END -->';
+const hubHeading = '## پاسخ مستقیم به جست‌وجوهای «بهترین دکتر زیبایی در کرمانشاه»';
+
+function stripGeneratedBlock(source) {
+  const start = source.indexOf(startMarker);
+  if (start < 0) return source;
+  const end = source.indexOf(endMarker, start);
+  if (end < 0) throw new Error('Generated best-doctor block has a start marker without an end marker.');
+  const after = end + endMarker.length;
+  return `${source.slice(0, start).replace(/\n{3,}$/, '\n\n')}${source.slice(after).replace(/^\n{3,}/, '\n\n')}`;
+}
+
+function injectGeneratedBlock() {
+  const original = stripGeneratedBlock(readFileSync(landingPath, 'utf8'));
+  const hubStart = original.indexOf(hubHeading);
+  if (hubStart < 0) throw new Error('Featured best-doctor hub heading was not found in landing.md.');
+  const boundary = original.indexOf('\n---\n\n## ', hubStart + hubHeading.length);
+  if (boundary < 0) throw new Error('The end boundary of the featured best-doctor hub was not found.');
+  const generated = renderExpandedBestDoctorMarkdown().trim();
+  const block = `\n\n${startMarker}\n${generated}\n${endMarker}`;
+  writeFileSync(landingPath, `${original.slice(0, boundary)}${block}${original.slice(boundary)}`, 'utf8');
+  return original;
+}
+
+function restoreOriginal(original) {
+  writeFileSync(landingPath, original, 'utf8');
+}
+
+const targetScript = process.argv[2];
+if (!targetScript) {
+  console.error('Usage: node scripts/with-best-doctor-service-expansion.mjs <npm-script>');
+  process.exit(2);
+}
+
+const original = injectGeneratedBlock();
+const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const child = spawn(npmCommand, ['run', targetScript], {
+  cwd: root,
+  stdio: 'inherit',
+  env: process.env,
+});
+
+let forwardedSignal = null;
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => {
+    forwardedSignal = signal;
+    if (!child.killed) child.kill(signal);
+  });
+}
+
+child.on('error', (error) => {
+  restoreOriginal(original);
+  console.error(error);
+  process.exit(1);
+});
+
+child.on('close', (code, signal) => {
+  restoreOriginal(original);
+  if (forwardedSignal || signal) process.kill(process.pid, forwardedSignal ?? signal);
+  process.exit(code ?? 1);
+});
