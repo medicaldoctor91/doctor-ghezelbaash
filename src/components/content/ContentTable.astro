@@ -3,25 +3,25 @@ import type { TocGroup } from '~/lib/content';
 interface Props { groups: TocGroup[]; }
 const { groups } = Astro.props;
 ---
-<aside id="content-table" class="content-table content-table-single" aria-label="فهرست موضوعی محتوای صفحه">
-  <details class="content-table-disclosure" open>
-    <summary><strong>نقشهٔ موضوعی صفحه</strong><span>بازکردن یا بستن فهرست</span></summary>
-    <nav aria-label="فهرست واحد محتوای صفحه">
+<aside id="content-table" class="content-table content-table-single bg-[linear-gradient(45deg,#F8FDFF,#FFFFFF)] text-black rounded-2xl p-4 border-2 border-main-200" aria-label="فهرست موضوعی محتوای صفحه">
+  <details class="overflow-hidden" open>
+    <summary class="flex items-center justify-between gap-3 cursor-pointer text-main-200"><strong>نقشهٔ موضوعی صفحه</strong><span class="text-xs text-gray-500">بازکردن یا بستن فهرست</span></summary>
+    <nav class="max-h-[72vh] overflow-y-auto mt-4" aria-label="فهرست واحد محتوای صفحه">
       {groups.map((group, index) => (
-        <details class="toc-category" open={index < 3}>
-          <summary>{group.label}</summary>
-          <ol>
+        <details class="border-t border-main-200 py-3 first:border-t-0" open={index < 3}>
+          <summary class="cursor-pointer text-main-200 font-semibold">{group.label}</summary>
+          <ol class="grid gap-3 mt-3 p-0 list-none">
             {group.sections.map((section) => (
               <li>
-                <a class="toc-section-link" href={`#${section.slug}`}>{section.text}</a>
+                <a class="hover:text-main-200 hover:underline" href={`#${section.slug}`}>{section.text}</a>
                 {section.children.length > 0 && (
-                  <details class="toc-children">
-                    <summary>زیرموضوع‌ها</summary>
-                    <ol>
+                  <details class="mt-2 border-r border-main-200 pr-3">
+                    <summary class="cursor-pointer text-sm text-gray-500">زیرموضوع‌ها</summary>
+                    <ol class="grid gap-2 mt-2 p-0 list-none">
                       {section.children.map((child) => (
                         <li>
-                          <a href={`#${child.slug}`}>{child.text}</a>
-                          {child.children.length > 0 && <details class="toc-children"><summary>پرسش‌ها و جزئیات</summary><ol>{child.children.map((grandchild) => <li><a href={`#${grandchild.slug}`}>{grandchild.text}</a></li>)}</ol></details>}
+                          <a class="hover:text-main-200 hover:underline" href={`#${child.slug}`}>{child.text}</a>
+                          {child.children.length > 0 && <details class="mt-2 border-r border-main-200 pr-3"><summary class="cursor-pointer text-sm text-gray-500">پرسش‌ها و جزئیات</summary><ol class="grid gap-2 mt-2 p-0 list-none">{child.children.map((grandchild) => <li><a class="hover:text-main-200 hover:underline" href={`#${grandchild.slug}`}>{grandchild.text}</a></li>)}</ol></details>}
                         </li>
                       ))}
                     </ol>
@@ -32,7 +32,7 @@ const { groups } = Astro.props;
           </ol>
         </details>
       ))}
-      <a class="toc-back-top" href="#top">بازگشت به ابتدای صفحه</a>
+      <a class="btn btn-outline border-2 border-main-200 text-main-200 rounded-lg hover:bg-main-200 hover:text-white w-full mt-5" href="#top">بازگشت به ابتدای صفحه</a>
     </nav>
   </details>
 </aside>

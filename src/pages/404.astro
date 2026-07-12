@@ -1,7 +1,6 @@
 ---
 import SiteLayout from '../layouts/SiteLayout.astro';
 import { site } from '~/domain/entities';
-import '../styles/visual-refresh.css';
 const canonical = `${site.url}404`;
 const graph = {
   '@context': 'https://schema.org',
@@ -26,8 +25,8 @@ const graph = {
     <h1>این نشانی در لندینگ تک‌صفحه‌ای وجود ندارد</h1>
     <p>همهٔ مطالب اصلی در صفحهٔ نخست و از طریق فهرست موضوعی در دسترس‌اند.</p>
     <div class="error-actions">
-      <a class="heal-button heal-button-primary" href="/">بازگشت به صفحهٔ اصلی</a>
-      <a class="heal-button" href="/#content-table">بازکردن فهرست کامل</a>
+      <a class="btn bg-[linear-gradient(125deg,var(--color-main-100),var(--color-main-200))] text-white border-0 rounded-xl text-lg py-3 px-6 h-auto shadow-xl hover:shadow-2xl" href="/">بازگشت به صفحهٔ اصلی</a>
+      <a class="btn btn-outline border-2 border-main-200 text-main-200 rounded-lg hover:bg-main-200 hover:text-white" href="/#content-table">بازکردن فهرست کامل</a>
     </div>
   </main>
 </SiteLayout>

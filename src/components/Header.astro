@@ -6,44 +6,46 @@ interface Props { navigation: NavItem[]; }
 const { navigation } = Astro.props;
 const homeAnchor = (id: string) => Astro.url.pathname === '/' ? `#${id}` : `${site.url}#${id}`;
 ---
-<header class="site-header">
-  <nav class="container site-header-grid" aria-label="ناوبری اصلی">
-    <a href={homeAnchor('top')} class="site-brand" aria-label="بازگشت به ابتدای صفحه">
-      <span class="site-brand-mark" aria-hidden="true">
-        <img
-          src="/assets/brand/doctor-ghezelbaash-logo-192.png"
-          alt=""
-          width="192"
-          height="192"
-          decoding="async"
-          fetchpriority="high"
-        />
-      </span>
-      <span>
-        <strong>{site.name}</strong>
-        <small>پزشکی زیبایی، پوست و مو · کرمانشاه</small>
+<header>
+  <nav class="container grid grid-cols-[168px_1fr_auto] py-4 items-center gap-2" aria-label="ناوبری اصلی">
+    <a href={homeAnchor('top')} class="flex items-center gap-2 no-underline min-w-0" aria-label="بازگشت به ابتدای صفحه">
+      <img
+        src="/assets/brand/doctor-ghezelbaash-mark-256.png"
+        alt=""
+        width="64"
+        height="64"
+        decoding="async"
+        fetchpriority="high"
+        class="w-14 h-14 object-contain"
+      />
+      <span class="hidden sm:grid min-w-0 leading-tight">
+        <strong class="text-main-200 text-sm truncate">{site.name}</strong>
+        <small class="text-gray-500 text-xs truncate">پزشکی زیبایی، پوست و مو · کرمانشاه</small>
       </span>
     </a>
 
-    <div class="site-navigation">
-      {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
-      <a href={homeAnchor('video-knowledge-hub')}>ویدئوها</a>
-      <a href={homeAnchor('content-table')}><ListTree size={17}/> فهرست کامل</a>
+    <div class="hidden lg:flex gap-10 items-center mx-auto">
+      {navigation.map((item) => <a href={item.href} class="hover:text-main-200">{item.label}</a>)}
+      <a href={homeAnchor('video-knowledge-hub')} class="hover:text-main-200">ویدئوها</a>
+      <a href={homeAnchor('content-table')} class="hover:text-main-200 inline-flex items-center gap-2"><ListTree size={17}/> فهرست کامل</a>
     </div>
 
-    <div class="site-header-actions">
-      <a href={`tel:${site.phone}`} class="heal-button heal-button-primary header-phone"><Phone size={18}/> تماس</a>
-      <details class="header-menu">
-        <summary><Menu aria-hidden="true"/><span class="sr-only">بازکردن منوی صفحه</span></summary>
-        <nav aria-label="منوی موبایل">
-          <a href={homeAnchor('video-knowledge-hub')}>مرکز دانش ویدئویی</a>
-          <a href={homeAnchor('content-table')}><ListTree size={17}/> فهرست کامل محتوا</a>
-          {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
-          <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={17}/> مسیریابی کلینیک</a>
-          <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={17}/> اینستاگرام رسمی</a>
-          <a href={`tel:${site.phone}`}><Phone size={17}/> تماس با کلینیک</a>
-        </nav>
-      </details>
-    </div>
+    <a href={`tel:${site.phone}`} class="btn mr-auto bg-[linear-gradient(125deg,var(--color-main-100),var(--color-main-200))] text-white border-0 rounded-xl text-lg py-3 px-6 h-auto shadow-xl hover:shadow-2xl"><Phone size={18}/> تماس</a>
+
+    <details class="relative lg:hidden">
+      <summary aria-label="بازکردن منوی صفحه" class="btn btn-square btn-ghost list-none">
+        <Menu aria-hidden="true"/>
+        <span class="sr-only">بازکردن منوی صفحه</span>
+      </summary>
+      <nav class="menu absolute z-50 top-full left-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-box bg-base-100 border-2 border-main-200 p-4 shadow-xl flex flex-col gap-3" aria-label="منوی موبایل">
+        <a href={homeAnchor('video-knowledge-hub')}>مرکز دانش ویدئویی</a>
+        <a href={homeAnchor('content-table')}><ListTree size={17}/> فهرست کامل محتوا</a>
+        {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
+        <hr class="opacity-20 my-2"/>
+        <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={17}/> مسیریابی کلینیک</a>
+        <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={17}/> اینستاگرام رسمی</a>
+        <a href={`tel:${site.phone}`}><Phone size={17}/> تماس با کلینیک</a>
+      </nav>
+    </details>
   </nav>
 </header>
