@@ -6,9 +6,12 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build && npm run validate:dist && npm run validate:architecture && npm run validate:answers && npm run validate:videos && npm run validate:knowledge && npm run validate:instagram && npm run validate:research-education && npm run benchmark:retrieval",
-    "build:astro": "astro build",
+    "dev": "node scripts/with-best-doctor-service-expansion.mjs dev:source",
+    "dev:source": "astro dev",
+    "build": "node scripts/with-best-doctor-service-expansion.mjs build:source",
+    "build:source": "astro build && npm run validate:dist && npm run validate:architecture && npm run validate:answers && npm run validate:videos && npm run validate:knowledge && npm run validate:instagram && npm run validate:research-education && npm run benchmark:retrieval",
+    "build:astro": "node scripts/with-best-doctor-service-expansion.mjs build:astro:source",
+    "build:astro:source": "astro build",
     "validate:dist": "node scripts/validate-dist.mjs",
     "benchmark:retrieval": "node scripts/retrieval-benchmark.mjs",
     "preview": "astro preview",
