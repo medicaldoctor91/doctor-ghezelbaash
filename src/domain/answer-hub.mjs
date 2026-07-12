@@ -1,3 +1,5 @@
+import { expandedBestDoctorMappings } from './best-doctor-service-expansion.mjs';
+
 /**
  * Canonical semantic mappings for the authored answer-first query hub.
  *
@@ -137,6 +139,7 @@ export const authoredAnswerMappings = Object.freeze([
     dimensionId: 'best-doctor-local',
     kind: 'question',
   },
+  ...expandedBestDoctorMappings,
 ]);
 
 const mappingBySection = new Map(authoredAnswerMappings.map((entry) => [entry.sectionId, entry]));
