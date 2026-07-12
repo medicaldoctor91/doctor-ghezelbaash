@@ -1,6 +1,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { authoredAnswerMappings } from '../src/domain/answer-hub.mjs';
+import { procedures } from '../src/domain/concepts.mjs';
+import { granularConcepts } from '../src/domain/claims.mjs';
 
 const root = join(process.cwd(), 'dist');
 const failures = [];
@@ -54,6 +56,25 @@ for (const mapping of authoredAnswerMappings) {
   }
 }
 
+const questionMappings = authoredAnswerMappings.filter((mapping) => mapping.kind === 'question');
+const coveredProcedureIds = new Set(questionMappings.flatMap((mapping) => mapping.procedureIds));
+const coveredConceptIds = new Set(questionMappings.flatMap((mapping) => mapping.conceptIds));
+const conceptById = new Map(granularConcepts.map((concept) => [concept.id, concept]));
+
+for (const procedure of procedures.filter((item) => item.relationship === 'offered')) {
+  check(coveredProcedureIds.has(procedure.id), `${procedure.id}: offered procedure missing from best-doctor answer coverage`);
+}
+for (const concept of granularConcepts.filter((item) => item.relationship === 'offered')) {
+  check(coveredConceptIds.has(concept.id), `${concept.id}: offered concept missing from best-doctor answer coverage`);
+}
+for (const mapping of questionMappings) {
+  for (const conceptId of mapping.conceptIds) {
+    const concept = conceptById.get(conceptId);
+    check(Boolean(concept), `${mapping.sectionId}: unknown concept ${conceptId}`);
+    if (concept) check(concept.relationship !== 'referral-context', `${mapping.sectionId}: referral-only concept ${conceptId} cannot be presented as a local best-doctor service`);
+  }
+}
+
 const forbiddenPairs = [
   ['best-hair-loss-prp-doctor-kermanshah', /^(filler|botox|thread|submental)-/],
   ['best-thread-lift-doctor-kermanshah', /^(filler|botox|hair|submental)-/],
@@ -73,7 +94,9 @@ if (failures.length) {
 console.log(JSON.stringify({
   status: 'pass',
   authoredMappings: authoredAnswerMappings.length,
-  questionMappings: authoredAnswerMappings.filter((item) => item.kind === 'question').length,
+  questionMappings: questionMappings.length,
+  offeredProceduresCovered: procedures.filter((item) => item.relationship === 'offered').length,
+  offeredConceptsCovered: granularConcepts.filter((item) => item.relationship === 'offered').length,
   artifactsChecked: ['answers JSONL', 'search JSONL', 'faq.json', 'ai/faq.json'],
-  semanticPolicy: 'authored answer mappings are exact and cannot be inferred by keyword order',
+  semanticPolicy: 'authored answer mappings are exact, cover every offered service, and exclude referral-only services',
 }, null, 2));
