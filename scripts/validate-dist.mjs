@@ -1,7 +1,9 @@
+import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const root = join(process.cwd(), 'dist');
+const site = 'https://www.ghezelbaash.ir/';
 const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
 const files = [];
@@ -97,6 +99,10 @@ const executableJs = [...html.matchAll(/<script(?![^>]+application\/ld\+json)[^>
 check(executableJs < 20_000, `initial inline JavaScript exceeds 20KB: ${executableJs}`);
 const contextPath = join(root, 'context.json');
 const manifestPath = join(root, 'knowledge-manifest.json');
+const graphManifestPath = join(root, 'graph.json');
+const graphSummaryPath = join(root, 'graph-summary.json');
+const graphCatalogPath = join(root, 'graph', 'catalog.jsonld');
+const coreGraphPath = join(root, 'graph', 'core.jsonld');
 const aiPolicyPath = join(root, '.well-known', 'ai.txt');
 const aiSummaryPath = join(root, 'ai', 'summary.json');
 const aiFaqPath = join(root, 'ai', 'faq.json');
@@ -107,6 +113,10 @@ check(existsSync(aiSummaryPath), '/ai/summary.json missing');
 check(existsSync(aiFaqPath), '/ai/faq.json missing');
 check(existsSync(searchPath), '/search/chunks-000.jsonl missing');
 check(existsSync(fullTextPath), '/llms-full.txt missing');
+check(existsSync(graphManifestPath), '/graph.json missing');
+check(existsSync(graphSummaryPath), '/graph-summary.json missing');
+check(existsSync(graphCatalogPath), '/graph/catalog.jsonld missing');
+check(existsSync(coreGraphPath), '/graph/core.jsonld missing');
 check(statSync(contextPath).size < 100_000, 'context.json exceeds 100KB');
 check(statSync(manifestPath).size < 250_000, 'knowledge-manifest.json exceeds 250KB');
 for (const path of files) {
@@ -117,11 +127,75 @@ for (const path of files) {
   if ((rel.startsWith('search/') || rel.startsWith('answers/') || rel.startsWith('evidence/')) && rel.endsWith('.jsonl')) check(size < 1_500_000, `${rel} exceeds 1.5MB`);
 }
 const context = JSON.parse(readFileSync(contextPath, 'utf8'));
+const knowledgeManifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+const graphManifest = JSON.parse(readFileSync(graphManifestPath, 'utf8'));
+const graphSummary = JSON.parse(readFileSync(graphSummaryPath, 'utf8'));
+const graphCatalog = JSON.parse(readFileSync(graphCatalogPath, 'utf8'));
 const aiPolicy = readFileSync(aiPolicyPath, 'utf8');
 const aiSummary = JSON.parse(readFileSync(aiSummaryPath, 'utf8'));
 const aiFaq = JSON.parse(readFileSync(aiFaqPath, 'utf8'));
 const searchCorpus = readFileSync(searchPath, 'utf8');
 const fullText = readFileSync(fullTextPath, 'utf8');
+
+check(Array.isArray(graphManifest.shards) && graphManifest.shards.length > 0, 'graph.json: shards must be a non-empty array');
+check(!('replacement' in graphManifest), 'graph.json: obsolete replacement field remains');
+check(graphManifest.primaryShard === `${site}graph/core.jsonld`, 'graph.json: primaryShard mismatch');
+check(graphManifest.completeGraphStrategy === 'union-of-all-listed-shards', 'graph.json: completeGraphStrategy mismatch');
+
+const compactGraph = (graphManifest.shards ?? [])
+  .map(({ url, bytes }) => ({ url, bytes }))
+  .sort((a, b) => a.url.localeCompare(b.url));
+const compactKnowledge = (knowledgeManifest.artifacts?.graph ?? [])
+  .map(({ url, bytes }) => ({ url, bytes }))
+  .sort((a, b) => a.url.localeCompare(b.url));
+check(JSON.stringify(compactGraph) === JSON.stringify(compactKnowledge), 'graph manifests list different shards');
+
+for (const shard of graphManifest.shards ?? []) {
+  const parsed = new URL(shard.url);
+  check(parsed.origin === new URL(site).origin, `graph.json: external shard URL ${shard.url}`);
+  const pathname = parsed.pathname.replace(/^\/+/, '');
+  const filePath = join(root, pathname);
+  check(existsSync(filePath), `missing graph shard: ${pathname}`);
+  if (!existsSync(filePath)) continue;
+  const raw = readFileSync(filePath);
+  check(raw.byteLength === shard.bytes, `${pathname}: byte count mismatch`);
+  try {
+    const value = JSON.parse(raw.toString('utf8'));
+    check(value['@context'] === 'https://schema.org', `${pathname}: invalid or missing @context`);
+    check(Array.isArray(value['@graph']), `${pathname}: @graph must be an array`);
+  } catch (error) {
+    failures.push(`${pathname}: invalid JSON-LD (${error.message})`);
+  }
+}
+
+for (const artifact of knowledgeManifest.artifacts?.graph ?? []) {
+  const pathname = new URL(artifact.url).pathname.replace(/^\/+/, '');
+  const filePath = join(root, pathname);
+  check(existsSync(filePath), `knowledge manifest references missing graph shard: ${pathname}`);
+  if (!existsSync(filePath)) continue;
+  const actual = createHash('sha256').update(readFileSync(filePath)).digest('hex');
+  check(actual === artifact.sha256, `${pathname}: SHA-256 mismatch`);
+}
+
+const core = JSON.parse(readFileSync(coreGraphPath, 'utf8'))['@graph'] ?? [];
+const corePerson = core.find((node) => node['@id'] === `${site}#person`);
+const coreClinic = core.find((node) => node['@id'] === `${site}#clinic`);
+check(Boolean(corePerson), 'core.jsonld: Person missing');
+check(Boolean(coreClinic), 'core.jsonld: Clinic missing');
+check(corePerson?.workLocation?.['@id'] === `${site}#clinic`, 'core.jsonld: Person.workLocation mismatch');
+check(coreClinic?.employee?.['@id'] === `${site}#person`, 'core.jsonld: Clinic.employee mismatch');
+
+const catalogGraph = graphCatalog['@graph'] ?? [];
+const graphDataset = catalogGraph.find((node) => node['@id'] === `${site}#dataset-graph`);
+check(Boolean(graphDataset), 'catalog: graph dataset missing');
+check(graphDataset?.distribution?.encodingFormat === 'application/json', 'catalog: graph.json encodingFormat must be application/json');
+check(graphDataset?.distribution?.contentUrl === `${site}graph.json`, 'catalog: graph.json contentUrl mismatch');
+
+check(graphSummary.graphManifestUrl === `${site}graph.json`, 'graph-summary: graphManifestUrl mismatch');
+check(graphSummary.primaryShardUrl === `${site}graph/core.jsonld`, 'graph-summary: primaryShardUrl mismatch');
+check(graphSummary.completeGraphStrategy === 'union-of-all-listed-shards', 'graph-summary: completeGraphStrategy mismatch');
+check(!('graphUrl' in graphSummary), 'graph-summary: obsolete graphUrl remains');
+
 for (const phrase of [
   'بهترین دکتر بوتاکس در کرمانشاه چه تفاوتی باید ایجاد کند؟',
   'بهترین دکتر فیلر لب در کرمانشاه چه چیزی را قبل از حجم می‌بیند؟',
