@@ -501,7 +501,7 @@ button, input, textarea, select { font: inherit; }
   position: fixed;
   z-index: 120;
   inset: auto .6rem calc(.6rem + env(safe-area-inset-bottom));
-  display: grid;
+  display: none;
   grid-template-columns: repeat(3, 1fr);
   padding: .3rem;
   border: 1px solid rgba(255,255,255,.12);
@@ -1549,7 +1549,7 @@ button, input, textarea, select { font: inherit; }
   z-index: 80;
   inset-inline-end: max(1rem, env(safe-area-inset-right));
   bottom: max(1rem, env(safe-area-inset-bottom));
-  display: grid;
+  display: none;
   gap: .45rem;
   width: min(12rem, calc(100vw - 2rem));
   padding: .55rem;
@@ -1579,6 +1579,7 @@ button, input, textarea, select { font: inherit; }
 @media (max-width: 720px) {
   body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .conversion-dock {
+    display: grid;
     inset-inline: .55rem;
     bottom: max(.45rem, env(safe-area-inset-bottom));
     width: auto;
