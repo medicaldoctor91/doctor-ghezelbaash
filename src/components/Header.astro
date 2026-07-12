@@ -9,7 +9,16 @@ const homeAnchor = (id: string) => Astro.url.pathname === '/' ? `#${id}` : `${si
 <header class="site-header">
   <nav class="container site-header-grid" aria-label="ناوبری اصلی">
     <a href={homeAnchor('top')} class="site-brand" aria-label="بازگشت به ابتدای صفحه">
-      <span class="site-brand-mark" aria-hidden="true">ق</span>
+      <span class="site-brand-mark" aria-hidden="true">
+        <img
+          src="/assets/brand/doctor-ghezelbaash-logo-192.png"
+          alt=""
+          width="192"
+          height="192"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </span>
       <span>
         <strong>{site.name}</strong>
         <small>پزشکی زیبایی، پوست و مو · کرمانشاه</small>

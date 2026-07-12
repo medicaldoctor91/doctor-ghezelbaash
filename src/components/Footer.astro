@@ -8,7 +8,12 @@ const topHref = Astro.url.pathname === '/' ? '#top' : `${site.url}#top`;
 <footer class="site-footer">
   <div class="container footer-grid">
     <section aria-label="معرفی پزشک">
-      <strong class="footer-title">{site.legalName}</strong>
+      <div class="footer-brand-lockup">
+        <span class="footer-brand-mark" aria-hidden="true">
+          <img src="/assets/brand/doctor-ghezelbaash-logo-192.png" alt="" width="192" height="192" loading="lazy" decoding="async" />
+        </span>
+        <strong class="footer-title">{site.legalName}</strong>
+      </div>
       <p>دکترای حرفه‌ای پزشکی · شمارهٔ نظام پزشکی {site.irimc}</p>
       <p>پزشکی زیبایی، پوست و مو؛ تشخیص پیش از مداخله و تعیین روشن مرز درمان و ارجاع.</p>
     </section>
