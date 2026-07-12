@@ -24,5 +24,21 @@ jobs:
         run: |
           rm -f package-lock.json
           npm install --package-lock=false --no-audit --no-fund --registry=https://registry.npmjs.org/
-      - name: Build and validate
-        run: npm run build
+      - name: Build Astro output
+        run: npm run build:astro
+      - name: Validate distribution
+        run: node scripts/with-best-doctor-service-expansion.mjs validate:dist
+      - name: Validate URL architecture
+        run: node scripts/with-best-doctor-service-expansion.mjs validate:architecture
+      - name: Validate answer semantics
+        run: node scripts/with-best-doctor-service-expansion.mjs validate:answers
+      - name: Validate video pages
+        run: node scripts/with-best-doctor-service-expansion.mjs validate:videos
+      - name: Validate knowledge page
+        run: node scripts/with-best-doctor-service-expansion.mjs validate:knowledge
+      - name: Validate Instagram CTA
+        run: node scripts/with-best-doctor-service-expansion.mjs validate:instagram
+      - name: Validate research and education
+        run: node scripts/with-best-doctor-service-expansion.mjs validate:research-education
+      - name: Benchmark retrieval
+        run: node scripts/with-best-doctor-service-expansion.mjs benchmark:retrieval
