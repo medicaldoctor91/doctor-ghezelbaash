@@ -12,6 +12,7 @@ import VideoKnowledgeHub from '../components/media/VideoKnowledgeHub.astro';
 import { getHeadings, rawContent } from '../content/landing.md';
 import { buildGroupedToc, buildProcedureAnchorMap, choosePrimaryNavigation } from '../lib/content';
 import { stabilizeHeadings } from '../domain/anchor-utils';
+import { authoredAnswerMappingFor } from '../domain/answer-hub.mjs';
 import { buildGooglePageGraph } from '../compilers/google-page-graph';
 import '../styles/featured-answer-disclosure.css';
 import {
@@ -22,11 +23,12 @@ import {
 } from '../lib/markdown-plugins.mjs';
 
 const raw = rawContent();
-const headings = stabilizeHeadings(getHeadings());
-const groups = buildGroupedToc(headings);
-const navigation = choosePrimaryNavigation(headings);
-const graph = buildGooglePageGraph(headings, raw);
-const procedureLinks = buildProcedureAnchorMap(headings);
+const allHeadings = stabilizeHeadings(getHeadings());
+const publicHeadings = allHeadings.filter((heading) => !authoredAnswerMappingFor(heading.slug));
+const groups = buildGroupedToc(publicHeadings);
+const navigation = choosePrimaryNavigation(publicHeadings);
+const graph = buildGooglePageGraph(allHeadings, raw);
+const procedureLinks = buildProcedureAnchorMap(allHeadings);
 const h2Offsets = [...raw.matchAll(/^##\s+/gm)].map((match) => match.index ?? -1).filter((offset) => offset >= 0);
 const firstH2 = h2Offsets[0] ?? -1;
 const secondH2 = h2Offsets[1] ?? -1;
