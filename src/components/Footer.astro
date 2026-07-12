@@ -5,28 +5,57 @@ const year = new Date().getFullYear();
 const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(`${site.dateModified}T12:00:00+03:30`));
 const topHref = Astro.url.pathname === '/' ? '#top' : `${site.url}#top`;
 ---
-<footer class="site-footer">
-  <div class="container footer-grid">
-    <section aria-label="معرفی پزشک">
-      <strong class="footer-title">{site.legalName}</strong>
-      <p>دکترای حرفه‌ای پزشکی · شمارهٔ نظام پزشکی {site.irimc}</p>
-      <p>پزشکی زیبایی، پوست و مو؛ تشخیص پیش از مداخله و تعیین روشن مرز درمان و ارجاع.</p>
-    </section>
-    <nav aria-label="ارتباط با کلینیک">
-      <strong class="footer-title">ارتباط و مراجعه</strong>
-      <a href={`tel:${site.phone}`} class="phone-link"><Phone size={18}/><bdi dir="ltr">{site.phoneDisplay}</bdi></a>
-      <a href={`mailto:${site.email}`}><Mail size={18}/><bdi dir="ltr">{site.email}</bdi></a>
-      <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={18}/>مسیریابی در Google Maps</a>
-      <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={18}/>صفحه رسمی اینستاگرام</a>
-    </nav>
-    <nav aria-label="پیوندهای کاربردی">
-      <strong class="footer-title">پیوندهای کاربردی</strong>
-      <a href="/videos/"><Video size={18}/>ویدئوهای آموزشی و نمونه‌ها</a>
-      <a href="/knowledge/" lang="en" dir="ltr"><Braces size={18}/>Knowledge & AI resources</a>
-      <a href={topHref}><ArrowUp size={18}/>بازگشت به ابتدای صفحه</a>
-    </nav>
+<footer class="footer w-full bg-[#F2FAFF] gap-0 dark:bg-black">
+  <div class="footer-top w-full py-15">
+    <div class="container">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10">
+        <section aria-label="معرفی پزشک">
+          <div class="inline-flex items-center gap-3">
+            <img
+              src="/assets/brand/doctor-ghezelbaash-mark-256.png"
+              alt=""
+              width="96"
+              height="96"
+              loading="lazy"
+              decoding="async"
+              class="w-20 h-20 object-contain"
+            />
+            <strong class="text-main-200">{site.legalName}</strong>
+          </div>
+          <p class="mt-4">دکترای حرفه‌ای پزشکی · شمارهٔ نظام پزشکی {site.irimc}</p>
+          <p>پزشکی زیبایی، پوست و مو؛ تشخیص پیش از مداخله و تعیین روشن مرز درمان و ارجاع.</p>
+        </section>
+
+        <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-10">
+          <nav aria-label="ارتباط با کلینیک">
+            <strong class="block text-xl sm:text-xl md:text-2xl lg:text-2xl font-semibold mb-4 leading-tight text-main-200">ارتباط و مراجعه</strong>
+            <div class="grid gap-3">
+              <a href={`tel:${site.phone}`} class="hover:text-main-200 hover:underline inline-flex items-center gap-2"><Phone size={18}/><bdi dir="ltr">{site.phoneDisplay}</bdi></a>
+              <a href={`mailto:${site.email}`} class="hover:text-main-200 hover:underline inline-flex items-center gap-2"><Mail size={18}/><bdi dir="ltr">{site.email}</bdi></a>
+              <a href={site.maps} target="_blank" rel="noopener noreferrer external" class="hover:text-main-200 hover:underline inline-flex items-center gap-2"><MapPin size={18}/>مسیریابی در Google Maps</a>
+              <a href={site.instagram} target="_blank" rel="me noopener noreferrer external" class="hover:text-main-200 hover:underline inline-flex items-center gap-2"><AtSign size={18}/>صفحه رسمی اینستاگرام</a>
+            </div>
+          </nav>
+
+          <nav aria-label="پیوندهای کاربردی">
+            <strong class="block text-xl sm:text-xl md:text-2xl lg:text-2xl font-semibold mb-4 leading-tight text-main-200">پیوندهای کاربردی</strong>
+            <div class="grid gap-3">
+              <a href="/videos/" class="hover:text-main-200 hover:underline inline-flex items-center gap-2"><Video size={18}/>ویدئوهای آموزشی و نمونه‌ها</a>
+              <a href="/knowledge/" lang="en" dir="ltr" class="hover:text-main-200 hover:underline inline-flex items-center gap-2"><Braces size={18}/>Knowledge &amp; AI resources</a>
+              <a href={topHref} class="hover:text-main-200 hover:underline inline-flex items-center gap-2"><ArrowUp size={18}/>بازگشت به ابتدای صفحه</a>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
   </div>
-  <div class="container footer-bottom">© {year} دکتر سعید قزلباش · آخرین بازبینی و به‌روزرسانی: {modified}</div>
+
+  <div class="footer-btm w-full">
+    <div class="container pb-5">
+      <hr class="border-t border-main-200 mb-5" />
+      <div class="flex flex-wrap gap-4 items-center justify-between">© {year} دکتر سعید قزلباش · آخرین بازبینی و به‌روزرسانی: {modified}</div>
+    </div>
+  </div>
 </footer>
 
 <nav class="mobile-cta" aria-label="اقدام‌های سریع موبایل">

@@ -103,12 +103,12 @@ function heroFigure() {
   return {
     type: 'element',
     tagName: 'figure',
-    properties: { className: ['article-hero-figure'] },
+    properties: { className: ['grid'] },
     children: [
       {
         type: 'element',
         tagName: 'picture',
-        properties: {},
+        properties: { className: ['w-auto', 'h-auto', 'mx-auto', '[grid-area:1/1/2/2]'] },
         children: [
           sourceNode('avif', [480, 768, 1200, 1600]),
           sourceNode('webp', [480, 768, 1200, 1600]),
@@ -124,6 +124,7 @@ function heroFigure() {
               height: 1067,
               fetchPriority: 'high',
               decoding: 'async',
+              className: ['w-auto', 'h-auto', 'mx-auto', 'rounded-xl', 'object-cover'],
             },
             children: [],
           },
@@ -132,7 +133,9 @@ function heroFigure() {
       {
         type: 'element',
         tagName: 'figcaption',
-        properties: {},
+        properties: {
+          className: ['border-main-200', 'border-2', 'rounded-xl', 'p-5', 'bg-[linear-gradient(-125deg,#E9F6FF_0%,#ffffff_100%)]', 'hidden', 'sm:block', 'sm:max-w-[60%]', 'mr-auto', 'mt-auto', '[grid-area:1/1/2/2]', 'text-black'],
+        },
         children: [{ type: 'text', value: 'دکتر محمدسعید قزلباش · شماره نظام پزشکی ۱۶۷۴۳۰ · کرمانشاه' }],
       },
     ],
@@ -148,7 +151,7 @@ function responsivePicture(image) {
   return {
     type: 'element',
     tagName: 'figure',
-    properties: { className: ['evidence-image'] },
+    properties: { className: ['group', 'h-full', 'flex', 'flex-col', 'gap-3', 'border-2', 'border-main-200', 'overflow-hidden', 'rounded-xl'] },
     children: [
       {
         type: 'element',
@@ -166,12 +169,13 @@ function responsivePicture(image) {
               height: image.height,
               loading: 'lazy',
               decoding: 'async',
+              className: ['aspect-2/1', 'w-full', 'h-auto', 'object-cover'],
             },
             children: [],
           },
         ],
       },
-      { type: 'element', tagName: 'figcaption', properties: {}, children: [{ type: 'text', value: image.caption }] },
+      { type: 'element', tagName: 'figcaption', properties: { className: ['text-center', 'p-4'] }, children: [{ type: 'text', value: image.caption }] },
     ],
   };
 }
@@ -180,7 +184,7 @@ function videoFigure(video) {
   return {
     type: 'element',
     tagName: 'figure',
-    properties: { className: ['clinical-video', 'video-facade'], id: `video-${video.id}` },
+    properties: { className: ['video-facade', 'group', 'h-full', 'flex', 'flex-col', 'gap-3', 'border-2', 'border-main-200', 'overflow-hidden', 'rounded-xl'], id: `video-${video.id}` },
     children: [
       {
         type: 'element',
@@ -208,11 +212,11 @@ function videoFigure(video) {
       {
         type: 'element',
         tagName: 'figcaption',
-        properties: { id: `video-${video.id}-description` },
+        properties: { id: `video-${video.id}-description`, className: ['text-center', 'w-full', 'flex-1', 'flex', 'flex-col', 'justify-between', 'items-center', 'p-4'] },
         children: [
           { type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: video.title }] },
           { type: 'element', tagName: 'p', properties: {}, children: [{ type: 'text', value: video.description }] },
-          { type: 'element', tagName: 'a', properties: { href: `/videos/${video.id}/`, className: ['video-watch-link'] }, children: [{ type: 'text', value: 'صفحهٔ ویدئو، متن و فصل‌بندی' }] },
+          { type: 'element', tagName: 'a', properties: { href: `/videos/${video.id}/`, className: ['btn', 'btn-outline', 'border-2', 'border-main-200', 'text-main-200', 'rounded-lg', 'hover:bg-main-200', 'hover:text-white', 'w-full', 'mt-auto'] }, children: [{ type: 'text', value: 'صفحهٔ ویدئو، متن و فصل‌بندی' }] },
         ],
       },
     ],
@@ -245,7 +249,7 @@ function contextualMedia(sectionTitle) {
   return {
     type: 'element',
     tagName: 'aside',
-    properties: { className: ['contextual-media'], ariaLabel: `رسانه‌های مرتبط با ${sectionTitle}` },
+    properties: { className: ['border-2', 'border-main-200', 'rounded-xl', 'p-4', 'lg:p-10', 'bg-[linear-gradient(45deg,#F8FDFF,#FFFFFF)]', 'text-black', 'mt-10'], ariaLabel: `رسانه‌های مرتبط با ${sectionTitle}` },
     children,
   };
 }
@@ -272,7 +276,7 @@ function relatedNavigation(section, relationships, sectionById) {
   return {
     type: 'element',
     tagName: 'nav',
-    properties: { className: ['related-sections'], ariaLabel: `بخش‌های مرتبط با ${section.title}` },
+    properties: { className: ['border-2', 'border-main-200', 'rounded-xl', 'p-4', 'lg:p-10', 'bg-[linear-gradient(45deg,#F8FDFF,#FFFFFF)]', 'text-black', 'mt-10'], ariaLabel: `بخش‌های مرتبط با ${section.title}` },
     children: [
       { type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: 'بخش‌های مرتبط' }] },
       { type: 'element', tagName: 'ul', properties: {}, children: links },
@@ -306,7 +310,7 @@ export function rehypeSemanticSections(options = {}) {
           type: 'element',
           tagName: 'section',
           properties: {
-            className: ['content-section', `topic-${group.id}`],
+            className: ['content-section', 'section', `topic-${group.id}`, 'bg-[linear-gradient(45deg,#F8FDFF,#FFFFFF)]', 'text-black', 'rounded-2xl', 'p-4', 'lg:p-10', 'border-2', 'border-main-200'],
             ...(headingId ? { ariaLabelledBy: headingId, dataSectionId: headingId } : {}),
             dataTopicGroup: group.id,
             dataIntents: metadata.intents.join(' '),
@@ -358,11 +362,45 @@ export function rehypeSemanticSections(options = {}) {
       delete section._sectionMeta;
     }
 
+    const heroHeading = introNodes.find((node) => isElement(node, 'h1'));
+    if (heroHeading) {
+      heroHeading.properties ??= {};
+      heroHeading.properties.className = [...(heroHeading.properties.className ?? []), 'healnet-hero-title'];
+      const textIndex = (heroHeading.children ?? []).findIndex((child) => child?.type === 'text' && String(child.value ?? '').includes('؛'));
+      if (textIndex >= 0) {
+        const value = String(heroHeading.children[textIndex].value ?? '');
+        const separatorIndex = value.indexOf('؛');
+        heroHeading.children.splice(textIndex, 1,
+          {
+            type: 'element',
+            tagName: 'span',
+            properties: { className: ['bg-linear-to-r', 'from-[#0179B4]', 'to-[#88D8FF]', 'bg-clip-text', 'text-transparent'] },
+            children: [{ type: 'text', value: value.slice(0, separatorIndex) }],
+          },
+          { type: 'text', value: value.slice(separatorIndex) },
+        );
+      }
+    }
+
+    const introParagraphs = introNodes.filter((node) => isElement(node, 'p'));
+    if (introParagraphs[0]) {
+      introParagraphs[0].properties ??= {};
+      introParagraphs[0].properties.className = [...(introParagraphs[0].properties.className ?? []), 'healnet-template-copy', 'mt-8', 'mb-10'];
+    }
+    const actionParagraph = introParagraphs.at(-1);
+    const actionLinks = (actionParagraph?.children ?? []).filter((node) => isElement(node, 'a'));
+    actionLinks.forEach((link, index) => {
+      link.properties ??= {};
+      link.properties.className = index === 0
+        ? ['btn', 'bg-[linear-gradient(125deg,var(--color-main-100),var(--color-main-200))]', 'text-white', 'border-0', 'rounded-xl', 'text-lg', 'py-3', 'px-6', 'h-auto', 'shadow-xl', 'hover:shadow-2xl']
+        : ['btn', 'btn-outline', 'border-2', 'border-main-200', 'text-main-200', 'rounded-lg', 'hover:bg-main-200', 'hover:text-white'];
+    });
+
     const intro = {
       type: 'element',
       tagName: 'section',
       properties: {
-        className: ['article-intro'],
+        className: ['section', 'section-hero', 'py-10', 'sm:py-20', 'my-0!'],
         ariaLabel: 'معرفی و پاسخ مستقیم',
         dataTopicGroup: 'physician-entity-authority',
       },
@@ -370,10 +408,27 @@ export function rehypeSemanticSections(options = {}) {
         {
           type: 'element',
           tagName: 'div',
-          properties: { className: ['article-intro-copy'] },
-          children: introNodes,
+          properties: { className: ['container'] },
+          children: [{
+            type: 'element',
+            tagName: 'div',
+            properties: { className: ['grid', 'grid-cols-1', 'md:grid-cols-2', 'items-center', 'gap-10'] },
+            children: [
+              {
+                type: 'element',
+                tagName: 'div',
+                properties: { className: ['text-center', 'sm:text-right'] },
+                children: introNodes,
+              },
+              {
+                type: 'element',
+                tagName: 'div',
+                properties: {},
+                children: [heroFigure()],
+              },
+            ],
+          }],
         },
-        heroFigure(),
       ],
     };
 

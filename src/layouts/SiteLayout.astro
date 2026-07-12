@@ -1,4 +1,5 @@
 ---
+import '@fontsource-variable/vazirmatn/wght.css';
 import '../styles/global.css';
 import '../styles/goal-first.css';
 import { site } from '../domain/entities';
@@ -24,7 +25,7 @@ const ogPrefix = ogType === 'article'
   : 'og: https://ogp.me/ns#';
 ---
 <!doctype html>
-<html lang={site.language} dir={site.direction} prefix={ogPrefix}>
+<html lang={site.language} dir={site.direction} prefix={ogPrefix} data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -98,7 +99,7 @@ const ogPrefix = ogType === 'article'
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={absolute(site.ogImage)} />
   </head>
-  <body>
+  <body class="flex flex-col min-h-full bg-[linear-gradient(125deg,#F2FAFF,#FFFFFF_50%)] bg-no-repeat bg-size-[900px_900px] bg-top-left">
     <slot />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(graph)} />
   </body>
