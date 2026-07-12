@@ -1,6 +1,7 @@
 import { getHeadings, rawContent } from '../content/landing.md';
 import { buildSearchChunks, buildProcedureAnchorMap } from '../lib/content';
 import { site } from '../data/site';
+import { physicianClinicRelationship } from '../domain/entity-identity';
 // @ts-expect-error Shared ESM authority data.
 import { allAuthorityClaims, buildIntentRegistry, evidenceSources, granularConcepts } from '../data/authority.mjs';
 
@@ -91,7 +92,7 @@ export function GET() {
       responsibleEntities: {
         physician: `${site.url}#person`,
         clinic: `${site.url}#clinic`,
-        relationship: 'practicesAt',
+        relationship: physicianClinicRelationship,
       },
       action: concept.relationship === 'offered'
         ? { type: 'clinical-evaluation-and-service', telephone: `tel:${site.phone}`, map: site.maps, instagram: site.instagram }
@@ -113,7 +114,7 @@ export function GET() {
     language: site.language,
     capsuleCount: capsules.length,
     sourceOfTruth: site.liveSourceOfTruth,
-    entities: { physician: `${site.url}#person`, clinic: `${site.url}#clinic`, relationship: 'practicesAt' },
+    entities: { physician: `${site.url}#person`, clinic: `${site.url}#clinic`, relationship: physicianClinicRelationship },
     policy: 'کپسول‌ها ساختار تصمیم، intent، claim و evidence را بدون حذف یا بازنویسی متن visible به هم متصل می‌کنند.',
     capsules,
   }, null, 2), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });

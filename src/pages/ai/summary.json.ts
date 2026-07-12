@@ -1,5 +1,6 @@
 import { site } from '~/domain/entities';
 import { clinic } from '~/domain/clinic';
+import { entityIdentity, physicianClinicRelationship, socialIdentityAssignment } from '~/domain/entity-identity';
 import { offeredProcedures, evaluatedProcedures, referralProcedures } from '~/domain/services';
 import { jsonResponse } from '~/compilers/utils';
 
@@ -34,6 +35,7 @@ export function GET() {
         medicalCouncilVerification: site.irimcVerification,
         orcid: site.orcidUrl,
         wikidata: site.doctorWikidata,
+        identifiers: entityIdentity.physician.identifiers,
       },
       clinic: {
         id: clinic.id,
@@ -44,7 +46,10 @@ export function GET() {
         countryCode: clinic.countryCode,
         maps: clinic.googleMaps,
         wikidata: site.placeWikidata,
+        identifiers: entityIdentity.clinic.identifiers,
       },
+      relationship: physicianClinicRelationship,
+      socialIdentityAssignment,
       dataset: {
         name: 'Dr. Saeed Ghezelbaash Entity Data',
         url: site.huggingFaceDataset,
@@ -71,6 +76,7 @@ export function GET() {
       faq: `${site.url}ai/faq.json`,
       compactContext: `${site.url}context.json`,
       knowledgeManifest: `${site.url}knowledge-manifest.json`,
+      identityCrosswalk: `${site.url}identity-crosswalk.json`,
       graphSummary: `${site.url}graph-summary.json`,
       researchIdentity: `${site.url}research.jsonld`,
       knowledgeDirectory: `${site.url}knowledge/`,
