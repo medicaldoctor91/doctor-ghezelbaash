@@ -13,7 +13,6 @@ import { getHeadings, rawContent } from '../content/landing.md';
 import { buildGroupedToc, buildProcedureAnchorMap, choosePrimaryNavigation } from '../lib/content';
 import { stabilizeHeadings } from '../domain/anchor-utils';
 import { buildGooglePageGraph } from '../compilers/google-page-graph';
-import '../styles/featured-answer-disclosure.css';
 import {
   rehypeAccessibleTables,
   rehypeExternalLinks,
@@ -56,10 +55,7 @@ const sectionsHtml = sectionsMarkdown ? (await sectionsProcessor.render(sections
   <main id="main-content" class="landing-shell">
     <article class="container page-article" aria-label="راهنمای جامع تصمیم‌گیری در پزشکی زیبایی" data-entity="doctor-saeed-ghezelbaash">
       <div class="medical-content article-lead" set:html={introHtml}></div>
-      <details class="featured-answer-disclosure">
-        <summary>راهنمای تکمیلی انتخاب پزشک و روش‌های زیبایی</summary>
-        <div class="medical-content article-featured-answer-hub" set:html={featuredAnswerHtml}></div>
-      </details>
+      <div class="medical-content article-featured-answer-hub" set:html={featuredAnswerHtml}></div>
       <section class="authority-stack" aria-label="هویت، پوشش و مسیرهای اصلی صفحه">
         <TopicNavigator groups={groups} />
         <EntityAuthorityPanel />
@@ -75,22 +71,6 @@ const sectionsHtml = sectionsMarkdown ? (await sectionsProcessor.render(sections
   <ConversionDock />
   <Footer />
   <script is:inline>
-    const openFeaturedDisclosureForHash = () => {
-      let id = '';
-      try {
-        id = decodeURIComponent(window.location.hash.slice(1));
-      } catch {
-        return;
-      }
-      if (!id) return;
-      const target = document.getElementById(id);
-      const disclosure = target?.closest?.('details.featured-answer-disclosure');
-      if (disclosure) disclosure.open = true;
-    };
-
-    openFeaturedDisclosureForHash();
-    window.addEventListener('hashchange', openFeaturedDisclosureForHash, { passive: true });
-
     document.addEventListener('click', (event) => {
       const button = event.target.closest?.('.video-facade-button');
       if (!button) return;

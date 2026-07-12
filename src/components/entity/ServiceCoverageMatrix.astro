@@ -28,32 +28,31 @@ const groups = [
 ];
 const fa = new Intl.NumberFormat('fa-IR');
 ---
-<section id="service-coverage-panel" class="section my-0! py-10 relative z-0 overflow-hidden" aria-labelledby="coverage-matrix-title" data-coverage-model="offered-evaluated-referral">
-  <header class="text-center max-w-5xl mx-auto">
+<section id="service-coverage-panel" class="coverage-matrix" aria-labelledby="coverage-matrix-title" data-coverage-model="offered-evaluated-referral">
+  <header>
     <p class="eyebrow">پوشش کامل خدمات، تصمیم و مرز جراحی</p>
-    <h2 id="coverage-matrix-title">هر روش در <span class="bg-linear-to-r from-[#0179B4] to-[#88D8FF] bg-clip-text text-transparent">جایگاه واقعی خودش</span> به پزشک و کلینیک متصل است</h2>
+    <h2 id="coverage-matrix-title" class="section-display-title">هر روش در جایگاه واقعی خودش به پزشک و کلینیک متصل است</h2>
     <p>ساختار صفحه هم خدمات قابل ارائه را پوشش می‌دهد، هم حوزه‌های نیازمند ارزیابی را، و هم جراحی‌های مرتبطی را که برای تصمیم درست و اتوریتی پزشکی باید در نقشهٔ دانش حضور داشته باشند.</p>
-    <p class="flex items-center justify-center gap-2 text-main-200 mt-4"><Layers3 size={19}/> {fa.format(procedures.length)} مسیر اصلی و {fa.format(granularConcepts.length)} موضوع درمانی با مرز روشنِ ارائه، ارزیابی یا ارجاع در این راهنما پوشش داده شده‌اند.</p>
+    <p class="coverage-summary"><Layers3 size={19}/> {fa.format(procedures.length)} مسیر اصلی و {fa.format(granularConcepts.length)} موضوع درمانی با مرز روشنِ ارائه، ارزیابی یا ارجاع در این راهنما پوشش داده شده‌اند.</p>
   </header>
-  <div class="relative grid gap-10 grid-cols-1 lg:grid-cols-3 mt-10 max-w-6xl mx-auto after:absolute after:-top-5 after:-left-10 after:bg-[url('/img/shape/shape2.svg')] after:bg-no-repeat after:w-35.5 after:h-9.25 after:bg-position-[left_top] after:bg-contain after:-z-10 before:absolute before:-bottom-5 before:-right-10 before:bg-[url('/img/shape/shape2-1.svg')] before:bg-no-repeat before:w-35.5 before:h-9.25 before:bg-position-[right_bottom] before:bg-contain before:-z-10">
+  <div class="coverage-grid">
     {groups.map((group) => {
       const Icon = group.icon;
       const umbrellaItems = procedures.filter((procedure: { relationship: string }) => procedure.relationship === group.relationship);
       const granularItems = granularConcepts.filter((concept: { relationship: string }) => concept.relationship === group.relationship);
       return (
-        <article data-relationship={group.relationship} class="border-2 border-main-200 rounded-xl p-4 lg:p-10 bg-[linear-gradient(45deg,#F8FDFF,#FFFFFF)] text-black">
-          <Icon size={44} aria-hidden="true"/>
-          <h3 class="text-main-200 mt-3">{group.title}</h3>
+        <article class={`coverage-card coverage-${group.relationship}`}>
+          <div class="coverage-card-title"><Icon aria-hidden="true"/><h3>{group.title}</h3></div>
           <p>{group.description}</p>
-          <p class="text-sm text-main-200 mt-4">{fa.format(umbrellaItems.length)} مسیر اصلی · {fa.format(granularItems.length)} مفهوم ریزدانه</p>
-          <ul class="grid gap-3 mt-4 p-0 list-none">{umbrellaItems.map((item: { id: string; name: string }) => <li><a class="hover:text-main-200 hover:underline" href={procedureLinks[item.id] ?? '#top'}>{item.name}</a></li>)}</ul>
-          <details class="mt-5 border-t border-main-200 pt-4">
-            <summary class="cursor-pointer text-main-200 font-semibold">نمایش پوشش ریزدانه</summary>
-            <ul class="grid gap-3 mt-4 p-0 list-none max-h-96 overflow-auto">{granularItems.map((item: { id: string; name: string; parentProcedureId: string }) => <li><a class="hover:text-main-200 hover:underline" href={procedureLinks[item.parentProcedureId] ?? '#top'}>{item.name}</a></li>)}</ul>
+          <p class="coverage-count">{fa.format(umbrellaItems.length)} مسیر اصلی · {fa.format(granularItems.length)} مفهوم ریزدانه</p>
+          <ul>{umbrellaItems.map((item: { id: string; name: string }) => <li><a href={procedureLinks[item.id] ?? '#top'}>{item.name}</a></li>)}</ul>
+          <details class="coverage-details">
+            <summary>نمایش پوشش ریزدانه</summary>
+            <ul>{granularItems.map((item: { id: string; name: string; parentProcedureId: string }) => <li><a href={procedureLinks[item.parentProcedureId] ?? '#top'}>{item.name}</a></li>)}</ul>
           </details>
         </article>
       );
     })}
   </div>
-  <p class="border-2 border-main-200 rounded-xl p-4 bg-[linear-gradient(45deg,#F8FDFF,#FFFFFF)] text-black max-w-6xl mx-auto mt-10 flex items-start gap-3"><ShieldCheck size={19}/> اصل داده: پوشش علمی و ارجاعی حذف نمی‌شود؛ نوع رابطه صریح می‌ماند تا گراف هم گسترده باشد و هم دقیق.</p>
+  <p class="coverage-principle"><ShieldCheck size={19}/> اصل داده: پوشش علمی و ارجاعی حذف نمی‌شود؛ نوع رابطه صریح می‌ماند تا گراف هم گسترده باشد و هم دقیق.</p>
 </section>

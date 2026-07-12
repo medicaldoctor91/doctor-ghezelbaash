@@ -1,37 +1,9 @@
 @import "tailwindcss";
-@plugin "daisyui";
 
 @theme {
   --color-main-100: #a7e2ff;
   --color-main-200: #0277c2;
-}
-
-html,
-body,
-.drawer {
-  @apply h-full;
-}
-
-.container {
-  @apply max-w-7xl! mx-auto px-4;
-}
-
-.section {
-  @apply my-10 lg:my-20;
-}
-
-@layer base {
-  h1 {
-    @apply text-3xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mb-4 leading-tight;
-  }
-
-  h2 {
-    @apply text-2xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold mb-4 leading-tight;
-  }
-
-  h3 {
-    @apply text-xl sm:text-xl md:text-2xl lg:text-2xl font-semibold mb-4 leading-tight;
-  }
+  --color-main-300: #005b99;
 }
 
 :root {
@@ -60,17 +32,24 @@ body {
   margin: 0;
   min-height: 100%;
   color: var(--ink);
-  background: linear-gradient(125deg, #F2FAFF, #FFFFFF 50%) no-repeat left top / 900px 900px;
-  font-family: "Vazirmatn Variable", Vazirmatn, Tahoma, Arial, sans-serif;
+  background:
+    radial-gradient(circle at 8% 3%, rgba(167,226,255,.28), transparent 25rem),
+    linear-gradient(180deg, #f8fdff 0, #fff 34rem);
+  font-family: Tahoma, Arial, sans-serif;
   line-height: 1.9;
   overflow-x: clip;
   text-rendering: optimizeLegibility;
 }
 
 * { box-sizing: border-box; }
-a:not(.btn) { color: inherit; }
+a { color: inherit; }
 img, video { display: block; max-width: 100%; }
 button, input, textarea, select { font: inherit; }
+
+.container {
+  width: min(calc(100% - 1.5rem), 92rem);
+  margin-inline: auto;
+}
 
 #top {
   position: absolute;
@@ -318,12 +297,36 @@ button, input, textarea, select { font: inherit; }
   line-height: 1.6;
 }
 
+.medical-content h1 {
+  margin: 0 0 1.15rem;
+  color: var(--blue-900);
+  font-size: clamp(2rem, 7vw, 4.4rem);
+  line-height: 1.3;
+  letter-spacing: -.045em;
+}
+
 .medical-content h2,
 .medical-content h3,
 .medical-content h4 {
   position: relative;
   scroll-margin-top: 6.2rem;
   text-wrap: balance;
+}
+
+.medical-content h2 {
+  margin: 0 0 1.15rem;
+  padding-block-end: .8rem;
+  border-bottom: 2px solid rgba(2,119,194,.18);
+  color: var(--blue-900);
+  font-size: clamp(1.55rem, 5vw, 2.35rem);
+  line-height: 1.45;
+}
+
+.medical-content h3 {
+  margin: 2.15rem 0 .8rem;
+  color: var(--blue-800);
+  font-size: clamp(1.2rem, 4vw, 1.55rem);
+  line-height: 1.55;
 }
 
 .medical-content h4 {
@@ -356,11 +359,17 @@ button, input, textarea, select { font: inherit; }
 .heading-anchor:focus { opacity: 1; }
 
 .content-section {
+  margin-block: 1rem;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid rgba(2,119,194,.14);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 12px 38px rgba(0,70,112,.065);
   content-visibility: auto;
   contain-intrinsic-size: auto 1200px;
 }
 
-.medical-content p:not(.healnet-template-copy) {
+.medical-content p {
   margin: .8rem 0;
   color: #233f4f;
   line-height: 2.05;
@@ -369,13 +378,13 @@ button, input, textarea, select { font: inherit; }
 .medical-content strong { color: #082f47; }
 .medical-content em { color: #274f65; }
 
-.medical-content a:not(.btn) {
+.medical-content a {
   color: var(--blue-700);
   font-weight: 700;
   text-decoration-thickness: .08em;
   text-underline-offset: .18em;
 }
-.medical-content a:not(.btn)[target="_blank"]::after {
+.medical-content a[target="_blank"]::after {
   content: "↗";
   display: inline-block;
   margin-inline-start: .2rem;
@@ -501,7 +510,7 @@ button, input, textarea, select { font: inherit; }
   position: fixed;
   z-index: 120;
   inset: auto .6rem calc(.6rem + env(safe-area-inset-bottom));
-  display: none;
+  display: grid;
   grid-template-columns: repeat(3, 1fr);
   padding: .3rem;
   border: 1px solid rgba(255,255,255,.12);
@@ -522,6 +531,7 @@ button, input, textarea, select { font: inherit; }
 .mobile-cta a:first-child { border-inline-start: 0; }
 
 @media (min-width: 640px) {
+  .container { width: min(calc(100% - 2rem), 92rem); }
   .header-phone { display: inline-flex; }
   .article-intro { padding: 1.5rem; }
   .footer-grid { grid-template-columns: 1.25fr .8fr .8fr; }
@@ -712,9 +722,14 @@ button, input, textarea, select { font: inherit; }
 }
 
 .direct-answer {
-  color: inherit !important;
-  font-size: inherit;
-  font-weight: inherit;
+  margin-block: 0 1rem !important;
+  padding: .85rem 1rem;
+  border-inline-start: 4px solid var(--blue-600);
+  border-radius: .75rem;
+  background: rgba(223,244,255,.62);
+  color: var(--blue-900) !important;
+  font-size: 1.05em;
+  font-weight: 800;
 }
 
 .question-heading::before {
@@ -1549,7 +1564,7 @@ button, input, textarea, select { font: inherit; }
   z-index: 80;
   inset-inline-end: max(1rem, env(safe-area-inset-right));
   bottom: max(1rem, env(safe-area-inset-bottom));
-  display: none;
+  display: grid;
   gap: .45rem;
   width: min(12rem, calc(100vw - 2rem));
   padding: .55rem;
@@ -1579,7 +1594,6 @@ button, input, textarea, select { font: inherit; }
 @media (max-width: 720px) {
   body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .conversion-dock {
-    display: grid;
     inset-inline: .55rem;
     bottom: max(.45rem, env(safe-area-inset-bottom));
     width: auto;

@@ -21,7 +21,6 @@
     "validate:answers": "node scripts/validate-answer-semantics.mjs"
   },
   "dependencies": {
-    "@fontsource-variable/vazirmatn": "^5.2.8",
     "@lucide/astro": "^1.23.0",
     "@tailwindcss/vite": "^4.3.1",
     "astro": "^7.0.2",
@@ -29,7 +28,6 @@
     "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
-    "@astrojs/markdown-remark": "^7.2.1",
-    "daisyui": "5.5.23"
+    "@astrojs/markdown-remark": "^7.2.1"
   }
 }

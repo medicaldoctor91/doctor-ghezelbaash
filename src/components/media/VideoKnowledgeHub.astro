@@ -43,33 +43,31 @@ const grouped = [
   },
 ];
 ---
-<section id="video-knowledge-hub" class="section overflow-hidden" aria-labelledby="video-knowledge-hub-title">
-  <header class="text-center max-w-5xl mx-auto">
+<section id="video-knowledge-hub" class="video-knowledge-hub authority-panel" aria-labelledby="video-knowledge-hub-title">
+  <header class="panel-heading">
     <span class="eyebrow"><Film size={18} />مرکز دانش ویدئویی صفحه</span>
-    <h2 id="video-knowledge-hub-title"><span class="bg-linear-to-r from-[#0179B4] to-[#88D8FF] bg-clip-text text-transparent">۱۲ ویدئو؛</span> هر رسانه متصل به موضوع، خدمت و مرز تصمیم خودش</h2>
+    <h2 id="video-knowledge-hub-title">۱۲ ویدئو؛ هر رسانه متصل به موضوع، خدمت و مرز تصمیم خودش</h2>
     <p>این فهرست، مسیر مستقیم به تمام ویدئوهای قابل‌نمایش همین لندینگ است. هر ویدئو در بخش بالینی مرتبط خود قرار دارد و به انتیتی پزشک، کلینیک و موضوع درمانی همان بخش متصل شده است.</p>
   </header>
 
-  <div class="grid gap-10 mt-10">
+  <div class="video-hub-groups">
     {grouped.map((group) => (
-      <section class="grid gap-5" id={group.id} aria-labelledby={`${group.id}-title`}>
-        <header class="text-center max-w-5xl mx-auto">
-          <h3 id={`${group.id}-title`} class="text-main-200">{group.title}</h3>
+      <section class="video-hub-group" id={group.id} aria-labelledby={`${group.id}-title`}>
+        <header>
+          <h3 id={`${group.id}-title`}>{group.title}</h3>
           <p>{group.description}</p>
         </header>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+        <div class="video-hub-grid">
           {group.videos.map((video: { id: string; title: string; description: string; durationSeconds: number; tags: string[]; thumbnail: string }) => (
-            <article class="group h-full flex flex-col gap-3 border-2 border-main-200 overflow-hidden rounded-xl">
-              <a href={`/videos/${video.id}/`} class="h-full flex flex-col text-black no-underline" aria-label={`دیدن ویدئو، متن و فصل‌بندی: ${video.title}`}>
-                <div class="grid relative">
-                  <img src={video.thumbnail} alt="" width="360" height="640" loading="lazy" decoding="async" class="aspect-2/1 w-full h-auto object-cover [grid-area:1/1/2/2]" />
-                  <span class="[grid-area:1/1/2/2] place-self-center grid place-items-center w-14 h-14 rounded-full bg-main-200/90 text-white shadow-xl" aria-hidden="true"><PlayCircle size={28} /></span>
-                </div>
-                <div class="text-center w-full flex-1 flex flex-col justify-between items-center p-4">
-                  <h4 class="font-semibold text-xl sm:text-2xl group-hover:underline">{video.title}</h4>
-                  <p class="mb-6 text-sm sm:text-base">{video.description}</p>
-                  <span class="flex flex-wrap gap-2 items-center justify-center text-main-200 text-sm"><Clock3 size={15} />{formatDuration(video.durationSeconds)}</span>
-                  <span class="flex flex-wrap gap-2 items-center justify-center text-gray-500 text-sm mt-2"><Tags size={15} />{video.tags.join(' · ')}</span>
+            <article class="video-hub-card">
+              <a href={`/videos/${video.id}/`} aria-label={`دیدن ویدئو، متن و فصل‌بندی: ${video.title}`}>
+                <img src={video.thumbnail} alt="" width="360" height="640" loading="lazy" decoding="async" />
+                <span class="video-hub-play" aria-hidden="true"><PlayCircle size={28} /></span>
+                <div>
+                  <h4>{video.title}</h4>
+                  <p>{video.description}</p>
+                  <span class="video-hub-meta"><Clock3 size={15} />{formatDuration(video.durationSeconds)}</span>
+                  <span class="video-hub-tags"><Tags size={15} />{video.tags.join(' · ')}</span>
                 </div>
               </a>
             </article>
