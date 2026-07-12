@@ -87,7 +87,10 @@ const sectionsHtml = sectionsMarkdown ? (await sectionsProcessor.render(sections
       if (!id) return;
       const target = document.getElementById(id);
       const disclosure = target?.closest?.('details.featured-answer-disclosure');
-      if (disclosure) disclosure.open = true;
+      if (disclosure) {
+        disclosure.open = true;
+        requestAnimationFrame(() => target.scrollIntoView({ block: 'start' }));
+      }
     };
 
     openFeaturedDisclosureForHash();
