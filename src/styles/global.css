@@ -68,7 +68,7 @@ body {
 }
 
 * { box-sizing: border-box; }
-a { color: inherit; }
+a:not(.btn) { color: inherit; }
 img, video { display: block; max-width: 100%; }
 button, input, textarea, select { font: inherit; }
 
