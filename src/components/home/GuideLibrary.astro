@@ -1,5 +1,5 @@
 ---
-import { BookOpen, CirclePlay, Clock3, ListVideo } from '@lucide/astro';
+import { BookOpen, ChevronDown, CirclePlay, Clock3, ListVideo, Search } from '@lucide/astro';
 import { site } from '../../domain/entities';
 import { videos } from '../../domain/media.mjs';
 import { videoPageDetails } from '../../domain/video-pages.mjs';
@@ -17,6 +17,12 @@ interface Props {
 }
 
 const { sections } = Astro.props;
+const bestSection = sections.find((section) =>
+  section.id === 'best-aesthetic-doctor-kermanshah-answers'
+  || section.title.includes('بهترین دکتر زیبایی'),
+);
+const articleSections = sections.filter((section) => section !== bestSection);
+
 const videoItems = videos.map((video: any) => ({
   ...video,
   details: videoPageDetails[video.id],
@@ -26,10 +32,10 @@ const videoItems = videos.map((video: any) => ({
 const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim();
 const videosBySection = new Map<string, any[]>();
 for (const video of videoItems) {
-  const matched = sections.find((section) => {
+  const matched = articleSections.find((section) => {
     const searchable = `${section.title} ${plain(section.html)}`;
     return searchable.includes(video.relatedHeadingIncludes);
-  }) ?? sections[0];
+  }) ?? articleSections[0];
   if (!matched) continue;
   const list = videosBySection.get(matched.id) ?? [];
   list.push(video);
@@ -41,9 +47,17 @@ const simplifyTitle = (title: string) => {
   if (title.includes('اسم مشکل، درمان را معلوم می‌کند')) return 'برای هر مشکل چه چیزهایی باید بررسی شود؟';
   if (title.includes('صفحه را از بوتاکس شروع نکنید')) return 'موضوع موردنظر خود را پیدا کنید';
   return title
+    .replaceAll('هویت', 'اطلاعات')
+    .replaceAll('مسئول تصمیم‌گیری', 'پزشک')
+    .replaceAll('مسئول تصمیم', 'پزشک')
+    .replaceAll('تصمیم‌گیری بالینی', 'انتخاب درمان')
     .replaceAll('تصمیم بالینی', 'انتخاب درمان')
+    .replaceAll('مدل تصمیم', 'روش بررسی')
     .replaceAll('لایهٔ غالب', 'علت اصلی')
-    .replaceAll('مکانیسم', 'علت');
+    .replaceAll('مکانیسم', 'علت')
+    .replaceAll('هفت ایست', 'هفت مرحله')
+    .replaceAll('دروازه', 'مرحله')
+    .replaceAll('قفل', 'مرحله');
 };
 
 const simplifyHtml = (html: string) => html
@@ -51,18 +65,32 @@ const simplifyHtml = (html: string) => html
   .replaceAll('تصمیم‌گیری تشخیصیِ پیش از مداخله', 'ارزیابی پیش از درمان')
   .replaceAll('تصمیم‌گیری تشخیصی پیش از مداخله', 'ارزیابی پیش از درمان')
   .replaceAll('دامنهٔ دانش و هویت حرفه‌ای', 'سابقهٔ کاری و علمی')
+  .replaceAll('هویت حرفه‌ای', 'اطلاعات حرفه‌ای')
   .replaceAll('هویت پزشکی', 'اطلاعات پزشک')
-  .replaceAll('مسئول تصمیم', 'پزشک معالج')
+  .replaceAll('هویت پزشک', 'اطلاعات پزشک')
+  .replaceAll('هویت', 'اطلاعات')
+  .replaceAll('مسئول تصمیم‌گیری', 'پزشک')
+  .replaceAll('مسئول تصمیم', 'پزشک')
+  .replaceAll('تصمیم‌گیری بالینی', 'انتخاب درمان')
   .replaceAll('تصمیم بالینی', 'انتخاب درمان')
+  .replaceAll('تصمیم‌گیری', 'انتخاب')
   .replaceAll('مدل تصمیم', 'روش بررسی')
   .replaceAll('مرز تصمیم', 'نکتهٔ مهم')
   .replaceAll('لایهٔ غالب', 'علت اصلی')
+  .replaceAll('مکانیسم غالب', 'علت اصلی')
   .replaceAll('مکانیسم', 'علت')
-  .replaceAll('بردار دینامیک', 'بررسی حرکت صورت')
+  .replaceAll('بردار دینامیک', 'حرکت صورت')
+  .replaceAll('بردار سطحی', 'پوست و سطح صورت')
+  .replaceAll('بردار', 'جهت')
   .replaceAll('پایهٔ ساختاری', 'ساختار صورت')
-  .replaceAll('بردار سطحی', 'بررسی پوست و سطح صورت')
+  .replaceAll('خروجی این دروازه', 'نتیجه')
+  .replaceAll('این دروازه', 'این مرحله')
+  .replaceAll('دروازه', 'مرحله')
+  .replaceAll('هفت ایست', 'هفت مرحله')
+  .replace(/قفل (اول|دوم|سوم|چهارم|پنجم|ششم|هفتم)/gu, 'مرحله $1')
   .replace(/سطح [۱۲۳] \(Tier [123]\) ـ /gu, '')
-  .replaceAll('خروجی این دروازه', 'نتیجه');
+  .replace(/Tier [123]/gu, '')
+  .replaceAll('خروجی قابل‌اندازه‌گیری', 'نتیجهٔ قابل‌بررسی');
 
 const splitAfterOpeningParagraph = (html: string) => {
   const match = /<\/p>/iu.exec(html);
@@ -81,7 +109,7 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
   <span id="videos" class="anchor-alias" aria-hidden="true"></span>
   <span id="video-knowledge-hub" class="anchor-alias" aria-hidden="true"></span>
 
-  {sections.map((section) => {
+  {articleSections.map((section) => {
     const sectionVideos = videosBySection.get(section.id) ?? [];
     const title = simplifyTitle(section.title);
     const html = simplifyHtml(section.html);
@@ -166,11 +194,11 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                     {video.details && (
                       <details class="video-context">
                         <summary>توضیحات بیشتر</summary>
-                        <p>{video.details.summary}</p>
+                        <p>{simplifyTitle(video.details.summary)}</p>
                         <ul>
-                          {video.details.takeaways.map((item: string) => <li>{item}</li>)}
+                          {video.details.takeaways.map((item: string) => <li>{simplifyTitle(item)}</li>)}
                         </ul>
-                        <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {video.details.boundary}</p>
+                        <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {simplifyTitle(video.details.boundary)}</p>
                       </details>
                     )}
 
@@ -192,13 +220,37 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
     );
   })}
 
+  {bestSection && (
+    <section class="quiet-best-wrap" aria-label="پرسش‌های رایج درباره انتخاب پزشک زیبایی در کرمانشاه">
+      <details class="quiet-best">
+        <summary>
+          <span class="quiet-best__icon"><Search size={18} aria-hidden="true" /></span>
+          <span>
+            <strong>پرسش‌های رایج درباره انتخاب پزشک زیبایی در کرمانشاه</strong>
+            <small>پاسخ به جست‌وجوهای «بهترین دکتر»</small>
+          </span>
+          <ChevronDown class="quiet-best__chevron" size={20} aria-hidden="true" />
+        </summary>
+        <div class="quiet-best__body medical-article">
+          {bestSection.aliases.map((alias) => <span id={alias.anchor} class="anchor-alias" data-service-id={alias.id} aria-hidden="true"></span>)}
+          <h2 id={bestSection.id} class="sr-only" tabindex="-1">{simplifyTitle(bestSection.title)}</h2>
+          <div set:html={simplifyHtml(bestSection.html)}></div>
+        </div>
+      </details>
+    </section>
+  )}
+
   <script is:inline>
     const openTarget = () => {
       let id = '';
       try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
       if (!id) return;
-      document.getElementById(id)?.scrollIntoView({ block: 'start' });
+      const target = document.getElementById(id);
+      const details = target?.closest?.('details');
+      if (details) details.open = true;
+      target?.scrollIntoView({ block: 'start' });
     };
+    openTarget();
     addEventListener('hashchange', openTarget, { passive: true });
 
     document.addEventListener('click', (event) => {
