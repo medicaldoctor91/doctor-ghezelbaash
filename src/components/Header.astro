@@ -19,6 +19,7 @@ const homeAnchor = (id: string) => Astro.url.pathname === '/' ? `#${id}` : `${si
     <div class="site-navigation">
       {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
       <a href={homeAnchor('video-knowledge-hub')}>ویدئوها</a>
+      <a href={homeAnchor('knowledge-resources')}>Knowledge &amp; AI</a>
       <a href={homeAnchor('content-table')}><ListTree size={17}/> فهرست کامل</a>
     </div>
 
@@ -28,6 +29,7 @@ const homeAnchor = (id: string) => Astro.url.pathname === '/' ? `#${id}` : `${si
         <summary><Menu aria-hidden="true"/><span class="sr-only">بازکردن منوی صفحه</span></summary>
         <nav aria-label="منوی موبایل">
           <a href={homeAnchor('video-knowledge-hub')}>مرکز دانش ویدئویی</a>
+          <a href={homeAnchor('knowledge-resources')}>Knowledge &amp; AI</a>
           <a href={homeAnchor('content-table')}><ListTree size={17}/> فهرست کامل محتوا</a>
           {navigation.map((item) => <a href={item.href}>{item.label}</a>)}
           <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={17}/> مسیریابی کلینیک</a>

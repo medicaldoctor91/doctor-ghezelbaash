@@ -13,6 +13,7 @@
 
 /
   Cache-Control: public, max-age=0, must-revalidate
+  Link: </knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json"
 
 /404.html
   X-Robots-Tag: noindex, follow
@@ -29,13 +30,6 @@
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
-
-# HTML video hub and watch pages must always revalidate. Media assets keep long-lived caching.
-/videos/
-  Cache-Control: public, max-age=0, must-revalidate
-
-/videos/*/
-  Cache-Control: public, max-age=0, must-revalidate
 
 /videos/*.mp4
   Content-Type: video/mp4
@@ -118,17 +112,9 @@
   Content-Type: application/json; charset=utf-8
 /faq.json
   Content-Type: application/json; charset=utf-8
-/graph-summary.json
-  Content-Type: application/json; charset=utf-8
-/graph.json
-  Content-Type: application/json; charset=utf-8
 /intent-coverage.json
   Content-Type: application/json; charset=utf-8
-/identity-crosswalk.json
-  Content-Type: application/json; charset=utf-8
 /intents.json
-  Content-Type: application/json; charset=utf-8
-/knowledge-manifest.json
   Content-Type: application/json; charset=utf-8
 /media.json
   Content-Type: application/json; charset=utf-8

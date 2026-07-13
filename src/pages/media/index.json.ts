@@ -19,7 +19,7 @@ export function GET() {
     images: galleryImages.map((image: any) => ({ ...image, entityId: `${site.url}#image-${image.id}` })),
     videos: videos.map((video: any) => ({
       ...video,
-      watchUrl: `${site.url}videos/${video.id}/`,
+      pageUrl: `${site.url}#video-${video.id}`,
       videoFile: record(`/videos/${video.file}`),
       thumbnailFile: record(video.thumbnail),
       chapterFile: record(video.chapterTrack),
@@ -27,4 +27,3 @@ export function GET() {
     })),
   });
 }
-

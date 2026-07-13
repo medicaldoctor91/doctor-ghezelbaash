@@ -21,8 +21,8 @@ const topHref = Astro.url.pathname === '/' ? '#top' : `${site.url}#top`;
     </nav>
     <nav aria-label="پیوندهای کاربردی">
       <strong class="footer-title">پیوندهای کاربردی</strong>
-      <a href="/videos/"><Video size={18}/>ویدئوهای آموزشی و نمونه‌ها</a>
-      <a href="/knowledge/" lang="en" dir="ltr"><Braces size={18}/>Knowledge & AI resources</a>
+      <a href={`${site.url}#video-knowledge-hub`}><Video size={18}/>ویدئوهای آموزشی و نمونه‌ها</a>
+      <a href={`${site.url}#knowledge-resources`} lang="en" dir="ltr"><Braces size={18}/>Knowledge & AI resources</a>
       <a href={topHref}><ArrowUp size={18}/>بازگشت به ابتدای صفحه</a>
     </nav>
   </div>

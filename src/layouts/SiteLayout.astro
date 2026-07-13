@@ -53,10 +53,7 @@ const ogPrefix = ogType === 'article'
     <link rel="alternate" type="application/json" href="/ai/summary.json" title="AI summary" />
     <link rel="alternate" type="application/json" href="/ai/faq.json" title="AI FAQ" />
     <link rel="alternate" type="application/json" href="/context.json" title="Compact entity and service context" />
-    <link rel="alternate" type="application/json" href="/knowledge-manifest.json" title="Knowledge artifact manifest" />
-    <link rel="alternate" type="application/ld+json" href="/graph/core.jsonld" title="Canonical physician and clinic entity graph" />
-    <link rel="alternate" type="application/json" href="/graph-summary.json" title="Knowledge graph summary" />
-    <link rel="alternate" type="application/ld+json" href="/research.jsonld" title="Research identity and scholarly works" />
+    <link rel="describedby" type="application/ld+json" href="/knowledge-graph.jsonld" title="Canonical self-contained knowledge graph" />
     <link rel="preload" as="image" href="/images/responsive/doctor-portrait-768.avif" type="image/avif" imagesrcset="/images/responsive/doctor-portrait-480.avif 480w, /images/responsive/doctor-portrait-768.avif 768w, /images/responsive/doctor-portrait-1200.avif 1200w, /images/responsive/doctor-portrait-1600.avif 1600w" imagesizes="(min-width: 900px) 34vw, 100vw" fetchpriority="high" />
     <meta name="generator" content={Astro.generator} />
     <meta name="geo.region" content="IR-05" />

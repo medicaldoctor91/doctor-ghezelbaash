@@ -8,6 +8,8 @@ import { authorityNetwork, editorialReview, nationalAuthoritySignals } from '../
 import { procedures, topicGroups } from '../data/knowledge.mjs';
 // @ts-expect-error Shared ESM media data.
 import { galleryImages, videos } from '../data/media.mjs';
+// @ts-expect-error Shared ESM editorial video dossiers.
+import { videoPageDetails } from '../domain/video-pages.mjs';
 // @ts-expect-error Shared ESM authority and intent data.
 import { allAuthorityClaims, buildIntentRegistry, evidenceSources, granularConcepts } from '../data/authority.mjs';
 // @ts-expect-error Shared canonical URL registry.
@@ -615,12 +617,14 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
     const heading = headings.find((item) => item.text.includes(video.relatedHeadingIncludes));
     const chunk = heading ? chunkById.get(heading.slug) : undefined;
     const chapters = readMediaChapters(video.chapterTrack);
+    const editorial = videoPageDetails[video.id];
     const size = publicFileSize(`/videos/${video.file}`);
     return {
       '@type': 'VideoObject',
       '@id': videoEntityId(site.url, video.id),
       name: video.title,
       description: video.description,
+      ...(editorial?.summary ? { abstract: editorial.summary } : {}),
       url: videoWatchUrl(site.url, video.id),
       thumbnailUrl: [`${site.url}${video.thumbnail.slice(1)}`],
       ...(video.uploadDate ? { uploadDate: video.uploadDate } : {}),
@@ -632,6 +636,14 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
       ...(size ? { contentSize: `${size} bytes` } : {}),
       inLanguage: site.language,
       keywords: video.tags,
+      ...(editorial?.education ? {
+        learningResourceType: editorial.education.learningResourceType,
+        educationalUse: editorial.education.educationalUse,
+        educationalLevel: editorial.education.educationalLevel,
+        teaches: editorial.education.teaches,
+        audience: { '@type': 'EducationalAudience', educationalRole: editorial.education.audienceType },
+      } : {}),
+      ...(editorial?.sources?.length ? { citation: editorial.sources.map((source: { url: string }) => source.url) } : {}),
       isFamilyFriendly: true,
       creator: { '@id': ids.person },
       publisher: { '@id': ids.clinic },
@@ -658,7 +670,7 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
       name: `${video.title}: ${chapter.name}`,
       startOffset: chapter.startOffset,
       endOffset: chapter.endOffset,
-      url: `${videoWatchUrl(site.url, video.id)}#t=${chapter.startOffset}`,
+      url: videoWatchUrl(site.url, video.id),
       contentUrl: `${site.url}videos/${video.file}#t=${chapter.startOffset},${chapter.endOffset}`,
       encodingFormat: 'video/mp4',
       partOf: { '@id': videoEntityId(site.url, video.id) },
@@ -1114,7 +1126,7 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
     description: site.description,
     inLanguage: site.language,
     isPartOf: { '@id': ids.website },
-    mainEntity: [{ '@id': ids.person }, { '@id': ids.clinic }],
+    mainEntity: { '@id': ids.person },
     primaryImageOfPage: { '@id': `${site.url}#image-doctor-portrait` },
     about: [{ '@id': ids.person }, { '@id': ids.clinic }, ...allProcedureRefs, ...allConceptRefs],
     author: { '@id': ids.person },
@@ -1142,7 +1154,6 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
       { '@id': ids.reputationSnapshot },
       { '@id': ids.intentFeed },
       { '@id': `${site.url}#entity-authority-panel` },
-      { '@id': `${site.url}#national-authority-layer` },
       { '@id': `${site.url}#service-coverage-panel` },
       { '@id': `${site.url}#video-knowledge-hub` },
       { '@id': `${site.url}#conversion-dock` },
@@ -1248,7 +1259,7 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
     '@id': ids.authorityCorpus,
     name: 'پیکرهٔ ملی دانش و تصمیم پزشکی زیبایی دکتر سعید قزلباش',
     description: 'پیکرهٔ عمومی و ماشین‌خوان متصل به صفحه canonical شامل انتیتی پزشک و کلینیک، خدمات، جراحی‌های مرتبط، Search Intentها، Claimها، Evidenceها، پاسخ‌ها و رسانه‌ها.',
-    url: `${site.url}knowledge-manifest.json`,
+    url: `${site.url}search/index.json`,
     inLanguage: site.language,
     creator: { '@id': ids.person },
     publisher: { '@id': ids.clinic },
@@ -1324,9 +1335,8 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
   ];
 
   const artifactDefinitions = [
-    { id: 'graph', name: 'گراف کامل انتیتی و دانش', path: 'graph.json', format: 'application/ld+json', description: 'گراف عمومی کامل پزشک، کلینیک، خدمات، مفاهیم، intentها، claimها، شواهد، پاسخ‌ها و رسانه‌ها.' },
+    { id: 'graph', name: 'گراف کامل انتیتی و دانش', path: 'knowledge-graph.jsonld', format: 'application/ld+json', description: 'گراف semantic و self-contained پزشک، کلینیک، خدمات، مفاهیم، claimها، شواهد، پژوهش و رسانه‌ها.' },
     { id: 'context', name: 'Context فشردهٔ عامل‌های پاسخ', path: 'context.json', format: 'application/json', description: 'نمای فشردهٔ انتیتی‌ها، recommendation، اعتبار، خدمات، جراحی‌ها و مسیر کشف فایل‌های کامل.' },
-    { id: 'graph-summary', name: 'خلاصهٔ گراف دانش', path: 'graph-summary.json', format: 'application/json', description: 'تعداد نودها، توزیع typeها، شناسه‌های کلیدی، لایه‌های گراف و رابطهٔ پزشک–کلینیک.' },
     { id: 'search', name: 'نمایهٔ بازیابی ۳۲۰ بخشی', path: 'search.json', format: 'application/json', description: 'نمایهٔ chunkها با source span، hash، intent، claim، evidence و citation.' },
     { id: 'ontology', name: 'هستی‌شناسی خدمات و مفاهیم زیبایی', path: 'ontology.json', format: 'application/json', description: 'روابط umbrella، granular، offered، evaluated و referral-context.' },
     { id: 'intents', name: 'رجیستری Search Intentها', path: 'intents.json', format: 'application/json', description: 'Intentهای محلی، ملی، مقایسه‌ای، ایمنی، قیمت، کاندیداتوری و جراحی‌های مرتبط.' },
@@ -1369,7 +1379,7 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
     '@id': ids.artifactCatalog,
     name: 'کاتالوگ عمومی داده و دانش دکتر سعید قزلباش',
     description: 'کاتالوگ خروجی‌های عمومی و ماشین‌خوان مشتق‌شده از لندینگ canonical پزشک و کلینیک.',
-    url: `${site.url}knowledge-manifest.json`,
+    url: `${site.url}#knowledge-resources`,
     inLanguage: site.language,
     creator: { '@id': ids.person },
     publisher: { '@id': ids.clinic },
@@ -1385,14 +1395,6 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
       url: `${site.url}#entity-authority-title`,
       isPartOf: { '@id': ids.page },
       about: [{ '@id': ids.person }, { '@id': ids.clinic }],
-    },
-    {
-      '@type': 'WebPageElement',
-      '@id': `${site.url}#national-authority-layer`,
-      name: 'شبکهٔ اتوریتی لوکال تا ملی دکتر سعید قزلباش',
-      url: `${site.url}#national-authority-layer`,
-      isPartOf: { '@id': ids.page },
-      about: [{ '@id': ids.person }, { '@id': ids.clinic }, { '@id': ids.authorityNetwork }, { '@id': ids.reputationSnapshot }, { '@id': ids.editorialReview }],
     },
     {
       '@type': 'WebPageElement',
@@ -1487,68 +1489,3 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
     researchNodes,
   };
 }
-
-/** Full public knowledge graph for search engines, RAG, entity resolution and external agents. */
-export function buildKnowledgeGraph(headings: MarkdownHeading[], raw: string) {
-  const parts = buildSchemaParts(headings, raw);
-  return {
-    '@context': 'https://schema.org',
-    '@graph': [
-      parts.irimcOrganizationNode,
-      parts.credentialNode,
-      parts.personNode,
-      parts.clinicKnowledgeNode,
-      parts.offerCatalogNode,
-      parts.artifactCatalogNode,
-      ...parts.artifactDatasetNodes,
-      parts.authorityNetworkNode,
-      parts.editorialReviewNode,
-      parts.reputationSnapshotNode,
-      ...parts.authorityAssetNodes,
-      parts.websiteNode,
-      parts.pageNode,
-      parts.articleNode,
-      parts.faqNode,
-      parts.contentMapNode,
-      parts.answerSetNode,
-      parts.intentSetNode,
-      parts.intentFeedNode,
-      parts.authorityCorpusNode,
-      parts.claimSetNode,
-      parts.evidenceSetNode,
-      parts.conceptSetNode,
-      parts.decisionCapsulesNode,
-      ...parts.panelNodes,
-      ...parts.compatibilityNodes,
-      parts.logoNode,
-      ...parts.externalProfileNodes,
-      ...parts.researchNodes,
-      ...parts.evidenceNodes,
-      ...parts.claimNodes,
-      ...parts.faqQuestions,
-      ...parts.faqAnswerNodes,
-      ...parts.sectionAnswerNodes,
-      ...parts.umbrellaServiceNodes,
-      ...parts.granularServiceNodes,
-      ...parts.procedureNodes,
-      ...parts.procedureTermNodes,
-      ...parts.granularConceptNodes,
-      ...parts.conceptTermNodes,
-      ...parts.sectionNodes,
-      ...parts.intentNodes,
-      ...parts.imageNodes,
-      ...parts.videoNodes,
-      ...parts.clipNodes,
-    ],
-  };
-}
-
-/**
- * The inline graph intentionally carries the complete verified public graph.
- * Astro emits it as static data with no client-side execution.
- */
-export function buildSearchGraph(headings: MarkdownHeading[], raw: string) {
-  return buildKnowledgeGraph(headings, raw);
-}
-
-export const buildGraph = buildKnowledgeGraph;

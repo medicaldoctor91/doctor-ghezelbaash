@@ -11,21 +11,39 @@ export function GET() {
   const tableOfContents = buildToc(headings);
   const h2Sections = tableOfContents.map((section) => ({ slug: section.slug, text: section.text }));
   const questions = extractFaqEntries(rawContent(), headings);
+  const groups = [
+    ...buildGroupedToc(headings),
+    {
+      id: 'knowledge-ai',
+      label: 'Knowledge & AI',
+      sections: [
+        { slug: 'knowledge-resources', text: 'گراف دانش و منابع ماشین‌خوان', children: [] },
+        { slug: 'knowledge-identity', text: 'شناسه‌های انتیتی پزشک و کلینیک', children: [] },
+        { slug: 'knowledge-retrieval', text: 'Retrieval و شواهد', children: [] },
+      ],
+    },
+  ];
   return new Response(JSON.stringify({
     schemaVersion: '3.0',
     canonical: site.url,
     language: site.language,
     direction: site.direction,
     updated: site.dateModified,
-    primaryEntities: [`${site.url}#person`, `${site.url}#clinic`],
+    primaryEntity: `${site.url}#person`,
+    relatedEntities: [`${site.url}#clinic`],
     prelude: [
       { id: 'entity-authority-panel', url: `${site.url}#entity-authority-panel`, role: 'entity-disambiguation', entities: [`${site.url}#person`, `${site.url}#clinic`] },
       { id: 'service-coverage-panel', url: `${site.url}#service-coverage-panel`, role: 'service-and-referral-coverage' },
+      { id: 'video-knowledge-hub', url: `${site.url}#video-knowledge-hub`, role: 'contextual-video-index' },
+      { id: 'knowledge-resources', url: `${site.url}#knowledge-resources`, role: 'knowledge-graph-and-retrieval-directory' },
     ],
     headingCount: headings.length,
     questionCount: questions.length,
-    groups: buildGroupedToc(headings),
-    tableOfContents,
+    groups,
+    tableOfContents: [
+      ...tableOfContents,
+      { slug: 'knowledge-resources', text: 'گراف دانش، شناسه‌های انتیتی و منابع Retrieval', depth: 2, children: [] },
+    ],
     relationships: buildSectionRelationships(h2Sections),
     procedureAnchors: buildProcedureAnchorMap(headings),
     knowledge: buildKnowledgeSummary(headings),

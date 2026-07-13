@@ -9,6 +9,7 @@ import TopicNavigator from '../components/content/TopicNavigator.astro';
 import EntityAuthorityPanel from '../components/entity/EntityAuthorityPanel.astro';
 import ServiceCoverageMatrix from '../components/entity/ServiceCoverageMatrix.astro';
 import VideoKnowledgeHub from '../components/media/VideoKnowledgeHub.astro';
+import KnowledgeResources from '../components/knowledge/KnowledgeResources.astro';
 import { getHeadings, rawContent } from '../content/landing.md';
 import { buildGroupedToc, buildProcedureAnchorMap, choosePrimaryNavigation } from '../lib/content';
 import { stabilizeHeadings } from '../domain/anchor-utils';
@@ -68,7 +69,10 @@ const sectionsHtml = sectionsMarkdown ? (await sectionsProcessor.render(sections
       </section>
       <div class="content-layout">
         <ContentTable groups={groups} />
-        <div class="medical-content article-sections" set:html={sectionsHtml}></div>
+        <div>
+          <div class="medical-content article-sections" set:html={sectionsHtml}></div>
+          <KnowledgeResources />
+        </div>
       </div>
     </article>
   </main>
@@ -92,6 +96,22 @@ const sectionsHtml = sectionsMarkdown ? (await sectionsProcessor.render(sections
     window.addEventListener('hashchange', openFeaturedDisclosureForHash, { passive: true });
 
     document.addEventListener('click', (event) => {
+      const chapter = event.target.closest?.('.video-chapter-play');
+      if (chapter) {
+        const figure = document.getElementById(chapter.dataset.videoId || '');
+        const button = figure?.querySelector('.video-facade-button');
+        const video = figure?.querySelector('video');
+        if (video) {
+          video.currentTime = Number(chapter.dataset.videoStart || 0);
+          video.play().catch(() => {});
+          return;
+        }
+        if (button) {
+          button.dataset.videoStart = chapter.dataset.videoStart || '0';
+          button.click();
+          return;
+        }
+      }
       const button = event.target.closest?.('.video-facade-button');
       if (!button) return;
       const shell = button.closest('.video-facade-shell');
@@ -107,7 +127,15 @@ const sectionsHtml = sectionsMarkdown ? (await sectionsProcessor.render(sections
         video.append(track);
       }
       shell.replaceChildren(video);
-      video.play().catch(() => {});
+      const start = Number(button.dataset.videoStart || 0);
+      if (start > 0) {
+        video.addEventListener('loadedmetadata', () => {
+          video.currentTime = start;
+          video.play().catch(() => {});
+        }, { once: true });
+      } else {
+        video.play().catch(() => {});
+      }
     }, { passive: true });
   </script>
 </SiteLayout>

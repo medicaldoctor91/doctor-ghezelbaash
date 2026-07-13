@@ -3,7 +3,7 @@ Site name: دکتر سعید قزلباش
 
 Canonical: https://www.ghezelbaash.ir/
 Language: fa-IR
-Updated: 2026-07-12
+Updated: 2026-07-13
 
 ## Primary resources
 Summary: https://www.ghezelbaash.ir/ai/summary.json
@@ -11,17 +11,16 @@ FAQ: https://www.ghezelbaash.ir/ai/faq.json
 LLMs: https://www.ghezelbaash.ir/llms.txt
 Full text: https://www.ghezelbaash.ir/llms-full.txt
 Compact context: https://www.ghezelbaash.ir/context.json
-Identity crosswalk: https://www.ghezelbaash.ir/identity-crosswalk.json
-Knowledge manifest: https://www.ghezelbaash.ir/knowledge-manifest.json
-Knowledge graph summary: https://www.ghezelbaash.ir/graph-summary.json
-Research identity graph: https://www.ghezelbaash.ir/research.jsonld
+Canonical knowledge graph: https://www.ghezelbaash.ir/knowledge-graph.jsonld
 Published entity dataset: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
 Dataset Wikidata: https://www.wikidata.org/entity/Q140304972
-English knowledge directory: https://www.ghezelbaash.ir/knowledge/
+Knowledge and AI section: https://www.ghezelbaash.ir/#knowledge-resources
+Contextual video index: https://www.ghezelbaash.ir/#video-knowledge-hub
 Sitemap: https://www.ghezelbaash.ir/sitemap.xml
 
 ## Interpretation
 The canonical visible HTML is authoritative.
+The self-contained knowledge graph is semantic. Retrieval indexes are separate datasets, not graph shards.
 "offered" means explicitly available at the clinic.
 "evaluated" means suitability is assessed before a treatment path is determined.
 "referral-context" is educational, comparative, or referral information and is not an offered clinic service.

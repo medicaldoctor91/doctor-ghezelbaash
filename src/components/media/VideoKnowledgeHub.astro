@@ -47,7 +47,7 @@ const grouped = [
   <header class="panel-heading">
     <span class="eyebrow"><Film size={18} />مرکز دانش ویدئویی صفحه</span>
     <h2 id="video-knowledge-hub-title">۱۲ ویدئو؛ هر رسانه متصل به موضوع، خدمت و مرز تصمیم خودش</h2>
-    <p>این فهرست، مسیر مستقیم به تمام ویدئوهای قابل‌نمایش همین لندینگ است. هر ویدئو در بخش بالینی مرتبط خود قرار دارد و به انتیتی پزشک، کلینیک و موضوع درمانی همان بخش متصل شده است.</p>
+    <p>این فهرست فقط نقشهٔ دسترسی است؛ خود ویدئو، خلاصهٔ تحریریه، فصل‌بندی، مرز ایمنی و منابع در بخش بالینی مرتبط همین صفحه قرار گرفته‌اند.</p>
   </header>
 
   <div class="video-hub-groups">
@@ -60,7 +60,7 @@ const grouped = [
         <div class="video-hub-grid">
           {group.videos.map((video: { id: string; title: string; description: string; durationSeconds: number; tags: string[]; thumbnail: string }) => (
             <article class="video-hub-card">
-              <a href={`/videos/${video.id}/`} aria-label={`دیدن ویدئو، متن و فصل‌بندی: ${video.title}`}>
+              <a href={`#video-${video.id}`} aria-label={`رفتن به ویدئو و متن آن در بخش بالینی مرتبط: ${video.title}`}>
                 <img src={video.thumbnail} alt="" width="360" height="640" loading="lazy" decoding="async" />
                 <span class="video-hub-play" aria-hidden="true"><PlayCircle size={28} /></span>
                 <div>

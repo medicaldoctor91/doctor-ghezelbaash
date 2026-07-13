@@ -16,7 +16,6 @@ export function GET() {
 - [Clinic Wikidata](${site.placeWikidata}): Persistent public identifier for the physical clinic entity.
 - [Physician Google Knowledge Graph](${site.doctorGoogleKnowledgeGraphUrl}): MID ${site.doctorGoogleKnowledgeGraphId}; Cloud Enterprise Knowledge Graph MID ${site.doctorCloudKnowledgeGraphMid}.
 - [Clinic Google Local Knowledge Graph](${site.clinicGoogleLocalKnowledgeGraphUrl}): Local MID ${site.clinicGoogleLocalKnowledgeGraphId}; Place ID ${site.googlePlaceId}; CID ${site.googleCid}.
-- [Identity crosswalk](${site.url}identity-crosswalk.json): Namespaced identifiers, strict entity ownership, and the physician–clinic relation.
 - [Physician–clinic relationship](${site.url}#entity-authority-panel): Schema.org worksFor/workLocation from physician to clinic, with employee as the inverse clinic-to-physician edge.
 
 ## AI discovery
@@ -28,17 +27,14 @@ export function GET() {
 ## Primary discovery
 
 - [Compact context](${site.url}context.json): Concise entity, service, recommendation, and discovery context for AI systems.
-- [Knowledge manifest](${site.url}knowledge-manifest.json): Index of public machine-readable artifacts and their roles.
-- [Knowledge graph summary](${site.url}graph-summary.json): High-level graph statistics, key entities, and relationship summary.
-- [Research identity graph](${site.url}research.jsonld): ORCID-linked physician identity and DOI/PMID-resolved scholarly works.
+- [Canonical knowledge graph](${site.url}knowledge-graph.jsonld): Self-contained JSON-LD graph for identity, services, research, evidence, page sections and media.
 - [Full visible text](${site.url}llms-full.txt): Plain-text mirror of the canonical visible content.
-- [Educational video library](${site.url}videos/): Canonical watch pages with valid chapters, medical context, safety boundaries, and related guidance.
-- [English knowledge and AI resource directory](${site.url}knowledge/): Human-readable catalogue of canonical identifiers, discovery endpoints, graph files, evidence, and retrieval resources.
+- [Contextual educational videos](${site.url}#video-knowledge-hub): Twelve videos embedded in their related clinical sections, with chapters, editorial context, safety boundaries and sources.
+- [Knowledge and AI resources](${site.url}#knowledge-resources): Human-readable section for canonical identifiers, graph discovery, evidence and retrieval resources.
 - [Published entity dataset](${site.huggingFaceDataset}): Public entity, clinic, service, evidence, and authority dataset; Wikidata identifier ${site.datasetWikidataId}.
 
-## Sharded knowledge resources
+## Retrieval resources
 
-- [Core knowledge graph](${site.url}graph/core.jsonld): Core JSON-LD entities and relationships.
 - [Intent control index](${site.url}intents/index.json): Search-intent categories and discovery paths.
 - [Query reverse index](${site.url}intents/reverse-index.json): Reverse lookup from query variants to canonical intent records.
 - [Retrieval index](${site.url}search/index.json): Sharded retrieval corpus and source metadata.
@@ -46,6 +42,8 @@ export function GET() {
 - [External evidence](${site.url}evidence/sources.json): Public external sources used to support factual claims.
 - [Internal provenance](${site.url}evidence/internal-provenance.json): Source spans, hashes, and derivation metadata.
 - [Media index](${site.url}media/index.json): Images, videos, transcripts, chapters, and media integrity data.
+
+The retrieval resources are separate from the semantic knowledge graph. They are not graph shards and are not required to reconstruct the graph.
 
 ## Interpretation rules
 

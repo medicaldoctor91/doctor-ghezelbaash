@@ -21,7 +21,7 @@ export function GET() {
       medicalRegistration: { authority: 'IRIMC', identifier: site.irimc, verificationUrl: site.irimcVerification },
     },
     publisherEntity: `${site.url}#clinic`,
-    appliesTo: [`${site.url}#webpage`, `${site.url}#article`, `${site.url}llms-full.txt`, `${site.url}graph.json`],
+    appliesTo: [`${site.url}#webpage`, `${site.url}#article`, `${site.url}llms-full.txt`, `${site.url}knowledge-graph.jsonld`],
     datePublished: editorialReview.datePublished,
     dateModified: editorialReview.dateModified,
     responsibility: editorialReview.responsibility,

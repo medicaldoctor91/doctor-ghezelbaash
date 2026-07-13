@@ -36,6 +36,11 @@
       "name": "مرکز دانش ویدئویی",
       "short_name": "ویدئوها",
       "url": "/#video-knowledge-hub"
+    },
+    {
+      "name": "Knowledge & AI",
+      "short_name": "Knowledge",
+      "url": "/#knowledge-resources"
     }
   ],
   "icons": [

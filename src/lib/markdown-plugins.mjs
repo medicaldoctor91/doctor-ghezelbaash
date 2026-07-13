@@ -1,9 +1,11 @@
 import GithubSlugger from 'github-slugger';
 import { buildSectionRelationships, classifyHeading, getTopicGroup } from '../domain/concepts.mjs';
 import { galleryImages, videos } from '../domain/media.mjs';
+import { videoPageDetails } from '../domain/video-pages.mjs';
 import { stableAnchorFor } from '../domain/anchor-utils.ts';
 import { site } from '../domain/entities.ts';
 import { serviceAliasesForHeading } from '../domain/url-architecture.mjs';
+import { readMediaChapters } from './media.ts';
 
 function walk(node, callback) {
   callback(node);
@@ -177,10 +179,22 @@ function responsivePicture(image) {
 }
 
 function videoFigure(video) {
+  const details = videoPageDetails[video.id];
+  const chapters = readMediaChapters(video.chapterTrack);
+  const externalLink = (source) => ({
+    type: 'element',
+    tagName: 'a',
+    properties: { href: source.url, target: '_blank', rel: ['noopener', 'noreferrer', 'external'], referrerPolicy: 'strict-origin-when-cross-origin' },
+    children: [{ type: 'text', value: source.name }],
+  });
   return {
     type: 'element',
     tagName: 'figure',
-    properties: { className: ['clinical-video', 'video-facade'], id: `video-${video.id}` },
+    properties: {
+      className: ['clinical-video', 'video-facade'],
+      id: `video-${video.id}`,
+      dataVideoEntity: `${site.url}#video-${video.id}`,
+    },
     children: [
       {
         type: 'element',
@@ -212,7 +226,44 @@ function videoFigure(video) {
         children: [
           { type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: video.title }] },
           { type: 'element', tagName: 'p', properties: {}, children: [{ type: 'text', value: video.description }] },
-          { type: 'element', tagName: 'a', properties: { href: `/videos/${video.id}/`, className: ['video-watch-link'] }, children: [{ type: 'text', value: 'صفحهٔ ویدئو، متن و فصل‌بندی' }] },
+          ...(details ? [{
+            type: 'element',
+            tagName: 'details',
+            properties: { className: ['video-context-details'] },
+            children: [
+              { type: 'element', tagName: 'summary', properties: {}, children: [{ type: 'text', value: 'متن تحریریه، فصل‌بندی و مرز تصمیم' }] },
+              { type: 'element', tagName: 'p', properties: { className: ['video-editorial-summary'] }, children: [{ type: 'text', value: details.summary }] },
+              ...(chapters.length ? [{
+                type: 'element', tagName: 'ol', properties: { className: ['video-chapter-list'], ariaLabel: 'فصل‌بندی ویدئو' },
+                children: chapters.map((chapter) => ({
+                  type: 'element', tagName: 'li', properties: {}, children: [
+                    { type: 'element', tagName: 'button', properties: { type: 'button', className: ['video-chapter-play'], dataVideoId: `video-${video.id}`, dataVideoStart: chapter.startOffset }, children: [{ type: 'text', value: chapter.name }] },
+                    { type: 'element', tagName: 'time', properties: {}, children: [{ type: 'text', value: chapter.startTimestamp.replace(/^00:/, '') }] },
+                  ],
+                })),
+              }] : []),
+              { type: 'element', tagName: 'ul', properties: { className: ['video-takeaways'] }, children: details.takeaways.map((item) => ({ type: 'element', tagName: 'li', properties: {}, children: [{ type: 'text', value: item }] })) },
+              { type: 'element', tagName: 'p', properties: { className: ['video-boundary'] }, children: [{ type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: 'مرز تصمیم: ' }] }, { type: 'text', value: details.boundary }] },
+              { type: 'element', tagName: 'p', properties: { className: ['video-audience'] }, children: [{ type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: 'مخاطب: ' }] }, { type: 'text', value: details.audience }] },
+              ...(details.education ? [{
+                type: 'element', tagName: 'div', properties: { className: ['video-education-context'] }, children: [
+                  { type: 'element', tagName: 'strong', properties: {}, children: [{ type: 'text', value: 'زمینهٔ آموزش حرفه‌ای' }] },
+                  { type: 'element', tagName: 'p', properties: {}, children: [{ type: 'text', value: details.education.context }] },
+                  { type: 'element', tagName: 'ul', properties: {}, children: details.education.teaches.map((item) => ({ type: 'element', tagName: 'li', properties: {}, children: [{ type: 'text', value: item }] })) },
+                ],
+              }] : []),
+              ...(details.questions?.length ? [{
+                type: 'element', tagName: 'dl', properties: { className: ['video-questions'] }, children: details.questions.flatMap(([question, answer]) => [
+                  { type: 'element', tagName: 'dt', properties: {}, children: [{ type: 'text', value: question }] },
+                  { type: 'element', tagName: 'dd', properties: {}, children: [{ type: 'text', value: answer }] },
+                ]),
+              }] : []),
+              ...(details.sources?.length ? [{
+                type: 'element', tagName: 'ul', properties: { className: ['video-sources'], ariaLabel: 'منابع این ویدئو' }, children: details.sources.map((source) => ({ type: 'element', tagName: 'li', properties: {}, children: [externalLink(source)] })),
+              }] : []),
+              ...(details.relatedPath ? [{ type: 'element', tagName: 'a', properties: { href: details.relatedPath.replace(/^\/#/, '#'), className: ['video-related-guide'] }, children: [{ type: 'text', value: details.relatedLabel }] }] : []),
+            ],
+          }] : []),
         ],
       },
     ],

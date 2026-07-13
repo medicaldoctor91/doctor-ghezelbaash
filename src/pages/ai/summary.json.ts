@@ -75,11 +75,8 @@ export function GET() {
       fullText: `${site.url}llms-full.txt`,
       faq: `${site.url}ai/faq.json`,
       compactContext: `${site.url}context.json`,
-      knowledgeManifest: `${site.url}knowledge-manifest.json`,
-      identityCrosswalk: `${site.url}identity-crosswalk.json`,
-      graphSummary: `${site.url}graph-summary.json`,
-      researchIdentity: `${site.url}research.jsonld`,
-      knowledgeDirectory: `${site.url}knowledge/`,
+      knowledgeGraph: `${site.url}knowledge-graph.jsonld`,
+      knowledgeSection: `${site.url}#knowledge-resources`,
       sitemap: `${site.url}sitemap.xml`,
     },
   });

@@ -70,9 +70,9 @@ export const site = {
   logo: "/assets/brand/doctor-ghezelbaash-logo-512.png",
   ogImage: "/og/home.jpg",
   datePublished: "2026-07-10",
-  dateModified: "2026-07-12",
+  dateModified: "2026-07-13",
   liveSourceOfTruth: "https://www.ghezelbaash.ir/",
-  sourceTruthObservedAt: "2026-07-12",
+  sourceTruthObservedAt: "2026-07-13",
   googleBusinessProfile: {
     ratingValue: 5,
     bestRating: 5,

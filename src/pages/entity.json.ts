@@ -66,7 +66,7 @@ export function GET() {
       intentCoverageUrl: `${site.url}intent-coverage.json`,
       authorityMapUrl: `${site.url}authority-map.json`,
       compactContextUrl: `${site.url}context.json`,
-      graphSummaryUrl: `${site.url}graph-summary.json`,
+      knowledgeGraphUrl: `${site.url}knowledge-graph.jsonld`,
       answersUrl: `${site.url}answers.json`,
       externalAuthorityNetworkUrl: `${site.url}authority-network.json`,
       reputationSnapshotUrl: `${site.url}reputation.json`,

@@ -11,7 +11,7 @@ export function GET() {
   return jsonlResponse(videos.map((video: any) => ({
     id: `transcript-${video.id}`,
     videoId: video.id,
-    watchUrl: `${site.url}videos/${video.id}/`,
+    pageUrl: `${site.url}#video-${video.id}`,
     language: 'fa-IR',
     recordType: 'chapter-summary',
     transcriptStatus: 'not-verbatim',
@@ -19,4 +19,3 @@ export function GET() {
     text: parse(readFileSync(join(process.cwd(), 'public', video.chapterTrack.replace(/^\//, '')), 'utf8')),
   })));
 }
-

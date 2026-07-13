@@ -1,197 +1,123 @@
 import type { MarkdownHeading } from 'astro';
 import { site } from '~/domain/entities';
-import { stabilizeHeadings } from '~/domain/anchor-utils';
-import { buildSchemaParts } from '~/lib/schema';
+import { buildCanonicalKnowledgeGraph } from './knowledge-graph';
 
 type Node = Record<string, any>;
 
-const compactRef = (id: string) => ({ '@id': id });
+const ref = (id: string) => ({ '@id': id });
+const types = (node: Node) => Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
 
-
-const inlineDefinitionFields = [
-  '@type',
-  '@id',
-  'name',
-  'alternateName',
-  'description',
-  'url',
-  'inLanguage',
-  'keywords',
-  'bodyLocation',
-  'procedureType',
-  'additionalProperty',
-] as const;
-
-function collectSameSiteReferences(value: unknown, references: Set<string>) {
+function collectInternalRefs(value: unknown, references: Set<string>) {
   if (Array.isArray(value)) {
-    value.forEach((item) => collectSameSiteReferences(item, references));
+    value.forEach((item) => collectInternalRefs(item, references));
     return;
   }
-
   if (!value || typeof value !== 'object') return;
-
   const record = value as Record<string, unknown>;
-  const keys = Object.keys(record);
-  if (
-    keys.length === 1
-    && typeof record['@id'] === 'string'
-    && record['@id'].startsWith(`${site.url}#`)
-  ) {
-    references.add(record['@id']);
-  }
-
-  Object.values(record).forEach((item) => collectSameSiteReferences(item, references));
+  if (typeof record['@id'] === 'string' && record['@id'].startsWith(site.url)) references.add(record['@id']);
+  Object.values(record).forEach((item) => collectInternalRefs(item, references));
 }
 
-function compactInlineDefinition(node: Node): Node {
-  const definition = Object.fromEntries(
-    inlineDefinitionFields
-      .filter((field) => node[field] !== undefined)
-      .map((field) => [field, node[field]]),
-  ) as Node;
-
-  // Keep the inline graph within Google's page-level rich-result profile.
-  // The full graph retains the more specific Dataset type.
-  if (definition['@type'] === 'Dataset') definition['@type'] = 'CreativeWork';
-
-  return definition;
+function compactDefinition(node: Node): Node {
+  const fields = [
+    '@type', '@id', 'name', 'alternateName', 'description', 'url', 'inLanguage',
+    'keywords', 'bodyLocation', 'procedureType', 'additionalProperty',
+  ];
+  return Object.fromEntries(fields.filter((field) => node[field] !== undefined).map((field) => [field, node[field]]));
 }
 
 export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
-  headings = stabilizeHeadings(headings);
-  const parts = buildSchemaParts(headings, raw) as Record<string, any>;
-  const selectedServices = (parts.umbrellaServiceNodes as Node[]).slice(0, 12);
-  const selectedServiceRefs = selectedServices.map((node) => compactRef(node['@id']));
-  const selectedProcedures = (parts.procedureNodes as Node[])
-    .filter((node) => selectedServices.some((service) => service.name === node.name))
-    .slice(0, 12);
+  const canonical = buildCanonicalKnowledgeGraph(headings, raw);
+  const nodes = canonical['@graph'] as Node[];
+  const byId = new Map(nodes.map((node) => [node['@id'], node]));
+
+  const serviceNodes = nodes.filter((node) => types(node).includes('Service')).slice(0, 12);
+  const procedureNodes = nodes.filter((node) => /^https:\/\/www\.ghezelbaash\.ir\/#procedure-/.test(node['@id'] ?? '')).slice(0, 12);
+  const researchNodes = nodes.filter((node) => types(node).includes('ScholarlyArticle'));
+  const videoNodes = nodes.filter((node) => types(node).includes('VideoObject'));
+  const clipNodes = nodes.filter((node) => types(node).includes('Clip'));
+  const imageNodes = nodes
+    .filter((node) => types(node).includes('ImageObject') && node['@id'] !== `${site.url}#logo`)
+    .slice(0, 4);
+
+  const personSource = byId.get(`${site.url}#person`) as Node;
+  const clinicSource = byId.get(`${site.url}#clinic`) as Node;
+  const pageSource = byId.get(`${site.url}#webpage`) as Node;
+  const articleSource = byId.get(`${site.url}#article`) as Node;
 
   const person: Node = {
-    ...parts.personNode,
+    ...personSource,
     '@type': 'Person',
     sameAs: [site.irimcVerification, site.orcidUrl, site.doctorWikidata, site.huggingFaceProfile, site.githubProfile],
-    workLocation: compactRef(`${site.url}#clinic`),
-    worksFor: compactRef(`${site.url}#clinic`),
-    knowsAbout: selectedProcedures.map((node) => compactRef(node['@id'])),
-    subjectOf: [compactRef(`${site.url}#article`)],
+    worksFor: ref(`${site.url}#clinic`),
+    workLocation: ref(`${site.url}#clinic`),
+    knowsAbout: procedureNodes.map((node) => ref(node['@id'])),
+    subjectOf: [ref(`${site.url}#article`), ...researchNodes.map((node) => ref(node['@id'])), ref(`${site.url}#knowledge-graph-dataset`)],
   };
   delete person.affiliation;
 
   const clinic: Node = {
-    ...parts.clinicNode,
-    employee: compactRef(`${site.url}#person`),
-    availableService: selectedServiceRefs,
-    additionalProperty: [
-      {
-        '@type': 'PropertyValue',
-        propertyID: 'googleMapsPublicRatingSnapshot',
-        name: 'Snapshot تاریخ‌دار بازخورد عمومی Google Maps',
-        value: `${site.googleBusinessProfile.ratingValue}/${site.googleBusinessProfile.bestRating} from ${site.googleBusinessProfile.ratingCount} ratings`,
-        url: site.googleBusinessProfile.sourceUrl,
-        dateModified: site.googleBusinessProfile.observedAt,
-      },
-    ],
+    ...clinicSource,
+    employee: ref(`${site.url}#person`),
+    availableService: serviceNodes.map((node) => ref(node['@id'])),
+    subjectOf: ref(`${site.url}#clinic-reputation-snapshot`),
   };
   delete clinic.hasOfferCatalog;
 
   const page: Node = {
-    ...parts.pageNode,
-    // This is a medical mega-landing, not a dedicated author/profile page.
-    // Keeping ProfilePage here would conflict with Google's ProfilePage use cases.
-    '@type': 'MedicalWebPage',
-    mainEntity: [compactRef(`${site.url}#person`), compactRef(`${site.url}#clinic`)],
-    about: [compactRef(`${site.url}#person`), compactRef(`${site.url}#clinic`), ...selectedProcedures.map((node) => compactRef(node['@id']))],
-    hasPart: [compactRef(`${site.url}#article`), compactRef(`${site.url}#video-watch-pages`)],
+    ...pageSource,
+    mainEntity: ref(`${site.url}#person`),
+    publisher: ref(`${site.url}#clinic`),
+    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`), ...procedureNodes.map((node) => ref(node['@id']))],
+    hasPart: [
+      ref(`${site.url}#article`),
+      ref(`${site.url}#video-knowledge-hub`),
+      ref(`${site.url}#knowledge-resources`),
+      ...videoNodes.map((node) => ref(node['@id'])),
+    ],
   };
 
   const article: Node = {
-    ...parts.articleNode,
+    ...articleSource,
     about: page.about,
-    mentions: [
-      ...selectedProcedures.map((node) => compactRef(node['@id'])),
-      ...parts.researchNodes.map((node: Node) => compactRef(node['@id'])),
-    ],
-    subjectOf: compactRef(`${site.url}#video-watch-pages`),
+    mentions: [...procedureNodes.map((node) => ref(node['@id'])), ...researchNodes.map((node) => ref(node['@id']))],
+    subjectOf: ref(`${site.url}#medical-editorial-review`),
   };
 
-
-  const videoWatchPageList: Node = {
-    '@type': 'ItemList',
-    '@id': `${site.url}#video-watch-pages`,
-    name: 'صفحات ویدئویی آموزشی دکتر سعید قزلباش',
-    description: 'فهرست صفحات مستقل ویدئو، متن تحریریه و فصل‌بندی هر رسانه.',
-    numberOfItems: parts.videoNodes.length,
-    itemListOrder: 'https://schema.org/ItemListOrderAscending',
-    itemListElement: (parts.videoNodes as Node[]).map((node, index) => ({
-      '@type': 'ListItem',
-      position: index + 1,
-      name: node.name,
-      url: node.url,
-      item: {
-        '@type': 'WebPage',
-        '@id': node.mainEntityOfPage?.['@id'],
-        url: node.url,
-        name: node.name,
-      },
-    })),
-  };
-
-  const conversionDock = (parts.panelNodes as Node[])
-    .find((node) => node['@id'] === `${site.url}#conversion-dock`);
-
-  const website: Node = {
-    '@type': 'WebSite',
-    '@id': `${site.url}#website`,
-    url: site.url,
-    name: site.title,
-    inLanguage: site.language,
-    publisher: compactRef(`${site.url}#clinic`),
-    creator: compactRef(`${site.url}#person`),
-    about: [compactRef(`${site.url}#person`), compactRef(`${site.url}#clinic`)],
-  };
+  const selectedIds = [
+    'https://membersearch.irimc.org/#organization',
+    `${site.url}#credential-irimc-${site.irimc}`,
+    `${site.url}#website`,
+    `${site.url}#logo`,
+    `${site.url}#medical-editorial-review`,
+    `${site.url}#clinic-reputation-snapshot`,
+    `${site.url}#conversion-dock`,
+    `${site.url}#video-knowledge-hub`,
+    `${site.url}#knowledge-resources`,
+    `${site.url}#knowledge-graph-dataset`,
+    `${site.url}#retrieval-corpus`,
+  ];
 
   const graph: Node[] = [
-    parts.irimcOrganizationNode,
-    parts.credentialNode,
+    ...selectedIds.map((id) => byId.get(id)).filter(Boolean) as Node[],
     person,
     clinic,
-    website,
     page,
     article,
-    parts.logoNode,
-    ...parts.imageNodes,
-    ...selectedProcedures,
-    ...selectedServices,
-    ...parts.researchNodes,
-    ...(conversionDock ? [conversionDock] : []),
-    videoWatchPageList,
+    ...imageNodes,
+    ...procedureNodes,
+    ...serviceNodes,
+    ...researchNodes,
+    ...videoNodes,
+    ...clipNodes,
   ];
 
-  const definedIds = new Set(
-    graph
-      .map((node) => node['@id'])
-      .filter((id): id is string => typeof id === 'string'),
-  );
-  const referencedIds = new Set<string>();
-  graph.forEach((node) => collectSameSiteReferences(node, referencedIds));
+  const definedIds = new Set(graph.map((node) => node['@id']).filter(Boolean));
+  const refs = new Set<string>();
+  graph.forEach((node) => collectInternalRefs(node, refs));
+  const supplemental = [...refs]
+    .filter((id) => !definedIds.has(id) && byId.has(id))
+    .map((id) => compactDefinition(byId.get(id) as Node));
 
-  const supplementalCandidates: Node[] = [
-    parts.authorityNetworkNode,
-    parts.editorialReviewNode,
-    parts.reputationSnapshotNode,
-    ...parts.procedureNodes,
-    ...parts.granularConceptNodes,
-  ];
-  const supplementalNodes = supplementalCandidates
-    .filter((node) => (
-      typeof node['@id'] === 'string'
-      && referencedIds.has(node['@id'])
-      && !definedIds.has(node['@id'])
-    ))
-    .map(compactInlineDefinition);
-
-  return {
-    '@context': 'https://schema.org',
-    '@graph': [...graph, ...supplementalNodes],
-  };
+  return { '@context': 'https://schema.org', '@graph': [...graph, ...supplemental] };
 }

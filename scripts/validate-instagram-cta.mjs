@@ -41,12 +41,10 @@ for (const forbidden of [irimc, wikidata, direct, reels]) {
   check(!meHrefs.includes(forbidden), `head rel=me should not include registry, knowledge-base, or action URL: ${forbidden}`);
 }
 
-const visibleHtml = html
-  .replace(/<script\b[\s\S]*?<\/script>/gi, '')
-  .replace(/<style\b[\s\S]*?<\/style>/gi, '');
-check(!new RegExp(`<a\\b[^>]*href="${irimc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`, 'i').test(visibleHtml), 'homepage must not expose the IRIMC registry as a visible link');
-check(!/<a\b[^>]*href="https:\/\/www\.wikidata\.org\/(?:entity|wiki)\//i.test(visibleHtml), 'homepage must not expose Wikidata as a visible patient-facing link');
-check(!/<a\b[^>]*href="https:\/\/huggingface\.co\//i.test(visibleHtml), 'homepage must not expose Hugging Face as a visible patient-facing link');
+check(html.includes('id="knowledge-resources"'), 'homepage Knowledge & AI section missing');
+check(html.includes(`href="${irimc}"`), 'Knowledge & AI section must expose IRIMC verification');
+check(html.includes(`href="${wikidata}"`), 'Knowledge & AI section must expose physician Wikidata');
+check(html.includes(`href="${huggingFace}`), 'Knowledge & AI section must expose Hugging Face resources');
 
 const blocks = [...html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)];
 check(blocks.length === 1, `homepage expected one JSON-LD block, found ${blocks.length}`);
@@ -89,7 +87,7 @@ console.log(JSON.stringify({
   instagramDirect: direct,
   instagramReels: reels,
   stickyTarget: 'profile',
-  visibleRegistryLinksOnHomepage: 0,
+  registryLinksScopedToKnowledgeSection: true,
   identitySignals: {
     head: ['ORCID', 'Instagram', 'GitHub', 'Hugging Face profile'],
     schema: ['IRIMC', 'ORCID', 'Wikidata person', 'Wikidata clinic', 'Google KG person', 'Google Local KG clinic', 'Instagram clinic', 'Hugging Face profile'],

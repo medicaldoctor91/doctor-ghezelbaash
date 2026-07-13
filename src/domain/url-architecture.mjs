@@ -51,25 +51,26 @@ function base(baseUrl) {
 }
 
 export function videoHubUrl(baseUrl) {
-  return `${base(baseUrl)}videos/`;
+  return `${base(baseUrl)}#video-knowledge-hub`;
 }
 
 export function videoHubPageId(baseUrl) {
-  return `${videoHubUrl(baseUrl)}#webpage`;
+  return `${base(baseUrl)}#video-knowledge-hub`;
 }
 
 export function videoWatchUrl(baseUrl, slug) {
-  return `${base(baseUrl)}videos/${slug}/`;
+  return `${base(baseUrl)}#video-${slug}`;
 }
 
 export function videoWebPageId(baseUrl, slug) {
-  return `${videoWatchUrl(baseUrl, slug)}#webpage`;
+  void slug;
+  return `${base(baseUrl)}#webpage`;
 }
 
 export function videoEntityId(baseUrl, slug) {
-  return `${videoWatchUrl(baseUrl, slug)}#video`;
+  return `${base(baseUrl)}#video-${slug}`;
 }
 
 export function videoClipId(baseUrl, slug, index) {
-  return `${videoWatchUrl(baseUrl, slug)}#clip-${index}`;
+  return `${base(baseUrl)}#video-${slug}-clip-${index}`;
 }
