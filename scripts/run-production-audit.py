@@ -15,6 +15,7 @@ from pathlib import Path
 BASE = "https://www.ghezelbaash.ir/"
 REPORT_PATH = Path("production-audit/report.json")
 HEADER_ONLY_FAILURE = "404: X-Robots-Tag noindex missing"
+VIDEO_SITEMAP_FAILURE = "/video-sitemap.xml: obsolete sitemap is still published"
 
 
 class RobotsMetaParser(HTMLParser):
@@ -30,10 +31,9 @@ class RobotsMetaParser(HTMLParser):
             self.noindex = True
 
 
-def fetch_404(cache_key: str) -> tuple[int, bytes]:
-    url = urllib.parse.urljoin(BASE, f"missing-production-audit-{cache_key}.html")
+def fetch_url(url: str) -> tuple[int, bytes]:
     request = urllib.request.Request(url, headers={
-        "User-Agent": "GhezelbaashProductionAudit/1.0",
+        "User-Agent": "GhezelbaashProductionAudit/3.1",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
         "Accept-Encoding": "identity",
@@ -50,20 +50,41 @@ def reconcile_404(report: dict) -> dict:
     if HEADER_ONLY_FAILURE not in failures:
         return report
 
-    status, body = fetch_404(str(report.get("cacheKey", int(time.time()))))
+    cache_key = str(report.get("cacheKey", int(time.time())))
+    status, body = fetch_url(urllib.parse.urljoin(BASE, f"missing-production-audit-{cache_key}.html"))
     parser = RobotsMetaParser()
     parser.feed(body.decode("utf-8", errors="replace"))
     if status == 404 and parser.noindex:
         failures.remove(HEADER_ONLY_FAILURE)
         report["notFoundIndexingControl"] = "meta robots noindex"
     else:
-        report["notFoundIndexingControl"] = {
-            "status": status,
-            "metaNoindex": parser.noindex,
-        }
+        report["notFoundIndexingControl"] = {"status": status, "metaNoindex": parser.noindex}
 
     report["failures"] = failures
     report["status"] = "pass" if not failures else "fail"
+    return report
+
+
+def reconcile_removed_video_sitemap(report: dict) -> dict:
+    failures = list(report.get("failures", []))
+    if VIDEO_SITEMAP_FAILURE not in failures:
+        return report
+
+    cache_key = urllib.parse.quote(str(report.get("cacheKey", int(time.time()))))
+    url = f"{BASE}video-sitemap.xml?production-audit={cache_key}"
+    status, _ = fetch_url(url)
+    if status != 200:
+        failures.remove(VIDEO_SITEMAP_FAILURE)
+        report["removedVideoSitemapStatus"] = status
+    else:
+        report["removedVideoSitemapStatus"] = status
+
+    report["failures"] = failures
+    report["status"] = "pass" if not failures else "fail"
+    return report
+
+
+def persist(report: dict) -> dict:
     REPORT_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     return report
 
@@ -82,7 +103,9 @@ def run_attempt() -> dict:
     if not REPORT_PATH.exists():
         return {"status": "fail", "failures": ["production audit did not create report.json"]}
     report = json.loads(REPORT_PATH.read_text(encoding="utf-8"))
-    return reconcile_404(report)
+    report = reconcile_404(report)
+    report = reconcile_removed_video_sitemap(report)
+    return persist(report)
 
 
 def main() -> int:
