@@ -1,0 +1,49 @@
+name: Observe Video Hub Removal
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  observe-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Wait for custom domain to expose hub-free homepage
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 36); do
+            url="https://www.ghezelbaash.ir/?hub-removal-check=${GITHUB_SHA}-${attempt}"
+            echo "Attempt ${attempt}: ${url}"
+            if curl --fail --silent --show-error --location \
+              --connect-timeout 15 --max-time 45 \
+              -H 'Cache-Control: no-cache' \
+              -H 'Pragma: no-cache' \
+              "$url" > production.html; then
+              contextual_videos=$(grep -oE '<article[^>]*data-inline-video([[:space:]]|>)' production.html | wc -l | tr -d ' ')
+              if [ "$contextual_videos" = "12" ] \
+                && ! grep -q 'مرکز دانش ویدئویی صفحه' production.html \
+                && ! grep -q '۱۲ ویدئو؛ هر رسانه متصل به موضوع، خدمت و مرز تصمیم خودش' production.html \
+                && ! grep -Eq 'href="#(videos|video-knowledge-hub)"' production.html; then
+                echo "Production passed: 12 contextual videos, zero standalone hub, zero hub links."
+                exit 0
+              fi
+            fi
+            sleep 20
+          done
+
+          echo 'Custom domain did not expose the hub-free homepage within the verification window.' >&2
+          exit 1
+
+      - name: Upload fetched production HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: video-hub-removal-production-html
+          path: production.html
+          if-no-files-found: warn
+          retention-days: 3
