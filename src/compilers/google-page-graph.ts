@@ -65,6 +65,7 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     hasCredential: ref(credentialId),
     worksFor: ref(clinicId),
     workLocation: ref(clinicId),
+    affiliation: ref(clinicId),
     knowsAbout: procedureNodes.map((node) => ref(node['@id'])),
     subjectOf: ref(articleId),
   };

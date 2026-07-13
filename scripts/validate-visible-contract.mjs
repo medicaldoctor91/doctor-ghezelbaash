@@ -62,12 +62,17 @@ for (const url of [
   'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
   'https://www.facebook.com/Ghezelbaash/',
   'https://www.pinterest.com/qezelbaash/',
+  'https://www.wikidata.org/entity/Q140287622',
 ]) {
-  check(homepage.includes(`<link rel="me" href="${url}">`) || homepage.includes(`<link rel="me" href="${url}"`), `owned head identity link missing: ${url}`);
+  check(homepage.includes(`<link rel="me" href="${url}"`), `required head identity link missing: ${url}`);
 }
 
+check(
+  homepage.includes('<link rel="describedby" type="application/ld+json" href="https://www.ghezelbaash.ir/knowledge-graph.jsonld"'),
+  'absolute external knowledge-graph link is missing from head',
+);
+
 for (const url of [
-  'https://www.wikidata.org/entity/Q140287622',
   'https://huggingface.co/Ghezelbaash',
   'https://github.com/Medicaldoctor91',
   'https://x.com/Qezelbaash',
@@ -93,7 +98,8 @@ console.log(JSON.stringify({
   bestDoctorWrapper: 'closed',
   bestDoctorQueries: 10,
   artificialVisiblePhrases: 0,
-  ownedIdentityHeadLinks: 5,
+  requiredIdentityHeadLinks: 6,
+  externalKnowledgeGraphHeadLink: true,
   nonessentialIdentityHeadLinks: 0,
   visibleSocialProfiles: 3,
 }, null, 2));

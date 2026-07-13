@@ -3,6 +3,7 @@ import { join, relative } from 'node:path';
 import { videos } from '../src/domain/media.mjs';
 import { serviceUrlRegistry } from '../src/domain/url-architecture.mjs';
 import {
+  clinicRequiredSameAs,
   personAlternateNames,
   personRequiredSameAs,
   restoredPersonIdentifiers,
@@ -114,6 +115,7 @@ function auditPersonIdentity(label, audit) {
 
   const sameAs = new Set(Array.isArray(person.sameAs) ? person.sameAs : [person.sameAs].filter(Boolean));
   for (const url of personRequiredSameAs) check(sameAs.has(url), `${label}: Person sameAs missing: ${url}`);
+  for (const url of clinicRequiredSameAs) check(!sameAs.has(url), `${label}: clinic social URL leaked into Person.sameAs: ${url}`);
 
   const identifiers = Array.isArray(person.identifier) ? person.identifier : [person.identifier].filter(Boolean);
   for (const required of restoredPersonIdentifiers) {
@@ -127,9 +129,23 @@ function auditPersonIdentity(label, audit) {
     identifiers.some((item) => item?.propertyID === 'MINC' && item?.value === personIdentityContract.minc),
     `${label}: Canadian MINC identifier missing`,
   );
-  check(sameAs.has(personIdentityContract.linkedin), `${label}: LinkedIn identity missing`);
-  check(sameAs.has(personIdentityContract.facebook), `${label}: Facebook identity missing`);
   check(sameAs.has(personIdentityContract.pinterest), `${label}: Pinterest identity missing`);
+}
+
+function auditDoctorClinicRelation(label, audit) {
+  const person = audit.nodes.find((node) => node['@id'] === `${site}#person`);
+  const clinic = audit.nodes.find((node) => node['@id'] === `${site}#clinic`);
+  check(Boolean(person), `${label}: Person missing for doctor-clinic relation`);
+  check(Boolean(clinic), `${label}: Clinic missing for doctor-clinic relation`);
+  if (!person || !clinic) return;
+
+  check(person.worksFor?.['@id'] === `${site}#clinic`, `${label}: Person.worksFor must point to Clinic`);
+  check(person.workLocation?.['@id'] === `${site}#clinic`, `${label}: Person.workLocation must point to Clinic`);
+  check(person.affiliation?.['@id'] === `${site}#clinic`, `${label}: Person.affiliation must point to Clinic`);
+  check(clinic.employee?.['@id'] === `${site}#person`, `${label}: Clinic.employee must point to Person`);
+
+  const clinicSameAs = new Set(Array.isArray(clinic.sameAs) ? clinic.sameAs : [clinic.sameAs].filter(Boolean));
+  for (const url of clinicRequiredSameAs) check(clinicSameAs.has(url), `${label}: Clinic.sameAs missing: ${url}`);
 }
 
 const fullAudit = auditGraph('canonical graph', full);
@@ -144,8 +160,10 @@ check(!fullAudit.defined.has(`${site}#retrieval-corpus`), 'removed retrieval Dat
 
 auditPersonIdentity('canonical graph', fullAudit);
 auditPersonIdentity('inline graph', inlineAudit);
+auditDoctorClinicRelation('canonical graph', fullAudit);
+auditDoctorClinicRelation('inline graph', inlineAudit);
 for (const profile of restoredPersonProfileNodes) {
-  check(fullAudit.defined.has(profile['@id']), `canonical graph: restored Person profile node missing: ${profile['@id']}`);
+  check(fullAudit.defined.has(profile['@id']), `canonical graph: restored external profile node missing: ${profile['@id']}`);
 }
 
 const inlineArticle = inlineAudit.nodes.find((node) => node['@id'] === `${site}#article`);
@@ -223,12 +241,20 @@ console.log(JSON.stringify({
   canonicalGraphNodes: fullAudit.nodes.length,
   personIdentityContract: {
     minc: personIdentityContract.minc,
-    linkedin: true,
-    facebook: true,
     pinterest: true,
     alternateNames: personAlternateNames.length,
     sameAs: personRequiredSameAs.length,
     restoredProfileNodes: restoredPersonProfileNodes.length,
+  },
+  clinicIdentityContract: {
+    socialSameAs: clinicRequiredSameAs,
+    employee: `${site}#person`,
+  },
+  doctorClinicRelation: {
+    worksFor: true,
+    workLocation: true,
+    affiliation: true,
+    employee: true,
   },
   publicFiles: files.length,
 }, null, 2));

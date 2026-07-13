@@ -20,18 +20,21 @@ export const personAlternateNames = [
 export const personRequiredSameAs = [
   'https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e',
   'https://orcid.org/0009-0001-9346-8475',
-  'https://www.instagram.com/doctor.ghezelbaash/',
   'https://www.wikidata.org/entity/Q140287622',
-  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
   'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/',
   'https://github.com/medicaldoctor91/doctor-ghezelbaash',
   'https://github.com/Medicaldoctor91',
-  'https://www.facebook.com/Ghezelbaash/',
   'https://www.pinterest.com/qezelbaash/',
   'https://about.me/ghezelbaash',
   'https://linktr.ee/Doctor.ghezelbaash',
   'https://huggingface.co/Ghezelbaash',
   'https://x.com/Qezelbaash',
+];
+
+export const clinicRequiredSameAs = [
+  'https://www.instagram.com/doctor.ghezelbaash/',
+  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
+  'https://www.facebook.com/Ghezelbaash/',
 ];
 
 export const restoredPersonIdentifiers = [
@@ -61,8 +64,9 @@ export const restoredPersonProfileNodes = [
     '@type': 'ProfilePage',
     '@id': 'https://www.facebook.com/Ghezelbaash/',
     url: 'https://www.facebook.com/Ghezelbaash/',
-    name: 'پروفایل Facebook دکتر سعید قزلباش',
-    about: { '@id': 'https://www.ghezelbaash.ir/#person' },
+    name: 'پروفایل Facebook کلینیک دکتر سعید قزلباش',
+    about: { '@id': 'https://www.ghezelbaash.ir/#clinic' },
+    mainEntity: { '@id': 'https://www.ghezelbaash.ir/#clinic' },
     publisher: { '@type': 'Organization', name: 'Facebook' },
   },
   {
@@ -80,6 +84,7 @@ export const personIdentityContract = {
   minc: 'CAMD-0224-1997',
   linkedin: 'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
   facebook: 'https://www.facebook.com/Ghezelbaash/',
+  instagram: 'https://www.instagram.com/doctor.ghezelbaash/',
   pinterest: 'https://www.pinterest.com/qezelbaash/',
   ncbiBibliography: 'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/',
 };
