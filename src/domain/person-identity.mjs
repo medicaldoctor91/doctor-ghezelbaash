@@ -50,13 +50,6 @@ export const restoredPersonIdentifiers = [
     name: 'Medical Identification Number for Canada',
     value: 'CAMD-0224-1997',
   },
-  {
-    '@type': 'PropertyValue',
-    propertyID: 'Hugging Face Profile',
-    name: 'Personal Hugging Face profile',
-    value: 'Ghezelbaash',
-    url: 'https://huggingface.co/Ghezelbaash',
-  },
 ];
 
 export const restoredPersonProfileNodes = [
@@ -86,6 +79,15 @@ export const restoredPersonProfileNodes = [
     about: { '@id': 'https://www.ghezelbaash.ir/#person' },
     publisher: { '@type': 'Organization', name: 'Pinterest' },
   },
+  {
+    '@type': 'ProfilePage',
+    '@id': 'https://huggingface.co/Ghezelbaash',
+    url: 'https://huggingface.co/Ghezelbaash',
+    name: 'پروفایل Hugging Face دکتر سعید قزلباش',
+    about: { '@id': 'https://www.ghezelbaash.ir/#person' },
+    mainEntity: { '@id': 'https://www.ghezelbaash.ir/#person' },
+    publisher: { '@type': 'Organization', name: 'Hugging Face' },
+  },
 ];
 
 export const personIdentityContract = {
@@ -95,5 +97,6 @@ export const personIdentityContract = {
   facebook: 'https://www.facebook.com/Ghezelbaash/',
   instagram: 'https://www.instagram.com/doctor.ghezelbaash/',
   pinterest: 'https://www.pinterest.com/qezelbaash/',
+  huggingFace: 'https://huggingface.co/Ghezelbaash',
   ncbiBibliography: 'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/',
 };

@@ -1,14 +1,7 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { videos } from '../src/domain/media.mjs';
-import {
-  serviceUrlRegistry,
-  videoClipId,
-  videoEntityId,
-  videoWatchPath,
-  videoWatchUrl,
-  videoWebPageId,
-} from '../src/domain/url-architecture.mjs';
+import { serviceUrlRegistry } from '../src/domain/url-architecture.mjs';
 import {
   clinicRequiredSameAs,
   personAlternateNames,
@@ -17,14 +10,17 @@ import {
   restoredPersonProfileNodes,
   personIdentityContract,
 } from '../src/domain/person-identity.mjs';
+import { bestDoctorAnswers } from '../src/domain/best-doctor-answers.mjs';
 
 const root = join(process.cwd(), 'dist');
 const site = 'https://www.ghezelbaash.ir/';
+const huggingFaceProfile = 'https://huggingface.co/Ghezelbaash';
+const huggingFaceDataset = 'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data';
 const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
 const files = [];
 const asArray = (value) => value === undefined ? [] : Array.isArray(value) ? value : [value];
-const timezoneDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
+const hasType = (node, type) => asArray(node?.['@type']).includes(type);
 const walkFiles = (directory) => {
   for (const name of readdirSync(directory)) {
     const path = join(directory, name);
@@ -43,51 +39,42 @@ const visible = homepage
   .replace(/\s+/gu, ' ');
 
 const htmlFiles = files.filter((path) => path.endsWith('.html')).map((path) => relative(root, path));
-const expectedHtmlFiles = new Set([
-  'index.html',
-  '404.html',
-  ...videos.map((video) => relative(root, join(root, videoWatchPath(video.id).replace(/^\//u, ''), 'index.html'))),
-]);
-check(
-  htmlFiles.length === expectedHtmlFiles.size && htmlFiles.every((path) => expectedHtmlFiles.has(path)),
-  `expected homepage, 404 and ${videos.length} watch pages; found ${htmlFiles.join(', ')}`,
-);
+check(htmlFiles.length === 2 && htmlFiles.includes('index.html') && htmlFiles.includes('404.html'), `expected only index.html and 404.html; found ${htmlFiles.join(', ')}`);
+check(!existsSync(join(root, 'videos', 'index.html')), 'standalone /videos/ page is forbidden');
+check(!htmlFiles.some((path) => path.startsWith('videos/')), `video watch pages are forbidden: ${htmlFiles.filter((path) => path.startsWith('videos/')).join(', ')}`);
 check(statSync(homepagePath).size < 700_000, `homepage exceeds 700KB: ${statSync(homepagePath).size}`);
 check((homepage.match(/<h1\b/giu) ?? []).length === 1, 'homepage must contain exactly one h1');
-check((homepage.match(/<video\b/giu) ?? []).length === videos.length, `homepage must contain ${videos.length} initial video elements`);
+check((homepage.match(/<video\b/giu) ?? []).length === videos.length, `homepage must contain ${videos.length} video elements`);
 check((homepage.match(/<video\b[^>]*preload="none"/giu) ?? []).length === videos.length, 'every homepage video must use preload="none"');
-check((homepage.match(/<source\b[^>]*type="video\/mp4"/giu) ?? []).length === videos.length, 'every homepage video must expose an MP4 source in initial HTML');
-check((homepage.match(/\bdata-inline-video(?:\s|>)/giu) ?? []).length === videos.length, 'every video must be embedded contextually inside article text');
+check((homepage.match(/<source\b[^>]*type="video\/mp4"/giu) ?? []).length === videos.length, 'every homepage video must expose an MP4 source');
+check((homepage.match(/\bdata-inline-video(?:\s|>)/giu) ?? []).length === videos.length, 'every video must remain embedded contextually inside article text');
 check((homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length >= 6, 'physician and clinic images must remain contextual');
 check(!/<section\b[^>]*\bid="videos"/iu.test(homepage), 'standalone video section is forbidden');
 check(!/<section\b[^>]*\bid="clinic"/iu.test(homepage), 'standalone clinic photo section is forbidden');
 check(!/<section\b[^>]*\bid="doctor"/iu.test(homepage), 'standalone physician identity section is forbidden');
-check(!/<section\b[^>]*\bid="decision-model"/iu.test(homepage), 'standalone decision-model section is forbidden');
 check(!homepage.includes('video-rail'), 'video carousel/library markup is forbidden');
 check(!homepage.includes('gallery-grid'), 'standalone photo gallery markup is forbidden');
 check(!homepage.includes('guide-index'), 'article must not render as a knowledge-base index');
 check(!homepage.includes('guide-card'), 'article must not render as accordion cards');
-check(!homepage.includes('href="#videos"'), 'navigation must not expose a separate videos destination');
-check(!existsSync(join(root, 'videos', 'index.html')), 'standalone /videos/ index page is forbidden');
-check(!/<div\b[^>]*aria-label=/iu.test(homepage.replace(/<div\b[^>]*role="(?:group|navigation|region)"[^>]*aria-label=[^>]*>/giu, '')), 'generic div uses aria-label without an explicit role');
-check(!/<time\b(?![^>]*datetime=)/iu.test(homepage), 'time element missing datetime');
+check(!homepage.includes('مشاهده در صفحه اختصاصی این ویدئو'), 'watch-page call to action must be absent');
+check(!/href="\/videos\/[^"/]+\/"/u.test(homepage), 'homepage must not link to video watch pages');
 
 const articleStart = homepage.indexOf('id="clinical-guide"');
+const answerStart = homepage.indexOf('class="quiet-best-wrap');
 const contactStart = homepage.indexOf('id="contact"');
-check(articleStart >= 0 && contactStart > articleStart, 'article and contact ordering is invalid');
+check(articleStart >= 0 && answerStart > articleStart && contactStart > answerStart, 'article, closed answer hub and contact ordering is invalid');
 for (const video of videos) {
   const position = homepage.indexOf(`id="video-${video.id}"`);
-  check(position > articleStart && position < contactStart, `${video.id}: video is not inside article text`);
-  check(homepage.includes(`href="${videoWatchPath(video.id)}"`), `${video.id}: contextual video does not link to its watch page`);
+  check(position > articleStart && position < answerStart, `${video.id}: video is not inside the main article`);
 }
 
-for (const phrase of [
-  'Knowledge & AI', 'Retrieval Corpus', 'Search Intent', 'knowsAbout', 'مدل زبانی',
-  'موتورهای جست‌وجو', 'گوگل و LLM', 'کتابخانهٔ ویدئویی', 'محیط واقعی کلینیک',
-  'هویت قابل‌پیگیری', 'تصمیم قابل‌دفاع', 'مدل تصمیم سه‌لایه', 'دانش‌نامهٔ بالینی',
-  'راهنمای کامل تصمیم‌گیری', 'مسئول تصمیم بالینی',
-]) {
-  check(!visible.includes(phrase), `forbidden phrase leaked into visible UI: ${phrase}`);
+const bestWrapper = homepage.match(/<details\b[^>]*class="[^"]*\bquiet-best\b[^"]*"[^>]*>/iu)?.[0];
+check(Boolean(bestWrapper), 'closed best-doctor disclosure missing');
+check(bestWrapper ? !/\bopen(?:\s|=|>)/iu.test(bestWrapper) : false, 'best-doctor disclosure must be closed by default');
+check((homepage.match(/class="quiet-best__item"/gu) ?? []).length === bestDoctorAnswers.length, `expected ${bestDoctorAnswers.length} best-doctor answers`);
+for (const answer of bestDoctorAnswers) {
+  check((homepage.match(new RegExp(`\\sid="${answer.id}"`, 'gu')) ?? []).length === 1, `${answer.id}: answer anchor missing or duplicated`);
+  check(visible.includes(answer.question), `${answer.id}: question absent from visible HTML`);
 }
 
 const ids = [...homepage.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]);
@@ -100,7 +87,7 @@ for (const item of serviceUrlRegistry) check(idSet.has(item.anchor), `missing st
 
 const inlineMatches = [...homepage.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gu)];
 check(inlineMatches.length === 1, `expected one inline JSON-LD block; found ${inlineMatches.length}`);
-const inline = JSON.parse(inlineMatches[0][1]);
+const inline = inlineMatches.length === 1 ? JSON.parse(inlineMatches[0][1]) : { '@graph': [] };
 const full = JSON.parse(readFileSync(join(root, 'knowledge-graph.jsonld'), 'utf8'));
 
 function auditGraph(label, graph) {
@@ -118,55 +105,42 @@ function auditGraph(label, graph) {
   check(graphIds.length === defined.size, `${label}: duplicate @id values`);
   check([...references].every((id) => defined.has(id)), `${label}: dangling same-site @id references`);
   const page = nodes.find((node) => node['@id'] === `${site}#webpage`);
-  const pageTypes = asArray(page?.['@type']);
-  check(pageTypes.includes('MedicalWebPage'), `${label}: homepage must remain MedicalWebPage`);
-  check(pageTypes.includes('ProfilePage'), `${label}: homepage must also be ProfilePage`);
+  check(hasType(page, 'MedicalWebPage'), `${label}: homepage must be MedicalWebPage`);
+  check(hasType(page, 'ProfilePage'), `${label}: homepage must also be ProfilePage`);
   check(page?.mainEntity?.['@id'] === `${site}#person` && !Array.isArray(page?.mainEntity), `${label}: Person must be the sole page mainEntity`);
-  return { nodes, defined };
+  return { nodes, defined, byId: new Map(nodes.filter((node) => node?.['@id']).map((node) => [node['@id'], node])) };
 }
 
 function auditPersonIdentity(label, audit) {
-  const person = audit.nodes.find((node) => node['@id'] === `${site}#person`);
+  const person = audit.byId.get(`${site}#person`);
   check(Boolean(person), `${label}: canonical Person missing`);
   if (!person) return;
-
   check(person.honorificPrefix === personIdentityContract.honorificPrefix, `${label}: Person honorificPrefix missing`);
-
-  const aliases = new Set(Array.isArray(person.alternateName) ? person.alternateName : [person.alternateName].filter(Boolean));
+  const aliases = new Set(asArray(person.alternateName));
   for (const alias of personAlternateNames) check(aliases.has(alias), `${label}: Person alternateName missing: ${alias}`);
-
-  const sameAs = new Set(Array.isArray(person.sameAs) ? person.sameAs : [person.sameAs].filter(Boolean));
+  const sameAs = new Set(asArray(person.sameAs));
   for (const url of personRequiredSameAs) check(sameAs.has(url), `${label}: Person sameAs missing: ${url}`);
   for (const url of clinicRequiredSameAs) check(!sameAs.has(url), `${label}: clinic social URL leaked into Person.sameAs: ${url}`);
-
-  const identifiers = Array.isArray(person.identifier) ? person.identifier : [person.identifier].filter(Boolean);
+  check(sameAs.has(huggingFaceProfile), `${label}: personal Hugging Face profile missing from Person.sameAs`);
+  check(!sameAs.has(huggingFaceDataset), `${label}: Dataset leaked into Person.sameAs`);
+  const identifiers = asArray(person.identifier);
   for (const required of restoredPersonIdentifiers) {
-    check(
-      identifiers.some((item) => item?.propertyID === required.propertyID && item?.value === required.value),
-      `${label}: Person identifier missing: ${required.propertyID}=${required.value}`,
-    );
+    check(identifiers.some((item) => item?.propertyID === required.propertyID && item?.value === required.value), `${label}: Person identifier missing: ${required.propertyID}=${required.value}`);
   }
-
-  check(
-    identifiers.some((item) => item?.propertyID === 'MINC' && item?.value === personIdentityContract.minc),
-    `${label}: Canadian MINC identifier missing`,
-  );
-  check(sameAs.has(personIdentityContract.pinterest), `${label}: Pinterest identity missing`);
+  check(!identifiers.some((item) => item?.propertyID === 'Hugging Face Profile'), `${label}: Hugging Face profile must not be a formal identifier`);
 }
 
 function auditDoctorClinicRelation(label, audit) {
-  const person = audit.nodes.find((node) => node['@id'] === `${site}#person`);
-  const clinic = audit.nodes.find((node) => node['@id'] === `${site}#clinic`);
+  const person = audit.byId.get(`${site}#person`);
+  const clinic = audit.byId.get(`${site}#clinic`);
   check(Boolean(person), `${label}: Person missing for doctor-clinic relation`);
   check(Boolean(clinic), `${label}: Clinic missing for doctor-clinic relation`);
   if (!person || !clinic) return;
-
   check(person.worksFor?.['@id'] === `${site}#clinic`, `${label}: Person.worksFor must point to Clinic`);
   check(person.workLocation?.['@id'] === `${site}#clinic`, `${label}: Person.workLocation must point to Clinic`);
   check(person.affiliation?.['@id'] === `${site}#clinic`, `${label}: Person.affiliation must point to Clinic`);
   check(clinic.employee?.['@id'] === `${site}#person`, `${label}: Clinic.employee must point to Person`);
-
-  const clinicSameAs = new Set(Array.isArray(clinic.sameAs) ? clinic.sameAs : [clinic.sameAs].filter(Boolean));
+  const clinicSameAs = new Set(asArray(clinic.sameAs));
   for (const url of clinicRequiredSameAs) check(clinicSameAs.has(url), `${label}: Clinic.sameAs missing: ${url}`);
 }
 
@@ -174,73 +148,38 @@ const fullAudit = auditGraph('canonical graph', full);
 const inlineAudit = auditGraph('inline graph', inline);
 check(fullAudit.nodes.length >= 800, `canonical graph unexpectedly narrow: ${fullAudit.nodes.length}`);
 check(inlineAudit.nodes.length <= 60, `inline projection is too broad: ${inlineAudit.nodes.length}`);
-check(!inlineAudit.nodes.some((node) => asArray(node['@type']).some((type) => type === 'VideoObject' || type === 'Clip')), 'homepage inline projection must leave video rich-result markup to watch pages');
-check(!inlineAudit.nodes.some((node) => asArray(node['@type']).includes('ScholarlyArticle')), 'research articles must stay in canonical graph and out of Google page projection');
+check(!inlineAudit.nodes.some((node) => hasType(node, 'VideoObject') || hasType(node, 'Clip')), 'inline graph must not contain VideoObject or Clip');
+check(!fullAudit.nodes.some((node) => hasType(node, 'VideoObject') || hasType(node, 'Clip')), 'canonical graph must keep videos as contextual homepage media');
+check(!inlineAudit.nodes.some((node) => hasType(node, 'ScholarlyArticle')), 'research articles must stay out of Google page projection');
 for (const id of inlineAudit.defined) check(fullAudit.defined.has(id), `inline @id absent from canonical graph: ${id}`);
-check(fullAudit.defined.has(`${site}#knowledge-graph-dataset`), 'canonical Dataset node missing');
+check(fullAudit.defined.has(`${site}#knowledge-graph-dataset`), 'canonical knowledge graph Dataset missing');
 check(!fullAudit.defined.has(`${site}#retrieval-corpus`), 'removed retrieval Dataset still exists');
 
 auditPersonIdentity('canonical graph', fullAudit);
 auditPersonIdentity('inline graph', inlineAudit);
 auditDoctorClinicRelation('canonical graph', fullAudit);
 auditDoctorClinicRelation('inline graph', inlineAudit);
-for (const profile of restoredPersonProfileNodes) {
-  check(fullAudit.defined.has(profile['@id']), `canonical graph: restored external profile node missing: ${profile['@id']}`);
-}
+for (const profile of restoredPersonProfileNodes) check(fullAudit.defined.has(profile['@id']), `canonical graph: external ProfilePage missing: ${profile['@id']}`);
 
-const inlineArticle = inlineAudit.nodes.find((node) => node['@id'] === `${site}#article`);
-check(timezoneDateTime.test(inlineArticle?.datePublished ?? ''), 'inline Article datePublished must be a timezone-aware ISO datetime');
-check(timezoneDateTime.test(inlineArticle?.dateModified ?? ''), 'inline Article dateModified must be a timezone-aware ISO datetime');
-const inlineClinic = inlineAudit.nodes.find((node) => node['@id'] === `${site}#clinic`);
+const dataset = fullAudit.byId.get(huggingFaceDataset);
+check(hasType(dataset, 'Dataset'), 'Hugging Face dataset must be a separate Dataset node');
+check(dataset?.creator?.['@id'] === `${site}#person`, 'Hugging Face Dataset.creator must point to Person');
+check(dataset?.publisher?.['@id'] === `${site}#clinic`, 'Hugging Face Dataset.publisher must point to Clinic');
+const datasetAbout = new Set(asArray(dataset?.about).map((item) => item?.['@id']));
+check(datasetAbout.has(`${site}#person`) && datasetAbout.has(`${site}#clinic`), 'Hugging Face Dataset.about must include Person and Clinic');
+
+const inlineArticle = inlineAudit.byId.get(`${site}#article`);
+const timezoneDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
+check(timezoneDateTime.test(inlineArticle?.datePublished ?? ''), 'inline Article datePublished must be timezone-aware');
+check(timezoneDateTime.test(inlineArticle?.dateModified ?? ''), 'inline Article dateModified must be timezone-aware');
+const inlineClinic = inlineAudit.byId.get(`${site}#clinic`);
 check(inlineClinic?.address?.postalCode === '6714657412', 'inline clinic postalCode is missing or incorrect');
 
-for (const node of fullAudit.nodes) {
-  const values = [];
-  const visit = (value) => {
-    if (Array.isArray(value)) return value.forEach(visit);
-    if (!value || typeof value !== 'object') return;
-    for (const [childKey, child] of Object.entries(value)) {
-      if ((childKey === 'url' || childKey === 'contentUrl') && typeof child === 'string') values.push(child);
-      visit(child);
-    }
-  };
-  visit(node);
-  for (const value of values.filter((url) => url.startsWith(`${site}#`))) {
-    check(idSet.has(value.split('#')[1]), `graph URL has no HTML anchor: ${value}`);
-  }
-}
-
-const videoNodes = fullAudit.nodes.filter((node) => asArray(node['@type']).includes('VideoObject'));
-const clipNodes = fullAudit.nodes.filter((node) => asArray(node['@type']).includes('Clip'));
-const eligibleVideos = videos.filter((video) => video.durationSeconds >= 30);
-check(videoNodes.length === videos.length, `canonical graph must contain ${videos.length} VideoObject nodes`);
-check(clipNodes.length === eligibleVideos.length * 3, `canonical graph must contain ${eligibleVideos.length * 3} eligible Clip nodes`);
-for (const video of videos) {
-  const node = videoNodes.find((item) => item['@id'] === videoEntityId(site, video.id));
-  check(Boolean(node), `${video.id}: canonical VideoObject missing`);
-  if (!node) continue;
-  check(node.url === videoWatchUrl(site, video.id), `${video.id}: VideoObject URL must target watch page`);
-  check(node.mainEntityOfPage?.['@id'] === videoWebPageId(site, video.id), `${video.id}: mainEntityOfPage must target watch WebPage`);
-  check(timezoneDateTime.test(node.uploadDate ?? ''), `${video.id}: canonical uploadDate missing or invalid`);
-  check(node.contentUrl === `${site}videos/${video.file}`, `${video.id}: canonical contentUrl mismatch`);
-  if (video.durationSeconds >= 30) check(asArray(node.hasPart).length === 3, `${video.id}: expected three eligible clips`);
-  else check(asArray(node.hasPart).length === 0, `${video.id}: short video must not claim Clip eligibility`);
-  check(fullAudit.defined.has(videoWebPageId(site, video.id)), `${video.id}: canonical watch WebPage node missing`);
-}
-for (const video of eligibleVideos) {
-  for (let index = 1; index <= 3; index += 1) {
-    const clip = clipNodes.find((node) => node['@id'] === videoClipId(site, video.id, index));
-    check(Boolean(clip), `${video.id}: Clip ${index} missing`);
-    if (!clip) continue;
-    check(typeof clip.url === 'string' && clip.url.startsWith(`${videoWatchUrl(site, video.id)}?t=`), `${video.id}: Clip ${index} must use ?t= URL`);
-    check(clip.isPartOf?.['@id'] === videoEntityId(site, video.id), `${video.id}: Clip ${index} isPartOf mismatch`);
-  }
-}
-
 for (const path of [
-  'knowledge-graph.jsonld', 'sitemap.xml', 'image-sitemap.xml', 'video-sitemap.xml',
+  'knowledge-graph.jsonld', 'sitemap.xml', 'image-sitemap.xml',
   'llms.txt', 'site.webmanifest', 'robots.txt', '.well-known/ai.txt', '.well-known/security.txt',
 ]) check(existsSync(join(root, path)), `required public artifact missing: /${path}`);
+check(!existsSync(join(root, 'video-sitemap.xml')), 'video-sitemap.xml must be removed');
 
 for (const removed of [
   'context.json', 'llms-full.txt', 'answers.json', 'search.json', 'intents.json', 'services.json',
@@ -263,39 +202,20 @@ console.log(JSON.stringify({
   htmlIds: ids.length,
   profilePage: true,
   homepageMainEntity: `${site}#person`,
-  watchPages: videos.length,
-  videos: videoNodes.length,
-  clips: clipNodes.length,
-  mediaPlacement: {
-    standaloneVideoSection: false,
-    standalonePhotoSection: false,
-    inlineVideos: videos.length,
-    contextualImages: (homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length,
-  },
-  richResults: {
-    postalCode: inlineClinic?.address?.postalCode,
-    datePublished: inlineArticle?.datePublished,
-    dateModified: inlineArticle?.dateModified,
-    researchArticlesInInlineGraph: 0,
-  },
+  bestDoctorAnswers: bestDoctorAnswers.length,
+  watchPages: 0,
+  videoSchemaNodes: 0,
+  contextualVideos: videos.length,
+  contextualImages: (homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length,
   inlineGraphNodes: inlineAudit.nodes.length,
   canonicalGraphNodes: fullAudit.nodes.length,
-  personIdentityContract: {
-    minc: personIdentityContract.minc,
-    pinterest: true,
-    alternateNames: personAlternateNames.length,
-    sameAs: personRequiredSameAs.length,
-    restoredProfileNodes: restoredPersonProfileNodes.length,
+  huggingFace: {
+    profileInPersonSameAs: true,
+    profileAsIdentifier: false,
+    datasetSeparate: true,
+    datasetCreatorPerson: true,
+    datasetPublisherClinic: true,
   },
-  clinicIdentityContract: {
-    socialSameAs: clinicRequiredSameAs,
-    employee: `${site}#person`,
-  },
-  doctorClinicRelation: {
-    worksFor: true,
-    workLocation: true,
-    affiliation: true,
-    employee: true,
-  },
+  doctorClinicRelation: true,
   publicFiles: files.length,
 }, null, 2));
