@@ -25,6 +25,7 @@ const {
 } = Astro.props;
 
 const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).href;
+const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
 const ownedIdentityLinks = [
   site.orcidUrl,
   site.instagram,
@@ -50,11 +51,12 @@ const ownedIdentityLinks = [
     <meta name="googlebot" content={robots} />
     <link rel="canonical" href={canonical} />
     <link rel="author" href={`${site.url}#person`} />
+    <link rel="me" href={site.doctorWikidata} title="Wikidata entity for Dr. Saeed Ghezelbaash" />
     {ownedIdentityLinks.map((href) => <link rel="me" href={href} />)}
     <link rel="alternate" hreflang="fa-IR" href={canonical} />
     <link rel="alternate" hreflang="fa" href={canonical} />
     <link rel="alternate" hreflang="x-default" href={canonical} />
-    <link rel="describedby" type="application/ld+json" href="/knowledge-graph.jsonld" title="داده‌های ساختاریافتهٔ اصلی وب‌سایت" />
+    <link rel="describedby" type="application/ld+json" href={externalGraphUrl} title="Canonical external knowledge graph" />
     <link rel="alternate" type="text/plain" href="/llms.txt" title="خلاصهٔ متنی وب‌سایت" />
     <link
       rel="preload"
