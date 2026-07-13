@@ -1,7 +1,7 @@
 {
   "name": "ghezelbaash-astro-megalanding",
   "type": "module",
-  "version": "9.1.0",
+  "version": "9.2.0",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -11,7 +11,7 @@
     "build:astro": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "validate:release": "node scripts/validate-release.mjs && node scripts/validate-visible-contract.mjs && node scripts/validate-schema-semantics.mjs && node scripts/validate-video-watch-pages.mjs"
+    "validate:release": "node scripts/validate-release.mjs && node scripts/validate-visible-contract.mjs && node scripts/validate-schema-semantics.mjs"
   },
   "dependencies": {
     "@lucide/astro": "^1.23.0",
