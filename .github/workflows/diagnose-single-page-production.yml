@@ -1,0 +1,29 @@
+name: Diagnose Single Page Production
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Run one live audit attempt
+        continue-on-error: true
+        run: python3 scripts/audit-production.py --attempts 1 --delay 0
+      - name: Upload diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: single-page-production-diagnostic
+          path: production-audit
+          if-no-files-found: warn
+          retention-days: 1
