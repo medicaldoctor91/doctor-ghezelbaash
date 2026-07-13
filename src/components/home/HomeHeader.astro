@@ -4,9 +4,9 @@ import { site } from '../../domain/entities';
 import BrandLogo from './BrandLogo.astro';
 
 const links = [
-  { href: '#services', label: 'خدمات' },
-  { href: '#clinical-guide', label: 'مطالب' },
-  { href: '#contact', label: 'تماس و نشانی' },
+  { href: '#services', label: 'خدمات کلینیک' },
+  { href: '#clinical-guide', label: 'راهنمای درمان‌ها' },
+  { href: '#contact', label: 'تماس با کلینیک' },
 ];
 ---
 
@@ -16,7 +16,7 @@ const links = [
       <BrandLogo compact priority />
       <span class="home-brand__copy">
         <strong>{site.name}</strong>
-        <small>پزشکی زیبایی، پوست و مو · کرمانشاه</small>
+        <small>پزشک زیبایی در کرمانشاه</small>
       </span>
     </a>
 
@@ -30,13 +30,13 @@ const links = [
         تماس
       </a>
       <details class="mobile-menu">
-        <summary aria-label="بازکردن منو">
+        <summary aria-label="باز کردن منو">
           <Menu class="mobile-menu__open" aria-hidden="true" />
           <X class="mobile-menu__close" aria-hidden="true" />
         </summary>
         <nav aria-label="منوی موبایل">
           {links.map((link) => <a href={link.href}>{link.label}</a>)}
-          <a href={`tel:${site.phone}`}>تماس با کلینیک</a>
+          <a href={`tel:${site.phone}`}>تماس مستقیم</a>
         </nav>
       </details>
     </div>

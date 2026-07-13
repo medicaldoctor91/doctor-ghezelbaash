@@ -6,31 +6,31 @@ const services = [
     id: 'service-botulinum-toxin',
     aliases: [],
     title: 'بوتاکس',
-    text: 'خطوط پیشانی، اخم، دور چشم و موارد وابسته به حرکت عضله.',
+    text: 'خطوط پیشانی و اخم، دور چشم، لبخند لثه‌ای و موارد وابسته به فعالیت عضلات.',
     icon: Activity,
     href: '#botulinum-toxin-guide',
   },
   {
     id: 'service-dermal-filler',
     aliases: [],
-    title: 'فیلر',
-    text: 'لب، زیر چشم، گونه، چانه، خط فک و اصلاح فیلر قبلی.',
+    title: 'فیلر و ژل',
+    text: 'لب، زیر چشم، گونه، چانه، خط فک و بررسی یا اصلاح فیلرهای قبلی.',
     icon: Syringe,
     href: '#dermal-fillers-revision',
   },
   {
     id: 'service-thread-lift',
     aliases: [],
-    title: 'لیفت نخ',
-    text: 'بررسی افتادگی خفیف تا متوسط صورت، ابرو و خط فک.',
+    title: 'لیفت با نخ',
+    text: 'بررسی افتادگی صورت، ابرو و خط فک و مشخص‌کردن محدودیت واقعی نخ.',
     icon: Sparkles,
     href: '#thread-lift-surgery-boundary',
   },
   {
     id: 'service-subcision',
     aliases: ['service-acne-scar-treatment'],
-    title: 'جوش، لک و اسکار',
-    text: 'درمان جوش، لک، جای جوش و بررسی نیاز به سابسیژن یا روش‌های ترکیبی.',
+    title: 'جوش و جای جوش',
+    text: 'درمان جوش، لک و اسکار و بررسی نیاز به سابسیژن یا درمان‌های ترکیبی.',
     icon: CircleDot,
     href: '#acne-scar-guide',
   },
@@ -38,14 +38,14 @@ const services = [
     id: 'service-skin-rejuvenation',
     aliases: [],
     title: 'جوان‌سازی پوست',
-    text: 'PRP، اسکین‌بوستر، مزوتراپی و روش‌های بهبود کیفیت پوست.',
+    text: 'PRP، اسکین‌بوستر، مزوتراپی و روش‌های بهبود بافت و کیفیت پوست.',
     icon: Droplets,
     href: '#skin-quality-rejuvenation-guide',
   },
   {
     id: 'service-prp-skin-hair',
     aliases: ['service-hair-loss-evaluation'],
-    title: 'ریزش مو',
+    title: 'ریزش مو و PRP',
     text: 'بررسی علت ریزش مو و انتخاب درمان مناسب برای مو و پوست سر.',
     icon: UserRoundSearch,
     href: '#hair-guide',
@@ -54,7 +54,7 @@ const services = [
     id: 'service-submental-liposuction',
     aliases: [],
     title: 'غبغب و فرم پایین صورت',
-    text: 'بررسی چربی غبغب، پوست، چانه و روش‌های جراحی یا غیرجراحی.',
+    text: 'بررسی چربی زیرچانه، پوست، فرم چانه و روش‌های جراحی یا غیرجراحی.',
     icon: ScanFace,
     href: '#submental-and-body-contouring-guide',
   },
@@ -65,9 +65,9 @@ const services = [
   <span id="service-coverage-panel" class="anchor-alias" aria-hidden="true"></span>
   <div class="section-heading section-heading--split">
     <div>
-      <h2 id="services-title">خدمات و موضوعات اصلی</h2>
+      <h2 id="services-title">خدمات کلینیک</h2>
     </div>
-    <p>برای دیدن توضیحات کامل هر موضوع، روی آن بزنید.</p>
+    <p>موضوع موردنظر را انتخاب کنید تا توضیحات، محدودیت‌ها و نمونه‌های مرتبط را ببینید.</p>
   </div>
 
   <div class="service-grid">
@@ -77,7 +77,7 @@ const services = [
         <span class="service-card__icon"><Icon size={25} aria-hidden="true" /></span>
         <h3>{title}</h3>
         <p>{text}</p>
-        <span class="service-card__link">توضیحات بیشتر</span>
+        <span class="service-card__link">مشاهده توضیحات</span>
       </a>
     ))}
   </div>

@@ -12,18 +12,18 @@ import { site } from '../../domain/entities';
   <span id="clinical-decision-model-overview" class="anchor-alias" aria-hidden="true"></span>
 
   <div class="hero__copy">
-    <p class="eyebrow">پزشکی زیبایی، پوست و مو در کرمانشاه</p>
+    <p class="eyebrow">پزشک زیبایی در کرمانشاه</p>
     <h1 id="hero-title">دکتر سعید قزلباش</h1>
     <p class="hero__lead">
-      اطلاعات خدمات زیبایی، پوست و مو، نمونه‌های ویدئویی، سوابق پژوهشی و راه‌های تماس با کلینیک در همین صفحه قرار دارد.
+      خدمات کلینیک، توضیح روش‌های زیبایی، نمونه‌های تصویری، سوابق پزشکی و راه‌های تماس مستقیم در همین صفحه در دسترس است.
     </p>
     <div class="hero__actions">
       <a class="button button--primary" href={`tel:${site.phone}`}>
         <Phone size={19} aria-hidden="true" />
-        تماس با کلینیک
+        تماس با کلینیک
       </a>
       <a class="button button--ghost" href="#services">
-        خدمات را ببینید
+        مشاهده خدمات
         <ArrowLeft size={19} aria-hidden="true" />
       </a>
     </div>
@@ -33,7 +33,7 @@ import { site } from '../../domain/entities';
         <dd>{site.irimc}</dd>
       </div>
       <div>
-        <dt><MapPin size={18} aria-hidden="true" /> نشانی</dt>
+        <dt><MapPin size={18} aria-hidden="true" /> محل کلینیک</dt>
         <dd>{site.city}، ساختمان ویستا</dd>
       </div>
     </dl>
@@ -44,17 +44,17 @@ import { site } from '../../domain/entities';
       <source
         type="image/avif"
         srcset="/images/responsive/doctor-portrait-480.avif 480w, /images/responsive/doctor-portrait-768.avif 768w, /images/responsive/doctor-portrait-1200.avif 1200w, /images/responsive/doctor-portrait-1600.avif 1600w"
-        sizes="(min-width: 920px) 42vw, 100vw"
+        sizes="(min-width: 920px) 38vw, 100vw"
       />
       <source
         type="image/webp"
         srcset="/images/responsive/doctor-portrait-480.webp 480w, /images/responsive/doctor-portrait-768.webp 768w, /images/responsive/doctor-portrait-1200.webp 1200w, /images/responsive/doctor-portrait-1600.webp 1600w"
-        sizes="(min-width: 920px) 42vw, 100vw"
+        sizes="(min-width: 920px) 38vw, 100vw"
       />
       <img
         src="/images/responsive/doctor-portrait-1200.jpg"
         srcset="/images/responsive/doctor-portrait-1200.jpg 1200w, /images/responsive/doctor-portrait-1600.jpg 1600w"
-        sizes="(min-width: 920px) 42vw, 100vw"
+        sizes="(min-width: 920px) 38vw, 100vw"
         alt="دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه"
         width="1600"
         height="1067"
@@ -65,7 +65,7 @@ import { site } from '../../domain/entities';
     </picture>
     <figcaption>
       <strong>{site.legalName}</strong>
-      <span>دکترای حرفه‌ای پزشکی · شماره نظام پزشکی {site.irimc}</span>
+      <span>دکترای حرفه‌ای پزشکی · نظام پزشکی {site.irimc}</span>
     </figcaption>
   </figure>
 </section>

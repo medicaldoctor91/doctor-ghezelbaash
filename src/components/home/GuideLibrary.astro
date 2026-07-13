@@ -18,10 +18,43 @@ interface Props {
 
 const { sections: articleSections } = Astro.props;
 
+const sectionTitleById: Record<string, string> = {
+  'clinical-decision-model-mechanism': 'برای هر مشکل، علت اصلی را پیدا کنید',
+  'clinical-decision-model-guide': 'راهنمای انتخاب موضوع',
+  'physician-entity-authority-guide': 'درباره دکتر سعید قزلباش',
+  'clinical-decision-model-mechanism-3': 'بررسی پوست، حرکت و ساختار صورت',
+  'clinical-decision-model-comparison': 'چروک‌های حرکتی و ثابت',
+  'clinical-decision-model-guide-2': 'فیلر؛ کاربردها و محدودیت‌ها',
+  'clinical-decision-model-mechanism-4': 'لک، جوش و انواع اسکار',
+  'clinical-decision-model-mechanism-5': 'عوامل مؤثر بر نتیجه درمان',
+  'clinical-decision-model-mechanism-6': 'بررسی‌های مهم پیش از درمان',
+  'clinical-decision-model-guide-3': 'هماهنگی اجزای صورت در انتخاب درمان',
+  'botulinum-toxin-guide': 'بوتاکس؛ کاربردها، محدودیت‌ها و مراقبت‌ها',
+  'dermal-fillers-revision': 'فیلر و ژل؛ انتخاب ناحیه، ماده و مقدار تزریق',
+  'thread-lift-surgery-boundary': 'لیفت با نخ؛ فرد مناسب و محدودیت روش',
+  'acne-scar-guide': 'درمان جوش، لک و جای جوش',
+  'skin-quality-rejuvenation-guide': 'جوان‌سازی و بهبود کیفیت پوست',
+  'skin-quality-rejuvenation-guide-2': 'انتخاب روش جوان‌سازی بر اساس نیاز پوست',
+  'hair-guide': 'بررسی ریزش مو و درمان‌های پوست سر',
+  'submental-and-body-contouring-mechanism': 'بررسی غبغب و فرم پایین صورت',
+  'submental-and-body-contouring-guide': 'کانتورینگ بدن و کاهش چربی موضعی',
+  'correction-and-combination-revision': 'بررسی و اصلاح درمان‌های قبلی',
+  'correction-and-combination-guide': 'درمان‌های ترکیبی و ترتیب انجام آن‌ها',
+  'surgery-and-referral-surgery-boundary': 'چه زمانی جراحی یا ارجاع مطرح می‌شود؟',
+  'complications-and-safety-safety': 'عوارض و نشانه‌های هشدار پس از درمان',
+  'visit-and-contact-guide': 'آمادگی برای مراجعه و معاینه',
+  'physician-entity-authority-guide-3': 'منابع رسمی و پروفایل‌های پزشک',
+  'faq-guide': 'پرسش‌های رایج پیش از درمان زیبایی',
+  'evidence-and-sources-guide': 'منابع پزشکی و نحوه استفاده از شواهد',
+  'conclusion-mechanism': 'جمع‌بندی: انتخاب درمان باید از علت مشکل شروع شود',
+};
+
 const videoItems = videos.map((video: any) => ({
   ...video,
   details: videoPageDetails[video.id],
-  chapters: readMediaChapters(video.chapterTrack).slice(0, 3),
+  chapters: video.durationSeconds >= 30
+    ? readMediaChapters(video.chapterTrack).slice(0, 3)
+    : [],
 }));
 
 const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim();
@@ -38,7 +71,7 @@ for (const video of videoItems) {
 }
 
 const normalizeText = (value: string) => value
-  .replaceAll('موتور تصمیم بالینی', 'راهنمای خدمات و درمان‌ها')
+  .replaceAll('موتور تصمیم بالینی', 'راهنمای انتخاب درمان')
   .replaceAll('تصمیم‌گیری تشخیصیِ پیش از مداخله', 'بررسی پیش از درمان')
   .replaceAll('تصمیم‌گیری تشخیصی پیش از مداخله', 'بررسی پیش از درمان')
   .replaceAll('تشخیص پیش از مداخله', 'بررسی پیش از درمان')
@@ -55,33 +88,44 @@ const normalizeText = (value: string) => value
   .replaceAll('تصمیم بالینی', 'انتخاب درمان')
   .replaceAll('تصمیم‌گیری', 'انتخاب')
   .replaceAll('مدل تصمیم', 'روش بررسی')
+  .replaceAll('مرز ارجاع', 'زمان ارجاع')
+  .replaceAll('مرز توان', 'محدودیت')
+  .replaceAll('مرز روش', 'محدودیت روش')
+  .replaceAll('مرز نتیجه', 'محدودیت نتیجه')
   .replaceAll('مرز تصمیم', 'نکتهٔ مهم')
   .replaceAll('اتوریتی ملی', 'اعتبار حرفه‌ای')
   .replaceAll('اتوریتی', 'اعتبار')
   .replaceAll('هستهٔ فعالیت بالینی', 'حوزهٔ فعالیت')
   .replaceAll('دامنهٔ دانش و ارزیابی', 'موضوعات کاری')
-  .replaceAll('لایهٔ غالب', 'علت اصلی')
+  .replaceAll('لایهٔ غالب', 'عامل اصلی')
   .replaceAll('مکانیسم غالب', 'علت اصلی')
   .replaceAll('مکانیسم', 'علت')
+  .replaceAll('بردار کشش', 'جهت کشش')
   .replaceAll('بردار دینامیک', 'حرکت صورت')
   .replaceAll('بردار سطحی', 'پوست و سطح صورت')
   .replaceAll('بردار', 'جهت')
-  .replaceAll('فنوتیپ سطحی', 'ظاهر و پوست')
+  .replaceAll('فنوتیپ سطحی', 'ظاهر پوست')
   .replaceAll('پایهٔ ساختاری', 'ساختار صورت')
   .replaceAll('Structural Foundation', 'ساختار صورت')
   .replaceAll('Dynamic Vector', 'حرکت صورت')
-  .replaceAll('Surface Phenotype', 'ظاهر و پوست')
+  .replaceAll('Surface Phenotype', 'ظاهر پوست')
+  .replaceAll('میدفیس', 'بخش میانی صورت')
+  .replaceAll('jowl', 'افتادگی کنار فک')
+  .replaceAll('پاتولوژی', 'مشکل')
+  .replaceAll('کاندیداتوری', 'مناسب بودن درمان')
+  .replaceAll('کاندید منتخب', 'فرد منتخب')
+  .replaceAll('کاندید مناسب', 'فرد مناسب')
+  .replaceAll('کاندید', 'فرد مناسب')
   .replaceAll('خروجی این دروازه', 'نتیجه')
   .replaceAll('این دروازه', 'این مرحله')
   .replaceAll('دروازه', 'مرحله')
-  .replaceAll('هفت ایست', 'هفت مرحله')
+  .replaceAll('هفت ایست', 'هفت بررسی')
   .replaceAll('قانون سه‌لایه', 'خلاصه')
   .replaceAll('سه‌لایه', 'کامل')
   .replaceAll('چندلایه', 'کامل')
-  .replaceAll('کاندیداتوری', 'مناسب بودن درمان')
   .replaceAll('متغیر کور', 'نکتهٔ بررسی‌نشده')
   .replaceAll('خروجی قابل‌اندازه‌گیری', 'نتیجهٔ قابل‌بررسی')
-  .replace(/قفل (اول|دوم|سوم|چهارم|پنجم|ششم|هفتم)/gu, 'مرحله $1')
+  .replace(/قفل (اول|دوم|سوم|چهارم|پنجم|ششم|هفتم)/gu, 'بررسی $1')
   .replace(/سطح [۱۲۳] \(Tier [123]\) ـ /gu, '')
   .replace(/\s*\((?:Surface Phenotype|Dynamic Vector|Structural Foundation)\)/gu, '')
   .replace(/Tier [123]/gu, '')
@@ -90,19 +134,40 @@ const normalizeText = (value: string) => value
   .replaceAll('سطح سوم', 'مرحلهٔ سوم')
   .replaceAll('سطح ۱', 'مرحلهٔ اول')
   .replaceAll('سطح ۲', 'مرحلهٔ دوم')
-  .replaceAll('سطح ۳', 'مرحلهٔ سوم');
+  .replaceAll('سطح ۳', 'مرحلهٔ سوم')
+  .replaceAll('ظاهر پوست (ظاهر پوست)', 'ظاهر پوست')
+  .replaceAll('حرکت صورت (حرکت صورت)', 'حرکت صورت')
+  .replaceAll('ساختار صورت (ساختار صورت)', 'ساختار صورت')
+  .replaceAll('رزومه را ته صفحه دفن نکنید؛ پژوهش توضیح می‌دهد این پزشک چگونه فکر می‌کند', 'سوابق پژوهشی دکتر سعید قزلباش')
+  .replaceAll('آموزش پزشکان یک نمایش جانبی نیست؛ وقتی تصمیم را درس می‌دهید، مجبورید آن را قابل‌توضیح کنید', 'سابقه آموزش پزشکان')
+  .replaceAll('اعتبار حرفه‌ای با نوشتن «ملی» ساخته نمی‌شود؛ مسئله باید از سطح شهر بزرگ‌تر فهمیده شود', 'اعتبار حرفه‌ای چگونه قابل بررسی است؟')
+  .replaceAll('بیمار باید چه چیزی از این اطلاعات ببیند؟ نه شعار؛ رفتار قابل‌مشاهده', 'چه اطلاعاتی برای مراجعه‌کننده مهم است؟')
+  .replaceAll('اسم پزشک کافی نیست؛ ببینید وقتی درخواست شما غلط است چه تصمیمی می‌گیرد', 'پزشک چه زمانی درمان درخواستی را رد می‌کند؟')
+  .replaceAll('«کم تزریق کنیم طبیعی می‌شود» یک ساده‌سازی است؛ محل و نسبت تعیین‌کننده‌اند', 'نتیجه طبیعی فقط به مقدار تزریق وابسته نیست')
+  .replaceAll('اطلاعات پزشک باید از پشت برند بیرون بیاید: نام ثبت‌شده، مدرک، شمارهٔ نظام پزشکی، محل فعالیت و پزشک.', 'اطلاعات پزشک باید روشن باشد: نام ثبت‌شده، مدرک، شمارهٔ نظام پزشکی و محل فعالیت.')
+  .replaceAll('کلینیک رستوران نیست. بیمار از منو سفارش نمی‌دهد و پزشک هم گارسونِ سرنگ نیست.', 'درمان پزشکی سفارش از یک منو نیست؛ درخواست بیمار باید پیش از اجرا از نظر تناسب و ایمنی بررسی شود.')
+  .replaceAll('تکنیک خوب روی تشخیص بد، فقط اجرای تمیزِ تصمیم غلط است.', 'اجرای دقیق، انتخاب درمان نامناسب را اصلاح نمی‌کند.')
+  .replaceAll('اگر ابزار به علت وصل نشود، اجرای تمیز هم تصمیم ضعیف را نجات نمی‌دهد.', 'اگر روش با علت مشکل هماهنگ نباشد، اجرای دقیق هم نتیجه مناسبی نمی‌سازد.')
+  .replaceAll('این تعریف پهن است، اما مبهم نیست.', 'این دامنه کاری گسترده است، اما به‌روشنی تعریف شده است.')
+  .replaceAll('چربی فقط یکی از متهم‌هاست', 'چربی فقط یکی از عوامل است')
+  .replaceAll('سطح را با نور و عمق را با لمس بخوانید', 'سطح و عمق اسکار باید جداگانه بررسی شوند')
+  .replaceAll('برند را جلو نیندازید؛ این چهار سؤال از نام ویال مهم‌ترند', 'چهار سؤال مهم پیش از انتخاب برند بوتاکس')
+  .replaceAll('صاف‌کردن آسان است، حفظ ابرو سخت‌تر', 'اثر بوتاکس بر پیشانی و موقعیت ابرو')
+  .replaceAll('ناحیه کوچک است، اثر ناخواسته کوچک نیست', 'کاربرد و عوارض احتمالی بوتاکس خطوط بینی')
+  .replaceAll('لب را پُر نمی‌کند و عملکرد را هم رایگان تغییر نمی‌دهد', 'کاربرد و محدودیت‌های لیپ فلیپ')
+  .replaceAll('فلج‌کردن لب، پوست پیر را جوان نمی‌کند', 'بوتاکس و محدودیت درمان خطوط دور لب')
+  .replaceAll('کوچک‌کردن عضله همیشه زیباتر یا سالم‌تر نیست', 'کاهش حجم عضله همیشه انتخاب مناسبی نیست')
+  .replaceAll('معاملهٔ عملکردی را قبل از تزریق ببینید', 'اثر درمان بر عملکرد دست و پا باید بررسی شود')
+  .replaceAll('پاک‌کن جادویی نیست', 'راه‌حل کامل برای همه فیلرها نیست')
+  .replaceAll('صورت را باد نکنید', 'از حجم‌دهی بیش از نیاز پرهیز کنید')
+  .replaceAll('با یک دستگاه نسوزانید', 'با یک روش درمان نکنید')
+  .replaceAll('پوست خسته را با حجم خفه نکنید', 'هر مشکل پوستی به حجم‌دهی نیاز ندارد')
+  .replaceAll('صورت نخ‌ناپذیر را با نخ بیشتر خراب نکنید', 'افزایش تعداد نخ محدودیت روش را برطرف نمی‌کند')
+  .replaceAll('قاطی نکنید', 'متفاوت بدانید')
+  .replaceAll('افسانه است', 'همیشه درست نیست')
+  .replaceAll('غلط است', 'همیشه درست نیست');
 
-const simplifyTitle = (title: string) => {
-  if (title.includes('هویت پزشک')) return 'درباره دکتر سعید قزلباش';
-  if (title.includes('اسم پزشک کافی نیست')) return 'پیش از درمان چه چیزهایی باید بررسی شود؟';
-  if (title.includes('اسم مشکل، درمان را معلوم می‌کند')) return 'برای هر مشکل چه چیزهایی باید بررسی شود؟';
-  if (title.includes('صفحه را از بوتاکس شروع نکنید')) return 'موضوع موردنظر خود را پیدا کنید';
-  if (title.includes('ظاهر، کل واقعیت نیست')) return 'پیش از انتخاب درمان چه چیزهایی باید بررسی شود؟';
-  if (title.includes('تشخیص را میان‌بُر نزنید')) return 'مراحل بررسی پیش از درمان';
-  if (title.includes('صورت، منوی ناحیه‌ها نیست')) return 'هماهنگی اجزای صورت در انتخاب درمان';
-  return normalizeText(title);
-};
-
+const simplifyTitle = (title: string) => normalizeText(title);
 const simplifyHtml = (html: string) => normalizeText(html);
 
 const splitAfterOpeningParagraph = (html: string) => {
@@ -114,9 +179,10 @@ const splitAfterOpeningParagraph = (html: string) => {
 
 const timeLabel = (timestamp: string) => timestamp.replace(/^00:/, '');
 const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000) / 1000)}S`;
+const toPersianDigits = (value: string | number) => String(value).replace(/\d/gu, (digit) => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
 ---
 
-<article id="clinical-guide" class="article-flow shell" aria-label="مطالب پزشکی زیبایی، پوست و مو">
+<article id="clinical-guide" class="article-flow shell" aria-label="راهنمای خدمات زیبایی، پوست و مو">
   <span id="content-table" class="anchor-alias" aria-hidden="true"></span>
   <span id="knowledge-resources" class="anchor-alias" aria-hidden="true"></span>
   <span id="videos" class="anchor-alias" aria-hidden="true"></span>
@@ -124,10 +190,10 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
 
   {articleSections.map((section) => {
     const sectionVideos = videosBySection.get(section.id) ?? [];
-    const title = simplifyTitle(section.title);
+    const title = sectionTitleById[section.id] ?? simplifyTitle(section.title);
     const html = simplifyHtml(section.html);
     const split = splitAfterOpeningParagraph(html);
-    const isDoctorSection = section.title.includes('هویت پزشک') || html.includes('شمارهٔ نظام پزشکی');
+    const isDoctorSection = section.id === 'physician-entity-authority-guide';
 
     return (
       <div class="article-flow__section">
@@ -148,21 +214,18 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
           )}
 
           {isDoctorSection && (
-            <p class="article-profile-links">
-              <a href={site.irimcVerification} target="_blank" rel="noopener noreferrer external">بررسی شماره نظام پزشکی</a>
-              <span aria-hidden="true"> · </span>
-              <a href={site.orcidUrl} target="_blank" rel="me noopener noreferrer external">ORCID</a>
-              <span aria-hidden="true"> · </span>
-              <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">مقاله‌های پژوهشی</a>
-              <span aria-hidden="true"> · </span>
-              <a href={site.huggingFaceProfile} target="_blank" rel="me noopener noreferrer external">Hugging Face</a>
-              <span aria-hidden="true"> · </span>
-              <a href={site.linkedinProfile} target="_blank" rel="me noopener noreferrer external">LinkedIn</a>
-              <span aria-hidden="true"> · </span>
-              <a href={site.facebookProfile} target="_blank" rel="me noopener noreferrer external">Facebook</a>
-              <span aria-hidden="true"> · </span>
-              <a href={site.pinterestProfile} target="_blank" rel="me noopener noreferrer external">Pinterest</a>
-            </p>
+            <details class="article-profile-links">
+              <summary>سوابق و پروفایل‌های رسمی</summary>
+              <div>
+                <a href={site.irimcVerification} target="_blank" rel="noopener noreferrer external">نظام پزشکی</a>
+                <a href={site.orcidUrl} target="_blank" rel="me noopener noreferrer external">ORCID</a>
+                <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">مقاله‌های پژوهشی</a>
+                <a href={site.huggingFaceProfile} target="_blank" rel="me noopener noreferrer external">Hugging Face</a>
+                <a href={site.linkedinProfile} target="_blank" rel="me noopener noreferrer external">LinkedIn</a>
+                <a href={site.facebookProfile} target="_blank" rel="me noopener noreferrer external">Facebook</a>
+                <a href={site.pinterestProfile} target="_blank" rel="me noopener noreferrer external">Pinterest</a>
+              </div>
+            </details>
           )}
 
           {sectionVideos.length > 0 && (
@@ -181,8 +244,8 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                       aria-describedby={`video-${video.id}-description`}
                     >
                       <source src={`/videos/${video.file}`} type="video/mp4" />
-                      {video.chapterTrack && (
-                        <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />
+                      {video.chapters.length > 0 && video.chapterTrack && (
+                        <track kind="chapters" src={video.chapterTrack} srclang="fa" label="موضوعات ویدئو" default />
                       )}
                       مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
                     </video>
@@ -190,15 +253,15 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
 
                   <div class="article-video__body">
                     <div class="article-video__meta">
-                      <span><CirclePlay size={16} aria-hidden="true" /> ویدئو</span>
-                      <span><Clock3 size={16} aria-hidden="true" /> حدود {video.durationSeconds} ثانیه</span>
+                      <span><CirclePlay size={16} aria-hidden="true" /> ویدئوی مرتبط</span>
+                      <span><Clock3 size={16} aria-hidden="true" /> {toPersianDigits(video.durationSeconds)} ثانیه</span>
                     </div>
                     <h3 id={`video-${video.id}-title`}>{video.title}</h3>
                     <p id={`video-${video.id}-description`}>{video.description}</p>
 
                     {video.chapters.length > 0 && (
-                      <div class="video-chapters" role="group" aria-label={`بخش‌های ${video.title}`}>
-                        <strong><ListVideo size={17} aria-hidden="true" /> بخش‌های ویدئو</strong>
+                      <div class="video-chapters" role="group" aria-label={`موضوعات ${video.title}`}>
+                        <strong><ListVideo size={17} aria-hidden="true" /> موضوعات این ویدئو</strong>
                         <ol>
                           {video.chapters.map((chapter: any, chapterIndex: number) => (
                             <li id={`video-${video.id}-clip-${chapterIndex + 1}`}>
@@ -214,12 +277,12 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
 
                     {video.details && (
                       <details class="video-context">
-                        <summary>توضیحات بیشتر</summary>
+                        <summary>نکات تکمیلی</summary>
                         <p>{normalizeText(video.details.summary)}</p>
                         <ul>
                           {video.details.takeaways.map((item: string) => <li>{normalizeText(item)}</li>)}
                         </ul>
-                        <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {normalizeText(video.details.boundary)}</p>
+                        <p class="video-boundary"><strong>توجه:</strong> {normalizeText(video.details.boundary)}</p>
                       </details>
                     )}
 
