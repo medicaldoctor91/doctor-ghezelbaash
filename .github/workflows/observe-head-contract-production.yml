@@ -26,8 +26,8 @@ jobs:
               -D headers.txt \
               "$url" > production.html || true
 
-            rel_me_hf=$(grep -o '<link rel="me" href="https://huggingface.co/Ghezelbaash"' production.html | wc -l | tr -d ' ')
-            rel_me_ig=$(grep -o '<link rel="me" href="https://www.instagram.com/doctor.ghezelbaash/"' production.html | wc -l | tr -d ' ')
+            rel_me_hf=$(grep -o '<link rel="me" href="https://huggingface.co/Ghezelbaash"' production.html | wc -l | tr -d ' ' || true)
+            rel_me_ig=$(grep -o '<link rel="me" href="https://www.instagram.com/doctor.ghezelbaash/"' production.html | wc -l | tr -d ' ' || true)
 
             if [ "$rel_me_hf" = "0" ] \
               && [ "$rel_me_ig" = "1" ] \
