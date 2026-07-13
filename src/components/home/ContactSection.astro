@@ -13,9 +13,8 @@ const srcset = (image: any, format: string) => image.widths
   <span id="clinic" class="anchor-alias" aria-hidden="true"></span>
   <div class="shell contact-card">
     <div class="contact-card__copy">
-      <p class="eyebrow">هماهنگی مراجعه</p>
-      <h2 id="contact-title">با درخواست آماده نیایید؛ با مسئلهٔ واقعی بیایید</h2>
-      <p>سابقهٔ درمان، نام مواد قبلی، داروها و نتیجه‌ای که واقعاً می‌خواهید را همراه داشته باشید. ممکن است پاسخ معاینه درمان، تعویق یا تغییر مسیر باشد.</p>
+      <h2 id="contact-title">تماس و نشانی کلینیک</h2>
+      <p>برای هماهنگی وقت مراجعه تماس بگیرید. سابقهٔ درمان، نام مواد تزریق‌شده و داروهای مصرفی را هنگام مراجعه همراه داشته باشید.</p>
       <div class="contact-card__actions">
         <a class="button button--primary" href={`tel:${site.phone}`}><Phone size={19} aria-hidden="true" /> تماس با کلینیک</a>
         <a class="button button--light" href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={19} aria-hidden="true" /> مسیریابی</a>
@@ -35,12 +34,12 @@ const srcset = (image: any, format: string) => image.widths
         <dd>{site.hours}</dd>
       </div>
       <div>
-        <dt><AtSign size={20} aria-hidden="true" /> اینستاگرام رسمی</dt>
+        <dt><AtSign size={20} aria-hidden="true" /> اینستاگرام</dt>
         <dd><a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><bdi dir="ltr">{site.instagramHandle}</bdi></a></dd>
       </div>
     </dl>
 
-    <div class="contact-card__media" role="group" aria-label="تصاویر واقعی محیط مراجعه">
+    <div class="contact-card__media" role="group" aria-label="تصاویر کلینیک">
       {clinicImages.map((image: any) => (
         <figure data-contextual-image>
           <picture>
