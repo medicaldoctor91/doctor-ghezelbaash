@@ -9,9 +9,9 @@ export const site = {
   title:
     "دکتر سعید قزلباش | پزشکی زیبایی در کرمانشاه",
   articleHeadline:
-    "دکتر سعید قزلباش در کرمانشاه؛ صورت شما «خدمت» نمی‌خواهد—تشخیصی می‌خواهد که لایهٔ جاافتاده را پیدا کند",
+    "دکتر سعید قزلباش؛ راهنمای انتخاب درمان‌های زیبایی، پوست و مو در کرمانشاه",
   description:
-    "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ ارزیابی تشخیصی برای بوتاکس، فیلر، لیفت نخ، پوست، مو و غبغب با مرزبندی روشن درمان و ارجاع.",
+    "معرفی دکتر سعید قزلباش و راهنمای روشن انتخاب درمان‌های زیبایی، بوتاکس، فیلر، لیفت نخ، پوست، مو و غبغب در کرمانشاه.",
   language: "fa-IR",
   direction: "rtl",
   phone: "+989308209494",
@@ -37,6 +37,7 @@ export const site = {
   openStreetMapNode: "13530287096",
   address: "کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا",
   streetAddress: "میدان ۱۷ شهریور، ساختمان ویستا",
+  postalCode: "6714657412",
   city: "کرمانشاه",
   region: "کرمانشاه",
   countryCode: "IR",
@@ -69,8 +70,8 @@ export const site = {
   heroImage: "/images/responsive/doctor-portrait-1200.jpg",
   logo: "/assets/brand/doctor-hand-syringe-logo-512.png",
   ogImage: "/og/home.jpg",
-  datePublished: "2026-07-10",
-  dateModified: "2026-07-13",
+  datePublished: "2026-07-10T12:00:00+03:30",
+  dateModified: "2026-07-13T08:45:00+03:30",
   liveSourceOfTruth: "https://www.ghezelbaash.ir/",
   sourceTruthObservedAt: "2026-07-13",
   googleBusinessProfile: {
@@ -174,7 +175,7 @@ export const site = {
       doi: "10.4103/2008-7802.182734",
       pmid: "27280013",
       pmcid: "PMC4882968",
-      datePublished: "2016",
+      datePublished: "2016-05-01T00:00:00Z",
       journal: "Journal of Research in Medical Sciences",
       publisher: "PubMed / PubMed Central",
     },
@@ -186,7 +187,7 @@ export const site = {
       doiUrl: "https://doi.org/10.3390/healthcare9091169",
       doi: "10.3390/healthcare9091169",
       pmid: "34574943",
-      datePublished: "2021-09-06",
+      datePublished: "2021-09-06T00:00:00Z",
       journal: "Healthcare",
       publisher: "MDPI / PubMed",
     },
