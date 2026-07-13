@@ -3,6 +3,7 @@ import { site } from '~/domain/entities';
 import { stabilizeHeadings } from '~/domain/anchor-utils';
 // @ts-expect-error Shared ESM physician identity contract.
 import {
+  clinicRequiredSameAs,
   personAlternateNames,
   personRequiredSameAs,
   restoredPersonIdentifiers,
@@ -154,6 +155,7 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     ...p.websiteNode,
     hasPart: [...(p.websiteNode.hasPart ?? []), ref(graphDatasetId)],
   };
+  const clinicSocialUrls = new Set(clinicRequiredSameAs);
   const person: Node = {
     ...p.personNode,
     honorificPrefix: personIdentityContract.honorificPrefix,
@@ -163,9 +165,12 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     ]),
     identifier: mergeIdentifiers(p.personNode.identifier, restoredPersonIdentifiers),
     sameAs: uniqueStrings([
-      ...asArray(p.personNode.sameAs),
+      ...asArray(p.personNode.sameAs).filter((url) => !clinicSocialUrls.has(url)),
       ...personRequiredSameAs,
     ]),
+    worksFor: ref(`${site.url}#clinic`),
+    workLocation: ref(`${site.url}#clinic`),
+    affiliation: ref(`${site.url}#clinic`),
     subjectOf: [
       ...(p.personNode.subjectOf ?? []),
       ...p.researchNodes.map((node: Node) => ref(node['@id'])),
@@ -180,6 +185,11 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
       ...(p.clinicKnowledgeNode?.address ?? {}),
       postalCode: site.postalCode,
     },
+    sameAs: uniqueStrings([
+      ...asArray(p.clinicKnowledgeNode?.sameAs),
+      ...clinicRequiredSameAs,
+    ]),
+    employee: ref(`${site.url}#person`),
   };
   const offerCatalog: Node = { ...p.offerCatalogNode, url: `${site.url}#services` };
   const authorityNetwork: Node = { ...p.authorityNetworkNode };
