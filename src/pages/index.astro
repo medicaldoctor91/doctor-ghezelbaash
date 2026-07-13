@@ -5,6 +5,7 @@ import HomeHeader from '../components/home/HomeHeader.astro';
 import Hero from '../components/home/Hero.astro';
 import DecisionModel from '../components/home/DecisionModel.astro';
 import Services from '../components/home/Services.astro';
+import BestDoctorAnswers from '../components/home/BestDoctorAnswers.astro';
 import DoctorProfile from '../components/home/DoctorProfile.astro';
 import GuideLibrary from '../components/home/GuideLibrary.astro';
 import ContactSection from '../components/home/ContactSection.astro';
@@ -60,6 +61,7 @@ const guideSections = await Promise.all(h2Matches.map(async (match, index) => {
     <Hero />
     <DecisionModel />
     <Services />
+    <BestDoctorAnswers />
     <DoctorProfile />
     <GuideLibrary sections={guideSections} groups={groups} />
     <ContactSection />
