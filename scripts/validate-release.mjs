@@ -12,6 +12,8 @@ import {
 
 const root = join(process.cwd(), 'dist');
 const site = 'https://www.ghezelbaash.ir/';
+const postalCode = '6714657412';
+const rfc3339DateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
 const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
 const files = [];
@@ -49,6 +51,21 @@ check(!homepage.includes('href="#videos"'), 'navigation must not expose a separa
 check(!/<div\b[^>]*aria-label=/iu.test(homepage.replace(/<div\b[^>]*role="(?:group|navigation|region)"[^>]*aria-label=[^>]*>/giu, '')), 'generic div uses aria-label without an explicit role');
 check(!/<time\b(?![^>]*datetime=)/iu.test(homepage), 'time element missing datetime');
 
+check(/<details\b[^>]*class="[^"]*featured-answer-disclosure[^"]*"/iu.test(homepage), 'compact best-doctor disclosure is missing');
+check(!/<details\b[^>]*class="[^"]*featured-answer-disclosure[^"]*"[^>]*\bopen\b/iu.test(homepage), 'best-doctor disclosure must be closed by default');
+for (const target of [
+  'best-aesthetic-doctor-kermanshah',
+  'best-botox-doctor-kermanshah',
+  'best-filler-doctor-kermanshah',
+  'best-lip-filler-doctor-kermanshah',
+  'best-under-eye-filler-doctor-kermanshah',
+  'best-thread-lift-doctor-kermanshah',
+  'best-acne-scar-subcision-doctor-kermanshah',
+  'best-skin-rejuvenation-doctor-kermanshah',
+  'best-hair-loss-prp-doctor-kermanshah',
+  'best-submental-liposuction-doctor-kermanshah',
+]) check(homepage.includes(`href="#${target}"`), `best-doctor disclosure link missing: #${target}`);
+
 const guideStart = homepage.indexOf('id="clinical-guide"');
 const contactStart = homepage.indexOf('id="contact"');
 check(guideStart >= 0 && contactStart > guideStart, 'clinical guide and contact ordering is invalid');
@@ -60,6 +77,7 @@ for (const video of videos) {
 for (const phrase of [
   'Knowledge & AI', 'Retrieval Corpus', 'Search Intent', 'knowsAbout', 'مدل زبانی',
   'موتورهای جست‌وجو', 'گوگل و LLM', 'کتابخانهٔ ویدئویی', 'محیط واقعی کلینیک',
+  'موتور تصمیم بالینی', 'تصمیم بالینی', 'تصمیم‌گیری بالینی', 'مسئول تصمیم', 'اتوریتی', 'انتیتی',
 ]) {
   check(!visible.includes(phrase), `forbidden or machine-facing phrase leaked into visible UI: ${phrase}`);
 }
@@ -71,6 +89,10 @@ for (const href of [...homepage.matchAll(/href="#([^"]+)"/gu)].map((match) => ma
   check(idSet.has(href), `broken homepage fragment: #${href}`);
 }
 for (const item of serviceUrlRegistry) check(idSet.has(item.anchor), `missing stable service anchor: #${item.anchor}`);
+
+for (const url of [personIdentityContract.linkedin, personIdentityContract.facebook, personIdentityContract.pinterest]) {
+  check(homepage.includes(`<link rel="me" href="${url}"`), `head rel=me identity link missing: ${url}`);
+}
 
 const inlineMatches = [...homepage.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gu)];
 check(inlineMatches.length === 1, `expected one inline JSON-LD block; found ${inlineMatches.length}`);
@@ -91,8 +113,19 @@ function auditGraph(label, graph) {
   nodes.forEach(visit);
   check(graphIds.length === defined.size, `${label}: duplicate @id values`);
   check([...references].every((id) => defined.has(id)), `${label}: dangling same-site @id references`);
+
   const page = nodes.find((node) => node['@id'] === `${site}#webpage`);
   check(page?.mainEntity?.['@id'] === `${site}#person` && !Array.isArray(page?.mainEntity), `${label}: Person must be the sole page mainEntity`);
+  check(rfc3339DateTime.test(page?.datePublished ?? ''), `${label}: page datePublished must be RFC3339 with timezone`);
+  check(rfc3339DateTime.test(page?.dateModified ?? ''), `${label}: page dateModified must be RFC3339 with timezone`);
+
+  const article = nodes.find((node) => node['@id'] === `${site}#article`);
+  check(rfc3339DateTime.test(article?.datePublished ?? ''), `${label}: Article datePublished must be RFC3339 with timezone`);
+  check(rfc3339DateTime.test(article?.dateModified ?? ''), `${label}: Article dateModified must be RFC3339 with timezone`);
+
+  const clinic = nodes.find((node) => node['@id'] === `${site}#clinic`);
+  check(clinic?.address?.postalCode === postalCode, `${label}: clinic postalCode must be ${postalCode}`);
+
   return { nodes, defined };
 }
 
@@ -108,7 +141,9 @@ function auditPersonIdentity(label, audit) {
 
   const sameAs = new Set(Array.isArray(person.sameAs) ? person.sameAs : [person.sameAs].filter(Boolean));
   for (const url of personRequiredSameAs) check(sameAs.has(url), `${label}: Person sameAs missing: ${url}`);
-  check(![...sameAs].some((url) => /facebook\.com|pinterest\.com/iu.test(url)), `${label}: unverified Facebook or Pinterest profile leaked into Person.sameAs`);
+  check(sameAs.has(personIdentityContract.linkedin), `${label}: LinkedIn identity missing`);
+  check(sameAs.has(personIdentityContract.facebook), `${label}: Facebook identity missing`);
+  check(sameAs.has(personIdentityContract.pinterest), `${label}: Pinterest identity missing`);
 
   const identifiers = Array.isArray(person.identifier) ? person.identifier : [person.identifier].filter(Boolean);
   for (const required of restoredPersonIdentifiers) {
@@ -122,7 +157,6 @@ function auditPersonIdentity(label, audit) {
     identifiers.some((item) => item?.propertyID === 'MINC' && item?.value === personIdentityContract.minc),
     `${label}: Canadian MINC identifier missing`,
   );
-  check(sameAs.has(personIdentityContract.linkedin), `${label}: LinkedIn identity missing`);
 }
 
 const fullAudit = auditGraph('canonical graph', full);
@@ -139,7 +173,6 @@ auditPersonIdentity('inline graph', inlineAudit);
 for (const profile of restoredPersonProfileNodes) {
   check(fullAudit.defined.has(profile['@id']), `canonical graph: restored Person profile node missing: ${profile['@id']}`);
 }
-check(!fullAudit.nodes.some((node) => /facebook\.com|pinterest\.com/iu.test(String(node['@id'] ?? ''))), 'unverified Facebook or Pinterest ProfilePage exists in canonical graph');
 
 for (const node of fullAudit.nodes) {
   const values = [];
@@ -199,11 +232,18 @@ console.log(JSON.stringify({
     inlineVideos: videos.length,
     contextualImages: (homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length,
   },
+  richResults: {
+    postalCode,
+    articleDatesHaveTimezone: true,
+    bestDoctorDisclosureClosed: true,
+  },
   inlineGraphNodes: inlineAudit.nodes.length,
   canonicalGraphNodes: fullAudit.nodes.length,
   personIdentityContract: {
     minc: personIdentityContract.minc,
     linkedin: true,
+    facebook: true,
+    pinterest: true,
     alternateNames: personAlternateNames.length,
     sameAs: personRequiredSameAs.length,
     restoredProfileNodes: restoredPersonProfileNodes.length,
