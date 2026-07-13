@@ -5,16 +5,16 @@ const services = [
   {
     id: 'service-botulinum-toxin',
     aliases: [],
-    title: 'بوتاکس و حرکت عضله',
-    text: 'برای الگوهای وابسته به حرکت؛ با ارزیابی ابرو، پلک، لبخند، تقارن و عملکرد.',
+    title: 'بوتاکس',
+    text: 'برای خطوط و تغییراتی که به حرکت عضله مربوط‌اند؛ با بررسی ابرو، پلک، لبخند و تقارن صورت.',
     icon: Activity,
     href: '#botulinum-toxin-guide',
   },
   {
     id: 'service-dermal-filler',
     aliases: [],
-    title: 'فیلر و حمایت حجمی',
-    text: 'برای کمبود حجم یا حمایت انتخابی؛ نه برای سنگین‌کردن بافتی که پایین آمده است.',
+    title: 'فیلر و ژل',
+    text: 'برای اصلاح کمبود حجم یا فرم بخش‌های مشخص صورت؛ با مقدار کنترل‌شده و متناسب با چهره.',
     icon: Syringe,
     href: '#dermal-fillers-revision',
   },
@@ -22,39 +22,39 @@ const services = [
     id: 'service-thread-lift',
     aliases: [],
     title: 'لیفت نخ',
-    text: 'برای شلی محدود و کاندید منتخب؛ با مرزبندی روشن در برابر افتادگی شدید و جراحی.',
+    text: 'برای بعضی موارد افت خفیف تا متوسط؛ پس از بررسی کیفیت پوست و شدت افتادگی.',
     icon: Sparkles,
     href: '#thread-lift-surgery-boundary',
   },
   {
     id: 'service-subcision',
     aliases: ['service-acne-scar-treatment'],
-    title: 'اسکار، آکنه و سابسیژن',
-    text: 'تفکیک لک، التهاب، rolling، boxcar و ice-pick پیش از انتخاب ابزار یا درمان ترکیبی.',
+    title: 'جای جوش و سابسیژن',
+    text: 'با تشخیص نوع اسکار و انتخاب روش مناسب برای لک، فرورفتگی و ناهمواری پوست.',
     icon: CircleDot,
     href: '#acne-scar-guide',
   },
   {
     id: 'service-skin-rejuvenation',
     aliases: [],
-    title: 'کیفیت و جوان‌سازی پوست',
-    text: 'PRP، اسکین‌بوستر، مزوتراپی و دستگاه فقط وقتی معنا دارند که هدف بافتی روشن باشد.',
+    title: 'جوان‌سازی و کیفیت پوست',
+    text: 'PRP، اسکین‌بوستر، مزوتراپی و روش‌های دیگر بر اساس نیاز واقعی پوست انتخاب می‌شوند.',
     icon: Droplets,
     href: '#skin-quality-rejuvenation-guide',
   },
   {
     id: 'service-prp-skin-hair',
     aliases: ['service-hair-loss-evaluation'],
-    title: 'مو و پوست سر',
-    text: 'تشخیص الگوی ریزش، التهاب و عوامل زمینه‌ای پیش از PRP، مزوتراپی یا مسیر تخصصی.',
+    title: 'ریزش مو و پوست سر',
+    text: 'بررسی نوع ریزش، وضعیت پوست سر و عوامل زمینه‌ای پیش از PRP، مزوتراپی یا درمان دیگر.',
     icon: UserRoundSearch,
     href: '#hair-guide',
   },
   {
     id: 'service-submental-liposuction',
     aliases: [],
-    title: 'غبغب و کانتورینگ',
-    text: 'تفکیک چربی، پوست، پلاتیسما، چانه و ساختار گردن پیش از ساکشن یا روش‌های غیرجراحی.',
+    title: 'غبغب و فرم پایین صورت',
+    text: 'بررسی چربی، پوست، چانه و گردن پیش از ساکشن یا انتخاب روش‌های غیرجراحی.',
     icon: ScanFace,
     href: '#submental-and-body-contouring-guide',
   },
@@ -65,10 +65,10 @@ const services = [
   <span id="service-coverage-panel" class="anchor-alias" aria-hidden="true"></span>
   <div class="section-heading section-heading--split">
     <div>
-      <p class="eyebrow">حوزه‌های ارزیابی و درمان</p>
-      <h2 id="services-title">هر ابزار، یک مأموریت محدود</h2>
+      <p class="eyebrow">خدمات و درمان‌ها</p>
+      <h2 id="services-title">هر روش برای مشکل مشخصی مناسب است</h2>
     </div>
-    <p>این دسته‌ها نقطهٔ شروع گفت‌وگو هستند؛ انتخاب نهایی پس از شرح‌حال، معاینه و تعیین مرز نتیجه انجام می‌شود.</p>
+    <p>انتخاب نهایی پس از شرح‌حال و معاینه انجام می‌شود؛ چون یک روش برای همهٔ صورت‌ها و همهٔ مشکلات مناسب نیست.</p>
   </div>
 
   <div class="service-grid">
@@ -78,7 +78,7 @@ const services = [
         <span class="service-card__icon"><Icon size={25} aria-hidden="true" /></span>
         <h3>{title}</h3>
         <p>{text}</p>
-        <span class="service-card__link">مطالعهٔ راهنمای کامل</span>
+        <span class="service-card__link">توضیحات کامل</span>
       </a>
     ))}
   </div>
