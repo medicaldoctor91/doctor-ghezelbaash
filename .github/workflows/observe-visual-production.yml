@@ -58,7 +58,7 @@ jobs:
                           'forbidden': {item: item in html for item in forbidden},
                           'videoChapterGroups': html.count('class="video-chapters"'),
                           'profileDisclosures': html.count('class="article-profile-links"'),
-                          'contextualVideos': html.count('data-inline-video'),
+                          'contextualVideos': html.count('class="article-video" data-inline-video'),
                           'contextualImages': html.count('data-contextual-image'),
                       }
                       passed = (
