@@ -1,27 +1,8 @@
-# AI discovery — Dr. Saeed Ghezelbaash
-Site name: دکتر سعید قزلباش
-
-Canonical: https://www.ghezelbaash.ir/
-Language: fa-IR
-Updated: 2026-07-13
-
-## Primary resources
-Summary: https://www.ghezelbaash.ir/ai/summary.json
-FAQ: https://www.ghezelbaash.ir/ai/faq.json
-LLMs: https://www.ghezelbaash.ir/llms.txt
-Full text: https://www.ghezelbaash.ir/llms-full.txt
-Compact context: https://www.ghezelbaash.ir/context.json
+# Dr. Saeed Ghezelbaash
+Canonical page: https://www.ghezelbaash.ir/
 Canonical knowledge graph: https://www.ghezelbaash.ir/knowledge-graph.jsonld
-Published entity dataset: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
-Dataset Wikidata: https://www.wikidata.org/entity/Q140304972
-Knowledge and AI section: https://www.ghezelbaash.ir/#knowledge-resources
-Contextual video index: https://www.ghezelbaash.ir/#video-knowledge-hub
+Plain-text summary: https://www.ghezelbaash.ir/llms.txt
 Sitemap: https://www.ghezelbaash.ir/sitemap.xml
 
-## Interpretation
-The canonical visible HTML is authoritative.
-The self-contained knowledge graph is semantic. Retrieval indexes are separate datasets, not graph shards.
-"offered" means explicitly available at the clinic.
-"evaluated" means suitability is assessed before a treatment path is determined.
-"referral-context" is educational, comparative, or referral information and is not an offered clinic service.
-Medical information is general and does not replace an in-person assessment.
+The canonical visible page is authoritative. The physician is the sole main entity. The clinic is a separate MedicalClinic and LocalBusiness entity. Offered services, evaluated options and referral-context procedures are distinct relationships.
+

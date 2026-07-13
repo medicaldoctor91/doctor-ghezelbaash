@@ -35,20 +35,29 @@ function collectInternalRefs(value: any, refs: Set<string>) {
 
 export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: string) {
   const p = buildSchemaParts(stabilizeHeadings(headings), raw) as Record<string, any>;
+
+  const machineOnlyClaimIds = new Set([
+    'claim-public-ai-dataset',
+    'claim-versioned-structured-data',
+    'claim-persistent-data-archive',
+    'claim-cross-platform-authority-network',
+  ].map((id) => `${site.url}#${id}`));
+
   const blocked = new Set<string>([
     ...p.intentNodes.map((node: Node) => node['@id']),
     ...p.sectionAnswerNodes.map((node: Node) => node['@id']),
     ...p.artifactDatasetNodes.map((node: Node) => node['@id']),
+    ...machineOnlyClaimIds,
     p.intentSetNode['@id'],
     p.intentFeedNode['@id'],
     p.authorityCorpusNode['@id'],
     p.answerSetNode['@id'],
     p.artifactCatalogNode['@id'],
+    p.decisionCapsulesNode['@id'],
   ].filter(Boolean));
 
   const graphDatasetId = `${site.url}#knowledge-graph-dataset`;
-  const retrievalDatasetId = `${site.url}#retrieval-corpus`;
-  const knowledgeSectionId = `${site.url}#knowledge-resources`;
+  const clinicalGuideId = `${site.url}#clinical-guide`;
 
   const graphDataset: Node = {
     '@type': 'Dataset',
@@ -62,35 +71,13 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
     isBasedOn: ref(`${site.url}#webpage`),
     dateModified: site.dateModified,
-    version: '1.0.0',
+    version: '2.0.0',
     license: 'https://creativecommons.org/licenses/by/4.0/',
     distribution: {
       '@type': 'DataDownload',
       contentUrl: `${site.url}knowledge-graph.jsonld`,
       encodingFormat: 'application/ld+json',
     },
-  };
-
-  const retrievalDataset: Node = {
-    '@type': 'Dataset',
-    '@id': retrievalDatasetId,
-    name: 'Retrieval Corpus of Dr. Saeed Ghezelbaash',
-    description: 'Search, answer, intent, evidence and provenance records derived from the canonical visible page and kept separate from the semantic knowledge graph.',
-    url: `${site.url}search/index.json`,
-    inLanguage: ['fa-IR', 'en'],
-    creator: ref(`${site.url}#person`),
-    publisher: ref(`${site.url}#clinic`),
-    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
-    isBasedOn: ref(`${site.url}#webpage`),
-    dateModified: site.dateModified,
-    distribution: [
-      { '@type': 'DataDownload', contentUrl: `${site.url}search/index.json`, encodingFormat: 'application/json' },
-      { '@type': 'DataDownload', contentUrl: `${site.url}answers/index.json`, encodingFormat: 'application/json' },
-      { '@type': 'DataDownload', contentUrl: `${site.url}intents/index.json`, encodingFormat: 'application/json' },
-      { '@type': 'DataDownload', contentUrl: `${site.url}evidence/sources.json`, encodingFormat: 'application/json' },
-      { '@type': 'DataDownload', contentUrl: `${site.url}evidence/internal-provenance.json`, encodingFormat: 'application/json' },
-      { '@type': 'DataDownload', contentUrl: `${site.url}media/index.json`, encodingFormat: 'application/json' },
-    ],
   };
 
   const publishedDataset: Node = {
@@ -112,25 +99,39 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     dateModified: site.dateModified,
   };
 
-  const knowledgeSection: Node = {
+  const clinicalGuide: Node = {
     '@type': 'WebPageElement',
-    '@id': knowledgeSectionId,
-    name: 'Knowledge graph, entity identifiers and AI retrieval resources',
-    url: `${site.url}#knowledge-resources`,
-    inLanguage: ['fa-IR', 'en'],
+    '@id': clinicalGuideId,
+    name: 'راهنمای کامل تصمیم‌گیری در پزشکی زیبایی، پوست و مو',
+    url: `${site.url}#clinical-guide`,
+    inLanguage: 'fa-IR',
     isPartOf: ref(`${site.url}#webpage`),
-    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`), ref(graphDatasetId), ref(retrievalDatasetId)],
-    hasPart: [ref(graphDatasetId), ref(retrievalDatasetId), ref(site.huggingFaceDataset)],
+    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`), ...p.procedureNodes.map((node: Node) => ref(node['@id']))],
   };
+
+  const panelUrlById = new Map([
+    [`${site.url}#entity-authority-panel`, `${site.url}#doctor`],
+    [`${site.url}#service-coverage-panel`, `${site.url}#services`],
+    [`${site.url}#conversion-dock`, `${site.url}#conversion-dock`],
+    [`${site.url}#video-knowledge-hub`, `${site.url}#videos`],
+  ]);
+  const panels = p.panelNodes.map((node: Node) => ({
+    ...node,
+    ...(panelUrlById.has(node['@id']) ? { url: panelUrlById.get(node['@id']) } : {}),
+  }));
 
   const page: Node = {
     ...p.pageNode,
     mainEntity: ref(`${site.url}#person`),
-    hasPart: [...(p.pageNode.hasPart ?? []), ref(knowledgeSectionId), ref(graphDatasetId), ref(retrievalDatasetId)],
+    hasPart: [
+      ...(p.pageNode.hasPart ?? []),
+      ref(clinicalGuideId),
+      ref(graphDatasetId),
+    ],
   };
   const website: Node = {
     ...p.websiteNode,
-    hasPart: [...(p.websiteNode.hasPart ?? []), ref(graphDatasetId), ref(retrievalDatasetId)],
+    hasPart: [...(p.websiteNode.hasPart ?? []), ref(graphDatasetId)],
   };
   const person: Node = {
     ...p.personNode,
@@ -141,13 +142,23 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
       ref(site.huggingFaceDataset),
     ],
   };
+  const offerCatalog: Node = { ...p.offerCatalogNode, url: `${site.url}#services` };
+  const authorityNetwork: Node = { ...p.authorityNetworkNode };
+  delete authorityNetwork.url;
+  const editorialReview: Node = { ...p.editorialReviewNode, url: `${site.url}#doctor` };
+  const reputationSnapshot: Node = { ...p.reputationSnapshotNode, url: site.maps };
+  const logo: Node = {
+    ...p.logoNode,
+    url: `${site.url}assets/brand/doctor-hand-syringe-logo-512.png`,
+    contentUrl: `${site.url}assets/brand/doctor-hand-syringe-logo-512.png`,
+  };
 
   const initial: Node[] = [
     p.irimcOrganizationNode,
     p.credentialNode,
     person,
     p.clinicKnowledgeNode,
-    p.offerCatalogNode,
+    offerCatalog,
     website,
     page,
     p.articleNode,
@@ -156,18 +167,16 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     p.claimSetNode,
     p.evidenceSetNode,
     p.conceptSetNode,
-    p.decisionCapsulesNode,
     graphDataset,
-    retrievalDataset,
     publishedDataset,
-    knowledgeSection,
-    p.authorityNetworkNode,
-    p.editorialReviewNode,
-    p.reputationSnapshotNode,
+    clinicalGuide,
+    authorityNetwork,
+    editorialReview,
+    reputationSnapshot,
     ...p.authorityAssetNodes,
-    ...p.panelNodes,
+    ...panels,
     ...p.compatibilityNodes,
-    p.logoNode,
+    logo,
     ...p.externalProfileNodes,
     ...p.researchNodes,
     ...p.evidenceNodes,

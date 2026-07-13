@@ -670,7 +670,7 @@ export function buildSchemaParts(headings: MarkdownHeading[], raw: string) {
       name: `${video.title}: ${chapter.name}`,
       startOffset: chapter.startOffset,
       endOffset: chapter.endOffset,
-      url: videoWatchUrl(site.url, video.id),
+      url: videoClipId(site.url, video.id, chapter.index),
       contentUrl: `${site.url}videos/${video.file}#t=${chapter.startOffset},${chapter.endOffset}`,
       encodingFormat: 'video/mp4',
       partOf: { '@id': videoEntityId(site.url, video.id) },

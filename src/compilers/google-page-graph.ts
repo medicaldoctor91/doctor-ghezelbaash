@@ -5,24 +5,9 @@ import { buildCanonicalKnowledgeGraph } from './knowledge-graph';
 type Node = Record<string, any>;
 
 const ref = (id: string) => ({ '@id': id });
-const types = (node: Node) => Array.isArray(node['@type']) ? node['@type'] : [node['@type']];
+const asArray = <T>(value: T | T[] | undefined): T[] => value === undefined ? [] : Array.isArray(value) ? value : [value];
 
-function collectInternalRefs(value: unknown, references: Set<string>) {
-  if (Array.isArray(value)) {
-    value.forEach((item) => collectInternalRefs(item, references));
-    return;
-  }
-  if (!value || typeof value !== 'object') return;
-  const record = value as Record<string, unknown>;
-  if (typeof record['@id'] === 'string' && record['@id'].startsWith(site.url)) references.add(record['@id']);
-  Object.values(record).forEach((item) => collectInternalRefs(item, references));
-}
-
-function compactDefinition(node: Node): Node {
-  const fields = [
-    '@type', '@id', 'name', 'alternateName', 'description', 'url', 'inLanguage',
-    'keywords', 'bodyLocation', 'procedureType', 'additionalProperty',
-  ];
+function pick(node: Node, fields: string[]): Node {
   return Object.fromEntries(fields.filter((field) => node[field] !== undefined).map((field) => [field, node[field]]));
 }
 
@@ -31,93 +16,111 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
   const nodes = canonical['@graph'] as Node[];
   const byId = new Map(nodes.map((node) => [node['@id'], node]));
 
-  const serviceNodes = nodes.filter((node) => types(node).includes('Service')).slice(0, 12);
-  const procedureNodes = nodes.filter((node) => /^https:\/\/www\.ghezelbaash\.ir\/#procedure-/.test(node['@id'] ?? '')).slice(0, 12);
-  const researchNodes = nodes.filter((node) => types(node).includes('ScholarlyArticle'));
-  const videoNodes = nodes.filter((node) => types(node).includes('VideoObject'));
-  const clipNodes = nodes.filter((node) => types(node).includes('Clip'));
-  const imageNodes = nodes
-    .filter((node) => types(node).includes('ImageObject') && node['@id'] !== `${site.url}#logo`)
-    .slice(0, 4);
+  const personId = `${site.url}#person`;
+  const clinicId = `${site.url}#clinic`;
+  const websiteId = `${site.url}#website`;
+  const pageId = `${site.url}#webpage`;
+  const articleId = `${site.url}#article`;
+  const logoId = `${site.url}#logo`;
+  const credentialId = `${site.url}#credential-irimc-${site.irimc}`;
+  const portraitId = `${site.url}#image-doctor-portrait`;
 
-  const personSource = byId.get(`${site.url}#person`) as Node;
-  const clinicSource = byId.get(`${site.url}#clinic`) as Node;
-  const pageSource = byId.get(`${site.url}#webpage`) as Node;
-  const articleSource = byId.get(`${site.url}#article`) as Node;
+  const procedureNodes = nodes.filter((node) => /^https:\/\/www\.ghezelbaash\.ir\/#procedure-/.test(node['@id'] ?? ''));
+  const serviceNodes = nodes.filter((node) => /^https:\/\/www\.ghezelbaash\.ir\/#service-/.test(node['@id'] ?? ''));
+  const researchNodes = nodes.filter((node) => asArray(node['@type']).includes('ScholarlyArticle'));
+  const imageNodes = nodes.filter((node) => [
+    portraitId,
+    `${site.url}#image-doctor-exam`,
+    `${site.url}#image-doctor-with-staff`,
+  ].includes(node['@id']));
+
+  const personSource = byId.get(personId) as Node;
+  const clinicSource = byId.get(clinicId) as Node;
+  const websiteSource = byId.get(websiteId) as Node;
+  const pageSource = byId.get(pageId) as Node;
+  const articleSource = byId.get(articleId) as Node;
+  const logoSource = byId.get(logoId) as Node;
+  const credentialSource = byId.get(credentialId) as Node;
 
   const person: Node = {
-    ...personSource,
+    ...pick(personSource, [
+      '@id', 'name', 'givenName', 'familyName', 'alternateName', 'url', 'jobTitle',
+      'description', 'disambiguatingDescription', 'telephone', 'identifier', 'sameAs',
+    ]),
     '@type': 'Person',
-    sameAs: [site.irimcVerification, site.orcidUrl, site.doctorWikidata, site.huggingFaceProfile, site.githubProfile],
-    worksFor: ref(`${site.url}#clinic`),
-    workLocation: ref(`${site.url}#clinic`),
+    image: ref(portraitId),
+    hasCredential: ref(credentialId),
+    worksFor: ref(clinicId),
+    workLocation: ref(clinicId),
     knowsAbout: procedureNodes.map((node) => ref(node['@id'])),
-    subjectOf: [ref(`${site.url}#article`), ...researchNodes.map((node) => ref(node['@id'])), ref(`${site.url}#knowledge-graph-dataset`)],
+    subjectOf: [ref(articleId), ...researchNodes.map((node) => ref(node['@id']))],
   };
-  delete person.affiliation;
 
   const clinic: Node = {
-    ...clinicSource,
-    employee: ref(`${site.url}#person`),
+    ...pick(clinicSource, [
+      '@id', 'name', 'alternateName', 'url', 'telephone', 'address', 'geo', 'hasMap',
+      'openingHoursSpecification', 'contactPoint', 'areaServed', 'identifier', 'sameAs',
+    ]),
+    '@type': ['MedicalClinic', 'LocalBusiness'],
+    logo: ref(logoId),
+    image: imageNodes.map((node) => ref(node['@id'])),
+    employee: ref(personId),
     availableService: serviceNodes.map((node) => ref(node['@id'])),
-    subjectOf: ref(`${site.url}#clinic-reputation-snapshot`),
   };
-  delete clinic.hasOfferCatalog;
+
+  const website: Node = {
+    ...pick(websiteSource, ['@type', '@id', 'url', 'name', 'alternateName', 'inLanguage']),
+    publisher: ref(clinicId),
+    creator: ref(personId),
+    about: [ref(personId), ref(clinicId)],
+  };
 
   const page: Node = {
-    ...pageSource,
-    mainEntity: ref(`${site.url}#person`),
-    publisher: ref(`${site.url}#clinic`),
-    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`), ...procedureNodes.map((node) => ref(node['@id']))],
-    hasPart: [
-      ref(`${site.url}#article`),
-      ref(`${site.url}#video-knowledge-hub`),
-      ref(`${site.url}#knowledge-resources`),
-      ...videoNodes.map((node) => ref(node['@id'])),
-    ],
+    ...pick(pageSource, ['@type', '@id', 'url', 'name', 'headline', 'description', 'inLanguage', 'datePublished', 'dateModified']),
+    isPartOf: ref(websiteId),
+    mainEntity: ref(personId),
+    primaryImageOfPage: ref(portraitId),
+    publisher: ref(clinicId),
+    about: [ref(personId), ref(clinicId), ...procedureNodes.map((node) => ref(node['@id']))],
+    hasPart: ref(articleId),
   };
 
   const article: Node = {
-    ...articleSource,
-    about: page.about,
-    mentions: [...procedureNodes.map((node) => ref(node['@id'])), ...researchNodes.map((node) => ref(node['@id']))],
-    subjectOf: ref(`${site.url}#medical-editorial-review`),
+    ...pick(articleSource, ['@type', '@id', 'headline', 'name', 'description', 'inLanguage', 'datePublished', 'dateModified', 'wordCount']),
+    url: site.url,
+    isPartOf: ref(pageId),
+    mainEntity: ref(personId),
+    author: ref(personId),
+    reviewedBy: ref(personId),
+    publisher: ref(clinicId),
+    image: ref(portraitId),
+    about: [ref(personId), ref(clinicId), ...procedureNodes.map((node) => ref(node['@id']))],
   };
 
-  const selectedIds = [
-    'https://membersearch.irimc.org/#organization',
-    `${site.url}#credential-irimc-${site.irimc}`,
-    `${site.url}#website`,
-    `${site.url}#logo`,
-    `${site.url}#medical-editorial-review`,
-    `${site.url}#clinic-reputation-snapshot`,
-    `${site.url}#conversion-dock`,
-    `${site.url}#video-knowledge-hub`,
-    `${site.url}#knowledge-resources`,
-    `${site.url}#knowledge-graph-dataset`,
-    `${site.url}#retrieval-corpus`,
-  ];
+  const compactProcedures = procedureNodes.map((node) => pick(node, [
+    '@type', '@id', 'name', 'alternateName', 'url', 'description', 'procedureType',
+    'bodyLocation', 'keywords', 'inLanguage', 'additionalProperty',
+  ])).map((node) => ({ ...node, isPartOf: ref(pageId), subjectOf: ref(articleId) }));
+
+  const compactServices = serviceNodes.map((node) => pick(node, [
+    '@type', '@id', 'name', 'alternateName', 'serviceType', 'category', 'description',
+    'areaServed', 'url', 'availableChannel', 'additionalProperty',
+  ])).map((node) => ({ ...node, provider: ref(clinicId), subjectOf: ref(articleId) }));
 
   const graph: Node[] = [
-    ...selectedIds.map((id) => byId.get(id)).filter(Boolean) as Node[],
     person,
     clinic,
+    website,
     page,
     article,
+    credentialSource,
+    logoSource,
     ...imageNodes,
-    ...procedureNodes,
-    ...serviceNodes,
     ...researchNodes,
-    ...videoNodes,
-    ...clipNodes,
-  ];
+    ...compactProcedures,
+    ...compactServices,
+  ].filter(Boolean);
 
-  const definedIds = new Set(graph.map((node) => node['@id']).filter(Boolean));
-  const refs = new Set<string>();
-  graph.forEach((node) => collectInternalRefs(node, refs));
-  const supplemental = [...refs]
-    .filter((id) => !definedIds.has(id) && byId.has(id))
-    .map((id) => compactDefinition(byId.get(id) as Node));
-
-  return { '@context': 'https://schema.org', '@graph': [...graph, ...supplemental] };
+  return { '@context': 'https://schema.org', '@graph': graph };
 }
+

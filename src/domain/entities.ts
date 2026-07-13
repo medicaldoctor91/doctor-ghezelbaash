@@ -7,15 +7,15 @@ export const site = {
   latinName: "Dr. Saeed Ghezelbaash",
   clinicName: "کلینیک زیبایی دکتر سعید قزلباش",
   title:
-    "دکتر سعید قزلباش | بهترین دکتر زیبایی کرمانشاه",
+    "دکتر سعید قزلباش | پزشکی زیبایی در کرمانشاه",
   articleHeadline:
     "دکتر سعید قزلباش در کرمانشاه؛ صورت شما «خدمت» نمی‌خواهد—تشخیصی می‌خواهد که لایهٔ جاافتاده را پیدا کند",
   description:
-    "راهنمای جامع دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه، برای بوتاکس، فیلر، لیفت نخ، پوست، مو و غبغب؛ با تمرکز بر تشخیص، عوارض و مرز ارجاع.",
+    "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ ارزیابی تشخیصی برای بوتاکس، فیلر، لیفت نخ، پوست، مو و غبغب با مرزبندی روشن درمان و ارجاع.",
   language: "fa-IR",
   direction: "rtl",
   phone: "+989308209494",
-  phoneDisplay: "۰۹۳۰ ۸۲۰ ۹۴۹۴",
+  phoneDisplay: "۰۹۳۰ ۸۲۰ ۹۴۹۴",
   email: "doctor@ghezelbaash.ir",
   instagram: "https://www.instagram.com/doctor.ghezelbaash/",
   instagramReels: "https://www.instagram.com/doctor.ghezelbaash/reels/",
@@ -67,7 +67,7 @@ export const site = {
   irimcVerification:
     "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
   heroImage: "/images/responsive/doctor-portrait-1200.jpg",
-  logo: "/assets/brand/doctor-ghezelbaash-logo-512.png",
+  logo: "/assets/brand/doctor-hand-syringe-logo-512.png",
   ogImage: "/og/home.jpg",
   datePublished: "2026-07-10",
   dateModified: "2026-07-13",
