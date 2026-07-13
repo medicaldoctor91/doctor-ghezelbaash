@@ -4,37 +4,42 @@ import { site } from '../../domain/entities';
 ---
 
 <section class="hero shell" aria-labelledby="hero-title">
+  <span id="doctor" class="anchor-alias" aria-hidden="true"></span>
+  <span id="person" class="anchor-alias" aria-hidden="true"></span>
+  <span id="entity-authority-panel" class="anchor-alias" aria-hidden="true"></span>
+  <span id="decision-model" class="anchor-alias" aria-hidden="true"></span>
+  <span id="clinical-process" class="anchor-alias" aria-hidden="true"></span>
   <span id="clinical-decision-model-overview" class="anchor-alias" aria-hidden="true"></span>
+
   <div class="hero__copy">
     <p class="eyebrow">پزشکی زیبایی، پوست و مو در کرمانشاه</p>
-    <h1 id="hero-title">دکتر سعید قزلباش؛ تشخیص پیش از مداخله</h1>
+    <h1 id="hero-title">دکتر سعید قزلباش</h1>
     <p class="hero__lead">
-      صورت شما یک فهرست خدمات نیست. تصمیم درست از تشخیص لایهٔ غالب شروع می‌شود:
-      حرکت عضله، کیفیت پوست، کمبود حجم، افت بافت یا ساختار زیرین.
+      اطلاعات خدمات زیبایی، پوست و مو، نمونه‌های ویدئویی، سوابق پژوهشی و راه‌های تماس با کلینیک در همین صفحه قرار دارد.
     </p>
     <div class="hero__actions">
       <a class="button button--primary" href={`tel:${site.phone}`}>
         <Phone size={19} aria-hidden="true" />
-        تماس برای هماهنگی
+        تماس با کلینیک
       </a>
-      <a class="button button--ghost" href="#decision-model">
-        رویکرد درمان را ببینید
+      <a class="button button--ghost" href="#services">
+        خدمات را ببینید
         <ArrowLeft size={19} aria-hidden="true" />
       </a>
     </div>
     <dl class="hero__facts">
       <div>
-        <dt><BadgeCheck size={18} aria-hidden="true" /> هویت حرفه‌ای</dt>
-        <dd>شمارهٔ نظام پزشکی {site.irimc}</dd>
+        <dt><BadgeCheck size={18} aria-hidden="true" /> شماره نظام پزشکی</dt>
+        <dd>{site.irimc}</dd>
       </div>
       <div>
-        <dt><MapPin size={18} aria-hidden="true" /> محل فعالیت</dt>
+        <dt><MapPin size={18} aria-hidden="true" /> نشانی</dt>
         <dd>{site.city}، ساختمان ویستا</dd>
       </div>
     </dl>
   </div>
 
-  <figure class="hero__portrait">
+  <figure class="hero__portrait" data-contextual-image>
     <picture>
       <source
         type="image/avif"
@@ -60,7 +65,7 @@ import { site } from '../../domain/entities';
     </picture>
     <figcaption>
       <strong>{site.legalName}</strong>
-      <span>دکترای حرفه‌ای پزشکی · مسئول تصمیم بالینی</span>
+      <span>دکترای حرفه‌ای پزشکی · شماره نظام پزشکی {site.irimc}</span>
     </figcaption>
   </figure>
 </section>

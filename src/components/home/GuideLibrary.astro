@@ -1,29 +1,28 @@
 ---
-import { BookOpen, BookOpenText, ChevronDown, CirclePlay, Clock3, ListVideo, Search } from '@lucide/astro';
+import { BookOpen, ChevronDown, CirclePlay, Clock3, ListVideo, Search } from '@lucide/astro';
+import { site } from '../../domain/entities';
 import { videos } from '../../domain/media.mjs';
 import { videoPageDetails } from '../../domain/video-pages.mjs';
 import { readMediaChapters } from '../../lib/media';
 
-type GuideSection = {
+type ArticleSection = {
   id: string;
   title: string;
   html: string;
   aliases: Array<{ id: string; anchor: string }>;
 };
 
-type GuideGroup = {
-  id: string;
-  label: string;
-  shortLabel: string;
-  sections: Array<{ slug: string; text: string }>;
-};
-
 interface Props {
-  sections: GuideSection[];
-  groups: GuideGroup[];
+  sections: ArticleSection[];
 }
 
-const { sections, groups } = Astro.props;
+const { sections } = Astro.props;
+const bestSection = sections.find((section) =>
+  section.id === 'best-aesthetic-doctor-kermanshah-answers'
+  || section.title.includes('بهترین دکتر زیبایی'),
+);
+const articleSections = sections.filter((section) => section !== bestSection);
+
 const videoItems = videos.map((video: any) => ({
   ...video,
   details: videoPageDetails[video.id],
@@ -33,15 +32,83 @@ const videoItems = videos.map((video: any) => ({
 const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim();
 const videosBySection = new Map<string, any[]>();
 for (const video of videoItems) {
-  const matched = sections.find((section) => {
+  const matched = articleSections.find((section) => {
     const searchable = `${section.title} ${plain(section.html)}`;
     return searchable.includes(video.relatedHeadingIncludes);
-  }) ?? sections[0];
+  }) ?? articleSections[0];
   if (!matched) continue;
   const list = videosBySection.get(matched.id) ?? [];
   list.push(video);
   videosBySection.set(matched.id, list);
 }
+
+const normalizeText = (value: string) => value
+  .replaceAll('موتور تصمیم بالینی', 'راهنمای خدمات و درمان‌ها')
+  .replaceAll('تصمیم‌گیری تشخیصیِ پیش از مداخله', 'بررسی پیش از درمان')
+  .replaceAll('تصمیم‌گیری تشخیصی پیش از مداخله', 'بررسی پیش از درمان')
+  .replaceAll('تشخیص پیش از مداخله', 'بررسی پیش از درمان')
+  .replaceAll('دامنهٔ دانش و هویت حرفه‌ای', 'سابقهٔ کاری و علمی')
+  .replaceAll('هویت پژوهشی و آموزشی', 'سابقهٔ پژوهشی و آموزشی')
+  .replaceAll('هویت آموزشی', 'سابقهٔ آموزشی')
+  .replaceAll('هویت حرفه‌ای', 'اطلاعات حرفه‌ای')
+  .replaceAll('هویت پزشکی', 'اطلاعات پزشک')
+  .replaceAll('هویت پزشک', 'اطلاعات پزشک')
+  .replaceAll('هویت', 'اطلاعات')
+  .replaceAll('مسئول تصمیم‌گیری', 'پزشک')
+  .replaceAll('مسئول تصمیم', 'پزشک')
+  .replaceAll('تصمیم‌گیری بالینی', 'انتخاب درمان')
+  .replaceAll('تصمیم بالینی', 'انتخاب درمان')
+  .replaceAll('تصمیم‌گیری', 'انتخاب')
+  .replaceAll('مدل تصمیم', 'روش بررسی')
+  .replaceAll('مرز تصمیم', 'نکتهٔ مهم')
+  .replaceAll('اتوریتی ملی', 'اعتبار حرفه‌ای')
+  .replaceAll('اتوریتی', 'اعتبار')
+  .replaceAll('هستهٔ فعالیت بالینی', 'حوزهٔ فعالیت')
+  .replaceAll('دامنهٔ دانش و ارزیابی', 'موضوعات کاری')
+  .replaceAll('لایهٔ غالب', 'علت اصلی')
+  .replaceAll('مکانیسم غالب', 'علت اصلی')
+  .replaceAll('مکانیسم', 'علت')
+  .replaceAll('بردار دینامیک', 'حرکت صورت')
+  .replaceAll('بردار سطحی', 'پوست و سطح صورت')
+  .replaceAll('بردار', 'جهت')
+  .replaceAll('فنوتیپ سطحی', 'ظاهر و پوست')
+  .replaceAll('پایهٔ ساختاری', 'ساختار صورت')
+  .replaceAll('Structural Foundation', 'ساختار صورت')
+  .replaceAll('Dynamic Vector', 'حرکت صورت')
+  .replaceAll('Surface Phenotype', 'ظاهر و پوست')
+  .replaceAll('خروجی این دروازه', 'نتیجه')
+  .replaceAll('این دروازه', 'این مرحله')
+  .replaceAll('دروازه', 'مرحله')
+  .replaceAll('هفت ایست', 'هفت مرحله')
+  .replaceAll('قانون سه‌لایه', 'خلاصه')
+  .replaceAll('سه‌لایه', 'کامل')
+  .replaceAll('چندلایه', 'کامل')
+  .replaceAll('کاندیداتوری', 'مناسب بودن درمان')
+  .replaceAll('متغیر کور', 'نکتهٔ بررسی‌نشده')
+  .replaceAll('خروجی قابل‌اندازه‌گیری', 'نتیجهٔ قابل‌بررسی')
+  .replace(/قفل (اول|دوم|سوم|چهارم|پنجم|ششم|هفتم)/gu, 'مرحله $1')
+  .replace(/سطح [۱۲۳] \(Tier [123]\) ـ /gu, '')
+  .replace(/\s*\((?:Surface Phenotype|Dynamic Vector|Structural Foundation)\)/gu, '')
+  .replace(/Tier [123]/gu, '')
+  .replaceAll('سطح اول', 'مرحلهٔ اول')
+  .replaceAll('سطح دوم', 'مرحلهٔ دوم')
+  .replaceAll('سطح سوم', 'مرحلهٔ سوم')
+  .replaceAll('سطح ۱', 'مرحلهٔ اول')
+  .replaceAll('سطح ۲', 'مرحلهٔ دوم')
+  .replaceAll('سطح ۳', 'مرحلهٔ سوم');
+
+const simplifyTitle = (title: string) => {
+  if (title.includes('هویت پزشک')) return 'درباره دکتر سعید قزلباش';
+  if (title.includes('اسم پزشک کافی نیست')) return 'پیش از درمان چه چیزهایی باید بررسی شود؟';
+  if (title.includes('اسم مشکل، درمان را معلوم می‌کند')) return 'برای هر مشکل چه چیزهایی باید بررسی شود؟';
+  if (title.includes('صفحه را از بوتاکس شروع نکنید')) return 'موضوع موردنظر خود را پیدا کنید';
+  if (title.includes('ظاهر، کل واقعیت نیست')) return 'پیش از انتخاب درمان چه چیزهایی باید بررسی شود؟';
+  if (title.includes('تشخیص را میان‌بُر نزنید')) return 'مراحل بررسی پیش از درمان';
+  if (title.includes('صورت، منوی ناحیه‌ها نیست')) return 'هماهنگی اجزای صورت در انتخاب درمان';
+  return normalizeText(title);
+};
+
+const simplifyHtml = (html: string) => normalizeText(html);
 
 const splitAfterOpeningParagraph = (html: string) => {
   const match = /<\/p>/iu.exec(html);
@@ -54,154 +121,158 @@ const timeLabel = (timestamp: string) => timestamp.replace(/^00:/, '');
 const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000) / 1000)}S`;
 ---
 
-<section id="clinical-guide" class="section guide-section" aria-labelledby="guide-title">
+<article id="clinical-guide" class="article-flow shell" aria-label="مطالب پزشکی زیبایی، پوست و مو">
   <span id="content-table" class="anchor-alias" aria-hidden="true"></span>
   <span id="knowledge-resources" class="anchor-alias" aria-hidden="true"></span>
   <span id="videos" class="anchor-alias" aria-hidden="true"></span>
   <span id="video-knowledge-hub" class="anchor-alias" aria-hidden="true"></span>
-  <div class="shell">
-    <div class="section-heading section-heading--split">
-      <div>
-        <p class="eyebrow">دانش‌نامهٔ بالینی</p>
-        <h2 id="guide-title">راهنمای کامل تصمیم‌گیری</h2>
-      </div>
-      <p>محتوای تفصیلی بر اساس مسئلهٔ بیمار سازمان یافته است. عکس و ویدئو فقط در همان بحثی قرار می‌گیرند که برای فهم آن لازم‌اند.</p>
-    </div>
 
-    <nav class="guide-index" aria-label="فهرست موضوعی دانش‌نامه">
-      <div class="guide-index__title">
-        <BookOpenText size={22} aria-hidden="true" />
-        <strong>مسیر سریع موضوعات</strong>
-      </div>
-      <div class="guide-index__groups">
-        {groups.map((group) => (
-          <section>
-            <h3>{group.shortLabel}</h3>
-            <ul>
-              {group.sections.slice(0, 5).map((item) => (
-                <li><a href={`#${item.slug}`}>{item.text.replace(/¶$/u, '')}</a></li>
+  {articleSections.map((section) => {
+    const sectionVideos = videosBySection.get(section.id) ?? [];
+    const title = simplifyTitle(section.title);
+    const html = simplifyHtml(section.html);
+    const split = splitAfterOpeningParagraph(html);
+    const isDoctorSection = section.title.includes('هویت پزشک') || html.includes('شمارهٔ نظام پزشکی');
+
+    return (
+      <div class="article-flow__section">
+        {section.aliases.map((alias) => <span id={alias.anchor} class="anchor-alias" data-service-id={alias.id} aria-hidden="true"></span>)}
+        <h2 id={section.id} tabindex="-1">{title}</h2>
+        <div class="medical-article article-flow__body">
+          <div class="medical-article__segment" set:html={split.intro}></div>
+
+          {isDoctorSection && (
+            <figure class="article-doctor-photo" data-contextual-image>
+              <picture>
+                <source type="image/avif" srcset="/images/responsive/doctor-with-staff-480.avif 480w, /images/responsive/doctor-with-staff-768.avif 768w, /images/responsive/doctor-with-staff-1200.avif 1200w" sizes="(min-width: 900px) 48rem, 100vw" />
+                <source type="image/webp" srcset="/images/responsive/doctor-with-staff-480.webp 480w, /images/responsive/doctor-with-staff-768.webp 768w, /images/responsive/doctor-with-staff-1200.webp 1200w" sizes="(min-width: 900px) 48rem, 100vw" />
+                <img src="/images/responsive/doctor-with-staff-1200.jpg" alt="دکتر سعید قزلباش همراه با تیم کلینیک" width="1600" height="1067" loading="lazy" decoding="async" />
+              </picture>
+              <figcaption>دکتر سعید قزلباش و تیم کلینیک در کرمانشاه</figcaption>
+            </figure>
+          )}
+
+          {isDoctorSection && (
+            <p class="article-profile-links">
+              <a href={site.irimcVerification} target="_blank" rel="noopener noreferrer external">بررسی شماره نظام پزشکی</a>
+              <span aria-hidden="true"> · </span>
+              <a href={site.orcidUrl} target="_blank" rel="me noopener noreferrer external">ORCID</a>
+              <span aria-hidden="true"> · </span>
+              <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">مقاله‌های پژوهشی</a>
+              <span aria-hidden="true"> · </span>
+              <a href={site.linkedinProfile} target="_blank" rel="me noopener noreferrer external">LinkedIn</a>
+              <span aria-hidden="true"> · </span>
+              <a href={site.facebookProfile} target="_blank" rel="me noopener noreferrer external">Facebook</a>
+              <span aria-hidden="true"> · </span>
+              <a href={site.pinterestProfile} target="_blank" rel="me noopener noreferrer external">Pinterest</a>
+            </p>
+          )}
+
+          {sectionVideos.length > 0 && (
+            <div class="article-media">
+              {sectionVideos.map((video: any) => (
+                <article id={`video-${video.id}`} class="article-video" data-inline-video>
+                  <div class="article-video__media">
+                    <video
+                      controls
+                      playsinline
+                      preload="none"
+                      poster={video.thumbnail}
+                      width={video.width}
+                      height={video.height}
+                      aria-labelledby={`video-${video.id}-title`}
+                      aria-describedby={`video-${video.id}-description`}
+                    >
+                      <source src={`/videos/${video.file}`} type="video/mp4" />
+                      {video.chapterTrack && (
+                        <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />
+                      )}
+                      مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
+                    </video>
+                  </div>
+
+                  <div class="article-video__body">
+                    <div class="article-video__meta">
+                      <span><CirclePlay size={16} aria-hidden="true" /> ویدئو</span>
+                      <span><Clock3 size={16} aria-hidden="true" /> حدود {video.durationSeconds} ثانیه</span>
+                    </div>
+                    <h3 id={`video-${video.id}-title`}>{video.title}</h3>
+                    <p id={`video-${video.id}-description`}>{video.description}</p>
+
+                    {video.chapters.length > 0 && (
+                      <div class="video-chapters" role="group" aria-label={`بخش‌های ${video.title}`}>
+                        <strong><ListVideo size={17} aria-hidden="true" /> بخش‌های ویدئو</strong>
+                        <ol>
+                          {video.chapters.map((chapter: any, chapterIndex: number) => (
+                            <li id={`video-${video.id}-clip-${chapterIndex + 1}`}>
+                              <button type="button" data-video-id={`video-${video.id}`} data-start={chapter.startOffset}>
+                                <span>{chapter.name}</span>
+                                <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time>
+                              </button>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+
+                    {video.details && (
+                      <details class="video-context">
+                        <summary>توضیحات بیشتر</summary>
+                        <p>{normalizeText(video.details.summary)}</p>
+                        <ul>
+                          {video.details.takeaways.map((item: string) => <li>{normalizeText(item)}</li>)}
+                        </ul>
+                        <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {normalizeText(video.details.boundary)}</p>
+                      </details>
+                    )}
+
+                    {video.details?.relatedPath && (
+                      <a class="video-card__related" href={video.details.relatedPath}>
+                        <BookOpen size={16} aria-hidden="true" />
+                        <span>{normalizeText(video.details.relatedLabel)}</span>
+                      </a>
+                    )}
+                  </div>
+                </article>
               ))}
-            </ul>
-          </section>
-        ))}
-      </div>
-    </nav>
-
-    <div class="guide-tools" role="group" aria-label="ابزار بازکردن راهنما">
-      <p><Search size={19} aria-hidden="true" /> برای یافتن عبارت خاص، از جست‌وجوی مرورگر استفاده کنید.</p>
-      <button type="button" data-guide-action="open">بازکردن همه</button>
-      <button type="button" data-guide-action="close">بستن همه</button>
-    </div>
-
-    <div class="guide-list">
-      {sections.map((section, index) => {
-        const sectionVideos = videosBySection.get(section.id) ?? [];
-        const split = splitAfterOpeningParagraph(section.html);
-        return (
-          <details class="guide-card" data-guide-section open={index === 0}>
-            <summary>
-              {section.aliases.map((alias) => <span id={alias.anchor} class="anchor-alias" data-service-id={alias.id} aria-hidden="true"></span>)}
-              <h2 id={section.id} tabindex="-1">{section.title}</h2>
-              <ChevronDown size={22} aria-hidden="true" />
-            </summary>
-            <div class="medical-article">
-              <div class="medical-article__segment" set:html={split.intro}></div>
-
-              {sectionVideos.length > 0 && (
-                <div class="article-media">
-                  <p class="article-media__label">ویدئوی مرتبط با همین بحث</p>
-                  {sectionVideos.map((video: any) => (
-                    <article id={`video-${video.id}`} class="article-video" data-inline-video>
-                      <div class="article-video__media">
-                        <video
-                          controls
-                          playsinline
-                          preload="none"
-                          poster={video.thumbnail}
-                          width={video.width}
-                          height={video.height}
-                          aria-labelledby={`video-${video.id}-title`}
-                          aria-describedby={`video-${video.id}-description`}
-                        >
-                          <source src={`/videos/${video.file}`} type="video/mp4" />
-                          {video.chapterTrack && (
-                            <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />
-                          )}
-                          مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
-                        </video>
-                      </div>
-
-                      <div class="article-video__body">
-                        <div class="article-video__meta">
-                          <span><CirclePlay size={16} aria-hidden="true" /> ویدئوی مرتبط</span>
-                          <span><Clock3 size={16} aria-hidden="true" /> حدود {video.durationSeconds} ثانیه</span>
-                        </div>
-                        <h3 id={`video-${video.id}-title`}>{video.title}</h3>
-                        <p id={`video-${video.id}-description`}>{video.description}</p>
-
-                        {video.chapters.length > 0 && (
-                          <div class="video-chapters" role="group" aria-label={`فصل‌های ${video.title}`}>
-                            <strong><ListVideo size={17} aria-hidden="true" /> فصل‌ها</strong>
-                            <ol>
-                              {video.chapters.map((chapter: any, chapterIndex: number) => (
-                                <li id={`video-${video.id}-clip-${chapterIndex + 1}`}>
-                                  <button type="button" data-video-id={`video-${video.id}`} data-start={chapter.startOffset}>
-                                    <span>{chapter.name}</span>
-                                    <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time>
-                                  </button>
-                                </li>
-                              ))}
-                            </ol>
-                          </div>
-                        )}
-
-                        {video.details && (
-                          <details class="video-context">
-                            <summary>شرح بالینی و مرز تصمیم</summary>
-                            <p>{video.details.summary}</p>
-                            <ul>
-                              {video.details.takeaways.map((item: string) => <li>{item}</li>)}
-                            </ul>
-                            <p class="video-boundary"><strong>مرز تصمیم:</strong> {video.details.boundary}</p>
-                          </details>
-                        )}
-
-                        {video.details?.relatedPath && (
-                          <a class="video-card__related" href={video.details.relatedPath}>
-                            <BookOpen size={16} aria-hidden="true" />
-                            <span>{video.details.relatedLabel}</span>
-                          </a>
-                        )}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-
-              <div class="medical-article__segment" set:html={split.rest}></div>
             </div>
-          </details>
-        );
-      })}
-    </div>
-  </div>
+          )}
+
+          <div class="medical-article__segment" set:html={split.rest}></div>
+        </div>
+      </div>
+    );
+  })}
+
+  {bestSection && (
+    <section class="quiet-best-wrap" aria-label="پرسش‌های رایج درباره انتخاب پزشک زیبایی در کرمانشاه">
+      <details class="quiet-best">
+        <summary>
+          <span class="quiet-best__icon"><Search size={18} aria-hidden="true" /></span>
+          <span>
+            <strong>پرسش‌های رایج درباره انتخاب پزشک زیبایی در کرمانشاه</strong>
+            <small>پاسخ به جست‌وجوهای «بهترین دکتر»</small>
+          </span>
+          <ChevronDown class="quiet-best__chevron" size={20} aria-hidden="true" />
+        </summary>
+        <div class="quiet-best__body medical-article">
+          {bestSection.aliases.map((alias) => <span id={alias.anchor} class="anchor-alias" data-service-id={alias.id} aria-hidden="true"></span>)}
+          <h2 id={bestSection.id} class="sr-only" tabindex="-1">{simplifyTitle(bestSection.title)}</h2>
+          <div set:html={simplifyHtml(bestSection.html)}></div>
+        </div>
+      </details>
+    </section>
+  )}
 
   <script is:inline>
-    const guide = document.querySelector('.guide-list');
-    document.querySelectorAll('[data-guide-action]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const shouldOpen = button.dataset.guideAction === 'open';
-        guide?.querySelectorAll('details[data-guide-section]').forEach((details) => { details.open = shouldOpen; });
-      });
-    });
-
     const openTarget = () => {
       let id = '';
       try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
       if (!id) return;
       const target = document.getElementById(id);
-      const details = target?.closest?.('details[data-guide-section]');
+      const details = target?.closest?.('details');
       if (details) details.open = true;
+      target?.scrollIntoView({ block: 'start' });
     };
     openTarget();
     addEventListener('hashchange', openTarget, { passive: true });
@@ -224,4 +295,4 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
       });
     }, true);
   </script>
-</section>
+</article>

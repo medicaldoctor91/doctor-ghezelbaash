@@ -3,14 +3,12 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import HomeHeader from '../components/home/HomeHeader.astro';
 import Hero from '../components/home/Hero.astro';
-import DecisionModel from '../components/home/DecisionModel.astro';
 import Services from '../components/home/Services.astro';
-import DoctorProfile from '../components/home/DoctorProfile.astro';
 import GuideLibrary from '../components/home/GuideLibrary.astro';
+import BestDoctorAnswers from '../components/home/BestDoctorAnswers.astro';
 import ContactSection from '../components/home/ContactSection.astro';
 import HomeFooter from '../components/home/HomeFooter.astro';
 import { getHeadings, rawContent } from '../content/landing.md';
-import { buildGroupedToc } from '../lib/content';
 import { stabilizeHeadings } from '../domain/anchor-utils';
 import { serviceAliasesForHeading } from '../domain/url-architecture.mjs';
 import { buildGooglePageGraph } from '../compilers/google-page-graph';
@@ -22,7 +20,6 @@ import {
 
 const raw = rawContent();
 const headings = stabilizeHeadings(getHeadings());
-const groups = buildGroupedToc(headings);
 const graph = buildGooglePageGraph(headings, raw);
 
 const h2Matches = [...raw.matchAll(/^##\s+(.+)$/gm)];
@@ -34,19 +31,48 @@ const processor = await createMarkdownProcessor({
   rehypePlugins: [rehypeExternalLinks, rehypeHeadingAnchors, rehypeAccessibleTables],
 });
 
-const guideSections = await Promise.all(h2Matches.map(async (match, index) => {
+const cleanVisibleCopy = (value: string) => value
+  .replaceAll('تصمیم قابل‌دفاع', 'انتخاب قابل‌توضیح')
+  .replaceAll('قابل‌دفاع', 'قابل‌توضیح');
+
+const allArticleSections = await Promise.all(h2Matches.map(async (match, index) => {
   const start = (match.index ?? 0) + match[0].length;
   const end = h2Matches[index + 1]?.index ?? raw.length;
   const markdown = raw.slice(start, end).trim();
   const heading = h2Headings[index];
-  const id = heading?.slug ?? `guide-${index + 1}`;
+  const id = heading?.slug ?? `article-${index + 1}`;
+  const rendered = markdown ? (await processor.render(markdown)).code : '';
   return {
     id,
-    title: match[1].trim(),
-    html: markdown ? (await processor.render(markdown)).code : '',
+    title: cleanVisibleCopy(match[1].trim()),
+    html: cleanVisibleCopy(rendered),
     aliases: serviceAliasesForHeading(id),
   };
 }));
+
+const suppressedBestSections = allArticleSections.filter((section) =>
+  section.id === 'best-aesthetic-doctor-kermanshah-answers'
+  || section.title.includes('بهترین دکتر زیبایی'),
+);
+const articleSections = allArticleSections.filter((section) => !suppressedBestSections.includes(section));
+const focusedBestIds = new Set([
+  'best-aesthetic-doctor-kermanshah-answers',
+  'best-aesthetic-doctor-kermanshah',
+  'best-botox-doctor-kermanshah',
+  'best-filler-doctor-kermanshah',
+  'best-lip-filler-doctor-kermanshah',
+  'best-under-eye-filler-doctor-kermanshah',
+  'best-thread-lift-doctor-kermanshah',
+  'best-acne-scar-subcision-doctor-kermanshah',
+  'best-skin-rejuvenation-doctor-kermanshah',
+  'best-hair-loss-prp-doctor-kermanshah',
+  'best-submental-liposuction-doctor-kermanshah',
+]);
+const suppressedBestAnchorIds = [...new Set(suppressedBestSections.flatMap((section) => [
+  section.id,
+  ...section.aliases.map((alias) => alias.anchor),
+  ...[...section.html.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]),
+]))].filter((id) => !focusedBestIds.has(id));
 ---
 
 <SiteLayout graph={graph} ogType="website">
@@ -58,10 +84,9 @@ const guideSections = await Promise.all(h2Matches.map(async (match, index) => {
   <HomeHeader />
   <main id="main-content">
     <Hero />
-    <DecisionModel />
     <Services />
-    <DoctorProfile />
-    <GuideLibrary sections={guideSections} groups={groups} />
+    <GuideLibrary sections={articleSections} />
+    <BestDoctorAnswers hiddenAnchorIds={suppressedBestAnchorIds} />
     <ContactSection />
   </main>
   <HomeFooter />

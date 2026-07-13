@@ -123,7 +123,7 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
   const clinicalGuide: Node = {
     '@type': 'WebPageElement',
     '@id': clinicalGuideId,
-    name: 'راهنمای کامل تصمیم‌گیری در پزشکی زیبایی، پوست و مو',
+    name: 'مطالب پزشکی زیبایی، پوست و مو',
     url: `${site.url}#clinical-guide`,
     inLanguage: 'fa-IR',
     isPartOf: ref(`${site.url}#webpage`),
@@ -174,6 +174,13 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
       ref(site.huggingFaceDataset),
     ],
   };
+  const clinic: Node = {
+    ...p.clinicKnowledgeNode,
+    address: {
+      ...(p.clinicKnowledgeNode?.address ?? {}),
+      postalCode: site.postalCode,
+    },
+  };
   const offerCatalog: Node = { ...p.offerCatalogNode, url: `${site.url}#services` };
   const authorityNetwork: Node = { ...p.authorityNetworkNode };
   delete authorityNetwork.url;
@@ -189,7 +196,7 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     p.irimcOrganizationNode,
     p.credentialNode,
     person,
-    p.clinicKnowledgeNode,
+    clinic,
     offerCatalog,
     website,
     page,
