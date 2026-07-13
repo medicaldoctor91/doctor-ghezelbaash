@@ -43,14 +43,18 @@
 /favicon.ico
   Cache-Control: public, max-age=604800
 
-/favicon.svg
-  Cache-Control: public, max-age=604800
-
 /favicon-32x32.png
   Cache-Control: public, max-age=604800
 
 /apple-touch-icon.png
   Cache-Control: public, max-age=604800
+
+/knowledge-graph.jsonld
+  Content-Type: application/ld+json; charset=utf-8
+  X-Robots-Tag: noindex, follow
+  Access-Control-Allow-Origin: *
+  Cross-Origin-Resource-Policy: cross-origin
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 
 /llms.txt
   Content-Type: text/plain; charset=utf-8
@@ -58,90 +62,6 @@
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
-
-/llms-full.txt
-  Content-Type: text/plain; charset=utf-8
-  X-Robots-Tag: noindex, follow
-  Access-Control-Allow-Origin: *
-  Cross-Origin-Resource-Policy: cross-origin
-  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
-
-# Common policy for every JSON resource. MIME is assigned by one non-overlapping rule below.
-/*.json
-  X-Robots-Tag: noindex, follow
-  Access-Control-Allow-Origin: *
-  Cross-Origin-Resource-Policy: cross-origin
-  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
-
-/*.jsonld
-  Content-Type: application/ld+json; charset=utf-8
-  X-Robots-Tag: noindex, follow
-  Access-Control-Allow-Origin: *
-  Cross-Origin-Resource-Policy: cross-origin
-  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
-
-/*.jsonl
-  Content-Type: application/x-ndjson; charset=utf-8
-  X-Robots-Tag: noindex, follow
-  Access-Control-Allow-Origin: *
-  Cross-Origin-Resource-Policy: cross-origin
-  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
-
-# Root JSON artifacts: explicit MIME without overlapping JSON MIME declarations.
-/answers.json
-  Content-Type: application/json; charset=utf-8
-/authority-map.json
-  Content-Type: application/json; charset=utf-8
-/authority-network.json
-  Content-Type: application/json; charset=utf-8
-/citations.json
-  Content-Type: application/json; charset=utf-8
-/claims.json
-  Content-Type: application/json; charset=utf-8
-/content-table.json
-  Content-Type: application/json; charset=utf-8
-/context.json
-  Content-Type: application/json; charset=utf-8
-/decision-capsules.json
-  Content-Type: application/json; charset=utf-8
-/editorial-review.json
-  Content-Type: application/json; charset=utf-8
-/entity.json
-  Content-Type: application/json; charset=utf-8
-/evidence.json
-  Content-Type: application/json; charset=utf-8
-/faq.json
-  Content-Type: application/json; charset=utf-8
-/intent-coverage.json
-  Content-Type: application/json; charset=utf-8
-/intents.json
-  Content-Type: application/json; charset=utf-8
-/media.json
-  Content-Type: application/json; charset=utf-8
-/ontology.json
-  Content-Type: application/json; charset=utf-8
-/reputation.json
-  Content-Type: application/json; charset=utf-8
-/resolver.json
-  Content-Type: application/json; charset=utf-8
-/search.json
-  Content-Type: application/json; charset=utf-8
-/services.json
-  Content-Type: application/json; charset=utf-8
-
-# Nested JSON indexes and records.
-/ai/*.json
-  Content-Type: application/json; charset=utf-8
-/intents/*.json
-  Content-Type: application/json; charset=utf-8
-/evidence/*.json
-  Content-Type: application/json; charset=utf-8
-/media/*.json
-  Content-Type: application/json; charset=utf-8
-/search/*.json
-  Content-Type: application/json; charset=utf-8
-/answers/*.json
-  Content-Type: application/json; charset=utf-8
 
 /*.xml
   Content-Type: application/xml; charset=utf-8
@@ -163,3 +83,4 @@
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
   Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+

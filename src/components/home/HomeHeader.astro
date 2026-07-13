@@ -1,0 +1,47 @@
+---
+import { Menu, Phone, X } from '@lucide/astro';
+import { site } from '../../domain/entities';
+import BrandLogo from './BrandLogo.astro';
+
+const links = [
+  { href: '#decision-model', label: 'رویکرد' },
+  { href: '#services', label: 'حوزه‌ها' },
+  { href: '#doctor', label: 'پزشک' },
+  { href: '#videos', label: 'ویدئوها' },
+  { href: '#clinical-guide', label: 'راهنمای بالینی' },
+  { href: '#contact', label: 'مراجعه' },
+];
+---
+
+<header class="home-header">
+  <nav class="shell home-header__inner" aria-label="ناوبری اصلی">
+    <a class="home-brand" href="#top" aria-label="دکتر سعید قزلباش؛ بازگشت به ابتدای صفحه">
+      <BrandLogo compact priority />
+      <span class="home-brand__copy">
+        <strong>{site.name}</strong>
+        <small>پزشکی زیبایی، پوست و مو · کرمانشاه</small>
+      </span>
+    </a>
+
+    <div class="home-header__links">
+      {links.map((link) => <a href={link.href}>{link.label}</a>)}
+    </div>
+
+    <div class="home-header__actions">
+      <a class="button button--primary header-call" href={`tel:${site.phone}`}>
+        <Phone size={18} aria-hidden="true" />
+        تماس
+      </a>
+      <details class="mobile-menu">
+        <summary aria-label="بازکردن منو">
+          <Menu class="mobile-menu__open" aria-hidden="true" />
+          <X class="mobile-menu__close" aria-hidden="true" />
+        </summary>
+        <nav aria-label="منوی موبایل">
+          {links.map((link) => <a href={link.href}>{link.label}</a>)}
+          <a href={`tel:${site.phone}`}>تماس با کلینیک</a>
+        </nav>
+      </details>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,21 @@
+---
+interface Props {
+  compact?: boolean;
+  priority?: boolean;
+}
+
+const { compact = false, priority = false } = Astro.props;
+---
+
+<span class:list={["brand-logo", { "brand-logo--compact": compact }]}>
+  <img
+    src="/assets/brand/doctor-hand-syringe-logo.png"
+    alt=""
+    width="1024"
+    height="1024"
+    loading={priority ? "eager" : "lazy"}
+    decoding="async"
+    fetchpriority={priority ? "high" : "auto"}
+  />
+</span>
+

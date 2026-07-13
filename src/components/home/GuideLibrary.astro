@@ -1,0 +1,98 @@
+---
+import { BookOpenText, ChevronDown, Search } from '@lucide/astro';
+
+type GuideSection = {
+  id: string;
+  title: string;
+  html: string;
+  aliases: Array<{ id: string; anchor: string }>;
+};
+
+type GuideGroup = {
+  id: string;
+  label: string;
+  shortLabel: string;
+  sections: Array<{ slug: string; text: string }>;
+};
+
+interface Props {
+  sections: GuideSection[];
+  groups: GuideGroup[];
+}
+
+const { sections, groups } = Astro.props;
+const sectionById = new Map(sections.map((section) => [section.id, section]));
+---
+
+<section id="clinical-guide" class="section guide-section" aria-labelledby="guide-title">
+  <span id="content-table" class="anchor-alias" aria-hidden="true"></span>
+  <span id="knowledge-resources" class="anchor-alias" aria-hidden="true"></span>
+  <div class="shell">
+    <div class="section-heading section-heading--split">
+      <div>
+        <p class="eyebrow">دانش‌نامهٔ بالینی</p>
+        <h2 id="guide-title">راهنمای کامل تصمیم‌گیری</h2>
+      </div>
+      <p>محتوای تفصیلی بر اساس مسئلهٔ بیمار سازمان یافته است. هر بخش را مستقل باز کنید و مستقیم به سؤال یا ناحیهٔ موردنظر برسید.</p>
+    </div>
+
+    <nav class="guide-index" aria-label="فهرست موضوعی دانش‌نامه">
+      <div class="guide-index__title">
+        <BookOpenText size={22} aria-hidden="true" />
+        <strong>مسیر سریع موضوعات</strong>
+      </div>
+      <div class="guide-index__groups">
+        {groups.map((group) => (
+          <section>
+            <h3>{group.shortLabel}</h3>
+            <ul>
+              {group.sections.slice(0, 5).map((item) => (
+                <li><a href={`#${item.slug}`}>{item.text.replace(/¶$/u, '')}</a></li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </nav>
+
+    <div class="guide-tools" role="group" aria-label="ابزار بازکردن راهنما">
+      <p><Search size={19} aria-hidden="true" /> برای یافتن عبارت خاص، از جست‌وجوی مرورگر استفاده کنید.</p>
+      <button type="button" data-guide-action="open">بازکردن همه</button>
+      <button type="button" data-guide-action="close">بستن همه</button>
+    </div>
+
+    <div class="guide-list">
+      {sections.map((section, index) => (
+        <details class="guide-card" data-guide-section open={index === 0}>
+          <summary>
+            {section.aliases.map((alias) => <span id={alias.anchor} class="anchor-alias" data-service-id={alias.id} aria-hidden="true"></span>)}
+            <h2 id={section.id} tabindex="-1">{section.title}</h2>
+            <ChevronDown size={22} aria-hidden="true" />
+          </summary>
+          <div class="medical-article" set:html={section.html}></div>
+        </details>
+      ))}
+    </div>
+  </div>
+
+  <script is:inline>
+    const guide = document.querySelector('.guide-list');
+    document.querySelectorAll('[data-guide-action]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const shouldOpen = button.dataset.guideAction === 'open';
+        guide?.querySelectorAll('details').forEach((details) => { details.open = shouldOpen; });
+      });
+    });
+
+    const openTarget = () => {
+      let id = '';
+      try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
+      if (!id) return;
+      const target = document.getElementById(id);
+      const details = target?.closest?.('details[data-guide-section]');
+      if (details) details.open = true;
+    };
+    openTarget();
+    addEventListener('hashchange', openTarget, { passive: true });
+  </script>
+</section>

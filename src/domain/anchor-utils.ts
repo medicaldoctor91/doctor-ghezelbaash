@@ -6,5 +6,8 @@ export function stableAnchorFor(title: string, fallback?: string) {
 }
 
 export function stabilizeHeadings(headings: MarkdownHeading[]): MarkdownHeading[] {
-  return headings.map((heading) => ({ ...heading, slug: stableAnchorFor(heading.text, heading.slug) }));
+  return headings.map((heading) => {
+    const text = heading.text.replace(/\s*¶$/u, '').trim();
+    return { ...heading, text, slug: stableAnchorFor(text, heading.slug) };
+  });
 }

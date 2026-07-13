@@ -1,10 +1,8 @@
 import { unified } from '@astrojs/markdown-remark';
 import { defineConfig } from 'astro/config';
-import tailwindcss from '@tailwindcss/vite';
 import {
   rehypeExternalLinks,
   rehypeHeadingAnchors,
-  rehypeSemanticSections,
   rehypeAccessibleTables,
 } from './src/lib/markdown-plugins.mjs';
 
@@ -15,8 +13,7 @@ export default defineConfig({
     processor: unified({
       gfm: true,
       smartypants: false,
-      rehypePlugins: [rehypeExternalLinks, rehypeHeadingAnchors, rehypeSemanticSections, rehypeAccessibleTables],
+      rehypePlugins: [rehypeExternalLinks, rehypeHeadingAnchors, rehypeAccessibleTables],
     }),
   },
-  vite: { plugins: [tailwindcss()] },
 });

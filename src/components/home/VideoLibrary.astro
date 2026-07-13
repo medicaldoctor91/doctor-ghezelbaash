@@ -1,0 +1,100 @@
+---
+import { CirclePlay, Clock3, ListVideo } from '@lucide/astro';
+import { videos } from '../../domain/media.mjs';
+import { videoPageDetails } from '../../domain/video-pages.mjs';
+import { readMediaChapters } from '../../lib/media';
+
+const videoItems = videos.map((video: any) => {
+  const details = videoPageDetails[video.id];
+  const chapters = readMediaChapters(video.chapterTrack).slice(0, 3);
+  return { ...video, details, chapters };
+});
+
+const timeLabel = (timestamp: string) => timestamp.replace(/^00:/, '');
+const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000) / 1000)}S`;
+---
+
+<section id="videos" class="section section--tint" aria-labelledby="videos-title">
+  <span id="video-knowledge-hub" class="anchor-alias" aria-hidden="true"></span>
+  <div class="shell">
+    <div class="section-heading section-heading--split">
+      <div>
+        <p class="eyebrow">کتابخانهٔ ویدئویی</p>
+        <h2 id="videos-title">تصمیم بالینی در حرکت</h2>
+      </div>
+      <p>۱۲ ویدئوی واقعی در همین صفحه قرار گرفته‌اند؛ نمونه، آموزش و مرز درمان کنار هم، بدون صفحهٔ جداگانه.</p>
+    </div>
+
+    <div class="video-grid">
+      {videoItems.map((video: any) => (
+        <article id={`video-${video.id}`} class="video-card">
+          <div class="video-card__media">
+            <video
+              controls
+              playsinline
+              preload="none"
+              poster={video.thumbnail}
+              width={video.width}
+              height={video.height}
+              aria-describedby={`video-${video.id}-description`}
+            >
+              <source src={`/videos/${video.file}`} type="video/mp4" />
+              {video.chapterTrack && (
+                <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />
+              )}
+              مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
+            </video>
+          </div>
+
+          <div class="video-card__body">
+            <div class="video-card__meta">
+              <span><CirclePlay size={16} aria-hidden="true" /> ویدئوی کوتاه</span>
+              <span><Clock3 size={16} aria-hidden="true" /> حدود {video.durationSeconds} ثانیه</span>
+            </div>
+            <h3>{video.title}</h3>
+            <p id={`video-${video.id}-description`}>{video.description}</p>
+
+            {video.chapters.length > 0 && (
+              <div class="video-chapters" role="group" aria-label={`فصل‌های ${video.title}`}>
+                <strong><ListVideo size={17} aria-hidden="true" /> فصل‌ها</strong>
+                <ol>
+                  {video.chapters.map((chapter: any, index: number) => (
+                    <li id={`video-${video.id}-clip-${index + 1}`}>
+                      <button type="button" data-video-id={`video-${video.id}`} data-start={chapter.startOffset}>
+                        <span>{chapter.name}</span>
+                        <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {video.details && (
+              <details class="video-context">
+                <summary>شرح بالینی و مرز تصمیم</summary>
+                <p>{video.details.summary}</p>
+                <ul>
+                  {video.details.takeaways.map((item: string) => <li>{item}</li>)}
+                </ul>
+                <p class="video-boundary"><strong>مرز تصمیم:</strong> {video.details.boundary}</p>
+              </details>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+
+  <script is:inline>
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest?.('.video-chapters button');
+      if (!button) return;
+      const figure = document.getElementById(button.dataset.videoId || '');
+      const video = figure?.querySelector('video');
+      if (!video) return;
+      video.currentTime = Number(button.dataset.start || 0);
+      video.play().catch(() => {});
+    });
+  </script>
+</section>

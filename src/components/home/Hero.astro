@@ -1,0 +1,66 @@
+---
+import { ArrowLeft, BadgeCheck, MapPin, Phone } from '@lucide/astro';
+import { site } from '../../domain/entities';
+---
+
+<section class="hero shell" aria-labelledby="hero-title">
+  <span id="clinical-decision-model-overview" class="anchor-alias" aria-hidden="true"></span>
+  <div class="hero__copy">
+    <p class="eyebrow">پزشکی زیبایی، پوست و مو در کرمانشاه</p>
+    <h1 id="hero-title">دکتر سعید قزلباش؛ تشخیص پیش از مداخله</h1>
+    <p class="hero__lead">
+      صورت شما یک فهرست خدمات نیست. تصمیم درست از تشخیص لایهٔ غالب شروع می‌شود:
+      حرکت عضله، کیفیت پوست، کمبود حجم، افت بافت یا ساختار زیرین.
+    </p>
+    <div class="hero__actions">
+      <a class="button button--primary" href={`tel:${site.phone}`}>
+        <Phone size={19} aria-hidden="true" />
+        تماس برای هماهنگی
+      </a>
+      <a class="button button--ghost" href="#decision-model">
+        رویکرد درمان را ببینید
+        <ArrowLeft size={19} aria-hidden="true" />
+      </a>
+    </div>
+    <dl class="hero__facts">
+      <div>
+        <dt><BadgeCheck size={18} aria-hidden="true" /> هویت حرفه‌ای</dt>
+        <dd>شمارهٔ نظام پزشکی {site.irimc}</dd>
+      </div>
+      <div>
+        <dt><MapPin size={18} aria-hidden="true" /> محل فعالیت</dt>
+        <dd>{site.city}، ساختمان ویستا</dd>
+      </div>
+    </dl>
+  </div>
+
+  <figure class="hero__portrait">
+    <picture>
+      <source
+        type="image/avif"
+        srcset="/images/responsive/doctor-portrait-480.avif 480w, /images/responsive/doctor-portrait-768.avif 768w, /images/responsive/doctor-portrait-1200.avif 1200w, /images/responsive/doctor-portrait-1600.avif 1600w"
+        sizes="(min-width: 920px) 42vw, 100vw"
+      />
+      <source
+        type="image/webp"
+        srcset="/images/responsive/doctor-portrait-480.webp 480w, /images/responsive/doctor-portrait-768.webp 768w, /images/responsive/doctor-portrait-1200.webp 1200w, /images/responsive/doctor-portrait-1600.webp 1600w"
+        sizes="(min-width: 920px) 42vw, 100vw"
+      />
+      <img
+        src="/images/responsive/doctor-portrait-1200.jpg"
+        srcset="/images/responsive/doctor-portrait-1200.jpg 1200w, /images/responsive/doctor-portrait-1600.jpg 1600w"
+        sizes="(min-width: 920px) 42vw, 100vw"
+        alt="دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه"
+        width="1600"
+        height="1067"
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+      />
+    </picture>
+    <figcaption>
+      <strong>{site.legalName}</strong>
+      <span>دکترای حرفه‌ای پزشکی · مسئول تصمیم بالینی</span>
+    </figcaption>
+  </figure>
+</section>

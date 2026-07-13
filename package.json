@@ -1,31 +1,22 @@
 {
   "name": "ghezelbaash-astro-megalanding",
   "type": "module",
-  "version": "8.0.0",
+  "version": "9.0.0",
   "engines": {
     "node": ">=22.12.0"
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && npm run validate:dist && npm run validate:architecture && npm run validate:answers && npm run validate:videos && npm run validate:knowledge && npm run validate:instagram && npm run validate:research-education && npm run benchmark:retrieval",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run validate:release",
     "build:astro": "astro build",
-    "validate:dist": "node scripts/validate-dist.mjs",
-    "benchmark:retrieval": "node scripts/retrieval-benchmark.mjs",
     "preview": "astro preview",
     "astro": "astro",
-    "validate:videos": "node scripts/validate-video-pages.mjs",
-    "validate:knowledge": "node scripts/validate-knowledge-page.mjs",
-    "validate:instagram": "node scripts/validate-instagram-cta.mjs",
-    "validate:research-education": "node scripts/validate-research-education.mjs",
-    "validate:architecture": "node scripts/validate-url-architecture.mjs",
-    "validate:answers": "node scripts/validate-answer-semantics.mjs"
+    "validate:release": "node scripts/validate-release.mjs"
   },
   "dependencies": {
     "@lucide/astro": "^1.23.0",
-    "@tailwindcss/vite": "^4.3.1",
     "astro": "^7.0.2",
-    "github-slugger": "^2.0.0",
-    "tailwindcss": "^4.3.1"
+    "github-slugger": "^2.0.0"
   },
   "devDependencies": {
     "@astrojs/markdown-remark": "^7.2.1"

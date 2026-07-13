@@ -2,7 +2,7 @@
   "id": "/",
   "name": "دکتر سعید قزلباش | پزشکی زیبایی در کرمانشاه",
   "short_name": "دکتر قزلباش",
-  "description": "راهنمای جامع تصمیم‌گیری در پزشکی زیبایی، پوست و مو؛ خدمات غیرجراحی، کم‌تهاجمی، جراحی‌های مرتبط و مرز ارجاع.",
+  "description": "دکتر سعید قزلباش؛ پزشکی زیبایی، پوست و مو در کرمانشاه با تشخیص پیش از مداخله.",
   "lang": "fa-IR",
   "dir": "rtl",
   "start_url": "/",
@@ -18,52 +18,47 @@
   ],
   "shortcuts": [
     {
-      "name": "فهرست کامل محتوا",
-      "short_name": "فهرست",
-      "url": "/#content-table"
+      "name": "راهنمای بالینی",
+      "short_name": "راهنما",
+      "url": "/#clinical-guide"
     },
     {
-      "name": "هویت پزشک و کلینیک",
-      "short_name": "هویت",
-      "url": "/#entity-authority-panel"
+      "name": "درباره پزشک",
+      "short_name": "پزشک",
+      "url": "/#doctor"
     },
     {
-      "name": "پوشش خدمات و جراحی",
-      "short_name": "خدمات",
-      "url": "/#service-coverage-panel"
+      "name": "حوزه‌های درمان",
+      "short_name": "حوزه‌ها",
+      "url": "/#services"
     },
     {
-      "name": "مرکز دانش ویدئویی",
+      "name": "ویدئوهای بالینی",
       "short_name": "ویدئوها",
-      "url": "/#video-knowledge-hub"
-    },
-    {
-      "name": "Knowledge & AI",
-      "short_name": "Knowledge",
-      "url": "/#knowledge-resources"
+      "url": "/#videos"
     }
   ],
   "icons": [
     {
-      "src": "/assets/brand/doctor-ghezelbaash-logo-192.png",
+      "src": "/assets/brand/doctor-hand-syringe-logo-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/brand/doctor-ghezelbaash-logo-192.png",
+      "src": "/assets/brand/doctor-hand-syringe-logo-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/assets/brand/doctor-ghezelbaash-logo-512.png",
+      "src": "/assets/brand/doctor-hand-syringe-logo-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/assets/brand/doctor-ghezelbaash-logo-512.png",
+      "src": "/assets/brand/doctor-hand-syringe-logo-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

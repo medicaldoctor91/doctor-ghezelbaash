@@ -1,0 +1,43 @@
+---
+import { ArrowUp, AtSign, MapPin, Phone } from '@lucide/astro';
+import { site } from '../../domain/entities';
+import BrandLogo from './BrandLogo.astro';
+
+const year = new Date().getFullYear();
+const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(`${site.dateModified}T12:00:00+03:30`));
+---
+
+<footer class="home-footer">
+  <div class="shell footer-grid">
+    <section class="footer-brand">
+      <BrandLogo compact />
+      <div>
+        <strong>{site.legalName}</strong>
+        <p>دکترای حرفه‌ای پزشکی · شمارهٔ نظام پزشکی {site.irimc}</p>
+      </div>
+    </section>
+    <nav aria-label="پیوندهای صفحه">
+      <strong>بخش‌های اصلی</strong>
+      <a href="#decision-model">رویکرد درمان</a>
+      <a href="#services">حوزه‌ها</a>
+      <a href="#videos">ویدئوها</a>
+      <a href="#clinical-guide">راهنمای بالینی</a>
+    </nav>
+    <nav aria-label="ارتباط با کلینیک">
+      <strong>ارتباط</strong>
+      <a href={`tel:${site.phone}`}><Phone size={17} aria-hidden="true" /> <bdi dir="ltr">{site.phoneDisplay}</bdi></a>
+      <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={17} aria-hidden="true" /> نقشه</a>
+      <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={17} aria-hidden="true" /> اینستاگرام</a>
+    </nav>
+  </div>
+  <div class="shell footer-bottom">
+    <span>© {year} دکتر سعید قزلباش · آخرین بازبینی: {modified}</span>
+    <a href="#top"><ArrowUp size={17} aria-hidden="true" /> بازگشت به بالا</a>
+  </div>
+</footer>
+
+<nav id="conversion-dock" class="mobile-dock" aria-label="اقدام‌های سریع موبایل">
+  <a href={`tel:${site.phone}`}><Phone size={20} aria-hidden="true" /><span>تماس</span></a>
+  <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={20} aria-hidden="true" /><span>نقشه</span></a>
+  <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={20} aria-hidden="true" /><span>اینستاگرام</span></a>
+</nav>
