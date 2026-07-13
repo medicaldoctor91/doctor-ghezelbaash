@@ -74,17 +74,31 @@ const requiredHeadMe = [
   'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
   'https://www.facebook.com/Ghezelbaash/',
   'https://www.pinterest.com/qezelbaash/',
-  'https://huggingface.co/Ghezelbaash',
 ];
 for (const url of requiredHeadMe) {
   check(homepage.includes(`<link rel="me" href="${url}"`), `required head identity link missing: ${url}`);
 }
-check(!homepage.includes('<link rel="me" href="https://www.wikidata.org/entity/Q140287622"'), 'Wikidata should be linked through Person.sameAs, not rel=me');
-check(!homepage.includes('<link rel="me" href="https://huggingface.co/datasets/'), 'Hugging Face Dataset must not be a Person rel=me identity link');
+check(!homepage.includes('<link rel="me" href="https://huggingface.co/Ghezelbaash"'), 'Hugging Face profile must not remain a rel=me head link');
+check(!homepage.includes('<link rel="me" href="https://www.wikidata.org/entity/'), 'Wikidata entities must use rel=describedby rather than rel=me');
+check(!homepage.includes('<link rel="me" href="https://huggingface.co/datasets/'), 'Hugging Face Dataset must not be a rel=me identity link');
 
+const requiredDescribedBy = [
+  'https://www.ghezelbaash.ir/knowledge-graph.jsonld',
+  'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data',
+  'https://www.wikidata.org/entity/Q140287622',
+  'https://www.wikidata.org/entity/Q140288589',
+  'https://www.wikidata.org/entity/Q140304972',
+];
+for (const url of requiredDescribedBy) {
+  check(homepage.includes(`<link rel="describedby" href="${url}"`), `required rel=describedby head link missing: ${url}`);
+}
 check(
-  homepage.includes('<link rel="describedby" type="application/ld+json" href="https://www.ghezelbaash.ir/knowledge-graph.jsonld"'),
-  'absolute external knowledge-graph link is missing from head',
+  homepage.includes('<link rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/llms.txt"'),
+  'absolute llms.txt alternate link is missing from head',
+);
+check(
+  homepage.includes('<link rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/.well-known/ai.txt"'),
+  'absolute ai.txt alternate link is missing from head',
 );
 
 for (const label of ['Hugging Face', 'LinkedIn', 'Facebook', 'Pinterest']) {
@@ -114,9 +128,19 @@ console.log(JSON.stringify({
   bestDoctorQueries: bestDoctorIds.length,
   artificialVisiblePhrases: 0,
   requiredIdentityHeadLinks: requiredHeadMe.length,
-  wikidataHeadLink: false,
-  huggingFaceDatasetHeadLink: false,
-  externalKnowledgeGraphHeadLink: true,
+  instagramHeadRelMe: true,
+  huggingFaceProfileHeadRelMe: false,
+  machineResourceHeadLinks: {
+    knowledgeGraph: true,
+    llms: true,
+    aiDeclaration: true,
+    huggingFaceDataset: true,
+  },
+  wikidataHeadLinks: {
+    person: true,
+    clinic: true,
+    dataset: true,
+  },
   visibleProfessionalProfiles: 4,
   watchPageLinks: 0,
   standaloneVideoHub: false,
