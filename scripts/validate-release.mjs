@@ -39,29 +39,35 @@ check((homepage.match(/<h1\b/giu) ?? []).length === 1, 'homepage must contain ex
 check((homepage.match(/<video\b/giu) ?? []).length === videos.length, `homepage must contain ${videos.length} initial video elements`);
 check((homepage.match(/<video\b[^>]*preload="none"/giu) ?? []).length === videos.length, 'every video must use preload="none"');
 check((homepage.match(/<source\b[^>]*type="video\/mp4"/giu) ?? []).length === videos.length, 'every video must expose an MP4 source in initial HTML');
-check((homepage.match(/\bdata-inline-video(?:\s|>)/giu) ?? []).length === videos.length, 'every video must be embedded contextually inside clinical text');
-check((homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length >= 6, 'physician and clinic images must remain inside contextual sections');
+check((homepage.match(/\bdata-inline-video(?:\s|>)/giu) ?? []).length === videos.length, 'every video must be embedded contextually inside article text');
+check((homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length >= 6, 'physician and clinic images must remain contextual');
 check(!/<section\b[^>]*\bid="videos"/iu.test(homepage), 'standalone video section is forbidden');
 check(!/<section\b[^>]*\bid="clinic"/iu.test(homepage), 'standalone clinic photo section is forbidden');
+check(!/<section\b[^>]*\bid="doctor"/iu.test(homepage), 'standalone physician identity section is forbidden');
+check(!/<section\b[^>]*\bid="decision-model"/iu.test(homepage), 'standalone decision-model section is forbidden');
 check(!homepage.includes('video-rail'), 'video carousel/library markup is forbidden');
 check(!homepage.includes('gallery-grid'), 'standalone photo gallery markup is forbidden');
+check(!homepage.includes('guide-index'), 'article must not render as a knowledge-base index');
+check(!homepage.includes('guide-card'), 'article must not render as accordion cards');
 check(!homepage.includes('href="#videos"'), 'navigation must not expose a separate videos destination');
 check(!/<div\b[^>]*aria-label=/iu.test(homepage.replace(/<div\b[^>]*role="(?:group|navigation|region)"[^>]*aria-label=[^>]*>/giu, '')), 'generic div uses aria-label without an explicit role');
 check(!/<time\b(?![^>]*datetime=)/iu.test(homepage), 'time element missing datetime');
 
-const guideStart = homepage.indexOf('id="clinical-guide"');
+const articleStart = homepage.indexOf('id="clinical-guide"');
 const contactStart = homepage.indexOf('id="contact"');
-check(guideStart >= 0 && contactStart > guideStart, 'clinical guide and contact ordering is invalid');
+check(articleStart >= 0 && contactStart > articleStart, 'article and contact ordering is invalid');
 for (const video of videos) {
   const position = homepage.indexOf(`id="video-${video.id}"`);
-  check(position > guideStart && position < contactStart, `${video.id}: video is not inside the clinical guide text`);
+  check(position > articleStart && position < contactStart, `${video.id}: video is not inside article text`);
 }
 
 for (const phrase of [
   'Knowledge & AI', 'Retrieval Corpus', 'Search Intent', 'knowsAbout', 'مدل زبانی',
   'موتورهای جست‌وجو', 'گوگل و LLM', 'کتابخانهٔ ویدئویی', 'محیط واقعی کلینیک',
+  'هویت قابل‌پیگیری', 'تصمیم قابل‌دفاع', 'مدل تصمیم سه‌لایه', 'دانش‌نامهٔ بالینی',
+  'راهنمای کامل تصمیم‌گیری', 'مسئول تصمیم بالینی',
 ]) {
-  check(!visible.includes(phrase), `forbidden or machine-facing phrase leaked into visible UI: ${phrase}`);
+  check(!visible.includes(phrase), `forbidden phrase leaked into visible UI: ${phrase}`);
 }
 
 const ids = [...homepage.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]);
@@ -108,7 +114,6 @@ function auditPersonIdentity(label, audit) {
 
   const sameAs = new Set(Array.isArray(person.sameAs) ? person.sameAs : [person.sameAs].filter(Boolean));
   for (const url of personRequiredSameAs) check(sameAs.has(url), `${label}: Person sameAs missing: ${url}`);
-  check(![...sameAs].some((url) => /facebook\.com|pinterest\.com/iu.test(url)), `${label}: unverified Facebook or Pinterest profile leaked into Person.sameAs`);
 
   const identifiers = Array.isArray(person.identifier) ? person.identifier : [person.identifier].filter(Boolean);
   for (const required of restoredPersonIdentifiers) {
@@ -123,6 +128,8 @@ function auditPersonIdentity(label, audit) {
     `${label}: Canadian MINC identifier missing`,
   );
   check(sameAs.has(personIdentityContract.linkedin), `${label}: LinkedIn identity missing`);
+  check(sameAs.has(personIdentityContract.facebook), `${label}: Facebook identity missing`);
+  check(sameAs.has(personIdentityContract.pinterest), `${label}: Pinterest identity missing`);
 }
 
 const fullAudit = auditGraph('canonical graph', full);
@@ -130,6 +137,7 @@ const inlineAudit = auditGraph('inline graph', inline);
 check(fullAudit.nodes.length >= 800, `canonical graph unexpectedly narrow: ${fullAudit.nodes.length}`);
 check(inlineAudit.nodes.length <= 60, `inline projection is too broad: ${inlineAudit.nodes.length}`);
 check(!inlineAudit.nodes.some((node) => [node['@type']].flat().some((type) => type === 'VideoObject' || type === 'Clip')), 'inline projection must not claim video rich-result eligibility without verified uploadDate');
+check(!inlineAudit.nodes.some((node) => [node['@type']].flat().includes('ScholarlyArticle')), 'research articles must stay in canonical graph and out of Google page projection');
 for (const id of inlineAudit.defined) check(fullAudit.defined.has(id), `inline @id absent from canonical graph: ${id}`);
 check(fullAudit.defined.has(`${site}#knowledge-graph-dataset`), 'canonical Dataset node missing');
 check(!fullAudit.defined.has(`${site}#retrieval-corpus`), 'removed retrieval Dataset still exists');
@@ -139,7 +147,13 @@ auditPersonIdentity('inline graph', inlineAudit);
 for (const profile of restoredPersonProfileNodes) {
   check(fullAudit.defined.has(profile['@id']), `canonical graph: restored Person profile node missing: ${profile['@id']}`);
 }
-check(!fullAudit.nodes.some((node) => /facebook\.com|pinterest\.com/iu.test(String(node['@id'] ?? ''))), 'unverified Facebook or Pinterest ProfilePage exists in canonical graph');
+
+const inlineArticle = inlineAudit.nodes.find((node) => node['@id'] === `${site}#article`);
+const timezoneDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
+check(timezoneDateTime.test(inlineArticle?.datePublished ?? ''), 'inline Article datePublished must be a timezone-aware ISO datetime');
+check(timezoneDateTime.test(inlineArticle?.dateModified ?? ''), 'inline Article dateModified must be a timezone-aware ISO datetime');
+const inlineClinic = inlineAudit.nodes.find((node) => node['@id'] === `${site}#clinic`);
+check(inlineClinic?.address?.postalCode === '6714657412', 'inline clinic postalCode is missing or incorrect');
 
 for (const node of fullAudit.nodes) {
   const values = [];
@@ -199,11 +213,19 @@ console.log(JSON.stringify({
     inlineVideos: videos.length,
     contextualImages: (homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length,
   },
+  richResults: {
+    postalCode: inlineClinic?.address?.postalCode,
+    datePublished: inlineArticle?.datePublished,
+    dateModified: inlineArticle?.dateModified,
+    researchArticlesInInlineGraph: 0,
+  },
   inlineGraphNodes: inlineAudit.nodes.length,
   canonicalGraphNodes: fullAudit.nodes.length,
   personIdentityContract: {
     minc: personIdentityContract.minc,
     linkedin: true,
+    facebook: true,
+    pinterest: true,
     alternateNames: personAlternateNames.length,
     sameAs: personRequiredSameAs.length,
     restoredProfileNodes: restoredPersonProfileNodes.length,
