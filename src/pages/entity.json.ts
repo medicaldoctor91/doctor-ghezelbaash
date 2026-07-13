@@ -1,5 +1,4 @@
 import { site } from '../data/site';
-import { entityIdentity, physicianClinicRelationship, socialIdentityAssignment } from '../domain/entity-identity';
 // @ts-expect-error Shared ESM authority data.
 import { allAuthorityClaims, evidenceSources } from '../data/authority.mjs';
 // @ts-expect-error Shared ESM national authority data.
@@ -29,13 +28,9 @@ export function GET() {
         givenName: site.givenName,
         familyName: site.familyName,
         medicalRegistration: { authority: 'سازمان نظام پزشکی جمهوری اسلامی ایران', identifier: site.irimc, verificationUrl: site.irimcVerification },
-        persistentIdentifiers: {
-          orcid: { identifier: site.orcid, url: site.orcidUrl },
-          ...entityIdentity.physician.identifiers,
-        },
-        worksFor: clinicId,
-        workLocation: clinicId,
-        identityProfiles: [site.irimcVerification, site.orcidUrl, site.doctorWikidata, site.huggingFaceProfile, site.githubProfile, site.linkedinProfile, site.aboutMeProfile, site.linktreeProfile, site.xProfile],
+        persistentIdentifiers: { orcid: { identifier: site.orcid, url: site.orcidUrl }, wikidata: { identifier: site.doctorWikidataId, url: site.doctorWikidata } },
+        practicesAt: clinicId,
+        identityProfiles: [site.irimcVerification, site.orcidUrl, site.instagram, site.doctorWikidata, site.huggingFaceProfile, site.githubProfile, site.linkedinProfile, site.aboutMeProfile, site.linktreeProfile, site.xProfile],
         researchEvidence: { bibliography: site.ncbiBibliography, publications: site.researchProfiles, dataRecord: site.zenodoRecord },
         machineReadableAuthority: { huggingFaceProfile: site.huggingFaceProfile, huggingFaceDataset: site.huggingFaceDataset, githubRepository: site.githubRepository, authorityNetwork: `${site.url}authority-network.json` },
         claimIds: allAuthorityClaims.filter((claim: { subject: string }) => claim.subject === 'person').map((claim: { id: string }) => claim.id),
@@ -48,15 +43,14 @@ export function GET() {
         geo: { latitude: site.latitude, longitude: site.longitude },
         phone: site.phone,
         hours: site.hours,
-        identifiers: entityIdentity.clinic.identifiers,
-        publicProfiles: [site.maps, site.mapsSearch, site.clinicGoogleLocalKnowledgeGraphUrl, site.openStreetMap, site.placeWikidata, site.instagram],
+        identifiers: { googlePlaceId: site.googlePlaceId, googleCid: site.googleCid, wikidata: site.placeWikidataId, openStreetMapNode: site.openStreetMapNode },
+        publicProfiles: [site.maps, site.mapsSearch, site.openStreetMap, site.placeWikidata],
         googleMapsEvidenceSnapshot: site.googleBusinessProfile,
         physician: personId,
         claimIds: allAuthorityClaims.filter((claim: { subject: string }) => claim.subject === 'clinic').map((claim: { id: string }) => claim.id),
       },
     },
-    relationship: { ...physicianClinicRelationship, description: `${site.legalName} در ${site.clinicName} فعالیت بالینی دارد و کلینیک او را به‌عنوان پزشک خود معرفی می‌کند.` },
-    socialIdentityAssignment,
+    relationship: { subject: personId, predicate: 'practicesAt', object: clinicId, description: `${site.legalName} در ${site.clinicName} فعالیت بالینی دارد.` },
     authorityLayer: {
       claimsUrl: `${site.url}claims.json`,
       evidenceUrl: `${site.url}evidence.json`,

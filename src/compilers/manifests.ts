@@ -4,7 +4,6 @@ import { externalEvidenceSources } from '~/domain/evidence';
 // @ts-expect-error Canonical ESM media catalogue.
 import { videos } from '~/domain/media.mjs';
 import { buildAgentContext } from './agent-context';
-import { entityIdentity, physicianClinicRelationship, socialIdentityAssignment } from '~/domain/entity-identity';
 import { buildFullGraphShards } from './full-graph';
 import { buildAnswerShards, buildIntentCategories, buildReverseIntentShards, buildSearchShards } from './search-corpus';
 import { bytes, digest, json } from './utils';
@@ -22,14 +21,6 @@ export function buildKnowledgeManifest(raw: string, headings: MarkdownHeading[])
   const answers = buildAnswerShards(raw, headings).map((item) => artifact(`/answers/${item.slug}.jsonl`, 'application/x-ndjson', item.records.map((record) => json(record)).join('\n') + '\n', 'answer-unit-shard'));
   const reverseIndex = json({ schemaVersion: '8.0', count: reverseShards.reduce((n, shard) => n + shard.records.length, 0), shards: reverseShards.map((shard) => ({ url: `${site.url}intents/reverse/${shard.slug}.json`, records: shard.records.length })) });
   const context = json(buildAgentContext(headings));
-  const identityCrosswalk = json({
-    schemaVersion: '1.0',
-    canonical: site.url,
-    updated: site.dateModified,
-    entities: entityIdentity,
-    relationship: physicianClinicRelationship,
-    socialIdentityAssignment,
-  });
   return {
     schemaVersion: '8.0',
     canonical: site.url,
@@ -44,7 +35,6 @@ export function buildKnowledgeManifest(raw: string, headings: MarkdownHeading[])
     },
     root: [
       artifact('/context.json', 'application/json', context, 'agent-context'),
-      artifact('/identity-crosswalk.json', 'application/json', identityCrosswalk, 'entity-identifier-crosswalk'),
       artifact('/llms-full.txt', 'text/plain', raw, 'full-visible-source'),
       artifact('/intents/reverse-index.json', 'application/json', reverseIndex, 'query-reverse-index'),
     ],

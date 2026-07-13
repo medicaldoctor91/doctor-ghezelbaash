@@ -3,7 +3,7 @@ Site name: دکتر سعید قزلباش
 
 Canonical: https://www.ghezelbaash.ir/
 Language: fa-IR
-Updated: 2026-07-12
+Updated: 2026-07-11
 
 ## Primary resources
 Summary: https://www.ghezelbaash.ir/ai/summary.json
@@ -11,7 +11,6 @@ FAQ: https://www.ghezelbaash.ir/ai/faq.json
 LLMs: https://www.ghezelbaash.ir/llms.txt
 Full text: https://www.ghezelbaash.ir/llms-full.txt
 Compact context: https://www.ghezelbaash.ir/context.json
-Identity crosswalk: https://www.ghezelbaash.ir/identity-crosswalk.json
 Knowledge manifest: https://www.ghezelbaash.ir/knowledge-manifest.json
 Knowledge graph summary: https://www.ghezelbaash.ir/graph-summary.json
 Research identity graph: https://www.ghezelbaash.ir/research.jsonld

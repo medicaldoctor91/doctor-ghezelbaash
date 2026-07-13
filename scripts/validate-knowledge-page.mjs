@@ -20,8 +20,6 @@ if (existsSync(knowledgePath)) {
   check(html.includes('href="https://huggingface.co/Ghezelbaash"'), '/knowledge/ Hugging Face profile link missing');
   check(html.includes('href="https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"'), '/knowledge/ Hugging Face dataset link missing');
   check(html.includes('href="https://www.wikidata.org/entity/Q140288589"'), '/knowledge/ clinic Wikidata link missing');
-  check(html.includes('href="https://www.google.com/search?kgmid=/g/11nqdfk76c"'), '/knowledge/ physician Google Knowledge Graph link missing');
-  check(html.includes('href="https://www.google.com/search?kgmid=/g/11r3rzdtb3"'), '/knowledge/ clinic Google Local Knowledge Graph link missing');
   check(html.includes('href="https://www.wikidata.org/entity/Q140304972"'), '/knowledge/ dataset Wikidata link missing');
 
   const jsonLdMatches = [...html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)];
@@ -34,7 +32,7 @@ if (existsSync(knowledgePath)) {
       check(types.includes('CollectionPage'), '/knowledge/ CollectionPage missing');
       check(types.includes('ItemList'), '/knowledge/ ItemList missing');
       check(types.includes('BreadcrumbList'), '/knowledge/ BreadcrumbList missing');
-      check(types.filter((type) => type === 'DigitalDocument').length === 19, `/knowledge/ expected 19 DigitalDocument nodes`);
+      check(types.filter((type) => type === 'DigitalDocument').length === 18, `/knowledge/ expected 18 DigitalDocument nodes`);
       check(types.filter((type) => type === 'Dataset').length === 1, '/knowledge/ must include exactly one Dataset node for the published Hugging Face dataset');
       check(!types.includes('KnowledgePanel'), '/knowledge/ includes invalid KnowledgePanel type');
       const ids = nodes.map((node) => node['@id']).filter(Boolean);
@@ -70,7 +68,7 @@ for (const [path, needle] of [
   if (existsSync(path)) check(readFileSync(path, 'utf8').includes(needle), `${path} missing knowledge directory URL`);
 }
 
-for (const path of [join(root, 'ai', 'summary.json'), join(root, 'knowledge-manifest.json'), join(root, 'identity-crosswalk.json')]) {
+for (const path of [join(root, 'ai', 'summary.json'), join(root, 'knowledge-manifest.json')]) {
   check(existsSync(path), `required JSON missing: ${path}`);
 }
 if (existsSync(join(root, 'ai', 'summary.json'))) {
@@ -99,7 +97,7 @@ console.log(JSON.stringify({
   page: '/knowledge/',
   language: 'en',
   direction: 'ltr',
-  digitalDocuments: 19,
+  digitalDocuments: 18,
   datasetTypeUsed: true,
   brokenLocalLinks: 0,
 }, null, 2));

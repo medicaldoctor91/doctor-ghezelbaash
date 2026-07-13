@@ -1,11 +1,11 @@
 export const editorialReview = {
-  id: 'editorial-review-2026-07-12',
+  id: 'editorial-review-2026-07-11',
   reviewedByEntityId: 'https://www.ghezelbaash.ir/#person',
   reviewerName: 'دکتر محمدسعید قزلباش',
   reviewerProfessionalName: 'دکتر سعید قزلباش',
   medicalRegistration: '167430',
   datePublished: '2026-07-10',
-  dateModified: '2026-07-12',
+  dateModified: '2026-07-11',
   reviewScope: [
     'هم‌خوانی متن قابل مشاهده با هویت پزشک و کلینیک',
     'پوشش خدمات غیرجراحی، کم‌تهاجمی و جراحی‌های مرتبط',
@@ -65,26 +65,6 @@ export const authorityNetwork = [
     role: 'حل انتیتی کلینیک و اتصال مکان به پزشک',
     entity: 'clinic',
     evidenceTier: 3,
-  },
-  {
-    id: 'google-knowledge-graph-person',
-    layer: 'google-public-knowledge-graph',
-    label: 'گراف دانش گوگل پزشک',
-    name: 'Google Knowledge Graph /g/11nqdfk76c',
-    url: 'https://www.google.com/search?kgmid=/g/11nqdfk76c',
-    role: 'حل انتیتی پزشک در namespace عمومی Google Knowledge Graph',
-    entity: 'physician',
-    evidenceTier: 2,
-  },
-  {
-    id: 'google-local-knowledge-graph-clinic',
-    layer: 'google-local-knowledge-graph',
-    label: 'گراف محلی گوگل کلینیک',
-    name: 'Google Local Knowledge Graph /g/11r3rzdtb3',
-    url: 'https://www.google.com/search?kgmid=/g/11r3rzdtb3',
-    role: 'حل انتیتی لوکیشن و اتصال Google Maps و پروفایل اجتماعی کلینیک',
-    entity: 'clinic',
-    evidenceTier: 2,
   },
   {
     id: 'google-maps',
@@ -182,11 +162,6 @@ export const nationalAuthoritySignals = {
     versionedStructuredDataRepository: true,
     archivedDoiLayer: true,
     externalAuthorityNodes: authorityNetwork.length,
-    googleKnowledgeGraphIdentifiers: {
-      physician: '/g/11nqdfk76c',
-      physicianCloudEnterpriseMid: 'C-02KY8SVQ2',
-      clinicLocal: '/g/11r3rzdtb3',
-    },
   },
   media: {
     videos: 12,
