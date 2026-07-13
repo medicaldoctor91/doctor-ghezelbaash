@@ -120,11 +120,7 @@
   Content-Type: application/json; charset=utf-8
 /graph-summary.json
   Content-Type: application/json; charset=utf-8
-/graph.json
-  Content-Type: application/json; charset=utf-8
 /intent-coverage.json
-  Content-Type: application/json; charset=utf-8
-/identity-crosswalk.json
   Content-Type: application/json; charset=utf-8
 /intents.json
   Content-Type: application/json; charset=utf-8
@@ -156,6 +152,10 @@
   Content-Type: application/json; charset=utf-8
 /answers/*.json
   Content-Type: application/json; charset=utf-8
+
+# graph.json is JSON-LD despite its .json extension.
+/graph.json
+  Content-Type: application/ld+json; charset=utf-8
 
 /*.xml
   Content-Type: application/xml; charset=utf-8

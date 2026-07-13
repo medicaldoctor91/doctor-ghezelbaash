@@ -1,7 +1,6 @@
 import type { MarkdownHeading } from 'astro';
 import { site } from '~/domain/entities';
 import { clinic } from '~/domain/clinic';
-import { entityIdentity, physicianClinicRelationship, socialIdentityAssignment } from '~/domain/entity-identity';
 import { stabilizeHeadings } from '~/domain/anchor-utils';
 import { offeredProcedures, evaluatedProcedures, referralProcedures } from '~/domain/services';
 import { buildGroupedToc } from '~/lib/content';
@@ -32,7 +31,6 @@ export function buildAgentContext(headings: MarkdownHeading[]) {
         irimcVerification: site.irimcVerification,
         orcid: site.orcidUrl,
         wikidata: site.doctorWikidata,
-        identifiers: entityIdentity.physician.identifiers,
       },
       clinic,
       dataset: {
@@ -42,8 +40,7 @@ export function buildAgentContext(headings: MarkdownHeading[]) {
         wikidataId: site.datasetWikidataId,
         persistentRecord: site.zenodoRecord,
       },
-      relationship: physicianClinicRelationship,
-      socialIdentityAssignment,
+      relationship: { subject: `${site.url}#person`, predicate: 'workLocation', object: clinic.id },
     },
     reputation: {
       entityId: clinic.id,
@@ -72,7 +69,6 @@ export function buildAgentContext(headings: MarkdownHeading[]) {
       graphSummary: `${site.url}graph-summary.json`,
       fullText: `${site.url}llms-full.txt`,
       graph: `${site.url}graph/core.jsonld`,
-      identityCrosswalk: `${site.url}identity-crosswalk.json`,
       intents: `${site.url}intents/index.json`,
       search: `${site.url}search/index.json`,
       answers: `${site.url}answers/index.json`,

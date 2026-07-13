@@ -10,8 +10,8 @@ export function GET() {
     schemaVersion: '8.0',
     deprecatedMonolith: true,
     canonical: site.url,
-    primaryShard: `${site.url}graph/core.jsonld`,
-    completeGraphStrategy: 'union-of-all-listed-shards',
+    replacement: `${site.url}graph/core.jsonld`,
     shards: shards.map(({ slug, bytes }) => ({ url: `${site.url}graph/${slug}.jsonld`, bytes })),
   });
 }
+

@@ -1,7 +1,6 @@
 import { getHeadings, rawContent } from '../content/landing.md';
 import { buildSearchChunks } from '../lib/content';
 import { site } from '../data/site';
-import { entityIdentity, physicianClinicRelationship } from '../domain/entity-identity';
 // @ts-expect-error Shared ESM product data.
 import { procedures } from '../data/knowledge.mjs';
 // @ts-expect-error Shared ESM authority data.
@@ -46,7 +45,7 @@ export function GET() {
       responsibleEntities: {
         physician: `${site.url}#person`,
         clinic: `${site.url}#clinic`,
-        relationship: physicianClinicRelationship,
+        relationship: 'practicesAt',
       },
       claim: claim ? {
         id: claim.id,
@@ -98,8 +97,11 @@ export function GET() {
     canonical: site.url,
     updated: site.dateModified,
     purpose: 'نقشهٔ پزشک‌محور برای اتصال تمام دارایی‌های صفحه به اتوریتی لوکال و ملی دکتر سعید قزلباش بدون انتقال تمرکز به انتیتی‌های دیگر.',
-    primaryEntities: entityIdentity,
-    primaryRelationship: physicianClinicRelationship,
+    primaryEntities: {
+      physician: `${site.url}#person`,
+      clinic: `${site.url}#clinic`,
+      relationship: 'practicesAt',
+    },
     authorityPillars: pillars,
     clinicalCoverage: clinicalMap,
   }, null, 2), { headers: { 'Content-Type': 'application/json; charset=utf-8' } });

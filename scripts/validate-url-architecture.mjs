@@ -195,6 +195,7 @@ function urlForFile(path) {
 const headerRules = parseHeaders(readFileSync(join(dist, '_headers'), 'utf8')).map((rule) => ({ ...rule, regex: patternRegex(rule.pattern) }));
 const distFiles = walk(dist, []);
 const expectedMime = (url) => {
+  if (url === '/graph.json') return 'application/ld+json';
   if (url.endsWith('.json')) return 'application/json';
   if (url.endsWith('.jsonld')) return 'application/ld+json';
   if (url.endsWith('.jsonl')) return 'application/x-ndjson';

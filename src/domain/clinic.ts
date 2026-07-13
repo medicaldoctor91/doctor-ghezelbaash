@@ -1,5 +1,4 @@
 import { site } from './entities';
-import { entityIds } from './entity-identity';
 
 export const clinic = {
   id: `${site.url}#clinic`,
@@ -16,12 +15,10 @@ export const clinic = {
   googleMaps: site.maps,
   googlePlaceId: site.googlePlaceId,
   googleCid: site.googleCid,
-  googleLocalKnowledgeGraphId: site.clinicGoogleLocalKnowledgeGraphId,
-  googleLocalKnowledgeGraphUrl: site.clinicGoogleLocalKnowledgeGraphUrl,
   openStreetMap: site.openStreetMap,
   openStreetMapNode: site.openStreetMapNode,
   wikidata: site.placeWikidata,
   wikidataId: site.placeWikidataId,
-  physicianId: entityIds.physician,
+  physicianId: `${site.url}#person`,
   reputationSnapshot: site.googleBusinessProfile,
 } as const;

@@ -1,9 +1,7 @@
-import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const root = join(process.cwd(), 'dist');
-const site = 'https://www.ghezelbaash.ir/';
 const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
 const files = [];
@@ -81,20 +79,13 @@ if (jsonLd[0]) {
     check(personNodes.length === 1, 'Person ID is not unique');
     check(clinicNodes.length === 1, 'Clinic ID is not unique');
     if (personNodes[0]) {
-      check(!(personNodes[0].sameAs ?? []).includes('https://www.instagram.com/doctor.ghezelbaash/'), 'Person sameAs must not claim the clinic/local Instagram identity');
-      check(!(personNodes[0].identifier ?? []).some((item) => item?.propertyID === 'Instagram'), 'Person identifier must not claim the clinic/local Instagram identity');
-      check((personNodes[0].identifier ?? []).some((item) => item?.propertyID === 'GoogleKnowledgeGraphMID' && item?.value === '/g/11nqdfk76c'), 'Person identifier is missing Google Knowledge Graph MID /g/11nqdfk76c');
-      check((personNodes[0].identifier ?? []).some((item) => item?.propertyID === 'GoogleCloudEnterpriseKnowledgeGraphMID' && item?.value === 'C-02KY8SVQ2'), 'Person identifier is missing Cloud Enterprise Knowledge Graph MID C-02KY8SVQ2');
-      check(personNodes[0].worksFor?.['@id'] === 'https://www.ghezelbaash.ir/#clinic', 'Person.worksFor must point to the canonical Clinic');
-      check(personNodes[0].workLocation?.['@id'] === 'https://www.ghezelbaash.ir/#clinic', 'Person.workLocation must point to the canonical Clinic');
+      check((personNodes[0].sameAs ?? []).includes('https://www.instagram.com/doctor.ghezelbaash/'), 'Person sameAs is missing Instagram');
+      check((personNodes[0].identifier ?? []).some((item) => item?.propertyID === 'Instagram' && item?.url === 'https://www.instagram.com/doctor.ghezelbaash/'), 'Person identifier is missing Instagram');
     }
     if (clinicNodes[0]) {
       check((clinicNodes[0].sameAs ?? []).includes('https://www.instagram.com/doctor.ghezelbaash/'), 'Clinic sameAs is missing Instagram');
       check((clinicNodes[0].sameAs ?? []).includes('https://www.wikidata.org/entity/Q140288589'), 'Clinic sameAs is missing its Wikidata entity');
       check((clinicNodes[0].identifier ?? []).some((item) => item?.propertyID === 'Wikidata' && item?.value === 'Q140288589'), 'Clinic identifier is missing Wikidata Q140288589');
-      check((clinicNodes[0].identifier ?? []).some((item) => item?.propertyID === 'GoogleLocalKnowledgeGraphMID' && item?.value === '/g/11r3rzdtb3'), 'Clinic identifier is missing Google Local Knowledge Graph MID /g/11r3rzdtb3');
-      check(clinicNodes[0].employee?.['@id'] === 'https://www.ghezelbaash.ir/#person', 'Clinic.employee must point to the canonical Person');
-      check(clinicNodes[0].geo?.latitude === 34.3400698 && clinicNodes[0].geo?.longitude === 47.0852334, 'Clinic geo must match the canonical Google Maps coordinates');
     }
     check(Buffer.byteLength(jsonLd[0][1]) < 400_000, 'inline JSON-LD exceeds 400KB');
     check(html.indexOf(jsonLd[0][0]) > html.indexOf('</main>'), 'inline JSON-LD must be after main content');
@@ -106,26 +97,16 @@ const executableJs = [...html.matchAll(/<script(?![^>]+application\/ld\+json)[^>
 check(executableJs < 20_000, `initial inline JavaScript exceeds 20KB: ${executableJs}`);
 const contextPath = join(root, 'context.json');
 const manifestPath = join(root, 'knowledge-manifest.json');
-const graphManifestPath = join(root, 'graph.json');
-const graphSummaryPath = join(root, 'graph-summary.json');
-const graphCatalogPath = join(root, 'graph', 'catalog.jsonld');
-const coreGraphPath = join(root, 'graph', 'core.jsonld');
 const aiPolicyPath = join(root, '.well-known', 'ai.txt');
 const aiSummaryPath = join(root, 'ai', 'summary.json');
-const identityCrosswalkPath = join(root, 'identity-crosswalk.json');
 const aiFaqPath = join(root, 'ai', 'faq.json');
 const searchPath = join(root, 'search', 'chunks-000.jsonl');
 const fullTextPath = join(root, 'llms-full.txt');
 check(existsSync(aiPolicyPath), '/.well-known/ai.txt missing');
 check(existsSync(aiSummaryPath), '/ai/summary.json missing');
 check(existsSync(aiFaqPath), '/ai/faq.json missing');
-check(existsSync(identityCrosswalkPath), '/identity-crosswalk.json missing');
 check(existsSync(searchPath), '/search/chunks-000.jsonl missing');
 check(existsSync(fullTextPath), '/llms-full.txt missing');
-check(existsSync(graphManifestPath), '/graph.json missing');
-check(existsSync(graphSummaryPath), '/graph-summary.json missing');
-check(existsSync(graphCatalogPath), '/graph/catalog.jsonld missing');
-check(existsSync(coreGraphPath), '/graph/core.jsonld missing');
 check(statSync(contextPath).size < 100_000, 'context.json exceeds 100KB');
 check(statSync(manifestPath).size < 250_000, 'knowledge-manifest.json exceeds 250KB');
 for (const path of files) {
@@ -136,76 +117,11 @@ for (const path of files) {
   if ((rel.startsWith('search/') || rel.startsWith('answers/') || rel.startsWith('evidence/')) && rel.endsWith('.jsonl')) check(size < 1_500_000, `${rel} exceeds 1.5MB`);
 }
 const context = JSON.parse(readFileSync(contextPath, 'utf8'));
-const knowledgeManifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-const graphManifest = JSON.parse(readFileSync(graphManifestPath, 'utf8'));
-const graphSummary = JSON.parse(readFileSync(graphSummaryPath, 'utf8'));
-const graphCatalog = JSON.parse(readFileSync(graphCatalogPath, 'utf8'));
 const aiPolicy = readFileSync(aiPolicyPath, 'utf8');
 const aiSummary = JSON.parse(readFileSync(aiSummaryPath, 'utf8'));
-const identityCrosswalk = JSON.parse(readFileSync(identityCrosswalkPath, 'utf8'));
 const aiFaq = JSON.parse(readFileSync(aiFaqPath, 'utf8'));
 const searchCorpus = readFileSync(searchPath, 'utf8');
 const fullText = readFileSync(fullTextPath, 'utf8');
-
-check(Array.isArray(graphManifest.shards) && graphManifest.shards.length > 0, 'graph.json: shards must be a non-empty array');
-check(!('replacement' in graphManifest), 'graph.json: obsolete replacement field remains');
-check(graphManifest.primaryShard === `${site}graph/core.jsonld`, 'graph.json: primaryShard mismatch');
-check(graphManifest.completeGraphStrategy === 'union-of-all-listed-shards', 'graph.json: completeGraphStrategy mismatch');
-
-const compactGraph = (graphManifest.shards ?? [])
-  .map(({ url, bytes }) => ({ url, bytes }))
-  .sort((a, b) => a.url.localeCompare(b.url));
-const compactKnowledge = (knowledgeManifest.artifacts?.graph ?? [])
-  .map(({ url, bytes }) => ({ url, bytes }))
-  .sort((a, b) => a.url.localeCompare(b.url));
-check(JSON.stringify(compactGraph) === JSON.stringify(compactKnowledge), 'graph manifests list different shards');
-
-for (const shard of graphManifest.shards ?? []) {
-  const parsed = new URL(shard.url);
-  check(parsed.origin === new URL(site).origin, `graph.json: external shard URL ${shard.url}`);
-  const pathname = parsed.pathname.replace(/^\/+/, '');
-  const filePath = join(root, pathname);
-  check(existsSync(filePath), `missing graph shard: ${pathname}`);
-  if (!existsSync(filePath)) continue;
-  const raw = readFileSync(filePath);
-  check(raw.byteLength === shard.bytes, `${pathname}: byte count mismatch`);
-  try {
-    const value = JSON.parse(raw.toString('utf8'));
-    check(value['@context'] === 'https://schema.org', `${pathname}: invalid or missing @context`);
-    check(Array.isArray(value['@graph']), `${pathname}: @graph must be an array`);
-  } catch (error) {
-    failures.push(`${pathname}: invalid JSON-LD (${error.message})`);
-  }
-}
-
-for (const artifact of knowledgeManifest.artifacts?.graph ?? []) {
-  const pathname = new URL(artifact.url).pathname.replace(/^\/+/, '');
-  const filePath = join(root, pathname);
-  check(existsSync(filePath), `knowledge manifest references missing graph shard: ${pathname}`);
-  if (!existsSync(filePath)) continue;
-  const actual = createHash('sha256').update(readFileSync(filePath)).digest('hex');
-  check(actual === artifact.sha256, `${pathname}: SHA-256 mismatch`);
-}
-
-const core = JSON.parse(readFileSync(coreGraphPath, 'utf8'))['@graph'] ?? [];
-const corePerson = core.find((node) => node['@id'] === `${site}#person`);
-const coreClinic = core.find((node) => node['@id'] === `${site}#clinic`);
-check(Boolean(corePerson), 'core.jsonld: Person missing');
-check(Boolean(coreClinic), 'core.jsonld: Clinic missing');
-check(corePerson?.workLocation?.['@id'] === `${site}#clinic`, 'core.jsonld: Person.workLocation mismatch');
-check(coreClinic?.employee?.['@id'] === `${site}#person`, 'core.jsonld: Clinic.employee mismatch');
-
-const catalogGraph = graphCatalog['@graph'] ?? [];
-const graphDataset = catalogGraph.find((node) => node['@id'] === `${site}#dataset-graph`);
-check(Boolean(graphDataset), 'catalog: graph dataset missing');
-check(graphDataset?.distribution?.encodingFormat === 'application/json', 'catalog: graph.json encodingFormat must be application/json');
-check(graphDataset?.distribution?.contentUrl === `${site}graph.json`, 'catalog: graph.json contentUrl mismatch');
-
-check(graphSummary.graphManifestUrl === `${site}graph.json`, 'graph-summary: graphManifestUrl mismatch');
-check(graphSummary.primaryShardUrl === `${site}graph/core.jsonld`, 'graph-summary: primaryShardUrl mismatch');
-check(graphSummary.completeGraphStrategy === 'union-of-all-listed-shards', 'graph-summary: completeGraphStrategy mismatch');
-check(!('graphUrl' in graphSummary), 'graph-summary: obsolete graphUrl remains');
-
 for (const phrase of [
   'بهترین دکتر بوتاکس در کرمانشاه چه تفاوتی باید ایجاد کند؟',
   'بهترین دکتر فیلر لب در کرمانشاه چه چیزی را قبل از حجم می‌بیند؟',
@@ -225,11 +141,6 @@ check(aiSummary.entities?.dataset?.wikidata === 'https://www.wikidata.org/entity
 check(aiSummary.discovery?.faq === 'https://www.ghezelbaash.ir/ai/faq.json', 'AI summary FAQ discovery URL mismatch');
 check(context.entities?.clinic?.wikidata === 'https://www.wikidata.org/entity/Q140288589', 'context clinic Wikidata mismatch');
 check(context.entities?.dataset?.wikidata === 'https://www.wikidata.org/entity/Q140304972', 'context dataset Wikidata mismatch');
-check(identityCrosswalk.entities?.physician?.identifiers?.googleKnowledgeGraph?.value === '/g/11nqdfk76c', 'identity crosswalk physician Google MID mismatch');
-check(identityCrosswalk.entities?.physician?.identifiers?.googleCloudKnowledgeGraph?.value === 'C-02KY8SVQ2', 'identity crosswalk physician Cloud MID mismatch');
-check(identityCrosswalk.entities?.clinic?.identifiers?.googleLocalKnowledgeGraph?.value === '/g/11r3rzdtb3', 'identity crosswalk clinic Local MID mismatch');
-check(identityCrosswalk.relationship?.predicate === 'worksFor' && identityCrosswalk.relationship?.inverse?.predicate === 'employee', 'identity crosswalk physician-clinic inverse relationship mismatch');
-check(identityCrosswalk.socialIdentityAssignment?.sameAsEntity === 'https://www.ghezelbaash.ir/#clinic', 'identity crosswalk Instagram entity assignment mismatch');
 check(Array.isArray(aiFaq.questions) && aiFaq.questions.length > 0, 'AI FAQ contains no questions');
 check(aiFaq.questionCount === aiFaq.questions.length, 'AI FAQ questionCount mismatch');
 check(aiFaq.questions.every((item) => item.question && item.answer && item.url), 'AI FAQ has incomplete records');

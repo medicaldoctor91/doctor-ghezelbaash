@@ -44,7 +44,6 @@ const resourceGroups = [
     icon: Network,
     resources: [
       { name: 'Compact entity context', path: '/context.json', format: 'application/json', description: 'Compact physician, clinic, service, recommendation, and provenance context.' },
-      { name: 'Entity identity crosswalk', path: '/identity-crosswalk.json', format: 'application/json', description: 'Physician and clinic Google identifiers, strict ownership boundaries, and the bidirectional Schema.org relationship.' },
       { name: 'Knowledge artifact manifest', path: '/knowledge-manifest.json', format: 'application/json', description: 'Inventory of generated graph, intent, search, answer, evidence, and media artifacts.' },
       { name: 'Knowledge graph summary', path: '/graph-summary.json', format: 'application/json', description: 'High-level graph statistics, key entities, and relationship summary.' },
       { name: 'Core knowledge graph', path: '/graph/core.jsonld', format: 'application/ld+json', description: 'Core Schema.org entities and canonical relationships in JSON-LD.' },
@@ -163,8 +162,6 @@ const identityLinks = [
   { label: 'ORCID researcher identifier', href: site.orcidUrl, icon: BookOpenCheck },
   { label: 'Wikidata entity', href: site.doctorWikidata, icon: Database },
   { label: 'Clinic Wikidata entity', href: site.placeWikidata, icon: Home },
-  { label: `Physician Google Knowledge Graph ${site.doctorGoogleKnowledgeGraphId}`, href: site.doctorGoogleKnowledgeGraphUrl, icon: Network },
-  { label: `Clinic Google Local Knowledge Graph ${site.clinicGoogleLocalKnowledgeGraphId}`, href: site.clinicGoogleLocalKnowledgeGraphUrl, icon: Home },
   { label: 'Official Instagram profile', href: site.instagram, icon: AtSign, rel: 'me noopener noreferrer external' },
   { label: 'Hugging Face profile', href: site.huggingFaceProfile, icon: Database, rel: 'me noopener noreferrer external' },
 ];
