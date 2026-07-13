@@ -97,6 +97,12 @@ check(!homepage.includes('class="guide-index'), 'knowledge-base index returned')
 check(!homepage.includes('مشاهده در صفحه اختصاصی این ویدئو'), 'watch-page link leaked into homepage');
 check(!/href="\/videos\/[^"/]+\/"/u.test(homepage), 'homepage links to removed video watch pages');
 
+const contextualVideos = (homepage.match(/<article\b[^>]*\bdata-inline-video(?:\s|>)/giu) ?? []).length;
+check(contextualVideos === 12, `all 12 videos must remain contextually embedded in article sections; found ${contextualVideos}`);
+check(!visible.includes('مرکز دانش ویدئویی صفحه'), 'standalone video knowledge hub label returned');
+check(!visible.includes('۱۲ ویدئو؛ هر رسانه متصل به موضوع، خدمت و مرز تصمیم خودش'), 'standalone video knowledge hub heading returned');
+check(!/href="#(?:videos|video-knowledge-hub)"/u.test(homepage), 'a visible link to the removed video hub returned');
+
 if (failures.length) {
   console.error(JSON.stringify({ status: 'fail', failures }, null, 2));
   process.exit(1);
@@ -113,4 +119,7 @@ console.log(JSON.stringify({
   externalKnowledgeGraphHeadLink: true,
   visibleProfessionalProfiles: 4,
   watchPageLinks: 0,
+  standaloneVideoHub: false,
+  videoHubLinks: 0,
+  contextualVideos,
 }, null, 2));
