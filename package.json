@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run validate:release",
     "build:astro": "astro build",
     "preview": "astro preview",
     "astro": "astro",
