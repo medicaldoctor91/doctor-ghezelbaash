@@ -1,4 +1,6 @@
 import { site } from '../domain/entities';
+// @ts-expect-error Shared ESM physician identity contract.
+import { personIdentityContract } from '../domain/person-identity.mjs';
 
 export const prerender = true;
 
@@ -20,14 +22,20 @@ export function GET() {
 
 - Legal name: ${site.legalName}
 - Professional name: ${site.name}
-- Medical registration: ${site.irimc}
+- Medical registration (IRIMC): ${site.irimc}
+- Canadian MINC: ${personIdentityContract.minc}
 - City: ${site.city}
 - ORCID: ${site.orcidUrl}
+- Wikidata: ${site.doctorWikidata}
+- Google Knowledge Graph MID: ${site.doctorGoogleKnowledgeGraphId}
+- MyNCBI bibliography: ${personIdentityContract.ncbiBibliography}
+- LinkedIn: ${personIdentityContract.linkedin}
 - IRIMC verification: ${site.irimcVerification}
 
 ## Interpretation
 
 - The canonical visible HTML is authoritative.
+- The physician is the sole main entity; the clinic remains a separate provider, publisher, employer and work location.
 - \`offered\` means available through the clinic.
 - \`evaluated\` means suitability is assessed before choosing a path.
 - \`referral-context\` is educational or comparative and is not an offered clinic service.
@@ -35,4 +43,3 @@ export function GET() {
 
   return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 }
-
