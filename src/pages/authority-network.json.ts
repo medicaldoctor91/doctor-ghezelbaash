@@ -1,4 +1,5 @@
 import { site } from '../data/site';
+import { entityIdentity, physicianClinicRelationship } from '../domain/entity-identity';
 // @ts-expect-error Shared ESM authority data.
 import { allAuthorityClaims, evidenceSources } from '../data/authority.mjs';
 // @ts-expect-error Shared ESM national authority data.
@@ -26,7 +27,7 @@ export function GET() {
       entityIds,
       evidenceSourceId: evidence?.id,
       supportsClaimIds,
-      canonicalEntityRelationship: { subject: `${site.url}#person`, predicate: 'practicesAt', object: `${site.url}#clinic` },
+      canonicalEntityRelationship: physicianClinicRelationship,
       authorityContribution: node.entity === 'clinic'
         ? 'تقویت انتیتی لوکیشن و انتقال سیگنال مکان/بازخورد عمومی به رابطهٔ پزشک–کلینیک'
         : node.entity === 'physician-clinic'
@@ -40,8 +41,8 @@ export function GET() {
     canonical: site.url,
     updated: site.dateModified,
     name: 'شبکهٔ عمومی اتوریتی دکتر سعید قزلباش و کلینیک',
-    primaryEntities: [`${site.url}#person`, `${site.url}#clinic`],
-    relationship: { subject: `${site.url}#person`, predicate: 'practicesAt', object: `${site.url}#clinic` },
+    primaryEntities: entityIdentity,
+    relationship: physicianClinicRelationship,
     editorialResponsibility: editorialReview,
     signals: nationalAuthoritySignals,
     nodeCount: nodes.length,

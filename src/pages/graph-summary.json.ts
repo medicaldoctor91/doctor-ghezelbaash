@@ -1,6 +1,7 @@
 import { getHeadings, rawContent } from '../content/landing.md';
 import { site } from '../data/site';
 import { buildKnowledgeGraph } from '../lib/schema';
+import { entityIdentity, physicianClinicRelationship } from '../domain/entity-identity';
 
 export const prerender = true;
 
@@ -24,14 +25,16 @@ export function GET() {
     schemaVersion: '7.0',
     canonical: site.url,
     updated: site.dateModified,
-    graphUrl: `${site.url}graph.json`,
+    graphManifestUrl: `${site.url}graph.json`,
+    primaryShardUrl: `${site.url}graph/core.jsonld`,
+    completeGraphStrategy: 'union-of-all-listed-shards',
     nodeCount: graph.length,
     uniqueIdCount: ids.size,
     duplicateIdCount: graph.length - ids.size,
     typeCounts: Object.fromEntries(Object.entries(typeCounts).sort((a, b) => b[1] - a[1])),
     keyNodeIds,
-    primaryEntities: [`${site.url}#person`, `${site.url}#clinic`],
-    primaryRelationship: { subject: `${site.url}#person`, predicate: 'practicesAt', object: `${site.url}#clinic` },
+    primaryEntities: entityIdentity,
+    primaryRelationship: physicianClinicRelationship,
     serviceRelationshipVocabulary: ['offered', 'evaluated', 'referral-context'],
     graphLayers: [
       'identity-and-credential', 'clinic-location-and-reputation', 'services-and-surgical-boundaries',

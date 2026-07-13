@@ -69,13 +69,12 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
   const person: Node = {
     ...parts.personNode,
     '@type': 'Person',
-    sameAs: [site.irimcVerification, site.orcidUrl, site.doctorWikidata, site.instagram, site.huggingFaceProfile, site.githubProfile],
+    sameAs: [site.irimcVerification, site.orcidUrl, site.doctorWikidata, site.huggingFaceProfile, site.githubProfile],
     workLocation: compactRef(`${site.url}#clinic`),
+    worksFor: compactRef(`${site.url}#clinic`),
     knowsAbout: selectedProcedures.map((node) => compactRef(node['@id'])),
     subjectOf: [compactRef(`${site.url}#article`)],
   };
-  delete person.practicesAt;
-  delete person.worksFor;
   delete person.affiliation;
 
   const clinic: Node = {

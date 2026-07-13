@@ -31,7 +31,20 @@ export function GET() {
           value: site.doctorWikidataId,
           url: site.doctorWikidata,
         },
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'GoogleKnowledgeGraphMID',
+          value: site.doctorGoogleKnowledgeGraphId,
+          url: site.doctorGoogleKnowledgeGraphUrl,
+        },
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'GoogleCloudEnterpriseKnowledgeGraphMID',
+          value: site.doctorCloudKnowledgeGraphMid,
+        },
       ],
+      workLocation: { '@id': `${site.url}#clinic` },
+      worksFor: { '@id': `${site.url}#clinic` },
       hasOccupation: [
         {
           '@type': 'Occupation',

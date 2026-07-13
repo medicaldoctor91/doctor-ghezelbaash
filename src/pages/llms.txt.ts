@@ -14,7 +14,10 @@ export function GET() {
 - [Clinic entity](${site.url}#clinic): Canonical identifier for ${site.clinicName}.
 - [Physician Wikidata](${site.doctorWikidata}): Persistent public identifier for the physician entity.
 - [Clinic Wikidata](${site.placeWikidata}): Persistent public identifier for the physical clinic entity.
-- [Physician–clinic relationship](${site.url}#entity-authority-panel): The physician works at the clinic, and the clinic identifies the physician as its medical professional.
+- [Physician Google Knowledge Graph](${site.doctorGoogleKnowledgeGraphUrl}): MID ${site.doctorGoogleKnowledgeGraphId}; Cloud Enterprise Knowledge Graph MID ${site.doctorCloudKnowledgeGraphMid}.
+- [Clinic Google Local Knowledge Graph](${site.clinicGoogleLocalKnowledgeGraphUrl}): Local MID ${site.clinicGoogleLocalKnowledgeGraphId}; Place ID ${site.googlePlaceId}; CID ${site.googleCid}.
+- [Identity crosswalk](${site.url}identity-crosswalk.json): Namespaced identifiers, strict entity ownership, and the physician–clinic relation.
+- [Physician–clinic relationship](${site.url}#entity-authority-panel): Schema.org worksFor/workLocation from physician to clinic, with employee as the inverse clinic-to-physician edge.
 
 ## AI discovery
 

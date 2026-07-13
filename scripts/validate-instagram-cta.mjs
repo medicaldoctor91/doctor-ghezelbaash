@@ -58,9 +58,10 @@ if (blocks[0]) {
     const clinic = nodes.find((node) => node['@id'] === 'https://www.ghezelbaash.ir/#clinic');
     const dock = nodes.find((node) => node['@id'] === 'https://www.ghezelbaash.ir/#conversion-dock');
 
-    for (const url of [irimc, 'https://orcid.org/0009-0001-9346-8475', wikidata, profile, huggingFace]) {
+    for (const url of [irimc, 'https://orcid.org/0009-0001-9346-8475', wikidata, huggingFace]) {
       check(person?.sameAs?.includes(url), `Person.sameAs missing ${url}`);
     }
+    check(!person?.sameAs?.includes(profile), 'Person.sameAs must not conflate the physician with the Google Local Instagram assignment');
     check(clinic?.sameAs?.includes('https://www.wikidata.org/entity/Q140288589'), 'Clinic.sameAs missing clinic Wikidata entity');
     check(clinic?.sameAs?.includes(profile), 'Clinic.sameAs missing official Instagram profile');
 
@@ -91,6 +92,6 @@ console.log(JSON.stringify({
   visibleRegistryLinksOnHomepage: 0,
   identitySignals: {
     head: ['ORCID', 'Instagram', 'GitHub', 'Hugging Face profile'],
-    schema: ['IRIMC', 'ORCID', 'Wikidata person', 'Wikidata clinic', 'Instagram', 'Hugging Face profile'],
+    schema: ['IRIMC', 'ORCID', 'Wikidata person', 'Wikidata clinic', 'Google KG person', 'Google Local KG clinic', 'Instagram clinic', 'Hugging Face profile'],
   },
 }, null, 2));
