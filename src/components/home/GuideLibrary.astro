@@ -1,5 +1,8 @@
 ---
-import { BookOpenText, ChevronDown, Search } from '@lucide/astro';
+import { BookOpen, BookOpenText, ChevronDown, CirclePlay, Clock3, ListVideo, Search } from '@lucide/astro';
+import { videos } from '../../domain/media.mjs';
+import { videoPageDetails } from '../../domain/video-pages.mjs';
+import { readMediaChapters } from '../../lib/media';
 
 type GuideSection = {
   id: string;
@@ -21,19 +24,48 @@ interface Props {
 }
 
 const { sections, groups } = Astro.props;
-const sectionById = new Map(sections.map((section) => [section.id, section]));
+const videoItems = videos.map((video: any) => ({
+  ...video,
+  details: videoPageDetails[video.id],
+  chapters: readMediaChapters(video.chapterTrack).slice(0, 3),
+}));
+
+const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim();
+const videosBySection = new Map<string, any[]>();
+for (const video of videoItems) {
+  const matched = sections.find((section) => {
+    const searchable = `${section.title} ${plain(section.html)}`;
+    return searchable.includes(video.relatedHeadingIncludes);
+  }) ?? sections[0];
+  if (!matched) continue;
+  const list = videosBySection.get(matched.id) ?? [];
+  list.push(video);
+  videosBySection.set(matched.id, list);
+}
+
+const splitAfterOpeningParagraph = (html: string) => {
+  const match = /<\/p>/iu.exec(html);
+  if (!match || match.index === undefined) return { intro: '', rest: html };
+  const end = match.index + match[0].length;
+  return { intro: html.slice(0, end), rest: html.slice(end) };
+};
+
+const timeLabel = (timestamp: string) => timestamp.replace(/^00:/, '');
+const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000) / 1000)}S`;
 ---
 
 <section id="clinical-guide" class="section guide-section" aria-labelledby="guide-title">
   <span id="content-table" class="anchor-alias" aria-hidden="true"></span>
   <span id="knowledge-resources" class="anchor-alias" aria-hidden="true"></span>
+  <span id="videos" class="anchor-alias" aria-hidden="true"></span>
+  <span id="video-knowledge-hub" class="anchor-alias" aria-hidden="true"></span>
   <div class="shell">
     <div class="section-heading section-heading--split">
       <div>
         <p class="eyebrow">دانش‌نامهٔ بالینی</p>
         <h2 id="guide-title">راهنمای کامل تصمیم‌گیری</h2>
       </div>
-      <p>محتوای تفصیلی بر اساس مسئلهٔ بیمار سازمان یافته است. هر بخش را مستقل باز کنید و مستقیم به سؤال یا ناحیهٔ موردنظر برسید.</p>
+      <p>محتوای تفصیلی بر اساس مسئلهٔ بیمار سازمان یافته است. عکس و ویدئو فقط در همان بحثی قرار می‌گیرند که برای فهم آن لازم‌اند.</p>
     </div>
 
     <nav class="guide-index" aria-label="فهرست موضوعی دانش‌نامه">
@@ -62,16 +94,95 @@ const sectionById = new Map(sections.map((section) => [section.id, section]));
     </div>
 
     <div class="guide-list">
-      {sections.map((section, index) => (
-        <details class="guide-card" data-guide-section open={index === 0}>
-          <summary>
-            {section.aliases.map((alias) => <span id={alias.anchor} class="anchor-alias" data-service-id={alias.id} aria-hidden="true"></span>)}
-            <h2 id={section.id} tabindex="-1">{section.title}</h2>
-            <ChevronDown size={22} aria-hidden="true" />
-          </summary>
-          <div class="medical-article" set:html={section.html}></div>
-        </details>
-      ))}
+      {sections.map((section, index) => {
+        const sectionVideos = videosBySection.get(section.id) ?? [];
+        const split = splitAfterOpeningParagraph(section.html);
+        return (
+          <details class="guide-card" data-guide-section open={index === 0}>
+            <summary>
+              {section.aliases.map((alias) => <span id={alias.anchor} class="anchor-alias" data-service-id={alias.id} aria-hidden="true"></span>)}
+              <h2 id={section.id} tabindex="-1">{section.title}</h2>
+              <ChevronDown size={22} aria-hidden="true" />
+            </summary>
+            <div class="medical-article">
+              <div class="medical-article__segment" set:html={split.intro}></div>
+
+              {sectionVideos.length > 0 && (
+                <div class="article-media">
+                  <p class="article-media__label">ویدئوی مرتبط با همین بحث</p>
+                  {sectionVideos.map((video: any) => (
+                    <article id={`video-${video.id}`} class="article-video" data-inline-video>
+                      <div class="article-video__media">
+                        <video
+                          controls
+                          playsinline
+                          preload="none"
+                          poster={video.thumbnail}
+                          width={video.width}
+                          height={video.height}
+                          aria-labelledby={`video-${video.id}-title`}
+                          aria-describedby={`video-${video.id}-description`}
+                        >
+                          <source src={`/videos/${video.file}`} type="video/mp4" />
+                          {video.chapterTrack && (
+                            <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />
+                          )}
+                          مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
+                        </video>
+                      </div>
+
+                      <div class="article-video__body">
+                        <div class="article-video__meta">
+                          <span><CirclePlay size={16} aria-hidden="true" /> ویدئوی مرتبط</span>
+                          <span><Clock3 size={16} aria-hidden="true" /> حدود {video.durationSeconds} ثانیه</span>
+                        </div>
+                        <h3 id={`video-${video.id}-title`}>{video.title}</h3>
+                        <p id={`video-${video.id}-description`}>{video.description}</p>
+
+                        {video.chapters.length > 0 && (
+                          <div class="video-chapters" role="group" aria-label={`فصل‌های ${video.title}`}>
+                            <strong><ListVideo size={17} aria-hidden="true" /> فصل‌ها</strong>
+                            <ol>
+                              {video.chapters.map((chapter: any, chapterIndex: number) => (
+                                <li id={`video-${video.id}-clip-${chapterIndex + 1}`}>
+                                  <button type="button" data-video-id={`video-${video.id}`} data-start={chapter.startOffset}>
+                                    <span>{chapter.name}</span>
+                                    <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time>
+                                  </button>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+
+                        {video.details && (
+                          <details class="video-context">
+                            <summary>شرح بالینی و مرز تصمیم</summary>
+                            <p>{video.details.summary}</p>
+                            <ul>
+                              {video.details.takeaways.map((item: string) => <li>{item}</li>)}
+                            </ul>
+                            <p class="video-boundary"><strong>مرز تصمیم:</strong> {video.details.boundary}</p>
+                          </details>
+                        )}
+
+                        {video.details?.relatedPath && (
+                          <a class="video-card__related" href={video.details.relatedPath}>
+                            <BookOpen size={16} aria-hidden="true" />
+                            <span>{video.details.relatedLabel}</span>
+                          </a>
+                        )}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+
+              <div class="medical-article__segment" set:html={split.rest}></div>
+            </div>
+          </details>
+        );
+      })}
     </div>
   </div>
 
@@ -80,7 +191,7 @@ const sectionById = new Map(sections.map((section) => [section.id, section]));
     document.querySelectorAll('[data-guide-action]').forEach((button) => {
       button.addEventListener('click', () => {
         const shouldOpen = button.dataset.guideAction === 'open';
-        guide?.querySelectorAll('details').forEach((details) => { details.open = shouldOpen; });
+        guide?.querySelectorAll('details[data-guide-section]').forEach((details) => { details.open = shouldOpen; });
       });
     });
 
@@ -94,5 +205,23 @@ const sectionById = new Map(sections.map((section) => [section.id, section]));
     };
     openTarget();
     addEventListener('hashchange', openTarget, { passive: true });
+
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest?.('.video-chapters button');
+      if (!button) return;
+      const article = document.getElementById(button.dataset.videoId || '');
+      const video = article?.querySelector('video');
+      if (!video) return;
+      video.currentTime = Number(button.dataset.start || 0);
+      video.play().catch(() => {});
+    });
+
+    document.addEventListener('play', (event) => {
+      const current = event.target;
+      if (!(current instanceof HTMLVideoElement) || !current.closest('[data-inline-video]')) return;
+      document.querySelectorAll('[data-inline-video] video').forEach((video) => {
+        if (video !== current) video.pause();
+      });
+    }, true);
   </script>
 </section>

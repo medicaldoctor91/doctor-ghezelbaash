@@ -39,11 +39,29 @@ check((homepage.match(/<h1\b/giu) ?? []).length === 1, 'homepage must contain ex
 check((homepage.match(/<video\b/giu) ?? []).length === videos.length, `homepage must contain ${videos.length} initial video elements`);
 check((homepage.match(/<video\b[^>]*preload="none"/giu) ?? []).length === videos.length, 'every video must use preload="none"');
 check((homepage.match(/<source\b[^>]*type="video\/mp4"/giu) ?? []).length === videos.length, 'every video must expose an MP4 source in initial HTML');
+check((homepage.match(/\bdata-inline-video(?:\s|>)/giu) ?? []).length === videos.length, 'every video must be embedded contextually inside clinical text');
+check((homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length >= 6, 'physician and clinic images must remain inside contextual sections');
+check(!/<section\b[^>]*\bid="videos"/iu.test(homepage), 'standalone video section is forbidden');
+check(!/<section\b[^>]*\bid="clinic"/iu.test(homepage), 'standalone clinic photo section is forbidden');
+check(!homepage.includes('video-rail'), 'video carousel/library markup is forbidden');
+check(!homepage.includes('gallery-grid'), 'standalone photo gallery markup is forbidden');
+check(!homepage.includes('href="#videos"'), 'navigation must not expose a separate videos destination');
 check(!/<div\b[^>]*aria-label=/iu.test(homepage.replace(/<div\b[^>]*role="(?:group|navigation|region)"[^>]*aria-label=[^>]*>/giu, '')), 'generic div uses aria-label without an explicit role');
 check(!/<time\b(?![^>]*datetime=)/iu.test(homepage), 'time element missing datetime');
 
-for (const phrase of ['Knowledge & AI', 'Retrieval Corpus', 'Search Intent', 'knowsAbout', 'مدل زبانی', 'موتورهای جست‌وجو', 'گوگل و LLM']) {
-  check(!visible.includes(phrase), `machine-facing phrase leaked into visible UI: ${phrase}`);
+const guideStart = homepage.indexOf('id="clinical-guide"');
+const contactStart = homepage.indexOf('id="contact"');
+check(guideStart >= 0 && contactStart > guideStart, 'clinical guide and contact ordering is invalid');
+for (const video of videos) {
+  const position = homepage.indexOf(`id="video-${video.id}"`);
+  check(position > guideStart && position < contactStart, `${video.id}: video is not inside the clinical guide text`);
+}
+
+for (const phrase of [
+  'Knowledge & AI', 'Retrieval Corpus', 'Search Intent', 'knowsAbout', 'مدل زبانی',
+  'موتورهای جست‌وجو', 'گوگل و LLM', 'کتابخانهٔ ویدئویی', 'محیط واقعی کلینیک',
+]) {
+  check(!visible.includes(phrase), `forbidden or machine-facing phrase leaked into visible UI: ${phrase}`);
 }
 
 const ids = [...homepage.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]);
@@ -90,6 +108,7 @@ function auditPersonIdentity(label, audit) {
 
   const sameAs = new Set(Array.isArray(person.sameAs) ? person.sameAs : [person.sameAs].filter(Boolean));
   for (const url of personRequiredSameAs) check(sameAs.has(url), `${label}: Person sameAs missing: ${url}`);
+  check(![...sameAs].some((url) => /facebook\.com|pinterest\.com/iu.test(url)), `${label}: unverified Facebook or Pinterest profile leaked into Person.sameAs`);
 
   const identifiers = Array.isArray(person.identifier) ? person.identifier : [person.identifier].filter(Boolean);
   for (const required of restoredPersonIdentifiers) {
@@ -120,6 +139,7 @@ auditPersonIdentity('inline graph', inlineAudit);
 for (const profile of restoredPersonProfileNodes) {
   check(fullAudit.defined.has(profile['@id']), `canonical graph: restored Person profile node missing: ${profile['@id']}`);
 }
+check(!fullAudit.nodes.some((node) => /facebook\.com|pinterest\.com/iu.test(String(node['@id'] ?? ''))), 'unverified Facebook or Pinterest ProfilePage exists in canonical graph');
 
 for (const node of fullAudit.nodes) {
   const values = [];
@@ -173,6 +193,12 @@ console.log(JSON.stringify({
   htmlIds: ids.length,
   videos: videoNodes.length,
   clips: clipNodes.length,
+  mediaPlacement: {
+    standaloneVideoSection: false,
+    standalonePhotoSection: false,
+    inlineVideos: videos.length,
+    contextualImages: (homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length,
+  },
   inlineGraphNodes: inlineAudit.nodes.length,
   canonicalGraphNodes: fullAudit.nodes.length,
   personIdentityContract: {

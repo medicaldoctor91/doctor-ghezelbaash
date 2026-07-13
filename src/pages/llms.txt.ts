@@ -11,12 +11,11 @@ export function GET() {
 
 ## Canonical resources
 
-- [Canonical page](${site.url}): Complete visible physician, clinic, service, video and clinical-guide content.
+- [Canonical page](${site.url}): Complete visible physician, clinic, service, contextual media and clinical-guide content.
 - [Canonical knowledge graph](${site.url}knowledge-graph.jsonld): Self-contained JSON-LD graph discovered from HTML and HTTP with rel="describedby".
 - [Physician entity](${site.url}#person): Sole main entity of the canonical MedicalWebPage.
 - [Clinic entity](${site.url}#clinic): Separate MedicalClinic and LocalBusiness entity; employer, work location, provider and publisher.
-- [Clinical guide](${site.url}#clinical-guide): Full Persian decision guide for aesthetic medicine, skin and hair.
-- [Videos](${site.url}#videos): Twelve first-party videos embedded on the canonical page.
+- [Clinical guide](${site.url}#clinical-guide): Full Persian decision guide for aesthetic medicine, skin and hair; all twelve first-party videos are embedded inside their related clinical discussions rather than a separate video section.
 
 ## Identity
 
@@ -36,6 +35,7 @@ export function GET() {
 
 - The canonical visible HTML is authoritative.
 - The physician is the sole main entity; the clinic remains a separate provider, publisher, employer and work location.
+- Photos and videos are contextual evidence inside physician, clinical or visit content; they are not standalone gallery or library sections.
 - \`offered\` means available through the clinic.
 - \`evaluated\` means suitability is assessed before choosing a path.
 - \`referral-context\` is educational or comparative and is not an offered clinic service.

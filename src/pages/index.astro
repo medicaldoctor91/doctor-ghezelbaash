@@ -6,8 +6,6 @@ import Hero from '../components/home/Hero.astro';
 import DecisionModel from '../components/home/DecisionModel.astro';
 import Services from '../components/home/Services.astro';
 import DoctorProfile from '../components/home/DoctorProfile.astro';
-import VideoLibrary from '../components/home/VideoLibrary.astro';
-import ClinicGallery from '../components/home/ClinicGallery.astro';
 import GuideLibrary from '../components/home/GuideLibrary.astro';
 import ContactSection from '../components/home/ContactSection.astro';
 import HomeFooter from '../components/home/HomeFooter.astro';
@@ -63,11 +61,8 @@ const guideSections = await Promise.all(h2Matches.map(async (match, index) => {
     <DecisionModel />
     <Services />
     <DoctorProfile />
-    <VideoLibrary />
-    <ClinicGallery />
     <GuideLibrary sections={guideSections} groups={groups} />
     <ContactSection />
   </main>
   <HomeFooter />
 </SiteLayout>
-
