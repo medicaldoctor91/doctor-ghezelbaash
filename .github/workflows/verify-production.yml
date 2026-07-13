@@ -28,7 +28,7 @@ jobs:
           python-version: '3.13'
 
       - name: Audit the live custom domain
-        run: python3 scripts/audit-production.py --attempts 36 --delay 20
+        run: python3 scripts/audit-production.py --attempts 1 --delay 0
 
       - name: Upload production audit report
         if: always()
