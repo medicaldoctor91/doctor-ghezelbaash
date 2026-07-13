@@ -1,11 +1,32 @@
 import type { MarkdownHeading } from 'astro';
 import { site } from '~/domain/entities';
 import { stabilizeHeadings } from '~/domain/anchor-utils';
+// @ts-expect-error Shared ESM physician identity contract.
+import {
+  personAlternateNames,
+  personRequiredSameAs,
+  restoredPersonIdentifiers,
+  restoredPersonProfileNodes,
+  personIdentityContract,
+} from '~/domain/person-identity.mjs';
 import { buildSchemaParts } from '~/lib/schema';
 
 type Node = Record<string, any>;
 
 const ref = (id: string) => ({ '@id': id });
+const asArray = <T>(value: T | T[] | undefined): T[] => value === undefined ? [] : Array.isArray(value) ? value : [value];
+const uniqueStrings = (values: unknown[]) => [...new Set(values.filter((value): value is string => typeof value === 'string' && value.length > 0))];
+
+function mergeIdentifiers(existing: unknown, restored: Node[]) {
+  const byKey = new Map<string, Node>();
+  for (const identifier of [...asArray(existing as Node | Node[] | undefined), ...restored]) {
+    if (!identifier || typeof identifier !== 'object') continue;
+    const key = `${identifier.propertyID ?? ''}:${identifier.value ?? ''}`;
+    if (key === ':') continue;
+    byKey.set(key, identifier);
+  }
+  return [...byKey.values()];
+}
 
 function sanitize(value: any, blocked: Set<string>): any {
   if (Array.isArray(value)) {
@@ -135,9 +156,20 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
   };
   const person: Node = {
     ...p.personNode,
+    honorificPrefix: personIdentityContract.honorificPrefix,
+    alternateName: uniqueStrings([
+      ...asArray(p.personNode.alternateName),
+      ...personAlternateNames,
+    ]),
+    identifier: mergeIdentifiers(p.personNode.identifier, restoredPersonIdentifiers),
+    sameAs: uniqueStrings([
+      ...asArray(p.personNode.sameAs),
+      ...personRequiredSameAs,
+    ]),
     subjectOf: [
       ...(p.personNode.subjectOf ?? []),
       ...p.researchNodes.map((node: Node) => ref(node['@id'])),
+      ...restoredPersonProfileNodes.map((node: Node) => ref(node['@id'])),
       ref(graphDatasetId),
       ref(site.huggingFaceDataset),
     ],
@@ -178,6 +210,7 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     ...p.compatibilityNodes,
     logo,
     ...p.externalProfileNodes,
+    ...restoredPersonProfileNodes,
     ...p.researchNodes,
     ...p.evidenceNodes,
     ...p.claimNodes,

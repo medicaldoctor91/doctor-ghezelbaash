@@ -2,6 +2,13 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { videos } from '../src/domain/media.mjs';
 import { serviceUrlRegistry } from '../src/domain/url-architecture.mjs';
+import {
+  personAlternateNames,
+  personRequiredSameAs,
+  restoredPersonIdentifiers,
+  restoredPersonProfileNodes,
+  personIdentityContract,
+} from '../src/domain/person-identity.mjs';
 
 const root = join(process.cwd(), 'dist');
 const site = 'https://www.ghezelbaash.ir/';
@@ -71,6 +78,34 @@ function auditGraph(label, graph) {
   return { nodes, defined };
 }
 
+function auditPersonIdentity(label, audit) {
+  const person = audit.nodes.find((node) => node['@id'] === `${site}#person`);
+  check(Boolean(person), `${label}: canonical Person missing`);
+  if (!person) return;
+
+  check(person.honorificPrefix === personIdentityContract.honorificPrefix, `${label}: Person honorificPrefix missing`);
+
+  const aliases = new Set(Array.isArray(person.alternateName) ? person.alternateName : [person.alternateName].filter(Boolean));
+  for (const alias of personAlternateNames) check(aliases.has(alias), `${label}: Person alternateName missing: ${alias}`);
+
+  const sameAs = new Set(Array.isArray(person.sameAs) ? person.sameAs : [person.sameAs].filter(Boolean));
+  for (const url of personRequiredSameAs) check(sameAs.has(url), `${label}: Person sameAs missing: ${url}`);
+
+  const identifiers = Array.isArray(person.identifier) ? person.identifier : [person.identifier].filter(Boolean);
+  for (const required of restoredPersonIdentifiers) {
+    check(
+      identifiers.some((item) => item?.propertyID === required.propertyID && item?.value === required.value),
+      `${label}: Person identifier missing: ${required.propertyID}=${required.value}`,
+    );
+  }
+
+  check(
+    identifiers.some((item) => item?.propertyID === 'MINC' && item?.value === personIdentityContract.minc),
+    `${label}: Canadian MINC identifier missing`,
+  );
+  check(sameAs.has(personIdentityContract.linkedin), `${label}: LinkedIn identity missing`);
+}
+
 const fullAudit = auditGraph('canonical graph', full);
 const inlineAudit = auditGraph('inline graph', inline);
 check(fullAudit.nodes.length >= 800, `canonical graph unexpectedly narrow: ${fullAudit.nodes.length}`);
@@ -79,6 +114,12 @@ check(!inlineAudit.nodes.some((node) => [node['@type']].flat().some((type) => ty
 for (const id of inlineAudit.defined) check(fullAudit.defined.has(id), `inline @id absent from canonical graph: ${id}`);
 check(fullAudit.defined.has(`${site}#knowledge-graph-dataset`), 'canonical Dataset node missing');
 check(!fullAudit.defined.has(`${site}#retrieval-corpus`), 'removed retrieval Dataset still exists');
+
+auditPersonIdentity('canonical graph', fullAudit);
+auditPersonIdentity('inline graph', inlineAudit);
+for (const profile of restoredPersonProfileNodes) {
+  check(fullAudit.defined.has(profile['@id']), `canonical graph: restored Person profile node missing: ${profile['@id']}`);
+}
 
 for (const node of fullAudit.nodes) {
   const values = [];
@@ -134,6 +175,12 @@ console.log(JSON.stringify({
   clips: clipNodes.length,
   inlineGraphNodes: inlineAudit.nodes.length,
   canonicalGraphNodes: fullAudit.nodes.length,
+  personIdentityContract: {
+    minc: personIdentityContract.minc,
+    linkedin: true,
+    alternateNames: personAlternateNames.length,
+    sameAs: personRequiredSameAs.length,
+    restoredProfileNodes: restoredPersonProfileNodes.length,
+  },
   publicFiles: files.length,
 }, null, 2));
-
