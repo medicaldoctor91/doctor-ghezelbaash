@@ -3,4 +3,3 @@ Allow: /
 
 Sitemap: https://www.ghezelbaash.ir/sitemap.xml
 Sitemap: https://www.ghezelbaash.ir/image-sitemap.xml
-Sitemap: https://www.ghezelbaash.ir/video-sitemap.xml
