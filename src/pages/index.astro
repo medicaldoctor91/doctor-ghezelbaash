@@ -3,14 +3,11 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import HomeHeader from '../components/home/HomeHeader.astro';
 import Hero from '../components/home/Hero.astro';
-import DecisionModel from '../components/home/DecisionModel.astro';
 import Services from '../components/home/Services.astro';
-import DoctorProfile from '../components/home/DoctorProfile.astro';
 import GuideLibrary from '../components/home/GuideLibrary.astro';
 import ContactSection from '../components/home/ContactSection.astro';
 import HomeFooter from '../components/home/HomeFooter.astro';
 import { getHeadings, rawContent } from '../content/landing.md';
-import { buildGroupedToc } from '../lib/content';
 import { stabilizeHeadings } from '../domain/anchor-utils';
 import { serviceAliasesForHeading } from '../domain/url-architecture.mjs';
 import { buildGooglePageGraph } from '../compilers/google-page-graph';
@@ -22,7 +19,6 @@ import {
 
 const raw = rawContent();
 const headings = stabilizeHeadings(getHeadings());
-const groups = buildGroupedToc(headings);
 const graph = buildGooglePageGraph(headings, raw);
 
 const h2Matches = [...raw.matchAll(/^##\s+(.+)$/gm)];
@@ -34,12 +30,12 @@ const processor = await createMarkdownProcessor({
   rehypePlugins: [rehypeExternalLinks, rehypeHeadingAnchors, rehypeAccessibleTables],
 });
 
-const guideSections = await Promise.all(h2Matches.map(async (match, index) => {
+const articleSections = await Promise.all(h2Matches.map(async (match, index) => {
   const start = (match.index ?? 0) + match[0].length;
   const end = h2Matches[index + 1]?.index ?? raw.length;
   const markdown = raw.slice(start, end).trim();
   const heading = h2Headings[index];
-  const id = heading?.slug ?? `guide-${index + 1}`;
+  const id = heading?.slug ?? `article-${index + 1}`;
   return {
     id,
     title: match[1].trim(),
@@ -58,10 +54,8 @@ const guideSections = await Promise.all(h2Matches.map(async (match, index) => {
   <HomeHeader />
   <main id="main-content">
     <Hero />
-    <DecisionModel />
     <Services />
-    <DoctorProfile />
-    <GuideLibrary sections={guideSections} groups={groups} />
+    <GuideLibrary sections={articleSections} />
     <ContactSection />
   </main>
   <HomeFooter />
