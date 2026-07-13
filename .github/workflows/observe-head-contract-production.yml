@@ -1,0 +1,66 @@
+name: Observe Head Contract Production
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  observe-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Verify live head and HTTP Link contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 36); do
+            url="https://www.ghezelbaash.ir/?head-contract-check=${GITHUB_SHA}-${attempt}"
+            echo "Attempt ${attempt}: ${url}"
+            curl --fail --silent --show-error --location \
+              --connect-timeout 15 --max-time 45 \
+              -H 'Cache-Control: no-cache' \
+              -H 'Pragma: no-cache' \
+              -D headers.txt \
+              "$url" > production.html || true
+
+            rel_me_hf=$(grep -o '<link rel="me" href="https://huggingface.co/Ghezelbaash"' production.html | wc -l | tr -d ' ')
+            rel_me_ig=$(grep -o '<link rel="me" href="https://www.instagram.com/doctor.ghezelbaash/"' production.html | wc -l | tr -d ' ')
+
+            if [ "$rel_me_hf" = "0" ] \
+              && [ "$rel_me_ig" = "1" ] \
+              && grep -q '<link rel="describedby" href="https://www.ghezelbaash.ir/knowledge-graph.jsonld"' production.html \
+              && grep -q '<link rel="describedby" href="https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"' production.html \
+              && grep -q '<link rel="describedby" href="https://www.wikidata.org/entity/Q140287622"' production.html \
+              && grep -q '<link rel="describedby" href="https://www.wikidata.org/entity/Q140288589"' production.html \
+              && grep -q '<link rel="describedby" href="https://www.wikidata.org/entity/Q140304972"' production.html \
+              && grep -q '<link rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/llms.txt"' production.html \
+              && grep -q '<link rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/.well-known/ai.txt"' production.html \
+              && grep -qi 'knowledge-graph.jsonld' headers.txt \
+              && grep -qi 'llms.txt' headers.txt \
+              && grep -qi '.well-known/ai.txt' headers.txt \
+              && grep -qi 'dr-saeid-ghezelbaash-entity-data' headers.txt \
+              && grep -qi 'Q140287622' headers.txt \
+              && grep -qi 'Q140288589' headers.txt \
+              && grep -qi 'Q140304972' headers.txt; then
+                echo 'Production head contract passed.'
+                exit 0
+            fi
+            sleep 20
+          done
+
+          echo 'Production head contract did not appear within the verification window.' >&2
+          exit 1
+
+      - name: Upload fetched production evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: head-contract-production-evidence
+          path: |
+            production.html
+            headers.txt
+          if-no-files-found: warn
+          retention-days: 3
