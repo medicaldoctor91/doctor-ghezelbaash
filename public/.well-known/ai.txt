@@ -1,8 +1,17 @@
 # Dr. Saeed Ghezelbaash
 Canonical page: https://www.ghezelbaash.ir/
+Canonical physician entity: https://www.ghezelbaash.ir/#person
+Canonical clinic entity: https://www.ghezelbaash.ir/#clinic
 Canonical knowledge graph: https://www.ghezelbaash.ir/knowledge-graph.jsonld
 Plain-text summary: https://www.ghezelbaash.ir/llms.txt
 Sitemap: https://www.ghezelbaash.ir/sitemap.xml
 
-The canonical visible page is authoritative. The physician is the sole main entity. The clinic is a separate MedicalClinic and LocalBusiness entity. Offered services, evaluated options and referral-context procedures are distinct relationships.
+Physician identity anchors:
+IRIMC: 167430
+MINC Canada: CAMD-0224-1997
+ORCID: https://orcid.org/0009-0001-9346-8475
+Wikidata: https://www.wikidata.org/entity/Q140287622
+LinkedIn: https://www.linkedin.com/in/saeed-ghezelbash-93310a96
+MyNCBI: https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/
 
+The canonical visible page is authoritative. The physician is the sole main entity. The clinic is a separate MedicalClinic and LocalBusiness entity. Offered services, evaluated options and referral-context procedures are distinct relationships.
