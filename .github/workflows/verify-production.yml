@@ -1,6 +1,8 @@
 name: Verify production deployment
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -9,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: verify-production
+  group: verify-production-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -26,7 +28,7 @@ jobs:
           python-version: '3.13'
 
       - name: Audit the live custom domain
-        run: python3 scripts/run-production-audit.py --attempts 36 --delay 20
+        run: python3 scripts/run-production-audit.py --attempts 1 --delay 0
 
       - name: Upload production audit report
         if: always()
