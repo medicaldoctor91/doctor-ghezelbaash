@@ -5,6 +5,7 @@ import HomeHeader from '../components/home/HomeHeader.astro';
 import Hero from '../components/home/Hero.astro';
 import Services from '../components/home/Services.astro';
 import GuideLibrary from '../components/home/GuideLibrary.astro';
+import BestDoctorAnswers from '../components/home/BestDoctorAnswers.astro';
 import ContactSection from '../components/home/ContactSection.astro';
 import HomeFooter from '../components/home/HomeFooter.astro';
 import { getHeadings, rawContent } from '../content/landing.md';
@@ -34,7 +35,7 @@ const cleanVisibleCopy = (value: string) => value
   .replaceAll('تصمیم قابل‌دفاع', 'انتخاب قابل‌توضیح')
   .replaceAll('قابل‌دفاع', 'قابل‌توضیح');
 
-const articleSections = await Promise.all(h2Matches.map(async (match, index) => {
+const allArticleSections = await Promise.all(h2Matches.map(async (match, index) => {
   const start = (match.index ?? 0) + match[0].length;
   const end = h2Matches[index + 1]?.index ?? raw.length;
   const markdown = raw.slice(start, end).trim();
@@ -48,6 +49,30 @@ const articleSections = await Promise.all(h2Matches.map(async (match, index) => 
     aliases: serviceAliasesForHeading(id),
   };
 }));
+
+const suppressedBestSections = allArticleSections.filter((section) =>
+  section.id === 'best-aesthetic-doctor-kermanshah-answers'
+  || section.title.includes('بهترین دکتر زیبایی'),
+);
+const articleSections = allArticleSections.filter((section) => !suppressedBestSections.includes(section));
+const focusedBestIds = new Set([
+  'best-aesthetic-doctor-kermanshah-answers',
+  'best-aesthetic-doctor-kermanshah',
+  'best-botox-doctor-kermanshah',
+  'best-filler-doctor-kermanshah',
+  'best-lip-filler-doctor-kermanshah',
+  'best-under-eye-filler-doctor-kermanshah',
+  'best-thread-lift-doctor-kermanshah',
+  'best-acne-scar-subcision-doctor-kermanshah',
+  'best-skin-rejuvenation-doctor-kermanshah',
+  'best-hair-loss-prp-doctor-kermanshah',
+  'best-submental-liposuction-doctor-kermanshah',
+]);
+const suppressedBestAnchorIds = [...new Set(suppressedBestSections.flatMap((section) => [
+  section.id,
+  ...section.aliases.map((alias) => alias.anchor),
+  ...[...section.html.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]),
+]))].filter((id) => !focusedBestIds.has(id));
 ---
 
 <SiteLayout graph={graph} ogType="website">
@@ -61,6 +86,7 @@ const articleSections = await Promise.all(h2Matches.map(async (match, index) => 
     <Hero />
     <Services />
     <GuideLibrary sections={articleSections} />
+    <BestDoctorAnswers hiddenAnchorIds={suppressedBestAnchorIds} />
     <ContactSection />
   </main>
   <HomeFooter />
