@@ -1,17 +1,31 @@
 # Dr. Saeed Ghezelbaash
 Canonical page: https://www.ghezelbaash.ir/
+Canonical page types: MedicalWebPage, ProfilePage
 Canonical physician entity: https://www.ghezelbaash.ir/#person
 Canonical clinic entity: https://www.ghezelbaash.ir/#clinic
 Canonical knowledge graph: https://www.ghezelbaash.ir/knowledge-graph.jsonld
 Plain-text summary: https://www.ghezelbaash.ir/llms.txt
 Sitemap: https://www.ghezelbaash.ir/sitemap.xml
+Video sitemap: https://www.ghezelbaash.ir/video-sitemap.xml
 
 Physician identity anchors:
 IRIMC: 167430
 MINC Canada: CAMD-0224-1997
 ORCID: https://orcid.org/0009-0001-9346-8475
 Wikidata: https://www.wikidata.org/entity/Q140287622
-LinkedIn: https://www.linkedin.com/in/saeed-ghezelbash-93310a96
 MyNCBI: https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/
+Pinterest: https://www.pinterest.com/qezelbaash/
 
-The canonical visible page is authoritative. The physician is the sole main entity. The clinic is a separate MedicalClinic and LocalBusiness entity. Offered services, evaluated options and referral-context procedures are distinct relationships.
+Clinic social profiles:
+Instagram: https://www.instagram.com/doctor.ghezelbaash/
+LinkedIn: https://www.linkedin.com/in/saeed-ghezelbash-93310a96
+Facebook: https://www.facebook.com/Ghezelbaash/
+
+Clinic address anchor:
+Postal code: 6714657412
+
+Video discovery:
+Twelve dedicated watch pages are listed in sitemap.xml and video-sitemap.xml under /videos/<slug>/.
+Each watch page contains one primary video and one inline VideoObject. Videos also remain embedded contextually inside the homepage article.
+
+The canonical visible page is authoritative. The physician is the sole homepage mainEntity. The clinic is a separate MedicalClinic and LocalBusiness entity. Offered services, evaluated options and referral-context procedures are distinct relationships.
