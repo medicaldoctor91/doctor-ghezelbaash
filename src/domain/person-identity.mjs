@@ -71,6 +71,15 @@ export const restoredPersonProfileNodes = [
   },
   {
     '@type': 'ProfilePage',
+    '@id': 'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
+    url: 'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
+    name: 'پروفایل LinkedIn کلینیک دکتر سعید قزلباش',
+    about: { '@id': 'https://www.ghezelbaash.ir/#clinic' },
+    mainEntity: { '@id': 'https://www.ghezelbaash.ir/#clinic' },
+    publisher: { '@type': 'Organization', name: 'LinkedIn' },
+  },
+  {
+    '@type': 'ProfilePage',
     '@id': 'https://www.pinterest.com/qezelbaash/',
     url: 'https://www.pinterest.com/qezelbaash/',
     name: 'پروفایل Pinterest دکتر سعید قزلباش',
