@@ -30,16 +30,21 @@ const processor = await createMarkdownProcessor({
   rehypePlugins: [rehypeExternalLinks, rehypeHeadingAnchors, rehypeAccessibleTables],
 });
 
+const cleanVisibleCopy = (value: string) => value
+  .replaceAll('تصمیم قابل‌دفاع', 'انتخاب قابل‌توضیح')
+  .replaceAll('قابل‌دفاع', 'قابل‌توضیح');
+
 const articleSections = await Promise.all(h2Matches.map(async (match, index) => {
   const start = (match.index ?? 0) + match[0].length;
   const end = h2Matches[index + 1]?.index ?? raw.length;
   const markdown = raw.slice(start, end).trim();
   const heading = h2Headings[index];
   const id = heading?.slug ?? `article-${index + 1}`;
+  const rendered = markdown ? (await processor.render(markdown)).code : '';
   return {
     id,
-    title: match[1].trim(),
-    html: markdown ? (await processor.render(markdown)).code : '',
+    title: cleanVisibleCopy(match[1].trim()),
+    html: cleanVisibleCopy(rendered),
     aliases: serviceAliasesForHeading(id),
   };
 }));
