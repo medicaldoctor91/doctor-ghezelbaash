@@ -39,6 +39,11 @@ for (const phrase of [
   'تصمیم بالینی',
   'مدل تصمیم',
   'دانش‌نامه',
+  'اتوریتی',
+  'فنوتیپ',
+  'Dynamic Vector',
+  'Structural Foundation',
+  'Surface Phenotype',
   'دروازه',
   'قفل اول',
   'قفل دوم',
@@ -61,6 +66,10 @@ for (const url of [
   check(homepage.includes(`<link rel="me" href="${url}">`) || homepage.includes(`<link rel="me" href="${url}"`), `head identity link missing: ${url}`);
 }
 
+for (const label of ['LinkedIn', 'Facebook', 'Pinterest']) {
+  check(visible.includes(label), `visible physician profile link missing: ${label}`);
+}
+
 check(homepage.includes('class="article-flow'), 'continuous article layout missing');
 check(!homepage.includes('class="guide-card'), 'accordion-card article layout returned');
 check(!homepage.includes('class="guide-index'), 'knowledge-base index returned');
@@ -76,4 +85,5 @@ console.log(JSON.stringify({
   bestDoctorQueries: 10,
   artificialVisiblePhrases: 0,
   identityHeadLinks: 5,
+  visibleSocialProfiles: 3,
 }, null, 2));
