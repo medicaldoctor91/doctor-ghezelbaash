@@ -24,8 +24,49 @@ interface Props {
 }
 
 const { sections, groups } = Astro.props;
+
+const visibleReplacements: Array<[RegExp, string]> = [
+  [/موتور تصمیم بالینی/gu, 'راهنمای انتخاب درمان'],
+  [/تصمیم‌گیریِ تشخیصیِ پیش از مداخله/gu, 'بررسی دقیق پیش از درمان'],
+  [/تصمیم‌گیری تشخیصیِ پیش از مداخله/gu, 'بررسی دقیق پیش از درمان'],
+  [/تصمیم‌گیری بالینی/gu, 'انتخاب درمان'],
+  [/تصمیم بالینی/gu, 'انتخاب درمان'],
+  [/مسئول تصمیم‌گیری/gu, 'پزشک معالج'],
+  [/مسئول تصمیم/gu, 'پزشک معالج'],
+  [/هویت حرفه‌ای/gu, 'سوابق حرفه‌ای'],
+  [/هویت پزشکی/gu, 'مشخصات پزشک'],
+  [/دادهٔ هویتی/gu, 'اطلاعات پزشک'],
+  [/هویتی/gu, 'شخصی'],
+  [/هویت/gu, 'مشخصات'],
+  [/اتوریتی ملی/gu, 'اعتبار گسترده'],
+  [/اتوریتی/gu, 'اعتبار'],
+  [/انتیتی/gu, 'نام و اطلاعات'],
+  [/تصمیم‌ساز/gu, 'مهم'],
+  [/مودالیتی/gu, 'روش'],
+  [/مکانیسم/gu, 'علت'],
+];
+
+const cleanVisibleCopy = (value: string) => visibleReplacements.reduce(
+  (result, [pattern, replacement]) => result.replace(pattern, replacement),
+  value,
+);
+
+const displaySections = sections.map((section) => ({
+  ...section,
+  title: cleanVisibleCopy(section.title),
+  html: cleanVisibleCopy(section.html),
+}));
+const displayGroups = groups.map((group) => ({
+  ...group,
+  label: cleanVisibleCopy(group.label),
+  shortLabel: cleanVisibleCopy(group.shortLabel),
+  sections: group.sections.map((item) => ({ ...item, text: cleanVisibleCopy(item.text) })),
+}));
+
 const videoItems = videos.map((video: any) => ({
   ...video,
+  title: cleanVisibleCopy(video.title),
+  description: cleanVisibleCopy(video.description),
   details: videoPageDetails[video.id],
   chapters: readMediaChapters(video.chapterTrack).slice(0, 3),
 }));
@@ -33,10 +74,10 @@ const videoItems = videos.map((video: any) => ({
 const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim();
 const videosBySection = new Map<string, any[]>();
 for (const video of videoItems) {
-  const matched = sections.find((section) => {
+  const matched = displaySections.find((section) => {
     const searchable = `${section.title} ${plain(section.html)}`;
     return searchable.includes(video.relatedHeadingIncludes);
-  }) ?? sections[0];
+  }) ?? displaySections[0];
   if (!matched) continue;
   const list = videosBySection.get(matched.id) ?? [];
   list.push(video);
@@ -62,19 +103,19 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
   <div class="shell">
     <div class="section-heading section-heading--split">
       <div>
-        <p class="eyebrow">دانش‌نامهٔ بالینی</p>
-        <h2 id="guide-title">راهنمای کامل تصمیم‌گیری</h2>
+        <p class="eyebrow">راهنمای درمان‌ها</p>
+        <h2 id="guide-title">مقالهٔ کامل پزشکی زیبایی، پوست و مو</h2>
       </div>
-      <p>محتوای تفصیلی بر اساس مسئلهٔ بیمار سازمان یافته است. عکس و ویدئو فقط در همان بحثی قرار می‌گیرند که برای فهم آن لازم‌اند.</p>
+      <p>موضوع موردنظر را باز کنید. عکس‌ها و ویدئوها داخل همان مطلب مرتبط قرار گرفته‌اند تا خواندن صفحه ساده‌تر باشد.</p>
     </div>
 
-    <nav class="guide-index" aria-label="فهرست موضوعی دانش‌نامه">
+    <nav class="guide-index" aria-label="فهرست موضوعات مقاله">
       <div class="guide-index__title">
         <BookOpenText size={22} aria-hidden="true" />
-        <strong>مسیر سریع موضوعات</strong>
+        <strong>دسترسی سریع به موضوعات</strong>
       </div>
       <div class="guide-index__groups">
-        {groups.map((group) => (
+        {displayGroups.map((group) => (
           <section>
             <h3>{group.shortLabel}</h3>
             <ul>
@@ -87,14 +128,14 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
       </div>
     </nav>
 
-    <div class="guide-tools" role="group" aria-label="ابزار بازکردن راهنما">
-      <p><Search size={19} aria-hidden="true" /> برای یافتن عبارت خاص، از جست‌وجوی مرورگر استفاده کنید.</p>
-      <button type="button" data-guide-action="open">بازکردن همه</button>
+    <div class="guide-tools" role="group" aria-label="باز و بسته کردن مطالب">
+      <p><Search size={19} aria-hidden="true" /> برای پیدا کردن یک عبارت، از جست‌وجوی مرورگر استفاده کنید.</p>
+      <button type="button" data-guide-action="open">باز کردن همه</button>
       <button type="button" data-guide-action="close">بستن همه</button>
     </div>
 
     <div class="guide-list">
-      {sections.map((section, index) => {
+      {displaySections.map((section, index) => {
         const sectionVideos = videosBySection.get(section.id) ?? [];
         const split = splitAfterOpeningParagraph(section.html);
         return (
@@ -109,7 +150,7 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
 
               {sectionVideos.length > 0 && (
                 <div class="article-media">
-                  <p class="article-media__label">ویدئوی مرتبط با همین بحث</p>
+                  <p class="article-media__label">ویدئوی همین موضوع</p>
                   {sectionVideos.map((video: any) => (
                     <article id={`video-${video.id}`} class="article-video" data-inline-video>
                       <div class="article-video__media">
@@ -125,7 +166,7 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                         >
                           <source src={`/videos/${video.file}`} type="video/mp4" />
                           {video.chapterTrack && (
-                            <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />
+                            <track kind="chapters" src={video.chapterTrack} srclang="fa" label="بخش‌های ویدئو" default />
                           )}
                           مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
                         </video>
@@ -140,13 +181,13 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                         <p id={`video-${video.id}-description`}>{video.description}</p>
 
                         {video.chapters.length > 0 && (
-                          <div class="video-chapters" role="group" aria-label={`فصل‌های ${video.title}`}>
-                            <strong><ListVideo size={17} aria-hidden="true" /> فصل‌ها</strong>
+                          <div class="video-chapters" role="group" aria-label={`بخش‌های ${video.title}`}>
+                            <strong><ListVideo size={17} aria-hidden="true" /> بخش‌های ویدئو</strong>
                             <ol>
                               {video.chapters.map((chapter: any, chapterIndex: number) => (
                                 <li id={`video-${video.id}-clip-${chapterIndex + 1}`}>
                                   <button type="button" data-video-id={`video-${video.id}`} data-start={chapter.startOffset}>
-                                    <span>{chapter.name}</span>
+                                    <span>{cleanVisibleCopy(chapter.name)}</span>
                                     <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time>
                                   </button>
                                 </li>
@@ -157,19 +198,19 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
 
                         {video.details && (
                           <details class="video-context">
-                            <summary>شرح بالینی و مرز تصمیم</summary>
-                            <p>{video.details.summary}</p>
+                            <summary>توضیح بیشتر</summary>
+                            <p>{cleanVisibleCopy(video.details.summary)}</p>
                             <ul>
-                              {video.details.takeaways.map((item: string) => <li>{item}</li>)}
+                              {video.details.takeaways.map((item: string) => <li>{cleanVisibleCopy(item)}</li>)}
                             </ul>
-                            <p class="video-boundary"><strong>مرز تصمیم:</strong> {video.details.boundary}</p>
+                            <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {cleanVisibleCopy(video.details.boundary)}</p>
                           </details>
                         )}
 
                         {video.details?.relatedPath && (
                           <a class="video-card__related" href={video.details.relatedPath}>
                             <BookOpen size={16} aria-hidden="true" />
-                            <span>{video.details.relatedLabel}</span>
+                            <span>{cleanVisibleCopy(video.details.relatedLabel)}</span>
                           </a>
                         )}
                       </div>
