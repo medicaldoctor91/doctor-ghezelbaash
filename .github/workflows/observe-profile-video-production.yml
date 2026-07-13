@@ -1,0 +1,33 @@
+name: Observe Profile and Video Production
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  production-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout current main-based audit
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Audit live homepage, graph, sitemaps and all watch pages
+        run: python3 scripts/run-production-audit.py --attempts 36 --delay 20
+
+      - name: Upload live audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-video-production-audit
+          path: production-audit
+          if-no-files-found: warn
+          retention-days: 3
