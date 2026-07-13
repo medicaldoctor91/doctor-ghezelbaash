@@ -12,6 +12,11 @@ MINC Canada: CAMD-0224-1997
 ORCID: https://orcid.org/0009-0001-9346-8475
 Wikidata: https://www.wikidata.org/entity/Q140287622
 LinkedIn: https://www.linkedin.com/in/saeed-ghezelbash-93310a96
+Facebook: https://www.facebook.com/Ghezelbaash/
+Pinterest: https://www.pinterest.com/qezelbaash/
 MyNCBI: https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/
+
+Clinic address anchor:
+Postal code: 6714657412
 
 The canonical visible page is authoritative. The physician is the sole main entity. The clinic is a separate MedicalClinic and LocalBusiness entity. Offered services, evaluated options and referral-context procedures are distinct relationships.
