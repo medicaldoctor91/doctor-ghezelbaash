@@ -64,9 +64,27 @@ for (const phrase of [
   'قفل پنجم',
   'قفل ششم',
   'قفل هفتم',
+  'کلینیک رستوران نیست',
+  'گارسونِ سرنگ',
+  'رزومه را ته صفحه دفن نکنید',
+  'یک نمایش جانبی نیست',
+  'ظاهر پوست (ظاهر پوست)',
+  'حرکت صورت (حرکت صورت)',
+  'ساختار صورت (ساختار صورت)',
 ]) {
   check(!visible.includes(phrase), `forbidden artificial phrase leaked into visible copy: ${phrase}`);
 }
+
+check(homepage.includes('<h1 id="hero-title">دکتر سعید قزلباش</h1>'), 'natural physician-first hero heading missing');
+check(homepage.includes('<h2 id="services-title">خدمات کلینیک</h2>'), 'natural services heading missing');
+check(homepage.includes('سوابق و پروفایل‌های رسمی'), 'compact professional-profile disclosure missing');
+
+const videoChapterGroups = (homepage.match(/class="video-chapters"/gu) ?? []).length;
+const videoChapterTracks = (homepage.match(/<track\b[^>]*kind="chapters"/gu) ?? []).length;
+check(videoChapterGroups === 6, `only six videos of at least 30 seconds should expose chapter controls; found ${videoChapterGroups}`);
+check(videoChapterTracks === 6, `only six videos of at least 30 seconds should expose chapter tracks; found ${videoChapterTracks}`);
+check(!visible.includes('بخش‌های ویدئو'), 'generic video chapter label leaked into visible copy');
+check(!visible.includes('حدود ۹ ثانیه') && !visible.includes('حدود ۸ ثانیه') && !visible.includes('حدود ۶ ثانیه'), 'artificial approximate duration labels leaked into short videos');
 
 const requiredHeadMe = [
   'https://orcid.org/0009-0001-9346-8475',
@@ -107,6 +125,10 @@ console.log(JSON.stringify({
   bestDoctorWrapper: 'closed',
   bestDoctorQueries: bestDoctorIds.length,
   artificialVisiblePhrases: 0,
+  naturalHeroHeading: true,
+  naturalServicesHeading: true,
+  meaningfulVideoChapterGroups: videoChapterGroups,
+  shortVideoChapterGroups: 0,
   requiredIdentityHeadLinks: requiredHeadMe.length,
   wikidataHeadLink: false,
   huggingFaceDatasetHeadLink: false,
