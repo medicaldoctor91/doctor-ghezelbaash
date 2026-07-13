@@ -24,11 +24,14 @@ export function GET() {
 - Medical registration (IRIMC): ${site.irimc}
 - Canadian MINC: ${personIdentityContract.minc}
 - City: ${site.city}
+- Postal code: ${site.postalCode}
 - ORCID: ${site.orcidUrl}
 - Wikidata: ${site.doctorWikidata}
 - Google Knowledge Graph MID: ${site.doctorGoogleKnowledgeGraphId}
 - MyNCBI bibliography: ${personIdentityContract.ncbiBibliography}
 - LinkedIn: ${personIdentityContract.linkedin}
+- Facebook: ${personIdentityContract.facebook}
+- Pinterest: ${personIdentityContract.pinterest}
 - IRIMC verification: ${site.irimcVerification}
 
 ## Interpretation
