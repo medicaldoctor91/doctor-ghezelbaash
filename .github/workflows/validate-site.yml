@@ -34,4 +34,20 @@ jobs:
         run: npm install --package-lock=false --no-audit --no-fund
 
       - name: Build and validate release
-        run: npm run build
+        id: build
+        shell: bash
+        run: |
+          set +e
+          npm run build > build.log 2>&1
+          status=$?
+          cat build.log
+          exit $status
+
+      - name: Upload build report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-build-report
+          path: build.log
+          if-no-files-found: error
+          retention-days: 3
