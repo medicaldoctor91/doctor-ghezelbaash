@@ -1,0 +1,34 @@
+---
+import { ChevronDown, Search } from '@lucide/astro';
+import { bestDoctorAnswers } from '../../domain/best-doctor-answers.mjs';
+
+interface Props {
+  hiddenAnchorIds?: string[];
+}
+
+const { hiddenAnchorIds = [] } = Astro.props;
+---
+
+<section class="quiet-best-wrap shell" aria-label="پرسش‌های رایج درباره انتخاب پزشک زیبایی در کرمانشاه">
+  {hiddenAnchorIds.map((id) => <span id={id} class="anchor-alias" aria-hidden="true"></span>)}
+  <details class="quiet-best">
+    <summary>
+      <span class="quiet-best__icon"><Search size={18} aria-hidden="true" /></span>
+      <span>
+        <strong>پرسش‌های رایج درباره انتخاب پزشک زیبایی در کرمانشاه</strong>
+        <small>پاسخ به جست‌وجوهای «بهترین دکتر»</small>
+      </span>
+      <ChevronDown class="quiet-best__chevron" size={20} aria-hidden="true" />
+    </summary>
+
+    <div class="quiet-best__body">
+      <h2 id="best-aesthetic-doctor-kermanshah-answers" class="sr-only" tabindex="-1">پاسخ به پرسش‌های بهترین دکتر زیبایی در کرمانشاه</h2>
+      {bestDoctorAnswers.map((item) => (
+        <section class="quiet-best__item" aria-labelledby={`${item.id}-title`}>
+          <h3 id={item.id} tabindex="-1">{item.question}</h3>
+          <p>{item.answer}</p>
+        </section>
+      ))}
+    </div>
+  </details>
+</section>
