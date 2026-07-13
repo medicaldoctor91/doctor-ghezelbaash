@@ -42,29 +42,14 @@ for (const video of videoItems) {
   videosBySection.set(matched.id, list);
 }
 
-const simplifyTitle = (title: string) => {
-  if (title.includes('هویت پزشک')) return 'درباره دکتر سعید قزلباش';
-  if (title.includes('اسم مشکل، درمان را معلوم می‌کند')) return 'برای هر مشکل چه چیزهایی باید بررسی شود؟';
-  if (title.includes('صفحه را از بوتاکس شروع نکنید')) return 'موضوع موردنظر خود را پیدا کنید';
-  return title
-    .replaceAll('هویت', 'اطلاعات')
-    .replaceAll('مسئول تصمیم‌گیری', 'پزشک')
-    .replaceAll('مسئول تصمیم', 'پزشک')
-    .replaceAll('تصمیم‌گیری بالینی', 'انتخاب درمان')
-    .replaceAll('تصمیم بالینی', 'انتخاب درمان')
-    .replaceAll('مدل تصمیم', 'روش بررسی')
-    .replaceAll('لایهٔ غالب', 'علت اصلی')
-    .replaceAll('مکانیسم', 'علت')
-    .replaceAll('هفت ایست', 'هفت مرحله')
-    .replaceAll('دروازه', 'مرحله')
-    .replaceAll('قفل', 'مرحله');
-};
-
-const simplifyHtml = (html: string) => html
+const normalizeText = (value: string) => value
   .replaceAll('موتور تصمیم بالینی', 'راهنمای خدمات و درمان‌ها')
-  .replaceAll('تصمیم‌گیری تشخیصیِ پیش از مداخله', 'ارزیابی پیش از درمان')
-  .replaceAll('تصمیم‌گیری تشخیصی پیش از مداخله', 'ارزیابی پیش از درمان')
+  .replaceAll('تصمیم‌گیری تشخیصیِ پیش از مداخله', 'بررسی پیش از درمان')
+  .replaceAll('تصمیم‌گیری تشخیصی پیش از مداخله', 'بررسی پیش از درمان')
+  .replaceAll('تشخیص پیش از مداخله', 'بررسی پیش از درمان')
   .replaceAll('دامنهٔ دانش و هویت حرفه‌ای', 'سابقهٔ کاری و علمی')
+  .replaceAll('هویت پژوهشی و آموزشی', 'سابقهٔ پژوهشی و آموزشی')
+  .replaceAll('هویت آموزشی', 'سابقهٔ آموزشی')
   .replaceAll('هویت حرفه‌ای', 'اطلاعات حرفه‌ای')
   .replaceAll('هویت پزشکی', 'اطلاعات پزشک')
   .replaceAll('هویت پزشک', 'اطلاعات پزشک')
@@ -76,21 +61,54 @@ const simplifyHtml = (html: string) => html
   .replaceAll('تصمیم‌گیری', 'انتخاب')
   .replaceAll('مدل تصمیم', 'روش بررسی')
   .replaceAll('مرز تصمیم', 'نکتهٔ مهم')
+  .replaceAll('اتوریتی ملی', 'اعتبار حرفه‌ای')
+  .replaceAll('اتوریتی', 'اعتبار')
+  .replaceAll('هستهٔ فعالیت بالینی', 'حوزهٔ فعالیت')
+  .replaceAll('دامنهٔ دانش و ارزیابی', 'موضوعات کاری')
   .replaceAll('لایهٔ غالب', 'علت اصلی')
   .replaceAll('مکانیسم غالب', 'علت اصلی')
   .replaceAll('مکانیسم', 'علت')
   .replaceAll('بردار دینامیک', 'حرکت صورت')
   .replaceAll('بردار سطحی', 'پوست و سطح صورت')
   .replaceAll('بردار', 'جهت')
+  .replaceAll('فنوتیپ سطحی', 'ظاهر و پوست')
   .replaceAll('پایهٔ ساختاری', 'ساختار صورت')
+  .replaceAll('Structural Foundation', 'ساختار صورت')
+  .replaceAll('Dynamic Vector', 'حرکت صورت')
+  .replaceAll('Surface Phenotype', 'ظاهر و پوست')
   .replaceAll('خروجی این دروازه', 'نتیجه')
   .replaceAll('این دروازه', 'این مرحله')
   .replaceAll('دروازه', 'مرحله')
   .replaceAll('هفت ایست', 'هفت مرحله')
+  .replaceAll('قانون سه‌لایه', 'خلاصه')
+  .replaceAll('سه‌لایه', 'کامل')
+  .replaceAll('چندلایه', 'کامل')
+  .replaceAll('کاندیداتوری', 'مناسب بودن درمان')
+  .replaceAll('متغیر کور', 'نکتهٔ بررسی‌نشده')
+  .replaceAll('خروجی قابل‌اندازه‌گیری', 'نتیجهٔ قابل‌بررسی')
   .replace(/قفل (اول|دوم|سوم|چهارم|پنجم|ششم|هفتم)/gu, 'مرحله $1')
   .replace(/سطح [۱۲۳] \(Tier [123]\) ـ /gu, '')
+  .replace(/\s*\((?:Surface Phenotype|Dynamic Vector|Structural Foundation)\)/gu, '')
   .replace(/Tier [123]/gu, '')
-  .replaceAll('خروجی قابل‌اندازه‌گیری', 'نتیجهٔ قابل‌بررسی');
+  .replaceAll('سطح اول', 'مرحلهٔ اول')
+  .replaceAll('سطح دوم', 'مرحلهٔ دوم')
+  .replaceAll('سطح سوم', 'مرحلهٔ سوم')
+  .replaceAll('سطح ۱', 'مرحلهٔ اول')
+  .replaceAll('سطح ۲', 'مرحلهٔ دوم')
+  .replaceAll('سطح ۳', 'مرحلهٔ سوم');
+
+const simplifyTitle = (title: string) => {
+  if (title.includes('هویت پزشک')) return 'درباره دکتر سعید قزلباش';
+  if (title.includes('اسم پزشک کافی نیست')) return 'پیش از درمان چه چیزهایی باید بررسی شود؟';
+  if (title.includes('اسم مشکل، درمان را معلوم می‌کند')) return 'برای هر مشکل چه چیزهایی باید بررسی شود؟';
+  if (title.includes('صفحه را از بوتاکس شروع نکنید')) return 'موضوع موردنظر خود را پیدا کنید';
+  if (title.includes('ظاهر، کل واقعیت نیست')) return 'پیش از انتخاب درمان چه چیزهایی باید بررسی شود؟';
+  if (title.includes('تشخیص را میان‌بُر نزنید')) return 'مراحل بررسی پیش از درمان';
+  if (title.includes('صورت، منوی ناحیه‌ها نیست')) return 'هماهنگی اجزای صورت در انتخاب درمان';
+  return normalizeText(title);
+};
+
+const simplifyHtml = (html: string) => normalizeText(html);
 
 const splitAfterOpeningParagraph = (html: string) => {
   const match = /<\/p>/iu.exec(html);
@@ -141,6 +159,12 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
               <a href={site.orcidUrl} target="_blank" rel="me noopener noreferrer external">ORCID</a>
               <span aria-hidden="true"> · </span>
               <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">مقاله‌های پژوهشی</a>
+              <span aria-hidden="true"> · </span>
+              <a href={site.linkedinProfile} target="_blank" rel="me noopener noreferrer external">LinkedIn</a>
+              <span aria-hidden="true"> · </span>
+              <a href={site.facebookProfile} target="_blank" rel="me noopener noreferrer external">Facebook</a>
+              <span aria-hidden="true"> · </span>
+              <a href={site.pinterestProfile} target="_blank" rel="me noopener noreferrer external">Pinterest</a>
             </p>
           )}
 
@@ -194,18 +218,18 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                     {video.details && (
                       <details class="video-context">
                         <summary>توضیحات بیشتر</summary>
-                        <p>{simplifyTitle(video.details.summary)}</p>
+                        <p>{normalizeText(video.details.summary)}</p>
                         <ul>
-                          {video.details.takeaways.map((item: string) => <li>{simplifyTitle(item)}</li>)}
+                          {video.details.takeaways.map((item: string) => <li>{normalizeText(item)}</li>)}
                         </ul>
-                        <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {simplifyTitle(video.details.boundary)}</p>
+                        <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {normalizeText(video.details.boundary)}</p>
                       </details>
                     )}
 
                     {video.details?.relatedPath && (
                       <a class="video-card__related" href={video.details.relatedPath}>
                         <BookOpen size={16} aria-hidden="true" />
-                        <span>{video.details.relatedLabel}</span>
+                        <span>{normalizeText(video.details.relatedLabel)}</span>
                       </a>
                     )}
                   </div>
