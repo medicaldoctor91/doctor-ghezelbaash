@@ -10,7 +10,7 @@ The release validator must preserve the complete verified identity set across th
 - Wikidata `Q140287622`
 - Google Knowledge Graph identifiers
 - MyNCBI bibliography `saeed.ghezelbash.1`
-- LinkedIn, Instagram, GitHub, Hugging Face, About.me, Linktree and X profiles
+- LinkedIn, Instagram, GitHub, Hugging Face, Facebook, Pinterest, About.me, Linktree and X profiles
 - historical Persian and Latin name variants used for entity disambiguation
 
-External social profiles must not be added to `sameAs` or as `ProfilePage` nodes unless ownership is explicitly confirmed. The clinic remains a separate `MedicalClinic` / `LocalBusiness` entity and must not absorb physician identifiers.
+Facebook and Pinterest ownership was explicitly confirmed by the site owner and must remain in `Person.sameAs`, the canonical ProfilePage nodes and the `rel="me"` identity links. LinkedIn must remain in the same three identity surfaces. The clinic remains a separate `MedicalClinic` / `LocalBusiness` entity and must not absorb physician identifiers.
