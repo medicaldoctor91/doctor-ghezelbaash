@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import '../styles/media-inline.css';
 import { site } from '../domain/entities';
+// @ts-expect-error Shared ESM physician identity contract.
+import { personIdentityContract } from '../domain/person-identity.mjs';
 
 interface Props {
   graph: Record<string, unknown>;
@@ -42,6 +44,9 @@ const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).hr
     <link rel="author" href={`${site.url}#person`} />
     <link rel="me" href={site.orcidUrl} />
     <link rel="me" href={site.instagram} />
+    <link rel="me" href={personIdentityContract.linkedin} />
+    <link rel="me" href={personIdentityContract.facebook} />
+    <link rel="me" href={personIdentityContract.pinterest} />
     <link rel="alternate" hreflang="fa-IR" href={canonical} />
     <link rel="alternate" hreflang="fa" href={canonical} />
     <link rel="alternate" hreflang="x-default" href={canonical} />
