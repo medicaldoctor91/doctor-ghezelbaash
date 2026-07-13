@@ -1,4 +1,5 @@
 import { site } from '../data/site';
+import { entityIdentity, physicianClinicRelationship } from '../domain/entity-identity';
 // @ts-expect-error Shared ESM product data.
 import { procedures, topicGroups } from '../data/knowledge.mjs';
 // @ts-expect-error Shared ESM authority data.
@@ -24,6 +25,8 @@ export function GET() {
     canonical: site.url,
     updated: site.dateModified,
     relationshipVocabulary: ['offered', 'evaluated', 'referral-context'],
+    entityIdentity,
+    physicianClinicRelationship,
     topicGroups,
     umbrellaProcedures: procedures,
     granularConcepts: concepts,

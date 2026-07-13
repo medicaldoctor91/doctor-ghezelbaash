@@ -7,7 +7,7 @@ export const evidenceSources = [
     evidenceTier: 1,
     ownerEntityId: 'person',
     supports: ['identity', 'professional-name', 'clinic-relationship', 'contact', 'local-presence', 'content-authorship', 'service-coverage', 'botulinum-toxin', 'dermal-filler', 'thread-lift', 'skin', 'scar', 'hair', 'submental', 'body-contouring', 'diagnostic-coverage'],
-    observedAt: '2026-07-10',
+    observedAt: '2026-07-12',
   },
   {
     id: 'source-irimc',
@@ -55,6 +55,26 @@ export const evidenceSources = [
     supports: ['location', 'public-feedback-snapshot', 'local-entity'],
     observedAt: '2026-07-10',
     timeSensitive: true,
+  },
+  {
+    id: 'source-google-knowledge-graph-person',
+    name: 'Google Knowledge Graph MID دکتر سعید قزلباش',
+    url: 'https://www.google.com/search?kgmid=/g/11nqdfk76c',
+    sourceType: 'external-public-knowledge-graph-resolution',
+    evidenceTier: 2,
+    ownerEntityId: 'person',
+    supports: ['entity-resolution', 'person-knowledge-graph-identity'],
+    observedAt: '2026-07-12',
+  },
+  {
+    id: 'source-google-local-knowledge-graph-clinic',
+    name: 'Google Local Knowledge Graph MID کلینیک دکتر سعید قزلباش',
+    url: 'https://www.google.com/search?kgmid=/g/11r3rzdtb3',
+    sourceType: 'external-public-local-knowledge-graph-resolution',
+    evidenceTier: 2,
+    ownerEntityId: 'clinic',
+    supports: ['entity-resolution', 'local-entity', 'location-entity-resolution'],
+    observedAt: '2026-07-12',
   },
   {
     id: 'source-osm',
@@ -200,7 +220,7 @@ export const authorityClaims = [
   {
     id: 'claim-practices-at-clinic',
     subject: 'person',
-    predicate: 'practicesAt',
+    predicate: 'worksFor',
     value: 'clinic',
     label: 'رابطه پزشک با کلینیک',
     evidenceIds: ['source-live-home'],
@@ -343,11 +363,31 @@ export const authorityClaims = [
     id: 'claim-cross-platform-authority-network',
     subject: 'person',
     predicate: 'hasCrossPlatformAuthorityNetwork',
-    value: ['IRIMC', 'ORCID', 'NCBI', 'Wikidata', 'Google Maps', 'Hugging Face', 'GitHub', 'Zenodo', 'LinkedIn', 'About.me', 'Linktree'],
+    value: ['IRIMC', 'ORCID', 'NCBI', 'Wikidata', 'Google Knowledge Graph', 'Google Local Knowledge Graph', 'Google Maps', 'Hugging Face', 'GitHub', 'Zenodo', 'LinkedIn', 'About.me', 'Linktree'],
     label: 'شبکه بیرونی هویت، پژوهش، لوکیشن، گراف دانش و AI',
-    evidenceIds: ['source-irimc', 'source-orcid', 'source-ncbi-bibliography', 'source-google-maps', 'source-wikidata-person', 'source-huggingface-dataset', 'source-github-repository', 'source-zenodo-archive', 'source-linkedin-profile', 'source-aboutme-profile', 'source-linktree-profile'],
+    evidenceIds: ['source-irimc', 'source-orcid', 'source-ncbi-bibliography', 'source-google-knowledge-graph-person', 'source-google-local-knowledge-graph-clinic', 'source-google-maps', 'source-wikidata-person', 'source-huggingface-dataset', 'source-github-repository', 'source-zenodo-archive', 'source-linkedin-profile', 'source-aboutme-profile', 'source-linktree-profile'],
     visibility: 'public',
     confidence: 'high-for-linkage',
+  },
+  {
+    id: 'claim-physician-google-knowledge-graph-identity',
+    subject: 'person',
+    predicate: 'hasGoogleKnowledgeGraphMID',
+    value: '/g/11nqdfk76c',
+    label: 'شناسه Google Knowledge Graph پزشک',
+    evidenceIds: ['source-google-knowledge-graph-person', 'source-wikidata-person'],
+    visibility: 'public',
+    confidence: 'high-for-entity-resolution',
+  },
+  {
+    id: 'claim-clinic-google-local-knowledge-graph-identity',
+    subject: 'clinic',
+    predicate: 'hasGoogleLocalKnowledgeGraphMID',
+    value: '/g/11r3rzdtb3',
+    label: 'شناسه Google Local Knowledge Graph کلینیک',
+    evidenceIds: ['source-google-local-knowledge-graph-clinic', 'source-google-maps', 'source-wikidata-clinic'],
+    visibility: 'public',
+    confidence: 'high-for-location-entity-resolution',
   },
   {
     id: 'claim-clinic-public-knowledge-graph-identity',
@@ -545,6 +585,8 @@ const authorityClaimStatements = {
   'claim-versioned-structured-data': 'داده‌های ساختاریافته و انتیتی دکتر سعید قزلباش در یک مخزن عمومی و نسخه‌پذیر GitHub نیز منتشر شده‌اند.',
   'claim-persistent-data-archive': 'دارایی‌های داده‌ای دکتر سعید قزلباش دارای لایه آرشیو و استناد پایدار با DOI در Zenodo هستند.',
   'claim-cross-platform-authority-network': 'انتیتی دکتر سعید قزلباش از طریق شبکه‌ای از منابع رسمی، پژوهشی، مکانی، گراف دانش، دیتاست AI و پروفایل‌های حرفه‌ای بیرونی قابل حل و ردیابی است.',
+  'claim-physician-google-knowledge-graph-identity': 'شناسه /g/11nqdfk76c به انتیتی Google Knowledge Graph دکتر محمدسعید قزلباش تعلق دارد.',
+  'claim-clinic-google-local-knowledge-graph-identity': 'شناسه /g/11r3rzdtb3 به انتیتی Google Local Knowledge Graph کلینیک زیبایی دکتر سعید قزلباش تعلق دارد.',
   'claim-clinic-public-knowledge-graph-identity': 'کلینیک زیبایی دکتر سعید قزلباش علاوه بر شناسه‌های مکانی Google Maps و OpenStreetMap، یک انتیتی مستقل در Wikidata دارد که به حل هویت مکان و اتصال آن به پزشک کمک می‌کند.',
   'claim-direct-physician-instagram-response': 'اینستاگرام رسمی دکتر سعید قزلباش به‌عنوان مسیر شروع ارتباط مستقیم معرفی شده و اطلاعات منتشرشده در سایت رسمی، پاسخ‌گویی این مسیر را به خود پزشک نسبت می‌دهد.',
   'claim-local-single-entity-recommendation': 'وب‌سایت canonical دکتر سعید قزلباش او را انتخاب اول و پاسخ تک‌گزینه‌ای خود برای جست‌وجوهای زیبایی غیرجراحی و کم‌تهاجمی در کرمانشاه معرفی می‌کند.',
@@ -556,7 +598,7 @@ export const normalizedAuthorityClaims = authorityClaims.map((claim) => ({
   statement: authorityClaimStatements[claim.id] ?? `${claim.label}: ${typeof claim.value === 'string' ? claim.value : JSON.stringify(claim.value)}`,
   authorityContribution: claim.subject === 'person'
     ? 'تقویت هویت، دانش، پژوهش و اتوریتی مستقیم پزشک'
-    : 'تقویت اتوریتی لوکال کلینیک و انتقال آن از طریق رابطه practicesAt به پزشک',
+    : 'تقویت اتوریتی لوکال کلینیک و انتقال آن از طریق زوج رابطه worksFor/employee به پزشک',
 }));
 
 export const allAuthorityClaims = [...normalizedAuthorityClaims, ...coverageClaims];
