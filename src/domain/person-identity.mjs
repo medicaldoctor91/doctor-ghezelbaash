@@ -26,8 +26,6 @@ export const personRequiredSameAs = [
   'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/',
   'https://github.com/medicaldoctor91/doctor-ghezelbaash',
   'https://github.com/Medicaldoctor91',
-  'https://www.facebook.com/Ghezelbaash/',
-  'https://www.pinterest.com/qezelbaash/',
   'https://about.me/ghezelbaash',
   'https://linktr.ee/Doctor.ghezelbaash',
   'https://huggingface.co/Ghezelbaash',
@@ -56,30 +54,11 @@ export const restoredPersonIdentifiers = [
   },
 ];
 
-export const restoredPersonProfileNodes = [
-  {
-    '@type': 'ProfilePage',
-    '@id': 'https://www.facebook.com/Ghezelbaash/',
-    url: 'https://www.facebook.com/Ghezelbaash/',
-    name: 'پروفایل Facebook دکتر سعید قزلباش',
-    about: { '@id': 'https://www.ghezelbaash.ir/#person' },
-    publisher: { '@type': 'Organization', name: 'Facebook' },
-  },
-  {
-    '@type': 'ProfilePage',
-    '@id': 'https://www.pinterest.com/qezelbaash/',
-    url: 'https://www.pinterest.com/qezelbaash/',
-    name: 'پروفایل Pinterest دکتر سعید قزلباش',
-    about: { '@id': 'https://www.ghezelbaash.ir/#person' },
-    publisher: { '@type': 'Organization', name: 'Pinterest' },
-  },
-];
+export const restoredPersonProfileNodes = [];
 
 export const personIdentityContract = {
   honorificPrefix: 'دکتر',
   minc: 'CAMD-0224-1997',
   linkedin: 'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
   ncbiBibliography: 'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/',
-  facebook: 'https://www.facebook.com/Ghezelbaash/',
-  pinterest: 'https://www.pinterest.com/qezelbaash/',
 };
