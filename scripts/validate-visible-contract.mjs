@@ -57,13 +57,22 @@ for (const phrase of [
 }
 
 for (const url of [
+  'https://orcid.org/0009-0001-9346-8475',
+  'https://www.instagram.com/doctor.ghezelbaash/',
   'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
   'https://www.facebook.com/Ghezelbaash/',
   'https://www.pinterest.com/qezelbaash/',
-  'https://huggingface.co/Ghezelbaash',
-  'https://www.wikidata.org/entity/Q140287622',
 ]) {
-  check(homepage.includes(`<link rel="me" href="${url}">`) || homepage.includes(`<link rel="me" href="${url}"`), `head identity link missing: ${url}`);
+  check(homepage.includes(`<link rel="me" href="${url}">`) || homepage.includes(`<link rel="me" href="${url}"`), `owned head identity link missing: ${url}`);
+}
+
+for (const url of [
+  'https://www.wikidata.org/entity/Q140287622',
+  'https://huggingface.co/Ghezelbaash',
+  'https://github.com/Medicaldoctor91',
+  'https://x.com/Qezelbaash',
+]) {
+  check(!homepage.includes(`<link rel="me" href="${url}"`), `nonessential head rel=me link returned: ${url}`);
 }
 
 for (const label of ['LinkedIn', 'Facebook', 'Pinterest']) {
@@ -84,6 +93,7 @@ console.log(JSON.stringify({
   bestDoctorWrapper: 'closed',
   bestDoctorQueries: 10,
   artificialVisiblePhrases: 0,
-  identityHeadLinks: 5,
+  ownedIdentityHeadLinks: 5,
+  nonessentialIdentityHeadLinks: 0,
   visibleSocialProfiles: 3,
 }, null, 2));
