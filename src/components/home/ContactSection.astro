@@ -13,9 +13,9 @@ const srcset = (image: any, format: string) => image.widths
   <span id="clinic" class="anchor-alias" aria-hidden="true"></span>
   <div class="shell contact-card">
     <div class="contact-card__copy">
-      <p class="eyebrow">هماهنگی مراجعه</p>
-      <h2 id="contact-title">با درخواست آماده نیایید؛ با مسئلهٔ واقعی بیایید</h2>
-      <p>سابقهٔ درمان، نام مواد قبلی، داروها و نتیجه‌ای که واقعاً می‌خواهید را همراه داشته باشید. ممکن است پاسخ معاینه درمان، تعویق یا تغییر مسیر باشد.</p>
+      <p class="eyebrow">تماس و مراجعه</p>
+      <h2 id="contact-title">برای وقت معاینه و مشاوره با کلینیک تماس بگیرید</h2>
+      <p>سابقهٔ درمان‌های قبلی، نام مواد تزریق‌شده، داروها و نتیجه‌ای که انتظار دارید را همراه داشته باشید تا انتخاب روش دقیق‌تر انجام شود.</p>
       <div class="contact-card__actions">
         <a class="button button--primary" href={`tel:${site.phone}`}><Phone size={19} aria-hidden="true" /> تماس با کلینیک</a>
         <a class="button button--light" href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={19} aria-hidden="true" /> مسیریابی</a>
@@ -28,7 +28,7 @@ const srcset = (image: any, format: string) => image.widths
       </div>
       <div>
         <dt><MapPin size={20} aria-hidden="true" /> نشانی</dt>
-        <dd>{site.address}</dd>
+        <dd>{site.address}<br /><small>کد پستی: <bdi dir="ltr">{site.postalCode}</bdi></small></dd>
       </div>
       <div>
         <dt><Clock3 size={20} aria-hidden="true" /> ساعات پاسخ‌گویی</dt>
