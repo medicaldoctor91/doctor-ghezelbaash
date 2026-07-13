@@ -1,9 +1,16 @@
 ---
 import { AtSign, Clock3, MapPin, Phone } from '@lucide/astro';
 import { site } from '../../domain/entities';
+import { galleryImages } from '../../domain/media.mjs';
+
+const clinicImages = galleryImages.filter((image: any) => image.id.startsWith('clinic-'));
+const srcset = (image: any, format: string) => image.widths
+  .map((width: number) => `/images/responsive/${image.base}-${width}.${format} ${width}w`)
+  .join(', ');
 ---
 
 <section id="contact" class="section contact-section" aria-labelledby="contact-title">
+  <span id="clinic" class="anchor-alias" aria-hidden="true"></span>
   <div class="shell contact-card">
     <div class="contact-card__copy">
       <p class="eyebrow">هماهنگی مراجعه</p>
@@ -32,5 +39,24 @@ import { site } from '../../domain/entities';
         <dd><a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><bdi dir="ltr">{site.instagramHandle}</bdi></a></dd>
       </div>
     </dl>
+
+    <div class="contact-card__media" aria-label="تصاویر واقعی محیط مراجعه">
+      {clinicImages.map((image: any) => (
+        <figure data-contextual-image>
+          <picture>
+            <source type="image/avif" srcset={srcset(image, 'avif')} sizes="(min-width: 928px) 18vw, 50vw" />
+            <source type="image/webp" srcset={srcset(image, 'webp')} sizes="(min-width: 928px) 18vw, 50vw" />
+            <img
+              src={`/images/responsive/${image.base}-${Math.max(...image.widths)}.jpg`}
+              alt={image.alt}
+              width={image.width}
+              height={image.height}
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
+        </figure>
+      ))}
+    </div>
   </div>
 </section>
