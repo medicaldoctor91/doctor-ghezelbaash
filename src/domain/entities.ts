@@ -9,9 +9,9 @@ export const site = {
   title:
     "دکتر سعید قزلباش | پزشکی زیبایی در کرمانشاه",
   articleHeadline:
-    "دکتر سعید قزلباش در کرمانشاه؛ صورت شما «خدمت» نمی‌خواهد—تشخیصی می‌خواهد که لایهٔ جاافتاده را پیدا کند",
+    "دکتر سعید قزلباش در کرمانشاه؛ خدمات زیبایی، پوست و مو",
   description:
-    "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ ارزیابی تشخیصی برای بوتاکس، فیلر، لیفت نخ، پوست، مو و غبغب با مرزبندی روشن درمان و ارجاع.",
+    "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ اطلاعات بوتاکس، فیلر، لیفت نخ، پوست، مو، غبغب، سوابق پژوهشی و راه‌های تماس با کلینیک.",
   language: "fa-IR",
   direction: "rtl",
   phone: "+989308209494",
@@ -21,6 +21,8 @@ export const site = {
   instagramReels: "https://www.instagram.com/doctor.ghezelbaash/reels/",
   instagramDirect: "https://ig.me/m/doctor.ghezelbaash",
   instagramHandle: "@Doctor.Ghezelbaash",
+  facebookProfile: "https://www.facebook.com/Ghezelbaash/",
+  pinterestProfile: "https://www.pinterest.com/qezelbaash/",
   maps: "https://www.google.com/maps?cid=12350483144643112463",
   mapsSearch:
     "https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas",
@@ -39,6 +41,7 @@ export const site = {
   streetAddress: "میدان ۱۷ شهریور، ساختمان ویستا",
   city: "کرمانشاه",
   region: "کرمانشاه",
+  postalCode: "6714657412",
   countryCode: "IR",
   hours: "شنبه تا پنج‌شنبه، ۱۶:۰۰ تا ۲۲:۰۰",
   latitude: 34.3400698,
@@ -69,8 +72,8 @@ export const site = {
   heroImage: "/images/responsive/doctor-portrait-1200.jpg",
   logo: "/assets/brand/doctor-hand-syringe-logo-512.png",
   ogImage: "/og/home.jpg",
-  datePublished: "2026-07-10",
-  dateModified: "2026-07-13",
+  datePublished: "2026-07-10T12:00:00+03:30",
+  dateModified: "2026-07-13T12:00:00+03:30",
   liveSourceOfTruth: "https://www.ghezelbaash.ir/",
   sourceTruthObservedAt: "2026-07-13",
   googleBusinessProfile: {
@@ -186,7 +189,7 @@ export const site = {
       doiUrl: "https://doi.org/10.3390/healthcare9091169",
       doi: "10.3390/healthcare9091169",
       pmid: "34574943",
-      datePublished: "2021-09-06",
+      datePublished: "2021-09-06T00:00:00Z",
       journal: "Healthcare",
       publisher: "MDPI / PubMed",
     },
