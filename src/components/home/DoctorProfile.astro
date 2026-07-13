@@ -11,33 +11,33 @@ import { site } from '../../domain/entities';
       <picture>
         <source type="image/avif" srcset="/images/responsive/doctor-exam-480.avif 480w, /images/responsive/doctor-exam-768.avif 768w, /images/responsive/doctor-exam-1200.avif 1200w" sizes="(min-width: 900px) 42vw, 100vw" />
         <source type="image/webp" srcset="/images/responsive/doctor-exam-480.webp 480w, /images/responsive/doctor-exam-768.webp 768w, /images/responsive/doctor-exam-1200.webp 1200w" sizes="(min-width: 900px) 42vw, 100vw" />
-        <img src="/images/responsive/doctor-exam-1200.jpg" alt="ارزیابی پزشکی چهره توسط دکتر سعید قزلباش" width="1600" height="1067" loading="lazy" decoding="async" />
+        <img src="/images/responsive/doctor-exam-1200.jpg" alt="معاینهٔ صورت توسط دکتر سعید قزلباش" width="1600" height="1067" loading="lazy" decoding="async" />
       </picture>
     </figure>
 
     <div class="doctor-copy">
-      <p class="eyebrow">پزشک، پژوهشگر و مدرس</p>
-      <h2 id="doctor-title">هویت قابل‌پیگیری؛ تصمیم قابل‌دفاع</h2>
+      <p class="eyebrow">دربارهٔ دکتر سعید قزلباش</p>
+      <h2 id="doctor-title">نام، شمارهٔ نظام پزشکی و سوابق قابل بررسی</h2>
       <p class="doctor-copy__lead">
-        دکتر محمدسعید قزلباش با نام حرفه‌ای دکتر سعید قزلباش، دارای دکترای حرفه‌ای پزشکی و شمارهٔ نظام پزشکی {site.irimc} است. رویکرد او بر تشخیص چندلایه، انتخاب بیمار، شناخت عارضه و مرز ارجاع بنا شده است.
+        دکتر محمدسعید قزلباش با نام حرفه‌ای دکتر سعید قزلباش، دارای دکترای حرفه‌ای پزشکی و شمارهٔ نظام پزشکی {site.irimc} است. حوزهٔ فعالیت او پزشکی زیبایی، پوست و مو در کرمانشاه است.
       </p>
 
       <ul class="credential-list">
         <li>
           <BadgeCheck size={21} aria-hidden="true" />
-          <span><strong>ثبت حرفه‌ای</strong> نام و کد نظام پزشکی قابل بررسی در سامانهٔ رسمی</span>
+          <span><strong>نظام پزشکی</strong> نام و شمارهٔ ثبت‌شده در سامانهٔ رسمی قابل بررسی است.</span>
         </li>
         <li>
           <BookOpen size={21} aria-hidden="true" />
-          <span><strong>پژوهش پزشکی</strong> مشارکت در دو مقالهٔ نمایه‌شده در PubMed</span>
+          <span><strong>مقالات پژوهشی</strong> نام او در دو مقالهٔ نمایه‌شده در PubMed ثبت شده است.</span>
         </li>
         <li>
           <GraduationCap size={21} aria-hidden="true" />
-          <span><strong>آموزش پزشکان</strong> تمرکز بر آناتومی، انتخاب کاندید و مرز روش</span>
+          <span><strong>آموزش پزشکان</strong> آموزش آناتومی صورت، انتخاب روش و پیشگیری از عوارض.</span>
         </li>
         <li>
           <MapPin size={21} aria-hidden="true" />
-          <span><strong>محل فعالیت</strong> {site.address}</span>
+          <span><strong>آدرس کلینیک</strong> {site.address}</span>
         </li>
       </ul>
 
@@ -47,13 +47,14 @@ import { site } from '../../domain/entities';
           <source type="image/webp" srcset="/images/responsive/doctor-with-staff-480.webp 480w, /images/responsive/doctor-with-staff-768.webp 768w, /images/responsive/doctor-with-staff-1200.webp 1200w" sizes="(min-width: 900px) 42vw, 100vw" />
           <img src="/images/responsive/doctor-with-staff-1200.jpg" alt="دکتر سعید قزلباش همراه با تیم کلینیک" width="1600" height="1067" loading="lazy" decoding="async" />
         </picture>
-        <figcaption>پزشک و تیم کلینیک؛ تصویر در همان بخش هویت و مسئولیت حرفه‌ای قرار گرفته است.</figcaption>
+        <figcaption>دکتر سعید قزلباش همراه با تیم کلینیک</figcaption>
       </figure>
 
-      <nav class="doctor-links" aria-label="شناسه‌ها و منابع حرفه‌ای">
+      <nav class="doctor-links" aria-label="مدارک و سوابق پزشک">
         <a href={site.irimcVerification} target="_blank" rel="noopener noreferrer external">بررسی نظام پزشکی</a>
         <a href={site.orcidUrl} target="_blank" rel="me noopener noreferrer external">ORCID</a>
-        <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">فهرست پژوهش‌ها</a>
+        <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">مقالات پژوهشی</a>
+        <a href={site.linkedinProfile} target="_blank" rel="me noopener noreferrer external">LinkedIn</a>
       </nav>
     </div>
   </div>
