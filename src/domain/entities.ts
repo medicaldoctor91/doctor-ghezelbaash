@@ -73,7 +73,7 @@ export const site = {
   logo: "/assets/brand/doctor-hand-syringe-logo-512.png",
   ogImage: "/og/home.jpg",
   datePublished: "2026-07-10T12:00:00+03:30",
-  dateModified: "2026-07-13T12:00:00+03:30",
+  dateModified: "2026-07-13T09:35:00+03:30",
   liveSourceOfTruth: "https://www.ghezelbaash.ir/",
   sourceTruthObservedAt: "2026-07-13",
   googleBusinessProfile: {
