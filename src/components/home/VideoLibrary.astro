@@ -1,5 +1,5 @@
 ---
-import { CirclePlay, Clock3, ListVideo } from '@lucide/astro';
+import { BookOpen, ChevronLeft, ChevronRight, CirclePlay, Clock3, ListVideo } from '@lucide/astro';
 import { videos } from '../../domain/media.mjs';
 import { videoPageDetails } from '../../domain/video-pages.mjs';
 import { readMediaChapters } from '../../lib/media';
@@ -17,7 +17,7 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
 <section id="videos" class="section section--tint" aria-labelledby="videos-title">
   <span id="video-knowledge-hub" class="anchor-alias" aria-hidden="true"></span>
   <div class="shell">
-    <div class="section-heading section-heading--split">
+    <div class="section-heading section-heading--split video-library__heading">
       <div>
         <p class="eyebrow">کتابخانهٔ ویدئویی</p>
         <h2 id="videos-title">تصمیم بالینی در حرکت</h2>
@@ -25,10 +25,23 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
       <p>۱۲ ویدئوی واقعی در همین صفحه قرار گرفته‌اند؛ نمونه، آموزش و مرز درمان کنار هم، بدون صفحهٔ جداگانه.</p>
     </div>
 
-    <div class="video-grid">
-      {videoItems.map((video: any) => (
-        <article id={`video-${video.id}`} class="video-card">
+    <div class="video-library__toolbar" role="group" aria-label="کنترل کتابخانهٔ ویدئویی">
+      <p><strong>۱۲ ویدئو</strong><span aria-hidden="true">—</span> برای دیدن همه، ورق بزنید</p>
+      <div class="video-library__buttons">
+        <button type="button" class="video-library__button" data-video-previous aria-label="ویدئوی قبلی">
+          <ChevronRight size={20} aria-hidden="true" />
+        </button>
+        <button type="button" class="video-library__button" data-video-next aria-label="ویدئوی بعدی">
+          <ChevronLeft size={20} aria-hidden="true" />
+        </button>
+      </div>
+    </div>
+
+    <div class="video-rail" data-video-rail tabindex="0" role="region" aria-label="۱۲ ویدئوی آموزشی و نمونه‌های بالینی">
+      {videoItems.map((video: any, index: number) => (
+        <article id={`video-${video.id}`} class="video-card" data-video-card>
           <div class="video-card__media">
+            <span class="video-card__number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
             <video
               controls
               playsinline
@@ -36,6 +49,7 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
               poster={video.thumbnail}
               width={video.width}
               height={video.height}
+              aria-labelledby={`video-${video.id}-title`}
               aria-describedby={`video-${video.id}-description`}
             >
               <source src={`/videos/${video.file}`} type="video/mp4" />
@@ -51,7 +65,8 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
               <span><CirclePlay size={16} aria-hidden="true" /> ویدئوی کوتاه</span>
               <span><Clock3 size={16} aria-hidden="true" /> حدود {video.durationSeconds} ثانیه</span>
             </div>
-            <h3>{video.title}</h3>
+            {video.tags?.[0] && <span class="video-card__tag">{video.tags[0]}</span>}
+            <h3 id={`video-${video.id}-title`}>{video.title}</h3>
             <p id={`video-${video.id}-description`}>{video.description}</p>
 
             {video.chapters.length > 0 && (
@@ -80,6 +95,13 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                 <p class="video-boundary"><strong>مرز تصمیم:</strong> {video.details.boundary}</p>
               </details>
             )}
+
+            {video.details?.relatedPath && (
+              <a class="video-card__related" href={video.details.relatedPath}>
+                <BookOpen size={16} aria-hidden="true" />
+                <span>{video.details.relatedLabel}</span>
+              </a>
+            )}
           </div>
         </article>
       ))}
@@ -87,6 +109,31 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
   </div>
 
   <script is:inline>
+    const rail = document.querySelector('[data-video-rail]');
+    const cards = rail ? Array.from(rail.querySelectorAll('[data-video-card]')) : [];
+    const currentCardIndex = () => {
+      if (!rail || !cards.length) return 0;
+      const railRect = rail.getBoundingClientRect();
+      const isRtl = getComputedStyle(rail).direction === 'rtl';
+      const startEdge = isRtl ? railRect.right : railRect.left;
+      return cards.reduce((closest, card, index) => {
+        const cardRect = card.getBoundingClientRect();
+        const cardEdge = isRtl ? cardRect.right : cardRect.left;
+        return Math.abs(cardEdge - startEdge) < closest.distance
+          ? { index, distance: Math.abs(cardEdge - startEdge) }
+          : closest;
+      }, { index: 0, distance: Number.POSITIVE_INFINITY }).index;
+    };
+
+    const scrollToCard = (index) => {
+      if (!cards.length) return;
+      const target = Math.max(0, Math.min(cards.length - 1, index));
+      cards[target].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    };
+
+    document.querySelector('[data-video-previous]')?.addEventListener('click', () => scrollToCard(currentCardIndex() - 1));
+    document.querySelector('[data-video-next]')?.addEventListener('click', () => scrollToCard(currentCardIndex() + 1));
+
     document.addEventListener('click', (event) => {
       const button = event.target.closest?.('.video-chapters button');
       if (!button) return;
@@ -96,5 +143,13 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
       video.currentTime = Number(button.dataset.start || 0);
       video.play().catch(() => {});
     });
+
+    document.addEventListener('play', (event) => {
+      const current = event.target;
+      if (!(current instanceof HTMLVideoElement) || !current.closest('#videos')) return;
+      document.querySelectorAll('#videos video').forEach((video) => {
+        if (video !== current) video.pause();
+      });
+    }, true);
   </script>
 </section>
