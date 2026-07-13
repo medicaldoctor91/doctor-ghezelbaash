@@ -27,7 +27,6 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
 
   const procedureNodes = nodes.filter((node) => /^https:\/\/www\.ghezelbaash\.ir\/#procedure-/.test(node['@id'] ?? ''));
   const serviceNodes = nodes.filter((node) => /^https:\/\/www\.ghezelbaash\.ir\/#service-/.test(node['@id'] ?? ''));
-  const researchNodes = nodes.filter((node) => asArray(node['@type']).includes('ScholarlyArticle'));
   const imageNodes = nodes.filter((node) => [
     portraitId,
     `${site.url}#image-doctor-exam`,
@@ -53,14 +52,18 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     worksFor: ref(clinicId),
     workLocation: ref(clinicId),
     knowsAbout: procedureNodes.map((node) => ref(node['@id'])),
-    subjectOf: [ref(articleId), ...researchNodes.map((node) => ref(node['@id']))],
+    subjectOf: ref(articleId),
   };
 
   const clinic: Node = {
     ...pick(clinicSource, [
-      '@id', 'name', 'alternateName', 'url', 'telephone', 'address', 'geo', 'hasMap',
+      '@id', 'name', 'alternateName', 'url', 'telephone', 'geo', 'hasMap',
       'openingHoursSpecification', 'contactPoint', 'areaServed', 'identifier', 'sameAs',
     ]),
+    address: {
+      ...(clinicSource.address ?? {}),
+      postalCode: site.postalCode,
+    },
     '@type': ['MedicalClinic', 'LocalBusiness'],
     logo: ref(logoId),
     image: imageNodes.map((node) => ref(node['@id'])),
@@ -86,7 +89,9 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
   };
 
   const article: Node = {
-    ...pick(articleSource, ['@type', '@id', 'headline', 'name', 'description', 'inLanguage', 'datePublished', 'dateModified', 'wordCount']),
+    ...pick(articleSource, ['@type', '@id', 'headline', 'name', 'description', 'inLanguage', 'wordCount']),
+    datePublished: site.datePublished,
+    dateModified: site.dateModified,
     url: site.url,
     isPartOf: ref(pageId),
     mainEntity: ref(personId),
@@ -116,7 +121,6 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     credentialSource,
     logoSource,
     ...imageNodes,
-    ...researchNodes,
     ...compactProcedures,
     ...compactServices,
   ].filter(Boolean);
