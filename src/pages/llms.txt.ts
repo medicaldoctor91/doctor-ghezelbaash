@@ -11,11 +11,11 @@ export function GET() {
 
 ## Canonical resources
 
-- [Canonical page](${site.url}): Complete visible physician, clinic, service, contextual media and clinical-guide content.
+- [Canonical page](${site.url}): Complete visible physician, clinic, service, contextual media and article content.
 - [Canonical knowledge graph](${site.url}knowledge-graph.jsonld): Self-contained JSON-LD graph discovered from HTML and HTTP with rel="describedby".
 - [Physician entity](${site.url}#person): Sole main entity of the canonical MedicalWebPage.
 - [Clinic entity](${site.url}#clinic): Separate MedicalClinic and LocalBusiness entity; employer, work location, provider and publisher.
-- [Clinical guide](${site.url}#clinical-guide): Full Persian decision guide for aesthetic medicine, skin and hair; all twelve first-party videos are embedded inside their related clinical discussions rather than a separate video section.
+- [Full article](${site.url}#clinical-guide): Persian guide for aesthetic medicine, skin and hair; all twelve first-party videos are embedded inside their related discussions rather than a separate video section.
 
 ## Identity
 
@@ -24,11 +24,14 @@ export function GET() {
 - Medical registration (IRIMC): ${site.irimc}
 - Canadian MINC: ${personIdentityContract.minc}
 - City: ${site.city}
+- Postal code: ${site.postalCode}
 - ORCID: ${site.orcidUrl}
 - Wikidata: ${site.doctorWikidata}
 - Google Knowledge Graph MID: ${site.doctorGoogleKnowledgeGraphId}
 - MyNCBI bibliography: ${personIdentityContract.ncbiBibliography}
 - LinkedIn: ${personIdentityContract.linkedin}
+- Facebook: ${personIdentityContract.facebook}
+- Pinterest: ${personIdentityContract.pinterest}
 - IRIMC verification: ${site.irimcVerification}
 
 ## Interpretation
