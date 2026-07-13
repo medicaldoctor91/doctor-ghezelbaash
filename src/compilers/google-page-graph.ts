@@ -6,6 +6,7 @@ type Node = Record<string, any>;
 
 const ref = (id: string) => ({ '@id': id });
 const asArray = <T>(value: T | T[] | undefined): T[] => value === undefined ? [] : Array.isArray(value) ? value : [value];
+const hasType = (node: Node, type: string) => asArray(node?.['@type']).includes(type);
 
 function pick(node: Node, fields: string[]): Node {
   return Object.fromEntries(fields.filter((field) => node[field] !== undefined).map((field) => [field, node[field]]));
@@ -25,8 +26,14 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
   const credentialId = `${site.url}#credential-irimc-${site.irimc}`;
   const portraitId = `${site.url}#image-doctor-portrait`;
 
-  const procedureNodes = nodes.filter((node) => /^https:\/\/www\.ghezelbaash\.ir\/#procedure-/.test(node['@id'] ?? ''));
-  const serviceNodes = nodes.filter((node) => /^https:\/\/www\.ghezelbaash\.ir\/#service-/.test(node['@id'] ?? ''));
+  const procedureNodes = nodes.filter((node) =>
+    /^https:\/\/www\.ghezelbaash\.ir\/#procedure-/.test(node['@id'] ?? '')
+    && (hasType(node, 'MedicalProcedure') || hasType(node, 'SurgicalProcedure')),
+  );
+  const serviceNodes = nodes.filter((node) =>
+    /^https:\/\/www\.ghezelbaash\.ir\/#service-/.test(node['@id'] ?? '')
+    && hasType(node, 'Service'),
+  );
   const imageNodes = nodes.filter((node) => [
     portraitId,
     `${site.url}#image-doctor-exam`,
@@ -40,6 +47,13 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
   const articleSource = byId.get(articleId) as Node;
   const logoSource = byId.get(logoId) as Node;
   const credentialSource = byId.get(credentialId) as Node;
+
+  const offeredProcedureIds = new Set(
+    asArray<Node>(clinicSource.availableService)
+      .map((item) => item?.['@id'])
+      .filter((id): id is string => typeof id === 'string'),
+  );
+  const offeredProcedureNodes = procedureNodes.filter((node) => offeredProcedureIds.has(node['@id']));
 
   const person: Node = {
     ...pick(personSource, [
@@ -68,7 +82,7 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     logo: ref(logoId),
     image: imageNodes.map((node) => ref(node['@id'])),
     employee: ref(personId),
-    availableService: serviceNodes.map((node) => ref(node['@id'])),
+    availableService: offeredProcedureNodes.map((node) => ref(node['@id'])),
   };
 
   const website: Node = {

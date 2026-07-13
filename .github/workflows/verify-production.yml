@@ -1,8 +1,6 @@
 name: Verify production deployment
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -11,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: verify-production-${{ github.event_name }}-${{ github.ref }}
+  group: verify-production
   cancel-in-progress: true
 
 jobs:
@@ -19,40 +17,22 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Wait for the current main build on the custom domain
-        shell: bash
-        run: |
-          set -euo pipefail
-          for attempt in $(seq 1 36); do
-            url="https://www.ghezelbaash.ir/?deploy-check=${GITHUB_SHA}-${attempt}"
-            echo "Attempt ${attempt}: ${url}"
-            if curl --fail --silent --show-error --location \
-              --connect-timeout 15 --max-time 45 \
-              -H 'Cache-Control: no-cache' \
-              -H 'Pragma: no-cache' \
-              "$url" > production.html; then
-              if grep -q 'class="quiet-best' production.html \
-                && grep -q 'class="article-flow' production.html \
-                && grep -q '6714657412' production.html \
-                && grep -q '2026-07-13T09:35:00+03:30' production.html \
-                && ! grep -q 'class="guide-card' production.html \
-                && ! grep -q '<section[^>]*id="videos"' production.html \
-                && ! grep -q '<section[^>]*id="clinic"' production.html; then
-                echo 'Production deployment is current and passed the visible-contract checks.'
-                exit 0
-              fi
-            fi
-            sleep 20
-          done
+      - name: Checkout
+        uses: actions/checkout@v4
 
-          echo 'The custom domain did not expose the current main build within the verification window.' >&2
-          exit 1
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
 
-      - name: Upload fetched production HTML
+      - name: Audit the live custom domain
+        run: python3 scripts/audit-production.py --attempts 36 --delay 20
+
+      - name: Upload production audit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: production-verification-html
-          path: production.html
+          name: production-audit-report
+          path: production-audit
           if-no-files-found: warn
-          retention-days: 3
+          retention-days: 7
