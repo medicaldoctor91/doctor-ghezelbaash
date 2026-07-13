@@ -2,8 +2,8 @@
  * Canonical URL and fragment registry.
  *
  * Service URLs are explicit and must never be inferred from heading text or order.
- * targetHeadingId only controls where the stable semantic alias is rendered in the
- * current single-page document; changing editorial copy cannot change service URLs.
+ * Video watch pages use stable crawlable paths; homepage fragment anchors remain
+ * available only for contextual in-article placement.
  */
 export const serviceUrlRegistry = Object.freeze([
   { id: 'botulinum-toxin', anchor: 'service-botulinum-toxin', targetHeadingId: 'best-botox-doctor-kermanshah' },
@@ -58,19 +58,27 @@ export function videoHubPageId(baseUrl) {
   return `${base(baseUrl)}#video-knowledge-hub`;
 }
 
+export function videoWatchPath(slug) {
+  return `/videos/${slug}/`;
+}
+
 export function videoWatchUrl(baseUrl, slug) {
-  return `${base(baseUrl)}#video-${slug}`;
+  return new URL(`videos/${slug}/`, base(baseUrl)).href;
 }
 
 export function videoWebPageId(baseUrl, slug) {
-  void slug;
-  return `${base(baseUrl)}#webpage`;
+  return `${videoWatchUrl(baseUrl, slug)}#webpage`;
 }
 
 export function videoEntityId(baseUrl, slug) {
-  return `${base(baseUrl)}#video-${slug}`;
+  return `${videoWatchUrl(baseUrl, slug)}#video`;
 }
 
 export function videoClipId(baseUrl, slug, index) {
-  return `${base(baseUrl)}#video-${slug}-clip-${index}`;
+  return `${videoWatchUrl(baseUrl, slug)}#clip-${index}`;
+}
+
+export function videoMomentUrl(baseUrl, slug, startOffset) {
+  const seconds = Math.max(0, Math.floor(Number(startOffset) || 0));
+  return `${videoWatchUrl(baseUrl, slug)}?t=${seconds}`;
 }
