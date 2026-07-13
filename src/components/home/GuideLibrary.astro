@@ -1,9 +1,8 @@
 ---
-import { BookOpen, ChevronDown, CirclePlay, Clock3, ListVideo, Search } from '@lucide/astro';
+import { BookOpen, CirclePlay, Clock3, ListVideo } from '@lucide/astro';
 import { site } from '../../domain/entities';
 import { videos } from '../../domain/media.mjs';
 import { videoPageDetails } from '../../domain/video-pages.mjs';
-import { videoWatchPath } from '../../domain/url-architecture.mjs';
 import { readMediaChapters } from '../../lib/media';
 
 type ArticleSection = {
@@ -17,18 +16,12 @@ interface Props {
   sections: ArticleSection[];
 }
 
-const { sections } = Astro.props;
-const bestSection = sections.find((section) =>
-  section.id === 'best-aesthetic-doctor-kermanshah-answers'
-  || section.title.includes('بهترین دکتر زیبایی'),
-);
-const articleSections = sections.filter((section) => section !== bestSection);
+const { sections: articleSections } = Astro.props;
 
 const videoItems = videos.map((video: any) => ({
   ...video,
   details: videoPageDetails[video.id],
   chapters: readMediaChapters(video.chapterTrack).slice(0, 3),
-  watchPath: videoWatchPath(video.id),
 }));
 
 const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim();
@@ -162,6 +155,8 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
               <span aria-hidden="true"> · </span>
               <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">مقاله‌های پژوهشی</a>
               <span aria-hidden="true"> · </span>
+              <a href={site.huggingFaceProfile} target="_blank" rel="me noopener noreferrer external">Hugging Face</a>
+              <span aria-hidden="true"> · </span>
               <a href={site.linkedinProfile} target="_blank" rel="me noopener noreferrer external">LinkedIn</a>
               <span aria-hidden="true"> · </span>
               <a href={site.facebookProfile} target="_blank" rel="me noopener noreferrer external">Facebook</a>
@@ -228,11 +223,6 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                       </details>
                     )}
 
-                    <a class="video-card__related" href={video.watchPath}>
-                      <CirclePlay size={16} aria-hidden="true" />
-                      <span>مشاهده در صفحه اختصاصی این ویدئو</span>
-                    </a>
-
                     {video.details?.relatedPath && (
                       <a class="video-card__related" href={video.details.relatedPath}>
                         <BookOpen size={16} aria-hidden="true" />
@@ -250,26 +240,6 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
       </div>
     );
   })}
-
-  {bestSection && (
-    <section class="quiet-best-wrap" aria-label="پرسش‌های رایج درباره انتخاب پزشک زیبایی در کرمانشاه">
-      <details class="quiet-best">
-        <summary>
-          <span class="quiet-best__icon"><Search size={18} aria-hidden="true" /></span>
-          <span>
-            <strong>پرسش‌های رایج درباره انتخاب پزشک زیبایی در کرمانشاه</strong>
-            <small>پاسخ به جست‌وجوهای «بهترین دکتر»</small>
-          </span>
-          <ChevronDown class="quiet-best__chevron" size={20} aria-hidden="true" />
-        </summary>
-        <div class="quiet-best__body medical-article">
-          {bestSection.aliases.map((alias) => <span id={alias.anchor} class="anchor-alias" data-service-id={alias.id} aria-hidden="true"></span>)}
-          <h2 id={bestSection.id} class="sr-only" tabindex="-1">{simplifyTitle(bestSection.title)}</h2>
-          <div set:html={simplifyHtml(bestSection.html)}></div>
-        </div>
-      </details>
-    </section>
-  )}
 
   <script is:inline>
     const openTarget = () => {
