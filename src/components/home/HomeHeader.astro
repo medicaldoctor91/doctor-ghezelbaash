@@ -4,16 +4,16 @@ import { site } from '../../domain/entities';
 import BrandLogo from './BrandLogo.astro';
 
 const links = [
-  { href: '#decision-model', label: 'رویکرد' },
-  { href: '#services', label: 'حوزه‌ها' },
-  { href: '#doctor', label: 'پزشک' },
-  { href: '#clinical-guide', label: 'راهنمای بالینی' },
-  { href: '#contact', label: 'مراجعه' },
+  { href: '#decision-model', label: 'انتخاب درمان' },
+  { href: '#services', label: 'خدمات' },
+  { href: '#doctor', label: 'دربارهٔ دکتر' },
+  { href: '#clinical-guide', label: 'مقاله' },
+  { href: '#contact', label: 'تماس' },
 ];
 ---
 
 <header class="home-header">
-  <nav class="shell home-header__inner" aria-label="ناوبری اصلی">
+  <nav class="shell home-header__inner" aria-label="منوی اصلی">
     <a class="home-brand" href="#top" aria-label="دکتر سعید قزلباش؛ بازگشت به ابتدای صفحه">
       <BrandLogo compact priority />
       <span class="home-brand__copy">
@@ -32,7 +32,7 @@ const links = [
         تماس
       </a>
       <details class="mobile-menu">
-        <summary aria-label="بازکردن منو">
+        <summary aria-label="باز کردن منو">
           <Menu class="mobile-menu__open" aria-hidden="true" />
           <X class="mobile-menu__close" aria-hidden="true" />
         </summary>
