@@ -6,15 +6,20 @@ Canonical clinic entity: https://www.ghezelbaash.ir/#clinic
 Canonical knowledge graph: https://www.ghezelbaash.ir/knowledge-graph.jsonld
 Plain-text summary: https://www.ghezelbaash.ir/llms.txt
 Sitemap: https://www.ghezelbaash.ir/sitemap.xml
-Video sitemap: https://www.ghezelbaash.ir/video-sitemap.xml
+Image sitemap: https://www.ghezelbaash.ir/image-sitemap.xml
 
 Physician identity anchors:
 IRIMC: 167430
 MINC Canada: CAMD-0224-1997
 ORCID: https://orcid.org/0009-0001-9346-8475
 Wikidata: https://www.wikidata.org/entity/Q140287622
+Hugging Face profile: https://huggingface.co/Ghezelbaash
 MyNCBI: https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/
 Pinterest: https://www.pinterest.com/qezelbaash/
+
+Published dataset:
+Hugging Face Dataset: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+The dataset is a separate Dataset about the physician and clinic. It is created by the physician and published by the clinic; it is not the Person entity and is not Person.sameAs.
 
 Clinic social profiles:
 Instagram: https://www.instagram.com/doctor.ghezelbaash/
@@ -24,8 +29,8 @@ Facebook: https://www.facebook.com/Ghezelbaash/
 Clinic address anchor:
 Postal code: 6714657412
 
-Video discovery:
-Twelve dedicated watch pages are listed in sitemap.xml and video-sitemap.xml under /videos/<slug>/.
-Each watch page contains one primary video and one inline VideoObject. Videos also remain embedded contextually inside the homepage article.
+Media and answer coverage:
+All photographs and twelve videos are contextual supporting media on the canonical homepage. No separate canonical video watch pages are published.
+The homepage contains a closed-by-default disclosure with visible HTML answers for best aesthetic physician/doctor queries in Kermanshah and service-specific doctor queries.
 
 The canonical visible page is authoritative. The physician is the sole homepage mainEntity. The clinic is a separate MedicalClinic and LocalBusiness entity. Offered services, evaluated options and referral-context procedures are distinct relationships.
