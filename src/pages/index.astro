@@ -5,6 +5,7 @@ import HomeHeader from '../components/home/HomeHeader.astro';
 import Hero from '../components/home/Hero.astro';
 import Services from '../components/home/Services.astro';
 import GuideLibrary from '../components/home/GuideLibrary.astro';
+import BestDoctorAnswers from '../components/home/BestDoctorAnswers.astro';
 import ContactSection from '../components/home/ContactSection.astro';
 import HomeFooter from '../components/home/HomeFooter.astro';
 import { getHeadings, rawContent } from '../content/landing.md';
@@ -56,6 +57,7 @@ const articleSections = await Promise.all(h2Matches.map(async (match, index) => 
     <Hero />
     <Services />
     <GuideLibrary sections={articleSections} />
+    <BestDoctorAnswers />
     <ContactSection />
   </main>
   <HomeFooter />
