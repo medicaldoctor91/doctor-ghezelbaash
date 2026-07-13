@@ -4,7 +4,7 @@ import { site } from '../../domain/entities';
 import BrandLogo from './BrandLogo.astro';
 
 const year = new Date().getFullYear();
-const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(`${site.dateModified}T12:00:00+03:30`));
+const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(site.dateModified));
 ---
 
 <footer class="home-footer">
@@ -16,12 +16,12 @@ const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'lon
         <p>دکترای حرفه‌ای پزشکی · شمارهٔ نظام پزشکی {site.irimc}</p>
       </div>
     </section>
-    <nav aria-label="پیوندهای صفحه">
+    <nav aria-label="بخش‌های صفحه">
       <strong>بخش‌های اصلی</strong>
-      <a href="#decision-model">رویکرد درمان</a>
-      <a href="#services">حوزه‌ها</a>
-      <a href="#doctor">پزشک</a>
-      <a href="#clinical-guide">راهنمای بالینی</a>
+      <a href="#decision-model">انتخاب درمان</a>
+      <a href="#services">خدمات</a>
+      <a href="#doctor">دربارهٔ دکتر</a>
+      <a href="#clinical-guide">مقاله</a>
     </nav>
     <nav aria-label="ارتباط با کلینیک">
       <strong>ارتباط</strong>
@@ -31,12 +31,12 @@ const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'lon
     </nav>
   </div>
   <div class="shell footer-bottom">
-    <span>© {year} دکتر سعید قزلباش · آخرین بازبینی: {modified}</span>
+    <span>© {year} دکتر سعید قزلباش · آخرین به‌روزرسانی: {modified}</span>
     <a href="#top"><ArrowUp size={17} aria-hidden="true" /> بازگشت به بالا</a>
   </div>
 </footer>
 
-<nav id="conversion-dock" class="mobile-dock" aria-label="اقدام‌های سریع موبایل">
+<nav id="conversion-dock" class="mobile-dock" aria-label="دسترسی سریع موبایل">
   <a href={`tel:${site.phone}`}><Phone size={20} aria-hidden="true" /><span>تماس</span></a>
   <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={20} aria-hidden="true" /><span>نقشه</span></a>
   <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={20} aria-hidden="true" /><span>اینستاگرام</span></a>
