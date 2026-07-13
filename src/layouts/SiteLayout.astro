@@ -28,13 +28,23 @@ const {
 
 const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).href;
 const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
+const aiDeclarationUrl = new URL('.well-known/ai.txt', site.url).href;
+const llmsUrl = new URL('llms.txt', site.url).href;
+
 const ownedIdentityLinks = [
   site.orcidUrl,
   site.instagram,
   personIdentityContract.linkedin,
   personIdentityContract.facebook,
   personIdentityContract.pinterest,
-  personIdentityContract.huggingFace,
+];
+
+const describedByLinks = [
+  { href: externalGraphUrl, type: 'application/ld+json', title: 'Canonical external knowledge graph' },
+  { href: site.huggingFaceDataset, title: 'Published Hugging Face Dataset' },
+  { href: site.doctorWikidata, title: 'Wikidata entity for Dr. Saeed Ghezelbaash' },
+  { href: site.placeWikidata, title: 'Wikidata entity for Dr. Saeed Ghezelbaash Aesthetic Clinic' },
+  { href: site.datasetWikidata, title: 'Wikidata entity for the published Dataset' },
 ];
 ---
 
@@ -58,8 +68,11 @@ const ownedIdentityLinks = [
     <link rel="alternate" hreflang="fa-IR" href={canonical} />
     <link rel="alternate" hreflang="fa" href={canonical} />
     <link rel="alternate" hreflang="x-default" href={canonical} />
-    <link rel="describedby" type="application/ld+json" href={externalGraphUrl} title="Canonical external knowledge graph" />
-    <link rel="alternate" type="text/plain" href="/llms.txt" title="خلاصهٔ متنی وب‌سایت" />
+    {describedByLinks.map((item) => (
+      <link rel="describedby" href={item.href} type={item.type} title={item.title} />
+    ))}
+    <link rel="alternate" type="text/plain" href={llmsUrl} title="خلاصهٔ متنی وب‌سایت" />
+    <link rel="alternate" type="text/plain" href={aiDeclarationUrl} title="اعلام منابع هوش مصنوعی وب‌سایت" />
     <link
       rel="preload"
       as="image"

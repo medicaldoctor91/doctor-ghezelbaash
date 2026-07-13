@@ -13,7 +13,7 @@
 
 /
   Cache-Control: public, max-age=0, must-revalidate
-  Link: </knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json"
+  Link: </knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json", </llms.txt>; rel="alternate"; type="text/plain", </.well-known/ai.txt>; rel="alternate"; type="text/plain", <https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data>; rel="describedby", <https://www.wikidata.org/entity/Q140287622>; rel="describedby", <https://www.wikidata.org/entity/Q140288589>; rel="describedby", <https://www.wikidata.org/entity/Q140304972>; rel="describedby"
 
 /404.html
   X-Robots-Tag: noindex, follow
