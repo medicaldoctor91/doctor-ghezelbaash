@@ -1,0 +1,59 @@
+name: Observe Machine Link Production
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify live head and HTTP Link contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://www.ghezelbaash.ir/?machine-link-check=${GITHUB_SHA}"
+          curl --fail --silent --show-error --location --dump-header headers.txt \
+            -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' \
+            "$url" > production.html
+
+          for token in \
+            'rel="me" href="https://www.instagram.com/doctor.ghezelbaash/"' \
+            'rel="describedby" href="https://www.ghezelbaash.ir/knowledge-graph.jsonld"' \
+            'rel="describedby" href="https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"' \
+            'rel="describedby" href="https://www.wikidata.org/entity/Q140287622"' \
+            'rel="describedby" href="https://www.wikidata.org/entity/Q140288589"' \
+            'rel="describedby" href="https://www.wikidata.org/entity/Q140304972"' \
+            'rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/llms.txt"' \
+            'rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/.well-known/ai.txt"'; do
+            grep -Fq "$token" production.html
+          done
+
+          ! grep -Fq 'rel="me" href="https://huggingface.co/Ghezelbaash"' production.html
+
+          for token in \
+            'knowledge-graph.jsonld' \
+            'llms.txt' \
+            '.well-known/ai.txt' \
+            'huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data' \
+            'wikidata.org/entity/Q140287622' \
+            'wikidata.org/entity/Q140288589' \
+            'wikidata.org/entity/Q140304972'; do
+            grep -Fiq "$token" headers.txt
+          done
+
+          echo 'Live machine-link contract passed.'
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: machine-link-production-evidence
+          path: |
+            production.html
+            headers.txt
+          retention-days: 3
