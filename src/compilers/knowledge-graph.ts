@@ -1,6 +1,14 @@
 import type { MarkdownHeading } from 'astro';
 import { site } from '~/domain/entities';
+import { videos } from '~/domain/media.mjs';
 import { stabilizeHeadings } from '~/domain/anchor-utils';
+import {
+  videoClipId,
+  videoEntityId,
+  videoMomentUrl,
+  videoWatchUrl,
+  videoWebPageId,
+} from '~/domain/url-architecture.mjs';
 // @ts-expect-error Shared ESM physician identity contract.
 import {
   clinicRequiredSameAs,
@@ -10,6 +18,7 @@ import {
   restoredPersonProfileNodes,
   personIdentityContract,
 } from '~/domain/person-identity.mjs';
+import { readMediaChapters } from '~/lib/media';
 import { buildSchemaParts } from '~/lib/schema';
 
 type Node = Record<string, any>;
@@ -93,7 +102,7 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
     isBasedOn: ref(`${site.url}#webpage`),
     dateModified: site.dateModified,
-    version: '2.0.0',
+    version: '2.1.0',
     license: 'https://creativecommons.org/licenses/by/4.0/',
     distribution: {
       '@type': 'DataDownload',
@@ -131,6 +140,83 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`), ...p.procedureNodes.map((node: Node) => ref(node['@id']))],
   };
 
+  const sourceVideos = new Map<string, Node>(p.videoNodes.map((node: Node) => [node['@id'], node]));
+  const sourceClips = new Map<string, Node>(p.clipNodes.map((node: Node) => [node['@id'], node]));
+
+  const canonicalClipNodes: Node[] = videos
+    .filter((video: any) => video.durationSeconds >= 30)
+    .flatMap((video: any) => readMediaChapters(video.chapterTrack).map((chapter) => {
+      const id = videoClipId(site.url, video.id, chapter.index);
+      const source = sourceClips.get(id) ?? {};
+      const node: Node = {
+        ...source,
+        '@type': 'Clip',
+        '@id': id,
+        name: source.name ?? `${video.title}: ${chapter.name}`,
+        startOffset: chapter.startOffset,
+        endOffset: chapter.endOffset,
+        url: videoMomentUrl(site.url, video.id, chapter.startOffset),
+        isPartOf: ref(videoEntityId(site.url, video.id)),
+      };
+      delete node.partOf;
+      return node;
+    }));
+
+  const canonicalVideoNodes: Node[] = videos.map((video: any) => {
+    const id = videoEntityId(site.url, video.id);
+    const source = sourceVideos.get(id) ?? {};
+    const clips = canonicalClipNodes.filter((clip) => clip.isPartOf?.['@id'] === id);
+    const node: Node = {
+      ...source,
+      '@type': 'VideoObject',
+      '@id': id,
+      name: video.title,
+      description: video.description,
+      url: videoWatchUrl(site.url, video.id),
+      thumbnailUrl: [`${site.url}${video.thumbnail.replace(/^\//u, '')}`],
+      uploadDate: video.uploadDate ?? site.dateModified,
+      duration: video.duration,
+      contentUrl: `${site.url}videos/${video.file}`,
+      encodingFormat: 'video/mp4',
+      width: video.width,
+      height: video.height,
+      inLanguage: site.language,
+      keywords: video.tags,
+      creator: ref(`${site.url}#person`),
+      publisher: ref(`${site.url}#clinic`),
+      about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
+      mainEntityOfPage: ref(videoWebPageId(site.url, video.id)),
+      isPartOf: ref(videoWebPageId(site.url, video.id)),
+      potentialAction: {
+        '@type': 'SeekToAction',
+        target: `${videoWatchUrl(site.url, video.id)}?t={seek_to_second_number}`,
+        'startOffset-input': 'required name=seek_to_second_number',
+      },
+    };
+    if (clips.length) node.hasPart = clips.map((clip) => ref(clip['@id']));
+    else delete node.hasPart;
+    return node;
+  });
+
+  const videoWatchPageNodes: Node[] = videos.map((video: any) => ({
+    '@type': 'WebPage',
+    '@id': videoWebPageId(site.url, video.id),
+    url: videoWatchUrl(site.url, video.id),
+    name: video.title,
+    headline: video.title,
+    description: video.description,
+    inLanguage: site.language,
+    isPartOf: ref(`${site.url}#website`),
+    mainEntity: ref(videoEntityId(site.url, video.id)),
+    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
+    author: ref(`${site.url}#person`),
+    reviewedBy: ref(`${site.url}#person`),
+    publisher: ref(`${site.url}#clinic`),
+    dateCreated: video.uploadDate ?? site.dateModified,
+    datePublished: video.uploadDate ?? site.dateModified,
+    dateModified: site.dateModified,
+  }));
+
   const panelUrlById = new Map([
     [`${site.url}#entity-authority-panel`, `${site.url}#doctor`],
     [`${site.url}#service-coverage-panel`, `${site.url}#services`],
@@ -144,6 +230,7 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
 
   const page: Node = {
     ...p.pageNode,
+    '@type': ['MedicalWebPage', 'ProfilePage'],
     mainEntity: ref(`${site.url}#person`),
     hasPart: [
       ...(p.pageNode.hasPart ?? []),
@@ -153,7 +240,11 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
   };
   const website: Node = {
     ...p.websiteNode,
-    hasPart: [...(p.websiteNode.hasPart ?? []), ref(graphDatasetId)],
+    hasPart: [
+      ...(p.websiteNode.hasPart ?? []),
+      ref(graphDatasetId),
+      ...videoWatchPageNodes.map((node) => ref(node['@id'])),
+    ],
   };
   const clinicSocialUrls = new Set(clinicRequiredSameAs);
   const person: Node = {
@@ -175,6 +266,7 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
       ...(p.personNode.subjectOf ?? []),
       ...p.researchNodes.map((node: Node) => ref(node['@id'])),
       ...restoredPersonProfileNodes.map((node: Node) => ref(node['@id'])),
+      ...videoWatchPageNodes.map((node) => ref(node['@id'])),
       ref(graphDatasetId),
       ref(site.huggingFaceDataset),
     ],
@@ -241,8 +333,9 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     ...p.conceptTermNodes,
     ...p.sectionNodes,
     ...p.imageNodes,
-    ...p.videoNodes,
-    ...p.clipNodes,
+    ...videoWatchPageNodes,
+    ...canonicalVideoNodes,
+    ...canonicalClipNodes,
   ];
 
   const allDefinitions = new Map<string, Node>();
@@ -252,6 +345,9 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
         allDefinitions.set(node['@id'], node);
       }
     }
+  }
+  for (const node of [...videoWatchPageNodes, ...canonicalVideoNodes, ...canonicalClipNodes]) {
+    allDefinitions.set(node['@id'], node);
   }
 
   const byId = new Map<string, Node>();

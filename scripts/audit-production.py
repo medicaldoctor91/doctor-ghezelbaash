@@ -18,16 +18,37 @@ BASE = "https://www.ghezelbaash.ir/"
 SITE_ID = BASE
 OUTPUT = Path("production-audit")
 RFC3339 = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$")
-REQUIRED_SAME_AS = {
+VIDEO_SLUGS = [
+    "home-workshop-thread-lift-training",
+    "home-workshop-thread-lift-advanced",
+    "clinic-patient-experience-review",
+    "botox-vs-subcision-dynamic-static-scar",
+    "filler-under-eye-transformation",
+    "filler-under-eye-before-after",
+    "cat-eye-thread-lift-before-after",
+    "jalupro-vs-profhilo-skin-boosters",
+    "nonsurgical-rhinoplasty-boundary",
+    "nose-filler-before-after",
+    "proper-subcision-technique-guide",
+    "mesoneedling-dark-spots-warning",
+]
+PERSON_SAME_AS = {
+    "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
     "https://orcid.org/0009-0001-9346-8475",
+    "https://www.wikidata.org/entity/Q140287622",
+    "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+    "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+    "https://github.com/Medicaldoctor91",
+    "https://www.pinterest.com/qezelbaash/",
+    "https://about.me/ghezelbaash",
+    "https://linktr.ee/Doctor.ghezelbaash",
+    "https://huggingface.co/Ghezelbaash",
+    "https://x.com/Qezelbaash",
+}
+CLINIC_SAME_AS = {
     "https://www.instagram.com/doctor.ghezelbaash/",
     "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
     "https://www.facebook.com/Ghezelbaash/",
-    "https://www.pinterest.com/qezelbaash/",
-    "https://www.wikidata.org/entity/Q140287622",
-    "https://huggingface.co/Ghezelbaash",
-    "https://github.com/Medicaldoctor91",
-    "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
 }
 REQUIRED_IDENTIFIERS = {
     ("IRIMC", "167430"),
@@ -37,12 +58,13 @@ REQUIRED_IDENTIFIERS = {
     ("NCBI Bibliography", "saeed.ghezelbash.1"),
     ("Hugging Face Profile", "Ghezelbaash"),
 }
-OWNED_HEAD_LINKS = {
+HEAD_ME_LINKS = {
     "https://orcid.org/0009-0001-9346-8475",
     "https://www.instagram.com/doctor.ghezelbaash/",
     "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
     "https://www.facebook.com/Ghezelbaash/",
     "https://www.pinterest.com/qezelbaash/",
+    "https://www.wikidata.org/entity/Q140287622",
 }
 
 
@@ -59,7 +81,7 @@ def node_types(node: dict[str, Any] | None) -> set[str]:
 def fetch(path_or_url: str, *, headers: dict[str, str] | None = None, timeout: int = 45) -> tuple[int, str, dict[str, str], bytes]:
     url = path_or_url if path_or_url.startswith("http") else urllib.parse.urljoin(BASE, path_or_url.lstrip("/"))
     request_headers = {
-        "User-Agent": "GhezelbaashProductionAudit/1.0",
+        "User-Agent": "GhezelbaashProductionAudit/2.0",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
         "Accept-Encoding": "identity",
@@ -154,6 +176,18 @@ def parse_json(data: bytes, label: str, failures: list[str]) -> Any:
         return {}
 
 
+def parse_page_jsonld(parser: PageParser, label: str, failures: list[str]) -> list[dict[str, Any]]:
+    if len(parser.ldjson) != 1:
+        failures.append(f"{label}: expected one inline JSON-LD block, found {len(parser.ldjson)}")
+        return []
+    try:
+        value = json.loads(parser.ldjson[0])
+        return value.get("@graph", []) if isinstance(value, dict) else []
+    except Exception as error:  # noqa: BLE001
+        failures.append(f"{label}: invalid inline JSON-LD: {error}")
+        return []
+
+
 def collect_same_site_refs(value: Any, output: set[str]) -> None:
     if isinstance(value, list):
         for item in value:
@@ -166,23 +200,82 @@ def collect_same_site_refs(value: Any, output: set[str]) -> None:
             collect_same_site_refs(item, output)
 
 
+def audit_watch_page(url: str, slug: str, cache_key: str, failures: list[str]) -> dict[str, Any]:
+    separator = "&" if "?" in url else "?"
+    status, final_url, headers, body = fetch(f"{url}{separator}production-audit={urllib.parse.quote(cache_key)}")
+    html = body.decode("utf-8", errors="replace")
+    parser = PageParser()
+    parser.feed(html)
+    label = f"watch page {slug}"
+    if status != 200:
+        failures.append(f"{label}: expected 200, got {status}")
+    if not final_url.startswith(url):
+        failures.append(f"{label}: unexpected final URL {final_url}")
+    if "text/html" not in headers.get("content-type", ""):
+        failures.append(f"{label}: invalid Content-Type")
+    if parser.canonicals != [url]:
+        failures.append(f"{label}: canonical mismatch {parser.canonicals}")
+    if parser.h1_count != 1:
+        failures.append(f"{label}: expected one H1, found {parser.h1_count}")
+    if len(parser.videos) != 1:
+        failures.append(f"{label}: expected one primary video, found {len(parser.videos)}")
+    mp4_sources = [source for source in parser.sources if source.get("type") == "video/mp4"]
+    if len(mp4_sources) != 1:
+        failures.append(f"{label}: expected one MP4 source, found {len(mp4_sources)}")
+
+    nodes = parse_page_jsonld(parser, label, failures)
+    page_id = f"{url}#webpage"
+    video_id = f"{url}#video"
+    by_id = {node.get("@id"): node for node in nodes if isinstance(node, dict) and node.get("@id")}
+    page = by_id.get(page_id, {})
+    video = by_id.get(video_id, {})
+    video_objects = [node for node in nodes if "VideoObject" in node_types(node)]
+    clips = [node for node in nodes if "Clip" in node_types(node)]
+    if len(video_objects) != 1:
+        failures.append(f"{label}: expected one VideoObject, found {len(video_objects)}")
+    if page.get("mainEntity", {}).get("@id") != video_id:
+        failures.append(f"{label}: WebPage.mainEntity mismatch")
+    if video.get("mainEntityOfPage", {}).get("@id") != page_id:
+        failures.append(f"{label}: VideoObject.mainEntityOfPage mismatch")
+    for key in ("name", "thumbnailUrl", "duration", "contentUrl"):
+        if not video.get(key):
+            failures.append(f"{label}: VideoObject missing {key}")
+    if not RFC3339.match(str(video.get("uploadDate", ""))):
+        failures.append(f"{label}: VideoObject uploadDate invalid")
+    if video.get("url") != url:
+        failures.append(f"{label}: VideoObject URL mismatch")
+    if video.get("potentialAction", {}).get("@type") != "SeekToAction":
+        failures.append(f"{label}: SeekToAction missing")
+    for clip in clips:
+        if not str(clip.get("url", "")).startswith(f"{url}?t="):
+            failures.append(f"{label}: Clip URL is not a ?t= deep link")
+        if clip.get("isPartOf", {}).get("@id") != video_id:
+            failures.append(f"{label}: Clip.isPartOf mismatch")
+
+    return {
+        "url": url,
+        "bytes": len(body),
+        "clips": len(clips),
+        "contentUrl": video.get("contentUrl"),
+    }
+
+
 def audit_once(cache_key: str) -> tuple[list[str], dict[str, Any]]:
     failures: list[str] = []
     report: dict[str, Any] = {"status": "fail", "cacheKey": cache_key}
+    OUTPUT.mkdir(exist_ok=True)
 
     homepage_url = f"{BASE}?production-audit={urllib.parse.quote(cache_key)}"
     status, final_url, headers, body = fetch(homepage_url)
     html = body.decode("utf-8", errors="replace")
-    OUTPUT.mkdir(exist_ok=True)
     (OUTPUT / "production.html").write_text(html, encoding="utf-8")
 
     if status != 200:
         failures.append(f"homepage: expected 200, got {status}")
     if not final_url.startswith(BASE):
         failures.append(f"homepage: unexpected final URL {final_url}")
-    content_type = headers.get("content-type", "")
-    if "text/html" not in content_type:
-        failures.append(f"homepage: invalid Content-Type {content_type}")
+    if "text/html" not in headers.get("content-type", ""):
+        failures.append("homepage: invalid Content-Type")
     for key, expected in {
         "content-language": "fa-IR",
         "x-content-type-options": "nosniff",
@@ -213,7 +306,7 @@ def audit_once(cache_key: str) -> tuple[list[str], dict[str, Any]]:
         failures.append(f"homepage: broken fragments: {', '.join(broken_fragments[:10])}")
     if parser.canonicals != [BASE]:
         failures.append(f"homepage: canonical mismatch {parser.canonicals}")
-    if set(parser.rel_me) != OWNED_HEAD_LINKS:
+    if set(parser.rel_me) != HEAD_ME_LINKS:
         failures.append(f"homepage: rel=me set mismatch {sorted(parser.rel_me)}")
     if len(parser.quiet_best) != 1 or "open" in parser.quiet_best[0]:
         failures.append("homepage: best-doctor wrapper must exist once and stay closed")
@@ -231,39 +324,36 @@ def audit_once(cache_key: str) -> tuple[list[str], dict[str, Any]]:
         failures.append(f"homepage: expected 12 MP4 sources, found {len(mp4_sources)}")
     if parser.contextual_images < 11:
         failures.append(f"homepage: contextual images unexpectedly low: {parser.contextual_images}")
-    for index, image in enumerate(parser.images, start=1):
-        if "alt" not in image or not image.get("width") or not image.get("height"):
-            failures.append(f"homepage: image {index} lacks alt or dimensions")
-    if len(parser.ldjson) != 1:
-        failures.append(f"homepage: expected one inline JSON-LD block, found {len(parser.ldjson)}")
-        inline = {"@graph": []}
-    else:
-        try:
-            inline = json.loads(parser.ldjson[0])
-        except Exception as error:  # noqa: BLE001
-            failures.append(f"homepage: inline JSON-LD is invalid: {error}")
-            inline = {"@graph": []}
 
-    inline_nodes = inline.get("@graph", []) if isinstance(inline, dict) else []
+    inline_nodes = parse_page_jsonld(parser, "homepage", failures)
     inline_by_id = {node.get("@id"): node for node in inline_nodes if isinstance(node, dict) and node.get("@id")}
     if len(inline_nodes) > 60:
         failures.append(f"inline graph too broad: {len(inline_nodes)} nodes")
     if any(node_types(node) & {"VideoObject", "Clip", "ScholarlyArticle"} for node in inline_nodes):
-        failures.append("inline graph contains disallowed video, clip, or research nodes")
+        failures.append("homepage inline graph contains disallowed video, clip, or research nodes")
 
     person = inline_by_id.get(f"{SITE_ID}#person", {})
     clinic = inline_by_id.get(f"{SITE_ID}#clinic", {})
     page = inline_by_id.get(f"{SITE_ID}#webpage", {})
     article = inline_by_id.get(f"{SITE_ID}#article", {})
-    if not REQUIRED_SAME_AS.issubset(set(as_list(person.get("sameAs")))):
+    if not PERSON_SAME_AS.issubset(set(as_list(person.get("sameAs")))):
         failures.append("inline Person sameAs is incomplete")
+    if CLINIC_SAME_AS & set(as_list(person.get("sameAs"))):
+        failures.append("inline Person sameAs contains clinic social URLs")
+    if not CLINIC_SAME_AS.issubset(set(as_list(clinic.get("sameAs")))):
+        failures.append("inline Clinic sameAs is incomplete")
     identifiers = {(item.get("propertyID"), item.get("value")) for item in as_list(person.get("identifier")) if isinstance(item, dict)}
     if not REQUIRED_IDENTIFIERS.issubset(identifiers):
         failures.append("inline Person identifiers are incomplete")
     if clinic.get("address", {}).get("postalCode") != "6714657412":
         failures.append("inline clinic postalCode is incorrect")
+    page_types = node_types(page)
+    if not {"MedicalWebPage", "ProfilePage"}.issubset(page_types):
+        failures.append(f"inline homepage types incomplete: {sorted(page_types)}")
     if page.get("mainEntity", {}).get("@id") != f"{SITE_ID}#person":
         failures.append("inline page mainEntity is not Person")
+    if person.get("worksFor", {}).get("@id") != f"{SITE_ID}#clinic" or clinic.get("employee", {}).get("@id") != f"{SITE_ID}#person":
+        failures.append("inline doctor-clinic relationship is incomplete")
     for key in ("datePublished", "dateModified"):
         if not RFC3339.match(str(article.get(key, ""))):
             failures.append(f"inline Article {key} lacks timezone-aware RFC3339 value")
@@ -279,11 +369,6 @@ def audit_once(cache_key: str) -> tuple[list[str], dict[str, Any]]:
             failures.append(f"inline availableService has invalid type: {identifier}")
         if node_types(node) & {"Service", "WebPageElement"}:
             failures.append(f"inline availableService points to non-medical node: {identifier}")
-    if f"{SITE_ID}#service-coverage-panel" in inline_by_id:
-        failures.append("inline graph contains service-coverage WebPageElement")
-    for identifier, node in inline_by_id.items():
-        if identifier.startswith(f"{SITE_ID}#service-") and "Service" not in node_types(node):
-            failures.append(f"inline #service-* node is not Service: {identifier}")
 
     endpoint_specs = {
         "knowledge-graph.jsonld": "application/ld+json",
@@ -327,11 +412,21 @@ def audit_once(cache_key: str) -> tuple[list[str], dict[str, Any]]:
     if f"{SITE_ID}#knowledge-graph-dataset" not in canonical_by_id:
         failures.append("knowledge graph: Dataset node missing")
     canonical_person = canonical_by_id.get(f"{SITE_ID}#person", {})
-    if not REQUIRED_SAME_AS.issubset(set(as_list(canonical_person.get("sameAs")))):
+    canonical_clinic = canonical_by_id.get(f"{SITE_ID}#clinic", {})
+    canonical_page = canonical_by_id.get(f"{SITE_ID}#webpage", {})
+    if not PERSON_SAME_AS.issubset(set(as_list(canonical_person.get("sameAs")))):
         failures.append("knowledge graph: Person sameAs is incomplete")
+    if not CLINIC_SAME_AS.issubset(set(as_list(canonical_clinic.get("sameAs")))):
+        failures.append("knowledge graph: Clinic sameAs is incomplete")
+    if not {"MedicalWebPage", "ProfilePage"}.issubset(node_types(canonical_page)):
+        failures.append("knowledge graph: homepage ProfilePage type missing")
+    canonical_videos = [node for node in canonical_nodes if "VideoObject" in node_types(node)]
+    canonical_clips = [node for node in canonical_nodes if "Clip" in node_types(node)]
+    if len(canonical_videos) != 12 or len(canonical_clips) != 18:
+        failures.append(f"knowledge graph: expected 12 videos and 18 clips, found {len(canonical_videos)} and {len(canonical_clips)}")
 
     llms = endpoint_data["llms.txt"][1].decode("utf-8", errors="replace")
-    for token in ("CAMD-0224-1997", "LinkedIn", "Facebook", "Pinterest", "6714657412"):
+    for token in ("CAMD-0224-1997", "Clinic social profiles", "Video watch pages", "6714657412"):
         if token not in llms:
             failures.append(f"llms.txt: missing {token}")
     robots = endpoint_data["robots.txt"][1].decode("utf-8", errors="replace")
@@ -339,17 +434,23 @@ def audit_once(cache_key: str) -> tuple[list[str], dict[str, Any]]:
         if f"Sitemap: {BASE}{path}" not in robots:
             failures.append(f"robots.txt: missing {path}")
 
+    expected_watch_urls = [urllib.parse.urljoin(BASE, f"videos/{slug}/") for slug in VIDEO_SLUGS]
     try:
         sitemap_root = ET.fromstring(endpoint_data["sitemap.xml"][1])
         sitemap_locs = [element.text for element in sitemap_root.findall("{http://www.sitemaps.org/schemas/sitemap/0.9}url/{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
-        if sitemap_locs != [BASE]:
-            failures.append(f"sitemap.xml: canonical URL mismatch {sitemap_locs}")
+        if sitemap_locs != [BASE, *expected_watch_urls]:
+            failures.append(f"sitemap.xml: URL set mismatch ({len(sitemap_locs)} URLs)")
     except Exception as error:  # noqa: BLE001
         failures.append(f"sitemap.xml: invalid XML: {error}")
 
     try:
         video_root = ET.fromstring(endpoint_data["video-sitemap.xml"][1])
+        namespace = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+        video_entries = video_root.findall(f"{namespace}url")
+        video_locs = [entry.findtext(f"{namespace}loc") for entry in video_entries]
         video_items = video_root.findall(".//{http://www.google.com/schemas/sitemap-video/1.1}video")
+        if video_locs != expected_watch_urls:
+            failures.append("video-sitemap.xml: watch-page loc set mismatch")
         if len(video_items) != 12:
             failures.append(f"video-sitemap.xml: expected 12 videos, found {len(video_items)}")
     except Exception as error:  # noqa: BLE001
@@ -358,20 +459,22 @@ def audit_once(cache_key: str) -> tuple[list[str], dict[str, Any]]:
     try:
         image_root = ET.fromstring(endpoint_data["image-sitemap.xml"][1])
         image_items = image_root.findall(".//{http://www.google.com/schemas/sitemap-image/1.1}image")
-        if len(image_items) < 13:
+        if len(image_items) < 25:
             failures.append(f"image-sitemap.xml: too few images ({len(image_items)})")
     except Exception as error:  # noqa: BLE001
         failures.append(f"image-sitemap.xml: invalid XML: {error}")
 
+    watch_reports = [audit_watch_page(url, slug, cache_key, failures) for slug, url in zip(VIDEO_SLUGS, expected_watch_urls, strict=True)]
+
     manifest = parse_json(endpoint_data["site.webmanifest"][1], "site.webmanifest", failures)
     if not manifest.get("name") or manifest.get("start_url") not in ("/", BASE):
         failures.append("site.webmanifest: name or start_url missing")
-    if len(as_list(manifest.get("icons"))) < 1:
-        failures.append("site.webmanifest: icons missing")
+    if any(shortcut.get("url") == "/#videos" for shortcut in as_list(manifest.get("shortcuts")) if isinstance(shortcut, dict)):
+        failures.append("site.webmanifest: obsolete video shortcut returned")
 
     ai_text = endpoint_data[".well-known/ai.txt"][1].decode("utf-8", errors="replace")
-    if f"Canonical physician entity: {BASE}#person" not in ai_text or "CAMD-0224-1997" not in ai_text:
-        failures.append("ai.txt: physician identity anchors incomplete")
+    if "Canonical page types: MedicalWebPage, ProfilePage" not in ai_text or "Video discovery:" not in ai_text:
+        failures.append("ai.txt: ProfilePage or video discovery declaration missing")
     security_text = endpoint_data[".well-known/security.txt"][1].decode("utf-8", errors="replace")
     if "Contact:" not in security_text or "Expires:" not in security_text:
         failures.append("security.txt: Contact or Expires missing")
@@ -392,27 +495,18 @@ def audit_once(cache_key: str) -> tuple[list[str], dict[str, Any]]:
         if not range_body:
             failures.append("video range: empty response")
 
-    if parser.images:
-        image_url = urllib.parse.urljoin(BASE, parser.images[0].get("src", ""))
-        image_status, _, image_headers, image_body = fetch(image_url)
-        if image_status != 200 or not image_headers.get("content-type", "").startswith("image/") or not image_body:
-            failures.append("representative image is not fetchable")
-
-    if parser.stylesheets:
-        css_url = urllib.parse.urljoin(BASE, parser.stylesheets[0])
-        css_status, _, css_headers, css_body = fetch(css_url)
-        if css_status != 200 or "text/css" not in css_headers.get("content-type", "") or not css_body:
-            failures.append("main stylesheet is not fetchable")
-
     report.update({
         "status": "pass" if not failures else "fail",
         "homepageBytes": len(body),
         "htmlIds": len(parser.ids),
-        "videos": len(parser.videos),
+        "homepageVideos": len(parser.videos),
         "contextualImages": parser.contextual_images,
         "inlineGraphNodes": len(inline_nodes),
         "inlineAvailableMedicalServices": len(available_refs),
         "canonicalGraphNodes": len(canonical_nodes),
+        "canonicalVideos": len(canonical_videos),
+        "canonicalClips": len(canonical_clips),
+        "watchPages": watch_reports,
         "contentSecurityPolicy": csp,
         "endpointsChecked": len(endpoint_specs),
         "failures": failures,

@@ -3,6 +3,7 @@ import { BookOpen, ChevronDown, CirclePlay, Clock3, ListVideo, Search } from '@l
 import { site } from '../../domain/entities';
 import { videos } from '../../domain/media.mjs';
 import { videoPageDetails } from '../../domain/video-pages.mjs';
+import { videoWatchPath } from '../../domain/url-architecture.mjs';
 import { readMediaChapters } from '../../lib/media';
 
 type ArticleSection = {
@@ -27,6 +28,7 @@ const videoItems = videos.map((video: any) => ({
   ...video,
   details: videoPageDetails[video.id],
   chapters: readMediaChapters(video.chapterTrack).slice(0, 3),
+  watchPath: videoWatchPath(video.id),
 }));
 
 const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/\s+/gu, ' ').trim();
@@ -225,6 +227,11 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                         <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {normalizeText(video.details.boundary)}</p>
                       </details>
                     )}
+
+                    <a class="video-card__related" href={video.watchPath}>
+                      <CirclePlay size={16} aria-hidden="true" />
+                      <span>مشاهده در صفحه اختصاصی این ویدئو</span>
+                    </a>
 
                     {video.details?.relatedPath && (
                       <a class="video-card__related" href={video.details.relatedPath}>

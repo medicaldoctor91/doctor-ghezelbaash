@@ -94,10 +94,13 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
   };
 
   const page: Node = {
-    ...pick(pageSource, ['@type', '@id', 'url', 'name', 'headline', 'description', 'inLanguage', 'datePublished', 'dateModified']),
+    ...pick(pageSource, ['@id', 'url', 'name', 'headline', 'description', 'inLanguage', 'dateCreated', 'datePublished', 'dateModified']),
+    '@type': ['MedicalWebPage', 'ProfilePage'],
     isPartOf: ref(websiteId),
     mainEntity: ref(personId),
     primaryImageOfPage: ref(portraitId),
+    author: ref(personId),
+    reviewedBy: ref(personId),
     publisher: ref(clinicId),
     about: [ref(personId), ref(clinicId), ...procedureNodes.map((node) => ref(node['@id']))],
     hasPart: ref(articleId),

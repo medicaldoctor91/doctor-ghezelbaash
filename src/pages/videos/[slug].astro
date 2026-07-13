@@ -1,0 +1,181 @@
+---
+import { ArrowRight, Clock3, ListVideo } from '@lucide/astro';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import '../../styles/video-watch.css';
+import { site } from '../../domain/entities';
+import { videos } from '../../domain/media.mjs';
+import { videoPageDetails } from '../../domain/video-pages.mjs';
+import { buildVideoWatchGraph, videoPublishedAt } from '../../compilers/video-watch-graph';
+import { readMediaChapters } from '../../lib/media';
+import { videoMomentUrl, videoWatchUrl } from '../../domain/url-architecture.mjs';
+
+export const prerender = true;
+
+export function getStaticPaths() {
+  return videos.map((video: any) => ({
+    params: { slug: video.id },
+    props: { video },
+  }));
+}
+
+const { video } = Astro.props as { video: any };
+const details = videoPageDetails[video.id];
+const canonical = videoWatchUrl(site.url, video.id);
+const publishedAt = videoPublishedAt(video);
+const chapters = video.durationSeconds >= 30 ? readMediaChapters(video.chapterTrack) : [];
+const title = `${video.title} | دکتر سعید قزلباش`;
+const relatedPath = details?.relatedPath ?? `/#video-${video.id}`;
+const relatedLabel = details?.relatedLabel ?? 'مطالعه توضیحات مرتبط در صفحه اصلی';
+const timeLabel = (value: string) => value.replace(/^00:/u, '');
+const clean = (value: string) => value
+  .replaceAll('هویت حرفه‌ای', 'اطلاعات حرفه‌ای')
+  .replaceAll('هویت پزشک', 'اطلاعات پزشک')
+  .replaceAll('هویت', 'اطلاعات')
+  .replaceAll('تصمیم‌گیری بالینی', 'انتخاب درمان')
+  .replaceAll('تصمیم‌گیری', 'انتخاب')
+  .replaceAll('کاندیداتوری', 'مناسب بودن درمان')
+  .replaceAll('بردار', 'جهت');
+const graph = buildVideoWatchGraph(video);
+---
+
+<SiteLayout
+  graph={graph}
+  title={title}
+  description={video.description}
+  canonical={canonical}
+  ogType="video.other"
+  ogImage={video.thumbnail}
+  videoUrl={`/videos/${video.file}`}
+  videoWidth={video.width}
+  videoHeight={video.height}
+  publishedTime={publishedAt}
+  modifiedTime={site.dateModified}
+>
+  <a class="skip-link" href="#watch-content">رفتن به محتوای اصلی</a>
+
+  <header class="watch-header">
+    <div class="watch-shell watch-header__inner">
+      <a href={site.url}>{site.name}</a>
+      <a class="watch-header__back" href={relatedPath}>
+        <ArrowRight size={17} aria-hidden="true" />
+        بازگشت به مطلب مرتبط
+      </a>
+    </div>
+  </header>
+
+  <main id="watch-content" class="watch-main watch-shell">
+    <nav class="watch-breadcrumb" aria-label="مسیر صفحه">
+      <a href={site.url}>صفحه اصلی</a>
+      <span aria-hidden="true">/</span>
+      <span>{video.title}</span>
+    </nav>
+
+    <article class="watch-hero" data-video-watch-page={video.id}>
+      <div class="watch-copy">
+        <p class="watch-copy__eyebrow">ویدئوی پزشکی از دکتر سعید قزلباش</p>
+        <h1>{video.title}</h1>
+        <p class="watch-copy__lead">{video.description}</p>
+        <div class="watch-meta" aria-label="مشخصات ویدئو">
+          <span><Clock3 size={15} aria-hidden="true" /> حدود {video.durationSeconds} ثانیه</span>
+          <span>زبان فارسی</span>
+          <span>انتشار: <time datetime={publishedAt}>{publishedAt.slice(0, 10)}</time></span>
+        </div>
+      </div>
+
+      <div class="watch-player">
+        <video
+          id="primary-video"
+          controls
+          playsinline
+          preload="metadata"
+          poster={video.thumbnail}
+          width={video.width}
+          height={video.height}
+          aria-label={video.title}
+        >
+          <source src={`/videos/${video.file}`} type="video/mp4" />
+          {video.chapterTrack && (
+            <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />
+          )}
+          مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
+        </video>
+      </div>
+    </article>
+
+    <div class="watch-content">
+      {details?.summary && (
+        <section class="watch-card watch-card--wide" aria-labelledby="watch-summary-title">
+          <h2 id="watch-summary-title">درباره این ویدئو</h2>
+          <p>{clean(details.summary)}</p>
+          {details.takeaways?.length > 0 && (
+            <ul>
+              {details.takeaways.map((item: string) => <li>{clean(item)}</li>)}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {chapters.length > 0 && (
+        <section class="watch-card" aria-labelledby="watch-chapters-title">
+          <h2 id="watch-chapters-title"><ListVideo size={19} aria-hidden="true" /> بخش‌های ویدئو</h2>
+          <ol class="watch-chapters">
+            {chapters.map((chapter) => (
+              <li>
+                <a href={videoMomentUrl(site.url, video.id, chapter.startOffset)} data-start={chapter.startOffset}>
+                  <span>{clean(chapter.name)}</span>
+                  <time datetime={`PT${chapter.startOffset}S`}>{timeLabel(chapter.startTimestamp)}</time>
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {details?.questions?.length > 0 && (
+        <section class="watch-card" aria-labelledby="watch-questions-title">
+          <h2 id="watch-questions-title">پرسش‌های مرتبط</h2>
+          {details.questions.map(([question, answer]: [string, string]) => (
+            <div>
+              <strong>{clean(question)}</strong>
+              <p>{clean(answer)}</p>
+            </div>
+          ))}
+        </section>
+      )}
+
+      {details?.boundary && (
+        <section class="watch-card watch-card--wide watch-boundary" aria-labelledby="watch-boundary-title">
+          <h2 id="watch-boundary-title">نکته مهم</h2>
+          <p>{clean(details.boundary)}</p>
+          <a class="watch-related" href={relatedPath}>{relatedLabel}</a>
+        </section>
+      )}
+
+      {details?.sources?.length > 0 && (
+        <section class="watch-card watch-card--wide watch-sources" aria-labelledby="watch-sources-title">
+          <h2 id="watch-sources-title">منابع مرتبط</h2>
+          <ul>
+            {details.sources.map((source: { name: string; url: string }) => (
+              <li><a href={source.url} target="_blank" rel="noopener noreferrer external">{source.name}</a></li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  </main>
+
+  <script is:inline>
+    const player = document.getElementById('primary-video');
+    const seekFromUrl = () => {
+      if (!(player instanceof HTMLVideoElement)) return;
+      const seconds = Number(new URLSearchParams(location.search).get('t') || 0);
+      if (!Number.isFinite(seconds) || seconds <= 0) return;
+      const apply = () => {
+        player.currentTime = Math.min(seconds, Number.isFinite(player.duration) ? player.duration : seconds);
+      };
+      if (player.readyState >= 1) apply();
+      else player.addEventListener('loadedmetadata', apply, { once: true });
+    };
+    seekFromUrl();
+  </script>
+</SiteLayout>

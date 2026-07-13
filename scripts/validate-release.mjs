@@ -1,7 +1,14 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { videos } from '../src/domain/media.mjs';
-import { serviceUrlRegistry } from '../src/domain/url-architecture.mjs';
+import {
+  serviceUrlRegistry,
+  videoClipId,
+  videoEntityId,
+  videoWatchPath,
+  videoWatchUrl,
+  videoWebPageId,
+} from '../src/domain/url-architecture.mjs';
 import {
   clinicRequiredSameAs,
   personAlternateNames,
@@ -16,6 +23,8 @@ const site = 'https://www.ghezelbaash.ir/';
 const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
 const files = [];
+const asArray = (value) => value === undefined ? [] : Array.isArray(value) ? value : [value];
+const timezoneDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
 const walkFiles = (directory) => {
   for (const name of readdirSync(directory)) {
     const path = join(directory, name);
@@ -34,12 +43,20 @@ const visible = homepage
   .replace(/\s+/gu, ' ');
 
 const htmlFiles = files.filter((path) => path.endsWith('.html')).map((path) => relative(root, path));
-check(htmlFiles.length === 2 && htmlFiles.includes('index.html') && htmlFiles.includes('404.html'), `expected only index.html and 404.html; found ${htmlFiles.join(', ')}`);
+const expectedHtmlFiles = new Set([
+  'index.html',
+  '404.html',
+  ...videos.map((video) => relative(root, join(root, videoWatchPath(video.id).replace(/^\//u, ''), 'index.html'))),
+]);
+check(
+  htmlFiles.length === expectedHtmlFiles.size && htmlFiles.every((path) => expectedHtmlFiles.has(path)),
+  `expected homepage, 404 and ${videos.length} watch pages; found ${htmlFiles.join(', ')}`,
+);
 check(statSync(homepagePath).size < 700_000, `homepage exceeds 700KB: ${statSync(homepagePath).size}`);
 check((homepage.match(/<h1\b/giu) ?? []).length === 1, 'homepage must contain exactly one h1');
 check((homepage.match(/<video\b/giu) ?? []).length === videos.length, `homepage must contain ${videos.length} initial video elements`);
-check((homepage.match(/<video\b[^>]*preload="none"/giu) ?? []).length === videos.length, 'every video must use preload="none"');
-check((homepage.match(/<source\b[^>]*type="video\/mp4"/giu) ?? []).length === videos.length, 'every video must expose an MP4 source in initial HTML');
+check((homepage.match(/<video\b[^>]*preload="none"/giu) ?? []).length === videos.length, 'every homepage video must use preload="none"');
+check((homepage.match(/<source\b[^>]*type="video\/mp4"/giu) ?? []).length === videos.length, 'every homepage video must expose an MP4 source in initial HTML');
 check((homepage.match(/\bdata-inline-video(?:\s|>)/giu) ?? []).length === videos.length, 'every video must be embedded contextually inside article text');
 check((homepage.match(/\bdata-contextual-image(?:\s|>)/giu) ?? []).length >= 6, 'physician and clinic images must remain contextual');
 check(!/<section\b[^>]*\bid="videos"/iu.test(homepage), 'standalone video section is forbidden');
@@ -51,6 +68,7 @@ check(!homepage.includes('gallery-grid'), 'standalone photo gallery markup is fo
 check(!homepage.includes('guide-index'), 'article must not render as a knowledge-base index');
 check(!homepage.includes('guide-card'), 'article must not render as accordion cards');
 check(!homepage.includes('href="#videos"'), 'navigation must not expose a separate videos destination');
+check(!existsSync(join(root, 'videos', 'index.html')), 'standalone /videos/ index page is forbidden');
 check(!/<div\b[^>]*aria-label=/iu.test(homepage.replace(/<div\b[^>]*role="(?:group|navigation|region)"[^>]*aria-label=[^>]*>/giu, '')), 'generic div uses aria-label without an explicit role');
 check(!/<time\b(?![^>]*datetime=)/iu.test(homepage), 'time element missing datetime');
 
@@ -60,6 +78,7 @@ check(articleStart >= 0 && contactStart > articleStart, 'article and contact ord
 for (const video of videos) {
   const position = homepage.indexOf(`id="video-${video.id}"`);
   check(position > articleStart && position < contactStart, `${video.id}: video is not inside article text`);
+  check(homepage.includes(`href="${videoWatchPath(video.id)}"`), `${video.id}: contextual video does not link to its watch page`);
 }
 
 for (const phrase of [
@@ -99,6 +118,9 @@ function auditGraph(label, graph) {
   check(graphIds.length === defined.size, `${label}: duplicate @id values`);
   check([...references].every((id) => defined.has(id)), `${label}: dangling same-site @id references`);
   const page = nodes.find((node) => node['@id'] === `${site}#webpage`);
+  const pageTypes = asArray(page?.['@type']);
+  check(pageTypes.includes('MedicalWebPage'), `${label}: homepage must remain MedicalWebPage`);
+  check(pageTypes.includes('ProfilePage'), `${label}: homepage must also be ProfilePage`);
   check(page?.mainEntity?.['@id'] === `${site}#person` && !Array.isArray(page?.mainEntity), `${label}: Person must be the sole page mainEntity`);
   return { nodes, defined };
 }
@@ -152,8 +174,8 @@ const fullAudit = auditGraph('canonical graph', full);
 const inlineAudit = auditGraph('inline graph', inline);
 check(fullAudit.nodes.length >= 800, `canonical graph unexpectedly narrow: ${fullAudit.nodes.length}`);
 check(inlineAudit.nodes.length <= 60, `inline projection is too broad: ${inlineAudit.nodes.length}`);
-check(!inlineAudit.nodes.some((node) => [node['@type']].flat().some((type) => type === 'VideoObject' || type === 'Clip')), 'inline projection must not claim video rich-result eligibility without verified uploadDate');
-check(!inlineAudit.nodes.some((node) => [node['@type']].flat().includes('ScholarlyArticle')), 'research articles must stay in canonical graph and out of Google page projection');
+check(!inlineAudit.nodes.some((node) => asArray(node['@type']).some((type) => type === 'VideoObject' || type === 'Clip')), 'homepage inline projection must leave video rich-result markup to watch pages');
+check(!inlineAudit.nodes.some((node) => asArray(node['@type']).includes('ScholarlyArticle')), 'research articles must stay in canonical graph and out of Google page projection');
 for (const id of inlineAudit.defined) check(fullAudit.defined.has(id), `inline @id absent from canonical graph: ${id}`);
 check(fullAudit.defined.has(`${site}#knowledge-graph-dataset`), 'canonical Dataset node missing');
 check(!fullAudit.defined.has(`${site}#retrieval-corpus`), 'removed retrieval Dataset still exists');
@@ -167,7 +189,6 @@ for (const profile of restoredPersonProfileNodes) {
 }
 
 const inlineArticle = inlineAudit.nodes.find((node) => node['@id'] === `${site}#article`);
-const timezoneDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u;
 check(timezoneDateTime.test(inlineArticle?.datePublished ?? ''), 'inline Article datePublished must be a timezone-aware ISO datetime');
 check(timezoneDateTime.test(inlineArticle?.dateModified ?? ''), 'inline Article dateModified must be a timezone-aware ISO datetime');
 const inlineClinic = inlineAudit.nodes.find((node) => node['@id'] === `${site}#clinic`);
@@ -175,12 +196,12 @@ check(inlineClinic?.address?.postalCode === '6714657412', 'inline clinic postalC
 
 for (const node of fullAudit.nodes) {
   const values = [];
-  const visit = (value, key = '') => {
-    if (Array.isArray(value)) return value.forEach((item) => visit(item, key));
+  const visit = (value) => {
+    if (Array.isArray(value)) return value.forEach(visit);
     if (!value || typeof value !== 'object') return;
     for (const [childKey, child] of Object.entries(value)) {
       if ((childKey === 'url' || childKey === 'contentUrl') && typeof child === 'string') values.push(child);
-      visit(child, childKey);
+      visit(child);
     }
   };
   visit(node);
@@ -189,15 +210,32 @@ for (const node of fullAudit.nodes) {
   }
 }
 
-const videoNodes = fullAudit.nodes.filter((node) => [node['@type']].flat().includes('VideoObject'));
-const clipNodes = fullAudit.nodes.filter((node) => [node['@type']].flat().includes('Clip'));
+const videoNodes = fullAudit.nodes.filter((node) => asArray(node['@type']).includes('VideoObject'));
+const clipNodes = fullAudit.nodes.filter((node) => asArray(node['@type']).includes('Clip'));
+const eligibleVideos = videos.filter((video) => video.durationSeconds >= 30);
 check(videoNodes.length === videos.length, `canonical graph must contain ${videos.length} VideoObject nodes`);
-check(clipNodes.length === videos.length * 3, `canonical graph must contain ${videos.length * 3} Clip nodes`);
-for (const video of videoNodes) {
-  check((video.hasPart ?? []).length === 3, `${video['@id']}: expected three clips`);
-  check(video.url === video['@id'], `${video['@id']}: URL must target the visible video anchor`);
+check(clipNodes.length === eligibleVideos.length * 3, `canonical graph must contain ${eligibleVideos.length * 3} eligible Clip nodes`);
+for (const video of videos) {
+  const node = videoNodes.find((item) => item['@id'] === videoEntityId(site, video.id));
+  check(Boolean(node), `${video.id}: canonical VideoObject missing`);
+  if (!node) continue;
+  check(node.url === videoWatchUrl(site, video.id), `${video.id}: VideoObject URL must target watch page`);
+  check(node.mainEntityOfPage?.['@id'] === videoWebPageId(site, video.id), `${video.id}: mainEntityOfPage must target watch WebPage`);
+  check(timezoneDateTime.test(node.uploadDate ?? ''), `${video.id}: canonical uploadDate missing or invalid`);
+  check(node.contentUrl === `${site}videos/${video.file}`, `${video.id}: canonical contentUrl mismatch`);
+  if (video.durationSeconds >= 30) check(asArray(node.hasPart).length === 3, `${video.id}: expected three eligible clips`);
+  else check(asArray(node.hasPart).length === 0, `${video.id}: short video must not claim Clip eligibility`);
+  check(fullAudit.defined.has(videoWebPageId(site, video.id)), `${video.id}: canonical watch WebPage node missing`);
 }
-for (const clip of clipNodes) check(clip.url === clip['@id'], `${clip['@id']}: URL must target its visible chapter anchor`);
+for (const video of eligibleVideos) {
+  for (let index = 1; index <= 3; index += 1) {
+    const clip = clipNodes.find((node) => node['@id'] === videoClipId(site, video.id, index));
+    check(Boolean(clip), `${video.id}: Clip ${index} missing`);
+    if (!clip) continue;
+    check(typeof clip.url === 'string' && clip.url.startsWith(`${videoWatchUrl(site, video.id)}?t=`), `${video.id}: Clip ${index} must use ?t= URL`);
+    check(clip.isPartOf?.['@id'] === videoEntityId(site, video.id), `${video.id}: Clip ${index} isPartOf mismatch`);
+  }
+}
 
 for (const path of [
   'knowledge-graph.jsonld', 'sitemap.xml', 'image-sitemap.xml', 'video-sitemap.xml',
@@ -223,6 +261,9 @@ console.log(JSON.stringify({
   htmlPages: htmlFiles.length,
   homepageBytes: statSync(homepagePath).size,
   htmlIds: ids.length,
+  profilePage: true,
+  homepageMainEntity: `${site}#person`,
+  watchPages: videos.length,
   videos: videoNodes.length,
   clips: clipNodes.length,
   mediaPlacement: {
