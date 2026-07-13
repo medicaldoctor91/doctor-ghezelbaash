@@ -44,7 +44,7 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
 
   const person: Node = {
     ...pick(personSource, [
-      '@id', 'name', 'givenName', 'familyName', 'alternateName', 'url', 'jobTitle',
+      '@id', 'name', 'givenName', 'familyName', 'honorificPrefix', 'alternateName', 'url', 'jobTitle',
       'description', 'disambiguatingDescription', 'telephone', 'identifier', 'sameAs',
     ]),
     '@type': 'Person',
@@ -123,4 +123,3 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
 
   return { '@context': 'https://schema.org', '@graph': graph };
 }
-
