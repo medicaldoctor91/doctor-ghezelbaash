@@ -175,7 +175,7 @@ export const site = {
       doi: "10.4103/2008-7802.182734",
       pmid: "27280013",
       pmcid: "PMC4882968",
-      datePublished: "2016-05-01T00:00:00Z",
+      datePublished: "2016",
       journal: "Journal of Research in Medical Sciences",
       publisher: "PubMed / PubMed Central",
     },
