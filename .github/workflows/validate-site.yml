@@ -26,9 +26,12 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm ci
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+        run: npm install --package-lock=false --no-audit --no-fund
 
       - name: Build and validate release
         run: npm run build
