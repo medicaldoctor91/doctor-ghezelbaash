@@ -1,5 +1,5 @@
 ---
-import { ArrowLeft, ChevronDown, Sparkles } from '@lucide/astro';
+import { ArrowLeft, ChevronDown, Link2, Sparkles } from '@lucide/astro';
 import '../../styles/featured-answer-disclosure.css';
 
 const answers = [
@@ -87,10 +87,16 @@ const answers = [
             <article id={item.id} class="best-answer-card">
               <h3>{item.question}</h3>
               <p>{item.answer}</p>
-              <a href={item.href}>
-                توضیح کامل
-                <ArrowLeft size={15} aria-hidden="true" />
-              </a>
+              <div class="best-answer-card__links">
+                <a href={item.href}>
+                  توضیح کامل
+                  <ArrowLeft size={15} aria-hidden="true" />
+                </a>
+                <a class="best-answer-card__permalink" href={`#${item.id}`} aria-label={`پیوند مستقیم به پاسخ: ${item.question}`}>
+                  <Link2 size={14} aria-hidden="true" />
+                  پیوند مستقیم
+                </a>
+              </div>
             </article>
           ))}
         </div>
