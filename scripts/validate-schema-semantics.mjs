@@ -16,6 +16,7 @@ const inline = inlineMatches.length === 1 ? JSON.parse(inlineMatches[0][1]) : { 
 const nodes = inline['@graph'] ?? [];
 const byId = new Map(nodes.filter((node) => node?.['@id']).map((node) => [node['@id'], node]));
 
+const person = byId.get(`${site}#person`);
 const clinic = byId.get(`${site}#clinic`);
 const availableServiceRefs = asArray(clinic?.availableService);
 const allowedMedicalTypes = new Set(['MedicalProcedure', 'SurgicalProcedure', 'MedicalTest', 'MedicalTherapy']);
@@ -29,6 +30,23 @@ for (const item of availableServiceRefs) {
   check(!hasType(node, 'Service'), `inline clinic availableService must not point to generic Service: ${id}`);
   check(!hasType(node, 'WebPageElement'), `inline clinic availableService must not point to WebPageElement: ${id}`);
 }
+
+const clinicSocialSameAs = [
+  'https://www.instagram.com/doctor.ghezelbaash/',
+  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
+  'https://www.facebook.com/Ghezelbaash/',
+];
+const clinicSameAs = new Set(asArray(clinic?.sameAs));
+const personSameAs = new Set(asArray(person?.sameAs));
+for (const url of clinicSocialSameAs) {
+  check(clinicSameAs.has(url), `inline Clinic.sameAs missing social URL: ${url}`);
+  check(!personSameAs.has(url), `inline Person.sameAs must not contain clinic social URL: ${url}`);
+}
+
+check(person?.worksFor?.['@id'] === `${site}#clinic`, 'inline Person.worksFor must point to Clinic');
+check(person?.workLocation?.['@id'] === `${site}#clinic`, 'inline Person.workLocation must point to Clinic');
+check(person?.affiliation?.['@id'] === `${site}#clinic`, 'inline Person.affiliation must point to Clinic');
+check(clinic?.employee?.['@id'] === `${site}#person`, 'inline Clinic.employee must point to Person');
 
 check(!byId.has(`${site}#service-coverage-panel`), 'service coverage WebPageElement leaked into Google inline graph');
 for (const node of nodes.filter((item) => /^https:\/\/www\.ghezelbaash\.ir\/#service-/.test(item?.['@id'] ?? ''))) {
@@ -57,6 +75,8 @@ console.log(JSON.stringify({
   inlineAvailableMedicalServices: availableServiceRefs.length,
   genericServiceNodes: nodes.filter((node) => hasType(node, 'Service')).length,
   invalidAvailableServiceTypes: 0,
+  clinicSocialSameAs: clinicSocialSameAs.length,
+  doctorClinicRelation: true,
   domElements: elementCount,
   rawBytes,
   gzipBytes,
