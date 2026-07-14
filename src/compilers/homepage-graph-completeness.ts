@@ -53,11 +53,11 @@ export function completeHomepageGraphContract(input: Graph): Graph {
     byId.set(graphDatasetId, node);
   }
 
-  for (const video of videos) {
+  for (const video of videos as any[]) {
     const node = byId.get(id(`video-${video.id}`));
     if (!node) continue;
-    node.isPartOf = ref(id(video.sectionId));
-    node.mainEntityOfPage = ref(id(video.subsectionId ?? video.sectionId));
+    node.isPartOf = ref(id(video.subsectionId ?? video.sectionId));
+    delete node.mainEntityOfPage;
   }
 
   return { '@context': input['@context'] ?? 'https://schema.org', '@graph': nodes };
