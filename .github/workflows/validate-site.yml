@@ -33,6 +33,9 @@ jobs:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
         run: npm install --package-lock=false --no-audit --no-fund
 
+      - name: Validate production audit syntax
+        run: python3 -m py_compile scripts/audit-production.py scripts/run-production-audit.py
+
       - name: Build and validate release
         id: build
         shell: bash
