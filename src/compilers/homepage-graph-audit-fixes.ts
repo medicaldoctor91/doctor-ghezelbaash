@@ -24,7 +24,7 @@ export function applyHomepageAuditFixes(input: Graph): Graph {
 
   if (person) person.sameAs = uniqueStrings([...asArray(person.sameAs), ...personSocials]);
   if (clinic) {
-    clinic.sameAs = uniqueStrings(asArray(clinic.sameAs).filter((url) => !personSocials.includes(url) && !mapResources.has(url)));
+    clinic.sameAs = uniqueStrings(asArray<string>(clinic.sameAs).filter((url) => !personSocials.includes(url) && !mapResources.has(url)));
     clinic.hasMap = site.maps;
   }
 
@@ -40,7 +40,7 @@ export function applyHomepageAuditFixes(input: Graph): Graph {
     if (typeof nodeId === 'string' && nodeId.startsWith(`${site.url}#`)) {
       const fragment = nodeId.slice(`${site.url}#`.length);
       const target = homepageServiceTargetByFragment.get(fragment);
-      if (target && (hasType(node, 'Service') || hasType(node, 'MedicalProcedure') || hasType(node, 'SurgicalProcedure'))) {
+      if (target) {
         node.url = id(target);
         if (hasType(node, 'Service')) node.provider = { '@id': clinicId };
       }
