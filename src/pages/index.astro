@@ -15,6 +15,7 @@ import { getHeadings, rawContent } from '../content/landing.md';
 import { stabilizeHeadings } from '../domain/anchor-utils';
 import { buildGooglePageGraph } from '../compilers/google-page-graph';
 import { applyHomepageGraphContract } from '../compilers/homepage-graph-contract';
+import { completeHomepageGraphContract } from '../compilers/homepage-graph-completeness';
 import {
   rehypeAccessibleTables,
   rehypeExternalLinks,
@@ -23,7 +24,7 @@ import {
 
 const raw = rawContent();
 const headings = stabilizeHeadings(getHeadings());
-const graph = applyHomepageGraphContract(buildGooglePageGraph(headings, raw));
+const graph = completeHomepageGraphContract(applyHomepageGraphContract(buildGooglePageGraph(headings, raw)));
 
 const h2Matches = [...raw.matchAll(/^##\s+(.+)$/gm)];
 const h2Headings = headings.filter((heading) => heading.depth === 2);
