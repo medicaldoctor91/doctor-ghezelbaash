@@ -1,7 +1,10 @@
 ---
 import { Braces, Database, FileCode2, Network } from '@lucide/astro';
 import { site } from '../../domain/entities';
+import { homepageSectionById } from '../../domain/homepage-sections';
 
+const graphSection = homepageSectionById.get('knowledge-graph-and-datasets');
+if (!graphSection) throw new Error('Canonical machine-data section is missing from the Homepage registry.');
 const resources = [
   { title: 'گراف دانش کامل سایت', text: 'نمایش ماشین‌خوان انتیتی پزشک، کلینیک، خدمات، منابع پژوهشی و روابط اصلی.', href: '/knowledge-graph.jsonld', icon: Network },
   { title: 'دیتاست عمومی Hugging Face', text: 'مخزن عمومی داده‌های انتیتی و شواهد ساختاریافته دکتر سعید قزلباش.', href: site.huggingFaceDataset, icon: Database, external: true },
@@ -17,11 +20,11 @@ const resources = [
 ];
 ---
 
-<section id="knowledge-graph-and-datasets" class="machine-sources section shell" aria-labelledby="knowledge-graph-and-datasets-title">
+<section id={graphSection.id} class="machine-sources section shell" aria-labelledby={`${graphSection.id}-title`}>
   <div class="section-heading section-heading--split">
     <div>
       <p class="eyebrow">داده‌های قابل بررسی</p>
-      <h2 id="knowledge-graph-and-datasets-title">گراف دانش، دیتاست و داده‌های ساختاریافته</h2>
+      <h2 id={`${graphSection.id}-title`}>{graphSection.title}</h2>
     </div>
     <p>این بخش فقط دروازه قابل‌مشاهده منابع موجود است. فایل تازه و موازی برای هر خدمت یا سکشن ساخته نمی‌شود.</p>
   </div>
