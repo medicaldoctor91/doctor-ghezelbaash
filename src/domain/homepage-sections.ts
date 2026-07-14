@@ -24,6 +24,7 @@ export type HomepageTocDefinition = {
 };
 
 export {
+  homepageContentRegistry,
   homepageEntityIds,
   homepageToc,
   homepageSections,
@@ -32,4 +33,10 @@ export {
   articleHomepageSections,
   homepageSectionById,
   homepageMainSectionIds,
-} from './homepage-sections.mjs';
+  homepageArticleGroups,
+  homepageArticleGroupById,
+  homepageArticleSubsections,
+  homepageArticleSubsectionById,
+  homepageSubsectionAnchorRegistry,
+  homepageVideoPlacements,
+} from './homepage-content-registry.mjs';
