@@ -14,6 +14,7 @@ import HomeFooter from '../components/home/HomeFooter.astro';
 import { getHeadings, rawContent } from '../content/landing.md';
 import { stabilizeHeadings } from '../domain/anchor-utils';
 import { buildGooglePageGraph } from '../compilers/google-page-graph';
+import { applyHomepageGraphContract } from '../compilers/homepage-graph-contract';
 import {
   rehypeAccessibleTables,
   rehypeExternalLinks,
@@ -22,7 +23,7 @@ import {
 
 const raw = rawContent();
 const headings = stabilizeHeadings(getHeadings());
-const graph = buildGooglePageGraph(headings, raw);
+const graph = applyHomepageGraphContract(buildGooglePageGraph(headings, raw));
 
 const h2Matches = [...raw.matchAll(/^##\s+(.+)$/gm)];
 const h2Headings = headings.filter((heading) => heading.depth === 2);
