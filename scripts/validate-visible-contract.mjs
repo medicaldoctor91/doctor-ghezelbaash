@@ -46,6 +46,26 @@ for (const id of ['best-aesthetic-doctor-kermanshah-answers', ...bestDoctorIds])
 }
 check((homepage.match(/class="quiet-best__item"/gu) ?? []).length === bestDoctorIds.length, `expected ${bestDoctorIds.length} best-doctor answers`);
 
+const priorityAnswerIds = [
+  'priority-best-aesthetic-doctor-kermanshah',
+  'priority-clinic-reputation',
+  'priority-national-aesthetic-doctor',
+  'priority-aesthetic-cost',
+  'priority-surgery-boundary',
+  'priority-correction-after-treatment',
+];
+for (const id of priorityAnswerIds) {
+  check((homepage.match(new RegExp(`\\sid="${id}"`, 'gu')) ?? []).length === 1, `priority answer anchor missing or duplicated: ${id}`);
+}
+check((homepage.match(/\bdata-answer-block(?:\s|>)/gu) ?? []).length === priorityAnswerIds.length, `expected ${priorityAnswerIds.length} priority answer blocks`);
+check(homepage.includes('id="clinic-reputation"'), 'visible clinic reputation section missing');
+check(homepage.includes('data-entity-bridge'), 'doctor-clinic reputation bridge marker missing');
+check(homepage.includes('id="search-intent-hub"'), 'priority search intent hub missing');
+check(visible.includes('۱۶۳ نظر'), 'visible Google Maps review count missing');
+check(visible.includes('میانگین امتیاز ۵'), 'visible Google Maps rating statement missing');
+check(visible.includes('دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه'), 'physician-first local H1 text missing');
+check(visible.includes('موضوعات ارزیابی، مقایسه و مرز ارجاع'), 'evaluation and referral coverage heading missing');
+
 for (const phrase of [
   'هویت',
   'مسئول تصمیم',
@@ -102,8 +122,8 @@ for (const forbidden of ['llms.txt', '.well-known/ai.txt', 'huggingface.co', 'wi
   check(!homepageHeaderBlock.includes(forbidden), `forbidden external or experimental resource leaked into homepage HTTP Link header: ${forbidden}`);
 }
 
-for (const label of ['Hugging Face', 'LinkedIn', 'Facebook', 'Pinterest']) {
-  check(visible.includes(label), `visible physician profile link missing: ${label}`);
+for (const label of ['Hugging Face', 'LinkedIn کلینیک', 'Facebook کلینیک', 'Pinterest']) {
+  check(visible.includes(label), `visible professional profile link missing: ${label}`);
 }
 
 check(homepage.includes('class="article-flow'), 'continuous article layout missing');
@@ -127,6 +147,10 @@ console.log(JSON.stringify({
   status: 'pass',
   bestDoctorWrapper: 'closed',
   bestDoctorQueries: bestDoctorIds.length,
+  priorityAnswerBlocks: priorityAnswerIds.length,
+  clinicReputationVisible: true,
+  clinicRating: 5,
+  clinicRatingCount: 163,
   artificialVisiblePhrases: 0,
   headContract: {
     relMeLinks: 0,

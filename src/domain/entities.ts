@@ -7,11 +7,11 @@ export const site = {
   latinName: "Dr. Saeed Ghezelbaash",
   clinicName: "کلینیک زیبایی دکتر سعید قزلباش",
   title:
-    "دکتر سعید قزلباش | پزشکی زیبایی در کرمانشاه",
+    "دکتر سعید قزلباش | پزشک زیبایی کرمانشاه؛ خدمات، شواهد و تماس",
   articleHeadline:
-    "دکتر سعید قزلباش در کرمانشاه؛ خدمات زیبایی، پوست و مو",
+    "دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه، خدمات و معیارهای انتخاب",
   description:
-    "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ اطلاعات بوتاکس، فیلر، لیفت نخ، پوست، مو، غبغب، سوابق پژوهشی و راه‌های تماس با کلینیک.",
+    "صفحه رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ خدمات جراحی و غیرجراحی، معیار انتخاب درمان، سوابق پژوهشی و کلینیک با ۱۶۳ نظر و امتیاز ۵ در Google Maps.",
   language: "fa-IR",
   direction: "rtl",
   phone: "+989308209494",
@@ -73,14 +73,14 @@ export const site = {
   logo: "/assets/brand/doctor-hand-syringe-logo-512.png",
   ogImage: "/og/home.jpg",
   datePublished: "2026-07-10T12:00:00+03:30",
-  dateModified: "2026-07-13T09:35:00+03:30",
+  dateModified: "2026-07-14T16:30:00+03:30",
   liveSourceOfTruth: "https://www.ghezelbaash.ir/",
-  sourceTruthObservedAt: "2026-07-13",
+  sourceTruthObservedAt: "2026-07-14",
   googleBusinessProfile: {
     ratingValue: 5,
     bestRating: 5,
     ratingCount: 163,
-    observedAt: "2026-07-10",
+    observedAt: "2026-07-14",
     sourceName: "Google Maps",
     sourceUrl: "https://www.google.com/maps?cid=12350483144643112463",
     evidenceStatus: "first-party-live-site-and-external-map-dated-snapshot",

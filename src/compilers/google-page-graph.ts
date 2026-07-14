@@ -1,5 +1,6 @@
 import type { MarkdownHeading } from 'astro';
 import { site } from '~/domain/entities';
+import { priorityIntentAnswers } from '~/domain/priority-intent-answers.mjs';
 import { buildCanonicalKnowledgeGraph } from './knowledge-graph';
 
 type Node = Record<string, any>;
@@ -9,7 +10,7 @@ const asArray = <T>(value: T | T[] | undefined): T[] => value === undefined ? []
 const hasType = (node: Node, type: string) => asArray(node?.['@type']).includes(type);
 
 function pick(node: Node, fields: string[]): Node {
-  return Object.fromEntries(fields.filter((field) => node[field] !== undefined).map((field) => [field, node[field]]));
+  return Object.fromEntries(fields.filter((field) => node?.[field] !== undefined).map((field) => [field, node[field]]));
 }
 
 export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
@@ -25,6 +26,8 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
   const logoId = `${site.url}#logo`;
   const credentialId = `${site.url}#credential-irimc-${site.irimc}`;
   const portraitId = `${site.url}#image-doctor-portrait`;
+  const reputationId = `${site.url}#clinic-reputation-snapshot`;
+  const priorityAnswerListId = `${site.url}#priority-answer-list`;
 
   const procedureNodes = nodes.filter((node) =>
     /^https:\/\/www\.ghezelbaash\.ir\/#procedure-/.test(node['@id'] ?? '')
@@ -47,6 +50,8 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
   const articleSource = byId.get(articleId) as Node;
   const logoSource = byId.get(logoId) as Node;
   const credentialSource = byId.get(credentialId) as Node;
+  const reputationSource = byId.get(reputationId) as Node;
+  const priorityAnswerListSource = byId.get(priorityAnswerListId) as Node;
 
   const offeredProcedureIds = new Set(
     asArray<Node>(clinicSource.availableService)
@@ -67,13 +72,13 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     workLocation: ref(clinicId),
     affiliation: ref(clinicId),
     knowsAbout: procedureNodes.map((node) => ref(node['@id'])),
-    subjectOf: ref(articleId),
+    subjectOf: [ref(articleId), ref(reputationId), ref(priorityAnswerListId)],
   };
 
   const clinic: Node = {
     ...pick(clinicSource, [
       '@id', 'name', 'alternateName', 'url', 'telephone', 'geo', 'hasMap',
-      'openingHoursSpecification', 'contactPoint', 'areaServed', 'identifier', 'sameAs',
+      'openingHoursSpecification', 'contactPoint', 'areaServed', 'identifier', 'sameAs', 'aggregateRating',
     ]),
     address: {
       ...(clinicSource.address ?? {}),
@@ -84,6 +89,7 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     image: imageNodes.map((node) => ref(node['@id'])),
     employee: ref(personId),
     availableService: offeredProcedureNodes.map((node) => ref(node['@id'])),
+    subjectOf: [ref(reputationId), ref(priorityAnswerListId)],
   };
 
   const website: Node = {
@@ -91,6 +97,7 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     publisher: ref(clinicId),
     creator: ref(personId),
     about: [ref(personId), ref(clinicId)],
+    hasPart: ref(priorityAnswerListId),
   };
 
   const page: Node = {
@@ -103,7 +110,8 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     reviewedBy: ref(personId),
     publisher: ref(clinicId),
     about: [ref(personId), ref(clinicId), ...procedureNodes.map((node) => ref(node['@id']))],
-    hasPart: ref(articleId),
+    mentions: [ref(clinicId), ref(reputationId)],
+    hasPart: [ref(articleId), ref(priorityAnswerListId)],
   };
 
   const article: Node = {
@@ -118,7 +126,29 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     publisher: ref(clinicId),
     image: ref(portraitId),
     about: [ref(personId), ref(clinicId), ...procedureNodes.map((node) => ref(node['@id']))],
+    mentions: ref(reputationId),
   };
+
+  const reputation: Node = {
+    ...pick(reputationSource, [
+      '@type', '@id', 'url', 'name', 'description', 'dateModified', 'temporalCoverage',
+      'about', 'isBasedOn', 'mainEntity', 'mentions', 'variableMeasured',
+    ]),
+    isPartOf: ref(pageId),
+  };
+
+  const priorityAnswerList: Node = pick(priorityAnswerListSource, [
+    '@type', '@id', 'name', 'url', 'inLanguage', 'numberOfItems', 'about', 'itemListElement',
+  ]);
+
+  const priorityNodes: Node[] = priorityIntentAnswers.flatMap((item: { id: string }) => {
+    const question = byId.get(`${site.url}#question-${item.id}`);
+    const answer = byId.get(`${site.url}#answer-${item.id}`);
+    return [question, answer].filter(Boolean).map((node) => pick(node as Node, [
+      '@type', '@id', 'name', 'text', 'url', 'inLanguage', 'about', 'acceptedAnswer',
+      'author', 'isPartOf', 'keywords', 'additionalProperty',
+    ]));
+  });
 
   const compactProcedures = procedureNodes.map((node) => pick(node, [
     '@type', '@id', 'name', 'alternateName', 'url', 'description', 'procedureType',
@@ -136,6 +166,9 @@ export function buildGooglePageGraph(headings: MarkdownHeading[], raw: string) {
     website,
     page,
     article,
+    reputation,
+    priorityAnswerList,
+    ...priorityNodes,
     credentialSource,
     logoSource,
     ...imageNodes,

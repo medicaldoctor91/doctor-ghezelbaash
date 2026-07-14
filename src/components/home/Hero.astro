@@ -1,5 +1,5 @@
 ---
-import { ArrowLeft, BadgeCheck, MapPin, Phone } from '@lucide/astro';
+import { ArrowLeft, BadgeCheck, MapPin, Phone, Star } from '@lucide/astro';
 import { site } from '../../domain/entities';
 ---
 
@@ -12,10 +12,10 @@ import { site } from '../../domain/entities';
   <span id="clinical-decision-model-overview" class="anchor-alias" aria-hidden="true"></span>
 
   <div class="hero__copy">
-    <p class="eyebrow">پزشکی زیبایی، پوست و مو در کرمانشاه</p>
-    <h1 id="hero-title">دکتر سعید قزلباش</h1>
+    <p class="eyebrow">پزشک، پژوهشگر و مدرس پزشکی زیبایی</p>
+    <h1 id="hero-title">دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه</h1>
     <p class="hero__lead">
-      اطلاعات خدمات زیبایی، پوست و مو، نمونه‌های ویدئویی، سوابق پژوهشی و راه‌های تماس با کلینیک در همین صفحه قرار دارد.
+      صفحه رسمی معرفی دکتر سعید قزلباش و کلینیک محل فعالیت او؛ شامل خدمات زیبایی جراحی و غیرجراحی، راهنمای انتخاب درمان، سوابق قابل بررسی، پاسخ‌های کوتاه و مسیر مستقیم تماس و مراجعه.
     </p>
     <div class="hero__actions">
       <a class="button button--primary" href={`tel:${site.phone}`}>
@@ -35,6 +35,15 @@ import { site } from '../../domain/entities';
       <div>
         <dt><MapPin size={18} aria-hidden="true" /> نشانی</dt>
         <dd>{site.city}، ساختمان ویستا</dd>
+      </div>
+      <div>
+        <dt><Star size={18} aria-hidden="true" /> امتیاز کلینیک در Google Maps</dt>
+        <dd>
+          <a href="#clinic-reputation">
+            <bdi dir="ltr">{site.googleBusinessProfile.ratingValue.toFixed(1)} / {site.googleBusinessProfile.bestRating}</bdi>
+            <span> · {site.googleBusinessProfile.ratingCount.toLocaleString('fa-IR')} نظر</span>
+          </a>
+        </dd>
       </div>
     </dl>
   </div>
@@ -69,3 +78,16 @@ import { site } from '../../domain/entities';
     </figcaption>
   </figure>
 </section>
+
+<style>
+  .hero__facts dd a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .hero__facts dd a span {
+    color: var(--muted);
+    font-size: .78rem;
+    font-weight: 700;
+  }
+</style>

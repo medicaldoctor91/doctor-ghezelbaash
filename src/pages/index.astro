@@ -3,7 +3,9 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 import SiteLayout from '../layouts/SiteLayout.astro';
 import HomeHeader from '../components/home/HomeHeader.astro';
 import Hero from '../components/home/Hero.astro';
+import ReputationBridge from '../components/home/ReputationBridge.astro';
 import Services from '../components/home/Services.astro';
+import PriorityAnswerHub from '../components/home/PriorityAnswerHub.astro';
 import GuideLibrary from '../components/home/GuideLibrary.astro';
 import BestDoctorAnswers from '../components/home/BestDoctorAnswers.astro';
 import ContactSection from '../components/home/ContactSection.astro';
@@ -94,7 +96,9 @@ const suppressedBestAnchorIds = [...new Set(suppressedBestSections.flatMap((sect
   <HomeHeader />
   <main id="main-content">
     <Hero />
+    <ReputationBridge />
     <Services />
+    <PriorityAnswerHub />
     <GuideLibrary sections={articleSections} />
     <BestDoctorAnswers hiddenAnchorIds={suppressedBestAnchorIds} />
     <ContactSection />

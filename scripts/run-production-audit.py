@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import time
@@ -30,6 +31,14 @@ FORBIDDEN_HTTP_LINK_TOKENS = {
     "membersearch.irimc.org",
     "ncbi.nlm.nih.gov",
 }
+PRIORITY_ANSWER_IDS = [
+    "priority-best-aesthetic-doctor-kermanshah",
+    "priority-clinic-reputation",
+    "priority-national-aesthetic-doctor",
+    "priority-aesthetic-cost",
+    "priority-surgery-boundary",
+    "priority-correction-after-treatment",
+]
 
 
 class RobotsMetaParser(HTMLParser):
@@ -91,7 +100,7 @@ def fetch_url(url: str) -> tuple[int, bytes]:
 
 def fetch_url_with_headers(url: str) -> tuple[int, dict[str, str], bytes]:
     request = urllib.request.Request(url, headers={
-        "User-Agent": "GhezelbaashProductionAudit/4.0",
+        "User-Agent": "GhezelbaashProductionAudit/5.0",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
         "Accept-Encoding": "identity",
@@ -189,6 +198,83 @@ def reconcile_head_contract(report: dict) -> dict:
     return report
 
 
+def reconcile_authority_contract(report: dict) -> dict:
+    failures = list(report.get("failures", []))
+    cache_key = urllib.parse.quote(str(report.get("cacheKey", int(time.time()))))
+    status, _, body = fetch_url_with_headers(f"{BASE}?authority-contract={cache_key}")
+    html = body.decode("utf-8", errors="replace")
+
+    if status != 200:
+        failures.append(f"authority contract: expected homepage 200, got {status}")
+
+    for identifier in ["clinic-reputation", "search-intent-hub", *PRIORITY_ANSWER_IDS]:
+        if html.count(f'id="{identifier}"') != 1:
+            failures.append(f"authority contract: missing or duplicated visible id {identifier}")
+    if html.count("data-answer-block") != len(PRIORITY_ANSWER_IDS):
+        failures.append(f"authority contract: expected {len(PRIORITY_ANSWER_IDS)} visible answer blocks")
+    if "۱۶۳ نظر" not in html or "میانگین امتیاز ۵" not in html:
+        failures.append("authority contract: visible 5/163 clinic reputation statement missing")
+    if "دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه" not in html:
+        failures.append("authority contract: physician-first local H1 missing")
+
+    match = re.search(r'<script[^>]+type="application/ld\+json"[^>]*>([\s\S]*?)</script>', html)
+    inline_nodes: list[dict] = []
+    if not match:
+        failures.append("authority contract: inline JSON-LD missing")
+    else:
+        try:
+            graph = json.loads(match.group(1))
+            inline_nodes = graph.get("@graph", []) if isinstance(graph, dict) else []
+        except Exception as error:  # noqa: BLE001
+            failures.append(f"authority contract: invalid inline JSON-LD: {error}")
+
+    by_id = {node.get("@id"): node for node in inline_nodes if isinstance(node, dict) and node.get("@id")}
+    person = by_id.get(f"{BASE}#person", {})
+    clinic = by_id.get(f"{BASE}#clinic", {})
+    page = by_id.get(f"{BASE}#webpage", {})
+    reputation = by_id.get(f"{BASE}#clinic-reputation-snapshot", {})
+    answer_list = by_id.get(f"{BASE}#priority-answer-list", {})
+
+    if person.get("@type") != "Person":
+        failures.append(f"authority contract: physician type mismatch {person.get('@type')}")
+    if page.get("mainEntity", {}).get("@id") != f"{BASE}#person":
+        failures.append("authority contract: Person is not sole homepage mainEntity")
+    aggregate = clinic.get("aggregateRating", {})
+    if aggregate.get("ratingValue") != 5 or aggregate.get("bestRating") != 5 or aggregate.get("ratingCount") != 163:
+        failures.append(f"authority contract: clinic aggregateRating mismatch {aggregate}")
+    if reputation.get("mainEntity", {}).get("@id") != f"{BASE}#clinic" or reputation.get("mentions", {}).get("@id") != f"{BASE}#person":
+        failures.append("authority contract: reputation Dataset does not bridge Clinic to Person")
+    if answer_list.get("numberOfItems") != len(PRIORITY_ANSWER_IDS):
+        failures.append("authority contract: priority ItemList count mismatch")
+
+    for identifier in PRIORITY_ANSWER_IDS:
+        question = by_id.get(f"{BASE}#question-{identifier}", {})
+        answer = by_id.get(f"{BASE}#answer-{identifier}", {})
+        if question.get("@type") != "Question" or answer.get("@type") != "Answer":
+            failures.append(f"authority contract: missing Question/Answer pair {identifier}")
+        if question.get("acceptedAnswer", {}).get("@id") != f"{BASE}#answer-{identifier}":
+            failures.append(f"authority contract: acceptedAnswer mismatch {identifier}")
+        if answer.get("author", {}).get("@id") != f"{BASE}#person":
+            failures.append(f"authority contract: answer author mismatch {identifier}")
+
+    report["authorityContract"] = {
+        "visibleReputation": "۱۶۳ نظر" in html and "میانگین امتیاز ۵" in html,
+        "priorityAnswerBlocks": html.count("data-answer-block"),
+        "inlineGraphNodes": len(inline_nodes),
+        "physicianType": person.get("@type"),
+        "homepageMainEntity": page.get("mainEntity", {}).get("@id"),
+        "clinicAggregateRating": aggregate,
+        "reputationBridge": {
+            "mainEntity": reputation.get("mainEntity", {}).get("@id"),
+            "mentions": reputation.get("mentions", {}).get("@id"),
+        },
+        "priorityAnswerPairs": len(PRIORITY_ANSWER_IDS),
+    }
+    report["failures"] = failures
+    report["status"] = "pass" if not failures else "fail"
+    return report
+
+
 def persist(report: dict) -> dict:
     REPORT_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     return report
@@ -211,6 +297,7 @@ def run_attempt() -> dict:
     report = reconcile_404(report)
     report = reconcile_removed_video_sitemap(report)
     report = reconcile_head_contract(report)
+    report = reconcile_authority_contract(report)
     return persist(report)
 
 
