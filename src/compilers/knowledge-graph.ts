@@ -263,9 +263,11 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
       ...clinicRequiredSameAs,
     ]),
     employee: ref(`${site.url}#person`),
-    subjectOf: uniqueStrings([]).length
-      ? p.clinicKnowledgeNode?.subjectOf
-      : [...asArray(p.clinicKnowledgeNode?.subjectOf), ref(`${site.url}#clinic-reputation-snapshot`), ref(priorityAnswerListId)],
+    subjectOf: [
+      ...asArray(p.clinicKnowledgeNode?.subjectOf),
+      ref(`${site.url}#clinic-reputation-snapshot`),
+      ref(priorityAnswerListId),
+    ],
   };
   const offerCatalog: Node = { ...p.offerCatalogNode, url: `${site.url}#services` };
   const authorityNetwork: Node = { ...p.authorityNetworkNode };
