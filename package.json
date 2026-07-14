@@ -11,7 +11,7 @@
     "build:astro": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "validate:release": "node scripts/validate-release.mjs && node scripts/validate-visible-contract.mjs && node scripts/validate-schema-semantics.mjs && node scripts/validate-nine-stage-audit.mjs"
+    "validate:release": "node scripts/validate-release.mjs && node scripts/validate-visible-contract.mjs && node scripts/validate-schema-semantics.mjs && node scripts/validate-nine-stage-audit.mjs && node scripts/validate-passage-depth.mjs"
   },
   "dependencies": {
     "@lucide/astro": "^1.23.0",
