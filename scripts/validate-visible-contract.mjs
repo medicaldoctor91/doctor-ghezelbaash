@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const homepage = readFileSync(join(process.cwd(), 'dist', 'index.html'), 'utf8');
+const headers = readFileSync(join(process.cwd(), 'dist', '_headers'), 'utf8');
 const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
 
@@ -68,38 +69,38 @@ for (const phrase of [
   check(!visible.includes(phrase), `forbidden artificial phrase leaked into visible copy: ${phrase}`);
 }
 
-const requiredHeadMe = [
-  'https://orcid.org/0009-0001-9346-8475',
-  'https://www.instagram.com/doctor.ghezelbaash/',
-  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
-  'https://www.facebook.com/Ghezelbaash/',
-  'https://www.pinterest.com/qezelbaash/',
-];
-for (const url of requiredHeadMe) {
-  check(homepage.includes(`<link rel="me" href="${url}"`), `required head identity link missing: ${url}`);
-}
-check(!homepage.includes('<link rel="me" href="https://huggingface.co/Ghezelbaash"'), 'Hugging Face profile must not remain a rel=me head link');
-check(!homepage.includes('<link rel="me" href="https://www.wikidata.org/entity/'), 'Wikidata entities must use rel=describedby rather than rel=me');
-check(!homepage.includes('<link rel="me" href="https://huggingface.co/datasets/'), 'Hugging Face Dataset must not be a rel=me identity link');
+const describedByMatches = [...homepage.matchAll(/<link\b[^>]*\brel="describedby"[^>]*>/giu)];
+check(describedByMatches.length === 1, `head must expose exactly one rel=describedby link; found ${describedByMatches.length}`);
+check(
+  describedByMatches[0]?.[0].includes('href="https://www.ghezelbaash.ir/knowledge-graph.jsonld"')
+    && describedByMatches[0]?.[0].includes('type="application/ld+json"'),
+  'the sole head describedby link must be the canonical knowledge graph',
+);
 
-const requiredDescribedBy = [
-  'https://www.ghezelbaash.ir/knowledge-graph.jsonld',
-  'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data',
-  'https://www.wikidata.org/entity/Q140287622',
-  'https://www.wikidata.org/entity/Q140288589',
-  'https://www.wikidata.org/entity/Q140304972',
-];
-for (const url of requiredDescribedBy) {
-  check(homepage.includes(`<link rel="describedby" href="${url}"`), `required rel=describedby head link missing: ${url}`);
+check((homepage.match(/<link\b[^>]*\brel="me"[^>]*>/giu) ?? []).length === 0, 'rel=me links are forbidden in the canonical head');
+check(!/<link\b[^>]*\brel="alternate"[^>]*\btype="text\/plain"/iu.test(homepage), 'AI text endpoints must not be advertised as alternate page representations');
+check(!/<link\b[^>]*\bhreflang=/iu.test(homepage), 'single-language homepage must not emit hreflang alternates');
+check(!/<meta\b[^>]*\bname="googlebot"/iu.test(homepage), 'duplicate googlebot robots directive is forbidden');
+check(!/<meta\b[^>]*\bname="(?:geo\.[^"]+|ICBM)"/iu.test(homepage), 'legacy geo and ICBM metadata are forbidden');
+check(
+  homepage.includes('<link rel="author" href="https://www.ghezelbaash.ir/#person"'),
+  'canonical Person author link is missing',
+);
+check(
+  homepage.includes('<meta property="og:site_name" content="وب‌سایت رسمی دکتر سعید قزلباش"'),
+  'Open Graph site name must remain physician-first',
+);
+
+const homepageHeaderBlock = headers.match(/\n\/\n([\s\S]*?)(?=\n\/404\.html\n)/u)?.[1] ?? '';
+const httpLinkLines = [...homepageHeaderBlock.matchAll(/^\s*Link:\s*(.+)$/gmu)].map((match) => match[1].trim());
+check(httpLinkLines.length === 1, `homepage must emit exactly one HTTP Link header; found ${httpLinkLines.length}`);
+check(
+  httpLinkLines[0] === '</knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json"',
+  `homepage HTTP Link contract is not minimal: ${httpLinkLines[0] ?? 'missing'}`,
+);
+for (const forbidden of ['llms.txt', '.well-known/ai.txt', 'huggingface.co', 'wikidata.org', 'orcid.org', 'membersearch.irimc.org', 'ncbi.nlm.nih.gov']) {
+  check(!homepageHeaderBlock.includes(forbidden), `forbidden external or experimental resource leaked into homepage HTTP Link header: ${forbidden}`);
 }
-check(
-  homepage.includes('<link rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/llms.txt"'),
-  'absolute llms.txt alternate link is missing from head',
-);
-check(
-  homepage.includes('<link rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/.well-known/ai.txt"'),
-  'absolute ai.txt alternate link is missing from head',
-);
 
 for (const label of ['Hugging Face', 'LinkedIn', 'Facebook', 'Pinterest']) {
   check(visible.includes(label), `visible physician profile link missing: ${label}`);
@@ -127,19 +128,19 @@ console.log(JSON.stringify({
   bestDoctorWrapper: 'closed',
   bestDoctorQueries: bestDoctorIds.length,
   artificialVisiblePhrases: 0,
-  requiredIdentityHeadLinks: requiredHeadMe.length,
-  instagramHeadRelMe: true,
-  huggingFaceProfileHeadRelMe: false,
-  machineResourceHeadLinks: {
-    knowledgeGraph: true,
-    llms: true,
-    aiDeclaration: true,
-    huggingFaceDataset: true,
+  headContract: {
+    relMeLinks: 0,
+    describedByLinks: 1,
+    describedByTarget: 'knowledge-graph.jsonld',
+    textAlternates: 0,
+    hreflangLinks: 0,
+    googlebotMeta: 0,
+    legacyGeoMeta: 0,
+    physicianFirstOpenGraph: true,
   },
-  wikidataHeadLinks: {
-    person: true,
-    clinic: true,
-    dataset: true,
+  httpLinkContract: {
+    links: 1,
+    target: 'knowledge-graph.jsonld',
   },
   visibleProfessionalProfiles: 4,
   watchPageLinks: 0,
