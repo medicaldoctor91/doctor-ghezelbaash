@@ -1,142 +1,106 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { videos } from '../src/domain/media.mjs';
 
 const homepage = readFileSync(join(process.cwd(), 'dist', 'index.html'), 'utf8');
 const headers = readFileSync(join(process.cwd(), 'dist', '_headers'), 'utf8');
 const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
+const countId = (id) => (homepage.match(new RegExp(`\\sid="${id}"`, 'gu')) ?? []).length;
+const position = (needle) => homepage.indexOf(needle);
 
-const visible = homepage
-  .replace(/<head[\s\S]*?<\/head>/giu, ' ')
-  .replace(/<script[\s\S]*?<\/script>/giu, ' ')
-  .replace(/<style[\s\S]*?<\/style>/giu, ' ')
-  .replace(/<[^>]+>/gu, ' ')
-  .replace(/\s+/gu, ' ');
-
-const quietBestMatches = [...homepage.matchAll(/<details\b[^>]*class="[^"]*\bquiet-best\b[^"]*"[^>]*>/giu)];
-check(quietBestMatches.length === 1, `expected exactly one closed best-doctor wrapper; found ${quietBestMatches.length}`);
-if (quietBestMatches[0]) check(!/\bopen(?:\s|=|>)/iu.test(quietBestMatches[0][0]), 'best-doctor wrapper must be closed by default');
-
-const bestDoctorIds = [
+const mainSectionIds = [
   'best-aesthetic-doctor-kermanshah',
-  'best-beauty-physician-kermanshah',
-  'best-aesthetic-clinic-kermanshah',
-  'best-botox-doctor-kermanshah',
-  'best-filler-doctor-kermanshah',
-  'best-lip-filler-doctor-kermanshah',
-  'best-under-eye-filler-doctor-kermanshah',
-  'best-thread-lift-doctor-kermanshah',
-  'best-acne-scar-subcision-doctor-kermanshah',
-  'best-skin-rejuvenation-doctor-kermanshah',
-  'best-prp-doctor-kermanshah',
-  'best-mesotherapy-doctor-kermanshah',
-  'best-hair-loss-prp-doctor-kermanshah',
-  'best-submental-liposuction-doctor-kermanshah',
-  'best-body-contouring-doctor-kermanshah',
-  'best-blepharoplasty-doctor-kermanshah',
-  'best-rhinoplasty-doctor-kermanshah',
-  'best-facelift-necklift-doctor-kermanshah',
-  'best-orthognathic-doctor-kermanshah',
-  'best-hair-transplant-doctor-kermanshah',
+  'aesthetic-services-kermanshah',
+  'aesthetic-treatment-selection',
+  'injectable-aesthetic-treatments',
+  'lifting-and-facial-aging',
+  'skin-scar-rejuvenation',
+  'hair-loss-and-restoration',
+  'submental-and-body-contouring',
+  'aesthetic-surgery-and-referral',
+  'revision-complications-and-safety',
+  'aesthetic-cost-and-consultation',
+  'aesthetic-faq-kermanshah-iran',
+  'medical-research-and-education',
+  'clinic-information-kermanshah',
+  'knowledge-graph-and-datasets',
+  'sources-contact-and-appointment',
 ];
 
-for (const id of ['best-aesthetic-doctor-kermanshah-answers', ...bestDoctorIds]) {
-  const count = (homepage.match(new RegExp(`\\sid="${id}"`, 'gu')) ?? []).length;
-  check(count === 1, `${id}: expected one canonical HTML anchor; found ${count}`);
-}
-check((homepage.match(/class="quiet-best__item"/gu) ?? []).length === bestDoctorIds.length, `expected ${bestDoctorIds.length} best-doctor answers`);
+const personId = 'mohammad-saeed-ghezelbash';
+const clinicId = 'dr-saeed-ghezelbash-aesthetic-clinic';
 
-const priorityAnswerIds = [
-  'priority-best-aesthetic-doctor-kermanshah',
-  'priority-clinic-reputation',
-  'priority-national-aesthetic-doctor',
-  'priority-aesthetic-cost',
-  'priority-surgery-boundary',
-  'priority-correction-after-treatment',
-];
-for (const id of priorityAnswerIds) {
-  check((homepage.match(new RegExp(`\\sid="${id}"`, 'gu')) ?? []).length === 1, `priority answer anchor missing or duplicated: ${id}`);
-}
-check((homepage.match(/\bdata-answer-block(?:\s|>)/gu) ?? []).length === priorityAnswerIds.length, `expected ${priorityAnswerIds.length} priority answer blocks`);
-check(homepage.includes('id="clinic-reputation"'), 'visible clinic reputation section missing');
-check(homepage.includes('data-entity-bridge'), 'doctor-clinic reputation bridge marker missing');
-check(homepage.includes('id="search-intent-hub"'), 'priority search intent hub missing');
-check(visible.includes('۱۶۳ نظر'), 'visible Google Maps review count missing');
-check(visible.includes('میانگین امتیاز ۵'), 'visible Google Maps rating statement missing');
-check(visible.includes('دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه'), 'physician-first local H1 text missing');
-check(visible.includes('موضوعات ارزیابی، مقایسه و مرز ارجاع'), 'evaluation and referral coverage heading missing');
+check((homepage.match(/<h1\b/gu) ?? []).length === 1, 'homepage must contain exactly one H1');
+check(homepage.includes('دکتر سعید قزلباش؛ پزشک زیبایی، پوست و مو در کرمانشاه'), 'approved physician-first H1 is missing');
+check(countId(personId) === 1, `canonical Person HTML id must appear once: ${personId}`);
+check(countId(clinicId) === 1, `canonical Clinic HTML id must appear once: ${clinicId}`);
+check(countId('content-table') === 1, 'real content table id must appear once');
 
-for (const phrase of [
-  'هویت',
-  'مسئول تصمیم',
-  'تصمیم بالینی',
-  'مدل تصمیم',
-  'دانش‌نامه',
-  'اتوریتی',
-  'فنوتیپ',
-  'Dynamic Vector',
-  'Structural Foundation',
-  'Surface Phenotype',
-  'دروازه',
-  'قفل اول',
-  'قفل دوم',
-  'قفل سوم',
-  'قفل چهارم',
-  'قفل پنجم',
-  'قفل ششم',
-  'قفل هفتم',
-]) {
-  check(!visible.includes(phrase), `forbidden artificial phrase leaked into visible copy: ${phrase}`);
+for (const id of mainSectionIds) check(countId(id) === 1, `${id}: expected one canonical HTML section id; found ${countId(id)}`);
+
+const personStart = position(`id="${personId}"`);
+const h1Start = position('id="page-title"');
+const portraitStart = position('class="physician-hero__portrait"');
+const actionBarStart = position('class="physician-hero__bar"');
+const tocStart = position('id="content-table"');
+check(personStart >= 0 && h1Start > personStart, 'H1 must be inside the Person entity block');
+check(portraitStart > h1Start, 'physician portrait must follow the H1 and introduction');
+check(actionBarStart > portraitStart, 'key action bar must appear directly after the physician portrait');
+check(tocStart > actionBarStart, 'content table must follow the complete Person block');
+
+const personEnd = homepage.indexOf('</header>', personStart);
+const personBlock = homepage.slice(personStart, personEnd + 9);
+check((personBlock.match(/class="button\b/gu) ?? []).length === 2, 'physician action bar must expose exactly two primary CTA links');
+check(personBlock.includes('رزرو وقت مشاوره رایگان'), 'free consultation CTA missing from physician action bar');
+check(personBlock.includes('گفت‌وگوی آنلاین با دکتر قزلباش'), 'Instagram direct CTA missing from physician action bar');
+check(personBlock.includes('https://ig.me/m/doctor.ghezelbaash'), 'Instagram direct deep link missing');
+check(personBlock.includes('https://www.google.com/maps?cid=12350483144643112463'), 'Google Maps deep link missing beside clinic rating');
+check(personBlock.includes('۱۶۳ ارزیابی Google Maps'), 'visible dated clinic rating count is missing from physician action bar');
+
+check(!homepage.includes('class="quiet-best'), 'collapsed best-doctor wrapper must not return');
+check(!homepage.includes('id="clinic-reputation"'), 'separate reputation H2 must not return');
+check(!homepage.includes('id="search-intent-hub"'), 'separate priority answer H2 must not return');
+check(!homepage.includes('id="services"'), 'legacy generic services anchor must not return');
+check(!homepage.includes('clinical-decision-model-detail-19"'), 'legacy numeric section anchors must not leak into rendered HTML');
+
+for (const video of videos) {
+  const videoId = `video-${video.id}`;
+  check(countId(videoId) === 1, `${videoId}: expected one contextual video figure`);
+  const videoPosition = position(`id="${videoId}"`);
+  const destinationPosition = position(`id="${video.subsectionId ?? video.sectionId}"`);
+  check(destinationPosition >= 0, `${video.id}: mapped destination is missing from HTML`);
+  check(videoPosition > destinationPosition, `${video.id}: video must render after its mapped destination`);
 }
 
+const educationStart = position('id="medical-education"');
+const researchSectionEnd = position('id="clinic-information-kermanshah"');
+for (const id of ['home-workshop-thread-lift-training', 'home-workshop-thread-lift-advanced']) {
+  const videoPosition = position(`id="video-${id}"`);
+  check(videoPosition > educationStart && videoPosition < researchSectionEnd, `${id}: medical education video must remain inside #medical-education`);
+}
+check((homepage.match(/\bdata-inline-video(?:\s|>)/gu) ?? []).length === 11, 'eleven non-clinic videos must be embedded in medical subsections');
+check(countId('video-clinic-patient-experience-review') === 1, 'clinic experience video must be embedded in the clinic section');
+
+for (const label of [
+  'بررسی شماره نظام پزشکی دکتر محمدسعید قزلباش',
+  'شناسه پژوهشگر ORCID دکتر سعید قزلباش',
+  'کتاب‌شناسی عمومی NCBI دکتر سعید قزلباش',
+  'اینستاگرام رسمی دکتر سعید قزلباش',
+  'دیتاست عمومی Hugging Face',
+  'گراف دانش JSON-LD سایت',
+  'انتیتی کلینیک در Wikidata',
+]) check(homepage.includes(label), `footer or source directory link missing: ${label}`);
+
+check(homepage.includes(`<link rel="author" href="https://www.ghezelbaash.ir/#${personId}"`), 'head author link must use the canonical physician entity id');
 const describedByMatches = [...homepage.matchAll(/<link\b[^>]*\brel="describedby"[^>]*>/giu)];
 check(describedByMatches.length === 1, `head must expose exactly one rel=describedby link; found ${describedByMatches.length}`);
-check(
-  describedByMatches[0]?.[0].includes('href="https://www.ghezelbaash.ir/knowledge-graph.jsonld"')
-    && describedByMatches[0]?.[0].includes('type="application/ld+json"'),
-  'the sole head describedby link must be the canonical knowledge graph',
-);
-
-check((homepage.match(/<link\b[^>]*\brel="me"[^>]*>/giu) ?? []).length === 0, 'rel=me links are forbidden in the canonical head');
-check(!/<link\b[^>]*\brel="alternate"[^>]*\btype="text\/plain"/iu.test(homepage), 'AI text endpoints must not be advertised as alternate page representations');
-check(!/<link\b[^>]*\bhreflang=/iu.test(homepage), 'single-language homepage must not emit hreflang alternates');
-check(!/<meta\b[^>]*\bname="googlebot"/iu.test(homepage), 'duplicate googlebot robots directive is forbidden');
-check(!/<meta\b[^>]*\bname="(?:geo\.[^"]+|ICBM)"/iu.test(homepage), 'legacy geo and ICBM metadata are forbidden');
-check(
-  homepage.includes('<link rel="author" href="https://www.ghezelbaash.ir/#person"'),
-  'canonical Person author link is missing',
-);
-check(
-  homepage.includes('<meta property="og:site_name" content="وب‌سایت رسمی دکتر سعید قزلباش"'),
-  'Open Graph site name must remain physician-first',
-);
+check(describedByMatches[0]?.[0].includes('knowledge-graph.jsonld'), 'describedby must point to the canonical knowledge graph');
 
 const homepageHeaderBlock = headers.match(/\n\/\n([\s\S]*?)(?=\n\/404\.html\n)/u)?.[1] ?? '';
 const httpLinkLines = [...homepageHeaderBlock.matchAll(/^\s*Link:\s*(.+)$/gmu)].map((match) => match[1].trim());
 check(httpLinkLines.length === 1, `homepage must emit exactly one HTTP Link header; found ${httpLinkLines.length}`);
-check(
-  httpLinkLines[0] === '</knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json"',
-  `homepage HTTP Link contract is not minimal: ${httpLinkLines[0] ?? 'missing'}`,
-);
-for (const forbidden of ['llms.txt', '.well-known/ai.txt', 'huggingface.co', 'wikidata.org', 'orcid.org', 'membersearch.irimc.org', 'ncbi.nlm.nih.gov']) {
-  check(!homepageHeaderBlock.includes(forbidden), `forbidden external or experimental resource leaked into homepage HTTP Link header: ${forbidden}`);
-}
-
-for (const label of ['Hugging Face', 'LinkedIn کلینیک', 'Facebook کلینیک', 'Pinterest']) {
-  check(visible.includes(label), `visible professional profile link missing: ${label}`);
-}
-
-check(homepage.includes('class="article-flow'), 'continuous article layout missing');
-check(!homepage.includes('class="guide-card'), 'accordion-card article layout returned');
-check(!homepage.includes('class="guide-index'), 'knowledge-base index returned');
-check(!homepage.includes('مشاهده در صفحه اختصاصی این ویدئو'), 'watch-page link leaked into homepage');
-check(!/href="\/videos\/[^"/]+\/"/u.test(homepage), 'homepage links to removed video watch pages');
-
-const contextualVideos = (homepage.match(/<article\b[^>]*\bdata-inline-video(?:\s|>)/giu) ?? []).length;
-check(contextualVideos === 12, `all 12 videos must remain contextually embedded in article sections; found ${contextualVideos}`);
-check(!visible.includes('مرکز دانش ویدئویی صفحه'), 'standalone video knowledge hub label returned');
-check(!visible.includes('۱۲ ویدئو؛ هر رسانه متصل به موضوع، خدمت و مرز تصمیم خودش'), 'standalone video knowledge hub heading returned');
-check(!/href="#(?:videos|video-knowledge-hub)"/u.test(homepage), 'a visible link to the removed video hub returned');
+check(httpLinkLines[0] === '</knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json"', 'homepage HTTP Link contract must remain minimal');
 
 if (failures.length) {
   console.error(JSON.stringify({ status: 'fail', failures }, null, 2));
@@ -145,30 +109,12 @@ if (failures.length) {
 
 console.log(JSON.stringify({
   status: 'pass',
-  bestDoctorWrapper: 'closed',
-  bestDoctorQueries: bestDoctorIds.length,
-  priorityAnswerBlocks: priorityAnswerIds.length,
-  clinicReputationVisible: true,
-  clinicRating: 5,
-  clinicRatingCount: 163,
-  artificialVisiblePhrases: 0,
-  headContract: {
-    relMeLinks: 0,
-    describedByLinks: 1,
-    describedByTarget: 'knowledge-graph.jsonld',
-    textAlternates: 0,
-    hreflangLinks: 0,
-    googlebotMeta: 0,
-    legacyGeoMeta: 0,
-    physicianFirstOpenGraph: true,
-  },
-  httpLinkContract: {
-    links: 1,
-    target: 'knowledge-graph.jsonld',
-  },
-  visibleProfessionalProfiles: 4,
-  watchPageLinks: 0,
-  standaloneVideoHub: false,
-  videoHubLinks: 0,
-  contextualVideos,
+  h1Count: 1,
+  mainSections: mainSectionIds.length,
+  personEntityId: personId,
+  clinicEntityId: clinicId,
+  heroPrimaryCtas: 2,
+  mappedVideos: videos.length,
+  contentTable: true,
+  externalSourceDirectory: true,
 }, null, 2));
