@@ -1,21 +1,21 @@
 ---
 import { ChevronDown, ListTree } from '@lucide/astro';
-import { homepageSections, homepageTocGroups } from '../../domain/homepage-sections';
+import { homepageToc, homepageTocSections } from '../../domain/homepage-sections';
 ---
 
-<nav id="content-table" class="content-table shell" aria-labelledby="content-table-title">
+<nav id={homepageToc.id} class="content-table shell" aria-labelledby={homepageToc.headingId}>
   <div class="content-table__heading">
     <span class="content-table__icon"><ListTree size={22} aria-hidden="true" /></span>
     <div>
       <p class="eyebrow">نقشه مطالعه این صفحه</p>
-      <h2 id="content-table-title">فهرست کامل راهنمای پزشکی زیبایی</h2>
+      <h2 id={homepageToc.headingId}>{homepageToc.title}</h2>
       <p>هر لینک مستقیماً به یک بخش واقعی و یکتا در همین Homepage می‌رسد.</p>
     </div>
   </div>
 
   <div class="content-table__groups">
-    {homepageTocGroups.map((group, groupIndex) => {
-      const sections = homepageSections.filter((section) => section.tocGroup === group.id && section.includeInToc);
+    {homepageToc.groups.map((group, groupIndex) => {
+      const sections = homepageTocSections.filter((section) => section.tocGroup === group.id);
       return (
         <details class="content-table__group" open={groupIndex === 0}>
           <summary>

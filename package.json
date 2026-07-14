@@ -7,10 +7,11 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run validate:release",
+    "build": "npm run validate:stage2 && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run validate:release",
     "build:astro": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "validate:stage2": "node scripts/validate-stage-2-architecture.mjs",
     "validate:release": "node scripts/validate-release.mjs && node scripts/validate-visible-contract.mjs && node scripts/validate-schema-semantics.mjs && node scripts/validate-nine-stage-audit.mjs && node scripts/validate-passage-depth.mjs"
   },
   "dependencies": {

@@ -1,5 +1,9 @@
 ---
 import { BadgeCheck, Building2, CircleOff, ScanFace, ShieldCheck, Sparkles, Syringe, UserRoundSearch } from '@lucide/astro';
+import { homepageSectionById } from '../../domain/homepage-sections';
+
+const bestDoctorSection = homepageSectionById.get('best-aesthetic-doctor-kermanshah');
+if (!bestDoctorSection) throw new Error('Canonical best-doctor section is missing from the Homepage registry.');
 
 const criteria = [
   {
@@ -104,11 +108,11 @@ const consultationChecks = [
 ];
 ---
 
-<section id="best-aesthetic-doctor-kermanshah" class="best-doctor section shell" aria-labelledby="best-aesthetic-doctor-kermanshah-title">
+<section id={bestDoctorSection.id} class="best-doctor section shell" aria-labelledby={`${bestDoctorSection.id}-title`}>
   <div class="section-heading section-heading--split">
     <div>
       <p class="eyebrow">Intent لوکال انتخاب پزشک</p>
-      <h2 id="best-aesthetic-doctor-kermanshah-title">بهترین دکتر زیبایی در کرمانشاه را چگونه انتخاب کنیم؟</h2>
+      <h2 id={`${bestDoctorSection.id}-title`}>{bestDoctorSection.title}</h2>
     </div>
     <p>«بهترین» در این بخش یک ادعای رتبه‌ای نیست؛ مجموعه‌ای از معیارهای قابل بررسی برای انتخاب پزشک و کلینیک است.</p>
   </div>
