@@ -157,9 +157,9 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
               <span aria-hidden="true"> · </span>
               <a href={site.huggingFaceProfile} target="_blank" rel="me noopener noreferrer external">Hugging Face</a>
               <span aria-hidden="true"> · </span>
-              <a href={site.linkedinProfile} target="_blank" rel="me noopener noreferrer external">LinkedIn</a>
+              <a href={site.linkedinProfile} target="_blank" rel="noopener noreferrer external">LinkedIn کلینیک</a>
               <span aria-hidden="true"> · </span>
-              <a href={site.facebookProfile} target="_blank" rel="me noopener noreferrer external">Facebook</a>
+              <a href={site.facebookProfile} target="_blank" rel="noopener noreferrer external">Facebook کلینیک</a>
               <span aria-hidden="true"> · </span>
               <a href={site.pinterestProfile} target="_blank" rel="me noopener noreferrer external">Pinterest</a>
             </p>
@@ -191,43 +191,21 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                   <div class="article-video__body">
                     <div class="article-video__meta">
                       <span><CirclePlay size={16} aria-hidden="true" /> ویدئو</span>
-                      <span><Clock3 size={16} aria-hidden="true" /> حدود {video.durationSeconds} ثانیه</span>
+                      <span><Clock3 size={16} aria-hidden="true" /> <time datetime={video.duration}>{video.details?.durationLabel ?? video.duration}</time></span>
                     </div>
                     <h3 id={`video-${video.id}-title`}>{video.title}</h3>
                     <p id={`video-${video.id}-description`}>{video.description}</p>
 
                     {video.chapters.length > 0 && (
-                      <div class="video-chapters" role="group" aria-label={`بخش‌های ${video.title}`}>
-                        <strong><ListVideo size={17} aria-hidden="true" /> بخش‌های ویدئو</strong>
-                        <ol>
-                          {video.chapters.map((chapter: any, chapterIndex: number) => (
-                            <li id={`video-${video.id}-clip-${chapterIndex + 1}`}>
-                              <button type="button" data-video-id={`video-${video.id}`} data-start={chapter.startOffset}>
-                                <span>{chapter.name}</span>
-                                <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time>
-                              </button>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    )}
-
-                    {video.details && (
-                      <details class="video-context">
-                        <summary>توضیحات بیشتر</summary>
-                        <p>{normalizeText(video.details.summary)}</p>
-                        <ul>
-                          {video.details.takeaways.map((item: string) => <li>{normalizeText(item)}</li>)}
-                        </ul>
-                        <p class="video-boundary"><strong>نکتهٔ مهم:</strong> {normalizeText(video.details.boundary)}</p>
-                      </details>
-                    )}
-
-                    {video.details?.relatedPath && (
-                      <a class="video-card__related" href={video.details.relatedPath}>
-                        <BookOpen size={16} aria-hidden="true" />
-                        <span>{normalizeText(video.details.relatedLabel)}</span>
-                      </a>
+                      <nav class="article-video__chapters" aria-label={`فصل‌های ${video.title}`}>
+                        <span><ListVideo size={16} aria-hidden="true" /> فصل‌ها:</span>
+                        {video.chapters.map((chapter: any) => (
+                          <a href={`#video-${video.id}`} data-video-id={video.id} data-start={chapter.startOffset}>
+                            <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.start)}</time>
+                            <span>{chapter.name}</span>
+                          </a>
+                        ))}
+                      </nav>
                     )}
                   </div>
                 </article>
@@ -240,36 +218,18 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
       </div>
     );
   })}
-
-  <script is:inline>
-    const openTarget = () => {
-      let id = '';
-      try { id = decodeURIComponent(location.hash.slice(1)); } catch { return; }
-      if (!id) return;
-      const target = document.getElementById(id);
-      const details = target?.closest?.('details');
-      if (details) details.open = true;
-      target?.scrollIntoView({ block: 'start' });
-    };
-    openTarget();
-    addEventListener('hashchange', openTarget, { passive: true });
-
-    document.addEventListener('click', (event) => {
-      const button = event.target.closest?.('.video-chapters button');
-      if (!button) return;
-      const article = document.getElementById(button.dataset.videoId || '');
-      const video = article?.querySelector('video');
-      if (!video) return;
-      video.currentTime = Number(button.dataset.start || 0);
-      video.play().catch(() => {});
-    });
-
-    document.addEventListener('play', (event) => {
-      const current = event.target;
-      if (!(current instanceof HTMLVideoElement) || !current.closest('[data-inline-video]')) return;
-      document.querySelectorAll('[data-inline-video] video').forEach((video) => {
-        if (video !== current) video.pause();
-      });
-    }, true);
-  </script>
 </article>
+
+<script is:inline>
+  document.querySelectorAll('[data-video-id][data-start]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const target = event.currentTarget;
+      const video = document.querySelector(`#video-${target.dataset.videoId} video`);
+      if (!video) return;
+      event.preventDefault();
+      video.currentTime = Number(target.dataset.start || 0);
+      video.play().catch(() => undefined);
+      video.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+</script>
