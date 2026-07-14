@@ -28,3 +28,5 @@ The homepage HTTP `Link` header exposes only `/knowledge-graph.jsonld` as `rel=d
 ## Release gates
 
 Pull requests compile the production-audit Python scripts and run the full Astro build. Release validators enforce the two-page static architecture, fragment integrity, exactly one H1, 12 contextual videos, 11+ contextual images, Person/Clinic relationships, 5/163 reputation consistency, six Question/Answer pairs, no video rich-result claims, fewer than 60 inline graph nodes, fewer than 3,500 DOM elements, homepage raw size below 700KB, gzip below 145KB and Brotli below 115KB.
+
+Deployment retrigger source commit: `9b47a5ecafaa72bd898f01068e8d69816d474843`.
