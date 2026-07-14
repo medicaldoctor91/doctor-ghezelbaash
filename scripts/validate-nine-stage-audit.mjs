@@ -88,7 +88,8 @@ const headingLevels = [...homepage.matchAll(/<h([1-4])\b/giu)].map((match) => Nu
 for (let index = 1; index < headingLevels.length; index += 1) {
   check(headingLevels[index] <= headingLevels[index - 1] + 1, `heading hierarchy jumps from H${headingLevels[index - 1]} to H${headingLevels[index]}`);
 }
-check(new RegExp(`<figure\\b[^>]*id="video-clinic-patient-experience-review"[\\s\\S]*?<h4\\b`, 'u').test(homepage), 'clinic contextual video title must be H4');
+check(new RegExp(`<figure\\b[^>]*id="video-clinic-patient-experience-review"[\\s\\S]*?<figcaption\\b[\\s\\S]*?id="video-clinic-patient-experience-review-title"`, 'u').test(homepage), 'clinic contextual video title must remain inside figcaption');
+check(!new RegExp(`<figure\\b[^>]*id="video-clinic-patient-experience-review"[\\s\\S]*?<h3\\b`, 'u').test(homepage), 'clinic contextual video title must not be an H3');
 
 const graphs = [];
 const inlineMatches = [...homepage.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gu)];
