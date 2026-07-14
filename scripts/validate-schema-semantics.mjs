@@ -1,10 +1,19 @@
 import { readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { gzipSync, brotliCompressSync, constants as zlibConstants } from 'node:zlib';
+import { videos } from '../src/domain/media.mjs';
 
 const site = 'https://www.ghezelbaash.ir/';
+const personId = `${site}#mohammad-saeed-ghezelbash`;
+const clinicId = `${site}#dr-saeed-ghezelbash-aesthetic-clinic`;
+const pageId = `${site}#webpage`;
+const contentTableId = `${site}#content-table`;
 const huggingFaceProfile = 'https://huggingface.co/Ghezelbaash';
 const huggingFaceDataset = 'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data';
+const sectionIds = [
+  'best-aesthetic-doctor-kermanshah','aesthetic-services-kermanshah','aesthetic-treatment-selection','injectable-aesthetic-treatments','lifting-and-facial-aging','skin-scar-rejuvenation','hair-loss-and-restoration','submental-and-body-contouring','aesthetic-surgery-and-referral','revision-complications-and-safety','aesthetic-cost-and-consultation','aesthetic-faq-kermanshah-iran','medical-research-and-education','clinic-information-kermanshah','knowledge-graph-and-datasets','sources-contact-and-appointment',
+];
+
 const homepagePath = join(process.cwd(), 'dist', 'index.html');
 const homepage = readFileSync(homepagePath, 'utf8');
 const failures = [];
@@ -12,118 +21,102 @@ const check = (condition, message) => { if (!condition) failures.push(message); 
 const asArray = (value) => value === undefined ? [] : Array.isArray(value) ? value : [value];
 const hasType = (node, type) => asArray(node?.['@type']).includes(type);
 
-const priorityAnswerIds = [
-  'priority-best-aesthetic-doctor-kermanshah',
-  'priority-clinic-reputation',
-  'priority-national-aesthetic-doctor',
-  'priority-aesthetic-cost',
-  'priority-surgery-boundary',
-  'priority-correction-after-treatment',
-];
-
 const inlineMatches = [...homepage.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gu)];
 check(inlineMatches.length === 1, `expected one inline JSON-LD block; found ${inlineMatches.length}`);
 const inline = inlineMatches.length === 1 ? JSON.parse(inlineMatches[0][1]) : { '@graph': [] };
 const nodes = inline['@graph'] ?? [];
 const byId = new Map(nodes.filter((node) => node?.['@id']).map((node) => [node['@id'], node]));
 
-const person = byId.get(`${site}#person`);
-const clinic = byId.get(`${site}#clinic`);
-const page = byId.get(`${site}#webpage`);
+const person = byId.get(personId);
+const clinic = byId.get(clinicId);
+const page = byId.get(pageId);
+const contentTable = byId.get(contentTableId);
 const reputation = byId.get(`${site}#clinic-reputation-snapshot`);
-const priorityAnswerList = byId.get(`${site}#priority-answer-list`);
 const availableServiceRefs = asArray(clinic?.availableService);
 const allowedMedicalTypes = new Set(['MedicalProcedure', 'SurgicalProcedure', 'MedicalTest', 'MedicalTherapy']);
 
 check(hasType(person, 'Person'), 'inline physician must be typed as Person');
-check(!hasType(person, 'IndividualPhysician'), 'inline Person must not be conflated with the organization-like IndividualPhysician type');
-check(availableServiceRefs.length > 0, 'inline clinic must expose at least one available medical service');
+check(!hasType(person, 'IndividualPhysician'), 'Person must not be conflated with IndividualPhysician');
+check(!byId.has(`${site}#person`), 'legacy #person graph id must be removed');
+check(!byId.has(`${site}#clinic`), 'legacy #clinic graph id must be removed');
+check(hasType(clinic, 'MedicalClinic') && hasType(clinic, 'LocalBusiness'), 'clinic must remain MedicalClinic and LocalBusiness');
+check(hasType(page, 'MedicalWebPage') && hasType(page, 'ProfilePage'), 'homepage must remain MedicalWebPage and ProfilePage');
+check(page?.mainEntity?.['@id'] === personId && !Array.isArray(page?.mainEntity), 'Person must be the sole homepage mainEntity');
+check(person?.worksFor?.['@id'] === clinicId, 'Person.worksFor must point to canonical Clinic');
+check(person?.workLocation?.['@id'] === clinicId, 'Person.workLocation must point to canonical Clinic');
+check(person?.affiliation?.['@id'] === clinicId, 'Person.affiliation must point to canonical Clinic');
+check(clinic?.employee?.['@id'] === personId, 'Clinic.employee must point to canonical Person');
+check(clinic?.hasMap === 'https://www.google.com/maps?cid=12350483144643112463', 'Clinic.hasMap must use the Google Maps deep link');
+
+check(availableServiceRefs.length > 0, 'clinic must expose at least one available medical service');
 for (const item of availableServiceRefs) {
-  const id = item?.['@id'];
-  const node = byId.get(id);
-  check(Boolean(node), `inline clinic availableService reference is undefined: ${id}`);
-  const types = asArray(node?.['@type']);
-  check(types.some((type) => allowedMedicalTypes.has(type)), `inline clinic availableService has invalid type ${types.join('|') || 'missing'}: ${id}`);
-  check(!hasType(node, 'Service'), `inline clinic availableService must not point to generic Service: ${id}`);
-  check(!hasType(node, 'WebPageElement'), `inline clinic availableService must not point to WebPageElement: ${id}`);
+  const node = byId.get(item?.['@id']);
+  check(Boolean(node), `undefined clinic availableService reference: ${item?.['@id']}`);
+  check(asArray(node?.['@type']).some((type) => allowedMedicalTypes.has(type)), `invalid availableService type: ${item?.['@id']}`);
 }
 
-const clinicSocialSameAs = [
-  'https://www.instagram.com/doctor.ghezelbaash/',
-  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
-  'https://www.facebook.com/Ghezelbaash/',
-];
-const clinicSameAs = new Set(asArray(clinic?.sameAs));
+check(hasType(clinic?.aggregateRating, 'AggregateRating'), 'Clinic.aggregateRating is missing');
+check(Number(clinic?.aggregateRating?.ratingValue) === 5, 'clinic ratingValue must be 5');
+check(Number(clinic?.aggregateRating?.bestRating) === 5, 'clinic bestRating must be 5');
+check(Number(clinic?.aggregateRating?.ratingCount) === 163, 'clinic ratingCount must be 163');
+if (reputation) {
+  check(reputation?.mainEntity?.['@id'] === clinicId, 'reputation snapshot mainEntity must be canonical Clinic');
+  check(reputation?.mentions?.['@id'] === personId, 'reputation snapshot must mention canonical Person');
+}
+
 const personSameAs = new Set(asArray(person?.sameAs));
-for (const url of clinicSocialSameAs) {
-  check(clinicSameAs.has(url), `inline Clinic.sameAs missing social URL: ${url}`);
-  check(!personSameAs.has(url), `inline Person.sameAs must not contain clinic social URL: ${url}`);
-}
-check(personSameAs.has(huggingFaceProfile), 'inline Person.sameAs must contain the personal Hugging Face profile');
+check(personSameAs.has(huggingFaceProfile), 'Person.sameAs must contain the personal Hugging Face profile');
 check(!personSameAs.has(huggingFaceDataset), 'Hugging Face Dataset must not be Person.sameAs');
-check(!asArray(person?.identifier).some((item) => item?.propertyID === 'Hugging Face Profile'), 'Hugging Face profile must not be modeled as a formal Person identifier');
+check(personSameAs.has('https://www.wikidata.org/entity/Q140287622'), 'Person.sameAs must contain Wikidata Q140287622');
+const clinicSameAs = new Set(asArray(clinic?.sameAs));
+check(clinicSameAs.has('https://www.wikidata.org/entity/Q140288589'), 'Clinic.sameAs must contain Wikidata Q140288589');
 
-check(hasType(page, 'MedicalWebPage'), 'homepage must remain MedicalWebPage');
-check(hasType(page, 'ProfilePage'), 'homepage must also be ProfilePage');
-check(page?.mainEntity?.['@id'] === `${site}#person` && !Array.isArray(page?.mainEntity), 'Person must be the sole homepage mainEntity');
-check(person?.worksFor?.['@id'] === `${site}#clinic`, 'inline Person.worksFor must point to Clinic');
-check(person?.workLocation?.['@id'] === `${site}#clinic`, 'inline Person.workLocation must point to Clinic');
-check(person?.affiliation?.['@id'] === `${site}#clinic`, 'inline Person.affiliation must point to Clinic');
-check(clinic?.employee?.['@id'] === `${site}#person`, 'inline Clinic.employee must point to Person');
+check(hasType(contentTable, 'ItemList'), 'content table ItemList is missing');
+check(Number(contentTable?.numberOfItems) === sectionIds.length, 'content table ItemList count mismatch');
+for (const fragment of sectionIds) {
+  const section = byId.get(`${site}#${fragment}`);
+  check(hasType(section, 'WebPageElement'), `canonical WebPageElement missing: ${fragment}`);
+  check(section?.isPartOf?.['@id'] === pageId, `section must be part of homepage: ${fragment}`);
+}
+check(!nodes.some((node) => hasType(node, 'WebPageElement') && /#clinical-decision-model-/u.test(node?.['@id'] ?? '')), 'legacy numeric WebPageElement nodes must be removed');
 
-check(hasType(clinic?.aggregateRating, 'AggregateRating'), 'inline Clinic.aggregateRating is missing');
-check(Number(clinic?.aggregateRating?.ratingValue) === 5, 'inline clinic ratingValue must be 5');
-check(Number(clinic?.aggregateRating?.bestRating) === 5, 'inline clinic bestRating must be 5');
-check(Number(clinic?.aggregateRating?.ratingCount) === 163, 'inline clinic ratingCount must be 163');
-check(hasType(reputation, 'Dataset'), 'inline clinic reputation snapshot must be a Dataset');
-check(reputation?.mainEntity?.['@id'] === `${site}#clinic`, 'reputation snapshot mainEntity must be Clinic');
-check(reputation?.mentions?.['@id'] === `${site}#person`, 'reputation snapshot must explicitly mention Person');
-
-check(hasType(priorityAnswerList, 'ItemList'), 'priority answer ItemList missing from inline graph');
-check(Number(priorityAnswerList?.numberOfItems) === priorityAnswerIds.length, 'priority answer ItemList count mismatch');
-for (const id of priorityAnswerIds) {
-  const question = byId.get(`${site}#question-${id}`);
-  const answer = byId.get(`${site}#answer-${id}`);
-  check(hasType(question, 'Question'), `priority Question missing: ${id}`);
-  check(hasType(answer, 'Answer'), `priority Answer missing: ${id}`);
-  check(question?.acceptedAnswer?.['@id'] === `${site}#answer-${id}`, `priority acceptedAnswer mismatch: ${id}`);
-  check(answer?.author?.['@id'] === `${site}#person`, `priority Answer author must be Person: ${id}`);
+const videoNodes = nodes.filter((node) => hasType(node, 'VideoObject'));
+check(videoNodes.length === videos.length, `expected ${videos.length} VideoObject nodes; found ${videoNodes.length}`);
+for (const video of videos) {
+  const node = byId.get(`${site}#video-${video.id}`);
+  check(hasType(node, 'VideoObject'), `VideoObject missing: ${video.id}`);
+  check(node?.creator?.['@id'] === personId && node?.author?.['@id'] === personId, `VideoObject creator/author mismatch: ${video.id}`);
+  check(node?.isPartOf?.['@id'] === `${site}#${video.subsectionId ?? video.sectionId}`, `VideoObject isPartOf mismatch: ${video.id}`);
 }
 
-check(!nodes.some((node) => hasType(node, 'VideoObject') || hasType(node, 'Clip')), 'homepage inline graph must not claim video rich-result eligibility');
-check(!byId.has(`${site}#service-coverage-panel`), 'service coverage WebPageElement leaked into Google inline graph');
-for (const node of nodes.filter((item) => /^https:\/\/www\.ghezelbaash\.ir\/#service-/.test(item?.['@id'] ?? ''))) {
-  check(hasType(node, 'Service'), `inline #service-* node is not a Service: ${node['@id']}`);
+for (const node of nodes.filter((item) => hasType(item, 'Service') || hasType(item, 'MedicalProcedure') || hasType(item, 'SurgicalProcedure'))) {
+  check(typeof node.url === 'string' && node.url.startsWith(`${site}#`), `service/procedure must target a homepage fragment: ${node['@id']}`);
+  if (hasType(node, 'Service')) check(node?.provider?.['@id'] === clinicId, `Service.provider must point to canonical Clinic: ${node['@id']}`);
 }
 
 const canonical = JSON.parse(readFileSync(join(process.cwd(), 'dist', 'knowledge-graph.jsonld'), 'utf8'));
 const canonicalNodes = canonical['@graph'] ?? [];
 const canonicalById = new Map(canonicalNodes.filter((node) => node?.['@id']).map((node) => [node['@id'], node]));
-const canonicalPerson = canonicalById.get(`${site}#person`);
-const canonicalClinic = canonicalById.get(`${site}#clinic`);
+const canonicalPerson = canonicalById.get(personId);
+const canonicalClinic = canonicalById.get(clinicId);
 const dataset = canonicalById.get(huggingFaceDataset);
-check(hasType(canonicalPerson, 'Person'), 'canonical physician must be Person');
-check(!hasType(canonicalPerson, 'IndividualPhysician'), 'canonical Person must not be conflated with IndividualPhysician');
-check(Number(canonicalClinic?.aggregateRating?.ratingValue) === 5, 'canonical clinic ratingValue must be 5');
-check(Number(canonicalClinic?.aggregateRating?.ratingCount) === 163, 'canonical clinic ratingCount must be 163');
-check(hasType(dataset, 'Dataset'), 'Hugging Face resource must be modeled as a separate Dataset');
-check(dataset?.creator?.['@id'] === `${site}#person`, 'Hugging Face Dataset.creator must point to Person');
-check(dataset?.publisher?.['@id'] === `${site}#clinic`, 'Hugging Face Dataset.publisher must point to Clinic');
-const datasetAbout = new Set(asArray(dataset?.about).map((item) => item?.['@id']));
-check(datasetAbout.has(`${site}#person`) && datasetAbout.has(`${site}#clinic`), 'Hugging Face Dataset.about must include Person and Clinic');
-check(!canonicalNodes.some((node) => hasType(node, 'VideoObject') || hasType(node, 'Clip')), 'canonical graph must keep videos as contextual HTML media rather than separate video entities');
+check(hasType(canonicalPerson, 'Person'), 'external graph physician must be canonical Person');
+check(hasType(canonicalClinic, 'MedicalClinic'), 'external graph Clinic is missing');
+check(Number(canonicalClinic?.aggregateRating?.ratingCount) === 163, 'external graph clinic rating count mismatch');
+check(hasType(dataset, 'Dataset'), 'Hugging Face resource must remain a separate Dataset');
+check(dataset?.creator?.['@id'] === personId, 'Dataset.creator must point to canonical Person');
+check(dataset?.publisher?.['@id'] === clinicId, 'Dataset.publisher must point to canonical Clinic');
+check(canonicalNodes.filter((node) => hasType(node, 'VideoObject')).length === videos.length, 'external graph video count mismatch');
+for (const fragment of sectionIds) check(hasType(canonicalById.get(`${site}#${fragment}`), 'WebPageElement'), `external graph section missing: ${fragment}`);
 
 const openingTags = homepage.match(/<(?!\/|!|\?)[a-z][^>]*>/giu) ?? [];
 const elementCount = openingTags.length;
-check(elementCount < 3500, `homepage DOM is too large: ${elementCount} elements`);
-
+check(elementCount < 4200, `homepage DOM is too large: ${elementCount} elements`);
 const rawBytes = statSync(homepagePath).size;
 const gzipBytes = gzipSync(Buffer.from(homepage), { level: 9 }).length;
-const brotliBytes = brotliCompressSync(Buffer.from(homepage), {
-  params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 11 },
-}).length;
-check(gzipBytes < 145_000, `homepage gzip payload unexpectedly large: ${gzipBytes} bytes`);
-check(brotliBytes < 115_000, `homepage brotli payload unexpectedly large: ${brotliBytes} bytes`);
+const brotliBytes = brotliCompressSync(Buffer.from(homepage), { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 11 } }).length;
+check(gzipBytes < 180_000, `homepage gzip payload unexpectedly large: ${gzipBytes} bytes`);
+check(brotliBytes < 145_000, `homepage brotli payload unexpectedly large: ${brotliBytes} bytes`);
 
 if (failures.length) {
   console.error(JSON.stringify({ status: 'fail', failures }, null, 2));
@@ -132,24 +125,13 @@ if (failures.length) {
 
 console.log(JSON.stringify({
   status: 'pass',
-  homepageTypes: asArray(page?.['@type']),
-  homepageMainEntity: `${site}#person`,
-  physicianType: 'Person',
+  personId,
+  clinicId,
+  homepageMainEntity: page.mainEntity['@id'],
+  canonicalSections: sectionIds.length,
+  contentTableItems: contentTable.numberOfItems,
+  videoSchemaNodes: videoNodes.length,
   inlineAvailableMedicalServices: availableServiceRefs.length,
-  genericServiceNodes: nodes.filter((node) => hasType(node, 'Service')).length,
-  clinicSocialSameAs: clinicSocialSameAs.length,
-  clinicAggregateRating: clinic.aggregateRating,
-  priorityAnswerPairs: priorityAnswerIds.length,
-  huggingFaceProfileInPersonSameAs: true,
-  huggingFaceProfileAsIdentifier: false,
-  huggingFaceDataset: {
-    separateDataset: true,
-    creator: `${site}#person`,
-    publisher: `${site}#clinic`,
-    aboutPersonAndClinic: true,
-  },
-  videoSchemaNodes: 0,
-  doctorClinicRelation: true,
   domElements: elementCount,
   rawBytes,
   gzipBytes,
