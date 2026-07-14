@@ -1,44 +1,93 @@
 ---
-import { ArrowUp, AtSign, MapPin, Phone } from '@lucide/astro';
+import { ArrowUp, CalendarCheck, MessageCircle } from '@lucide/astro';
 import { site } from '../../domain/entities';
 import BrandLogo from './BrandLogo.astro';
 
 const year = new Date().getFullYear();
 const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(site.dateModified));
+
+const groups = [
+  {
+    title: 'هویت و اعتبار پزشکی',
+    links: [
+      ['بررسی شماره نظام پزشکی دکتر محمدسعید قزلباش', site.irimcVerification, false],
+      ['شناسه پژوهشگر ORCID دکتر سعید قزلباش', site.orcidUrl, true],
+      ['کتاب‌شناسی عمومی NCBI دکتر سعید قزلباش', site.ncbiBibliography, false],
+      ['انتیتی Mohammad Saeed Ghezelbash در Wikidata', site.doctorWikidata, false],
+      ['مقاله Omega-3 و اختلال دوقطبی در PubMed', site.researchProfiles[0].url, false],
+      ['مقاله سبک دلبستگی و افسردگی در PubMed', site.researchProfiles[1].url, false],
+    ],
+  },
+  {
+    title: 'پروفایل‌های رسمی',
+    links: [
+      ['اینستاگرام رسمی دکتر سعید قزلباش', site.instagram, true],
+      ['LinkedIn دکتر سعید قزلباش', site.linkedinProfile, true],
+      ['Facebook رسمی', site.facebookProfile, false],
+      ['Pinterest رسمی', site.pinterestProfile, true],
+      ['پروفایل X دکتر سعید قزلباش', site.xProfile, true],
+      ['About.me دکتر سعید قزلباش', site.aboutMeProfile, true],
+      ['Linktree رسمی', site.linktreeProfile, true],
+      ['پروفایل GitHub', site.githubProfile, true],
+      ['پروفایل Hugging Face', site.huggingFaceProfile, true],
+    ],
+  },
+  {
+    title: 'کلینیک و موقعیت',
+    links: [
+      ['موقعیت کلینیک در Google Maps', site.maps, false],
+      ['موقعیت کلینیک در OpenStreetMap', site.openStreetMap, false],
+      ['انتیتی کلینیک در Wikidata', site.placeWikidata, false],
+      ['تماس با کلینیک', `tel:${site.phone}`, false],
+      ['گفت‌وگو در دایرکت اینستاگرام', site.instagramDirect, false],
+    ],
+  },
+  {
+    title: 'داده و ماشین‌خوان',
+    links: [
+      ['گراف دانش JSON-LD سایت', '/knowledge-graph.jsonld', false],
+      ['دیتاست عمومی Hugging Face', site.huggingFaceDataset, false],
+      ['Wikidata دیتاست ساختاریافته', site.datasetWikidata, false],
+      ['آرشیو Zenodo و DOI', site.zenodoRecord, false],
+      ['فایل llms.txt سایت', '/llms.txt', false],
+      ['فایل ai.txt سایت', '/.well-known/ai.txt', false],
+      ['مخزن کد GitHub سایت', site.githubRepository, false],
+    ],
+  },
+] as const;
 ---
 
 <footer class="home-footer">
-  <div class="shell footer-grid">
-    <section class="footer-brand">
-      <BrandLogo compact />
-      <div>
-        <strong>{site.legalName}</strong>
-        <p>دکترای حرفه‌ای پزشکی · شمارهٔ نظام پزشکی {site.irimc}</p>
-      </div>
-    </section>
-    <nav aria-label="پیوندهای صفحه">
-      <strong>صفحه</strong>
-      <a href="#clinic-reputation">اعتبار عمومی کلینیک</a>
-      <a href="#services">خدمات</a>
-      <a href="#search-intent-hub">پاسخ‌های سریع</a>
-      <a href="#clinical-guide">مطالب</a>
-      <a href="#contact">تماس و نشانی</a>
-    </nav>
-    <nav aria-label="ارتباط با کلینیک">
-      <strong>ارتباط</strong>
-      <a href={`tel:${site.phone}`}><Phone size={17} aria-hidden="true" /> <bdi dir="ltr">{site.phoneDisplay}</bdi></a>
-      <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={17} aria-hidden="true" /> نقشه و نظرها</a>
-      <a href={site.instagram} target="_blank" rel="noopener noreferrer external"><AtSign size={17} aria-hidden="true" /> اینستاگرام</a>
-    </nav>
+  <div class="shell footer-identity">
+    <BrandLogo compact />
+    <div>
+      <strong>{site.legalName}</strong>
+      <p>دکترای حرفه‌ای پزشکی · شماره نظام پزشکی {site.irimc} · پزشک زیبایی، پوست و مو در کرمانشاه</p>
+    </div>
   </div>
+
+  <div class="shell footer-directory" aria-label="دایرکتوری منابع رسمی دکتر سعید قزلباش">
+    {groups.map((group) => (
+      <nav aria-label={group.title}>
+        <strong>{group.title}</strong>
+        {group.links.map(([label, href, owned]) => (
+          <a href={href} target={href.startsWith('/') || href.startsWith('tel:') ? undefined : '_blank'} rel={href.startsWith('/') || href.startsWith('tel:') ? undefined : owned ? 'me noopener noreferrer external' : 'noopener noreferrer external'}>{label}</a>
+        ))}
+      </nav>
+    ))}
+  </div>
+
   <div class="shell footer-bottom">
     <span>© {year} دکتر سعید قزلباش · آخرین بازبینی: {modified}</span>
     <a href="#top"><ArrowUp size={17} aria-hidden="true" /> بازگشت به بالا</a>
   </div>
 </footer>
 
-<nav id="conversion-dock" class="mobile-dock" aria-label="اقدام‌های سریع موبایل">
-  <a href={`tel:${site.phone}`}><Phone size={20} aria-hidden="true" /><span>تماس</span></a>
-  <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={20} aria-hidden="true" /><span>نقشه</span></a>
-  <a href={site.instagram} target="_blank" rel="noopener noreferrer external"><AtSign size={20} aria-hidden="true" /><span>اینستاگرام</span></a>
+<nav id="conversion-dock" class="mobile-dock" aria-label="اقدام‌های اصلی موبایل">
+  <a href={`tel:${site.phone}`}><CalendarCheck size={20} aria-hidden="true" /><span>رزرو مشاوره</span></a>
+  <a href={site.instagramDirect} target="_blank" rel="noopener noreferrer external"><MessageCircle size={20} aria-hidden="true" /><span>گفت‌وگوی آنلاین</span></a>
 </nav>
+
+<style>
+  .footer-identity{display:flex;gap:.9rem;align-items:center;padding-block:2rem 1rem}.footer-identity strong{color:#fff}.footer-identity p{margin:.25rem 0 0;color:rgba(255,255,255,.7);font-size:.78rem;line-height:1.7}.footer-directory{display:grid;gap:1.4rem;padding-block:1rem 2rem}.footer-directory nav{display:grid;align-content:start;gap:.5rem}.footer-directory strong{margin-bottom:.25rem;color:#fff;font-size:.9rem}.footer-directory a{color:rgba(255,255,255,.74);font-size:.76rem;line-height:1.75;text-decoration-thickness:.06em;text-underline-offset:.2em}.footer-directory a:hover{color:#fff}@media(min-width:48rem){.footer-directory{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(min-width:72rem){.footer-directory{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
