@@ -3,6 +3,7 @@ import { CalendarCheck, MapPin, MessageCircle, Star } from '@lucide/astro';
 import { site } from '../../domain/entities';
 import { homepageEntityIds } from '../../domain/homepage-sections';
 
+const irimcDisplay = Number(site.irimc).toLocaleString('fa-IR', { useGrouping: false });
 const ratingValue = site.googleBusinessProfile.ratingValue.toLocaleString('fa-IR');
 const bestRating = site.googleBusinessProfile.bestRating.toLocaleString('fa-IR');
 const ratingCount = site.googleBusinessProfile.ratingCount.toLocaleString('fa-IR');
@@ -12,7 +13,7 @@ const ratingCount = site.googleBusinessProfile.ratingCount.toLocaleString('fa-IR
   <div class="physician-hero__copy">
     <h1 id="page-title">دکتر سعید قزلباش؛ پزشک زیبایی، پوست و مو در کرمانشاه</h1>
     <div class="physician-hero__introduction" data-physician-introduction>
-      <p><strong>{site.legalName}</strong>، با نام حرفه‌ای <strong>دکتر سعید قزلباش</strong>، دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی <strong>{site.irimc}</strong> است. فعالیت او در کرمانشاه بر ارزیابی و درمان مسائل پزشکی زیبایی، پوست و مو متمرکز است. نقطه شروع این رویکرد انتخاب نام یک روش یا محصول نیست؛ ابتدا باید مشخص شود مسئله ظاهری از حرکت عضله، کیفیت پوست، کاهش حجم، جابه‌جایی بافت، چربی، ساختار استخوانی یا ترکیبی از این عوامل ایجاد شده است.</p>
+      <p><strong>{site.legalName}</strong>، با نام حرفه‌ای <strong>دکتر سعید قزلباش</strong>، دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی <strong>{irimcDisplay}</strong> است. فعالیت او در کرمانشاه بر ارزیابی و درمان مسائل پزشکی زیبایی، پوست و مو متمرکز است. نقطه شروع این رویکرد انتخاب نام یک روش یا محصول نیست؛ ابتدا باید مشخص شود مسئله ظاهری از حرکت عضله، کیفیت پوست، کاهش حجم، جابه‌جایی بافت، چربی، ساختار استخوانی یا ترکیبی از این عوامل ایجاد شده است.</p>
       <p>در ارزیابی پیش از درمان، سابقه تزریق یا جراحی قبلی، داروها، بیماری‌های زمینه‌ای، کیفیت پوست، آناتومی و نتیجه واقع‌بینانه بررسی می‌شوند. بخشی از تصمیم پزشکی نیز تشخیص مرز روش‌های غیرجراحی است؛ در مواردی که قدرت ابزار با شدت مشکل هماهنگ نیست، انجام ندادن درمان یا ارجاع برای ارزیابی جراحی می‌تواند انتخاب دقیق‌تری باشد.</p>
       <p>فعالیت پژوهشی و آموزش پزشکی نیز بخشی از سابقه حرفه‌ای دکتر قزلباش است. مقاله‌های منتشرشده، شناسه ORCID و کتاب‌شناسی عمومی NCBI در همین صفحه به منبع اصلی متصل شده‌اند. دو نمونه ویدئوی آموزش پزشکی نیز در بخش اختصاصی پژوهش و آموزش قرار دارند تا این سابقه با محتوای قابل مشاهده و قابل بررسی معرفی شود، نه با یک عنوان تبلیغاتی کوتاه.</p>
     </div>
