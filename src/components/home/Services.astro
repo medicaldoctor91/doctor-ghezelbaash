@@ -2,212 +2,67 @@
 import { Activity, CircleDot, Droplets, ScanFace, Sparkles, Syringe, UserRoundSearch } from '@lucide/astro';
 
 const offeredServices = [
-  {
-    id: 'service-botulinum-toxin',
-    aliases: [],
-    title: 'بوتاکس و بوتولینوم توکسین',
-    text: 'خطوط پیشانی، اخم، دور چشم، ماستر، لبخند لثه‌ای و موارد وابسته به حرکت عضله.',
-    icon: Activity,
-    href: '#botulinum-toxin-guide',
-  },
-  {
-    id: 'service-dermal-filler',
-    aliases: [],
-    title: 'فیلر و اصلاح تزریق قبلی',
-    text: 'لب، زیر چشم، گونه، چانه، خط فک، خط خنده و بررسی نیاز به هیالورونیداز.',
-    icon: Syringe,
-    href: '#dermal-fillers-revision',
-  },
-  {
-    id: 'service-thread-lift',
-    aliases: [],
-    title: 'لیفت با نخ',
-    text: 'بررسی افتادگی خفیف تا متوسط صورت، ابرو، میدفیس، jowl و خط فک.',
-    icon: Sparkles,
-    href: '#thread-lift-surgery-boundary',
-  },
-  {
-    id: 'service-subcision',
-    aliases: ['service-acne-scar-treatment'],
-    title: 'جوش، لک، اسکار و سابسیژن',
-    text: 'تفکیک لک و قرمزی از اسکار و انتخاب سابسیژن، TCA CROSS، میکرونیدلینگ یا درمان ترکیبی.',
-    icon: CircleDot,
-    href: '#acne-scar-guide',
-  },
-  {
-    id: 'service-skin-rejuvenation',
-    aliases: [],
-    title: 'جوان‌سازی و کیفیت پوست',
-    text: 'اسکین‌بوستر، مزوژل، PRP، مزوتراپی و روش‌های بهبود بافت، رطوبت و کیفیت پوست.',
-    icon: Droplets,
-    href: '#skin-quality-rejuvenation-guide',
-  },
-  {
-    id: 'service-prp-skin-hair',
-    aliases: ['service-hair-loss-evaluation'],
-    title: 'ریزش مو، PRP و مزوتراپی مو',
-    text: 'بررسی الگوی ریزش، پوست سر، علت‌های زمینه‌ای و انتخاب درمان تزریقی یا مسیر ارجاع.',
-    icon: UserRoundSearch,
-    href: '#hair-guide',
-  },
-  {
-    id: 'service-submental-liposuction',
-    aliases: [],
-    title: 'ساکشن غبغب و فرم پایین صورت',
-    text: 'بررسی سهم چربی، پوست، پلاتیسما، چانه و ساختار فک پیش از انتخاب روش جراحی یا غیرجراحی.',
-    icon: ScanFace,
-    href: '#submental-and-body-contouring-guide',
-  },
+  { id: 'botox-kermanshah', title: 'بوتاکس در کرمانشاه', text: 'ارزیابی خطوط وابسته به حرکت، موقعیت ابرو و پلک، عدم تقارن و سابقه تزریق پیش از انتخاب ناحیه و دوز.', icon: Activity, href: '#botulinum-toxin-guide' },
+  { id: 'dermal-filler-kermanshah', title: 'فیلر و تزریق ژل در کرمانشاه', text: 'لب، زیر چشم، گونه، چانه، خط فک، خط خنده و بررسی فیلر قبلی یا نیاز احتمالی به هیالورونیداز.', icon: Syringe, href: '#dermal-filler-guide' },
+  { id: 'thread-lift-kermanshah', title: 'لیفت نخ در کرمانشاه', text: 'بررسی افتادگی خفیف تا متوسط، کیفیت پوست، وزن بافت و مرز واقعی توان نخ.', icon: Sparkles, href: '#thread-lift-guide' },
+  { id: 'acne-scar-subcision-kermanshah', title: 'درمان جای جوش و سابسیژن در کرمانشاه', text: 'تفکیک آکنه فعال، لک و قرمزی از rolling، boxcar و ice-pick و انتخاب درمان مرحله‌ای.', icon: CircleDot, href: '#acne-scar-types' },
+  { id: 'skin-rejuvenation-kermanshah', title: 'جوان‌سازی پوست در کرمانشاه', text: 'ارزیابی خشکی، بافت، لک، التهاب و اسکار پیش از انتخاب اسکین‌بوستر، مزوژل، PRP یا روش‌های دیگر.', icon: Droplets, href: '#skin-booster-mesogel' },
+  { id: 'hair-loss-prp-kermanshah', title: 'ریزش مو، PRP و مزوتراپی در کرمانشاه', text: 'بررسی الگوی ریزش، وضعیت پوست سر و علت‌های زمینه‌ای پیش از درمان تزریقی یا ارجاع.', icon: UserRoundSearch, href: '#hair-loss-diagnosis' },
+  { id: 'submental-liposuction-kermanshah', title: 'ساکشن غبغب در کرمانشاه', text: 'تفکیک سهم چربی، پوست، پلاتیسما، چانه و فک پیش از انتخاب مسیر جراحی یا غیرجراحی.', icon: ScanFace, href: '#submental-liposuction-guide' },
 ];
 
 const evaluationTopics = [
-  {
-    title: 'مزوتراپی پوست و مو',
-    text: 'انتخاب ماده، هدف، تعداد جلسات و کاندید مناسب؛ نه یک نسخه ثابت برای همه.',
-    icon: Droplets,
-    href: '#service-mesotherapy',
-    status: 'ارائه پس از ارزیابی',
-  },
-  {
-    title: 'کانتورینگ و لاغری موضعی',
-    text: 'تفکیک چربی، شلی پوست، سلولیت و محدودیت روش‌ها پیش از انتخاب مسیر.',
-    icon: ScanFace,
-    href: '#service-body-contouring',
-    status: 'ارزیابی',
-  },
-  {
-    title: 'بلفاروپلاستی و جراحی پلک',
-    text: 'تفکیک پوست اضافه، پف چربی، افت ابرو، خشکی چشم و زمان ارجاع جراحی.',
-    icon: Activity,
-    href: '#service-blepharoplasty',
-    status: 'مرز ارجاع',
-  },
-  {
-    title: 'رینوپلاستی و جراحی بینی',
-    text: 'مقایسه اصلاح محدود تزریقی با تغییر ساختاری، عملکرد تنفسی و ارجاع مناسب.',
-    icon: Sparkles,
-    href: '#service-rhinoplasty',
-    status: 'مرز ارجاع',
-  },
-  {
-    title: 'لیفت جراحی صورت و گردن',
-    text: 'تشخیص افتادگی خارج از ظرفیت نخ، فیلر یا روش‌های انرژی‌محور.',
-    icon: ScanFace,
-    href: '#service-facelift-necklift',
-    status: 'مرز ارجاع',
-  },
-  {
-    title: 'جراحی فک و اصلاح اسکلتی',
-    text: 'تفکیک مشکل اسکلتی و بایت از کانتور تزریقی و تعیین مسیر تیم تخصصی.',
-    icon: UserRoundSearch,
-    href: '#service-orthognathic-surgery',
-    status: 'مرز ارجاع',
-  },
-  {
-    title: 'کاشت و پیوند مو',
-    text: 'بررسی ثبات ریزش، بانک مو، پوست سر و زمان مناسب ارجاع برای کاشت.',
-    icon: UserRoundSearch,
-    href: '#service-hair-transplant',
-    status: 'مرز ارجاع',
-  },
+  { title: 'بلفاروپلاستی و جراحی پلک', text: 'پوست اضافه، پف چربی، افت ابرو، خشکی چشم و پتوز باید از هم جدا شوند.', icon: Activity, href: '#blepharoplasty-evaluation' },
+  { title: 'رینوپلاستی و جراحی بینی', text: 'تغییر ظاهری محدود تزریقی با اصلاح ساختاری و عملکرد تنفسی یکسان نیست.', icon: Sparkles, href: '#rhinoplasty-evaluation' },
+  { title: 'لیفت جراحی صورت و گردن', text: 'افتادگی خارج از ظرفیت نخ، فیلر یا انرژی به ارزیابی جراحی نیاز دارد.', icon: ScanFace, href: '#facelift-necklift-evaluation' },
+  { title: 'جراحی فک و اصلاح اسکلتی', text: 'مشکل بایت و ساختار اسکلتی با کانتور تزریقی درمان نمی‌شود.', icon: UserRoundSearch, href: '#orthognathic-surgery-evaluation' },
+  { title: 'کاشت و پیوند مو', text: 'ثبات ریزش، بانک مو، پوست سر و انتظار نتیجه باید پیش از ارجاع بررسی شوند.', icon: UserRoundSearch, href: '#hair-transplant-surgical-evaluation' },
+  { title: 'کانتورینگ بدن', text: 'چربی، شلی پوست، سلولیت، وزن پایدار و محدودیت روش‌ها باید جداگانه ارزیابی شوند.', icon: ScanFace, href: '#body-contouring-evaluation' },
 ];
 ---
 
-<section id="services" class="section shell" aria-labelledby="services-title">
-  <span id="service-coverage-panel" class="anchor-alias" aria-hidden="true"></span>
+<section id="aesthetic-services-kermanshah" class="section shell" aria-labelledby="aesthetic-services-kermanshah-title">
   <div class="section-heading section-heading--split">
     <div>
-      <p class="eyebrow">پوشش کامل، بدون مخلوط‌کردن خدمت و ارجاع</p>
-      <h2 id="services-title">خدمات ارائه‌شده و موضوعات جراحی یا غیرجراحی که پیش از انتخاب باید ارزیابی شوند</h2>
+      <p class="eyebrow">خدمات و مرز ارجاع</p>
+      <h2 id="aesthetic-services-kermanshah-title">خدمات زیبایی در کرمانشاه؛ خدمات ارائه‌شده، ارزیابی و مرز ارجاع</h2>
     </div>
-    <p>هر کارت به توضیح همان موضوع در همین صفحه متصل است.</p>
+    <p>حضور یک موضوع در این فهرست به معنی ارائه همه روش‌های آن نیست؛ خدمات کلینیک و موضوعات صرفاً ارزیابی یا ارجاع به‌صورت روشن جدا شده‌اند.</p>
   </div>
 
   <div class="service-group" aria-labelledby="offered-services-title">
-    <h3 id="offered-services-title" class="service-group__title">خدمات ارائه‌شده در کلینیک</h3>
+    <h3 id="offered-services-title" class="service-group__title">خدمات ارائه‌شده پس از ارزیابی پزشکی</h3>
     <div class="service-grid">
-      {offeredServices.map(({ id, aliases, title, text, icon: Icon, href }) => (
-        <a id={id} class="service-card" href={href}>
-          {aliases.map((alias) => <span id={alias} class="anchor-alias" aria-hidden="true"></span>)}
+      {offeredServices.map(({ id, title, text, icon: Icon, href }) => (
+        <section id={id} class="service-card" aria-labelledby={`${id}-title`}>
           <span class="service-card__icon"><Icon size={25} aria-hidden="true" /></span>
-          <h3>{title}</h3>
+          <h3 id={`${id}-title`}>{title}</h3>
           <p>{text}</p>
-          <span class="service-card__link">توضیحات، کاندید و محدودیت‌ها</span>
-        </a>
+          <a class="service-card__link" href={href}>توضیحات، کاندید و محدودیت‌ها</a>
+        </section>
       ))}
     </div>
   </div>
 
-  <div class="service-group service-group--evaluation" aria-labelledby="evaluation-services-title">
+  <section id="aesthetic-surgery-evaluation-kermanshah" class="service-group service-group--evaluation" aria-labelledby="aesthetic-surgery-evaluation-kermanshah-title">
     <div class="service-group__heading">
-      <h3 id="evaluation-services-title" class="service-group__title">موضوعات ارزیابی، مقایسه و مرز ارجاع</h3>
-      <p>حضور یک موضوع در این بخش به معنی ارائه همه روش‌ها نیست؛ هدف، تشخیص مرز روش جاری و ارجاع درست است.</p>
+      <h3 id="aesthetic-surgery-evaluation-kermanshah-title" class="service-group__title">ارزیابی جراحی زیبایی و مرز ارجاع در کرمانشاه</h3>
+      <p>هدف این بخش تشخیص مرز روش جاری و معرفی مسیر ارجاع مناسب است؛ نه ادعای ارائه تمام جراحی‌ها.</p>
     </div>
     <div class="service-grid service-grid--evaluation">
-      {evaluationTopics.map(({ title, text, icon: Icon, href, status }) => (
-        <a class="service-card service-card--evaluation" href={href}>
-          <span class="service-card__badge">{status}</span>
+      {evaluationTopics.map(({ title, text, icon: Icon, href }) => (
+        <article class="service-card service-card--evaluation">
+          <span class="service-card__badge">ارزیابی و ارجاع</span>
           <span class="service-card__icon"><Icon size={25} aria-hidden="true" /></span>
-          <h3>{title}</h3>
+          <h4>{title}</h4>
           <p>{text}</p>
-          <span class="service-card__link">دیدن معیار تصمیم و ارجاع</span>
-        </a>
+          <a class="service-card__link" href={href}>دیدن معیار تصمیم و ارجاع</a>
+        </article>
       ))}
     </div>
-  </div>
+  </section>
 </section>
 
 <style>
-  .service-group + .service-group {
-    margin-top: clamp(2rem, 5vw, 3.5rem);
-  }
-
-  .service-group__title {
-    margin: 0 0 .9rem;
-    color: var(--blue-950);
-    font-size: 1.08rem;
-  }
-
-  .service-group__heading {
-    display: grid;
-    gap: .35rem;
-    margin-bottom: .9rem;
-  }
-
-  .service-group__heading p {
-    max-width: 58rem;
-    margin: 0;
-    color: var(--muted);
-    font-size: .88rem;
-    line-height: 1.85;
-  }
-
-  .service-card--evaluation {
-    border-style: dashed;
-    background:
-      radial-gradient(circle at 100% 0%, rgba(239, 106, 39, .09), transparent 9rem),
-      rgba(255, 255, 255, .86);
-  }
-
-  .service-card__badge {
-    position: absolute;
-    inset: .72rem auto auto .72rem;
-    padding: .23rem .48rem;
-    border-radius: 999px;
-    color: #8a431d;
-    background: rgba(239, 106, 39, .11);
-    font-size: .64rem;
-    font-weight: 800;
-  }
-
-  @media (min-width: 64rem) {
-    .service-grid--evaluation {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .service-grid--evaluation .service-card:first-child,
-    .service-grid--evaluation .service-card:nth-child(5) {
-      grid-column: auto;
-    }
-  }
+  #aesthetic-services-kermanshah{scroll-margin-top:6rem}.service-group+.service-group{margin-top:clamp(2rem,5vw,3.5rem)}.service-group__title{margin:0 0 .9rem;color:var(--blue-950);font-size:1.08rem}.service-group__heading{display:grid;gap:.35rem;margin-bottom:.9rem}.service-group__heading p{max-width:58rem;margin:0;color:var(--muted);font-size:.88rem;line-height:1.85}.service-card{display:block;scroll-margin-top:6rem}.service-card h4{margin:.85rem 0 .4rem;color:var(--blue-950);font-size:1rem;line-height:1.75}.service-card__link{display:inline-block;margin-top:.65rem;color:var(--blue-700);font-size:.78rem;font-weight:750;text-underline-offset:.22em}.service-card--evaluation{position:relative;border-style:dashed;background:radial-gradient(circle at 100% 0%,rgba(239,106,39,.09),transparent 9rem),rgba(255,255,255,.86)}.service-card__badge{position:absolute;inset:.72rem auto auto .72rem;padding:.23rem .48rem;border-radius:999px;color:#8a431d;background:rgba(239,106,39,.11);font-size:.64rem;font-weight:800}@media(min-width:64rem){.service-grid--evaluation{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
