@@ -2,21 +2,23 @@
 import { Clock3, MapPin, MessageCircleMore, Phone, Star } from '@lucide/astro';
 import { site } from '../../domain/entities';
 import { galleryImages, videos } from '../../domain/media.mjs';
-import { homepageEntityIds } from '../../domain/homepage-sections';
+import { homepageEntityIds, homepageSectionById } from '../../domain/homepage-sections';
 
+const clinicSection = homepageSectionById.get('clinic-information-kermanshah');
+if (!clinicSection) throw new Error('Canonical clinic information section is missing from the Homepage registry.');
 const clinicImages = galleryImages.filter((image: any) => image.id.startsWith('clinic-'));
-const clinicVideo = videos.find((video: any) => video.sectionId === 'clinic-information-kermanshah');
+const clinicVideo = videos.find((video: any) => video.sectionId === clinicSection.id);
 const srcset = (image: any, format: string) => image.widths.map((width: number) => `/images/responsive/${image.base}-${width}.${format} ${width}w`).join(', ');
 const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tehran' }).format(new Date(`${site.googleBusinessProfile.observedAt}T12:00:00+03:30`));
 ---
 
-<section id="clinic-information-kermanshah" class="clinic-info section" aria-labelledby="clinic-information-kermanshah-title">
+<section id={clinicSection.id} class="clinic-info section" aria-labelledby={`${clinicSection.id}-title`}>
   <span id={homepageEntityIds.clinic} class="anchor-alias" aria-hidden="true"></span>
   <div class="shell">
     <div class="section-heading section-heading--split">
       <div>
         <p class="eyebrow">انتیتی مستقل محل فعالیت</p>
-        <h2 id="clinic-information-kermanshah-title">کلینیک محل فعالیت دکتر سعید قزلباش در کرمانشاه</h2>
+        <h2 id={`${clinicSection.id}-title`}>{clinicSection.title}</h2>
       </div>
       <p>اطلاعات کلینیک، شهرت عمومی محل مراجعه و موقعیت مکانی را نشان می‌دهد؛ هویت و مسئولیت پزشکی دکتر سعید قزلباش به‌صورت مستقل ثبت شده است.</p>
     </div>
@@ -67,7 +69,7 @@ const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'l
           </video>
         </div>
         <figcaption class="article-video__body">
-          <h3 id={`video-${clinicVideo.id}-title`}>{clinicVideo.title}</h3>
+          <strong id={`video-${clinicVideo.id}-title`} class="clinic-info__video-title">{clinicVideo.title}</strong>
           <p id={`video-${clinicVideo.id}-description`}>{clinicVideo.description}</p>
         </figcaption>
       </figure>
@@ -76,5 +78,5 @@ const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'l
 </section>
 
 <style>
-  .clinic-info{scroll-margin-top:6rem}.clinic-info__grid{display:grid;gap:1.2rem;margin-top:1.3rem}.clinic-info__copy{padding:clamp(1rem,3vw,1.5rem);border:1px solid rgba(2,119,194,.14);border-radius:1.1rem;background:rgba(255,255,255,.94)}.clinic-info__details{display:grid;gap:.65rem;margin:1.1rem 0}.clinic-info__details div{padding:.75rem .85rem;border:1px solid rgba(2,119,194,.1);border-radius:.85rem;background:rgba(247,251,254,.82)}.clinic-info__details dt{display:flex;gap:.4rem;align-items:center;color:var(--muted);font-size:.76rem;font-weight:750}.clinic-info__details dd{margin:.35rem 0 0;color:var(--blue-950);font-weight:800;line-height:1.8}.clinic-info__links{font-size:.86rem}.clinic-info__media{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}.clinic-info__media figure{margin:0;overflow:hidden;border-radius:.9rem;background:#fff}.clinic-info__media picture,.clinic-info__media img{display:block;width:100%;height:100%}.clinic-info__media img{object-fit:cover;aspect-ratio:4/5}.clinic-info__media figcaption{padding:.5rem;color:var(--muted);font-size:.7rem;line-height:1.6}.clinic-info__video{max-width:58rem;margin:1.5rem auto 0}.clinic-info__video h3{margin:.3rem 0;color:var(--blue-950);font-size:1.05rem;line-height:1.8}@media(min-width:62rem){.clinic-info__grid{grid-template-columns:minmax(0,1.15fr) minmax(24rem,.85fr)}.clinic-info__details{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .clinic-info{scroll-margin-top:6rem}.clinic-info__grid{display:grid;gap:1.2rem;margin-top:1.3rem}.clinic-info__copy{padding:clamp(1rem,3vw,1.5rem);border:1px solid rgba(2,119,194,.14);border-radius:1.1rem;background:rgba(255,255,255,.94)}.clinic-info__details{display:grid;gap:.65rem;margin:1.1rem 0}.clinic-info__details div{padding:.75rem .85rem;border:1px solid rgba(2,119,194,.1);border-radius:.85rem;background:rgba(247,251,254,.82)}.clinic-info__details dt{display:flex;gap:.4rem;align-items:center;color:var(--muted);font-size:.76rem;font-weight:750}.clinic-info__details dd{margin:.35rem 0 0;color:var(--blue-950);font-weight:800;line-height:1.8}.clinic-info__links{font-size:.86rem}.clinic-info__media{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}.clinic-info__media figure{margin:0;overflow:hidden;border-radius:.9rem;background:#fff}.clinic-info__media picture,.clinic-info__media img{display:block;width:100%;height:100%}.clinic-info__media img{object-fit:cover;aspect-ratio:4/5}.clinic-info__media figcaption{padding:.5rem;color:var(--muted);font-size:.7rem;line-height:1.6}.clinic-info__video{max-width:58rem;margin:1.5rem auto 0}.clinic-info__video-title{display:block;margin:.3rem 0;color:var(--blue-950);font-size:1.05rem;line-height:1.8}@media(min-width:62rem){.clinic-info__grid{grid-template-columns:minmax(0,1.15fr) minmax(24rem,.85fr)}.clinic-info__details{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
