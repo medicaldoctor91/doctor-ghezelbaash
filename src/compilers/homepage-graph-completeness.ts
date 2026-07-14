@@ -6,6 +6,7 @@ type Node = Record<string, any>;
 type Graph = { '@context'?: unknown; '@graph'?: Node[] };
 const id = (fragment: string) => `${site.url}#${fragment}`;
 const ref = (value: string) => ({ '@id': value });
+const asArray = <T>(value: T | T[] | undefined): T[] => value === undefined ? [] : Array.isArray(value) ? value : [value];
 
 export function completeHomepageGraphContract(input: Graph): Graph {
   const nodes = [...(input['@graph'] ?? [])];
@@ -51,6 +52,13 @@ export function completeHomepageGraphContract(input: Graph): Graph {
     };
     nodes.push(node);
     byId.set(graphDatasetId, node);
+  }
+
+  const clinic = byId.get(clinicId);
+  if (clinic) {
+    const mapResources = new Set([site.maps, site.mapsSearch, site.openStreetMap]);
+    clinic.sameAs = asArray<string>(clinic.sameAs).filter((url) => !mapResources.has(url));
+    clinic.hasMap = site.maps;
   }
 
   for (const video of videos as any[]) {
