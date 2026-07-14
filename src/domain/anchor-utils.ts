@@ -1,19 +1,14 @@
 import type { MarkdownHeading } from 'astro';
-import { anchorRegistry } from './anchors';
-import { homepageSections } from './homepage-sections';
 import { homepageSubsectionAnchorRegistry } from './homepage-subsections';
+import { anchorRegistry } from './anchors';
 
-const homepageSectionAnchorRegistry = Object.fromEntries(
-  homepageSections.map((section) => [section.title, section.id]),
-) as Record<string, string>;
+const canonicalAnchorRegistry: Record<string, string> = {
+  ...anchorRegistry,
+  ...homepageSubsectionAnchorRegistry,
+};
 
 export function stableAnchorFor(title: string, fallback?: string) {
-  const normalized = title.replace(/\s*¶$/u, '').trim();
-  return homepageSectionAnchorRegistry[normalized]
-    ?? homepageSubsectionAnchorRegistry[normalized]
-    ?? anchorRegistry[normalized]
-    ?? fallback
-    ?? 'section';
+  return canonicalAnchorRegistry[title.trim()] ?? fallback ?? 'section';
 }
 
 export function stabilizeHeadings(headings: MarkdownHeading[]): MarkdownHeading[] {
