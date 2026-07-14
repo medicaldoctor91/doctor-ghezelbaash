@@ -60,7 +60,7 @@ function serviceTarget(node: Node) {
     [/ملاسما|لک|پوست|جوان/iu, 'skin-scar-rejuvenation'],
     [/مو|PRP|مزوتراپی/iu, 'hair-loss-and-restoration'],
     [/غبغب|زیر چانه/iu, 'submental-liposuction-guide'],
-    [/بلفارو/پلک/iu, 'blepharoplasty-evaluation'],
+    [/بلفارو|پلک/iu, 'blepharoplasty-evaluation'],
     [/رینو|بینی/iu, 'rhinoplasty-evaluation'],
     [/فک|ارتوگنات/iu, 'orthognathic-surgery-evaluation'],
     [/جراحی|surgery/iu, 'aesthetic-surgery-and-referral'],
