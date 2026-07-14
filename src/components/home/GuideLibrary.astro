@@ -201,7 +201,7 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                         <span><ListVideo size={16} aria-hidden="true" /> فصل‌ها:</span>
                         {video.chapters.map((chapter: any) => (
                           <a href={`#video-${video.id}`} data-video-id={video.id} data-start={chapter.startOffset}>
-                            <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.start)}</time>
+                            <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time>
                             <span>{chapter.name}</span>
                           </a>
                         ))}
