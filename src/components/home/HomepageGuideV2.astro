@@ -4,7 +4,11 @@ import { site } from '../../domain/entities';
 import { videos } from '../../domain/media.mjs';
 import { videoPageDetails } from '../../domain/video-pages.mjs';
 import { articleHomepageSections } from '../../domain/homepage-sections';
-import { homepageArticleGroups } from '../../domain/homepage-article-registry.mjs';
+import {
+  homepageArticleGroups,
+  homepageArticleSubsectionById,
+} from '../../domain/homepage-article-registry.mjs';
+import { homepageSubsectionSummaries } from '../../domain/homepage-subsection-summaries.mjs';
 import { readMediaChapters } from '../../lib/media';
 
 type LegacySection = { id: string; title: string; html: string };
@@ -17,6 +21,7 @@ type Source = { section?: string; headings?: string[]; manualHtml?: string };
 const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/&[a-zA-Z#0-9]+;/gu, ' ').replace(/\s+/gu, ' ').replaceAll('¶', '').trim();
 const wordCount = (value: string) => plain(value).split(/\s+/u).filter(Boolean).length;
 const stripHeadingAnchors = (value: string) => value.replace(/<a[^>]*class="[^"]*heading-anchor[^"]*"[^>]*>[\s\S]*?<\/a>/giu, '');
+const cleanVisibleHtml = (value: string) => value.replace(/\s+id="clinical-decision-model-[^"]+"/gu, '');
 
 const fragments = new Map<string, LegacyBlock & { title: string }>();
 const sectionBlocks = new Map<string, LegacyBlock[]>();
@@ -26,7 +31,7 @@ for (const section of sections) {
   const matches = [...html.matchAll(/<h3\b[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/h3>/giu)];
   const blocks: LegacyBlock[] = [];
   const introEnd = matches[0]?.index ?? html.length;
-  const introHtml = html.slice(0, introEnd).trim();
+  const introHtml = cleanVisibleHtml(html.slice(0, introEnd).trim());
   if (wordCount(introHtml) >= 18) blocks.push({ key: `section:${section.id}:intro`, html: introHtml, words: wordCount(introHtml) });
 
   for (let index = 0; index < matches.length; index += 1) {
@@ -35,7 +40,7 @@ for (const section of sections) {
     const title = plain(match[2]);
     const start = (match.index ?? 0) + match[0].length;
     const end = matches[index + 1]?.index ?? html.length;
-    const body = html.slice(start, end);
+    const body = cleanVisibleHtml(html.slice(start, end));
     const rendered = `<h4>${title}</h4>${body}`;
     const block = { key: `heading:${fragmentId}`, html: rendered, words: wordCount(rendered), title };
     fragments.set(fragmentId, block);
@@ -46,7 +51,10 @@ for (const section of sections) {
 
 const usedLegacyKeys = new Map<string, string>();
 const sourceBlocks = (source: Source, uniqueKey: string): LegacyBlock[] => {
-  if (source.manualHtml) return [{ key: `manual:${uniqueKey}`, html: source.manualHtml, words: wordCount(source.manualHtml) }];
+  if (source.manualHtml) {
+    const html = cleanVisibleHtml(source.manualHtml);
+    return [{ key: `manual:${uniqueKey}`, html, words: wordCount(html) }];
+  }
   if (source.section) return sectionBlocks.get(source.section) ?? [];
   return (source.headings ?? []).map((id) => fragments.get(id)).filter((block): block is LegacyBlock => Boolean(block));
 };
@@ -71,15 +79,23 @@ const renderSubsection = (groupId: string, subsection: any, budget: number) => {
     }
   });
 
+  const summary = homepageSubsectionSummaries[subsection.id];
+  const summaryHtml = summary
+    ? `<p class="subsection-direct-answer"><strong>پاسخ مستقیم:</strong> ${summary}</p>`
+    : '';
   const references = [...crossReferences]
-    .map((id) => `<a href="#${id}">${id}</a>`)
+    .map((ownerId) => {
+      const owner = homepageArticleSubsectionById.get(ownerId);
+      if (!owner) throw new Error(`Cross-reference owner is absent from the article registry: ${ownerId}`);
+      return `<a href="#${ownerId}">${owner.title}</a>`;
+    })
     .join('، ');
   const crossReferenceHtml = references
     ? `<p class="content-cross-reference"><strong>ادامهٔ مرتبط:</strong> برای جلوگیری از تکرار متن، توضیح مشترک در ${references} آمده است.</p>`
     : '';
-  const html = chosen.map((block) => block.html).join('') + crossReferenceHtml;
+  const html = summaryHtml + chosen.map((block) => block.html).join('') + crossReferenceHtml;
   if (!html.trim()) throw new Error(`No visible content resolved for homepage subsection: ${subsection.id}`);
-  return { ...subsection, html, renderedWords: words };
+  return { ...subsection, html, renderedWords: words + wordCount(summaryHtml) };
 };
 
 const titleById = new Map(articleHomepageSections.map((section: any) => [section.id, section.title]));

@@ -1,13 +1,17 @@
 ---
 import { AtSign, CalendarCheck, Mail, MapPin, MessageCircle, Phone } from '@lucide/astro';
 import { site } from '../../domain/entities';
+import { homepageSectionById } from '../../domain/homepage-sections';
+
+const contactSection = homepageSectionById.get('sources-contact-and-appointment');
+if (!contactSection) throw new Error('Canonical contact section is missing from the Homepage registry.');
 ---
 
-<section id="sources-contact-and-appointment" class="section contact-section" aria-labelledby="sources-contact-and-appointment-title">
+<section id={contactSection.id} class="section contact-section" aria-labelledby={`${contactSection.id}-title`}>
   <div class="shell contact-card">
     <div class="contact-card__copy">
       <p class="eyebrow">ارتباط مستقیم</p>
-      <h2 id="sources-contact-and-appointment-title">منابع، راه‌های ارتباطی و رزرو مشاوره</h2>
+      <h2 id={`${contactSection.id}-title`}>{contactSection.title}</h2>
       <p>برای مشاوره اولیه، مسئله اصلی، درمان‌های قبلی، داروهای مصرفی و هدف خود را توضیح دهید. در عارضه حاد یا نشانه خطر، دایرکت شبکه اجتماعی جای ارزیابی فوری پزشکی را نمی‌گیرد.</p>
       <div class="contact-card__actions">
         <a class="button button--primary" href={`tel:${site.phone}`}><CalendarCheck size={19} aria-hidden="true" /> رزرو وقت مشاوره رایگان</a>
