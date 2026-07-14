@@ -6,7 +6,7 @@ import PhysicianHero from '../components/home/PhysicianHero.astro';
 import ContentTable from '../components/home/ContentTable.astro';
 import BestDoctorAnswers from '../components/home/BestDoctorAnswers.astro';
 import Services from '../components/home/Services.astro';
-import HomepageGuide from '../components/home/HomepageGuide.astro';
+import HomepageGuideV2 from '../components/home/HomepageGuideV2.astro';
 import ClinicInformation from '../components/home/ClinicInformation.astro';
 import KnowledgeGraphSources from '../components/home/KnowledgeGraphSources.astro';
 import ContactSection from '../components/home/ContactSection.astro';
@@ -16,6 +16,7 @@ import { stabilizeHeadings } from '../domain/anchor-utils';
 import { buildGooglePageGraph } from '../compilers/google-page-graph';
 import { applyHomepageGraphContract } from '../compilers/homepage-graph-contract';
 import { completeHomepageGraphContract } from '../compilers/homepage-graph-completeness';
+import { applyHomepageAuditFixes } from '../compilers/homepage-graph-audit-fixes';
 import {
   rehypeAccessibleTables,
   rehypeExternalLinks,
@@ -24,7 +25,7 @@ import {
 
 const raw = rawContent();
 const headings = stabilizeHeadings(getHeadings());
-const graph = completeHomepageGraphContract(applyHomepageGraphContract(buildGooglePageGraph(headings, raw)));
+const graph = applyHomepageAuditFixes(completeHomepageGraphContract(applyHomepageGraphContract(buildGooglePageGraph(headings, raw))));
 
 const h2Matches = [...raw.matchAll(/^##\s+(.+)$/gm)];
 const h2Headings = headings.filter((heading) => heading.depth === 2);
@@ -60,7 +61,7 @@ const articleSections = await Promise.all(h2Matches.map(async (match, index) => 
     <ContentTable />
     <BestDoctorAnswers />
     <Services />
-    <HomepageGuide sections={articleSections} />
+    <HomepageGuideV2 sections={articleSections} />
     <ClinicInformation />
     <KnowledgeGraphSources />
     <ContactSection />
