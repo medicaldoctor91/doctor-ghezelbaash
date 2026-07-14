@@ -1,6 +1,7 @@
 import type { MarkdownHeading } from 'astro';
 import { site } from '~/domain/entities';
 import { stabilizeHeadings } from '~/domain/anchor-utils';
+import { priorityIntentAnswers } from '~/domain/priority-intent-answers.mjs';
 // @ts-expect-error Shared ESM physician identity contract.
 import {
   clinicRequiredSameAs,
@@ -82,6 +83,60 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
 
   const graphDatasetId = `${site.url}#knowledge-graph-dataset`;
   const clinicalGuideId = `${site.url}#clinical-guide`;
+  const priorityAnswerListId = `${site.url}#priority-answer-list`;
+
+  const priorityAnswerNodes: Node[] = priorityIntentAnswers.map((item: {
+    id: string;
+    question: string;
+    answer: string;
+    intentClass: string[];
+    geographyScope: string[];
+  }) => ({
+    '@type': 'Answer',
+    '@id': `${site.url}#answer-${item.id}`,
+    text: item.answer,
+    url: `${site.url}#${item.id}`,
+    inLanguage: site.language,
+    author: ref(`${site.url}#person`),
+    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
+    isPartOf: ref(priorityAnswerListId),
+    additionalProperty: [
+      { '@type': 'PropertyValue', propertyID: 'intentClass', value: item.intentClass.join(', ') },
+      { '@type': 'PropertyValue', propertyID: 'geographyScope', value: item.geographyScope.join(', ') },
+    ],
+  }));
+
+  const priorityQuestionNodes: Node[] = priorityIntentAnswers.map((item: {
+    id: string;
+    question: string;
+    intentClass: string[];
+    geographyScope: string[];
+  }) => ({
+    '@type': 'Question',
+    '@id': `${site.url}#question-${item.id}`,
+    name: item.question,
+    url: `${site.url}#${item.id}`,
+    inLanguage: site.language,
+    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
+    acceptedAnswer: ref(`${site.url}#answer-${item.id}`),
+    isPartOf: ref(priorityAnswerListId),
+    keywords: [...item.intentClass, ...item.geographyScope],
+  }));
+
+  const priorityAnswerList: Node = {
+    '@type': 'ItemList',
+    '@id': priorityAnswerListId,
+    name: 'پاسخ‌های اولویت‌دار انتخاب پزشک و درمان زیبایی از کرمانشاه تا سراسر ایران',
+    url: `${site.url}#search-intent-hub`,
+    inLanguage: site.language,
+    numberOfItems: priorityQuestionNodes.length,
+    about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
+    itemListElement: priorityQuestionNodes.map((node, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: ref(node['@id']),
+    })),
+  };
 
   const graphDataset: Node = {
     '@type': 'Dataset',
@@ -95,7 +150,7 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     about: [ref(`${site.url}#person`), ref(`${site.url}#clinic`)],
     isBasedOn: ref(`${site.url}#webpage`),
     dateModified: site.dateModified,
-    version: '2.2.0',
+    version: '2.3.0',
     license: 'https://creativecommons.org/licenses/by/4.0/',
     distribution: {
       '@type': 'DataDownload',
@@ -151,19 +206,22 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     ...p.pageNode,
     '@type': ['MedicalWebPage', 'ProfilePage'],
     mainEntity: ref(`${site.url}#person`),
+    mentions: [...asArray(p.pageNode.mentions), ref(`${site.url}#clinic`), ref(`${site.url}#clinic-reputation-snapshot`)],
     hasPart: [
-      ...(p.pageNode.hasPart ?? []),
+      ...asArray(p.pageNode.hasPart),
       ref(clinicalGuideId),
+      ref(priorityAnswerListId),
       ref(graphDatasetId),
     ],
   };
   const website: Node = {
     ...p.websiteNode,
-    hasPart: [...(p.websiteNode.hasPart ?? []), ref(graphDatasetId)],
+    hasPart: [...asArray(p.websiteNode.hasPart), ref(priorityAnswerListId), ref(graphDatasetId)],
   };
   const clinicSocialUrls = new Set(clinicRequiredSameAs);
   const person: Node = {
     ...p.personNode,
+    '@type': 'Person',
     honorificPrefix: personIdentityContract.honorificPrefix,
     alternateName: uniqueStrings([
       ...asArray(p.personNode.alternateName),
@@ -178,9 +236,11 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     workLocation: ref(`${site.url}#clinic`),
     affiliation: ref(`${site.url}#clinic`),
     subjectOf: [
-      ...(p.personNode.subjectOf ?? []),
+      ...asArray(p.personNode.subjectOf),
       ...p.researchNodes.map((node: Node) => ref(node['@id'])),
       ...restoredPersonProfileNodes.map((node: Node) => ref(node['@id'])),
+      ref(`${site.url}#clinic-reputation-snapshot`),
+      ref(priorityAnswerListId),
       ref(graphDatasetId),
       ref(site.huggingFaceDataset),
     ],
@@ -191,17 +251,40 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
       ...(p.clinicKnowledgeNode?.address ?? {}),
       postalCode: site.postalCode,
     },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: site.googleBusinessProfile.ratingValue,
+      bestRating: site.googleBusinessProfile.bestRating,
+      worstRating: 1,
+      ratingCount: site.googleBusinessProfile.ratingCount,
+    },
     sameAs: uniqueStrings([
       ...asArray(p.clinicKnowledgeNode?.sameAs),
       ...clinicRequiredSameAs,
     ]),
     employee: ref(`${site.url}#person`),
+    subjectOf: uniqueStrings([]).length
+      ? p.clinicKnowledgeNode?.subjectOf
+      : [...asArray(p.clinicKnowledgeNode?.subjectOf), ref(`${site.url}#clinic-reputation-snapshot`), ref(priorityAnswerListId)],
   };
   const offerCatalog: Node = { ...p.offerCatalogNode, url: `${site.url}#services` };
   const authorityNetwork: Node = { ...p.authorityNetworkNode };
   delete authorityNetwork.url;
-  const editorialReview: Node = { ...p.editorialReviewNode, url: `${site.url}#doctor` };
-  const reputationSnapshot: Node = { ...p.reputationSnapshotNode, url: site.maps };
+  const editorialReview: Node = { ...p.editorialReviewNode, url: `${site.url}#doctor`, dateModified: site.dateModified };
+  const reputationSnapshot: Node = {
+    ...p.reputationSnapshotNode,
+    url: site.maps,
+    dateModified: site.googleBusinessProfile.observedAt,
+    temporalCoverage: site.googleBusinessProfile.observedAt,
+    mainEntity: ref(`${site.url}#clinic`),
+    mentions: ref(`${site.url}#person`),
+    variableMeasured: [
+      { '@type': 'PropertyValue', propertyID: 'ratingValue', value: site.googleBusinessProfile.ratingValue },
+      { '@type': 'PropertyValue', propertyID: 'bestRating', value: site.googleBusinessProfile.bestRating },
+      { '@type': 'PropertyValue', propertyID: 'ratingCount', value: site.googleBusinessProfile.ratingCount },
+      { '@type': 'PropertyValue', propertyID: 'observedAt', value: site.googleBusinessProfile.observedAt },
+    ],
+  };
   const logo: Node = {
     ...p.logoNode,
     url: `${site.url}assets/brand/doctor-hand-syringe-logo-512.png`,
@@ -224,6 +307,9 @@ export function buildCanonicalKnowledgeGraph(headings: MarkdownHeading[], raw: s
     p.conceptSetNode,
     graphDataset,
     clinicalGuide,
+    priorityAnswerList,
+    ...priorityQuestionNodes,
+    ...priorityAnswerNodes,
     authorityNetwork,
     editorialReview,
     reputationSnapshot,
