@@ -18,15 +18,17 @@ const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'lon
     </section>
     <nav aria-label="پیوندهای صفحه">
       <strong>صفحه</strong>
+      <a href="#clinic-reputation">اعتبار عمومی کلینیک</a>
       <a href="#services">خدمات</a>
+      <a href="#search-intent-hub">پاسخ‌های سریع</a>
       <a href="#clinical-guide">مطالب</a>
       <a href="#contact">تماس و نشانی</a>
     </nav>
     <nav aria-label="ارتباط با کلینیک">
       <strong>ارتباط</strong>
       <a href={`tel:${site.phone}`}><Phone size={17} aria-hidden="true" /> <bdi dir="ltr">{site.phoneDisplay}</bdi></a>
-      <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={17} aria-hidden="true" /> نقشه</a>
-      <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={17} aria-hidden="true" /> اینستاگرام</a>
+      <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={17} aria-hidden="true" /> نقشه و نظرها</a>
+      <a href={site.instagram} target="_blank" rel="noopener noreferrer external"><AtSign size={17} aria-hidden="true" /> اینستاگرام</a>
     </nav>
   </div>
   <div class="shell footer-bottom">
@@ -38,5 +40,5 @@ const modified = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'lon
 <nav id="conversion-dock" class="mobile-dock" aria-label="اقدام‌های سریع موبایل">
   <a href={`tel:${site.phone}`}><Phone size={20} aria-hidden="true" /><span>تماس</span></a>
   <a href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={20} aria-hidden="true" /><span>نقشه</span></a>
-  <a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><AtSign size={20} aria-hidden="true" /><span>اینستاگرام</span></a>
+  <a href={site.instagram} target="_blank" rel="noopener noreferrer external"><AtSign size={20} aria-hidden="true" /><span>اینستاگرام</span></a>
 </nav>
