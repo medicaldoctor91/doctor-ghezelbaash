@@ -1,61 +1,36 @@
 ---
-import { AtSign, Clock3, MapPin, Phone } from '@lucide/astro';
+import { AtSign, CalendarCheck, Mail, MapPin, MessageCircle, Phone } from '@lucide/astro';
 import { site } from '../../domain/entities';
-import { galleryImages } from '../../domain/media.mjs';
-
-const clinicImages = galleryImages.filter((image: any) => image.id.startsWith('clinic-'));
-const srcset = (image: any, format: string) => image.widths
-  .map((width: number) => `/images/responsive/${image.base}-${width}.${format} ${width}w`)
-  .join(', ');
 ---
 
-<section id="contact" class="section contact-section" aria-labelledby="contact-title">
-  <span id="clinic" class="anchor-alias" aria-hidden="true"></span>
+<section id="sources-contact-and-appointment" class="section contact-section" aria-labelledby="sources-contact-and-appointment-title">
   <div class="shell contact-card">
     <div class="contact-card__copy">
-      <h2 id="contact-title">تماس و نشانی کلینیک</h2>
-      <p>برای هماهنگی وقت مراجعه تماس بگیرید. سابقهٔ درمان، نام مواد تزریق‌شده و داروهای مصرفی را هنگام مراجعه همراه داشته باشید.</p>
+      <p class="eyebrow">ارتباط مستقیم</p>
+      <h2 id="sources-contact-and-appointment-title">منابع، راه‌های ارتباطی و رزرو مشاوره</h2>
+      <p>برای مشاوره اولیه، مسئله اصلی، درمان‌های قبلی، داروهای مصرفی و هدف خود را توضیح دهید. در عارضه حاد یا نشانه خطر، دایرکت شبکه اجتماعی جای ارزیابی فوری پزشکی را نمی‌گیرد.</p>
       <div class="contact-card__actions">
-        <a class="button button--primary" href={`tel:${site.phone}`}><Phone size={19} aria-hidden="true" /> تماس با کلینیک</a>
-        <a class="button button--light" href={site.maps} target="_blank" rel="noopener noreferrer external"><MapPin size={19} aria-hidden="true" /> مسیریابی</a>
+        <a class="button button--primary" href={`tel:${site.phone}`}><CalendarCheck size={19} aria-hidden="true" /> رزرو وقت مشاوره رایگان</a>
+        <a class="button button--light" href={site.instagramDirect} target="_blank" rel="noopener noreferrer external"><MessageCircle size={19} aria-hidden="true" /> گفت‌وگوی آنلاین با دکتر قزلباش</a>
       </div>
     </div>
+
     <dl class="contact-details">
-      <div>
-        <dt><Phone size={20} aria-hidden="true" /> تلفن</dt>
-        <dd><a href={`tel:${site.phone}`}><bdi dir="ltr">{site.phoneDisplay}</bdi></a></dd>
-      </div>
-      <div>
-        <dt><MapPin size={20} aria-hidden="true" /> نشانی</dt>
-        <dd>{site.address}</dd>
-      </div>
-      <div>
-        <dt><Clock3 size={20} aria-hidden="true" /> ساعات پاسخ‌گویی</dt>
-        <dd>{site.hours}</dd>
-      </div>
-      <div>
-        <dt><AtSign size={20} aria-hidden="true" /> اینستاگرام</dt>
-        <dd><a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><bdi dir="ltr">{site.instagramHandle}</bdi></a></dd>
-      </div>
+      <div><dt><Phone size={20} aria-hidden="true" /> تلفن</dt><dd><a href={`tel:${site.phone}`}><bdi dir="ltr">{site.phoneDisplay}</bdi></a></dd></div>
+      <div><dt><MapPin size={20} aria-hidden="true" /> نشانی و نقشه</dt><dd><a href={site.maps} target="_blank" rel="noopener noreferrer external">{site.address}</a></dd></div>
+      <div><dt><AtSign size={20} aria-hidden="true" /> اینستاگرام رسمی</dt><dd><a href={site.instagram} target="_blank" rel="me noopener noreferrer external"><bdi dir="ltr">{site.instagramHandle}</bdi></a></dd></div>
+      <div><dt><Mail size={20} aria-hidden="true" /> ایمیل</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd></div>
     </dl>
 
-    <div class="contact-card__media" role="group" aria-label="تصاویر کلینیک">
-      {clinicImages.map((image: any) => (
-        <figure data-contextual-image>
-          <picture>
-            <source type="image/avif" srcset={srcset(image, 'avif')} sizes="(min-width: 928px) 18vw, 50vw" />
-            <source type="image/webp" srcset={srcset(image, 'webp')} sizes="(min-width: 928px) 18vw, 50vw" />
-            <img
-              src={`/images/responsive/${image.base}-${Math.max(...image.widths)}.jpg`}
-              alt={image.alt}
-              width={image.width}
-              height={image.height}
-              loading="lazy"
-              decoding="async"
-            />
-          </picture>
-        </figure>
-      ))}
+    <div class="contact-card__sources" aria-label="منابع هویتی و علمی منتخب">
+      <a href={site.irimcVerification} target="_blank" rel="noopener noreferrer external">بررسی رسمی شماره نظام پزشکی دکتر محمدسعید قزلباش</a>
+      <a href={site.orcidUrl} target="_blank" rel="me noopener noreferrer external">شناسه پژوهشگر ORCID دکتر سعید قزلباش</a>
+      <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">کتاب‌شناسی عمومی NCBI دکتر سعید قزلباش</a>
+      <a href={site.doctorWikidata} target="_blank" rel="noopener noreferrer external">انتیتی Mohammad Saeed Ghezelbash در Wikidata</a>
     </div>
   </div>
 </section>
+
+<style>
+  .contact-section{scroll-margin-top:6rem}.contact-card{display:grid;gap:1.2rem}.contact-card__copy h2{margin:.35rem 0 .75rem;color:var(--blue-950);font-size:clamp(1.45rem,3.4vw,2.2rem);line-height:1.65}.contact-card__copy p{max-width:58rem;color:#36596b;line-height:2}.contact-card__actions{display:grid;gap:.65rem;margin-top:1rem}.contact-card__actions .button{justify-content:center;text-align:center}.contact-details{display:grid;gap:.7rem;margin:0}.contact-details div{padding:.85rem;border:1px solid rgba(2,119,194,.13);border-radius:.9rem;background:rgba(255,255,255,.9)}.contact-details dt{display:flex;gap:.4rem;align-items:center;color:var(--muted);font-size:.75rem;font-weight:750}.contact-details dd{margin:.4rem 0 0;color:var(--blue-950);font-weight:800;line-height:1.8}.contact-card__sources{display:grid;gap:.55rem;padding:1rem;border:1px dashed rgba(2,119,194,.2);border-radius:1rem}.contact-card__sources a{color:var(--blue-700);font-size:.85rem;font-weight:720;line-height:1.8;text-underline-offset:.22em}@media(min-width:52rem){.contact-card__actions{grid-template-columns:repeat(2,minmax(15rem,auto));justify-content:start}.contact-details{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>

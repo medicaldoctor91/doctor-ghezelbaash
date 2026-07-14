@@ -6,6 +6,7 @@ import '../styles/refinement.css';
 import '../styles/finishing.css';
 import '../styles/responsive.css';
 import { site } from '../domain/entities';
+import { homepageEntityIds } from '../domain/homepage-sections';
 
 interface Props {
   graph: Record<string, unknown>;
@@ -43,22 +44,9 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
     <meta name="author" content={site.legalName} />
     <meta name="robots" content={robots} />
     <link rel="canonical" href={canonical} />
-    <link rel="author" href={`${site.url}#person`} />
-    <link
-      rel="describedby"
-      href={externalGraphUrl}
-      type="application/ld+json"
-      title="Canonical knowledge graph"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="/images/responsive/doctor-portrait-768.avif"
-      type="image/avif"
-      imagesrcset="/images/responsive/doctor-portrait-480.avif 480w, /images/responsive/doctor-portrait-768.avif 768w, /images/responsive/doctor-portrait-1200.avif 1200w, /images/responsive/doctor-portrait-1600.avif 1600w"
-      imagesizes="(min-width: 920px) 42vw, 100vw"
-      fetchpriority="high"
-    />
+    <link rel="author" href={`${site.url}#${homepageEntityIds.person}`} />
+    <link rel="describedby" href={externalGraphUrl} type="application/ld+json" title="Canonical knowledge graph" />
+    <link rel="preload" as="image" href="/images/responsive/doctor-portrait-768.avif" type="image/avif" imagesrcset="/images/responsive/doctor-portrait-480.avif 480w, /images/responsive/doctor-portrait-768.avif 768w, /images/responsive/doctor-portrait-1200.avif 1200w, /images/responsive/doctor-portrait-1600.avif 1600w" imagesizes="(min-width: 920px) 42vw, 100vw" fetchpriority="high" />
     <meta name="generator" content={Astro.generator} />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
