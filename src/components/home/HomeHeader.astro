@@ -32,11 +32,11 @@ const links = [
         تماس
       </a>
       <details class="mobile-menu">
-        <summary aria-label="بازکردن منو">
+        <summary aria-label="بازکردن منو" aria-controls="mobile-navigation" aria-expanded="false">
           <Menu class="mobile-menu__open" aria-hidden="true" />
           <X class="mobile-menu__close" aria-hidden="true" />
         </summary>
-        <nav aria-label="منوی موبایل">
+        <nav id="mobile-navigation" aria-label="منوی موبایل">
           {links.map((link) => <a href={link.href}>{link.label}</a>)}
           <a href={`tel:${site.phone}`}>تماس با کلینیک</a>
         </nav>
@@ -44,3 +44,34 @@ const links = [
     </div>
   </nav>
 </header>
+
+<script>
+  const menu = document.querySelector<HTMLDetailsElement>('.mobile-menu');
+
+  if (menu) {
+    const summary = menu.querySelector<HTMLElement>('summary');
+
+    const syncState = () => {
+      const isOpen = menu.open;
+      summary?.setAttribute('aria-expanded', String(isOpen));
+      summary?.setAttribute('aria-label', isOpen ? 'بستن منو' : 'بازکردن منو');
+    };
+
+    const closeMenu = () => {
+      if (!menu.open) return;
+      menu.open = false;
+      syncState();
+    };
+
+    menu.addEventListener('toggle', syncState);
+    menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeMenu();
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+      if (menu.open && event.target instanceof Node && !menu.contains(event.target)) closeMenu();
+    });
+  }
+</script>
