@@ -1,112 +1,88 @@
 # Independent nine-stage Homepage audit
 
-This report re-checks the merged Person-first Homepage against the original nine-stage execution plan. It records both the defects found after PR #53 and the corrective evidence in PR #54.
+This report re-checks PR #53 against the original nine-stage plan and records the corrective evidence in PR #54.
 
-## Executive result
+## Result
 
-PR #53 passed its original validators but did not satisfy every acceptance gate. The independent audit found excessive content volume, repeated medical passages, non-explicit Service destination inference, incorrect ownership of physician social profiles, and validator blind spots.
+The first implementation passed its original validators but did not satisfy every acceptance gate. The independent audit found:
 
-The corrective branch now produces:
+- about 31,228 words instead of the intended 18–22k range;
+- repeated legacy passages across new medical subsections;
+- H2, H3 and validator contracts distributed across multiple files;
+- Service URLs inferred by text matching rather than explicit mapping;
+- physician social profiles placed under Clinic instead of Person;
+- a clinic video title presented as a medical H3;
+- no tests for word budgets, repeated passages, passage depth, social ownership, exact Service targets or complete VideoObject parity.
 
-- one canonical and indexable Homepage;
-- one H1;
-- sixteen canonical main H2 sections;
-- fifty-seven canonical article H3 sections;
-- 19,049 words across the sixteen main content sections;
-- zero exact duplicate long paragraphs;
-- 164 H4 headings instead of the previous 300-range output;
-- 2,244 DOM elements;
-- 432,455 raw HTML bytes;
-- 79,854 gzip bytes;
-- 59,205 Brotli bytes;
-- twelve explicitly mapped contextual videos;
-- zero duplicate HTML IDs;
-- zero legacy numeric `clinical-decision-model-*` IDs in final HTML;
-- explicit Service and Procedure destinations;
-- physician social profiles under `Person.sameAs`;
-- Google Maps in `Clinic.hasMap`, with Google Maps and OpenStreetMap excluded from `Clinic.sameAs`.
+## Corrected output
 
-## Stage 1 — audit and migration map
+The latest corrective build produces:
 
-### Baseline defects found after PR #53
+- 1 H1;
+- 16 canonical H2 sections;
+- 57 canonical article H3 passages;
+- 19,268 words across the sixteen main sections;
+- 0 duplicate long paragraphs;
+- minimum H3 passage depth of 49 words;
+- 164 H4 headings;
+- 2,250 DOM elements;
+- 434,682 raw HTML bytes;
+- 80,345 gzip bytes;
+- 59,551 Brotli bytes;
+- 12 explicitly mapped videos;
+- 0 duplicate IDs;
+- 0 legacy numeric `clinical-decision-model-*` IDs in final HTML;
+- 5 descriptive cross-links replacing repeated source blocks;
+- 3 supplemental direct answers for passages made thin by deduplication.
 
-- Main content was approximately 31,228 words rather than the intended 18–22k range.
-- The renderer repeated legacy passages under multiple new subsections.
-- At least 42 long paragraphs and 21 H4 titles had exact duplicate output.
-- H2, H3, source placement and validator arrays were defined in multiple files.
-- Service destination selection used Persian regular-expression matching. For example, `موضعی` could match the hair token `مو`, sending body contouring to the hair section.
-- Instagram, LinkedIn and Facebook URLs visibly identifying the physician were placed in `Clinic.sameAs`.
-- The clinic contextual video used a medical H3 heading.
-- Validators did not measure total words, duplicate passages, exact Service destinations, social-profile ownership or full VideoObject parity.
-- The primary domain did not match the Cloudflare Preview after the earlier merge.
+## Stage 1 — audit and migration
 
-### Major old → canonical destination map
+The audit now records the changed files, baseline failures, video destinations and major identifier migration:
 
 | Previous identifier or behavior | Canonical replacement |
 | --- | --- |
 | `#person` | `#mohammad-saeed-ghezelbash` |
 | `#clinic` | `#dr-saeed-ghezelbash-aesthetic-clinic` |
 | `#doctor` | Person block `#mohammad-saeed-ghezelbash` |
-| `#clinic-reputation` | rating in the Person bar plus `#clinic-information-kermanshah` |
+| `#clinic-reputation` | Person rating bar plus `#clinic-information-kermanshah` |
 | `#services` | `#aesthetic-services-kermanshah` |
 | `#search-intent-hub` | `#best-aesthetic-doctor-kermanshah` |
 | `#contact` | `#sources-contact-and-appointment` |
-| `#videos` / `#video-knowledge-hub` | each video’s explicit medical or clinic destination |
-| numeric `#clinical-decision-model-*` HTML IDs | removed from final HTML; source selection is internal only |
-| inferred Service URL by text regex | explicit node-fragment → visible destination registry |
+| `#videos` | each video’s explicit medical or clinic destination |
+| numeric legacy content IDs | removed from final HTML |
+| text-inferred Service target | explicit node-fragment → destination registry |
 
-The broad `#clinical-guide` remains only as the semantic wrapper around the article flow. It is not a substitute for the sixteen canonical main-section destinations.
+## Stage 2 — shared contracts
 
-## Stage 2 — central architecture contract
+The corrected architecture uses:
 
-The corrected implementation uses shared machine-readable registries:
+- `homepage-sections.mjs` for entities, H2 order, titles, TOC groups, intent, geography and Graph inclusion;
+- `homepage-article-registry.mjs` for H3 titles, IDs, sources and content budgets;
+- `homepage-service-targets.mjs` for explicit Service and Procedure destinations;
+- `media.mjs` for video placement;
+- `homepage-subsection-summaries.mjs` for independent answers required after deduplication.
 
-- `src/domain/homepage-sections.mjs` for canonical entities, sixteen H2 sections, order, TOC groups, intent class, geography and Graph/TOC inclusion;
-- `src/domain/homepage-article-registry.mjs` for article H3 IDs, titles, source selection and content budgets;
-- `src/domain/homepage-service-targets.mjs` for explicit Service/Procedure destination mapping;
-- `src/domain/media.mjs` for explicit video placement.
+Final H2 text is applied from the registry before validation, so visible HTML and Graph cannot silently diverge on section titles.
 
-Astro components, graph compilers, Content Table generation, post-processing and Node validators consume these registries. Final H2 text is applied from the registry before release validation, preventing drift from component fallback text.
-
-## Stage 3 — Person-first opening
+## Stages 3–4 — opening and semantic skeleton
 
 Verified:
 
-- one H1;
-- Person block ID `#mohammad-saeed-ghezelbash`;
-- physician introduction directly below the H1 and without an independent content anchor;
-- physician portrait before the action bar;
-- eager responsive LCP image with fixed dimensions and high fetch priority;
+- Person-first opening with canonical Person ID;
+- introduction immediately below the sole H1;
+- portrait before the action bar;
 - exactly two primary CTA links;
-- Google Maps beside clinic rating and location information;
-- no ORCID, Dataset or unrelated profile links in the action bar;
-- no repeated physician introduction at the page end.
+- Google Maps beside clinic rating and location;
+- real Content Table immediately after the Person block;
+- 16 H2 and 57 H3 destinations;
+- no broken Fragment links;
+- no duplicate IDs;
+- no heading-level jumps;
+- no JavaScript requirement for basic section navigation.
 
-## Stage 4 — Content Table and heading skeleton
+## Stage 5 — content restructuring
 
-Verified:
-
-- real crawlable Content Table after the complete Person block;
-- sixteen canonical H2 destinations;
-- fifty-seven canonical article H3 destinations;
-- unique IDs;
-- no broken internal Fragment links;
-- no H1–H4 hierarchy jumps;
-- no JavaScript dependency for basic section navigation;
-- no legacy numeric content IDs in final HTML.
-
-## Stage 5 — medical-content restructuring
-
-### Before correction
-
-- approximately 31,228 main-content words;
-- repeated passages across treatment selection, injectable, safety and referral clusters;
-- very large injectable, lifting and skin clusters;
-- approximately 300 H4 headings.
-
-### Corrected output
-
-| Main section | Words |
+| Section | Words |
 | --- | ---: |
 | best-aesthetic-doctor-kermanshah | 1,636 |
 | aesthetic-services-kermanshah | 1,958 |
@@ -114,105 +90,73 @@ Verified:
 | injectable-aesthetic-treatments | 3,327 |
 | lifting-and-facial-aging | 1,710 |
 | skin-scar-rejuvenation | 2,121 |
-| hair-loss-and-restoration | 1,278 |
+| hair-loss-and-restoration | 1,286 |
 | submental-and-body-contouring | 1,135 |
-| aesthetic-surgery-and-referral | 728 |
-| revision-complications-and-safety | 1,195 |
+| aesthetic-surgery-and-referral | 803 |
+| revision-complications-and-safety | 1,266 |
 | aesthetic-cost-and-consultation | 372 |
-| aesthetic-faq-kermanshah-iran | 875 |
+| aesthetic-faq-kermanshah-iran | 940 |
 | medical-research-and-education | 751 |
 | clinic-information-kermanshah | 222 |
 | knowledge-graph-and-datasets | 185 |
 | sources-contact-and-appointment | 96 |
-| **Total** | **19,049** |
+| **Total** | **19,268** |
 
-A legacy medical block is rendered only once. If a later subsection needs the same source, it receives a cross-reference to the first canonical destination rather than duplicate text.
+A legacy content block is rendered once. Later reuse produces a descriptive cross-link, not duplicate text. Every canonical article H3 must retain at least 40 visible words; the current minimum is 49.
 
-## Stage 6 — video placement map
+## Stage 6 — video map
 
-| Video ID | Section | Subsection |
-| --- | --- | --- |
-| `home-workshop-thread-lift-training` | `medical-research-and-education` | `medical-education` |
-| `home-workshop-thread-lift-advanced` | `medical-research-and-education` | `medical-education` |
-| `clinic-patient-experience-review` | `clinic-information-kermanshah` | — |
-| `botox-vs-subcision-dynamic-static-scar` | `injectable-aesthetic-treatments` | `botulinum-toxin-guide` |
-| `filler-under-eye-transformation` | `injectable-aesthetic-treatments` | `under-eye-filler-guide` |
-| `filler-under-eye-before-after` | `injectable-aesthetic-treatments` | `under-eye-filler-guide` |
-| `cat-eye-thread-lift-before-after` | `lifting-and-facial-aging` | `thread-lift-guide` |
-| `jalupro-vs-profhilo-skin-boosters` | `skin-scar-rejuvenation` | `skin-booster-mesogel` |
-| `nonsurgical-rhinoplasty-boundary` | `aesthetic-surgery-and-referral` | `rhinoplasty-evaluation` |
-| `nose-filler-before-after` | `injectable-aesthetic-treatments` | `facial-contouring-injections` |
-| `proper-subcision-technique-guide` | `skin-scar-rejuvenation` | `subcision-guide` |
-| `mesoneedling-dark-spots-warning` | `skin-scar-rejuvenation` | `pigmentation-melasma-guide` |
+| Video | Destination |
+| --- | --- |
+| home-workshop-thread-lift-training | `medical-research-and-education / medical-education` |
+| home-workshop-thread-lift-advanced | `medical-research-and-education / medical-education` |
+| clinic-patient-experience-review | `clinic-information-kermanshah` |
+| botox-vs-subcision-dynamic-static-scar | `injectable-aesthetic-treatments / botulinum-toxin-guide` |
+| filler-under-eye-transformation | `injectable-aesthetic-treatments / under-eye-filler-guide` |
+| filler-under-eye-before-after | `injectable-aesthetic-treatments / under-eye-filler-guide` |
+| cat-eye-thread-lift-before-after | `lifting-and-facial-aging / thread-lift-guide` |
+| jalupro-vs-profhilo-skin-boosters | `skin-scar-rejuvenation / skin-booster-mesogel` |
+| nonsurgical-rhinoplasty-boundary | `aesthetic-surgery-and-referral / rhinoplasty-evaluation` |
+| nose-filler-before-after | `injectable-aesthetic-treatments / facial-contouring-injections` |
+| proper-subcision-technique-guide | `skin-scar-rejuvenation / subcision-guide` |
+| mesoneedling-dark-spots-warning | `skin-scar-rejuvenation / pigmentation-melasma-guide` |
 
-Verified:
+All VideoObject fields are validated against the visible media registry.
 
-- no string matching;
-- no fallback to the first section;
-- all destinations exist in HTML;
-- the two professional-education videos occur only under `#medical-education`;
-- article video titles are H4;
-- the clinic video title is descriptive figcaption text rather than a peer medical H3;
-- VideoObject title, description, duration, dimensions, thumbnail, file URL, creator, author and `isPartOf` are validated against the visible media registry.
-
-## Stage 7 — clinic, sources and Footer
+## Stages 7–8 — Clinic, Footer and Graph
 
 Verified:
 
-- visible clinic section `#clinic-information-kermanshah`;
-- independent Clinic entity `#dr-saeed-ghezelbash-aesthetic-clinic`;
-- address, telephone, recorded hours, dated rating and map links;
-- visible knowledge-graph/Dataset gateway;
-- categorized external source directory;
-- descriptive link labels;
-- Instagram Direct remains a CTA and is not `sameAs`;
-- Google Maps is `hasMap` and is not `sameAs`;
-- OpenStreetMap is a visible location source and is not `sameAs`;
-- official Instagram, LinkedIn and Facebook URLs that visibly identify the physician are assigned to `Person.sameAs`, not `Clinic.sameAs`.
-
-## Stage 8 — graph alignment
-
-Verified in inline and canonical JSON-LD:
-
+- Person and Clinic remain independent;
 - Person is the sole Homepage `mainEntity`;
-- Person and Clinic remain separate;
-- sixteen main sections are `WebPageElement` nodes;
-- Content Table is a sixteen-item `ItemList`;
-- twelve VideoObject nodes match visible media;
-- exact Service/Procedure destination registry replaces regex inference;
-- body contouring points to `#body-contouring-evaluation`;
-- blepharoplasty points to `#blepharoplasty-evaluation`;
-- facelift/necklift points to `#facelift-necklift-evaluation`;
-- hair transplant points to `#hair-transplant-surgical-evaluation`;
-- Graph URLs targeting Homepage fragments resolve to visible HTML destinations;
-- Google Maps and OpenStreetMap do not occur in Clinic.sameAs.
+- Instagram, LinkedIn and Facebook identifying the physician are in `Person.sameAs`;
+- Instagram Direct is only a CTA;
+- Google Maps is `Clinic.hasMap` and is not `sameAs`;
+- OpenStreetMap is a visible location link and is not `sameAs`;
+- Content Table is a sixteen-item ItemList;
+- all twelve videos have matching VideoObject nodes;
+- exact Service destinations replace text inference;
+- Graph URLs targeting Homepage fragments resolve to visible HTML.
 
-## Stage 9 — testing and release status
+## Stage 9 — release evidence and remaining gaps
 
-### Passed
+Passed on the corrective branch:
 
 - Astro production build;
-- release contract validator;
-- visible HTML contract validator;
-- schema-semantics validator;
-- independent nine-stage audit validator;
-- duplicate-ID and Fragment validation;
-- heading hierarchy validation;
-- content word-budget and exact-duplicate validation;
-- Graph/HTML title and destination parity;
-- explicit Service target validation;
-- full VideoObject parity validation;
+- release, visible-contract and schema validators;
+- independent nine-stage validator;
+- independent H3 passage-depth validator;
 - GitHub Actions;
-- Cloudflare branch and immutable Preview deployment.
+- Cloudflare Preview.
 
-Latest validated Preview for the corrective branch:
+Validated Preview:
 
-- immutable: `https://2252b054.doctor-ghezelbaash.pages.dev`
-- branch: `https://fix-homepage-nine-stage-audi.doctor-ghezelbaash.pages.dev`
+- `https://6955527f.doctor-ghezelbaash.pages.dev`
+- `https://fix-homepage-nine-stage-audi.doctor-ghezelbaash.pages.dev`
 
-### Not yet claimable as passed
+Not yet claimable as complete:
 
-- A separate full TypeScript diagnostic (`astro check` / `tsc --noEmit`) and a formal lint command are not installed in the current dependency contract. Astro build verifies compilation, but this is not equivalent to a dedicated static type and lint gate.
-- Production parity cannot be marked complete until the corrective PR is merged and the primary domain is observed serving the same output.
+- a separate `astro check` or `tsc --noEmit` diagnostic and a formal lint command are not installed in the dependency contract; Astro build is not identical to those gates;
+- Production parity can only be closed after PR #54 is merged and the primary domain is observed serving the corrective output.
 
-Therefore the corrected implementation passes the executable Homepage, content and Graph gates, while final Production parity and a separately installed type/lint toolchain remain explicit release follow-ups rather than hidden assumptions.
+Therefore Stages 1–8 and the executable CI/Preview portion of Stage 9 are evidenced. Dedicated type/lint diagnostics and final Production parity remain explicit release gaps until completed.
