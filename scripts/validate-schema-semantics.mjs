@@ -10,6 +10,9 @@ const pageId = `${site}#webpage`;
 const contentTableId = `${site}#content-table`;
 const huggingFaceProfile = 'https://huggingface.co/Ghezelbaash';
 const huggingFaceDataset = 'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data';
+const mapsUrl = 'https://www.google.com/maps?cid=12350483144643112463';
+const mapsSearchUrl = 'https://www.google.com/maps/search/?api=1&query=کلینیک%20زیبایی%20دکتر%20قزلباش%20کرمانشاه&query_place_id=ChIJBTOYDOTt-j8RD-7mAPy6Zas';
+const openStreetMapUrl = 'https://www.openstreetmap.org/node/13530287096';
 const sectionIds = [
   'best-aesthetic-doctor-kermanshah','aesthetic-services-kermanshah','aesthetic-treatment-selection','injectable-aesthetic-treatments','lifting-and-facial-aging','skin-scar-rejuvenation','hair-loss-and-restoration','submental-and-body-contouring','aesthetic-surgery-and-referral','revision-complications-and-safety','aesthetic-cost-and-consultation','aesthetic-faq-kermanshah-iran','medical-research-and-education','clinic-information-kermanshah','knowledge-graph-and-datasets','sources-contact-and-appointment',
 ];
@@ -46,7 +49,7 @@ check(person?.worksFor?.['@id'] === clinicId, 'Person.worksFor must point to can
 check(person?.workLocation?.['@id'] === clinicId, 'Person.workLocation must point to canonical Clinic');
 check(person?.affiliation?.['@id'] === clinicId, 'Person.affiliation must point to canonical Clinic');
 check(clinic?.employee?.['@id'] === personId, 'Clinic.employee must point to canonical Person');
-check(clinic?.hasMap === 'https://www.google.com/maps?cid=12350483144643112463', 'Clinic.hasMap must use the Google Maps deep link');
+check(clinic?.hasMap === mapsUrl, 'Clinic.hasMap must use the Google Maps deep link');
 
 check(availableServiceRefs.length > 0, 'clinic must expose at least one available medical service');
 for (const item of availableServiceRefs) {
@@ -70,6 +73,9 @@ check(!personSameAs.has(huggingFaceDataset), 'Hugging Face Dataset must not be P
 check(personSameAs.has('https://www.wikidata.org/entity/Q140287622'), 'Person.sameAs must contain Wikidata Q140287622');
 const clinicSameAs = new Set(asArray(clinic?.sameAs));
 check(clinicSameAs.has('https://www.wikidata.org/entity/Q140288589'), 'Clinic.sameAs must contain Wikidata Q140288589');
+for (const mapResource of [mapsUrl, mapsSearchUrl, openStreetMapUrl]) {
+  check(!clinicSameAs.has(mapResource), `map resource must not appear in Clinic.sameAs: ${mapResource}`);
+}
 
 check(hasType(contentTable, 'ItemList'), 'content table ItemList is missing');
 check(Number(contentTable?.numberOfItems) === sectionIds.length, 'content table ItemList count mismatch');
@@ -103,6 +109,10 @@ const dataset = canonicalById.get(huggingFaceDataset);
 check(hasType(canonicalPerson, 'Person'), 'external graph physician must be canonical Person');
 check(hasType(canonicalClinic, 'MedicalClinic'), 'external graph Clinic is missing');
 check(Number(canonicalClinic?.aggregateRating?.ratingCount) === 163, 'external graph clinic rating count mismatch');
+const canonicalClinicSameAs = new Set(asArray(canonicalClinic?.sameAs));
+for (const mapResource of [mapsUrl, mapsSearchUrl, openStreetMapUrl]) {
+  check(!canonicalClinicSameAs.has(mapResource), `external graph map resource must not appear in Clinic.sameAs: ${mapResource}`);
+}
 check(hasType(dataset, 'Dataset'), 'Hugging Face resource must remain a separate Dataset');
 check(dataset?.creator?.['@id'] === personId, 'Dataset.creator must point to canonical Person');
 check(dataset?.publisher?.['@id'] === clinicId, 'Dataset.publisher must point to canonical Clinic');
