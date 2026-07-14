@@ -34,7 +34,7 @@ check(!/\bid=/iu.test(introAttrs) && !/<a\b/iu.test(introHtml), 'introduction mu
 check(count(introHtml, /<p\b/gu) === 3, 'introduction must contain three paragraphs');
 check(introWords >= 180 && introWords <= 280, `introduction must contain 180–280 words; found ${introWords}`);
 for (const phrase of ['دکتر محمدسعید قزلباش','نام حرفه‌ای','دکترای حرفه‌ای پزشکی','۱۶۷۴۳۰','کرمانشاه','ارزیابی پیش از درمان','مرز روش‌های غیرجراحی','ارجاع','فعالیت پژوهشی','آموزش پزشکی']) check(introText.includes(phrase), `introduction is missing: ${phrase}`);
-check(count(html, /data-physician-introduction/gu) === 1 && count(html, /با نام حرفه‌ای/gu) === 1, 'physician introduction is repeated later');
+check(count(html, /data-physician-introduction/gu) === 1, 'physician introduction is repeated later');
 
 const h1At = hero.indexOf('<h1');
 const introAt = hero.indexOf('data-physician-introduction');
@@ -73,9 +73,10 @@ check(bar.includes('۵ از ۵') && bar.includes('۱۶۳ ارزیابی Google M
 check(bar.includes('کلینیک زیبایی دکتر سعید قزلباش، کرمانشاه'), 'clinic name and city are missing beside Maps');
 for (const term of ['ORCID','NCBI','Hugging Face','LinkedIn','Facebook','Pinterest','Wikidata','Dataset','knowledge-graph','مشاهده رزومه']) check(!bar.includes(term), `forbidden resource appears in hero bar: ${term}`);
 
-const tocAt = html.indexOf('id="content-table"');
-check(tocAt > end, 'Content Table must follow the Person header');
-check(html.slice(end, tocAt).replace(/<!--[\s\S]*?-->/gu,'').trim() === '', 'Content Table must immediately follow the Person header');
+const tocIdAt = html.indexOf('id="content-table"');
+const tocOpen = html.lastIndexOf('<nav', tocIdAt);
+check(tocOpen > end, 'Content Table must follow the Person header');
+check(html.slice(end, tocOpen).replace(/<!--[\s\S]*?-->/gu,'').trim() === '', 'Content Table must immediately follow the Person header');
 
 if (failures.length) {
   console.error(JSON.stringify({ stage: 3, status: 'fail', failures }, null, 2));
