@@ -1,6 +1,7 @@
 import { site } from '~/domain/entities';
 import { videos } from '~/domain/media.mjs';
 import { homepageEntityIds, homepageSections } from '~/domain/homepage-sections';
+import { homepageSubsectionAnchorRegistry } from '~/domain/homepage-subsections';
 
 type Node = Record<string, any>;
 type Graph = { '@context'?: unknown; '@graph'?: Node[] };
@@ -26,6 +27,10 @@ const replacements = new Map([
   [legacyClinicId, clinicId],
   [legacyDoctorId, personId],
 ]);
+
+const subsectionTitleById = new Map(
+  Object.entries(homepageSubsectionAnchorRegistry).map(([title, fragment]) => [fragment, title]),
+);
 
 function remap(value: any): any {
   if (typeof value === 'string') return replacements.get(value) ?? value;
@@ -121,6 +126,23 @@ export function applyHomepageGraphContract(input: Graph): Graph {
     ],
   }));
 
+  const videoSubsectionParents = new Map<string, string>();
+  for (const video of videos as any[]) {
+    if (video.subsectionId) videoSubsectionParents.set(video.subsectionId, video.sectionId);
+  }
+  const videoSubsectionNodes: Node[] = [...videoSubsectionParents].map(([fragment, parentFragment]) => {
+    const parent = homepageSections.find((section) => section.id === parentFragment);
+    return {
+      '@type': 'WebPageElement',
+      '@id': id(fragment),
+      name: subsectionTitleById.get(fragment) ?? fragment,
+      url: id(fragment),
+      inLanguage: site.language,
+      isPartOf: ref(id(parentFragment)),
+      about: parent ? sectionAbout(parent) : ref(personId),
+    };
+  });
+
   const contentTable: Node = {
     '@type': 'ItemList',
     '@id': contentTableId,
@@ -139,7 +161,7 @@ export function applyHomepageGraphContract(input: Graph): Graph {
     })),
   };
 
-  const videoNodes: Node[] = videos.map((video: any) => ({
+  const videoNodes: Node[] = (videos as any[]).map((video) => ({
     '@type': 'VideoObject',
     '@id': id(`video-${video.id}`),
     name: video.title,
@@ -190,7 +212,13 @@ export function applyHomepageGraphContract(input: Graph): Graph {
     page.reviewedBy = ref(personId);
     page.publisher = ref(clinicId);
     page.about = uniqueRefs([ref(personId), ref(clinicId), ...asArray<Node>(page.about)]);
-    page.hasPart = uniqueRefs([ref(contentTableId), ref(clinicalGuideId), ...sectionNodes.map((node) => ref(node['@id'])), ...videoNodes.map((node) => ref(node['@id']))]);
+    page.hasPart = uniqueRefs([
+      ref(contentTableId),
+      ref(clinicalGuideId),
+      ...sectionNodes.map((node) => ref(node['@id'])),
+      ...videoSubsectionNodes.map((node) => ref(node['@id'])),
+      ...videoNodes.map((node) => ref(node['@id'])),
+    ]);
   }
 
   const website = byId.get(websiteId);
@@ -207,7 +235,10 @@ export function applyHomepageGraphContract(input: Graph): Graph {
     article.author = ref(personId);
     article.reviewedBy = ref(personId);
     article.publisher = ref(clinicId);
-    article.hasPart = sectionNodes.map((node) => ref(node['@id']));
+    article.hasPart = [
+      ...sectionNodes.map((node) => ref(node['@id'])),
+      ...videoSubsectionNodes.map((node) => ref(node['@id'])),
+    ];
   }
 
   for (const node of cleaned) {
@@ -221,7 +252,15 @@ export function applyHomepageGraphContract(input: Graph): Graph {
   }
 
   const finalNodes = new Map<string, Node>();
-  for (const node of [...cleaned, person, clinic, ...sectionNodes, contentTable, ...videoNodes]) {
+  for (const node of [
+    ...cleaned,
+    person,
+    clinic,
+    ...sectionNodes,
+    ...videoSubsectionNodes,
+    contentTable,
+    ...videoNodes,
+  ]) {
     if (node?.['@id']) finalNodes.set(node['@id'], node);
   }
 
