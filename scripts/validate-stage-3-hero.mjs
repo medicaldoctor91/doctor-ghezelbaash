@@ -75,7 +75,7 @@ for (const term of ['ORCID','NCBI','Hugging Face','LinkedIn','Facebook','Pintere
 
 const tocIdAt = html.indexOf('id="content-table"');
 const tocOpen = html.lastIndexOf('<nav', tocIdAt);
-check(tocOpen > end, 'Content Table must follow the Person header');
+check(tocOpen >= end, 'Content Table must follow the Person header');
 check(html.slice(end, tocOpen).replace(/<!--[\s\S]*?-->/gu,'').trim() === '', 'Content Table must immediately follow the Person header');
 
 if (failures.length) {
