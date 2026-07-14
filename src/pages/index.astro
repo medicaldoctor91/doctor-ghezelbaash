@@ -26,7 +26,6 @@ import {
 const raw = rawContent();
 const headings = stabilizeHeadings(getHeadings());
 const graph = applyHomepageAuditFixes(completeHomepageGraphContract(applyHomepageGraphContract(buildGooglePageGraph(headings, raw))));
-const removeLegacyNumericIds = (html: string) => html.replace(/\s+id="clinical-decision-model-[^"]+"/gu, '');
 
 const h2Matches = [...raw.matchAll(/^##\s+(.+)$/gm)];
 const h2Headings = headings.filter((heading) => heading.depth === 2);
@@ -42,11 +41,10 @@ const articleSections = await Promise.all(h2Matches.map(async (match, index) => 
   const end = h2Matches[index + 1]?.index ?? raw.length;
   const markdown = raw.slice(start, end).trim();
   const heading = h2Headings[index];
-  const rendered = markdown ? (await processor.render(markdown)).code : '';
   return {
     id: heading?.slug ?? `legacy-article-${index + 1}`,
     title: match[1].trim(),
-    html: removeLegacyNumericIds(rendered),
+    html: markdown ? (await processor.render(markdown)).code : '',
   };
 }));
 ---
