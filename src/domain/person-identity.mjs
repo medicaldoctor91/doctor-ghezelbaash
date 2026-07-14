@@ -1,3 +1,5 @@
+const personId = 'https://www.ghezelbaash.ir/#mohammad-saeed-ghezelbash';
+
 export const personAlternateNames = [
   'دکتر سعید قزلباش',
   'دکتر محمد سعید قزلباش',
@@ -22,6 +24,9 @@ export const personRequiredSameAs = [
   'https://orcid.org/0009-0001-9346-8475',
   'https://www.wikidata.org/entity/Q140287622',
   'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/',
+  'https://www.instagram.com/doctor.ghezelbaash/',
+  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
+  'https://www.facebook.com/Ghezelbaash/',
   'https://github.com/medicaldoctor91/doctor-ghezelbaash',
   'https://github.com/Medicaldoctor91',
   'https://www.pinterest.com/qezelbaash/',
@@ -31,11 +36,9 @@ export const personRequiredSameAs = [
   'https://x.com/Qezelbaash',
 ];
 
-export const clinicRequiredSameAs = [
-  'https://www.instagram.com/doctor.ghezelbaash/',
-  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
-  'https://www.facebook.com/Ghezelbaash/',
-];
+// Clinic.sameAs is limited to sources that directly identify the clinic entity.
+// The current social URLs visibly identify the physician and therefore belong to Person.sameAs.
+export const clinicRequiredSameAs = [];
 
 export const restoredPersonIdentifiers = [
   {
@@ -57,18 +60,18 @@ export const restoredPersonProfileNodes = [
     '@type': 'ProfilePage',
     '@id': 'https://www.facebook.com/Ghezelbaash/',
     url: 'https://www.facebook.com/Ghezelbaash/',
-    name: 'پروفایل Facebook کلینیک دکتر سعید قزلباش',
-    about: { '@id': 'https://www.ghezelbaash.ir/#clinic' },
-    mainEntity: { '@id': 'https://www.ghezelbaash.ir/#clinic' },
+    name: 'پروفایل Facebook دکتر سعید قزلباش',
+    about: { '@id': personId },
+    mainEntity: { '@id': personId },
     publisher: { '@type': 'Organization', name: 'Facebook' },
   },
   {
     '@type': 'ProfilePage',
     '@id': 'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
     url: 'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
-    name: 'پروفایل LinkedIn کلینیک دکتر سعید قزلباش',
-    about: { '@id': 'https://www.ghezelbaash.ir/#clinic' },
-    mainEntity: { '@id': 'https://www.ghezelbaash.ir/#clinic' },
+    name: 'پروفایل LinkedIn دکتر سعید قزلباش',
+    about: { '@id': personId },
+    mainEntity: { '@id': personId },
     publisher: { '@type': 'Organization', name: 'LinkedIn' },
   },
   {
@@ -76,7 +79,8 @@ export const restoredPersonProfileNodes = [
     '@id': 'https://www.pinterest.com/qezelbaash/',
     url: 'https://www.pinterest.com/qezelbaash/',
     name: 'پروفایل Pinterest دکتر سعید قزلباش',
-    about: { '@id': 'https://www.ghezelbaash.ir/#person' },
+    about: { '@id': personId },
+    mainEntity: { '@id': personId },
     publisher: { '@type': 'Organization', name: 'Pinterest' },
   },
   {
@@ -84,8 +88,8 @@ export const restoredPersonProfileNodes = [
     '@id': 'https://huggingface.co/Ghezelbaash',
     url: 'https://huggingface.co/Ghezelbaash',
     name: 'پروفایل Hugging Face دکتر سعید قزلباش',
-    about: { '@id': 'https://www.ghezelbaash.ir/#person' },
-    mainEntity: { '@id': 'https://www.ghezelbaash.ir/#person' },
+    about: { '@id': personId },
+    mainEntity: { '@id': personId },
     publisher: { '@type': 'Organization', name: 'Hugging Face' },
   },
 ];
