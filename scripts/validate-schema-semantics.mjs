@@ -12,6 +12,15 @@ const check = (condition, message) => { if (!condition) failures.push(message); 
 const asArray = (value) => value === undefined ? [] : Array.isArray(value) ? value : [value];
 const hasType = (node, type) => asArray(node?.['@type']).includes(type);
 
+const priorityAnswerIds = [
+  'priority-best-aesthetic-doctor-kermanshah',
+  'priority-clinic-reputation',
+  'priority-national-aesthetic-doctor',
+  'priority-aesthetic-cost',
+  'priority-surgery-boundary',
+  'priority-correction-after-treatment',
+];
+
 const inlineMatches = [...homepage.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gu)];
 check(inlineMatches.length === 1, `expected one inline JSON-LD block; found ${inlineMatches.length}`);
 const inline = inlineMatches.length === 1 ? JSON.parse(inlineMatches[0][1]) : { '@graph': [] };
@@ -21,8 +30,13 @@ const byId = new Map(nodes.filter((node) => node?.['@id']).map((node) => [node['
 const person = byId.get(`${site}#person`);
 const clinic = byId.get(`${site}#clinic`);
 const page = byId.get(`${site}#webpage`);
+const reputation = byId.get(`${site}#clinic-reputation-snapshot`);
+const priorityAnswerList = byId.get(`${site}#priority-answer-list`);
 const availableServiceRefs = asArray(clinic?.availableService);
 const allowedMedicalTypes = new Set(['MedicalProcedure', 'SurgicalProcedure', 'MedicalTest', 'MedicalTherapy']);
+
+check(hasType(person, 'Person'), 'inline physician must be typed as Person');
+check(!hasType(person, 'IndividualPhysician'), 'inline Person must not be conflated with the organization-like IndividualPhysician type');
 check(availableServiceRefs.length > 0, 'inline clinic must expose at least one available medical service');
 for (const item of availableServiceRefs) {
   const id = item?.['@id'];
@@ -57,6 +71,25 @@ check(person?.workLocation?.['@id'] === `${site}#clinic`, 'inline Person.workLoc
 check(person?.affiliation?.['@id'] === `${site}#clinic`, 'inline Person.affiliation must point to Clinic');
 check(clinic?.employee?.['@id'] === `${site}#person`, 'inline Clinic.employee must point to Person');
 
+check(hasType(clinic?.aggregateRating, 'AggregateRating'), 'inline Clinic.aggregateRating is missing');
+check(Number(clinic?.aggregateRating?.ratingValue) === 5, 'inline clinic ratingValue must be 5');
+check(Number(clinic?.aggregateRating?.bestRating) === 5, 'inline clinic bestRating must be 5');
+check(Number(clinic?.aggregateRating?.ratingCount) === 163, 'inline clinic ratingCount must be 163');
+check(hasType(reputation, 'Dataset'), 'inline clinic reputation snapshot must be a Dataset');
+check(reputation?.mainEntity?.['@id'] === `${site}#clinic`, 'reputation snapshot mainEntity must be Clinic');
+check(reputation?.mentions?.['@id'] === `${site}#person`, 'reputation snapshot must explicitly mention Person');
+
+check(hasType(priorityAnswerList, 'ItemList'), 'priority answer ItemList missing from inline graph');
+check(Number(priorityAnswerList?.numberOfItems) === priorityAnswerIds.length, 'priority answer ItemList count mismatch');
+for (const id of priorityAnswerIds) {
+  const question = byId.get(`${site}#question-${id}`);
+  const answer = byId.get(`${site}#answer-${id}`);
+  check(hasType(question, 'Question'), `priority Question missing: ${id}`);
+  check(hasType(answer, 'Answer'), `priority Answer missing: ${id}`);
+  check(question?.acceptedAnswer?.['@id'] === `${site}#answer-${id}`, `priority acceptedAnswer mismatch: ${id}`);
+  check(answer?.author?.['@id'] === `${site}#person`, `priority Answer author must be Person: ${id}`);
+}
+
 check(!nodes.some((node) => hasType(node, 'VideoObject') || hasType(node, 'Clip')), 'homepage inline graph must not claim video rich-result eligibility');
 check(!byId.has(`${site}#service-coverage-panel`), 'service coverage WebPageElement leaked into Google inline graph');
 for (const node of nodes.filter((item) => /^https:\/\/www\.ghezelbaash\.ir\/#service-/.test(item?.['@id'] ?? ''))) {
@@ -66,7 +99,13 @@ for (const node of nodes.filter((item) => /^https:\/\/www\.ghezelbaash\.ir\/#ser
 const canonical = JSON.parse(readFileSync(join(process.cwd(), 'dist', 'knowledge-graph.jsonld'), 'utf8'));
 const canonicalNodes = canonical['@graph'] ?? [];
 const canonicalById = new Map(canonicalNodes.filter((node) => node?.['@id']).map((node) => [node['@id'], node]));
+const canonicalPerson = canonicalById.get(`${site}#person`);
+const canonicalClinic = canonicalById.get(`${site}#clinic`);
 const dataset = canonicalById.get(huggingFaceDataset);
+check(hasType(canonicalPerson, 'Person'), 'canonical physician must be Person');
+check(!hasType(canonicalPerson, 'IndividualPhysician'), 'canonical Person must not be conflated with IndividualPhysician');
+check(Number(canonicalClinic?.aggregateRating?.ratingValue) === 5, 'canonical clinic ratingValue must be 5');
+check(Number(canonicalClinic?.aggregateRating?.ratingCount) === 163, 'canonical clinic ratingCount must be 163');
 check(hasType(dataset, 'Dataset'), 'Hugging Face resource must be modeled as a separate Dataset');
 check(dataset?.creator?.['@id'] === `${site}#person`, 'Hugging Face Dataset.creator must point to Person');
 check(dataset?.publisher?.['@id'] === `${site}#clinic`, 'Hugging Face Dataset.publisher must point to Clinic');
@@ -95,9 +134,12 @@ console.log(JSON.stringify({
   status: 'pass',
   homepageTypes: asArray(page?.['@type']),
   homepageMainEntity: `${site}#person`,
+  physicianType: 'Person',
   inlineAvailableMedicalServices: availableServiceRefs.length,
   genericServiceNodes: nodes.filter((node) => hasType(node, 'Service')).length,
   clinicSocialSameAs: clinicSocialSameAs.length,
+  clinicAggregateRating: clinic.aggregateRating,
+  priorityAnswerPairs: priorityAnswerIds.length,
   huggingFaceProfileInPersonSameAs: true,
   huggingFaceProfileAsIdentifier: false,
   huggingFaceDataset: {
