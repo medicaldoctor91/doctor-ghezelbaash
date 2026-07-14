@@ -1,0 +1,46 @@
+---
+import { Braces, Database, FileCode2, Network } from '@lucide/astro';
+import { site } from '../../domain/entities';
+
+const resources = [
+  { title: 'گراف دانش کامل سایت', text: 'نمایش ماشین‌خوان انتیتی پزشک، کلینیک، خدمات، منابع پژوهشی و روابط اصلی.', href: '/knowledge-graph.jsonld', icon: Network },
+  { title: 'دیتاست عمومی Hugging Face', text: 'مخزن عمومی داده‌های انتیتی و شواهد ساختاریافته دکتر سعید قزلباش.', href: site.huggingFaceDataset, icon: Database, external: true },
+  { title: 'Wikidata پزشک', text: `شناسه ${site.doctorWikidataId} برای Mohammad Saeed Ghezelbash.`, href: site.doctorWikidata, icon: Braces, external: true },
+  { title: 'Wikidata کلینیک', text: `شناسه ${site.placeWikidataId} برای Dr. Saeed Ghezelbash Aesthetic Clinic.`, href: site.placeWikidata, icon: Braces, external: true },
+  { title: 'Wikidata دیتاست', text: `شناسه ${site.datasetWikidataId} برای مخزن داده ساختاریافته.`, href: site.datasetWikidata, icon: Database, external: true },
+  { title: 'ORCID پژوهشگر', text: `شناسه پایدار پژوهشگر ${site.orcid}.`, href: site.orcidUrl, icon: FileCode2, external: true },
+  { title: 'کتاب‌شناسی عمومی NCBI', text: 'فهرست عمومی منابع پژوهشی متصل به نام پژوهشگر.', href: site.ncbiBibliography, icon: FileCode2, external: true },
+  { title: 'راهنمای llms.txt', text: 'خلاصه مسیرهای اصلی و منابع قابل استفاده برای سامانه‌های زبانی.', href: '/llms.txt', icon: FileCode2 },
+  { title: 'بیانیه ai.txt', text: 'اطلاعات تکمیلی ماشین‌خوان در مسیر استاندارد سایت.', href: '/.well-known/ai.txt', icon: FileCode2 },
+  { title: 'آرشیو Zenodo', text: 'نسخه آرشیوشده و دارای DOI از داده منتشرشده.', href: site.zenodoRecord, icon: Database, external: true },
+  { title: 'مخزن GitHub سایت', text: 'کد منبع، compilerها و validatorهای این پروژه.', href: site.githubRepository, icon: FileCode2, external: true },
+];
+---
+
+<section id="knowledge-graph-and-datasets" class="machine-sources section shell" aria-labelledby="knowledge-graph-and-datasets-title">
+  <div class="section-heading section-heading--split">
+    <div>
+      <p class="eyebrow">داده‌های قابل بررسی</p>
+      <h2 id="knowledge-graph-and-datasets-title">گراف دانش، دیتاست و داده‌های ساختاریافته</h2>
+    </div>
+    <p>این بخش فقط دروازه قابل‌مشاهده منابع موجود است. فایل تازه و موازی برای هر خدمت یا سکشن ساخته نمی‌شود.</p>
+  </div>
+
+  <div class="machine-sources__intro medical-article">
+    <p><strong>منبع اصلی حقیقت، محتوای قابل‌مشاهده همین Homepage است.</strong> JSON-LD داخلی و فایل گراف دانش باید همان نام‌ها، عنوان‌ها، شناسه‌ها و روابط را بازتاب دهند. منابع خارجی نیز فقط در محدوده اطلاعاتی که واقعاً ثبت کرده‌اند استفاده می‌شوند.</p>
+  </div>
+
+  <div class="machine-sources__grid">
+    {resources.map(({ title, text, href, icon: Icon, external }) => (
+      <a class="machine-sources__item" href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer external' : undefined}>
+        <span><Icon size={22} aria-hidden="true" /></span>
+        <strong>{title}</strong>
+        <p>{text}</p>
+      </a>
+    ))}
+  </div>
+</section>
+
+<style>
+  .machine-sources{scroll-margin-top:6rem}.machine-sources__intro{max-width:68rem;margin:1.1rem 0 1.4rem}.machine-sources__grid{display:grid;gap:.75rem}.machine-sources__item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.3rem .7rem;align-items:start;padding:1rem;border:1px solid rgba(2,119,194,.14);border-radius:1rem;color:inherit;background:rgba(255,255,255,.94);text-decoration:none;box-shadow:0 10px 30px rgba(5,69,105,.055)}.machine-sources__item>span{grid-row:1/3;display:grid;width:2.5rem;height:2.5rem;place-items:center;border-radius:.8rem;color:var(--blue-700);background:rgba(2,119,194,.08)}.machine-sources__item strong{color:var(--blue-950);line-height:1.7}.machine-sources__item p{margin:0;color:var(--muted);font-size:.8rem;line-height:1.8}@media(min-width:48rem){.machine-sources__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(min-width:72rem){.machine-sources__grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
