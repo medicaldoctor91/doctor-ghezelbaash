@@ -5,8 +5,6 @@ import '../styles/premium.css';
 import '../styles/refinement.css';
 import '../styles/finishing.css';
 import { site } from '../domain/entities';
-// @ts-expect-error Shared ESM physician identity contract.
-import { personIdentityContract } from '../domain/person-identity.mjs';
 
 interface Props {
   graph: Record<string, unknown>;
@@ -28,24 +26,6 @@ const {
 
 const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).href;
 const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
-const aiDeclarationUrl = new URL('.well-known/ai.txt', site.url).href;
-const llmsUrl = new URL('llms.txt', site.url).href;
-
-const ownedIdentityLinks = [
-  site.orcidUrl,
-  site.instagram,
-  personIdentityContract.linkedin,
-  personIdentityContract.facebook,
-  personIdentityContract.pinterest,
-];
-
-const describedByLinks = [
-  { href: externalGraphUrl, type: 'application/ld+json', title: 'Canonical external knowledge graph' },
-  { href: site.huggingFaceDataset, title: 'Published Hugging Face Dataset' },
-  { href: site.doctorWikidata, title: 'Wikidata entity for Dr. Saeed Ghezelbaash' },
-  { href: site.placeWikidata, title: 'Wikidata entity for Dr. Saeed Ghezelbaash Aesthetic Clinic' },
-  { href: site.datasetWikidata, title: 'Wikidata entity for the published Dataset' },
-];
 ---
 
 <!doctype html>
@@ -61,18 +41,14 @@ const describedByLinks = [
     <meta name="description" content={description} />
     <meta name="author" content={site.legalName} />
     <meta name="robots" content={robots} />
-    <meta name="googlebot" content={robots} />
     <link rel="canonical" href={canonical} />
     <link rel="author" href={`${site.url}#person`} />
-    {ownedIdentityLinks.map((href) => <link rel="me" href={href} />)}
-    <link rel="alternate" hreflang="fa-IR" href={canonical} />
-    <link rel="alternate" hreflang="fa" href={canonical} />
-    <link rel="alternate" hreflang="x-default" href={canonical} />
-    {describedByLinks.map((item) => (
-      <link rel="describedby" href={item.href} type={item.type} title={item.title} />
-    ))}
-    <link rel="alternate" type="text/plain" href={llmsUrl} title="خلاصهٔ متنی وب‌سایت" />
-    <link rel="alternate" type="text/plain" href={aiDeclarationUrl} title="اعلام منابع هوش مصنوعی وب‌سایت" />
+    <link
+      rel="describedby"
+      href={externalGraphUrl}
+      type="application/ld+json"
+      title="Canonical knowledge graph"
+    />
     <link
       rel="preload"
       as="image"
@@ -83,17 +59,13 @@ const describedByLinks = [
       fetchpriority="high"
     />
     <meta name="generator" content={Astro.generator} />
-    <meta name="geo.region" content="IR-05" />
-    <meta name="geo.placename" content={site.city} />
-    <meta name="geo.position" content={`${site.latitude};${site.longitude}`} />
-    <meta name="ICBM" content={`${site.latitude}, ${site.longitude}`} />
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="manifest" href="/site.webmanifest" />
     <meta property="og:type" content={ogType} />
     <meta property="og:locale" content="fa_IR" />
-    <meta property="og:site_name" content={site.clinicName} />
+    <meta property="og:site_name" content={`وب‌سایت رسمی ${site.name}`} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
