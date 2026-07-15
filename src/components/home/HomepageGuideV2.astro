@@ -127,7 +127,7 @@ const timeLabel = (timestamp: string) => timestamp.replace(/^00:/, '');
 const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000) / 1000)}S`;
 ---
 
-<article id="clinical-guide" class="article-flow shell" aria-label="راهنمای جامع پزشکی زیبایی، پوست و مو">
+<article class="article-flow shell" aria-label="راهنمای جامع پزشکی زیبایی، پوست و مو">
   {renderedGroups.map((group: any) => (
     <section id={group.id} class="article-flow__section" aria-labelledby={`${group.id}-title`} data-target-words={group.targetWords}>
       <h2 id={`${group.id}-title`} tabindex="-1">{group.title}</h2>
