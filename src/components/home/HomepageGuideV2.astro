@@ -18,6 +18,7 @@ const { sections } = Astro.props;
 
 type LegacyBlock = { key: string; html: string; words: number };
 type Source = { section?: string; headings?: string[]; manualHtml?: string };
+const deferredVideoPoster = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 16'%3E%3C/svg%3E";
 
 const plain = (value: string) => value
   .replace(/<[^>]+>/gu, ' ')
@@ -203,7 +204,9 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                           controls
                           playsinline
                           preload="none"
-                          poster={video.thumbnail}
+                          poster={deferredVideoPoster}
+                          data-poster={video.thumbnail}
+                          data-deferred-poster
                           width={video.width}
                           height={video.height}
                           aria-labelledby={`video-${video.id}-title`}
@@ -213,6 +216,7 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                           {video.chapterTrack && <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />}
                           مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
                         </video>
+                        <noscript><img src={video.thumbnail} alt="" width={video.width} height={video.height} loading="lazy" decoding="async" /></noscript>
                       </div>
                       <figcaption class="article-video__body">
                         <div class="article-video__meta">
@@ -269,4 +273,5 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
   .subsection-direct-answer{margin:0 0 1rem}
   .content-cross-reference{padding:.75rem .85rem;border:1px dashed rgba(2,119,194,.2);border-radius:.75rem;background:rgba(247,251,254,.8);font-size:.84rem}
   .article-video h4{margin:.45rem 0;color:var(--blue-950);font-size:1rem;line-height:1.8}
+  .article-video__media noscript img{width:100%;height:auto;display:block;aspect-ratio:9/16;object-fit:cover}
 </style>
