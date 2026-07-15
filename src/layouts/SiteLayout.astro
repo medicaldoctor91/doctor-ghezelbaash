@@ -83,16 +83,34 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
           video.dataset.posterLoaded = 'true';
         };
 
+        const activateNearby = () => {
+          scheduled = false;
+          const margin = 1000;
+          videos.forEach((video) => {
+            if (video.dataset.posterLoaded === 'true') return;
+            const rect = video.getBoundingClientRect();
+            if (rect.top <= window.innerHeight + margin && rect.bottom >= -margin) activatePoster(video);
+          });
+        };
+
+        let scheduled = false;
+        const scheduleNearbyCheck = () => {
+          if (scheduled) return;
+          scheduled = true;
+          requestAnimationFrame(activateNearby);
+        };
+
         videos.forEach((video) => {
           video.addEventListener('pointerenter', () => activatePoster(video), { once: true, passive: true });
           video.addEventListener('focusin', () => activatePoster(video), { once: true });
           video.addEventListener('play', () => activatePoster(video), { once: true });
         });
 
-        if (!('IntersectionObserver' in window)) {
-          videos.forEach(activatePoster);
-          return;
-        }
+        window.addEventListener('scroll', scheduleNearbyCheck, { passive: true });
+        window.addEventListener('resize', scheduleNearbyCheck, { passive: true });
+        scheduleNearbyCheck();
+
+        if (!('IntersectionObserver' in window)) return;
 
         const observer = new IntersectionObserver((entries) => {
           entries.forEach((entry) => {
