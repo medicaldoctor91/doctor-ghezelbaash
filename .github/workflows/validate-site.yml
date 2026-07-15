@@ -34,7 +34,7 @@ jobs:
         run: npm install --package-lock=false --no-audit --no-fund
 
       - name: Validate production audit syntax
-        run: python3 -m py_compile scripts/audit-production.py scripts/run-production-audit.py
+        run: python3 -m py_compile scripts/audit-production.py scripts/run-production-audit.py scripts/verify-stage-11-production.py
 
       - name: Build and validate release
         id: build
@@ -46,7 +46,7 @@ jobs:
           cat build.log
           exit $status
 
-      - name: Upload build and Stage 9 reports
+      - name: Upload build and Stage 11 reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -55,10 +55,12 @@ jobs:
             build.log
             build-reports/stage-9-validation.json
             dist/index.html
+            dist/404.html
             dist/knowledge-graph.jsonld
             dist/_headers
+            dist/_redirects
             dist/llms.txt
             dist/.well-known/ai.txt
           include-hidden-files: true
           if-no-files-found: warn
-          retention-days: 7
+          retention-days: 14
