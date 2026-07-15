@@ -18,6 +18,7 @@ import { applyHomepageGraphContract } from '../compilers/homepage-graph-contract
 import { completeHomepageGraphContract } from '../compilers/homepage-graph-completeness';
 import { applyHomepageAuditFixes } from '../compilers/homepage-graph-audit-fixes';
 import { synchronizeHomepageGraph } from '../compilers/homepage-graph-synchronization';
+import { applyHomepageMissionGraph } from '../compilers/homepage-mission-graph';
 import {
   rehypeAccessibleTables,
   rehypeExternalLinks,
@@ -26,10 +27,12 @@ import {
 
 const raw = rawContent();
 const headings = stabilizeHeadings(getHeadings());
-const graph = synchronizeHomepageGraph(
-  applyHomepageAuditFixes(
-    completeHomepageGraphContract(
-      applyHomepageGraphContract(buildGooglePageGraph(headings, raw)),
+const graph = applyHomepageMissionGraph(
+  synchronizeHomepageGraph(
+    applyHomepageAuditFixes(
+      completeHomepageGraphContract(
+        applyHomepageGraphContract(buildGooglePageGraph(headings, raw)),
+      ),
     ),
   ),
 );
