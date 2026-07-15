@@ -15,8 +15,14 @@ const srcset = (image: any, format: string) => image.widths.map((width: number) 
 const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tehran' }).format(new Date(`${site.googleBusinessProfile.observedAt}T12:00:00+03:30`));
 ---
 
-<section id={clinicSection.id} class="clinic-info section" aria-labelledby={`${clinicSection.id}-title`}>
-  <span id={homepageEntityIds.clinic} class="anchor-alias" aria-hidden="true"></span>
+<section
+  id={clinicSection.id}
+  class="clinic-info section"
+  aria-labelledby={`${clinicSection.id}-title`}
+  data-stage-seven-clinic
+  data-entity-kind="clinic"
+>
+  <span id={homepageEntityIds.clinic} class="anchor-alias" aria-hidden="true" data-canonical-clinic-entity></span>
   <div class="shell">
     <div class="section-heading section-heading--split">
       <div>
@@ -31,20 +37,20 @@ const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'l
         <p><strong>{site.clinicName}</strong> در {site.address} محل فعالیت دکتر سعید قزلباش است. برای هماهنگی مراجعه، سابقه درمان‌های قبلی، نام مواد تزریق‌شده، داروهای مصرفی و تصاویر مربوط به تغییر یا عارضه را آماده کنید.</p>
         <p>امتیاز عمومی زیر از Google Maps و متعلق به انتیتی کلینیک است. این داده تجربه عمومی مراجعه‌کنندگان را توصیف می‌کند و به‌تنهایی تضمین نتیجه درمان یا جایگزین بررسی هویت پزشک، کاندید مناسب و محدودیت روش نیست.</p>
 
-        <dl class="clinic-info__details">
-          <div><dt><Star size={19} aria-hidden="true" /> امتیاز Google Maps</dt><dd><bdi dir="ltr">{site.googleBusinessProfile.ratingValue.toFixed(1)} / {site.googleBusinessProfile.bestRating}</bdi> · {site.googleBusinessProfile.ratingCount.toLocaleString('fa-IR')} ارزیابی</dd></div>
-          <div><dt><MapPin size={19} aria-hidden="true" /> نشانی</dt><dd>{site.address}</dd></div>
-          <div><dt><Phone size={19} aria-hidden="true" /> تلفن</dt><dd><a href={`tel:${site.phone}`}><bdi dir="ltr">{site.phoneDisplay}</bdi></a></dd></div>
-          <div><dt><Clock3 size={19} aria-hidden="true" /> ساعات پاسخ‌گویی ثبت‌شده</dt><dd>{site.hours}</dd></div>
-          <div><dt><MessageCircleMore size={19} aria-hidden="true" /> تاریخ مشاهده داده امتیاز</dt><dd><time datetime={site.googleBusinessProfile.observedAt}>{observedAt}</time></dd></div>
+        <dl class="clinic-info__details" data-clinic-facts>
+          <div data-clinic-field="rating"><dt><Star size={19} aria-hidden="true" /> امتیاز Google Maps</dt><dd><bdi dir="ltr">{site.googleBusinessProfile.ratingValue.toFixed(1)} / {site.googleBusinessProfile.bestRating}</bdi> · {site.googleBusinessProfile.ratingCount.toLocaleString('fa-IR')} ارزیابی</dd></div>
+          <div data-clinic-field="address"><dt><MapPin size={19} aria-hidden="true" /> نشانی</dt><dd>{site.address}</dd></div>
+          <div data-clinic-field="phone"><dt><Phone size={19} aria-hidden="true" /> تلفن</dt><dd><a href={`tel:${site.phone}`}><bdi dir="ltr">{site.phoneDisplay}</bdi></a></dd></div>
+          <div data-clinic-field="hours"><dt><Clock3 size={19} aria-hidden="true" /> ساعات پاسخ‌گویی ثبت‌شده</dt><dd>{site.hours}</dd></div>
+          <div data-clinic-field="rating-observed-at"><dt><MessageCircleMore size={19} aria-hidden="true" /> تاریخ مشاهده داده امتیاز</dt><dd><time datetime={site.googleBusinessProfile.observedAt}>{observedAt}</time></dd></div>
         </dl>
 
-        <p class="clinic-info__links">
-          <a href={site.maps} target="_blank" rel="noopener noreferrer external">بازکردن موقعیت کلینیک در Google Maps</a>
+        <p class="clinic-info__links" aria-label="منابع موقعیت و انتیتی کلینیک">
+          <a href={site.maps} target="_blank" rel="noopener noreferrer external" data-clinic-source="google-maps">بازکردن موقعیت کلینیک در Google Maps</a>
           <span aria-hidden="true"> · </span>
-          <a href={site.openStreetMap} target="_blank" rel="noopener noreferrer external">مشاهده موقعیت در OpenStreetMap</a>
+          <a href={site.openStreetMap} target="_blank" rel="noopener noreferrer external" data-clinic-source="openstreetmap">مشاهده موقعیت کلینیک در OpenStreetMap</a>
           <span aria-hidden="true"> · </span>
-          <a href={site.placeWikidata} target="_blank" rel="noopener noreferrer external">انتیتی کلینیک در Wikidata</a>
+          <a href={site.placeWikidata} target="_blank" rel="noopener noreferrer external" data-clinic-source="wikidata">انتیتی کلینیک زیبایی دکتر سعید قزلباش در Wikidata</a>
         </p>
       </div>
 
