@@ -1,0 +1,102 @@
+name: Stage 11 quality baseline
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-11-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  browser-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install project dependencies
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+        run: npm ci --no-audit --no-fund
+
+      - name: Build validated static dist
+        run: npm run build
+
+      - name: Resolve and record audit tool versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p quality-reports
+          lighthouse_version="$(npm view lighthouse version)"
+          axe_version="$(npm view @axe-core/cli version)"
+          printf 'LIGHTHOUSE_VERSION=%s\n' "$lighthouse_version" >> "$GITHUB_ENV"
+          printf 'AXE_VERSION=%s\n' "$axe_version" >> "$GITHUB_ENV"
+          printf '{"lighthouse":"%s","axe":"%s"}\n' "$lighthouse_version" "$axe_version" > quality-reports/tool-versions.json
+
+      - name: Serve dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m http.server 4173 --directory dist > quality-reports/server.log 2>&1 &
+          echo $! > quality-reports/server.pid
+          for attempt in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0
+            sleep 1
+          done
+          cat quality-reports/server.log
+          exit 1
+
+      - name: Run Lighthouse three times per profile
+        shell: bash
+        run: |
+          set -euo pipefail
+          for profile in mobile desktop; do
+            for run in 1 2 3; do
+              preset=()
+              if [ "$profile" = desktop ]; then preset=(--preset=desktop); fi
+              npx --yes "lighthouse@${LIGHTHOUSE_VERSION}" http://127.0.0.1:4173/ \
+                --quiet \
+                --chrome-flags='--headless=new --no-sandbox --disable-dev-shm-usage' \
+                --output=json \
+                --output-path="quality-reports/lighthouse-${profile}-${run}.json" \
+                "${preset[@]}"
+            done
+          done
+          node scripts/summarize-lighthouse.mjs quality-reports
+
+      - name: Run automated accessibility scan
+        shell: bash
+        run: |
+          set +e
+          npx --yes "@axe-core/cli@${AXE_VERSION}" http://127.0.0.1:4173/ --exit --save quality-reports/axe.json > quality-reports/axe.log 2>&1
+          status=$?
+          cat quality-reports/axe.log
+          printf '%s\n' "$status" > quality-reports/axe-exit-code.txt
+          exit 0
+
+      - name: Upload baseline evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-11-quality-baseline
+          path: |
+            quality-reports
+            dist/index.html
+            dist/404.html
+            dist/_headers
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
