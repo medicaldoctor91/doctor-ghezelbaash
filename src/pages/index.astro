@@ -19,7 +19,6 @@ import { completeHomepageGraphContract } from '../compilers/homepage-graph-compl
 import { applyHomepageAuditFixes } from '../compilers/homepage-graph-audit-fixes';
 import { synchronizeHomepageGraph } from '../compilers/homepage-graph-synchronization';
 import { applyHomepageMissionGraph } from '../compilers/homepage-mission-graph';
-import { buildPublicSchemaGraph } from '../compilers/public-schema-graph';
 import {
   rehypeAccessibleTables,
   rehypeExternalLinks,
@@ -37,7 +36,6 @@ const completePageGraph = applyHomepageMissionGraph(
     ),
   ),
 );
-const publicSchemaGraph = buildPublicSchemaGraph(completePageGraph);
 
 const h2Matches = [...raw.matchAll(/^##\s+(.+)$/gm)];
 const h2Headings = headings.filter((heading) => heading.depth === 2);
@@ -61,7 +59,7 @@ const articleSections = await Promise.all(h2Matches.map(async (match, index) => 
 }));
 ---
 
-<SiteLayout graph={publicSchemaGraph} ogType="website">
+<SiteLayout graph={completePageGraph} ogType="website">
   <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
   <div id="top"></div>
   <span id="website" class="anchor-alias" aria-hidden="true"></span>
