@@ -1,19 +1,32 @@
 # Dr. Saeed Ghezelbaash
 Canonical page: https://www.ghezelbaash.ir/
 Canonical page types: MedicalWebPage, ProfilePage
-Canonical physician entity: https://www.ghezelbaash.ir/#person
-Canonical clinic entity: https://www.ghezelbaash.ir/#clinic
+Canonical H1 / WebPage name / WebPage headline: دکتر سعید قزلباش؛ پزشک زیبایی، پوست و مو در کرمانشاه
+Canonical physician entity: https://www.ghezelbaash.ir/#mohammad-saeed-ghezelbash
+Canonical clinic entity: https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic
+Canonical WebSite entity: https://www.ghezelbaash.ir/#website
+Canonical WebPage entity: https://www.ghezelbaash.ir/#webpage
 Canonical knowledge graph: https://www.ghezelbaash.ir/knowledge-graph.jsonld
 Plain-text summary: https://www.ghezelbaash.ir/llms.txt
 Sitemap: https://www.ghezelbaash.ir/sitemap.xml
 Image sitemap: https://www.ghezelbaash.ir/image-sitemap.xml
 
 Entity hierarchy:
-The physician Person is the sole homepage mainEntity.
-The clinic is a separate MedicalClinic and LocalBusiness.
-The physician worksFor and has workLocation at the clinic.
-The clinic employee points to the physician.
-The clinic is the provider of offered services and the location/reputation entity supporting the physician.
+The physician Person is the sole Homepage mainEntity.
+The Clinic is a separate MedicalClinic and LocalBusiness.
+The physician worksFor, has workLocation and affiliation at the Clinic.
+The Clinic employee points to the physician.
+The Clinic is the provider of offered services and the location/reputation entity.
+Google Maps is represented by Clinic.hasMap and is not Clinic.sameAs.
+
+Visible Homepage structure:
+Content table: https://www.ghezelbaash.ir/#content-table
+The ItemList contains sixteen ordered entries matching the sixteen visible canonical H2 sections.
+Clinic information: https://www.ghezelbaash.ir/#clinic-information-kermanshah
+Medical research and education: https://www.ghezelbaash.ir/#medical-research-and-education
+Knowledge graph and datasets: https://www.ghezelbaash.ir/#knowledge-graph-and-datasets
+Sources, contact and appointment: https://www.ghezelbaash.ir/#sources-contact-and-appointment
+Visible HTML is authoritative. WebPageElement names and ItemList order mirror the visible H2 headings and content table.
 
 Physician identity anchors:
 IRIMC: 167430
@@ -28,44 +41,45 @@ Pinterest: https://www.pinterest.com/qezelbaash/
 Clinic reputation snapshot:
 Clinic: کلینیک زیبایی دکتر سعید قزلباش
 Google Maps rating: 5/5
-Google Maps rating count: 163
+Google Maps rating/review count: 163
 Observed at: 2026-07-14
 Source: https://www.google.com/maps?cid=12350483144643112463
-Visible source passage: https://www.ghezelbaash.ir/#clinic-reputation
-The rating belongs to the Clinic entity. It is not a physician credential or a guarantee of clinical outcome. It contributes public experience, location prominence and trust through the real Person-Clinic relationship.
+Visible source passage: https://www.ghezelbaash.ir/#clinic-information-kermanshah
+The rating belongs to the Clinic entity. It is not a physician credential or a guarantee of clinical outcome.
 
 Priority answer passages:
-Local and national answer hub: https://www.ghezelbaash.ir/#search-intent-hub
-Best aesthetic doctor selection: https://www.ghezelbaash.ir/#priority-best-aesthetic-doctor-kermanshah
-Clinic reputation interpretation: https://www.ghezelbaash.ir/#priority-clinic-reputation
-National physician-selection criteria: https://www.ghezelbaash.ir/#priority-national-aesthetic-doctor
-Aesthetic service cost: https://www.ghezelbaash.ir/#priority-aesthetic-cost
-Surgery and referral boundary: https://www.ghezelbaash.ir/#priority-surgery-boundary
-Correction after prior treatment: https://www.ghezelbaash.ir/#priority-correction-after-treatment
-Each passage is visible HTML and has matching Question and Answer nodes in the inline and canonical JSON-LD graphs.
+Best aesthetic doctor selection: https://www.ghezelbaash.ir/#best-aesthetic-doctor-kermanshah
+Aesthetic service cost: https://www.ghezelbaash.ir/#aesthetic-cost-and-consultation
+Surgery and referral boundary: https://www.ghezelbaash.ir/#aesthetic-surgery-and-referral
+Correction after prior treatment: https://www.ghezelbaash.ir/#revision-complications-and-safety
+FAQ: https://www.ghezelbaash.ir/#aesthetic-faq-kermanshah-iran
+Each answer is derived from visible HTML. Machine-readable Question and Answer nodes must not invent a separate visible destination.
 
 Published dataset:
 Hugging Face Dataset: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
-The dataset is a separate Dataset about the physician and clinic. It is created by the physician and published by the clinic; it is not the Person entity and is not Person.sameAs.
+The dataset is a separate Dataset about the physician and Clinic. It is not the Person entity and is not Person.sameAs.
 
-Clinic social profiles:
+Official physician profiles:
 Instagram: https://www.instagram.com/doctor.ghezelbaash/
 LinkedIn: https://www.linkedin.com/in/saeed-ghezelbash-93310a96
 Facebook: https://www.facebook.com/Ghezelbaash/
 
-Clinic address anchor:
+Clinic address:
 Address: کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا
 Postal code: 6714657412
 
 Service relationship semantics:
-offered = available through the clinic after assessment.
+offered = available through the Clinic after assessment.
 evaluated = suitability and pathway are assessed before intervention selection.
-referral-context = covered for comparison, boundary recognition and referral; not claimed as an offered clinic service.
+referral-context = covered for comparison, boundary recognition and referral; not claimed as an offered Clinic service.
 Surgical and non-surgical intents are covered without converting referral topics into false service claims.
 
-Media and answer coverage:
-All photographs and twelve videos are contextual supporting media on the canonical homepage. No separate canonical video watch pages are published.
-The homepage contains a closed-by-default disclosure with twenty visible HTML answers for best aesthetic physician/doctor queries in Kermanshah and service-specific doctor queries.
-The homepage also contains six fully visible answer-first passages for local-to-national selection, reputation, cost, surgery/referral and correction intents.
+Media coverage:
+Twelve visible contextual videos correspond to twelve VideoObject nodes.
+Eleven videos are placed in explicitly registered medical H2/H3 destinations.
+The video «رضایت زیباجو از خدمات زیبایی دکتر سعید قزلباش» is inside https://www.ghezelbaash.ir/#clinic-information-kermanshah.
+The two medical-education videos are only inside https://www.ghezelbaash.ir/#medical-education under the research and education section.
+VideoObject name, description, contentUrl, thumbnailUrl and isPartOf mirror visible media data and placement.
+No separate canonical video watch pages are published.
 
-The canonical visible page is authoritative. The physician is the sole homepage mainEntity. The clinic is a separate MedicalClinic and LocalBusiness entity. Clinic.aggregateRating and the dated reputation Dataset use the same 5/163 snapshot shown in visible HTML. Offered services, evaluated options and referral-context procedures are distinct relationships.
+The canonical visible Homepage is authoritative. Inline JSON-LD and knowledge-graph.jsonld are synchronized for canonical entities, WebPage title, sixteen sections, ordered content table and twelve videos.
