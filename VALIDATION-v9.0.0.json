@@ -6,11 +6,13 @@
   "acceptanceCriteria": 20,
   "passed": 20,
   "failed": 0,
-  "ciWorkflow": {
-    "name": "Validate site",
-    "runId": 29385769344,
-    "headCommit": "65f0defffcc82dd7c28fdce6d885b349522b3e66",
-    "reportArtifact": "build-reports/stage-9-validation.json"
+  "evidence": {
+    "policy": "commit-scoped",
+    "workflow": ".github/workflows/validate-site.yml",
+    "workflowName": "Validate site",
+    "artifactName": "site-build-report",
+    "generatedReport": "build-reports/stage-9-validation.json",
+    "note": "Commit-specific validation is stored in the successful workflow run and artifact for that commit. This manifest contains invariant release facts and does not store a run ID or head SHA."
   },
   "baseline": {
     "architectureCommit": "c2608056ffb3ee6f35a1f7f097fdd2cccb17e46a",
