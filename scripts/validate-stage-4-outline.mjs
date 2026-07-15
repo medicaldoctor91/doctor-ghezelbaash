@@ -13,7 +13,7 @@ const failures = [];
 const check = (condition, message) => { if (!condition) failures.push(message); };
 const count = (value, pattern) => (value.match(pattern) ?? []).length;
 const unique = (values) => new Set(values).size === values.length;
-const attr = (tag, name) => tag.match(new RegExp(`\\b${name}="([^"]*)"`, 'iu'))?.[1] ?? null;
+const attr = (tag, name) => tag.match(new RegExp(`(?:^|\\s)${name}="([^"]*)"`, 'iu'))?.[1] ?? null;
 const textOf = (value) => value
   .replace(/<script\b[\s\S]*?<\/script>/giu, ' ')
   .replace(/<style\b[\s\S]*?<\/style>/giu, ' ')
@@ -29,7 +29,7 @@ const mainMatch = html.match(/<main\b[^>]*id="main-content"[^>]*>([\s\S]*?)<\/ma
 const main = mainMatch?.[1] ?? '';
 check(Boolean(main), 'main#main-content is missing');
 
-const tagsWithIds = [...html.matchAll(/<([a-z][a-z0-9:-]*)\b[^>]*\bid="([^"]+)"[^>]*>/giu)]
+const tagsWithIds = [...html.matchAll(/<([a-z][a-z0-9:-]*)\b[^>]*\sid="([^"]+)"[^>]*>/giu)]
   .map((match) => ({ tag: match[1].toLowerCase(), id: match[2], raw: match[0] }));
 const ids = tagsWithIds.map((entry) => entry.id);
 const idCounts = new Map(ids.map((id) => [id, ids.filter((candidate) => candidate === id).length]));
@@ -66,7 +66,7 @@ check(h2Matches[0]?.text === homepageToc.title, 'Content Table must be the first
 
 let previousSectionPosition = tocClose;
 for (const section of homepageSections) {
-  const sectionPattern = new RegExp(`<section\\b[^>]*\\bid="${section.id}"[^>]*\\baria-labelledby="${section.id}-title"[^>]*>`, 'iu');
+  const sectionPattern = new RegExp(`<section\\b[^>]*\\sid="${section.id}"[^>]*\\saria-labelledby="${section.id}-title"[^>]*>`, 'iu');
   const sectionMatch = main.match(sectionPattern);
   const sectionPosition = sectionMatch?.index ?? -1;
   const heading = h2Matches.find((candidate) => candidate.id === `${section.id}-title`);
@@ -99,7 +99,7 @@ const componentH3Ids = [
   'aesthetic-surgery-evaluation-kermanshah',
 ];
 const expectedH3Ids = [...componentH3Ids, ...homepageArticleSubsections.map((subsection) => subsection.id)];
-const h3Matches = [...main.matchAll(/<h3\b[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/h3>/giu)]
+const h3Matches = [...main.matchAll(/<h3\b[^>]*\sid="([^"]+)"[^>]*>([\s\S]*?)<\/h3>/giu)]
   .map((match) => ({ headingId: match[1], text: textOf(match[2]), index: match.index ?? -1 }));
 const actualH3Ids = h3Matches.map((heading) => heading.headingId.endsWith('-title') ? heading.headingId.slice(0, -6) : heading.headingId);
 check(expectedH3Ids.length === 75, `Stage 4 contract must define 75 canonical H3s; found ${expectedH3Ids.length}`);
