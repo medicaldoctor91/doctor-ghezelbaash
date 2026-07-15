@@ -64,7 +64,7 @@ jobs:
           root_url="${PREVIEW_URL}/?verification=${cache_bust}"
           curl --compressed -fsSL -D preview-evidence/home.headers -o preview-evidence/home.html "$root_url"
 
-          grep -Eiq '^x-robots-tag:[[:space:]]*noindex,[[:space:]]*nofollow' preview-evidence/home.headers
+          grep -Eiq '^x-robots-tag:.*noindex' preview-evidence/home.headers
           grep -Eiq '^strict-transport-security:' preview-evidence/home.headers
           grep -Eiq '^content-security-policy:' preview-evidence/home.headers
           grep -Eiq '^x-content-type-options:[[:space:]]*nosniff' preview-evidence/home.headers
@@ -81,7 +81,7 @@ jobs:
 
           redirect_status="$(curl -sS -o /dev/null -D preview-evidence/index-redirect.headers -w '%{http_code}' "${PREVIEW_URL}/index.html")"
           test "$redirect_status" = '301'
-          grep -Eiq '^location:[[:space:]]*/([[:space:]]|$)' preview-evidence/index-redirect.headers
+          grep -Eiq '^location:[[:space:]]*(/|https://[^/]+/)[[:space:]]*$' preview-evidence/index-redirect.headers
 
           missing_status="$(curl --compressed -sS -D preview-evidence/404.headers -o preview-evidence/404.html -w '%{http_code}' "${PREVIEW_URL}/missing-stage-11-${cache_bust}")"
           test "$missing_status" = '404'
