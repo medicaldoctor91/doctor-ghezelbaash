@@ -71,6 +71,40 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
   </head>
   <body>
     <slot />
+    <script is:inline>
+      (() => {
+        const videos = [...document.querySelectorAll('video[data-deferred-poster][data-poster]')];
+        if (!videos.length) return;
+
+        const activatePoster = (video) => {
+          const poster = video.dataset.poster;
+          if (!poster || video.dataset.posterLoaded === 'true') return;
+          video.poster = poster;
+          video.dataset.posterLoaded = 'true';
+        };
+
+        videos.forEach((video) => {
+          video.addEventListener('pointerenter', () => activatePoster(video), { once: true, passive: true });
+          video.addEventListener('focusin', () => activatePoster(video), { once: true });
+          video.addEventListener('play', () => activatePoster(video), { once: true });
+        });
+
+        if (!('IntersectionObserver' in window)) {
+          videos.forEach(activatePoster);
+          return;
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            activatePoster(entry.target);
+            observer.unobserve(entry.target);
+          });
+        }, { rootMargin: '1000px 0px', threshold: 0.01 });
+
+        videos.forEach((video) => observer.observe(video));
+      })();
+    </script>
     <script is:inline type="application/ld+json" set:html={JSON.stringify(graph)} />
   </body>
 </html>
