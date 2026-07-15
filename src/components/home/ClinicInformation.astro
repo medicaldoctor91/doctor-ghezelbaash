@@ -7,7 +7,10 @@ import { homepageEntityIds, homepageSectionById } from '../../domain/homepage-se
 const clinicSection = homepageSectionById.get('clinic-information-kermanshah');
 if (!clinicSection) throw new Error('Canonical clinic information section is missing from the Homepage registry.');
 const clinicImages = galleryImages.filter((image: any) => image.id.startsWith('clinic-'));
-const clinicVideo = videos.find((video: any) => video.sectionId === clinicSection.id);
+const clinicVideos = videos.filter((video: any) => video.sectionId === clinicSection.id);
+if (clinicVideos.length !== 1) throw new Error(`Clinic section requires exactly one explicitly mapped video; found ${clinicVideos.length}.`);
+const [clinicVideo] = clinicVideos;
+if (clinicVideo.subsectionId != null) throw new Error(`Clinic video must target the H2 directly: ${clinicVideo.id} -> ${clinicVideo.subsectionId}`);
 const srcset = (image: any, format: string) => image.widths.map((width: number) => `/images/responsive/${image.base}-${width}.${format} ${width}w`).join(', ');
 const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tehran' }).format(new Date(`${site.googleBusinessProfile.observedAt}T12:00:00+03:30`));
 ---
@@ -59,21 +62,19 @@ const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'l
       </div>
     </div>
 
-    {clinicVideo && (
-      <figure id={`video-${clinicVideo.id}`} class="clinic-info__video article-video">
-        <div class="article-video__media">
-          <video controls playsinline preload="none" poster={clinicVideo.thumbnail} width={clinicVideo.width} height={clinicVideo.height} aria-labelledby={`video-${clinicVideo.id}-title`} aria-describedby={`video-${clinicVideo.id}-description`}>
-            <source src={`/videos/${clinicVideo.file}`} type="video/mp4" />
-            {clinicVideo.chapterTrack && <track kind="chapters" src={clinicVideo.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />}
-            مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
-          </video>
-        </div>
-        <figcaption class="article-video__body">
-          <strong id={`video-${clinicVideo.id}-title`} class="clinic-info__video-title">{clinicVideo.title}</strong>
-          <p id={`video-${clinicVideo.id}-description`}>{clinicVideo.description}</p>
-        </figcaption>
-      </figure>
-    )}
+    <figure id={`video-${clinicVideo.id}`} class="clinic-info__video article-video" data-contextual-video data-video-section={clinicVideo.sectionId}>
+      <div class="article-video__media">
+        <video controls playsinline preload="none" poster={clinicVideo.thumbnail} width={clinicVideo.width} height={clinicVideo.height} aria-labelledby={`video-${clinicVideo.id}-title`} aria-describedby={`video-${clinicVideo.id}-description`}>
+          <source src={`/videos/${clinicVideo.file}`} type="video/mp4" />
+          {clinicVideo.chapterTrack && <track kind="chapters" src={clinicVideo.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />}
+          مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
+        </video>
+      </div>
+      <figcaption class="article-video__body">
+        <strong id={`video-${clinicVideo.id}-title`} class="clinic-info__video-title">{clinicVideo.title}</strong>
+        <p id={`video-${clinicVideo.id}-description`}>{clinicVideo.description}</p>
+      </figcaption>
+    </figure>
   </div>
 </section>
 
