@@ -66,11 +66,16 @@ jobs:
     name: Verify custom domain deployment
     needs: deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout deployed source
         uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
 
       - name: Verify live Homepage contract
         shell: bash
@@ -104,6 +109,19 @@ jobs:
 
           printf '%s\n' 'Custom domain did not expose the mission-locked Homepage contract within the verification window.' >&2
           exit 1
+
+      - name: Verify live inline and external JSON-LD
+        run: python3 scripts/verify-schema-production.py --commit "${GITHUB_SHA}" --attempts 18 --delay 20
+
+      - name: Upload schema verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-production-evidence
+          path: production-audit
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Record verified deployment commit
         shell: bash
