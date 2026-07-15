@@ -60,10 +60,11 @@ https://*.doctor-ghezelbaash.pages.dev/*
 
 /knowledge-graph.jsonld
   Content-Type: application/ld+json; charset=utf-8
-  X-Robots-Tag: noindex, follow
+  Content-Disposition: inline; filename="knowledge-graph.jsonld"
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
-  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  Cache-Control: public, max-age=0, must-revalidate
+  CDN-Cache-Control: public, max-age=0, must-revalidate
 
 /llms.txt
   Content-Type: text/plain; charset=utf-8

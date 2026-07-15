@@ -17,13 +17,13 @@ SCRIPT_RE = re.compile(
 
 def fetch(url: str):
     request = Request(url, headers={
-        "User-Agent": "Ghezelbaash-Schema-Visibility-Verifier/1.0",
+        "User-Agent": "Ghezelbaash-Schema-Visibility-Verifier/2.0",
         "Cache-Control": "no-cache",
         "Pragma": "no-cache",
-        "Accept": "text/html,application/ld+json;q=0.9,*/*;q=0.8",
+        "Accept": "text/html,application/ld+json;q=1.0,*/*;q=0.1",
     })
     try:
-        with urlopen(request, timeout=30) as response:
+        with urlopen(request, timeout=45) as response:
             return response.status, dict(response.headers.items()), response.read()
     except HTTPError as error:
         return error.code, dict(error.headers.items()), error.read()
@@ -44,6 +44,9 @@ def verify(commit: str):
     head = re.search(r"<head>([\s\S]*?)</head>", html, re.IGNORECASE)
     head_html = head.group(1) if head else ""
     script = SCRIPT_RE.search(head_html)
+    script_position = head_html.find('id="homepage-entity-graph"')
+    describedby_position = head_html.find('rel="describedby"')
+    alternate_position = head_html.find('rel="alternate"')
     inline_graph = {}
     inline_error = None
     if script:
@@ -66,21 +69,30 @@ def verify(commit: str):
     external_ids = {node.get("@id") for node in external_nodes if isinstance(node, dict)}
     person = f"{SITE}/#mohammad-saeed-ghezelbash"
     clinic = f"{SITE}/#dr-saeed-ghezelbash-aesthetic-clinic"
+    graph_x_robots = header(graph_headers, "x-robots-tag").lower()
+    graph_cache = header(graph_headers, "cache-control").lower()
+    graph_disposition = header(graph_headers, "content-disposition").lower()
 
     checks = {
         "homepageStatus200": home_status == 200,
         "inlineScriptInHead": script is not None,
         "stableInlineScriptId": 'id="homepage-entity-graph"' in head_html,
-        "schemaNearStartOfHead": head_html.find('id="homepage-entity-graph"') >= 0 and head_html.find('id="homepage-entity-graph"') < 3000,
+        "fullSchemaMarker": 'data-schema-completeness="full"' in head_html,
+        "schemaNearStartOfHead": script_position >= 0 and script_position < 4000,
+        "describedByBeforeSchema": describedby_position >= 0 and describedby_position < script_position,
+        "alternateBeforeSchema": alternate_position >= 0 and alternate_position < script_position,
         "inlineJsonParses": inline_error is None and isinstance(inline_graph, dict),
-        "inlineGraphDepth": len(inline_nodes) > 30,
+        "inlineGraphPreserved": len(inline_nodes) >= 120 and len(script.group(1).encode("utf-8")) >= 100_000 if script else False,
         "inlinePerson": person in inline_ids,
         "inlineClinic": clinic in inline_ids,
-        "externalDiscoveryLink": 'rel="describedby"' in head_html and "knowledge-graph.jsonld" in head_html,
         "externalStatus200": graph_status == 200,
         "externalContentType": header(graph_headers, "content-type").lower().startswith("application/ld+json"),
+        "externalCrawlable": "noindex" not in graph_x_robots,
+        "externalFresh": "max-age=0" in graph_cache and "must-revalidate" in graph_cache,
+        "externalInlineDisposition": "inline" in graph_disposition,
+        "externalCors": header(graph_headers, "access-control-allow-origin") == "*",
         "externalJsonParses": external_error is None and isinstance(external_graph, dict),
-        "externalGraphDepth": len(external_nodes) > 500,
+        "externalGraphPreserved": len(external_nodes) >= 600 and len(graph_body) >= 750_000,
         "externalPerson": person in external_ids,
         "externalClinic": clinic in external_ids,
         "inlineIsExternalSubset": inline_ids.issubset(external_ids),
@@ -91,11 +103,20 @@ def verify(commit: str):
         "verifiedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "status": "pass" if all(checks.values()) else "fail",
         "checks": checks,
-        "inline": {"nodes": len(inline_nodes), "parseError": inline_error},
+        "inline": {
+            "nodes": len(inline_nodes),
+            "bytes": len(script.group(1).encode("utf-8")) if script else 0,
+            "parseError": inline_error,
+            "position": script_position,
+        },
         "external": {
             "status": graph_status,
             "contentType": header(graph_headers, "content-type"),
+            "xRobotsTag": header(graph_headers, "x-robots-tag"),
+            "cacheControl": header(graph_headers, "cache-control"),
+            "contentDisposition": header(graph_headers, "content-disposition"),
             "nodes": len(external_nodes),
+            "bytes": len(graph_body),
             "parseError": external_error,
         },
     }

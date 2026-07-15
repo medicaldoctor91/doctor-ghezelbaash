@@ -27,7 +27,7 @@ import {
 
 const raw = rawContent();
 const headings = stabilizeHeadings(getHeadings());
-const graph = applyHomepageMissionGraph(
+const completePageGraph = applyHomepageMissionGraph(
   synchronizeHomepageGraph(
     applyHomepageAuditFixes(
       completeHomepageGraphContract(
@@ -59,7 +59,7 @@ const articleSections = await Promise.all(h2Matches.map(async (match, index) => 
 }));
 ---
 
-<SiteLayout graph={graph} ogType="website">
+<SiteLayout graph={completePageGraph} ogType="website">
   <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
   <div id="top"></div>
   <span id="website" class="anchor-alias" aria-hidden="true"></span>
