@@ -85,7 +85,11 @@ test('video posters do not load before need and activate near viewport', async (
   expect(posterRequests).toEqual([]);
   const firstVideo = page.locator('video[data-deferred-poster]').first();
   await expect(firstVideo).toHaveAttribute('poster', /^data:image\/svg\+xml,/u);
-  await firstVideo.scrollIntoViewIfNeeded();
+  await firstVideo.evaluate((video) => {
+    video.scrollIntoView({ block: 'center', behavior: 'auto' });
+    window.dispatchEvent(new Event('scroll'));
+  });
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   await expect.poll(() => posterRequests.length).toBeGreaterThan(0);
   await expect(firstVideo).toHaveAttribute('poster', /\/videos\/thumbnails\//u);
 });
