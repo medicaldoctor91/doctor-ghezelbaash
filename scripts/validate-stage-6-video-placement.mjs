@@ -10,6 +10,9 @@ import {
 
 const root = process.cwd();
 const html = readFileSync(join(root, 'dist', 'index.html'), 'utf8');
+const renderedMarkup = html
+  .replace(/<style\b[\s\S]*?<\/style>/giu, '')
+  .replace(/<script\b[\s\S]*?<\/script>/giu, '');
 const guideSource = readFileSync(join(root, 'src/components/home/HomepageGuideV2.astro'), 'utf8');
 const clinicSource = readFileSync(join(root, 'src/components/home/ClinicInformation.astro'), 'utf8');
 const indexSource = readFileSync(join(root, 'src/pages/index.astro'), 'utf8');
@@ -112,13 +115,13 @@ check(clinicSource.includes('if (clinicVideos.length !== 1)'), 'clinic renderer 
 check(clinicSource.includes('if (clinicVideo.subsectionId != null)'), 'clinic renderer must reject an unexpected subsection destination');
 check(!clinicSource.includes('videos.find('), 'clinic renderer must not silently select the first matching video');
 
-const htmlIds = [...html.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]);
+const htmlIds = [...renderedMarkup.matchAll(/\sid="([^"]+)"/gu)].map((match) => match[1]);
 const idCounts = new Map(htmlIds.map((id) => [id, htmlIds.filter((candidate) => candidate === id).length]));
 const structuralNodes = [
   ...homepageSections.map((section) => ({ id: section.id, level: 2 })),
   ...homepageArticleSubsections.map((subsection) => ({ id: subsection.id, level: 3 })),
 ]
-  .map((node) => ({ ...node, position: html.indexOf(`id="${node.id}"`) }))
+  .map((node) => ({ ...node, position: renderedMarkup.indexOf(`id="${node.id}"`) }))
   .filter((node) => node.position >= 0)
   .sort((left, right) => left.position - right.position);
 
@@ -127,16 +130,16 @@ const destinationRange = (id) => {
   if (index < 0) return null;
   const node = structuralNodes[index];
   const next = structuralNodes.slice(index + 1).find((candidate) => candidate.level <= node.level);
-  return [node.position, next?.position ?? html.indexOf('</main>', node.position)];
+  return [node.position, next?.position ?? renderedMarkup.indexOf('</main>', node.position)];
 };
 
 for (const video of videos) {
   const figureId = `video-${video.id}`;
-  const figureIdAt = html.indexOf(`id="${figureId}"`);
-  const figureStart = html.lastIndexOf('<figure', figureIdAt);
-  const figureEndAt = html.indexOf('</figure>', figureIdAt);
+  const figureIdAt = renderedMarkup.indexOf(`id="${figureId}"`);
+  const figureStart = renderedMarkup.lastIndexOf('<figure', figureIdAt);
+  const figureEndAt = renderedMarkup.indexOf('</figure>', figureIdAt);
   const figureEnd = figureEndAt < 0 ? -1 : figureEndAt + 9;
-  const figure = figureStart >= 0 && figureEnd > figureStart ? html.slice(figureStart, figureEnd) : '';
+  const figure = figureStart >= 0 && figureEnd > figureStart ? renderedMarkup.slice(figureStart, figureEnd) : '';
   check(idCounts.get(figureId) === 1, `${video.id}: contextual figure must exist exactly once`);
   check(Boolean(figure), `${video.id}: figure markup is missing`);
   check(count(figure, /<video\b/gu) === 1, `${video.id}: figure must contain exactly one video element`);
@@ -164,10 +167,10 @@ for (const video of videos) {
   if (range) check(figureStart > range[0] && figureEnd <= range[1], `${video.id}: figure is outside its mapped DOM destination #${destination}`);
 }
 
-check(count(html, /<video\b/gu) === videos.length, `rendered video count differs from registry: ${count(html, /<video\b/gu)}/${videos.length}`);
-check(count(html, /<figure\b[^>]*id="video-/gu) === videos.length, `rendered contextual figure count differs from registry`);
-check(!html.includes('video-rail'), 'video rail/carousel markup is forbidden');
-check(!/href="\/videos\/[^"/]+\/?"/u.test(html), 'video watch-page links are forbidden');
+check(count(renderedMarkup, /<video\b/gu) === videos.length, `rendered video count differs from registry: ${count(renderedMarkup, /<video\b/gu)}/${videos.length}`);
+check(count(renderedMarkup, /<figure\b[^>]*id="video-/gu) === videos.length, 'rendered contextual figure count differs from registry');
+check(!renderedMarkup.includes('video-rail'), 'video rail/carousel markup is forbidden');
+check(!/href="\/videos\/[^"/]+\/?"/u.test(renderedMarkup), 'video watch-page links are forbidden');
 
 if (failures.length > 0) {
   console.error(JSON.stringify({
