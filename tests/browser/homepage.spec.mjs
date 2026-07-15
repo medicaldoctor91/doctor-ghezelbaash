@@ -76,7 +76,7 @@ test('fragment focus, browser history and mobile navigation work progressively',
   await assertNoHorizontalOverflow(page);
 });
 
-test('video posters do not load before need and activate near viewport', async ({ page }) => {
+test('video posters do not load before need and activate at a real deep-link destination', async ({ page }) => {
   const posterRequests = [];
   page.on('request', (request) => {
     if (request.url().includes('/videos/thumbnails/')) posterRequests.push(request.url());
@@ -85,13 +85,13 @@ test('video posters do not load before need and activate near viewport', async (
   expect(posterRequests).toEqual([]);
   const firstVideo = page.locator('video[data-deferred-poster]').first();
   await expect(firstVideo).toHaveAttribute('poster', /^data:image\/svg\+xml,/u);
-  await firstVideo.evaluate((video) => {
-    video.scrollIntoView({ block: 'center', behavior: 'auto' });
-    window.dispatchEvent(new Event('scroll'));
-  });
+  const figureId = await firstVideo.evaluate((video) => video.closest('figure')?.id ?? '');
+  expect(figureId).toMatch(/^video-/u);
+  await page.goto(`/#${figureId}`, { waitUntil: 'domcontentloaded' });
+  await expect(page).toHaveURL(new RegExp(`#${figureId}$`, 'u'));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   await expect.poll(() => posterRequests.length).toBeGreaterThan(0);
-  await expect(firstVideo).toHaveAttribute('poster', /\/videos\/thumbnails\//u);
+  await expect(page.locator(`#${figureId} video`)).toHaveAttribute('poster', /\/videos\/thumbnails\//u);
 });
 
 test('reduced motion and small-phone reflow remain usable', async ({ page }) => {
