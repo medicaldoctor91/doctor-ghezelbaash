@@ -1,6 +1,11 @@
 import { site } from '../domain/entities';
 import { homepageGraphSyncContract } from '../domain/homepage-graph-sync.mjs';
 import { priorityIntentAnswers } from '../domain/priority-intent-answers.mjs';
+import {
+  homepageMissionLock,
+  localServiceIntentAnswers,
+  nationalAuthorityAnswers,
+} from '../domain/homepage-mission-lock.mjs';
 // @ts-expect-error Shared ESM physician identity contract.
 import { personIdentityContract } from '../domain/person-identity.mjs';
 
@@ -10,6 +15,12 @@ export function GET() {
   const priorityAnswers = priorityIntentAnswers.map((item: { question: string; answer: string; id: string }) =>
     `### ${item.question}\n\n${item.answer}\n\nSource passage: ${site.url}#${item.id}`,
   ).join('\n\n');
+  const localIntentMap = localServiceIntentAnswers.map((item) =>
+    `- [${item.question}](${site.url}#${item.id}) — relationship: ${item.relationship}; destination: ${site.url}#${item.destinationId}`,
+  ).join('\n');
+  const nationalIntentMap = nationalAuthorityAnswers.map((item) =>
+    `- [${item.question}](${site.url}#${item.id}) — destination: ${site.url}#${item.destinationId}`,
+  ).join('\n');
   const personUri = `${site.url}#${homepageGraphSyncContract.entities.person}`;
   const clinicUri = `${site.url}#${homepageGraphSyncContract.entities.clinic}`;
 
@@ -24,6 +35,8 @@ export function GET() {
 - [Physician entity](${personUri}): Canonical Person URI and sole mainEntity of the Homepage.
 - [Clinic entity](${clinicUri}): Separate MedicalClinic and LocalBusiness URI; employer, work location, provider, publisher and location/reputation entity.
 - [Content table](${site.url}#${homepageGraphSyncContract.toc.id}): Crawlable ordered index of all sixteen canonical H2 sections.
+- [Local service-intent answers](${site.url}#${homepageMissionLock.localAnswerListId}): ${homepageMissionLock.localAnswerCount} visible answer-first passages for local physician/service selection.
+- [National authority answers](${site.url}#${homepageMissionLock.nationalAnswerListId}): ${homepageMissionLock.nationalAnswerCount} visible passages for national selection, out-of-city planning and complex revision.
 - [Clinic information](${site.url}#clinic-information-kermanshah): Visible clinic name, address, phone, hours, dated Google Maps rating evidence, location sources and the patient testimonial video.
 - [Medical research and education](${site.url}#medical-research-and-education): Research identifiers, publications and two physician-education videos.
 - [Knowledge graph and datasets](${site.url}#knowledge-graph-and-datasets): Existing machine-readable resources; no parallel per-service or per-section graph files.
@@ -39,6 +52,7 @@ export function GET() {
 - Person is the sole Homepage mainEntity.
 - Clinic remains a separate provider, publisher, employer, work location and reputation/location entity.
 - Google Maps is represented through Clinic.hasMap and is not Clinic.sameAs.
+- Clinic AggregateRating remains on Clinic only and is not copied to Person.
 
 ## Physician identity
 
@@ -68,6 +82,14 @@ export function GET() {
 - Address: ${site.address}
 - The rating belongs to the Clinic. It describes public visitor experience and location prominence; it is not a physician credential and does not guarantee treatment outcomes.
 
+## Mission-locked local service intent map
+
+${localIntentMap}
+
+## Local-to-national authority passages
+
+${nationalIntentMap}
+
 ## Official physician profiles
 
 - Instagram: ${personIdentityContract.instagram}
@@ -96,6 +118,7 @@ ${priorityAnswers}
 ## Interpretation
 
 - Visible HTML is authoritative; inline JSON-LD and knowledge-graph.jsonld must mirror it.
+- The local and national Question/Answer nodes mirror the visible answer passages and do not create separate URLs.
 - H2 titles and order mirror WebPageElement and ItemList nodes.
 - Video titles, descriptions, files, thumbnails and destinations mirror VideoObject nodes.
 - The Homepage is both MedicalWebPage and ProfilePage; the physician remains its sole mainEntity.

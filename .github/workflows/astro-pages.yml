@@ -79,6 +79,10 @@ jobs:
           expected_h1='دکتر سعید قزلباش؛ پزشک زیبایی، پوست و مو در کرمانشاه'
           expected_person='id="mohammad-saeed-ghezelbash"'
           expected_testimonial='رضایت زیباجو از خدمات زیبایی دکتر سعید قزلباش'
+          expected_local_answers='id="local-service-intent-answers"'
+          expected_national_answers='id="national-aesthetic-authority-answers"'
+          expected_referral='id="best-rhinoplasty-doctor-kermanshah"'
+          expected_national_question='برای انتخاب پزشک زیبایی در سطح ایران چه معیارهایی از نام شهر مهم‌ترند؟'
 
           for attempt in $(seq 1 45); do
             url="https://www.ghezelbaash.ir/?deployment=${GITHUB_SHA}-${attempt}"
@@ -86,15 +90,19 @@ jobs:
 
             if grep -Fq "$expected_h1" <<< "$html" \
               && grep -Fq "$expected_person" <<< "$html" \
-              && grep -Fq "$expected_testimonial" <<< "$html"; then
-              printf '%s\n' 'Verified final Homepage contract on the custom domain.'
+              && grep -Fq "$expected_testimonial" <<< "$html" \
+              && grep -Fq "$expected_local_answers" <<< "$html" \
+              && grep -Fq "$expected_national_answers" <<< "$html" \
+              && grep -Fq "$expected_referral" <<< "$html" \
+              && grep -Fq "$expected_national_question" <<< "$html"; then
+              printf '%s\n' 'Verified final mission-locked Homepage contract on the custom domain.'
               exit 0
             fi
 
             sleep 20
           done
 
-          printf '%s\n' 'Custom domain did not expose the deployed Homepage contract within the verification window.' >&2
+          printf '%s\n' 'Custom domain did not expose the mission-locked Homepage contract within the verification window.' >&2
           exit 1
 
       - name: Record verified deployment commit
