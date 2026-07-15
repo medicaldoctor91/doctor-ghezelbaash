@@ -50,11 +50,12 @@ for (const [id, summary] of Object.entries(homepageSubsectionSummaries)) {
   check(!/(?:تضمین(?:‌|\s)?شده|صددرصد|بدون عارضه|کاملاً بی‌خطر)/u.test(summary), `${id}: absolute medical claim is forbidden`);
 }
 
-for (const subsection of homepageArticleSubsections) {
-  const start = html.indexOf(`id="${subsection.id}"`);
-  const nextHeading = html.indexOf('<h3', start + 1);
-  const end = nextHeading > start ? nextHeading : html.indexOf('</article>', start);
-  const slice = start >= 0 && end > start ? html.slice(start, end) : '';
+for (let index = 0; index < homepageArticleSubsections.length; index += 1) {
+  const subsection = homepageArticleSubsections[index];
+  const start = sectionPosition(subsection.id);
+  const nextId = homepageArticleSubsections[index + 1]?.id;
+  const nextPosition = nextId ? sectionPosition(nextId) : html.indexOf('</article>', start);
+  const slice = start >= 0 && nextPosition > start ? html.slice(start, nextPosition) : '';
   const direct = slice.match(/<p\b[^>]*class="[^"]*\bsubsection-direct-answer\b[^"]*"[^>]*>([\s\S]*?)<\/p>/iu);
   check(Boolean(direct), `${subsection.id}: visible direct answer is missing`);
   const visible = normalize(direct?.[1] ?? '').replace(/^پاسخ مستقیم:\s*/u, '');
