@@ -1,46 +1,83 @@
 ---
 import { Braces, Database, FileCode2, Network } from '@lucide/astro';
 import { site } from '../../domain/entities';
+import { resolveHomepageExternalDirectory } from '../../domain/homepage-external-directory.mjs';
 import { homepageSectionById } from '../../domain/homepage-sections';
 
 const graphSection = homepageSectionById.get('knowledge-graph-and-datasets');
 if (!graphSection) throw new Error('Canonical machine-data section is missing from the Homepage registry.');
-const resources = [
-  { title: 'گراف دانش کامل سایت', text: 'نمایش ماشین‌خوان انتیتی پزشک، کلینیک، خدمات، منابع پژوهشی و روابط اصلی.', href: '/knowledge-graph.jsonld', icon: Network },
-  { title: 'دیتاست عمومی Hugging Face', text: 'مخزن عمومی داده‌های انتیتی و شواهد ساختاریافته دکتر سعید قزلباش.', href: site.huggingFaceDataset, icon: Database, external: true },
-  { title: 'Wikidata پزشک', text: `شناسه ${site.doctorWikidataId} برای Mohammad Saeed Ghezelbash.`, href: site.doctorWikidata, icon: Braces, external: true },
-  { title: 'Wikidata کلینیک', text: `شناسه ${site.placeWikidataId} برای Dr. Saeed Ghezelbash Aesthetic Clinic.`, href: site.placeWikidata, icon: Braces, external: true },
-  { title: 'Wikidata دیتاست', text: `شناسه ${site.datasetWikidataId} برای مخزن داده ساختاریافته.`, href: site.datasetWikidata, icon: Database, external: true },
-  { title: 'ORCID پژوهشگر', text: `شناسه پایدار پژوهشگر ${site.orcid}.`, href: site.orcidUrl, icon: FileCode2, external: true },
-  { title: 'کتاب‌شناسی عمومی NCBI', text: 'فهرست عمومی منابع پژوهشی متصل به نام پژوهشگر.', href: site.ncbiBibliography, icon: FileCode2, external: true },
-  { title: 'راهنمای llms.txt', text: 'خلاصه مسیرهای اصلی و منابع قابل استفاده برای سامانه‌های زبانی.', href: '/llms.txt', icon: FileCode2 },
-  { title: 'بیانیه ai.txt', text: 'اطلاعات تکمیلی ماشین‌خوان در مسیر استاندارد سایت.', href: '/.well-known/ai.txt', icon: FileCode2 },
-  { title: 'آرشیو Zenodo', text: 'نسخه آرشیوشده و دارای DOI از داده منتشرشده.', href: site.zenodoRecord, icon: Database, external: true },
-  { title: 'مخزن GitHub سایت', text: 'کد منبع، compilerها و validatorهای این پروژه.', href: site.githubRepository, icon: FileCode2, external: true },
-];
+const machineGroup = resolveHomepageExternalDirectory(site).find((group: any) => group.id === 'machine-data');
+if (!machineGroup) throw new Error('Stage 7 machine-data directory group is missing.');
+
+const presentation: Record<string, { text: string; icon: any }> = {
+  'knowledge-graph-jsonld': {
+    text: 'نمایش ماشین‌خوان انتیتی پزشک، کلینیک، خدمات، ویدئوها، منابع و روابط اصلی سایت.',
+    icon: Network,
+  },
+  'huggingface-dataset': {
+    text: 'مخزن عمومی داده‌های انتیتی و شواهد ساختاریافته دکتر سعید قزلباش.',
+    icon: Database,
+  },
+  'dataset-wikidata': {
+    text: `شناسه ${site.datasetWikidataId} برای دیتاست ساختاریافته منتشرشده.`,
+    icon: Braces,
+  },
+  'zenodo-archive': {
+    text: 'نسخه آرشیوشده و دارای DOI از داده منتشرشده برای ارجاع پایدار.',
+    icon: Database,
+  },
+  'llms-text': {
+    text: 'خلاصه مسیرهای اصلی و منابع قابل استفاده برای سامانه‌های زبانی.',
+    icon: FileCode2,
+  },
+  'ai-text': {
+    text: 'بیانیه تکمیلی ماشین‌خوان در مسیر استاندارد سایت.',
+    icon: FileCode2,
+  },
+  'github-source-repository': {
+    text: 'کد منبع، compilerها، Registryها و validatorهای پروژه.',
+    icon: FileCode2,
+  },
+};
 ---
 
-<section id={graphSection.id} class="machine-sources section shell" aria-labelledby={`${graphSection.id}-title`}>
+<section
+  id={graphSection.id}
+  class="machine-sources section shell"
+  aria-labelledby={`${graphSection.id}-title`}
+  data-stage-seven-machine-data
+>
   <div class="section-heading section-heading--split">
     <div>
       <p class="eyebrow">داده‌های قابل بررسی</p>
       <h2 id={`${graphSection.id}-title`}>{graphSection.title}</h2>
     </div>
-    <p>این بخش فقط دروازه قابل‌مشاهده منابع موجود است. فایل تازه و موازی برای هر خدمت یا سکشن ساخته نمی‌شود.</p>
+    <p>این بخش فقط دروازه قابل‌مشاهده منابع ماشین‌خوان موجود است. فایل تازه و موازی برای هر خدمت، ویدئو یا سکشن ساخته نمی‌شود.</p>
   </div>
 
   <div class="machine-sources__intro medical-article">
-    <p><strong>منبع اصلی حقیقت، محتوای قابل‌مشاهده همین Homepage است.</strong> JSON-LD داخلی و فایل گراف دانش باید همان نام‌ها، عنوان‌ها، شناسه‌ها و روابط را بازتاب دهند. منابع خارجی نیز فقط در محدوده اطلاعاتی که واقعاً ثبت کرده‌اند استفاده می‌شوند.</p>
+    <p><strong>منبع اصلی حقیقت، محتوای قابل‌مشاهده همین Homepage است.</strong> JSON-LD داخلی و فایل گراف دانش باید همان نام‌ها، عنوان‌ها، شناسه‌ها و روابط را بازتاب دهند. منابع آرشیوی و Datasetها نیز فقط در محدوده داده‌ای که واقعاً منتشر کرده‌اند استفاده می‌شوند.</p>
   </div>
 
   <div class="machine-sources__grid">
-    {resources.map(({ title, text, href, icon: Icon, external }) => (
-      <a class="machine-sources__item" href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer external' : undefined}>
-        <span><Icon size={22} aria-hidden="true" /></span>
-        <strong>{title}</strong>
-        <p>{text}</p>
-      </a>
-    ))}
+    {machineGroup.links.map((resource: any) => {
+      const details = presentation[resource.id];
+      if (!details) throw new Error(`Stage 7 machine resource presentation is missing: ${resource.id}`);
+      const Icon = details.icon;
+      return (
+        <a
+          class="machine-sources__item"
+          href={resource.href}
+          target={resource.external ? '_blank' : undefined}
+          rel={resource.external ? 'noopener noreferrer external' : undefined}
+          data-machine-resource={resource.id}
+        >
+          <span><Icon size={22} aria-hidden="true" /></span>
+          <strong>{resource.label}</strong>
+          <p>{details.text}</p>
+        </a>
+      );
+    })}
   </div>
 </section>
 

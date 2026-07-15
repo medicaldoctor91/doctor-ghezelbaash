@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { homepageExternalDirectoryContract } from '../src/domain/homepage-external-directory.mjs';
 import { videos } from '../src/domain/media.mjs';
 
 const homepage = readFileSync(join(process.cwd(), 'dist', 'index.html'), 'utf8');
@@ -82,15 +83,8 @@ for (const id of ['home-workshop-thread-lift-training', 'home-workshop-thread-li
 check((homepage.match(/\bdata-inline-video(?:\s|>)/gu) ?? []).length === 11, 'eleven non-clinic videos must be embedded in medical subsections');
 check(countId('video-clinic-patient-experience-review') === 1, 'clinic experience video must be embedded in the clinic section');
 
-for (const label of [
-  'بررسی شماره نظام پزشکی دکتر محمدسعید قزلباش',
-  'شناسه پژوهشگر ORCID دکتر سعید قزلباش',
-  'کتاب‌شناسی عمومی NCBI دکتر سعید قزلباش',
-  'اینستاگرام رسمی دکتر سعید قزلباش',
-  'دیتاست عمومی Hugging Face',
-  'گراف دانش JSON-LD سایت',
-  'انتیتی کلینیک در Wikidata',
-]) check(homepage.includes(label), `footer or source directory link missing: ${label}`);
+const directoryLabels = homepageExternalDirectoryContract.flatMap((group) => group.links.map((link) => link.label));
+for (const label of directoryLabels) check(homepage.includes(label), `footer directory link missing: ${label}`);
 
 check(homepage.includes(`<link rel="author" href="https://www.ghezelbaash.ir/#${personId}"`), 'head author link must use the canonical physician entity id');
 const describedByMatches = [...homepage.matchAll(/<link\b[^>]*\brel="describedby"[^>]*>/giu)];
@@ -117,4 +111,5 @@ console.log(JSON.stringify({
   mappedVideos: videos.length,
   contentTable: true,
   externalSourceDirectory: true,
+  externalDirectoryLinks: directoryLabels.length,
 }, null, 2));

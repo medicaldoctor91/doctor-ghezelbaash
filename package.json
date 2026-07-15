@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "npm run validate:stage2 && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run validate:stage3 && npm run validate:stage4 && npm run validate:stage5 && npm run validate:stage6 && npm run validate:release",
+    "build": "npm run validate:stage2 && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run validate:stage3 && npm run validate:stage4 && npm run validate:stage5 && npm run validate:stage6 && npm run validate:stage7 && npm run validate:release",
     "build:astro": "astro build",
     "preview": "astro preview",
     "astro": "astro",
@@ -16,6 +16,7 @@
     "validate:stage4": "node scripts/validate-stage-4-outline.mjs",
     "validate:stage5": "node scripts/validate-stage-5-medical-content.mjs",
     "validate:stage6": "node scripts/validate-stage-6-video-placement.mjs",
+    "validate:stage7": "node scripts/validate-stage-7-clinic-footer.mjs",
     "validate:release": "node scripts/validate-release.mjs && node scripts/validate-visible-contract.mjs && node scripts/validate-schema-semantics.mjs && node scripts/validate-nine-stage-audit.mjs && node scripts/validate-passage-depth.mjs"
   },
   "dependencies": {
