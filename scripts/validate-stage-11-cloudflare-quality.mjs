@@ -62,11 +62,11 @@ check(!services.includes('service-card__badge'), 'separate referral badge remain
 check(services.includes('یک Knowledge Domain؛ نه منوی فروش'), 'unified medical knowledge-domain framing is missing');
 check(services.includes('حکم آناتومی'), 'diagnostic boundary language is missing from surgical topics');
 
-const profileMatch = entities.match(/googleBusinessProfile:\s*\{([\s\S]*?)\n\s*\},\n\s*sourceTruthObservedAt:/u);
+const profileMatch = entities.match(/googleBusinessProfile:\s*\{([\s\S]*?)\n\s*\},\n\s*externalProfiles:/u);
 check(Boolean(profileMatch), 'typed central Google Business Profile snapshot is missing');
 const profile = profileMatch?.[1] ?? '';
 const numberField = (field) => Number(profile.match(new RegExp(`${field}:\\s*([0-9.]+)`, 'u'))?.[1]);
-const stringField = (field) => profile.match(new RegExp(`${field}:\\s*'([^']+)'`, 'u'))?.[1] ?? '';
+const stringField = (field) => profile.match(new RegExp(`${field}:\\s*["']([^"']+)["']`, 'u'))?.[1] ?? '';
 const snapshot = {
   ratingValue: numberField('ratingValue'),
   bestRating: numberField('bestRating'),
