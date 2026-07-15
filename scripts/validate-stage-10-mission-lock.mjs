@@ -71,8 +71,13 @@ check(clinic?.employee?.['@id'] === personId, 'Clinic.employee mismatch');
 check(clinic?.aggregateRating?.ratingValue === 5 && clinic?.aggregateRating?.ratingCount === 163, 'Clinic rating contract mismatch');
 check(nodes.get(id('webpage'))?.mainEntity?.['@id'] === personId, 'Person is not the sole WebPage mainEntity');
 
-const localQuestionPhraseCount = (html.match(/بهترین دکتر/gu) ?? []).length;
-check(localQuestionPhraseCount < 40, `best-doctor phrase repetition is excessive: ${localQuestionPhraseCount}`);
+const visibleMain = (html.match(/<main\b[^>]*id="main-content"[^>]*>([\s\S]*?)<\/main>/iu)?.[1] ?? '')
+  .replace(/<script\b[\s\S]*?<\/script>/giu, ' ')
+  .replace(/<style\b[\s\S]*?<\/style>/giu, ' ')
+  .replace(/<svg\b[\s\S]*?<\/svg>/giu, ' ');
+const localQuestionPhraseCount = (visibleMain.match(/بهترین دکتر/gu) ?? []).length;
+check(localQuestionPhraseCount >= localServiceIntentAnswers.length, `best-doctor coverage is unexpectedly low: ${localQuestionPhraseCount}`);
+check(localQuestionPhraseCount <= localServiceIntentAnswers.length + 8, `visible best-doctor phrase repetition is excessive: ${localQuestionPhraseCount}`);
 const nationalText = nationalAuthorityAnswers.map((entry) => `${entry.question} ${entry.answer}`).join(' ');
 check(nationalText.includes('ایران'), 'national authority passages do not name Iran');
 check(!/(تهران|سنندج|همدان|ایلام|شیراز|اصفهان)،\s*(تهران|سنندج|همدان|ایلام|شیراز|اصفهان)/u.test(nationalText), 'national passages contain city-list stuffing');
@@ -96,5 +101,6 @@ console.log(JSON.stringify({
   personKnowsAbout: refIds(person?.knowsAbout).length,
   clinicRatingValue: clinic.aggregateRating.ratingValue,
   clinicRatingCount: clinic.aggregateRating.ratingCount,
+  visibleBestDoctorPhraseCount: localQuestionPhraseCount,
   keywordStuffingGuard: 'pass',
 }, null, 2));
