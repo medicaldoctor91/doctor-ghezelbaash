@@ -1,0 +1,13 @@
+{
+  "version": "9.0.0",
+  "stage": 9,
+  "status": "pending-ci",
+  "acceptanceCriteria": 20,
+  "reportArtifact": "build-reports/stage-9-validation.json",
+  "baselineCommit": "c2608056ffb3ee6f35a1f7f097fdd2cccb17e46a",
+  "preStage9RollbackCommit": "aeeade6650ee4947ec9287c8d15c8887a0ae89a3",
+  "baselineLandingBlobSha": "2489ae2d05bf12ad7ad8782d969f2b6d6abc8b72",
+  "canonicalPerson": "https://www.ghezelbaash.ir/#mohammad-saeed-ghezelbash",
+  "canonicalClinic": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic",
+  "notes": "Final metrics and PASS status are produced by the Stage 9 CI report; this source manifest records the release contract only."
+}
