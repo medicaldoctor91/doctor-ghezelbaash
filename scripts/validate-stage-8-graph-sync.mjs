@@ -37,6 +37,10 @@ const collectRefs = (value, output = []) => {
   Object.values(value).forEach((item) => collectRefs(item, output));
   return output;
 };
+const containsExactLegacyEntityUri = (text, fragment) => {
+  const escaped = `${site}#${fragment}`.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+  return new RegExp(`${escaped}(?=$|[\\s),;\\]])`, 'mu').test(text);
+};
 
 const inlineMatches = [...homepage.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gu)];
 check(inlineMatches.length === 1, `Stage 8 requires exactly one inline JSON-LD block; found ${inlineMatches.length}`);
@@ -169,15 +173,17 @@ if (existsSync(llmsPath)) {
   const llms = readFileSync(llmsPath, 'utf8');
   check(llms.includes(personId), 'llms.txt omits canonical Person URI');
   check(llms.includes(clinicId), 'llms.txt omits canonical Clinic URI');
-  check(!llms.includes(`${site}#person`) && !llms.includes(`${site}#clinic`), 'llms.txt still exposes legacy entity URIs');
+  check(!containsExactLegacyEntityUri(llms, 'person') && !containsExactLegacyEntityUri(llms, 'clinic'), 'llms.txt still exposes legacy entity URIs');
   check(llms.includes(`${site}#${homepageGraphSyncContract.toc.id}`), 'llms.txt omits canonical content table URI');
 }
 const aiPath = join(root, '.well-known', 'ai.txt');
+check(existsSync(aiPath), 'Stage 8 requires existing ai.txt');
 if (existsSync(aiPath)) {
   const ai = readFileSync(aiPath, 'utf8');
   check(ai.includes(personId), 'ai.txt omits canonical Person URI');
   check(ai.includes(clinicId), 'ai.txt omits canonical Clinic URI');
-  check(!ai.includes(`${site}#person`) && !ai.includes(`${site}#clinic`), 'ai.txt still exposes legacy entity URIs');
+  check(!containsExactLegacyEntityUri(ai, 'person') && !containsExactLegacyEntityUri(ai, 'clinic'), 'ai.txt still exposes legacy entity URIs');
+  check(ai.includes(`${site}#${homepageGraphSyncContract.toc.id}`), 'ai.txt omits canonical content table URI');
 }
 
 if (failures.length) {
@@ -196,5 +202,5 @@ console.log(JSON.stringify({
   canonicalNodes: canonicalById.size,
   canonicalSuperset: true,
   llmsCanonicalEntities: true,
-  aiCanonicalEntities: existsSync(aiPath),
+  aiCanonicalEntities: true,
 }, null, 2));
