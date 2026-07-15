@@ -1,4 +1,6 @@
 import { site } from '~/domain/entities';
+import { homepageArticleSubsectionById } from '~/domain/homepage-article-registry.mjs';
+import { homepageSectionById } from '~/domain/homepage-sections.mjs';
 import {
   homepageMissionLock,
   localServiceIntentAnswers,
@@ -25,6 +27,35 @@ export function applyHomepageMissionGraph(input: Graph): Graph {
   const webpageId = id('webpage');
   const articleId = id('article');
   const parentSectionId = id('best-aesthetic-doctor-kermanshah');
+  const allMissionEntries = [...localServiceIntentAnswers, ...nationalAuthorityAnswers];
+
+  const destinationFragments = [...new Set(allMissionEntries.map((entry) => entry.destinationId))];
+  const destinationNodes = destinationFragments.map((fragment) => {
+    const nodeId = id(fragment);
+    const existing = byId.get(nodeId);
+    if (existing) return existing;
+
+    const subsection = homepageArticleSubsectionById.get(fragment);
+    const primarySection = homepageSectionById.get(fragment);
+    const parentFragment = subsection?.parentId;
+    const node: Node = {
+      '@type': 'WebPageElement',
+      '@id': nodeId,
+      name: subsection?.title ?? primarySection?.title ?? fragment,
+      url: nodeId,
+      inLanguage: site.language,
+      isPartOf: ref(parentFragment ? id(parentFragment) : webpageId),
+      about: ref(personId),
+      mentions: ref(clinicId),
+    };
+    byId.set(nodeId, node);
+
+    if (parentFragment) {
+      const parent = byId.get(id(parentFragment));
+      if (parent) parent.hasPart = uniqueRefs([...asArray<Node>(parent.hasPart), ref(nodeId)]);
+    }
+    return node;
+  });
 
   const makeAnswerNodes = (entries: readonly any[]) => entries.flatMap((entry) => {
     const questionId = id(`question-${entry.id}`);
@@ -104,8 +135,7 @@ export function applyHomepageMissionGraph(input: Graph): Graph {
   if (person) {
     person.knowsAbout = uniqueRefs([
       ...asArray<Node>(person.knowsAbout),
-      ...localServiceIntentAnswers.map((entry) => ref(id(entry.destinationId))),
-      ...nationalAuthorityAnswers.map((entry) => ref(id(entry.destinationId))),
+      ...destinationNodes.map((node) => ref(node['@id'])),
     ]);
     person.subjectOf = uniqueRefs([
       ...asArray<Node>(person.subjectOf),
@@ -124,6 +154,7 @@ export function applyHomepageMissionGraph(input: Graph): Graph {
       ...asArray<Node>(node.hasPart),
       ref(localList['@id']),
       ref(nationalList['@id']),
+      ...destinationNodes.map((item) => ref(item['@id'])),
       ...localNodes.map((item) => ref(item['@id'])),
       ...nationalNodes.map((item) => ref(item['@id'])),
     ]);
