@@ -72,6 +72,14 @@ const links = [
     if (!hadTabindex) target.addEventListener('blur', () => target.removeAttribute('tabindex'), { once: true });
   };
 
+  let hashCurrentLocked = Boolean(decodeFragment(window.location.hash));
+  const unlockHashCurrent = () => { hashCurrentLocked = false; };
+  window.addEventListener('wheel', unlockHashCurrent, { passive: true });
+  window.addEventListener('touchstart', unlockHashCurrent, { passive: true });
+  document.addEventListener('keydown', (event) => {
+    if (['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '].includes(event.key)) unlockHashCurrent();
+  });
+
   if (menu) {
     const summary = menu.querySelector<HTMLElement>('summary');
     const syncState = () => {
@@ -94,6 +102,7 @@ const links = [
 
   const initializeNavigation = () => {
     const initialFragment = decodeFragment(window.location.hash);
+    hashCurrentLocked = Boolean(initialFragment);
     setCurrent(initialFragment || null);
     focusFragment();
     const targets = sectionLinks
@@ -101,6 +110,7 @@ const links = [
       .filter((target): target is HTMLElement => Boolean(target));
     if (!('IntersectionObserver' in window) || !targets.length) return;
     const observer = new IntersectionObserver((entries) => {
+      if (hashCurrentLocked) return;
       const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
       if (visible?.target.id) setCurrent(visible.target.id);
     }, { rootMargin: '-18% 0px -68%', threshold: [0, .01, .25] });
@@ -115,6 +125,7 @@ const links = [
 
   window.addEventListener('hashchange', () => {
     const fragment = decodeFragment(window.location.hash);
+    hashCurrentLocked = Boolean(fragment);
     setCurrent(fragment || null);
     focusFragment();
   });
