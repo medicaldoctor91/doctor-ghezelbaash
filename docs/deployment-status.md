@@ -82,6 +82,10 @@ Current production budgets are:
 
 The live-domain audit verifies response/security headers, the minimal HTML/HTTP discovery contract, canonical IDs, H1, Content Table, sixteen sections, twelve contextual videos, Clinic testimonial placement, Person/Clinic separation, rating consistency, graph parity, machine-readable guidance, sitemap/robots behavior, removed routes and byte-range video delivery.
 
+## Deployment execution
+
+Production deployment was explicitly retriggered from `main` on 2026-07-15 after Stage 9 completion. The application source immediately before the retrigger was commit `2385143c3c5882ccde71d771abe87cf420f35acc`; this documentation-only commit intentionally starts the production build, Cloudflare deployment and live-domain audit without modifying the rendered Homepage contract.
+
 ## Rollback
 
 The pre-Stage-9 rollback point is:
