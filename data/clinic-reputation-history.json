@@ -1,0 +1,12 @@
+[
+  {
+    "ratingValue": 5,
+    "bestRating": 5,
+    "ratingCount": 163,
+    "observedAt": "2026-07-14",
+    "sourceName": "Google Maps",
+    "sourceUrl": "https://www.google.com/maps?cid=12350483144643112463",
+    "recordedAt": "2026-07-14T16:30:00+03:30",
+    "note": "Verified baseline migrated from the canonical typed entity source."
+  }
+]
