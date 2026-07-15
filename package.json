@@ -17,12 +17,12 @@
     "validate:stage3": "node scripts/validate-stage-3-hero.mjs",
     "validate:stage4": "node scripts/validate-stage-4-outline-mission.mjs",
     "validate:stage5": "node scripts/validate-stage-5-medical-content.mjs",
-    "validate:stage6": "node scripts/validate-stage-6-video-placement.mjs",
+    "validate:stage6": "node scripts/run-validator-with-deferred-posters.mjs scripts/validate-stage-6-video-placement.mjs",
     "validate:stage7": "node scripts/validate-stage-7-clinic-footer.mjs",
-    "validate:stage8": "node scripts/validate-stage-8-graph-sync.mjs",
-    "validate:stage9": "node scripts/validate-stage-9-production-readiness.mjs",
+    "validate:stage8": "node scripts/run-validator-with-deferred-posters.mjs scripts/validate-stage-8-graph-sync.mjs",
+    "validate:stage9": "node scripts/run-validator-with-deferred-posters.mjs scripts/validate-stage-9-production-readiness.mjs",
     "validate:stage10": "node scripts/validate-stage-10-mission-lock.mjs",
-    "validate:stage11": "node scripts/validate-stage-11-cloudflare-quality.mjs",
+    "validate:stage11": "node scripts/validate-stage-11-cloudflare-quality.mjs && node scripts/validate-deferred-video-posters.mjs",
     "validate:release": "node scripts/validate-release.mjs && node scripts/validate-visible-contract.mjs && node scripts/validate-schema-semantics.mjs && node scripts/validate-nine-stage-audit.mjs && node scripts/validate-passage-depth.mjs"
   },
   "dependencies": {
