@@ -102,7 +102,7 @@ export const videos = [
   {
     id: 'clinic-patient-experience-review',
     file: 'patient-satisfaction-review-dr-saeed-ghezelbash.mp4',
-    title: 'تجربه مراجعه به کلینیک دکتر سعید قزلباش',
+    title: 'رضایت زیبا از خدمات زیبایی دکتر سعید قزلباش',
     description: 'روایت کوتاهی از تجربه مراجعه و ارتباط با کلینیک دکتر سعید قزلباش در کرمانشاه.',
     thumbnail: '/videos/thumbnails/patient-satisfaction-review-dr-saeed-ghezelbash.jpg',
     width: 720, height: 1280, duration: 'PT20.133S', durationSeconds: 21, exactDurationSeconds: 20.133,
