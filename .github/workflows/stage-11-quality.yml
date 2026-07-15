@@ -15,11 +15,12 @@ concurrency:
 env:
   LIGHTHOUSE_VERSION: '13.4.0'
   AXE_VERSION: '4.12.1'
+  PLAYWRIGHT_VERSION: '1.61.0'
 
 jobs:
   browser-quality:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,6 +42,13 @@ jobs:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
         run: npm install --package-lock=false --no-audit --no-fund
 
+      - name: Install pinned Playwright test runner
+        env:
+          NPM_CONFIG_REGISTRY: https://registry.npmjs.org
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund "@playwright/test@${PLAYWRIGHT_VERSION}"
+          npx playwright install --with-deps chromium firefox webkit msedge
+
       - name: Build validated static dist
         run: npm run build
 
@@ -48,7 +56,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p quality-reports
-          printf '{"lighthouse":"%s","axe":"%s"}\n' "$LIGHTHOUSE_VERSION" "$AXE_VERSION" > quality-reports/tool-versions.json
+          printf '{"lighthouse":"%s","axe":"%s","playwright":"%s"}\n' "$LIGHTHOUSE_VERSION" "$AXE_VERSION" "$PLAYWRIGHT_VERSION" > quality-reports/tool-versions.json
 
       - name: Serve dist with Brotli and cache semantics
         shell: bash
@@ -63,7 +71,7 @@ jobs:
           cat quality-reports/server.log
           exit 1
 
-      - name: Run Lighthouse three times per profile
+      - name: Run Lighthouse three times per profile and enforce medians
         shell: bash
         run: |
           set -euo pipefail
@@ -79,7 +87,7 @@ jobs:
                 "${preset[@]}"
             done
           done
-          node scripts/summarize-lighthouse.mjs quality-reports
+          node scripts/summarize-lighthouse.mjs quality-reports --enforce
 
       - name: Run automated accessibility scan
         shell: bash
@@ -91,6 +99,11 @@ jobs:
           printf '%s\n' "$status" > quality-reports/axe-exit-code.txt
           exit $status
 
+      - name: Run Chromium Firefox WebKit Edge and mobile Safari behavior tests
+        env:
+          BASE_URL: http://127.0.0.1:4173
+        run: npx playwright test --workers=1 --fail-on-flaky-tests
+
       - name: Upload full Stage 11 evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -98,6 +111,8 @@ jobs:
           name: stage-11-quality-evidence
           path: |
             quality-reports
+            playwright-report
+            test-results
             dist
           include-hidden-files: true
           if-no-files-found: error
