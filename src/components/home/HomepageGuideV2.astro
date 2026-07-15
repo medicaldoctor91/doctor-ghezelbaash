@@ -7,6 +7,7 @@ import { articleHomepageSections } from '../../domain/homepage-sections';
 import {
   homepageArticleGroups,
   homepageArticleSubsectionById,
+  homepageArticleSubsections,
 } from '../../domain/homepage-article-registry.mjs';
 import { homepageSubsectionSummaries } from '../../domain/homepage-subsection-summaries.mjs';
 import { readMediaChapters } from '../../lib/media';
@@ -18,10 +19,30 @@ const { sections } = Astro.props;
 type LegacyBlock = { key: string; html: string; words: number };
 type Source = { section?: string; headings?: string[]; manualHtml?: string };
 
-const plain = (value: string) => value.replace(/<[^>]+>/gu, ' ').replace(/&[a-zA-Z#0-9]+;/gu, ' ').replace(/\s+/gu, ' ').replaceAll('¶', '').trim();
+const plain = (value: string) => value
+  .replace(/<[^>]+>/gu, ' ')
+  .replace(/&[a-zA-Z#0-9]+;/gu, ' ')
+  .replace(/\s+/gu, ' ')
+  .replaceAll('¶', '')
+  .trim();
 const wordCount = (value: string) => plain(value).split(/\s+/u).filter(Boolean).length;
 const stripHeadingAnchors = (value: string) => value.replace(/<a[^>]*class="[^"]*heading-anchor[^"]*"[^>]*>[\s\S]*?<\/a>/giu, '');
-const cleanVisibleHtml = (value: string) => value.replace(/\s+id="clinical-decision-model-[^"]+"/gu, '');
+const cleanVisibleHtml = (value: string) => value
+  .replace(/\s+id="clinical-decision-model-[^"]+"/gu, '')
+  .replace(/<strong>\s*پاسخ مستقیم:\s*<\/strong>\s*/giu, '');
+
+const legacyHeadingTitleOverrides = new Map<string, string>([
+  ['سطح ۳ (Tier 3) ـ پایهٔ ساختاری (Structural Foundation): خط را نبینید؛ تکیه‌گاه صورت را ببینید', 'افتادگی را براساس لایه و تکیه‌گاه صورت ارزیابی کنید'],
+  ['قفل پنجم: درمان قبلی در کدام سطح انجام شده و چه چیزی باقی مانده است؟', 'درمان قبلی و مسئله باقی‌مانده را جدا ارزیابی کنید'],
+  ['جواب‌های کوتاه، بدون افسانهٔ «تقویت ریشه»', 'پرسش‌های رایج درباره تشخیص و درمان ریزش مو'],
+  ['پروتکل قبل از خروج؛ سه چیز باید روشن باشد', 'پیش از خروج، مسیر تماس و علائم خطر باید روشن باشند'],
+]);
+
+const expectedSummaryIds = homepageArticleSubsections.map((subsection: any) => subsection.id);
+const actualSummaryIds = Object.keys(homepageSubsectionSummaries);
+if (actualSummaryIds.length !== expectedSummaryIds.length || expectedSummaryIds.some((id: string) => !homepageSubsectionSummaries[id])) {
+  throw new Error('Stage 5 requires one curated direct answer for every canonical Homepage H3.');
+}
 
 const fragments = new Map<string, LegacyBlock & { title: string }>();
 const sectionBlocks = new Map<string, LegacyBlock[]>();
@@ -32,17 +53,20 @@ for (const section of sections) {
   const blocks: LegacyBlock[] = [];
   const introEnd = matches[0]?.index ?? html.length;
   const introHtml = cleanVisibleHtml(html.slice(0, introEnd).trim());
-  if (wordCount(introHtml) >= 18) blocks.push({ key: `section:${section.id}:intro`, html: introHtml, words: wordCount(introHtml) });
+  if (wordCount(introHtml) >= 18) {
+    blocks.push({ key: `section:${section.id}:intro`, html: introHtml, words: wordCount(introHtml) });
+  }
 
   for (let index = 0; index < matches.length; index += 1) {
     const match = matches[index];
     const fragmentId = match[1];
-    const title = plain(match[2]);
+    const sourceTitle = plain(match[2]);
+    const visibleTitle = legacyHeadingTitleOverrides.get(sourceTitle) ?? sourceTitle;
     const start = (match.index ?? 0) + match[0].length;
     const end = matches[index + 1]?.index ?? html.length;
     const body = cleanVisibleHtml(html.slice(start, end));
-    const rendered = `<h4>${title}</h4>${body}`;
-    const block = { key: `heading:${fragmentId}`, html: rendered, words: wordCount(rendered), title };
+    const rendered = `<h4>${visibleTitle}</h4>${body}`;
+    const block = { key: `heading:${fragmentId}`, html: rendered, words: wordCount(rendered), title: visibleTitle };
     fragments.set(fragmentId, block);
     blocks.push(block);
   }
@@ -56,13 +80,19 @@ const sourceBlocks = (source: Source, uniqueKey: string): LegacyBlock[] => {
     return [{ key: `manual:${uniqueKey}`, html, words: wordCount(html) }];
   }
   if (source.section) return sectionBlocks.get(source.section) ?? [];
-  return (source.headings ?? []).map((id) => fragments.get(id)).filter((block): block is LegacyBlock => Boolean(block));
+  return (source.headings ?? [])
+    .map((id) => fragments.get(id))
+    .filter((block): block is LegacyBlock => Boolean(block));
 };
 
-const renderSubsection = (groupId: string, subsection: any, budget: number) => {
+const renderSubsection = (groupId: string, subsection: any, nominalBudget: number) => {
+  const summary = homepageSubsectionSummaries[subsection.id];
+  if (!summary) throw new Error(`Curated direct answer is missing: ${subsection.id}`);
+  const summaryWords = wordCount(summary);
+  const legacyBudget = Math.max(100, Math.round((nominalBudget - summaryWords) * 0.9));
   const chosen: LegacyBlock[] = [];
   const crossReferences = new Set<string>();
-  let words = 0;
+  let legacyWords = 0;
 
   subsection.sources.forEach((source: Source, sourceIndex: number) => {
     for (const block of sourceBlocks(source, `${groupId}:${subsection.id}:${sourceIndex}`)) {
@@ -71,18 +101,14 @@ const renderSubsection = (groupId: string, subsection: any, budget: number) => {
         if (owner !== subsection.id) crossReferences.add(owner);
         continue;
       }
-      if (chosen.length > 0 && words + block.words > Math.max(budget, words) * 1.15) break;
+      if (chosen.length > 0 && legacyWords + block.words > Math.max(legacyBudget, legacyWords) * 1.12) break;
       chosen.push(block);
-      words += block.words;
+      legacyWords += block.words;
       if (!block.key.startsWith('manual:')) usedLegacyKeys.set(block.key, subsection.id);
-      if (words >= budget) break;
+      if (legacyWords >= legacyBudget) break;
     }
   });
 
-  const summary = homepageSubsectionSummaries[subsection.id];
-  const summaryHtml = summary
-    ? `<p class="subsection-direct-answer"><strong>پاسخ مستقیم:</strong> ${summary}</p>`
-    : '';
   const references = [...crossReferences]
     .map((ownerId) => {
       const owner = homepageArticleSubsectionById.get(ownerId);
@@ -91,11 +117,17 @@ const renderSubsection = (groupId: string, subsection: any, budget: number) => {
     })
     .join('، ');
   const crossReferenceHtml = references
-    ? `<p class="content-cross-reference"><strong>ادامهٔ مرتبط:</strong> برای جلوگیری از تکرار متن، توضیح مشترک در ${references} آمده است.</p>`
+    ? `<p class="content-cross-reference"><strong>ادامهٔ مرتبط:</strong> برای جلوگیری از تکرار، توضیح مشترک در ${references} آمده است.</p>`
     : '';
+  const summaryHtml = `<p class="subsection-direct-answer"><strong>پاسخ مستقیم:</strong> ${summary}</p>`;
   const html = summaryHtml + chosen.map((block) => block.html).join('') + crossReferenceHtml;
-  if (!html.trim()) throw new Error(`No visible content resolved for homepage subsection: ${subsection.id}`);
-  return { ...subsection, html, renderedWords: words + wordCount(summaryHtml) };
+  return {
+    ...subsection,
+    html,
+    summaryWords,
+    renderedLegacyWords: legacyWords,
+    renderedWords: summaryWords + legacyWords + wordCount(crossReferenceHtml),
+  };
 };
 
 const titleById = new Map(articleHomepageSections.map((section: any) => [section.id, section.title]));
@@ -114,20 +146,29 @@ const renderedGroups = homepageArticleGroups.map((group: any) => {
   };
 });
 
-const articleDestinationIds = new Set(renderedGroups.flatMap((group: any) => [group.id, ...group.subsections.map((subsection: any) => subsection.id)]));
+const articleDestinationIds = new Set(
+  renderedGroups.flatMap((group: any) => [group.id, ...group.subsections.map((subsection: any) => subsection.id)]),
+);
 for (const video of videos as any[]) {
   if (video.sectionId === 'clinic-information-kermanshah') continue;
   const destination = video.subsectionId ?? video.sectionId;
-  if (!articleDestinationIds.has(destination)) throw new Error(`Video destination is absent from the article registry: ${video.id} -> ${destination}`);
+  if (!articleDestinationIds.has(destination)) {
+    throw new Error(`Video destination is absent from the article registry: ${video.id} -> ${destination}`);
+  }
 }
 
-const videoItems = videos.map((video: any) => ({ ...video, details: videoPageDetails[video.id], chapters: readMediaChapters(video.chapterTrack).slice(0, 3) }));
-const videosFor = (sectionId: string, subsectionId: string) => videoItems.filter((video: any) => video.sectionId === sectionId && video.subsectionId === subsectionId);
+const videoItems = videos.map((video: any) => ({
+  ...video,
+  details: videoPageDetails[video.id],
+  chapters: readMediaChapters(video.chapterTrack).slice(0, 3),
+}));
+const videosFor = (sectionId: string, subsectionId: string) => videoItems
+  .filter((video: any) => video.sectionId === sectionId && video.subsectionId === subsectionId);
 const timeLabel = (timestamp: string) => timestamp.replace(/^00:/, '');
 const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000) / 1000)}S`;
 ---
 
-<article class="article-flow shell" aria-label="راهنمای جامع پزشکی زیبایی، پوست و مو">
+<article class="article-flow shell" aria-label="راهنمای جامع پزشکی زیبایی، پوست و مو" data-stage-five-content>
   {renderedGroups.map((group: any) => (
     <section id={group.id} class="article-flow__section" aria-labelledby={`${group.id}-title`} data-target-words={group.targetWords}>
       <h2 id={`${group.id}-title`} tabindex="-1">{group.title}</h2>
@@ -136,7 +177,14 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
         {group.subsections.map((subsection: any) => {
           const subsectionVideos = videosFor(group.id, subsection.id);
           return (
-            <section id={subsection.id} class="article-flow__subsection" aria-labelledby={`${subsection.id}-title`} data-rendered-legacy-words={subsection.renderedWords}>
+            <section
+              id={subsection.id}
+              class="article-flow__subsection"
+              aria-labelledby={`${subsection.id}-title`}
+              data-summary-words={subsection.summaryWords}
+              data-rendered-legacy-words={subsection.renderedLegacyWords}
+              data-rendered-words={subsection.renderedWords}
+            >
               <h3 id={`${subsection.id}-title`} tabindex="-1">{subsection.title}</h3>
               <div class="medical-article__segment" set:html={subsection.html}></div>
               {group.id === 'medical-research-and-education' && subsection.id === 'medical-research' && (
@@ -151,21 +199,36 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
                   {subsectionVideos.map((video: any) => (
                     <figure id={`video-${video.id}`} class="article-video" data-inline-video>
                       <div class="article-video__media">
-                        <video controls playsinline preload="none" poster={video.thumbnail} width={video.width} height={video.height} aria-labelledby={`video-${video.id}-title`} aria-describedby={`video-${video.id}-description`}>
+                        <video
+                          controls
+                          playsinline
+                          preload="none"
+                          poster={video.thumbnail}
+                          width={video.width}
+                          height={video.height}
+                          aria-labelledby={`video-${video.id}-title`}
+                          aria-describedby={`video-${video.id}-description`}
+                        >
                           <source src={`/videos/${video.file}`} type="video/mp4" />
                           {video.chapterTrack && <track kind="chapters" src={video.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />}
                           مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
                         </video>
                       </div>
                       <figcaption class="article-video__body">
-                        <div class="article-video__meta"><span><CirclePlay size={16} aria-hidden="true" /> ویدئو</span><span><Clock3 size={16} aria-hidden="true" /> <time datetime={video.duration}>{video.details?.durationLabel ?? video.duration}</time></span></div>
+                        <div class="article-video__meta">
+                          <span><CirclePlay size={16} aria-hidden="true" /> ویدئو</span>
+                          <span><Clock3 size={16} aria-hidden="true" /> <time datetime={video.duration}>{video.details?.durationLabel ?? video.duration}</time></span>
+                        </div>
                         <h4 id={`video-${video.id}-title`}>{video.title}</h4>
                         <p id={`video-${video.id}-description`}>{video.description}</p>
                         {video.chapters.length > 0 && (
                           <nav class="article-video__chapters" aria-label={`فصل‌های ${video.title}`}>
                             <span><ListVideo size={16} aria-hidden="true" /> فصل‌ها:</span>
                             {video.chapters.map((chapter: any) => (
-                              <a href={`#video-${video.id}`} data-video-id={video.id} data-start={chapter.startOffset}><time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time><span>{chapter.name}</span></a>
+                              <a href={`#video-${video.id}`} data-video-id={video.id} data-start={chapter.startOffset}>
+                                <time datetime={isoTime(chapter.startOffset)}>{timeLabel(chapter.startTimestamp)}</time>
+                                <span>{chapter.name}</span>
+                              </a>
                             ))}
                           </nav>
                         )}
@@ -197,5 +260,13 @@ const isoTime = (seconds: number) => `PT${Math.max(0, Math.round(seconds * 1000)
 </script>
 
 <style>
-  .article-flow__section,.article-flow__subsection{scroll-margin-top:6rem}.article-flow__section{padding-block:clamp(2.5rem,6vw,5rem)}.article-flow__section>h2{margin:0 0 1.1rem;color:var(--blue-950);font-size:clamp(1.45rem,3.4vw,2.25rem);line-height:1.65}.article-flow__subsection{margin-top:clamp(2rem,5vw,3.5rem)}.article-flow__subsection>h3{margin:0 0 .85rem;color:var(--blue-900);font-size:clamp(1.15rem,2.4vw,1.55rem);line-height:1.75}.article-flow__answer{padding:1rem;border-inline-start:.25rem solid var(--blue-600);border-radius:.65rem;background:rgba(2,119,194,.055)}.content-cross-reference{padding:.75rem .85rem;border:1px dashed rgba(2,119,194,.2);border-radius:.75rem;background:rgba(247,251,254,.8);font-size:.84rem}.article-video h4{margin:.45rem 0;color:var(--blue-950);font-size:1rem;line-height:1.8}
+  .article-flow__section,.article-flow__subsection{scroll-margin-top:6rem}
+  .article-flow__section{padding-block:clamp(2.5rem,6vw,5rem)}
+  .article-flow__section>h2{margin:0 0 1.1rem;color:var(--blue-950);font-size:clamp(1.45rem,3.4vw,2.25rem);line-height:1.65}
+  .article-flow__subsection{margin-top:clamp(2rem,5vw,3.5rem)}
+  .article-flow__subsection>h3{margin:0 0 .85rem;color:var(--blue-900);font-size:clamp(1.15rem,2.4vw,1.55rem);line-height:1.75}
+  .article-flow__answer,.subsection-direct-answer{padding:1rem;border-inline-start:.25rem solid var(--blue-600);border-radius:.65rem;background:rgba(2,119,194,.055)}
+  .subsection-direct-answer{margin:0 0 1rem}
+  .content-cross-reference{padding:.75rem .85rem;border:1px dashed rgba(2,119,194,.2);border-radius:.75rem;background:rgba(247,251,254,.8);font-size:.84rem}
+  .article-video h4{margin:.45rem 0;color:var(--blue-950);font-size:1rem;line-height:1.8}
 </style>
