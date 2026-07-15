@@ -93,6 +93,8 @@ const links = [
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    const initialFragment = decodeFragment(window.location.hash);
+    setCurrent(initialFragment || null);
     focusFragment();
     const targets = sectionLinks
       .map((link) => document.getElementById(decodeFragment(link.hash)))
