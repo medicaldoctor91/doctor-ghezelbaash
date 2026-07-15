@@ -31,12 +31,20 @@ const {
 
 const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).href;
 const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
+const serializedGraph = JSON.stringify(graph).replace(/</gu, '\\u003c');
 ---
 
 <!doctype html>
 <html lang={site.language} dir={site.direction}>
   <head>
     <meta charset="utf-8" />
+    <script
+      is:inline
+      id="homepage-entity-graph"
+      type="application/ld+json"
+      data-schema-location="head"
+      set:html={serializedGraph}
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#0277c2" />
@@ -164,6 +172,5 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
         videos.forEach((video) => observer.observe(video));
       })();
     </script>
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(graph)} />
   </body>
 </html>
