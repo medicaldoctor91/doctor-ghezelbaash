@@ -14,6 +14,7 @@ export const homepageGraphSyncContract = Object.freeze({
   toc: Object.freeze({
     id: homepageToc.id,
     title: homepageToc.title,
+    groups: homepageToc.groups,
     sectionIds: Object.freeze(homepageSections.map((section) => section.id)),
   }),
   sections: Object.freeze(homepageSections.map((section) => Object.freeze({
