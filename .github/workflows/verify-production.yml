@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: verify-production
@@ -15,7 +15,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,11 +28,19 @@ jobs:
       - name: Audit the live custom domain
         run: python3 scripts/run-production-audit.py --attempts 36 --delay 20
 
+      - name: Verify the Stage 11 Cloudflare contract
+        run: python3 scripts/verify-stage-11-production.py --commit "${GITHUB_SHA}" --attempts 18 --delay 20
+
+      - name: Record verified Cloudflare production commit
+        shell: bash
+        run: git push --force origin "${GITHUB_SHA}:refs/heads/cloudflare-production-live"
+
       - name: Upload production audit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: production-audit-report
           path: production-audit
-          if-no-files-found: warn
-          retention-days: 7
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14
