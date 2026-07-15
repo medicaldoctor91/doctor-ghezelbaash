@@ -58,11 +58,11 @@ export function applyHomepageAuditFixes(input: Graph): Graph {
     homepageEntityIds.webpage,
     'article',
     'content-table',
-    'clinical-guide',
   ]);
   const legacyVisibleTargets = new Map([
     ['services', 'aesthetic-services-kermanshah'],
     ['search-intent-hub', 'best-aesthetic-doctor-kermanshah'],
+    ['clinical-guide', 'aesthetic-treatment-selection'],
     ['videos', 'medical-research-and-education'],
     ['contact', 'sources-contact-and-appointment'],
   ]);
