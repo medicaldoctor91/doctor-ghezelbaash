@@ -19,7 +19,7 @@ https://*.doctor-ghezelbaash.pages.dev/*
 
 /
   Cache-Control: public, max-age=0, must-revalidate
-  Link: </knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json"
+  Link: </knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json", </knowledge-graph.jsonld>; rel="alternate"; type="application/ld+json"
 
 /404.html
   X-Robots-Tag: noindex, follow
@@ -60,10 +60,11 @@ https://*.doctor-ghezelbaash.pages.dev/*
 
 /knowledge-graph.jsonld
   Content-Type: application/ld+json; charset=utf-8
-  X-Robots-Tag: noindex, follow
+  Content-Disposition: inline; filename="knowledge-graph.jsonld"
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
-  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  Cache-Control: public, max-age=0, must-revalidate
+  CDN-Cache-Control: public, max-age=0, must-revalidate
 
 /llms.txt
   Content-Type: text/plain; charset=utf-8
