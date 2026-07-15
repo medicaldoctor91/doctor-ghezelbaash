@@ -1,13 +1,59 @@
 {
   "version": "9.0.0",
   "stage": 9,
-  "status": "pending-ci",
+  "status": "pass",
+  "validatedAt": "2026-07-15",
   "acceptanceCriteria": 20,
-  "reportArtifact": "build-reports/stage-9-validation.json",
-  "baselineCommit": "c2608056ffb3ee6f35a1f7f097fdd2cccb17e46a",
-  "preStage9RollbackCommit": "aeeade6650ee4947ec9287c8d15c8887a0ae89a3",
-  "baselineLandingBlobSha": "2489ae2d05bf12ad7ad8782d969f2b6d6abc8b72",
-  "canonicalPerson": "https://www.ghezelbaash.ir/#mohammad-saeed-ghezelbash",
-  "canonicalClinic": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic",
-  "notes": "Final metrics and PASS status are produced by the Stage 9 CI report; this source manifest records the release contract only."
+  "passed": 20,
+  "failed": 0,
+  "ciWorkflow": {
+    "name": "Validate site",
+    "runId": 29385769344,
+    "headCommit": "65f0defffcc82dd7c28fdce6d885b349522b3e66",
+    "reportArtifact": "build-reports/stage-9-validation.json"
+  },
+  "baseline": {
+    "architectureCommit": "c2608056ffb3ee6f35a1f7f097fdd2cccb17e46a",
+    "preStage9RollbackCommit": "aeeade6650ee4947ec9287c8d15c8887a0ae89a3",
+    "baselineLandingBlobSha": "2489ae2d05bf12ad7ad8782d969f2b6d6abc8b72",
+    "landingBlobSha": "2489ae2d05bf12ad7ad8782d969f2b6d6abc8b72",
+    "sourcePreserved": true
+  },
+  "entities": {
+    "person": "https://www.ghezelbaash.ir/#mohammad-saeed-ghezelbash",
+    "clinic": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic",
+    "mainEntity": "https://www.ghezelbaash.ir/#mohammad-saeed-ghezelbash"
+  },
+  "architecture": {
+    "htmlRoutes": ["index.html", "404.html"],
+    "h2Sections": 16,
+    "selectedH3Subsections": 57,
+    "contentTableGroups": 5,
+    "contentTableItems": 16,
+    "videos": 12,
+    "educationVideos": 2,
+    "clinicTestimonialVideos": 1,
+    "footerGroups": 5,
+    "footerLinks": 28
+  },
+  "graph": {
+    "inlineNodes": 77,
+    "canonicalNodes": 558,
+    "parityNodes": 34,
+    "canonicalSuperset": true
+  },
+  "content": {
+    "h1": "دکتر سعید قزلباش؛ پزشک زیبایی، پوست و مو در کرمانشاه",
+    "introductionWords": 202,
+    "mainWords": 21075,
+    "htmlIds": 237,
+    "duplicateLongParagraphs": 0,
+    "brokenFragments": 0
+  },
+  "performance": {
+    "homepageRawBytes": 439097,
+    "homepageGzipBytes": 79409,
+    "homepageBrotliBytes": 58468,
+    "domElements": 2061
+  }
 }
