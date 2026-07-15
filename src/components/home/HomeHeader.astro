@@ -92,7 +92,7 @@ const links = [
     });
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  const initializeNavigation = () => {
     const initialFragment = decodeFragment(window.location.hash);
     setCurrent(initialFragment || null);
     focusFragment();
@@ -105,7 +105,13 @@ const links = [
       if (visible?.target.id) setCurrent(visible.target.id);
     }, { rootMargin: '-18% 0px -68%', threshold: [0, .01, .25] });
     targets.forEach((target) => observer.observe(target));
-  });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeNavigation, { once: true });
+  } else {
+    initializeNavigation();
+  }
 
   window.addEventListener('hashchange', () => {
     const fragment = decodeFragment(window.location.hash);
