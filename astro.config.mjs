@@ -9,9 +9,6 @@ import {
 export default defineConfig({
   site: 'https://www.ghezelbaash.ir/',
   output: 'static',
-  build: {
-    inlineStylesheets: 'always',
-  },
   markdown: {
     processor: unified({
       gfm: true,
