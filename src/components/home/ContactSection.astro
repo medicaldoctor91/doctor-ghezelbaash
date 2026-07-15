@@ -7,15 +7,20 @@ const contactSection = homepageSectionById.get('sources-contact-and-appointment'
 if (!contactSection) throw new Error('Canonical contact section is missing from the Homepage registry.');
 ---
 
-<section id={contactSection.id} class="section contact-section" aria-labelledby={`${contactSection.id}-title`}>
+<section
+  id={contactSection.id}
+  class="section contact-section"
+  aria-labelledby={`${contactSection.id}-title`}
+  data-stage-seven-contact
+>
   <div class="shell contact-card">
     <div class="contact-card__copy">
       <p class="eyebrow">ارتباط مستقیم</p>
       <h2 id={`${contactSection.id}-title`}>{contactSection.title}</h2>
       <p>برای مشاوره اولیه، مسئله اصلی، درمان‌های قبلی، داروهای مصرفی و هدف خود را توضیح دهید. در عارضه حاد یا نشانه خطر، دایرکت شبکه اجتماعی جای ارزیابی فوری پزشکی را نمی‌گیرد.</p>
-      <div class="contact-card__actions">
-        <a class="button button--primary" href={`tel:${site.phone}`}><CalendarCheck size={19} aria-hidden="true" /> رزرو وقت مشاوره رایگان</a>
-        <a class="button button--light" href={site.instagramDirect} target="_blank" rel="noopener noreferrer external"><MessageCircle size={19} aria-hidden="true" /> گفت‌وگوی آنلاین با دکتر قزلباش</a>
+      <div class="contact-card__actions" aria-label="اقدام‌های مستقیم تماس">
+        <a class="button button--primary" href={`tel:${site.phone}`} data-contact-cta="phone"><CalendarCheck size={19} aria-hidden="true" /> رزرو وقت مشاوره رایگان</a>
+        <a class="button button--light" href={site.instagramDirect} target="_blank" rel="noopener noreferrer external" data-contact-cta="instagram-direct"><MessageCircle size={19} aria-hidden="true" /> گفت‌وگوی آنلاین با دکتر قزلباش</a>
       </div>
     </div>
 
@@ -27,10 +32,10 @@ if (!contactSection) throw new Error('Canonical contact section is missing from 
     </dl>
 
     <div class="contact-card__sources" aria-label="منابع هویتی و علمی منتخب">
-      <a href={site.irimcVerification} target="_blank" rel="noopener noreferrer external">بررسی رسمی شماره نظام پزشکی دکتر محمدسعید قزلباش</a>
-      <a href={site.orcidUrl} target="_blank" rel="me noopener noreferrer external">شناسه پژوهشگر ORCID دکتر سعید قزلباش</a>
-      <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external">کتاب‌شناسی عمومی NCBI دکتر سعید قزلباش</a>
-      <a href={site.doctorWikidata} target="_blank" rel="noopener noreferrer external">انتیتی Mohammad Saeed Ghezelbash در Wikidata</a>
+      <a href={site.irimcVerification} target="_blank" rel="noopener noreferrer external" data-contact-source="irimc">بررسی رسمی شماره نظام پزشکی دکتر محمدسعید قزلباش</a>
+      <a href={site.orcidUrl} target="_blank" rel="me noopener noreferrer external" data-contact-source="orcid">شناسه پژوهشگر ORCID دکتر سعید قزلباش</a>
+      <a href={site.ncbiBibliography} target="_blank" rel="noopener noreferrer external" data-contact-source="ncbi">کتاب‌شناسی عمومی NCBI دکتر سعید قزلباش</a>
+      <a href={site.doctorWikidata} target="_blank" rel="noopener noreferrer external" data-contact-source="wikidata">انتیتی Mohammad Saeed Ghezelbash در Wikidata</a>
     </div>
   </div>
 </section>
