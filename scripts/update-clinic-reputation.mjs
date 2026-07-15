@@ -30,12 +30,12 @@ if (!Number.isInteger(ratingCount) || ratingCount < 0) throw new Error('count mu
 if (!/^\d{4}-\d{2}-\d{2}$/u.test(observedAt) || Number.isNaN(Date.parse(`${observedAt}T00:00:00Z`))) throw new Error('observed-at must be a valid YYYY-MM-DD date');
 if (new Date(`${observedAt}T23:59:59Z`) > new Date()) throw new Error('observed-at cannot be in the future');
 
-const blockPattern = /googleBusinessProfile:\s*\{([\s\S]*?)\n\s*\},\n\s*sourceTruthObservedAt:/u;
+const blockPattern = /googleBusinessProfile:\s*\{([\s\S]*?)\n\s*\},\n\s*externalProfiles:/u;
 const blockMatch = source.match(blockPattern);
 if (!blockMatch) throw new Error('canonical googleBusinessProfile block was not found');
 const currentBlock = blockMatch[1];
 const readNumber = (field) => Number(currentBlock.match(new RegExp(`${field}:\\s*([0-9.]+)`, 'u'))?.[1]);
-const readString = (field) => currentBlock.match(new RegExp(`${field}:\\s*'([^']+)'`, 'u'))?.[1] ?? '';
+const readString = (field) => currentBlock.match(new RegExp(`${field}:\\s*["']([^"']+)["']`, 'u'))?.[1] ?? '';
 const current = {
   ratingValue: readNumber('ratingValue'),
   bestRating: readNumber('bestRating'),
@@ -52,17 +52,18 @@ if (!/^https:\/\/www\.google\.com\/maps/u.test(sourceUrl)) throw new Error('sour
 const note = String(args.get('note') ?? 'Manual Google Maps snapshot update through the guarded project command.');
 const recordedAt = new Date().toISOString();
 
-let updated = source;
-const replaceField = (field, value) => {
-  const valueText = typeof value === 'number' ? String(value) : `'${value}'`;
-  updated = updated.replace(new RegExp(`(${field}:\\s*)(?:[0-9.]+|'[^']*')`, 'u'), `$1${valueText}`);
+let nextBlock = currentBlock;
+const replaceInBlock = (field, value) => {
+  const valueText = typeof value === 'number' ? String(value) : JSON.stringify(value);
+  nextBlock = nextBlock.replace(new RegExp(`(${field}:\\s*)(?:[0-9.]+|["'][^"']*["'])`, 'u'), `$1${valueText}`);
 };
-replaceField('ratingValue', ratingValue);
-replaceField('ratingCount', ratingCount);
-replaceField('observedAt', observedAt);
-replaceField('sourceUrl', sourceUrl);
-updated = updated.replace(/dateModified:\s*'[^']+'/u, `dateModified: '${observedAt}T16:30:00+03:30'`);
-updated = updated.replace(/sourceTruthObservedAt:\s*'[^']+'/u, `sourceTruthObservedAt: '${observedAt}T16:30:00+03:30'`);
+replaceInBlock('ratingValue', ratingValue);
+replaceInBlock('ratingCount', ratingCount);
+replaceInBlock('observedAt', observedAt);
+replaceInBlock('sourceUrl', sourceUrl);
+let updated = source.replace(currentBlock, nextBlock);
+updated = updated.replace(/dateModified:\s*["'][^"']+["']/u, `dateModified: "${observedAt}T16:30:00+03:30"`);
+updated = updated.replace(/sourceTruthObservedAt:\s*["'][^"']+["']/u, `sourceTruthObservedAt: "${observedAt}"`);
 
 const nextRecord = {
   ratingValue,
