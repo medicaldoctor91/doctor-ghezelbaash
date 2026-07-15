@@ -83,6 +83,8 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
           video.dataset.posterLoaded = 'true';
         };
 
+        let scheduled = false;
+        let settleTimer;
         const activateNearby = () => {
           scheduled = false;
           const margin = 1000;
@@ -93,11 +95,13 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
           });
         };
 
-        let scheduled = false;
         const scheduleNearbyCheck = () => {
-          if (scheduled) return;
-          scheduled = true;
-          requestAnimationFrame(activateNearby);
+          if (!scheduled) {
+            scheduled = true;
+            requestAnimationFrame(activateNearby);
+          }
+          window.clearTimeout(settleTimer);
+          settleTimer = window.setTimeout(activateNearby, 180);
         };
 
         videos.forEach((video) => {
@@ -107,6 +111,7 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
         });
 
         window.addEventListener('scroll', scheduleNearbyCheck, { passive: true });
+        window.addEventListener('scrollend', activateNearby, { passive: true });
         window.addEventListener('resize', scheduleNearbyCheck, { passive: true });
         scheduleNearbyCheck();
 
