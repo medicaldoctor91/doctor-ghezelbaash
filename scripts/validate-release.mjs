@@ -84,16 +84,15 @@ for (const fragment of sectionIds) check(idSet.has(fragment), `canonical homepag
 const position = (fragment) => homepage.indexOf(`id="${fragment}"`);
 const personStart = position(personFragment);
 const contentTableStart = position('content-table');
-const firstSectionStart = position(sectionIds[0]);
-const clinicalGuideStart = position('clinical-guide');
-const researchStart = position('medical-research-and-education');
+const sectionPositions = sectionIds.map((fragment) => position(fragment));
+const firstSectionStart = sectionPositions[0];
 const clinicStart = position('clinic-information-kermanshah');
-const graphStart = position('knowledge-graph-and-datasets');
-const contactStart = position('sources-contact-and-appointment');
 check(personStart >= 0 && contentTableStart > personStart, 'Content Table must follow the complete Person block');
 check(firstSectionStart > contentTableStart, 'main content must follow the Content Table');
-check(clinicalGuideStart > firstSectionStart, 'clinical guide must follow local doctor and service sections');
-check(researchStart > clinicalGuideStart && clinicStart > researchStart && graphStart > clinicStart && contactStart > graphStart, 'research, clinic, graph and contact section ordering is invalid');
+check(sectionPositions.every((value) => value >= 0), 'one or more canonical Homepage section positions are missing');
+for (let index = 1; index < sectionPositions.length; index += 1) {
+  check(sectionPositions[index] > sectionPositions[index - 1], `canonical Homepage section ordering is invalid: ${sectionIds[index - 1]} -> ${sectionIds[index]}`);
+}
 
 const personEnd = homepage.indexOf('</header>', personStart);
 const personBlock = homepage.slice(personStart, personEnd + 9);
