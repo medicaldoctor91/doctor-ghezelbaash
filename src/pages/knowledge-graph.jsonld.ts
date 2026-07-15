@@ -4,15 +4,18 @@ import { applyHomepageGraphContract } from '~/compilers/homepage-graph-contract'
 import { completeHomepageGraphContract } from '~/compilers/homepage-graph-completeness';
 import { applyHomepageAuditFixes } from '~/compilers/homepage-graph-audit-fixes';
 import { synchronizeHomepageGraph } from '~/compilers/homepage-graph-synchronization';
+import { applyHomepageMissionGraph } from '~/compilers/homepage-mission-graph';
 
 export const prerender = true;
 
 export function GET() {
-  const graph = synchronizeHomepageGraph(
-    applyHomepageAuditFixes(
-      completeHomepageGraphContract(
-        applyHomepageGraphContract(
-          buildCanonicalKnowledgeGraph(getHeadings(), rawContent()),
+  const graph = applyHomepageMissionGraph(
+    synchronizeHomepageGraph(
+      applyHomepageAuditFixes(
+        completeHomepageGraphContract(
+          applyHomepageGraphContract(
+            buildCanonicalKnowledgeGraph(getHeadings(), rawContent()),
+          ),
         ),
       ),
     ),
