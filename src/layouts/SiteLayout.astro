@@ -88,6 +88,18 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
           video.dataset.posterLoaded = 'true';
         };
 
+        const activateHashTarget = () => {
+          let fragment = window.location.hash.replace(/^#/, '');
+          if (!fragment) return;
+          try { fragment = decodeURIComponent(fragment); } catch {}
+          const target = document.getElementById(fragment);
+          if (!target) return;
+          const video = target.matches?.('video[data-deferred-poster]')
+            ? target
+            : target.querySelector?.('video[data-deferred-poster]');
+          if (video) activatePoster(video);
+        };
+
         let scheduled = false;
         let settleTimer;
         const activateNearby = () => {
@@ -110,8 +122,12 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
         };
 
         const scheduleAfterNavigation = () => {
+          activateHashTarget();
           scheduleNearbyCheck();
-          window.setTimeout(activateNearby, 320);
+          window.setTimeout(() => {
+            activateHashTarget();
+            activateNearby();
+          }, 320);
         };
 
         videos.forEach((video) => {
@@ -132,6 +148,7 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
           videos.forEach((video) => resizeObserver.observe(video));
         }
 
+        activateHashTarget();
         scheduleNearbyCheck();
 
         if (!('IntersectionObserver' in window)) return;
