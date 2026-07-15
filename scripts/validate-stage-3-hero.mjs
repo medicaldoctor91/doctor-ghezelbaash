@@ -4,6 +4,7 @@ import { join } from 'node:path';
 const root = process.cwd();
 const html = readFileSync(join(root, 'dist', 'index.html'), 'utf8');
 const source = readFileSync(join(root, 'src/components/home/PhysicianHero.astro'), 'utf8');
+const layoutSource = readFileSync(join(root, 'src/layouts/SiteLayout.astro'), 'utf8');
 const failures = [];
 const check = (ok, message) => { if (!ok) failures.push(message); };
 const count = (text, re) => (text.match(re) ?? []).length;
@@ -31,7 +32,7 @@ const introText = textOf(introHtml);
 const introWords = introText.split(/\s+/u).filter(Boolean).length;
 check(count(hero, /data-physician-introduction/gu) === 1, 'Person header must contain one introduction');
 check(!/\bid=/iu.test(introAttrs) && !/<a\b/iu.test(introHtml), 'introduction must not have an ID or anchor');
-check(count(introHtml, /<p\b/gu) === 3, 'introduction must contain three paragraphs');
+check(count(introHtml, /<p\b/gu) === 4, 'introduction must contain four concise retrieval paragraphs');
 check(introWords >= 180 && introWords <= 280, `introduction must contain 180–280 words; found ${introWords}`);
 for (const phrase of ['دکتر محمدسعید قزلباش','نام حرفه‌ای','دکترای حرفه‌ای پزشکی','۱۶۷۴۳۰','کرمانشاه','ارزیابی پیش از درمان','مرز روش‌های غیرجراحی','ارجاع','فعالیت پژوهشی','آموزش پزشکی']) check(introText.includes(phrase), `introduction is missing: ${phrase}`);
 check(count(html, /data-physician-introduction/gu) === 1, 'physician introduction is repeated later');
@@ -56,7 +57,8 @@ for (const width of [480,768,1200,1600]) {
 check(attr(img,'src') === '/images/responsive/doctor-portrait-1200.jpg', 'portrait fallback src is incorrect');
 check(attr(img,'alt') === 'دکتر سعید قزلباش، پزشک زیبایی، پوست و مو در کرمانشاه', 'portrait alt is incorrect');
 check(attr(img,'width') === '1600' && attr(img,'height') === '1067', 'portrait intrinsic dimensions are missing');
-check(attr(img,'loading') === 'eager' && attr(img,'fetchpriority') === 'high' && attr(img,'decoding') === 'async', 'portrait LCP attributes are incorrect');
+check(attr(img,'loading') === 'lazy' && attr(img,'fetchpriority') === 'auto' && attr(img,'decoding') === 'async', 'mobile portrait deferral attributes are incorrect');
+check(layoutSource.includes('media="(min-width: 58rem)"') && layoutSource.includes('fetchpriority="high"'), 'desktop Hero preload contract is missing');
 check(Boolean(attr(img,'srcset')) && Boolean(attr(img,'sizes')), 'portrait responsive fallback is incomplete');
 check(/<figcaption\b[^>]*>\s*[^<]+/iu.test(portrait), 'portrait figcaption is missing');
 const assets = [...[480,768,1200,1600].flatMap((w) => [`doctor-portrait-${w}.avif`,`doctor-portrait-${w}.webp`]),'doctor-portrait-1200.jpg','doctor-portrait-1600.jpg'];
@@ -82,4 +84,4 @@ if (failures.length) {
   console.error(JSON.stringify({ stage: 3, status: 'fail', failures }, null, 2));
   process.exit(1);
 }
-console.log(JSON.stringify({ stage: 3, status: 'pass', h1Count: 1, introductionWords: introWords, introductionParagraphs: 3, primaryCtas: 2, mapsLinks: 1, rating: '5/5', ratingCount: 163, portraitAssets: assets.length, layout: 'sequential', duplicateIntroduction: false }, null, 2));
+console.log(JSON.stringify({ stage: 3, status: 'pass', h1Count: 1, introductionWords: introWords, introductionParagraphs: 4, primaryCtas: 2, mapsLinks: 1, rating: '5/5', ratingCount: 163, portraitAssets: assets.length, layout: 'sequential', mobilePortraitLoading: 'lazy', desktopPortraitPreload: true, duplicateIntroduction: false }, null, 2));

@@ -68,7 +68,9 @@ const directAnswerSectionIds = homepageSections.slice(0, 13).map((section) => se
 for (const id of directAnswerSectionIds) {
   const slice = sectionSlice(id);
   check(Boolean(slice), `${id}: section is missing`);
-  check(slice.includes('پاسخ مستقیم:'), `${id}: H2 section lacks an answer-first opening`);
+  const hasAnswerFirstOpening = slice.includes('پاسخ مستقیم:')
+    || (id === 'aesthetic-services-kermanshah' && slice.includes('باور غلط را کنار بگذارید:'));
+  check(hasAnswerFirstOpening, `${id}: H2 section lacks an answer-first or myth-busting opening`);
 }
 
 const sectionWordRanges = {
@@ -114,10 +116,12 @@ for (const id of nationalArticleIds) {
 }
 
 const services = sectionSlice('aesthetic-services-kermanshah');
-check(services.includes('خدمات ارائه‌شده پس از ارزیابی پزشکی'), 'offered-service group label is missing');
-check(services.includes('ارزیابی جراحی زیبایی و مرز ارجاع در کرمانشاه'), 'evaluation/referral group is missing');
-check(services.includes('ارزیابی و ارجاع'), 'evaluation cards are not visibly distinguished from offered services');
-check(services.includes('id="botox-kermanshah"') && services.includes('id="aesthetic-surgery-evaluation-kermanshah"'), 'offered and referral destinations are not independently addressable');
+check(services.includes('یک Knowledge Domain؛ نه منوی فروش'), 'unified medical knowledge-domain framing is missing');
+check(services.includes('وقتی سوزن و دستگاه کم می‌آورند؛ جراحی وارد تصمیم می‌شود'), 'surgical decision boundary is missing from the unified domain');
+check(services.includes('حکم آناتومی:'), 'surgical topics do not expose the anatomical decision boundary');
+check(!services.includes('خدمات ارائه‌شده پس از ارزیابی پزشکی'), 'obsolete offered-service presentation split remains');
+check(!services.includes('class="service-card__badge"'), 'obsolete referral badge remains');
+check(services.includes('id="botox-kermanshah"') && services.includes('id="aesthetic-surgery-evaluation-kermanshah"'), 'medical topic destinations are not independently addressable');
 
 check(homepageSubsectionSummaries['dermal-filler-guide'].includes('انسداد عروقی'), 'filler guide must state vascular-occlusion risk');
 check(homepageSubsectionSummaries['filler-complications'].includes('اختلال بینایی'), 'filler complication answer must state the vision-warning boundary');
@@ -164,6 +168,6 @@ console.log(JSON.stringify({
   ],
   duplicateLongParagraphs: 0,
   localKeywordStuffing: 0,
-  offeredReferralSeparation: true,
+  unifiedMedicalKnowledgeDomain: true,
   absoluteMedicalClaims: 0,
 }, null, 2));

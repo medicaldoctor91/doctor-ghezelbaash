@@ -13,6 +13,7 @@ const [clinicVideo] = clinicVideos;
 if (clinicVideo.subsectionId != null) throw new Error(`Clinic video must target the H2 directly: ${clinicVideo.id} -> ${clinicVideo.subsectionId}`);
 const srcset = (image: any, format: string) => image.widths.map((width: number) => `/images/responsive/${image.base}-${width}.${format} ${width}w`).join(', ');
 const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Tehran' }).format(new Date(`${site.googleBusinessProfile.observedAt}T12:00:00+03:30`));
+const deferredVideoPoster = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 16'%3E%3C/svg%3E";
 ---
 
 <section
@@ -70,11 +71,23 @@ const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'l
 
     <figure id={`video-${clinicVideo.id}`} class="clinic-info__video article-video" data-contextual-video data-video-section={clinicVideo.sectionId}>
       <div class="article-video__media">
-        <video controls playsinline preload="none" poster={clinicVideo.thumbnail} width={clinicVideo.width} height={clinicVideo.height} aria-labelledby={`video-${clinicVideo.id}-title`} aria-describedby={`video-${clinicVideo.id}-description`}>
+        <video
+          controls
+          playsinline
+          preload="none"
+          poster={deferredVideoPoster}
+          data-poster={clinicVideo.thumbnail}
+          data-deferred-poster
+          width={clinicVideo.width}
+          height={clinicVideo.height}
+          aria-labelledby={`video-${clinicVideo.id}-title`}
+          aria-describedby={`video-${clinicVideo.id}-description`}
+        >
           <source src={`/videos/${clinicVideo.file}`} type="video/mp4" />
           {clinicVideo.chapterTrack && <track kind="chapters" src={clinicVideo.chapterTrack} srclang="fa" label="فصل‌بندی فارسی" default />}
           مرورگر شما پخش ویدئو را پشتیبانی نمی‌کند.
         </video>
+        <noscript><img src={clinicVideo.thumbnail} alt="" width={clinicVideo.width} height={clinicVideo.height} loading="lazy" decoding="async" /></noscript>
       </div>
       <figcaption class="article-video__body">
         <strong id={`video-${clinicVideo.id}-title`} class="clinic-info__video-title">{clinicVideo.title}</strong>
@@ -85,5 +98,5 @@ const observedAt = new Intl.DateTimeFormat('fa-IR', { year: 'numeric', month: 'l
 </section>
 
 <style>
-  .clinic-info{scroll-margin-top:6rem}.clinic-info__grid{display:grid;gap:1.2rem;margin-top:1.3rem}.clinic-info__copy{padding:clamp(1rem,3vw,1.5rem);border:1px solid rgba(2,119,194,.14);border-radius:1.1rem;background:rgba(255,255,255,.94)}.clinic-info__details{display:grid;gap:.65rem;margin:1.1rem 0}.clinic-info__details div{padding:.75rem .85rem;border:1px solid rgba(2,119,194,.1);border-radius:.85rem;background:rgba(247,251,254,.82)}.clinic-info__details dt{display:flex;gap:.4rem;align-items:center;color:var(--muted);font-size:.76rem;font-weight:750}.clinic-info__details dd{margin:.35rem 0 0;color:var(--blue-950);font-weight:800;line-height:1.8}.clinic-info__links{font-size:.86rem}.clinic-info__media{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}.clinic-info__media figure{margin:0;overflow:hidden;border-radius:.9rem;background:#fff}.clinic-info__media picture,.clinic-info__media img{display:block;width:100%;height:100%}.clinic-info__media img{object-fit:cover;aspect-ratio:4/5}.clinic-info__media figcaption{padding:.5rem;color:var(--muted);font-size:.7rem;line-height:1.6}.clinic-info__video{max-width:58rem;margin:1.5rem auto 0}.clinic-info__video-title{display:block;margin:.3rem 0;color:var(--blue-950);font-size:1.05rem;line-height:1.8}@media(min-width:62rem){.clinic-info__grid{grid-template-columns:minmax(0,1.15fr) minmax(24rem,.85fr)}.clinic-info__details{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .clinic-info{scroll-margin-top:6rem}.clinic-info__grid{display:grid;gap:1.2rem;margin-top:1.3rem}.clinic-info__copy{padding:clamp(1rem,3vw,1.5rem);border:1px solid rgba(2,119,194,.14);border-radius:1.1rem;background:rgba(255,255,255,.94)}.clinic-info__details{display:grid;gap:.65rem;margin:1.1rem 0}.clinic-info__details div{padding:.75rem .85rem;border:1px solid rgba(2,119,194,.1);border-radius:.85rem;background:rgba(247,251,254,.82)}.clinic-info__details dt{display:flex;gap:.4rem;align-items:center;color:var(--muted);font-size:.76rem;font-weight:750}.clinic-info__details dd{margin:.35rem 0 0;color:var(--blue-950);font-weight:800;line-height:1.8}.clinic-info__links{font-size:.86rem}.clinic-info__media{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.65rem}.clinic-info__media figure{margin:0;overflow:hidden;border-radius:.9rem;background:#fff}.clinic-info__media picture,.clinic-info__media img{display:block;width:100%;height:100%}.clinic-info__media img{object-fit:cover;aspect-ratio:4/5}.clinic-info__media figcaption{padding:.5rem;color:var(--muted);font-size:.7rem;line-height:1.6}.clinic-info__video{max-width:58rem;margin:1.5rem auto 0}.clinic-info__video-title{display:block;margin:.3rem 0;color:var(--blue-950);font-size:1.05rem;line-height:1.8}.clinic-info__video noscript img{width:100%;height:auto;display:block;aspect-ratio:9/16;object-fit:cover}@media(min-width:62rem){.clinic-info__grid{grid-template-columns:minmax(0,1.15fr) minmax(24rem,.85fr)}.clinic-info__details{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>

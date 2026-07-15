@@ -18,19 +18,24 @@
   ],
   "shortcuts": [
     {
-      "name": "مطالب پزشکی",
-      "short_name": "مطالب",
-      "url": "/#clinical-guide"
+      "name": "انتخاب درمان زیبایی",
+      "short_name": "انتخاب درمان",
+      "url": "/#aesthetic-treatment-selection"
     },
     {
       "name": "درباره پزشک",
       "short_name": "پزشک",
-      "url": "/#doctor"
+      "url": "/#mohammad-saeed-ghezelbash"
     },
     {
-      "name": "حوزه‌های درمان",
-      "short_name": "حوزه‌ها",
-      "url": "/#services"
+      "name": "موضوعات و روش‌های زیبایی",
+      "short_name": "موضوعات",
+      "url": "/#aesthetic-services-kermanshah"
+    },
+    {
+      "name": "تماس و رزرو مشاوره",
+      "short_name": "تماس",
+      "url": "/#sources-contact-and-appointment"
     }
   ],
   "icons": [

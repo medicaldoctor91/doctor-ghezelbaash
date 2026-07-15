@@ -75,21 +75,21 @@ const evaluationTopics = [
   {
     title: 'بلفاروپلاستی و جراحی پلک',
     text: 'سنگینی پلک ممکن است از پوست اضافه، پف چربی، افت ابرو، پتوز واقعی، عدم تقارن یا ترکیب آن‌ها ایجاد شود. خشکی چشم، سابقه جراحی و عملکرد پلک نیز باید بررسی شوند.',
-    boundary: 'این بخش برای تشخیص مرز روش غیرجراحی و ارجاع است. وقتی مشکل عملکردی، پتوز یا بیماری چشمی مطرح باشد، ارزیابی توسط جراح یا متخصص مرتبط مقدم بر اقدام زیبایی است.',
+    boundary: 'وقتی مشکل عملکردی، پتوز یا بیماری چشمی مطرح باشد، ارزیابی توسط جراح یا متخصص مرتبط مقدم بر اقدام زیبایی است.',
     icon: Activity,
     href: '#blepharoplasty-evaluation',
   },
   {
     title: 'رینوپلاستی و جراحی بینی',
     text: 'فرم پوست، ساختار استخوان و غضروف، تقارن، سابقه ضربه یا جراحی و عملکرد تنفسی باید همراه با نسبت بینی و صورت بررسی شوند.',
-    boundary: 'فیلر ممکن است بعضی نامنظمی‌های ظاهری منتخب را استتار کند، اما بینی را کوچک یا مسیر هوایی را اصلاح نمی‌کند و خود دارای ریسک عروقی مهم است. تغییر ساختاری یا عملکردی به ارجاع جراحی نیاز دارد.',
+    boundary: 'فیلر ممکن است بعضی نامنظمی‌های ظاهری منتخب را استتار کند، اما بینی را کوچک یا مسیر هوایی را اصلاح نمی‌کند و خود دارای ریسک عروقی مهم است. تغییر ساختاری یا عملکردی به ارزیابی جراحی نیاز دارد.',
     icon: Sparkles,
     href: '#rhinoplasty-evaluation',
   },
   {
     title: 'لیفت جراحی صورت و گردن',
     text: 'شدت افتادگی، پوست اضافه، وضعیت میدفیس، jowl، گردن و پلاتیسما تعیین می‌کنند که روش کم‌تهاجمی چه مقدار توان واقعی دارد.',
-    boundary: 'وقتی بافت و پوست خارج از ظرفیت نخ، فیلر یا روش انرژی‌محور باشند، افزودن مداخلات ضعیف‌تر جایگزین جراحی نمی‌شود. هدف این صفحه تشخیص این مرز و ارجاع به جراح واجد صلاحیت است.',
+    boundary: 'وقتی بافت و پوست خارج از ظرفیت نخ، فیلر یا روش انرژی‌محور باشند، افزودن مداخلات ضعیف‌تر جایگزین جراحی نمی‌شود. مسیر درست، ارزیابی توسط جراح واجد صلاحیت است.',
     icon: ScanFace,
     href: '#facelift-necklift-evaluation',
   },
@@ -103,14 +103,14 @@ const evaluationTopics = [
   {
     title: 'کاشت و پیوند مو',
     text: 'ثبات ریزش، کیفیت و تراکم بانک مو، الگوی آینده ریزش، وضعیت پوست سر، سن و درمان‌های قبلی پیش از تصمیم برای کاشت بررسی می‌شوند.',
-    boundary: 'کاشت علت ریزش فعال را متوقف نمی‌کند و ظرفیت ناحیه دهنده محدود است. در صورت کاندید مناسب، ارجاع برای ارزیابی جراحی و برنامه حفظ موهای موجود انجام می‌شود.',
+    boundary: 'کاشت علت ریزش فعال را متوقف نمی‌کند و ظرفیت ناحیه دهنده محدود است. کاندید مناسب به ارزیابی جراحی و برنامه حفظ موهای موجود نیاز دارد.',
     icon: UserRoundSearch,
     href: '#hair-transplant-surgical-evaluation',
   },
   {
     title: 'کانتورینگ بدن',
     text: 'چربی موضعی، شلی پوست، سلولیت، وضعیت عضله، وزن پایدار، سابقه جراحی و بیماری‌های زمینه‌ای باید جداگانه بررسی شوند.',
-    boundary: 'روش کانتورینگ جای کاهش وزن یا درمان بیماری متابولیک نیست. وسعت مداخله و ریسک بیهوشی، لخته، ترمیم و نامنظمی سطحی تعیین می‌کنند که ارجاع جراحی یا مسیر غیرجراحی مناسب‌تر است.',
+    boundary: 'روش کانتورینگ جای کاهش وزن یا درمان بیماری متابولیک نیست. وسعت مداخله و ریسک بیهوشی، لخته، ترمیم و نامنظمی سطحی تعیین می‌کنند که مسیر جراحی یا غیرجراحی منطقی‌تر است.',
     icon: ScanFace,
     href: '#body-contouring-evaluation',
   },
@@ -120,7 +120,7 @@ const consultationFlow = [
   ['۱. توضیح درخواست', 'در تماس یا دایرکت، مشکل اصلی، درمان قبلی و هدف خود را کوتاه و روشن بیان کنید. پاسخ آنلاین تشخیص قطعی یا جای معاینه نیست.'],
   ['۲. آماده‌کردن سابقه', 'نام مواد تزریق‌شده، زمان درمان‌ها، داروها، بیماری‌ها، حساسیت‌ها و تصاویر مربوط به تغییر یا عارضه را همراه داشته باشید.'],
   ['۳. ارزیابی حضوری', 'ناحیه در استراحت و حرکت، کیفیت بافت، تقارن، عوامل خطر و تناسب انتظار با توان روش بررسی می‌شوند.'],
-  ['۴. انتخاب یا ارجاع', 'ممکن است یک روش، درمان مرحله‌ای، تعویق، انجام ندادن درمان یا ارجاع به جراح و متخصص مرتبط پیشنهاد شود.'],
+  ['۴. انتخاب مسیر', 'ممکن است یک روش، درمان مرحله‌ای، تعویق، انجام ندادن درمان یا ارزیابی توسط تیم تخصصی مرتبط انتخاب شود.'],
   ['۵. ثبت و پیگیری', 'ماده، ناحیه، برنامه مراقبت، زمان ارزیابی نتیجه و مسیر تماس برای سؤال یا نشانه خطر مشخص می‌شوند.'],
 ];
 ---
@@ -128,15 +128,15 @@ const consultationFlow = [
 <section id={servicesSection.id} class="services-section section shell" aria-labelledby={`${servicesSection.id}-title`}>
   <div class="section-heading section-heading--split">
     <div>
-      <p class="eyebrow">خدمات و مرز ارجاع</p>
+      <p class="eyebrow">یک Knowledge Domain؛ نه منوی فروش</p>
       <h2 id={`${servicesSection.id}-title`}>{servicesSection.title}</h2>
     </div>
-    <p>حضور یک موضوع در این فهرست به معنی ارائه همه روش‌های آن نیست؛ خدمات کلینیک و موضوعات صرفاً ارزیابی یا ارجاع به‌صورت روشن جدا شده‌اند.</p>
+    <p>صورت و بدن به برچسب «جراحی» یا «غیرجراحی» اهمیت نمی‌دهند. مسئله ممکن است در عضله، پوست، حجم، بافت، چربی یا اسکلت باشد؛ ابزار فقط بعد از پیدا شدن لایه وارد تصمیم می‌شود.</p>
   </div>
 
   <div class="service-local-intro medical-article">
-    <p><strong>پاسخ مستقیم:</strong> انتخاب خدمت در کلینیک از معاینه و تعریف مسئله شروع می‌شود. نام‌هایی مانند بوتاکس، فیلر، نخ، سابسیژن یا PRP ابزارند؛ مناسب‌بودن آن‌ها به علت مشکل، آناتومی، درمان‌های قبلی، موارد منع و نتیجه قابل انتظار وابسته است. امکان ارائه یک روش به معنی مناسب‌بودن آن برای همه مراجعه‌کنندگان نیست.</p>
-    <p>بخش نخست، خدماتی را توضیح می‌دهد که پس از ارزیابی پزشکی می‌توانند در کلینیک انجام شوند. بخش دوم فقط موضوعات جراحی یا ساختاری را پوشش می‌دهد که برای تشخیص مرز روش جاری و ارجاع درست بررسی می‌شوند. این تفکیک باید در گفت‌وگو، رضایت آگاهانه و برنامه درمان نیز حفظ شود.</p>
+    <p><strong>باور غلط را کنار بگذارید:</strong> نام روش، تشخیص نیست. کسی که با واژه «فیلر»، «بوتاکس» یا «جراحی» وارد می‌شود، معمولاً پاسخ را پیش از طرح سؤال انتخاب کرده است. این صفحه همه موضوعات زیبایی را در یک قلمرو پیوسته بررسی می‌کند؛ از سوزن و نخ تا پوست، مو، چربی و جراحی. آنچه مسیر را عوض می‌کند محل مشکل است، نه عنوان تبلیغاتی روش.</p>
+    <p>در هر موضوع یک سؤال ثابت وجود دارد: کدام لایه ظاهر را ساخته و کدام ابزار واقعاً به همان لایه می‌رسد؟ اگر پاسخ پوست باشد، حجم بیشتر خطاست. اگر پاسخ اسکلت باشد، دستگاه پوست معجزه نمی‌کند. اگر التهاب فعال باشد، تحریک بیشتر می‌تواند همان زخمی را عمیق‌تر کند که قرار بود درمان شود. تصمیم پزشکی از همین‌جا شروع می‌شود.</p>
   </div>
 
   <aside class="consultation-flow" aria-labelledby="consultation-flow-title">
@@ -151,16 +151,16 @@ const consultationFlow = [
     </ol>
   </aside>
 
-  <div class="service-group" aria-labelledby="offered-services-title">
-    <strong id="offered-services-title" class="service-group__title">خدمات ارائه‌شده پس از ارزیابی پزشکی</strong>
+  <div class="service-group" aria-labelledby="aesthetic-topic-map-title">
+    <strong id="aesthetic-topic-map-title" class="service-group__title">یک مشکل، چند لایه؛ نام روش آخر تصمیم است</strong>
     <div class="service-grid service-grid--expanded">
       {offeredServices.map(({ id, title, answer, assessment, boundary, icon: Icon, href }) => (
         <section id={id} class="service-card service-card--expanded" aria-labelledby={`${id}-title`}>
           <span class="service-card__icon"><Icon size={25} aria-hidden="true" /></span>
           <h3 id={`${id}-title`}>{title}</h3>
-          <p><strong>چه زمانی بررسی می‌شود؟</strong> {answer}</p>
-          <p><strong>ارزیابی و دامنه خدمت:</strong> {assessment}</p>
-          <p><strong>مرز و نکته ایمنی:</strong> {boundary}</p>
+          <p><strong>مسئله واقعی:</strong> {answer}</p>
+          <p><strong>متغیر پنهان:</strong> {assessment}</p>
+          <p><strong>خط قرمز:</strong> {boundary}</p>
           <a class="service-card__link" href={href}>توضیحات کامل، کاندید، عوارض و محدودیت‌ها</a>
         </section>
       ))}
@@ -169,18 +169,17 @@ const consultationFlow = [
 
   <section id="aesthetic-surgery-evaluation-kermanshah" class="service-group service-group--evaluation" aria-labelledby="aesthetic-surgery-evaluation-kermanshah-title">
     <div class="service-group__heading">
-      <h3 id="aesthetic-surgery-evaluation-kermanshah-title" class="service-group__title">ارزیابی جراحی زیبایی و مرز ارجاع در کرمانشاه</h3>
-      <p>هدف این بخش تشخیص مرز روش جاری و معرفی مسیر ارجاع مناسب است؛ نه ادعای ارائه تمام جراحی‌ها.</p>
+      <h3 id="aesthetic-surgery-evaluation-kermanshah-title" class="service-group__title">وقتی سوزن و دستگاه کم می‌آورند؛ جراحی وارد تصمیم می‌شود</h3>
+      <p>پوست اضافه، اختلال عملکرد، مشکل اسکلتی یا تغییر ساختاری با تکرار ابزار ضعیف‌تر ناپدید نمی‌شوند. اینجا مرز آناتومی روشن می‌شود؛ همان مرزی که انتخاب مسیر جراحی یا غیرجراحی را تعیین می‌کند.</p>
     </div>
     <div class="service-grid service-grid--evaluation">
       {evaluationTopics.map(({ title, text, boundary, icon: Icon, href }) => (
         <article class="service-card service-card--evaluation">
-          <span class="service-card__badge">ارزیابی و ارجاع</span>
           <span class="service-card__icon"><Icon size={25} aria-hidden="true" /></span>
           <h4>{title}</h4>
           <p>{text}</p>
-          <p><strong>مرز ارجاع:</strong> {boundary}</p>
-          <a class="service-card__link" href={href}>دیدن معیار تصمیم و ارجاع</a>
+          <p><strong>حکم آناتومی:</strong> {boundary}</p>
+          <a class="service-card__link" href={href}>دیدن معیار تصمیم کامل</a>
         </article>
       ))}
     </div>
@@ -188,5 +187,5 @@ const consultationFlow = [
 </section>
 
 <style>
-  .services-section{scroll-margin-top:6rem}.service-local-intro{max-width:68rem;margin:1.1rem 0 1.4rem}.consultation-flow{margin:0 0 2rem;padding:clamp(1rem,3vw,1.35rem);border:1px solid rgba(2,119,194,.14);border-radius:1.1rem;background:linear-gradient(145deg,rgba(239,248,255,.9),rgba(255,255,255,.96))}.consultation-flow__heading{display:flex;gap:.6rem;align-items:center;color:var(--blue-950)}.consultation-flow__title{font-size:1.05rem;line-height:1.8}.consultation-flow ol{display:grid;gap:.7rem;margin:1rem 0 0;padding-inline-start:1.4rem}.consultation-flow li{color:var(--blue-950);font-size:.86rem;font-weight:800;line-height:1.8}.consultation-flow li p{margin:.2rem 0 0;color:#36596b;font-weight:500;line-height:1.9}.service-group+.service-group{margin-top:clamp(2rem,5vw,3.5rem)}.service-group__title{display:block;margin:0 0 .9rem;color:var(--blue-950);font-size:1.08rem;line-height:1.8}.service-group__heading{display:grid;gap:.35rem;margin-bottom:.9rem}.service-group__heading p{max-width:58rem;margin:0;color:var(--muted);font-size:.88rem;line-height:1.85}.service-card{display:block;scroll-margin-top:6rem}.service-card--expanded{padding:clamp(1rem,2.5vw,1.35rem)}.service-card--expanded p,.service-card--evaluation p{margin:.55rem 0 0;color:#36596b;font-size:.87rem;line-height:2}.service-card--expanded p strong,.service-card--evaluation p strong{color:var(--blue-950)}.service-card h4{margin:.85rem 0 .4rem;color:var(--blue-950);font-size:1rem;line-height:1.75}.service-card__link{display:inline-block;margin-top:.75rem;color:var(--blue-700);font-size:.78rem;font-weight:750;line-height:1.8;text-underline-offset:.22em}.service-card--evaluation{position:relative;border-style:dashed;background:radial-gradient(circle at 100% 0%,rgba(239,106,39,.09),transparent 9rem),rgba(255,255,255,.86)}.service-card__badge{position:absolute;inset:.72rem auto auto .72rem;padding:.23rem .48rem;border-radius:999px;color:#8a431d;background:rgba(239,106,39,.11);font-size:.64rem;font-weight:800}@media(min-width:48rem){.consultation-flow ol{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(min-width:64rem){.service-grid--expanded{grid-template-columns:repeat(2,minmax(0,1fr))}.service-grid--evaluation{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  .services-section{scroll-margin-top:6rem}.service-local-intro{max-width:68rem;margin:1.1rem 0 1.4rem}.consultation-flow{margin:0 0 2rem;padding:clamp(1rem,3vw,1.35rem);border:1px solid rgba(2,119,194,.14);border-radius:1.1rem;background:linear-gradient(145deg,rgba(239,248,255,.9),rgba(255,255,255,.96))}.consultation-flow__heading{display:flex;gap:.6rem;align-items:center;color:var(--blue-950)}.consultation-flow__title{font-size:1.05rem;line-height:1.8}.consultation-flow ol{display:grid;gap:.7rem;margin:1rem 0 0;padding-inline-start:1.4rem}.consultation-flow li{color:var(--blue-950);font-size:.86rem;font-weight:800;line-height:1.8}.consultation-flow li p{margin:.2rem 0 0;color:#36596b;font-weight:500;line-height:1.9}.service-group+.service-group{margin-top:clamp(2rem,5vw,3.5rem)}.service-group__title{display:block;margin:0 0 .9rem;color:var(--blue-950);font-size:1.08rem;line-height:1.8}.service-group__heading{display:grid;gap:.35rem;margin-bottom:.9rem}.service-group__heading p{max-width:58rem;margin:0;color:var(--muted);font-size:.88rem;line-height:1.85}.service-card{display:block;scroll-margin-top:6rem}.service-card--expanded{padding:clamp(1rem,2.5vw,1.35rem)}.service-card--expanded p,.service-card--evaluation p{margin:.55rem 0 0;color:#36596b;font-size:.87rem;line-height:2}.service-card--expanded p strong,.service-card--evaluation p strong{color:var(--blue-950)}.service-card h4{margin:.85rem 0 .4rem;color:var(--blue-950);font-size:1rem;line-height:1.75}.service-card__link{display:inline-block;margin-top:.75rem;color:var(--blue-700);font-size:.78rem;font-weight:750;line-height:1.8;text-underline-offset:.22em}.service-card--evaluation{position:relative;background:radial-gradient(circle at 100% 0%,rgba(239,106,39,.09),transparent 9rem),rgba(255,255,255,.9)}@media(min-width:48rem){.consultation-flow ol{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(min-width:64rem){.service-grid--expanded{grid-template-columns:repeat(2,minmax(0,1fr))}.service-grid--evaluation{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>

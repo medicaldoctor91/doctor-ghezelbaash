@@ -9,13 +9,12 @@ const { compact = false, priority = false } = Astro.props;
 
 <span class:list={["brand-logo", { "brand-logo--compact": compact }]}>
   <img
-    src="/assets/brand/doctor-hand-syringe-logo.png"
+    src="/assets/brand/doctor-hand-syringe-logo-192.png"
     alt=""
-    width="1024"
-    height="1024"
+    width="192"
+    height="192"
     loading={priority ? "eager" : "lazy"}
     decoding="async"
     fetchpriority={priority ? "high" : "auto"}
   />
 </span>
-
