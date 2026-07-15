@@ -57,14 +57,16 @@ External identity profiles, datasets and authority resources are modeled in the 
 
 Pull requests run:
 
-1. Python syntax checks for both production-audit scripts.
-2. Astro build.
-3. Validators for stages ۲ through ۹.
-4. Release, visible-contract, schema-semantics, nine-stage and passage-depth validators.
-5. Upload of the build log, built Homepage and Stage 9 acceptance report.
-6. Cloudflare Branch Preview for the exact PR head commit.
+1. Python syntax checks for the production-audit scripts.
+2. Astro build and validators for stages ۲ through ۱۱.
+3. Release, visible-contract, schema-semantics, nine-stage and passage-depth validators.
+4. Three Lighthouse Mobile and three Lighthouse Desktop runs with enforced medians.
+5. Axe accessibility validation.
+6. Thirty Playwright behavior tests across Chromium, Firefox, WebKit, Edge and Mobile Safari.
+7. Cloudflare Branch Preview verification for the exact PR head commit.
+8. Upload of build, Lighthouse, accessibility, browser and Cloudflare evidence.
 
-Stage 9 formalizes twenty canonical acceptance criteria. Its generated report is written to `build-reports/stage-9-validation.json` and retained as a CI artifact; it is not deployed as a public entity file.
+Stage 11 extends the formal production contract with Cloudflare Preview noindex, `/index.html` consolidation, custom 404 recovery, centralized reputation history, deferred offscreen rendering and video posters, responsive Hero loading, active fragment navigation and exact production verification.
 
 Current production budgets are:
 
@@ -74,19 +76,30 @@ Current production budgets are:
 - Brotli size below 145 KB;
 - fewer than 4,200 DOM elements;
 - exactly twelve videos, all with `preload="none"`;
+- no real video poster requests in the initial Homepage load;
 - no duplicate IDs, broken fragments, dangling same-site graph references or legacy entity IDs.
 
 ## Production verification
 
-`.github/workflows/verify-production.yml` runs after pushes to `main` and through manual dispatch. It calls `scripts/run-production-audit.py`, which retries cache-busted checks against the custom domain until the deployed commit is visible or the retry budget is exhausted.
+`.github/workflows/verify-production.yml` runs after pushes to `main` and through manual dispatch. It calls `scripts/run-production-audit.py` and `scripts/verify-stage-11-production.py`, which retry cache-busted checks against the custom domain until the deployed commit is visible or the retry budget is exhausted.
 
-The live-domain audit verifies response/security headers, the minimal HTML/HTTP discovery contract, canonical IDs, H1, Content Table, sixteen sections, twelve contextual videos, Clinic testimonial placement, Person/Clinic separation, rating consistency, graph parity, machine-readable guidance, sitemap/robots behavior, removed routes and byte-range video delivery.
+The live-domain audit verifies response/security headers, the minimal HTML/HTTP discovery contract, canonical IDs, H1, Content Table, sixteen sections, twelve contextual videos, Clinic testimonial placement, Person/Clinic separation, rating consistency, graph parity, machine-readable guidance, sitemap/robots behavior, redirects, custom 404, immutable asset caching, deferred posters and byte-range video delivery.
+
+A successful production verification force-updates `cloudflare-production-live` to the exact verified commit. This branch is the machine-readable deployment marker and rollback reference for the currently verified Cloudflare production release.
 
 ## Deployment execution
 
-Production deployment was explicitly retriggered from `main` on 2026-07-15 after Stage 9 completion. The application source immediately before the retrigger was commit `2385143c3c5882ccde71d771abe87cf420f35acc`; this documentation-only commit intentionally starts the production build, Cloudflare deployment and live-domain audit without modifying the rendered Homepage contract.
+Stage 9 production was explicitly retriggered from `main` on 2026-07-15 after Stage 9 completion. The application source immediately before that retrigger was commit `2385143c3c5882ccde71d771abe87cf420f35acc`; the documentation-only commit started the production build and live-domain audit without changing the rendered Homepage contract.
+
+Stage 11 was merged through PR #69 as commit `ca8263813e75c554bdf8f240e3504dc1985ec0ab` after the validated Preview, six Lighthouse runs, Axe and all thirty cross-browser tests passed. This documentation-only commit explicitly retriggers Cloudflare Production from `main` because the custom domain still exposed the preceding release immediately after the squash merge. It does not change the validated rendered Homepage, graph, styles, scripts or assets.
 
 ## Rollback
+
+The immediate pre-Stage-11 production rollback branch is:
+
+```text
+backup/pre-stage-11-d76bdbc
+```
 
 The pre-Stage-9 rollback point is:
 
