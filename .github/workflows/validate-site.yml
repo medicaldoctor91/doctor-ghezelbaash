@@ -46,13 +46,18 @@ jobs:
           cat build.log
           exit $status
 
-      - name: Upload build report
+      - name: Upload build and Stage 9 reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: site-build-report
           path: |
             build.log
+            build-reports/stage-9-validation.json
             dist/index.html
-          if-no-files-found: error
-          retention-days: 3
+            dist/knowledge-graph.jsonld
+            dist/_headers
+            dist/llms.txt
+            dist/.well-known/ai.txt
+          if-no-files-found: warn
+          retention-days: 7
