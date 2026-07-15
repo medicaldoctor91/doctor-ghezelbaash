@@ -12,9 +12,10 @@ interface Props {
   graph: Record<string, unknown>;
   title?: string;
   description?: string;
-  canonical?: string;
+  canonical?: string | null;
   robots?: string;
   ogType?: 'website' | 'article';
+  preloadHero?: boolean;
 }
 
 const {
@@ -24,6 +25,7 @@ const {
   canonical = site.url,
   robots = 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
   ogType = 'website',
+  preloadHero = true,
 } = Astro.props;
 
 const absolute = (path: string) => new URL(path.replace(/^\//, ''), site.url).href;
@@ -43,11 +45,10 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
     <meta name="description" content={description} />
     <meta name="author" content={site.legalName} />
     <meta name="robots" content={robots} />
-    <link rel="canonical" href={canonical} />
+    {canonical && <link rel="canonical" href={canonical} />}
     <link rel="author" href={`${site.url}#${homepageEntityIds.person}`} />
     <link rel="describedby" href={externalGraphUrl} type="application/ld+json" title="Canonical knowledge graph" />
-    <link rel="preload" as="image" href="/images/responsive/doctor-portrait-768.avif" type="image/avif" imagesrcset="/images/responsive/doctor-portrait-480.avif 480w, /images/responsive/doctor-portrait-768.avif 768w, /images/responsive/doctor-portrait-1200.avif 1200w, /images/responsive/doctor-portrait-1600.avif 1600w" imagesizes="(min-width: 920px) 42vw, 100vw" fetchpriority="high" />
-    <meta name="generator" content={Astro.generator} />
+    {preloadHero && <link rel="preload" as="image" href="/images/responsive/doctor-portrait-768.avif" type="image/avif" imagesrcset="/images/responsive/doctor-portrait-480.avif 480w, /images/responsive/doctor-portrait-768.avif 768w, /images/responsive/doctor-portrait-1200.avif 1200w, /images/responsive/doctor-portrait-1600.avif 1600w" imagesizes="(min-width: 920px) 42vw, 100vw" fetchpriority="high" />}
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
@@ -57,7 +58,7 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
     <meta property="og:site_name" content={`وب‌سایت رسمی ${site.name}`} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {canonical && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={absolute(site.ogImage)} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
