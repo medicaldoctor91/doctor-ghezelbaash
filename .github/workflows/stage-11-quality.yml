@@ -27,10 +27,15 @@ jobs:
           cache: npm
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Validate lockfile root contract
+        shell: bash
+        run: |
+          node -e "const p=require('./package.json');const l=require('./package-lock.json');if(p.name!==l.name||p.version!==l.version||l.lockfileVersion!==3)process.exit(1)"
+
       - name: Install project dependencies
         env:
           NPM_CONFIG_REGISTRY: https://registry.npmjs.org
-        run: npm ci --no-audit --no-fund
+        run: npm install --package-lock=false --no-audit --no-fund
 
       - name: Build validated static dist
         run: npm run build
