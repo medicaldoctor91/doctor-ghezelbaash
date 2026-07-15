@@ -19,7 +19,7 @@ https://*.doctor-ghezelbaash.pages.dev/*
 
 /
   Cache-Control: public, max-age=0, must-revalidate
-  Link: </knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json", </knowledge-graph.jsonld>; rel="alternate"; type="application/ld+json"
+  Link: </knowledge-graph.jsonld>; rel="describedby"; type="application/ld+json"
 
 /404.html
   X-Robots-Tag: noindex, follow
