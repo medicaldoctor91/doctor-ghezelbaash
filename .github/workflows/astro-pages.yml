@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -61,3 +61,42 @@ jobs:
       - name: Deploy validated artifact
         id: deployment
         uses: actions/deploy-pages@v4
+
+  verify:
+    name: Verify custom domain deployment
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout deployed source
+        uses: actions/checkout@v4
+
+      - name: Verify live Homepage contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_h1='دکتر سعید قزلباش؛ پزشک زیبایی، پوست و مو در کرمانشاه'
+          expected_person='id="mohammad-saeed-ghezelbash"'
+          expected_testimonial='رضایت زیباجو از خدمات زیبایی دکتر سعید قزلباش'
+
+          for attempt in $(seq 1 45); do
+            url="https://www.ghezelbaash.ir/?deployment=${GITHUB_SHA}-${attempt}"
+            html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "$url" || true)"
+
+            if grep -Fq "$expected_h1" <<< "$html" \
+              && grep -Fq "$expected_person" <<< "$html" \
+              && grep -Fq "$expected_testimonial" <<< "$html"; then
+              printf '%s\n' 'Verified final Homepage contract on the custom domain.'
+              exit 0
+            fi
+
+            sleep 20
+          done
+
+          printf '%s\n' 'Custom domain did not expose the deployed Homepage contract within the verification window.' >&2
+          exit 1
+
+      - name: Record verified deployment commit
+        shell: bash
+        run: git push --force origin "${GITHUB_SHA}:refs/heads/deployment-live"
