@@ -50,7 +50,15 @@ test('fragment focus, browser history and mobile navigation work progressively',
   await expect(page.locator('[href="#aesthetic-services-kermanshah"][aria-current="location"]')).toHaveCount(2);
 
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await page.locator('.home-header__links [href="#content-table"]').click();
+  const desktopLink = page.locator('.home-header__links [href="#content-table"]');
+  if (await desktopLink.isVisible()) {
+    await desktopLink.click();
+  } else {
+    const summary = page.locator('.mobile-menu summary');
+    await summary.click();
+    await expect(summary).toHaveAttribute('aria-expanded', 'true');
+    await page.locator('#mobile-navigation [href="#content-table"]').click();
+  }
   await expect(page).toHaveURL(/#content-table$/u);
   await expect(page.locator('#content-table')).toBeFocused();
   await page.goBack();
