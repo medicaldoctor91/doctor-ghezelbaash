@@ -6,7 +6,7 @@ import PhysicianHero from '../components/home/PhysicianHero.astro';
 import ContentTable from '../components/home/ContentTable.astro';
 import BestDoctorAnswers from '../components/home/BestDoctorAnswers.astro';
 import Services from '../components/home/Services.astro';
-import HomepageGuideV2 from '../components/home/HomepageGuideV2.astro';
+import HomepageGuideV3 from '../components/home/HomepageGuideV3.astro';
 import ClinicInformation from '../components/home/ClinicInformation.astro';
 import KnowledgeGraphSources from '../components/home/KnowledgeGraphSources.astro';
 import ContactSection from '../components/home/ContactSection.astro';
@@ -60,7 +60,7 @@ const articleSections = await Promise.all(h2Matches.map(async (match, index) => 
     <ContentTable />
     <BestDoctorAnswers />
     <Services />
-    <HomepageGuideV2 sections={articleSections} />
+    <HomepageGuideV3 sections={articleSections} />
     <ClinicInformation />
     <KnowledgeGraphSources />
     <ContactSection />
