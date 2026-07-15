@@ -11,7 +11,7 @@ const attr = (tag, name) => tag.match(new RegExp(`(?:^|\\s)${name}="([^"]*)"`, '
 
 const videoTags = [...html.matchAll(/<video\b[^>]*data-deferred-poster[^>]*>/giu)].map((match) => match[0]);
 check(videoTags.length === videos.length, `deferred video tag count ${videoTags.length}/${videos.length}`);
-check(!/<video\b[^>]*poster="\/videos\/thumbnails\//iu.test(html), 'a real video thumbnail remains in an initial poster attribute');
+check(!/<video\b[^>]*\sposter="\/videos\/thumbnails\//iu.test(html), 'a real video thumbnail remains in an initial poster attribute');
 check(layout.includes("querySelectorAll('video[data-deferred-poster][data-poster]')"), 'global deferred poster selector is missing');
 check(layout.includes("rootMargin: '1000px 0px'"), 'poster activation distance is missing');
 check(layout.includes('video.poster = poster'), 'poster activation assignment is missing');
