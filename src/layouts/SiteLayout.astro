@@ -109,6 +109,11 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
           settleTimer = window.setTimeout(activateNearby, 180);
         };
 
+        const scheduleAfterNavigation = () => {
+          scheduleNearbyCheck();
+          window.setTimeout(activateNearby, 320);
+        };
+
         videos.forEach((video) => {
           video.addEventListener('pointerenter', () => activatePoster(video), { once: true, passive: true });
           video.addEventListener('focusin', () => activatePoster(video), { once: true });
@@ -118,6 +123,9 @@ const externalGraphUrl = new URL('knowledge-graph.jsonld', site.url).href;
         window.addEventListener('scroll', scheduleNearbyCheck, { passive: true });
         window.addEventListener('scrollend', activateNearby, { passive: true });
         window.addEventListener('resize', scheduleNearbyCheck, { passive: true });
+        window.addEventListener('hashchange', scheduleAfterNavigation, { passive: true });
+        window.addEventListener('pageshow', scheduleAfterNavigation, { passive: true });
+        window.addEventListener('load', scheduleAfterNavigation, { once: true, passive: true });
 
         if ('ResizeObserver' in window) {
           const resizeObserver = new ResizeObserver(scheduleNearbyCheck);
