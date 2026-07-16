@@ -2,6 +2,8 @@ name: Static entity page
 
 on:
   pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -16,34 +18,57 @@ concurrency:
 
 jobs:
   verify:
+    name: Build and validate production output
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
       - name: Install dependencies
         run: npm ci
-
-      - name: Verify scaffold on pull requests
-        if: github.event_name == 'pull_request'
-        run: npm run build:scaffold
-
-      - name: Enforce production gates on main
-        if: github.event_name != 'pull_request'
+      - name: Build strict production output
         run: npm run build
-
       - name: Upload verified static output
-        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ github.sha }}
-          path: dist
+          path: |
+            dist
+            audit/generated
+          include-hidden-files: true
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
+
+  verify-production:
+    name: Verify Cloudflare production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Wait for Git integration deployment and verify canonical output
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/?deployment=${GITHUB_SHA}-${attempt}" || true)"
+            release="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/release.json?deployment=${GITHUB_SHA}-${attempt}" || true)"
+            graph="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/graph.jsonld?deployment=${GITHUB_SHA}-${attempt}" || true)"
+            if grep -Fq 'صورت شما «خدمت» نمی‌خواهد' <<<"$html" \
+              && grep -Fq 'rel="canonical" href="https://www.ghezelbaash.ir/"' <<<"$html" \
+              && ! grep -Fq 'TODO_VISIBLE_CONTENT' <<<"$html" \
+              && grep -Fq '"contentFrozen": true' <<<"$release" \
+              && grep -Fq '"releaseStatus": "production-final"' <<<"$release" \
+              && grep -Fq '"@id": "https://www.ghezelbaash.ir/#doctor"' <<<"$graph"; then
+              printf '%s\n' 'Cloudflare production exposes the validated final entity page.'
+              exit 0
+            fi
+            sleep 20
+          done
+          printf '%s\n' 'Cloudflare Git integration did not expose the validated main build in the verification window.' >&2
+          exit 1

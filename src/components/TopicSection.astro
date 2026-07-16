@@ -1,21 +1,38 @@
 ---
+import { topicGroups } from '../data/topics';
+
 interface Props {
   id: string;
   title: string;
   contentFile?: string;
   lang?: string;
   dir?: 'rtl' | 'ltr';
+  summary?: string;
 }
 
-const { id, title, contentFile = '09-topic-sections.md', lang, dir } = Astro.props;
+const { id, title, contentFile = '09-topic-sections.md', lang, dir, summary } = Astro.props;
 const titleId = `${id}-title`;
+const group = topicGroups.find((item) => item.id === id);
 ---
 
 <section id={id} class="content-section" aria-labelledby={titleId} lang={lang} dir={dir}>
   <h2 id={titleId}>{title}</h2>
   <div class="content-slot" data-content-file={contentFile} data-content-section={id}>
     <slot>
-      <p>TODO_VISIBLE_CONTENT</p>
+      {
+        group?.terms.length ? (
+          group.terms.map((term) => (
+            <article id={`topic-${term.id}`} class="topic-entry">
+              <h3>{term.name}</h3>
+              <p>{term.description}</p>
+            </article>
+          ))
+        ) : summary ? (
+          <p>{summary}</p>
+        ) : (
+          <p>این بخش، دامنه موضوع و مرز تصمیم را در چارچوب پزشکی زیبایی توضیح می‌دهد.</p>
+        )
+      }
     </slot>
   </div>
 </section>
