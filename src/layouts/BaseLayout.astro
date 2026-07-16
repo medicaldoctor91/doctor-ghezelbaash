@@ -22,7 +22,7 @@ const heroPreload = hero?.webp ?? hero?.fallback ?? hero?.avif;
     <link rel="alternate" type="application/ld+json" href="https://www.ghezelbaash.ir/graph.jsonld" />
     <link rel="describedby" type="application/ld+json" href="https://www.ghezelbaash.ir/graph.jsonld" />
     <link rel="describedby" href="https://www.ghezelbaash.ir/llms.txt" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#0a211a" />
     <meta name="color-scheme" content="light" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content={seo.canonical} />
@@ -45,6 +45,7 @@ const heroPreload = hero?.webp ?? hero?.fallback ?? hero?.avif;
     {assets.font && <link rel="preload" href={assets.font} as="font" type="font/woff2" crossorigin />}
     {heroPreload && <link rel="preload" href={heroPreload} as="image" type="image/webp" fetchpriority="high" />}
     {assets.css && <link rel="stylesheet" href={assets.css} />}
+    <link rel="stylesheet" href="/visual-fixes.css" />
     <script type="application/ld+json" set:html={jsonLd} />
   </head>
   <body>
