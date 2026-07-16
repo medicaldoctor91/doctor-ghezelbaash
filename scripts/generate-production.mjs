@@ -26,7 +26,7 @@ const writeText = (path, value) => { ensure(resolve(path, '..')); writeFileSync(
 const writeJson = (path, value) => writeText(path, `${JSON.stringify(value, null, 2)}\n`);
 const sha256 = (buffer) => createHash('sha256').update(buffer).digest('hex');
 const publicUrlFor = (path) => `/${path.replace(publicDir, '').replace(/^\/+/, '').replaceAll('\\', '/')}`;
-for (const directory of ['css','fonts','images','videos','data']) {
+for (const directory of ['css','js','fonts','images','videos','data']) {
   rmSync(resolve(assetsDir, directory), { recursive: true, force: true });
   ensure(resolve(assetsDir, directory));
 }
@@ -49,6 +49,12 @@ const cssBuffer = Buffer.from(
 const cssPath = resolve(assetsDir, 'css', `main.${sha256(cssBuffer).slice(0, 12)}.css`);
 writeFileSync(cssPath, cssBuffer);
 const cssUrl = publicUrlFor(cssPath);
+const navigationUrl = copyHashed(
+  resolve(root, 'src/scripts/navigation.js'),
+  resolve(assetsDir, 'js'),
+  'navigation',
+  'js',
+);
 
 const imageStem = {
   'doctor-portrait': 'doctor-portrait', 'doctor-profile': 'doctor-portrait',
@@ -142,9 +148,10 @@ const icon512Source = resolve(root, 'Media/existing-derivatives/brand/doctor-ghe
 const icon192 = copyHashed(icon192Source, resolve(assetsDir, 'images'), 'icon-192', 'png');
 const icon512 = copyHashed(icon512Source, resolve(assetsDir, 'images'), 'icon-512', 'png');
 const assets = {
-  version: 3,
+  version: 4,
   css: cssUrl,
   font: fontUrl ?? null,
+  scripts: { ...(navigationUrl ? { navigation: navigationUrl } : {}) },
   icons: { ...(icon192 ? { '192': icon192 } : {}), ...(icon512 ? { '512': icon512 } : {}) },
   images: imageAssets,
   videos: videoAssets,
@@ -199,10 +206,9 @@ writeJson(resolve(publicDir, 'release.json'), {
   htmlSha256: null,
   graphSha256: sha256(readFileSync(resolve(publicDir, 'knowledge-graph.jsonld'))),
   llmsSha256: sha256(readFileSync(resolve(publicDir, 'llms-full.txt'))),
-  mediaPolicy: {
-    publishableVideos: videos.filter((video) => video.available).length,
-    deferredVideos: videos.filter((video) => !video.available).map((video) => video.id),
-    captionsOptionalUntilAccessibilityFinalization: true,
+  media: {
+    publishedVideos: videos.filter((video) => video.available).length,
+    captionedVideos: videos.filter((video) => video.available && existsSync(resolve(root, 'Media', video.captionFile))).length,
   },
 });
 writeText(resolve(publicDir, 'doctor.vcf'), `BEGIN:VCARD\r\nVERSION:4.0\r\nFN:${doctor.name}\r\nN:${doctor.familyName};${doctor.givenName};;;\r\nTITLE:${doctor.jobTitle}\r\nTEL;TYPE=work,voice:${clinic.telephone}\r\nEMAIL:${doctor.email}\r\nURL:https://www.ghezelbaash.ir/\r\nEND:VCARD\r\n`);

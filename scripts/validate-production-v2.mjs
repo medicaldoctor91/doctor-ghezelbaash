@@ -119,14 +119,14 @@ if (mode !== 'inputs') {
     assert(dockTargets.every((target, index) => index === 0 || contactDock.indexOf(dockTargets[index - 1]) < contactDock.indexOf(target)), 'Contact dock order changed.');
     for (const section of sections) assert(html.includes(`id="${section.id}"`), `Section missing: ${section.id}`);
     assert(occurrences(html, /<video(?:\s|>)/giu) === publishable.length, `Expected ${publishable.length} playable videos.`);
-    for (const video of videos) {
+    for (const video of publishable) {
       const block = html.match(new RegExp(`<section[^>]+id="${video.id}"[\\s\\S]*?<\\/section>`, 'u'))?.[0];
       assert(Boolean(block), `Video card missing: ${video.id}`);
-      if (video.available && block) assert(block.includes('controls') && block.includes('preload="none"'), `Video contract failed: ${video.id}`);
-      if (!video.available && block) assert(!block.includes('<video'), `Corrupt video emitted: ${video.id}`);
+      if (block) assert(block.includes('controls') && block.includes('preload="none"'), `Video contract failed: ${video.id}`);
     }
+    for (const video of videos.filter((item) => !item.available)) assert(!html.includes(`id="${video.id}"`), `Unavailable video leaked into visible HTML: ${video.id}`);
     const manifest = JSON.parse(read(resolve(dist, 'asset-manifest.json')));
-    assert(Boolean(manifest.css && manifest.font), 'CSS/font manifest entries missing.');
+    assert(Boolean(manifest.css && manifest.font && manifest.scripts?.navigation), 'CSS/font/navigation manifest entries missing.');
     const manifestAssetUrls = new Set();
     const collectAssetUrls = (value) => {
       if (typeof value === 'string' && value.startsWith('/assets/')) manifestAssetUrls.add(value);
@@ -136,7 +136,9 @@ if (mode !== 'inputs') {
     collectAssetUrls(manifest);
     const activeCss = read(resolve(dist, manifest.css.replace(/^\//u, '')));
     assert(/\.floating-actions\s*\{[^}]*position:\s*fixed;/su.test(activeCss), 'Persistent contact dock lost fixed positioning.');
-    for (const directory of ['css', 'fonts', 'images', 'videos']) {
+    assert(!/content-visibility:\s*auto/iu.test(activeCss), 'Layout-unstable content-visibility optimization returned.');
+    assert(html.includes(`src="${manifest.scripts.navigation}"`), 'Progressive navigation script is not loaded.');
+    for (const directory of ['css', 'js', 'fonts', 'images', 'videos']) {
       for (const file of readdirSync(resolve(dist, 'assets', directory))) {
         assert(manifestAssetUrls.has(`/assets/${directory}/${file}`), `Orphaned generated asset: /assets/${directory}/${file}`);
       }
@@ -250,14 +252,37 @@ if (mode !== 'inputs') {
     const headers = read(resolve(dist, '_headers'));
     for (const token of ['X-Content-Type-Options: nosniff','Referrer-Policy:','Permissions-Policy:','X-Frame-Options: DENY','Content-Security-Policy:']) assert(headers.includes(token), `Header missing: ${token}`);
     assert(!headers.includes('__JSON_LD_HASH__'), 'CSP hash placeholder remains.');
-    const redirects = read(resolve(dist, '_redirects')).trim().split(/\r?\n/u);
-    assert(JSON.stringify(redirects) === JSON.stringify(['/index.html / 301', '/index / 301', '/graph.jsonld /knowledge-graph.jsonld 301']), '_redirects contract failed.');
+    assert(headers.includes('https://static.cloudflareinsights.com') && headers.includes('https://cloudflareinsights.com'), 'Cloudflare Web Analytics is blocked by CSP.');
+    const redirects = read(resolve(dist, '_redirects')).trim().split(/\r?\n/u).filter((line) => line.trim() && !line.trim().startsWith('#'));
+    const requiredRedirects = [
+      '/index.html / 301',
+      '/index / 301',
+      '/graph.jsonld /knowledge-graph.jsonld 301',
+      '/videos/ /#video-library 301',
+      '/botox-kermanshah/ /#injectable-procedures 301',
+      '/filler-kermanshah/ /#injectable-procedures 301',
+      '/thread-lift-kermanshah/ /#facial-contouring 301',
+      '/aesthetic-concerns-kermanshah/ /#aesthetic-medicine-map 301',
+      '/double-chin-liposuction-kermanshah/ /#facial-contouring 301',
+      '/dr-saeed-ghezelbash-aesthetic-clinic/ /#clinic-entity 301',
+      '/videos/aesthetic-jalupro-vs-profhilo-skin-boosters/ /#educational-video-skin-boosters 301',
+      '/videos/jalupro-vs-profhilo-skin-boosters/ /#educational-video-skin-boosters 301',
+      '/videos/home-workshop-thread-lift-training/ /#professional-training-thread-lift 301',
+      '/videos/home-workshop-thread-lift-advanced/ /#professional-education-thread-lift 301',
+      '/videos/cat-eye-thread-lift-before-after/ /#visual-example-cat-eye-thread-lift 301',
+      '/videos/filler-under-eye-transformation/ /#visual-example-under-eye-filler-transformation 301',
+      '/videos/nose-filler-before-after/ /#visual-example-nose-filler 301',
+      '/videos/nonsurgical-rhinoplasty-boundary/ /#visual-example-nonsurgical-rhinoplasty 301',
+    ];
+    for (const redirect of requiredRedirects) assert(redirects.includes(redirect), `Required redirect missing: ${redirect}`);
+    assert(!redirects.some((line) => /^\/\*\s/u.test(line)), 'Catch-all redirect would break real 404 responses.');
     const notFound = read(resolve(dist, '404.html'));
-    assert(notFound.includes('noindex') && !/rel="canonical"/iu.test(notFound), '404 contract failed.');
+    assert(notFound.includes('noindex,follow') && !/rel="canonical"/iu.test(notFound), '404 robots/canonical contract failed.');
+    assert(/<html[^>]+lang="fa-IR"[^>]+dir="rtl"/iu.test(notFound) && notFound.includes('href="/"'), '404 language or recovery navigation failed.');
     const release = JSON.parse(read(resolve(dist, 'release.json')));
     assert(release.contentFrozen === releaseDefinition.contentFrozen && release.releaseStatus === releaseDefinition.releaseStatus, 'Release status drifted from the source definition.');
     for (const [field, file] of [['htmlSha256','index.html'],['graphSha256','knowledge-graph.jsonld'],['llmsSha256','llms-full.txt']]) assert(release[field] === sha(readFileSync(resolve(dist, file))), `Digest mismatch: ${field}`);
-    assert(release.mediaPolicy?.publishableVideos === publishable.length, 'Release media policy mismatch.');
+    assert(release.media?.publishedVideos === publishable.length, 'Release media summary mismatch.');
     for (const dataset of datasets) assert(JSON.stringify(graph).includes(dataset.url), `Dataset absent from canonical graph: ${dataset.url}`);
     assert(!html.includes('id="datasets"'), 'Machine dataset section must not be user-visible.');
   }

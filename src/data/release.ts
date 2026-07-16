@@ -1,6 +1,6 @@
 export const release = {
   site: 'https://www.ghezelbaash.ir/',
-  version: '1.0.1',
+  version: '1.1.0',
   publishedAt: '2026-07-16',
   dateModified: '2026-07-16',
   buildTool: 'Astro',
@@ -8,5 +8,5 @@ export const release = {
   output: 'static',
   contentFrozen: false,
   assetManifest: 'https://www.ghezelbaash.ir/asset-manifest.json',
-  releaseStatus: 'technical-foundation',
+  releaseStatus: 'production',
 } as const;

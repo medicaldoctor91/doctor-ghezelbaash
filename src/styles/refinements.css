@@ -5,6 +5,7 @@
   --ink-soft: #394d45;
   --ink-faint: #5f716a;
   --gold: #9b7133;
+  --gold-text: #865c26;
   font-family: var(--font-sans);
   font-kerning: normal;
   font-feature-settings: "kern" 1, "calt" 1, "rlig" 1;
@@ -149,8 +150,33 @@ a {
   text-decoration-skip-ink: auto;
 }
 
-[id] {
-  scroll-margin-block-start: 9rem;
+.section-kicker,
+.rating-stars,
+.trust-strip__icon,
+.evidence-stamp span,
+.faq-item summary > span {
+  color: var(--gold-text);
+}
+
+.topics-zone .section-kicker,
+.zone-heading > span,
+.contact-stage .section-kicker {
+  color: var(--gold-light);
+}
+
+.primary-nav a[aria-current="location"]::after {
+  inset-inline: 0;
+  width: 100%;
+}
+
+.primary-nav a[aria-current="location"],
+.quick-nav a[aria-current="location"] {
+  color: var(--forest-800);
+}
+
+.quick-nav a[aria-current="location"] {
+  border-color: rgba(24, 84, 66, 0.45);
+  background: var(--forest-50);
 }
 
 .topic-entry,
@@ -158,15 +184,6 @@ a {
 .comparison-card,
 .faq-item {
   overflow-wrap: anywhere;
-}
-
-@supports (content-visibility: auto) {
-  .topic-entry,
-  .video-card,
-  .comparison-card {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 22rem;
-  }
 }
 
 @media (hover: none) {
@@ -190,7 +207,7 @@ a {
   }
 
   .header-notice {
-    font-size: 0.78rem;
+    display: none;
   }
 
   .brand__copy strong {
@@ -239,7 +256,21 @@ a {
   }
 
   .floating-actions a {
-    font-size: 0.68rem;
+    font-size: 0.72rem;
+  }
+
+  .floating-actions__copy strong {
+    font-size: 0.72rem;
+    line-height: 1.35;
+    white-space: normal;
+  }
+
+  .floating-actions__copy small {
+    display: none;
+  }
+
+  .floating-actions__top {
+    font-size: 0.64rem;
   }
 
   .content-slot p,

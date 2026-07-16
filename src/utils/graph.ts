@@ -14,6 +14,7 @@ import { absoluteUrl, seo } from './seo.ts';
 export type AssetManifest = {
   css: string | null;
   font: string | null;
+  scripts?: { navigation?: string };
   icons?: Record<string, string>;
   images: Record<string, {
     avif?: string;

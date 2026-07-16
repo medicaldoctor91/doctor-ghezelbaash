@@ -5,7 +5,7 @@ import { videos } from '../data/videos';
 import type { AssetManifest } from '../utils/graph';
 interface Props { assets: AssetManifest; }
 const { assets } = Astro.props;
-const videoCards = videos.map((video) => {
+const videoCards = videos.filter((video) => video.available).map((video) => {
   const asset = assets.videos[video.id];
   const transcriptPath = resolve(process.cwd(), 'Media', video.transcriptFile);
   const hasTranscript = existsSync(transcriptPath);
@@ -23,16 +23,14 @@ const videoCards = videos.map((video) => {
   </header>
   <div class="video-grid">
     {videoCards.map(({ video, asset, hasTranscript, textAlternative }, index) => (
-      <section id={video.id} class:list={['video-card', !video.available && 'video-card--unavailable']} aria-labelledby={`${video.id}-title`}>
+      <section id={video.id} class="video-card" aria-labelledby={`${video.id}-title`}>
         <div class="video-card__media">
-          {video.available && asset?.mp4 && asset.poster ? (
+          {asset?.mp4 && asset.poster && (
             <video controls playsinline preload="none" poster={asset.poster} width={video.width} height={video.height}>
               {asset.webm && <source src={asset.webm} type="video/webm" />}
               <source src={asset.mp4} type="video/mp4" />
               {asset.captions && <track src={asset.captions} kind="captions" srclang="fa" label="فارسی" default />}
             </video>
-          ) : (
-            <div class="media-blocker"><span aria-hidden="true">◌</span><strong>این ویدئو منتشر نشده است</strong><small>خلاصهٔ آموزشیِ تأییدشده در ادامه آمده است.</small></div>
           )}
           <span class="video-card__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
         </div>

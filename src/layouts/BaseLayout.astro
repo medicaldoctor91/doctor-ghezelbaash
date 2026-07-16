@@ -55,6 +55,7 @@ const heroPreload = hero?.avif
     {heroPreload && <link rel="preload" href={heroPreload.href} as="image" type={heroPreload.type} imagesrcset={heroPreload.srcset} imagesizes={heroSizes} fetchpriority="high" />}
     {assets.css && <link rel="stylesheet" href={assets.css} />}
     <script is:inline type="application/ld+json" set:html={jsonLd} />
+    {assets.scripts?.navigation && <script is:inline src={assets.scripts.navigation} defer></script>}
   </head>
   <body id="top">
     <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>

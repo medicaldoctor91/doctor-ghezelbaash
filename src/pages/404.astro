@@ -1,0 +1,51 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { clinic } from '../data/clinic';
+import type { AssetManifest } from '../utils/graph';
+
+const manifestPath = resolve(process.cwd(), 'public/asset-manifest.json');
+const assets: AssetManifest = existsSync(manifestPath)
+  ? JSON.parse(readFileSync(manifestPath, 'utf8'))
+  : { css: null, font: null, images: {}, videos: {} };
+---
+
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,follow" />
+    <meta name="theme-color" content="#0a211a" />
+    <title>صفحه پیدا نشد | دکتر سعید قزلباش</title>
+    <meta name="description" content="این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد؛ از مسیرهای این صفحه به بخش موردنظر بازگردید." />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {assets.css && <link rel="stylesheet" href={assets.css} />}
+  </head>
+  <body class="not-found-page">
+    <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
+    <main id="main-content" class="not-found" aria-labelledby="not-found-title">
+      <a class="not-found__brand" href="/" aria-label="صفحه اصلی دکتر سعید قزلباش">
+        <span class="brand__seal" aria-hidden="true">ق</span>
+        <span><strong>دکتر سعید قزلباش</strong><small>پزشک زیبایی · کرمانشاه</small></span>
+      </a>
+      <section class="not-found__card">
+        <span class="not-found__code" aria-hidden="true">۴۰۴</span>
+        <p class="section-kicker">نشانی نادرست یا جابه‌جا‌شده</p>
+        <h1 id="not-found-title">این صفحه پیدا نشد</h1>
+        <p>نشانی واردشده در این وب‌سایت وجود ندارد. می‌توانید به صفحه اصلی یا مستقیماً به یکی از بخش‌های اصلی بروید.</p>
+        <div class="not-found__actions">
+          <a class="button button--primary" href="/">بازگشت به صفحه اصلی</a>
+          <a class="button button--outline" href={`tel:${clinic.telephone}`}>تماس با کلینیک</a>
+        </div>
+        <nav class="not-found__links" aria-label="مسیرهای پیشنهادی">
+          <a href="/#doctor-entity">معرفی پزشک</a>
+          <a href="/#aesthetic-medicine-map">راهنمای روش‌ها</a>
+          <a href="/#faq">پرسش‌های رایج</a>
+          <a href="/#contact">اطلاعات مراجعه</a>
+          <a href={clinic.mapsUrl} rel="noopener noreferrer external">مسیریابی کلینیک</a>
+        </nav>
+      </section>
+    </main>
+  </body>
+</html>

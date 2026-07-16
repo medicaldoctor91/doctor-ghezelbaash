@@ -36,6 +36,7 @@
   --radius-xl: 3rem;
   --max: 84rem;
   --reading: 72ch;
+  --sticky-offset: 8.5rem;
   font-family: Vazirmatn, "Noto Sans Arabic", Tahoma, Arial, sans-serif;
   font-synthesis: none;
   line-height: 1.9;
@@ -49,7 +50,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 10rem;
+  scroll-padding-block-start: var(--sticky-offset);
 }
 
 body {
@@ -2006,8 +2007,106 @@ tbody tr:last-child td {
   gap: 1rem;
   padding-block: 1.2rem;
   border-block-start: 1px solid var(--line-light);
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.7rem;
+}
+
+/* Branded recovery page */
+.not-found-page {
+  min-height: 100svh;
+  padding: 0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(181, 140, 77, 0.16), transparent 34rem),
+    var(--forest-950);
+}
+
+.not-found {
+  display: grid;
+  width: min(calc(100% - 2rem), 54rem);
+  min-height: 100svh;
+  align-content: center;
+  gap: 1.5rem;
+  margin-inline: auto;
+  padding-block: 3rem;
+}
+
+.not-found__brand {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--white);
+  text-decoration: none;
+}
+
+.not-found__brand > span:last-child {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.45;
+}
+
+.not-found__brand small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.not-found__card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  border: 1px solid rgba(225, 194, 140, 0.24);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  box-shadow: var(--shadow-lg);
+}
+
+.not-found__code {
+  position: absolute;
+  inset-block-start: -2rem;
+  inset-inline-end: 1rem;
+  color: rgba(16, 55, 44, 0.055);
+  font-size: clamp(8rem, 26vw, 15rem);
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.not-found__card h1 {
+  position: relative;
+  max-width: 12ch;
+  margin-block: 0.4rem 1rem;
+  font-size: clamp(2.2rem, 8vw, 4.8rem);
+  line-height: 1.18;
+}
+
+.not-found__card > p:not(.section-kicker) {
+  position: relative;
+  max-width: 54ch;
+  color: var(--ink-soft);
+}
+
+.not-found__actions,
+.not-found__links {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-block-start: 1.5rem;
+}
+
+.not-found__links {
+  padding-block-start: 1.2rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.not-found__links a {
+  min-height: 2.75rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 999px;
+  color: var(--forest-800);
+  background: var(--forest-50);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 /* Persistent contact dock */
@@ -2167,8 +2266,8 @@ tbody tr:last-child td {
 }
 
 @media (max-width: 56rem) {
-  html {
-    scroll-padding-top: 8rem;
+  :root {
+    --sticky-offset: 7rem;
   }
 
   .header-notice__inner span:not(.status-dot) {
