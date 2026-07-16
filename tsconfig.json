@@ -1,12 +1,14 @@
 {
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["src/*"]
-    },
-    "resolveJsonModule": true
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true
   },
-  "include": [".astro/types.d.ts", "**/*"],
+  "include": [".astro/types.d.ts", "src/**/*", "scripts/**/*"],
   "exclude": ["dist"]
 }

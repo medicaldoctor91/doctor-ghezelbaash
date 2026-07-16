@@ -1,79 +1,124 @@
 ---
-import { createMarkdownProcessor } from '@astrojs/markdown-remark';
-import SiteLayout from '../layouts/SiteLayout.astro';
-import HomeHeader from '../components/home/HomeHeader.astro';
-import PhysicianHero from '../components/home/PhysicianHero.astro';
-import ContentTable from '../components/home/ContentTable.astro';
-import BestDoctorAnswers from '../components/home/BestDoctorAnswers.astro';
-import Services from '../components/home/Services.astro';
-import HomepageGuideV2 from '../components/home/HomepageGuideV2.astro';
-import ClinicInformation from '../components/home/ClinicInformation.astro';
-import KnowledgeGraphSources from '../components/home/KnowledgeGraphSources.astro';
-import ContactSection from '../components/home/ContactSection.astro';
-import HomeFooter from '../components/home/HomeFooter.astro';
-import { getHeadings, rawContent } from '../content/landing.md';
-import { stabilizeHeadings } from '../domain/anchor-utils';
-import { buildGooglePageGraph } from '../compilers/google-page-graph';
-import { applyHomepageGraphContract } from '../compilers/homepage-graph-contract';
-import { completeHomepageGraphContract } from '../compilers/homepage-graph-completeness';
-import { applyHomepageAuditFixes } from '../compilers/homepage-graph-audit-fixes';
-import { synchronizeHomepageGraph } from '../compilers/homepage-graph-synchronization';
-import { applyHomepageMissionGraph } from '../compilers/homepage-mission-graph';
-import {
-  rehypeAccessibleTables,
-  rehypeExternalLinks,
-  rehypeHeadingAnchors,
-} from '../lib/markdown-plugins.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import ClinicCopy from '../content/visible/02-clinic-profile.md';
+import ContactCopy from '../content/visible/13-contact.md';
+import CtaCopy from '../content/visible/14-visible-cta.md';
+import DatasetCopy from '../content/visible/17-datasets-section.md';
+import DecisionCopy from '../content/visible/07-decision-map.md';
+import DoctorCopy from '../content/visible/01-doctor-profile.md';
+import EntityCopy from '../content/visible/03-entity-relationship.md';
+import EvidenceCopy from '../content/visible/05-evidence-summary.md';
+import FAQCopy from '../content/visible/11-faq.md';
+import FinalCopy from '../content/visible/16-final-visible-copy.md';
+import HeroCopy from '../content/visible/04-hero.md';
+import ImageManifestCopy from '../content/visible/15-images-manifest.md';
+import ProjectIdentityCopy from '../content/visible/00-project-identity.md';
+import ReferencesCopy from '../content/visible/12-references.md';
+import SelectionCopy from '../content/visible/06-selection-criteria.md';
+import TablesCopy from '../content/visible/10-comparison-tables.md';
+import TopicMatrixCopy from '../content/visible/08-topic-matrix.md';
+import VideoCopy from '../content/visible/18-video-content.md';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ClinicProfile from '../components/ClinicProfile.astro';
+import ComparisonTable from '../components/ComparisonTable.astro';
+import DatasetSection from '../components/DatasetSection.astro';
+import DoctorProfile from '../components/DoctorProfile.astro';
+import EntityRelationship from '../components/EntityRelationship.astro';
+import EvidenceSummary from '../components/EvidenceSummary.astro';
+import FAQ from '../components/FAQ.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import References from '../components/References.astro';
+import TopicSection from '../components/TopicSection.astro';
+import VideoSection from '../components/VideoSection.astro';
+import { buildCanonicalGraph, type AssetManifest } from '../utils/graph';
 
-const raw = rawContent();
-const headings = stabilizeHeadings(getHeadings());
-const completePageGraph = applyHomepageMissionGraph(
-  synchronizeHomepageGraph(
-    applyHomepageAuditFixes(
-      completeHomepageGraphContract(
-        applyHomepageGraphContract(buildGooglePageGraph(headings, raw)),
-      ),
-    ),
-  ),
-);
-
-const h2Matches = [...raw.matchAll(/^##\s+(.+)$/gm)];
-const h2Headings = headings.filter((heading) => heading.depth === 2);
-const processor = await createMarkdownProcessor({
-  gfm: true,
-  smartypants: false,
-  syntaxHighlight: false,
-  rehypePlugins: [rehypeExternalLinks, rehypeHeadingAnchors, rehypeAccessibleTables],
-});
-
-const articleSections = await Promise.all(h2Matches.map(async (match, index) => {
-  const start = (match.index ?? 0) + match[0].length;
-  const end = h2Matches[index + 1]?.index ?? raw.length;
-  const markdown = raw.slice(start, end).trim();
-  const heading = h2Headings[index];
-  return {
-    id: heading?.slug ?? `legacy-article-${index + 1}`,
-    title: match[1].trim(),
-    html: markdown ? (await processor.render(markdown)).code : '',
-  };
-}));
+const emptyAssets: AssetManifest = { css: null, font: null, images: {}, videos: {} };
+const manifestPath = resolve(process.cwd(), 'public/asset-manifest.json');
+const assets: AssetManifest = existsSync(manifestPath)
+  ? JSON.parse(readFileSync(manifestPath, 'utf8'))
+  : emptyAssets;
+const graph = buildCanonicalGraph(assets);
 ---
 
-<SiteLayout graph={completePageGraph} ogType="website">
-  <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
-  <div id="top"></div>
-  <span id="website" class="anchor-alias" aria-hidden="true"></span>
-  <span id="webpage" class="anchor-alias" aria-hidden="true"></span>
-  <HomeHeader />
+<BaseLayout {graph} {assets}>
+  <Header />
   <main id="main-content">
-    <PhysicianHero />
-    <ContentTable />
-    <BestDoctorAnswers />
-    <Services />
-    <HomepageGuideV2 sections={articleSections} />
-    <ClinicInformation />
-    <KnowledgeGraphSources />
-    <ContactSection />
+    <Hero {assets}>
+      <ProjectIdentityCopy />
+      <HeroCopy />
+    </Hero>
+
+    <DoctorProfile><DoctorCopy /></DoctorProfile>
+
+    <TopicSection id="doctor-video" title="ویدئوی معرفی پزشک" contentFile="18-video-content.md" />
+
+    <ClinicProfile><ClinicCopy /></ClinicProfile>
+
+    <TopicSection id="clinic-video" title="ویدئوی معرفی کلینیک" contentFile="18-video-content.md" />
+
+    <EntityRelationship><EntityCopy /></EntityRelationship>
+
+    <EvidenceSummary><EvidenceCopy /></EvidenceSummary>
+
+    <TopicSection
+      id="aesthetic-medicine-map"
+      title="نقشه پزشکی زیبایی"
+      contentFile="08-topic-matrix.md"
+    >
+      <TopicMatrixCopy />
+      <ImageManifestCopy />
+    </TopicSection>
+
+    <TopicSection
+      id="best-doctor-selection-criteria"
+      title="معیارهای انتخاب پزشک"
+      contentFile="06-selection-criteria.md"
+    >
+      <SelectionCopy />
+    </TopicSection>
+
+    <TopicSection id="decision-map" title="نقشه تصمیم" contentFile="07-decision-map.md">
+      <DecisionCopy />
+    </TopicSection>
+
+    <TopicSection id="injectable-procedures" title="روش‌های تزریقی" />
+    <TopicSection id="device-based-procedures" title="روش‌های مبتنی بر دستگاه" />
+    <TopicSection id="skin-rejuvenation" title="جوان‌سازی پوست" />
+    <TopicSection id="hair-aesthetics" title="زیبایی و موی سر" />
+    <TopicSection id="facial-contouring" title="کانتورینگ صورت" />
+    <TopicSection id="lip-aesthetics" title="زیبایی لب" />
+    <TopicSection id="jawline-and-chin" title="زاویه فک و چانه" />
+    <TopicSection id="eye-area" title="ناحیه اطراف چشم" />
+    <TopicSection id="nose-aesthetics" title="زیبایی بینی" />
+    <TopicSection id="body-aesthetics" title="زیبایی بدن" />
+    <TopicSection id="surgical-aesthetics-reference" title="مرجع روش‌های جراحی زیبایی" />
+
+    <ComparisonTable><TablesCopy /></ComparisonTable>
+
+    <VideoSection {assets}><VideoCopy /></VideoSection>
+
+    <TopicSection id="safety-limitations" title="ایمنی و محدودیت‌ها" />
+    <TopicSection id="local-kermanshah" title="کرمانشاه" contentFile="02-clinic-profile.md" />
+    <TopicSection
+      id="national-reference"
+      title="مرجع ملی"
+      contentFile="16-final-visible-copy.md"
+    >
+      <FinalCopy />
+    </TopicSection>
+
+    <FAQ><FAQCopy /></FAQ>
+    <References><ReferencesCopy /></References>
+
+    <TopicSection id="contact" title="تماس و مسیر" contentFile="13-contact.md">
+      <ContactCopy />
+      <CtaCopy />
+    </TopicSection>
+
+    <DatasetSection><DatasetCopy /></DatasetSection>
   </main>
-  <HomeFooter />
-</SiteLayout>
+  <Footer />
+</BaseLayout>

@@ -1,0 +1,25 @@
+---
+import { comparisons } from '../data/comparisons';
+---
+
+<section id="comparison-hub" class="content-section" aria-labelledby="comparison-hub-title">
+  <h2 id="comparison-hub-title">مقایسه روش‌ها</h2>
+  <div class="content-slot" data-content-file="10-comparison-tables.md"><slot /></div>
+  {
+    comparisons.map((comparison) => (
+      <div class="table-scroll">
+        <table id={comparison.id}>
+          <caption>{comparison.caption}</caption>
+          <thead>
+            <tr>{comparison.columns.map((column) => <th scope="col">{column}</th>)}</tr>
+          </thead>
+          <tbody>
+            {comparison.rows.map((row) => (
+              <tr>{row.map((cell, index) => (index === 0 ? <th scope="row">{cell}</th> : <td>{cell}</td>))}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ))
+  }
+</section>

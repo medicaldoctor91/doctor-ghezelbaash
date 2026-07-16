@@ -1,4 +1,0 @@
-Contact: https://www.instagram.com/doctor.ghezelbaash/
-Canonical: https://www.ghezelbaash.ir/.well-known/security.txt
-Expires: 2027-07-13T00:00:00.000Z
-Preferred-Languages: fa, en

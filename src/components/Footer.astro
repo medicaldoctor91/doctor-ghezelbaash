@@ -1,0 +1,18 @@
+---
+import { clinic } from '../data/clinic';
+---
+
+<footer id="site-footer" class="site-footer">
+  <p><strong>دکتر سعید قزلباش</strong> — {clinic.name}</p>
+  <address>{clinic.address.addressLocality}، {clinic.address.streetAddress}</address>
+  <p>
+    <a href={`tel:${clinic.telephone}`}>{clinic.telephoneDisplay}</a>
+    <span aria-hidden="true"> · </span>
+    <a href={clinic.mapsUrl} rel="noopener noreferrer">Google Maps</a>
+    <span aria-hidden="true"> · </span>
+    <a href="/doctor.vcf">کارت تماس پزشک</a>
+    <span aria-hidden="true"> · </span>
+    <a href="/clinic.vcf">کارت تماس کلینیک</a>
+  </p>
+  <p><time datetime="2026-07-16">انتشار: ۲۰۲۶-۰۷-۱۶</time></p>
+</footer>

@@ -1,0 +1,16 @@
+---
+import { faqItems } from '../data/faq';
+---
+
+<section id="faq" class="content-section" aria-labelledby="faq-title">
+  <h2 id="faq-title">پرسش‌های پرتکرار</h2>
+  <div class="content-slot" data-content-file="11-faq.md"><slot /></div>
+  {
+    faqItems.map((item) => (
+      <details id={item.id}>
+        <summary>{item.question}</summary>
+        <p>{item.answer}</p>
+      </details>
+    ))
+  }
+</section>
