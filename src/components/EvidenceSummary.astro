@@ -1,14 +1,26 @@
+---
+import type { AssetManifest } from '../utils/graph';
+import ResponsiveImage from './ResponsiveImage.astro';
+
+interface Props { assets: AssetManifest; }
+const { assets } = Astro.props;
+---
+
 <section id="evidence-summary" class="content-section evidence-section" aria-labelledby="evidence-summary-title">
   <header class="section-heading section-heading--compact">
     <span class="section-heading__line" aria-hidden="true"></span>
     <div><span class="section-kicker">هویت قابل پیگیری، نه ادعای بی‌سند</span><h2 id="evidence-summary-title">شواهدی که می‌توانید خودتان بررسی کنید</h2></div>
   </header>
   <div class="evidence-section__body">
-    <div class="content-slot" data-content-file="05-evidence-summary.md"><slot /></div>
+    <div class="content-slot"><slot /></div>
     <aside class="evidence-stamp" aria-label="شواهد هویتی و علمی">
       <span>Verified</span>
       <strong>هویت پزشکی<br />قابل تطبیق</strong>
       <small>Medical Council · ORCID · NCBI · Wikidata</small>
     </aside>
+  </div>
+  <div class="evidence-media" aria-label="تصاویر محیط حرفه‌ای و ارزیابی بالینی">
+    <ResponsiveImage id="doctor-exam" asset={assets.images['doctor-exam']} />
+    <ResponsiveImage id="doctor-with-staff" asset={assets.images['doctor-with-staff']} />
   </div>
 </section>

@@ -20,6 +20,7 @@ import { buildSitemap } from '../src/utils/sitemap.ts';
 const root = process.cwd();
 const publicDir = resolve(root, 'public');
 const assetsDir = resolve(publicDir, 'assets');
+rmSync(resolve(publicDir, 'graph.jsonld'), { force: true });
 const ensure = (path) => mkdirSync(path, { recursive: true });
 const writeText = (path, value) => { ensure(resolve(path, '..')); writeFileSync(path, value, 'utf8'); };
 const writeJson = (path, value) => writeText(path, `${JSON.stringify(value, null, 2)}\n`);
@@ -39,17 +40,22 @@ const copyHashed = (source, outputDirectory, logicalName, forcedExtension) => {
 };
 
 const fontUrl = copyHashed(resolve(root, 'Media/persian.woff2'), resolve(assetsDir, 'fonts'), 'persian', 'woff2');
-const cssBuffer = Buffer.from(readFileSync(resolve(root, 'src/styles/main.css'), 'utf8').replace('__PERSIAN_FONT_URL__', fontUrl ?? ''));
+const cssBuffer = Buffer.from(
+  [
+    readFileSync(resolve(root, 'src/styles/main.css'), 'utf8'),
+    readFileSync(resolve(root, 'src/styles/refinements.css'), 'utf8'),
+  ].join('\n').replace('__PERSIAN_FONT_URL__', fontUrl ?? ''),
+);
 const cssPath = resolve(assetsDir, 'css', `main.${sha256(cssBuffer).slice(0, 12)}.css`);
 writeFileSync(cssPath, cssBuffer);
 const cssUrl = publicUrlFor(cssPath);
 
 const imageStem = {
-  'doctor-portrait': 'doctor-portrait-1200', 'doctor-profile': 'doctor-portrait-1200',
-  'doctor-exam': 'doctor-exam-1200', 'doctor-with-staff': 'doctor-with-staff-1200',
-  'clinic-waiting-room': 'clinic-waiting-room-768', 'clinic-interior': 'clinic-interior-768',
-  'clinic-interior-2': 'clinic-interior-2-768', 'clinic-corridor': 'clinic-corridor-768',
-  'clinic-environment-3': 'clinic-environment-3-768',
+  'doctor-portrait': 'doctor-portrait', 'doctor-profile': 'doctor-portrait',
+  'doctor-exam': 'doctor-exam', 'doctor-with-staff': 'doctor-with-staff',
+  'clinic-waiting-room': 'clinic-waiting-room', 'clinic-interior': 'clinic-interior',
+  'clinic-interior-2': 'clinic-interior-2', 'clinic-corridor': 'clinic-corridor',
+  'clinic-environment-3': 'clinic-environment-3',
 };
 const imageAlt = {
   'doctor-portrait': 'پرتره دکتر سعید قزلباش',
@@ -63,24 +69,53 @@ const imageAlt = {
   'clinic-environment-3': 'محیط کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه',
 };
 const imageAssets = {};
+const fallbackDirectory = resolve(root, 'Media/existing-derivatives/images/responsive');
 for (const image of images) {
+  if (image.id === 'doctor-profile' && imageAssets['doctor-portrait']) {
+    imageAssets[image.id] = { ...imageAssets['doctor-portrait'], alt: imageAlt[image.id] };
+    continue;
+  }
   const source = resolve(root, 'Media', image.sourceFile);
   const stem = imageStem[image.id];
-  const fallbackDirectory = resolve(root, 'Media/existing-derivatives/images/responsive');
-  const pick = (extension) => {
+  const nominalWidth = image.scaffoldWidth ?? 1200;
+  const pickSingleton = (extension) => {
     const optimized = resolve(root, 'Media/optimized/images', `${image.id}.${extension}`);
     if (existsSync(optimized)) return optimized;
     if (existsSync(source) && extname(source).slice(1).toLowerCase() === extension) return source;
-    const fallback = stem ? resolve(fallbackDirectory, `${stem}.${extension}`) : undefined;
-    return fallback && existsSync(fallback) ? fallback : undefined;
+    return undefined;
   };
-  const avifSource = pick('avif');
-  const webpSource = pick('webp');
-  const jpgSource = pick('jpg') ?? (existsSync(source) ? source : undefined);
-  const avif = copyHashed(avifSource, resolve(assetsDir, 'images'), image.id, 'avif');
-  const webp = copyHashed(webpSource, resolve(assetsDir, 'images'), image.id, 'webp');
-  const fallback = copyHashed(jpgSource, resolve(assetsDir, 'images'), image.id, jpgSource ? extname(jpgSource).slice(1).toLowerCase() : 'jpg');
-  if (avif && webp && fallback) imageAssets[image.id] = { avif, webp, fallback, width: image.scaffoldWidth ?? 1200, height: image.scaffoldHeight ?? 800, alt: imageAlt[image.id] };
+  const copyVariantSet = (extension) => {
+    const pattern = new RegExp(`^${stem}-(\\d+)\\.${extension}$`, 'u');
+    const derivativeSources = readdirSync(fallbackDirectory)
+      .map((name) => ({ name, match: name.match(pattern) }))
+      .filter((entry) => entry.match)
+      .map((entry) => ({ source: resolve(fallbackDirectory, entry.name), width: Number(entry.match[1]) }))
+      .sort((a, b) => a.width - b.width);
+    const singleton = pickSingleton(extension) ?? (extension === 'jpg' && existsSync(source) ? source : undefined);
+    const sources = derivativeSources.length > 0 ? derivativeSources : singleton ? [{ source: singleton, width: nominalWidth }] : [];
+    return sources.map((variant) => ({
+      src: copyHashed(variant.source, resolve(assetsDir, 'images'), `${image.id}-${variant.width}`, extension),
+      width: variant.width,
+    })).filter((variant) => variant.src);
+  };
+  const avifSrcset = copyVariantSet('avif');
+  const webpSrcset = copyVariantSet('webp');
+  const fallbackSrcset = copyVariantSet('jpg');
+  const primary = (variants) => variants.find((variant) => variant.width === nominalWidth)?.src ?? variants.at(-1)?.src;
+  const avif = primary(avifSrcset);
+  const webp = primary(webpSrcset);
+  const fallback = primary(fallbackSrcset);
+  if (avif && webp && fallback) imageAssets[image.id] = {
+    avif,
+    webp,
+    fallback,
+    avifSrcset,
+    webpSrcset,
+    fallbackSrcset,
+    width: nominalWidth,
+    height: image.scaffoldHeight ?? 800,
+    alt: imageAlt[image.id],
+  };
 }
 
 const integrity = JSON.parse(readFileSync(resolve(root, 'Media/media-integrity.json'), 'utf8'));
@@ -106,29 +141,49 @@ const icon192Source = resolve(root, 'Media/existing-derivatives/brand/doctor-ghe
 const icon512Source = resolve(root, 'Media/existing-derivatives/brand/doctor-ghezelbaash-logo-512.png');
 const icon192 = copyHashed(icon192Source, resolve(assetsDir, 'images'), 'icon-192', 'png');
 const icon512 = copyHashed(icon512Source, resolve(assetsDir, 'images'), 'icon-512', 'png');
-const assets = { version: 2, css: cssUrl, font: fontUrl ?? null, images: imageAssets, videos: videoAssets };
+const assets = {
+  version: 3,
+  css: cssUrl,
+  font: fontUrl ?? null,
+  icons: { ...(icon192 ? { '192': icon192 } : {}), ...(icon512 ? { '512': icon512 } : {}) },
+  images: imageAssets,
+  videos: videoAssets,
+};
 writeJson(resolve(publicDir, 'asset-manifest.json'), assets);
 
 const visibleContent = Object.fromEntries(requiredVisibleFiles.map((file) => [file, readFileSync(resolve(root, 'src/content/visible', file), 'utf8')]));
 if (Object.values(visibleContent).some((value) => value.includes('TODO_VISIBLE_CONTENT'))) throw new Error('Visible-content placeholders remain.');
 const sectionInputs = sections.map((section) => {
-  if (section.contentFile === '09-topic-sections.md') {
+  if (section.id === 'references') {
+    return {
+      id: section.id,
+      title: section.title,
+      text: references.map((reference) => `${reference.name}\n${reference.url}`).join('\n\n'),
+    };
+  }
+  if (section.contentSource === 'topic-registry') {
     const group = topicGroups.find((item) => item.id === section.id);
     return { id: section.id, title: section.title, text: group?.terms.map((term) => `## ${term.name}\n\n${term.description}`).join('\n\n') ?? '' };
   }
-  return { id: section.id, title: section.title, text: visibleContent[section.contentFile] ?? '' };
+  return { id: section.id, title: section.title, text: 'contentFile' in section ? visibleContent[section.contentFile] ?? '' : '' };
 });
 const faqInputs = faqItems.map((item) => ({ id: item.id, title: item.question, text: `${item.question}\n\n${item.answer}`, type: 'faq' }));
 const comparisonInputs = comparisons.map((item) => ({ id: item.id, title: item.caption, text: [item.caption,item.columns.join(' | '),...item.rows.map((row) => row.join(' | '))].join('\n\n'), type: 'comparison' }));
 const chunks = buildChunks([...sectionInputs,...faqInputs,...comparisonInputs]);
 const graph = buildCanonicalGraph(assets);
-writeJson(resolve(publicDir, 'graph.jsonld'), graph);
+writeJson(resolve(publicDir, 'knowledge-graph.jsonld'), graph);
 writeText(resolve(publicDir, 'llms.txt'), buildLlmsTxt());
 writeText(resolve(publicDir, 'llms-full.txt'), buildLlmsFullTxt(chunks));
 writeText(resolve(publicDir, 'sitemap.xml'), buildSitemap(assets));
 writeJson(resolve(assetsDir, 'data/entities.json'), { doctor, clinic });
 writeJson(resolve(assetsDir, 'data/topic-index.json'), topicGroups);
-writeJson(resolve(assetsDir, 'data/sections.json'), sections.map((section) => ({ id: section.id, heading: section.title, url: `https://www.ghezelbaash.ir/#${section.id}`, contentFile: section.contentFile })));
+writeJson(resolve(assetsDir, 'data/sections.json'), sections.map((section) => ({
+  id: section.id,
+  heading: section.title,
+  url: `https://www.ghezelbaash.ir/#${section.id}`,
+  contentSource: 'contentSource' in section ? section.contentSource : 'markdown',
+  contentFile: 'contentFile' in section ? section.contentFile : null,
+})));
 writeJson(resolve(assetsDir, 'data/chunks.json'), chunks);
 writeJson(resolve(assetsDir, 'data/faq.json'), faqItems);
 writeJson(resolve(assetsDir, 'data/references.json'), references);
@@ -136,7 +191,20 @@ writeJson(resolve(assetsDir, 'data/comparisons.json'), comparisons);
 writeJson(resolve(assetsDir, 'data/image-index.json'), images.map((image) => ({ ...image, assets: imageAssets[image.id] ?? null })));
 writeJson(resolve(assetsDir, 'data/video-index.json'), videos.map((video) => ({ ...video, assets: videoAssets[video.id] ?? null })));
 writeJson(resolve(assetsDir, 'data/dataset-index.json'), datasets);
-writeJson(resolve(publicDir, 'release.json'), { ...release, contentFrozen: true, htmlSha256: null, graphSha256: sha256(readFileSync(resolve(publicDir, 'graph.jsonld'))), llmsSha256: sha256(readFileSync(resolve(publicDir, 'llms-full.txt'))), mediaPolicy: { publishableVideos: videos.filter((video) => video.available).length, deferredVideos: videos.filter((video) => !video.available).map((video) => video.id), captionsOptionalUntilAccessibilityFinalization: true } });
+writeJson(resolve(publicDir, 'release.json'), {
+  ...release,
+  deploymentProvider: 'cloudflare-pages',
+  sourceRevision: process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'local',
+  contentFrozen: release.contentFrozen,
+  htmlSha256: null,
+  graphSha256: sha256(readFileSync(resolve(publicDir, 'knowledge-graph.jsonld'))),
+  llmsSha256: sha256(readFileSync(resolve(publicDir, 'llms-full.txt'))),
+  mediaPolicy: {
+    publishableVideos: videos.filter((video) => video.available).length,
+    deferredVideos: videos.filter((video) => !video.available).map((video) => video.id),
+    captionsOptionalUntilAccessibilityFinalization: true,
+  },
+});
 writeText(resolve(publicDir, 'doctor.vcf'), `BEGIN:VCARD\r\nVERSION:4.0\r\nFN:${doctor.name}\r\nN:${doctor.familyName};${doctor.givenName};;;\r\nTITLE:${doctor.jobTitle}\r\nTEL;TYPE=work,voice:${clinic.telephone}\r\nEMAIL:${doctor.email}\r\nURL:https://www.ghezelbaash.ir/\r\nEND:VCARD\r\n`);
 writeText(resolve(publicDir, 'clinic.vcf'), `BEGIN:VCARD\r\nVERSION:4.0\r\nFN:${clinic.name}\r\nORG:${clinic.name}\r\nTEL;TYPE=work,voice:${clinic.telephone}\r\nEMAIL:${clinic.email}\r\nADR;TYPE=work:;;${clinic.address.streetAddress};${clinic.address.addressLocality};${clinic.address.addressRegion};${clinic.address.postalCode};IR\r\nGEO:geo:${clinic.geo.latitude},${clinic.geo.longitude}\r\nURL:${clinic.mapsUrl}\r\nEND:VCARD\r\n`);
 writeJson(resolve(publicDir, 'manifest.webmanifest'), { name: 'دکتر سعید قزلباش', short_name: 'دکتر قزلباش', lang: 'fa-IR', dir: 'rtl', start_url: '/', scope: '/', display: 'standalone', background_color: '#ffffff', theme_color: '#ffffff', icons: [...(icon192 ? [{ src: icon192, sizes: '192x192', type: 'image/png' }] : []),...(icon512 ? [{ src: icon512, sizes: '512x512', type: 'image/png' }] : [])] });

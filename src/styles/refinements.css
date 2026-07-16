@@ -217,10 +217,6 @@ a {
     line-height: 1.9;
   }
 
-  .hero__lead p:nth-of-type(n + 3) {
-    display: none;
-  }
-
   .hero__proof strong {
     font-size: 1rem;
   }

@@ -1,4 +1,4 @@
-name: Static entity page
+name: Validate static Cloudflare Pages build
 
 on:
   pull_request:
@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: static-site-${{ github.ref }}
@@ -31,7 +29,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Build strict production output
+      - name: Build strict static output
         shell: bash
         run: |
           set -o pipefail
@@ -56,105 +54,31 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
-      - name: Configure GitHub Pages
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@v5
-      - name: Upload GitHub Pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: dist
 
-  deploy:
-    name: Deploy validated artifact to GitHub Pages
+  verify_cloudflare:
+    name: Verify Cloudflare Pages production revision
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      page_url: ${{ steps.deployment.outputs.page_url }}
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 6
     steps:
-      - name: Deploy GitHub Pages artifact
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-  verify_production:
-    name: Verify canonical production domain
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: deploy
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Verify final HTML, release record, and graph
+      - name: Wait for the connected Cloudflare Pages deployment
         shell: bash
+        env:
+          EXPECTED_REVISION: ${{ github.sha }}
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 12); do
-            html="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/?deployment=${GITHUB_SHA}-${attempt}" || true)"
-            release="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/release.json?deployment=${GITHUB_SHA}-${attempt}" || true)"
-            graph="$(curl -fsSL --retry 2 --retry-delay 2 -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/graph.jsonld?deployment=${GITHUB_SHA}-${attempt}" || true)"
-            if grep -Fq 'صورت شما «خدمت» نمی‌خواهد' <<<"$html" \
+          for attempt in $(seq 1 30); do
+            release="$(curl -fsSL --retry 1 -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/release.json?revision=${EXPECTED_REVISION}-${attempt}" || true)"
+            html="$(curl -fsSL --retry 1 -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/?revision=${EXPECTED_REVISION}-${attempt}" || true)"
+            if grep -Fq "\"sourceRevision\": \"${EXPECTED_REVISION}\"" <<<"$release" \
+              && grep -Fq '"deploymentProvider": "cloudflare-pages"' <<<"$release" \
               && grep -Fq 'rel="canonical" href="https://www.ghezelbaash.ir/"' <<<"$html" \
-              && ! grep -Fq 'TODO_VISIBLE_CONTENT' <<<"$html" \
-              && grep -Fq '"contentFrozen": true' <<<"$release" \
-              && grep -Fq '"releaseStatus": "production-final"' <<<"$release" \
-              && grep -Fq '"@id": "https://www.ghezelbaash.ir/#doctor"' <<<"$graph"; then
-              printf '%s\n' 'Canonical production domain exposes the validated final entity page.'
+              && ! grep -Fq 'TODO_VISIBLE_CONTENT' <<<"$html"; then
+              printf '%s\n' 'Cloudflare Pages serves the validated production revision.'
               exit 0
             fi
             sleep 10
           done
-          printf '%s\n' 'Canonical domain did not expose the validated deployment within two minutes.' >&2
+          printf '%s\n' 'Cloudflare Pages did not expose the expected revision within five minutes.' >&2
           exit 1
-
-  record_status:
-    name: Record deployment status
-    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [build, deploy, verify_production]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      BUILD_RESULT: ${{ needs.build.result }}
-      DEPLOY_RESULT: ${{ needs.deploy.result }}
-      VERIFY_RESULT: ${{ needs.verify_production.result }}
-      PAGES_URL: ${{ needs.deploy.outputs.page_url }}
-    steps:
-      - name: Check out repository history
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Publish machine-readable deployment status branch
-        shell: bash
-        run: |
-          set -euo pipefail
-          overall=failure
-          if [ "$BUILD_RESULT" = success ] && [ "$DEPLOY_RESULT" = success ] && [ "$VERIFY_RESULT" = success ]; then
-            overall=success
-          fi
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git switch --orphan deployment-status-worktree
-          git rm -rf . >/dev/null 2>&1 || true
-          cat > deployment-status.json <<EOF
-          {
-            "sourceSha": "${GITHUB_SHA}",
-            "runId": "${GITHUB_RUN_ID}",
-            "runAttempt": "${GITHUB_RUN_ATTEMPT}",
-            "workflow": "${GITHUB_WORKFLOW}",
-            "build": "${BUILD_RESULT}",
-            "deploy": "${DEPLOY_RESULT}",
-            "verifyProduction": "${VERIFY_RESULT}",
-            "overall": "${overall}",
-            "pagesUrl": "${PAGES_URL}",
-            "canonicalUrl": "https://www.ghezelbaash.ir/",
-            "runUrl": "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}",
-            "recordedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          }
-          EOF
-          git add deployment-status.json
-          git commit -m "Record deployment ${overall} for ${GITHUB_SHA}"
-          git push --force origin HEAD:refs/heads/deployment-status

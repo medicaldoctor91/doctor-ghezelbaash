@@ -7,7 +7,7 @@ import { comparisons } from '../data/comparisons';
     <span class="section-heading__line" aria-hidden="true"></span>
     <div><span class="section-kicker">قدرت، محدودیت و کاربرد واقعی</span><h2 id="comparison-hub-title">مقایسه روش‌ها بدون بازی تبلیغاتی</h2></div>
   </header>
-  <div class="content-slot comparison-hub__intro" data-content-file="10-comparison-tables.md"><slot /></div>
+  <div class="content-slot comparison-hub__intro"><slot /></div>
   <div class="comparison-grid">
     {comparisons.map((comparison, index) => (
       <article class="comparison-card">
@@ -15,7 +15,7 @@ import { comparisons } from '../data/comparisons';
           <span>{String(index + 1).padStart(2, '0')}</span>
           <h3>{comparison.caption}</h3>
         </div>
-        <div class="table-scroll">
+        <div class="table-scroll" tabindex="0" role="region" aria-label={`جدول ${comparison.caption}`}>
           <table id={comparison.id}>
             <thead><tr>{comparison.columns.map((column) => <th scope="col">{column}</th>)}</tr></thead>
             <tbody>{comparison.rows.map((row) => <tr>{row.map((cell, cellIndex) => (cellIndex === 0 ? <th scope="row">{cell}</th> : <td>{cell}</td>))}</tr>)}</tbody>

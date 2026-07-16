@@ -3,12 +3,13 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
+    "types": ["node"],
     "noEmit": true,
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true
   },
-  "include": [".astro/types.d.ts", "src/**/*", "scripts/**/*"],
-  "exclude": ["dist"]
+  "include": [".astro/types.d.ts", "src/**/*"],
+  "exclude": ["dist", "src/utils/remarkDemoteHeadings.mjs"]
 }

@@ -1,19 +1,26 @@
-# Production finalization status
+# Final-content integration status
 
-The production build no longer depends on placeholder content, synthetic payload floors, or unfinished transcript work.
+The content-independent production foundation is complete and passes the strict static build. The current repository copy remains a fallback corpus; it is not the final editorial package.
 
-## Resolved
+## Resolved technical foundation
 
-- All 19 visible Markdown inputs contain approved, user-visible copy.
-- The FAQ dataset contains 80 visible question-and-answer units.
-- The topic registry contains 31 defined medical-aesthetic terms.
-- The comparison registry contains 13 visible comparison tables.
-- Existing image derivatives are accepted as authoritative repository media and emitted in AVIF, WebP, and fallback formats.
-- Eleven MP4/WebM pairs pass SHA-bound full-decode integrity checks and are published.
-- The corrupt `why-mesoneedling-makes-dark-spots-worse-dr-ghezelbash.mp4` and its truncated WebM are explicitly excluded from playback, schema, and sitemap output rather than blocking the entire site.
-- Persian captions and verbatim transcripts remain an accessibility enhancement phase. Every video card has an honest text alternative; no fabricated transcript is emitted.
-- Strict production build, schema, link, canonical, header, media, retrieval, release-digest, and output-budget checks run on pull requests and `main`.
+- Astro emits exactly one indexable static route and no client-side JavaScript bundle.
+- The physician is the sole page `mainEntity`; the clinic is represented as a separate supporting entity.
+- Canonical external JSON-LD, its page-scoped inline projection, HTML fragment targets, FAQ nodes, media nodes, and release digests are validated together.
+- The current fallback corpus contains 80 visible FAQ units, 31 baseline topic units, and 13 comparison tables. These counts do not constrain the final package except where the package contract explicitly requires them.
+- All nine repository images render through responsive AVIF, WebP, and fallback sources.
+- Eleven verified self-hosted video pairs are published with honest text alternatives. Missing Persian captions or verbatim transcripts are deferred enhancements and do not block release.
+- The damaged mesoneedling video pair is excluded from playback, schema, and sitemap output.
+- Security headers, caching, canonical redirects, retrieval artifacts, asset manifests, and Cloudflare release verification are generated and checked at build time.
+
+## Remaining input
+
+The only editorial dependency is one extracted `ghezelbaash-content-final` package that passes `npm run content:validate -- <package-path>`. After validation it can be staged with `npm run content:stage -- <package-path>`.
+
+Staging validates and preserves the package without silently replacing the current renderer. The final integration must then map its approved facts, claims, visible modules, sources, topics, comparisons, FAQ data, and retrieval records into the existing typed render and graph layers. Optional captions and verbatim transcripts remain non-blocking.
+
+Only after that integrated build passes every gate should `src/data/release.ts` move from `technical-foundation`/`contentFrozen: false` to `production-final`/`contentFrozen: true`.
 
 ## Deployment
 
-The validated `dist` directory is packaged and deployed through the repository's enabled GitHub Pages environment. The custom domain remains `www.ghezelbaash.ir`; after deployment, the workflow verifies the live HTML, frozen release record, and canonical graph before reporting success.
+The repository workflow validates and archives `dist` but does not deploy through GitHub Pages. Cloudflare Pages builds `main` with `npm run build`, publishes `dist`, and serves `www.ghezelbaash.ir`. After a `main` push, CI verifies that the production `release.json` exposes the same commit SHA.

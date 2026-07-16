@@ -1,59 +1,46 @@
-# Static entity-page scaffold report
+# Content-independent foundation report
 
 Status date: 2026-07-16
 
-Base revision: `main@115ea581c47bb7c04d7c3954306bd7096b87edc8`
+Release state: **technical foundation complete; final editorial package pending**
 
-Release state: **scaffold only — not production-final**
-
-## File changes
-
-- Removed: legacy page routes, the former nine-stage homepage/content system, obsolete compilers/domain layers, browser tests, old validation scripts and reports, legacy Cloudflare/GitHub workflows, and duplicate package-manager locks.
-- Added: the prescribed single-page Astro source tree, 19 visible-content slots, canonical graph/data generators, machine-readable artifact generators, media workspace and integrity report, production validators, Cloudflare account checklist, and one CI workflow.
-- Changed: Astro/package/TypeScript configuration, ignore rules, security headers, redirects, robots policy, and the root page.
-- Moved without content changes where possible: existing MP4 masters, thumbnails, image derivatives, brand derivatives, and legacy chapter-marker VTT files into `Media/` with their provenance retained.
-
-## URL and deployment controls
+## Runtime and URL contract
 
 - Source routes: only `src/pages/index.astro`.
 - Canonical: `https://www.ghezelbaash.ir/`.
-- Repository redirect: only `/index.html / 301`.
-- Static 404: noindex, no canonical, no script; real edge-status behavior still requires Cloudflare verification.
-- No `pages.dev` URL, SPA fallback, catch-all redirect, Worker, or Pages Function is emitted.
-- Host, scheme, preview-protection, and unknown-path behavior remain account-side checks in `docs/cloudflare-required-settings.md`.
+- Output: static Astro files for Cloudflare Pages; no SSR, Worker, Pages Function, API, session, database, or client JavaScript bundle.
+- Canonical redirects: `/index.html` and `/index` to `/`; legacy `/graph.jsonld` to `/knowledge-graph.jsonld`.
+- Static 404 is `noindex`; Cloudflare account-level host, preview, and unknown-path checks remain documented in `docs/cloudflare-required-settings.md`.
 
-## Media status
+## Render and media foundation
 
-- Images: existing derivatives support scaffold rendering; all nine originals plus seven prescribed brand/favicon sources remain required for production.
-- Videos: 12 MP4 masters, 12 WebM alternatives, 12 thumbnails, and 12 WebP posters are present.
-- Integrity: 11 MP4 masters pass full decode. The mesoneedling MP4 fails full decode, and its WebM is truncated relative to the master duration.
-- Captions/transcripts: 0/12 verified Persian caption VTT files and 0/12 verbatim Persian transcript files. The retained three-cue VTT files are chapter markers only.
-- Playback contract: the production component uses self-hosted WebM/MP4, `controls`, `preload="none"`, poster, caption track, explicit dimensions, and visible transcript; it emits no player until those required inputs exist.
+- Technical manifests and entity-maintenance prose are excluded from the visible page.
+- Visible HTML has one H1, semantic section anchors, keyboard-accessible comparison regions, and graph-addressable FAQ answers.
+- All nine repository images render with responsive AVIF, WebP, and fallback variants.
+- Eleven verified self-hosted WebM/MP4 pairs render with `preload="none"`, posters, dimensions, and honest text alternatives.
+- The damaged mesoneedling pair is excluded. Missing captions and verbatim transcripts are non-blocking deferred enhancements.
+- Current Google evidence remains normalized as 5/5 from 163 reviews with its observation date; it has not been removed or reduced.
 
-## Semantic and machine-readable status
+## Entity and retrieval foundation
 
-- Scaffold graph: 54 nodes generated from the same canonical graph used by inline JSON-LD and `/graph.jsonld`.
-- Main entity: physician `https://www.ghezelbaash.ir/#doctor`; clinic remains an independent supporting entity.
-- Physician/clinic identifiers and `sameAs` sets are separated and checked for leakage.
-- Prohibited procedure-level commercial schema and data-layer flags are rejected.
-- Dataset section and schema use the repository's existing Zenodo and Hugging Face records.
-- `/llms.txt`, `/llms-full.txt`, all required data indexes, sitemap extensions, vCards, manifests, and release metadata are generated at build time.
-- Scaffold chunks: 0, because visible copy is intentionally blank. Production requires 150–280 and fails outside that range.
-- Scaffold release: `contentFrozen=false`; production switches it to `true` only after all gates pass.
+- The physician is the sole `MedicalWebPage.mainEntity`.
+- The clinic is an independent supporting `MedicalClinic`; physician and clinic identifiers remain separated.
+- The canonical graph is `/knowledge-graph.jsonld`; inline JSON-LD is a page-scoped projection rather than a duplicate full graph.
+- Every same-site graph fragment resolves to visible HTML or another graph node. Procedure, condition, and informational-term types are not conflated.
+- `/llms.txt`, `/llms-full.txt`, retrieval chunks, data indexes, sitemap extensions, release metadata, and SHA-256 digests are generated from the same source state.
 
-## Current scaffold budgets
+## Measured build
 
-- HTML raw: about 45KB; HTML gzip: about 7KB; DOM: about 395 nodes.
-- CSS gzip: about 2KB; client JavaScript: 0 bytes.
-- Persian WOFF2: 111,152 bytes, within the required 80–180KB range.
-- Scaffold LCP WebP: about 23KB; all videos are `preload="none"` and excluded from initial transfer.
-- The production HTML/gzip floors cannot be evaluated until the final visible corpus is supplied.
+- Routes: 1.
+- Client JavaScript: 0 bytes.
+- HTML: 205,318 bytes raw; 41,046 bytes gzip; 1,802 DOM nodes.
+- Retrieval chunks: 121.
+- Canonical graph: 253 nodes, 253 unique IDs, 0 dangling same-site references, 0 invisible fragment targets.
+- Astro diagnostics: 0 errors, 0 warnings, 0 hints across 36 files.
+- Content-package contract: valid synthetic handoff accepted; a 79-item FAQ mutation rejected by the intended gate.
 
-## Validation result
+## Final-content boundary
 
-- `npm run build:scaffold`: passes all 18 structural checks.
-- `npm run build`: intentionally fails before artifact generation while visible copy, original media, captions, transcripts, and the damaged video pair remain unresolved.
-- `npm run media:verify`: intentionally fails and records the damaged MP4/WebM pair; all other video files pass.
-- `git diff --check`: passes.
+The current visible corpus is a buildable fallback, not the final editorial authority. The final ZIP must pass `scripts/validate-content-package.mjs` and is staged separately before a deliberate adapter maps its approved facts, claims, modules, sources, topics, comparisons, FAQs, and retrieval records into the renderer and canonical graph.
 
-The complete input gate is in `BLOCKING_INPUTS.md`; the visible-copy contract is in `CONTENT_INPUT_SPEC.md`.
+The package contract is in `CONTENT_INPUT_SPEC.md`; the remaining integration state is in `BLOCKING_INPUTS.md`.

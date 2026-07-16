@@ -6,7 +6,7 @@ export const release = {
   buildTool: 'Astro',
   astroVersion: '7',
   output: 'static',
-  contentFrozen: true,
+  contentFrozen: false,
   assetManifest: 'https://www.ghezelbaash.ir/asset-manifest.json',
-  releaseStatus: 'production-final',
+  releaseStatus: 'technical-foundation',
 } as const;

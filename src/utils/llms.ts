@@ -5,7 +5,7 @@ export const buildLlmsTxt = (): string => `# دکتر سعید قزلباش
 > Canonical static entity page for Dr. Saeed Ghezelbaash and the supporting clinic entity in Kermanshah, Iran.
 
 - Canonical: https://www.ghezelbaash.ir/
-- Knowledge graph: https://www.ghezelbaash.ir/graph.jsonld
+- Knowledge graph: https://www.ghezelbaash.ir/knowledge-graph.jsonld
 - Full retrieval text: https://www.ghezelbaash.ir/llms-full.txt
 - Zenodo: https://doi.org/10.5281/zenodo.18765169
 - Hugging Face: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data

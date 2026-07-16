@@ -1,12 +1,17 @@
 ---
 import { clinic } from '../data/clinic';
+import type { AssetManifest } from '../utils/graph';
+import ResponsiveImage from './ResponsiveImage.astro';
+
+interface Props { assets: AssetManifest; }
+const { assets } = Astro.props;
 ---
 
 <section id="clinic-entity" class="entity-card entity-card--clinic" aria-labelledby="clinic-entity-title">
   <div class="entity-card__intro">
     <span class="section-kicker">محل ارزیابی و مراجعه حضوری</span>
     <h2 id="clinic-entity-title">کلینیک در کرمانشاه؛ مسیر روشن، تماس مستقیم</h2>
-    <div class="content-slot" data-content-file="02-clinic-profile.md"><slot /></div>
+    <div class="content-slot"><slot /></div>
     <div class="clinic-actions">
       <a class="button button--primary" href={`tel:${clinic.telephone}`}>تماس با کلینیک</a>
       <a class="button button--outline" href={clinic.mapsUrl} rel="noopener noreferrer">بازکردن Google Maps</a>
@@ -14,6 +19,7 @@ import { clinic } from '../data/clinic';
   </div>
 
   <aside class="location-panel" aria-label="اطلاعات مراجعه کلینیک">
+    <ResponsiveImage id="clinic-interior" asset={assets.images['clinic-interior']} class="location-panel__photo" />
     <div class="location-panel__map" aria-hidden="true">
       <svg viewBox="0 0 240 150"><path d="M0 25c40 25 70-22 112 10s71 7 128-19v134H0V25Z" /><path d="M18 118c40-14 61-58 104-52s63 34 104 11" /><path d="M44 15c20 30 2 67 33 88s68 5 89 36" /><circle cx="133" cy="68" r="8" /><circle cx="133" cy="68" r="17" /></svg>
     </div>
@@ -23,12 +29,11 @@ import { clinic } from '../data/clinic';
       <div><dt>تلفن مستقیم</dt><dd><a href={`tel:${clinic.telephone}`}>{clinic.telephoneDisplay}</a></dd></div>
       <div><dt>کد پستی</dt><dd><bdi>{clinic.address.postalCode}</bdi></dd></div>
     </dl>
-    <details class="technical-details">
-      <summary>شناسه‌های مکانی</summary>
-      <dl>
-        <div><dt>مختصات</dt><dd><bdi>{clinic.geo.latitude}, {clinic.geo.longitude}</bdi></dd></div>
-        <div><dt>Google Place</dt><dd><bdi>ChIJBTOYDOTt-j8RD-7mAPy6Zas</bdi></dd></div>
-      </dl>
-    </details>
+    <div class="clinic-gallery" aria-label="تصاویر فضای کلینیک">
+      <ResponsiveImage id="clinic-waiting-room" asset={assets.images['clinic-waiting-room']} />
+      <ResponsiveImage id="clinic-interior-2" asset={assets.images['clinic-interior-2']} />
+      <ResponsiveImage id="clinic-corridor" asset={assets.images['clinic-corridor']} />
+      <ResponsiveImage id="clinic-environment-3" asset={assets.images['clinic-environment-3']} />
+    </div>
   </aside>
 </section>
