@@ -1,38 +1,39 @@
 ---
 import { topicGroups } from '../data/topics';
-
-interface Props {
-  id: string;
-  title: string;
-  contentFile?: string;
-  lang?: string;
-  dir?: 'rtl' | 'ltr';
-  summary?: string;
-}
-
+interface Props { id: string; title: string; contentFile?: string; lang?: string; dir?: 'rtl' | 'ltr'; summary?: string; }
 const { id, title, contentFile = '09-topic-sections.md', lang, dir, summary } = Astro.props;
 const titleId = `${id}-title`;
 const group = topicGroups.find((item) => item.id === id);
+const isTopicGroup = Boolean(group?.terms.length);
 ---
 
-<section id={id} class="content-section" aria-labelledby={titleId} lang={lang} dir={dir}>
-  <h2 id={titleId}>{title}</h2>
+<section id={id} class:list={['content-section', 'topic-section', isTopicGroup && 'topic-section--grid']} aria-labelledby={titleId} lang={lang} dir={dir}>
+  <header class="section-heading">
+    <span class="section-heading__line" aria-hidden="true"></span>
+    <div>
+      <span class="section-kicker">راهنمای تصمیم پزشکی</span>
+      <h2 id={titleId}>{title}</h2>
+    </div>
+  </header>
+
   <div class="content-slot" data-content-file={contentFile} data-content-section={id}>
     <slot>
-      {
-        group?.terms.length ? (
-          group.terms.map((term) => (
+      {isTopicGroup ? (
+        <div class="topic-grid">
+          {group?.terms.map((term, index) => (
             <article id={`topic-${term.id}`} class="topic-entry">
+              <span class="topic-entry__number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
               <h3>{term.name}</h3>
               <p>{term.description}</p>
+              <a href="#contact" aria-label={`تماس برای ارزیابی ${term.name}`}>ارزیابی پیش از انتخاب روش <span aria-hidden="true">←</span></a>
             </article>
-          ))
-        ) : summary ? (
-          <p>{summary}</p>
-        ) : (
-          <p>این بخش، دامنه موضوع و مرز تصمیم را در چارچوب پزشکی زیبایی توضیح می‌دهد.</p>
-        )
-      }
+          ))}
+        </div>
+      ) : summary ? (
+        <div class="section-callout"><span aria-hidden="true">!</span><p>{summary}</p></div>
+      ) : (
+        <p>این بخش، دامنه موضوع و مرز تصمیم را در چارچوب پزشکی زیبایی توضیح می‌دهد.</p>
+      )}
     </slot>
   </div>
 </section>
