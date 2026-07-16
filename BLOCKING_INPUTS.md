@@ -16,4 +16,4 @@ The production build no longer depends on placeholder content, synthetic payload
 
 ## Deployment
 
-Cloudflare Pages Git integration remains the deployment mechanism. A push to `main` builds the strict static output and the GitHub workflow polls the canonical custom domain until the new production page, frozen release record, and canonical graph are visible.
+The validated `dist` directory is packaged and deployed through the repository's enabled GitHub Pages environment. The custom domain remains `www.ghezelbaash.ir`; after deployment, the workflow verifies the live HTML, frozen release record, and canonical graph before reporting success.
