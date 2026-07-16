@@ -9,19 +9,21 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 concurrency:
   group: static-site-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  verify:
+  build:
     name: Build and validate production output
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
@@ -54,15 +56,37 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+      - name: Upload GitHub Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy validated artifact to GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   verify-production:
-    name: Verify Cloudflare production
+    name: Verify canonical production domain
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: verify
+    needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - name: Wait for Git integration deployment and verify canonical output
+      - name: Verify final HTML, release record, and graph
         shell: bash
         run: |
           set -euo pipefail
@@ -76,10 +100,10 @@ jobs:
               && grep -Fq '"contentFrozen": true' <<<"$release" \
               && grep -Fq '"releaseStatus": "production-final"' <<<"$release" \
               && grep -Fq '"@id": "https://www.ghezelbaash.ir/#doctor"' <<<"$graph"; then
-              printf '%s\n' 'Cloudflare production exposes the validated final entity page.'
+              printf '%s\n' 'Canonical production domain exposes the validated final entity page.'
               exit 0
             fi
             sleep 20
           done
-          printf '%s\n' 'Cloudflare Git integration did not expose the validated main build in the verification window.' >&2
+          printf '%s\n' 'Canonical domain did not expose the validated deployment within the verification window.' >&2
           exit 1
