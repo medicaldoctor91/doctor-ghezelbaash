@@ -8,21 +8,20 @@ const { assets } = Astro.props;
 const videoCards = videos.map((video) => {
   const asset = assets.videos[video.id];
   const transcriptPath = resolve(process.cwd(), 'Media', video.transcriptFile);
-  const transcript = existsSync(transcriptPath)
-    ? readFileSync(transcriptPath, 'utf8').split(/\n{2,}/u).map((paragraph) => paragraph.replace(/^#{1,6}\s+/u, '').trim()).filter(Boolean)
-    : [video.description];
+  const transcript = existsSync(transcriptPath) ? readFileSync(transcriptPath, 'utf8').split(/\n{2,}/u).map((paragraph) => paragraph.replace(/^#{1,6}\s+/u, '').trim()).filter(Boolean) : [video.description];
   return { video, asset, transcript };
 });
 ---
 
-<section id="video-library" class="content-section" aria-labelledby="video-library-title">
-  <h2 id="video-library-title">کتابخانه ویدئو</h2>
-  <div class="content-slot" data-content-file="18-video-content.md"><slot /></div>
+<section id="video-library" class="content-section video-library" aria-labelledby="video-library-title">
+  <header class="video-library__header">
+    <div><span class="section-kicker">آموزش، تکنیک و نمونه‌های منتخب</span><h2 id="video-library-title">کتابخانه ویدئویی</h2></div>
+    <div class="content-slot" data-content-file="18-video-content.md"><slot /></div>
+  </header>
   <div class="video-grid">
-    {
-      videoCards.map(({ video, asset, transcript }) => (
-        <section id={video.id} class="video-card" aria-labelledby={`${video.id}-title`}>
-          <h3 id={`${video.id}-title`}>{video.title}</h3>
+    {videoCards.map(({ video, asset, transcript }, index) => (
+      <section id={video.id} class:list={['video-card', !video.available && 'video-card--unavailable']} aria-labelledby={`${video.id}-title`}>
+        <div class="video-card__media">
           {video.available && asset?.mp4 && asset.poster ? (
             <video controls preload="none" poster={asset.poster} width={video.width} height={video.height}>
               {asset.webm && <source src={asset.webm} type="video/webm" />}
@@ -30,14 +29,19 @@ const videoCards = videos.map((video) => {
               {asset.captions && <track src={asset.captions} kind="captions" srclang="fa" label="فارسی" default />}
             </video>
           ) : (
-            <div class="media-blocker" role="status">نسخه ویدئویی این مورد تا جایگزینی فایل سالم پخش نمی‌شود.</div>
+            <div class="media-blocker" role="status"><span aria-hidden="true">◌</span><strong>نسخه متنی این آموزش</strong><small>فایل ویدئویی سالم در حال جایگزینی است.</small></div>
           )}
-          <div class="video-transcript">
-            <h4>توضیح متنی ویدئو</h4>
-            {transcript.map((paragraph) => <p>{paragraph}</p>)}
-          </div>
-        </section>
-      ))
-    }
+          <span class="video-card__index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+        </div>
+        <div class="video-card__body">
+          <h3 id={`${video.id}-title`}>{video.title}</h3>
+          <p>{video.description}</p>
+          <details class="video-transcript">
+            <summary>توضیح متنی ویدئو</summary>
+            <div>{transcript.map((paragraph) => <p>{paragraph}</p>)}</div>
+          </details>
+        </div>
+      </section>
+    ))}
   </div>
 </section>
