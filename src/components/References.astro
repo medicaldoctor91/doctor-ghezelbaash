@@ -1,0 +1,23 @@
+---
+import { references } from '../data/references';
+---
+
+<section id="references" class="content-section" aria-labelledby="references-title">
+  <h2 id="references-title">منابع</h2>
+  <div class="content-slot" data-content-file="12-references.md"><slot /></div>
+  <ol class="references-list">
+    {
+      references.map((reference) => (
+        <li id={reference.id}>
+          <cite>{reference.name}</cite>
+          {' — '}
+          <a href={reference.url} rel="noopener noreferrer">
+            رکورد منبع
+          </a>
+          {' — '}
+          <time datetime={reference.datePublished}>{reference.datePublished}</time>
+        </li>
+      ))
+    }
+  </ol>
+</section>

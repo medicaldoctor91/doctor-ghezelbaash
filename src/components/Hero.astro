@@ -1,0 +1,53 @@
+---
+import type { AssetManifest } from '../utils/graph';
+
+interface Props {
+  assets: AssetManifest;
+}
+
+const { assets } = Astro.props;
+const hero = assets.images['doctor-portrait'];
+const source = hero?.webp ?? hero?.fallback ?? hero?.avif;
+---
+
+<section id="hero" class="hero" aria-labelledby="hero-title">
+  <div class="hero__copy">
+    <p class="eyebrow">صفحه رسمی و canonical</p>
+    <h1 id="hero-title">دکتر سعید قزل‌باش | پزشک زیبایی در کرمانشاه</h1>
+    <div class="content-slot" data-content-file="04-hero.md">
+      <slot />
+    </div>
+    <div class="hero__actions">
+      <a class="button" href="tel:+989308209494">تماس با کلینیک</a>
+      <a
+        class="button button--secondary"
+        href="https://www.google.com/maps?cid=12350483144643112463"
+        rel="noopener noreferrer"
+      >
+        مسیریابی
+      </a>
+    </div>
+  </div>
+  {
+    source ? (
+      <figure class="hero__media">
+        <picture>
+          {hero.avif && <source srcset={hero.avif} type="image/avif" />}
+          {hero.webp && <source srcset={hero.webp} type="image/webp" />}
+          <img
+            src={hero.fallback ?? source}
+            alt={hero.alt ?? 'دکتر سعید قزلباش'}
+            width={hero.width}
+            height={hero.height}
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+          />
+        </picture>
+        <figcaption>دکتر سعید قزلباش</figcaption>
+      </figure>
+    ) : (
+      <div class="media-blocker" role="status">TODO_VISIBLE_CONTENT</div>
+    )
+  }
+</section>

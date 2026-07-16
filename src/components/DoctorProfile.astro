@@ -1,0 +1,19 @@
+---
+import { doctor } from '../data/doctor';
+---
+
+<section id="doctor-entity" class="entity-card" aria-labelledby="doctor-entity-title">
+  <div>
+    <p class="eyebrow">mainEntity</p>
+    <h2 id="doctor-entity-title">هویت پزشک</h2>
+    <div class="content-slot" data-content-file="01-doctor-profile.md"><slot /></div>
+  </div>
+  <dl class="facts">
+    <div><dt>نام رسمی</dt><dd>{doctor.name}</dd></div>
+    <div><dt>نام شناخته‌شده</dt><dd>{doctor.publicName}</dd></div>
+    <div><dt>شماره نظام پزشکی</dt><dd><bdi>{doctor.medicalRegistrationNumber}</bdi></dd></div>
+    <div><dt>Wikidata</dt><dd><bdi>Q140287622</bdi></dd></div>
+    <div><dt>Google KG MID</dt><dd><bdi>/g/11nqdfk76c</bdi></dd></div>
+    <div><dt>Cloud KG MID</dt><dd><bdi>C-02KY8SVQ2</bdi></dd></div>
+  </dl>
+</section>

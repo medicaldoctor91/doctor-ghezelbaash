@@ -1,0 +1,21 @@
+---
+interface Props {
+  id: string;
+  title: string;
+  contentFile?: string;
+  lang?: string;
+  dir?: 'rtl' | 'ltr';
+}
+
+const { id, title, contentFile = '09-topic-sections.md', lang, dir } = Astro.props;
+const titleId = `${id}-title`;
+---
+
+<section id={id} class="content-section" aria-labelledby={titleId} lang={lang} dir={dir}>
+  <h2 id={titleId}>{title}</h2>
+  <div class="content-slot" data-content-file={contentFile} data-content-section={id}>
+    <slot>
+      <p>TODO_VISIBLE_CONTENT</p>
+    </slot>
+  </div>
+</section>

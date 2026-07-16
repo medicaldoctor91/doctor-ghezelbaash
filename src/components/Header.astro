@@ -1,0 +1,23 @@
+---
+import { sections } from '../data/sections';
+---
+
+<header id="site-header" class="site-header">
+  <a class="brand" href="/" aria-label="صفحه اصلی دکتر سعید قزلباش">
+    <span class="brand__name">دکتر سعید قزلباش</span>
+    <span class="brand__location">کرمانشاه</span>
+  </a>
+  <a class="header-contact" href="tel:+989308209494">۰۹۳۰ ۸۲۰ ۹۴۹۴</a>
+</header>
+
+<nav id="toc" class="toc" aria-label="فهرست بخش‌های صفحه">
+  <ol>
+    {
+      sections.map((section) => (
+        <li>
+          <a href={`#${section.id}`}>{section.title}</a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>

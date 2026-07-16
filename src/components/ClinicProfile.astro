@@ -1,0 +1,26 @@
+---
+import { clinic } from '../data/clinic';
+---
+
+<section id="clinic-entity" class="entity-card" aria-labelledby="clinic-entity-title">
+  <div>
+    <p class="eyebrow">supporting Place entity</p>
+    <h2 id="clinic-entity-title">هویت کلینیک</h2>
+    <div class="content-slot" data-content-file="02-clinic-profile.md"><slot /></div>
+  </div>
+  <dl class="facts">
+    <div><dt>نام رسمی</dt><dd>{clinic.name}</dd></div>
+    <div>
+      <dt>نشانی</dt>
+      <dd>
+        <address>
+          {clinic.address.addressLocality}، {clinic.address.streetAddress}
+        </address>
+      </dd>
+    </div>
+    <div><dt>تلفن</dt><dd><a href={`tel:${clinic.telephone}`}>{clinic.telephoneDisplay}</a></dd></div>
+    <div><dt>مختصات</dt><dd><bdi>{clinic.geo.latitude}, {clinic.geo.longitude}</bdi></dd></div>
+    <div><dt>Google Local KG MID</dt><dd><bdi>/g/11r3rzdtb3</bdi></dd></div>
+    <div><dt>Google Place ID</dt><dd><bdi>ChIJBTOYDOTt-j8RD-7mAPy6Zas</bdi></dd></div>
+  </dl>
+</section>
