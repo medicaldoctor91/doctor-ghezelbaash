@@ -1,5 +1,10 @@
 export const SITE_URL = 'https://www.ghezelbaash.ir/' as const;
 
+export const doctorContactUrls = {
+  instagramProfile: 'https://www.instagram.com/doctor.ghezelbaash/',
+  instagramDirect: 'https://ig.me/m/doctor.ghezelbaash',
+} as const;
+
 export const doctor = {
   id: `${SITE_URL}#doctor`,
   type: 'Person',
@@ -50,7 +55,7 @@ export const doctor = {
     'https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e',
     'https://orcid.org/0009-0001-9346-8475',
     'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/',
-    'https://www.instagram.com/doctor.ghezelbaash/',
+    doctorContactUrls.instagramProfile,
     'https://www.linkedin.com/in/saeed-ghezelbash-93310a96',
     'https://www.facebook.com/Ghezelbaash/',
     'https://github.com/Medicaldoctor91',
