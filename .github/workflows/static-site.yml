@@ -79,7 +79,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-  verify-production:
+  verify_production:
     name: Verify canonical production domain
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: deploy
@@ -107,3 +107,49 @@ jobs:
           done
           printf '%s\n' 'Canonical domain did not expose the validated deployment within the verification window.' >&2
           exit 1
+
+  record_status:
+    name: Record deployment status
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, deploy, verify_production]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      BUILD_RESULT: ${{ needs.build.result }}
+      DEPLOY_RESULT: ${{ needs.deploy.result }}
+      VERIFY_RESULT: ${{ needs.verify_production.result }}
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Publish machine-readable deployment status branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          overall=failure
+          if [ "$BUILD_RESULT" = success ] && [ "$DEPLOY_RESULT" = success ] && [ "$VERIFY_RESULT" = success ]; then
+            overall=success
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git switch --orphan deployment-status-worktree
+          git rm -rf . >/dev/null 2>&1 || true
+          cat > deployment-status.json <<EOF
+          {
+            "sourceSha": "${GITHUB_SHA}",
+            "runId": "${GITHUB_RUN_ID}",
+            "runAttempt": "${GITHUB_RUN_ATTEMPT}",
+            "workflow": "${GITHUB_WORKFLOW}",
+            "build": "${BUILD_RESULT}",
+            "deploy": "${DEPLOY_RESULT}",
+            "verifyProduction": "${VERIFY_RESULT}",
+            "overall": "${overall}",
+            "runUrl": "https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}",
+            "recordedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+          git add deployment-status.json
+          git commit -m "Record deployment ${overall} for ${GITHUB_SHA}"
+          git push --force origin HEAD:refs/heads/deployment-status
