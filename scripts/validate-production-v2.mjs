@@ -2,7 +2,9 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { createHash } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { resolve } from 'node:path';
+import { clinic } from '../src/data/clinic.ts';
 import { datasets } from '../src/data/datasets.ts';
+import { doctorContactUrls } from '../src/data/doctor.ts';
 import { googleMapsEvidence } from '../src/data/evidence.ts';
 import { faqItems } from '../src/data/faq.ts';
 import { images } from '../src/data/images.ts';
@@ -109,6 +111,12 @@ if (mode !== 'inputs') {
     assert(new Set(htmlIds).size === htmlIds.length, 'Rendered HTML contains duplicate id attributes.');
     const renderedIdSet = new Set(htmlIds);
     for (const match of html.matchAll(/href="#([^"]+)"/gu)) assert(renderedIdSet.has(match[1]), `Broken same-page anchor: #${match[1]}`);
+    assert(/<body[^>]*\sid="top"(?:\s|>)/u.test(html), 'Top-of-page anchor is missing from body.');
+    const contactDock = html.match(/<nav class="floating-actions"[\s\S]*?<\/nav>/u)?.[0] ?? '';
+    assert(Boolean(contactDock), 'Persistent contact dock is missing.');
+    const dockTargets = [`tel:${clinic.telephone}`, doctorContactUrls.instagramDirect, clinic.mapsUrl, '#top'];
+    for (const target of dockTargets) assert(contactDock.includes(`href="${target}"`), `Contact dock target missing: ${target}`);
+    assert(dockTargets.every((target, index) => index === 0 || contactDock.indexOf(dockTargets[index - 1]) < contactDock.indexOf(target)), 'Contact dock order changed.');
     for (const section of sections) assert(html.includes(`id="${section.id}"`), `Section missing: ${section.id}`);
     assert(occurrences(html, /<video(?:\s|>)/giu) === publishable.length, `Expected ${publishable.length} playable videos.`);
     for (const video of videos) {
@@ -126,6 +134,8 @@ if (mode !== 'inputs') {
       else if (value && typeof value === 'object') Object.values(value).forEach(collectAssetUrls);
     };
     collectAssetUrls(manifest);
+    const activeCss = read(resolve(dist, manifest.css.replace(/^\//u, '')));
+    assert(/\.floating-actions\s*\{[^}]*position:\s*fixed;/su.test(activeCss), 'Persistent contact dock lost fixed positioning.');
     for (const directory of ['css', 'fonts', 'images', 'videos']) {
       for (const file of readdirSync(resolve(dist, 'assets', directory))) {
         assert(manifestAssetUrls.has(`/assets/${directory}/${file}`), `Orphaned generated asset: /assets/${directory}/${file}`);
