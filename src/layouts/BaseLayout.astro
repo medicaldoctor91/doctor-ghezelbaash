@@ -2,12 +2,7 @@
 import type { AssetManifest } from '../utils/graph';
 import type { CanonicalGraph } from '../utils/schema';
 import { escapeJsonForHtml, seo } from '../utils/seo';
-
-interface Props {
-  graph: CanonicalGraph;
-  assets: AssetManifest;
-}
-
+interface Props { graph: CanonicalGraph; assets: AssetManifest; }
 const { graph, assets } = Astro.props;
 const jsonLd = escapeJsonForHtml(graph);
 const hero = assets.images['doctor-portrait'];
@@ -22,21 +17,10 @@ const heroPreload = hero?.webp ?? hero?.fallback ?? hero?.avif;
     <title>{seo.title}</title>
     <meta name="description" content={seo.description} />
     <link rel="canonical" href={seo.canonical} />
-    <meta
-      name="robots"
-      content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1"
-    />
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
     <link rel="alternate" hreflang="fa-IR" href={seo.canonical} />
-    <link
-      rel="alternate"
-      type="application/ld+json"
-      href="https://www.ghezelbaash.ir/graph.jsonld"
-    />
-    <link
-      rel="describedby"
-      type="application/ld+json"
-      href="https://www.ghezelbaash.ir/graph.jsonld"
-    />
+    <link rel="alternate" type="application/ld+json" href="https://www.ghezelbaash.ir/graph.jsonld" />
+    <link rel="describedby" type="application/ld+json" href="https://www.ghezelbaash.ir/graph.jsonld" />
     <link rel="describedby" href="https://www.ghezelbaash.ir/llms.txt" />
     <meta name="theme-color" content="#ffffff" />
     <meta name="color-scheme" content="light" />
@@ -55,15 +39,11 @@ const heroPreload = hero?.webp ?? hero?.fallback ?? hero?.avif;
     <meta name="twitter:description" content={seo.description} />
     <meta name="twitter:image" content={seo.ogImage} />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {assets.font && <link rel="preload" href={assets.font} as="font" type="font/woff2" crossorigin />}
-    {
-      heroPreload && (
-        <link rel="preload" href={heroPreload} as="image" type="image/webp" fetchpriority="high" />
-      )
-    }
+    {heroPreload && <link rel="preload" href={heroPreload} as="image" type="image/webp" fetchpriority="high" />}
     {assets.css && <link rel="stylesheet" href={assets.css} />}
     <script type="application/ld+json" set:html={jsonLd} />
   </head>

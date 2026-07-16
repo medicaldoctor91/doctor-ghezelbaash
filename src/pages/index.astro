@@ -37,56 +37,26 @@ import { buildCanonicalGraph, type AssetManifest } from '../utils/graph';
 
 const emptyAssets: AssetManifest = { css: null, font: null, images: {}, videos: {} };
 const manifestPath = resolve(process.cwd(), 'public/asset-manifest.json');
-const assets: AssetManifest = existsSync(manifestPath)
-  ? JSON.parse(readFileSync(manifestPath, 'utf8'))
-  : emptyAssets;
+const assets: AssetManifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : emptyAssets;
 const graph = buildCanonicalGraph(assets);
 ---
 
 <BaseLayout {graph} {assets}>
   <Header />
   <main id="main-content">
-    <Hero {assets}>
-      <ProjectIdentityCopy />
-      <HeroCopy />
-    </Hero>
-
+    <Hero {assets}><ProjectIdentityCopy /><HeroCopy /></Hero>
     <DoctorProfile><DoctorCopy /></DoctorProfile>
-
-    <TopicSection id="doctor-video" title="ویدئوی معرفی پزشک" contentFile="18-video-content.md" />
-
+    <TopicSection id="doctor-video" title="ویدئوی معرفی پزشک" contentFile="18-video-content.md" summary="نمونه‌های آموزشی و حرفه‌ای صفحه، روش فکرکردن پیش از تکنیک را نشان می‌دهند؛ کتابخانه کامل ویدئو در بخش اختصاصی پایین صفحه قرار دارد." />
     <ClinicProfile><ClinicCopy /></ClinicProfile>
-
-    <TopicSection id="clinic-video" title="ویدئوی معرفی کلینیک" contentFile="18-video-content.md" />
-
+    <TopicSection id="clinic-video" title="ویدئوی معرفی کلینیک" contentFile="18-video-content.md" summary="ویدئوهای مرتبط با تجربه مراجعه و فضای حرفه‌ای، مکمل اطلاعات رسمی تماس و نقشه‌اند و جای ارزیابی بالینی را نمی‌گیرند." />
     <EntityRelationship><EntityCopy /></EntityRelationship>
-
     <EvidenceSummary><EvidenceCopy /></EvidenceSummary>
-
-    <TopicSection
-      id="aesthetic-medicine-map"
-      title="نقشه پزشکی زیبایی"
-      contentFile="08-topic-matrix.md"
-    >
-      <TopicMatrixCopy />
-      <ImageManifestCopy />
-    </TopicSection>
-
-    <TopicSection
-      id="best-doctor-selection-criteria"
-      title="معیارهای انتخاب پزشک"
-      contentFile="06-selection-criteria.md"
-    >
-      <SelectionCopy />
-    </TopicSection>
-
-    <TopicSection id="decision-map" title="نقشه تصمیم" contentFile="07-decision-map.md">
-      <DecisionCopy />
-    </TopicSection>
-
+    <TopicSection id="aesthetic-medicine-map" title="نقشه پزشکی زیبایی" contentFile="08-topic-matrix.md"><TopicMatrixCopy /><ImageManifestCopy /></TopicSection>
+    <TopicSection id="best-doctor-selection-criteria" title="معیارهای انتخاب پزشک" contentFile="06-selection-criteria.md"><SelectionCopy /></TopicSection>
+    <TopicSection id="decision-map" title="نقشه تصمیم" contentFile="07-decision-map.md"><DecisionCopy /></TopicSection>
     <TopicSection id="injectable-procedures" title="روش‌های تزریقی" />
     <TopicSection id="device-based-procedures" title="روش‌های مبتنی بر دستگاه" />
-    <TopicSection id="skin-rejuvenation" title="جوان‌سازی پوست" />
+    <TopicSection id="skin-rejuvenation" title="جوان‌سازی و بیماری‌های پوست" />
     <TopicSection id="hair-aesthetics" title="زیبایی و موی سر" />
     <TopicSection id="facial-contouring" title="کانتورینگ صورت" />
     <TopicSection id="lip-aesthetics" title="زیبایی لب" />
@@ -95,29 +65,14 @@ const graph = buildCanonicalGraph(assets);
     <TopicSection id="nose-aesthetics" title="زیبایی بینی" />
     <TopicSection id="body-aesthetics" title="زیبایی بدن" />
     <TopicSection id="surgical-aesthetics-reference" title="مرجع روش‌های جراحی زیبایی" />
-
     <ComparisonTable><TablesCopy /></ComparisonTable>
-
     <VideoSection {assets}><VideoCopy /></VideoSection>
-
-    <TopicSection id="safety-limitations" title="ایمنی و محدودیت‌ها" />
-    <TopicSection id="local-kermanshah" title="کرمانشاه" contentFile="02-clinic-profile.md" />
-    <TopicSection
-      id="national-reference"
-      title="مرجع ملی"
-      contentFile="16-final-visible-copy.md"
-    >
-      <FinalCopy />
-    </TopicSection>
-
+    <TopicSection id="safety-limitations" title="ایمنی و محدودیت‌ها" summary="ریسک هر روش به ناحیه، آناتومی، بیماری‌ها، داروها، ماده یا دستگاه، تجربه اجرا و سرعت تشخیص عارضه وابسته است. وعده درمان بدون ریسک یا نتیجه تضمینی با واقعیت پزشکی سازگار نیست." />
+    <TopicSection id="local-kermanshah" title="کرمانشاه" contentFile="02-clinic-profile.md" summary="محل مراجعه در کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا است. شماره تماس مستقیم ۰۹۳۰ ۸۲۰ ۹۴۹۴ و مسیر رسمی Google Maps در بخش تماس قرار دارد." />
+    <TopicSection id="national-reference" title="مرجع ملی" contentFile="16-final-visible-copy.md"><FinalCopy /></TopicSection>
     <FAQ><FAQCopy /></FAQ>
     <References><ReferencesCopy /></References>
-
-    <TopicSection id="contact" title="تماس و مسیر" contentFile="13-contact.md">
-      <ContactCopy />
-      <CtaCopy />
-    </TopicSection>
-
+    <TopicSection id="contact" title="تماس و مسیر" contentFile="13-contact.md"><ContactCopy /><CtaCopy /></TopicSection>
     <DatasetSection><DatasetCopy /></DatasetSection>
   </main>
   <Footer />
