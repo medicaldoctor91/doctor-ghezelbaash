@@ -6,14 +6,14 @@ import { faqItems } from '../data/faq';
   <div class="faq-section__intro">
     <span class="section-kicker">پاسخ روشن، بدون وعده‌سازی</span>
     <h2 id="faq-title">پرسش‌هایی که قبل از تصمیم باید جواب بگیرند</h2>
-    <div class="content-slot" data-content-file="11-faq.md"><slot /></div>
+    <div class="content-slot"><slot /></div>
     <a class="button button--outline" href="#contact">پرسش شما در این فهرست نیست؟</a>
   </div>
   <div class="faq-grid">
     {faqItems.map((item, index) => (
       <details id={item.id} class="faq-item">
         <summary><span>{String(index + 1).padStart(2, '0')}</span>{item.question}<i aria-hidden="true"></i></summary>
-        <div><p>{item.answer}</p></div>
+        <div id={`${item.id}-answer`}><p>{item.answer}</p></div>
       </details>
     ))}
   </div>

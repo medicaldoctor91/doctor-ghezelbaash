@@ -10,7 +10,7 @@ public/assets/
 public/clinic.vcf
 public/doctor.vcf
 public/favicon.svg
-public/graph.jsonld
+public/knowledge-graph.jsonld
 public/llms.txt
 public/llms-full.txt
 public/manifest.webmanifest

@@ -942,6 +942,33 @@ summary {
     var(--forest-900);
 }
 
+.responsive-media {
+  margin: 0;
+  overflow: hidden;
+  border-radius: calc(var(--radius-md) * 0.72);
+  background: var(--forest-100);
+}
+
+.responsive-media picture,
+.responsive-media img {
+  display: block;
+  width: 100%;
+}
+
+.responsive-media img {
+  height: 100%;
+  object-fit: cover;
+}
+
+.identity-panel__portrait {
+  aspect-ratio: 4 / 3;
+  margin: -1rem -1rem 1.5rem;
+}
+
+.identity-panel__portrait img {
+  object-position: 50% 26%;
+}
+
 .identity-panel__seal {
   display: grid;
   width: 4.3rem;
@@ -1033,6 +1060,12 @@ summary {
   background: var(--paper);
 }
 
+.location-panel__photo {
+  aspect-ratio: 16 / 10;
+  margin: -1.4rem -1.4rem 1.4rem;
+  border-radius: 0;
+}
+
 .location-panel__map {
   position: relative;
   min-height: 10rem;
@@ -1092,6 +1125,17 @@ summary {
 
 .location-panel .technical-details summary {
   color: var(--forest-700);
+}
+
+.clinic-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-block-start: 1.2rem;
+}
+
+.clinic-gallery .responsive-media {
+  aspect-ratio: 1;
 }
 
 address {
@@ -1225,6 +1269,17 @@ address {
   color: var(--ink-faint);
   font-size: 0.58rem;
   line-height: 1.6;
+}
+
+.evidence-media {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-block-start: 2rem;
+}
+
+.evidence-media .responsive-media {
+  aspect-ratio: 16 / 9;
 }
 
 /* General sections */
@@ -2078,6 +2133,10 @@ tbody tr:last-child td {
     max-width: 34rem;
   }
 
+  .clinic-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .feature-pair,
   .decision-pair,
   .safety-local-zone,
@@ -2237,6 +2296,10 @@ tbody tr:last-child td {
   .topic-grid,
   .video-grid,
   .references-list {
+    grid-template-columns: 1fr;
+  }
+
+  .evidence-media {
     grid-template-columns: 1fr;
   }
 

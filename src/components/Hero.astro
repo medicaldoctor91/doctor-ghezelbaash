@@ -1,11 +1,15 @@
 ---
 import { clinic } from '../data/clinic';
 import { doctor } from '../data/doctor';
+import { googleMapsEvidence } from '../data/evidence';
 import type { AssetManifest } from '../utils/graph';
 interface Props { assets: AssetManifest; }
 const { assets } = Astro.props;
 const hero = assets.images['doctor-portrait'];
 const source = hero?.webp ?? hero?.fallback ?? hero?.avif;
+const heroSizes = '(max-width: 62rem) 100vw, 48vw';
+const srcset = (variants: Array<{ src: string; width: number }> | undefined) =>
+  variants?.map((variant) => `${variant.src} ${variant.width}w`).join(', ');
 ---
 
 <section id="hero" class="hero" aria-labelledby="hero-title">
@@ -21,7 +25,7 @@ const source = hero?.webp ?? hero?.fallback ?? hero?.avif;
       زیبایی وقتی دقیق است که
       <span>از تشخیص شروع شود.</span>
     </h1>
-    <div class="hero__lead content-slot" data-content-file="04-hero.md"><slot /></div>
+    <div class="hero__lead content-slot"><slot /></div>
 
     <div class="hero__actions">
       <a class="button button--primary" href={`tel:${clinic.telephone}`}>
@@ -36,18 +40,18 @@ const source = hero?.webp ?? hero?.fallback ?? hero?.avif;
 
     <div class="hero__proof" aria-label="اطلاعات اعتبارسنجی">
       <div><strong>۱۶۷۴۳۰</strong><span>شماره نظام پزشکی</span></div>
-      <div><strong>۵ از ۵</strong><span>امتیاز Google Maps</span></div>
-      <div><strong>۱۶۳</strong><span>ارزیابی ثبت‌شده</span></div>
+      <div><strong>{googleMapsEvidence.ratingDisplay}</strong><span>امتیاز Google Maps</span></div>
+      <div><strong>{googleMapsEvidence.reviewCountDisplay}</strong><span>ارزیابی ثبت‌شده</span></div>
     </div>
   </div>
 
   <div class="hero__visual">
     <div class="hero__frame">
       {source ? (
-        <picture>
-          {hero.avif && <source srcset={hero.avif} type="image/avif" />}
-          {hero.webp && <source srcset={hero.webp} type="image/webp" />}
-          <img src={hero.fallback ?? source} alt={hero.alt ?? doctor.publicName} width={hero.width} height={hero.height} loading="eager" decoding="async" fetchpriority="high" />
+        <picture id="image-doctor-portrait">
+          {hero.avif && <source srcset={srcset(hero.avifSrcset) ?? hero.avif} sizes={heroSizes} type="image/avif" />}
+          {hero.webp && <source srcset={srcset(hero.webpSrcset) ?? hero.webp} sizes={heroSizes} type="image/webp" />}
+          <img src={hero.fallback ?? source} srcset={srcset(hero.fallbackSrcset)} sizes={heroSizes} alt={hero.alt ?? doctor.publicName} width={hero.width} height={hero.height} loading="eager" decoding="async" fetchpriority="high" />
         </picture>
       ) : (
         <div class="hero__image-placeholder" role="img" aria-label={doctor.publicName}>دکتر سعید قزلباش</div>
@@ -63,7 +67,10 @@ const source = hero?.webp ?? hero?.fallback ?? hero?.avif;
     <div class="hero__rating-card">
       <span class="rating-stars" aria-label="پنج ستاره">★★★★★</span>
       <strong>امتیاز کامل مراجعه‌کنندگان</strong>
-      <small>بر پایه ۱۶۳ ارزیابی در Google Maps</small>
+      <small>
+        بر پایه {googleMapsEvidence.reviewCountDisplay} ارزیابی در Google Maps · مشاهده در{' '}
+        <time datetime={googleMapsEvidence.observedAt}>{googleMapsEvidence.observedAtDisplay}</time>
+      </small>
     </div>
 
     <div class="hero__principle-card">

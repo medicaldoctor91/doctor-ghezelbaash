@@ -1,12 +1,17 @@
 ---
 import { doctor, doctorIdentityUrls } from '../data/doctor';
+import type { AssetManifest } from '../utils/graph';
+import ResponsiveImage from './ResponsiveImage.astro';
+
+interface Props { assets: AssetManifest; }
+const { assets } = Astro.props;
 ---
 
 <section id="doctor-entity" class="entity-card entity-card--doctor" aria-labelledby="doctor-entity-title">
   <div class="entity-card__intro">
     <span class="section-kicker">پزشک مسئول و تصمیم‌گیرنده درمان</span>
     <h2 id="doctor-entity-title">هویت پزشکی که می‌توانید بررسی کنید</h2>
-    <div class="content-slot" data-content-file="01-doctor-profile.md"><slot /></div>
+    <div class="content-slot"><slot /></div>
     <div class="identity-links" aria-label="پیوندهای اعتبارسنجی پزشک">
       <a href={doctorIdentityUrls.medicalCouncil} rel="noopener noreferrer">نظام پزشکی</a>
       <a href={doctorIdentityUrls.orcid} rel="noopener noreferrer">ORCID</a>
@@ -16,6 +21,7 @@ import { doctor, doctorIdentityUrls } from '../data/doctor';
   </div>
 
   <aside class="identity-panel" aria-label="مشخصات ثبت‌شده پزشک">
+    <ResponsiveImage id="doctor-profile" asset={assets.images['doctor-profile']} class="identity-panel__portrait" />
     <div class="identity-panel__seal" aria-hidden="true">دق</div>
     <p class="identity-panel__label">مشخصات رسمی</p>
     <dl class="facts facts--premium">
@@ -24,13 +30,5 @@ import { doctor, doctorIdentityUrls } from '../data/doctor';
       <div><dt>شماره نظام پزشکی</dt><dd><bdi>{doctor.medicalRegistrationNumber}</bdi></dd></div>
       <div><dt>شهر فعالیت</dt><dd>کرمانشاه</dd></div>
     </dl>
-    <details class="technical-details">
-      <summary>شناسه‌های فنی هویت</summary>
-      <dl>
-        <div><dt>Wikidata</dt><dd><bdi>Q140287622</bdi></dd></div>
-        <div><dt>Google KG</dt><dd><bdi>/g/11nqdfk76c</bdi></dd></div>
-        <div><dt>Cloud KG</dt><dd><bdi>C-02KY8SVQ2</bdi></dd></div>
-      </dl>
-    </details>
   </aside>
 </section>

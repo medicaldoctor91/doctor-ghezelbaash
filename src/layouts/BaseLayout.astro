@@ -6,7 +6,16 @@ interface Props { graph: CanonicalGraph; assets: AssetManifest; }
 const { graph, assets } = Astro.props;
 const jsonLd = escapeJsonForHtml(graph);
 const hero = assets.images['doctor-portrait'];
-const heroPreload = hero?.webp ?? hero?.fallback ?? hero?.avif;
+const heroSizes = '(max-width: 62rem) 100vw, 48vw';
+const srcset = (variants: Array<{ src: string; width: number }> | undefined) =>
+  variants?.map((variant) => `${variant.src} ${variant.width}w`).join(', ');
+const heroPreload = hero?.avif
+  ? { href: hero.avif, type: 'image/avif', srcset: srcset(hero.avifSrcset) }
+  : hero?.webp
+    ? { href: hero.webp, type: 'image/webp', srcset: srcset(hero.webpSrcset) }
+    : hero?.fallback
+      ? { href: hero.fallback, type: 'image/jpeg', srcset: srcset(hero.fallbackSrcset) }
+      : null;
 ---
 
 <!doctype html>
@@ -19,8 +28,8 @@ const heroPreload = hero?.webp ?? hero?.fallback ?? hero?.avif;
     <link rel="canonical" href={seo.canonical} />
     <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
     <link rel="alternate" hreflang="fa-IR" href={seo.canonical} />
-    <link rel="alternate" type="application/ld+json" href="https://www.ghezelbaash.ir/graph.jsonld" />
-    <link rel="describedby" type="application/ld+json" href="https://www.ghezelbaash.ir/graph.jsonld" />
+    <link rel="alternate" type="application/ld+json" href="https://www.ghezelbaash.ir/knowledge-graph.jsonld" />
+    <link rel="describedby" type="application/ld+json" href="https://www.ghezelbaash.ir/knowledge-graph.jsonld" />
     <link rel="describedby" href="https://www.ghezelbaash.ir/llms.txt" />
     <meta name="theme-color" content="#0a211a" />
     <meta name="color-scheme" content="light" />
@@ -43,10 +52,9 @@ const heroPreload = hero?.webp ?? hero?.fallback ?? hero?.avif;
     <link rel="icon" href="/favicon-32x32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     {assets.font && <link rel="preload" href={assets.font} as="font" type="font/woff2" crossorigin />}
-    {heroPreload && <link rel="preload" href={heroPreload} as="image" type="image/webp" fetchpriority="high" />}
+    {heroPreload && <link rel="preload" href={heroPreload.href} as="image" type={heroPreload.type} imagesrcset={heroPreload.srcset} imagesizes={heroSizes} fetchpriority="high" />}
     {assets.css && <link rel="stylesheet" href={assets.css} />}
-    <link rel="stylesheet" href="/visual-fixes.css" />
-    <script type="application/ld+json" set:html={jsonLd} />
+    <script is:inline type="application/ld+json" set:html={jsonLd} />
   </head>
   <body>
     <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>

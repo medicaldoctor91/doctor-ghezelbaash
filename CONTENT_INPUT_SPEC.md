@@ -1,27 +1,26 @@
-# Visible-content replacement contract
+# Final content-package contract
 
-All files are UTF-8 Markdown, Persian unless explicitly stated otherwise. Do not include front matter, scripts, styles, schema markup, invented citations, or duplicated H1 headings. Use Persian `ی` and `ک`, stable section anchors, descriptive link text, and factual claims that can be tied to a supplied source.
+The final editorial handoff is an extracted directory named `ghezelbaash-content-final`. It is validated before any file is copied into source or rendered by Astro.
 
-| File | Required content |
-|---|---|
-| `00-project-identity.md` | Page purpose, audience, scope, canonical entity statement, and content-freeze statement. |
-| `01-doctor-profile.md` | Approved physician biography, credentials, registration facts, research identity, and alternate-name policy. |
-| `02-clinic-profile.md` | Official clinic description, complete address wording, access details, hours if approved, and contact context. |
-| `03-entity-relationship.md` | Plain-language distinction and relationship between the physician and clinic entities. |
-| `04-hero.md` | One H1-ready title line, concise positioning paragraph, and evidence-bound opening copy. |
-| `05-evidence-summary.md` | Evidence hierarchy, verified records, limits of evidence, and source-backed authority summary. |
-| `06-selection-criteria.md` | Criteria for selecting a physician/clinic without unsupported superiority claims. |
-| `07-decision-map.md` | Patient decision dimensions, candidacy boundaries, alternatives, and escalation criteria. |
-| `08-topic-matrix.md` | High-level taxonomy connecting goals, methods, constraints, and relevant page sections. |
-| `09-topic-sections.md` | Final copy for every medical-aesthetic topic section; each subsection must use the exact section ID supplied in `src/data/sections.ts`. |
-| `10-comparison-tables.md` | Table-ready factual comparisons with column headings, limitations, and source references. |
-| `11-faq.md` | Approved question/answer pairs; every schema FAQ must be visibly identical here. |
-| `12-references.md` | Full source list with title, publisher, stable URL/DOI/PMID where available, and access/publication date. |
-| `13-contact.md` | Approved contact wording, telephone display, address, map links, and response expectations. |
-| `14-visible-cta.md` | Final non-deceptive CTA language; no dynamic booking or processed form promises. |
-| `15-images-manifest.md` | Per-image subject, placement, alt text, caption, rights/source confirmation, and crop restrictions. |
-| `16-final-visible-copy.md` | Final editorial pass or consolidated replacement copy; identify which earlier sections it supersedes. |
-| `17-datasets-section.md` | English dataset description for the Zenodo and Hugging Face records already fixed in `src/data/datasets.ts`. |
-| `18-video-content.md` | Approved title, description, visible transcript mapping, upload date if known, and section placement for all 12 videos. |
+## Required separation
 
-Video transcript text must also be delivered as the separate files specified in `BLOCKING_INPUTS.md`; duplicating a summary in `18-video-content.md` does not satisfy the transcript gate.
+- `visible/`: publishable Persian Markdown bodies and explicitly allowlisted JSON fields.
+- `facts/`: entity facts, claim permissions, source registry, claim/source mapping, and media truth. Never rendered.
+- `retrieval/`: passage boundaries, aliases, and intent mappings. Never rendered as page copy.
+- `validation/`: coverage and editorial validation evidence. Never rendered.
+- `package-manifest.json`: exactly `package_name`, `schema_version`, and `files`; each file entry has `path`, `role`, `language`, `format`, `render_fields`, `strip_frontmatter`, and SHA-256. The manifest does not hash itself.
+
+The exact required tree is enforced by `scripts/validate-content-package.mjs`. A package is rejected for a missing or unlisted file, symlink, digest mismatch, manifest role/format/allowlist drift, invalid JSON/JSONL, physician/clinic identifier overlap, authoring text in a renderable field, unresolved visible placeholder, malformed heading ownership, incomplete coverage or retrieval records, broken source references, empty claim-permission control, missing claim/source mapping, or FAQ count other than 80.
+
+## Commands
+
+```sh
+npm run content:validate -- /absolute/path/to/extracted-parent-or-root
+npm run content:stage -- /absolute/path/to/extracted-parent-or-root
+```
+
+`content:stage` writes only to `content-package/current` after all gates pass. It never makes the package visible by itself. The Astro adapter must render only the fields declared by the manifest; files in `facts/`, `retrieval/`, `validation/`, and `NON_VISIBLE_README.md` are never page inputs.
+
+The release remains `technical-foundation` with `contentFrozen: false` while the fallback corpus is active. The final adapter changes those values to `production-final` and `true` only after source/render/graph parity and the strict production build pass.
+
+If `content-package/current` already exists, staging stops. `--replace` is accepted only for an intentional, already validated replacement.

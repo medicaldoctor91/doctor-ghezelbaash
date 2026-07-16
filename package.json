@@ -3,41 +3,32 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "engines": { "node": ">=22.12.0" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "preview": "astro preview",
     "astro": "astro",
+    "check:astro": "ASTRO_TELEMETRY_DISABLED=1 astro check",
     "media:verify": "node scripts/check-media-integrity.mjs",
-    "prebuild": "node --experimental-strip-types scripts/validate-production-v2.mjs inputs && npm run generate",
+    "content:validate": "node scripts/validate-content-package.mjs",
+    "content:stage": "node scripts/stage-content-package.mjs",
+    "content:test": "node scripts/test-content-package-validator.mjs",
+    "prebuild": "npm run check:astro && npm run content:test && node --experimental-strip-types scripts/validate-production-v2.mjs inputs && npm run generate",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build && npm run finalize && node --experimental-strip-types scripts/validate-production-v2.mjs all",
-    "build:scaffold": "npm run build",
     "generate": "node --experimental-strip-types scripts/generate-production.mjs && node scripts/copy-static-icons.mjs",
     "finalize": "node --experimental-strip-types scripts/finalize-build.mjs",
     "validate": "node --experimental-strip-types scripts/validate-production-v2.mjs all",
-    "validate:inputs": "node --experimental-strip-types scripts/validate-production-v2.mjs inputs",
-    "validate:legacy": "node --experimental-strip-types scripts/validate.mjs all",
-    "validate:structure": "node --experimental-strip-types scripts/validate.mjs structure",
-    "validate:html": "node --experimental-strip-types scripts/validate.mjs html",
-    "validate:schema": "node --experimental-strip-types scripts/validate.mjs schema",
-    "validate:graph": "node --experimental-strip-types scripts/validate.mjs graph",
-    "validate:links": "node --experimental-strip-types scripts/validate.mjs links",
-    "validate:anchors": "node --experimental-strip-types scripts/validate.mjs anchors",
-    "validate:canonical": "node --experimental-strip-types scripts/validate.mjs canonical",
-    "validate:budgets": "node --experimental-strip-types scripts/validate.mjs budgets",
-    "validate:persian": "node --experimental-strip-types scripts/validate.mjs persian",
-    "validate:llms": "node --experimental-strip-types scripts/validate.mjs llms",
-    "validate:no-pages-dev": "node --experimental-strip-types scripts/validate.mjs no-pages-dev",
-    "validate:no-service-flags": "node --experimental-strip-types scripts/validate.mjs no-service-flags",
-    "validate:headers": "node --experimental-strip-types scripts/validate.mjs headers",
-    "validate:sitemap": "node --experimental-strip-types scripts/validate.mjs sitemap",
-    "validate:robots": "node --experimental-strip-types scripts/validate.mjs robots",
-    "validate:media": "node --experimental-strip-types scripts/validate-production-v2.mjs media",
-    "validate:video": "node --experimental-strip-types scripts/validate-production-v2.mjs video",
-    "validate:video-schema": "node --experimental-strip-types scripts/validate-production-v2.mjs schema",
-    "validate:datasets": "node --experimental-strip-types scripts/validate-production-v2.mjs datasets",
-    "validate:release": "node --experimental-strip-types scripts/validate-production-v2.mjs release"
+    "validate:inputs": "node --experimental-strip-types scripts/validate-production-v2.mjs inputs"
   },
-  "dependencies": { "astro": "^7.0.2" },
-  "devDependencies": { "@astrojs/markdown-remark": "^7.2.1" }
+  "dependencies": {
+    "astro": "^7.0.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/markdown-remark": "^7.2.1",
+    "@types/node": "^26.1.1",
+    "typescript": "^6.0.3"
+  }
 }

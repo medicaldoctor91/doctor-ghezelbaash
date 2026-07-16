@@ -8,7 +8,7 @@ const allowPlaceholders = process.argv.includes('--allow-placeholders');
 const required = [
   'index.html',
   '404.html',
-  'graph.jsonld',
+  'knowledge-graph.jsonld',
   'llms.txt',
   'llms-full.txt',
   'release.json',
@@ -23,7 +23,7 @@ for (const file of required) {
 
 const sha256Hex = (value) => createHash('sha256').update(value).digest('hex');
 const html = readFileSync(resolve(dist, 'index.html'));
-const graph = readFileSync(resolve(dist, 'graph.jsonld'));
+const graph = readFileSync(resolve(dist, 'knowledge-graph.jsonld'));
 const llms = readFileSync(resolve(dist, 'llms-full.txt'));
 const releasePath = resolve(dist, 'release.json');
 const release = JSON.parse(readFileSync(releasePath, 'utf8'));
@@ -33,7 +33,7 @@ writeFileSync(
   `${JSON.stringify(
     {
       ...release,
-      contentFrozen: !allowPlaceholders,
+      contentFrozen: allowPlaceholders ? false : release.contentFrozen,
       htmlSha256: sha256Hex(html),
       graphSha256: sha256Hex(graph),
       llmsSha256: sha256Hex(llms),

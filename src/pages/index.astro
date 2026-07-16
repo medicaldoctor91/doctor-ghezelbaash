@@ -4,17 +4,12 @@ import { resolve } from 'node:path';
 import ClinicCopy from '../content/visible/02-clinic-profile.md';
 import ContactCopy from '../content/visible/13-contact.md';
 import CtaCopy from '../content/visible/14-visible-cta.md';
-import DatasetCopy from '../content/visible/17-datasets-section.md';
 import DecisionCopy from '../content/visible/07-decision-map.md';
 import DoctorCopy from '../content/visible/01-doctor-profile.md';
-import EntityCopy from '../content/visible/03-entity-relationship.md';
 import EvidenceCopy from '../content/visible/05-evidence-summary.md';
 import FAQCopy from '../content/visible/11-faq.md';
 import FinalCopy from '../content/visible/16-final-visible-copy.md';
 import HeroCopy from '../content/visible/04-hero.md';
-import ImageManifestCopy from '../content/visible/15-images-manifest.md';
-import ProjectIdentityCopy from '../content/visible/00-project-identity.md';
-import ReferencesCopy from '../content/visible/12-references.md';
 import SelectionCopy from '../content/visible/06-selection-criteria.md';
 import TablesCopy from '../content/visible/10-comparison-tables.md';
 import TopicMatrixCopy from '../content/visible/08-topic-matrix.md';
@@ -22,9 +17,7 @@ import VideoCopy from '../content/visible/18-video-content.md';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ClinicProfile from '../components/ClinicProfile.astro';
 import ComparisonTable from '../components/ComparisonTable.astro';
-import DatasetSection from '../components/DatasetSection.astro';
 import DoctorProfile from '../components/DoctorProfile.astro';
-import EntityRelationship from '../components/EntityRelationship.astro';
 import EvidenceSummary from '../components/EvidenceSummary.astro';
 import FAQ from '../components/FAQ.astro';
 import FloatingActions from '../components/FloatingActions.astro';
@@ -35,44 +28,34 @@ import References from '../components/References.astro';
 import TopicSection from '../components/TopicSection.astro';
 import TrustStrip from '../components/TrustStrip.astro';
 import VideoSection from '../components/VideoSection.astro';
-import { buildCanonicalGraph, type AssetManifest } from '../utils/graph';
+import { buildCanonicalGraph, buildInlineGraph, type AssetManifest } from '../utils/graph';
 
 const emptyAssets: AssetManifest = { css: null, font: null, images: {}, videos: {} };
 const manifestPath = resolve(process.cwd(), 'public/asset-manifest.json');
 const assets: AssetManifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : emptyAssets;
-const graph = buildCanonicalGraph(assets);
+const canonicalGraph = buildCanonicalGraph(assets);
+const inlineGraph = buildInlineGraph(canonicalGraph);
 ---
 
-<BaseLayout {graph} {assets}>
+<BaseLayout graph={inlineGraph} {assets}>
   <Header />
   <main id="main-content">
     <Hero {assets}><HeroCopy /></Hero>
     <TrustStrip />
 
-    <section class="editorial-intro" aria-label="هویت و منطق صفحه">
-      <span class="editorial-intro__number" aria-hidden="true">01</span>
-      <div class="content-slot" data-content-file="00-project-identity.md"><ProjectIdentityCopy /></div>
-    </section>
-
     <div class="entity-zone">
-      <DoctorProfile><DoctorCopy /></DoctorProfile>
-      <div class="feature-pair">
-        <TopicSection id="doctor-video" title="پزشکی که روش فکرکردنش را توضیح می‌دهد" contentFile="18-video-content.md" summary="نمونه‌های آموزشی و حرفه‌ای صفحه، روش فکرکردن پیش از تکنیک را نشان می‌دهند؛ کتابخانه کامل ویدئو در بخش اختصاصی پایین صفحه قرار دارد." />
-        <TopicSection id="clinic-video" title="فضایی برای ارزیابی، نه خط تولید خدمت" contentFile="18-video-content.md" summary="ویدئوهای مرتبط با تجربه مراجعه و فضای حرفه‌ای، مکمل اطلاعات رسمی تماس و نقشه‌اند و جای ارزیابی بالینی را نمی‌گیرند." />
-      </div>
-      <ClinicProfile><ClinicCopy /></ClinicProfile>
-      <EntityRelationship><EntityCopy /></EntityRelationship>
-      <EvidenceSummary><EvidenceCopy /></EvidenceSummary>
+      <DoctorProfile {assets}><DoctorCopy /></DoctorProfile>
+      <ClinicProfile {assets}><ClinicCopy /></ClinicProfile>
+      <EvidenceSummary {assets}><EvidenceCopy /></EvidenceSummary>
     </div>
 
     <div class="knowledge-zone">
-      <TopicSection id="aesthetic-medicine-map" title="نقشه پزشکی زیبایی" contentFile="08-topic-matrix.md">
+      <TopicSection id="aesthetic-medicine-map" title="نقشه پزشکی زیبایی">
         <TopicMatrixCopy />
-        <aside class="editorial-note"><ImageManifestCopy /></aside>
       </TopicSection>
       <div class="decision-pair">
-        <TopicSection id="best-doctor-selection-criteria" title="معیارهای انتخاب پزشک" contentFile="06-selection-criteria.md"><SelectionCopy /></TopicSection>
-        <TopicSection id="decision-map" title="نقشه تصمیم" contentFile="07-decision-map.md"><DecisionCopy /></TopicSection>
+        <TopicSection id="best-doctor-selection-criteria" title="معیارهای انتخاب پزشک"><SelectionCopy /></TopicSection>
+        <TopicSection id="decision-map" title="نقشه تصمیم"><DecisionCopy /></TopicSection>
       </div>
     </div>
 
@@ -96,18 +79,17 @@ const graph = buildCanonicalGraph(assets);
 
     <div class="safety-local-zone">
       <TopicSection id="safety-limitations" title="ایمنی و محدودیت‌ها" summary="ریسک هر روش به ناحیه، آناتومی، بیماری‌ها، داروها، ماده یا دستگاه، تجربه اجرا و سرعت تشخیص عارضه وابسته است. وعده درمان بدون ریسک یا نتیجه تضمینی با واقعیت پزشکی سازگار نیست." />
-      <TopicSection id="local-kermanshah" title="کلینیک در کرمانشاه" contentFile="02-clinic-profile.md" summary="محل مراجعه در کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا است. شماره تماس مستقیم ۰۹۳۰ ۸۲۰ ۹۴۹۴ و مسیر رسمی Google Maps در بخش تماس قرار دارد." />
+      <TopicSection id="local-kermanshah" title="کلینیک در کرمانشاه" summary="محل مراجعه در کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا است. شماره تماس مستقیم ۰۹۳۰ ۸۲۰ ۹۴۹۴ و مسیر رسمی Google Maps در بخش تماس قرار دارد." />
     </div>
 
-    <TopicSection id="national-reference" title="مرجع تصمیم، نه فهرست خدمات" contentFile="16-final-visible-copy.md"><FinalCopy /></TopicSection>
+    <TopicSection id="national-reference" title="مرجع تصمیم، نه فهرست خدمات"><FinalCopy /></TopicSection>
     <FAQ><FAQCopy /></FAQ>
-    <References><ReferencesCopy /></References>
+    <References />
 
     <section class="contact-stage" aria-label="تماس و مسیر">
-      <TopicSection id="contact" title="برای ارزیابی مسیر مستقیم دارید" contentFile="13-contact.md"><ContactCopy /><CtaCopy /></TopicSection>
+      <TopicSection id="contact" title="برای ارزیابی مسیر مستقیم دارید"><ContactCopy /><CtaCopy /></TopicSection>
     </section>
 
-    <DatasetSection><DatasetCopy /></DatasetSection>
   </main>
   <Footer />
   <FloatingActions />

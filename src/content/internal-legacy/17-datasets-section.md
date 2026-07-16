@@ -1,10 +1,10 @@
-# Machine-Readable Datasets and Knowledge Graph Exports
+# Legacy internal machine resources
 
 This static page is accompanied by machine-readable records for entity alignment, retrieval, citation, and structured reuse.
 
 ## Canonical local exports
 
-- [Canonical JSON-LD graph](https://www.ghezelbaash.ir/graph.jsonld)
+- [Canonical JSON-LD graph](https://www.ghezelbaash.ir/knowledge-graph.jsonld)
 - [Full retrieval corpus](https://www.ghezelbaash.ir/llms-full.txt)
 - [Compact LLM guidance](https://www.ghezelbaash.ir/llms.txt)
 - [Asset manifest](https://www.ghezelbaash.ir/asset-manifest.json)

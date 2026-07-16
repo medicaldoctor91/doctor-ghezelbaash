@@ -1,7 +1,7 @@
 ---
 import { topicGroups } from '../data/topics';
-interface Props { id: string; title: string; contentFile?: string; lang?: string; dir?: 'rtl' | 'ltr'; summary?: string; }
-const { id, title, contentFile = '09-topic-sections.md', lang, dir, summary } = Astro.props;
+interface Props { id: string; title: string; lang?: string; dir?: 'rtl' | 'ltr'; summary?: string; }
+const { id, title, lang, dir, summary } = Astro.props;
 const titleId = `${id}-title`;
 const group = topicGroups.find((item) => item.id === id);
 const isTopicGroup = Boolean(group?.terms.length);
@@ -16,7 +16,7 @@ const isTopicGroup = Boolean(group?.terms.length);
     </div>
   </header>
 
-  <div class="content-slot" data-content-file={contentFile} data-content-section={id}>
+  <div class="content-slot">
     <slot>
       {isTopicGroup ? (
         <div class="topic-grid">
