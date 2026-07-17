@@ -59,8 +59,8 @@
     revealTarget(target);
     updateOffset();
     const top = Math.max(0, window.scrollY + target.getBoundingClientRect().top - offset());
-    window.scrollTo({ top, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
     if (historyMode) setHistory(`#${encodeURIComponent(target.id)}`, historyMode);
+    window.scrollTo({ top, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
     if (focus) focusTarget(target);
   };
 

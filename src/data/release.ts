@@ -1,6 +1,6 @@
 export const release = {
   site: 'https://www.ghezelbaash.ir/',
-  version: '1.1.0',
+  version: '1.1.1',
   publishedAt: '2026-07-16',
   dateModified: '2026-07-16',
   buildTool: 'Astro',
