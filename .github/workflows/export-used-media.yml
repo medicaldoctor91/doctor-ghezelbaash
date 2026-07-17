@@ -1,0 +1,139 @@
+name: Export Used Website Media
+
+on:
+  push:
+    branches:
+      - ai/export-used-media-20260717
+
+permissions:
+  contents: read
+
+jobs:
+  export-media:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12.0'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production website
+        run: npm run build
+
+      - name: Package images and videos from final build
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import csv
+          import hashlib
+          import re
+          import shutil
+          import zipfile
+          from pathlib import Path
+
+          root = Path.cwd()
+          dist = root / "dist"
+          out = root / "media-export"
+          payload = out / "website-used-media"
+          deployed = payload / "deployed-media"
+
+          if not dist.is_dir():
+              raise SystemExit("dist/ does not exist after production build")
+
+          media_exts = {
+              ".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".avif",
+              ".bmp", ".ico", ".tif", ".tiff", ".heic", ".heif",
+              ".mp4", ".webm", ".mov", ".m4v", ".ogv", ".avi", ".mkv"
+          }
+          text_exts = {".html", ".css", ".js", ".mjs", ".json", ".xml", ".txt"}
+
+          if out.exists():
+              shutil.rmtree(out)
+          deployed.mkdir(parents=True, exist_ok=True)
+
+          records: list[dict[str, str | int]] = []
+          for src in sorted(p for p in dist.rglob("*") if p.is_file() and p.suffix.lower() in media_exts):
+              rel = src.relative_to(dist)
+              dst = deployed / rel
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copy2(src, dst)
+              digest = hashlib.sha256(src.read_bytes()).hexdigest()
+              kind = "video" if src.suffix.lower() in {".mp4", ".webm", ".mov", ".m4v", ".ogv", ".avi", ".mkv"} else "image"
+              records.append({
+                  "type": kind,
+                  "path_in_deployed_site": rel.as_posix(),
+                  "size_bytes": src.stat().st_size,
+                  "sha256": digest,
+              })
+
+          external_pattern = re.compile(
+              r"https?://[^\s\"'<>]+?\.(?:jpe?g|png|webp|gif|svg|avif|bmp|ico|tiff?|heic|heif|mp4|webm|mov|m4v|ogv|avi|mkv)(?:\?[^\s\"'<>]*)?",
+              re.IGNORECASE,
+          )
+          external_urls: set[str] = set()
+          for text_file in (p for p in dist.rglob("*") if p.is_file() and p.suffix.lower() in text_exts):
+              try:
+                  text = text_file.read_text(encoding="utf-8", errors="ignore")
+              except OSError:
+                  continue
+              external_urls.update(external_pattern.findall(text))
+
+          with (payload / "manifest.csv").open("w", newline="", encoding="utf-8-sig") as f:
+              writer = csv.DictWriter(f, fieldnames=["type", "path_in_deployed_site", "size_bytes", "sha256"])
+              writer.writeheader()
+              writer.writerows(records)
+
+          (payload / "external-media-urls.txt").write_text(
+              "\n".join(sorted(external_urls)) + ("\n" if external_urls else ""),
+              encoding="utf-8",
+          )
+
+          image_count = sum(r["type"] == "image" for r in records)
+          video_count = sum(r["type"] == "video" for r in records)
+          total_bytes = sum(int(r["size_bytes"]) for r in records)
+          readme = f"""# Website used media export
+
+Source repository: medicaldoctor91/doctor-ghezelbaash
+Source branch/commit: ai/export-used-media-20260717 / ${{{{ github.sha }}}}
+Extraction basis: media files present in the final Astro production build (`dist/`).
+
+- Images: {image_count}
+- Videos: {video_count}
+- Total files: {len(records)}
+- Total bytes: {total_bytes}
+- External media URLs detected in built text files: {len(external_urls)}
+
+`deployed-media/` preserves the exact paths used by the deployed website.
+`manifest.csv` contains file type, deployed path, byte size, and SHA-256.
+`external-media-urls.txt` lists externally hosted media references; those remote files are not embedded in this archive.
+"""
+          (payload / "README.md").write_text(readme, encoding="utf-8")
+
+          zip_path = out / "doctor-ghezelbaash-used-media.zip"
+          with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
+              for path in sorted(payload.rglob("*")):
+                  if path.is_file():
+                      zf.write(path, path.relative_to(out))
+
+          print(f"Packaged {len(records)} media files ({image_count} images, {video_count} videos)")
+          print(f"ZIP: {zip_path} ({zip_path.stat().st_size} bytes)")
+          PY
+
+      - name: Upload media ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-ghezelbaash-used-media
+          path: media-export/doctor-ghezelbaash-used-media.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
