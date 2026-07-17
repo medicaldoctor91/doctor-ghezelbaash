@@ -1,9 +1,9 @@
 name: Export Used Website Media
 
 on:
-  push:
+  pull_request:
     branches:
-      - ai/export-used-media-20260717
+      - main
 
 permissions:
   contents: read
