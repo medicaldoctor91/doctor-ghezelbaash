@@ -1,0 +1,51 @@
+name: Install Astro framework skill
+
+on:
+  push:
+    branches:
+      - chore/install-astro-framework-skill
+
+permissions:
+  contents: write
+
+jobs:
+  install-skill:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: chore/install-astro-framework-skill
+          fetch-depth: 0
+
+      - name: Fetch upstream skill
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/delineas/astro-framework-agents.git "$RUNNER_TEMP/astro-framework-agents"
+          test -f "$RUNNER_TEMP/astro-framework-agents/skills/astro-framework/SKILL.md"
+
+      - name: Install complete skill package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .agents/skills/astro-framework
+          mkdir -p .agents/skills
+          cp -R "$RUNNER_TEMP/astro-framework-agents/skills/astro-framework" .agents/skills/astro-framework
+          rm -f .github/workflows/install-astro-framework-skill.yml
+
+      - name: Commit installed skill
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .agents/skills/astro-framework
+          git add -u .github/workflows/install-astro-framework-skill.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore: install Astro framework agent skill"
+          git push origin HEAD:chore/install-astro-framework-skill
