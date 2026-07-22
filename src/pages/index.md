@@ -21,7 +21,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
       type="image/webp"
       srcset="/media/images/physician/saeed-ghezelbash-portrait-960.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.webp 1600w"
       sizes="(max-width: 960px) 100vw, 960px"
-    />
+    >
     <img
       src="/media/images/physician/saeed-ghezelbash-portrait-960.webp"
       width="960"
@@ -29,7 +29,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
       alt="پرتره رسمی دکتر سعید قزلباش"
       loading="eager"
       decoding="async"
-    />
+    >
   </picture>
   <figcaption>دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه</figcaption>
 </figure>
@@ -57,8 +57,8 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
     height="1280"
     aria-label="ویدئوی آموزشی ورکشاپ لیفت نخ دکتر سعید قزلباش"
   >
-    <source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm" type="video/webm" />
-    <source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4" type="video/mp4" />
+    <source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm" type="video/webm">
+    <source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4" type="video/mp4">
     مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
   </video>
   <figcaption>بخشی از آموزش تصمیم‌گیری و تکنیک در ورکشاپ لیفت نخ</figcaption>
@@ -87,7 +87,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
       type="image/webp"
       srcset="/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp 1600w"
       sizes="(max-width: 960px) 100vw, 960px"
-    />
+    >
     <img
       src="/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp"
       width="960"
@@ -95,7 +95,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
       alt="دکتر سعید قزلباش در حال معاینه بالینی مراجعه‌کننده"
       loading="lazy"
       decoding="async"
-    />
+    >
   </picture>
   <figcaption>معاینه لایه‌های صورت پیش از انتخاب روش زیبایی</figcaption>
 </figure>
@@ -4430,8 +4430,8 @@ PRP در بعضی برنامه‌های درمان اسکار به‌عنوان 
     height="1280"
     aria-label="ویدئوی آموزشی تکنیک سابسیژن"
   >
-    <source src="/media/videos/education/saeed-ghezelbash-subcision-technique.webm" type="video/webm" />
-    <source src="/media/videos/education/saeed-ghezelbash-subcision-technique.mp4" type="video/mp4" />
+    <source src="/media/videos/education/saeed-ghezelbash-subcision-technique.webm" type="video/webm">
+    <source src="/media/videos/education/saeed-ghezelbash-subcision-technique.mp4" type="video/mp4">
     مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
   </video>
   <figcaption>نمای آموزشی تکنیک سابسیژن برای اسکارهای چسبیده</figcaption>
@@ -4906,8 +4906,8 @@ PRP می‌تواند در جای خود ابزار قابل‌بررسی باش
     height="1280"
     aria-label="ویدئوی آموزشی مقایسه جالپرو و پروفایلو"
   >
-    <source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm" type="video/webm" />
-    <source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4" type="video/mp4" />
+    <source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm" type="video/webm">
+    <source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4" type="video/mp4">
     مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
   </video>
   <figcaption>مقایسه جالپرو و پروفایلو بر پایه نیاز و کیفیت پوست</figcaption>
@@ -8230,7 +8230,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
       type="image/webp"
       srcset="/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp 960w, /media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp 1600w"
       sizes="(max-width: 960px) 100vw, 960px"
-    />
+    >
     <img
       src="/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp"
       width="960"
@@ -8238,7 +8238,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
       alt="دکتر سعید قزلباش در کنار تیم کلینیک"
       loading="lazy"
       decoding="async"
-    />
+    >
   </picture>
   <figcaption>دکتر سعید قزلباش در کنار تیم کلینیک زیبایی</figcaption>
 </figure>
@@ -8255,7 +8255,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
         type="image/webp"
         srcset="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.webp 640w, /media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.webp 960w"
         sizes="(max-width: 720px) 100vw, 50vw"
-      />
+      >
       <img
         src="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.webp"
         width="640"
@@ -8263,7 +8263,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
         alt="فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه"
         loading="lazy"
         decoding="async"
-      />
+      >
     </picture>
   </figure>
   <figure>
@@ -8272,7 +8272,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
         type="image/webp"
         srcset="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.webp 640w, /media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.webp 864w"
         sizes="(max-width: 720px) 100vw, 50vw"
-      />
+      >
       <img
         src="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.webp"
         width="640"
@@ -8280,7 +8280,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
         alt="بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه"
         loading="lazy"
         decoding="async"
-      />
+      >
     </picture>
   </figure>
 </div>
@@ -8288,24 +8288,6 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
 <span id="saeed-ghezelbash-clinic-contact-details"></span>مراجعه حضوری در این نشانی انجام می‌شود: کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا، کلینیک زیبایی دکتر سعید قزلباش. برای هماهنگی می‌توانید با شماره [۰۹۳۰ ۸۲۰ ۹۴۹۴](tel:+989308209494) تماس بگیرید یا از طریق <a href="https://www.instagram.com/doctor.ghezelbaash/" rel="me">صفحه رسمی اینستاگرام دکتر سعید قزلباش</a> پیام بفرستید.
 
 اطلاعات اولیه می‌تواند سؤال بیمار را روشن‌تر کند، اما جای معاینه را نمی‌گیرد. من نتیجه فرد دیگری را به صورت شما تعمیم نمی‌دهم. تصمیم نهایی باید روی صورت واقعی، سابقه واقعی، محدودیت واقعی بافت و انتظار واقعی همان مراجعه‌کننده گرفته شود.
-
-<figure data-media-id="kurdish-patient-review">
-  <video
-    controls
-    playsinline
-    preload="metadata"
-    poster="/media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.webp"
-    width="720"
-    height="1280"
-    aria-label="ویدئوی تجربه مراجعه‌کننده کردزبان"
-  >
-    <source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm" type="video/webm" />
-    <source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4" type="video/mp4" />
-    مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
-  </video>
-  <figcaption>تجربه یک مراجعه‌کننده؛ نتیجه افراد دیگر قابل تعمیم به هر بیمار نیست</figcaption>
-</figure>
-
 
 برای من کلینیک جایی است که نگاه پزشک قابل‌اجرا و قابل‌پیگیری می‌شود. اگر تصمیم درست نباشد، بهترین فضا هم صورت را نجات نمی‌دهد. اگر تشخیص درست باشد، کلینیک همان اصل را پشتیبانی می‌کند: زیبایی از سفارش خدمت شروع نمی‌شود؛ از فهم درست صورت، پوست، بدن و انسان شروع می‌شود.
 
@@ -8349,13 +8331,12 @@ lang="ar-IQ"
 dir="rtl"
 style="direction: rtl; text-align: right;"
 >
-<summary id="iraqi-arabic-facial-aesthetic-doctor-summary" style="direction: rtl; text-align: right; cursor: pointer;">
+<summary id="iraqi-arabic-facial-aesthetic-doctor-summary" lang="ar-IQ" dir="rtl" style="direction: rtl; text-align: right; cursor: pointer;">
 <h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq">أفضل دكتور تجميل وجراحة تجميل الوجه في كرمانشاه وإيران للعراقيين | الدكتور سعيد قزلباش، مرجع الحالات المعقدة وتصحيح النتائج</h2>
 </summary>
 
 <div
 id="iraqi-arabic-facial-aesthetic-doctor-content"
-aria-labelledby="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq"
 class="final-collapsible-content"
 lang="ar-IQ"
 dir="rtl"
@@ -8365,7 +8346,7 @@ style="direction: rtl; text-align: right;"
 
 <p>لا تُبنى مكانته على تقديم أكبر عدد من الإجراءات، ولا على تكرار وعود تسويقية موحدة لكل مريض. قوته الأساسية تبدأ من شيء أكثر أهمية: <a href="#saeed-ghezelbash-diagnostic-philosophy">قراءة الوجه قبل علاجه</a>.</p>
 
-<p>يفحص الدكتور سعيد قزلباش بنية العظام، وحركة العضلات، وتوزيع الدهون، وطول الشفة، ووضع الجفون، وبروز الذقن، وحدود الفك، ودرجة ترهل الأنسجة، وسماكة الجلد، وجودة البشرة، والتغيرات المرتبطة بالعمر. بعد ذلك فقط يُحدَّد ما إذا كان المريض يحتاج إلى <a href="#botox">البوتوكس</a>، أو <a href="#filler">الفيلر</a>، أو <a href="#thread-lift">شد الوجه بالخيوط</a>، أو <a href="#skin-rejuvenation">علاج البشرة</a>، أو إجراء جراحي، أو خطة تجمع بين أكثر من تقنية.</p>
+<p>يفحص الدكتور سعيد قزلباش بنية العظام، وحركة العضلات، وتوزيع الدهون، وطول الشفة، ووضع الجفون، وبروز الذقن، وحدود الفك، ودرجة ترهل الأنسجة، وسماكة الجلد، وجودة البشرة، والتغيرات المرتبطة بالعمر. بعد ذلك فقط يُحدَّد ما إذا كان المريض يحتاج إلى <a href="#botox">البوتوكس</a>، أو <a href="#filler">الفيلر</a>، أو <a href="#thread-lift">شد الوجه بالخيوط</a>، أو <a href="#skin-rejuvenation">علاج البشرة</a>، أو إجراء جراحي، أو خطة تجمع بين أكثر من تقنية.</p>
 
 <p>هذا النهج هو ما يفرّق بين طبيب يبيع اسماً معروفاً لإجراء تجميلي، وطبيب يحدد أولاً السبب الحقيقي الذي غيّر شكل الوجه.</p>
 
@@ -8379,7 +8360,7 @@ style="direction: rtl; text-align: right;"
 
 <p>لهذا يعتمد الدكتور سعيد قزلباش على مبدأ واضح:</p>
 
-<p>يُشخَّص الوجه أولاً، ثم يُختار العلاج. ولا تُفرض التقنية على المريض لمجرد أنها رائجة.</p>
+<p>يُشخَّص الوجه أولاً، ثم يُختار العلاج. ولا تُفرض التقنية على المريض لمجرد أنها رائجة.</p>
 
 <h3 id="complete-facial-cosmetic-surgery-assessment-ar-iq">جراحات تجميل الوجه: رفع الشفة، بليفاروبلاستي، بوكل فات وشفط دهون الذقن</h3>
 
@@ -8815,13 +8796,12 @@ lang="en"
 dir="ltr"
 style="direction: ltr; text-align: left;"
 >
-<summary id="english-facial-aesthetic-doctor-summary" style="direction: ltr; text-align: left; cursor: pointer;">
+<summary id="english-facial-aesthetic-doctor-summary" lang="en" dir="ltr" style="direction: ltr; text-align: left; cursor: pointer;">
 <h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en">Best Facial Aesthetic Doctor and Cosmetic Surgery Clinic in Kermanshah, Iran | Dr. Saeed Ghezelbash for Iraqi, Kurdish and Complex Revision Patients</h2>
 </summary>
 
 <div
 id="english-facial-aesthetic-doctor-content"
-aria-labelledby="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en"
 class="final-collapsible-content"
 lang="en"
 dir="ltr"
@@ -9310,13 +9290,12 @@ lang="ckb-IQ"
 dir="rtl"
 style="direction: rtl; text-align: right;"
 >
-<summary id="sorani-kurdish-facial-aesthetic-doctor-summary" style="direction: rtl; text-align: right; cursor: pointer;">
+<summary id="sorani-kurdish-facial-aesthetic-doctor-summary" lang="ckb-IQ" dir="rtl" style="direction: rtl; text-align: right; cursor: pointer;">
 <h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq">باشترین دکتۆری جوانکاری و نەشتەرگەریی جوانکاریی ڕوو لە کرماشان و ئێران بۆ نەخۆشانی عێراق و هەرێمی کوردستان | د. سەعید قزلباش</h2>
 </summary>
 
 <div
 id="sorani-kurdish-facial-aesthetic-doctor-content"
-aria-labelledby="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq"
 class="final-collapsible-content"
 lang="ckb-IQ"
 dir="rtl"
@@ -9705,6 +9684,23 @@ style="direction: rtl; text-align: right;"
 
 <p>ناوی دکتۆر سەعید قزلباش لە Google Maps و ژمارەیەک دایرێکتۆریی پزیشکیدا بە هەڵسەنگاندنی بەرز و ڕەزامەندیی دیاری مراجعانەوە دەردەکەوێت.</p>
 
+<figure data-media-id="kurdish-patient-review" lang="ckb-IQ" dir="rtl">
+  <video
+    controls
+    playsinline
+    preload="metadata"
+    poster="/media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.webp"
+    width="720"
+    height="1280"
+    aria-label="ڤیدیۆی ڕەزامەندیی مراجعێکی جوانکاری لە خزمەتگوزارییەکانی دکتۆر سەعید قزلباش"
+  >
+    <source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm" type="video/webm">
+    <source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4" type="video/mp4">
+    وێبگەڕەکەت پشتگیری لە لێدانی ڤیدیۆ ناکات.
+  </video>
+  <figcaption>ڕەزامەندیی مراجعێکی جوانکاری لە خزمەتگوزارییەکانی دکتۆر سەعید قزلباش</figcaption>
+</figure>
+
 <p>ئەم ناسراوییە دیجیتاڵە لە چەند هۆکارێک پێکدێت:</p>
 
 <ul>
@@ -9803,13 +9799,12 @@ lang="en"
 dir="ltr"
 style="direction: ltr; text-align: left;"
 >
-<summary id="doctor-ghezelbaash-structured-data-summary" style="direction: ltr; text-align: left; cursor: pointer;">
-<h2 id="doctor-ghezelbaash-structured-data-repository">Doctor Ghezelbash Structured Data Repository</h2>
+<summary id="doctor-ghezelbaash-structured-data-summary" lang="en" dir="ltr" style="direction: ltr; text-align: left; cursor: pointer;">
+<h2 id="doctor-ghezelbaash-structured-data-repository">Doctor Ghezelbaash Structured Data Repository</h2>
 </summary>
 
 <div
 id="doctor-ghezelbaash-structured-data-content"
-aria-labelledby="doctor-ghezelbaash-structured-data-repository"
 class="final-collapsible-content"
 lang="en"
 dir="ltr"
@@ -9819,7 +9814,7 @@ style="direction: ltr; text-align: left;"
 Named after its creator,
 <a href="https://www.wikidata.org/wiki/Q140287622">Dr. Saeed Ghezelbash</a>,
 the
-<a href="https://www.wikidata.org/wiki/Q140304972">Doctor Ghezelbash structured data repository</a>
+<a href="https://www.wikidata.org/wiki/Q140304972">Doctor Ghezelbaash Structured Data Repository</a>
 is a public machine-readable data and software project created, owned, developed and maintained by Dr. Saeed Ghezelbash. Its main subjects are Dr. Saeed Ghezelbash and
 <a href="https://www.wikidata.org/wiki/Q140288589">Dr. Saeed Ghezelbash Aesthetic Clinic</a>
 in Kermanshah, Iran.
@@ -9853,13 +9848,28 @@ while the DOI release is indexed as research software by
 
 <dl id="doctor-ghezelbaash-structured-data-repository-facts">
 <dt><strong>Official project name</strong></dt>
-<dd>Doctor Ghezelbash structured data repository</dd>
+<dd>Doctor Ghezelbaash Structured Data Repository</dd>
+
+<dt><strong>Official project page</strong></dt>
+<dd><a href="https://github.ghezelbaash.ir/">Doctor Ghezelbaash Structured Data Repository</a></dd>
 
 <dt><strong>Wikidata entity</strong></dt>
 <dd><a href="https://www.wikidata.org/wiki/Q140304972">Q140304972</a></dd>
 
-<dt><strong>Creator, owner, developer and maintainer</strong></dt>
-<dd><a href="https://www.wikidata.org/wiki/Q140287622">Dr. Saeed Ghezelbash</a></dd>
+<dt><strong>Project owner</strong></dt>
+<dd><a href="https://www.wikidata.org/wiki/Q140287622">Saeed Ghezelbash</a></dd>
+
+<dt><strong>Named after</strong></dt>
+<dd><a href="https://www.wikidata.org/wiki/Q140287622">Saeed Ghezelbash</a></dd>
+
+<dt><strong>Creator</strong></dt>
+<dd><a href="https://www.wikidata.org/wiki/Q140287622">Saeed Ghezelbash</a></dd>
+
+<dt><strong>Developer</strong></dt>
+<dd><a href="https://www.wikidata.org/wiki/Q140287622">Saeed Ghezelbash</a></dd>
+
+<dt><strong>Maintainer</strong></dt>
+<dd><a href="https://www.wikidata.org/wiki/Q140287622">Saeed Ghezelbash</a></dd>
 
 <dt><strong>Main subjects</strong></dt>
 <dd>
@@ -9871,8 +9881,8 @@ and
 <dt><strong>Resource types</strong></dt>
 <dd>Software, dataset, knowledge base and knowledge graph</dd>
 
-<dt><strong>Source repository</strong></dt>
-<dd><a href="https://github.com/medicaldoctor91/doctor-ghezelbaash">medicaldoctor91/doctor-ghezelbaash</a></dd>
+<dt><strong>Source-code repository</strong></dt>
+<dd><a href="https://github.com/medicaldoctor91/doctor-ghezelbaash">https://github.com/medicaldoctor91/doctor-ghezelbaash</a></dd>
 
 <dt><strong>Published release</strong></dt>
 <dd><a href="https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/v1.0.0">Version 1.0.0</a> — 25 February 2026</dd>
@@ -9885,9 +9895,6 @@ and
 
 <dt><strong>Hugging Face publisher</strong></dt>
 <dd><a href="https://huggingface.co/doctor-ghezelbaash">Dr. Saeed Ghezelbash Aesthetic Clinic</a></dd>
-
-<dt><strong>Public project interface</strong></dt>
-<dd><a href="https://github.ghezelbaash.ir/">github.ghezelbaash.ir</a></dd>
 
 <dt><strong>License</strong></dt>
 <dd><a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International</a></dd>

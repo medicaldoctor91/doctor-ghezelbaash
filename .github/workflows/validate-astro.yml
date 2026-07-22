@@ -18,22 +18,75 @@ concurrency:
 
 jobs:
   build:
-    name: Install and build
+    name: Build and validate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
+    env:
+      ASTRO_TELEMETRY_DISABLED: 1
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up pinned Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .node-version
           cache: npm
 
+      - name: Set up Java for Nu HTML Checker
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Type-check Astro and structured data
+        run: npm run check:astro
+
       - name: Build static Astro site
         run: npm run build
+
+      - name: Audit the built page
+        run: npm run audit
+
+      - name: Validate built HTML and embedded CSS
+        run: npm run validate:html
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Run cross-browser and accessibility tests
+        run: npm run test:e2e
+
+      - name: Run Lighthouse release gate
+        shell: bash
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4321 > /tmp/astro-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid"' EXIT
+
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4321/ > /dev/null; then
+              npm run audit:lighthouse -- http://127.0.0.1:4321/ --runs=3
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat /tmp/astro-preview.log
+          exit 1
+
+      - name: Upload validation failure evidence
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: validation-failure-evidence
+          path: |
+            playwright-report/
+            test-results/
+            lighthouse-results/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,5 +1,8 @@
 ---
 import type { MarkdownLayoutProps } from 'astro';
+import StructuredData from '../components/StructuredData.astro';
+import { buildStructuredData } from '../data/structured-data';
+import '../styles/global.css';
 
 type PageFrontmatter = {
   title: string;
@@ -16,26 +19,64 @@ const { frontmatter } = Astro.props;
 const lang = frontmatter.lang ?? 'fa-IR';
 const dir = frontmatter.dir ?? 'rtl';
 const robots = frontmatter.robots ?? 'index, follow';
-const canonicalURL = Astro.site
-  ? new URL(Astro.url.pathname, Astro.site)
-  : undefined;
+const siteOrigin = Astro.site ?? Astro.url.origin;
+const canonicalURL = new URL(Astro.url.pathname, siteOrigin);
+const socialImageURL = new URL(
+  '/media/images/physician/saeed-ghezelbash-portrait-1600.webp',
+  siteOrigin,
+);
+const structuredData = buildStructuredData({
+  canonicalURL: canonicalURL.href,
+  description: frontmatter.description,
+  title: frontmatter.title,
+});
 ---
 
 <!doctype html>
 <html lang={lang} dir={dir}>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="generator" content={Astro.generator} />
-    <meta name="robots" content={robots} />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content={Astro.generator}>
+    <meta name="robots" content={robots}>
 
     <title>{frontmatter.title}</title>
-    <meta name="description" content={frontmatter.description} />
+    <meta name="description" content={frontmatter.description}>
 
-    {canonicalURL && <link rel="canonical" href={canonicalURL} />}
+    <link rel="canonical" href={canonicalURL}>
+
+    <meta property="og:title" content={frontmatter.title}>
+    <meta property="og:description" content={frontmatter.description}>
+    <meta property="og:type" content="profile">
+    <meta property="og:url" content={canonicalURL}>
+    <meta property="og:site_name" content="دکتر سعید قزلباش">
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:image" content={socialImageURL}>
+    <meta property="og:image:type" content="image/webp">
+    <meta property="og:image:width" content="1600">
+    <meta property="og:image:height" content="1067">
+    <meta
+      property="og:image:alt"
+      content="پرتره رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه"
+    >
+    <meta property="profile:first_name" content="محمدسعید">
+    <meta property="profile:last_name" content="قزلباش">
+    <meta property="profile:username" content="doctor.ghezelbaash">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content={frontmatter.title}>
+    <meta name="twitter:description" content={frontmatter.description}>
+    <meta name="twitter:image" content={socialImageURL}>
+    <meta
+      name="twitter:image:alt"
+      content="پرتره رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه"
+    >
+
+    <StructuredData data={structuredData} />
   </head>
 
   <body>
+    <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
     <main id="main-content">
       <article aria-labelledby="saeed-ghezelbash-aesthetic-medicine">
         <slot />
