@@ -66,13 +66,9 @@ article {
  * while keeping their HTML, links, headings, and text in the document.
  */
 article > h2,
-article > h2 ~ * {
+article > h2 ~ :not(figure) {
   content-visibility: auto;
   contain-intrinsic-block-size: auto 6rem;
-}
-
-article > figure {
-  contain-intrinsic-block-size: auto 45rem;
 }
 
 article > nav {
