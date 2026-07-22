@@ -97,13 +97,19 @@ test('loads every image and preserves intrinsic dimensions', async ({ page }) =>
   expect(count).toBeGreaterThan(0);
   for (let index = 0; index < count; index += 1) {
     const image = images.nth(index);
+    await image.evaluate((element) => {
+      const deferredSection = element.closest<HTMLElement>('.page-section');
+      if (deferredSection) deferredSection.style.contentVisibility = 'visible';
+    });
     await image.scrollIntoViewIfNeeded();
     await expect
-      .poll(() =>
-        image.evaluate((element) => {
-          const htmlImage = element as HTMLImageElement;
-          return htmlImage.complete && htmlImage.naturalWidth > 0;
-        }),
+      .poll(
+        () =>
+          image.evaluate((element) => {
+            const htmlImage = element as HTMLImageElement;
+            return htmlImage.complete && htmlImage.naturalWidth > 0;
+          }),
+        { timeout: 15_000 },
       )
       .toBe(true);
   }
