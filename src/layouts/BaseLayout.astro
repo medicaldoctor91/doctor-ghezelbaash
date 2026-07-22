@@ -1,0 +1,45 @@
+---
+import type { MarkdownLayoutProps } from 'astro';
+
+type PageFrontmatter = {
+  title: string;
+  description: string;
+  lang?: string;
+  dir?: 'rtl' | 'ltr' | 'auto';
+  robots?: string;
+};
+
+type Props = MarkdownLayoutProps<PageFrontmatter>;
+
+const { frontmatter } = Astro.props;
+
+const lang = frontmatter.lang ?? 'fa-IR';
+const dir = frontmatter.dir ?? 'rtl';
+const robots = frontmatter.robots ?? 'index, follow';
+const canonicalURL = Astro.site
+  ? new URL(Astro.url.pathname, Astro.site)
+  : undefined;
+---
+
+<!doctype html>
+<html lang={lang} dir={dir}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="robots" content={robots} />
+
+    <title>{frontmatter.title}</title>
+    <meta name="description" content={frontmatter.description} />
+
+    {canonicalURL && <link rel="canonical" href={canonicalURL} />}
+  </head>
+
+  <body>
+    <main id="main-content">
+      <article aria-labelledby="saeed-ghezelbash-aesthetic-medicine">
+        <slot />
+      </article>
+    </main>
+  </body>
+</html>
