@@ -1,0 +1,173 @@
+name: Test compressHTML
+
+on:
+  push:
+    branches:
+      - test/compress-html
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Compare default and compressed HTML
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up pinned Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build current configuration
+        run: npm run build
+
+      - name: Save baseline HTML and measurements
+        shell: bash
+        run: |
+          cp dist/index.html /tmp/index-baseline.html
+          node <<'NODE'
+          const fs = require('node:fs');
+          const zlib = require('node:zlib');
+          const html = fs.readFileSync('/tmp/index-baseline.html');
+          const sizes = {
+            raw: html.length,
+            gzip: zlib.gzipSync(html, { level: 9 }).length,
+            brotli: zlib.brotliCompressSync(html, {
+              params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 },
+            }).length,
+          };
+          fs.writeFileSync('/tmp/baseline-sizes.json', JSON.stringify(sizes));
+          console.log('BASELINE_SIZES=' + JSON.stringify(sizes));
+          NODE
+
+      - name: Enable compressHTML true only for this test
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path('astro.config.mjs')
+          source = path.read_text(encoding='utf-8')
+          needle = "  output: 'static',\n"
+          if needle not in source:
+              raise SystemExit('Expected Astro configuration line was not found')
+          path.write_text(
+              source.replace(needle, needle + '  compressHTML: true,\n', 1),
+              encoding='utf-8',
+          )
+          PY
+          cat astro.config.mjs
+
+      - name: Build with compressHTML true
+        run: npm run build
+
+      - name: Compare size and document integrity
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const zlib = require('node:zlib');
+          const crypto = require('node:crypto');
+
+          const baselineBuffer = fs.readFileSync('/tmp/index-baseline.html');
+          const compressedBuffer = fs.readFileSync('dist/index.html');
+          const baselineHtml = baselineBuffer.toString('utf8');
+          const compressedHtml = compressedBuffer.toString('utf8');
+
+          function sizes(buffer) {
+            return {
+              raw: buffer.length,
+              gzip: zlib.gzipSync(buffer, { level: 9 }).length,
+              brotli: zlib.brotliCompressSync(buffer, {
+                params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 },
+              }).length,
+            };
+          }
+
+          function collect(pattern, html) {
+            return [...html.matchAll(pattern)].map((match) => match[1]).sort();
+          }
+
+          function visibleText(html) {
+            return html
+              .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+              .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+              .replace(/<[^>]+>/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim();
+          }
+
+          const baseline = sizes(baselineBuffer);
+          const compressed = sizes(compressedBuffer);
+          const metrics = {};
+          for (const key of ['raw', 'gzip', 'brotli']) {
+            const saved = baseline[key] - compressed[key];
+            metrics[key] = {
+              baseline: baseline[key],
+              compressed: compressed[key],
+              saved,
+              percent: Number(((saved / baseline[key]) * 100).toFixed(4)),
+            };
+          }
+
+          const baselineIds = collect(/\sid=["']([^"']+)["']/gi, baselineHtml);
+          const compressedIds = collect(/\sid=["']([^"']+)["']/gi, compressedHtml);
+          const baselineFragments = collect(/\shref=["']#([^"']+)["']/gi, baselineHtml);
+          const compressedFragments = collect(/\shref=["']#([^"']+)["']/gi, compressedHtml);
+          const baselineText = visibleText(baselineHtml);
+          const compressedText = visibleText(compressedHtml);
+
+          const integrity = {
+            idsEqual: JSON.stringify(baselineIds) === JSON.stringify(compressedIds),
+            fragmentsEqual: JSON.stringify(baselineFragments) === JSON.stringify(compressedFragments),
+            visibleTextEqual: baselineText === compressedText,
+            visibleTextHashBaseline: crypto.createHash('sha256').update(baselineText).digest('hex'),
+            visibleTextHashCompressed: crypto.createHash('sha256').update(compressedText).digest('hex'),
+            headingCountBaseline: (baselineHtml.match(/<h[1-6]\b/gi) || []).length,
+            headingCountCompressed: (compressedHtml.match(/<h[1-6]\b/gi) || []).length,
+            imageCountBaseline: (baselineHtml.match(/<img\b/gi) || []).length,
+            imageCountCompressed: (compressedHtml.match(/<img\b/gi) || []).length,
+            videoCountBaseline: (baselineHtml.match(/<video\b/gi) || []).length,
+            videoCountCompressed: (compressedHtml.match(/<video\b/gi) || []).length,
+          };
+
+          console.log('SIZE_COMPARISON=' + JSON.stringify(metrics));
+          console.log('INTEGRITY_COMPARISON=' + JSON.stringify(integrity));
+
+          const summary = [
+            '# compressHTML comparison',
+            '',
+            '| Encoding | Current bytes | compressHTML bytes | Saved bytes | Saved % |',
+            '|---|---:|---:|---:|---:|',
+            ...['raw', 'gzip', 'brotli'].map((key) =>
+              `| ${key} | ${metrics[key].baseline} | ${metrics[key].compressed} | ${metrics[key].saved} | ${metrics[key].percent}% |`
+            ),
+            '',
+            '## Integrity',
+            '',
+            `- IDs equal: ${integrity.idsEqual}`,
+            `- Fragment targets equal: ${integrity.fragmentsEqual}`,
+            `- Normalized visible text equal: ${integrity.visibleTextEqual}`,
+            `- Heading count: ${integrity.headingCountBaseline} → ${integrity.headingCountCompressed}`,
+            `- Image count: ${integrity.imageCountBaseline} → ${integrity.imageCountCompressed}`,
+            `- Video count: ${integrity.videoCountBaseline} → ${integrity.videoCountCompressed}`,
+          ].join('\n');
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary + '\n');
+
+          if (!integrity.idsEqual || !integrity.fragmentsEqual ||
+              integrity.headingCountBaseline !== integrity.headingCountCompressed ||
+              integrity.imageCountBaseline !== integrity.imageCountCompressed ||
+              integrity.videoCountBaseline !== integrity.videoCountCompressed) {
+            process.exitCode = 1;
+          }
+          NODE
