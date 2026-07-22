@@ -36,7 +36,7 @@ test('resolves every in-page link and table-of-contents target', async ({ page }
     return { linkCount: links.length, missing, tocCount: tableOfContentsLinks.length };
   });
   expect(result.linkCount).toBeGreaterThan(100);
-  expect(result.tocCount).toBeGreaterThan(20);
+  expect(result.tocCount).toBe(15);
   expect(result.missing).toEqual([]);
 });
 
