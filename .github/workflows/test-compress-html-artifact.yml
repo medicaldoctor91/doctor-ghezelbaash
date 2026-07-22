@@ -1,0 +1,102 @@
+name: Export compressHTML result
+
+on:
+  push:
+    branches:
+      - test/compress-html
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: Build baseline
+        run: |
+          npm run build
+          cp dist/index.html /tmp/baseline.html
+      - name: Build with compressHTML true
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p = Path('astro.config.mjs')
+          s = p.read_text(encoding='utf-8')
+          p.write_text(s.replace("  output: 'static',\n", "  output: 'static',\n  compressHTML: true,\n", 1), encoding='utf-8')
+          PY
+          npm run build
+      - name: Produce comparison JSON
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const zlib = require('node:zlib');
+          const crypto = require('node:crypto');
+
+          const a = fs.readFileSync('/tmp/baseline.html');
+          const b = fs.readFileSync('dist/index.html');
+          const sa = a.toString('utf8');
+          const sb = b.toString('utf8');
+
+          const size = (buf) => ({
+            raw: buf.length,
+            gzip: zlib.gzipSync(buf, { level: 9 }).length,
+            brotli: zlib.brotliCompressSync(buf, {
+              params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 },
+            }).length,
+          });
+          const collect = (re, html) => [...html.matchAll(re)].map(m => m[1]).sort();
+          const text = (html) => html
+            .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+            .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          const baseline = size(a);
+          const compressed = size(b);
+          const savings = {};
+          for (const key of ['raw', 'gzip', 'brotli']) {
+            const bytes = baseline[key] - compressed[key];
+            savings[key] = {
+              bytes,
+              percent: Number((bytes * 100 / baseline[key]).toFixed(4)),
+            };
+          }
+
+          const ta = text(sa);
+          const tb = text(sb);
+          const result = {
+            baseline,
+            compressed,
+            savings,
+            integrity: {
+              idsEqual: JSON.stringify(collect(/\sid=["']([^"']+)["']/gi, sa)) === JSON.stringify(collect(/\sid=["']([^"']+)["']/gi, sb)),
+              fragmentsEqual: JSON.stringify(collect(/\shref=["']#([^"']+)["']/gi, sa)) === JSON.stringify(collect(/\shref=["']#([^"']+)["']/gi, sb)),
+              normalizedVisibleTextEqual: ta === tb,
+              baselineTextHash: crypto.createHash('sha256').update(ta).digest('hex'),
+              compressedTextHash: crypto.createHash('sha256').update(tb).digest('hex'),
+              headings: [(sa.match(/<h[1-6]\b/gi) || []).length, (sb.match(/<h[1-6]\b/gi) || []).length],
+              images: [(sa.match(/<img\b/gi) || []).length, (sb.match(/<img\b/gi) || []).length],
+              videos: [(sa.match(/<video\b/gi) || []).length, (sb.match(/<video\b/gi) || []).length],
+            },
+          };
+          fs.writeFileSync('compress-html-result.json', JSON.stringify(result, null, 2));
+          console.log(JSON.stringify(result));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compress-html-result
+          path: compress-html-result.json
+          if-no-files-found: error
+          retention-days: 1
