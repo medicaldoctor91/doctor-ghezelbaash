@@ -60,6 +60,29 @@ article {
   overflow-wrap: anywhere;
 }
 
+/*
+ * The document is intentionally a single, very long static page. Let browsers
+ * defer layout and paint for the reference sections below the introduction,
+ * while keeping their HTML, links, headings, and text in the document.
+ */
+article > h2,
+article > h2 ~ * {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 6rem;
+}
+
+article > figure {
+  contain-intrinsic-block-size: auto 45rem;
+}
+
+article > nav {
+  contain-intrinsic-block-size: auto 55rem;
+}
+
+article > details {
+  contain-intrinsic-block-size: auto 4rem;
+}
+
 h1,
 h2,
 h3,
