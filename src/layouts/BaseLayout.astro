@@ -3,6 +3,7 @@ import type { MarkdownLayoutProps } from 'astro';
 import StructuredData from '../components/StructuredData.astro';
 import { buildStructuredData } from '../data/structured-data';
 import '../styles/global.css';
+import { sectionizePageContent } from '../utils/sectionize-page-content.mjs';
 
 type PageFrontmatter = {
   title: string;
@@ -30,6 +31,7 @@ const structuredData = buildStructuredData({
   description: frontmatter.description,
   title: frontmatter.title,
 });
+const pageContent = sectionizePageContent(await Astro.props.compiledContent());
 ---
 
 <!doctype html>
@@ -84,7 +86,7 @@ const structuredData = buildStructuredData({
     <a class="skip-link" href="#main-content">رفتن به محتوای اصلی</a>
     <main id="main-content">
       <article aria-labelledby="saeed-ghezelbash-aesthetic-medicine">
-        <slot />
+        <Fragment set:html={pageContent} />
       </article>
     </main>
   </body>

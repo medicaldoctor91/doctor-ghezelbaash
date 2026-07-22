@@ -27,6 +27,25 @@ const DOCTOR_KG_ID = '/g/11nqdfk76c';
 const CLINIC_KG_ID = '/g/11r3rzdtb3';
 const CONTENT_SOURCE_SHA256 =
   'e2655ee593569877411807b2e1b15db9e485565824f86cbc2a45f3aad2a06030';
+const RENDERED_ARTICLE_TEXT_SHA256 =
+  'eace8f8d1dfb96ba93cacd31da9b4c1e3b2f06e7ca077793f74c3dfd8a9d4f19';
+const PAGE_SECTION_IDS = [
+  'diagnosis-before-aesthetic-treatment-selection',
+  'facial-aging-differential-diagnosis',
+  'botox',
+  'filler',
+  'thread-lift',
+  'acne-pigmentation-and-scars',
+  'skin-rejuvenation',
+  'hair-loss',
+  'chin-jawline-and-facial-contouring',
+  'aesthetic-treatment-selection',
+  'aesthetic-treatment-candidacy',
+  'complications-aftercare-and-follow-up',
+  'saeed-ghezelbash-diagnostic-philosophy',
+  'aesthetic-treatment-failure-from-diagnostic-error',
+  'dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',
+];
 
 const failures = [];
 const assert = (condition, message) => {
@@ -69,6 +88,36 @@ assert(attr(htmlElement, 'dir') === 'rtl', 'Root dir must be rtl.');
 const headings = elements.filter((node) => /^h[1-6]$/.test(node.tagName));
 const h1s = headings.filter((node) => node.tagName === 'h1');
 assert(h1s.length === 1, `Expected exactly one H1; found ${h1s.length}.`);
+
+const articles = byTag('article');
+assert(articles.length === 1, `Expected exactly one article; found ${articles.length}.`);
+const article = articles[0];
+if (article) {
+  const renderedTextHash = createHash('sha256')
+    .update(textContent(article))
+    .digest('hex');
+  assert(
+    renderedTextHash === RENDERED_ARTICLE_TEXT_SHA256,
+    'Rendered article text changed during the build.',
+  );
+
+  const pageSections = (article.childNodes ?? []).filter(
+    (node) =>
+      node.tagName === 'section' &&
+      (attr(node, 'class') ?? '').split(/\s+/u).includes('page-section'),
+  );
+  const sectionHeadingIds = pageSections.map((section) =>
+    attr(
+      (section.childNodes ?? []).find((node) => node.tagName === 'h2'),
+      'id',
+    ),
+  );
+  assert(
+    JSON.stringify(sectionHeadingIds) === JSON.stringify(PAGE_SECTION_IDS),
+    'The 15 main content sections are missing, reordered or malformed.',
+  );
+}
+
 for (let index = 1; index < headings.length; index += 1) {
   const previousLevel = Number(headings[index - 1].tagName.slice(1));
   const currentLevel = Number(headings[index].tagName.slice(1));
