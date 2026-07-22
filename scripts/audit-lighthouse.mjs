@@ -38,6 +38,7 @@ for (const [profile, config] of profiles) {
           port: chrome.port,
           output: 'json',
           logLevel: 'error',
+          throttlingMethod: 'devtools',
           onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
         },
         config,

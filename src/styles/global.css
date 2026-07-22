@@ -203,6 +203,12 @@ dd {
   margin-inline-start: 1.25rem;
 }
 
+dd > a {
+  display: inline-flex;
+  min-block-size: 1.5rem;
+  align-items: center;
+}
+
 [dir="ltr"] {
   text-align: left;
 }
