@@ -4,20 +4,21 @@ on:
   push:
     branches:
       - main
-    paths:
-      - .github/workflows/extract-website-source-once.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   extract:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
     steps:
       - name: Check out main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Extract exact website source into repository root
@@ -40,10 +41,8 @@ jobs:
           test -f "$SOURCE/package.json" || { echo "package.json missing from extracted website source" >&2; exit 1; }
           test -d "$SOURCE/src" || { echo "src/ missing from extracted website source" >&2; exit 1; }
 
-          # Put the actual Astro project at repository root, not inside the ZIP wrapper folder.
           cp -a "$SOURCE/." "$GITHUB_WORKSPACE/"
 
-          # Remove only extraction/upload artifacts and this one-shot workflow.
           rm -rf "$GITHUB_WORKSPACE/$WRAPPER"
           rm -rf "$GITHUB_WORKSPACE/__MACOSX"
           rm -f "$ZIP"
