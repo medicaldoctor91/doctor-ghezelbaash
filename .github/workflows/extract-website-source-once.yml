@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - .github/unzip-trigger
   workflow_dispatch:
 
 permissions:
@@ -46,6 +48,7 @@ jobs:
           rm -rf "$GITHUB_WORKSPACE/$WRAPPER"
           rm -rf "$GITHUB_WORKSPACE/__MACOSX"
           rm -f "$ZIP"
+          rm -f "$GITHUB_WORKSPACE/.github/unzip-trigger"
           rm -f "$GITHUB_WORKSPACE/.github/workflows/extract-website-source-once.yml"
           find "$GITHUB_WORKSPACE" -type f \( -name '.DS_Store' -o -name '._*' \) -delete
 
