@@ -1,0 +1,41 @@
+name: Apply homepage v4
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.upload-v4/ready'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Reconstruct homepage
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .upload-v4/part*.b64 > /tmp/index.md.gz.b64
+          base64 -d /tmp/index.md.gz.b64 | gzip -d > src/pages/index.md
+          echo '185b7dc5fc2cb8f27226e024c555f20bcc5324f338f1649bc9c528d773c75197  src/pages/index.md' | sha256sum -c -
+
+      - name: Commit homepage and clean transport files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .upload-v4
+          rm -f .github/workflows/apply-index-v4.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'Replace homepage with v4 clinical intelligence'
+          git push origin HEAD:main
