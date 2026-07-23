@@ -36,8 +36,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Validate inputs and archive entries
-        id: paths
+      - name: Validate and extract ZIP safely
         shell: bash
         env:
           ZIP_INPUT: ${{ inputs.zip_path }}
@@ -45,59 +44,100 @@ jobs:
         run: |
           set -euo pipefail
 
-          repo="$(realpath "$GITHUB_WORKSPACE")"
-          zip="$(realpath -m "$GITHUB_WORKSPACE/$ZIP_INPUT")"
-          dest="$(realpath -m "$GITHUB_WORKSPACE/$DEST_INPUT")"
+          python3 <<'PY'
+          import os
+          import shutil
+          import stat
+          from pathlib import Path, PurePosixPath
+          from zipfile import BadZipFile, ZipFile
 
-          case "$zip" in
-            "$repo"/*) ;;
-            *) echo "ZIP path escapes repository: $ZIP_INPUT" >&2; exit 1 ;;
-          esac
+          workspace = Path(os.environ["GITHUB_WORKSPACE"]).resolve()
+          zip_input = os.environ["ZIP_INPUT"]
+          dest_input = os.environ["DEST_INPUT"]
 
-          case "$dest" in
-            "$repo"|"$repo"/*) ;;
-            *) echo "Destination escapes repository: $DEST_INPUT" >&2; exit 1 ;;
-          esac
+          zip_path = (workspace / zip_input).resolve()
+          destination = (workspace / dest_input).resolve()
 
-          if [[ ! -f "$zip" ]]; then
-            echo "ZIP file not found: $ZIP_INPUT" >&2
-            exit 1
-          fi
+          def inside_repo(path: Path) -> bool:
+              return path == workspace or workspace in path.parents
 
-          if [[ "${zip,,}" != *.zip ]]; then
-            echo "Input is not a .zip file: $ZIP_INPUT" >&2
-            exit 1
-          fi
+          if not inside_repo(zip_path):
+              raise SystemExit(f"ZIP path escapes repository: {zip_input}")
 
-          # Reject absolute paths or parent-directory traversal inside the archive.
-          if zipinfo -1 "$zip" | awk '
-            /^\// { bad=1 }
-            (^|\/)\.\.($|\/)/ { bad=1 }
-            END { exit bad ? 0 : 1 }
-          '; then
-            echo "Unsafe path detected inside ZIP; extraction aborted." >&2
-            exit 1
-          fi
+          if not inside_repo(destination):
+              raise SystemExit(f"Destination escapes repository: {dest_input}")
 
-          mkdir -p "$dest"
-          echo "zip=$zip" >> "$GITHUB_OUTPUT"
-          echo "dest=$dest" >> "$GITHUB_OUTPUT"
+          if not zip_path.is_file():
+              raise SystemExit(f"ZIP file not found: {zip_input}")
 
-      - name: Extract ZIP
-        shell: bash
-        env:
-          ZIP_FILE: ${{ steps.paths.outputs.zip }}
-          DEST_DIR: ${{ steps.paths.outputs.dest }}
-        run: |
-          set -euo pipefail
-          unzip -o "$ZIP_FILE" -d "$DEST_DIR"
+          if zip_path.suffix.lower() != ".zip":
+              raise SystemExit(f"Input is not a .zip file: {zip_input}")
+
+          destination.mkdir(parents=True, exist_ok=True)
+
+          try:
+              with ZipFile(zip_path) as archive:
+                  planned = []
+
+                  for info in archive.infolist():
+                      # Treat backslashes as separators too, so Windows-style traversal
+                      # cannot bypass validation even though the runner is Linux.
+                      normalized_name = info.filename.replace("\\", "/")
+                      member = PurePosixPath(normalized_name)
+
+                      if member.is_absolute() or ".." in member.parts:
+                          raise SystemExit(
+                              f"Unsafe path inside ZIP: {info.filename}"
+                          )
+
+                      mode = info.external_attr >> 16
+                      if stat.S_ISLNK(mode):
+                          raise SystemExit(
+                              f"Symlink entry is not allowed: {info.filename}"
+                          )
+
+                      relative = Path(*member.parts)
+                      target = (destination / relative).resolve()
+
+                      if target != destination and destination not in target.parents:
+                          raise SystemExit(
+                              f"Archive entry escapes destination: {info.filename}"
+                          )
+
+                      if target == zip_path:
+                          raise SystemExit(
+                              f"Archive would overwrite itself: {info.filename}"
+                          )
+
+                      planned.append((info, target, mode))
+
+                  for info, target, mode in planned:
+                      if info.is_dir():
+                          target.mkdir(parents=True, exist_ok=True)
+                          continue
+
+                      target.parent.mkdir(parents=True, exist_ok=True)
+                      with archive.open(info, "r") as src, target.open("wb") as dst:
+                          shutil.copyfileobj(src, dst)
+
+                      permissions = mode & 0o777
+                      if permissions:
+                          target.chmod(permissions)
+
+          except BadZipFile as exc:
+              raise SystemExit(f"Invalid or corrupted ZIP: {zip_input}") from exc
+
+          print(f"Extracted {zip_input} -> {dest_input}")
+          PY
 
       - name: Delete ZIP if requested
         if: ${{ inputs.delete_zip }}
         shell: bash
         env:
-          ZIP_FILE: ${{ steps.paths.outputs.zip }}
-        run: rm -f -- "$ZIP_FILE"
+          ZIP_INPUT: ${{ inputs.zip_path }}
+        run: |
+          set -euo pipefail
+          rm -f -- "$GITHUB_WORKSPACE/$ZIP_INPUT"
 
       - name: Commit and push extracted files
         shell: bash
