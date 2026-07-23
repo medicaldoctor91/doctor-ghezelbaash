@@ -1,0 +1,30 @@
+{
+  "name": "dr-saeed-ghezelbash-astro-page",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "check:astro": "ASTRO_TELEMETRY_DISABLED=1 astro check",
+    "audit": "node scripts/audit-built-page.mjs",
+    "validate:html": "vnu --skip-info-messages --Werror dist/*.html",
+    "test:e2e": "playwright test",
+    "test": "npm run check:astro && npm run build && npm run audit && npm run validate:html && npm run test:e2e",
+    "audit:lighthouse": "node scripts/audit-lighthouse.mjs"
+  },
+  "dependencies": {
+    "astro": "7.1.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.9",
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
+    "chrome-launcher": "1.2.1",
+    "lighthouse": "13.4.1",
+    "parse5": "8.0.1",
+    "schema-dts": "2.0.0",
+    "typescript": "6.0.3",
+    "vnu-jar": "26.7.22"
+  }
+}
