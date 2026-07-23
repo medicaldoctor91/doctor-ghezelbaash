@@ -1,0 +1,120 @@
+name: Extract ZIP in repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      zip_path:
+        description: "Path to the ZIP file in the repository (e.g. archive.zip or uploads/site.zip)"
+        required: true
+        type: string
+      destination:
+        description: "Extraction destination relative to repository root"
+        required: true
+        default: "."
+        type: string
+      delete_zip:
+        description: "Delete the ZIP after successful extraction"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: unzip-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    name: Extract and commit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate inputs and archive entries
+        id: paths
+        shell: bash
+        env:
+          ZIP_INPUT: ${{ inputs.zip_path }}
+          DEST_INPUT: ${{ inputs.destination }}
+        run: |
+          set -euo pipefail
+
+          repo="$(realpath "$GITHUB_WORKSPACE")"
+          zip="$(realpath -m "$GITHUB_WORKSPACE/$ZIP_INPUT")"
+          dest="$(realpath -m "$GITHUB_WORKSPACE/$DEST_INPUT")"
+
+          case "$zip" in
+            "$repo"/*) ;;
+            *) echo "ZIP path escapes repository: $ZIP_INPUT" >&2; exit 1 ;;
+          esac
+
+          case "$dest" in
+            "$repo"|"$repo"/*) ;;
+            *) echo "Destination escapes repository: $DEST_INPUT" >&2; exit 1 ;;
+          esac
+
+          if [[ ! -f "$zip" ]]; then
+            echo "ZIP file not found: $ZIP_INPUT" >&2
+            exit 1
+          fi
+
+          if [[ "${zip,,}" != *.zip ]]; then
+            echo "Input is not a .zip file: $ZIP_INPUT" >&2
+            exit 1
+          fi
+
+          # Reject absolute paths or parent-directory traversal inside the archive.
+          if zipinfo -1 "$zip" | awk '
+            /^\// { bad=1 }
+            (^|\/)\.\.($|\/)/ { bad=1 }
+            END { exit bad ? 0 : 1 }
+          '; then
+            echo "Unsafe path detected inside ZIP; extraction aborted." >&2
+            exit 1
+          fi
+
+          mkdir -p "$dest"
+          echo "zip=$zip" >> "$GITHUB_OUTPUT"
+          echo "dest=$dest" >> "$GITHUB_OUTPUT"
+
+      - name: Extract ZIP
+        shell: bash
+        env:
+          ZIP_FILE: ${{ steps.paths.outputs.zip }}
+          DEST_DIR: ${{ steps.paths.outputs.dest }}
+        run: |
+          set -euo pipefail
+          unzip -o "$ZIP_FILE" -d "$DEST_DIR"
+
+      - name: Delete ZIP if requested
+        if: ${{ inputs.delete_zip }}
+        shell: bash
+        env:
+          ZIP_FILE: ${{ steps.paths.outputs.zip }}
+        run: rm -f -- "$ZIP_FILE"
+
+      - name: Commit and push extracted files
+        shell: bash
+        env:
+          ZIP_INPUT: ${{ inputs.zip_path }}
+          DEST_INPUT: ${{ inputs.destination }}
+        run: |
+          set -euo pipefail
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No repository changes produced by extraction."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: extract ${ZIP_INPUT} to ${DEST_INPUT}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
