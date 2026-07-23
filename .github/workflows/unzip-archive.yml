@@ -1,0 +1,64 @@
+name: Extract repository ZIP
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/unzip-trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Extract website source into repository root
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ZIP="$GITHUB_WORKSPACE/astro_best_doctor_with_baselayout_domain_v2.zip"
+          TMP="$RUNNER_TEMP/website-source"
+          WRAPPER="astro_best_doctor_with_baselayout_domain_v2"
+
+          test -f "$ZIP" || { echo "Missing source ZIP: $ZIP" >&2; exit 1; }
+
+          rm -rf "$TMP"
+          mkdir -p "$TMP"
+          unzip -q "$ZIP" -d "$TMP"
+
+          SOURCE="$TMP/$WRAPPER"
+          test -f "$SOURCE/package.json" || { echo "package.json missing from website source" >&2; exit 1; }
+          test -d "$SOURCE/src" || { echo "src/ missing from website source" >&2; exit 1; }
+
+          cp -a "$SOURCE/." "$GITHUB_WORKSPACE/"
+
+          rm -rf "$GITHUB_WORKSPACE/$WRAPPER"
+          rm -rf "$GITHUB_WORKSPACE/__MACOSX"
+          rm -f "$ZIP"
+          rm -f "$GITHUB_WORKSPACE/.github/unzip-trigger"
+          rm -f "$GITHUB_WORKSPACE/.github/workflows/unzip-archive.yml"
+          rm -f "$GITHUB_WORKSPACE/.github/workflows/extract-website-source-once.yml"
+          find "$GITHUB_WORKSPACE" -type f \( -name '.DS_Store' -o -name '._*' \) -delete
+
+      - name: Commit corrected website source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --quiet && { echo "No changes to commit"; exit 0; }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Extract website source to repository root"
+          git push origin HEAD:main
