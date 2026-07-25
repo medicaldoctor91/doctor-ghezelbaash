@@ -1,0 +1,63 @@
+name: One-time unpack Astro source
+
+on:
+  push:
+    paths:
+      - .github/workflows/codex-unpack-astro-source.yml
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Validate and publish ZIP contents at repository root
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ZIP_NAME="ghezelbaash-astro-source-final-2026.zip"
+          EXPECTED_SHA256="7a7cade1e32cca4f4cb6ef15849efb2a05ff1e43f7f7fe10de7d90c46534fde0"
+          WRAPPER_NAME="ghezelbaash-astro-source-final-2026"
+
+          cd "$GITHUB_WORKSPACE"
+          test -d .git
+          test -f "$ZIP_NAME"
+          printf '%s  %s\n' "$EXPECTED_SHA256" "$ZIP_NAME" | sha256sum --check --strict
+          unzip -t "$ZIP_NAME"
+
+          if unzip -Z1 "$ZIP_NAME" | awk '/^\// || /(^|\/)\.\.($|\/)/ { bad=1 } END { exit bad ? 0 : 1 }'; then
+            echo "Unsafe ZIP path detected" >&2
+            exit 1
+          fi
+
+          if zipinfo -l "$ZIP_NAME" | awk '$1 ~ /^l/ { found=1 } END { exit found ? 0 : 1 }'; then
+            echo "Symlink entry detected" >&2
+            exit 1
+          fi
+
+          EXTRACT_DIR="$(mktemp -d)"
+          trap 'rm -rf -- "$EXTRACT_DIR"' EXIT
+          unzip -q "$ZIP_NAME" -d "$EXTRACT_DIR"
+          SOURCE_ROOT="$EXTRACT_DIR/$WRAPPER_NAME"
+
+          test "$(find "$EXTRACT_DIR" -mindepth 1 -maxdepth 1 | wc -l)" -eq 1
+          test -f "$SOURCE_ROOT/package.json"
+          test -d "$SOURCE_ROOT/src"
+          test -d "$SOURCE_ROOT/public"
+
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf -- {} +
+          cp -a "$SOURCE_ROOT"/. .
+
+          git config user.name "repository-publisher"
+          git config user.email "repository-publisher@users.noreply.github.com"
+          git add -A
+          git commit -m "Unpack Astro source on main"
+          git push origin HEAD:main
