@@ -4057,7 +4057,7 @@ PRP در بعضی برنامه‌های درمان اسکار به‌عنوان 
     height="1280"
     aria-label="توضیحات دکتر سعید قزلباش درباره سابسیژن"
   >
-    <source src="/media/videos/education/saeed-ghezelbash-subcision-technique.webm" type="video/webm" />
+    <source src="/media/videos/education/saeed-ghezelbash-subcision-technique.webm" type='video/webm; codecs="av01, opus"' />
     <source src="/media/videos/education/saeed-ghezelbash-subcision-technique.mp4" type="video/mp4" />
     مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
   </video>
@@ -4549,7 +4549,7 @@ PRP می‌تواند در جای خود ابزار قابل‌بررسی باش
     height="1280"
     aria-label="توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی"
   >
-    <source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm" type="video/webm" />
+    <source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm" type='video/webm; codecs="av01, opus"' />
     <source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4" type="video/mp4" />
     مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
   </video>
@@ -8029,7 +8029,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
     height="1280"
     aria-label="بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران"
   >
-    <source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm" type="video/webm" />
+    <source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm" type='video/webm; codecs="av01, opus"' />
     <source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4" type="video/mp4" />
     مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند.
   </video>
@@ -9760,7 +9760,7 @@ style="direction: rtl; text-align: right;"
     height="1280"
     aria-label="ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش"
   >
-    <source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm" type="video/webm">
+    <source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm" type='video/webm; codecs="av01, opus"'>
     <source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4" type="video/mp4">
     وێبگەڕەکەت پشتگیری لە لێدانی ڤیدیۆ ناکات.
   </video>
