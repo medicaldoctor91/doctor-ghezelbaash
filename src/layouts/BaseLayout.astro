@@ -25,6 +25,20 @@ const robots = frontmatter.robots ?? 'index, follow';
       canonicalURL={canonicalURL}
       ogImageURL={ogImageURL}
     />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="anonymous" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-Variable-font-face.css"
+    />
+    <style is:inline>
+      :root {
+        font-family: "Vazirmatn", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+      }
+
+      body {
+        font-size: clamp(0.98rem, 0.94rem + 0.18vw, 1.08rem);
+      }
+    </style>
   </head>
   <body>
     <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>
