@@ -1,0 +1,338 @@
+:root {
+  --glass-panel: rgb(248 252 250 / 0.68);
+  --glass-panel-strong: rgb(255 255 255 / 0.82);
+  --glass-line: rgb(255 255 255 / 0.78);
+  --glass-shadow: 0 18px 48px rgb(17 53 42 / 0.14);
+  --glass-shadow-soft: 0 10px 28px rgb(17 53 42 / 0.09);
+}
+
+/* Minimal TOC: one glass surface, quiet rows, no card-wall effect. */
+#aesthetic-medicine-table-of-contents {
+  overflow: visible;
+  margin-block: 2.5rem 3.8rem;
+  padding: clamp(1rem, 2vw, 1.35rem);
+  border: 1px solid var(--glass-line);
+  border-radius: 1.4rem;
+  background: linear-gradient(145deg, rgb(255 255 255 / 0.78), rgb(242 249 246 / 0.62));
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset, var(--glass-shadow-soft);
+}
+
+#aesthetic-medicine-table-of-contents::before {
+  inset: -4.5rem auto auto -3rem;
+  width: 11rem;
+  opacity: 0.7;
+}
+
+#aesthetic-medicine-table-of-contents > p {
+  gap: 0.65rem;
+  color: #173f35;
+  font-size: clamp(1rem, 1.7vw, 1.16rem);
+}
+
+#aesthetic-medicine-table-of-contents > p::before {
+  width: 0.48rem;
+  height: 0.48rem;
+  box-shadow: 0 0 0 0.28rem rgb(10 107 88 / 0.08);
+}
+
+#aesthetic-medicine-table-of-contents ol {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1.25rem;
+  margin-top: 1rem;
+  border-top: 1px solid rgb(210 226 219 / 0.7);
+}
+
+#aesthetic-medicine-table-of-contents li {
+  border-bottom: 1px solid rgb(216 229 223 / 0.72);
+}
+
+#aesthetic-medicine-table-of-contents a {
+  grid-template-columns: 1.72rem minmax(0, 1fr);
+  gap: 0.62rem;
+  align-items: center;
+  min-height: 3.35rem;
+  padding: 0.58rem 0.2rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #28483f;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  box-shadow: none;
+}
+
+#aesthetic-medicine-table-of-contents a::before {
+  width: 1.72rem;
+  min-height: 1.72rem;
+  border: 1px solid rgb(10 107 88 / 0.12);
+  border-radius: 999px;
+  background: rgb(232 244 240 / 0.72);
+  font-size: 0.62rem;
+}
+
+#aesthetic-medicine-table-of-contents a:hover {
+  transform: translateX(-2px);
+  border-color: transparent;
+  background: linear-gradient(90deg, transparent, rgb(232 244 240 / 0.5));
+  box-shadow: none;
+}
+
+@supports (backdrop-filter: blur(18px)) {
+  #aesthetic-medicine-table-of-contents {
+    background: rgb(248 252 250 / 0.58);
+    backdrop-filter: blur(20px) saturate(1.25);
+  }
+}
+
+/*
+ * Floating action dock inspired by contemporary iOS/macOS liquid-glass docks:
+ * two independent glass islands plus a detached center return control.
+ */
+.floating-action-dock {
+  bottom: max(0.85rem, env(safe-area-inset-bottom));
+  width: min(calc(100% - 1.25rem), 43rem);
+}
+
+.floating-action-dock__glass {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) 4.8rem minmax(0, 0.82fr);
+  gap: 0.7rem;
+  align-items: end;
+  min-height: 4.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: auto;
+}
+
+.floating-action-dock__glass::before {
+  display: none;
+}
+
+.floating-action-dock__group {
+  position: relative;
+  display: flex;
+  gap: 0.3rem;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 4.05rem;
+  padding: 0.36rem;
+  border: 1px solid var(--glass-line);
+  border-radius: 1.35rem;
+  background: linear-gradient(145deg, rgb(255 255 255 / 0.76), rgb(239 247 244 / 0.66));
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset, var(--glass-shadow);
+}
+
+.floating-action-dock__group::before {
+  content: "";
+  position: absolute;
+  inset: 0.16rem;
+  border: 1px solid rgb(255 255 255 / 0.34);
+  border-radius: 1.12rem;
+  pointer-events: none;
+}
+
+@supports (backdrop-filter: blur(24px)) {
+  .floating-action-dock__group,
+  .floating-action--top {
+    background: var(--glass-panel);
+    backdrop-filter: blur(24px) saturate(1.45);
+  }
+}
+
+.floating-action-dock__group--primary,
+.floating-action-dock__group--secondary {
+  justify-content: stretch;
+}
+
+.floating-action {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  gap: 0.55rem;
+  min-width: 0;
+  min-height: 3.3rem;
+  padding: 0.5rem 0.72rem;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  background: transparent;
+  color: #244239;
+  font-size: 0.78rem;
+  font-weight: 720;
+  box-shadow: none;
+}
+
+.floating-action__copy {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+  text-align: start;
+}
+
+.floating-action__copy strong {
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.floating-action__copy small {
+  color: #61736c;
+  font-size: 0.63rem;
+  font-weight: 610;
+  line-height: 1.15;
+}
+
+.floating-action:hover {
+  transform: translateY(-1px);
+  border-color: rgb(255 255 255 / 0.62);
+  background: rgb(255 255 255 / 0.54);
+  box-shadow: 0 8px 20px rgb(13 61 48 / 0.08);
+}
+
+.floating-action--consult {
+  border-color: rgb(10 107 88 / 0.11);
+  background: linear-gradient(135deg, rgb(220 242 234 / 0.82), rgb(235 247 243 / 0.7));
+  color: #075244;
+  box-shadow: 0 8px 20px rgb(8 91 73 / 0.08);
+}
+
+.floating-action--consult .floating-action__copy small {
+  color: #3b7163;
+}
+
+.floating-action--consult:hover {
+  border-color: rgb(10 107 88 / 0.2);
+  background: linear-gradient(135deg, rgb(211 238 228 / 0.92), rgb(231 246 240 / 0.82));
+  color: #064c40;
+}
+
+.floating-action--booking,
+.floating-action--location {
+  background: transparent;
+}
+
+.floating-action--top {
+  align-self: start;
+  justify-self: center;
+  width: 3.75rem;
+  height: 3.75rem;
+  min-height: 3.75rem;
+  margin-top: -1.3rem;
+  padding: 0;
+  border: 1px solid var(--glass-line);
+  border-radius: 999px;
+  background: linear-gradient(145deg, rgb(255 255 255 / 0.84), rgb(231 242 237 / 0.72));
+  color: var(--accent-strong);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.92) inset, 0 15px 34px rgb(13 59 47 / 0.17);
+}
+
+.floating-action--top::before {
+  content: "";
+  position: absolute;
+  inset: -0.42rem;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgb(10 107 88 / 0.12), transparent 68%);
+  pointer-events: none;
+}
+
+.floating-action--top:hover {
+  transform: translateY(-2px);
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.95) inset, 0 18px 38px rgb(13 59 47 / 0.2);
+}
+
+@media (max-width: 720px) {
+  #aesthetic-medicine-table-of-contents {
+    padding: 0.88rem;
+    border-radius: 1.1rem;
+  }
+
+  #aesthetic-medicine-table-of-contents ol {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  #aesthetic-medicine-table-of-contents a {
+    min-height: 3.1rem;
+    padding-block: 0.52rem;
+  }
+
+  .floating-action-dock {
+    left: max(0.42rem, env(safe-area-inset-left));
+    right: max(0.42rem, env(safe-area-inset-right));
+    bottom: max(0.46rem, env(safe-area-inset-bottom));
+    width: auto;
+  }
+
+  .floating-action-dock__glass {
+    grid-template-columns: minmax(0, 1.55fr) 3.55rem minmax(0, 0.78fr);
+    gap: 0.34rem;
+    min-height: 4rem;
+  }
+
+  .floating-action-dock__group {
+    gap: 0.12rem;
+    min-height: 3.72rem;
+    padding: 0.25rem;
+    border-radius: 1.15rem;
+  }
+
+  .floating-action {
+    flex-direction: column;
+    gap: 0.1rem;
+    min-height: 3.18rem;
+    padding: 0.3rem 0.3rem;
+    border-radius: 0.9rem;
+  }
+
+  .floating-action__copy {
+    display: block;
+    text-align: center;
+  }
+
+  .floating-action__copy strong {
+    display: block;
+    font-size: clamp(0.61rem, 2.8vw, 0.72rem);
+    white-space: nowrap;
+  }
+
+  .floating-action__copy small {
+    display: none;
+  }
+
+  .floating-action--top {
+    width: 3.18rem;
+    height: 3.18rem;
+    min-height: 3.18rem;
+    margin-top: -1.05rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .floating-action-dock__glass {
+    grid-template-columns: minmax(0, 1.7fr) 3.2rem minmax(0, 0.72fr);
+    gap: 0.24rem;
+  }
+
+  .floating-action-dock__group {
+    padding: 0.2rem;
+  }
+
+  .floating-action svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .floating-action__copy strong {
+    font-size: 0.59rem;
+  }
+
+  .floating-action--top {
+    width: 2.95rem;
+    height: 2.95rem;
+    min-height: 2.95rem;
+  }
+}
