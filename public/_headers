@@ -7,10 +7,10 @@
   Cross-Origin-Opener-Policy: same-origin
   X-Permitted-Cross-Domain-Policies: none
 
-https://:project.pages.dev/*
+https://doctor-ghezelbaash.pages.dev/*
   X-Robots-Tag: noindex
 
-https://:version.:project.pages.dev/*
+https://:version.doctor-ghezelbaash.pages.dev/*
   X-Robots-Tag: noindex
 
 /
