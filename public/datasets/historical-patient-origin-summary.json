@@ -1,0 +1,304 @@
+{
+  "datasetId": "https://www.ghezelbaash.ir/#historical-patient-origin-summary",
+  "name": "Historical patient-origin summary",
+  "about": [
+    "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+  ],
+  "temporalCoverage": "historical",
+  "measurementTechnique": "Manual aggregation of patient-origin cities from clinic records",
+  "spatialCoverage": [
+    {
+      "id": "https://www.ghezelbaash.ir/#country-iran",
+      "type": "Country",
+      "name": "Iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#country-iraq",
+      "type": "Country",
+      "name": "Iraq"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-kermanshah",
+      "type": "City",
+      "name": "کرمانشاه",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-javanrud",
+      "type": "City",
+      "name": "جوانرود",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-sarpol-e-zahab",
+      "type": "City",
+      "name": "سرپل‌ذهاب",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-qasr-e-shirin",
+      "type": "City",
+      "name": "قصرشیرین",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-harsin",
+      "type": "City",
+      "name": "هرسین",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-eslamabad-e-gharb",
+      "type": "City",
+      "name": "اسلام‌آباد غرب",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-kerend-e-gharb",
+      "type": "City",
+      "name": "کرند غرب",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-hamadan",
+      "type": "City",
+      "name": "همدان",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-malayer",
+      "type": "City",
+      "name": "ملایر",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-tuyserkan",
+      "type": "City",
+      "name": "تویسرکان",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-sanandaj",
+      "type": "City",
+      "name": "سنندج",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-kamiyaran",
+      "type": "City",
+      "name": "کامیاران",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-baneh",
+      "type": "City",
+      "name": "بانه",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-khorramabad",
+      "type": "City",
+      "name": "خرم‌آباد",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-ilam",
+      "type": "City",
+      "name": "ایلام",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-tehran",
+      "type": "City",
+      "name": "تهران",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-mashhad",
+      "type": "City",
+      "name": "مشهد",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-isfahan",
+      "type": "City",
+      "name": "اصفهان",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-shiraz",
+      "type": "City",
+      "name": "شیراز",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-tabriz",
+      "type": "City",
+      "name": "تبریز",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-karaj",
+      "type": "City",
+      "name": "کرج",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-ahvaz",
+      "type": "City",
+      "name": "اهواز",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-qom",
+      "type": "City",
+      "name": "قم",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-rasht",
+      "type": "City",
+      "name": "رشت",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-urmia",
+      "type": "City",
+      "name": "ارومیه",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-yazd",
+      "type": "City",
+      "name": "یزد",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-kerman",
+      "type": "City",
+      "name": "کرمان",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-arak",
+      "type": "City",
+      "name": "اراک",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-qazvin",
+      "type": "City",
+      "name": "قزوین",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-sari",
+      "type": "City",
+      "name": "ساری",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-bandar-abbas",
+      "type": "City",
+      "name": "بندرعباس",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-ardabil",
+      "type": "City",
+      "name": "اردبیل",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-zanjan",
+      "type": "City",
+      "name": "زنجان",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-birjand",
+      "type": "City",
+      "name": "بیرجند",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-bushehr",
+      "type": "City",
+      "name": "بوشهر",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-semnan",
+      "type": "City",
+      "name": "سمنان",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-gorgan",
+      "type": "City",
+      "name": "گرگان",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-shahrekord",
+      "type": "City",
+      "name": "شهرکرد",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-yasuj",
+      "type": "City",
+      "name": "یاسوج",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-bojnurd",
+      "type": "City",
+      "name": "بجنورد",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-zahedan",
+      "type": "City",
+      "name": "زاهدان",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iran"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-erbil",
+      "type": "City",
+      "name": "اربیل",
+      "containedInPlace": "https://www.ghezelbaash.ir/#kurdistan-region-of-iraq"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-sulaymaniyah",
+      "type": "City",
+      "name": "سلیمانیه",
+      "containedInPlace": "https://www.ghezelbaash.ir/#kurdistan-region-of-iraq"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-baghdad",
+      "type": "City",
+      "name": "بغداد",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iraq"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-kalar",
+      "type": "City",
+      "name": "کلار",
+      "containedInPlace": "https://www.ghezelbaash.ir/#kurdistan-region-of-iraq"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#patient-origin-city-khanaqin",
+      "type": "City",
+      "name": "خانقین",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iraq"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#kurdistan-region-of-iraq",
+      "type": "AdministrativeArea",
+      "name": "Kurdistan Region of Iraq",
+      "containedInPlace": "https://www.ghezelbaash.ir/#country-iraq"
+    }
+  ]
+}

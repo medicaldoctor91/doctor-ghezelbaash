@@ -1,0 +1,35 @@
+---
+import '../styles/global.css';
+import DocumentHead from '../components/DocumentHead.astro';
+import FloatingActionDock from '../components/FloatingActionDock.astro';
+
+const { frontmatter, url } = Astro.props;
+const baseURL = Astro.site ?? Astro.url;
+const canonicalURL = new URL(url ?? Astro.url.pathname, baseURL);
+const ogImageURL = new URL('/media/images/physician/saeed-ghezelbash-portrait-1600.webp', baseURL);
+
+const title = frontmatter.title;
+const description = frontmatter.description;
+const lang = frontmatter.lang ?? 'fa-IR';
+const dir = frontmatter.dir ?? 'rtl';
+const robots = frontmatter.robots ?? 'index, follow';
+---
+<!doctype html>
+<html lang={lang} dir={dir}>
+  <head>
+    <DocumentHead
+      title={title}
+      description={description}
+      robots={robots}
+      canonicalURL={canonicalURL}
+      ogImageURL={ogImageURL}
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>
+    <main id="main-content">
+      <slot />
+    </main>
+    <FloatingActionDock />
+  </body>
+</html>

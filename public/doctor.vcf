@@ -1,0 +1,14 @@
+BEGIN:VCARD
+VERSION:4.0
+KIND:individual
+UID:https://www.ghezelbaash.ir/#saeed-ghezelbash
+FN;LANGUAGE=fa:دکتر سعید قزلباش
+N;LANGUAGE=fa:قزلباش;سعید;;دکتر;
+TITLE;LANGUAGE=fa:پزشک زیبایی
+ORG;LANGUAGE=fa:کلینیک زیبایی دکتر سعید قزلباش
+TEL;TYPE=work,voice;VALUE=uri:tel:+989308209494
+URL:https://www.ghezelbaash.ir/
+ADR;TYPE=work;LANGUAGE=fa:;;میدان ۱۷ شهریور، ساختما
+ ن ویستا;کرمانشاه;Kermanshah Province;6714657412;ایران
+GEO:geo:34.3401243,47.0851778
+END:VCARD

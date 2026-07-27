@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https://www.ghezelbaash.ir/</loc>
+    <lastmod>2026-07-27</lastmod>
+
+    <image:image><image:loc>https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-1600.webp</image:loc></image:image>
+    <image:image><image:loc>https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp</image:loc></image:image>
+    <image:image><image:loc>https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp</image:loc></image:image>
+    <image:image><image:loc>https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.webp</image:loc></image:image>
+    <image:image><image:loc>https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.webp</image:loc></image:image>
+
+    <video:video>
+      <video:thumbnail_loc>https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.webp</video:thumbnail_loc>
+      <video:title><![CDATA[دکتر سعید قزلباش | پروفایلو، جالپرو و جوانسازهای تزریقی]]></video:title>
+      <video:description><![CDATA[توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.]]></video:description>
+      <video:content_loc>https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4</video:content_loc>
+      <video:duration>62</video:duration>
+      <video:family_friendly>yes</video:family_friendly>
+    </video:video>
+
+    <video:video>
+      <video:thumbnail_loc>https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-subcision-technique.webp</video:thumbnail_loc>
+      <video:title><![CDATA[دکتر سعید قزلباش | سابسیژن و درمان اسکار آکنه]]></video:title>
+      <video:description><![CDATA[توضیحات دکتر سعید قزلباش درباره سابسیژن.]]></video:description>
+      <video:content_loc>https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-subcision-technique.mp4</video:content_loc>
+      <video:duration>36</video:duration>
+      <video:family_friendly>yes</video:family_friendly>
+    </video:video>
+
+    <video:video>
+      <video:thumbnail_loc>https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-thread-lift-workshop.webp</video:thumbnail_loc>
+      <video:title><![CDATA[دکتر سعید قزلباش | ورکشاپ لیفت نخ در تهران برای متخصصان زیبایی از سراسر ایران]]></video:title>
+      <video:description><![CDATA[بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.]]></video:description>
+      <video:content_loc>https://www.ghezelbaash.ir/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4</video:content_loc>
+      <video:duration>39</video:duration>
+      <video:family_friendly>yes</video:family_friendly>
+    </video:video>
+
+    <video:video>
+      <video:thumbnail_loc>https://www.ghezelbaash.ir/media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.webp</video:thumbnail_loc>
+      <video:title><![CDATA[ڕەزامەندیی مراجعێک لە هەولێر | دکتۆر سەعید قزلباش]]></video:title>
+      <video:description><![CDATA[ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش.]]></video:description>
+      <video:content_loc>https://www.ghezelbaash.ir/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4</video:content_loc>
+      <video:duration>20</video:duration>
+      <video:family_friendly>yes</video:family_friendly>
+    </video:video>
+  </url>
+</urlset>

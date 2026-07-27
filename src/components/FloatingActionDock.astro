@@ -1,0 +1,26 @@
+---
+const phone = 'tel:+989308209494';
+const onlineConsultation = 'https://ig.me/m/doctor.ghezelbaash';
+const maps = 'https://www.google.com/maps?cid=12350483144643112463';
+---
+<nav class="floating-action-dock" aria-label="دسترسی سریع به کلینیک و مشاوره">
+  <a class="floating-action floating-action--primary" data-action="in-person-booking" href={phone} aria-label="تماس برای رزرو مشاوره حضوری">
+    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24c1.1.37 2.3.57 3.5.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.6 21 3 13.4 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.2.2 2.4.57 3.5a1 1 0 0 1-.25 1Z"/></svg>
+    <span>رزرو حضوری</span>
+  </a>
+
+  <a class="floating-action floating-action--accent" data-action="online-consultation" href={onlineConsultation} rel="me external" aria-label="گفت‌وگوی مستقیم با دکتر سعید قزلباش برای مشاوره آنلاین اولیه رایگان">
+    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.6 9.6 0 0 1-3.9-.9L3 20.4l1.5-4.5A8.1 8.1 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 9 8.4Zm-12.2-.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Zm3.2 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Zm3.2 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg>
+    <span>مشاوره آنلاین</span>
+  </a>
+
+  <a class="floating-action" data-action="clinic-location" href={maps} rel="external" aria-label="مشاهده موقعیت کلینیک دکتر سعید قزلباش در Google Maps">
+    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M12 22s7-6 7-13a7 7 0 1 0-14 0c0 7 7 13 7 13Zm0-10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg>
+    <span>لوکیشن</span>
+  </a>
+
+  <a class="floating-action" data-action="back-to-top" href="#main-content" aria-label="بازگشت به ابتدای صفحه">
+    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m5.3 14.7 6.7-6.7 6.7 6.7-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4Z"/></svg>
+    <span>بالا</span>
+  </a>
+</nav>

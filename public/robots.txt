@@ -1,0 +1,28 @@
+# Canonical crawling policy for ghezelbaash.ir
+User-agent: *
+Allow: /
+
+# Search and user-directed AI retrieval crawlers are explicitly allowed.
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+Sitemap: https://www.ghezelbaash.ir/sitemap.xml
+
+# Machine-readable entity graph (informational comment; not a robots directive):
+# https://www.ghezelbaash.ir/graph.jsonld
+# https://www.ghezelbaash.ir/graph.ttl
+# LLM-oriented site guides (informational comments; not robots directives):
+# https://www.ghezelbaash.ir/llms.txt
+# https://www.ghezelbaash.ir/llms-full.txt
+# Portable contact resources:
+# https://www.ghezelbaash.ir/doctor.vcf
+# https://www.ghezelbaash.ir/clinic.vcf
