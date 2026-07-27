@@ -265,13 +265,15 @@ address {
 .floating-action-dock {
   position: fixed;
   z-index: 1000;
-  inset-inline-end: clamp(0.7rem, 1.5vw, 1.25rem);
-  top: 50%;
+  left: 50%;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
   display: grid;
-  gap: 0.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  width: min(calc(100% - 2rem), 42rem);
   margin: 0;
   padding: 0.45rem;
-  transform: translateY(-50%);
+  transform: translateX(-50%);
   border: 1px solid rgb(213 224 218 / 0.9);
   border-radius: 1rem;
   background: rgb(255 255 255 / 0.92);
@@ -362,13 +364,13 @@ address {
   }
 
   .floating-action-dock {
-    inset: auto max(0.55rem, env(safe-area-inset-right)) max(0.55rem, env(safe-area-inset-bottom)) max(0.55rem, env(safe-area-inset-left));
-    top: auto;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    left: max(0.55rem, env(safe-area-inset-left));
+    right: max(0.55rem, env(safe-area-inset-right));
+    bottom: max(0.55rem, env(safe-area-inset-bottom));
+    width: auto;
     gap: 0.3rem;
     padding: 0.38rem;
     transform: none;
-    border-radius: 1rem;
   }
 
   .floating-action {
