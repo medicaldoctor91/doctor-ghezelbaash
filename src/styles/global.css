@@ -1,6 +1,14 @@
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@6e553e33489a8f9dfaccc76860a2e3f3c1e66de7/misc/Non-Latin/fonts/webfonts/Vazirmatn-NL%5Bwght%5D.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
-  font-family: "Vazirmatn", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+  font-family: "Vazirmatn", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
   color: #18211e;
   background: #f3f6f4;
   font-synthesis: none;
