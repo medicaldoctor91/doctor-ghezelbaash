@@ -192,6 +192,13 @@ const maps = 'https://www.google.com/maps?cid=12350483144643112463';
     transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
   }
 
+  .quick-actions__top::before {
+    content: "";
+    position: absolute;
+    inset: -0.35rem;
+    border-radius: inherit;
+  }
+
   .quick-actions__top:hover {
     transform: translateX(-50%) translateY(-1px);
     background: #fff;
