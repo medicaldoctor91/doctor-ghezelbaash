@@ -1,53 +1,332 @@
 ---
 const phone = 'tel:+989308209494';
-const onlineConsultation = 'https://ig.me/m/doctor.ghezelbaash';
+const directChat = 'https://ig.me/m/doctor.ghezelbaash';
 const maps = 'https://www.google.com/maps?cid=12350483144643112463';
+const portrait = '/media/images/physician/saeed-ghezelbash-portrait-960.webp';
 ---
-<nav class="floating-action-dock" aria-label="دسترسی سریع به دکتر و کلینیک">
-  <div class="floating-action-dock__glass">
-    <div class="floating-action-dock__group floating-action-dock__group--primary">
-      <a
-        class="floating-action floating-action--booking"
-        data-action="in-person-booking"
-        href={phone}
-        aria-label="رزرو وقت مشاوره حضوری با کلینیک دکتر سعید قزلباش"
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.24c1.1.37 2.3.57 3.5.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.6 21 3 13.4 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.2.2 2.4.57 3.5a1 1 0 0 1-.25 1Z"/></svg>
-        <span class="floating-action__copy"><strong>رزرو وقت</strong><small>مشاوره حضوری</small></span>
-      </a>
 
-      <a
-        class="floating-action floating-action--consult"
-        data-action="online-consultation"
-        href={onlineConsultation}
-        rel="external"
-        aria-label="گفت‌وگوی مستقیم با دکتر سعید قزلباش برای مشاوره آنلاین اولیه"
-      >
-        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.6 9.6 0 0 1-3.9-.9L3 20.4l1.5-4.5A8.1 8.1 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 9 8.4Zm-12.2-.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Zm3.2 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Zm3.2 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg>
-        <span class="floating-action__copy"><strong>پیام مستقیم</strong><small>به دکتر قزلباش</small></span>
-      </a>
-    </div>
+<nav class="physician-access-dock" aria-label="دسترسی سریع به دکتر سعید قزلباش و کلینیک">
+  <a
+    class="physician-access-dock__top"
+    data-action="back-to-top"
+    href="#main-content"
+    aria-label="بازگشت به ابتدای صفحه"
+    title="بالای صفحه"
+  >
+    <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+      <path d="M12 19V5m0 0-6 6m6-6 6 6" />
+    </svg>
+  </a>
 
+  <div class="physician-access-dock__tray">
     <a
-      class="floating-action floating-action--top"
-      data-action="back-to-top"
-      href="#main-content"
-      aria-label="بازگشت به ابتدای صفحه"
+      class="physician-access-dock__action physician-access-dock__action--booking"
+      data-action="in-person-booking"
+      href={phone}
+      aria-label="رزرو نوبت حضوری کلینیک دکتر سعید قزلباش"
+      title="رزرو نوبت حضوری"
     >
-      <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="m5.3 14.7 6.7-6.7 6.7 6.7-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4Z"/></svg>
+      <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+        <path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm4 11 2 2 4-4" />
+      </svg>
+      <span>نوبت</span>
     </a>
 
-    <div class="floating-action-dock__group floating-action-dock__group--secondary">
-      <a
-        class="floating-action floating-action--location"
-        data-action="clinic-location"
-        href={maps}
-        rel="external"
-        aria-label="مسیریابی به کلینیک دکتر سعید قزلباش در Google Maps"
+    <span class="physician-access-dock__divider" aria-hidden="true"></span>
+
+    <a
+      class="physician-access-dock__action physician-access-dock__action--doctor"
+      data-action="online-consultation"
+      href={directChat}
+      rel="external"
+      aria-label="چت مستقیم با دکتر سعید قزلباش"
+      title="چت مستقیم با دکتر سعید قزلباش"
+    >
+      <span
+        class="physician-access-dock__avatar"
+        aria-hidden="true"
+        style={`--doctor-portrait: url("${portrait}")`}
       >
-        <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M12 22s7-6 7-13a7 7 0 1 0-14 0c0 7 7 13 7 13Zm0-10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/></svg>
-        <span class="floating-action__copy"><strong>مسیریابی</strong><small>کلینیک کرمانشاه</small></span>
-      </a>
-    </div>
+        <span class="physician-access-dock__chat-badge">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M21 12a8 8 0 0 1-8 8H8l-5 2 1.7-4.2A8 8 0 1 1 21 12Z" />
+          </svg>
+        </span>
+      </span>
+      <span class="physician-access-dock__doctor-name">دکتر قزلباش</span>
+    </a>
+
+    <span class="physician-access-dock__divider" aria-hidden="true"></span>
+
+    <a
+      class="physician-access-dock__action physician-access-dock__action--location"
+      data-action="clinic-location"
+      href={maps}
+      rel="external"
+      aria-label="مسیریابی کلینیک دکتر سعید قزلباش در کرمانشاه"
+      title="مسیر کلینیک"
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+        <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Zm-8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+      </svg>
+      <span>مسیر</span>
+    </a>
   </div>
 </nav>
+
+<style>
+  .physician-access-dock {
+    position: fixed;
+    z-index: 1000;
+    left: 50%;
+    bottom: max(0.75rem, calc(env(safe-area-inset-bottom) + 0.35rem));
+    width: min(calc(100% - 1.25rem), 34rem);
+    margin: 0;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .physician-access-dock__tray {
+    display: grid;
+    grid-template-columns: minmax(0, 0.82fr) 1px minmax(0, 1.5fr) 1px minmax(0, 0.82fr);
+    align-items: center;
+    min-height: 3.65rem;
+    padding: 0.34rem 0.42rem;
+    border: 1px solid rgb(24 33 30 / 0.08);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.82);
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.9) inset,
+      0 12px 34px rgb(17 39 31 / 0.13);
+    pointer-events: auto;
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  .physician-access-dock__divider {
+    width: 1px;
+    height: 1.15rem;
+    justify-self: center;
+    background: rgb(24 33 30 / 0.09);
+  }
+
+  .physician-access-dock__action {
+    display: inline-flex;
+    gap: 0.42rem;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.38rem 0.52rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #244239;
+    font-size: 0.82rem;
+    font-weight: 720;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      transform 150ms ease,
+      background-color 150ms ease,
+      color 150ms ease,
+      box-shadow 150ms ease;
+  }
+
+  .physician-access-dock__action:hover {
+    transform: translateY(-1px);
+    background: rgb(10 107 88 / 0.055);
+    color: #075244;
+  }
+
+  .physician-access-dock__action:active {
+    transform: translateY(0) scale(0.985);
+  }
+
+  .physician-access-dock__action svg {
+    width: 1.08rem;
+    height: 1.08rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .physician-access-dock__action--doctor {
+    gap: 0.48rem;
+    min-height: 3.05rem;
+    background: rgb(10 107 88 / 0.045);
+    color: #173f35;
+    font-weight: 780;
+  }
+
+  .physician-access-dock__action--doctor:hover {
+    background: rgb(10 107 88 / 0.085);
+    box-shadow: 0 8px 18px rgb(13 61 48 / 0.07);
+  }
+
+  .physician-access-dock__avatar {
+    position: relative;
+    width: 2.15rem;
+    height: 2.15rem;
+    flex: 0 0 2.15rem;
+    overflow: visible;
+    border: 1px solid rgb(255 255 255 / 0.92);
+    border-radius: 999px;
+    background-image: var(--doctor-portrait);
+    background-repeat: no-repeat;
+    background-position: 50% 24%;
+    background-size: 220%;
+    box-shadow: 0 0 0 1px rgb(10 107 88 / 0.12);
+  }
+
+  .physician-access-dock__chat-badge {
+    position: absolute;
+    right: -0.18rem;
+    bottom: -0.12rem;
+    display: grid;
+    place-items: center;
+    width: 0.96rem;
+    height: 0.96rem;
+    border: 1.5px solid rgb(255 255 255 / 0.96);
+    border-radius: 999px;
+    background: #173f35;
+    color: #fff;
+    box-shadow: 0 2px 5px rgb(17 39 31 / 0.16);
+  }
+
+  .physician-access-dock__chat-badge svg {
+    width: 0.57rem;
+    height: 0.57rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+  }
+
+  .physician-access-dock__doctor-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .physician-access-dock__top {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 0.52rem);
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border: 1px solid rgb(24 33 30 / 0.08);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.86);
+    color: #315148;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.92) inset,
+      0 8px 22px rgb(17 39 31 / 0.11);
+    transform: translateX(-50%);
+    text-decoration: none;
+    pointer-events: auto;
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    backdrop-filter: blur(16px) saturate(1.3);
+    transition:
+      transform 150ms ease,
+      background-color 150ms ease,
+      color 150ms ease;
+  }
+
+  .physician-access-dock__top:hover {
+    transform: translateX(-50%) translateY(-1px);
+    background: rgb(255 255 255 / 0.96);
+    color: #075244;
+  }
+
+  .physician-access-dock__top:active {
+    transform: translateX(-50%) scale(0.97);
+  }
+
+  .physician-access-dock__top svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @media (max-width: 560px) {
+    .physician-access-dock {
+      left: max(0.5rem, env(safe-area-inset-left));
+      right: max(0.5rem, env(safe-area-inset-right));
+      width: auto;
+      transform: none;
+    }
+
+    .physician-access-dock__tray {
+      grid-template-columns: minmax(0, 0.8fr) 1px minmax(0, 1.52fr) 1px minmax(0, 0.8fr);
+      min-height: 3.55rem;
+      padding: 0.3rem 0.32rem;
+    }
+
+    .physician-access-dock__action {
+      gap: 0.3rem;
+      min-height: 2.9rem;
+      padding: 0.32rem 0.3rem;
+      font-size: 0.75rem;
+    }
+
+    .physician-access-dock__action--doctor {
+      gap: 0.38rem;
+      font-size: 0.78rem;
+    }
+
+    .physician-access-dock__avatar {
+      width: 2rem;
+      height: 2rem;
+      flex-basis: 2rem;
+    }
+
+    .physician-access-dock__divider {
+      height: 1rem;
+    }
+
+    .physician-access-dock__top {
+      width: 2.25rem;
+      height: 2.25rem;
+      bottom: calc(100% + 0.46rem);
+    }
+  }
+
+  @media (max-width: 350px) {
+    .physician-access-dock__action {
+      font-size: 0.7rem;
+    }
+
+    .physician-access-dock__action--doctor {
+      font-size: 0.73rem;
+    }
+
+    .physician-access-dock__avatar {
+      width: 1.85rem;
+      height: 1.85rem;
+      flex-basis: 1.85rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .physician-access-dock__action,
+    .physician-access-dock__top {
+      transition: none;
+    }
+  }
+
+  @media print {
+    .physician-access-dock {
+      display: none !important;
+    }
+  }
+</style>
