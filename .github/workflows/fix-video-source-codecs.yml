@@ -1,0 +1,47 @@
+name: One-shot video source codec patch
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-video-source-codecs.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Patch exactly four WebM source declarations
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('src/pages/index.md')
+          text = path.read_text(encoding='utf-8')
+          old = 'type="video/webm"'
+          new = 'type=\'video/webm; codecs="av01, opus"\''
+
+          count = text.count(old)
+          if count != 4:
+              raise SystemExit(f'Expected exactly 4 WebM declarations, found {count}; refusing to modify index.md')
+
+          patched = text.replace(old, new)
+          if patched.count(new) != 4 or old in patched:
+              raise SystemExit('Post-patch validation failed; refusing to commit')
+
+          path.write_text(patched, encoding='utf-8')
+
+      - name: Commit exact patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/pages/index.md
+          git diff --cached --check
+          git commit -m "Declare AV1 Opus codecs for WebM video sources"
+          git push origin HEAD:main
