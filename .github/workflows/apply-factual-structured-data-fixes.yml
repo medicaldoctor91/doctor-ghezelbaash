@@ -1,0 +1,186 @@
+name: Apply factual structured-data fixes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-factual-structured-data-fixes.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+
+      - name: Install RDF tooling
+        run: python -m pip install --disable-pip-version-check 'rdflib>=7.1,<8'
+
+      - name: Patch verified facts in Full Graph and Head Graph
+        shell: bash
+        run: |
+          python <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from rdflib import Graph
+
+          ROOT = 'https://www.ghezelbaash.ir/'
+          PERSON = ROOT + '#saeed-ghezelbash'
+          COURSE = ROOT + '#advanced-thread-lift-workshop-course'
+          EVENT = ROOT + '#event-wpa-xvii-world-congress-psychiatry-2017'
+          ARTICLE_2016 = ROOT + '#article-omega-3-bipolar-i-2016'
+          ARTICLE_2021 = ROOT + '#article-mdd-attachment-dissociation-trauma-2021'
+          WPA = ROOT + '#world-psychiatric-association'
+          DGPPN = ROOT + '#dgppn'
+
+          course_description = (
+              'در ورکشاپ لیفت نخ، آموزش دکتر سعید قزلباش بر انتخاب درست بیمار، آناتومی، '
+              'نواحی پرخطر، وزن بافت، جهت افتادگی، ضخامت پوست، تکیه‌گاه استخوانی، طراحی وکتور، '
+              'مدیریت عارضه و اصلاح نتیجه تمرکز دارد؛ تکنیک فقط زمانی ارزشمند است که بر تشخیص و انتخاب درست بیمار استوار باشد.'
+          )
+          event_description = (
+              'WPA XVII World Congress of Psychiatry, held in Berlin from 8 to 12 October 2017 '
+              'under the theme “Psychiatry of the 21st Century: Context, Controversies and Commitment”.'
+          )
+
+          def node_map(doc):
+              return {n.get('@id'): n for n in doc.get('@graph', []) if isinstance(n, dict) and n.get('@id')}
+
+          def ensure_node(doc, node):
+              nodes = node_map(doc)
+              existing = nodes.get(node['@id'])
+              if existing is None:
+                  doc.setdefault('@graph', []).append(node)
+                  return node
+              for key, value in node.items():
+                  if key not in existing:
+                      existing[key] = value
+              return existing
+
+          def normalize_country(doc, suffix, code):
+              nodes = node_map(doc)
+              node = nodes.get(ROOT + suffix)
+              if not node:
+                  return
+              name = node.get('name')
+              if isinstance(name, list):
+                  node['name'] = [v for v in name if v not in ('IR', 'IQ')]
+              node['identifier'] = code
+
+          def patch(doc):
+              normalize_country(doc, '#country-iran', 'IR')
+              normalize_country(doc, '#country-iraq', 'IQ')
+              nodes = node_map(doc)
+
+              course = nodes.get(COURSE)
+              if course:
+                  course['description'] = course_description
+                  course['provider'] = {'@id': PERSON}
+                  course['instructor'] = {'@id': PERSON}
+
+              event = nodes.get(EVENT)
+              if event:
+                  event['startDate'] = '2017-10-08'
+                  event['endDate'] = '2017-10-12'
+                  event['description'] = event_description
+                  event['eventAttendanceMode'] = 'https://schema.org/OfflineEventAttendanceMode'
+                  event['eventStatus'] = 'https://schema.org/EventCompleted'
+                  event['organizer'] = [{'@id': WPA}, {'@id': DGPPN}]
+
+              article = nodes.get(ARTICLE_2016)
+              if article:
+                  article['headline'] = 'Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder'
+                  article['datePublished'] = '2016-05-19'
+
+              article = nodes.get(ARTICLE_2021)
+              if article:
+                  article['headline'] = 'Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events'
+                  article['datePublished'] = '2021-09-06'
+
+              ensure_node(doc, {
+                  '@id': WPA,
+                  '@type': 'Organization',
+                  'name': 'World Psychiatric Association',
+                  'url': 'https://www.wpanet.org/',
+                  'sameAs': 'https://www.wikidata.org/entity/Q1683009'
+              })
+              ensure_node(doc, {
+                  '@id': DGPPN,
+                  '@type': 'Organization',
+                  'name': 'German Association for Psychiatry, Psychotherapy and Psychosomatics',
+                  'alternateName': 'DGPPN',
+                  'url': 'https://www.dgppn.de/'
+              })
+
+          for path in [Path('public/graph.jsonld'), Path('src/data/semantic/head-graph.min.jsonld')]:
+              doc = json.loads(path.read_text(encoding='utf-8'))
+              patch(doc)
+              path.write_text(json.dumps(doc, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+
+          # Validate Full Graph and derive Turtle losslessly.
+          graph_path = Path('public/graph.jsonld')
+          graph_bytes = graph_path.read_bytes()
+          graph_sha = hashlib.sha256(graph_bytes).hexdigest()
+          rdf = Graph()
+          rdf.parse(data=graph_bytes.decode('utf-8'), format='json-ld')
+          nt_lines = sorted(line for line in rdf.serialize(format='nt').splitlines() if line.strip())
+          canonical_nt = ('\n'.join(nt_lines) + '\n').encode('utf-8')
+          nt_sha = hashlib.sha256(canonical_nt).hexdigest()
+          ttl_body = rdf.serialize(format='turtle')
+          header = (
+              '# Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld\n'
+              f'# Source SHA-256: {graph_sha}\n'
+              f'# RDF triples: {len(rdf)}\n'
+              f'# Canonical sorted N-Triples SHA-256: {nt_sha}\n\n'
+          )
+          Path('public/graph.ttl').write_text(header + ttl_body, encoding='utf-8')
+
+          # Hard assertions for the previously reported critical errors.
+          for path in [Path('public/graph.jsonld'), Path('src/data/semantic/head-graph.min.jsonld')]:
+              doc = json.loads(path.read_text(encoding='utf-8'))
+              nodes = node_map(doc)
+              assert nodes[COURSE].get('description')
+              assert nodes[COURSE].get('provider', {}).get('@id') == PERSON
+              assert nodes[EVENT].get('startDate') == '2017-10-08'
+              assert nodes[EVENT].get('endDate') == '2017-10-12'
+              assert nodes[ARTICLE_2016].get('datePublished') == '2016-05-19'
+              assert nodes[ARTICLE_2021].get('datePublished') == '2021-09-06'
+              assert nodes[ROOT + '#country-iran'].get('identifier') == 'IR'
+              assert nodes[ROOT + '#country-iraq'].get('identifier') == 'IQ'
+          PY
+
+      - name: Build production output
+        run: |
+          npm ci
+          npm run build
+
+      - name: Remove one-shot workflow and temporary audit artifact
+        run: |
+          rm -f .github/workflows/apply-factual-structured-data-fixes.yml
+          rm -f tmp/hardened-live-audit.json
+
+      - name: Commit verified changes directly to main
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Fix verified structured-data facts and regenerate RDF'
+          git push origin HEAD:main
