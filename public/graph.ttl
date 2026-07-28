@@ -1,7 +1,7 @@
 # Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld
 # Source SHA-256: 66f07b41d76665b92a25774313589dd5d66dba35eded105d8cc1bf98cf37f36b
 # RDF triples: 6966
-# Canonical sorted N-Triples SHA-256: 7909763983997786754d72288578337d43d5f05e7dd087bbd081dfa40410d6da
+# Canonical sorted N-Triples SHA-256: cfb05fd80d1d0d8777165fb16194c7f6f865a7767ce811c766e44fbc6bd51318
 
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
