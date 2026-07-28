@@ -62,12 +62,12 @@ main > :where(p, ul, ol, blockquote, details, address, .section-answer, .micro-a
 }
 
 /* Preserve the complete semantic corpus while deferring below-fold layout and paint. */
-main > :nth-child(n + 8) {
+main > :nth-child(n + 30) {
   content-visibility: auto;
   contain-intrinsic-size: auto 240px;
 }
 
-main > :where(nav, ul, ol, table, figure, details, blockquote):nth-child(n + 8) {
+main > :where(nav, ul, ol, table, figure, details, blockquote):nth-child(n + 30) {
   contain-intrinsic-size: auto 720px;
 }
 
