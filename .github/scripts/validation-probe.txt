@@ -1,2 +1,0 @@
-Validation-only branch probe for the current main snapshot.
-Exact Turtle coordinate precision and CSP synchronization are included.
