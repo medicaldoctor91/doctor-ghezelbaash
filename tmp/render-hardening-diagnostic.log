@@ -1,0 +1,56 @@
+start 2026-07-28T13:00:34Z
+astro.config.mjs "inlineStylesheets: 'auto'" 1
+head '<link rel="shortcut icon" href="/favicon.ico" />\n' 1
+head '<link rel="manifest" href="/site.webmanifest" />\n' 1
+head '<link rel="preload" href="/fonts/vazirmatn-nl-wght.woff2" as="font" type="font/woff2" crossorigin="anonymous" />\n' 1
+heading 1
+marker 1
+backdrop 1
+dock 'background: rgb(255 255 255 / 0.88);' 1
+dock 'background: rgb(255 255 255 / 0.9);' 1
+dock line '    -webkit-backdrop-filter: blur(16px) saturate(1.25);\n' 1
+dock line '    backdrop-filter: blur(16px) saturate(1.25);\n' 1
+dock line '    -webkit-backdrop-filter: blur(14px);\n' 1
+dock line '    backdrop-filter: blur(14px);\n' 1
+
+added 194 packages in 6s
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.28.1 (postinstall: node install.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+
+> ghezelbaash-ir@1.0.0 build
+> astro build
+
+[2m13:00:41[22m [34m[types][39m Generated [2m121ms[22m
+[2m13:00:41[22m [34m[build][39m output: [34m"static"[39m
+[2m13:00:41[22m [34m[build][39m mode: [34m"static"[39m
+[2m13:00:41[22m [34m[build][39m directory: [34m/home/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/dist/[39m
+[2m13:00:41[22m [34m[build][39m Collecting build info...
+[2m13:00:41[22m [34m[build][39m [32m✓ Completed in 167ms.[39m
+[2m13:00:41[22m [34m[build][39m Building static entrypoints...
+[2m13:00:41[22m [34m[vite][39m [32m✓ built in 440ms[39m
+[2m13:00:42[22m [34m[vite][39m [32m✓ built in 32ms[39m
+[2m13:00:42[22m [34m[build][39m Rearranging server assets...
+
+[42m[30m generating static routes [39m[49m
+[2m13:00:42[22m   [34m├─[39m [2m/404.html[22m [2m(+9ms)[22m 
+[2m13:00:42[22m   [34m├─[39m [2m/index.html[22m [2m(+33ms)[22m 
+[2m13:00:42[22m [32m✓ Completed in 54ms.
+[39m
+[2m13:00:42[22m [34m[build][39m [32m✓ Completed in 579ms.[39m
+[2m13:00:42[22m [34m[build][39m 2 page(s) built in [1m747ms[22m
+[2m13:00:42[22m [34m[build][39m [1mComplete![22m
+curl: (7) Failed to connect to 127.0.0.1 port 4173 after 0 ms: Couldn't connect to server
+curl: (7) Failed to connect to 127.0.0.1 port 4173 after 0 ms: Couldn't connect to server
+{
+  "performance": 33,
+  "accessibility": 100,
+  "bestPractices": 100,
+  "seo": 100,
+  "tbt": 1109.9601999999995,
+  "fcp": 9455.079600000001,
+  "lcp": 9980.079600000001,
+  "mainthread": 3091.995999999937
+}
+exit 0
