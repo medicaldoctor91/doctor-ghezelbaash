@@ -3,7 +3,7 @@
   src: url("/fonts/vazirmatn-nl-wght.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
-  font-display: swap;
+  font-display: optional;
 }
 
 :root {
@@ -12,7 +12,6 @@
   color: #18211e;
   background: #f3f6f4;
   font-synthesis: none;
-  text-rendering: optimizeLegibility;
   --ink: #18211e;
   --muted: #5f6d67;
   --line: #dce5e0;
@@ -40,7 +39,7 @@ html {
 
 body {
   margin: 0;
-  background: linear-gradient(180deg, #f8faf9 0, #f3f6f4 42rem, #f3f6f4 100%);
+  background: #f3f6f4;
   color: var(--ink);
   font-size: clamp(0.98rem, 0.94rem + 0.18vw, 1.08rem);
   line-height: 1.92;
@@ -52,7 +51,7 @@ main {
   padding: clamp(1.2rem, 2.6vw, 2.6rem) clamp(1rem, 3vw, 3rem) 6rem;
   background: rgb(255 255 255 / 0.94);
   border-inline: 1px solid rgb(220 229 224 / 0.75);
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 
 main > :where(p, ul, ol, blockquote, details, address, .section-answer, .micro-answer, .semantic-alias) {
