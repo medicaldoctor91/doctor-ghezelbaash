@@ -1,0 +1,122 @@
+name: Apply rendering hardening
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-rendering-hardening.yml
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+      - uses: browser-actions/setup-chrome@v1
+
+      - name: Apply source-level rendering optimizations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p=Path(path); s=p.read_text(encoding='utf-8')
+              if s.count(old)!=1:
+                  raise SystemExit(f'{path}: expected exactly one match, found {s.count(old)} for {old!r}')
+              p.write_text(s.replace(old,new),encoding='utf-8')
+
+          replace_once('astro.config.mjs', "inlineStylesheets: 'auto'", "inlineStylesheets: 'always'")
+
+          head=Path('src/components/DocumentHead.astro')
+          s=head.read_text(encoding='utf-8')
+          for block in [
+              '  <link rel="shortcut icon" href="/favicon.ico" />\n',
+              '  <link rel="manifest" href="/site.webmanifest" />\n',
+              '  <link\n    rel="preload"\n    href="/fonts/vazirmatn-nl-wght.woff2"\n    as="font"\n    type="font/woff2"\n    crossorigin\n  />\n',
+          ]:
+              if block not in s:
+                  raise SystemExit(f'DocumentHead missing expected block: {block!r}')
+              s=s.replace(block,'',1)
+          head.write_text(s,encoding='utf-8')
+
+          css=Path('src/styles/global.css')
+          s=css.read_text(encoding='utf-8')
+          old='''h1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  line-height: 1.45;\n  text-wrap: balance;\n  scroll-margin-top: 1.5rem;\n}\n'''
+          new='''h1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  line-height: 1.45;\n  scroll-margin-top: 1.5rem;\n}\n\nh1,\nh2 {\n  text-wrap: balance;\n}\n'''
+          if s.count(old)!=1: raise SystemExit('heading block mismatch')
+          s=s.replace(old,new,1)
+          marker='''main > :where(p, ul, ol, blockquote, details, address, .section-answer, .micro-answer, .semantic-alias) {\n  max-width: var(--reading-measure);\n  margin-inline-start: 0;\n  margin-inline-end: auto;\n}\n'''
+          addition=marker+'''\n/* Keep the complete semantic corpus in the DOM while deferring layout and paint\n   for blocks that are well below the initial viewport. */\nmain > :nth-child(n + 8) {\n  content-visibility: auto;\n  contain-intrinsic-size: auto 240px;\n}\n\nmain > :where(nav, ul, ol, table, figure, details, blockquote):nth-child(n + 8) {\n  contain-intrinsic-size: auto 720px;\n}\n'''
+          if s.count(marker)!=1: raise SystemExit('main marker mismatch')
+          s=s.replace(marker,addition,1)
+          backdrop='''@supports (backdrop-filter: blur(18px)) {\n  #aesthetic-medicine-table-of-contents {\n    background: rgb(248 252 250 / 0.58);\n    backdrop-filter: blur(20px) saturate(1.25);\n  }\n}\n\n'''
+          if s.count(backdrop)!=1: raise SystemExit('TOC backdrop block mismatch')
+          s=s.replace(backdrop,'',1)
+          css.write_text(s,encoding='utf-8')
+
+          dock=Path('src/components/FloatingActionDock.astro')
+          s=dock.read_text(encoding='utf-8')
+          s=s.replace('background: rgb(255 255 255 / 0.88);','background: #fff;',1)
+          s=s.replace('background: rgb(255 255 255 / 0.9);','background: #fff;',1)
+          for line in [
+              '    -webkit-backdrop-filter: blur(16px) saturate(1.25);\n',
+              '    backdrop-filter: blur(16px) saturate(1.25);\n',
+              '    -webkit-backdrop-filter: blur(14px);\n',
+              '    backdrop-filter: blur(14px);\n',
+          ]:
+              if line not in s: raise SystemExit(f'Dock missing {line!r}')
+              s=s.replace(line,'',1)
+          dock.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Build and verify semantic integrity
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          grep -q 'image-saeed-ghezelbash-portrait-master' dist/index.html
+          grep -q 'دکتر سعید قزلباش، پزشک ایرانی' dist/index.html
+          test "$(grep -o 'در حال معاینه بالینی مراجعه‌کننده' dist/index.html | wc -l)" = "0"
+          test "$(grep -o '<link[^>]*rel=\"stylesheet\"' dist/index.html | wc -l)" = "0"
+
+      - name: Run mobile regression gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes http-server@14.1.1 dist -p 4173 -c-1 >/tmp/http-server.log 2>&1 &
+          pid=$!
+          trap 'kill $pid || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          npx --yes lighthouse http://127.0.0.1:4173/ --quiet --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/render-hardening-lhr.json
+          node <<'NODE'
+          const lhr=require('/tmp/render-hardening-lhr.json');
+          const score=Math.round(lhr.categories.performance.score*100);
+          const a11y=Math.round(lhr.categories.accessibility.score*100);
+          const bp=Math.round(lhr.categories['best-practices'].score*100);
+          const seo=Math.round(lhr.categories.seo.score*100);
+          const tbt=lhr.audits['total-blocking-time'].numericValue;
+          console.log({score,a11y,bp,seo,tbt});
+          if(score < 45 || a11y !== 100 || bp !== 100 || seo !== 100) process.exit(1);
+          NODE
+
+      - name: Commit hardening and remove workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/apply-rendering-hardening.yml
+          rm -f tmp/production-build-audit.json tmp/live-production-audit.json tmp/mobile-render-profile.json
+          git add -A
+          git commit -m 'Defer below-fold rendering and remove critical request overhead'
+          git push origin HEAD:main
