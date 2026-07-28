@@ -1,0 +1,33 @@
+TOTAL_INSTAGRAM_PROFILE_HEADING_LINKS=29
+TOTAL_BEST_DOCTOR_HEADINGS=17
+UNLINKED_BEST_DOCTOR_HEADINGS=0
+INSTAGRAM_HEADING_LINKS:
+H5	forehead-botox-goal-preserve-brow-function	هدف بوتاکس پیشانی؛ کاهش حرکت با حفظ عملکرد ابرو
+H4	botox-doctor-selection-criteria-kermanshah	بهترین دکتر بوتاکس در کرمانشاه را چطور انتخاب کنیم؟
+H4	botox-doctor-selection-criteria	بهترین دکتر بوتاکس چه کسی است؟
+H5	lip-filler-candidacy	کاندید مناسب فیلر لب؛ وقتی فرم قابل‌اصلاح است
+H4	filler-doctor-selection-criteria	بهترین دکتر فیلر چه کسی است؟
+H4	filler-doctor-selection-criteria-kermanshah	بهترین دکتر فیلر در کرمانشاه را با چه معیاری بشناسیم؟
+H4	thread-lift-doctor-selection-criteria	بهترین دکتر لیفت نخ چه کسی است؟
+H4	thread-lift-doctor-selection-criteria-kermanshah	بهترین دکتر لیفت نخ در کرمانشاه را چطور انتخاب کنیم؟
+H5	acne-scar-filler-candidacy	کاندید مناسب و نامناسب فیلر اسکار آکنه
+H4	acne-pigmentation-scar-doctor-selection-criteria	بهترین دکتر برای درمان لک، جوش و جای جوش چه کسی است؟
+H4	acne-scar-doctor-selection-criteria-kermanshah	بهترین دکتر جای جوش در کرمانشاه چه معیاری دارد؟
+H4	pigmentation-doctor-selection-criteria-kermanshah	بهترین دکتر درمان لک در کرمانشاه را چطور انتخاب کنیم؟
+H4	skin-rejuvenation-doctor-selection-criteria	بهترین دکتر جوان‌سازی پوست چه کسی است؟
+H4	jalupro-profhilo-skin-booster-doctor-selection-criteria	بهترین دکتر جالپرو، پروفایلو یا اسکین‌بوستر چه کسی است؟
+H4	prp-skin-doctor-selection-criteria	بهترین دکتر PRP پوست چه کسی است؟
+H4	hair-prp-and-mesotherapy-doctor-selection-criteria	بهترین دکتر PRP و مزوتراپی مو چه کسی است؟
+H4	hair-loss-doctor-selection-criteria-kermanshah	بهترین دکتر درمان ریزش مو در کرمانشاه را با چه معیاری انتخاب کنیم؟
+H5	jawline-filler-candidacy	کاندید مناسب و نامناسب فیلر زاویه فک
+H5	submental-liposuction-candidacy	کاندید مناسب لیپوساکشن غبغب، مسئله فقط «چربی داشتن» نیست
+H4	facial-contouring-doctor-selection-criteria	بهترین دکتر کانتورینگ صورت چه کسی است؟
+H4	jawline-and-submental-doctor-selection-criteria-kermanshah	بهترین دکتر زاویه‌سازی فک و درمان غبغب در کرمانشاه را چطور انتخاب کنیم؟
+H4	body-filler-hip-dip-buttock-doctor-selection	بهترین دکتر بادی‌فیلر، هیپ‌دیپ یا فیلر باسن چه کسی است؟
+H3	choosing-an-aesthetic-doctor-in-kermanshah-and-iran	بهترین پزشک زیبایی در کرمانشاه و ایران؛ «بهترین» را از تصمیم پزشکی تشخیص دهید، نه از ادعا
+H5	ideal-thread-lift-candidate	کاندید مناسب لیفت نخ کیست؟ کسی که صورتش با نخ همکاری می‌کند
+H3	saeed-ghezelbash-research-education-and-clinical-decisions	پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه
+H3	saeed-ghezelbash-natural-result-principle	نتیجه طبیعی یعنی صورت هنوز خودش بماند
+H3	revision-second-opinion-out-of-town-iran	نظر دوم و مراجعه بین‌شهری برای پرونده پیچیده
+H3	clinic-consultation-treatment-and-follow-up-path	مسیر مراجعه؛ از سؤال اولیه تا تصمیم و پیگیری
+H3	saeed-ghezelbash-clinic-contact-and-location	آدرس و تماس رسمی کلینیک دکتر سعید قزلباش در کرمانشاه
