@@ -8,6 +8,7 @@ const { frontmatter, url } = Astro.props;
 const baseURL = Astro.site ?? Astro.url;
 const canonicalURL = new URL(url ?? Astro.url.pathname, baseURL);
 const ogImageURL = new URL('/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.jpg', baseURL);
+const deployCommit = process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'local';
 
 const title = frontmatter.title;
 const description = frontmatter.description;
@@ -25,6 +26,7 @@ const robots = frontmatter.robots ?? 'index, follow';
       canonicalURL={canonicalURL}
       ogImageURL={ogImageURL}
     />
+    <meta name="x-deploy-commit" content={deployCommit} />
   </head>
   <body>
     <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>
