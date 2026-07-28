@@ -1,0 +1,67 @@
+name: Report identity asset metadata
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/report-identity-assets.yml
+
+permissions:
+  contents: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Install image tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends imagemagick
+      - name: Build metadata report
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          python3 - <<'PY'
+          import hashlib, json, mimetypes, pathlib, subprocess
+          paths = [
+            'public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg',
+            'public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg',
+            'public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg',
+            'public/media/brand/doctor-ghezelbaash-symbol-512.png',
+            'public/favicon.svg',
+            'public/favicon.ico',
+            'public/favicon-48x48.png',
+            'public/apple-touch-icon.png',
+            'public/fonts/vazirmatn-nl-wght.woff2',
+          ]
+          out = {}
+          for raw in paths:
+              p = pathlib.Path(raw)
+              data = p.read_bytes()
+              item = {
+                  'bytes': len(data),
+                  'sha256': hashlib.sha256(data).hexdigest(),
+                  'mime': mimetypes.guess_type(p.name)[0] or 'application/octet-stream',
+              }
+              if p.suffix.lower() in {'.jpg', '.jpeg', '.png', '.webp', '.ico'}:
+                  result = subprocess.check_output(['identify', '-format', '%w %h', str(p)], text=True).strip().splitlines()[0]
+                  w, h = result.split()
+                  item['width'] = int(w)
+                  item['height'] = int(h)
+              out[raw] = item
+          pathlib.Path('tmp/identity-assets-metadata.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+      - name: Commit report and remove workflow
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/report-identity-assets.yml
+          git add tmp/identity-assets-metadata.json
+          git commit -m 'Record identity asset hashes and dimensions'
+          git push origin HEAD:main
