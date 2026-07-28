@@ -20,7 +20,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
     <source
       type="image/webp"
       srcset="/media/images/physician/saeed-ghezelbash-portrait-640.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-960.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.webp 1600w"
-      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"
+      sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"
     />
     <img
       src="/media/images/physician/saeed-ghezelbash-portrait-640.webp"
@@ -42,7 +42,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
     <source
       type="image/webp"
       srcset="/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp 640w, /media/images/physician/saeed-ghezelbash-clinical-examination-960.webp 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp 1600w"
-      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"
+      sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"
     />
     <img
       src="/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp"
@@ -8222,7 +8222,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
     <source
       type="image/webp"
       srcset="/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp 640w, /media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp 960w, /media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp 1600w"
-      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"
+      sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"
     />
     <img
       src="/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp"
