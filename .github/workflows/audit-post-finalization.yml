@@ -1,0 +1,296 @@
+name: Audit post-finalization source and live deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-post-finalization.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: audit-doctor-ghezelbaash-post-finalization
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install source validation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check rdflib==7.1.4 pillow==11.3.0
+          npm ci --no-audit --no-fund
+
+      - name: Build and validate semantic source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp/audit
+          npm run build
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          from rdflib import Graph
+          import hashlib, json, re
+
+          ROOT='https://www.ghezelbaash.ir/'
+          IDS={
+            'person':ROOT+'#saeed-ghezelbash',
+            'clinic':ROOT+'#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',
+            'course':ROOT+'#advanced-thread-lift-workshop-course',
+            'courseInstance':ROOT+'#advanced-thread-lift-workshop-tehran-1403-11',
+            'event2017':ROOT+'#event-wpa-xvii-world-congress-psychiatry-2017',
+            'article2016':ROOT+'#article-omega-3-bipolar-i-2016',
+            'article2021':ROOT+'#article-mdd-attachment-dissociation-trauma-2021',
+            'presentation2017':ROOT+'#presentation-attachment-style-dissociative-depression-2017',
+            'iran':ROOT+'#country-iran',
+            'iraq':ROOT+'#country-iraq',
+          }
+          def types(n):
+            v=n.get('@type',[]); return [v] if isinstance(v,str) else list(v)
+          def ref(value):
+            if isinstance(value,dict): return value.get('@id')
+            return None
+          def refs(value):
+            if value is None:return []
+            if not isinstance(value,list):value=[value]
+            return [x.get('@id') for x in value if isinstance(x,dict) and x.get('@id')]
+          def has_lang_value(value,lang):
+            if not isinstance(value,list):value=[value]
+            return any(isinstance(x,dict) and x.get('@language')==lang and x.get('@value') for x in value)
+
+          report={'sourceCommit':None,'files':{},'semantic':{},'images':{},'build':{},'failures':[],'warnings':[]}
+          report['sourceCommit']=Path('.git/HEAD').read_text().strip()
+          paths=['public/graph.jsonld','src/data/semantic/head-graph.min.jsonld','public/graph.ttl','src/pages/index.md','public/_headers','dist/index.html']
+          for p in paths:
+            b=Path(p).read_bytes()
+            report['files'][p]={'bytes':len(b),'sha256':hashlib.sha256(b).hexdigest()}
+          report['build']['htmlUnder1900000']=report['files']['dist/index.html']['bytes']<1900000
+          if not report['build']['htmlUnder1900000']:report['failures'].append('dist/index.html exceeds 1.9 MB budget')
+
+          docs={}
+          for p in ('public/graph.jsonld','src/data/semantic/head-graph.min.jsonld'):
+            doc=json.loads(Path(p).read_text(encoding='utf-8'))
+            by={n.get('@id'):n for n in doc.get('@graph',[]) if isinstance(n,dict) and n.get('@id')}
+            docs[p]=by
+            report['semantic'][p]={'nodes':len(by),'duplicateIds':len(doc.get('@graph',[]))-len(by)}
+
+          full=docs['public/graph.jsonld']; head=docs['src/data/semantic/head-graph.min.jsonld']
+          missing=sorted(set(head)-set(full))
+          report['semantic']['headMissingFromFull']=missing
+          if missing:report['failures'].append(f'Head nodes missing from Full: {missing[:10]}')
+
+          for label,by in [('full',full),('head',head)]:
+            sem=report['semantic'].setdefault(label,{})
+            for key,node_id in IDS.items():sem[key+'Present']=node_id in by
+            required=(IDS['person'],IDS['clinic'],IDS['course'],IDS['courseInstance'],IDS['article2016'],IDS['article2021'],IDS['presentation2017'],IDS['iran'],IDS['iraq'])
+            for node_id in required:
+              if node_id not in by:report['failures'].append(f'{label}: missing required node {node_id}')
+            person=by[IDS['person']]; clinic=by[IDS['clinic']]; course=by[IDS['course']]; instance=by[IDS['courseInstance']]
+            sem['personTypes']=types(person); sem['clinicTypes']=types(clinic)
+            sem['personPriceRange']=person.get('priceRange'); sem['clinicPriceRange']=clinic.get('priceRange')
+            sem['courseProvider']=ref(course.get('provider')); sem['courseHasInstructor']='instructor' in course
+            sem['courseDescription']=bool(course.get('description'))
+            sem['instanceProvider']=ref(instance.get('provider')); sem['instanceInstructor']=ref(instance.get('instructor'))
+            checks=[
+              (person.get('priceRange')=='$$$$',f'{label}: Person priceRange'),
+              (clinic.get('priceRange')=='$$$$',f'{label}: Clinic priceRange'),
+              (ref(course.get('provider'))==IDS['clinic'],f'{label}: Course provider'),
+              ('instructor' not in course,f'{label}: Course instructor should be on CourseInstance'),
+              (bool(course.get('description')),f'{label}: Course description'),
+              (ref(instance.get('provider'))==IDS['clinic'],f'{label}: CourseInstance provider'),
+              (ref(instance.get('instructor'))==IDS['person'],f'{label}: CourseInstance instructor'),
+              ('ScholarlyArticle' in types(by[IDS['article2021']]),f'{label}: 2021 ScholarlyArticle type'),
+              ('PresentationDigitalDocument' not in types(by[IDS['article2021']]),f'{label}: 2021 not presentation'),
+              ('PresentationDigitalDocument' in types(by[IDS['presentation2017']]),f'{label}: 2017 presentation type'),
+              ('ScholarlyArticle' not in types(by[IDS['presentation2017']]),f'{label}: 2017 not article'),
+              (by[IDS['iran']].get('identifier')=='IR',f'{label}: Iran code'),
+              (by[IDS['iraq']].get('identifier')=='IQ',f'{label}: Iraq code'),
+            ]
+            for ok,name in checks:
+              if not ok:report['failures'].append(name)
+
+          event=full.get(IDS['event2017'])
+          if event:
+            event_fields=['startDate','endDate','description','organizer','eventAttendanceMode','eventStatus','location']
+            report['semantic']['event2017Fields']={f:bool(event.get(f)) for f in event_fields}
+            for f in ('startDate','description','organizer','eventStatus'):
+              if not event.get(f):report['failures'].append(f'Full Event missing {f}')
+            for f in ('image','offers','performer'):
+              if not event.get(f):report['warnings'].append(f'Event optional field absent: {f}')
+
+          for key in ('article2016','article2021'):
+            n=full[IDS[key]]
+            fields={f:bool(n.get(f)) for f in ('headline','name','datePublished','author','publisher','sameAs','image')}
+            report['semantic'][key+'Fields']=fields
+            for f in ('headline','datePublished','author'):
+              if not n.get(f):report['failures'].append(f'{key} missing {f}')
+            if not re.fullmatch(r'\d{4}-\d{2}-\d{2}',str(n.get('datePublished',''))):report['failures'].append(f'{key} datePublished not YYYY-MM-DD')
+            if not n.get('image'):report['warnings'].append(f'{key} optional image absent')
+
+          clinic=full[IDS['clinic']]
+          for f in ('image','logo','address','geo','telephone','priceRange'):
+            if not clinic.get(f):report['failures'].append(f'Clinic missing {f}')
+
+          image_nodes=[n for n in full.values() if 'ImageObject' in types(n)]
+          image_issues=[]
+          for n in image_nodes:
+            if any(token in (n.get('@id','')+' '+str(n.get('contentUrl',''))) for token in ('physician-portrait','clinical-team','clinical-office','clinical-examination','with-clinic-team','in-clinical-office')):
+              for f in ('creditText','license','copyrightNotice','acquireLicensePage'):
+                if not n.get(f):image_issues.append({'id':n.get('@id'),'field':f})
+          report['semantic']['physicianImageMetadataIssues']=image_issues
+          if image_issues:report['failures'].append(f'Physician ImageObject metadata issues: {len(image_issues)}')
+
+          image_files=[
+            'public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg',
+            'public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg',
+            'public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg',
+            'public/media/images/physician/saeed-ghezelbash-portrait-640.webp',
+            'public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',
+            'public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',
+          ]
+          for p in image_files:
+            with Image.open(p) as im:
+              report['images'][p]={'width':im.width,'height':im.height,'format':im.format,'bytes':Path(p).stat().st_size,'sha256':hashlib.sha256(Path(p).read_bytes()).hexdigest()}
+          for p in image_files[3:]:
+            if (report['images'][p]['width'],report['images'][p]['height'])!=(640,427):report['failures'].append(f'Wrong responsive image dimensions: {p}')
+
+          g1=Graph().parse('public/graph.jsonld',format='json-ld')
+          g2=Graph().parse('public/graph.ttl',format='turtle')
+          report['semantic']['jsonLdTriples']=len(g1);report['semantic']['turtleTriples']=len(g2);report['semantic']['rdfTripleCountsEqual']=len(g1)==len(g2)
+          if len(g1)!=len(g2):report['failures'].append('JSON-LD/Turtle triple count mismatch')
+
+          page=Path('src/pages/index.md').read_text(encoding='utf-8')
+          report['semantic']['visibleOfficeOldPhrase']=('معاینه بالینی مراجعه‌کننده' in page or 'معاینه لایه‌های صورت پیش از انتخاب روش زیبایی' in page)
+          report['semantic']['visibleOfficeNewImage']=('saeed-ghezelbash-in-clinical-office-640.webp' in page)
+          if report['semantic']['visibleOfficeOldPhrase']:report['failures'].append('Old office/examination visible wording remains')
+          if not report['semantic']['visibleOfficeNewImage']:report['failures'].append('New office responsive image not wired')
+
+          Path('tmp/audit/source-validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          if report['failures']:
+            print(json.dumps(report,ensure_ascii=False,indent=2))
+            raise SystemExit(f"Source validation failures: {len(report['failures'])}")
+          PY
+
+      - name: Run local Lighthouse mobile and desktop
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup python3 -m http.server 4173 --directory dist >tmp/audit/http-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --output=json --output-path=tmp/audit/lighthouse-local-mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --preset=desktop --output=json --output-path=tmp/audit/lighthouse-local-desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+
+      - name: Wait for Cloudflare and audit live endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 180
+          base='https://www.ghezelbaash.ir'
+          curl -fsS --compressed "$base/" -o tmp/audit/live-index.html
+          for path in / /graph.jsonld /graph.ttl /media/images/physician/saeed-ghezelbash-portrait-640.webp /media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp /media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp /favicon.svg /site.webmanifest /robots.txt /sitemap.xml; do
+            name=$(printf '%s' "$path" | sed 's#^/##;s#[/?&=]#_#g'); [ -n "$name" ] || name=root
+            curl -sS -D "tmp/audit/live-headers-${name}.txt" -o /dev/null "$base$path" || true
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          html=Path('tmp/audit/live-index.html').read_text(encoding='utf-8',errors='replace')
+          result={
+            'bytes':len(html.encode('utf-8')),
+            'hasPortrait640':'saeed-ghezelbash-portrait-640.webp' in html,
+            'hasOffice640':'saeed-ghezelbash-in-clinical-office-640.webp' in html,
+            'hasTeam640':'saeed-ghezelbash-with-clinic-team-640.webp' in html,
+            'hasOldOfficePhrase':('معاینه بالینی مراجعه‌کننده' in html or 'معاینه لایه‌های صورت پیش از انتخاب روش زیبایی' in html),
+            'hasPriceRange':'"priceRange":"$$$$"' in html,
+            'hasPresentationType':'PresentationDigitalDocument' in html,
+          }
+          Path('tmp/audit/live-deployment.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+
+      - name: Run live Lighthouse mobile and desktop
+        shell: bash
+        run: |
+          set +e
+          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --output=json --output-path=tmp/audit/lighthouse-live-mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          echo "$?" > tmp/audit/lighthouse-live-mobile.exit
+          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --preset=desktop --output=json --output-path=tmp/audit/lighthouse-live-desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          echo "$?" > tmp/audit/lighthouse-live-desktop.exit
+          exit 0
+
+      - name: Summarize Lighthouse and HTTP results
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          root=Path('tmp/audit')
+          result={'lighthouse':{},'headers':{},'liveDeployment':{},'sourceValidation':{}}
+          if (root/'source-validation.json').exists():result['sourceValidation']=json.loads((root/'source-validation.json').read_text())
+          if (root/'live-deployment.json').exists():result['liveDeployment']=json.loads((root/'live-deployment.json').read_text())
+          for name in ('local-mobile','local-desktop','live-mobile','live-desktop'):
+            p=root/f'lighthouse-{name}.json'
+            if not p.exists():
+              result['lighthouse'][name]={'missing':True}
+              continue
+            d=json.loads(p.read_text())
+            audits=d.get('audits',{}); cats=d.get('categories',{})
+            metrics={}
+            for key in ('first-contentful-paint','largest-contentful-paint','speed-index','total-blocking-time','cumulative-layout-shift','interactive','mainthread-work-breakdown','max-potential-fid'):
+              a=audits.get(key,{})
+              metrics[key]={'score':a.get('score'),'numericValue':a.get('numericValue'),'displayValue':a.get('displayValue')}
+            failures=[]
+            for key,a in audits.items():
+              score=a.get('score')
+              if isinstance(score,(int,float)) and score<1 and a.get('scoreDisplayMode') not in ('notApplicable','manual','informative'):
+                failures.append({'id':key,'title':a.get('title'),'score':score,'displayValue':a.get('displayValue')})
+            failures.sort(key=lambda x:(x['score'],x['id']))
+            result['lighthouse'][name]={
+              'categories':{k:round((v.get('score') or 0)*100) for k,v in cats.items()},
+              'metrics':metrics,
+              'failures':failures[:40],
+            }
+          for p in sorted(root.glob('live-headers-*.txt')):
+            text=p.read_text(errors='replace')
+            blocks=[x.strip() for x in re.split(r'\r?\n\r?\n',text) if x.strip()]
+            block=blocks[-1] if blocks else text
+            lines=block.splitlines()
+            status=lines[0] if lines else ''
+            headers={}
+            for line in lines[1:]:
+              if ':' in line:
+                k,v=line.split(':',1);headers[k.strip().lower()]=v.strip()
+            result['headers'][p.stem.replace('live-headers-','')]={'status':status,'headers':headers}
+          Path('tmp/post-finalization-audit.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+
+      - name: Commit audit and remove one-shot workflow
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/audit-post-finalization.yml
+          rm -rf tmp/audit
+          git add tmp/post-finalization-audit.json
+          git commit -m 'Record post-finalization source and live audit'
+          git push origin HEAD:main
