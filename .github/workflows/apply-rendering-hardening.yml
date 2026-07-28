@@ -32,22 +32,23 @@ jobs:
 
           def replace_once(path, old, new):
               p=Path(path); s=p.read_text(encoding='utf-8')
-              if s.count(old)!=1:
-                  raise SystemExit(f'{path}: expected exactly one match, found {s.count(old)} for {old!r}')
+              count=s.count(old)
+              if count!=1:
+                  raise SystemExit(f'{path}: expected exactly one match, found {count} for {old!r}')
               p.write_text(s.replace(old,new),encoding='utf-8')
 
           replace_once('astro.config.mjs', "inlineStylesheets: 'auto'", "inlineStylesheets: 'always'")
 
           head=Path('src/components/DocumentHead.astro')
           s=head.read_text(encoding='utf-8')
-          for block in [
-              '  <link rel="shortcut icon" href="/favicon.ico" />\n',
-              '  <link rel="manifest" href="/site.webmanifest" />\n',
-              '  <link\n    rel="preload"\n    href="/fonts/vazirmatn-nl-wght.woff2"\n    as="font"\n    type="font/woff2"\n    crossorigin\n  />\n',
+          for line in [
+              '<link rel="shortcut icon" href="/favicon.ico" />\n',
+              '<link rel="manifest" href="/site.webmanifest" />\n',
+              '<link rel="preload" href="/fonts/vazirmatn-nl-wght.woff2" as="font" type="font/woff2" crossorigin="anonymous" />\n',
           ]:
-              if block not in s:
-                  raise SystemExit(f'DocumentHead missing expected block: {block!r}')
-              s=s.replace(block,'',1)
+              if s.count(line)!=1:
+                  raise SystemExit(f'DocumentHead expected one line, found {s.count(line)}: {line!r}')
+              s=s.replace(line,'',1)
           head.write_text(s,encoding='utf-8')
 
           css=Path('src/styles/global.css')
@@ -57,7 +58,7 @@ jobs:
           if s.count(old)!=1: raise SystemExit('heading block mismatch')
           s=s.replace(old,new,1)
           marker='''main > :where(p, ul, ol, blockquote, details, address, .section-answer, .micro-answer, .semantic-alias) {\n  max-width: var(--reading-measure);\n  margin-inline-start: 0;\n  margin-inline-end: auto;\n}\n'''
-          addition=marker+'''\n/* Keep the complete semantic corpus in the DOM while deferring layout and paint\n   for blocks that are well below the initial viewport. */\nmain > :nth-child(n + 8) {\n  content-visibility: auto;\n  contain-intrinsic-size: auto 240px;\n}\n\nmain > :where(nav, ul, ol, table, figure, details, blockquote):nth-child(n + 8) {\n  contain-intrinsic-size: auto 720px;\n}\n'''
+          addition=marker+'''\n/* Preserve the complete semantic corpus while deferring below-fold layout and paint. */\nmain > :nth-child(n + 8) {\n  content-visibility: auto;\n  contain-intrinsic-size: auto 240px;\n}\n\nmain > :where(nav, ul, ol, table, figure, details, blockquote):nth-child(n + 8) {\n  contain-intrinsic-size: auto 720px;\n}\n'''
           if s.count(marker)!=1: raise SystemExit('main marker mismatch')
           s=s.replace(marker,addition,1)
           backdrop='''@supports (backdrop-filter: blur(18px)) {\n  #aesthetic-medicine-table-of-contents {\n    background: rgb(248 252 250 / 0.58);\n    backdrop-filter: blur(20px) saturate(1.25);\n  }\n}\n\n'''
@@ -67,15 +68,19 @@ jobs:
 
           dock=Path('src/components/FloatingActionDock.astro')
           s=dock.read_text(encoding='utf-8')
-          s=s.replace('background: rgb(255 255 255 / 0.88);','background: #fff;',1)
-          s=s.replace('background: rgb(255 255 255 / 0.9);','background: #fff;',1)
+          for old,new in [
+              ('background: rgb(255 255 255 / 0.88);','background: #fff;'),
+              ('background: rgb(255 255 255 / 0.9);','background: #fff;'),
+          ]:
+              if s.count(old)!=1: raise SystemExit(f'Dock expected one {old!r}')
+              s=s.replace(old,new,1)
           for line in [
               '    -webkit-backdrop-filter: blur(16px) saturate(1.25);\n',
               '    backdrop-filter: blur(16px) saturate(1.25);\n',
               '    -webkit-backdrop-filter: blur(14px);\n',
               '    backdrop-filter: blur(14px);\n',
           ]:
-              if line not in s: raise SystemExit(f'Dock missing {line!r}')
+              if s.count(line)!=1: raise SystemExit(f'Dock missing {line!r}')
               s=s.replace(line,'',1)
           dock.write_text(s,encoding='utf-8')
           PY
