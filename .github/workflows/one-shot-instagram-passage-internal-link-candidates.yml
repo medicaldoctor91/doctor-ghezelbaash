@@ -1,0 +1,155 @@
+name: One-shot Instagram passage internal-link candidates
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-instagram-passage-internal-link-candidates.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find cross-section anchor candidates
+        run: |
+          python3 - <<'PY'
+          import re, html, pathlib
+
+          path = pathlib.Path('src/pages/index.md')
+          text = path.read_text(encoding='utf-8')
+          lines = text.splitlines()
+          profile = 'https://www.instagram.com/doctor.ghezelbaash/'
+
+          heading_re = re.compile(r'<h([2-6])\b[^>]*\bid="([^"]+)"[^>]*>(.*?)</h\1>', re.I)
+          tag_re = re.compile(r'<[^>]+>')
+          link_re = re.compile(r'<a\b[^>]*>.*?</a>', re.I)
+
+          def visible(s):
+              s = re.sub(r'<script\b.*?</script>', ' ', s, flags=re.I|re.S)
+              s = re.sub(r'<style\b.*?</style>', ' ', s, flags=re.I|re.S)
+              s = tag_re.sub(' ', s)
+              s = html.unescape(s)
+              return re.sub(r'\s+', ' ', s).strip()
+
+          headings=[]
+          current_h2=current_h3=''
+          line_context=[]
+          for i,line in enumerate(lines,1):
+              m=heading_re.search(line)
+              if m:
+                  level=int(m.group(1)); hid=m.group(2); label=visible(m.group(3))
+                  if level==2:
+                      current_h2=hid; current_h3=''
+                  elif level==3:
+                      current_h3=hid
+                  headings.append({'line':i,'level':level,'id':hid,'text':label,'raw':line,'h2':current_h2,'h3':current_h3})
+              line_context.append((current_h2,current_h3))
+
+          targets=[h for h in headings if profile in h['raw']]
+
+          terms = {
+          'mesotherapy-for-skin-pigmentation-and-acne':['مزوتراپی پوست','مزوتراپی برای پوست','مزوتراپی لک','مزوتراپی جوش'],
+          'choosing-an-aesthetic-doctor-in-kermanshah-and-iran':['انتخاب پزشک زیبایی','پزشک زیبایی در کرمانشاه','بهترین پزشک زیبایی','انتخاب دکتر زیبایی'],
+          'saeed-ghezelbash-research-education-and-clinical-decisions':['سابقه پژوهشی','پژوهش و آموزش','آموزش پزشکان','هویت پژوهشی','پژوهش‌های پزشکی'],
+          'saeed-ghezelbash-natural-result-principle':['نتیجه طبیعی','طبیعی بماند','طبیعی ماندن','چهره طبیعی'],
+          'revision-second-opinion-out-of-town-iran':['نظر دوم','پرونده پیچیده','مراجعه بین‌شهری','مراجعه از شهرهای دیگر','اصلاح نتیجه قبلی'],
+          'clinic-consultation-treatment-and-follow-up-path':['مسیر مراجعه','مشاوره و پیگیری','پیگیری درمان','فرایند مراجعه','نوبت و پیگیری'],
+          'saeed-ghezelbash-clinic-contact-and-location':['آدرس کلینیک','تماس با کلینیک','کلینیک دکتر سعید قزلباش','موقعیت کلینیک','شماره تماس'],
+          'botox-doctor-selection-criteria-kermanshah':['بهترین دکتر بوتاکس در کرمانشاه','انتخاب دکتر بوتاکس در کرمانشاه'],
+          'botox-doctor-selection-criteria':['انتخاب دکتر بوتاکس','پزشک مناسب برای بوتاکس','بهترین دکتر بوتاکس'],
+          'filler-doctor-selection-criteria':['انتخاب دکتر فیلر','پزشک مناسب برای فیلر','بهترین دکتر فیلر'],
+          'filler-doctor-selection-criteria-kermanshah':['بهترین دکتر فیلر در کرمانشاه','انتخاب دکتر فیلر در کرمانشاه'],
+          'thread-lift-doctor-selection-criteria':['انتخاب دکتر لیفت نخ','پزشک مناسب برای لیفت نخ','بهترین دکتر لیفت نخ'],
+          'thread-lift-doctor-selection-criteria-kermanshah':['بهترین دکتر لیفت نخ در کرمانشاه','انتخاب دکتر لیفت نخ در کرمانشاه'],
+          'subcision-for-tethered-acne-scars':['سابسیژن جای جوش','سابسیژن اسکار','اسکارهای چسبیده','آزاد کردن چسبندگی اسکار'],
+          'acne-scar-resurfacing-microneedling-fractional-laser-and-peeling':['میکرونیدلینگ','لیزر فرکشنال','پیلینگ','RF فرکشنال'],
+          'acne-pigmentation-scar-doctor-selection-criteria':['دکتر درمان لک و جوش','انتخاب پزشک برای جای جوش','بهترین دکتر برای درمان لک'],
+          'acne-scar-doctor-selection-criteria-kermanshah':['بهترین دکتر جای جوش در کرمانشاه','دکتر جای جوش در کرمانشاه'],
+          'pigmentation-doctor-selection-criteria-kermanshah':['بهترین دکتر درمان لک در کرمانشاه','دکتر لک در کرمانشاه'],
+          'skin-rejuvenation-doctor-selection-criteria':['انتخاب دکتر جوان‌سازی','بهترین دکتر جوان‌سازی پوست','پزشک جوانسازی پوست'],
+          'jalupro-profhilo-skin-booster-doctor-selection-criteria':['دکتر جالپرو','دکتر پروفایلو','انتخاب پزشک برای اسکین‌بوستر'],
+          'prp-skin-doctor-selection-criteria':['دکتر PRP پوست','انتخاب پزشک PRP پوست','پی‌آرپی پوست'],
+          'hair-prp-and-mesotherapy-doctor-selection-criteria':['دکتر PRP و مزوتراپی مو','انتخاب پزشک برای PRP مو','پی‌آرپی و مزوتراپی مو'],
+          'hair-loss-doctor-selection-criteria-kermanshah':['دکتر ریزش مو در کرمانشاه','بهترین دکتر درمان ریزش مو در کرمانشاه'],
+          'hyaluronidase-definition':['هیالورونیداز','هیالاز','حل کردن فیلر','آنزیم حل‌کننده فیلر'],
+          'facial-contouring-doctor-selection-criteria':['دکتر کانتورینگ صورت','انتخاب پزشک کانتورینگ','بهترین دکتر کانتورینگ'],
+          'jawline-and-submental-doctor-selection-criteria-kermanshah':['دکتر زاویه‌سازی فک در کرمانشاه','درمان غبغب در کرمانشاه','پزشک زاویه‌سازی فک'],
+          'body-filler-hip-dip-buttock-doctor-selection':['دکتر بادی‌فیلر','فیلر هیپ‌دیپ','فیلر باسن','انتخاب پزشک بادی فیلر'],
+          'fat-grafting-is-living-tissue-transfer':['تزریق چربی','انتقال چربی','پیوند چربی'],
+          'forehead-botox-goal-preserve-brow-function':['بوتاکس پیشانی','حفظ عملکرد ابرو','حرکت پیشانی'],
+          'lip-filler-candidacy':['کاندید فیلر لب','فیلر لب مناسب چه کسی','فیلر لب برای چه کسی'],
+          'acne-scar-filler-candidacy':['فیلر اسکار آکنه','فیلر جای جوش','کاندید فیلر اسکار'],
+          'jawline-filler-candidacy':['فیلر زاویه فک','کاندید فیلر فک','فیلر خط فک'],
+          'submental-liposuction-candidacy':['لیپوساکشن غبغب','کاندید لیپوساکشن غبغب','چربی غبغب'],
+          'botox-for-migraine-search-intent':['بوتاکس برای میگرن','بوتاکس میگرن','درمان میگرن با بوتاکس'],
+          'ideal-thread-lift-candidate':['کاندید لیفت نخ','لیفت نخ مناسب چه کسی','صورت مناسب لیفت نخ'],
+          }
+
+          # Build candidate paragraphs/lines, excluding headings, existing anchor-containing lines, code fences and tiny fragments.
+          candidates=[]
+          in_code=False
+          for i,line in enumerate(lines,1):
+              if line.strip().startswith('```'):
+                  in_code=not in_code; continue
+              if in_code or heading_re.search(line) or '<a ' in line.lower():
+                  continue
+              v=visible(line)
+              if len(v)<45 or len(v)>1200:
+                  continue
+              h2,h3=line_context[i-1]
+              candidates.append({'line':i,'text':v,'raw':line,'h2':h2,'h3':h3})
+
+          out=[]
+          out.append(f'TOTAL_TARGETS={len(targets)}')
+          out.append('RULE=Candidate source must be outside target H2 and contain no existing <a>.')
+          out.append('')
+          total_found=0
+          for t in targets:
+              pats=terms.get(t['id'],[])
+              scored=[]
+              for c in candidates:
+                  if c['h2']==t['h2']:
+                      continue
+                  matches=[p for p in pats if p.casefold() in c['text'].casefold()]
+                  if not matches:
+                      continue
+                  # Prefer exact multiword phrase, shorter source paragraph and distinct semantic section.
+                  best=max(matches,key=len)
+                  score=len(best)*10 + len(matches)*8 - min(len(c['text']),500)/50
+                  # extract context around best phrase
+                  low=c['text'].casefold(); pos=low.find(best.casefold())
+                  start=max(0,pos-100); end=min(len(c['text']),pos+len(best)+150)
+                  snippet=c['text'][start:end]
+                  if start: snippet='…'+snippet
+                  if end<len(c['text']): snippet+='…'
+                  scored.append((score,best,c,snippet))
+              scored.sort(key=lambda x:(-x[0],x[2]['line']))
+              # dedupe same phrase/source section
+              chosen=[]; seen=set()
+              for item in scored:
+                  key=(item[1],item[2]['h2'],item[2]['h3'])
+                  if key in seen: continue
+                  seen.add(key); chosen.append(item)
+                  if len(chosen)==4: break
+              out.append(f"## {t['level']} {t['id']} | {t['text']}")
+              out.append(f"TARGET_LINE={t['line']} TARGET_H2={t['h2']}")
+              if not chosen:
+                  out.append('NO_STRONG_CROSS_SECTION_CANDIDATE')
+              else:
+                  total_found += len(chosen)
+                  for score,phrase,c,snippet in chosen:
+                      out.append(f"- PHRASE={phrase} | SOURCE_LINE={c['line']} | SOURCE_H2={c['h2']} | SOURCE_H3={c['h3']} | SNIPPET={snippet}")
+              out.append('')
+          out.insert(1,f'TOTAL_CANDIDATES={total_found}')
+          pathlib.Path('instagram-passage-internal-link-candidates.txt').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+      - name: Commit report
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add instagram-passage-internal-link-candidates.txt
+          git commit -m "Add temporary Instagram passage internal-link candidate report"
+          git push
