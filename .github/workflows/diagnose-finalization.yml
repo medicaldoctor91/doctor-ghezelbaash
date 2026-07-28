@@ -1,0 +1,146 @@
+name: Diagnose finalization workflow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/diagnose-finalization.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Run non-destructive diagnostics
+        shell: bash
+        run: |
+          set +e
+          mkdir -p tmp
+          report=tmp/finalization-diagnostic.txt
+          : > "$report"
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$report"
+          echo "source_sha=$GITHUB_SHA" >> "$report"
+          echo "node=$(node --version 2>&1)" >> "$report"
+          echo "npm=$(npm --version 2>&1)" >> "$report"
+          echo >> "$report"
+
+          for f in \
+            public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg \
+            public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg \
+            public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg \
+            public/graph.jsonld \
+            src/data/semantic/head-graph.min.jsonld \
+            src/pages/index.md \
+            public/_headers; do
+            if [ -f "$f" ]; then
+              echo "file_ok $f bytes=$(wc -c < "$f")" >> "$report"
+            else
+              echo "file_missing $f" >> "$report"
+            fi
+          done
+
+          echo >> "$report"
+          python3 - <<'PY' >> "$report" 2>&1
+          import json
+          from pathlib import Path
+          ROOT='https://www.ghezelbaash.ir/'
+          ids={
+            'person':ROOT+'#saeed-ghezelbash',
+            'clinic':ROOT+'#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',
+            'course':ROOT+'#advanced-thread-lift-workshop-course',
+            'article2021':ROOT+'#article-mdd-attachment-dissociation-trauma-2021',
+            'presentation2017':ROOT+'#presentation-attachment-style-dissociative-depression-2017',
+          }
+          for path in ('public/graph.jsonld','src/data/semantic/head-graph.min.jsonld'):
+            doc=json.loads(Path(path).read_text(encoding='utf-8'))
+            graph=doc.get('@graph',[])
+            by={n.get('@id'):n for n in graph if isinstance(n,dict) and n.get('@id')}
+            print('graph',path,'nodes',len(by))
+            for name,i in ids.items():
+              n=by.get(i)
+              print(' node',name,'present',bool(n),'type',None if not n else n.get('@type'))
+              if n and name in ('person','clinic'):
+                print('  priceRange',n.get('priceRange'))
+              if n and name=='course':
+                print('  provider',n.get('provider'),'instructor',n.get('instructor'),'instances',n.get('hasCourseInstance'))
+            office=[]
+            for n in graph:
+              if not isinstance(n,dict): continue
+              t=n.get('@type',[]); t=[t] if isinstance(t,str) else t
+              if 'ImageObject' not in t: continue
+              text=(n.get('@id','')+' '+str(n.get('contentUrl',''))).lower()
+              if any(x in text for x in ('clinical-office','clinical-examination','in-clinical-office')):
+                office.append((n.get('@id'),n.get('about')))
+            print(' office_nodes',len(office))
+            for x in office[:20]: print('  office',x)
+          page=Path('src/pages/index.md').read_text(encoding='utf-8')
+          for legacy,new640 in [
+            ('saeed-ghezelbash-portrait','saeed-ghezelbash-portrait-640.webp'),
+            ('saeed-ghezelbash-clinical-examination','saeed-ghezelbash-in-clinical-office-640.webp'),
+            ('saeed-ghezelbash-with-clinic-team','saeed-ghezelbash-with-clinic-team-640.webp'),
+          ]:
+            old_srcset=(f'srcset="/media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 960px) 100vw, 960px"')
+            new_srcset=(f'srcset="/media/images/physician/{new640} 640w, /media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"')
+            old_img=(f'src="/media/images/physician/{legacy}-960.webp"\n      width="960"\n      height="640"')
+            new_img=(f'src="/media/images/physician/{new640}"\n      width="640"\n      height="427"')
+            print('markup',legacy,'old_srcset',page.count(old_srcset),'new_srcset',page.count(new_srcset),'old_img',page.count(old_img),'new_img',page.count(new_img))
+          PY
+          echo "python_diagnostic_exit=$?" >> "$report"
+
+          echo >> "$report"
+          sudo apt-get update >> "$report" 2>&1
+          echo "apt_update_exit=$?" >> "$report"
+          sudo apt-get install -y --no-install-recommends webp >> "$report" 2>&1
+          echo "webp_install_exit=$?" >> "$report"
+          cwebp -version >> "$report" 2>&1
+          echo "cwebp_version_exit=$?" >> "$report"
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg -o /tmp/test-portrait-640.webp >> "$report" 2>&1
+          echo "cwebp_test_exit=$? bytes=$(test -f /tmp/test-portrait-640.webp && wc -c < /tmp/test-portrait-640.webp || echo 0)" >> "$report"
+
+          echo >> "$report"
+          python -m pip install --disable-pip-version-check rdflib==7.1.4 >> "$report" 2>&1
+          echo "rdflib_install_exit=$?" >> "$report"
+          python3 - <<'PY' >> "$report" 2>&1
+          from rdflib import Graph
+          for p,f in [('public/graph.jsonld','json-ld'),('public/graph.ttl','turtle')]:
+            g=Graph().parse(p,format=f)
+            print('rdf_parse',p,'triples',len(g))
+          PY
+          echo "rdf_parse_exit=$?" >> "$report"
+
+          echo >> "$report"
+          npm ci --no-audit --no-fund >> "$report" 2>&1
+          echo "npm_ci_exit=$?" >> "$report"
+          npm run build >> "$report" 2>&1
+          echo "npm_build_exit=$?" >> "$report"
+          if [ -f dist/index.html ]; then echo "dist_html_bytes=$(wc -c < dist/index.html)" >> "$report"; fi
+
+      - name: Commit diagnostic and remove one-shot workflow
+        if: always()
+        shell: bash
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/diagnose-finalization.yml
+          git add tmp/finalization-diagnostic.txt
+          git commit -m 'Record finalization workflow diagnostics'
+          git pull --rebase origin main
+          git push origin HEAD:main
