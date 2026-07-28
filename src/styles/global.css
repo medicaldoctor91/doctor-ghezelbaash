@@ -61,6 +61,16 @@ main > :where(p, ul, ol, blockquote, details, address, .section-answer, .micro-a
   margin-inline-end: auto;
 }
 
+/* Preserve the complete semantic corpus while deferring below-fold layout and paint. */
+main > :nth-child(n + 8) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
+main > :where(nav, ul, ol, table, figure, details, blockquote):nth-child(n + 8) {
+  contain-intrinsic-size: auto 720px;
+}
+
 h1,
 h2,
 h3,
@@ -68,8 +78,12 @@ h4,
 h5,
 h6 {
   line-height: 1.45;
-  text-wrap: balance;
   scroll-margin-top: 1.5rem;
+}
+
+h1,
+h2 {
+  text-wrap: balance;
 }
 
 h1 {
@@ -275,13 +289,6 @@ blockquote {
 #aesthetic-medicine-table-of-contents a:hover {
   transform: translateX(-2px);
   background: linear-gradient(90deg, transparent, rgb(232 244 240 / 0.5));
-}
-
-@supports (backdrop-filter: blur(18px)) {
-  #aesthetic-medicine-table-of-contents {
-    background: rgb(248 252 250 / 0.58);
-    backdrop-filter: blur(20px) saturate(1.25);
-  }
 }
 
 details {
