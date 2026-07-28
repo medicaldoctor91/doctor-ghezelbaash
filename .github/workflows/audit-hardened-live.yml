@@ -1,0 +1,65 @@
+name: Audit hardened live release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-hardened-live.yml
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+      - uses: browser-actions/setup-chrome@v1
+      - name: Wait for hardened HTML
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 40); do
+            curl -fsSL --compressed 'https://www.ghezelbaash.ir/' -o /tmp/root.html
+            if ! grep -q 'site.webmanifest' /tmp/root.html && ! grep -q 'rel="stylesheet"' /tmp/root.html && grep -q 'contain-intrinsic-size' /tmp/root.html; then
+              exit 0
+            fi
+            sleep 15
+          done
+          echo 'Hardened production HTML was not observed.' >&2
+          exit 1
+      - name: Run live mobile and desktop Lighthouse
+        run: |
+          mkdir -p tmp
+          npx --yes lighthouse 'https://www.ghezelbaash.ir/' --quiet --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/mobile.json
+          npx --yes lighthouse 'https://www.ghezelbaash.ir/' --quiet --preset=desktop --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/desktop.json
+      - name: Create comparison report
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const summarize=l=>({
+            categories:Object.fromEntries(Object.entries(l.categories).map(([k,v])=>[k,Math.round((v.score??0)*100)])),
+            metrics:Object.fromEntries(['first-contentful-paint','largest-contentful-paint','speed-index','total-blocking-time','cumulative-layout-shift','interactive','mainthread-work-breakdown','max-potential-fid'].map(id=>[id,l.audits[id]&&{score:l.audits[id].score,numericValue:l.audits[id].numericValue,displayValue:l.audits[id].displayValue}])),
+            failures:Object.values(l.audits).filter(a=>a&&a.score!==null&&a.score<1&&!['manual','notApplicable'].includes(a.scoreDisplayMode)).map(a=>({id:a.id,title:a.title,score:a.score,numericValue:a.numericValue,displayValue:a.displayValue})).sort((a,b)=>(a.score??1)-(b.score??1))
+          });
+          const html=fs.readFileSync('/tmp/root.html');
+          const out={generatedAt:new Date().toISOString(),sourceCommit:process.env.GITHUB_SHA,htmlBytes:html.length,mobile:summarize(JSON.parse(fs.readFileSync('/tmp/mobile.json'))),desktop:summarize(JSON.parse(fs.readFileSync('/tmp/desktop.json')))};
+          fs.writeFileSync('tmp/hardened-live-audit.json',JSON.stringify(out,null,2)+'\n');
+          NODE
+      - name: Commit audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/audit-hardened-live.yml
+          git add tmp/hardened-live-audit.json
+          git commit -m 'Record hardened live rendering audit'
+          git push origin HEAD:main
