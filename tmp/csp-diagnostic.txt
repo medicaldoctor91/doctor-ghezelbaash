@@ -1,0 +1,43 @@
+
+added 194 packages in 3s
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.28.1 (postinstall: node install.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+npm_ci_exit=0
+
+> ghezelbaash-ir@1.0.0 build
+> astro build
+
+[2m16:13:59[22m [34m[types][39m Generated [2m133ms[22m
+[2m16:13:59[22m [34m[build][39m output: [34m"static"[39m
+[2m16:13:59[22m [34m[build][39m mode: [34m"static"[39m
+[2m16:13:59[22m [34m[build][39m directory: [34m/home/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/dist/[39m
+[2m16:13:59[22m [34m[build][39m Collecting build info...
+[2m16:13:59[22m [34m[build][39m [32m✓ Completed in 176ms.[39m
+[2m16:13:59[22m [34m[build][39m Building static entrypoints...
+[2m16:14:00[22m [34m[vite][39m [32m✓ built in 442ms[39m
+[2m16:14:00[22m [34m[vite][39m [32m✓ built in 32ms[39m
+[2m16:14:00[22m [34m[build][39m Rearranging server assets...
+
+[42m[30m generating static routes [39m[49m
+[2m16:14:00[22m   [34m├─[39m [2m/404.html[22m [2m(+8ms)[22m 
+[2m16:14:00[22m   [34m├─[39m [2m/index.html[22m [2m(+38ms)[22m 
+[2m16:14:00[22m [32m✓ Completed in 58ms.
+[39m
+[2m16:14:00[22m [34m[build][39m [32m✓ Completed in 582ms.[39m
+[2m16:14:00[22m [34m[build][39m 2 page(s) built in [1m759ms[22m
+[2m16:14:00[22m [34m[build][39m [1mComplete![22m
+build_exit=0
+dist_exists True
+html_bytes 1757797
+styles 1 [10749]
+scripts 1 [48779]
+external_scripts []
+style_attrs 13 [('address', 'font-style: normal;'), ('details', 'direction: rtl; text-align: right;'), ('summary', 'direction: rtl; text-align: right; cursor: pointer;'), ('section', 'direction: rtl; text-align: right;'), ('details', 'direction: ltr; text-align: left;'), ('summary', 'direction: ltr; text-align: left; cursor: pointer;'), ('section', 'direction: ltr; text-align: left;'), ('details', 'direction: rtl; text-align: right;'), ('summary', 'direction: rtl; text-align: right; cursor: pointer;'), ('section', 'direction: rtl; text-align: right;'), ('details', 'direction: ltr; text-align: left;'), ('summary', 'direction: ltr; text-align: left; cursor: pointer;'), ('section', 'direction: ltr; text-align: left;')]
+style_hashes ["'sha256-Bj/2hAJyutJoG6jydQVLRC0Js4gq88XyP4RrP82xFUY='"]
+script_hashes ["'sha256-uIlyfWz1tAEl84OXdfhuRoH/stGvxU/UZNh6lvToyMw='"]
+root_exact_count 1
+csp_existing False
+root_excerpt '/\n  Content-Language: fa-IR\n  Cache-Control: public, max-age=0, must-revalidate\n  Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle"\n\n/404.html\n  X-Robots-Tag: noindex, nofollow\n  Cache-Control: no-store\n\n/robots.txt\n  Content-Type: text/plain; charset=utf-8\n\n/sitemap.xml\n  Content-Type: application/xml; charset=utf-8\n  X-Robots-Tag: noindex\n\n/graph.jsonld\n  Content-Type: application/ld+json; charset=utf-8\n  Cache-Control: pu'
+diagnostic_exit=0
