@@ -452,3 +452,18 @@ address {
     display: none !important;
   }
 }
+
+
+/* Keep the mobile critical path independent of the optional brand font. */
+@media (max-width: 48rem) {
+  :root {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
+  }
+}
+
+/* WCAG 2.2 touch targets for the final clinic fact links. */
+#dr-saeed-ghezelbash-aesthetic-clinic-facts dd > a {
+  display: inline-block;
+  min-block-size: 24px;
+  padding-block: 3px;
+}
