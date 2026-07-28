@@ -1,14 +1,18 @@
 BEGIN:VCARD
 VERSION:4.0
 KIND:org
-UID:https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-ker
- manshah
+UID:https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kerman
+ shah
 FN;LANGUAGE=fa:کلینیک زیبایی دکتر سعید قزلباش
 ORG;LANGUAGE=fa:کلینیک زیبایی دکتر سعید قزلباش
 TEL;TYPE=work,voice;VALUE=uri:tel:+989308209494
-URL:https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-ker
- manshah
-ADR;TYPE=work;LANGUAGE=fa:;;میدان ۱۷ شهریور، ساختما
- ن ویستا;کرمانشاه;Kermanshah Province;6714657412;ایران
+URL:https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kerman
+ shah
+LOGO;MEDIATYPE=image/png;VALUE=uri:https://www.ghezelbaash.ir/media/brand/d
+ octor-ghezelbaash-symbol-512.png
+PHOTO;MEDIATYPE=image/webp;VALUE=uri:https://www.ghezelbaash.ir/media/image
+ s/clinic/ghezelbash-clinic-interior-kermanshah-960.webp
+ADR;TYPE=work;LANGUAGE=fa:;;میدان ۱۷ شهریور، ساختمان 
+ ویستا;کرمانشاه;Kermanshah Province;6714657412;ایران
 GEO:geo:34.3401243,47.0851778
 END:VCARD

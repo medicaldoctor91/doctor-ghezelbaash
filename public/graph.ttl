@@ -1,7 +1,7 @@
 # Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld
-# Source SHA-256: 859bfd175d214258903af9f6f03d73f25994188b69e6b09b2a8af953caf83663
-# RDF triples: 6426
-# Canonical sorted N-Triples SHA-256: f09c33b8a4fbe871e0778c44978a9f4eeddbe19b21bb6a82ced5085c53e19a25
+# Source SHA-256: 886aaff8643e3bd38188185baeec371ba93c18b8c112e8a2e75a6b07efe0c206
+# RDF triples: 6724
+# Canonical sorted N-Triples SHA-256: cec8798dbd7b1b2dea86a1e54eb5f862a6035a25195a98768394ff286be67d50
 
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -10,48 +10,47 @@
 
 <https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-course> a schema:Course ;
     schema:about <https://www.ghezelbaash.ir/#procedure-thread-lift> ;
+    schema:description "Advanced thread-lift workshop provided and taught by Dr. Saeed Ghezelbaash in Tehran for aesthetic practitioners from across Iran."@en,
+        "ورکشاپ پیشرفته لیفت نخ دکتر سعید قزلباش، برگزارشده در بهمن ۱۴۰۳ در تهران برای متخصصان زیبایی از سراسر ایران."@fa ;
     schema:hasCourseInstance <https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11> ;
+    schema:instructor <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:name "Advanced Thread Lift Workshop"@en,
-        "ورکشاپ پیشرفته لیفت نخ"@fa .
+        "ورکشاپ پیشرفته لیفت نخ"@fa ;
+    schema:provider <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> a schema:Event ;
-    schema:location <https://www.ghezelbaash.ir/#place-berlin-germany> ;
+    schema:description "WPA XVII World Congress of Psychiatry, held at Messe Berlin from 8–12 October 2017 under the theme “Psychiatry of the 21st Century: Context, Controversies and Commitment”." ;
+    schema:endDate "2017-10-12" ;
+    schema:eventAttendanceMode schema:OfflineEventAttendanceMode ;
+    schema:eventStatus schema:EventCompleted ;
+    schema:location <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> ;
     schema:name "WPA XVII World Congress of Psychiatry" ;
+    schema:organizer <https://www.ghezelbaash.ir/#organization-dgppn>,
+        <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> ;
     schema:sameAs <https://www.wikidata.org/entity/Q140307274> ;
+    schema:startDate "2017-10-08" ;
+    schema:url <https://wpaberlin2017.com/> ;
     schema:workFeatured <https://www.ghezelbaash.ir/#presentation-attachment-style-dissociative-depression-2017> .
 
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team> a schema:ImageObject ;
-    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
-        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:caption "دکتر سعید قزلباش در کنار تیم کلینیک زیبایی در کرمانشاه" ;
-    schema:contentSize "67188 bytes" ;
-    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp> ;
-    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:encodingFormat "image/webp" ;
-    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-height> ;
-    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
-    schema:name "دکتر سعید قزلباش در کنار تیم کلینیک زیبایی در کرمانشاه" ;
-    schema:representativeOfPage false ;
-    schema:sha256 "e8d629478762c77360f14ef6447b73c9be97e5ab58eed53b9ff3b7a47f56f733" ;
-    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail> ;
-    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-width> .
-
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination> a schema:ImageObject ;
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-social-1200x630> a schema:ImageObject ;
     schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:caption "دکتر سعید قزلباش در حال معاینه بالینی مراجعه‌کننده" ;
-    schema:contentSize "58756 bytes" ;
-    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:contentSize "59343 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.jpg> ;
     schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
     schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:encodingFormat "image/webp" ;
-    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-height> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height 630 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
     schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
-    schema:name "دکتر سعید قزلباش در حال معاینه بالینی مراجعه‌کننده" ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Social preview portrait of Dr. Saeed Ghezelbaash" ;
     schema:representativeOfPage false ;
-    schema:sha256 "66d2f50e5c3990683e2f6722ee4f1f1bccd3fe93dd093d7add868ab8a2fbc53a" ;
-    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-thumbnail> ;
-    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-width> .
+    schema:sha256 "53977f15e6067e5428d2cd380bca128b685f30d38e1e3c58b11b0526c31208fe" ;
+    schema:width 1200 .
 
 <https://www.ghezelbaash.ir/#observation-clinic-balad-rating-2026-07-25> a schema:Observation ;
     prov:wasDerivedFrom <https://www.ghezelbaash.ir/#evidence-balad-clinic> ;
@@ -1240,8 +1239,8 @@
         "جمعه: تعطیل"@fa .
 
 <https://www.ghezelbaash.ir/#clinic-geo> a schema:GeoCoordinates ;
-    schema:latitude "34.3401243"^^xsd:double ;
-    schema:longitude "47.0851778"^^xsd:double .
+    schema:latitude 3.434012e+01 ;
+    schema:longitude 4.708518e+01 .
 
 <https://www.ghezelbaash.ir/#clinic-opening-hours-sat-thu> a schema:OpeningHoursSpecification ;
     schema:closes "22:00" ;
@@ -1252,13 +1251,6 @@
         schema:Tuesday,
         schema:Wednesday ;
     schema:opens "16:00" .
-
-<https://www.ghezelbaash.ir/#clinic-postal-address> a schema:PostalAddress ;
-    schema:addressCountry <https://www.ghezelbaash.ir/#country-iran> ;
-    schema:addressLocality "کرمانشاه" ;
-    schema:addressRegion "Kermanshah Province" ;
-    schema:postalCode "6714657412" ;
-    schema:streetAddress "میدان ۱۷ شهریور، ساختمان ویستا" .
 
 <https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up> a schema:WebPageElement ;
     schema:about <https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques>,
@@ -1458,6 +1450,32 @@
     schema:url <https://doi.org/10.5281/zenodo.18765169> ;
     schema:value "10.5281/zenodo.18765169" .
 
+<https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> ;
+    schema:caption "Official logo of Dr. Saeed Ghezelbaash Aesthetic Clinic"@en,
+        "نشان رسمی کلینیک زیبایی دکتر سعید قزلباش"@fa ;
+    schema:contentSize "37548 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.png> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2026 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:encodingFormat "image/png" ;
+    schema:height <https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo-height> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:name "Dr. Saeed Ghezelbaash Aesthetic Clinic logo"@en,
+        "نشان کلینیک زیبایی دکتر سعید قزلباش"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "5490580757998ac37fa310fac84b013f1ce896262e659004a34732f503eb2e02" ;
+    schema:width <https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo-width> .
+
+<https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo-height> a schema:QuantitativeValue ;
+    schema:unitText "px" ;
+    schema:value 512 .
+
+<https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo-width> a schema:QuantitativeValue ;
+    schema:unitText "px" ;
+    schema:value 512 .
+
 <https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior> a schema:ImageObject ;
     schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> ;
     schema:caption "فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" ;
@@ -1538,15 +1556,48 @@
     schema:unitText "px" ;
     schema:value 864 .
 
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
+    schema:caption "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:contentSize "67188 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-height> ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "e8d629478762c77360f14ef6447b73c9be97e5ab58eed53b9ff3b7a47f56f733" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-width> .
+
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-height> a schema:QuantitativeValue ;
     schema:unitText "px" ;
     schema:value 1068 .
 
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail> a schema:ImageObject ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
     schema:contentSize "38776 bytes" ;
     schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
     schema:encodingFormat "image/webp" ;
     schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail-height> ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
     schema:sha256 "f25dcd8c3801aa6e838f79f585c25b17ff2ec6c73ed0d0d99479a1534533e47c" ;
     schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail-width> .
 
@@ -1562,15 +1613,47 @@
     schema:unitText "px" ;
     schema:value 1600 .
 
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
+    schema:caption "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:contentSize "58756 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-height> ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "66d2f50e5c3990683e2f6722ee4f1f1bccd3fe93dd093d7add868ab8a2fbc53a" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-thumbnail> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-width> .
+
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-height> a schema:QuantitativeValue ;
     schema:unitText "px" ;
     schema:value 1068 .
 
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-thumbnail> a schema:ImageObject ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
     schema:contentSize "33590 bytes" ;
     schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
     schema:encodingFormat "image/webp" ;
     schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-thumbnail-height> ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
     schema:sha256 "880612d44f2b5abb3235fa838907814958196c19c250f7a25aeae4f74170d5ad" ;
     schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-thumbnail-width> .
 
@@ -1586,15 +1669,131 @@
     schema:unitText "px" ;
     schema:value 1600 .
 
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-height> a schema:QuantitativeValue ;
+    schema:unitText "px" ;
+    schema:value 3266 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-width> a schema:QuantitativeValue ;
+    schema:unitText "px" ;
+    schema:value 4897 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-height> a schema:QuantitativeValue ;
+    schema:unitText "px" ;
+    schema:value 3266 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-width> a schema:QuantitativeValue ;
+    schema:unitText "px" ;
+    schema:value 4897 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:caption "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:contentSize "47580 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-1600.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Portrait of Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white coat and stethoscope in a clinical setting in Kermanshah, Iran."@en,
+        "پرتره دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-height> ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:representativeOfPage true ;
+    schema:sha256 "09e22afc9b828cd480c3805d9a643ad8af14e860150ac9665cedef6be1f48243" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-thumbnail> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-width> .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-16x9-1200> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:contentSize "62831 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x675.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height 675 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "16:9 portrait of Dr. Saeed Ghezelbaash" ;
+    schema:representativeOfPage false ;
+    schema:sha256 "0d0a7a0c6b7b572920d19c1d3ace04d7219c9eb1a90420f83e7fa541cc099503" ;
+    schema:width 1200 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-4x3-1200> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:contentSize "76145 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x900.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height 900 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "4:3 portrait of Dr. Saeed Ghezelbaash" ;
+    schema:representativeOfPage false ;
+    schema:sha256 "eb6b4a6d543d11c32e6eea00b04d0241819f94d1f4a26a2e11f758f16181d289" ;
+    schema:width 1200 .
+
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-height> a schema:QuantitativeValue ;
     schema:unitText "px" ;
     schema:value 1068 .
 
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-height> a schema:QuantitativeValue ;
+    schema:unitText "px" ;
+    schema:value 3266 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-width> a schema:QuantitativeValue ;
+    schema:unitText "px" ;
+    schema:value 4897 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-square-1200> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:contentSize "99450 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x1200.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height 1200 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Square portrait of Dr. Saeed Ghezelbaash" ;
+    schema:representativeOfPage false ;
+    schema:sha256 "df501566a2eeb8a08e0135fcd2ecd0bb8e6766dd4ade065105abf77d6016db0f" ;
+    schema:width 1200 .
+
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-thumbnail> a schema:ImageObject ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
     schema:contentSize "26188 bytes" ;
     schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.webp> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creditText "Dr. Saeed Ghezelbaash — derivative of the CC BY 4.0 Wikimedia Commons master" ;
+    schema:dateCreated "2023-05-29" ;
     schema:encodingFormat "image/webp" ;
     schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-thumbnail-height> ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
     schema:sha256 "b934950e4fdc858fbc2cb87817519d297d5f76648d6aca2441542c4f8d9d33cd" ;
     schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-thumbnail-width> .
 
@@ -1666,6 +1865,18 @@
     schema:availableLanguage "fa-IR" ;
     schema:contactType "initial aesthetic consultation" ;
     schema:telephone "+989308209494" .
+
+<https://www.ghezelbaash.ir/#organization-dgppn> a schema:Organization ;
+    schema:alternateName "DGPPN",
+        "Deutsche Gesellschaft für Psychiatrie und Psychotherapie, Psychosomatik und Nervenheilkunde" ;
+    schema:name "German Association for Psychiatry, Psychotherapy and Psychosomatics" ;
+    schema:url <https://www.dgppn.de/> .
+
+<https://www.ghezelbaash.ir/#organization-world-psychiatric-association> a schema:Organization ;
+    schema:alternateName "WPA" ;
+    schema:name "World Psychiatric Association" ;
+    schema:sameAs <https://www.wikidata.org/entity/Q1645764> ;
+    schema:url <https://www.wpanet.org/> .
 
 <https://www.ghezelbaash.ir/#out-of-town-aesthetic-patients-iran> a schema:WebPageElement ;
     schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
@@ -1879,6 +2090,16 @@
 <https://www.ghezelbaash.ir/#place-berlin-germany> a schema:Place ;
     schema:name "Berlin, Germany"@en,
         "برلین، آلمان"@fa .
+
+<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> a schema:Place ;
+    schema:address [ a schema:PostalAddress ;
+            schema:addressCountry "DE" ;
+            schema:addressLocality "Berlin" ;
+            schema:postalCode "14055" ;
+            schema:streetAddress "Jafféstraße" ] ;
+    schema:containedInPlace <https://www.ghezelbaash.ir/#place-berlin-germany> ;
+    schema:name "Messe Berlin / CityCube Berlin" ;
+    schema:sameAs <https://www.wikidata.org/entity/Q700236> .
 
 <https://www.ghezelbaash.ir/#project-public-interface> a schema:WebSite ;
     schema:about <https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project> ;
@@ -2179,15 +2400,24 @@
 
 <https://www.ghezelbaash.ir/#website> a schema:WebSite ;
     schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:alternateName "Doctor.Ghezelbaash",
+        "Official website of Dr. Saeed Ghezelbaash",
+        "Official website of Dr. Saeed Ghezelbash",
+        "وب‌سایت رسمی دکتر سعید قزلباش" ;
     schema:inLanguage "fa-IR" ;
-    schema:name "Official website of Dr. Saeed Ghezelbash"@en,
-        "وب‌سایت رسمی دکتر سعید قزلباش"@fa ;
+    schema:name "Dr. Saeed Ghezelbaash"@en,
+        "دکتر سعید قزلباش"@fa ;
     schema:publisher <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:url <https://www.ghezelbaash.ir/> .
 
 <https://www.ghezelbaash.ir/graph.jsonld#download> a schema:DataDownload ;
     schema:contentUrl <https://www.ghezelbaash.ir/graph.jsonld> ;
     schema:encodingFormat "application/ld+json" ;
+    schema:isPartOf <https://www.ghezelbaash.ir/graph.jsonld#dataset> .
+
+<https://www.ghezelbaash.ir/graph.ttl#download> a schema:DataDownload ;
+    schema:contentUrl <https://www.ghezelbaash.ir/graph.ttl> ;
+    schema:encodingFormat "text/turtle" ;
     schema:isPartOf <https://www.ghezelbaash.ir/graph.jsonld#dataset> .
 
 <urn:sha256-property:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> a schema:PropertyValue ;
@@ -2230,11 +2460,13 @@
     schema:audience <https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-audience> ;
     schema:description "ورکشاپ پیشرفته لیفت نخ دکتر سعید قزلباش، برگزارشده در بهمن ۱۴۰۳ در تهران برای متخصصان زیبایی از سراسر ایران." ;
     schema:eventAttendanceMode schema:OfflineEventAttendanceMode ;
+    schema:eventStatus schema:EventCompleted ;
     schema:instructor <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:location <https://www.ghezelbaash.ir/#city-tehran> ;
     schema:name "Advanced Thread Lift Workshop in Tehran"@en,
         "ورکشاپ پیشرفته لیفت نخ در تهران"@fa ;
     schema:performer <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:provider <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:recordedIn <https://www.ghezelbaash.ir/#video-thread-lift-workshop> ;
     schema:teaches "Complication management",
         "Danger zones",
@@ -2320,6 +2552,13 @@
     schema:name "مسیر مراجعه؛ از سؤال اولیه تا تصمیم و پیگیری" ;
     schema:position 1004 ;
     schema:url <https://www.ghezelbaash.ir/#clinic-consultation-treatment-and-follow-up-path> .
+
+<https://www.ghezelbaash.ir/#clinic-postal-address> a schema:PostalAddress ;
+    schema:addressCountry "IR" ;
+    schema:addressLocality "کرمانشاه" ;
+    schema:addressRegion "Kermanshah Province" ;
+    schema:postalCode "6714657412" ;
+    schema:streetAddress "میدان ۱۷ شهریور، ساختمان ویستا" .
 
 <https://www.ghezelbaash.ir/#evidence-foursquare-clinic> a schema:ProfilePage ;
     schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
@@ -2478,22 +2717,6 @@
     schema:propertyID "GitHub account" ;
     schema:url <https://github.com/medicaldoctor91> ;
     schema:value "medicaldoctor91" .
-
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait> a schema:ImageObject ;
-    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:caption "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه" ;
-    schema:contentSize "47580 bytes" ;
-    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-1600.webp> ;
-    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:encodingFormat "image/webp" ;
-    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-height> ;
-    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
-    schema:name "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه" ;
-    schema:representativeOfPage true ;
-    schema:sha256 "09e22afc9b828cd480c3805d9a643ad8af14e860150ac9665cedef6be1f48243" ;
-    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-thumbnail> ;
-    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-width> .
 
 <https://www.ghezelbaash.ir/#jalupro-for-skin-quality-not-lift-or-contouring> a schema:WebPageElement ;
     schema:about <https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment> ;
@@ -3822,27 +4045,6 @@
     schema:url <https://www.ghezelbaash.ir/#aesthetic-physician-ratings-patient-satisfaction-ckb-iq> ;
     schema:width <https://www.ghezelbaash.ir/#video-kurdish-patient-experience-width> .
 
-<https://www.ghezelbaash.ir/graph.jsonld#dataset> a schema:Dataset ;
-    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
-        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:dateModified "2026-07-27" ;
-    schema:datePublished "2026-07-25" ;
-    schema:description "Public physician-first knowledge graph for Dr. Saeed Ghezelbash covering professional identity, aesthetic-medicine specialty, physician ownership of the clinic and structured-data project, 122 confirmed granular medical services, geographic reach, research, teaching, media provenance, dated public reputation observations, external identifiers and curated question-answer content." ;
-    schema:distribution <https://www.ghezelbaash.ir/graph.jsonld#download> ;
-    schema:hasPart <https://www.ghezelbaash.ir/#external-identity-evidence-registry>,
-        <https://www.ghezelbaash.ir/#google-maps-reputation-snapshot-current> ;
-    schema:isBasedOn <https://www.ghezelbaash.ir/#webpage> ;
-    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
-    schema:mentions <https://www.ghezelbaash.ir/#evidence-google-maps-clinic>,
-        <https://www.ghezelbaash.ir/#evidence-irimc>,
-        <https://www.ghezelbaash.ir/#evidence-ncbi-bibliography>,
-        <https://www.ghezelbaash.ir/#evidence-openalex-author>,
-        <https://www.ghezelbaash.ir/#presentation-attachment-style-dissociative-depression-2017> ;
-    schema:name "Dr. Saeed Ghezelbaash Public Knowledge Graph" ;
-    schema:publisher <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:version "2026.07.27-stage1-physician-authority-v2" .
-
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> a schema:ImageObjectSnapshot ;
     schema:contentSize "291854 bytes" ;
     schema:encodingFormat "image/jpeg" ;
@@ -3952,6 +4154,7 @@
     schema:about <https://www.ghezelbaash.ir/#biomedical-concept-major-depressive-disorder> ;
     schema:author <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:datePublished "2021-09-06" ;
+    schema:headline "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events" ;
     schema:identifier "DOI:10.3390/healthcare9091169",
         "PMID:34574943" ;
     schema:isPartOf <https://www.ghezelbaash.ir/#periodical-healthcare> ;
@@ -4310,6 +4513,60 @@
     schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
     schema:name "جوان‌سازی دست؛ پشت دست فقط با پرکردن جوان نمی‌شود" ;
     schema:url <https://www.ghezelbaash.ir/#hand-rejuvenation> .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
+    schema:caption "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:contentSize "350694 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-height> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
+    schema:sha256 "09aa6fefed5c6491f270de999db57264049d567fd68cda7966540ea9e3b45c36" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-width> .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
+    schema:caption "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:contentSize "379699 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-height> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
+    schema:sha256 "144576a426ace532ca5b280590c673df2fad830ef8511789990d65538b1345e2" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-width> .
 
 <https://www.ghezelbaash.ir/#injectable-lipolysis-definition> a schema:WebPageElement ;
     schema:inLanguage "fa-IR" ;
@@ -4949,6 +5206,28 @@
     schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
     schema:name "چه کسانی ممکن است برای اسکالپترا منطقی‌تر باشند؟" ;
     schema:url <https://www.ghezelbaash.ir/#sculptra-candidacy> .
+
+<https://www.ghezelbaash.ir/graph.jsonld#dataset> a schema:Dataset ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:dateModified "2026-07-28" ;
+    schema:datePublished "2026-07-25" ;
+    schema:description "Public physician-first knowledge graph for Dr. Saeed Ghezelbaash covering professional identity, aesthetic-medicine specialty, physician ownership of the clinic and structured-data project, confirmed medical services, geographic reach, research, teaching, canonical Wikimedia-linked image identity, media provenance, dated public reputation observations, external identifiers and curated question-answer content." ;
+    schema:distribution <https://www.ghezelbaash.ir/graph.jsonld#download>,
+        <https://www.ghezelbaash.ir/graph.ttl#download> ;
+    schema:hasPart <https://www.ghezelbaash.ir/#external-identity-evidence-registry>,
+        <https://www.ghezelbaash.ir/#google-maps-reputation-snapshot-current> ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:mentions <https://www.ghezelbaash.ir/#evidence-google-maps-clinic>,
+        <https://www.ghezelbaash.ir/#evidence-irimc>,
+        <https://www.ghezelbaash.ir/#evidence-ncbi-bibliography>,
+        <https://www.ghezelbaash.ir/#evidence-openalex-author>,
+        <https://www.ghezelbaash.ir/#presentation-attachment-style-dissociative-depression-2017> ;
+    schema:name "Dr. Saeed Ghezelbaash Public Knowledge Graph" ;
+    schema:publisher <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:version "1.1.0" .
 
 <https://www.plasticsurgery.org/cosmetic-procedures/chin-surgery> a schema:WebPage ;
     schema:name "مرجع ASPS درباره genioplasty / mentoplasty" ;
@@ -5688,6 +5967,7 @@
         <https://www.ghezelbaash.ir/#biomedical-concept-omega-3-fatty-acids> ;
     schema:author <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:datePublished "2016-05-19" ;
+    schema:headline "Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder" ;
     schema:identifier "DOI:10.4103/2008-7802.182734",
         "PMCID:PMC4882968",
         "PMID:27280013" ;
@@ -5956,7 +6236,9 @@
     schema:subjectOf <https://www.ghezelbaash.ir/#autologous-fat-grafting-vs-dermal-filler> .
 
 <https://www.ghezelbaash.ir/#country-iraq> a schema:Country ;
-    schema:name "Iraq"@en,
+    schema:identifier "IQ" ;
+    schema:name "IQ",
+        "Iraq"@en,
         "عراق"@fa ;
     schema:sameAs <https://www.wikidata.org/entity/Q796> .
 
@@ -5966,6 +6248,32 @@
     schema:mainEntity <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:name "Wikidata entity for Saeed Ghezelbash" ;
     schema:url <https://www.wikidata.org/wiki/Q140287622> .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:caption "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:contentSize "289620 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Portrait of Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white coat and stethoscope in a clinical setting in Kermanshah, Iran."@en,
+        "پرتره دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-height> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:representativeOfPage true ;
+    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:sha256 "236fe6eb5f3651de15cf72033a372ab027ceb3c84995074aafe6a6e20cf0d484" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-width> .
 
 <https://www.ghezelbaash.ir/#procedure-buccal-fat-removal> a schema:MedicalProcedure ;
     dcterms:subject <https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques> ;
@@ -6351,7 +6659,9 @@
     schema:termCode "rejuvenation" .
 
 <https://www.ghezelbaash.ir/#country-iran> a schema:Country ;
-    schema:name "Iran"@en,
+    schema:identifier "IR" ;
+    schema:name "IR",
+        "Iran"@en,
         "ایران"@fa ;
     schema:sameAs <https://www.wikidata.org/entity/Q794> .
 
@@ -6402,6 +6712,67 @@
         <https://www.ghezelbaash.ir/#question-preventive-botox-value-and-candidacy>,
         <https://www.ghezelbaash.ir/#question-therapeutic-botox-specialty-boundaries>,
         <https://www.ghezelbaash.ir/#question-under-eye-botox-candidacy> .
+
+<https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler> a schema:MedicalProcedure ;
+    dcterms:hasPart <https://www.ghezelbaash.ir/#procedure-acne-scar-filler>,
+        <https://www.ghezelbaash.ir/#procedure-filler-cheek>,
+        <https://www.ghezelbaash.ir/#procedure-filler-chin>,
+        <https://www.ghezelbaash.ir/#procedure-filler-hand>,
+        <https://www.ghezelbaash.ir/#procedure-filler-jawline>,
+        <https://www.ghezelbaash.ir/#procedure-filler-lips>,
+        <https://www.ghezelbaash.ir/#procedure-filler-nasolabial>,
+        <https://www.ghezelbaash.ir/#procedure-filler-nose>,
+        <https://www.ghezelbaash.ir/#procedure-filler-temple>,
+        <https://www.ghezelbaash.ir/#procedure-filler-under-eye>,
+        <https://www.ghezelbaash.ir/#procedure-forehead-glabellar-filler>,
+        <https://www.ghezelbaash.ir/#procedure-full-face-filler-contouring>,
+        <https://www.ghezelbaash.ir/#procedure-hyaluronic-acid-dermal-filler>,
+        <https://www.ghezelbaash.ir/#procedure-lip-filler-asymmetry-correction>,
+        <https://www.ghezelbaash.ir/#procedure-marionette-line-filler>,
+        <https://www.ghezelbaash.ir/#procedure-neck-dermal-filler> ;
+    dcterms:subject <https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques>,
+        <https://www.ghezelbaash.ir/#biomedical-concept-dermal-fillers>,
+        <https://www.ghezelbaash.ir/#biomedical-concept-lip-augmentation> ;
+    schema:alternateName "تزریق فیلر در کرمانشاه",
+        "فیلر دکتر سعید قزلباش",
+        "فیلر صورت و لب در کرمانشاه",
+        "فیلر پوستی" ;
+    schema:name "Facial and lip dermal filler"@en,
+        "فیلر صورت و لب"@fa ;
+    schema:subjectOf <https://www.ghezelbaash.ir/#filler>,
+        <https://www.ghezelbaash.ir/#question-at-home-filler-injection-risk>,
+        <https://www.ghezelbaash.ir/#question-body-filler-and-hip-dip-treatment-complexity>,
+        <https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift>,
+        <https://www.ghezelbaash.ir/#question-botox-vs-filler-treatment-selection>,
+        <https://www.ghezelbaash.ir/#question-buttock-and-body-filler-safety>,
+        <https://www.ghezelbaash.ir/#question-calf-filler-for-asymmetry>,
+        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-en>,
+        <https://www.ghezelbaash.ir/#question-chin-filler-effects-on-projection-and-proportion>,
+        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-en>,
+        <https://www.ghezelbaash.ir/#question-fat-grafting-vs-filler-for-facial-contouring>,
+        <https://www.ghezelbaash.ir/#question-filler-aftercare-and-activity-restrictions>,
+        <https://www.ghezelbaash.ir/#question-filler-contraindications-and-noncandidacy>,
+        <https://www.ghezelbaash.ir/#question-filler-doctor-selection-criteria-kermanshah>,
+        <https://www.ghezelbaash.ir/#question-filler-post-treatment-warning-signs>,
+        <https://www.ghezelbaash.ir/#question-filler-remote-assessment-limitations>,
+        <https://www.ghezelbaash.ir/#question-filler-vascular-occlusion>,
+        <https://www.ghezelbaash.ir/#question-filler-vision-loss-risk>,
+        <https://www.ghezelbaash.ir/#question-filler-volume-shadow-and-proportion-assessment>,
+        <https://www.ghezelbaash.ir/#question-glabellar-filler-for-frown-lines-risk>,
+        <https://www.ghezelbaash.ir/#question-hip-dip-normal-anatomy-vs-filler>,
+        <https://www.ghezelbaash.ir/#question-hyaluronic-acid-filler-reversibility>,
+        <https://www.ghezelbaash.ir/#question-jawline-filler-for-round-face-candidacy>,
+        <https://www.ghezelbaash.ir/#question-lip-filler-for-thin-lips-candidacy>,
+        <https://www.ghezelbaash.ir/#question-lip-filler-migration-causes>,
+        <https://www.ghezelbaash.ir/#question-low-cost-filler-safety-risk>,
+        <https://www.ghezelbaash.ir/#question-midface-assessment-before-tear-trough-filler>,
+        <https://www.ghezelbaash.ir/#question-needle-free-filler-device-risk>,
+        <https://www.ghezelbaash.ir/#question-nonsurgical-rhinoplasty-filler-safety>,
+        <https://www.ghezelbaash.ir/#question-tear-trough-filler-safety> .
 
 <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> a schema:MedicalClinic ;
     schema:address <https://www.ghezelbaash.ir/#clinic-postal-address> ;
@@ -6554,8 +6925,11 @@
         <https://www.ghezelbaash.ir/#identifier-clinic-osm-node>,
         <https://www.ghezelbaash.ir/#identifier-clinic-yandex> ;
     schema:image <https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior>,
-        <https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception> ;
+        <https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> ;
     schema:location <https://www.ghezelbaash.ir/#city-kermanshah> ;
+    schema:logo <https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo> ;
     schema:medicalSpecialty <https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine> ;
     schema:member <https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-role> ;
     schema:name "Dr. Saeed Ghezelbash Aesthetic Clinic"@en,
@@ -6610,67 +6984,6 @@
     schema:telephone "+989308209494" ;
     schema:url <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
 
-<https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler> a schema:MedicalProcedure ;
-    dcterms:hasPart <https://www.ghezelbaash.ir/#procedure-acne-scar-filler>,
-        <https://www.ghezelbaash.ir/#procedure-filler-cheek>,
-        <https://www.ghezelbaash.ir/#procedure-filler-chin>,
-        <https://www.ghezelbaash.ir/#procedure-filler-hand>,
-        <https://www.ghezelbaash.ir/#procedure-filler-jawline>,
-        <https://www.ghezelbaash.ir/#procedure-filler-lips>,
-        <https://www.ghezelbaash.ir/#procedure-filler-nasolabial>,
-        <https://www.ghezelbaash.ir/#procedure-filler-nose>,
-        <https://www.ghezelbaash.ir/#procedure-filler-temple>,
-        <https://www.ghezelbaash.ir/#procedure-filler-under-eye>,
-        <https://www.ghezelbaash.ir/#procedure-forehead-glabellar-filler>,
-        <https://www.ghezelbaash.ir/#procedure-full-face-filler-contouring>,
-        <https://www.ghezelbaash.ir/#procedure-hyaluronic-acid-dermal-filler>,
-        <https://www.ghezelbaash.ir/#procedure-lip-filler-asymmetry-correction>,
-        <https://www.ghezelbaash.ir/#procedure-marionette-line-filler>,
-        <https://www.ghezelbaash.ir/#procedure-neck-dermal-filler> ;
-    dcterms:subject <https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques>,
-        <https://www.ghezelbaash.ir/#biomedical-concept-dermal-fillers>,
-        <https://www.ghezelbaash.ir/#biomedical-concept-lip-augmentation> ;
-    schema:alternateName "تزریق فیلر در کرمانشاه",
-        "فیلر دکتر سعید قزلباش",
-        "فیلر صورت و لب در کرمانشاه",
-        "فیلر پوستی" ;
-    schema:name "Facial and lip dermal filler"@en,
-        "فیلر صورت و لب"@fa ;
-    schema:subjectOf <https://www.ghezelbaash.ir/#filler>,
-        <https://www.ghezelbaash.ir/#question-at-home-filler-injection-risk>,
-        <https://www.ghezelbaash.ir/#question-body-filler-and-hip-dip-treatment-complexity>,
-        <https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift>,
-        <https://www.ghezelbaash.ir/#question-botox-vs-filler-treatment-selection>,
-        <https://www.ghezelbaash.ir/#question-buttock-and-body-filler-safety>,
-        <https://www.ghezelbaash.ir/#question-calf-filler-for-asymmetry>,
-        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-en>,
-        <https://www.ghezelbaash.ir/#question-chin-filler-effects-on-projection-and-proportion>,
-        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-en>,
-        <https://www.ghezelbaash.ir/#question-fat-grafting-vs-filler-for-facial-contouring>,
-        <https://www.ghezelbaash.ir/#question-filler-aftercare-and-activity-restrictions>,
-        <https://www.ghezelbaash.ir/#question-filler-contraindications-and-noncandidacy>,
-        <https://www.ghezelbaash.ir/#question-filler-doctor-selection-criteria-kermanshah>,
-        <https://www.ghezelbaash.ir/#question-filler-post-treatment-warning-signs>,
-        <https://www.ghezelbaash.ir/#question-filler-remote-assessment-limitations>,
-        <https://www.ghezelbaash.ir/#question-filler-vascular-occlusion>,
-        <https://www.ghezelbaash.ir/#question-filler-vision-loss-risk>,
-        <https://www.ghezelbaash.ir/#question-filler-volume-shadow-and-proportion-assessment>,
-        <https://www.ghezelbaash.ir/#question-glabellar-filler-for-frown-lines-risk>,
-        <https://www.ghezelbaash.ir/#question-hip-dip-normal-anatomy-vs-filler>,
-        <https://www.ghezelbaash.ir/#question-hyaluronic-acid-filler-reversibility>,
-        <https://www.ghezelbaash.ir/#question-jawline-filler-for-round-face-candidacy>,
-        <https://www.ghezelbaash.ir/#question-lip-filler-for-thin-lips-candidacy>,
-        <https://www.ghezelbaash.ir/#question-lip-filler-migration-causes>,
-        <https://www.ghezelbaash.ir/#question-low-cost-filler-safety-risk>,
-        <https://www.ghezelbaash.ir/#question-midface-assessment-before-tear-trough-filler>,
-        <https://www.ghezelbaash.ir/#question-needle-free-filler-device-risk>,
-        <https://www.ghezelbaash.ir/#question-nonsurgical-rhinoplasty-filler-safety>,
-        <https://www.ghezelbaash.ir/#question-tear-trough-filler-safety> .
-
 <https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques> a schema:DefinedTerm ;
     schema:identifier "MeSH:D003357" ;
     schema:inDefinedTermSet <https://www.ghezelbaash.ir/#biomedical-concept-registry> ;
@@ -6680,6 +6993,7 @@
 
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> a schema:IndividualPhysician,
         schema:Person ;
+    schema:address <https://www.ghezelbaash.ir/#clinic-postal-address> ;
     schema:alternateName "Doctor Ghezelbaash",
         "Dr. Mohammad Saeed Ghazlbash",
         "Dr. Mohammad Saeed Ghezelbaash",
@@ -6849,7 +7163,10 @@
         <https://www.ghezelbaash.ir/#identifier-person-minc>,
         <https://www.ghezelbaash.ir/#identifier-person-openalex>,
         <https://www.ghezelbaash.ir/#identifier-person-orcid> ;
-    schema:image <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait> ;
+    schema:image <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-16x9-1200>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-4x3-1200>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-square-1200> ;
     schema:jobTitle "Aesthetic physician"@en,
         "پزشک زیبایی"@fa ;
     schema:knowsAbout <https://www.ghezelbaash.ir/#topic-botox-migraine-context>,
@@ -7161,7 +7478,7 @@
         <https://www.ghezelbaash.ir/#topic-hair-transplant-boundary>,
         <https://www.ghezelbaash.ir/#topic-orthognathic-boundary> ;
     schema:name "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه، تشخیص و درمان" ;
-    schema:primaryImageOfPage <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait> ;
+    schema:primaryImageOfPage <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
     schema:publisher <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:specialty <https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine> ;
     schema:url <https://www.ghezelbaash.ir/> .

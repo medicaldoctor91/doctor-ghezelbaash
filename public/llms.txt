@@ -19,6 +19,13 @@ Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The ph
 - [ORCID](https://orcid.org/0009-0001-9346-8475): Researcher identifier.
 - [OpenAlex](https://openalex.org/A5064828898): Research author identity.
 
+## Canonical image identity
+
+- [First-party canonical portrait](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg): Byte-identical first-party master of the physician portrait.
+- [Wikimedia Commons portrait](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg): CC BY 4.0 canonical portrait linked as Wikidata P18 and depicting Wikidata Q140287622.
+- [Clinical-team image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg): Contextual Commons image depicting the physician; not a P18 image.
+- [Clinical-office image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg): Contextual Commons image depicting the physician; not a P18 image.
+
 ## Research and education
 
 - [Omega-3 and Bipolar I Disorder — PubMed](https://pubmed.ncbi.nlm.nih.gov/27280013/): 2016 scholarly article co-authored by Dr. Saeed Ghezelbash.

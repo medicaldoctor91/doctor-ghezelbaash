@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Vazirmatn";
-  src: url("https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@6e553e33489a8f9dfaccc76860a2e3f3c1e66de7/misc/Non-Latin/fonts/webfonts/Vazirmatn-NL%5Bwght%5D.woff2") format("woff2");
+  src: url("/fonts/vazirmatn-nl-wght.woff2") format("woff2");
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -128,6 +128,8 @@ video {
 }
 
 figure {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
   margin: 2.2rem 0;
   padding: clamp(0.65rem, 1.5vw, 1rem);
   border: 1px solid var(--line);
@@ -283,6 +285,8 @@ blockquote {
 }
 
 details {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
   overflow: clip;
   padding: 0.85rem 1rem;
   border: 1px solid var(--line);

@@ -3,7 +3,7 @@
 > Canonical page: https://www.ghezelbaash.ir/
 > Full knowledge graph: https://www.ghezelbaash.ir/graph.jsonld
 > Turtle graph serialization: https://www.ghezelbaash.ir/graph.ttl
-> Source index SHA-256: 58829c4dac04af69990d1dfbc98d262a02b324e6751949ac0627c14204716d1b
+> Source index SHA-256: 60495358f41a9210756b6ad55c95682b7d693a856e669927bcb92378c51f2f5d
 
 This file is a deterministic machine-oriented rendering of the canonical single-page website content. The canonical human-readable source remains the root URL; entity identity and relationships are defined by the full knowledge graph.
 
@@ -20,15 +20,15 @@ This file is a deterministic machine-oriented rendering of the canonical single-
 
 **۵٫۰ از ۵ در Google Maps** · بر اساس ۱۶۴ نظر · ثبت ۲۵ ژوئیهٔ ۲۰۲۶ — [مشاهده نظرها](https://www.google.com/maps?cid=12350483144643112463)
 
-![پرتره رسمی دکتر سعید قزلباش](https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.webp)
+![دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه](https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.webp)
 
-*دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه*
+*دکتر سعید قزلباش، پزشک ایرانی*
 
 صورت را فقط در یک عکس ثابت قضاوت نمی‌کنم. در حالت استراحت، هنگام اخم، لبخند، حرف‌زدن و حرکت باید دیده شود. پوست و التهاب را بررسی می‌کنم، حرکت عضله را می‌بینم، حجم و چربی و استخوان را کنار هم می‌گذارم، عدم تقارن و سابقه تزریق یا جراحی را می‌پرسم و بعد تازه می‌رسم به اینکه چه درمانی اصلاً ارزش مطرح‌شدن دارد. در پرونده مرزی، عجله مزیت نیست. اگر هنوز نمی‌دانیم مشکل چیست، شروع درمان فقط سرعتِ اشتباه را بیشتر می‌کند.
 
-![دکتر سعید قزلباش در حال معاینه بالینی مراجعه‌کننده](https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp)
+![دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه](https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp)
 
-*معاینه لایه‌های صورت پیش از انتخاب روش زیبایی*
+*سعید قزلباش در محیط بالینی*
 
 من جمله «صورتم را بهتر کن» را ساده نمی‌شنوم. گاهی واقعاً یک تغییر آناتومیک وجود دارد؛ گاهی چیزی که بیمار از صورتش می‌خواهد بیشتر از تصویرهای غیرواقعی و مقایسه مداوم با دیگران آمده است. وظیفه پزشک این نیست که هر خواسته‌ای را با یک سرنگ ترجمه کند. باید بفهمد کدام بخش مسئله واقعاً قابل درمان است، کدام انتظار باید اصلاح شود و کجا دست‌کاری بیشتر فقط بیمار را از صورت خودش دورتر می‌کند. زیبایی با دست شروع نمی‌شود؛ با فهم شروع می‌شود.
 
@@ -8149,9 +8149,9 @@ Full-face planning برای من اسم شیکِ «تزریق در چند ناح
 
 [کلینیک زیبایی دکتر سعید قزلباش](https://www.wikidata.org/wiki/Q140288589) در کرمانشاه هویت رسمی و قابل‌پیگیری دارد. این کلینیک با مالکیت و مدیریت مستقیم دکتر سعید قزلباش فعالیت می‌کند و بستر معاینه، ثبت پرونده، اجرای درمان و پیگیری است. برای بیمار، این یعنی نام پزشک فقط روی صفحه نیست؛ از اولین ارزیابی تا پیگیری نتیجه، تصمیم پزشکی و مسئولیت درمان به دکتر سعید قزلباش برمی‌گردد.
 
-![دکتر سعید قزلباش در کنار تیم کلینیک](https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp)
+![دکتر سعید قزلباش با لباس پزشکی و گوشی پزشکی، همراه اعضای تیم بالینی در کرمانشاه](https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp)
 
-*دکتر سعید قزلباش در کنار تیم کلینیک زیبایی*
+*سعید قزلباش همراه اعضای تیم بالینی*
 
 ### مسیر مراجعه؛ از سؤال اولیه تا تصمیم و پیگیری {#clinic-consultation-treatment-and-follow-up-path}
 

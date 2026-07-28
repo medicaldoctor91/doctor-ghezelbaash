@@ -26,13 +26,13 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
       src="/media/images/physician/saeed-ghezelbash-portrait-960.webp"
       width="960"
       height="640"
-      alt="پرتره رسمی دکتر سعید قزلباش"
+      alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه"
       loading="eager"
       decoding="async"
       fetchpriority="high"
     />
   </picture>
-  <figcaption>دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه</figcaption>
+  <figcaption>دکتر سعید قزلباش، پزشک ایرانی</figcaption>
 </figure>
 
 صورت را فقط در یک عکس ثابت قضاوت نمی‌کنم. در حالت استراحت، هنگام اخم، لبخند، حرف‌زدن و حرکت باید دیده شود. پوست و التهاب را بررسی می‌کنم، حرکت عضله را می‌بینم، حجم و چربی و استخوان را کنار هم می‌گذارم، عدم تقارن و سابقه تزریق یا جراحی را می‌پرسم و بعد تازه می‌رسم به اینکه چه درمانی اصلاً ارزش مطرح‌شدن دارد. در پرونده مرزی، عجله مزیت نیست. اگر هنوز نمی‌دانیم مشکل چیست، شروع درمان فقط سرعتِ اشتباه را بیشتر می‌کند.
@@ -48,12 +48,12 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
       src="/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp"
       width="960"
       height="640"
-      alt="دکتر سعید قزلباش در حال معاینه بالینی مراجعه‌کننده"
+      alt="دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه"
       loading="lazy"
       decoding="async"
     />
   </picture>
-  <figcaption>معاینه لایه‌های صورت پیش از انتخاب روش زیبایی</figcaption>
+  <figcaption>سعید قزلباش در محیط بالینی</figcaption>
 </figure>
 
 من جمله «صورتم را بهتر کن» را ساده نمی‌شنوم. گاهی واقعاً یک تغییر آناتومیک وجود دارد؛ گاهی چیزی که بیمار از صورتش می‌خواهد بیشتر از تصویرهای غیرواقعی و مقایسه مداوم با دیگران آمده است. وظیفه پزشک این نیست که هر خواسته‌ای را با یک سرنگ ترجمه کند. باید بفهمد کدام بخش مسئله واقعاً قابل درمان است، کدام انتظار باید اصلاح شود و کجا دست‌کاری بیشتر فقط بیمار را از صورت خودش دورتر می‌کند. زیبایی با دست شروع نمی‌شود؛ با فهم شروع می‌شود.
@@ -8228,12 +8228,12 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
       src="/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp"
       width="960"
       height="640"
-      alt="دکتر سعید قزلباش در کنار تیم کلینیک"
+      alt="دکتر سعید قزلباش با لباس پزشکی و گوشی پزشکی، همراه اعضای تیم بالینی در کرمانشاه"
       loading="lazy"
       decoding="async"
     />
   </picture>
-  <figcaption>دکتر سعید قزلباش در کنار تیم کلینیک زیبایی</figcaption>
+  <figcaption>سعید قزلباش همراه اعضای تیم بالینی</figcaption>
 </figure>
 
 <h3 id="clinic-consultation-treatment-and-follow-up-path"><a href="https://www.instagram.com/doctor.ghezelbaash/" rel="me external">مسیر مراجعه؛ از سؤال اولیه تا تصمیم و پیگیری</a></h3>
