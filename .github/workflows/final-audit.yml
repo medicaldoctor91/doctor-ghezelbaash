@@ -1,3 +1,4 @@
+# Temporary one-shot workflow; removed after final evidence is collected.
 name: Final production audit evidence
 
 on:
