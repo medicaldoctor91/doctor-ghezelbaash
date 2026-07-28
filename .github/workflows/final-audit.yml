@@ -1,4 +1,4 @@
-# Temporary one-shot workflow; removed after final evidence is collected.
+# Temporary one-shot workflow; post-CSP final evidence run 2.
 name: Final production audit evidence
 
 on:
