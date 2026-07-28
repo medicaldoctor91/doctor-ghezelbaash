@@ -1,0 +1,67 @@
+name: Audit live after CLS and image sizing pass
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-live-pass1.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Wait for production deploy
+        run: sleep 180
+      - name: Run live Lighthouse mobile and desktop
+        run: |
+          mkdir -p tmp/live-pass1
+          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --output=json --output-path=tmp/live-pass1/mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --preset=desktop --output=json --output-path=tmp/live-pass1/desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+      - name: Summarize live result
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          result={}
+          for mode in ('mobile','desktop'):
+            d=json.loads(Path(f'tmp/live-pass1/{mode}.json').read_text())
+            a=d['audits'];c=d['categories']
+            image_items=a.get('image-delivery-insight',{}).get('details',{}).get('items',[])
+            requests=a.get('network-requests',{}).get('details',{}).get('items',[])
+            physician=[{'url':x.get('url'),'transferSize':x.get('transferSize'),'resourceSize':x.get('resourceSize')} for x in requests if 'media/images/physician/' in x.get('url','')]
+            result[mode]={
+              'categories':{k:round(v['score']*100) for k,v in c.items()},
+              'fcp':a['first-contentful-paint']['numericValue'],
+              'lcp':a['largest-contentful-paint']['numericValue'],
+              'speedIndex':a['speed-index']['numericValue'],
+              'tbt':a['total-blocking-time']['numericValue'],
+              'cls':a['cumulative-layout-shift']['numericValue'],
+              'mainthread':a['mainthread-work-breakdown']['numericValue'],
+              'maxPotentialFid':a['max-potential-fid']['numericValue'],
+              'imageSavings':a.get('image-delivery-insight',{}).get('displayValue'),
+              'imageItems':[{'url':x.get('url'),'totalBytes':x.get('totalBytes'),'wastedBytes':x.get('wastedBytes')} for x in image_items],
+              'physicianRequests':physician,
+            }
+          Path('tmp/live-performance-pass1.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+      - name: Commit audit and remove workflow
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/audit-live-pass1.yml
+          rm -rf tmp/live-pass1
+          git add tmp/live-performance-pass1.json
+          git commit -m 'Record live performance after CLS fix'
+          git push origin HEAD:main
