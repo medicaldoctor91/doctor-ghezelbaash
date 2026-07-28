@@ -1,0 +1,135 @@
+name: Execute finalization v3 with resolved image masters
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/execute-finalization-v3.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: execute-doctor-ghezelbaash-finalization-v3
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install deterministic tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends webp
+          python -m pip install --disable-pip-version-check rdflib==7.1.4
+
+      - name: Generate responsive physician images
+        shell: bash
+        run: |
+          set -euo pipefail
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg -o public/media/images/physician/saeed-ghezelbash-portrait-640.webp
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg -o public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg -o public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp
+
+      - name: Extract v2 logic and resolve canonical master IDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, textwrap
+
+          workflow=Path('.github/workflows/execute-finalization-v2.yml')
+          source=workflow.read_text(encoding='utf-8').splitlines()
+          blocks=[]; current=None
+          for line in source:
+              if "python3 - <<'PY'" in line:
+                  current=[]; continue
+              if current is not None and line.strip()=='PY':
+                  blocks.append(textwrap.dedent('\n'.join(current))+'\n'); current=None; continue
+              if current is not None: current.append(line)
+          if len(blocks)!=2:
+              raise SystemExit(f'Expected two Python blocks in v2 workflow, found {len(blocks)}')
+
+          graph=json.loads(Path('public/graph.jsonld').read_text(encoding='utf-8'))
+          nodes=[n for n in graph.get('@graph',[]) if isinstance(n,dict)]
+          targets={
+              "ROOT+'#image-saeed-ghezelbash-portrait-master'":('saeed-ghezelbaash-physician-portrait.jpg','File:Saeed-Ghezelbaash-physician-portrait.jpg'),
+              "ROOT+'#image-saeed-ghezelbash-clinic-team-master'":('saeed-ghezelbaash-with-clinical-team.jpg','File:Saeed-Ghezelbaash-with-clinical-team.jpg'),
+              "ROOT+'#image-saeed-ghezelbash-clinical-office-master'":('saeed-ghezelbaash-in-clinical-office.jpg','File:Saeed-Ghezelbaash-in-clinical-office.jpg'),
+          }
+          resolved={}
+          for literal,(filename,commons_token) in targets.items():
+              matches=[]
+              for n in nodes:
+                  t=n.get('@type',[]); t=[t] if isinstance(t,str) else t
+                  if 'ImageObject' not in t or not n.get('@id'): continue
+                  hay=' '.join([n.get('@id',''),str(n.get('contentUrl','')),str(n.get('url','')),str(n.get('sameAs','')),str(n.get('acquireLicensePage',''))])
+                  if filename in hay or commons_token in hay:
+                      matches.append(n['@id'])
+              matches=list(dict.fromkeys(matches))
+              if len(matches)!=1:
+                  raise SystemExit(f'Could not uniquely resolve {filename}: {matches}')
+              resolved[literal]=matches[0]
+
+          patch=blocks[0]
+          for literal,node_id in resolved.items():
+              if literal not in patch:
+                  raise SystemExit(f'Expected literal absent from v2 patch: {literal}')
+              patch=patch.replace(literal,repr(node_id))
+          Path('/tmp/finalize-patch.py').write_text(patch,encoding='utf-8')
+          Path('/tmp/finalize-validate.py').write_text(blocks[1],encoding='utf-8')
+          print(json.dumps(resolved,ensure_ascii=False,indent=2))
+          PY
+
+      - name: Apply semantic, RDF, and delivery changes
+        run: |
+          set -euo pipefail
+          python3 /tmp/finalize-patch.py
+          python3 /tmp/finalize-validate.py
+          python -m json.tool public/graph.jsonld >/dev/null
+          python -m json.tool src/data/semantic/head-graph.min.jsonld >/dev/null
+          grep -q 'saeed-ghezelbash-portrait-640.webp' src/pages/index.md
+          grep -q 'saeed-ghezelbash-in-clinical-office-640.webp' src/pages/index.md
+          grep -q 'saeed-ghezelbash-with-clinic-team-640.webp' src/pages/index.md
+          grep -q 'image-saeed-ghezelbash-clinical-office-responsive-640' public/graph.jsonld
+          git diff --check
+
+      - name: Build and enforce crawler byte budget
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          test -f dist/index.html
+          bytes=$(wc -c < dist/index.html)
+          echo "dist/index.html bytes=$bytes"
+          test "$bytes" -lt 1900000
+
+      - name: Commit finalization and remove temporary machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f --ignore-unmatch \
+            .github/workflows/execute-finalization-v3.yml \
+            .github/workflows/execute-finalization-v2.yml \
+            .github/workflows/execute-finalization.yml \
+            .github/workflows/add-responsive-physician-images.yml
+          rm -f tmp/finalization-diagnostic.txt tmp/v2-state.txt tmp/v2-execution.txt tmp/actions-trigger.txt tmp/hardened-live-audit.json tmp/mobile-render-profile.json tmp/psi-live-latest.json
+          git add -A
+          git commit -m 'Finalize semantic facts, RDF equivalence, and responsive media'
+          git push origin HEAD:main
