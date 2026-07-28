@@ -1,0 +1,1 @@
+Temporary trigger for the validated paragraph-link patch. This file will be removed before merge.
