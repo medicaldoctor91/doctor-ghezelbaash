@@ -1,0 +1,72 @@
+name: Apply mobile font and touch target fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-mobile-font-target-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+      - shell: bash
+        run: |
+          set -euo pipefail
+          cat >> src/styles/global.css <<'CSS'
+
+/* Keep the mobile critical path independent of the optional brand font. */
+@media (max-width: 48rem) {
+  :root {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
+  }
+}
+
+/* WCAG 2.2 touch targets for the final clinic fact links. */
+#dr-saeed-ghezelbash-aesthetic-clinic-facts dd > a {
+  display: inline-block;
+  min-block-size: 24px;
+  padding-block: 3px;
+}
+CSS
+
+          npm ci --no-audit --no-fund
+          npm run build
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import re
+          from pathlib import Path
+
+          html = Path('dist/index.html').read_text(encoding='utf-8')
+          styles = re.findall(r'<style(?:\s[^>]*)?>(.*?)</style>', html, re.I | re.S)
+          if len(styles) != 1:
+              raise SystemExit(f'expected one inline style block, found {len(styles)}')
+          new_hash = "'sha256-" + base64.b64encode(hashlib.sha256(styles[0].encode()).digest()).decode() + "'"
+          headers = Path('public/_headers')
+          text = headers.read_text(encoding='utf-8')
+          matches = re.findall(r"style-src 'self' ('sha256-[^']+')", text)
+          if len(matches) != 1:
+              raise SystemExit(f'expected one CSP style hash, found {len(matches)}')
+          headers.write_text(text.replace(matches[0], new_hash), encoding='utf-8')
+          PY
+          npm run build
+          python3 -m pip install --quiet rdflib
+          python3 .github/scripts/validate_source.py
+
+          git rm .github/workflows/apply-mobile-font-target-fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/styles/global.css public/_headers
+          git commit -m 'Restore touch targets and remove mobile font contention'
+          git push origin HEAD:main
