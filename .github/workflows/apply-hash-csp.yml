@@ -1,0 +1,135 @@
+name: Apply deterministic hash-based CSP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-hash-csp.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  secure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Build deterministic production HTML
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Generate CSP from exact inline bytes
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import base64,hashlib,json,re
+
+          class Collector(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=False)
+                  self.capture=None;self.buf=[];self.styles=[];self.scripts=[];self.style_attrs=[]
+              def handle_starttag(self,tag,attrs):
+                  attrs=dict(attrs)
+                  if 'style' in attrs:self.style_attrs.append(attrs['style'])
+                  if tag=='style':self.capture='style';self.buf=[]
+                  elif tag=='script':self.capture='script';self.buf=[]
+              def handle_data(self,data):
+                  if self.capture:self.buf.append(data)
+              def handle_entityref(self,name):
+                  if self.capture:self.buf.append('&'+name+';')
+              def handle_charref(self,name):
+                  if self.capture:self.buf.append('&#'+name+';')
+              def handle_endtag(self,tag):
+                  if tag==self.capture:
+                      value=''.join(self.buf)
+                      (self.styles if tag=='style' else self.scripts).append(value)
+                      self.capture=None;self.buf=[]
+
+          html=Path('dist/index.html').read_text(encoding='utf-8')
+          parser=Collector();parser.feed(html)
+          if parser.style_attrs:raise SystemExit(f'Inline style attributes prevent strict CSP: {len(parser.style_attrs)}')
+          if not parser.styles:raise SystemExit('No inline style block found')
+          if len(parser.scripts)!=1:raise SystemExit(f'Expected one JSON-LD data block, found {len(parser.scripts)}')
+          def token(value):return "'sha256-"+base64.b64encode(hashlib.sha256(value.encode('utf-8')).digest()).decode('ascii')+"'"
+          style_tokens=list(dict.fromkeys(token(x) for x in parser.styles))
+          script_tokens=list(dict.fromkeys(token(x) for x in parser.scripts))
+          csp='; '.join([
+            "default-src 'self'",
+            "base-uri 'self'",
+            "object-src 'none'",
+            "frame-ancestors 'none'",
+            "frame-src 'none'",
+            "worker-src 'none'",
+            "connect-src 'none'",
+            "font-src 'self'",
+            "img-src 'self' data:",
+            "media-src 'self'",
+            "manifest-src 'self'",
+            'script-src '+ ' '.join(script_tokens),
+            "script-src-attr 'none'",
+            'style-src '+ ' '.join(style_tokens),
+            "style-src-attr 'none'",
+            "form-action 'self'",
+            'upgrade-insecure-requests',
+          ])
+          if len(csp)>1900:raise SystemExit(f'CSP too long: {len(csp)}')
+          hp=Path('public/_headers');headers=hp.read_text(encoding='utf-8')
+          route='''/
+            Content-Language: fa-IR
+            Cache-Control: public, max-age=0, must-revalidate
+            Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle"
+          '''
+          replacement=route.rstrip()+f'\n  Content-Security-Policy: {csp}\n'
+          if headers.count(route)!=1:raise SystemExit('Root header block mismatch')
+          headers=headers.replace(route,replacement,1)
+          hp.write_text(headers,encoding='utf-8')
+          report={'styles':len(parser.styles),'scripts':len(parser.scripts),'styleHashes':style_tokens,'scriptHashes':script_tokens,'csp':csp,'length':len(csp),'htmlBytes':len(html.encode())}
+          Path('tmp/csp-manifest.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+          PY
+          git diff --check
+      - name: Rebuild and verify hashes are stable
+        run: |
+          npm run build
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import base64,hashlib,json
+          class C(HTMLParser):
+            def __init__(self):super().__init__(convert_charrefs=False);self.cap=None;self.buf=[];self.styles=[];self.scripts=[]
+            def handle_starttag(self,t,a):
+              if t in ('style','script'):self.cap=t;self.buf=[]
+            def handle_data(self,d):
+              if self.cap:self.buf.append(d)
+            def handle_entityref(self,n):
+              if self.cap:self.buf.append('&'+n+';')
+            def handle_charref(self,n):
+              if self.cap:self.buf.append('&#'+n+';')
+            def handle_endtag(self,t):
+              if t==self.cap:
+                (self.styles if t=='style' else self.scripts).append(''.join(self.buf));self.cap=None;self.buf=[]
+          c=C();c.feed(Path('dist/index.html').read_text(encoding='utf-8'))
+          tok=lambda x:"'sha256-"+base64.b64encode(hashlib.sha256(x.encode()).digest()).decode()+"'"
+          manifest=json.loads(Path('tmp/csp-manifest.json').read_text())
+          assert list(dict.fromkeys(tok(x) for x in c.styles))==manifest['styleHashes']
+          assert list(dict.fromkeys(tok(x) for x in c.scripts))==manifest['scriptHashes']
+          assert Path('dist/index.html').stat().st_size<1900000
+          PY
+      - name: Commit enforced CSP
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/apply-hash-csp.yml
+          git add public/_headers tmp/csp-manifest.json
+          git commit -m 'Enforce deterministic hash-based content security policy'
+          git pull --rebase origin main
+          git push origin HEAD:main
