@@ -1,0 +1,116 @@
+name: Performance pass by moving JSON-LD after visible content
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/performance-pass-defer-jsonld.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Move inline graph after user-visible content
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          head=Path('src/components/DocumentHead.astro')
+          s=head.read_text(encoding='utf-8')
+          imp="import headGraph from '../data/semantic/head-graph.min.jsonld?raw';\n"
+          script='<script type="application/ld+json" set:html={headGraph}></script>\n'
+          if s.count(imp)!=1 or s.count(script)!=1:raise SystemExit('DocumentHead JSON-LD markers mismatch')
+          s=s.replace(imp,'',1).replace(script,'',1)
+          head.write_text(s,encoding='utf-8')
+
+          layout=Path('src/layouts/BaseLayout.astro')
+          s=layout.read_text(encoding='utf-8')
+          import_marker="import '../styles/global.css';\n"
+          graph_import="import headGraph from '../data/semantic/head-graph.min.jsonld?raw';\n"
+          if graph_import not in s:
+            if s.count(import_marker)!=1:raise SystemExit('BaseLayout import marker mismatch')
+            s=s.replace(import_marker,import_marker+graph_import,1)
+          marker='''    <FloatingActionDock />
+            </body>'''
+          replacement='''    <FloatingActionDock />
+              <script type="application/ld+json" set:html={headGraph}></script>
+            </body>'''
+          if s.count(marker)!=1:raise SystemExit('BaseLayout body marker mismatch')
+          s=s.replace(marker,replacement,1)
+          layout.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+      - name: Build and verify structured data remains within crawler budget
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          h=Path('dist/index.html').read_text(encoding='utf-8')
+          scripts=list(re.finditer(r'<script type="application/ld\+json">',h))
+          assert len(scripts)==1,len(scripts)
+          assert scripts[0].start()>h.find('</main>')
+          assert len(h.encode())<1900000
+          print({'jsonldOffset':scripts[0].start(),'htmlBytes':len(h.encode())})
+          PY
+      - name: Benchmark local Lighthouse
+        run: |
+          mkdir -p tmp/defer-jsonld
+          nohup python3 -m http.server 4173 --directory dist >tmp/defer-jsonld/server.log 2>&1 &
+          echo $! >tmp/defer-jsonld/server.pid
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --output=json --output-path=tmp/defer-jsonld/mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --preset=desktop --output=json --output-path=tmp/defer-jsonld/desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          kill $(cat tmp/defer-jsonld/server.pid) || true
+      - name: Evaluate result
+        id: evaluate
+        run: |
+          set +e
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          baseline={'mobile':{'performance':56,'fcp':9265.681,'lcp':9676.362,'mainthread':619.408},'desktop':{'performance':87,'fcp':1592.598,'lcp':1641.196,'mainthread':157.187}}
+          r={'accepted':False}
+          for mode in ('mobile','desktop'):
+            d=json.loads(Path(f'tmp/defer-jsonld/{mode}.json').read_text());a=d['audits'];c=d['categories']
+            r[mode]={'performance':round(c['performance']['score']*100),'accessibility':round(c['accessibility']['score']*100),'bestPractices':round(c['best-practices']['score']*100),'seo':round(c['seo']['score']*100),'fcp':a['first-contentful-paint']['numericValue'],'lcp':a['largest-contentful-paint']['numericValue'],'tbt':a['total-blocking-time']['numericValue'],'cls':a['cumulative-layout-shift']['numericValue'],'mainthread':a['mainthread-work-breakdown']['numericValue']}
+          r['htmlBytes']=Path('dist/index.html').stat().st_size
+          quality=all(r[m][k]==100 for m in ('mobile','desktop') for k in ('accessibility','bestPractices','seo'))
+          stable=all(r[m]['cls']<0.02 for m in ('mobile','desktop'))
+          mobile_ok=(r['mobile']['performance']>=baseline['mobile']['performance']-1 and r['mobile']['mainthread']<=baseline['mobile']['mainthread']*1.1)
+          desktop_ok=r['desktop']['performance']>=baseline['desktop']['performance']-2
+          r['accepted']=bool(quality and stable and mobile_ok and desktop_ok and r['htmlBytes']<1900000)
+          Path('tmp/performance-defer-jsonld.json').write_text(json.dumps(r,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(r,indent=2))
+          raise SystemExit(0 if r['accepted'] else 1)
+          PY
+          rc=$?
+          if [ "$rc" -eq 0 ]; then echo 'accepted=true' >> "$GITHUB_OUTPUT"; else echo 'accepted=false' >> "$GITHUB_OUTPUT"; fi
+          exit 0
+      - name: Roll back rejected experiment
+        if: steps.evaluate.outputs.accepted != 'true'
+        run: |
+          git reset --hard HEAD
+          git clean -fd -e tmp/performance-defer-jsonld.json
+      - name: Commit result
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/performance-pass-defer-jsonld.yml
+          rm -rf tmp/defer-jsonld
+          git add -A
+          if [ "${{ steps.evaluate.outputs.accepted }}" = "true" ]; then git commit -m 'Move JSON-LD after visible content without weakening crawlability'; else git commit -m 'Record rejected deferred JSON-LD benchmark'; fi
+          git push origin HEAD:main
