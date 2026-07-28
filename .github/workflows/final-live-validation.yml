@@ -1,0 +1,227 @@
+name: Definitive source build and live validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/final-live-validation.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Wait for preceding hardening commit and refresh main
+        run: |
+          sleep 180
+          git pull --ff-only origin main
+
+      - name: Build and validate source graph and HTML
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          python3 -m pip install --quiet rdflib
+          mkdir -p tmp/definitive-live-validation/lighthouse
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          from rdflib import Graph
+          from rdflib.compare import isomorphic
+          import base64, hashlib, json, re
+
+          html=Path('dist/index.html').read_text(encoding='utf-8')
+          headers=Path('public/_headers').read_text(encoding='utf-8')
+          full=json.loads(Path('public/graph.jsonld').read_text(encoding='utf-8'))
+          head=json.loads(Path('src/data/semantic/head-graph.min.jsonld').read_text(encoding='utf-8'))
+
+          class C(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=False);self.cap=None;self.buf=[];self.styles=[];self.scripts=[];self.style_attrs=[];self.script_src=[];self.ids=[];self.hrefs=[]
+              def handle_starttag(self,t,a):
+                  d=dict(a)
+                  if 'style' in d:self.style_attrs.append((t,d['style']))
+                  if t=='script' and d.get('src'):self.script_src.append(d['src'])
+                  if 'id' in d:self.ids.append(d['id'])
+                  if d.get('href','').startswith('#'):self.hrefs.append(d['href'][1:])
+                  if t=='style':self.cap='style';self.buf=[]
+                  elif t=='script' and not d.get('src'):self.cap='script';self.buf=[]
+              def handle_data(self,d):
+                  if self.cap:self.buf.append(d)
+              def handle_entityref(self,n):
+                  if self.cap:self.buf.append('&'+n+';')
+              def handle_charref(self,n):
+                  if self.cap:self.buf.append('&#'+n+';')
+              def handle_endtag(self,t):
+                  if t==self.cap:
+                      (self.styles if t=='style' else self.scripts).append(''.join(self.buf));self.cap=None;self.buf=[]
+
+          c=C();c.feed(html)
+          tok=lambda x:"sha256-"+base64.b64encode(hashlib.sha256(x.encode('utf-8')).digest()).decode('ascii')
+          assert len(c.styles)==1
+          assert len(c.scripts)==1
+          assert not c.script_src
+          assert not c.style_attrs
+          json.loads(c.scripts[0])
+          expected_style=tok(c.styles[0]);expected_script=tok(c.scripts[0])
+          assert expected_style in headers and expected_script in headers
+          assert "style-src-attr 'none'" in headers
+          assert "script-src-attr 'none'" in headers
+          assert "connect-src 'none'" in headers
+          assert len(html.encode('utf-8')) < 1_900_000
+          assert len(c.ids)==len(set(c.ids))
+          missing=sorted(set(c.hrefs)-set(c.ids));assert not missing,missing[:20]
+          assert 'در حال معاینه بالینی مراجعه‌کننده' not in html
+          assert 'PresentationDigitalDocument' in html
+          assert '"priceRange":"$$$$"' in html or '"priceRange": "$$$$"' in html
+          assert html.find('</main>') < html.find('application/ld+json')
+
+          fn=full.get('@graph',[]);hn=head.get('@graph',[])
+          fids={x.get('@id') for x in fn if isinstance(x,dict) and x.get('@id')};hids={x.get('@id') for x in hn if isinstance(x,dict) and x.get('@id')}
+          assert hids <= fids
+          assert len(fids)==len([x for x in fn if isinstance(x,dict) and x.get('@id')])
+          assert len(hids)==len([x for x in hn if isinstance(x,dict) and x.get('@id')])
+          gj=Graph();gj.parse('public/graph.jsonld',format='json-ld')
+          gt=Graph();gt.parse('public/graph.ttl',format='turtle')
+          assert isomorphic(gj,gt)
+
+          out={
+            'sourceCommit':__import__('subprocess').check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'htmlBytes':len(html.encode('utf-8')),
+            'expectedStyleHash':expected_style,
+            'expectedScriptHash':expected_script,
+            'inlineStyleAttributes':0,
+            'externalScripts':[],
+            'duplicateIds':0,
+            'brokenFragments':[],
+            'fullNodes':len(fn),'headNodes':len(hn),'rdfTriples':len(gj),'rdfIsomorphic':True,'headSubset':True,
+          }
+          Path('tmp/definitive-live-validation/source.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+          Path('tmp/definitive-live-validation/expected-style.txt').write_text(expected_style,encoding='utf-8')
+          Path('tmp/definitive-live-validation/expected-script.txt').write_text(expected_script,encoding='utf-8')
+          PY
+
+      - name: Wait for exact production deployment
+        shell: bash
+        run: |
+          style=$(cat tmp/definitive-live-validation/expected-style.txt)
+          script=$(cat tmp/definitive-live-validation/expected-script.txt)
+          ready=0
+          for i in $(seq 1 48); do
+            curl -fsS --compressed -D tmp/definitive-live-validation/root-headers.txt -o tmp/definitive-live-validation/live.html https://www.ghezelbaash.ir/
+            if grep -qi 'content-security-policy:' tmp/definitive-live-validation/root-headers.txt \
+              && grep -q "$style" tmp/definitive-live-validation/root-headers.txt \
+              && grep -q "$script" tmp/definitive-live-validation/root-headers.txt \
+              && grep -q 'saeed-ghezelbash-portrait-delivery-640.webp' tmp/definitive-live-validation/live.html \
+              && ! grep -q 'در حال معاینه بالینی مراجعه‌کننده' tmp/definitive-live-validation/live.html; then
+              ready=1;break
+            fi
+            sleep 15
+          done
+          test "$ready" = 1
+          curl -fsS --compressed -D tmp/definitive-live-validation/graph-headers.txt -o tmp/definitive-live-validation/live-graph.jsonld https://www.ghezelbaash.ir/graph.jsonld
+          curl -fsS --compressed -D tmp/definitive-live-validation/ttl-headers.txt -o tmp/definitive-live-validation/live-graph.ttl https://www.ghezelbaash.ir/graph.ttl
+          curl -fsS -D tmp/definitive-live-validation/portrait-headers.txt -o /dev/null https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp
+
+      - name: Validate exact live headers and semantic parity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          h=Path('tmp/definitive-live-validation/root-headers.txt').read_text(errors='replace').lower()
+          gh=Path('tmp/definitive-live-validation/graph-headers.txt').read_text(errors='replace').lower()
+          th=Path('tmp/definitive-live-validation/ttl-headers.txt').read_text(errors='replace').lower()
+          ih=Path('tmp/definitive-live-validation/portrait-headers.txt').read_text(errors='replace').lower()
+          html=Path('tmp/definitive-live-validation/live.html').read_text(encoding='utf-8')
+          style=Path('tmp/definitive-live-validation/expected-style.txt').read_text()
+          script=Path('tmp/definitive-live-validation/expected-script.txt').read_text()
+          assert 'content-security-policy:' in h
+          assert style.lower() in h and script.lower() in h
+          assert "style-src-attr 'none'" in h
+          assert "connect-src 'none'" in h
+          assert 'content-encoding: br' in h
+          assert 'alt-svc: h3=' in h
+          assert 'application/ld+json' in gh
+          assert 'text/turtle' in th
+          assert 'cache-control: public, max-age=31536000, immutable' in ih
+          assert 'rel="about"' in ih
+          assert 'static.cloudflareinsights.com' not in html
+          assert 'cloudflareinsights.com/cdn-cgi/rum' not in html
+          assert 'در حال معاینه بالینی مراجعه‌کننده' not in html
+          assert 'PresentationDigitalDocument' in html
+          assert '"priceRange":"$$$$"' in html or '"priceRange": "$$$$"' in html
+          assert html.find('</main>') < html.find('application/ld+json')
+          out={
+            'htmlBytes':len(html.encode('utf-8')),'cspStrict':True,'brotli':True,'http3Advertised':True,'analyticsMarkupAbsent':True,
+            'oldOfficePhraseAbsent':True,'jsonLdAfterMain':True,'priceRangePremium':True,'presentationTypeCorrect':True,
+            'graphMime':True,'ttlMime':True,'portraitImmutable':True,'portraitSemanticLink':True,
+          }
+          Path('tmp/definitive-live-validation/live.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+
+      - name: Run repeated live Lighthouse audits
+        run: |
+          for mode in mobile desktop; do
+            for run in 1 2 3; do
+              args=""
+              if [ "$mode" = desktop ]; then args="--preset=desktop"; fi
+              npx --yes lighthouse@latest https://www.ghezelbaash.ir/ $args \
+                --output=json --output-path="tmp/definitive-live-validation/lighthouse/${mode}-${run}.json" \
+                --only-categories=performance,accessibility,best-practices,seo \
+                --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet || true
+            done
+          done
+
+      - name: Summarize Lighthouse and failed audits
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,statistics
+          out={'modes':{}}
+          for mode in ('mobile','desktop'):
+              rows=[]
+              for p in sorted(Path('tmp/definitive-live-validation/lighthouse').glob(f'{mode}-*.json')):
+                  d=json.loads(p.read_text());a=d['audits'];c=d['categories']
+                  failed=[]
+                  for k,v in a.items():
+                      score=v.get('score')
+                      if isinstance(score,(int,float)) and score<1 and v.get('scoreDisplayMode') not in ('notApplicable','manual','informative'):
+                          failed.append({'id':k,'score':score,'displayValue':v.get('displayValue'),'title':v.get('title')})
+                  rows.append({
+                    'performance':round(c['performance']['score']*100),'accessibility':round(c['accessibility']['score']*100),
+                    'bestPractices':round(c['best-practices']['score']*100),'seo':round(c['seo']['score']*100),
+                    'fcp':a['first-contentful-paint']['numericValue'],'lcp':a['largest-contentful-paint']['numericValue'],
+                    'tbt':a['total-blocking-time']['numericValue'],'cls':a['cumulative-layout-shift']['numericValue'],
+                    'speedIndex':a['speed-index']['numericValue'],'failedAudits':failed,
+                  })
+              if not rows:raise SystemExit(f'No Lighthouse output for {mode}')
+              out['modes'][mode]={'runs':rows,'median':{k:statistics.median([r[k] for r in rows]) for k in ('performance','fcp','lcp','tbt','cls','speedIndex')}}
+          Path('tmp/definitive-live-validation/lighthouse-summary.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+
+      - name: Commit final validation report and remove one-shot workflows
+        shell: bash
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f .github/workflows/final-live-validation.yml
+          git rm -f .github/workflows/audit-live-pass1.yml || true
+          rm -rf tmp/definitive-live-validation/lighthouse
+          rm -f tmp/definitive-live-validation/expected-style.txt tmp/definitive-live-validation/expected-script.txt
+          git add -A
+          git commit -m 'Record definitive production validation and Lighthouse audit'
+          git pull --rebase origin main
+          git push origin HEAD:main
