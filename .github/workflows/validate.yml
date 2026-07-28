@@ -10,6 +10,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.node-version'
+      - '.github/scripts/**'
       - '.github/workflows/validate.yml'
   pull_request:
     paths:
@@ -19,6 +20,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - '.node-version'
+      - '.github/scripts/**'
       - '.github/workflows/validate.yml'
   workflow_dispatch:
     inputs:
@@ -27,11 +29,21 @@ on:
         required: true
         type: boolean
         default: true
+      run_lighthouse:
+        description: 'Run three Mobile and three Desktop Lighthouse audits'
+        required: true
+        type: boolean
+        default: true
       enforce_performance_100:
-        description: 'Fail unless every Lighthouse category scores 100 in every run'
+        description: 'Fail unless Performance is 100 in every Lighthouse run'
         required: true
         type: boolean
         default: false
+      enforce_agentic:
+        description: 'Fail unless every applicable Agentic Browsing check passes'
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -45,8 +57,40 @@ env:
   CANONICAL_URL: 'https://www.ghezelbaash.ir/'
 
 jobs:
+  changes:
+    name: Detect production-surface changes
+    runs-on: ubuntu-latest
+    outputs:
+      production: ${{ steps.detect.outputs.production }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - id: detect
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo 'production=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          before="$BEFORE_SHA"
+          if [ -z "$before" ] || [ "$before" = '0000000000000000000000000000000000000000' ]; then
+            before='HEAD^'
+          fi
+          files=$(git diff --name-only "$before" HEAD || true)
+          printf '%s\n' "$files"
+          if printf '%s\n' "$files" | grep -Eq '^(src/|public/|astro\.config\.mjs$|package(-lock)?\.json$|\.node-version$)'; then
+            echo 'production=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'production=false' >> "$GITHUB_OUTPUT"
+          fi
+
   source:
-    name: Source, build, graph and CSP validation
+    name: Source build graph and CSP validation
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -65,215 +109,7 @@ jobs:
           python3 -m pip install --quiet rdflib
 
       - name: Validate immutable production contract
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          from html.parser import HTMLParser
-          from rdflib import Graph
-          from rdflib.compare import isomorphic
-          import base64, hashlib, json, sys
-
-          errors = []
-          warnings = []
-
-          def require(condition, message):
-              if not condition:
-                  errors.append(message)
-
-          def load_json(path):
-              try:
-                  return json.loads(Path(path).read_text(encoding='utf-8'))
-              except Exception as exc:
-                  errors.append(f'{path}: invalid JSON: {exc}')
-                  return {}
-
-          def ids(value):
-              if value is None:
-                  return []
-              if not isinstance(value, list):
-                  value = [value]
-              output = []
-              for item in value:
-                  if isinstance(item, dict) and isinstance(item.get('@id'), str):
-                      output.append(item['@id'])
-                  elif isinstance(item, str):
-                      output.append(item)
-              return output
-
-          required_files = [
-              'dist/index.html', 'dist/404.html', 'public/graph.jsonld', 'public/graph.ttl',
-              'src/data/semantic/head-graph.min.jsonld', 'public/_headers', 'public/_redirects',
-              'public/robots.txt', 'public/sitemap.xml', 'public/llms.txt', 'public/llms-full.txt',
-              'public/doctor.vcf', 'public/clinic.vcf', 'public/favicon.svg', 'public/favicon.ico',
-              'public/favicon-48x48.png', 'public/apple-touch-icon.png', 'public/site.webmanifest',
-              'public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg',
-              'public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg',
-              'public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg',
-              'public/media/brand/doctor-ghezelbaash-symbol-512.png',
-          ]
-          for path in required_files:
-              require(Path(path).is_file(), f'missing required file: {path}')
-
-          html_path = Path('dist/index.html')
-          html = html_path.read_text(encoding='utf-8') if html_path.exists() else ''
-          html_bytes = len(html.encode('utf-8'))
-          require(html_bytes < 1_900_000, f'HTML exceeds 1.90 MB safety gate: {html_bytes} bytes')
-          require('https://www.ghezelbaash.ir/' in html and 'rel="canonical"' in html, 'canonical homepage link is missing')
-          require('/graph.jsonld' in html and 'describedby' in html, 'HTML does not discover graph.jsonld')
-          require('/graph.ttl' in html and 'describedby' in html, 'HTML does not discover graph.ttl')
-          require('application/ld+json' in html, 'inline Head Graph is missing from generated HTML')
-          require('در حال معاینه بالینی مراجعه‌کننده' not in html, 'obsolete clinical-examination wording remains in HTML')
-          require('PresentationDigitalDocument' in html, '2017 presentation type is absent from inline graph')
-          require('"priceRange":"$$$$"' in html or '"priceRange": "$$$$"' in html, 'premium priceRange is absent from inline graph')
-          require('static.cloudflareinsights.com' not in html and 'cloudflareinsights.com' not in html, 'Cloudflare Web Analytics script is present in source HTML')
-          require(all(token not in html for token in ('client:load', 'client:visible', 'client:idle')), 'Astro hydration directive leaked to HTML')
-
-          class Parser(HTMLParser):
-              def __init__(self):
-                  super().__init__(convert_charrefs=False)
-                  self.capture = None
-                  self.buffer = []
-                  self.styles = []
-                  self.scripts = []
-                  self.external_scripts = []
-                  self.ids = []
-                  self.fragments = []
-                  self.style_attrs = []
-                  self.event_attrs = []
-                  self.images = []
-
-              def handle_starttag(self, tag, attrs):
-                  data = dict(attrs)
-                  if 'id' in data:
-                      self.ids.append(data['id'])
-                  if data.get('href', '').startswith('#'):
-                      self.fragments.append(data['href'][1:])
-                  if 'style' in data:
-                      self.style_attrs.append((tag, data['style']))
-                  for key, value in attrs:
-                      if key.lower().startswith('on'):
-                          self.event_attrs.append((tag, key, value))
-                  if tag == 'img':
-                      self.images.append(data)
-                  if tag == 'script' and data.get('src'):
-                      self.external_scripts.append(data['src'])
-                  if tag == 'style':
-                      self.capture = 'style'
-                      self.buffer = []
-                  elif tag == 'script' and not data.get('src'):
-                      self.capture = 'script'
-                      self.buffer = []
-
-              def handle_data(self, data):
-                  if self.capture:
-                      self.buffer.append(data)
-
-              def handle_entityref(self, name):
-                  if self.capture:
-                      self.buffer.append('&' + name + ';')
-
-              def handle_charref(self, name):
-                  if self.capture:
-                      self.buffer.append('&#' + name + ';')
-
-              def handle_endtag(self, tag):
-                  if tag == self.capture:
-                      value = ''.join(self.buffer)
-                      (self.styles if tag == 'style' else self.scripts).append(value)
-                      self.capture = None
-                      self.buffer = []
-
-          parser = Parser()
-          parser.feed(html)
-          duplicate_ids = sorted({item for item in parser.ids if parser.ids.count(item) > 1})
-          broken_fragments = sorted(set(parser.fragments) - set(parser.ids))
-          require(not duplicate_ids, f'duplicate HTML ids: {duplicate_ids[:20]}')
-          require(not broken_fragments, f'broken internal fragments: {broken_fragments[:30]}')
-          require(not parser.external_scripts, f'external scripts found: {parser.external_scripts}')
-          require(not parser.style_attrs, f'inline style attributes found: {parser.style_attrs[:10]}')
-          require(not parser.event_attrs, f'inline event attributes found: {parser.event_attrs[:10]}')
-          missing_dimensions = [item.get('src') for item in parser.images if not item.get('width') or not item.get('height')]
-          require(not missing_dimensions, f'images without explicit width/height: {missing_dimensions[:20]}')
-
-          headers = Path('public/_headers').read_text(encoding='utf-8') if Path('public/_headers').exists() else ''
-          csp_lines = [line.strip().split(':', 1)[1].strip() for line in headers.splitlines() if line.strip().startswith('Content-Security-Policy:')]
-          require(len(csp_lines) == 1, f'expected one CSP header, found {len(csp_lines)}')
-          csp = csp_lines[0] if csp_lines else ''
-          require("'unsafe-eval'" not in csp, 'CSP permits unsafe-eval')
-          require("style-src-attr 'none'" in csp, 'CSP does not block inline style attributes')
-          require("connect-src 'none'" in csp, 'CSP does not block unexpected outbound connections')
-          require(max((len(line) for line in headers.splitlines()), default=0) < 2000, 'a _headers line exceeds the Cloudflare Pages limit')
-          style_hashes = ["'sha256-" + base64.b64encode(hashlib.sha256(value.encode()).digest()).decode() + "'" for value in parser.styles]
-          script_hashes = ["'sha256-" + base64.b64encode(hashlib.sha256(value.encode()).digest()).decode() + "'" for value in parser.scripts]
-          for digest in style_hashes:
-              require(digest in csp, f'CSP misses inline style hash {digest}')
-          for digest in script_hashes:
-              require(digest in csp, f'CSP misses inline script/JSON-LD hash {digest}')
-
-          full = load_json('public/graph.jsonld')
-          head = load_json('src/data/semantic/head-graph.min.jsonld')
-          full_nodes = full.get('@graph', []) if isinstance(full, dict) else []
-          head_nodes = head.get('@graph', []) if isinstance(head, dict) else []
-          full_ids = [item.get('@id') for item in full_nodes if isinstance(item, dict) and item.get('@id')]
-          head_ids = [item.get('@id') for item in head_nodes if isinstance(item, dict) and item.get('@id')]
-          require(len(full_ids) == len(set(full_ids)), 'duplicate @id values in Full Graph')
-          require(len(head_ids) == len(set(head_ids)), 'duplicate @id values in Head Graph')
-          require(set(head_ids) <= set(full_ids), f'Head Graph ids absent from Full Graph: {sorted(set(head_ids) - set(full_ids))[:20]}')
-          full_by = {item.get('@id'): item for item in full_nodes if isinstance(item, dict) and item.get('@id')}
-
-          doctor_id = 'https://www.ghezelbaash.ir/#saeed-ghezelbash'
-          clinic_id = 'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
-          portrait = 'https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master'
-          team = 'https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master'
-          office = 'https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master'
-          doctor = full_by.get(doctor_id, {})
-          clinic = full_by.get(clinic_id, {})
-          doctor_types = doctor.get('@type', [])
-          doctor_types = doctor_types if isinstance(doctor_types, list) else [doctor_types]
-          require({'Person', 'IndividualPhysician'} <= set(doctor_types), f'doctor types are incomplete: {doctor_types}')
-          require(doctor.get('priceRange') == '$$$$', 'doctor priceRange is not $$$$')
-          require(clinic.get('priceRange') == '$$$$', 'clinic priceRange is not $$$$')
-          require(clinic_id in ids(doctor.get('owns')), 'Doctor → owns → Clinic is missing')
-          require(clinic_id in ids(doctor.get('practicesAt')), 'Doctor → practicesAt → Clinic is missing')
-          require(clinic_id in ids(doctor.get('workLocation')), 'Doctor → workLocation → Clinic is missing')
-          require(doctor_id in ids(clinic.get('owner')), 'Clinic → owner → Doctor is missing')
-          require(doctor_id in ids(clinic.get('founder')), 'Clinic → founder → Doctor is missing')
-          course = full_by.get('https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-course', {})
-          require(clinic_id in ids(course.get('provider')), 'Course provider is not the clinic')
-          presentation = full_by.get('https://www.ghezelbaash.ir/#presentation-attachment-style-dissociative-depression-2017', {})
-          presentation_types = presentation.get('@type', [])
-          presentation_types = presentation_types if isinstance(presentation_types, list) else [presentation_types]
-          require('PresentationDigitalDocument' in presentation_types, '2017 congress work is not PresentationDigitalDocument')
-          doctor_images = ids(doctor.get('image'))
-          require(portrait in doctor_images, 'canonical portrait is absent from Person.image')
-          require(team not in doctor_images and office not in doctor_images, 'contextual Team/Office image is incorrectly a primary Person image')
-          require({doctor_id, clinic_id} <= set(ids(full_by.get(office, {}).get('about'))), 'Office master does not describe both Doctor and Clinic')
-          require({doctor_id, clinic_id} <= set(ids(full_by.get(team, {}).get('about'))), 'Team master does not describe both Doctor and Clinic')
-
-          try:
-              json_graph = Graph()
-              json_graph.parse('public/graph.jsonld', format='json-ld')
-              ttl_graph = Graph()
-              ttl_graph.parse('public/graph.ttl', format='turtle')
-              require(isomorphic(json_graph, ttl_graph), f'Full JSON-LD and Turtle are not RDF-isomorphic ({len(json_graph)} vs {len(ttl_graph)} triples)')
-          except Exception as exc:
-              errors.append(f'RDF parse/equivalence failure: {exc}')
-
-          redirects = Path('public/_redirects').read_text(encoding='utf-8')
-          require('/index.html / 301' in redirects, 'index.html canonical redirect is missing')
-          require('/* /404.html 404' in redirects, 'real static 404 fallback is missing')
-          require('/services/' not in redirects and '/contact/' not in redirects and '/subcision-kermanshah/' not in redirects, 'legacy WordPress paths were added to redirect architecture')
-
-          for warning in warnings:
-              print('WARNING:', warning)
-          if errors:
-              for error in errors:
-                  print('ERROR:', error, file=sys.stderr)
-              raise SystemExit(f'{len(errors)} validation error(s)')
-          print(f'PASS: HTML={html_bytes} bytes, Full={len(full_nodes)} nodes, Head={len(head_nodes)} nodes')
-          PY
+        run: python3 .github/scripts/validate_source.py
 
       - name: Upload generated build for forensic comparison
         if: always()
@@ -284,11 +120,47 @@ jobs:
           retention-days: 14
 
   live:
-    name: Manual live HTTP and Lighthouse audit
-    if: github.event_name == 'workflow_dispatch' && inputs.run_live_audit
-    needs: source
+    name: Live deployment HTTP and semantic validation
+    needs: [changes, source]
+    if: >-
+      (github.event_name == 'push' && needs.changes.outputs.production == 'true') ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_live_audit)
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for and validate the matching Cloudflare deployment
+        run: python3 .github/scripts/validate_live.py --expected-sha "${{ github.sha }}" --deployment-timeout 600
+
+      - name: Record Cloudflare Pages range behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          video=$(find public/media/videos -type f -name '*.mp4' | sort | head -n1)
+          url="https://www.ghezelbaash.ir/${video#public/}"
+          status=$(curl -sS --compressed --max-time 90 -H 'Range: bytes=0-1023' -o /dev/null -D live-audit/video-range.headers -w '%{http_code}' "$url")
+          case "$status" in
+            200) echo 'Cloudflare Pages returned its documented full-response behavior for a Range request.' ;;
+            206) grep -qi '^content-range:' live-audit/video-range.headers ;;
+            *) echo "Unexpected Range response: $status" >&2; exit 1 ;;
+          esac
+          printf '%s\n' "$status" > live-audit/video-range-status.txt
+
+      - name: Upload live HTTP evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-http-${{ github.sha }}
+          path: live-audit/
+          retention-days: 30
+
+  lighthouse:
+    name: Repeated Mobile Desktop and Agentic Lighthouse audit
+    needs: live
+    if: github.event_name == 'workflow_dispatch' && inputs.run_lighthouse
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -297,168 +169,37 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Wait for Cloudflare Pages deployment
-        run: sleep 90
-
-      - name: Validate live routing, machine surfaces and headers
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p live-audit
-          python3 - <<'PY'
-          from pathlib import Path
-          import json, subprocess, sys
-
-          targets = {
-              'root': ('https://www.ghezelbaash.ir/', {200}),
-              'apex': ('https://ghezelbaash.ir/', {200}),
-              'http': ('http://www.ghezelbaash.ir/', {200}),
-              'index': ('https://www.ghezelbaash.ir/index.html', {200}),
-              'graph': ('https://www.ghezelbaash.ir/graph.jsonld', {200}),
-              'ttl': ('https://www.ghezelbaash.ir/graph.ttl', {200}),
-              'robots': ('https://www.ghezelbaash.ir/robots.txt', {200}),
-              'sitemap': ('https://www.ghezelbaash.ir/sitemap.xml', {200}),
-              'favicon': ('https://www.ghezelbaash.ir/favicon.svg', {200}),
-              'portrait': ('https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg', {200}),
-              'notfound': ('https://www.ghezelbaash.ir/__production-validation-not-found__', {404}),
-              'services': ('https://www.ghezelbaash.ir/services/', {404, 410}),
-              'contact': ('https://www.ghezelbaash.ir/contact/', {404, 410}),
-              'subcision': ('https://www.ghezelbaash.ir/subcision-kermanshah/', {404, 410}),
-          }
-          rows = {}
-          errors = []
-          for name, (url, expected) in targets.items():
-              proc = subprocess.run([
-                  'curl', '-sS', '--compressed', '--max-time', '45', '-L', '-D', '-',
-                  '-o', f'live-audit/{name}.body', '-w', '\n__META__%{http_code}\t%{url_effective}\t%{size_download}', url,
-              ], capture_output=True, text=True)
-              output = proc.stdout
-              headers, meta = output.rsplit('\n__META__', 1) if '\n__META__' in output else (output, '')
-              parts = meta.strip().split('\t')
-              code = int(parts[0]) if parts and parts[0].isdigit() else None
-              rows[name] = {
-                  'url': url,
-                  'status': code,
-                  'effectiveUrl': parts[1] if len(parts) > 1 else None,
-                  'downloadBytes': int(parts[2]) if len(parts) > 2 and parts[2].isdigit() else None,
-                  'headers': headers,
-              }
-              if code not in expected:
-                  errors.append(f'{name}: expected {sorted(expected)}, got {code}')
-
-          root_body = Path('live-audit/root.body').read_text(encoding='utf-8', errors='replace')
-          if 'در حال معاینه بالینی مراجعه‌کننده' in root_body:
-              errors.append('live root still contains obsolete Office wording')
-          if 'PresentationDigitalDocument' not in root_body:
-              errors.append('live root lacks PresentationDigitalDocument')
-          if '"priceRange":"$$$$"' not in root_body and '"priceRange": "$$$$"' not in root_body:
-              errors.append('live root lacks premium priceRange')
-          root_headers = rows['root']['headers'].lower()
-          for token in ['content-security-policy:', 'rel="describedby"', 'graph.jsonld', 'graph.ttl']:
-              if token not in root_headers:
-                  errors.append(f'live root header misses {token}')
-          if "style-src-attr 'none'" not in root_headers:
-              errors.append('live CSP does not block inline style attributes')
-          if "connect-src 'none'" not in root_headers:
-              errors.append('live CSP does not block unexpected connections')
-
-          pages = subprocess.run([
-              'curl', '-sS', '--compressed', '--max-time', '45', '-L', '-D', '-',
-              '-o', 'live-audit/pagesdev.body', '-w', '\n__META__%{http_code}\t%{url_effective}',
-              'https://doctor-ghezelbaash.pages.dev/',
-          ], capture_output=True, text=True).stdout
-          rows['pagesdev'] = {'raw': pages}
-          pages_lower = pages.lower()
-          if 'x-robots-tag: noindex' not in pages_lower and 'https://www.ghezelbaash.ir/' not in pages_lower:
-              errors.append('pages.dev is neither redirected to canonical nor protected by noindex')
-
-          Path('live-audit/http.json').write_text(json.dumps(rows, ensure_ascii=False, indent=2), encoding='utf-8')
-          if errors:
-              for error in errors:
-                  print('ERROR:', error, file=sys.stderr)
-              raise SystemExit(f'{len(errors)} live HTTP error(s)')
-          print('PASS: live HTTP, legacy routing and semantic headers')
-          PY
-
-      - name: Verify byte-range video delivery
-        shell: bash
-        run: |
-          set -euo pipefail
-          video=$(find public/media/videos -type f -name '*.mp4' | sort | head -n1)
-          url="https://www.ghezelbaash.ir/${video#public/}"
-          status=$(curl -sS --max-time 45 -H 'Range: bytes=0-1023' -o live-audit/video-range.bin -D live-audit/video-range.headers -w '%{http_code}' "$url")
-          test "$status" = 206
-          grep -qi '^content-range:' live-audit/video-range.headers
-
       - name: Run repeated Lighthouse audits
         shell: bash
         run: |
           set +e
+          mkdir -p live-audit
+          google-chrome --version || chromium --version || true
           for mode in mobile desktop; do
             for run in 1 2 3; do
               preset=''
               [ "$mode" = desktop ] && preset='--preset=desktop'
               npx --yes lighthouse@latest "$CANONICAL_URL" $preset \
                 --output=json --output-path="live-audit/lighthouse-${mode}-${run}.json" \
-                --only-categories=performance,accessibility,best-practices,seo \
+                --only-categories=performance,accessibility,best-practices,seo,agentic-browsing \
                 --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
             done
           done
           exit 0
 
       - name: Evaluate Lighthouse results
-        env:
-          ENFORCE_100: ${{ inputs.enforce_performance_100 }}
+        shell: bash
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import json, os, statistics, sys
+          set -euo pipefail
+          args=()
+          [ "${{ inputs.enforce_performance_100 }}" = 'true' ] && args+=(--enforce-performance-100)
+          [ "${{ inputs.enforce_agentic }}" = 'true' ] && args+=(--enforce-agentic)
+          python3 .github/scripts/evaluate_lighthouse.py --directory live-audit "${args[@]}"
 
-          errors = []
-          report = {}
-          for mode in ('mobile', 'desktop'):
-              rows = []
-              for path in sorted(Path('live-audit').glob(f'lighthouse-{mode}-*.json')):
-                  try:
-                      data = json.loads(path.read_text())
-                      categories = data['categories']
-                      audits = data['audits']
-                      rows.append({
-                          'performance': round(categories['performance']['score'] * 100),
-                          'accessibility': round(categories['accessibility']['score'] * 100),
-                          'bestPractices': round(categories['best-practices']['score'] * 100),
-                          'seo': round(categories['seo']['score'] * 100),
-                          'lcp': audits['largest-contentful-paint']['numericValue'],
-                          'tbt': audits['total-blocking-time']['numericValue'],
-                          'cls': audits['cumulative-layout-shift']['numericValue'],
-                      })
-                  except Exception as exc:
-                      errors.append(f'{path}: {exc}')
-              report[mode] = {
-                  'runs': rows,
-                  'median': {key: statistics.median(row[key] for row in rows) for key in rows[0]} if rows else {},
-              }
-              if not rows:
-                  errors.append(f'no Lighthouse results for {mode}')
-              for row in rows:
-                  for key in ('accessibility', 'bestPractices', 'seo'):
-                      if row[key] != 100:
-                          errors.append(f'{mode} {key} score is {row[key]}')
-                  if os.environ.get('ENFORCE_100', 'false').lower() == 'true' and row['performance'] != 100:
-                      errors.append(f'{mode} performance score is {row["performance"]}, strict gate requires 100')
-
-          Path('live-audit/lighthouse-summary.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
-          print(json.dumps(report, indent=2))
-          if errors:
-              for error in errors:
-                  print('ERROR:', error, file=sys.stderr)
-              raise SystemExit(f'{len(errors)} Lighthouse validation error(s)')
-          PY
-
-      - name: Upload live audit evidence
+      - name: Upload Lighthouse evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: live-audit-${{ github.sha }}
+          name: lighthouse-${{ github.sha }}
           path: live-audit/
           retention-days: 30
