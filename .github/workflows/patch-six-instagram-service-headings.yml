@@ -1,0 +1,75 @@
+name: One-shot six Instagram service heading links
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-six-instagram-service-headings.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Guard source and patch six headings
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, subprocess
+
+          p = Path('src/pages/index.md')
+          text = p.read_text(encoding='utf-8')
+          blob = subprocess.check_output(['git','hash-object',str(p)], text=True).strip()
+          assert blob == '37e11e7026941f4e01780b5da6115b856d1d70fd', blob
+
+          target = 'https://www.instagram.com/doctor.ghezelbaash/'
+          specs = [
+              (3, 'mesotherapy-for-skin-pigmentation-and-acne'),
+              (4, 'subcision-for-tethered-acne-scars'),
+              (4, 'acne-scar-resurfacing-microneedling-fractional-laser-and-peeling'),
+              (4, 'hyaluronidase-definition'),
+              (4, 'fat-grafting-is-living-tissue-transfer'),
+              (5, 'botox-for-migraine-search-intent'),
+          ]
+
+          original_ids = re.findall(r'\bid="([^"]+)"', text)
+          original_heading_count = len(re.findall(r'<h[1-6]\b', text))
+
+          for level, id_ in specs:
+              pat = re.compile(rf'<h{level} id="{re.escape(id_)}">([^<]+)</h{level}>')
+              m = list(pat.finditer(text))
+              if len(m) != 1:
+                  raise SystemExit(f'{id_}: expected exactly one unlinked h{level}, found {len(m)}')
+              inner = m[0].group(1)
+              repl = f'<h{level} id="{id_}"><a href="{target}" rel="me external">{inner}</a></h{level}>'
+              text, n = pat.subn(repl, text, count=1)
+              assert n == 1
+
+          assert re.findall(r'\bid="([^"]+)"', text) == original_ids
+          assert len(re.findall(r'<h[1-6]\b', text)) == original_heading_count
+          for level, id_ in specs:
+              exact = f'<h{level} id="{id_}"><a href="{target}" rel="me external">'
+              assert text.count(exact) == 1, id_
+
+          # Final total heading links to the Instagram profile must become 35.
+          heading_links = re.findall(r'<h[1-6][^>]*>\s*<a href="https://www\.instagram\.com/doctor\.ghezelbaash/" rel="me external">', text)
+          assert len(heading_links) == 35, len(heading_links)
+          assert 'nofollow' not in '\n'.join(re.findall(r'<h[1-6][^>]*>.*?</h[1-6]>', text, flags=re.S))
+
+          p.write_text(text, encoding='utf-8')
+          print('PASS: six headings patched; total Instagram profile heading links = 35')
+      - name: Commit
+        run: |
+          git diff --check
+          test "$(git diff --name-only)" = "src/pages/index.md"
+          test "$(git diff --numstat | awk '{print $1}')" = "6"
+          test "$(git diff --numstat | awk '{print $2}')" = "6"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/pages/index.md
+          git commit -m "Expand Instagram service heading coverage"
+          git push origin HEAD:main
