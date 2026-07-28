@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       run_live_audit:
-        description: 'Audit the deployed production site and legacy routes'
+        description: 'Audit the deployed production site and canonical machine surfaces'
         required: true
         type: boolean
         default: true
@@ -83,7 +83,7 @@ jobs:
           fi
           files=$(git diff --name-only "$before" HEAD || true)
           printf '%s\n' "$files"
-          if printf '%s\n' "$files" | grep -Eq '^(src/|public/|astro\.config\.mjs$|package(-lock)?\.json$|\.node-version$)'; then
+          if printf '%s\n' "$files" | grep -Eq '^(src/|public/|astro\.config\.mjs$|package(-lock)?\.json$|\.node-version$|\.github/scripts/|\.github/workflows/validate\.yml$)'; then
             echo 'production=true' >> "$GITHUB_OUTPUT"
           else
             echo 'production=false' >> "$GITHUB_OUTPUT"
@@ -157,8 +157,10 @@ jobs:
 
   lighthouse:
     name: Repeated Mobile Desktop and Agentic Lighthouse audit
-    needs: live
-    if: github.event_name == 'workflow_dispatch' && inputs.run_lighthouse
+    needs: [changes, live]
+    if: >-
+      (github.event_name == 'push' && needs.changes.outputs.production == 'true' && needs.live.result == 'success') ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_lighthouse)
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -192,8 +194,12 @@ jobs:
         run: |
           set -euo pipefail
           args=()
-          [ "${{ inputs.enforce_performance_100 }}" = 'true' ] && args+=(--enforce-performance-100)
-          [ "${{ inputs.enforce_agentic }}" = 'true' ] && args+=(--enforce-agentic)
+          if [ "${{ github.event_name }}" = 'push' ]; then
+            args+=(--enforce-agentic)
+          else
+            [ "${{ inputs.enforce_performance_100 }}" = 'true' ] && args+=(--enforce-performance-100)
+            [ "${{ inputs.enforce_agentic }}" = 'true' ] && args+=(--enforce-agentic)
+          fi
           python3 .github/scripts/evaluate_lighthouse.py --directory live-audit "${args[@]}"
 
       - name: Upload Lighthouse evidence
