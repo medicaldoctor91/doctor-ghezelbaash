@@ -1,0 +1,105 @@
+name: Audit production build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-production-build.yml
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies and build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - uses: browser-actions/setup-chrome@v1
+
+      - name: Run local Lighthouse audits
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes http-server@14.1.1 dist -p 4173 -c-1 >/tmp/http-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid || true' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ --quiet --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/lighthouse-mobile.json
+          npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ --quiet --preset=desktop --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/lighthouse-desktop.json
+
+      - name: Create compact build and performance report
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          node <<'NODE'
+          const fs = require('fs');
+          const zlib = require('zlib');
+          const crypto = require('crypto');
+          const path = require('path');
+          const htmlPath = 'dist/index.html';
+          const html = fs.readFileSync(htmlPath);
+          const text = html.toString('utf8');
+          const mobile = JSON.parse(fs.readFileSync('/tmp/lighthouse-mobile.json','utf8'));
+          const desktop = JSON.parse(fs.readFileSync('/tmp/lighthouse-desktop.json','utf8'));
+          const summarize = lhr => {
+            const cats = Object.fromEntries(Object.entries(lhr.categories).map(([k,v]) => [k, Math.round((v.score ?? 0)*100)]));
+            const metrics = {};
+            for (const id of ['first-contentful-paint','largest-contentful-paint','speed-index','total-blocking-time','cumulative-layout-shift','interactive','server-response-time']) {
+              const a=lhr.audits[id]; if(a) metrics[id]={score:a.score,numericValue:a.numericValue,displayValue:a.displayValue};
+            }
+            const opportunities = Object.values(lhr.audits)
+              .filter(a => a && a.score !== null && a.score < 1 && !['manual','notApplicable'].includes(a.scoreDisplayMode))
+              .map(a => ({id:a.id,title:a.title,score:a.score,numericValue:a.numericValue,displayValue:a.displayValue,description:a.description}))
+              .sort((a,b)=>(a.score??1)-(b.score??1));
+            return {categories:cats,metrics,opportunities};
+          };
+          const inline=[];
+          const re=/<(script|style)(?:\s[^>]*)?>([\s\S]*?)<\/\1>/gi;
+          let m;
+          while((m=re.exec(text))) {
+            const body=m[2]; if(!body.trim()) continue;
+            inline.push({tag:m[1],sha256:`sha256-${crypto.createHash('sha256').update(body).digest('base64')}`,bytes:Buffer.byteLength(body)});
+          }
+          const assets=[];
+          const walk=dir=>{for(const ent of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,ent.name);if(ent.isDirectory())walk(p);else assets.push({path:p.replace(/^dist\//,''),bytes:fs.statSync(p).size});}};
+          walk('dist');
+          const report={
+            generatedAt:new Date().toISOString(),
+            commit:process.env.GITHUB_SHA,
+            html:{bytes:html.length,gzipBytes:zlib.gzipSync(html,{level:9}).length,brotliBytes:zlib.brotliCompressSync(html,{params:{[zlib.constants.BROTLI_PARAM_QUALITY]:11}}).length,sha256:crypto.createHash('sha256').update(html).digest('hex')},
+            counts:{scripts:(text.match(/<script\b/gi)||[]).length,styles:(text.match(/<style\b/gi)||[]).length,stylesheets:(text.match(/<link[^>]+rel=["']stylesheet["']/gi)||[]).length,images:(text.match(/<img\b/gi)||[]).length,videos:(text.match(/<video\b/gi)||[]).length},
+            inline,
+            largestAssets:assets.sort((a,b)=>b.bytes-a.bytes).slice(0,30),
+            mobile:summarize(mobile),
+            desktop:summarize(desktop)
+          };
+          fs.writeFileSync('tmp/production-build-audit.json',JSON.stringify(report,null,2)+'\n');
+          NODE
+
+      - name: Commit package lock and audit report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/audit-production-build.yml
+          git add package-lock.json tmp/production-build-audit.json
+          git commit -m 'Record deterministic production build and Lighthouse audit'
+          git push origin HEAD:main
