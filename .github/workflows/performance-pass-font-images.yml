@@ -1,0 +1,103 @@
+name: Performance pass for font stability and responsive images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/performance-pass-font-images.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Apply verified font and sizes fixes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          head=Path('src/components/DocumentHead.astro')
+          s=head.read_text(encoding='utf-8')
+          marker='<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />\n'
+          preload='<link rel="preload" href="/fonts/vazirmatn-nl-wght.woff2" as="font" type="font/woff2" crossorigin="anonymous" />\n'
+          if preload not in s:
+            if s.count(marker)!=1:raise SystemExit('DocumentHead insertion marker mismatch')
+            s=s.replace(marker,marker+preload,1)
+          head.write_text(s,encoding='utf-8')
+
+          page=Path('src/pages/index.md')
+          s=page.read_text(encoding='utf-8')
+          old='sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"'
+          new='sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"'
+          count=s.count(old)
+          if count!=3:raise SystemExit(f'Expected 3 responsive sizes attributes, found {count}')
+          s=s.replace(old,new)
+          page.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+
+      - name: Build and run local Lighthouse
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          mkdir -p tmp/pass1
+          nohup python3 -m http.server 4173 --directory dist >tmp/pass1/server.log 2>&1 &
+          echo $! > tmp/pass1/server.pid
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --output=json --output-path=tmp/pass1/mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --preset=desktop --output=json --output-path=tmp/pass1/desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          kill $(cat tmp/pass1/server.pid) || true
+
+      - name: Gate improvement and summarize
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          result={}
+          for mode in ('mobile','desktop'):
+            d=json.loads(Path(f'tmp/pass1/{mode}.json').read_text())
+            a=d['audits'];c=d['categories']
+            result[mode]={
+              'categories':{k:round(v['score']*100) for k,v in c.items()},
+              'fcp':a['first-contentful-paint']['numericValue'],
+              'lcp':a['largest-contentful-paint']['numericValue'],
+              'tbt':a['total-blocking-time']['numericValue'],
+              'cls':a['cumulative-layout-shift']['numericValue'],
+              'mainthread':a['mainthread-work-breakdown']['numericValue'],
+              'imageSavings':a.get('image-delivery-insight',{}).get('displayValue'),
+              'layoutShifts':a.get('layout-shifts',{}).get('displayValue'),
+            }
+          result['htmlBytes']=Path('dist/index.html').stat().st_size
+          Path('tmp/performance-pass1.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+          assert result['mobile']['cls'] < 0.02, result
+          assert result['desktop']['cls'] < 0.02, result
+          assert result['mobile']['categories']['accessibility']==100
+          assert result['mobile']['categories']['best-practices']==100
+          assert result['mobile']['categories']['seo']==100
+          assert result['desktop']['categories']['accessibility']==100
+          assert result['desktop']['categories']['best-practices']==100
+          assert result['desktop']['categories']['seo']==100
+          assert result['htmlBytes']<1900000
+          PY
+
+      - name: Commit verified performance pass
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/performance-pass-font-images.yml
+          rm -rf tmp/pass1
+          git add -A
+          git commit -m 'Eliminate font CLS and correct responsive image sizing'
+          git push origin HEAD:main
