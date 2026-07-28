@@ -1,4 +1,4 @@
-name: Add responsive physician images
+name: Finalize confirmed facts and responsive images
 
 on:
   push:
@@ -10,165 +10,437 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: doctor-ghezelbaash-final-facts
+  cancel-in-progress: true
+
 jobs:
-  images:
+  finalize:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+
       - name: Install deterministic image and RDF tooling
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends webp
           python -m pip install --disable-pip-version-check rdflib==7.1.4
-      - name: Generate 640-pixel delivery derivatives
+
+      - name: Generate responsive physician image derivatives
         shell: bash
         run: |
           set -euo pipefail
-          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg -o public/media/images/physician/saeed-ghezelbash-portrait-640.webp
-          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg -o public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp
-          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg -o public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp
-      - name: Wire responsive HTML and Full Graph
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 \
+            public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg \
+            -o public/media/images/physician/saeed-ghezelbash-portrait-640.webp
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 \
+            public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg \
+            -o public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 \
+            public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg \
+            -o public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp
+
+      - name: Apply user-confirmed facts and responsive delivery
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          from pathlib import Path
-          import hashlib, json
-
-          page=Path('src/pages/index.md')
-          s=page.read_text(encoding='utf-8')
-          specs=[
-            ('saeed-ghezelbash-portrait','saeed-ghezelbash-portrait-640.webp'),
-            ('saeed-ghezelbash-clinical-examination','saeed-ghezelbash-in-clinical-office-640.webp'),
-            ('saeed-ghezelbash-with-clinic-team','saeed-ghezelbash-with-clinic-team-640.webp'),
-          ]
-          for legacy,new640 in specs:
-              old=f'srcset="/media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 960px) 100vw, 960px"'
-              new=f'srcset="/media/images/physician/{new640} 640w, /media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"'
-              if s.count(old)!=1: raise SystemExit(f'srcset mismatch {legacy}: {s.count(old)}')
-              s=s.replace(old,new,1)
-              old_img=f'src="/media/images/physician/{legacy}-960.webp"\n      width="960"\n      height="640"'
-              new_img=f'src="/media/images/physician/{new640}"\n      width="640"\n      height="427"'
-              if s.count(old_img)!=1: raise SystemExit(f'img mismatch {legacy}: {s.count(old_img)}')
-              s=s.replace(old_img,new_img,1)
-          page.write_text(s,encoding='utf-8')
-
-          graph_path=Path('public/graph.jsonld')
-          graph=json.loads(graph_path.read_text(encoding='utf-8'))
-          nodes=graph['@graph']
-          byid={n.get('@id'):n for n in nodes if isinstance(n,dict) and n.get('@id')}
-          base='https://www.ghezelbaash.ir/'
-          person=base+'#saeed-ghezelbash'
-          clinic=base+'#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
-          webpage=base+'#webpage'
-          license_url='https://creativecommons.org/licenses/by/4.0/'
-          rows=[
-            {
-              'id':base+'#image-saeed-ghezelbash-portrait-responsive-640',
-              'path':'public/media/images/physician/saeed-ghezelbash-portrait-640.webp',
-              'url':base+'media/images/physician/saeed-ghezelbash-portrait-640.webp',
-              'master':base+'#image-saeed-ghezelbash-portrait-master',
-              'commons':'https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg',
-              'name_fa':'دکتر سعید قزلباش، پزشک ایرانی',
-              'name_en':'Dr. Saeed Ghezelbaash, Iranian physician',
-              'description_fa':'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران.',
-              'description_en':'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white medical coat and stethoscope in a clinical setting in Kermanshah, Iran.',
-              'about':[person]
-            },
-            {
-              'id':base+'#image-saeed-ghezelbash-clinic-team-responsive-640',
-              'path':'public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',
-              'url':base+'media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',
-              'master':base+'#image-saeed-ghezelbash-clinic-team-master',
-              'commons':'https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg',
-              'name_fa':'سعید قزلباش همراه اعضای تیم بالینی',
-              'name_en':'Saeed Ghezelbaash with members of his clinical team',
-              'description_fa':'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران.',
-              'description_en':'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran.',
-              'about':[person,clinic]
-            },
-            {
-              'id':base+'#image-saeed-ghezelbash-clinical-office-responsive-640',
-              'path':'public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',
-              'url':base+'media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',
-              'master':base+'#image-saeed-ghezelbash-clinical-office-master',
-              'commons':'https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg',
-              'name_fa':'سعید قزلباش در محیط بالینی',
-              'name_en':'Saeed Ghezelbaash in a clinical office',
-              'description_fa':'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران.',
-              'description_en':'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope.',
-              'about':[person,clinic]
-            },
-          ]
-          for row in rows:
-              if row['id'] in byid: raise SystemExit('duplicate planned node '+row['id'])
-              p=Path(row['path']); data=p.read_bytes()
-              node={
-                '@id':row['id'],'@type':'ImageObject',
-                'name':[{'@value':row['name_fa'],'@language':'fa'},{'@value':row['name_en'],'@language':'en'}],
-                'caption':[{'@value':row['name_fa'],'@language':'fa'},{'@value':row['name_en'],'@language':'en'}],
-                'description':[{'@value':row['description_fa'],'@language':'fa'},{'@value':row['description_en'],'@language':'en'}],
-                'contentUrl':row['url'],'encodingFormat':'image/webp','width':640,'height':427,
-                'contentSize':f'{len(data)} bytes','sha256':hashlib.sha256(data).hexdigest(),
-                'about':[{'@id':x} for x in row['about']],
-                'creator':{'@id':person},'copyrightHolder':{'@id':person},
-                'creditText':'Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0',
-                'copyrightNotice':'© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0.',
-                'license':license_url,'acquireLicensePage':row['commons'],
-                'dateCreated':'2023-05-29','representativeOfPage':False,
-                'isBasedOn':{'@id':row['master']},'isPartOf':{'@id':webpage}
-              }
-              nodes.append(node); byid[row['id']]=node
-              master=byid.get(row['master'])
-              if not master: raise SystemExit('missing master '+row['master'])
-              enc=master.setdefault('encoding',[])
-              if isinstance(enc,dict): enc=[enc]; master['encoding']=enc
-              enc.append({'@id':row['id']})
-          graph_path.write_text(json.dumps(graph,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
-
-          headers=Path('public/_headers'); hs=headers.read_text(encoding='utf-8')
-          marker='/media/images/physician/saeed-ghezelbash-clinical-examination-*\n  Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license"\n'
-          extra=marker+'\n/media/images/physician/saeed-ghezelbash-in-clinical-office-*\n  Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license"\n'
-          if hs.count(marker)!=1: raise SystemExit('headers office marker mismatch')
-          headers.write_text(hs.replace(marker,extra,1),encoding='utf-8')
-          PY
-      - name: Regenerate Turtle and validate Graph equivalence
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          from rdflib import Graph
           from pathlib import Path
           import hashlib
-          g=Graph().parse('public/graph.jsonld',format='json-ld')
-          nt=sorted(line for line in g.serialize(format='nt').splitlines() if line.strip())
-          canonical=('\n'.join(nt)+'\n').encode()
-          source=Path('public/graph.jsonld').read_bytes()
-          ttl=g.serialize(format='turtle')
-          header=(f'# Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld\n'
-                  f'# Source SHA-256: {hashlib.sha256(source).hexdigest()}\n'
-                  f'# RDF triples: {len(g)}\n'
-                  f'# Canonical sorted N-Triples SHA-256: {hashlib.sha256(canonical).hexdigest()}\n\n')
-          Path('public/graph.ttl').write_text(header+ttl,encoding='utf-8')
-          g2=Graph().parse('public/graph.ttl',format='turtle')
-          assert len(g)==len(g2)
+          import json
+
+          ROOT = 'https://www.ghezelbaash.ir/'
+          PERSON = ROOT + '#saeed-ghezelbash'
+          CLINIC = ROOT + '#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          WEBPAGE = ROOT + '#webpage'
+          COURSE = ROOT + '#advanced-thread-lift-workshop-course'
+          ARTICLE_2021 = ROOT + '#article-mdd-attachment-dissociation-trauma-2021'
+          PRESENTATION_2017 = ROOT + '#presentation-attachment-style-dissociative-depression-2017'
+          LICENSE = 'https://creativecommons.org/licenses/by/4.0/'
+
+          def type_list(node):
+              value = node.get('@type', [])
+              if isinstance(value, str):
+                  return [value]
+              return list(value)
+
+          def set_types(node, values):
+              values = list(dict.fromkeys(values))
+              node['@type'] = values[0] if len(values) == 1 else values
+
+          def ref_ids(value):
+              if value is None:
+                  return []
+              if not isinstance(value, list):
+                  value = [value]
+              out = []
+              for item in value:
+                  if isinstance(item, dict) and item.get('@id'):
+                      out.append(item['@id'])
+                  elif isinstance(item, str):
+                      out.append(item)
+              return out
+
+          def set_about(node, ids):
+              existing = ref_ids(node.get('about'))
+              merged = list(dict.fromkeys(existing + ids))
+              node['about'] = [{'@id': value} for value in merged]
+
+          def patch_confirmed_facts(doc, label):
+              graph = doc.get('@graph', [])
+              nodes = {n.get('@id'): n for n in graph if isinstance(n, dict) and n.get('@id')}
+
+              person = nodes.get(PERSON)
+              clinic = nodes.get(CLINIC)
+              course = nodes.get(COURSE)
+              if not person or not clinic or not course:
+                  raise SystemExit(f'{label}: missing Person, Clinic, or Course node')
+
+              # User-confirmed premium positioning. IndividualPhysician and MedicalClinic
+              # are LocalBusiness-derived types, so priceRange is valid on both nodes.
+              person['priceRange'] = '$$$$'
+              clinic['priceRange'] = '$$$$'
+
+              # The clinic is the formal provider; Dr. Ghezelbaash remains the instructor.
+              course['provider'] = {'@id': CLINIC}
+              course.pop('instructor', None)
+
+              instance_ids = ref_ids(course.get('hasCourseInstance'))
+              if not instance_ids:
+                  for node in graph:
+                      if not isinstance(node, dict):
+                          continue
+                      if 'CourseInstance' not in type_list(node):
+                          continue
+                      linked = set(ref_ids(node.get('isPartOf')) + ref_ids(node.get('about')) + ref_ids(node.get('superEvent')))
+                      if COURSE in linked or 'thread-lift' in node.get('@id', ''):
+                          instance_ids.append(node['@id'])
+              for instance_id in dict.fromkeys(instance_ids):
+                  instance = nodes.get(instance_id)
+                  if instance:
+                      instance['instructor'] = {'@id': PERSON}
+
+              # The office photograph was taken in this clinic. Apply the Clinic relation
+              # to the master and all first-party derivatives, including the legacy URL.
+              office_count = 0
+              for node in graph:
+                  if not isinstance(node, dict) or 'ImageObject' not in type_list(node):
+                      continue
+                  node_id = node.get('@id', '')
+                  content_url = node.get('contentUrl', '')
+                  if any(token in node_id or token in content_url for token in (
+                      'clinical-office', 'clinical-examination', 'in-clinical-office'
+                  )):
+                      set_about(node, [PERSON, CLINIC])
+                      office_count += 1
+
+              # Keep the 2021 item as a published scholarly article and the 2017 item
+              # as a congress presentation. Do not manufacture an image for either.
+              article = nodes.get(ARTICLE_2021)
+              if article:
+                  types = [t for t in type_list(article) if t != 'PresentationDigitalDocument']
+                  if 'ScholarlyArticle' not in types:
+                      types.append('ScholarlyArticle')
+                  set_types(article, types)
+
+              presentation = nodes.get(PRESENTATION_2017)
+              if presentation:
+                  types = [t for t in type_list(presentation) if t not in ('ScholarlyArticle', 'MedicalScholarlyArticle')]
+                  if 'PresentationDigitalDocument' not in types:
+                      types.append('PresentationDigitalDocument')
+                  set_types(presentation, types)
+                  presentation['author'] = {'@id': PERSON}
+                  presentation['creator'] = {'@id': PERSON}
+
+              if label == 'Full Graph' and office_count == 0:
+                  raise SystemExit('Full Graph: no office ImageObject matched')
+
+              return {
+                  'instances': len(set(instance_ids)),
+                  'officeImages': office_count,
+                  'hasArticle2021': bool(article),
+                  'hasPresentation2017': bool(presentation),
+              }
+
+          # Wire responsive HTML idempotently.
+          page = Path('src/pages/index.md')
+          html = page.read_text(encoding='utf-8')
+          specs = [
+              ('saeed-ghezelbash-portrait', 'saeed-ghezelbash-portrait-640.webp'),
+              ('saeed-ghezelbash-clinical-examination', 'saeed-ghezelbash-in-clinical-office-640.webp'),
+              ('saeed-ghezelbash-with-clinic-team', 'saeed-ghezelbash-with-clinic-team-640.webp'),
+          ]
+          for legacy, new640 in specs:
+              old_srcset = (
+                  f'srcset="/media/images/physician/{legacy}-960.webp 960w, '
+                  f'/media/images/physician/{legacy}-1600.webp 1600w"\n'
+                  '      sizes="(max-width: 960px) 100vw, 960px"'
+              )
+              new_srcset = (
+                  f'srcset="/media/images/physician/{new640} 640w, '
+                  f'/media/images/physician/{legacy}-960.webp 960w, '
+                  f'/media/images/physician/{legacy}-1600.webp 1600w"\n'
+                  '      sizes="(max-width: 720px) calc(100vw - 2.75rem), '
+                  '(max-width: 960px) calc(100vw - 4rem), 960px"'
+              )
+              if new_srcset not in html:
+                  if old_srcset not in html:
+                      raise SystemExit(f'Unexpected srcset state for {legacy}')
+                  html = html.replace(old_srcset, new_srcset, 1)
+
+              old_img = (
+                  f'src="/media/images/physician/{legacy}-960.webp"\n'
+                  '      width="960"\n'
+                  '      height="640"'
+              )
+              new_img = (
+                  f'src="/media/images/physician/{new640}"\n'
+                  '      width="640"\n'
+                  '      height="427"'
+              )
+              if new_img not in html:
+                  if old_img not in html:
+                      raise SystemExit(f'Unexpected img state for {legacy}')
+                  html = html.replace(old_img, new_img, 1)
+          page.write_text(html, encoding='utf-8')
+
+          # Patch Full and Head graphs with the confirmed facts.
+          graph_paths = [
+              (Path('public/graph.jsonld'), 'Full Graph'),
+              (Path('src/data/semantic/head-graph.min.jsonld'), 'Head Graph'),
+          ]
+          reports = {}
+          documents = {}
+          for path, label in graph_paths:
+              doc = json.loads(path.read_text(encoding='utf-8'))
+              reports[label] = patch_confirmed_facts(doc, label)
+              documents[label] = doc
+              path.write_text(json.dumps(doc, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+
+          # Add/update the 640 px ImageObjects in Full Graph only.
+          full = documents['Full Graph']
+          graph = full['@graph']
+          by_id = {n.get('@id'): n for n in graph if isinstance(n, dict) and n.get('@id')}
+          rows = [
+              {
+                  'id': ROOT + '#image-saeed-ghezelbash-portrait-responsive-640',
+                  'path': 'public/media/images/physician/saeed-ghezelbash-portrait-640.webp',
+                  'url': ROOT + 'media/images/physician/saeed-ghezelbash-portrait-640.webp',
+                  'master': ROOT + '#image-saeed-ghezelbash-portrait-master',
+                  'commons': 'https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg',
+                  'name_fa': 'دکتر سعید قزلباش، پزشک ایرانی',
+                  'name_en': 'Dr. Saeed Ghezelbaash, Iranian physician',
+                  'description_fa': 'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران.',
+                  'description_en': 'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white medical coat and stethoscope in a clinical setting in Kermanshah, Iran.',
+                  'about': [PERSON],
+              },
+              {
+                  'id': ROOT + '#image-saeed-ghezelbash-clinic-team-responsive-640',
+                  'path': 'public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',
+                  'url': ROOT + 'media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',
+                  'master': ROOT + '#image-saeed-ghezelbash-clinic-team-master',
+                  'commons': 'https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg',
+                  'name_fa': 'سعید قزلباش همراه اعضای تیم بالینی',
+                  'name_en': 'Saeed Ghezelbaash with members of his clinical team',
+                  'description_fa': 'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران.',
+                  'description_en': 'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran.',
+                  'about': [PERSON, CLINIC],
+              },
+              {
+                  'id': ROOT + '#image-saeed-ghezelbash-clinical-office-responsive-640',
+                  'path': 'public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',
+                  'url': ROOT + 'media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',
+                  'master': ROOT + '#image-saeed-ghezelbash-clinical-office-master',
+                  'commons': 'https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg',
+                  'name_fa': 'سعید قزلباش در محیط بالینی',
+                  'name_en': 'Saeed Ghezelbaash in a clinical office',
+                  'description_fa': 'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران.',
+                  'description_en': 'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope.',
+                  'about': [PERSON, CLINIC],
+              },
+          ]
+          for row in rows:
+              path = Path(row['path'])
+              data = path.read_bytes()
+              node = by_id.get(row['id'])
+              if node is None:
+                  node = {'@id': row['id']}
+                  graph.append(node)
+                  by_id[row['id']] = node
+              node.update({
+                  '@type': 'ImageObject',
+                  'name': [
+                      {'@value': row['name_fa'], '@language': 'fa'},
+                      {'@value': row['name_en'], '@language': 'en'},
+                  ],
+                  'caption': [
+                      {'@value': row['name_fa'], '@language': 'fa'},
+                      {'@value': row['name_en'], '@language': 'en'},
+                  ],
+                  'description': [
+                      {'@value': row['description_fa'], '@language': 'fa'},
+                      {'@value': row['description_en'], '@language': 'en'},
+                  ],
+                  'contentUrl': row['url'],
+                  'encodingFormat': 'image/webp',
+                  'width': 640,
+                  'height': 427,
+                  'contentSize': f'{len(data)} bytes',
+                  'sha256': hashlib.sha256(data).hexdigest(),
+                  'about': [{'@id': value} for value in row['about']],
+                  'creator': {'@id': PERSON},
+                  'copyrightHolder': {'@id': PERSON},
+                  'creditText': 'Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0',
+                  'copyrightNotice': '© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0.',
+                  'license': LICENSE,
+                  'acquireLicensePage': row['commons'],
+                  'dateCreated': '2023-05-29',
+                  'representativeOfPage': False,
+                  'isBasedOn': {'@id': row['master']},
+                  'isPartOf': {'@id': WEBPAGE},
+              })
+              master = by_id.get(row['master'])
+              if not master:
+                  raise SystemExit('Missing image master ' + row['master'])
+              encoding = master.setdefault('encoding', [])
+              if isinstance(encoding, dict):
+                  encoding = [encoding]
+                  master['encoding'] = encoding
+              if row['id'] not in ref_ids(encoding):
+                  encoding.append({'@id': row['id']})
+
+          Path('public/graph.jsonld').write_text(
+              json.dumps(full, ensure_ascii=False, separators=(',', ':')),
+              encoding='utf-8',
+          )
+
+          # Add the explicit response metadata for the new office derivative family.
+          headers = Path('public/_headers')
+          header_text = headers.read_text(encoding='utf-8')
+          office_header = (
+              '/media/images/physician/saeed-ghezelbash-in-clinical-office-*\n'
+              '  Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", '
+              '<https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", '
+              '</graph.jsonld>; rel="describedby"; type="application/ld+json", '
+              '<https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", '
+              '<https://creativecommons.org/licenses/by/4.0/>; rel="license"\n'
+          )
+          if '/media/images/physician/saeed-ghezelbash-in-clinical-office-*' not in header_text:
+              marker = (
+                  '/media/images/physician/saeed-ghezelbash-clinical-examination-*\n'
+                  '  Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", '
+                  '<https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", '
+                  '</graph.jsonld>; rel="describedby"; type="application/ld+json", '
+                  '<https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", '
+                  '<https://creativecommons.org/licenses/by/4.0/>; rel="license"\n'
+              )
+              if marker not in header_text:
+                  raise SystemExit('Office header insertion point not found')
+              header_text = header_text.replace(marker, marker + '\n' + office_header, 1)
+              headers.write_text(header_text, encoding='utf-8')
+
+          print(json.dumps(reports, ensure_ascii=False, indent=2))
           PY
+
+      - name: Regenerate Turtle and validate semantic invariants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from rdflib import Graph
+          import hashlib
+          import json
+
+          ROOT = 'https://www.ghezelbaash.ir/'
+          PERSON = ROOT + '#saeed-ghezelbash'
+          CLINIC = ROOT + '#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          COURSE = ROOT + '#advanced-thread-lift-workshop-course'
+          ARTICLE_2021 = ROOT + '#article-mdd-attachment-dissociation-trauma-2021'
+          PRESENTATION_2017 = ROOT + '#presentation-attachment-style-dissociative-depression-2017'
+
+          def types(node):
+              value = node.get('@type', [])
+              return [value] if isinstance(value, str) else list(value)
+
+          def ids(value):
+              if value is None:
+                  return []
+              if not isinstance(value, list):
+                  value = [value]
+              return [x.get('@id') for x in value if isinstance(x, dict) and x.get('@id')]
+
+          docs = {}
+          for path in ('public/graph.jsonld', 'src/data/semantic/head-graph.min.jsonld'):
+              doc = json.loads(Path(path).read_text(encoding='utf-8'))
+              by_id = {n.get('@id'): n for n in doc.get('@graph', []) if isinstance(n, dict) and n.get('@id')}
+              docs[path] = by_id
+              assert by_id[PERSON]['priceRange'] == '$$$$'
+              assert by_id[CLINIC]['priceRange'] == '$$$$'
+              assert by_id[COURSE]['provider']['@id'] == CLINIC
+              assert 'instructor' not in by_id[COURSE]
+              if ARTICLE_2021 in by_id:
+                  assert 'ScholarlyArticle' in types(by_id[ARTICLE_2021])
+                  assert 'PresentationDigitalDocument' not in types(by_id[ARTICLE_2021])
+              if PRESENTATION_2017 in by_id:
+                  assert 'PresentationDigitalDocument' in types(by_id[PRESENTATION_2017])
+                  assert 'ScholarlyArticle' not in types(by_id[PRESENTATION_2017])
+
+          full_ids = set(docs['public/graph.jsonld'])
+          head_ids = set(docs['src/data/semantic/head-graph.min.jsonld'])
+          missing = sorted(head_ids - full_ids)
+          assert not missing, f'Head nodes absent from Full Graph: {missing[:10]}'
+
+          full_doc = Path('public/graph.jsonld')
+          source = full_doc.read_bytes()
+          graph = Graph().parse(data=source.decode('utf-8'), format='json-ld')
+          nt = sorted(line for line in graph.serialize(format='nt').splitlines() if line.strip())
+          canonical = ('\n'.join(nt) + '\n').encode('utf-8')
+          turtle = graph.serialize(format='turtle')
+          header = (
+              '# Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld\n'
+              f'# Source SHA-256: {hashlib.sha256(source).hexdigest()}\n'
+              f'# RDF triples: {len(graph)}\n'
+              f'# Canonical sorted N-Triples SHA-256: {hashlib.sha256(canonical).hexdigest()}\n\n'
+          )
+          Path('public/graph.ttl').write_text(header + turtle, encoding='utf-8')
+          check = Graph().parse('public/graph.ttl', format='turtle')
+          assert len(graph) == len(check)
+          PY
+
           python -m json.tool public/graph.jsonld >/dev/null
+          python -m json.tool src/data/semantic/head-graph.min.jsonld >/dev/null
           grep -q 'saeed-ghezelbash-in-clinical-office-640.webp' src/pages/index.md
           grep -q 'image-saeed-ghezelbash-clinical-office-responsive-640' public/graph.jsonld
           git diff --check
-      - name: Commit responsive images and remove workflow
+
+      - name: Build production output
         run: |
-          git config user.name 'github-actions[bot]'
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Commit finalized source and remove one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'OpenAI Project Automation'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/add-responsive-physician-images.yml
-          rm -f tmp/hardened-live-audit.json
+          rm -f tmp/hardened-live-audit.json tmp/mobile-render-profile.json tmp/psi-live-latest.json
           git add -A
-          git commit -m 'Add responsive physician image derivatives and provenance'
+          git commit -m 'Finalize premium pricing, course provider, research types, and responsive media'
+          git pull --rebase origin main
           git push origin HEAD:main
