@@ -1,0 +1,29 @@
+name: Apply paragraph social links PR
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.ref == 'apply-paragraph-social-links'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Apply validated paragraph links
+        run: python3 scripts/apply-paragraph-social-links.py
+      - name: Commit paragraph links to PR branch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/pages/index.md paragraph-social-links-report.txt
+          git diff --cached --quiet && { echo "No changes"; exit 1; }
+          git commit -m "Add cross-section paragraph links to social headings"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
