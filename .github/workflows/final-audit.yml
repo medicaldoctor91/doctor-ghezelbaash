@@ -36,7 +36,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add tmp/final-audit-run-id.txt
-          git commit -m 'Record final audit run identifier [skip ci]'
+          git commit -m 'Record final audit run identifier'
           git push origin HEAD:main
           audited_sha=$(git rev-parse HEAD)
           echo "audited_sha=$audited_sha" >> "$GITHUB_OUTPUT"
