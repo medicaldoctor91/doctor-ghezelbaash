@@ -1,0 +1,59 @@
+name: Diagnose and apply semantic release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/diagnose-and-apply-release.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply release with captured diagnostics
+        shell: bash
+        run: |
+          set +e
+          mkdir -p /tmp/ghezelbaash-release tmp
+          exec > >(tee tmp/release-diagnostic.log) 2>&1
+          echo "release-start $(date -u +%FT%TZ)"
+          cat .github/release-bundle/part-* | base64 --decode | tar -xzf - -C /tmp/ghezelbaash-release
+          rc=$?
+          if [ "$rc" -eq 0 ]; then python -m py_compile /tmp/ghezelbaash-release/*.py; rc=$?; fi
+          if [ "$rc" -eq 0 ]; then python -m pip install --disable-pip-version-check rdflib==7.1.4; rc=$?; fi
+          if [ "$rc" -eq 0 ]; then python /tmp/ghezelbaash-release/transform_graph.py; rc=$?; fi
+          if [ "$rc" -eq 0 ]; then python /tmp/ghezelbaash-release/transform_head.py; rc=$?; fi
+          if [ "$rc" -eq 0 ]; then python /tmp/ghezelbaash-release/patch_site_files.py; rc=$?; fi
+          if [ "$rc" -eq 0 ]; then python /tmp/ghezelbaash-release/regenerate_ttl.py; rc=$?; fi
+          echo "release-exit-code $rc"
+          echo "$rc" > tmp/release-exit-code.txt
+          exit 0
+
+      - name: Commit success or diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          rc="$(cat tmp/release-exit-code.txt)"
+          git rm .github/workflows/diagnose-and-apply-release.yml
+          if [ "$rc" = "0" ]; then
+            git rm -f .github/workflows/apply-semantic-release.yml
+            git rm -r .github/release-bundle
+            rm -f tmp/identity-assets-metadata.json tmp/trigger-semantic-release.txt tmp/release-exit-code.txt tmp/release-diagnostic.log
+            git add -A
+            git commit -m 'Upgrade physician identity graph, image provenance, Head schema, and delivery metadata'
+          else
+            rm -f tmp/release-exit-code.txt
+            git add tmp/release-diagnostic.log
+            git commit -m 'Record semantic release diagnostic failure'
+          fi
+          git push origin HEAD:main
