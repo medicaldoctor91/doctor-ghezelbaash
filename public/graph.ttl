@@ -1,7 +1,7 @@
 # Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld
-# Source SHA-256: 886aaff8643e3bd38188185baeec371ba93c18b8c112e8a2e75a6b07efe0c206
-# RDF triples: 6724
-# Canonical sorted N-Triples SHA-256: cec8798dbd7b1b2dea86a1e54eb5f862a6035a25195a98768394ff286be67d50
+# Source SHA-256: 07bdaa99edb42a4246c07fb67823a0ab1336447633969208243f93ac4fce3770
+# RDF triples: 6729
+# Canonical sorted N-Triples SHA-256: 55dc06286d5c758632671560950f785717c0fa650c6fda71a5bbc37c24f05823
 
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -10,8 +10,7 @@
 
 <https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-course> a schema:Course ;
     schema:about <https://www.ghezelbaash.ir/#procedure-thread-lift> ;
-    schema:description "Advanced thread-lift workshop provided and taught by Dr. Saeed Ghezelbaash in Tehran for aesthetic practitioners from across Iran."@en,
-        "ورکشاپ پیشرفته لیفت نخ دکتر سعید قزلباش، برگزارشده در بهمن ۱۴۰۳ در تهران برای متخصصان زیبایی از سراسر ایران."@fa ;
+    schema:description "در ورکشاپ لیفت نخ، آموزش دکتر سعید قزلباش بر انتخاب درست بیمار، آناتومی، نواحی پرخطر، وزن بافت، جهت افتادگی، ضخامت پوست، تکیه‌گاه استخوانی، طراحی وکتور، مدیریت عارضه و اصلاح نتیجه تمرکز دارد؛ تکنیک فقط زمانی ارزشمند است که بر تشخیص و انتخاب درست بیمار استوار باشد." ;
     schema:hasCourseInstance <https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11> ;
     schema:instructor <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:name "Advanced Thread Lift Workshop"@en,
@@ -19,14 +18,14 @@
     schema:provider <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> a schema:Event ;
-    schema:description "WPA XVII World Congress of Psychiatry, held at Messe Berlin from 8–12 October 2017 under the theme “Psychiatry of the 21st Century: Context, Controversies and Commitment”." ;
+    schema:description "WPA XVII World Congress of Psychiatry, held in Berlin from 8 to 12 October 2017 under the theme “Psychiatry of the 21st Century: Context, Controversies and Commitment”." ;
     schema:endDate "2017-10-12" ;
     schema:eventAttendanceMode schema:OfflineEventAttendanceMode ;
     schema:eventStatus schema:EventCompleted ;
     schema:location <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> ;
     schema:name "WPA XVII World Congress of Psychiatry" ;
-    schema:organizer <https://www.ghezelbaash.ir/#organization-dgppn>,
-        <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> ;
+    schema:organizer <https://www.ghezelbaash.ir/#dgppn>,
+        <https://www.ghezelbaash.ir/#world-psychiatric-association> ;
     schema:sameAs <https://www.wikidata.org/entity/Q140307274> ;
     schema:startDate "2017-10-08" ;
     schema:url <https://wpaberlin2017.com/> ;
@@ -60,6 +59,18 @@
     schema:observationAbout <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> ;
     schema:observationDate "2026-07-25" ;
     schema:value 5e+00 .
+
+<https://www.ghezelbaash.ir/#organization-dgppn> a schema:Organization ;
+    schema:alternateName "DGPPN",
+        "Deutsche Gesellschaft für Psychiatrie und Psychotherapie, Psychosomatik und Nervenheilkunde" ;
+    schema:name "German Association for Psychiatry, Psychotherapy and Psychosomatics" ;
+    schema:url <https://www.dgppn.de/> .
+
+<https://www.ghezelbaash.ir/#organization-world-psychiatric-association> a schema:Organization ;
+    schema:alternateName "WPA" ;
+    schema:name "World Psychiatric Association" ;
+    schema:sameAs <https://www.wikidata.org/entity/Q1645764> ;
+    schema:url <https://www.wpanet.org/> .
 
 <https://www.ghezelbaash.ir/#review-kurdish-patient-experience> a schema:Review ;
     prov:wasDerivedFrom <https://www.ghezelbaash.ir/#video-kurdish-patient-experience> ;
@@ -1273,6 +1284,11 @@
     schema:subjectOf <https://www.ghezelbaash.ir/#evidence-irimc>,
         <https://www.ghezelbaash.ir/#evidence-wikidata-doctor> .
 
+<https://www.ghezelbaash.ir/#dgppn> a schema:Organization ;
+    schema:alternateName "DGPPN" ;
+    schema:name "German Association for Psychiatry, Psychotherapy and Psychosomatics" ;
+    schema:url <https://www.dgppn.de/> .
+
 <https://www.ghezelbaash.ir/#district-1-kermanshah> a schema:AdministrativeArea ;
     schema:alternateName "District 1",
         "District 1 (Kermanshah)" ;
@@ -1866,18 +1882,6 @@
     schema:contactType "initial aesthetic consultation" ;
     schema:telephone "+989308209494" .
 
-<https://www.ghezelbaash.ir/#organization-dgppn> a schema:Organization ;
-    schema:alternateName "DGPPN",
-        "Deutsche Gesellschaft für Psychiatrie und Psychotherapie, Psychosomatik und Nervenheilkunde" ;
-    schema:name "German Association for Psychiatry, Psychotherapy and Psychosomatics" ;
-    schema:url <https://www.dgppn.de/> .
-
-<https://www.ghezelbaash.ir/#organization-world-psychiatric-association> a schema:Organization ;
-    schema:alternateName "WPA" ;
-    schema:name "World Psychiatric Association" ;
-    schema:sameAs <https://www.wikidata.org/entity/Q1645764> ;
-    schema:url <https://www.wpanet.org/> .
-
 <https://www.ghezelbaash.ir/#out-of-town-aesthetic-patients-iran> a schema:WebPageElement ;
     schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
         <https://www.ghezelbaash.ir/#historical-patient-origin-summary>,
@@ -2409,6 +2413,11 @@
         "دکتر سعید قزلباش"@fa ;
     schema:publisher <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:url <https://www.ghezelbaash.ir/> .
+
+<https://www.ghezelbaash.ir/#world-psychiatric-association> a schema:Organization ;
+    schema:name "World Psychiatric Association" ;
+    schema:sameAs <https://www.wikidata.org/entity/Q1683009> ;
+    schema:url <https://www.wpanet.org/> .
 
 <https://www.ghezelbaash.ir/graph.jsonld#download> a schema:DataDownload ;
     schema:contentUrl <https://www.ghezelbaash.ir/graph.jsonld> ;
@@ -6237,8 +6246,7 @@
 
 <https://www.ghezelbaash.ir/#country-iraq> a schema:Country ;
     schema:identifier "IQ" ;
-    schema:name "IQ",
-        "Iraq"@en,
+    schema:name "Iraq"@en,
         "عراق"@fa ;
     schema:sameAs <https://www.wikidata.org/entity/Q796> .
 
@@ -6660,8 +6668,7 @@
 
 <https://www.ghezelbaash.ir/#country-iran> a schema:Country ;
     schema:identifier "IR" ;
-    schema:name "IR",
-        "Iran"@en,
+    schema:name "Iran"@en,
         "ایران"@fa ;
     schema:sameAs <https://www.wikidata.org/entity/Q794> .
 
