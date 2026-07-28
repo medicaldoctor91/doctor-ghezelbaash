@@ -13,11 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Checkout exact PR source
+      - name: Checkout exact main source
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 1
           lfs: true
+
+      - name: Set up exact project Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
 
       - name: Build conservative publication-only source tree
         shell: bash
@@ -84,30 +90,37 @@ jobs:
             echo '# Clean source export report'
             echo
             echo "- Source repository: medicaldoctor91/doctor-ghezelbaash"
-            echo "- Source ref: $GITHUB_SHA"
+            echo "- Source branch: main"
+            echo "- Source commit: $(git rev-parse HEAD)"
             echo "- Original tracked files: $original_count"
             echo "- Kept files: $kept_count"
             echo "- Removed files: $removed_count"
             echo '- Policy: preserve runtime source, public assets, package/build configuration, lockfiles, Cloudflare/Astro configuration, and Git metadata controls; remove audits, reports, internal instructions, development tooling, tests, backups, caches, generated output, and environment files.'
           } > "$report_dir/CLEANUP-REPORT.md"
 
-      - name: Validate clean tree with a production build
+      - name: Validate clean tree with exact production toolchain
         shell: bash
         run: |
           set -uo pipefail
           export_dir="$RUNNER_TEMP/clean-source"
           report_dir="$RUNNER_TEMP/export-report"
+          npm_prefix="$RUNNER_TEMP/npm-global"
           cd "$export_dir"
           : > "$report_dir/build.log"
 
+          original_lock=0
+          [[ -f package-lock.json ]] && original_lock=1
+
           set +e
           {
-            corepack disable || true
-            npm install --global npm@11.16.0
+            npm install --global npm@11.16.0 --prefix "$npm_prefix"
+            export PATH="$npm_prefix/bin:$PATH"
+            echo "Node: $(node --version)"
+            echo "npm: $(npm --version)"
             if [[ -f package-lock.json ]]; then
               npm ci
             else
-              npm install --package-lock=false
+              npm install
             fi
             npm run build
           } > >(tee "$report_dir/build.log") 2>&1
@@ -116,9 +129,12 @@ jobs:
 
           printf '%s\n' "$status" > "$report_dir/build-exit-code.txt"
           rm -rf node_modules dist .astro .cache coverage
+          if [[ "$original_lock" -eq 0 ]]; then
+            rm -f package-lock.json
+          fi
 
           if [[ "$status" -eq 0 ]]; then
-            echo '- Validation: production build succeeded.' >> "$report_dir/CLEANUP-REPORT.md"
+            echo '- Validation: production build succeeded with Node 24.18.0 and npm 11.16.0.' >> "$report_dir/CLEANUP-REPORT.md"
           else
             echo "- Validation: production build failed with exit code $status; inspect build.log." >> "$report_dir/CLEANUP-REPORT.md"
           fi
