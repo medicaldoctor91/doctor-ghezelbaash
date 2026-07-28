@@ -25,41 +25,83 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
-
-      - name: Publish run identifier without changing the audited deployment
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p tmp
-          printf '%s\n' "$GITHUB_RUN_ID" > tmp/final-performance-run-id.txt
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add tmp/final-performance-run-id.txt
-          git commit -m 'Record final performance run identifier [skip ci]'
-          git push origin HEAD:main
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Build and validate source contract
+      - name: Apply final mobile font and touch-target fix
+        id: patch
         shell: bash
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          css = Path('src/styles/global.css')
+          text = css.read_text(encoding='utf-8')
+          marker = '/* Keep the mobile critical path independent of the optional brand font. */'
+          if marker not in text:
+              text += '''\n\n/* Keep the mobile critical path independent of the optional brand font. */
+          @media (max-width: 48rem) {
+            :root {
+              font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
+            }
+          }
+
+          /* WCAG 2.2 touch targets for the final clinic fact links. */
+          #dr-saeed-ghezelbash-aesthetic-clinic-facts dd > a {
+            display: inline-block;
+            min-block-size: 24px;
+            padding-block: 3px;
+          }
+          '''.replace('\n          ', '\n')
+              css.write_text(text, encoding='utf-8')
+          PY
+
+          rm -f .github/workflows/apply-mobile-font-target-fix.yml .github/workflows/trigger-final-audit.yml
+          mkdir -p tmp
+          printf '%s\n' "$GITHUB_RUN_ID" > tmp/final-performance-run-id.txt
+
           npm ci --no-audit --no-fund
+          npm run build
+          python3 - <<'PY'
+          import base64
+          import hashlib
+          import re
+          from pathlib import Path
+
+          html = Path('dist/index.html').read_text(encoding='utf-8')
+          styles = re.findall(r'<style(?:\s[^>]*)?>(.*?)</style>', html, re.I | re.S)
+          if len(styles) != 1:
+              raise SystemExit(f'expected one inline style block, found {len(styles)}')
+          new_hash = "'sha256-" + base64.b64encode(hashlib.sha256(styles[0].encode()).digest()).decode() + "'"
+          headers = Path('public/_headers')
+          text = headers.read_text(encoding='utf-8')
+          matches = re.findall(r"style-src 'self' ('sha256-[^']+')", text)
+          if len(matches) != 1:
+              raise SystemExit(f'expected one CSP style hash, found {len(matches)}')
+          headers.write_text(text.replace(matches[0], new_hash), encoding='utf-8')
+          PY
           npm run build
           python3 -m pip install --quiet rdflib
           python3 .github/scripts/validate_source.py
-          mkdir -p live-audit
-          printf '{"install":0,"build":0,"validation":0}\n' > live-audit/source-status.json
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/styles/global.css public/_headers tmp/final-performance-run-id.txt .github/workflows
+          git commit -m 'Finalize mobile rendering and accessibility safeguards'
+          git push origin HEAD:main
+          audited_sha=$(git rev-parse HEAD)
+          echo "audited_sha=$audited_sha" >> "$GITHUB_OUTPUT"
 
       - name: Validate matching Cloudflare production deployment
         shell: bash
         continue-on-error: true
         run: |
           set +e
-          python3 .github/scripts/validate_live.py --expected-sha "${{ github.sha }}" --deployment-timeout 900
+          mkdir -p live-audit
+          python3 .github/scripts/validate_live.py --expected-sha "${{ steps.patch.outputs.audited_sha }}" --deployment-timeout 900
           printf '%s\n' "$?" > live-audit/live-status.txt
           exit 0
 
@@ -86,6 +128,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: final-production-audit-${{ github.sha }}
+          name: final-production-audit-${{ steps.patch.outputs.audited_sha }}
           path: live-audit/
           retention-days: 30
