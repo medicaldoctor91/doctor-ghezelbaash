@@ -1,0 +1,231 @@
+name: Execute confirmed finalization v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/execute-finalization-v2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: execute-doctor-ghezelbaash-finalization-v2
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install deterministic tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends webp
+          python -m pip install --disable-pip-version-check rdflib==7.1.4
+
+      - name: Generate responsive derivatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg -o public/media/images/physician/saeed-ghezelbash-portrait-640.webp
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg -o public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg -o public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp
+
+      - name: Patch source of truth and head projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          ROOT='https://www.ghezelbaash.ir/'
+          PERSON=ROOT+'#saeed-ghezelbash'
+          CLINIC=ROOT+'#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          WEBPAGE=ROOT+'#webpage'
+          COURSE=ROOT+'#advanced-thread-lift-workshop-course'
+          COURSE_INSTANCE=ROOT+'#advanced-thread-lift-workshop-tehran-1403-11'
+          ARTICLE_2021=ROOT+'#article-mdd-attachment-dissociation-trauma-2021'
+          PRESENTATION_2017=ROOT+'#presentation-attachment-style-dissociative-depression-2017'
+          LICENSE='https://creativecommons.org/licenses/by/4.0/'
+
+          def tlist(node):
+              v=node.get('@type',[])
+              return [v] if isinstance(v,str) else list(v)
+          def settypes(node,values):
+              values=list(dict.fromkeys(values)); node['@type']=values[0] if len(values)==1 else values
+          def refs(value):
+              if value is None:return []
+              if not isinstance(value,list):value=[value]
+              out=[]
+              for x in value:
+                  if isinstance(x,dict) and x.get('@id'):out.append(x['@id'])
+                  elif isinstance(x,str):out.append(x)
+              return out
+          def add_about(node,values):
+              node['about']=[{'@id':x} for x in dict.fromkeys(refs(node.get('about'))+values)]
+
+          def patch(doc,label):
+              graph=doc.setdefault('@graph',[])
+              by={n.get('@id'):n for n in graph if isinstance(n,dict) and n.get('@id')}
+              for x in (PERSON,CLINIC,COURSE):
+                  if x not in by:raise SystemExit(f'{label}: missing {x}')
+              by[PERSON]['priceRange']='$$$$'
+              by[CLINIC]['priceRange']='$$$$'
+              by[COURSE]['provider']={'@id':CLINIC}
+              by[COURSE].pop('instructor',None)
+
+              instance=by.get(COURSE_INSTANCE)
+              if instance is None:
+                  instance={
+                      '@id':COURSE_INSTANCE,
+                      '@type':'CourseInstance',
+                      'instructor':{'@id':PERSON},
+                      'provider':{'@id':CLINIC},
+                  }
+                  graph.append(instance); by[COURSE_INSTANCE]=instance
+              else:
+                  types=tlist(instance)
+                  if 'CourseInstance' not in types:types.append('CourseInstance')
+                  settypes(instance,types)
+                  instance['instructor']={'@id':PERSON}
+                  instance['provider']={'@id':CLINIC}
+
+              office=0
+              for n in graph:
+                  if not isinstance(n,dict) or 'ImageObject' not in tlist(n):continue
+                  identity=(n.get('@id','')+' '+str(n.get('contentUrl',''))).lower()
+                  if any(x in identity for x in ('clinical-office','clinical-examination','in-clinical-office')):
+                      add_about(n,[PERSON,CLINIC]); office+=1
+              if label=='Full Graph' and office<3:raise SystemExit(f'{label}: office ImageObjects={office}')
+
+              article=by.get(ARTICLE_2021)
+              if article:
+                  types=[x for x in tlist(article) if x!='PresentationDigitalDocument']
+                  if 'ScholarlyArticle' not in types:types.append('ScholarlyArticle')
+                  settypes(article,types)
+              presentation=by.get(PRESENTATION_2017)
+              if presentation:
+                  types=[x for x in tlist(presentation) if x not in ('ScholarlyArticle','MedicalScholarlyArticle')]
+                  if 'PresentationDigitalDocument' not in types:types.append('PresentationDigitalDocument')
+                  settypes(presentation,types)
+                  presentation['author']={'@id':PERSON}
+                  presentation['creator']={'@id':PERSON}
+
+              for n in graph:
+                  if isinstance(n,dict) and 'Dataset' in tlist(n) and ('graph.jsonld#dataset' in n.get('@id','') or n.get('@id','').endswith('#dataset')):
+                      n['version']='1.1.0'; n['dateModified']='2026-07-28'
+              return by
+
+          page_path=Path('src/pages/index.md')
+          page=page_path.read_text(encoding='utf-8')
+          for legacy,new640 in [
+              ('saeed-ghezelbash-portrait','saeed-ghezelbash-portrait-640.webp'),
+              ('saeed-ghezelbash-clinical-examination','saeed-ghezelbash-in-clinical-office-640.webp'),
+              ('saeed-ghezelbash-with-clinic-team','saeed-ghezelbash-with-clinic-team-640.webp'),
+          ]:
+              old=(f'srcset="/media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 960px) 100vw, 960px"')
+              new=(f'srcset="/media/images/physician/{new640} 640w, /media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"')
+              if new not in page:
+                  if page.count(old)!=1:raise SystemExit(f'srcset mismatch {legacy}: {page.count(old)}')
+                  page=page.replace(old,new,1)
+              oldimg=f'src="/media/images/physician/{legacy}-960.webp"\n      width="960"\n      height="640"'
+              newimg=f'src="/media/images/physician/{new640}"\n      width="640"\n      height="427"'
+              if newimg not in page:
+                  if page.count(oldimg)!=1:raise SystemExit(f'img mismatch {legacy}: {page.count(oldimg)}')
+                  page=page.replace(oldimg,newimg,1)
+          page_path.write_text(page,encoding='utf-8')
+
+          docs={}; maps={}
+          for path,label in [(Path('public/graph.jsonld'),'Full Graph'),(Path('src/data/semantic/head-graph.min.jsonld'),'Head Graph')]:
+              doc=json.loads(path.read_text(encoding='utf-8'))
+              maps[label]=patch(doc,label); docs[label]=doc
+              path.write_text(json.dumps(doc,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
+
+          full=docs['Full Graph']; graph=full['@graph']; by=maps['Full Graph']
+          rows=[
+            (ROOT+'#image-saeed-ghezelbash-portrait-responsive-640','public/media/images/physician/saeed-ghezelbash-portrait-640.webp',ROOT+'media/images/physician/saeed-ghezelbash-portrait-640.webp',ROOT+'#image-saeed-ghezelbash-portrait-master','https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg','دکتر سعید قزلباش، پزشک ایرانی','Dr. Saeed Ghezelbaash, Iranian physician','دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران.','Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white medical coat and stethoscope in a clinical setting in Kermanshah, Iran.',[PERSON]),
+            (ROOT+'#image-saeed-ghezelbash-clinic-team-responsive-640','public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',ROOT+'media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',ROOT+'#image-saeed-ghezelbash-clinic-team-master','https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg','سعید قزلباش همراه اعضای تیم بالینی','Saeed Ghezelbaash with members of his clinical team','دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران.','Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran.',[PERSON,CLINIC]),
+            (ROOT+'#image-saeed-ghezelbash-clinical-office-responsive-640','public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',ROOT+'media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',ROOT+'#image-saeed-ghezelbash-clinical-office-master','https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg','سعید قزلباش در محیط بالینی','Saeed Ghezelbaash in a clinical office','دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران.','Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope.',[PERSON,CLINIC]),
+          ]
+          for node_id,path,url,master,commons,name_fa,name_en,desc_fa,desc_en,about in rows:
+              data=Path(path).read_bytes(); node=by.get(node_id)
+              if node is None:node={'@id':node_id}; graph.append(node); by[node_id]=node
+              node.update({'@type':'ImageObject','name':[{'@value':name_fa,'@language':'fa'},{'@value':name_en,'@language':'en'}],'caption':[{'@value':name_fa,'@language':'fa'},{'@value':name_en,'@language':'en'}],'description':[{'@value':desc_fa,'@language':'fa'},{'@value':desc_en,'@language':'en'}],'contentUrl':url,'encodingFormat':'image/webp','width':640,'height':427,'contentSize':f'{len(data)} bytes','sha256':hashlib.sha256(data).hexdigest(),'about':[{'@id':x} for x in about],'creator':{'@id':PERSON},'copyrightHolder':{'@id':PERSON},'creditText':'Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0','copyrightNotice':'© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0.','license':LICENSE,'acquireLicensePage':commons,'dateCreated':'2023-05-29','representativeOfPage':False,'isBasedOn':{'@id':master},'isPartOf':{'@id':WEBPAGE}})
+              m=by.get(master)
+              if not m:raise SystemExit('missing master '+master)
+              enc=m.setdefault('encoding',[])
+              if isinstance(enc,dict):enc=[enc];m['encoding']=enc
+              if node_id not in refs(enc):enc.append({'@id':node_id})
+          Path('public/graph.jsonld').write_text(json.dumps(full,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
+
+          hp=Path('public/_headers'); h=hp.read_text(encoding='utf-8')
+          if '/media/images/physician/saeed-ghezelbash-in-clinical-office-*' not in h:
+              marker='/media/images/physician/saeed-ghezelbash-clinical-examination-*\n'
+              pos=h.find(marker)
+              if pos<0:raise SystemExit('office header marker missing')
+              end=h.find('\n\n',pos); end=len(h) if end<0 else end
+              rule='\n\n/media/images/physician/saeed-ghezelbash-in-clinical-office-*\n  Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license"\n'
+              hp.write_text(h[:end]+rule+h[end:],encoding='utf-8')
+          PY
+
+      - name: Regenerate Turtle and validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from rdflib import Graph
+          import hashlib,json
+          ROOT='https://www.ghezelbaash.ir/'; PERSON=ROOT+'#saeed-ghezelbash'; CLINIC=ROOT+'#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'; COURSE=ROOT+'#advanced-thread-lift-workshop-course'; INSTANCE=ROOT+'#advanced-thread-lift-workshop-tehran-1403-11'; ARTICLE=ROOT+'#article-mdd-attachment-dissociation-trauma-2021'; PRESENTATION=ROOT+'#presentation-attachment-style-dissociative-depression-2017'
+          def types(n):
+              v=n.get('@type',[]);return [v] if isinstance(v,str) else list(v)
+          docs={}
+          for p in ('public/graph.jsonld','src/data/semantic/head-graph.min.jsonld'):
+              d=json.loads(Path(p).read_text(encoding='utf-8')); by={n.get('@id'):n for n in d.get('@graph',[]) if isinstance(n,dict) and n.get('@id')};docs[p]=by
+              assert by[PERSON]['priceRange']=='$$$$'; assert by[CLINIC]['priceRange']=='$$$$'; assert by[COURSE]['provider']['@id']==CLINIC; assert 'instructor' not in by[COURSE]; assert by[INSTANCE]['instructor']['@id']==PERSON; assert by[INSTANCE]['provider']['@id']==CLINIC
+              if ARTICLE in by:assert 'ScholarlyArticle' in types(by[ARTICLE]) and 'PresentationDigitalDocument' not in types(by[ARTICLE])
+              if PRESENTATION in by:assert 'PresentationDigitalDocument' in types(by[PRESENTATION]) and 'ScholarlyArticle' not in types(by[PRESENTATION])
+          assert not(set(docs['src/data/semantic/head-graph.min.jsonld'])-set(docs['public/graph.jsonld']))
+          source=Path('public/graph.jsonld').read_bytes();g=Graph().parse(data=source.decode(),format='json-ld');nt=sorted(x for x in g.serialize(format='nt').splitlines() if x.strip());canonical=('\n'.join(nt)+'\n').encode();ttl=g.serialize(format='turtle');header=f'# Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld\n# Source SHA-256: {hashlib.sha256(source).hexdigest()}\n# RDF triples: {len(g)}\n# Canonical sorted N-Triples SHA-256: {hashlib.sha256(canonical).hexdigest()}\n\n';Path('public/graph.ttl').write_text(header+ttl,encoding='utf-8');g2=Graph().parse('public/graph.ttl',format='turtle');assert len(g)==len(g2)
+          PY
+          python -m json.tool public/graph.jsonld >/dev/null
+          python -m json.tool src/data/semantic/head-graph.min.jsonld >/dev/null
+          grep -q 'saeed-ghezelbash-in-clinical-office-640.webp' src/pages/index.md
+          grep -q 'image-saeed-ghezelbash-clinical-office-responsive-640' public/graph.jsonld
+          git diff --check
+
+      - name: Build production output
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          test -f dist/index.html
+          bytes=$(wc -c < dist/index.html)
+          echo "dist/index.html bytes=$bytes"
+          test "$bytes" -lt 1900000
+
+      - name: Commit finalized source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f --ignore-unmatch .github/workflows/execute-finalization-v2.yml .github/workflows/execute-finalization.yml .github/workflows/add-responsive-physician-images.yml
+          rm -f tmp/finalization-diagnostic.txt tmp/actions-trigger.txt tmp/hardened-live-audit.json tmp/mobile-render-profile.json tmp/psi-live-latest.json
+          git add -A
+          git commit -m 'Finalize confirmed semantic facts, RDF, and responsive media'
+          git push origin HEAD:main
