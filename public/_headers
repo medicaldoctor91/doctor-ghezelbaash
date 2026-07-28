@@ -17,6 +17,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
   Content-Language: fa-IR
   Cache-Control: public, max-age=0, must-revalidate
   Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle"
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-uIlyfWz1tAEl84OXdfhuRoH/stGvxU/UZNh6lvToyMw='; script-src-attr 'none'; style-src 'self' 'sha256-Bj/2hAJyutJoG6jydQVLRC0Js4gq88XyP4RrP82xFUY='; style-src-attr 'unsafe-inline'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
 
 /404.html
   X-Robots-Tag: noindex, nofollow
@@ -106,7 +107,6 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /media/images/physician/saeed-ghezelbash-in-clinical-office-*
   Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
-
 
 /media/brand/doctor-ghezelbaash-symbol-512.png
   Link: <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json"
