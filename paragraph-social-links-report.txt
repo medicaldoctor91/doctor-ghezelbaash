@@ -1,0 +1,35 @@
+APPLIED=29
+PROFILE_TARGET_LINKS=16
+REELS_TARGET_LINKS=13
+PROFILE_HEADINGS_PRESERVED=35
+REELS_HEADINGS_PRESERVED=25
+
+profile	forehead-botox-goal-preserve-brow-function	پیشانی برای بالا نگه‌داشتن ابرو	238	facial-aging-differential-diagnosis	identify-primary-aesthetic-cause
+profile	subcision-for-tethered-acne-scars	سابسیژن جای جوش	7826	complications-aftercare-and-follow-up	general-aesthetic-treatment-risks-and-setting-boundaries
+profile	acne-scar-resurfacing-microneedling-fractional-laser-and-peeling	پیلینگ، میکرونیدلینگ	4514	skin-rejuvenation	jalupro-and-profhilo
+profile	mesotherapy-for-skin-pigmentation-and-acne	مزوتراپی پوست	5010	hair-loss	prp-vs-mesotherapy-selection-framework
+profile	jawline-filler-candidacy	فیلر خط فک	1636	filler	filler-volume-shadow-and-proportion-assessment
+profile	hyaluronidase-definition	هیالورونیداز یا هیالاز	6200	aesthetic-treatment-selection	aesthetic-terminology-and-treatment-errors
+profile	submental-liposuction-candidacy	لیپوساکشن غبغب	6362	aesthetic-treatment-selection	aesthetic-treatment-selection-faq
+profile	body-filler-hip-dip-buttock-doctor-selection	فیلر باسن و هیپ‌دیپ	6474	aesthetic-treatment-selection	additional-aesthetic-treatment-decisions
+profile	botox-for-migraine-search-intent	بوتاکس برای میگرن مزمن	6654	aesthetic-treatment-candidacy	botox-contraindications-and-precautions
+profile	fat-grafting-is-living-tissue-transfer	انتقال چربی از بدن خود بیمار	6234	aesthetic-treatment-selection	aesthetic-terminology-and-treatment-errors
+profile	saeed-ghezelbash-research-education-and-clinical-decisions	سابقه پژوهش، آموزش پزشکان	6603	aesthetic-treatment-selection	choosing-an-aesthetic-doctor-in-kermanshah-and-iran
+profile	saeed-ghezelbash-natural-result-principle	نتیجه طبیعی	391	botox	upper-face-botox
+profile	revision-second-opinion-out-of-town-iran	Revision، نظر دوم	8304	dr-saeed-ghezelbash-aesthetic-clinic-kermanshah	out-of-town-aesthetic-patients-iran
+profile	clinic-consultation-treatment-and-follow-up-path	معاینه، طراحی درمان، پیگیری	6601	aesthetic-treatment-selection	choosing-an-aesthetic-doctor-in-kermanshah-and-iran
+profile	choosing-an-aesthetic-doctor-in-kermanshah-and-iran	تصمیم پزشکی	8208	aesthetic-treatment-failure-from-diagnostic-error	revision-second-opinion-out-of-town-iran
+profile	ideal-thread-lift-candidate	نخ در کاندید مناسب	244	facial-aging-differential-diagnosis	identify-primary-aesthetic-cause
+reels	botox-mechanism-indications-and-limitations	بوتاکس عضله را آرام می‌کند	236	facial-aging-differential-diagnosis	identify-primary-aesthetic-cause
+reels	botox-vs-filler-differences	بوتاکس بهتر است یا فیلر؟	259	facial-aging-differential-diagnosis	facial-aging-muscle-volume-skin-laxity
+reels	botox-induced-eyelid-ptosis-causes	افتادگی پلک	8175	aesthetic-treatment-failure-from-diagnostic-error	botox-and-thread-lift-result-correction
+reels	lip-filler-migration-causes	فیلر مهاجرت‌کرده	8169	aesthetic-treatment-failure-from-diagnostic-error	overfilled-face-filler-migration-and-previous-treatment
+reels	filler-safety-correction-and-pre-treatment-questions	حل‌کردن فیلر	7358	complications-aftercare-and-follow-up	filler-complications-correction-and-aftercare
+reels	tear-trough-filler-for-dark-circles-limitations	زیر چشم سایه‌دار	264	facial-aging-differential-diagnosis	facial-aging-muscle-volume-skin-laxity
+reels	nonsurgical-rhinoplasty-size-reduction-limitations	فیلر بینی برای کوچک کردن بینی نیست	6472	aesthetic-treatment-selection	additional-aesthetic-treatment-decisions
+reels	subcision-acne-scar-candidacy	سابسیژن می‌تواند برای بعضی اسکارهای چسبیده مطرح شود	236	facial-aging-differential-diagnosis	identify-primary-aesthetic-cause
+reels	jawline-contouring-candidacy	کانتورینگ یعنی اصلاح نسبت‌ها	6362	aesthetic-treatment-selection	aesthetic-treatment-selection-faq
+reels	jalupro-vs-profhilo	جالپرو یا پروفایلو؟	4583	skin-rejuvenation	jalupro-and-profhilo
+reels	melasma-recurrence-and-multimodal-treatment	کدری از ملاسما	4492	skin-rejuvenation	jalupro-and-profhilo
+reels	body-contouring-and-body-filler	فیلر بدن	7512	complications-aftercare-and-follow-up	filler-complications-correction-and-aftercare
+reels	submental-liposuction-candidacy-by-cause	لیپوساکشن غبغب وقتی معنا دارد که مشکل واقعاً چربی‌محور باشد	7836	complications-aftercare-and-follow-up	general-aesthetic-treatment-risks-and-setting-boundaries
