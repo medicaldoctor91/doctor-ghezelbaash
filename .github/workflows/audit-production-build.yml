@@ -22,8 +22,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24.18.0
-          cache: npm
-          cache-dependency-path: package-lock.json
 
       - name: Install dependencies and build
         run: |
@@ -40,8 +38,8 @@ jobs:
           server_pid=$!
           trap 'kill $server_pid || true' EXIT
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
-          npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ --quiet --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/lighthouse-mobile.json
-          npx --yes lighthouse@13.0.1 http://127.0.0.1:4173/ --quiet --preset=desktop --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/lighthouse-desktop.json
+          npx --yes lighthouse http://127.0.0.1:4173/ --quiet --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/lighthouse-mobile.json
+          npx --yes lighthouse http://127.0.0.1:4173/ --quiet --preset=desktop --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/lighthouse-desktop.json
 
       - name: Create compact build and performance report
         shell: bash
