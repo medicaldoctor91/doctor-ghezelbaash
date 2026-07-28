@@ -1,0 +1,220 @@
+{
+  "generatedAt": "2026-07-28T13:07:54.006Z",
+  "sourceCommit": "ee126e6e2bb9907a003229c8f996c0c31237ded2",
+  "htmlBytes": 1756658,
+  "mobile": {
+    "categories": {
+      "performance": 59,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100,
+      "agentic-browsing": 100
+    },
+    "metrics": {
+      "first-contentful-paint": {
+        "score": 0.47,
+        "numericValue": 3074.527,
+        "displayValue": "3.1 s"
+      },
+      "largest-contentful-paint": {
+        "score": 0.68,
+        "numericValue": 3355.027,
+        "displayValue": "3.4 s"
+      },
+      "speed-index": {
+        "score": 0.92,
+        "numericValue": 3195.0881804591663,
+        "displayValue": "3.2 s"
+      },
+      "total-blocking-time": {
+        "score": 0.1,
+        "numericValue": 1795,
+        "displayValue": "1,800 ms"
+      },
+      "cumulative-layout-shift": {
+        "score": 1,
+        "numericValue": 0,
+        "displayValue": "0"
+      },
+      "interactive": {
+        "score": 0.67,
+        "numericValue": 5753.227000000001,
+        "displayValue": "5.8 s"
+      },
+      "mainthread-work-breakdown": {
+        "score": 0,
+        "numericValue": 4055.360000000055,
+        "displayValue": "4.1 s"
+      },
+      "max-potential-fid": {
+        "score": 0.01,
+        "numericValue": 756,
+        "displayValue": "760 ms"
+      }
+    },
+    "failures": [
+      {
+        "id": "mainthread-work-breakdown",
+        "title": "Minimize main-thread work",
+        "score": 0,
+        "numericValue": 4055.360000000055,
+        "displayValue": "4.1 s"
+      },
+      {
+        "id": "image-delivery-insight",
+        "title": "Improve image delivery",
+        "score": 0,
+        "displayValue": "Est savings of 35 KiB"
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "max-potential-fid",
+        "title": "Max Potential First Input Delay",
+        "score": 0.01,
+        "numericValue": 756,
+        "displayValue": "760 ms"
+      },
+      {
+        "id": "total-blocking-time",
+        "title": "Total Blocking Time",
+        "score": 0.1,
+        "numericValue": 1795,
+        "displayValue": "1,800 ms"
+      },
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.47,
+        "numericValue": 3074.527,
+        "displayValue": "3.1 s"
+      },
+      {
+        "id": "cache-insight",
+        "title": "Use efficient cache lifetimes",
+        "score": 0.5,
+        "displayValue": "Est savings of 5 KiB"
+      },
+      {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "score": 0.67,
+        "numericValue": 5753.227000000001,
+        "displayValue": "5.8 s"
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.68,
+        "numericValue": 3355.027,
+        "displayValue": "3.4 s"
+      },
+      {
+        "id": "speed-index",
+        "title": "Speed Index",
+        "score": 0.92,
+        "numericValue": 3195.0881804591663,
+        "displayValue": "3.2 s"
+      }
+    ]
+  },
+  "desktop": {
+    "categories": {
+      "performance": 82,
+      "accessibility": 100,
+      "best-practices": 100,
+      "seo": 100,
+      "agentic-browsing": 77
+    },
+    "metrics": {
+      "first-contentful-paint": {
+        "score": 0.98,
+        "numericValue": 647.056,
+        "displayValue": "0.6 s"
+      },
+      "largest-contentful-paint": {
+        "score": 0.98,
+        "numericValue": 788.818,
+        "displayValue": "0.8 s"
+      },
+      "speed-index": {
+        "score": 1,
+        "numericValue": 647.056,
+        "displayValue": "0.6 s"
+      },
+      "total-blocking-time": {
+        "score": 1,
+        "numericValue": 0,
+        "displayValue": "0 ms"
+      },
+      "cumulative-layout-shift": {
+        "score": 0.32,
+        "numericValue": 0.347735565497109,
+        "displayValue": "0.348"
+      },
+      "interactive": {
+        "score": 1,
+        "numericValue": 788.818,
+        "displayValue": "0.8 s"
+      },
+      "mainthread-work-breakdown": {
+        "score": 1,
+        "numericValue": 240.05300000000162,
+        "displayValue": "0.2 s"
+      },
+      "max-potential-fid": {
+        "score": 1,
+        "numericValue": 21,
+        "displayValue": "20 ms"
+      }
+    },
+    "failures": [
+      {
+        "id": "layout-shifts",
+        "title": "Avoid large layout shifts",
+        "score": 0,
+        "displayValue": "1 layout shift found"
+      },
+      {
+        "id": "cls-culprits-insight",
+        "title": "Layout shift culprits",
+        "score": 0
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "cumulative-layout-shift",
+        "title": "Cumulative Layout Shift",
+        "score": 0.32,
+        "numericValue": 0.347735565497109,
+        "displayValue": "0.348"
+      },
+      {
+        "id": "cache-insight",
+        "title": "Use efficient cache lifetimes",
+        "score": 0.5,
+        "displayValue": "Est savings of 5 KiB"
+      },
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.98,
+        "numericValue": 647.056,
+        "displayValue": "0.6 s"
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.98,
+        "numericValue": 788.818,
+        "displayValue": "0.8 s"
+      }
+    ]
+  }
+}
