@@ -1,0 +1,95 @@
+name: Performance pass with optional web font
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/performance-pass-optional-font.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Make font non-blocking and layout-stable
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          css=Path('src/styles/global.css')
+          s=css.read_text(encoding='utf-8')
+          if s.count('font-display: swap;')!=1:raise SystemExit('font-display swap marker mismatch')
+          s=s.replace('font-display: swap;','font-display: optional;',1)
+          css.write_text(s,encoding='utf-8')
+
+          head=Path('src/components/DocumentHead.astro')
+          s=head.read_text(encoding='utf-8')
+          preload='<link rel="preload" href="/fonts/vazirmatn-nl-wght.woff2" as="font" type="font/woff2" crossorigin="anonymous" />\n'
+          if s.count(preload)!=1:raise SystemExit('font preload marker mismatch')
+          s=s.replace(preload,'',1)
+          head.write_text(s,encoding='utf-8')
+          PY
+          git diff --check
+      - name: Build and benchmark
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          mkdir -p tmp/optional-font
+          nohup python3 -m http.server 4173 --directory dist >tmp/optional-font/server.log 2>&1 &
+          echo $! >tmp/optional-font/server.pid
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --output=json --output-path=tmp/optional-font/mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --preset=desktop --output=json --output-path=tmp/optional-font/desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          kill $(cat tmp/optional-font/server.pid) || true
+      - name: Evaluate optional font
+        id: evaluate
+        run: |
+          set +e
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          baseline={'mobile':{'performance':37,'fcp':9747.5725,'lcp':9976.145},'desktop':{'performance':86,'fcp':1594.9399,'lcp':1681.8798}}
+          r={'accepted':False}
+          for mode in ('mobile','desktop'):
+            d=json.loads(Path(f'tmp/optional-font/{mode}.json').read_text());a=d['audits'];c=d['categories']
+            requests=a.get('network-requests',{}).get('details',{}).get('items',[])
+            font=[x for x in requests if 'vazirmatn' in x.get('url','').lower()]
+            r[mode]={'performance':round(c['performance']['score']*100),'accessibility':round(c['accessibility']['score']*100),'bestPractices':round(c['best-practices']['score']*100),'seo':round(c['seo']['score']*100),'fcp':a['first-contentful-paint']['numericValue'],'lcp':a['largest-contentful-paint']['numericValue'],'tbt':a['total-blocking-time']['numericValue'],'cls':a['cumulative-layout-shift']['numericValue'],'mainthread':a['mainthread-work-breakdown']['numericValue'],'fontRequests':[{'url':x.get('url'),'priority':x.get('priority'),'transferSize':x.get('transferSize')} for x in font]}
+          r['htmlBytes']=Path('dist/index.html').stat().st_size
+          quality=all(r[m][k]==100 for m in ('mobile','desktop') for k in ('accessibility','bestPractices','seo'))
+          stable=all(r[m]['cls']<0.02 for m in ('mobile','desktop'))
+          mobile_ok=r['mobile']['performance']>=baseline['mobile']['performance']-1 and r['mobile']['fcp']<=baseline['mobile']['fcp']*1.03
+          desktop_ok=r['desktop']['performance']>=baseline['desktop']['performance']-2
+          r['accepted']=bool(quality and stable and mobile_ok and desktop_ok and r['htmlBytes']<1900000)
+          Path('tmp/performance-optional-font.json').write_text(json.dumps(r,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(r,indent=2))
+          raise SystemExit(0 if r['accepted'] else 1)
+          PY
+          rc=$?
+          if [ "$rc" -eq 0 ]; then echo 'accepted=true' >> "$GITHUB_OUTPUT"; else echo 'accepted=false' >> "$GITHUB_OUTPUT"; fi
+          exit 0
+      - name: Roll back rejected experiment
+        if: steps.evaluate.outputs.accepted != 'true'
+        run: |
+          git reset --hard HEAD
+          git clean -fd -e tmp/performance-optional-font.json
+      - name: Commit experiment result
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/performance-pass-optional-font.yml
+          rm -rf tmp/optional-font
+          git add -A
+          if [ "${{ steps.evaluate.outputs.accepted }}" = "true" ]; then git commit -m 'Use optional font loading for stable first paint'; else git commit -m 'Record rejected optional font benchmark'; fi
+          git push origin HEAD:main
