@@ -1,0 +1,144 @@
+name: Performance pass with lightweight 640 and 960 delivery images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/performance-pass-delivery-images.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install deterministic media and RDF tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends webp
+          python -m pip install --disable-pip-version-check rdflib==7.1.4
+      - name: Generate lightweight delivery-only derivatives
+        run: |
+          set -euo pipefail
+          for size in 640 960; do
+            if [ "$size" = 640 ]; then height=427; else height=640; fi
+            cwebp -quiet -q 76 -m 6 -metadata none -resize "$size" "$height" public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg -o public/media/images/physician/saeed-ghezelbash-portrait-delivery-${size}.webp
+            cwebp -quiet -q 76 -m 6 -metadata none -resize "$size" "$height" public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg -o public/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-${size}.webp
+            cwebp -quiet -q 76 -m 6 -metadata none -resize "$size" "$height" public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg -o public/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-${size}.webp
+          done
+      - name: Wire delivery derivatives and provenance
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from rdflib import Graph
+          import hashlib,json
+          ROOT='https://www.ghezelbaash.ir/';PERSON=ROOT+'#saeed-ghezelbash';CLINIC=ROOT+'#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';WEBPAGE=ROOT+'#webpage';LICENSE='https://creativecommons.org/licenses/by/4.0/'
+          page=Path('src/pages/index.md');s=page.read_text(encoding='utf-8')
+          sets=[
+            ('saeed-ghezelbash-portrait-640.webp','saeed-ghezelbash-portrait-delivery-640.webp'),('saeed-ghezelbash-portrait-960.webp','saeed-ghezelbash-portrait-delivery-960.webp'),
+            ('saeed-ghezelbash-in-clinical-office-640.webp','saeed-ghezelbash-in-clinical-office-delivery-640.webp'),('saeed-ghezelbash-clinical-examination-960.webp','saeed-ghezelbash-in-clinical-office-delivery-960.webp'),
+            ('saeed-ghezelbash-with-clinic-team-640.webp','saeed-ghezelbash-with-clinic-team-delivery-640.webp'),('saeed-ghezelbash-with-clinic-team-960.webp','saeed-ghezelbash-with-clinic-team-delivery-960.webp'),
+          ]
+          for old,new in sets:
+            count=s.count('/media/images/physician/'+old)
+            expected=2 if old.endswith('-640.webp') else 1
+            if count!=expected:raise SystemExit(f'{old} count={count}, expected={expected}')
+            s=s.replace('/media/images/physician/'+old,'/media/images/physician/'+new)
+          page.write_text(s,encoding='utf-8')
+
+          gp=Path('public/graph.jsonld');doc=json.loads(gp.read_text(encoding='utf-8'));graph=doc['@graph'];by={n.get('@id'):n for n in graph if isinstance(n,dict) and n.get('@id')}
+          masters={}
+          for n in graph:
+            t=n.get('@type',[]);t=[t] if isinstance(t,str) else t
+            if 'ImageObject' not in t:continue
+            u=str(n.get('contentUrl',''))
+            for key,filename in [('portrait','saeed-ghezelbaash-physician-portrait.jpg'),('team','saeed-ghezelbaash-with-clinical-team.jpg'),('office','saeed-ghezelbaash-in-clinical-office.jpg')]:
+              if u.endswith('/master/'+filename):masters[key]=n['@id']
+          if set(masters)!= {'portrait','team','office'}:raise SystemExit(f'masters {masters}')
+          common={
+            'portrait':('https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg','دکتر سعید قزلباش، پزشک ایرانی','Dr. Saeed Ghezelbaash, Iranian physician','دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران.','Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white medical coat and stethoscope in a clinical setting in Kermanshah, Iran.',[PERSON]),
+            'team':('https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg','سعید قزلباش همراه اعضای تیم بالینی','Saeed Ghezelbaash with members of his clinical team','دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران.','Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran.',[PERSON,CLINIC]),
+            'office':('https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg','سعید قزلباش در محیط بالینی','Saeed Ghezelbaash in a clinical office','دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران.','Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope.',[PERSON,CLINIC]),
+          }
+          filebase={'portrait':'saeed-ghezelbash-portrait','team':'saeed-ghezelbash-with-clinic-team','office':'saeed-ghezelbash-in-clinical-office'}
+          idbase={'portrait':'portrait','team':'clinic-team','office':'clinical-office'}
+          for key in ('portrait','team','office'):
+            commons,name_fa,name_en,desc_fa,desc_en,about=common[key]
+            for size,height in ((640,427),(960,640)):
+              filename=f'{filebase[key]}-delivery-{size}.webp';path='public/media/images/physician/'+filename;url=ROOT+'media/images/physician/'+filename;node_id=ROOT+f'#image-saeed-ghezelbash-{idbase[key]}-delivery-{size}'
+              if node_id in by:raise SystemExit('node exists '+node_id)
+              data=Path(path).read_bytes();node={'@id':node_id,'@type':'ImageObject','name':[{'@value':name_fa,'@language':'fa'},{'@value':name_en,'@language':'en'}],'caption':[{'@value':name_fa,'@language':'fa'},{'@value':name_en,'@language':'en'}],'description':[{'@value':desc_fa,'@language':'fa'},{'@value':desc_en,'@language':'en'}],'contentUrl':url,'encodingFormat':'image/webp','width':size,'height':height,'contentSize':f'{len(data)} bytes','sha256':hashlib.sha256(data).hexdigest(),'about':[{'@id':x} for x in about],'creator':{'@id':PERSON},'copyrightHolder':{'@id':PERSON},'creditText':'Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0','copyrightNotice':'© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0.','license':LICENSE,'acquireLicensePage':commons,'dateCreated':'2023-05-29','representativeOfPage':False,'isBasedOn':{'@id':masters[key]},'isPartOf':{'@id':WEBPAGE}}
+              graph.append(node);by[node_id]=node
+              m=by[masters[key]];enc=m.setdefault('encoding',[])
+              if isinstance(enc,dict):enc=[enc];m['encoding']=enc
+              enc.append({'@id':node_id})
+          for n in graph:
+            t=n.get('@type',[]);t=[t] if isinstance(t,str) else t
+            if 'Dataset' in t and ('graph.jsonld#dataset' in n.get('@id','') or n.get('@id','').endswith('#dataset')):
+              n['version']='1.1.1';n['dateModified']='2026-07-28'
+          gp.write_text(json.dumps(doc,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
+          source=gp.read_bytes();g=Graph().parse(data=source.decode(),format='json-ld');nt=sorted(x for x in g.serialize(format='nt').splitlines() if x.strip());canonical=('\n'.join(nt)+'\n').encode();Path('public/graph.ttl').write_text(f'# Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld\n# Source SHA-256: {hashlib.sha256(source).hexdigest()}\n# RDF triples: {len(g)}\n# Canonical sorted N-Triples SHA-256: {hashlib.sha256(canonical).hexdigest()}\n\n'+g.serialize(format='turtle'),encoding='utf-8')
+          PY
+          git diff --check
+      - name: Build and benchmark
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+          mkdir -p tmp/delivery-images
+          nohup python3 -m http.server 4173 --directory dist >tmp/delivery-images/server.log 2>&1 &
+          echo $! >tmp/delivery-images/server.pid
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4173/ >/dev/null && break; sleep 1; done
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --output=json --output-path=tmp/delivery-images/mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          npx --yes lighthouse@latest http://127.0.0.1:4173/ --preset=desktop --output=json --output-path=tmp/delivery-images/desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          kill $(cat tmp/delivery-images/server.pid) || true
+      - name: Evaluate objective image audit
+        id: evaluate
+        run: |
+          set +e
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          r={'accepted':False}
+          for mode in ('mobile','desktop'):
+            d=json.loads(Path(f'tmp/delivery-images/{mode}.json').read_text());a=d['audits'];c=d['categories'];items=a.get('image-delivery-insight',{}).get('details',{}).get('items',[]);req=a.get('network-requests',{}).get('details',{}).get('items',[])
+            r[mode]={'performance':round(c['performance']['score']*100),'accessibility':round(c['accessibility']['score']*100),'bestPractices':round(c['best-practices']['score']*100),'seo':round(c['seo']['score']*100),'fcp':a['first-contentful-paint']['numericValue'],'lcp':a['largest-contentful-paint']['numericValue'],'tbt':a['total-blocking-time']['numericValue'],'cls':a['cumulative-layout-shift']['numericValue'],'mainthread':a['mainthread-work-breakdown']['numericValue'],'imageSavings':a.get('image-delivery-insight',{}).get('displayValue'),'wastedBytes':sum(x.get('wastedBytes',0) or 0 for x in items),'physicianRequests':[{'url':x.get('url'),'priority':x.get('priority'),'transferSize':x.get('transferSize'),'resourceSize':x.get('resourceSize')} for x in req if 'media/images/physician/' in x.get('url','')]}
+          assets={p.name:p.stat().st_size for p in Path('public/media/images/physician').glob('*delivery-*.webp')};r['assetBytes']=assets;r['htmlBytes']=Path('dist/index.html').stat().st_size
+          quality=all(r[m][k]==100 for m in ('mobile','desktop') for k in ('accessibility','bestPractices','seo'))
+          stable=all(r[m]['cls']<0.02 for m in ('mobile','desktop'))
+          selected=all(r[m]['physicianRequests'] and all('delivery-' in x['url'] for x in r[m]['physicianRequests']) for m in ('mobile','desktop'))
+          clean=all(r[m]['wastedBytes']<5000 for m in ('mobile','desktop'))
+          r['accepted']=bool(quality and stable and selected and clean and r['htmlBytes']<1900000)
+          Path('tmp/performance-delivery-images.json').write_text(json.dumps(r,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(r,indent=2));raise SystemExit(0 if r['accepted'] else 1)
+          PY
+          rc=$?
+          if [ "$rc" -eq 0 ]; then echo 'accepted=true' >> "$GITHUB_OUTPUT"; else echo 'accepted=false' >> "$GITHUB_OUTPUT"; fi
+          exit 0
+      - name: Roll back rejected experiment
+        if: steps.evaluate.outputs.accepted != 'true'
+        run: |
+          git reset --hard HEAD
+          git clean -fd -e tmp/performance-delivery-images.json
+      - name: Commit result
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/performance-pass-delivery-images.yml
+          rm -rf tmp/delivery-images
+          git add -A
+          if [ "${{ steps.evaluate.outputs.accepted }}" = "true" ]; then git commit -m 'Use lightweight responsive physician delivery images'; else git commit -m 'Record rejected responsive delivery image benchmark'; fi
+          git push origin HEAD:main
