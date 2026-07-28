@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import headGraph from '../data/semantic/head-graph.min.jsonld?raw';
 import DocumentHead from '../components/DocumentHead.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
 
@@ -31,5 +32,6 @@ const robots = frontmatter.robots ?? 'index, follow';
       <slot />
     </main>
     <FloatingActionDock />
+    <script type="application/ld+json" set:html={headGraph}></script>
   </body>
 </html>
