@@ -44,7 +44,6 @@ jobs:
               *.bak|*.tmp|*.temp|*.orig|*.rej|*~|*.log) return 0 ;;
             esac
 
-            # Root-level prose and development records are not part of the deployable source.
             if [[ "$p" != */* ]]; then
               case "$base" in
                 README|README.*|CHANGELOG|CHANGELOG.*|CONTRIBUTING|CONTRIBUTING.*|SECURITY|SECURITY.*|CODE_OF_CONDUCT|CODE_OF_CONDUCT.*|TODO|TODO.*|NOTES|NOTES.*) return 0 ;;
@@ -52,7 +51,6 @@ jobs:
               esac
             fi
 
-            # Remove clearly internal audit/development artifacts outside runtime trees.
             if [[ "$p" != src/* && "$p" != public/* ]]; then
               case "$lower" in
                 *audit*|*report*|*analysis*|*instruction*|*prompt*|*checklist*|*review*|*benchmark*|*migration-note*|*handoff*|*scratch*|*debug*) return 0 ;;
@@ -76,7 +74,6 @@ jobs:
             printf '%s\n' "$path" >> "$report_dir/kept-files.txt"
           done < "$report_dir/original-files.txt"
 
-          # Never export local environment or secret-bearing files.
           find "$export_dir" -type f \( -name '.env' -o -name '.env.*' \) -print -delete | LC_ALL=C sort >> "$report_dir/removed-files.txt" || true
 
           original_count="$(wc -l < "$report_dir/original-files.txt" | tr -d ' ')"
@@ -97,27 +94,37 @@ jobs:
       - name: Validate clean tree with a production build
         shell: bash
         run: |
-          set -euo pipefail
+          set -uo pipefail
           export_dir="$RUNNER_TEMP/clean-source"
           report_dir="$RUNNER_TEMP/export-report"
           cd "$export_dir"
+          : > "$report_dir/build.log"
 
-          corepack disable || true
-          npm install --global npm@11.16.0
+          set +e
+          {
+            corepack disable || true
+            npm install --global npm@11.16.0
+            if [[ -f package-lock.json ]]; then
+              npm ci
+            else
+              npm install --package-lock=false
+            fi
+            npm run build
+          } > >(tee "$report_dir/build.log") 2>&1
+          status=$?
+          set -e
 
-          if [[ -f package-lock.json ]]; then
-            npm ci
+          printf '%s\n' "$status" > "$report_dir/build-exit-code.txt"
+          rm -rf node_modules dist .astro .cache coverage
+
+          if [[ "$status" -eq 0 ]]; then
+            echo '- Validation: production build succeeded.' >> "$report_dir/CLEANUP-REPORT.md"
           else
-            npm install --package-lock=false
+            echo "- Validation: production build failed with exit code $status; inspect build.log." >> "$report_dir/CLEANUP-REPORT.md"
           fi
 
-          npm run build 2>&1 | tee "$report_dir/build.log"
-
-          # Dependencies and generated output are not source deliverables.
-          rm -rf node_modules dist .astro .cache coverage
-          echo '- Validation: production build succeeded.' >> "$report_dir/CLEANUP-REPORT.md"
-
-      - name: Create deterministic ZIP
+      - name: Create deterministic ZIP and diagnostics
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -126,7 +133,7 @@ jobs:
           output_dir="$RUNNER_TEMP/final-export"
           mkdir -p "$output_dir"
 
-          find "$export_dir" -type f -print0 | xargs -0 touch -d '@0'
+          find "$export_dir" -type f -print0 | xargs -0 -r touch -d '@0'
           (
             cd "$export_dir"
             LC_ALL=C find . -type f -print | LC_ALL=C sort | zip -X -q "$output_dir/doctor-ghezelbaash-clean-main-4a53d72.zip" -@
@@ -137,9 +144,11 @@ jobs:
           cp "$report_dir/kept-files.txt" "$output_dir/"
           cp "$report_dir/removed-files.txt" "$output_dir/"
           cp "$report_dir/build.log" "$output_dir/"
+          cp "$report_dir/build-exit-code.txt" "$output_dir/"
           sha256sum "$output_dir/doctor-ghezelbaash-clean-main-4a53d72.zip" > "$output_dir/SHA256SUMS.txt"
 
       - name: Upload clean source artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: doctor-ghezelbaash-clean-source
