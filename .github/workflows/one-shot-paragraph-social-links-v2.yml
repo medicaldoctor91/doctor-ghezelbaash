@@ -1,0 +1,122 @@
+name: One-shot paragraph social links v2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-paragraph-social-links-v2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply validated paragraph links and write audit
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          path = Path('src/pages/index.md')
+          text = path.read_text(encoding='utf-8')
+          lines = text.splitlines()
+          PROFILE = 'https://www.instagram.com/doctor.ghezelbaash/'
+          REELS = 'https://www.instagram.com/doctor.ghezelbaash/reels/'
+
+          mappings = [
+            ('profile','facial-aging-differential-diagnosis','identify-primary-aesthetic-cause','پیشانی برای بالا نگه‌داشتن ابرو','forehead-botox-goal-preserve-brow-function'),
+            ('profile','complications-aftercare-and-follow-up','general-aesthetic-treatment-risks-and-setting-boundaries','سابسیژن جای جوش','subcision-for-tethered-acne-scars'),
+            ('profile','skin-rejuvenation','jalupro-and-profhilo','پیلینگ، میکرونیدلینگ','acne-scar-resurfacing-microneedling-fractional-laser-and-peeling'),
+            ('profile','hair-loss','prp-vs-mesotherapy-selection-framework','مزوتراپی پوست','mesotherapy-for-skin-pigmentation-and-acne'),
+            ('profile','filler','filler-volume-shadow-and-proportion-assessment','فیلر خط فک','jawline-filler-candidacy'),
+            ('profile','aesthetic-treatment-selection','aesthetic-terminology-and-treatment-errors','هیالورونیداز یا هیالاز','hyaluronidase-definition'),
+            ('profile','aesthetic-treatment-selection','aesthetic-treatment-selection-faq','لیپوساکشن غبغب','submental-liposuction-candidacy'),
+            ('profile','aesthetic-treatment-selection','additional-aesthetic-treatment-decisions','فیلر باسن و هیپ‌دیپ','body-filler-hip-dip-buttock-doctor-selection'),
+            ('profile','aesthetic-treatment-candidacy','botox-contraindications-and-precautions','بوتاکس برای میگرن مزمن','botox-for-migraine-search-intent'),
+            ('profile','aesthetic-treatment-selection','aesthetic-terminology-and-treatment-errors','انتقال چربی از بدن خود بیمار','fat-grafting-is-living-tissue-transfer'),
+            ('profile','aesthetic-treatment-selection','choosing-an-aesthetic-doctor-in-kermanshah-and-iran','سابقه پژوهش، آموزش پزشکان','saeed-ghezelbash-research-education-and-clinical-decisions'),
+            ('profile','botox','upper-face-botox','نتیجه طبیعی','saeed-ghezelbash-natural-result-principle'),
+            ('profile','dr-saeed-ghezelbash-aesthetic-clinic-kermanshah','out-of-town-aesthetic-patients-iran','Revision، نظر دوم','revision-second-opinion-out-of-town-iran'),
+            ('profile','aesthetic-treatment-selection','choosing-an-aesthetic-doctor-in-kermanshah-and-iran','معاینه، طراحی درمان، پیگیری','clinic-consultation-treatment-and-follow-up-path'),
+            ('profile','aesthetic-treatment-failure-from-diagnostic-error','revision-second-opinion-out-of-town-iran','تصمیم پزشکی','choosing-an-aesthetic-doctor-in-kermanshah-and-iran'),
+            ('profile','facial-aging-differential-diagnosis','identify-primary-aesthetic-cause','نخ در کاندید مناسب','ideal-thread-lift-candidate'),
+            ('reels','facial-aging-differential-diagnosis','identify-primary-aesthetic-cause','بوتاکس عضله را آرام می‌کند','botox-mechanism-indications-and-limitations'),
+            ('reels','facial-aging-differential-diagnosis','facial-aging-muscle-volume-skin-laxity','بوتاکس بهتر است یا فیلر؟','botox-vs-filler-differences'),
+            ('reels','aesthetic-treatment-failure-from-diagnostic-error','botox-and-thread-lift-result-correction','افتادگی پلک','botox-induced-eyelid-ptosis-causes'),
+            ('reels','aesthetic-treatment-failure-from-diagnostic-error','overfilled-face-filler-migration-and-previous-treatment','فیلر مهاجرت‌کرده','lip-filler-migration-causes'),
+            ('reels','complications-aftercare-and-follow-up','filler-complications-correction-and-aftercare','حل‌کردن فیلر','filler-safety-correction-and-pre-treatment-questions'),
+            ('reels','facial-aging-differential-diagnosis','facial-aging-muscle-volume-skin-laxity','زیر چشم سایه‌دار','tear-trough-filler-for-dark-circles-limitations'),
+            ('reels','aesthetic-treatment-selection','additional-aesthetic-treatment-decisions','کوچک کردن بینی','nonsurgical-rhinoplasty-size-reduction-limitations'),
+            ('reels','facial-aging-differential-diagnosis','identify-primary-aesthetic-cause','سابسیژن می‌تواند برای بعضی اسکارهای چسبیده مطرح شود','subcision-acne-scar-candidacy'),
+            ('reels','aesthetic-treatment-selection','aesthetic-treatment-selection-faq','کانتورینگ یعنی اصلاح نسبت‌ها','jawline-contouring-candidacy'),
+            ('reels','skin-rejuvenation','jalupro-and-profhilo','جالپرو یا پروفایلو','jalupro-vs-profhilo'),
+            ('reels','skin-rejuvenation','jalupro-and-profhilo','کدری از ملاسما','melasma-recurrence-and-multimodal-treatment'),
+            ('reels','complications-aftercare-and-follow-up','filler-complications-correction-and-aftercare','فیلر بدن','body-contouring-and-body-filler'),
+            ('reels','complications-aftercare-and-follow-up','general-aesthetic-treatment-risks-and-setting-boundaries','لیپوساکشن غبغب وقتی معنا دارد که مشکل واقعاً چربی‌محور باشد','submental-liposuction-candidacy-by-cause'),
+          ]
+
+          heading_re = re.compile(r'<h([2-6])\b[^>]*\bid="([^"]+)"[^>]*>(.*?)</h\1>', re.I)
+          current_h2 = current_h3 = ''
+          contexts=[]; targets={}
+          for line in lines:
+            m=heading_re.search(line)
+            if m:
+              level=int(m.group(1)); hid=m.group(2)
+              if level==2: current_h2,current_h3=hid,''
+              elif level==3: current_h3=hid
+              targets[hid]=line
+            contexts.append((current_h2,current_h3))
+
+          html_anchor_re = re.compile(r'(<a\b[^>]*>.*?</a>)', re.I)
+          md_link_re = re.compile(r'(\[[^\]]+\]\([^\)]+\))')
+          def replace_unlinked(segment, phrase, replacement):
+            parts=html_anchor_re.split(segment)
+            for i in range(0,len(parts),2):
+              subs=md_link_re.split(parts[i])
+              for j in range(0,len(subs),2):
+                if phrase in subs[j]:
+                  subs[j]=subs[j].replace(phrase,replacement,1)
+                  parts[i]=''.join(subs)
+                  return ''.join(parts),1
+            return segment,0
+
+          applied=[]; skipped=[]
+          for kind,src_h2,src_h3,phrase,target in mappings:
+            raw=targets.get(target,'')
+            expected=PROFILE if kind=='profile' else REELS
+            if f'href="{expected}"' not in raw:
+              skipped.append((target,'TARGET_DESTINATION_MISMATCH',phrase,src_h2,src_h3)); continue
+            found=[]
+            for idx,line in enumerate(lines):
+              h2,h3=contexts[idx]
+              if h2!=src_h2 or h3!=src_h3 or '<p' not in line.lower() or phrase not in line: continue
+              new,hits=replace_unlinked(line,phrase,f'<a href="#{target}">{phrase}</a>')
+              if hits: found.append((idx,new))
+            if len(found)!=1:
+              skipped.append((target,f'OCCURRENCES_{len(found)}',phrase,src_h2,src_h3)); continue
+            idx,new=found[0]; lines[idx]=new
+            applied.append((kind,target,phrase,idx+1,src_h2,src_h3))
+
+          result='\n'.join(lines)+('\n' if text.endswith('\n') else '')
+          for kind,target,phrase,_,_,_ in applied:
+            assert result.count(f'<a href="#{target}">{phrase}</a>')==1
+          assert len(applied)>=18, f'Only {len(applied)} mappings validated'
+          path.write_text(result,encoding='utf-8')
+
+          out=[f'APPLIED={len(applied)}',f'SKIPPED={len(skipped)}',f'PROFILE_APPLIED={sum(x[0]=="profile" for x in applied)}',f'REELS_APPLIED={sum(x[0]=="reels" for x in applied)}','', '# APPLIED']
+          for row in applied: out.append('\t'.join(map(str,row)))
+          out += ['', '# SKIPPED']
+          for row in skipped: out.append('\t'.join(map(str,row)))
+          Path('paragraph-social-links-v2-report.txt').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          print('\n'.join(out))
+          PY
+      - name: Commit validated links and audit report
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/pages/index.md paragraph-social-links-v2-report.txt
+          git diff --cached --quiet && { echo 'No changes'; exit 1; }
+          git commit -m "Add validated cross-section paragraph links"
+          git push
