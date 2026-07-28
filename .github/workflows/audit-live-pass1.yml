@@ -1,4 +1,4 @@
-name: Audit live after CLS and image sizing pass
+name: Final production CSP semantic and performance gate
 
 on:
   push:
@@ -11,57 +11,270 @@ permissions:
   contents: write
 
 jobs:
-  audit:
+  gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Wait for production deploy
-        run: sleep 180
-      - name: Run live Lighthouse mobile and desktop
+          cache: npm
+
+      - name: Build current production source
         run: |
-          mkdir -p tmp/live-pass1
-          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --output=json --output-path=tmp/live-pass1/mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
-          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --preset=desktop --output=json --output-path=tmp/live-pass1/desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
-      - name: Summarize live result
+          npm ci --no-audit --no-fund
+          npm run build
+
+      - name: Validate build, graph topology, RDF equivalence, and CSP hashes
+        run: |
+          python3 -m pip install --quiet rdflib
+          mkdir -p tmp/final-live-gate
+          python3 - <<'PY'
+          from pathlib import Path
+          from html.parser import HTMLParser
+          from rdflib import Graph
+          from rdflib.compare import isomorphic
+          import base64, hashlib, json, re
+
+          root = Path('.')
+          html_path = root / 'dist/index.html'
+          html = html_path.read_text(encoding='utf-8')
+          headers = (root / 'public/_headers').read_text(encoding='utf-8')
+          full = json.loads((root / 'public/graph.jsonld').read_text(encoding='utf-8'))
+          head = json.loads((root / 'src/data/semantic/head-graph.min.jsonld').read_text(encoding='utf-8'))
+
+          class Collector(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=False)
+                  self.capture = None
+                  self.buf = []
+                  self.styles = []
+                  self.scripts = []
+                  self.ids = []
+                  self.hrefs = []
+                  self.external_scripts = []
+                  self.style_attrs = []
+              def handle_starttag(self, tag, attrs):
+                  d = dict(attrs)
+                  if 'id' in d: self.ids.append(d['id'])
+                  if d.get('href','').startswith('#'): self.hrefs.append(d['href'][1:])
+                  if 'style' in d: self.style_attrs.append(d['style'])
+                  if tag == 'script' and d.get('src'): self.external_scripts.append(d['src'])
+                  if tag == 'style': self.capture='style'; self.buf=[]
+                  elif tag == 'script' and not d.get('src'): self.capture='script'; self.buf=[]
+              def handle_data(self, data):
+                  if self.capture: self.buf.append(data)
+              def handle_entityref(self, name):
+                  if self.capture: self.buf.append('&'+name+';')
+              def handle_charref(self, name):
+                  if self.capture: self.buf.append('&#'+name+';')
+              def handle_endtag(self, tag):
+                  if tag == self.capture:
+                      value=''.join(self.buf)
+                      (self.styles if tag == 'style' else self.scripts).append(value)
+                      self.capture=None; self.buf=[]
+
+          c=Collector(); c.feed(html)
+          tok=lambda x:"'sha256-"+base64.b64encode(hashlib.sha256(x.encode('utf-8')).digest()).decode('ascii')+"'"
+          style_hashes=list(dict.fromkeys(tok(x) for x in c.styles))
+          script_hashes=list(dict.fromkeys(tok(x) for x in c.scripts))
+          csp_match=re.search(r'^  Content-Security-Policy: (.+)$', headers, re.M)
+          assert csp_match, 'CSP missing from public/_headers'
+          csp=csp_match.group(1)
+          assert all(x in csp for x in style_hashes), 'CSP style hash mismatch'
+          assert all(x in csp for x in script_hashes), 'CSP script hash mismatch'
+          assert "script-src-attr 'none'" in csp
+          assert "style-src-attr 'unsafe-inline'" in csp
+          assert 'static.cloudflareinsights.com' not in csp
+          assert 'cloudflareinsights.com' not in csp
+          assert len(c.external_scripts) == 0
+          assert len(html.encode('utf-8')) < 1_900_000
+          assert len(c.ids) == len(set(c.ids)), 'Duplicate HTML ids'
+          missing_fragments=sorted(set(c.hrefs)-set(c.ids))
+          assert not missing_fragments, f'Broken fragments: {missing_fragments[:20]}'
+          assert len(c.scripts) == 1, f'Expected one inline JSON-LD block, got {len(c.scripts)}'
+          json.loads(c.scripts[0])
+
+          def graph_nodes(obj):
+              return obj.get('@graph', []) if isinstance(obj, dict) else []
+          full_nodes=graph_nodes(full); head_nodes=graph_nodes(head)
+          full_ids=[n.get('@id') for n in full_nodes if isinstance(n,dict) and n.get('@id')]
+          head_ids=[n.get('@id') for n in head_nodes if isinstance(n,dict) and n.get('@id')]
+          assert len(full_ids)==len(set(full_ids)), 'Duplicate Full Graph @id'
+          assert len(head_ids)==len(set(head_ids)), 'Duplicate Head Graph @id'
+          missing_head_ids=sorted(set(head_ids)-set(full_ids))
+          assert not missing_head_ids, f'Head nodes missing from Full Graph: {missing_head_ids}'
+
+          by_id={n.get('@id'):n for n in full_nodes if isinstance(n,dict) and n.get('@id')}
+          doctor=by_id['https://www.ghezelbaash.ir/#saeed-ghezelbash']
+          clinic=by_id['https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah']
+          assert doctor.get('priceRange') == '$$$$'
+          assert clinic.get('priceRange') == '$$$$'
+          assert any('PresentationDigitalDocument' in (n.get('@type') if isinstance(n.get('@type'),list) else [n.get('@type')]) for n in full_nodes if isinstance(n,dict))
+          course_nodes=[n for n in full_nodes if isinstance(n,dict) and 'Course' in (n.get('@type') if isinstance(n.get('@type'),list) else [n.get('@type')])]
+          assert course_nodes and all((n.get('provider') or {}).get('@id') == clinic['@id'] for n in course_nodes)
+          office_nodes=[n for n in full_nodes if isinstance(n,dict) and 'clinical-office' in n.get('@id','') and 'ImageObject' in (n.get('@type') if isinstance(n.get('@type'),list) else [n.get('@type')])]
+          assert office_nodes
+          office_about=office_nodes[0].get('about',[])
+          if isinstance(office_about,dict): office_about=[office_about]
+          office_about_ids={x.get('@id') for x in office_about if isinstance(x,dict)}
+          assert doctor['@id'] in office_about_ids and clinic['@id'] in office_about_ids
+          assert 'در حال معاینه بالینی مراجعه‌کننده' not in html
+
+          gj=Graph(); gj.parse(root/'public/graph.jsonld', format='json-ld')
+          gt=Graph(); gt.parse(root/'public/graph.ttl', format='turtle')
+          assert isomorphic(gj,gt), f'JSON-LD/Turtle mismatch: {len(gj)} vs {len(gt)}'
+
+          report={
+            'build': {
+              'htmlBytes': len(html.encode('utf-8')),
+              'inlineStyles': len(c.styles),
+              'inlineScripts': len(c.scripts),
+              'inlineStyleAttributes': len(c.style_attrs),
+              'externalScripts': c.external_scripts,
+              'duplicateIds': len(c.ids)-len(set(c.ids)),
+              'brokenFragments': missing_fragments,
+            },
+            'csp': {'value':csp,'styleHashes':style_hashes,'scriptHashes':script_hashes},
+            'graphs': {'fullNodes':len(full_nodes),'headNodes':len(head_nodes),'rdfTriples':len(gj),'isomorphic':True,'headIdsSubset':True},
+            'semanticFacts': {'priceRange':'$$$$','courseProvider':'clinic','presentationType':'PresentationDigitalDocument','officeAboutDoctorAndClinic':True},
+          }
+          Path('tmp/final-live-gate/source-build.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+
+      - name: Wait for matching production deployment
+        run: |
+          set -euo pipefail
+          expected_script="sha256-uIlyfWz1tAEl84OXdfhuRoH/stGvxU/UZNh6lvToyMw="
+          expected_style="sha256-Bj/2hAJyutJoG6jydQVLRC0Js4gq88XyP4RrP82xFUY="
+          ready=0
+          for i in $(seq 1 40); do
+            curl -fsS -D tmp/final-live-gate/root-headers.txt -o tmp/final-live-gate/live.html https://www.ghezelbaash.ir/
+            if grep -qi 'content-security-policy:' tmp/final-live-gate/root-headers.txt \
+              && grep -q "$expected_script" tmp/final-live-gate/root-headers.txt \
+              && grep -q "$expected_style" tmp/final-live-gate/root-headers.txt \
+              && grep -q 'saeed-ghezelbash-portrait-delivery-640.webp' tmp/final-live-gate/live.html \
+              && ! grep -q 'در حال معاینه بالینی مراجعه‌کننده' tmp/final-live-gate/live.html; then
+              ready=1
+              break
+            fi
+            sleep 15
+          done
+          test "$ready" = 1
+          curl -fsS -D tmp/final-live-gate/graph-headers.txt -o tmp/final-live-gate/live-graph.jsonld https://www.ghezelbaash.ir/graph.jsonld
+          curl -fsS -D tmp/final-live-gate/ttl-headers.txt -o tmp/final-live-gate/live-graph.ttl https://www.ghezelbaash.ir/graph.ttl
+          curl -fsS -D tmp/final-live-gate/portrait-headers.txt -o /dev/null https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp
+
+      - name: Validate production headers and live semantic parity
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import json
-          result={}
-          for mode in ('mobile','desktop'):
-            d=json.loads(Path(f'tmp/live-pass1/{mode}.json').read_text())
-            a=d['audits'];c=d['categories']
-            image_items=a.get('image-delivery-insight',{}).get('details',{}).get('items',[])
-            requests=a.get('network-requests',{}).get('details',{}).get('items',[])
-            physician=[{'url':x.get('url'),'transferSize':x.get('transferSize'),'resourceSize':x.get('resourceSize')} for x in requests if 'media/images/physician/' in x.get('url','')]
-            result[mode]={
-              'categories':{k:round(v['score']*100) for k,v in c.items()},
-              'fcp':a['first-contentful-paint']['numericValue'],
-              'lcp':a['largest-contentful-paint']['numericValue'],
-              'speedIndex':a['speed-index']['numericValue'],
-              'tbt':a['total-blocking-time']['numericValue'],
-              'cls':a['cumulative-layout-shift']['numericValue'],
-              'mainthread':a['mainthread-work-breakdown']['numericValue'],
-              'maxPotentialFid':a['max-potential-fid']['numericValue'],
-              'imageSavings':a.get('image-delivery-insight',{}).get('displayValue'),
-              'imageItems':[{'url':x.get('url'),'totalBytes':x.get('totalBytes'),'wastedBytes':x.get('wastedBytes')} for x in image_items],
-              'physicianRequests':physician,
-            }
-          Path('tmp/live-performance-pass1.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+          from html.parser import HTMLParser
+          import json,re
+          h=Path('tmp/final-live-gate/root-headers.txt').read_text(errors='replace')
+          html=Path('tmp/final-live-gate/live.html').read_text(encoding='utf-8')
+          gh=Path('tmp/final-live-gate/graph-headers.txt').read_text(errors='replace')
+          th=Path('tmp/final-live-gate/ttl-headers.txt').read_text(errors='replace')
+          ih=Path('tmp/final-live-gate/portrait-headers.txt').read_text(errors='replace')
+          low=lambda x:x.lower()
+          assert 'content-security-policy:' in low(h)
+          assert "script-src 'self' 'sha256-uilyfwz1tael84oxdfhuroh/stgvxu/uznh6lvtoymw='" in low(h)
+          assert "style-src 'self' 'sha256-bj/2hajyutjog6jydqvlrc0js4gq88xyp4rrp82xfuy='" in low(h)
+          assert 'static.cloudflareinsights.com' not in html
+          assert 'cloudflareinsights.com/cdn-cgi/rum' not in html
+          assert 'content-encoding: br' in low(h)
+          assert 'alt-svc: h3=' in low(h)
+          assert 'application/ld+json' in low(gh)
+          assert 'text/turtle' in low(th)
+          assert 'cache-control: public, max-age=31536000, immutable' in low(ih)
+          assert 'rel="about"' in low(ih)
+          assert 'در حال معاینه بالینی مراجعه‌کننده' not in html
+          assert 'PresentationDigitalDocument' in html
+          assert '"priceRange":"$$$$"' in html or '"priceRange": "$$$$"' in html
+          assert html.find('</main>') < html.find('application/ld+json')
+          report={
+            'htmlBytes':len(html.encode('utf-8')),
+            'cspPresent':True,
+            'brotli':True,
+            'http3Advertised':True,
+            'analyticsMarkupAbsent':True,
+            'oldOfficePhraseAbsent':True,
+            'jsonLdAfterMain':True,
+            'priceRange':True,
+            'presentationType':True,
+            'graphMime':True,
+            'ttlMime':True,
+            'portraitImmutable':True,
+            'portraitSemanticLink':True,
+          }
+          Path('tmp/final-live-gate/live-validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
           PY
-      - name: Commit audit and remove workflow
+
+      - name: Run repeated live Lighthouse audits
+        run: |
+          mkdir -p tmp/final-live-gate/lighthouse
+          for mode in mobile desktop; do
+            for run in 1 2 3; do
+              args=""
+              if [ "$mode" = desktop ]; then args="--preset=desktop"; fi
+              npx --yes lighthouse@latest https://www.ghezelbaash.ir/ $args \
+                --output=json --output-path="tmp/final-live-gate/lighthouse/${mode}-${run}.json" \
+                --only-categories=performance,accessibility,best-practices,seo \
+                --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet || true
+            done
+          done
+
+      - name: Summarize final live gate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,statistics
+          out={'modes':{}}
+          for mode in ('mobile','desktop'):
+            rows=[]
+            for p in sorted(Path('tmp/final-live-gate/lighthouse').glob(f'{mode}-*.json')):
+              d=json.loads(p.read_text());a=d['audits'];c=d['categories']
+              req=a.get('network-requests',{}).get('details',{}).get('items',[])
+              rows.append({
+                'performance':round(c['performance']['score']*100),
+                'accessibility':round(c['accessibility']['score']*100),
+                'bestPractices':round(c['best-practices']['score']*100),
+                'seo':round(c['seo']['score']*100),
+                'fcp':a['first-contentful-paint']['numericValue'],
+                'lcp':a['largest-contentful-paint']['numericValue'],
+                'tbt':a['total-blocking-time']['numericValue'],
+                'cls':a['cumulative-layout-shift']['numericValue'],
+                'mainthread':a['mainthread-work-breakdown']['numericValue'],
+                'cloudflareAnalyticsRequests':[x.get('url') for x in req if 'cloudflareinsights' in x.get('url','') or 'static.cloudflareinsights.com' in x.get('url','')],
+              })
+            def med(k): return statistics.median(x[k] for x in rows)
+            out['modes'][mode]={'runs':rows,'median':{k:med(k) for k in ('performance','fcp','lcp','tbt','cls','mainthread')}}
+          out['sourceBuild']=json.loads(Path('tmp/final-live-gate/source-build.json').read_text())
+          out['liveValidation']=json.loads(Path('tmp/final-live-gate/live-validation.json').read_text())
+          out['acceptance']={
+            'semanticAndDelivery':True,
+            'accessibility100':all(x['accessibility']==100 for m in out['modes'].values() for x in m['runs']),
+            'bestPractices100':all(x['bestPractices']==100 for m in out['modes'].values() for x in m['runs']),
+            'seo100':all(x['seo']==100 for m in out['modes'].values() for x in m['runs']),
+            'performance100Repeated':all(x['performance']==100 for m in out['modes'].values() for x in m['runs']),
+            'noCloudflareAnalyticsRequests':all(not x['cloudflareAnalyticsRequests'] for m in out['modes'].values() for x in m['runs']),
+          }
+          Path('tmp/final-production-gate.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+          rm -rf tmp/final-live-gate/lighthouse
+
+      - name: Commit final gate report and remove one-shot workflow
+        if: always()
         run: |
           git config user.name 'OpenAI Project Automation'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/audit-live-pass1.yml
-          rm -rf tmp/live-pass1
-          git add tmp/live-performance-pass1.json
-          git commit -m 'Record live performance after CLS fix'
+          git add tmp/final-production-gate.json tmp/final-live-gate/source-build.json tmp/final-live-gate/live-validation.json tmp/final-live-gate/*-headers.txt
+          git commit -m 'Record final production CSP semantic and performance gate'
+          git pull --rebase origin main
           git push origin HEAD:main
