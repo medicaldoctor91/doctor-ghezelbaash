@@ -1,0 +1,90 @@
+name: Diagnose deterministic CSP generation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/diagnose-csp-generation.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Build and diagnose CSP prerequisites
+        shell: bash
+        run: |
+          set +e
+          mkdir -p tmp
+          report=tmp/csp-diagnostic.txt
+          : > "$report"
+          npm ci --no-audit --no-fund >> "$report" 2>&1
+          echo "npm_ci_exit=$?" >> "$report"
+          npm run build >> "$report" 2>&1
+          echo "build_exit=$?" >> "$report"
+          python3 - <<'PY' >> "$report" 2>&1
+          from html.parser import HTMLParser
+          from pathlib import Path
+          import base64,hashlib,json
+          class Collector(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=False);self.capture=None;self.buf=[];self.styles=[];self.scripts=[];self.style_attrs=[];self.script_src=[]
+              def handle_starttag(self,tag,attrs):
+                  d=dict(attrs)
+                  if 'style' in d:self.style_attrs.append((tag,d['style']))
+                  if tag=='script' and d.get('src'):self.script_src.append(d.get('src'))
+                  if tag=='style':self.capture='style';self.buf=[]
+                  elif tag=='script' and not d.get('src'):self.capture='script';self.buf=[]
+              def handle_data(self,data):
+                  if self.capture:self.buf.append(data)
+              def handle_entityref(self,name):
+                  if self.capture:self.buf.append('&'+name+';')
+              def handle_charref(self,name):
+                  if self.capture:self.buf.append('&#'+name+';')
+              def handle_endtag(self,tag):
+                  if tag==self.capture:
+                      value=''.join(self.buf);(self.styles if tag=='style' else self.scripts).append(value);self.capture=None;self.buf=[]
+          p=Path('dist/index.html');print('dist_exists',p.exists())
+          if p.exists():
+              html=p.read_text(encoding='utf-8');c=Collector();c.feed(html)
+              print('html_bytes',len(html.encode()))
+              print('styles',len(c.styles),[len(x.encode()) for x in c.styles])
+              print('scripts',len(c.scripts),[len(x.encode()) for x in c.scripts])
+              print('external_scripts',c.script_src)
+              print('style_attrs',len(c.style_attrs),c.style_attrs[:30])
+              tok=lambda x:"'sha256-"+base64.b64encode(hashlib.sha256(x.encode()).digest()).decode()+"'"
+              print('style_hashes',[tok(x) for x in c.styles])
+              print('script_hashes',[tok(x) for x in c.scripts])
+          headers=Path('public/_headers').read_text(encoding='utf-8')
+          route='''/
+            Content-Language: fa-IR
+            Cache-Control: public, max-age=0, must-revalidate
+            Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle"
+          '''
+          print('root_exact_count',headers.count(route))
+          print('csp_existing','Content-Security-Policy:' in headers)
+          print('root_excerpt',repr(headers[headers.find('/\n'):headers.find('/\n')+500]))
+          PY
+          echo "diagnostic_exit=$?" >> "$report"
+      - name: Commit diagnostic and remove workflow
+        if: always()
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/diagnose-csp-generation.yml
+          git add tmp/csp-diagnostic.txt
+          git commit -m 'Record CSP generation diagnostics'
+          git pull --rebase origin main
+          git push origin HEAD:main
