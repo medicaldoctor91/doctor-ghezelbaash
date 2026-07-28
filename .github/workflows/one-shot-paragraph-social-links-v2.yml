@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/one-shot-paragraph-social-links-v2.yml'
+      - 'scripts/apply-paragraph-social-links.py'
 
 permissions:
   contents: write
