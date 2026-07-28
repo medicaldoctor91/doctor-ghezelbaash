@@ -19,13 +19,13 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
   <picture>
     <source
       type="image/webp"
-      srcset="/media/images/physician/saeed-ghezelbash-portrait-960.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.webp 1600w"
-      sizes="(max-width: 960px) 100vw, 960px"
+      srcset="/media/images/physician/saeed-ghezelbash-portrait-640.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-960.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.webp 1600w"
+      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"
     />
     <img
-      src="/media/images/physician/saeed-ghezelbash-portrait-960.webp"
-      width="960"
-      height="640"
+      src="/media/images/physician/saeed-ghezelbash-portrait-640.webp"
+      width="640"
+      height="427"
       alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه"
       loading="eager"
       decoding="async"
@@ -41,13 +41,13 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
   <picture>
     <source
       type="image/webp"
-      srcset="/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp 1600w"
-      sizes="(max-width: 960px) 100vw, 960px"
+      srcset="/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp 640w, /media/images/physician/saeed-ghezelbash-clinical-examination-960.webp 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp 1600w"
+      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"
     />
     <img
-      src="/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp"
-      width="960"
-      height="640"
+      src="/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp"
+      width="640"
+      height="427"
       alt="دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه"
       loading="lazy"
       decoding="async"
@@ -8221,13 +8221,13 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
   <picture>
     <source
       type="image/webp"
-      srcset="/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp 960w, /media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp 1600w"
-      sizes="(max-width: 960px) 100vw, 960px"
+      srcset="/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp 640w, /media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp 960w, /media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp 1600w"
+      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"
     />
     <img
-      src="/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp"
-      width="960"
-      height="640"
+      src="/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp"
+      width="640"
+      height="427"
       alt="دکتر سعید قزلباش با لباس پزشکی و گوشی پزشکی، همراه اعضای تیم بالینی در کرمانشاه"
       loading="lazy"
       decoding="async"

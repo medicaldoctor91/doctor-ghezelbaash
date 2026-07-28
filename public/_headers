@@ -104,6 +104,10 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 /media/images/physician/saeed-ghezelbash-clinical-examination-*
   Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
 
+/media/images/physician/saeed-ghezelbash-in-clinical-office-*
+  Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
+
+
 /media/brand/doctor-ghezelbaash-symbol-512.png
   Link: <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json"
 
