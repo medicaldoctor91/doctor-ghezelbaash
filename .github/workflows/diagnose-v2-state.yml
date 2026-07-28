@@ -1,0 +1,67 @@
+name: Diagnose v2 finalization state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/diagnose-v2-state.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Record exact preconditions
+        run: |
+          mkdir -p tmp
+          python3 - <<'PY' > tmp/v2-state.txt 2>&1
+          import json
+          from pathlib import Path
+          ROOT='https://www.ghezelbaash.ir/'
+          ids={
+            'person':ROOT+'#saeed-ghezelbash',
+            'clinic':ROOT+'#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',
+            'course':ROOT+'#advanced-thread-lift-workshop-course',
+            'instance':ROOT+'#advanced-thread-lift-workshop-tehran-1403-11',
+            'article':ROOT+'#article-mdd-attachment-dissociation-trauma-2021',
+            'presentation':ROOT+'#presentation-attachment-style-dissociative-depression-2017',
+          }
+          print('source_files')
+          for p in ['public/graph.jsonld','src/data/semantic/head-graph.min.jsonld','src/pages/index.md','public/_headers']:
+            print(p,Path(p).exists(),Path(p).stat().st_size if Path(p).exists() else None)
+          for p in ['public/graph.jsonld','src/data/semantic/head-graph.min.jsonld']:
+            d=json.loads(Path(p).read_text(encoding='utf-8'))
+            graph=d.get('@graph',[])
+            by={n.get('@id'):n for n in graph if isinstance(n,dict) and n.get('@id')}
+            print('\nGRAPH',p,'nodes',len(by))
+            for k,i in ids.items():
+              n=by.get(i)
+              print(k,'present',bool(n),'type',None if not n else n.get('@type'))
+              if n: print(' ',{x:n.get(x) for x in ('priceRange','provider','instructor','hasCourseInstance','about') if x in n})
+          h=Path('public/_headers').read_text(encoding='utf-8')
+          print('\nheader_legacy',h.count('/media/images/physician/saeed-ghezelbash-clinical-examination-*'))
+          print('header_new',h.count('/media/images/physician/saeed-ghezelbash-in-clinical-office-*'))
+          page=Path('src/pages/index.md').read_text(encoding='utf-8')
+          for legacy,new640 in [('saeed-ghezelbash-portrait','saeed-ghezelbash-portrait-640.webp'),('saeed-ghezelbash-clinical-examination','saeed-ghezelbash-in-clinical-office-640.webp'),('saeed-ghezelbash-with-clinic-team','saeed-ghezelbash-with-clinic-team-640.webp')]:
+            old=f'srcset="/media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 960px) 100vw, 960px"'
+            new=f'srcset="/media/images/physician/{new640} 640w, /media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"'
+            print('markup',legacy,'old',page.count(old),'new',page.count(new))
+          print('workflow_execute_exists',Path('.github/workflows/execute-finalization.yml').exists())
+          print('workflow_execute_v2_exists',Path('.github/workflows/execute-finalization-v2.yml').exists())
+          print('workflow_old_exists',Path('.github/workflows/add-responsive-physician-images.yml').exists())
+          PY
+      - name: Commit diagnostic
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/diagnose-v2-state.yml
+          git add tmp/v2-state.txt
+          git commit -m 'Record v2 finalization preconditions'
+          git push origin HEAD:main
