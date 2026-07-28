@@ -1,0 +1,59 @@
+name: One-shot Instagram heading audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-instagram-heading-audit.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Extract Instagram-linked headings
+        run: |
+          python - <<'PY'
+          import html
+          import re
+          from pathlib import Path
+
+          src = Path('src/pages/index.md').read_text(encoding='utf-8')
+          url = 'https://www.instagram.com/doctor.ghezelbaash/'
+          heading_re = re.compile(r'<h([3-5])\s+id="([^"]+)"[^>]*>(.*?)</h\1>', re.S)
+          tag_re = re.compile(r'<[^>]+>')
+          rows = []
+          for level, ident, inner in heading_re.findall(src):
+              if f'href="{url}"' not in inner:
+                  continue
+              text = html.unescape(tag_re.sub('', inner)).strip()
+              rows.append((int(level), ident, text))
+
+          rows.sort(key=lambda x: (x[0], src.find(f'id="{x[1]}"')))
+          counts = {level: sum(1 for row in rows if row[0] == level) for level in (3, 4, 5)}
+          out = [
+              f'TOTAL={len(rows)}',
+              f'H3={counts[3]}',
+              f'H4={counts[4]}',
+              f'H5={counts[5]}',
+              '',
+          ]
+          for level in (3, 4, 5):
+              out.append(f'## H{level}')
+              for _, ident, text in [r for r in rows if r[0] == level]:
+                  out.append(f'H{level}\t{ident}\t{text}')
+              out.append('')
+          Path('tmp-instagram-heading-audit.txt').write_text('\n'.join(out), encoding='utf-8')
+          print('\n'.join(out))
+          PY
+      - name: Commit audit report
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add tmp-instagram-heading-audit.txt
+          git commit -m "Add temporary Instagram heading audit report"
+          git push
