@@ -27,9 +27,9 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
       width="640"
       height="427"
       alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه"
-      loading="eager"
+      loading="lazy"
       decoding="async"
-      fetchpriority="high"
+      fetchpriority="low"
     />
   </picture>
   <figcaption>دکتر سعید قزلباش، پزشک ایرانی</figcaption>
