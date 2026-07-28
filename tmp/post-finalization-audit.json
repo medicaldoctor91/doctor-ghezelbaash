@@ -1,0 +1,913 @@
+{
+  "lighthouse": {
+    "local-mobile": {
+      "categories": {
+        "performance": 33,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "first-contentful-paint": {
+          "score": 0,
+          "numericValue": 9533.79525,
+          "displayValue": "9.5 s"
+        },
+        "largest-contentful-paint": {
+          "score": 0,
+          "numericValue": 9976.590499999998,
+          "displayValue": "10.0 s"
+        },
+        "speed-index": {
+          "score": 0.11,
+          "numericValue": 9533.79525,
+          "displayValue": "9.5 s"
+        },
+        "total-blocking-time": {
+          "score": 0.22,
+          "numericValue": 1152,
+          "displayValue": "1,150 ms"
+        },
+        "cumulative-layout-shift": {
+          "score": 1,
+          "numericValue": 0,
+          "displayValue": "0"
+        },
+        "interactive": {
+          "score": 0.19,
+          "numericValue": 11305.99525,
+          "displayValue": "11.3 s"
+        },
+        "mainthread-work-breakdown": {
+          "score": 0,
+          "numericValue": 3095.759999999837,
+          "displayValue": "3.1 s"
+        },
+        "max-potential-fid": {
+          "score": 0.08,
+          "numericValue": 503,
+          "displayValue": "500 ms"
+        }
+      },
+      "failures": [
+        {
+          "id": "cache-insight",
+          "title": "Use efficient cache lifetimes",
+          "score": 0,
+          "displayValue": "Est savings of 106 KiB"
+        },
+        {
+          "id": "first-contentful-paint",
+          "title": "First Contentful Paint",
+          "score": 0,
+          "displayValue": "9.5 s"
+        },
+        {
+          "id": "image-delivery-insight",
+          "title": "Improve image delivery",
+          "score": 0,
+          "displayValue": "Est savings of 51 KiB"
+        },
+        {
+          "id": "largest-contentful-paint",
+          "title": "Largest Contentful Paint",
+          "score": 0,
+          "displayValue": "10.0 s"
+        },
+        {
+          "id": "mainthread-work-breakdown",
+          "title": "Minimize main-thread work",
+          "score": 0,
+          "displayValue": "3.1 s"
+        },
+        {
+          "id": "network-dependency-tree-insight",
+          "title": "Network dependency tree",
+          "score": 0,
+          "displayValue": null
+        },
+        {
+          "id": "max-potential-fid",
+          "title": "Max Potential First Input Delay",
+          "score": 0.08,
+          "displayValue": "500 ms"
+        },
+        {
+          "id": "speed-index",
+          "title": "Speed Index",
+          "score": 0.11,
+          "displayValue": "9.5 s"
+        },
+        {
+          "id": "interactive",
+          "title": "Time to Interactive",
+          "score": 0.19,
+          "displayValue": "11.3 s"
+        },
+        {
+          "id": "total-blocking-time",
+          "title": "Total Blocking Time",
+          "score": 0.22,
+          "displayValue": "1,150 ms"
+        },
+        {
+          "id": "document-latency-insight",
+          "title": "Document request latency",
+          "score": 0.5,
+          "displayValue": "Est savings of 1,150 KiB"
+        }
+      ]
+    },
+    "local-desktop": {
+      "categories": {
+        "performance": 69,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "first-contentful-paint": {
+          "score": 0.49,
+          "numericValue": 1601.4452999999999,
+          "displayValue": "1.6 s"
+        },
+        "largest-contentful-paint": {
+          "score": 0.74,
+          "numericValue": 1681.4452999999999,
+          "displayValue": "1.7 s"
+        },
+        "speed-index": {
+          "score": 0.79,
+          "numericValue": 1601.4452999999999,
+          "displayValue": "1.6 s"
+        },
+        "total-blocking-time": {
+          "score": 1,
+          "numericValue": 0,
+          "displayValue": "0 ms"
+        },
+        "cumulative-layout-shift": {
+          "score": 0.32,
+          "numericValue": 0.347735565497109,
+          "displayValue": "0.348"
+        },
+        "interactive": {
+          "score": 0.98,
+          "numericValue": 1681.4452999999999,
+          "displayValue": "1.7 s"
+        },
+        "mainthread-work-breakdown": {
+          "score": 1,
+          "numericValue": 241.85000000000036,
+          "displayValue": "0.2 s"
+        },
+        "max-potential-fid": {
+          "score": 1,
+          "numericValue": 32,
+          "displayValue": "30 ms"
+        }
+      },
+      "failures": [
+        {
+          "id": "cache-insight",
+          "title": "Use efficient cache lifetimes",
+          "score": 0,
+          "displayValue": "Est savings of 106 KiB"
+        },
+        {
+          "id": "cls-culprits-insight",
+          "title": "Layout shift culprits",
+          "score": 0,
+          "displayValue": null
+        },
+        {
+          "id": "image-delivery-insight",
+          "title": "Improve image delivery",
+          "score": 0,
+          "displayValue": "Est savings of 32 KiB"
+        },
+        {
+          "id": "layout-shifts",
+          "title": "Avoid large layout shifts",
+          "score": 0,
+          "displayValue": "1 layout shift found"
+        },
+        {
+          "id": "network-dependency-tree-insight",
+          "title": "Network dependency tree",
+          "score": 0,
+          "displayValue": null
+        },
+        {
+          "id": "cumulative-layout-shift",
+          "title": "Cumulative Layout Shift",
+          "score": 0.32,
+          "displayValue": "0.348"
+        },
+        {
+          "id": "first-contentful-paint",
+          "title": "First Contentful Paint",
+          "score": 0.49,
+          "displayValue": "1.6 s"
+        },
+        {
+          "id": "document-latency-insight",
+          "title": "Document request latency",
+          "score": 0.5,
+          "displayValue": "Est savings of 1,150 KiB"
+        },
+        {
+          "id": "largest-contentful-paint",
+          "title": "Largest Contentful Paint",
+          "score": 0.74,
+          "displayValue": "1.7 s"
+        },
+        {
+          "id": "speed-index",
+          "title": "Speed Index",
+          "score": 0.79,
+          "displayValue": "1.6 s"
+        },
+        {
+          "id": "interactive",
+          "title": "Time to Interactive",
+          "score": 0.98,
+          "displayValue": "1.7 s"
+        }
+      ]
+    },
+    "live-mobile": {
+      "categories": {
+        "performance": 69,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "first-contentful-paint": {
+          "score": 0.49,
+          "numericValue": 3013.2855,
+          "displayValue": "3.0 s"
+        },
+        "largest-contentful-paint": {
+          "score": 0.73,
+          "numericValue": 3171.2855,
+          "displayValue": "3.2 s"
+        },
+        "speed-index": {
+          "score": 0.94,
+          "numericValue": 3013.2855,
+          "displayValue": "3.0 s"
+        },
+        "total-blocking-time": {
+          "score": 0.96,
+          "numericValue": 134,
+          "displayValue": "130 ms"
+        },
+        "cumulative-layout-shift": {
+          "score": 0.32,
+          "numericValue": 0.3474397944627933,
+          "displayValue": "0.347"
+        },
+        "interactive": {
+          "score": 0.93,
+          "numericValue": 3435.7355,
+          "displayValue": "3.4 s"
+        },
+        "mainthread-work-breakdown": {
+          "score": 1,
+          "numericValue": 1260.680000000009,
+          "displayValue": "1.3 s"
+        },
+        "max-potential-fid": {
+          "score": 0.52,
+          "numericValue": 243,
+          "displayValue": "240 ms"
+        }
+      },
+      "failures": [
+        {
+          "id": "cls-culprits-insight",
+          "title": "Layout shift culprits",
+          "score": 0,
+          "displayValue": null
+        },
+        {
+          "id": "image-delivery-insight",
+          "title": "Improve image delivery",
+          "score": 0,
+          "displayValue": "Est savings of 35 KiB"
+        },
+        {
+          "id": "layout-shifts",
+          "title": "Avoid large layout shifts",
+          "score": 0,
+          "displayValue": "1 layout shift found"
+        },
+        {
+          "id": "network-dependency-tree-insight",
+          "title": "Network dependency tree",
+          "score": 0,
+          "displayValue": null
+        },
+        {
+          "id": "cumulative-layout-shift",
+          "title": "Cumulative Layout Shift",
+          "score": 0.32,
+          "displayValue": "0.347"
+        },
+        {
+          "id": "first-contentful-paint",
+          "title": "First Contentful Paint",
+          "score": 0.49,
+          "displayValue": "3.0 s"
+        },
+        {
+          "id": "cache-insight",
+          "title": "Use efficient cache lifetimes",
+          "score": 0.5,
+          "displayValue": "Est savings of 5 KiB"
+        },
+        {
+          "id": "max-potential-fid",
+          "title": "Max Potential First Input Delay",
+          "score": 0.52,
+          "displayValue": "240 ms"
+        },
+        {
+          "id": "largest-contentful-paint",
+          "title": "Largest Contentful Paint",
+          "score": 0.73,
+          "displayValue": "3.2 s"
+        },
+        {
+          "id": "interactive",
+          "title": "Time to Interactive",
+          "score": 0.93,
+          "displayValue": "3.4 s"
+        },
+        {
+          "id": "speed-index",
+          "title": "Speed Index",
+          "score": 0.94,
+          "displayValue": "3.0 s"
+        },
+        {
+          "id": "total-blocking-time",
+          "title": "Total Blocking Time",
+          "score": 0.96,
+          "displayValue": "130 ms"
+        }
+      ]
+    },
+    "live-desktop": {
+      "categories": {
+        "performance": 82,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "first-contentful-paint": {
+          "score": 0.97,
+          "numericValue": 697.0820000000001,
+          "displayValue": "0.7 s"
+        },
+        "largest-contentful-paint": {
+          "score": 0.97,
+          "numericValue": 846.7790000000001,
+          "displayValue": "0.8 s"
+        },
+        "speed-index": {
+          "score": 1,
+          "numericValue": 697.0820000000001,
+          "displayValue": "0.7 s"
+        },
+        "total-blocking-time": {
+          "score": 1,
+          "numericValue": 0,
+          "displayValue": "0 ms"
+        },
+        "cumulative-layout-shift": {
+          "score": 0.32,
+          "numericValue": 0.347735565497109,
+          "displayValue": "0.348"
+        },
+        "interactive": {
+          "score": 1,
+          "numericValue": 846.7790000000002,
+          "displayValue": "0.8 s"
+        },
+        "mainthread-work-breakdown": {
+          "score": 1,
+          "numericValue": 276.7250000000068,
+          "displayValue": "0.3 s"
+        },
+        "max-potential-fid": {
+          "score": 1,
+          "numericValue": 23,
+          "displayValue": "20 ms"
+        }
+      },
+      "failures": [
+        {
+          "id": "cls-culprits-insight",
+          "title": "Layout shift culprits",
+          "score": 0,
+          "displayValue": null
+        },
+        {
+          "id": "image-delivery-insight",
+          "title": "Improve image delivery",
+          "score": 0,
+          "displayValue": "Est savings of 32 KiB"
+        },
+        {
+          "id": "layout-shifts",
+          "title": "Avoid large layout shifts",
+          "score": 0,
+          "displayValue": "1 layout shift found"
+        },
+        {
+          "id": "network-dependency-tree-insight",
+          "title": "Network dependency tree",
+          "score": 0,
+          "displayValue": null
+        },
+        {
+          "id": "cumulative-layout-shift",
+          "title": "Cumulative Layout Shift",
+          "score": 0.32,
+          "displayValue": "0.348"
+        },
+        {
+          "id": "cache-insight",
+          "title": "Use efficient cache lifetimes",
+          "score": 0.5,
+          "displayValue": "Est savings of 5 KiB"
+        },
+        {
+          "id": "first-contentful-paint",
+          "title": "First Contentful Paint",
+          "score": 0.97,
+          "displayValue": "0.7 s"
+        },
+        {
+          "id": "largest-contentful-paint",
+          "title": "Largest Contentful Paint",
+          "score": 0.97,
+          "displayValue": "0.8 s"
+        }
+      ]
+    }
+  },
+  "headers": {
+    "favicon.svg": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:46 GMT",
+        "content-type": "image/svg+xml",
+        "content-length": "1240",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=jUA06bFyfWouHZJBfyyuy5KTn7tUIWioY2qmyldkLPryXmxJR%2BtBhUye9Nx8KE%2BkSRCJ%2BIyj45Z%2BlnVuSvbdpBqKJGNFt9RkF9L7Mjd9ewckPfCOIA7EKYRaETrUOSJo5%2BT9jW0%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=31536000, immutable",
+        "etag": "\"17846912a92a18e94c1c426bc02f6ecb\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d17a9cf3c9a9-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "graph.jsonld": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:45 GMT",
+        "content-type": "application/ld+json; charset=utf-8",
+        "content-length": "534604",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=YAGHXhqKv7wSXXIgbh%2FZNLWgcGNrt9pVRSnZElxsoFLPqwrpfuheRKUCJdrdcCBdirypN9DPDqznA37OJOKQzo73yehL9gGq7SeO17Q%2FJV10%2BOdBAI0uCZWt8vatmNcPoTMp%2BkM%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=86400, s-maxage=604800",
+        "etag": "\"c75d2b4639df136587baa2b0c024723c\"",
+        "link": "</graph.ttl>; rel=\"alternate\"; type=\"text/turtle\", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel=\"describes\", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel=\"describes\", <https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project>; rel=\"describes\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "cross-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d172ffd7d4c1-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "graph.ttl": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:45 GMT",
+        "content-type": "text/turtle; charset=utf-8",
+        "content-length": "554702",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=DweBek4aEL8QXbveWPf%2FoHUTYQxemOotT0ivAzCjGs77kSvpmwO0usvcmH2Ea9q2Dp76OX80wARhstsSVew3yCFBxSjHUzY4kYUlPn5jrpoxPD9X%2F2hhjaSQU70UiTi1hzjGEJQ%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=86400, s-maxage=604800",
+        "etag": "\"75dea1abaf2f5c90e8214cfba8edba7d\"",
+        "link": "</graph.jsonld>; rel=\"alternate\"; type=\"application/ld+json\", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel=\"describes\", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel=\"describes\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "cross-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d174bada8f7d-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "media_images_physician_saeed-ghezelbash-in-clinical-office-640.webp": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:46 GMT",
+        "content-type": "image/webp",
+        "content-length": "27188",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=nXxWis67UAo1%2B1oc4XtZx%2FOq7oDIygzCecxZi5O1hjGH7Wj5NBlqMZ12WJS9CndtdB9bjvMqZB92ek1mALljh8SpnyN74QS7N8dGp%2FOgIOuX9snwpeAknj9K6rioZu9sy5IqPKM%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=31536000, immutable",
+        "etag": "\"3044a5da66df0bd1bb7c9367fd934ded\"",
+        "link": "<https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel=\"about\", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel=\"about\", </graph.jsonld>; rel=\"describedby\"; type=\"application/ld+json\", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel=\"describedby\", <https://creativecommons.org/licenses/by/4.0/>; rel=\"license\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d177eda8801d-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "media_images_physician_saeed-ghezelbash-portrait-640.webp": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:45 GMT",
+        "content-type": "image/webp",
+        "content-length": "25294",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=Fv5yIxqYF6QXi66OfIW%2Fhkxp7K3CUpZ23G6WGxaF5rgWterLAEjcfI1KnXrJIpQu8Mui2aUZFNXO3fXGIicjXhvCCYbiGt2ew2WVXGhxGvfb8nB04BAuD7OrnfHc5WMgIadVqn8%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=31536000, immutable",
+        "etag": "\"47ada1198c57e197a77c7102e3b63b4b\"",
+        "link": "<https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel=\"about\", </graph.jsonld>; rel=\"describedby\"; type=\"application/ld+json\", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg>; rel=\"describedby\", <https://creativecommons.org/licenses/by/4.0/>; rel=\"license\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d176799905cc-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "media_images_physician_saeed-ghezelbash-with-clinic-team-640.webp": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:46 GMT",
+        "content-type": "image/webp",
+        "content-length": "32070",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=XHt9KpAn491N6bFnSLJBReMZmbu6yWHe4sP13kJxe8baZTOn%2FkW9lQX4qBKvP0EcSmkOOpUgVfTVB1IaAJEdqR0JApe2mQzYOkoLHI0I0%2BXGn7hbQWkieuMiI97n2y1IQj1TNq8%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=31536000, immutable",
+        "etag": "\"561dfd1d27db41ea46bd48f45ab4f60a\"",
+        "link": "<https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel=\"about\", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel=\"about\", </graph.jsonld>; rel=\"describedby\"; type=\"application/ld+json\", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg>; rel=\"describedby\", <https://creativecommons.org/licenses/by/4.0/>; rel=\"license\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d1793e1ad6eb-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "robots.txt": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:46 GMT",
+        "content-type": "text/plain; charset=utf-8",
+        "content-length": "767",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=%2BhgE7kbMxxuo5QT%2BPU7YQafe08aVOvqigvCqCs95fJ%2BppnmgI9K1Ot4Kq%2FZOnOJ9av%2BJMl3czIZy2s%2BMRYvJ4OyOsircZfF%2B5e6qjakpw3ggymhnxBd%2Bhpu8dvqBMaPN9b4S2Mo%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "etag": "\"0c544f8a797191892a3a2f9c75d4d030\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d17b99dec989-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "root": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:45 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=4tflElVueu4hyzdS9zn7ucUmCk7QajolSa%2B2TCmafVDTtcBglFU4MCBI%2Fi42QMWBRfJH7kai5oXHATe%2FCa9lRSh8tr58VFerGbjhlPgEjpSLCV5JOvznh4sJHaU9cO0owf%2FAiIo%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "content-language": "fa-IR",
+        "x-frame-options": "DENY",
+        "link": "</graph.jsonld>; rel=\"describedby\"; type=\"application/ld+json\", </graph.ttl>; rel=\"describedby\"; type=\"text/turtle\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "server": "cloudflare",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d1722a30d468-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "site.webmanifest": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:46 GMT",
+        "content-type": "application/manifest+json; charset=utf-8",
+        "content-length": "692",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=BZDXTMKMdc3GZbmOpsolxEmCODfL%2BcB0FF2g9tJwH1M3gB0LaXdkzC1JcBdg98TneXbxeMtmeQdyPRDmhXl%2F0nECUh19DGddqiEjK3DkkuPCGgQEpnvLVZQIifhNNRbXZmrKrAs%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=86400, s-maxage=604800",
+        "etag": "\"f6be1da96b7d5a67b5e5946dca595a66\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d17b1a8ccbf8-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "sitemap.xml": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 15:11:46 GMT",
+        "content-type": "application/xml; charset=utf-8",
+        "content-length": "4996",
+        "x-robots-tag": "noindex",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=6FeYfFRuwsivYcTky0YvcG6AnvUAuhbDDgHSh2SRHMEbXA11iqaaVqIkBpxnAmSNF%2B5qyC4xsYGHzntB9klxFZRcB6xBEKkNtvUbwjDztcDbxd54eV5Vj4z%2FG6jDG4wdndXDQPE%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "etag": "\"e81e647fc0ca93ff80c42ba92afcb836\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "x-permitted-cross-domain-policies": "none",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a224d17c1cf2d6f7-IAD",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    }
+  },
+  "liveDeployment": {
+    "bytes": 1757833,
+    "hasPortrait640": true,
+    "hasOffice640": true,
+    "hasTeam640": true,
+    "hasOldOfficePhrase": false,
+    "hasPriceRange": true,
+    "hasPresentationType": true
+  },
+  "sourceValidation": {
+    "sourceCommit": "ref: refs/heads/main",
+    "files": {
+      "public/graph.jsonld": {
+        "bytes": 534604,
+        "sha256": "ed10c0a270b4ef30a3aa37e6396bcffce30530aed3076628f55ea15dadd3854d"
+      },
+      "src/data/semantic/head-graph.min.jsonld": {
+        "bytes": 48779,
+        "sha256": "b889727d6cf5b40125f3839775f86e4681ffb2d1afc54fd464d87a96f4e8c8cc"
+      },
+      "public/graph.ttl": {
+        "bytes": 554702,
+        "sha256": "caa25016134530f7a33ec94b2ee660cd97d30cb2f4b6396665503c03ea42c957"
+      },
+      "src/pages/index.md": {
+        "bytes": 1674475,
+        "sha256": "b32857da2eb21c8595a0c0c54edecbc31b7d5b9fe4dee782826bccf33c13b961"
+      },
+      "public/_headers": {
+        "bytes": 6745,
+        "sha256": "180b8e7a4b3c3e4f0d45e77a1d4c3813ca751de6f5f1f206407be93e5c4432a9"
+      },
+      "dist/index.html": {
+        "bytes": 1757619,
+        "sha256": "7aec3c07687412c4de786f4235139423ec082654fb658963060f4074279db46a"
+      }
+    },
+    "semantic": {
+      "public/graph.jsonld": {
+        "nodes": 757,
+        "duplicateIds": 0
+      },
+      "src/data/semantic/head-graph.min.jsonld": {
+        "nodes": 108,
+        "duplicateIds": 0
+      },
+      "headMissingFromFull": [],
+      "full": {
+        "personPresent": true,
+        "clinicPresent": true,
+        "coursePresent": true,
+        "courseInstancePresent": true,
+        "event2017Present": true,
+        "article2016Present": true,
+        "article2021Present": true,
+        "presentation2017Present": true,
+        "iranPresent": true,
+        "iraqPresent": true,
+        "personTypes": [
+          "Person",
+          "IndividualPhysician"
+        ],
+        "clinicTypes": [
+          "MedicalClinic"
+        ],
+        "personPriceRange": "$$$$",
+        "clinicPriceRange": "$$$$",
+        "courseProvider": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "courseHasInstructor": false,
+        "courseDescription": true,
+        "instanceProvider": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "instanceInstructor": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "head": {
+        "personPresent": true,
+        "clinicPresent": true,
+        "coursePresent": true,
+        "courseInstancePresent": true,
+        "event2017Present": true,
+        "article2016Present": true,
+        "article2021Present": true,
+        "presentation2017Present": true,
+        "iranPresent": true,
+        "iraqPresent": true,
+        "personTypes": [
+          "Person",
+          "IndividualPhysician"
+        ],
+        "clinicTypes": [
+          "MedicalClinic"
+        ],
+        "personPriceRange": "$$$$",
+        "clinicPriceRange": "$$$$",
+        "courseProvider": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "courseHasInstructor": false,
+        "courseDescription": true,
+        "instanceProvider": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "instanceInstructor": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "event2017Fields": {
+        "startDate": true,
+        "endDate": true,
+        "description": true,
+        "organizer": true,
+        "eventAttendanceMode": true,
+        "eventStatus": true,
+        "location": true
+      },
+      "article2016Fields": {
+        "headline": true,
+        "name": true,
+        "datePublished": true,
+        "author": true,
+        "publisher": false,
+        "sameAs": true,
+        "image": false
+      },
+      "article2021Fields": {
+        "headline": true,
+        "name": true,
+        "datePublished": true,
+        "author": true,
+        "publisher": false,
+        "sameAs": true,
+        "image": false
+      },
+      "physicianImageMetadataIssues": [],
+      "jsonLdTriples": 6812,
+      "turtleTriples": 6812,
+      "rdfTripleCountsEqual": true,
+      "visibleOfficeOldPhrase": false,
+      "visibleOfficeNewImage": true
+    },
+    "images": {
+      "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg": {
+        "width": 4897,
+        "height": 3266,
+        "format": "JPEG",
+        "bytes": 289620,
+        "sha256": "236fe6eb5f3651de15cf72033a372ab027ceb3c84995074aafe6a6e20cf0d484"
+      },
+      "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg": {
+        "width": 4897,
+        "height": 3266,
+        "format": "JPEG",
+        "bytes": 379699,
+        "sha256": "144576a426ace532ca5b280590c673df2fad830ef8511789990d65538b1345e2"
+      },
+      "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg": {
+        "width": 4897,
+        "height": 3266,
+        "format": "JPEG",
+        "bytes": 350694,
+        "sha256": "09aa6fefed5c6491f270de999db57264049d567fd68cda7966540ea9e3b45c36"
+      },
+      "public/media/images/physician/saeed-ghezelbash-portrait-640.webp": {
+        "width": 640,
+        "height": 427,
+        "format": "WEBP",
+        "bytes": 25294,
+        "sha256": "8acb652d97064548c8965408dc344893abd78b8f97483cfcd52026ba315f3ba6"
+      },
+      "public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp": {
+        "width": 640,
+        "height": 427,
+        "format": "WEBP",
+        "bytes": 32070,
+        "sha256": "13ec1a5d632fb1a8549be4b54c2a6ed9d90d0a39ae24bec0726cd8cc57859f61"
+      },
+      "public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp": {
+        "width": 640,
+        "height": 427,
+        "format": "WEBP",
+        "bytes": 27188,
+        "sha256": "9eccca6d05f075c767ed2a4560fe7b6e0c365ced68b59b821af6d1c3491ca19d"
+      }
+    },
+    "build": {
+      "htmlUnder1900000": true
+    },
+    "failures": [],
+    "warnings": [
+      "Event optional field absent: image",
+      "Event optional field absent: offers",
+      "Event optional field absent: performer",
+      "article2016 optional image absent",
+      "article2021 optional image absent"
+    ]
+  }
+}
