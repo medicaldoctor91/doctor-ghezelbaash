@@ -1,0 +1,40 @@
+{
+  "accepted": false,
+  "mobile": {
+    "performance": 32,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcp": 9451.4005,
+    "lcp": 9976.4005,
+    "tbt": 1273.2997500000001,
+    "cls": 0,
+    "mainthread": 3087.6799999999357,
+    "fontRequests": [
+      {
+        "url": "http://127.0.0.1:4173/fonts/vazirmatn-nl-wght.woff2",
+        "priority": "VeryHigh",
+        "transferSize": 48161
+      }
+    ]
+  },
+  "desktop": {
+    "performance": 86,
+    "accessibility": 97,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcp": 1601.7182,
+    "lcp": 1681.7182,
+    "tbt": 0,
+    "cls": 0,
+    "mainthread": 239.41600000000045,
+    "fontRequests": [
+      {
+        "url": "http://127.0.0.1:4173/fonts/vazirmatn-nl-wght.woff2",
+        "priority": "VeryHigh",
+        "transferSize": 48161
+      }
+    ]
+  },
+  "htmlBytes": 1757614
+}
