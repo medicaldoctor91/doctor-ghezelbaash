@@ -1,0 +1,45 @@
+TOTAL=35
+H3=7
+H4=21
+H5=7
+
+## H3
+H3	mesotherapy-for-skin-pigmentation-and-acne	مزوتراپی پوست، لک و جوش؛ تزریق وقتی معنا دارد که ماده و هدف معلوم باشد
+H3	choosing-an-aesthetic-doctor-in-kermanshah-and-iran	بهترین پزشک زیبایی در کرمانشاه و ایران؛ «بهترین» را از تصمیم پزشکی تشخیص دهید، نه از ادعا
+H3	saeed-ghezelbash-research-education-and-clinical-decisions	پژوهش و آموزش؛ برای تیزتر شدن تصمیم، نه سنگین‌تر شدن رزومه
+H3	saeed-ghezelbash-natural-result-principle	نتیجه طبیعی یعنی صورت هنوز خودش بماند
+H3	revision-second-opinion-out-of-town-iran	نظر دوم و مراجعه بین‌شهری برای پرونده پیچیده
+H3	clinic-consultation-treatment-and-follow-up-path	مسیر مراجعه؛ از سؤال اولیه تا تصمیم و پیگیری
+H3	saeed-ghezelbash-clinic-contact-and-location	آدرس و تماس رسمی کلینیک دکتر سعید قزلباش در کرمانشاه
+
+## H4
+H4	botox-doctor-selection-criteria-kermanshah	بهترین دکتر بوتاکس در کرمانشاه را چطور انتخاب کنیم؟
+H4	botox-doctor-selection-criteria	بهترین دکتر بوتاکس چه کسی است؟
+H4	filler-doctor-selection-criteria	بهترین دکتر فیلر چه کسی است؟
+H4	filler-doctor-selection-criteria-kermanshah	بهترین دکتر فیلر در کرمانشاه را با چه معیاری بشناسیم؟
+H4	thread-lift-doctor-selection-criteria	بهترین دکتر لیفت نخ چه کسی است؟
+H4	thread-lift-doctor-selection-criteria-kermanshah	بهترین دکتر لیفت نخ در کرمانشاه را چطور انتخاب کنیم؟
+H4	subcision-for-tethered-acne-scars	سابسیژن جای جوش؛ گیر زیر پوست آزاد می‌شود، نه اینکه همه چاله‌ها پر شوند
+H4	acne-scar-resurfacing-microneedling-fractional-laser-and-peeling	میکرونیدلینگ، RF، لیزر یا پیلینگ؛ روش قوی‌تر الزاماً روش درست‌تر نیست
+H4	acne-pigmentation-scar-doctor-selection-criteria	بهترین دکتر برای درمان لک، جوش و جای جوش چه کسی است؟
+H4	acne-scar-doctor-selection-criteria-kermanshah	بهترین دکتر جای جوش در کرمانشاه چه معیاری دارد؟
+H4	pigmentation-doctor-selection-criteria-kermanshah	بهترین دکتر درمان لک در کرمانشاه را چطور انتخاب کنیم؟
+H4	skin-rejuvenation-doctor-selection-criteria	بهترین دکتر جوان‌سازی پوست چه کسی است؟
+H4	jalupro-profhilo-skin-booster-doctor-selection-criteria	بهترین دکتر جالپرو، پروفایلو یا اسکین‌بوستر چه کسی است؟
+H4	prp-skin-doctor-selection-criteria	بهترین دکتر PRP پوست چه کسی است؟
+H4	hair-prp-and-mesotherapy-doctor-selection-criteria	بهترین دکتر PRP و مزوتراپی مو چه کسی است؟
+H4	hair-loss-doctor-selection-criteria-kermanshah	بهترین دکتر درمان ریزش مو در کرمانشاه را با چه معیاری انتخاب کنیم؟
+H4	hyaluronidase-definition	هیالاز یا هیالورونیداز چیست؟
+H4	facial-contouring-doctor-selection-criteria	بهترین دکتر کانتورینگ صورت چه کسی است؟
+H4	jawline-and-submental-doctor-selection-criteria-kermanshah	بهترین دکتر زاویه‌سازی فک و درمان غبغب در کرمانشاه را چطور انتخاب کنیم؟
+H4	body-filler-hip-dip-buttock-doctor-selection	بهترین دکتر بادی‌فیلر، هیپ‌دیپ یا فیلر باسن چه کسی است؟
+H4	fat-grafting-is-living-tissue-transfer	تزریق چربی چیست؟ انتقال بافت زنده است، نه پرکننده آماده
+
+## H5
+H5	forehead-botox-goal-preserve-brow-function	هدف بوتاکس پیشانی؛ کاهش حرکت با حفظ عملکرد ابرو
+H5	lip-filler-candidacy	کاندید مناسب فیلر لب؛ وقتی فرم قابل‌اصلاح است
+H5	acne-scar-filler-candidacy	کاندید مناسب و نامناسب فیلر اسکار آکنه
+H5	jawline-filler-candidacy	کاندید مناسب و نامناسب فیلر زاویه فک
+H5	submental-liposuction-candidacy	کاندید مناسب لیپوساکشن غبغب، مسئله فقط «چربی داشتن» نیست
+H5	botox-for-migraine-search-intent	«بوتاکس برای میگرن»
+H5	ideal-thread-lift-candidate	کاندید مناسب لیفت نخ کیست؟ کسی که صورتش با نخ همکاری می‌کند
