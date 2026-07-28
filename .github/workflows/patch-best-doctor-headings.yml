@@ -1,0 +1,108 @@
+name: One-shot best-doctor heading links
+
+on:
+  push:
+    paths:
+      - '.github/workflows/patch-best-doctor-headings.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify exact source blob
+        run: |
+          test "$(git hash-object src/pages/index.md)" = "54b30e4ca563774a8db7bb3dee77debc01327615"
+
+      - name: Link all currently unlinked best-doctor headings
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path('src/pages/index.md')
+          text = path.read_text(encoding='utf-8')
+          instagram = 'https://www.instagram.com/doctor.ghezelbaash/'
+
+          heading_re = re.compile(r'<h([2-6]) id="([^"]+)">(.*?)</h\1>', re.S)
+          strip_tags = lambda s: re.sub(r'<[^>]+>', '', s)
+
+          original_ids = re.findall(r'\bid="([^"]+)"', text)
+          original_headings = list(heading_re.finditer(text))
+
+          def is_profile_linked(inner: str) -> bool:
+              return re.search(r'<a\b[^>]*\bhref=["\']' + re.escape(instagram) + r'["\'][^>]*>', inner) is not None
+
+          before_profile = sum(is_profile_linked(m.group(3)) for m in original_headings)
+
+          targets = []
+          for m in original_headings:
+              level, id_, inner = m.group(1), m.group(2), m.group(3)
+              visible = strip_tags(inner).strip()
+              if 'بهترین دکتر' in visible and '<a ' not in inner:
+                  targets.append((level, id_, visible, m.group(0), inner))
+
+          if not targets:
+              raise SystemExit('No currently unlinked headings containing «بهترین دکتر» found')
+
+          for level, id_, visible, full, inner in targets:
+              replacement = f'<h{level} id="{id_}"><a href="{instagram}" rel="me external">{inner}</a></h{level}>'
+              if text.count(full) != 1:
+                  raise SystemExit(f'{id_}: exact heading occurrence count != 1')
+              text = text.replace(full, replacement, 1)
+
+          new_ids = re.findall(r'\bid="([^"]+)"', text)
+          if original_ids != new_ids:
+              raise SystemExit('ID sequence changed')
+
+          new_headings = list(heading_re.finditer(text))
+          if len(original_headings) != len(new_headings):
+              raise SystemExit('Heading count changed')
+
+          for old, new in zip(original_headings, new_headings):
+              if old.group(1) != new.group(1) or old.group(2) != new.group(2):
+                  raise SystemExit('Heading level/ID changed')
+              if strip_tags(old.group(3)) != strip_tags(new.group(3)):
+                  raise SystemExit(f'Heading visible text changed: {old.group(2)}')
+
+          after_profile = sum(is_profile_linked(m.group(3)) for m in new_headings)
+          expected_after = before_profile + len(targets)
+          if after_profile != expected_after:
+              raise SystemExit(f'Instagram heading count mismatch: {before_profile}+{len(targets)} != {after_profile}')
+
+          remaining = []
+          for m in new_headings:
+              visible = strip_tags(m.group(3)).strip()
+              if 'بهترین دکتر' in visible and '<a ' not in m.group(3):
+                  remaining.append((m.group(2), visible))
+          if remaining:
+              raise SystemExit(f'Remaining unlinked best-doctor headings: {remaining}')
+
+          if 'nofollow' in '\n'.join(m.group(0) for m in new_headings if is_profile_linked(m.group(3))):
+              raise SystemExit('nofollow found on Instagram-linked heading')
+
+          path.write_text(text, encoding='utf-8')
+
+          print(f'BEFORE_INSTAGRAM_HEADING_LINKS={before_profile}')
+          print(f'NEW_BEST_DOCTOR_HEADING_LINKS={len(targets)}')
+          print(f'AFTER_INSTAGRAM_HEADING_LINKS={after_profile}')
+          print('TARGETS:')
+          for level, id_, visible, *_ in targets:
+              print(f'H{level}\t{id_}\t{visible}')
+
+      - name: Validate and commit
+        run: |
+          git diff --check
+          test "$(git diff --name-only)" = "src/pages/index.md"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/pages/index.md
+          git commit -m "Link remaining best-doctor headings to Instagram"
+          git push origin HEAD:main
