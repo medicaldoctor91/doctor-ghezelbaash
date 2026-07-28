@@ -1,0 +1,47 @@
+name: Repair exact Turtle precision on audit branch
+
+on:
+  push:
+    branches: [audit/validate-main-20260729]
+    paths:
+      - '.github/workflows/fix-ttl-precision-on-audit.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/validate-main-20260729
+          fetch-depth: 0
+
+      - name: Preserve source coordinate precision exactly
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('public/graph.ttl')
+          value = path.read_text(encoding='utf-8')
+          old = '''<https://www.ghezelbaash.ir/#clinic-geo> a schema:GeoCoordinates ;
+              schema:latitude 3.434012e+01 ;
+              schema:longitude 4.708518e+01 .'''
+          new = '''<https://www.ghezelbaash.ir/#clinic-geo> a schema:GeoCoordinates ;
+              schema:latitude "34.3401243"^^xsd:double ;
+              schema:longitude "47.0851778"^^xsd:double .'''
+          if old not in value:
+              raise SystemExit('Expected rounded GeoCoordinates block was not found')
+          path.write_text(value.replace(old, new), encoding='utf-8')
+          PY
+
+      - name: Self-remove and commit
+        run: |
+          set -euo pipefail
+          rm .github/workflows/fix-ttl-precision-on-audit.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add public/graph.ttl .github/workflows/fix-ttl-precision-on-audit.yml
+          git commit -m 'Preserve exact clinic coordinates in Turtle'
+          git push origin HEAD:audit/validate-main-20260729
