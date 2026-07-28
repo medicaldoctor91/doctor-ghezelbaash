@@ -7,7 +7,7 @@ on:
       - '.github/workflows/final-audit.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: final-production-audit
@@ -23,6 +23,21 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Publish run identifier without changing the audited deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          printf '%s\n' "$GITHUB_RUN_ID" > tmp/final-performance-run-id.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tmp/final-performance-run-id.txt
+          git commit -m 'Record final performance run identifier [skip ci]'
+          git push origin HEAD:main
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
