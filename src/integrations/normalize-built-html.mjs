@@ -25,9 +25,9 @@ export default function normalizeBuiltHtml() {
   return {
     name: 'normalize-built-html',
     hooks: {
-      'astro:build:done': async ({ dir, pages, logger }) => {
-        for (const page of pages) {
-          const pathname = page.pathname === '/' ? 'index.html' : `${page.pathname.replace(/^\//, '').replace(/\/$/, '')}/index.html`;
+      'astro:build:done': async ({ dir, logger }) => {
+        let changed = 0;
+        for (const pathname of ['index.html', '404.html']) {
           const url = new URL(pathname, dir);
           try {
             const input = await readFile(url, 'utf8');
@@ -35,13 +35,16 @@ export default function normalizeBuiltHtml() {
             if (/\sstyle=(['"])/i.test(output)) {
               throw new Error(`an unapproved inline style remains in ${pathname}`);
             }
-            if (output !== input) await writeFile(url, output, 'utf8');
+            if (output !== input) {
+              await writeFile(url, output, 'utf8');
+              changed += 1;
+            }
           } catch (error) {
             if (error?.code === 'ENOENT') continue;
             throw error;
           }
         }
-        logger.info('Removed approved legacy inline style attributes from generated HTML.');
+        logger.info(`Normalized inline presentation attributes in ${changed} generated page(s).`);
       },
     },
   };
