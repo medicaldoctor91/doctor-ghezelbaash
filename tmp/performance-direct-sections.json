@@ -1,0 +1,28 @@
+{
+  "accepted": false,
+  "mobile": {
+    "performance": 32,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcp": 9654.70725,
+    "lcp": 10126.414499999999,
+    "tbt": 1218.5,
+    "cls": 0,
+    "mainthread": 2771.8599999999956,
+    "domSize": 6022
+  },
+  "desktop": {
+    "performance": 87,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "fcp": 1580.60655,
+    "lcp": 1683.2131,
+    "tbt": 0,
+    "cls": 0,
+    "mainthread": 133.71700000000013,
+    "domSize": 6022
+  },
+  "htmlBytes": 1761594
+}
