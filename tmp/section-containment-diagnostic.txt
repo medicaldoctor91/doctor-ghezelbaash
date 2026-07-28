@@ -1,0 +1,24 @@
+plugin_match True python_blocks 3
+patch_exit=0
+
+added 194 packages in 3s
+npm warn allow-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn allow-scripts   esbuild@0.28.1 (postinstall: node install.js)
+npm warn allow-scripts
+npm warn allow-scripts Run `npm approve-scripts --allow-scripts-pending` to review, or `npm approve-scripts <pkg>` to allow.
+npm_ci_exit=0
+
+> ghezelbaash-ir@1.0.0 build
+> astro build
+
+`markdown.remarkPlugins`, `markdown.rehypePlugins`, and `markdown.remarkRehype` run on the `unified` processor from `@astrojs/markdown-remark`, which is no longer installed by default now that Sätteri is the default Markdown processor. Install it with:
+  npm install @astrojs/markdown-remark
+  [1mLocation:[22m
+    [4m/home/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/node_modules/astro/dist/core/config/validate.js:53:11[24m
+  [1mStack trace:[22m
+[2m    at coerceLegacyMarkdownPlugins (file:///home/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/node_modules/astro/dist/core/config/validate.js:53:11)
+    at async resolveConfig (file:///home/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/node_modules/astro/dist/core/config/config.js:91:19)
+    at async build (file:///home/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/node_modules/astro/dist/cli/build/index.js:29:3)
+    at async cli (file:///home/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/node_modules/astro/dist/cli/index.js:220:5)[22m
+build_exit=1
+dist_exists False
