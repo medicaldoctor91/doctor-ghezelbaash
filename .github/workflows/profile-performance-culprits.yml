@@ -1,0 +1,80 @@
+name: Profile Lighthouse performance culprits
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/profile-performance-culprits.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Run live Lighthouse profiles
+        run: |
+          mkdir -p tmp/profile
+          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --output=json --output-path=tmp/profile/mobile.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --preset=desktop --output=json --output-path=tmp/profile/desktop.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+      - name: Extract actionable diagnostics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          audit_ids=[
+            'layout-shifts','cls-culprits-insight','image-delivery-insight','network-dependency-tree-insight',
+            'lcp-breakdown-insight','lcp-discovery-insight','mainthread-work-breakdown','long-tasks',
+            'font-display-insight','render-blocking-insight','third-parties-insight','dom-size-insight',
+            'cache-insight','bootup-time','script-treemap-data','network-requests','largest-contentful-paint-element',
+          ]
+          def clean(value,depth=0):
+            if depth>8:return '<depth-limit>'
+            if isinstance(value,dict):
+              out={}
+              for k,v in value.items():
+                if k in ('screenshot','thumbnail','timing','debugData'):continue
+                out[k]=clean(v,depth+1)
+              return out
+            if isinstance(value,list):return [clean(x,depth+1) for x in value[:50]]
+            if isinstance(value,str) and len(value)>1800:return value[:1800]+'…'
+            return value
+          result={}
+          for mode in ('mobile','desktop'):
+            d=json.loads(Path(f'tmp/profile/{mode}.json').read_text())
+            result[mode]={
+              'categories':{k:round((v.get('score') or 0)*100) for k,v in d.get('categories',{}).items()},
+              'audits':{},
+            }
+            audits=d.get('audits',{})
+            for aid in audit_ids:
+              a=audits.get(aid)
+              if not a:continue
+              result[mode]['audits'][aid]=clean({
+                'score':a.get('score'),'numericValue':a.get('numericValue'),'displayValue':a.get('displayValue'),
+                'details':a.get('details')
+              })
+          Path('tmp/performance-culprits.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+      - name: Commit profile and remove workflow
+        if: always()
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/profile-performance-culprits.yml
+          rm -rf tmp/profile
+          git add tmp/performance-culprits.json
+          git commit -m 'Record detailed Lighthouse performance culprits'
+          git push origin HEAD:main
