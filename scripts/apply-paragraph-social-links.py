@@ -97,3 +97,5 @@ report += ['', 'SKIPPED']
 report += ['\t'.join(map(str, row)) for row in skipped]
 Path('paragraph-social-links-report.txt').write_text('\n'.join(report) + '\n', encoding='utf-8')
 print('\n'.join(report))
+
+# Triggered after workflow activation.
