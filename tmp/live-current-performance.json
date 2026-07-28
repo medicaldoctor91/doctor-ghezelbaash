@@ -1,0 +1,592 @@
+{
+  "liveHtml": {
+    "bytes": 1758011,
+    "hasDelivery640": true,
+    "hasDelivery960": true,
+    "hasOfficeDelivery": true,
+    "hasOldOfficePhrase": false,
+    "jsonLdAfterMain": true,
+    "priceRange": true,
+    "presentationType": true
+  },
+  "modes": {
+    "mobile": {
+      "runs": [
+        {
+          "performance": 65,
+          "accessibility": 100,
+          "bestPractices": 100,
+          "seo": 100,
+          "fcp": 3442.0860000000002,
+          "lcp": 3829.5510000000004,
+          "speedIndex": 3442.0860000000002,
+          "tbt": 651,
+          "cls": 0,
+          "mainthread": 2831.795999999943,
+          "maxPotentialFid": 620,
+          "imageSavings": null,
+          "thirdParty": [
+            {
+              "entity": "Cloudflare",
+              "mainThreadTime": 46.860999999946216,
+              "transferSize": 11577,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://static.cloudflareinsights.com/beacon.min.js",
+                    "mainThreadTime": 46.860999999946216,
+                    "transferSize": 11577
+                  }
+                ]
+              }
+            },
+            {
+              "entity": "cloudflareinsights.com",
+              "mainThreadTime": 0.059999999997671694,
+              "transferSize": 35,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+                    "mainThreadTime": 0.059999999997671694,
+                    "transferSize": 35
+                  }
+                ]
+              }
+            }
+          ],
+          "requests": [
+            {
+              "url": "https://static.cloudflareinsights.com/beacon.min.js",
+              "priority": "Low",
+              "transferSize": 11577,
+              "resourceSize": 31612
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp",
+              "priority": "Low",
+              "transferSize": 9800,
+              "resourceSize": 8882
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp",
+              "priority": "Low",
+              "transferSize": 13567,
+              "resourceSize": 12574
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 35,
+              "resourceSize": 0
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 0,
+              "resourceSize": 0
+            }
+          ]
+        },
+        {
+          "performance": 84,
+          "accessibility": 100,
+          "bestPractices": 100,
+          "seo": 100,
+          "fcp": 3034.8925,
+          "lcp": 3515.4049999999997,
+          "speedIndex": 3034.8925,
+          "tbt": 100,
+          "cls": 0,
+          "mainthread": 858.8279999999905,
+          "maxPotentialFid": 128,
+          "imageSavings": null,
+          "thirdParty": [
+            {
+              "entity": "Cloudflare",
+              "mainThreadTime": 7.373000000079628,
+              "transferSize": 11577,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://static.cloudflareinsights.com/beacon.min.js",
+                    "mainThreadTime": 7.373000000079628,
+                    "transferSize": 11577
+                  }
+                ]
+              }
+            },
+            {
+              "entity": "cloudflareinsights.com",
+              "mainThreadTime": 0.05400000003282912,
+              "transferSize": 35,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+                    "mainThreadTime": 0.05400000003282912,
+                    "transferSize": 35
+                  }
+                ]
+              }
+            }
+          ],
+          "requests": [
+            {
+              "url": "https://static.cloudflareinsights.com/beacon.min.js",
+              "priority": "Low",
+              "transferSize": 11577,
+              "resourceSize": 31612
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp",
+              "priority": "Low",
+              "transferSize": 9808,
+              "resourceSize": 8882
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp",
+              "priority": "Low",
+              "transferSize": 13564,
+              "resourceSize": 12574
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 0,
+              "resourceSize": 0
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 35,
+              "resourceSize": 0
+            }
+          ]
+        },
+        {
+          "performance": 82,
+          "accessibility": 100,
+          "bestPractices": 100,
+          "seo": 100,
+          "fcp": 3081.3680000000004,
+          "lcp": 3847.8230000000003,
+          "speedIndex": 3081.3680000000004,
+          "tbt": 89,
+          "cls": 0,
+          "mainthread": 839.8999999999988,
+          "maxPotentialFid": 131,
+          "imageSavings": null,
+          "thirdParty": [
+            {
+              "entity": "Cloudflare",
+              "mainThreadTime": 7.655999999900814,
+              "transferSize": 11576,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://static.cloudflareinsights.com/beacon.min.js",
+                    "mainThreadTime": 7.655999999900814,
+                    "transferSize": 11576
+                  }
+                ]
+              }
+            },
+            {
+              "entity": "cloudflareinsights.com",
+              "mainThreadTime": 0.06999999994877726,
+              "transferSize": 35,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+                    "mainThreadTime": 0.06999999994877726,
+                    "transferSize": 35
+                  }
+                ]
+              }
+            }
+          ],
+          "requests": [
+            {
+              "url": "https://static.cloudflareinsights.com/beacon.min.js",
+              "priority": "Low",
+              "transferSize": 11576,
+              "resourceSize": 31612
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp",
+              "priority": "Low",
+              "transferSize": 9804,
+              "resourceSize": 8882
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp",
+              "priority": "Low",
+              "transferSize": 13562,
+              "resourceSize": 12574
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 35,
+              "resourceSize": 0
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 0,
+              "resourceSize": 0
+            }
+          ]
+        }
+      ],
+      "median": {
+        "performance": 82,
+        "fcp": 3081.3680000000004,
+        "lcp": 3829.5510000000004,
+        "speedIndex": 3081.3680000000004,
+        "tbt": 100,
+        "cls": 0,
+        "mainthread": 858.8279999999905,
+        "maxPotentialFid": 131
+      }
+    },
+    "desktop": {
+      "runs": [
+        {
+          "performance": 99,
+          "accessibility": 100,
+          "bestPractices": 100,
+          "seo": 100,
+          "fcp": 734.5530000000001,
+          "lcp": 941.7910000000002,
+          "speedIndex": 734.5530000000001,
+          "tbt": 0,
+          "cls": 0,
+          "mainthread": 240.84000000000069,
+          "maxPotentialFid": 34,
+          "imageSavings": null,
+          "thirdParty": [
+            {
+              "entity": "Cloudflare",
+              "mainThreadTime": 8.218000000109896,
+              "transferSize": 11577,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://static.cloudflareinsights.com/beacon.min.js",
+                    "mainThreadTime": 8.218000000109896,
+                    "transferSize": 11577
+                  }
+                ]
+              }
+            },
+            {
+              "entity": "cloudflareinsights.com",
+              "mainThreadTime": 0.07599999994272366,
+              "transferSize": 35,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+                    "mainThreadTime": 0.07599999994272366,
+                    "transferSize": 35
+                  }
+                ]
+              }
+            }
+          ],
+          "requests": [
+            {
+              "url": "https://static.cloudflareinsights.com/beacon.min.js",
+              "priority": "Low",
+              "transferSize": 11577,
+              "resourceSize": 31612
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp",
+              "priority": "Low",
+              "transferSize": 16078,
+              "resourceSize": 15154
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp",
+              "priority": "Low",
+              "transferSize": 21642,
+              "resourceSize": 20644
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 35,
+              "resourceSize": 0
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 0,
+              "resourceSize": 0
+            }
+          ]
+        },
+        {
+          "performance": 99,
+          "accessibility": 100,
+          "bestPractices": 100,
+          "seo": 100,
+          "fcp": 678.2434999999999,
+          "lcp": 875.5535,
+          "speedIndex": 678.2434999999999,
+          "tbt": 0,
+          "cls": 0,
+          "mainthread": 228.3529999999995,
+          "maxPotentialFid": 39,
+          "imageSavings": null,
+          "thirdParty": [
+            {
+              "entity": "Cloudflare",
+              "mainThreadTime": 8.072999999858439,
+              "transferSize": 11577,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://static.cloudflareinsights.com/beacon.min.js",
+                    "mainThreadTime": 8.072999999858439,
+                    "transferSize": 11577
+                  }
+                ]
+              }
+            },
+            {
+              "entity": "cloudflareinsights.com",
+              "mainThreadTime": 0.044000000052619725,
+              "transferSize": 35,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+                    "mainThreadTime": 0.044000000052619725,
+                    "transferSize": 35
+                  }
+                ]
+              }
+            }
+          ],
+          "requests": [
+            {
+              "url": "https://static.cloudflareinsights.com/beacon.min.js",
+              "priority": "Low",
+              "transferSize": 11577,
+              "resourceSize": 31612
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp",
+              "priority": "Low",
+              "transferSize": 16080,
+              "resourceSize": 15154
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp",
+              "priority": "Low",
+              "transferSize": 21643,
+              "resourceSize": 20644
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 35,
+              "resourceSize": 0
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 0,
+              "resourceSize": 0
+            }
+          ]
+        },
+        {
+          "performance": 99,
+          "accessibility": 100,
+          "bestPractices": 100,
+          "seo": 100,
+          "fcp": 678.796,
+          "lcp": 897.018,
+          "speedIndex": 680.9578341005598,
+          "tbt": 0,
+          "cls": 0,
+          "mainthread": 225.51999999999785,
+          "maxPotentialFid": 32,
+          "imageSavings": null,
+          "thirdParty": [
+            {
+              "entity": "Cloudflare",
+              "mainThreadTime": 8.445000000006985,
+              "transferSize": 11577,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://static.cloudflareinsights.com/beacon.min.js",
+                    "mainThreadTime": 8.445000000006985,
+                    "transferSize": 11577
+                  }
+                ]
+              }
+            },
+            {
+              "entity": "cloudflareinsights.com",
+              "mainThreadTime": 0.047999999951571226,
+              "transferSize": 35,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+                    "mainThreadTime": 0.047999999951571226,
+                    "transferSize": 35
+                  }
+                ]
+              }
+            }
+          ],
+          "requests": [
+            {
+              "url": "https://static.cloudflareinsights.com/beacon.min.js",
+              "priority": "Low",
+              "transferSize": 11577,
+              "resourceSize": 31612
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp",
+              "priority": "Low",
+              "transferSize": 16072,
+              "resourceSize": 15154
+            },
+            {
+              "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp",
+              "priority": "Low",
+              "transferSize": 21636,
+              "resourceSize": 20644
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 35,
+              "resourceSize": 0
+            },
+            {
+              "url": "https://cloudflareinsights.com/cdn-cgi/rum",
+              "priority": "High",
+              "transferSize": 0,
+              "resourceSize": 0
+            }
+          ]
+        }
+      ],
+      "median": {
+        "performance": 99,
+        "fcp": 678.796,
+        "lcp": 897.018,
+        "speedIndex": 680.9578341005598,
+        "tbt": 0,
+        "cls": 0,
+        "mainthread": 228.3529999999995,
+        "maxPotentialFid": 34
+      }
+    }
+  },
+  "headers": {
+    "root": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 16:07:07 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=gI2IUEckb37madUXstbAGsQiSh3Vh5BVDkuVNtO4rIRCYQ0DFws4Jkojq834hY9pYzFSVMDKFm0QDuDcuDkNwATmi5SSGWzdZZpCiKNxCLgNcID8zJFtBEHV8DEer6BEndsBoDE%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=0, must-revalidate",
+        "content-language": "fa-IR",
+        "x-frame-options": "DENY",
+        "link": "</graph.jsonld>; rel=\"describedby\"; type=\"application/ld+json\", </graph.ttl>; rel=\"describedby\"; type=\"text/turtle\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "vary": "accept-encoding",
+        "server": "cloudflare",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "cf-cache-status": "DYNAMIC",
+        "content-encoding": "br",
+        "cf-ray": "a225228d9dd2ebee-SEA",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "graph": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 16:07:07 GMT",
+        "content-type": "application/ld+json; charset=utf-8",
+        "content-length": "546965",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=IgUz%2FRpqdut82pws4QDKnm3vToIERVVSi8Lt74iqwXLoTssbw8hc%2Bqi8v51ee5RWaswcUA5CpHmMS2lEarlmYx523HrUw0hG2Fqq0ilYBJj1LIpZsU5SKuDvb6i3DuLu5XN6W7Y%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=86400, s-maxage=604800",
+        "etag": "\"8ea902c88728af8e79d934647bf8fe87\"",
+        "link": "</graph.ttl>; rel=\"alternate\"; type=\"text/turtle\", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel=\"describes\", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel=\"describes\", <https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project>; rel=\"describes\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "cross-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a22522917b05b9c7-SEA",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    },
+    "portrait": {
+      "status": "HTTP/2 200 ",
+      "headers": {
+        "date": "Tue, 28 Jul 2026 16:07:08 GMT",
+        "content-type": "image/webp",
+        "content-length": "8882",
+        "x-permitted-cross-domain-policies": "none",
+        "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=nqaU9FC3%2Bw3CwIPOdQt69brJ5usR8onVvEn6%2BoDXwwX9nyIkTc1HIFxRn6EboOz7q4c9pjpSPKwUXzGzQ6Jhceo8%2Btx8R9UCm86jKENX63UISCkTOCqD2XNOIcOC5UBwCQ1%2BbRY%3D\"}]}",
+        "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+        "access-control-allow-origin": "*",
+        "cache-control": "public, max-age=31536000, immutable",
+        "etag": "\"716b3fa148e1af98ce2be443040d9893\"",
+        "link": "<https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel=\"about\", </graph.jsonld>; rel=\"describedby\"; type=\"application/ld+json\", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg>; rel=\"describedby\", <https://creativecommons.org/licenses/by/4.0/>; rel=\"license\"",
+        "strict-transport-security": "max-age=15552000",
+        "cross-origin-opener-policy": "same-origin",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), payment=(), usb=()",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "speculation-rules": "\"/cdn-cgi/speculation\"",
+        "server": "cloudflare",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a22522935be37536-SEA",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      }
+    }
+  }
+}
