@@ -1,0 +1,15 @@
+{
+  "runId": "30402950966",
+  "auditedSha": "6299db34616e6ce60220b00ec426bddc452cd785",
+  "source-status": {
+    "install": 0,
+    "build": 0,
+    "validation": 0
+  },
+  "live-status": null,
+  "lighthouse-status": null,
+  "opportunities": {
+    "mobile": [],
+    "desktop": []
+  }
+}
