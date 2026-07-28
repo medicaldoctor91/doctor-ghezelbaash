@@ -1,0 +1,148 @@
+name: Export clean publication source
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact PR source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          lfs: true
+
+      - name: Build conservative publication-only source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          export_dir="$RUNNER_TEMP/clean-source"
+          report_dir="$RUNNER_TEMP/export-report"
+          mkdir -p "$export_dir" "$report_dir"
+
+          git ls-files | LC_ALL=C sort > "$report_dir/original-files.txt"
+
+          should_remove() {
+            local p="$1"
+            local base="${p##*/}"
+            local lower
+            lower="$(printf '%s' "$p" | tr '[:upper:]' '[:lower:]')"
+
+            case "$p" in
+              .git/*|node_modules/*|dist/*|.astro/*|coverage/*|.cache/*) return 0 ;;
+              .github/*|.vscode/*|.idea/*|.devcontainer/*) return 0 ;;
+              docs/*|doc/*|audit/*|audits/*|report/*|reports/*|analysis/*|plans/*|prompts/*|instructions/*|internal/*|notes/*|tmp/*|temp/*|backup/*|backups/*|archive/*|archives/*) return 0 ;;
+              scripts/*|tools/*|bin/*|test/*|tests/*|__tests__/*|fixtures/*|examples/*) return 0 ;;
+              *.bak|*.tmp|*.temp|*.orig|*.rej|*~|*.log) return 0 ;;
+            esac
+
+            # Root-level prose and development records are not part of the deployable source.
+            if [[ "$p" != */* ]]; then
+              case "$base" in
+                README|README.*|CHANGELOG|CHANGELOG.*|CONTRIBUTING|CONTRIBUTING.*|SECURITY|SECURITY.*|CODE_OF_CONDUCT|CODE_OF_CONDUCT.*|TODO|TODO.*|NOTES|NOTES.*) return 0 ;;
+                *.md|*.markdown|*.txt|*.rtf|*.doc|*.docx|*.pdf) return 0 ;;
+              esac
+            fi
+
+            # Remove clearly internal audit/development artifacts outside runtime trees.
+            if [[ "$p" != src/* && "$p" != public/* ]]; then
+              case "$lower" in
+                *audit*|*report*|*analysis*|*instruction*|*prompt*|*checklist*|*review*|*benchmark*|*migration-note*|*handoff*|*scratch*|*debug*) return 0 ;;
+              esac
+            fi
+
+            return 1
+          }
+
+          : > "$report_dir/kept-files.txt"
+          : > "$report_dir/removed-files.txt"
+
+          while IFS= read -r path; do
+            if should_remove "$path"; then
+              printf '%s\n' "$path" >> "$report_dir/removed-files.txt"
+              continue
+            fi
+
+            mkdir -p "$export_dir/$(dirname "$path")"
+            cp -a "$path" "$export_dir/$path"
+            printf '%s\n' "$path" >> "$report_dir/kept-files.txt"
+          done < "$report_dir/original-files.txt"
+
+          # Never export local environment or secret-bearing files.
+          find "$export_dir" -type f \( -name '.env' -o -name '.env.*' \) -print -delete | LC_ALL=C sort >> "$report_dir/removed-files.txt" || true
+
+          original_count="$(wc -l < "$report_dir/original-files.txt" | tr -d ' ')"
+          kept_count="$(wc -l < "$report_dir/kept-files.txt" | tr -d ' ')"
+          removed_count="$(wc -l < "$report_dir/removed-files.txt" | tr -d ' ')"
+
+          {
+            echo '# Clean source export report'
+            echo
+            echo "- Source repository: medicaldoctor91/doctor-ghezelbaash"
+            echo "- Source ref: $GITHUB_SHA"
+            echo "- Original tracked files: $original_count"
+            echo "- Kept files: $kept_count"
+            echo "- Removed files: $removed_count"
+            echo '- Policy: preserve runtime source, public assets, package/build configuration, lockfiles, Cloudflare/Astro configuration, and Git metadata controls; remove audits, reports, internal instructions, development tooling, tests, backups, caches, generated output, and environment files.'
+          } > "$report_dir/CLEANUP-REPORT.md"
+
+      - name: Validate clean tree with a production build
+        shell: bash
+        run: |
+          set -euo pipefail
+          export_dir="$RUNNER_TEMP/clean-source"
+          report_dir="$RUNNER_TEMP/export-report"
+          cd "$export_dir"
+
+          corepack disable || true
+          npm install --global npm@11.16.0
+
+          if [[ -f package-lock.json ]]; then
+            npm ci
+          else
+            npm install --package-lock=false
+          fi
+
+          npm run build 2>&1 | tee "$report_dir/build.log"
+
+          # Dependencies and generated output are not source deliverables.
+          rm -rf node_modules dist .astro .cache coverage
+          echo '- Validation: production build succeeded.' >> "$report_dir/CLEANUP-REPORT.md"
+
+      - name: Create deterministic ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          export_dir="$RUNNER_TEMP/clean-source"
+          report_dir="$RUNNER_TEMP/export-report"
+          output_dir="$RUNNER_TEMP/final-export"
+          mkdir -p "$output_dir"
+
+          find "$export_dir" -type f -print0 | xargs -0 touch -d '@0'
+          (
+            cd "$export_dir"
+            LC_ALL=C find . -type f -print | LC_ALL=C sort | zip -X -q "$output_dir/doctor-ghezelbaash-clean-main-4a53d72.zip" -@
+          )
+
+          cp "$report_dir/CLEANUP-REPORT.md" "$output_dir/"
+          cp "$report_dir/original-files.txt" "$output_dir/"
+          cp "$report_dir/kept-files.txt" "$output_dir/"
+          cp "$report_dir/removed-files.txt" "$output_dir/"
+          cp "$report_dir/build.log" "$output_dir/"
+          sha256sum "$output_dir/doctor-ghezelbaash-clean-main-4a53d72.zip" > "$output_dir/SHA256SUMS.txt"
+
+      - name: Upload clean source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-ghezelbaash-clean-source
+          path: ${{ runner.temp }}/final-export/*
+          if-no-files-found: error
+          retention-days: 1
