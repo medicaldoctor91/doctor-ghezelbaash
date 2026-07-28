@@ -1,7 +1,7 @@
 # Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld
-# Source SHA-256: ed10c0a270b4ef30a3aa37e6396bcffce30530aed3076628f55ea15dadd3854d
-# RDF triples: 6812
-# Canonical sorted N-Triples SHA-256: 5aa2d208d0f3bcb32809ae1fbeeb6d8448b672440f488f5751789418171c24fe
+# Source SHA-256: 66f07b41d76665b92a25774313589dd5d66dba35eded105d8cc1bf98cf37f36b
+# RDF triples: 6966
+# Canonical sorted N-Triples SHA-256: 7909763983997786754d72288578337d43d5f05e7dd087bbd081dfa40410d6da
 
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -1598,6 +1598,58 @@
     schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail> ;
     schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-width> .
 
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-delivery-640> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
+    schema:caption "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:contentSize "14204 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height 427 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "e63bf929f151b82e08626fc2515bc2e933561c8d41e2c83ec80b9d9340461b48" ;
+    schema:width 640 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-delivery-960> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
+    schema:caption "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:contentSize "22972 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-960.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height 640 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "de4f42b604c4faab8f64925c6e86972e0e94365c18dbfb47e44b49c33e4404f5" ;
+    schema:width 960 .
+
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-height> a schema:QuantitativeValue ;
     schema:unitText "px" ;
     schema:value 1068 .
@@ -1713,6 +1765,58 @@
     schema:unitText "px" ;
     schema:value 1600 .
 
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-delivery-640> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
+    schema:caption "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:contentSize "12574 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height 427 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "41df6523a519dd9e2f229fba968adc5c9eaaca4dc535302527bb4d5806c87257" ;
+    schema:width 640 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-delivery-960> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
+    schema:caption "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:contentSize "20644 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height 640 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "fe20875294b0517c09b4a76157ea06248760d47c6d359e4d40227a87bd75bac6" ;
+    schema:width 960 .
+
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-height> a schema:QuantitativeValue ;
     schema:unitText "px" ;
     schema:value 3266 .
@@ -1820,6 +1924,56 @@
     schema:representativeOfPage false ;
     schema:sha256 "eb6b4a6d543d11c32e6eea00b04d0241819f94d1f4a26a2e11f758f16181d289" ;
     schema:width 1200 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-delivery-640> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:caption "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:contentSize "8882 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white medical coat and stethoscope in a clinical setting in Kermanshah, Iran."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height 427 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "4805e67d7c4788ce9cbb9c64b28887456aa66f6f1ec6eef8f43864346d0782ec" ;
+    schema:width 640 .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-delivery-960> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:caption "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:contentSize "15154 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white medical coat and stethoscope in a clinical setting in Kermanshah, Iran."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران."@fa ;
+    schema:encodingFormat "image/webp" ;
+    schema:height 640 ;
+    schema:isBasedOn <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sha256 "3a89040f222f0375eb974476c039464030311ac405dfdad042fed5458d1f9943" ;
+    schema:width 960 .
 
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-height> a schema:QuantitativeValue ;
     schema:unitText "px" ;
@@ -5263,7 +5417,7 @@
         <https://www.ghezelbaash.ir/#presentation-attachment-style-dissociative-depression-2017> ;
     schema:name "Dr. Saeed Ghezelbaash Public Knowledge Graph" ;
     schema:publisher <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:version "1.1.0" .
+    schema:version "1.1.1" .
 
 <https://www.plasticsurgery.org/cosmetic-procedures/chin-surgery> a schema:WebPage ;
     schema:name "مرجع ASPS درباره genioplasty / mentoplasty" ;
@@ -5369,62 +5523,6 @@
     schema:mentions <https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine> ;
     schema:name "Rokna — facial lifting and jaw/chin contouring with Dr. Ghezelbash" ;
     schema:url <https://www.rokna.net/%D8%A8%D8%AE%D8%B4-%D8%B3%D9%84%D8%A7%D9%85%D8%AA-16/1149379-%D9%84%DB%8C%D9%81%D8%AA-%D8%B5%D9%88%D8%B1%D8%AA-%DA%A9%D8%A7%D9%86%D8%AA%D9%88%D8%B1%DB%8C%D9%86%DA%AF-%D9%81%DA%A9-%DA%86%D8%A7%D9%86%D9%87-%D8%AF%D8%B1-%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87-%D8%A8%D8%A7-%D8%AF%DA%A9%D8%AA%D8%B1-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4> .
-
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> a schema:ImageObject ;
-    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
-        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
-    schema:caption "Saeed Ghezelbaash in a clinical office"@en,
-        "سعید قزلباش در محیط بالینی"@fa ;
-    schema:contentSize "350694 bytes" ;
-    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg> ;
-    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
-    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
-    schema:dateCreated "2023-05-29" ;
-    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope."@en,
-        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران."@fa ;
-    schema:encoding <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> ;
-    schema:encodingFormat "image/jpeg" ;
-    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-height> ;
-    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
-    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
-    schema:name "Saeed Ghezelbaash in a clinical office"@en,
-        "سعید قزلباش در محیط بالینی"@fa ;
-    schema:representativeOfPage false ;
-    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
-    schema:sha256 "09aa6fefed5c6491f270de999db57264049d567fd68cda7966540ea9e3b45c36" ;
-    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination> ;
-    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-width> .
-
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> a schema:ImageObject ;
-    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
-        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
-    schema:caption "Saeed Ghezelbaash with members of his clinical team"@en,
-        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
-    schema:contentSize "379699 bytes" ;
-    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg> ;
-    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
-    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
-    schema:dateCreated "2023-05-29" ;
-    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran."@en,
-        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران."@fa ;
-    schema:encoding <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> ;
-    schema:encodingFormat "image/jpeg" ;
-    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-height> ;
-    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
-    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
-    schema:name "Saeed Ghezelbaash with members of his clinical team"@en,
-        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
-    schema:representativeOfPage false ;
-    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
-    schema:sha256 "144576a426ace532ca5b280590c673df2fad830ef8511789990d65538b1345e2" ;
-    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team> ;
-    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-width> .
 
 <https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> a schema:AdministrativeArea ;
     schema:alternateName "Iraqi Kurdistan region",
@@ -6242,6 +6340,66 @@
     schema:name "دکتر سعید قزلباش؛ دروغ بزرگ جوانسازی و فریب زیباجویان" ;
     schema:url <https://iranmedlabs.com/skin-and-hair-and-beauty/120049/> .
 
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
+    schema:caption "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:contentSize "350694 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران."@fa ;
+    schema:encoding <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-delivery-640>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-delivery-960>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-height> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash in a clinical office"@en,
+        "سعید قزلباش در محیط بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> ;
+    schema:sha256 "09aa6fefed5c6491f270de999db57264049d567fd68cda7966540ea9e3b45c36" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-width> .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
+    schema:caption "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:contentSize "379699 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran."@en,
+        "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران."@fa ;
+    schema:encoding <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-delivery-640>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-delivery-960>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-height> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Saeed Ghezelbaash with members of his clinical team"@en,
+        "سعید قزلباش همراه اعضای تیم بالینی"@fa ;
+    schema:representativeOfPage false ;
+    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> ;
+    schema:sha256 "144576a426ace532ca5b280590c673df2fad830ef8511789990d65538b1345e2" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-width> .
+
 <https://www.ghezelbaash.ir/#procedure-body-dermal-filler> a schema:MedicalProcedure ;
     dcterms:hasPart <https://www.ghezelbaash.ir/#procedure-gluteal-body-filler> ;
     dcterms:subject <https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques>,
@@ -6376,33 +6534,6 @@
     schema:sameAs <http://id.nlm.nih.gov/mesh/D007271> ;
     schema:termCode "intradermal-injection" .
 
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> a schema:ImageObject ;
-    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
-    schema:caption "Dr. Saeed Ghezelbaash, Iranian physician"@en,
-        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
-    schema:contentSize "289620 bytes" ;
-    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg> ;
-    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
-    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
-    schema:dateCreated "2023-05-29" ;
-    schema:description "Portrait of Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white coat and stethoscope in a clinical setting in Kermanshah, Iran."@en,
-        "پرتره دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران."@fa ;
-    schema:encoding <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> ;
-    schema:encodingFormat "image/jpeg" ;
-    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-height> ;
-    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
-    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
-    schema:name "Dr. Saeed Ghezelbaash, Iranian physician"@en,
-        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
-    schema:representativeOfPage true ;
-    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
-    schema:sha256 "236fe6eb5f3651de15cf72033a372ab027ceb3c84995074aafe6a6e20cf0d484" ;
-    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait> ;
-    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-width> .
-
 <https://www.ghezelbaash.ir/#procedure-acne-scar-evaluation> a schema:DiagnosticProcedure ;
     dcterms:subject <https://www.ghezelbaash.ir/#biomedical-concept-acne-vulgaris>,
         <https://www.ghezelbaash.ir/#biomedical-concept-scar> ;
@@ -6483,6 +6614,35 @@
     schema:name "Platelet-rich plasma skin treatment"@en,
         "PRP پوست"@fa ;
     schema:subjectOf <https://www.ghezelbaash.ir/#prp-skin-repair-not-lift-or-volumization> .
+
+<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> a schema:ImageObject ;
+    schema:about <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:acquireLicensePage <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:caption "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:contentSize "289620 bytes" ;
+    schema:contentUrl <https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg> ;
+    schema:copyrightHolder <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:copyrightNotice "© 2023 Dr. Saeed Ghezelbaash" ;
+    schema:creator <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:creditText "Dr. Saeed Ghezelbaash — CC BY 4.0 via Wikimedia Commons" ;
+    schema:dateCreated "2023-05-29" ;
+    schema:description "Portrait of Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white coat and stethoscope in a clinical setting in Kermanshah, Iran."@en,
+        "پرتره دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران."@fa ;
+    schema:encoding <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-delivery-640>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-delivery-960>,
+        <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> ;
+    schema:encodingFormat "image/jpeg" ;
+    schema:height <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-height> ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#webpage> ;
+    schema:license <https://creativecommons.org/licenses/by/4.0/> ;
+    schema:name "Dr. Saeed Ghezelbaash, Iranian physician"@en,
+        "دکتر سعید قزلباش، پزشک ایرانی"@fa ;
+    schema:representativeOfPage true ;
+    schema:sameAs <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> ;
+    schema:sha256 "236fe6eb5f3651de15cf72033a372ab027ceb3c84995074aafe6a6e20cf0d484" ;
+    schema:thumbnail <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait> ;
+    schema:width <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-width> .
 
 <https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine> a schema:MedicalSpecialty ;
     prov:wasDerivedFrom <https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview>,
@@ -6865,6 +7025,13 @@
         <https://www.ghezelbaash.ir/#question-nonsurgical-rhinoplasty-filler-safety>,
         <https://www.ghezelbaash.ir/#question-tear-trough-filler-safety> .
 
+<https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques> a schema:DefinedTerm ;
+    schema:identifier "MeSH:D003357" ;
+    schema:inDefinedTermSet <https://www.ghezelbaash.ir/#biomedical-concept-registry> ;
+    schema:name "Cosmetic Techniques" ;
+    schema:sameAs <http://id.nlm.nih.gov/mesh/D003357> ;
+    schema:termCode "cosmetic-techniques" .
+
 <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> a schema:MedicalClinic ;
     schema:address <https://www.ghezelbaash.ir/#clinic-postal-address> ;
     schema:alternateName "Dr. Ghezelbaash Aesthetic Clinic",
@@ -7076,12 +7243,223 @@
     schema:telephone "+989308209494" ;
     schema:url <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
 
-<https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques> a schema:DefinedTerm ;
-    schema:identifier "MeSH:D003357" ;
-    schema:inDefinedTermSet <https://www.ghezelbaash.ir/#biomedical-concept-registry> ;
-    schema:name "Cosmetic Techniques" ;
-    schema:sameAs <http://id.nlm.nih.gov/mesh/D003357> ;
-    schema:termCode "cosmetic-techniques" .
+<https://www.ghezelbaash.ir/#webpage> a schema:MedicalWebPage ;
+    schema:about <https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine>,
+        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:author <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:citation <https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=33d066a9-34ff-4a1a-b38b-d10983df3300>,
+        <https://pmc.ncbi.nlm.nih.gov/articles/PMC11702150/>,
+        <https://pubmed.ncbi.nlm.nih.gov/30856634/>,
+        <https://pubmed.ncbi.nlm.nih.gov/34840662/>,
+        <https://pubmed.ncbi.nlm.nih.gov/36315903/>,
+        <https://pubmed.ncbi.nlm.nih.gov/38284294/>,
+        <https://pubmed.ncbi.nlm.nih.gov/40118148/>,
+        <https://pubmed.ncbi.nlm.nih.gov/41517528/>,
+        <https://pubmed.ncbi.nlm.nih.gov/41988336/>,
+        <https://www.aad.org/public/cosmetic/scars-stretch-marks/microneedling-fade-scars>,
+        <https://www.aad.org/public/cosmetic/wrinkles/botulinum-toxin-faqs>,
+        <https://www.aad.org/public/diseases/a-z/melasma-treatment>,
+        <https://www.aad.org/public/diseases/acne/derm-treat/scars/treatment>,
+        <https://www.aad.org/public/diseases/hair-loss/causes/18-causes>,
+        <https://www.aad.org/public/diseases/hair-loss/treatment/diagnosis-treat>,
+        <https://www.aad.org/public/diseases/hair-loss/types/ccca>,
+        <https://www.aad.org/public/diseases/rosacea/treatment/diagnosis-treat>,
+        <https://www.aad.org/public/diseases/rosacea/treatment/lasers-lights>,
+        <https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/206333s002s003lbl.pdf>,
+        <https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/103000s5316s5319s5323s5326s5331lbl.pdf>,
+        <https://www.fda.gov/consumers/consumer-updates/dermal-filler-dos-and-donts-wrinkles-lips-and-more>,
+        <https://www.fda.gov/drugs/buying-using-medicine-safely/using-fat-dissolving-injections-are-not-fda-approved-can-be-harmful>,
+        <https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/dermal-fillers-soft-tissue-fillers>,
+        <https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/fda-approved-dermal-fillers>,
+        <https://www.fda.gov/medical-devices/recently-approved-devices/sculptra-p030050s039>,
+        <https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016>,
+        <https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview>,
+        <https://www.plasticsurgery.org/cosmetic-procedures/chin-surgery>,
+        <https://www.plasticsurgery.org/cosmetic-procedures/thread-lift/safety> ;
+    schema:description "وب‌سایت رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ راهنمای جامع بوتاکس، فیلر، لیفت نخ، پوست، مو، کانتورینگ، جراحی زیبایی، عوارض، Revision، نظر دوم و ارزیابی پرونده‌های پیچیده برای مراجعه‌کنندگان از سراسر ایران و عراق." ;
+    schema:hasPart <https://www.ghezelbaash.ir/#question-acne-scar-complete-clearance-and-session-count>,
+        <https://www.ghezelbaash.ir/#question-acne-scar-doctor-selection-criteria-kermanshah>,
+        <https://www.ghezelbaash.ir/#question-active-acne-and-acne-scar-treatment-sequencing>,
+        <https://www.ghezelbaash.ir/#question-at-home-filler-injection-risk>,
+        <https://www.ghezelbaash.ir/#question-baby-botox-safety>,
+        <https://www.ghezelbaash.ir/#question-body-filler-and-hip-dip-treatment-complexity>,
+        <https://www.ghezelbaash.ir/#question-body-filler-hip-dip-buttock-doctor-selection>,
+        <https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift>,
+        <https://www.ghezelbaash.ir/#question-botox-doctor-selection-criteria-kermanshah>,
+        <https://www.ghezelbaash.ir/#question-botox-dose-response>,
+        <https://www.ghezelbaash.ir/#question-botox-dynamic-facial-examination>,
+        <https://www.ghezelbaash.ir/#question-botox-for-nasal-shape-limitations>,
+        <https://www.ghezelbaash.ir/#question-botox-induced-eyelid-ptosis-causes>,
+        <https://www.ghezelbaash.ir/#question-botox-mechanism-indications-and-limitations>,
+        <https://www.ghezelbaash.ir/#question-botox-natural-vs-frozen-facial-expression>,
+        <https://www.ghezelbaash.ir/#question-botox-nonresponse-nonmuscular-causes>,
+        <https://www.ghezelbaash.ir/#question-botox-onset-of-action>,
+        <https://www.ghezelbaash.ir/#question-botox-resistance-and-nonresponse>,
+        <https://www.ghezelbaash.ir/#question-botox-vs-filler-differences>,
+        <https://www.ghezelbaash.ir/#question-botox-vs-filler-treatment-selection>,
+        <https://www.ghezelbaash.ir/#question-botox-vs-thread-lift>,
+        <https://www.ghezelbaash.ir/#question-bruxism-botox-indications>,
+        <https://www.ghezelbaash.ir/#question-buttock-and-body-filler-safety>,
+        <https://www.ghezelbaash.ir/#question-calf-filler-for-asymmetry>,
+        <https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-en>,
+        <https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-en>,
+        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-en>,
+        <https://www.ghezelbaash.ir/#question-chin-filler-effects-on-projection-and-proportion>,
+        <https://www.ghezelbaash.ir/#question-choosing-an-aesthetic-doctor-in-kermanshah-and-iran>,
+        <https://www.ghezelbaash.ir/#question-clinic-before-visit-information>,
+        <https://www.ghezelbaash.ir/#question-clinic-follow-up-after-returning-home>,
+        <https://www.ghezelbaash.ir/#question-combination-treatment-vs-single-modality>,
+        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-en>,
+        <https://www.ghezelbaash.ir/#question-exposed-thread-management>,
+        <https://www.ghezelbaash.ir/#question-facial-contouring-beyond-filler>,
+        <https://www.ghezelbaash.ir/#question-facial-contouring-doctor-selection-criteria>,
+        <https://www.ghezelbaash.ir/#question-fat-grafting-vs-filler-for-facial-contouring>,
+        <https://www.ghezelbaash.ir/#question-filler-aftercare-and-activity-restrictions>,
+        <https://www.ghezelbaash.ir/#question-filler-contraindications-and-noncandidacy>,
+        <https://www.ghezelbaash.ir/#question-filler-doctor-selection-criteria-kermanshah>,
+        <https://www.ghezelbaash.ir/#question-filler-post-treatment-warning-signs>,
+        <https://www.ghezelbaash.ir/#question-filler-remote-assessment-limitations>,
+        <https://www.ghezelbaash.ir/#question-filler-vascular-occlusion>,
+        <https://www.ghezelbaash.ir/#question-filler-vision-loss-risk>,
+        <https://www.ghezelbaash.ir/#question-filler-volume-shadow-and-proportion-assessment>,
+        <https://www.ghezelbaash.ir/#question-filler-vs-surgery-detailed-boundary>,
+        <https://www.ghezelbaash.ir/#question-glabellar-filler-for-frown-lines-risk>,
+        <https://www.ghezelbaash.ir/#question-hair-loss-doctor-selection-criteria-kermanshah>,
+        <https://www.ghezelbaash.ir/#question-hair-loss-red-flags>,
+        <https://www.ghezelbaash.ir/#question-hair-prp-and-mesotherapy-doctor-selection-criteria>,
+        <https://www.ghezelbaash.ir/#question-hip-dip-normal-anatomy-vs-filler>,
+        <https://www.ghezelbaash.ir/#question-hyaluronic-acid-filler-reversibility>,
+        <https://www.ghezelbaash.ir/#question-identify-primary-aesthetic-cause>,
+        <https://www.ghezelbaash.ir/#question-individualized-facial-treatment-planning>,
+        <https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-en>,
+        <https://www.ghezelbaash.ir/#question-jalupro-profhilo-and-skin-booster-candidacy>,
+        <https://www.ghezelbaash.ir/#question-jalupro-vs-profhilo-selection>,
+        <https://www.ghezelbaash.ir/#question-jalupro-vs-volumizing-filler>,
+        <https://www.ghezelbaash.ir/#question-jawline-and-submental-doctor-selection-criteria-kermanshah>,
+        <https://www.ghezelbaash.ir/#question-jawline-filler-for-round-face-candidacy>,
+        <https://www.ghezelbaash.ir/#question-jawline-thread-lift-definition-limitations>,
+        <https://www.ghezelbaash.ir/#question-laser-treatment-for-pigmentation-limitations>,
+        <https://www.ghezelbaash.ir/#question-lip-filler-for-thin-lips-candidacy>,
+        <https://www.ghezelbaash.ir/#question-lip-filler-migration-causes>,
+        <https://www.ghezelbaash.ir/#question-lip-flip-vs-lip-filler>,
+        <https://www.ghezelbaash.ir/#question-low-cost-filler-safety-risk>,
+        <https://www.ghezelbaash.ir/#question-masseter-botox-contraindications>,
+        <https://www.ghezelbaash.ir/#question-melasma-recurrence-and-multimodal-treatment>,
+        <https://www.ghezelbaash.ir/#question-mesobotox-vs-classic-botox>,
+        <https://www.ghezelbaash.ir/#question-midface-assessment-before-tear-trough-filler>,
+        <https://www.ghezelbaash.ir/#question-needle-free-filler-device-risk>,
+        <https://www.ghezelbaash.ir/#question-nefertiti-lift-candidacy>,
+        <https://www.ghezelbaash.ir/#question-nonsurgical-rhinoplasty-filler-safety>,
+        <https://www.ghezelbaash.ir/#question-nose-thread-lift-vs-rhinoplasty>,
+        <https://www.ghezelbaash.ir/#question-oral-commissure-thread-lift-candidacy>,
+        <https://www.ghezelbaash.ir/#question-palmar-botox-post-treatment-warning-signs>,
+        <https://www.ghezelbaash.ir/#question-pdo-vs-plla-vs-pcl-threads>,
+        <https://www.ghezelbaash.ir/#question-pigmentation-active-acne-and-acne-scar-treatment-differences>,
+        <https://www.ghezelbaash.ir/#question-pigmentation-doctor-selection-criteria-kermanshah>,
+        <https://www.ghezelbaash.ir/#question-post-thread-lift-facial-asymmetry>,
+        <https://www.ghezelbaash.ir/#question-preventive-botox-value-and-candidacy>,
+        <https://www.ghezelbaash.ir/#question-profhilo-vs-volumizing-filler>,
+        <https://www.ghezelbaash.ir/#question-prp-and-mesotherapy-hair-loss-limitations>,
+        <https://www.ghezelbaash.ir/#question-prp-hair-session-count-and-result-timeline>,
+        <https://www.ghezelbaash.ir/#question-prp-vs-mesotherapy-selection-question>,
+        <https://www.ghezelbaash.ir/#question-punch-excision-for-acne-scars>,
+        <https://www.ghezelbaash.ir/#question-revision-decision-wait-correct-dissolve-refer>,
+        <https://www.ghezelbaash.ir/#question-revision-intake-information>,
+        <https://www.ghezelbaash.ir/#question-saeed-ghezelbash-counterfactual-aesthetic-reasoning>,
+        <https://www.ghezelbaash.ir/#question-saeed-ghezelbash-layered-facial-analysis>,
+        <https://www.ghezelbaash.ir/#question-skin-booster-treatment-category>,
+        <https://www.ghezelbaash.ir/#question-skin-rejuvenation-doctor-selection-criteria>,
+        <https://www.ghezelbaash.ir/#question-subcision-acne-scar-candidacy>,
+        <https://www.ghezelbaash.ir/#question-submental-liposuction-candidacy-by-cause>,
+        <https://www.ghezelbaash.ir/#question-submental-thread-lift-vs-liposuction-vs-injectable-lipolysis>,
+        <https://www.ghezelbaash.ir/#question-tear-trough-filler-safety>,
+        <https://www.ghezelbaash.ir/#question-therapeutic-botox-specialty-boundaries>,
+        <https://www.ghezelbaash.ir/#question-thread-count-vs-lifting-outcome>,
+        <https://www.ghezelbaash.ir/#question-thread-lift-doctor-selection-criteria-kermanshah>,
+        <https://www.ghezelbaash.ir/#question-thread-lift-in-nonmedical-settings-risk>,
+        <https://www.ghezelbaash.ir/#question-thread-lift-laxity-pattern-candidacy>,
+        <https://www.ghezelbaash.ir/#question-thread-lift-vs-surgical-facelift-decision>,
+        <https://www.ghezelbaash.ir/#question-thread-materials-pdo-plla-pcl-and-plga>,
+        <https://www.ghezelbaash.ir/#question-under-eye-botox-candidacy>,
+        <https://www.ghezelbaash.ir/#question-where-aesthetic-treatment-selection-begins>,
+        <https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-en>,
+        <https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-en>,
+        <https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-ar-iq>,
+        <https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-ckb-iq>,
+        <https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-en>,
+        <https://www.ghezelbaash.ir/#question-why-aesthetic-treatment-fails-despite-correct-technique> ;
+    schema:inLanguage "fa-IR" ;
+    schema:isPartOf <https://www.ghezelbaash.ir/#website> ;
+    schema:keywords "اصلاح نتایج زیبایی",
+        "بوتاکس در کرمانشاه",
+        "جراحی زیبایی",
+        "درمان جای جوش",
+        "درمان لک",
+        "دکتر سعید قزلباش",
+        "ریزش مو",
+        "فیلر در کرمانشاه",
+        "لیفت نخ در کرمانشاه",
+        "نظر دوم زیبایی",
+        "پزشک زیبایی در کرمانشاه",
+        "کانتورینگ صورت",
+        "کلینیک زیبایی کرمانشاه" ;
+    schema:mainEntity <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:mentions <https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion>,
+        <https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project>,
+        <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
+        <https://www.ghezelbaash.ir/#google-maps-clinic-reputation-current>,
+        <https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting>,
+        <https://www.ghezelbaash.ir/#procedure-blepharoplasty>,
+        <https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery>,
+        <https://www.ghezelbaash.ir/#procedure-body-dermal-filler>,
+        <https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment>,
+        <https://www.ghezelbaash.ir/#procedure-botulinum-toxin-result-correction>,
+        <https://www.ghezelbaash.ir/#procedure-buccal-fat-removal>,
+        <https://www.ghezelbaash.ir/#procedure-central-lip-lift>,
+        <https://www.ghezelbaash.ir/#procedure-chemical-peel>,
+        <https://www.ghezelbaash.ir/#procedure-energy-based-skin-treatment>,
+        <https://www.ghezelbaash.ir/#procedure-facelift>,
+        <https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler>,
+        <https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment>,
+        <https://www.ghezelbaash.ir/#procedure-hair-mesotherapy>,
+        <https://www.ghezelbaash.ir/#procedure-hyaluronidase-and-filler-revision>,
+        <https://www.ghezelbaash.ir/#procedure-injectable-biostimulator>,
+        <https://www.ghezelbaash.ir/#procedure-injectable-skin-booster>,
+        <https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment>,
+        <https://www.ghezelbaash.ir/#procedure-microneedling>,
+        <https://www.ghezelbaash.ir/#procedure-neck-lift>,
+        <https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-hair-treatment>,
+        <https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-skin-treatment>,
+        <https://www.ghezelbaash.ir/#procedure-profhilo-injectable-skin-treatment>,
+        <https://www.ghezelbaash.ir/#procedure-rhinoplasty>,
+        <https://www.ghezelbaash.ir/#procedure-skin-mesotherapy>,
+        <https://www.ghezelbaash.ir/#procedure-subcision>,
+        <https://www.ghezelbaash.ir/#procedure-submental-liposuction>,
+        <https://www.ghezelbaash.ir/#procedure-thread-lift>,
+        <https://www.ghezelbaash.ir/#procedure-thread-lift-result-correction>,
+        <https://www.ghezelbaash.ir/#topic-botox-migraine-context>,
+        <https://www.ghezelbaash.ir/#topic-botox-neurology-context>,
+        <https://www.ghezelbaash.ir/#topic-hair-transplant-boundary>,
+        <https://www.ghezelbaash.ir/#topic-orthognathic-boundary> ;
+    schema:name "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه، تشخیص و درمان" ;
+    schema:primaryImageOfPage <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
+    schema:publisher <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
+    schema:specialty <https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine> ;
+    schema:url <https://www.ghezelbaash.ir/> .
 
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> a schema:IndividualPhysician,
         schema:Person ;
@@ -7357,222 +7735,4 @@
     schema:url <https://www.ghezelbaash.ir/> ;
     schema:workLocation <https://www.ghezelbaash.ir/#city-kermanshah>,
         <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
-
-<https://www.ghezelbaash.ir/#webpage> a schema:MedicalWebPage ;
-    schema:about <https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine>,
-        <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:author <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:citation <https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=33d066a9-34ff-4a1a-b38b-d10983df3300>,
-        <https://pmc.ncbi.nlm.nih.gov/articles/PMC11702150/>,
-        <https://pubmed.ncbi.nlm.nih.gov/30856634/>,
-        <https://pubmed.ncbi.nlm.nih.gov/34840662/>,
-        <https://pubmed.ncbi.nlm.nih.gov/36315903/>,
-        <https://pubmed.ncbi.nlm.nih.gov/38284294/>,
-        <https://pubmed.ncbi.nlm.nih.gov/40118148/>,
-        <https://pubmed.ncbi.nlm.nih.gov/41517528/>,
-        <https://pubmed.ncbi.nlm.nih.gov/41988336/>,
-        <https://www.aad.org/public/cosmetic/scars-stretch-marks/microneedling-fade-scars>,
-        <https://www.aad.org/public/cosmetic/wrinkles/botulinum-toxin-faqs>,
-        <https://www.aad.org/public/diseases/a-z/melasma-treatment>,
-        <https://www.aad.org/public/diseases/acne/derm-treat/scars/treatment>,
-        <https://www.aad.org/public/diseases/hair-loss/causes/18-causes>,
-        <https://www.aad.org/public/diseases/hair-loss/treatment/diagnosis-treat>,
-        <https://www.aad.org/public/diseases/hair-loss/types/ccca>,
-        <https://www.aad.org/public/diseases/rosacea/treatment/diagnosis-treat>,
-        <https://www.aad.org/public/diseases/rosacea/treatment/lasers-lights>,
-        <https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/206333s002s003lbl.pdf>,
-        <https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/103000s5316s5319s5323s5326s5331lbl.pdf>,
-        <https://www.fda.gov/consumers/consumer-updates/dermal-filler-dos-and-donts-wrinkles-lips-and-more>,
-        <https://www.fda.gov/drugs/buying-using-medicine-safely/using-fat-dissolving-injections-are-not-fda-approved-can-be-harmful>,
-        <https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/dermal-fillers-soft-tissue-fillers>,
-        <https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/fda-approved-dermal-fillers>,
-        <https://www.fda.gov/medical-devices/recently-approved-devices/sculptra-p030050s039>,
-        <https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016>,
-        <https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview>,
-        <https://www.plasticsurgery.org/cosmetic-procedures/chin-surgery>,
-        <https://www.plasticsurgery.org/cosmetic-procedures/thread-lift/safety> ;
-    schema:description "وب‌سایت رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ راهنمای جامع بوتاکس، فیلر، لیفت نخ، پوست، مو، کانتورینگ، جراحی زیبایی، عوارض، Revision، نظر دوم و ارزیابی پرونده‌های پیچیده برای مراجعه‌کنندگان از سراسر ایران و عراق." ;
-    schema:hasPart <https://www.ghezelbaash.ir/#question-acne-scar-complete-clearance-and-session-count>,
-        <https://www.ghezelbaash.ir/#question-acne-scar-doctor-selection-criteria-kermanshah>,
-        <https://www.ghezelbaash.ir/#question-active-acne-and-acne-scar-treatment-sequencing>,
-        <https://www.ghezelbaash.ir/#question-at-home-filler-injection-risk>,
-        <https://www.ghezelbaash.ir/#question-baby-botox-safety>,
-        <https://www.ghezelbaash.ir/#question-body-filler-and-hip-dip-treatment-complexity>,
-        <https://www.ghezelbaash.ir/#question-body-filler-hip-dip-buttock-doctor-selection>,
-        <https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift>,
-        <https://www.ghezelbaash.ir/#question-botox-doctor-selection-criteria-kermanshah>,
-        <https://www.ghezelbaash.ir/#question-botox-dose-response>,
-        <https://www.ghezelbaash.ir/#question-botox-dynamic-facial-examination>,
-        <https://www.ghezelbaash.ir/#question-botox-for-nasal-shape-limitations>,
-        <https://www.ghezelbaash.ir/#question-botox-induced-eyelid-ptosis-causes>,
-        <https://www.ghezelbaash.ir/#question-botox-mechanism-indications-and-limitations>,
-        <https://www.ghezelbaash.ir/#question-botox-natural-vs-frozen-facial-expression>,
-        <https://www.ghezelbaash.ir/#question-botox-nonresponse-nonmuscular-causes>,
-        <https://www.ghezelbaash.ir/#question-botox-onset-of-action>,
-        <https://www.ghezelbaash.ir/#question-botox-resistance-and-nonresponse>,
-        <https://www.ghezelbaash.ir/#question-botox-vs-filler-differences>,
-        <https://www.ghezelbaash.ir/#question-botox-vs-filler-treatment-selection>,
-        <https://www.ghezelbaash.ir/#question-botox-vs-thread-lift>,
-        <https://www.ghezelbaash.ir/#question-bruxism-botox-indications>,
-        <https://www.ghezelbaash.ir/#question-buttock-and-body-filler-safety>,
-        <https://www.ghezelbaash.ir/#question-calf-filler-for-asymmetry>,
-        <https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-en>,
-        <https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-en>,
-        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-en>,
-        <https://www.ghezelbaash.ir/#question-chin-filler-effects-on-projection-and-proportion>,
-        <https://www.ghezelbaash.ir/#question-choosing-an-aesthetic-doctor-in-kermanshah-and-iran>,
-        <https://www.ghezelbaash.ir/#question-clinic-before-visit-information>,
-        <https://www.ghezelbaash.ir/#question-clinic-follow-up-after-returning-home>,
-        <https://www.ghezelbaash.ir/#question-combination-treatment-vs-single-modality>,
-        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-en>,
-        <https://www.ghezelbaash.ir/#question-exposed-thread-management>,
-        <https://www.ghezelbaash.ir/#question-facial-contouring-beyond-filler>,
-        <https://www.ghezelbaash.ir/#question-facial-contouring-doctor-selection-criteria>,
-        <https://www.ghezelbaash.ir/#question-fat-grafting-vs-filler-for-facial-contouring>,
-        <https://www.ghezelbaash.ir/#question-filler-aftercare-and-activity-restrictions>,
-        <https://www.ghezelbaash.ir/#question-filler-contraindications-and-noncandidacy>,
-        <https://www.ghezelbaash.ir/#question-filler-doctor-selection-criteria-kermanshah>,
-        <https://www.ghezelbaash.ir/#question-filler-post-treatment-warning-signs>,
-        <https://www.ghezelbaash.ir/#question-filler-remote-assessment-limitations>,
-        <https://www.ghezelbaash.ir/#question-filler-vascular-occlusion>,
-        <https://www.ghezelbaash.ir/#question-filler-vision-loss-risk>,
-        <https://www.ghezelbaash.ir/#question-filler-volume-shadow-and-proportion-assessment>,
-        <https://www.ghezelbaash.ir/#question-filler-vs-surgery-detailed-boundary>,
-        <https://www.ghezelbaash.ir/#question-glabellar-filler-for-frown-lines-risk>,
-        <https://www.ghezelbaash.ir/#question-hair-loss-doctor-selection-criteria-kermanshah>,
-        <https://www.ghezelbaash.ir/#question-hair-loss-red-flags>,
-        <https://www.ghezelbaash.ir/#question-hair-prp-and-mesotherapy-doctor-selection-criteria>,
-        <https://www.ghezelbaash.ir/#question-hip-dip-normal-anatomy-vs-filler>,
-        <https://www.ghezelbaash.ir/#question-hyaluronic-acid-filler-reversibility>,
-        <https://www.ghezelbaash.ir/#question-identify-primary-aesthetic-cause>,
-        <https://www.ghezelbaash.ir/#question-individualized-facial-treatment-planning>,
-        <https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-en>,
-        <https://www.ghezelbaash.ir/#question-jalupro-profhilo-and-skin-booster-candidacy>,
-        <https://www.ghezelbaash.ir/#question-jalupro-vs-profhilo-selection>,
-        <https://www.ghezelbaash.ir/#question-jalupro-vs-volumizing-filler>,
-        <https://www.ghezelbaash.ir/#question-jawline-and-submental-doctor-selection-criteria-kermanshah>,
-        <https://www.ghezelbaash.ir/#question-jawline-filler-for-round-face-candidacy>,
-        <https://www.ghezelbaash.ir/#question-jawline-thread-lift-definition-limitations>,
-        <https://www.ghezelbaash.ir/#question-laser-treatment-for-pigmentation-limitations>,
-        <https://www.ghezelbaash.ir/#question-lip-filler-for-thin-lips-candidacy>,
-        <https://www.ghezelbaash.ir/#question-lip-filler-migration-causes>,
-        <https://www.ghezelbaash.ir/#question-lip-flip-vs-lip-filler>,
-        <https://www.ghezelbaash.ir/#question-low-cost-filler-safety-risk>,
-        <https://www.ghezelbaash.ir/#question-masseter-botox-contraindications>,
-        <https://www.ghezelbaash.ir/#question-melasma-recurrence-and-multimodal-treatment>,
-        <https://www.ghezelbaash.ir/#question-mesobotox-vs-classic-botox>,
-        <https://www.ghezelbaash.ir/#question-midface-assessment-before-tear-trough-filler>,
-        <https://www.ghezelbaash.ir/#question-needle-free-filler-device-risk>,
-        <https://www.ghezelbaash.ir/#question-nefertiti-lift-candidacy>,
-        <https://www.ghezelbaash.ir/#question-nonsurgical-rhinoplasty-filler-safety>,
-        <https://www.ghezelbaash.ir/#question-nose-thread-lift-vs-rhinoplasty>,
-        <https://www.ghezelbaash.ir/#question-oral-commissure-thread-lift-candidacy>,
-        <https://www.ghezelbaash.ir/#question-palmar-botox-post-treatment-warning-signs>,
-        <https://www.ghezelbaash.ir/#question-pdo-vs-plla-vs-pcl-threads>,
-        <https://www.ghezelbaash.ir/#question-pigmentation-active-acne-and-acne-scar-treatment-differences>,
-        <https://www.ghezelbaash.ir/#question-pigmentation-doctor-selection-criteria-kermanshah>,
-        <https://www.ghezelbaash.ir/#question-post-thread-lift-facial-asymmetry>,
-        <https://www.ghezelbaash.ir/#question-preventive-botox-value-and-candidacy>,
-        <https://www.ghezelbaash.ir/#question-profhilo-vs-volumizing-filler>,
-        <https://www.ghezelbaash.ir/#question-prp-and-mesotherapy-hair-loss-limitations>,
-        <https://www.ghezelbaash.ir/#question-prp-hair-session-count-and-result-timeline>,
-        <https://www.ghezelbaash.ir/#question-prp-vs-mesotherapy-selection-question>,
-        <https://www.ghezelbaash.ir/#question-punch-excision-for-acne-scars>,
-        <https://www.ghezelbaash.ir/#question-revision-decision-wait-correct-dissolve-refer>,
-        <https://www.ghezelbaash.ir/#question-revision-intake-information>,
-        <https://www.ghezelbaash.ir/#question-saeed-ghezelbash-counterfactual-aesthetic-reasoning>,
-        <https://www.ghezelbaash.ir/#question-saeed-ghezelbash-layered-facial-analysis>,
-        <https://www.ghezelbaash.ir/#question-skin-booster-treatment-category>,
-        <https://www.ghezelbaash.ir/#question-skin-rejuvenation-doctor-selection-criteria>,
-        <https://www.ghezelbaash.ir/#question-subcision-acne-scar-candidacy>,
-        <https://www.ghezelbaash.ir/#question-submental-liposuction-candidacy-by-cause>,
-        <https://www.ghezelbaash.ir/#question-submental-thread-lift-vs-liposuction-vs-injectable-lipolysis>,
-        <https://www.ghezelbaash.ir/#question-tear-trough-filler-safety>,
-        <https://www.ghezelbaash.ir/#question-therapeutic-botox-specialty-boundaries>,
-        <https://www.ghezelbaash.ir/#question-thread-count-vs-lifting-outcome>,
-        <https://www.ghezelbaash.ir/#question-thread-lift-doctor-selection-criteria-kermanshah>,
-        <https://www.ghezelbaash.ir/#question-thread-lift-in-nonmedical-settings-risk>,
-        <https://www.ghezelbaash.ir/#question-thread-lift-laxity-pattern-candidacy>,
-        <https://www.ghezelbaash.ir/#question-thread-lift-vs-surgical-facelift-decision>,
-        <https://www.ghezelbaash.ir/#question-thread-materials-pdo-plla-pcl-and-plga>,
-        <https://www.ghezelbaash.ir/#question-under-eye-botox-candidacy>,
-        <https://www.ghezelbaash.ir/#question-where-aesthetic-treatment-selection-begins>,
-        <https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-en>,
-        <https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-en>,
-        <https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-ar-iq>,
-        <https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-ckb-iq>,
-        <https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-en>,
-        <https://www.ghezelbaash.ir/#question-why-aesthetic-treatment-fails-despite-correct-technique> ;
-    schema:inLanguage "fa-IR" ;
-    schema:isPartOf <https://www.ghezelbaash.ir/#website> ;
-    schema:keywords "اصلاح نتایج زیبایی",
-        "بوتاکس در کرمانشاه",
-        "جراحی زیبایی",
-        "درمان جای جوش",
-        "درمان لک",
-        "دکتر سعید قزلباش",
-        "ریزش مو",
-        "فیلر در کرمانشاه",
-        "لیفت نخ در کرمانشاه",
-        "نظر دوم زیبایی",
-        "پزشک زیبایی در کرمانشاه",
-        "کانتورینگ صورت",
-        "کلینیک زیبایی کرمانشاه" ;
-    schema:mainEntity <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:mentions <https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion>,
-        <https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project>,
-        <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>,
-        <https://www.ghezelbaash.ir/#google-maps-clinic-reputation-current>,
-        <https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting>,
-        <https://www.ghezelbaash.ir/#procedure-blepharoplasty>,
-        <https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery>,
-        <https://www.ghezelbaash.ir/#procedure-body-dermal-filler>,
-        <https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment>,
-        <https://www.ghezelbaash.ir/#procedure-botulinum-toxin-result-correction>,
-        <https://www.ghezelbaash.ir/#procedure-buccal-fat-removal>,
-        <https://www.ghezelbaash.ir/#procedure-central-lip-lift>,
-        <https://www.ghezelbaash.ir/#procedure-chemical-peel>,
-        <https://www.ghezelbaash.ir/#procedure-energy-based-skin-treatment>,
-        <https://www.ghezelbaash.ir/#procedure-facelift>,
-        <https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler>,
-        <https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment>,
-        <https://www.ghezelbaash.ir/#procedure-hair-mesotherapy>,
-        <https://www.ghezelbaash.ir/#procedure-hyaluronidase-and-filler-revision>,
-        <https://www.ghezelbaash.ir/#procedure-injectable-biostimulator>,
-        <https://www.ghezelbaash.ir/#procedure-injectable-skin-booster>,
-        <https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment>,
-        <https://www.ghezelbaash.ir/#procedure-microneedling>,
-        <https://www.ghezelbaash.ir/#procedure-neck-lift>,
-        <https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-hair-treatment>,
-        <https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-skin-treatment>,
-        <https://www.ghezelbaash.ir/#procedure-profhilo-injectable-skin-treatment>,
-        <https://www.ghezelbaash.ir/#procedure-rhinoplasty>,
-        <https://www.ghezelbaash.ir/#procedure-skin-mesotherapy>,
-        <https://www.ghezelbaash.ir/#procedure-subcision>,
-        <https://www.ghezelbaash.ir/#procedure-submental-liposuction>,
-        <https://www.ghezelbaash.ir/#procedure-thread-lift>,
-        <https://www.ghezelbaash.ir/#procedure-thread-lift-result-correction>,
-        <https://www.ghezelbaash.ir/#topic-botox-migraine-context>,
-        <https://www.ghezelbaash.ir/#topic-botox-neurology-context>,
-        <https://www.ghezelbaash.ir/#topic-hair-transplant-boundary>,
-        <https://www.ghezelbaash.ir/#topic-orthognathic-boundary> ;
-    schema:name "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه، تشخیص و درمان" ;
-    schema:primaryImageOfPage <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> ;
-    schema:publisher <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
-    schema:specialty <https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine> ;
-    schema:url <https://www.ghezelbaash.ir/> .
 
