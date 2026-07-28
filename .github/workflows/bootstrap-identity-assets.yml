@@ -1,0 +1,85 @@
+name: Bootstrap identity assets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/bootstrap-identity-assets.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Install deterministic image tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends librsvg2-bin imagemagick
+
+      - name: Download byte-identical Wikimedia masters and self-host font
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p public/media/images/physician/master public/media/brand public/fonts
+          curl --fail --location --retry 5 --retry-all-errors --user-agent 'doctor-ghezelbaash-site/1.0' \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Saeed-Ghezelbaash-physician-portrait.jpg' \
+            --output public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg
+          curl --fail --location --retry 5 --retry-all-errors --user-agent 'doctor-ghezelbaash-site/1.0' \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Saeed-Ghezelbaash-with-clinical-team.jpg' \
+            --output public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg
+          curl --fail --location --retry 5 --retry-all-errors --user-agent 'doctor-ghezelbaash-site/1.0' \
+            'https://commons.wikimedia.org/wiki/Special:Redirect/file/Saeed-Ghezelbaash-in-clinical-office.jpg' \
+            --output public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg
+          curl --fail --location --retry 5 --retry-all-errors \
+            'https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@6e553e33489a8f9dfaccc76860a2e3f3c1e66de7/misc/Non-Latin/fonts/webfonts/Vazirmatn-NL%5Bwght%5D.woff2' \
+            --output public/fonts/vazirmatn-nl-wght.woff2
+
+      - name: Render favicon and clinic-logo derivatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp public/media/brand/doctor-ghezelbaash-symbol.svg public/favicon.svg
+          rsvg-convert -w 512 -h 512 public/media/brand/doctor-ghezelbaash-symbol.svg > public/media/brand/doctor-ghezelbaash-symbol-512.png
+          rsvg-convert -w 180 -h 180 public/media/brand/doctor-ghezelbaash-symbol.svg > public/apple-touch-icon.png
+          rsvg-convert -w 48 -h 48 public/media/brand/doctor-ghezelbaash-symbol.svg > public/favicon-48x48.png
+          rsvg-convert -w 32 -h 32 public/media/brand/doctor-ghezelbaash-symbol.svg > /tmp/favicon-32.png
+          rsvg-convert -w 16 -h 16 public/media/brand/doctor-ghezelbaash-symbol.svg > /tmp/favicon-16.png
+          convert /tmp/favicon-16.png /tmp/favicon-32.png public/favicon-48x48.png public/favicon.ico
+
+      - name: Verify generated assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          file \
+            public/media/images/physician/master/*.jpg \
+            public/media/brand/doctor-ghezelbaash-symbol-512.png \
+            public/favicon.svg public/favicon.ico public/favicon-48x48.png \
+            public/apple-touch-icon.png public/fonts/vazirmatn-nl-wght.woff2
+          identify \
+            public/media/images/physician/master/*.jpg \
+            public/media/brand/doctor-ghezelbaash-symbol-512.png \
+            public/favicon-48x48.png public/apple-touch-icon.png
+          sha256sum \
+            public/media/images/physician/master/*.jpg \
+            public/media/brand/doctor-ghezelbaash-symbol-512.png \
+            public/favicon.svg public/favicon.ico public/favicon-48x48.png \
+            public/apple-touch-icon.png public/fonts/vazirmatn-nl-wght.woff2
+
+      - name: Commit assets and remove one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/bootstrap-identity-assets.yml
+          git add public
+          git commit -m 'Add canonical identity images, favicon, clinic logo, and local font'
+          git push origin HEAD:main
