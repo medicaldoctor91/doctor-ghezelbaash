@@ -1,0 +1,167 @@
+name: One-shot paragraph to social heading audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/one-shot-paragraph-to-social-heading-audit.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find paragraph-source internal-link candidates
+        run: |
+          python3 - <<'PY'
+          import re, html, pathlib, math
+          from collections import Counter
+
+          path = pathlib.Path('src/pages/index.md')
+          text = path.read_text(encoding='utf-8')
+
+          PROFILE = 'https://www.instagram.com/doctor.ghezelbaash/'
+          REELS = 'https://www.instagram.com/doctor.ghezelbaash/reels/'
+
+          heading_re = re.compile(r'<h([2-6])\b([^>]*)>(.*?)</h\1>', re.I|re.S)
+          id_re = re.compile(r'\bid=["\']([^"\']+)["\']', re.I)
+          href_re = re.compile(r'\bhref=["\']([^"\']+)["\']', re.I)
+          p_re = re.compile(r'<p\b[^>]*>(.*?)</p>', re.I|re.S)
+          a_re = re.compile(r'<a\b[^>]*>.*?</a>', re.I|re.S)
+          tag_re = re.compile(r'<[^>]+>')
+
+          def clean(s):
+              s = tag_re.sub(' ', s)
+              s = html.unescape(s)
+              return re.sub(r'\s+', ' ', s).strip()
+
+          # Position-aware heading hierarchy.
+          headings=[]
+          h2=''; h3=''
+          for m in heading_re.finditer(text):
+              attrs, inner = m.group(2), m.group(3)
+              im = id_re.search(attrs)
+              if not im: continue
+              level=int(m.group(1)); hid=im.group(1); label=clean(inner)
+              if level==2:
+                  h2=hid; h3=''
+              elif level==3:
+                  h3=hid
+              hrefs=href_re.findall(inner)
+              dest = 'profile' if PROFILE in hrefs else ('reels' if REELS in hrefs else '')
+              headings.append({'pos':m.start(),'line':text.count('\n',0,m.start())+1,'level':level,'id':hid,'text':label,'h2':h2,'h3':h3,'dest':dest})
+
+          targets=[h for h in headings if h['dest']]
+          assert sum(t['dest']=='profile' for t in targets)==35, sum(t['dest']=='profile' for t in targets)
+          assert sum(t['dest']=='reels' for t in targets)==25, sum(t['dest']=='reels' for t in targets)
+
+          # Locate heading context for each paragraph by nearest preceding heading.
+          paragraphs=[]
+          hi=0; cur_h2=''; cur_h3=''
+          for pm in p_re.finditer(text):
+              while hi < len(headings) and headings[hi]['pos'] < pm.start():
+                  h=headings[hi]
+                  if h['level']==2: cur_h2=h['id']; cur_h3=''
+                  elif h['level']==3: cur_h3=h['id']
+                  hi += 1
+              raw=pm.group(1)
+              # Only unlinked paragraph text is eligible as source anchor text.
+              eligible=clean(a_re.sub(' ', raw))
+              full=clean(raw)
+              if len(eligible) < 45:
+                  continue
+              paragraphs.append({'pos':pm.start(),'line':text.count('\n',0,pm.start())+1,'h2':cur_h2,'h3':cur_h3,'eligible':eligible,'full':full})
+
+          stop=set('''و یا از به در با برای که را این آن یک است هست بود شده می شود چه چطور چرا آیا وقتی اگر نه تا روی بعد قبل همان هر همه فقط باید یعنی بدون کدام کسی مناسب بهترین دکتر پزشک درمان نتیجه صورت پوست مو چیست کنیم کنیم؟ چه‌کسی چه‌کسی‌است'''.split())
+          token_re=re.compile(r'[\w\u200c]+',re.UNICODE)
+          def toks(s):
+              return [x for x in token_re.findall(s.casefold()) if len(x)>2 and x not in stop and not x.isdigit()]
+
+          # Document frequency across eligible paragraphs for rarity weighting.
+          df=Counter()
+          para_tokens=[]
+          for p in paragraphs:
+              ts=toks(p['eligible']); para_tokens.append(ts)
+              df.update(set(ts))
+          N=max(1,len(paragraphs))
+          def idf(t): return math.log((N+1)/(df[t]+1))+1
+
+          def longest_exact_ngram(target_tokens, paragraph_text):
+              low=paragraph_text.casefold()
+              for n in range(min(5,len(target_tokens)),1,-1):
+                  for i in range(len(target_tokens)-n+1):
+                      phrase=' '.join(target_tokens[i:i+n])
+                      if phrase in low:
+                          return phrase
+              return ''
+
+          rows=[]
+          for t in targets:
+              tt=toks(t['text'])
+              tset=set(tt)
+              scored=[]
+              for p,pts in zip(paragraphs,para_tokens):
+                  if p['h2']==t['h2']:
+                      continue
+                  common=tset.intersection(pts)
+                  if not common:
+                      continue
+                  exact=longest_exact_ngram(tt,p['eligible'])
+                  weighted=sum(idf(x) for x in common)
+                  score=weighted + len(common)*1.5 + (len(exact.split())*4 if exact else 0)
+                  # Require either an exact 2+ word phrase or at least two meaningful shared tokens.
+                  if not exact and len(common)<2:
+                      continue
+                  # Suggested anchor: exact phrase when available, otherwise shortest sentence fragment around shared terms.
+                  anchor=exact
+                  if not anchor:
+                      words=p['eligible'].split()
+                      idx=[i for i,w in enumerate(words) if any(c in w.casefold() for c in common)]
+                      if idx:
+                          a=max(0,min(idx)-1); b=min(len(words),max(idx)+2)
+                          anchor=' '.join(words[a:b])
+                  # Snippet around anchor.
+                  low=p['eligible'].casefold(); pos=low.find(anchor.casefold()) if anchor else -1
+                  if pos<0: pos=0
+                  s=max(0,pos-100); e=min(len(p['eligible']),pos+len(anchor)+180)
+                  snip=('…' if s else '')+p['eligible'][s:e]+('…' if e<len(p['eligible']) else '')
+                  scored.append((score,p,anchor,snip,sorted(common)))
+              scored.sort(key=lambda x:(-x[0],x[1]['line']))
+              # Deduplicate by source H3 and suggested anchor.
+              chosen=[]; seen=set()
+              for item in scored:
+                  key=(item[1]['h3'],item[2])
+                  if key in seen: continue
+                  seen.add(key); chosen.append(item)
+                  if len(chosen)>=3: break
+              rows.append((t,chosen))
+
+          out=[]
+          out.append('PROFILE_TARGETS=35')
+          out.append('REELS_TARGETS=25')
+          out.append(f'HTML_PARAGRAPHS_SCANNED={len(paragraphs)}')
+          out.append('SOURCE_RULE=Only currently unlinked words inside <p> blocks; source H2 must differ from target H2.')
+          out.append('')
+          for dest in ('profile','reels'):
+              out.append(f'# {dest.upper()}')
+              for t,chosen in rows:
+                  if t['dest']!=dest: continue
+                  out.append(f"## H{t['level']} {t['id']} | {t['text']}")
+                  if not chosen:
+                      out.append('NO_STRONG_PARAGRAPH_CANDIDATE')
+                  else:
+                      for score,p,anchor,snip,common in chosen:
+                          out.append(f"- ANCHOR={anchor} | SOURCE_LINE={p['line']} | SOURCE_H2={p['h2']} | SOURCE_H3={p['h3']} | SCORE={score:.2f} | MATCH={','.join(common)} | SNIPPET={snip}")
+                  out.append('')
+
+          pathlib.Path('paragraph-to-social-heading-candidates.txt').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+      - name: Commit report
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add paragraph-to-social-heading-candidates.txt
+          git commit -m "Add temporary paragraph-to-social heading candidate report"
+          git push
