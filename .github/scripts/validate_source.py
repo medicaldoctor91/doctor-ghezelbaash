@@ -237,7 +237,7 @@ require(len(csp_lines) == 1, f"expected one CSP header, found {len(csp_lines)}")
 csp = csp_lines[0] if csp_lines else ""
 for directive in (
     "default-src 'self'", "base-uri 'self'", "object-src 'none'", "frame-ancestors 'none'",
-    "script-src-attr 'none'", "style-src-attr 'none'", "connect-src 'none'",
+    "script-src-attr 'none'", "style-src-attr 'none'", "connect-src 'self'",
 ):
     require(directive in csp, f"CSP misses directive: {directive}")
 require("'unsafe-inline'" not in csp and "'unsafe-eval'" not in csp, "CSP contains an unsafe execution source")

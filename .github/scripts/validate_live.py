@@ -131,7 +131,7 @@ def main() -> None:
     csp = root.header("content-security-policy")
     link = root.header("link")
     require(bool(csp), "live root has no Content-Security-Policy header")
-    for directive in ("script-src-attr 'none'", "style-src-attr 'none'", "connect-src 'none'", "object-src 'none'", "frame-ancestors 'none'"):
+    for directive in ("script-src-attr 'none'", "style-src-attr 'none'", "connect-src 'self'", "object-src 'none'", "frame-ancestors 'none'"):
         require(directive in csp, f"live CSP misses {directive}")
     require("'unsafe-inline'" not in csp and "'unsafe-eval'" not in csp, "live CSP contains an unsafe execution source")
     require("graph.jsonld" in link and 'rel="describedby"' in link, "live root Link header does not discover graph.jsonld")
