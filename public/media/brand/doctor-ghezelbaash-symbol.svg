@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Doctor Ghezelbaash brand symbol</title>
+  <desc id="desc">A circular medical brand mark combining a simplified face and syringe.</desc>
+  <rect width="512" height="512" rx="112" fill="#ffffff"/>
+  <circle cx="256" cy="256" r="206" fill="none" stroke="#075244" stroke-width="24"/>
+  <path d="M170 190c8-49 45-78 92-78h34c52 0 82 35 82 88v51c0 83-50 151-122 151s-122-68-122-151v-61" fill="none" stroke="#075244" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M190 230c22-17 47-17 68 0M304 230c22-17 47-17 68 0M214 309c27 25 57 25 84 0" fill="none" stroke="#075244" stroke-width="22" stroke-linecap="round"/>
+  <path d="M257 269l-10 9 15 5" fill="none" stroke="#075244" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(112 176)">
+    <path d="M0 142h98M28 142V23h42v119M18 23h62M36 0h26v23M37 55h33M37 78h33M37 101h33M49 142v42M29 184h42" fill="none" stroke="#075244" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M49 0v-26" fill="none" stroke="#075244" stroke-width="14" stroke-linecap="round"/>
+  </g>
+</svg>
