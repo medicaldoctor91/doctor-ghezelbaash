@@ -1,0 +1,42 @@
+source_files
+public/graph.jsonld True 528031
+src/data/semantic/head-graph.min.jsonld True 48648
+src/pages/index.md True 1674099
+public/_headers True 6291
+
+GRAPH public/graph.jsonld nodes 754
+person present True type ['Person', 'IndividualPhysician']
+  {}
+clinic present True type MedicalClinic
+  {}
+course present True type Course
+  {'provider': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'instructor': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'hasCourseInstance': {'@id': 'https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11'}, 'about': {'@id': 'https://www.ghezelbaash.ir/#procedure-thread-lift'}}
+instance present True type ['CourseInstance', 'EducationEvent']
+  {'provider': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'instructor': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'about': {'@id': 'https://www.ghezelbaash.ir/#procedure-thread-lift'}}
+article present True type ScholarlyArticle
+  {'about': [{'@id': 'https://www.ghezelbaash.ir/#biomedical-concept-major-depressive-disorder'}]}
+presentation present True type CreativeWork
+  {'about': {'@id': 'https://www.ghezelbaash.ir/#biomedical-concept-dissociative-disorders'}}
+
+GRAPH src/data/semantic/head-graph.min.jsonld nodes 108
+person present True type ['Person', 'IndividualPhysician']
+  {}
+clinic present True type MedicalClinic
+  {}
+course present True type Course
+  {'provider': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'instructor': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'hasCourseInstance': {'@id': 'https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11'}, 'about': {'@id': 'https://www.ghezelbaash.ir/#procedure-thread-lift'}}
+instance present True type ['CourseInstance', 'EducationEvent']
+  {'provider': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'instructor': {'@id': 'https://www.ghezelbaash.ir/#saeed-ghezelbash'}, 'about': {'@id': 'https://www.ghezelbaash.ir/#procedure-thread-lift'}}
+article present True type ScholarlyArticle
+  {'about': [{'@id': 'https://www.ghezelbaash.ir/#biomedical-concept-major-depressive-disorder'}]}
+presentation present True type CreativeWork
+  {'about': {'@id': 'https://www.ghezelbaash.ir/#biomedical-concept-dissociative-disorders'}}
+
+header_legacy 1
+header_new 0
+markup saeed-ghezelbash-portrait old 1 new 0
+markup saeed-ghezelbash-clinical-examination old 1 new 0
+markup saeed-ghezelbash-with-clinic-team old 1 new 0
+workflow_execute_exists True
+workflow_execute_v2_exists True
+workflow_old_exists True
