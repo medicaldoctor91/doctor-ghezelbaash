@@ -1,0 +1,37 @@
+name: Trigger final production audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/trigger-final-audit.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/final-audit.yml')
+          text = path.read_text(encoding='utf-8')
+          old = '# Temporary one-shot workflow; removed after final evidence is collected.'
+          new = '# Temporary one-shot workflow; post-CSP final evidence run.'
+          if text.count(old) != 1:
+              raise SystemExit('final audit trigger marker was not found exactly once')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+          git rm .github/workflows/trigger-final-audit.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/workflows/final-audit.yml
+          git commit -m 'Trigger post-CSP final production audit'
+          git push origin HEAD:main
