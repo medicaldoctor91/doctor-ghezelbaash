@@ -1,0 +1,81 @@
+name: Audit current live deployment after performance passes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-current-live-performance.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: current-live-performance-audit
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Wait for Cloudflare production deployment
+        run: sleep 180
+      - name: Capture live HTML and headers
+        run: |
+          mkdir -p tmp/live-current
+          curl -fsS --compressed -D tmp/live-current/root-headers.txt https://www.ghezelbaash.ir/ -o tmp/live-current/index.html
+          curl -fsS -D tmp/live-current/graph-headers.txt -o /dev/null https://www.ghezelbaash.ir/graph.jsonld
+          curl -fsS -D tmp/live-current/portrait-headers.txt -o /dev/null https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp
+      - name: Run repeated live Lighthouse
+        run: |
+          for mode in mobile desktop; do
+            for run in 1 2 3; do
+              args=''
+              if [ "$mode" = desktop ]; then args='--preset=desktop'; fi
+              npx --yes lighthouse@latest https://www.ghezelbaash.ir/ $args --output=json --output-path=tmp/live-current/${mode}-${run}.json --only-categories=performance,accessibility,best-practices,seo --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+            done
+          done
+      - name: Summarize median live result
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re,statistics
+          root=Path('tmp/live-current')
+          result={'liveHtml':{},'modes':{},'headers':{}}
+          html=(root/'index.html').read_text(encoding='utf-8',errors='replace')
+          result['liveHtml']={'bytes':len(html.encode()),'hasDelivery640':'portrait-delivery-640.webp' in html,'hasDelivery960':'portrait-delivery-960.webp' in html,'hasOfficeDelivery':'in-clinical-office-delivery-' in html,'hasOldOfficePhrase':('معاینه بالینی مراجعه‌کننده' in html or 'معاینه لایه‌های صورت پیش از انتخاب روش زیبایی' in html),'jsonLdAfterMain':html.find('<script type="application/ld+json">')>html.find('</main>'),'priceRange':'"priceRange":"$$$$"' in html,'presentationType':'PresentationDigitalDocument' in html}
+          for mode in ('mobile','desktop'):
+            runs=[]
+            for i in (1,2,3):
+              d=json.loads((root/f'{mode}-{i}.json').read_text());a=d['audits'];c=d['categories'];req=a.get('network-requests',{}).get('details',{}).get('items',[])
+              runs.append({'performance':round(c['performance']['score']*100),'accessibility':round(c['accessibility']['score']*100),'bestPractices':round(c['best-practices']['score']*100),'seo':round(c['seo']['score']*100),'fcp':a['first-contentful-paint']['numericValue'],'lcp':a['largest-contentful-paint']['numericValue'],'speedIndex':a['speed-index']['numericValue'],'tbt':a['total-blocking-time']['numericValue'],'cls':a['cumulative-layout-shift']['numericValue'],'mainthread':a['mainthread-work-breakdown']['numericValue'],'maxPotentialFid':a['max-potential-fid']['numericValue'],'imageSavings':a.get('image-delivery-insight',{}).get('displayValue'),'thirdParty':a.get('third-parties-insight',{}).get('details',{}).get('items',[]),'requests':[{'url':x.get('url'),'priority':x.get('priority'),'transferSize':x.get('transferSize'),'resourceSize':x.get('resourceSize')} for x in req if 'cloudflareinsights' in x.get('url','') or 'static.cloudflareinsights' in x.get('url','') or 'media/images/physician/' in x.get('url','')]})
+            median={k:statistics.median([r[k] for r in runs]) for k in ('performance','fcp','lcp','speedIndex','tbt','cls','mainthread','maxPotentialFid')}
+            result['modes'][mode]={'runs':runs,'median':median}
+          for name in ('root','graph','portrait'):
+            text=(root/f'{name}-headers.txt').read_text(errors='replace')
+            blocks=[x.strip() for x in re.split(r'\r?\n\r?\n',text) if x.strip()];block=blocks[-1] if blocks else text;lines=block.splitlines();headers={}
+            for line in lines[1:]:
+              if ':' in line:
+                k,v=line.split(':',1);headers[k.lower().strip()]=v.strip()
+            result['headers'][name]={'status':lines[0] if lines else '', 'headers':headers}
+          Path('tmp/live-current-performance.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
+          PY
+      - name: Commit audit and remove one-shot workflow
+        if: always()
+        run: |
+          git config user.name 'OpenAI Project Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/audit-current-live-performance.yml
+          rm -rf tmp/live-current
+          git add tmp/live-current-performance.json
+          git commit -m 'Record repeated current live performance audit'
+          git pull --rebase origin main
+          git push origin HEAD:main
