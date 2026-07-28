@@ -2,9 +2,9 @@ name: Apply semantic identity release
 
 on:
   push:
-    branches: [main]
-    paths:
-      - .github/workflows/apply-semantic-release.yml
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,17 +13,19 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out main
+        uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Install RDF validator
-        run: python -m pip install --disable-pip-version-check 'rdflib==7.1.4'
+        run: python -m pip install --disable-pip-version-check rdflib==7.1.4
 
       - name: Decode deterministic release scripts
         shell: bash
@@ -33,7 +35,7 @@ jobs:
           cat .github/release-bundle/part-* | base64 --decode | tar -xzf - -C /tmp/ghezelbaash-release
           python -m py_compile /tmp/ghezelbaash-release/*.py
 
-      - name: Apply Full Graph, Head projection, visible image semantics and machine surfaces
+      - name: Apply release transformations
         shell: bash
         run: |
           set -euo pipefail
@@ -65,10 +67,10 @@ jobs:
           person='https://www.ghezelbaash.ir/#saeed-ghezelbash'
           clinic='https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
           assert person in full_ids and clinic in full_ids
-          g=Graph().parse('public/graph.jsonld',format='json-ld')
-          ttl=Graph().parse('public/graph.ttl',format='turtle')
-          assert len(g)==len(ttl), (len(g),len(ttl))
-          print('full_nodes',len(full_ids),'head_nodes',len(head_ids),'rdf_triples',len(g))
+          graph=Graph().parse('public/graph.jsonld',format='json-ld')
+          turtle=Graph().parse('public/graph.ttl',format='turtle')
+          assert len(graph)==len(turtle), (len(graph),len(turtle))
+          print('full_nodes',len(full_ids),'head_nodes',len(head_ids),'rdf_triples',len(graph))
           print('full_bytes',Path('public/graph.jsonld').stat().st_size)
           print('head_bytes',Path('src/data/semantic/head-graph.min.jsonld').stat().st_size)
           PY
