@@ -17,17 +17,39 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Install image tooling
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends imagemagick
-      - name: Build metadata report
+      - name: Build metadata report without external tooling
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p tmp
           python3 - <<'PY'
-          import hashlib, json, mimetypes, pathlib, subprocess
+          import hashlib, json, mimetypes, pathlib, struct
+
+          def dimensions(data: bytes, suffix: str):
+              suffix = suffix.lower()
+              if suffix == '.png':
+                  if data[:8] != b'\x89PNG\r\n\x1a\n':
+                      raise ValueError('invalid PNG')
+                  return struct.unpack('>II', data[16:24])
+              if suffix in {'.jpg', '.jpeg'}:
+                  i = 2
+                  while i < len(data):
+                      if data[i] != 0xFF:
+                          i += 1
+                          continue
+                      marker = data[i + 1]
+                      i += 2
+                      if marker in {0xD8, 0xD9}:
+                          continue
+                      length = int.from_bytes(data[i:i+2], 'big')
+                      if marker in {0xC0,0xC1,0xC2,0xC3,0xC5,0xC6,0xC7,0xC9,0xCA,0xCB,0xCD,0xCE,0xCF}:
+                          h = int.from_bytes(data[i+3:i+5], 'big')
+                          w = int.from_bytes(data[i+5:i+7], 'big')
+                          return w, h
+                      i += length
+                  raise ValueError('JPEG dimensions not found')
+              return None
+
           paths = [
             'public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg',
             'public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg',
@@ -48,11 +70,9 @@ jobs:
                   'sha256': hashlib.sha256(data).hexdigest(),
                   'mime': mimetypes.guess_type(p.name)[0] or 'application/octet-stream',
               }
-              if p.suffix.lower() in {'.jpg', '.jpeg', '.png', '.webp', '.ico'}:
-                  result = subprocess.check_output(['identify', '-format', '%w %h', str(p)], text=True).strip().splitlines()[0]
-                  w, h = result.split()
-                  item['width'] = int(w)
-                  item['height'] = int(h)
+              dim = dimensions(data, p.suffix)
+              if dim:
+                  item['width'], item['height'] = dim
               out[raw] = item
           pathlib.Path('tmp/identity-assets-metadata.json').write_text(json.dumps(out, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
