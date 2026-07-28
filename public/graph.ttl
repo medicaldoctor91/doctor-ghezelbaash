@@ -1249,8 +1249,8 @@
         "جمعه: تعطیل"@fa .
 
 <https://www.ghezelbaash.ir/#clinic-geo> a schema:GeoCoordinates ;
-    schema:latitude 3.434012e+01 ;
-    schema:longitude 4.708518e+01 .
+    schema:latitude "34.3401243"^^xsd:double ;
+    schema:longitude "47.0851778"^^xsd:double .
 
 <https://www.ghezelbaash.ir/#clinic-opening-hours-sat-thu> a schema:OpeningHoursSpecification ;
     schema:closes "22:00" ;
