@@ -1,0 +1,101 @@
+name: Audit live Cloudflare deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/audit-live-deployment.yml
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+
+      - uses: browser-actions/setup-chrome@v1
+
+      - name: Wait for the semantic release to reach production
+        shell: bash
+        run: |
+          set -euo pipefail
+          ready=0
+          for i in $(seq 1 40); do
+            if curl -fsSL --compressed 'https://www.ghezelbaash.ir/graph.jsonld' | grep -q 'image-saeed-ghezelbash-portrait-master'; then
+              ready=1
+              break
+            fi
+            sleep 15
+          done
+          if [ "$ready" != "1" ]; then
+            echo 'Production did not expose the current semantic graph within ten minutes.' >&2
+            exit 1
+          fi
+
+      - name: Capture HTTP delivery and Lighthouse
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/live-audit tmp
+          curl -fsSL --compressed -D /tmp/live-audit/root-headers.txt -o /tmp/live-audit/root.html 'https://www.ghezelbaash.ir/'
+          curl -fsSL --compressed -D /tmp/live-audit/graph-headers.txt -o /tmp/live-audit/graph.jsonld 'https://www.ghezelbaash.ir/graph.jsonld'
+          curl -fsSL --compressed -D /tmp/live-audit/ttl-headers.txt -o /tmp/live-audit/graph.ttl 'https://www.ghezelbaash.ir/graph.ttl'
+          curl -fsSL --compressed -D /tmp/live-audit/favicon-headers.txt -o /tmp/live-audit/favicon.svg 'https://www.ghezelbaash.ir/favicon.svg'
+          npx --yes lighthouse 'https://www.ghezelbaash.ir/' --quiet --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/live-audit/lighthouse-mobile.json
+          npx --yes lighthouse 'https://www.ghezelbaash.ir/' --quiet --preset=desktop --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --output=json --output-path=/tmp/live-audit/lighthouse-desktop.json
+
+      - name: Generate compact live report
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const crypto=require('crypto');
+          const summarize=lhr=>{
+            const categories=Object.fromEntries(Object.entries(lhr.categories).map(([k,v])=>[k,Math.round((v.score??0)*100)]));
+            const metrics={};
+            for(const id of ['first-contentful-paint','largest-contentful-paint','speed-index','total-blocking-time','cumulative-layout-shift','interactive','server-response-time']){
+              const a=lhr.audits[id]; if(a) metrics[id]={score:a.score,numericValue:a.numericValue,displayValue:a.displayValue};
+            }
+            const failures=Object.values(lhr.audits).filter(a=>a&&a.score!==null&&a.score<1&&!['manual','notApplicable'].includes(a.scoreDisplayMode)).map(a=>({id:a.id,title:a.title,score:a.score,numericValue:a.numericValue,displayValue:a.displayValue})).sort((a,b)=>(a.score??1)-(b.score??1));
+            return {categories,metrics,failures};
+          };
+          const fileInfo=p=>{const b=fs.readFileSync(p);return {bytes:b.length,sha256:crypto.createHash('sha256').update(b).digest('hex')}};
+          const report={
+            generatedAt:new Date().toISOString(),
+            sourceCommit:process.env.GITHUB_SHA,
+            root:fileInfo('/tmp/live-audit/root.html'),
+            graph:fileInfo('/tmp/live-audit/graph.jsonld'),
+            turtle:fileInfo('/tmp/live-audit/graph.ttl'),
+            headers:{
+              root:fs.readFileSync('/tmp/live-audit/root-headers.txt','utf8'),
+              graph:fs.readFileSync('/tmp/live-audit/graph-headers.txt','utf8'),
+              turtle:fs.readFileSync('/tmp/live-audit/ttl-headers.txt','utf8'),
+              favicon:fs.readFileSync('/tmp/live-audit/favicon-headers.txt','utf8')
+            },
+            mobile:summarize(JSON.parse(fs.readFileSync('/tmp/live-audit/lighthouse-mobile.json','utf8'))),
+            desktop:summarize(JSON.parse(fs.readFileSync('/tmp/live-audit/lighthouse-desktop.json','utf8')))
+          };
+          fs.writeFileSync('tmp/live-production-audit.json',JSON.stringify(report,null,2)+'\n');
+          NODE
+
+      - name: Commit live audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/audit-live-deployment.yml
+          git add tmp/live-production-audit.json
+          git commit -m 'Record live Cloudflare deployment and Lighthouse audit'
+          git push origin HEAD:main
