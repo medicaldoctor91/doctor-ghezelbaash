@@ -1,0 +1,170 @@
+name: Add responsive physician images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/add-responsive-physician-images.yml
+
+permissions:
+  contents: write
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deterministic image and RDF tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends webp
+          python -m pip install --disable-pip-version-check rdflib==7.1.4
+      - name: Generate 640-pixel delivery derivatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg -o public/media/images/physician/saeed-ghezelbash-portrait-640.webp
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg -o public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp
+          cwebp -quiet -q 82 -m 6 -metadata all -resize 640 427 public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg -o public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp
+      - name: Wire responsive HTML and Full Graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+
+          page=Path('src/pages/index.md')
+          s=page.read_text(encoding='utf-8')
+          specs=[
+            ('saeed-ghezelbash-portrait','saeed-ghezelbash-portrait-640.webp'),
+            ('saeed-ghezelbash-clinical-examination','saeed-ghezelbash-in-clinical-office-640.webp'),
+            ('saeed-ghezelbash-with-clinic-team','saeed-ghezelbash-with-clinic-team-640.webp'),
+          ]
+          for legacy,new640 in specs:
+              old=f'srcset="/media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 960px) 100vw, 960px"'
+              new=f'srcset="/media/images/physician/{new640} 640w, /media/images/physician/{legacy}-960.webp 960w, /media/images/physician/{legacy}-1600.webp 1600w"\n      sizes="(max-width: 720px) calc(100vw - 2.75rem), (max-width: 960px) calc(100vw - 4rem), 960px"'
+              if s.count(old)!=1: raise SystemExit(f'srcset mismatch {legacy}: {s.count(old)}')
+              s=s.replace(old,new,1)
+              old_img=f'src="/media/images/physician/{legacy}-960.webp"\n      width="960"\n      height="640"'
+              new_img=f'src="/media/images/physician/{new640}"\n      width="640"\n      height="427"'
+              if s.count(old_img)!=1: raise SystemExit(f'img mismatch {legacy}: {s.count(old_img)}')
+              s=s.replace(old_img,new_img,1)
+          page.write_text(s,encoding='utf-8')
+
+          graph_path=Path('public/graph.jsonld')
+          graph=json.loads(graph_path.read_text(encoding='utf-8'))
+          nodes=graph['@graph']
+          byid={n.get('@id'):n for n in nodes if isinstance(n,dict) and n.get('@id')}
+          base='https://www.ghezelbaash.ir/'
+          person=base+'#saeed-ghezelbash'
+          clinic=base+'#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          webpage=base+'#webpage'
+          license_url='https://creativecommons.org/licenses/by/4.0/'
+          rows=[
+            {
+              'id':base+'#image-saeed-ghezelbash-portrait-responsive-640',
+              'path':'public/media/images/physician/saeed-ghezelbash-portrait-640.webp',
+              'url':base+'media/images/physician/saeed-ghezelbash-portrait-640.webp',
+              'master':base+'#image-saeed-ghezelbash-portrait-master',
+              'name_fa':'دکتر سعید قزلباش، پزشک ایرانی',
+              'name_en':'Dr. Saeed Ghezelbaash, Iranian physician',
+              'description_fa':'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران.',
+              'description_en':'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white medical coat and stethoscope in a clinical setting in Kermanshah, Iran.',
+              'about':[person]
+            },
+            {
+              'id':base+'#image-saeed-ghezelbash-clinic-team-responsive-640',
+              'path':'public/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',
+              'url':base+'media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp',
+              'master':base+'#image-saeed-ghezelbash-clinic-team-master',
+              'name_fa':'سعید قزلباش همراه اعضای تیم بالینی',
+              'name_en':'Saeed Ghezelbaash with members of his clinical team',
+              'description_fa':'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران.',
+              'description_en':'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran.',
+              'about':[person,clinic]
+            },
+            {
+              'id':base+'#image-saeed-ghezelbash-clinical-office-responsive-640',
+              'path':'public/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',
+              'url':base+'media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp',
+              'master':base+'#image-saeed-ghezelbash-clinical-office-master',
+              'name_fa':'سعید قزلباش در محیط بالینی',
+              'name_en':'Saeed Ghezelbaash in a clinical office',
+              'description_fa':'دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران.',
+              'description_en':'Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope.',
+              'about':[person,clinic]
+            },
+          ]
+          for row in rows:
+              if row['id'] in byid: raise SystemExit('duplicate planned node '+row['id'])
+              p=Path(row['path']); data=p.read_bytes()
+              node={
+                '@id':row['id'],'@type':'ImageObject',
+                'name':[{'@value':row['name_fa'],'@language':'fa'},{'@value':row['name_en'],'@language':'en'}],
+                'caption':[{'@value':row['name_fa'],'@language':'fa'},{'@value':row['name_en'],'@language':'en'}],
+                'description':[{'@value':row['description_fa'],'@language':'fa'},{'@value':row['description_en'],'@language':'en'}],
+                'contentUrl':row['url'],'encodingFormat':'image/webp','width':640,'height':427,
+                'contentSize':f'{len(data)} bytes','sha256':hashlib.sha256(data).hexdigest(),
+                'about':[{'@id':x} for x in row['about']],
+                'creator':{'@id':person},'copyrightHolder':{'@id':person},
+                'creditText':'Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0',
+                'copyrightNotice':'© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0.',
+                'license':license_url,'acquireLicensePage':license_url,
+                'dateCreated':'2023-05-29','representativeOfPage':False,
+                'isBasedOn':{'@id':row['master']},'isPartOf':{'@id':webpage}
+              }
+              nodes.append(node); byid[row['id']]=node
+              master=byid.get(row['master'])
+              if not master: raise SystemExit('missing master '+row['master'])
+              enc=master.setdefault('encoding',[])
+              if isinstance(enc,dict): enc=[enc]; master['encoding']=enc
+              enc.append({'@id':row['id']})
+          graph_path.write_text(json.dumps(graph,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
+
+          headers=Path('public/_headers'); hs=headers.read_text(encoding='utf-8')
+          marker='/media/images/physician/saeed-ghezelbash-clinical-examination-*\n  Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license"\n'
+          extra=marker+'\n/media/images/physician/saeed-ghezelbash-in-clinical-office-*\n  Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license"\n'
+          if hs.count(marker)!=1: raise SystemExit('headers office marker mismatch')
+          headers.write_text(hs.replace(marker,extra,1),encoding='utf-8')
+          PY
+      - name: Regenerate Turtle and validate Graph equivalence
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from rdflib import Graph
+          from pathlib import Path
+          import hashlib
+          g=Graph().parse('public/graph.jsonld',format='json-ld')
+          nt=sorted(line for line in g.serialize(format='nt').splitlines() if line.strip())
+          canonical=('\n'.join(nt)+'\n').encode()
+          source=Path('public/graph.jsonld').read_bytes()
+          ttl=g.serialize(format='turtle')
+          header=(f'# Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld\n'
+                  f'# Source SHA-256: {hashlib.sha256(source).hexdigest()}\n'
+                  f'# RDF triples: {len(g)}\n'
+                  f'# Canonical sorted N-Triples SHA-256: {hashlib.sha256(canonical).hexdigest()}\n\n')
+          Path('public/graph.ttl').write_text(header+ttl,encoding='utf-8')
+          g2=Graph().parse('public/graph.ttl',format='turtle')
+          assert len(g)==len(g2)
+          PY
+          python -m json.tool public/graph.jsonld >/dev/null
+          grep -q 'saeed-ghezelbash-in-clinical-office-640.webp' src/pages/index.md
+          grep -q 'image-saeed-ghezelbash-clinical-office-responsive-640' public/graph.jsonld
+          git diff --check
+      - name: Commit responsive images and remove workflow
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/add-responsive-physician-images.yml
+          rm -f tmp/hardened-live-audit.json
+          git add -A
+          git commit -m 'Add responsive physician image derivatives and provenance'
+          git push origin HEAD:main
