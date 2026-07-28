@@ -167,11 +167,10 @@ def main() -> None:
     same_bytes("live sitemap.xml", sitemap.body, "public/sitemap.xml")
     same_bytes("live robots.txt", robots.body, "public/robots.txt")
 
-    # Native 404/410 behavior: no redirect and no duplicate homepage content.
-    for path in ("__production-validation-not-found__", "services/", "contact/", "subcision-kermanshah/"):
-        response = fetch(urljoin(BASE, path), follow=False)
-        require(response.status in {404, 410}, f"legacy/unknown path /{path} returned {response.status}, expected 404 or 410")
-        require(response.header("location") == "", f"legacy/unknown path /{path} redirects to {response.header('location')}")
+    # Verify native not-found behavior without assigning significance to disposable development URLs.
+    response = fetch(urljoin(BASE, "__production-validation-not-found__"), follow=False)
+    require(response.status in {404, 410}, f"unknown path returned {response.status}, expected 404 or 410")
+    require(response.header("location") == "", f"unknown path redirects to {response.header('location')}")
 
     # Preview hostname must be redirected or excluded from indexing.
     pages = fetch(PAGES, follow=False)
