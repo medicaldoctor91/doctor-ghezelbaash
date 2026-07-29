@@ -17,6 +17,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TARGET_SHA: 612f305452969410d1ec7aa783466a948793df16
+          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT_ID_VAR: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CF_ZONE_ID_VAR: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          GSC_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
         run: |
           set -euo pipefail
           mkdir -p inspection
@@ -39,12 +43,30 @@ jobs:
                   'jobs':[{'id':j.get('id'),'name':j.get('name'),'status':j.get('status'),'conclusion':j.get('conclusion'),'steps':j.get('steps')} for j in jobs.get('jobs',[])],
                   'artifacts':[{'id':a.get('id'),'name':a.get('name'),'expired':a.get('expired'),'size_in_bytes':a.get('size_in_bytes')} for a in arts.get('artifacts',[])]
               })
-          Path('inspection/summary.json').write_text(json.dumps({'targetSha':target,'runs':out},indent=2))
-          print(Path('inspection/summary.json').read_text())
+          credentials = {
+              'cloudflareApiTokenPresent': bool(os.environ.get('CF_API_TOKEN')),
+              'cloudflareAccountIdVariablePresent': bool(os.environ.get('CF_ACCOUNT_ID_VAR')),
+              'cloudflareZoneIdVariablePresent': bool(os.environ.get('CF_ZONE_ID_VAR')),
+              'gscServiceAccountPresent': bool(os.environ.get('GSC_JSON')),
+          }
+          payload={'targetSha':target,'credentials':credentials,'runs':out}
+          Path('inspection/summary.json').write_text(json.dumps(payload,indent=2))
+          print(json.dumps(payload,indent=2))
           PY
+          account_id="${CF_ACCOUNT_ID_VAR:-884d1d90bd1fb6ecca14992c6c60d677}"
+          if [ -n "${CF_API_TOKEN:-}" ]; then
+            curl -sS --fail-with-body \
+              -H "Authorization: Bearer $CF_API_TOKEN" \
+              "https://api.cloudflare.com/client/v4/accounts/$account_id/pages/projects/doctor-ghezelbaash" \
+              | jq '{success,errors,result:{name:.result.name,production_branch:.result.production_branch,build_config:{web_analytics_tag:.result.build_config.web_analytics_tag,web_analytics_token_present:(.result.build_config.web_analytics_token != null and .result.build_config.web_analytics_token != "")}}}' \
+              > inspection/cloudflare-project.json
+          else
+            printf '%s\n' '{"available":false}' > inspection/cloudflare-project.json
+          fi
+          cat inspection/cloudflare-project.json
       - uses: actions/upload-artifact@v4
         with:
           name: inspect-final-validation-612f
           path: inspection/
           retention-days: 1
-# refresh
+# credential-inspection refresh
