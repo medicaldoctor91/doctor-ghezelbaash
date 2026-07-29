@@ -1,0 +1,163 @@
+{
+  "auditedSha": "2edec0651592e92d90e1bbf028530260091bc069",
+  "runId": 30413880456,
+  "liveStatus": 1,
+  "lighthouseStatus": 1,
+  "http": {
+    "expectedSha": "2edec0651592e92d90e1bbf028530260091bc069",
+    "liveMarker": "2edec0651592e92d90e1bbf028530260091bc069",
+    "rootBytes": 1757753,
+    "rootStatus": 200,
+    "apexStatus": 301,
+    "httpStatus": 301,
+    "indexStatus": 301,
+    "graphSha256": "66f07b41d76665b92a25774313589dd5d66dba35eded105d8cc1bf98cf37f36b",
+    "ttlSha256": "4defa206c5ba5b1251b6fa9a6c20b890cb92349858a9578be8026d24ad9b3ca1",
+    "warnings": [],
+    "errors": [
+      "Cloudflare Web Analytics script is injected into live HTML"
+    ]
+  },
+  "lighthouse": {
+    "mobile": {
+      "runs": [
+        {
+          "file": "lighthouse-mobile-1.json",
+          "performance": 34,
+          "accessibility": 100,
+          "bestPractices": 92,
+          "seo": 100,
+          "lcp": 9751.427,
+          "fcp": 9582.427,
+          "tbt": 1042.5,
+          "cls": 6.602175102784873e-05,
+          "agentic": {
+            "passed": 3,
+            "applicable": 3,
+            "failed": []
+          }
+        },
+        {
+          "file": "lighthouse-mobile-2.json",
+          "performance": 56,
+          "accessibility": 100,
+          "bestPractices": 92,
+          "seo": 100,
+          "lcp": 9473.101999999999,
+          "fcp": 9425.551,
+          "tbt": 69.5,
+          "cls": 0,
+          "agentic": {
+            "passed": 3,
+            "applicable": 3,
+            "failed": []
+          }
+        },
+        {
+          "file": "lighthouse-mobile-3.json",
+          "performance": 56,
+          "accessibility": 100,
+          "bestPractices": 92,
+          "seo": 100,
+          "lcp": 9613.82,
+          "fcp": 9413.91,
+          "tbt": 33.5,
+          "cls": 0,
+          "agentic": {
+            "passed": 3,
+            "applicable": 3,
+            "failed": []
+          }
+        },
+        {
+          "file": "lighthouse-summary.json",
+          "performance": 0,
+          "accessibility": 0,
+          "bestPractices": 0,
+          "seo": 0,
+          "lcp": null,
+          "fcp": null,
+          "tbt": null,
+          "cls": null,
+          "agentic": {
+            "passed": 0,
+            "applicable": 0,
+            "failed": []
+          }
+        }
+      ],
+      "median": {
+        "performance": 45.0,
+        "accessibility": 100.0,
+        "bestPractices": 92.0,
+        "seo": 100.0,
+        "lcp": 9613.82,
+        "fcp": 9425.551,
+        "tbt": 69.5,
+        "cls": 0
+      }
+    },
+    "desktop": {
+      "runs": [
+        {
+          "file": "lighthouse-desktop-1.json",
+          "performance": 85,
+          "accessibility": 100,
+          "bestPractices": 92,
+          "seo": 100,
+          "lcp": 1780.3339999999998,
+          "fcp": 1660.3339999999998,
+          "tbt": 0,
+          "cls": 0,
+          "agentic": {
+            "passed": 3,
+            "applicable": 3,
+            "failed": []
+          }
+        },
+        {
+          "file": "lighthouse-desktop-2.json",
+          "performance": 85,
+          "accessibility": 100,
+          "bestPractices": 92,
+          "seo": 100,
+          "lcp": 1792.616,
+          "fcp": 1672.616,
+          "tbt": 0,
+          "cls": 0,
+          "agentic": {
+            "passed": 3,
+            "applicable": 3,
+            "failed": []
+          }
+        },
+        {
+          "file": "lighthouse-desktop-3.json",
+          "performance": 85,
+          "accessibility": 100,
+          "bestPractices": 92,
+          "seo": 100,
+          "lcp": 1780.645,
+          "fcp": 1660.645,
+          "tbt": 0,
+          "cls": 0,
+          "agentic": {
+            "passed": 3,
+            "applicable": 3,
+            "failed": []
+          }
+        }
+      ],
+      "median": {
+        "performance": 85,
+        "accessibility": 100,
+        "bestPractices": 92,
+        "seo": 100,
+        "lcp": 1780.645,
+        "fcp": 1660.645,
+        "tbt": 0,
+        "cls": 0
+      }
+    }
+  }
+}
