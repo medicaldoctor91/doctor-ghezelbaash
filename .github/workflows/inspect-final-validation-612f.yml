@@ -1,4 +1,4 @@
-name: Inspect final validation 612f
+name: Remove Cloudflare Pages analytics injection
 
 on:
   pull_request:
@@ -6,67 +6,56 @@ on:
       - '.github/workflows/inspect-final-validation-612f.yml'
 
 permissions:
-  actions: read
   contents: read
 
 jobs:
-  inspect:
+  patch-pages-project:
     runs-on: ubuntu-latest
+    env:
+      CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      PROJECT_NAME: doctor-ghezelbaash
     steps:
-      - name: Capture final validation state
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET_SHA: 612f305452969410d1ec7aa783466a948793df16
-          CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT_ID_VAR: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CF_ZONE_ID_VAR: ${{ vars.CLOUDFLARE_ZONE_ID }}
-          GSC_JSON: ${{ secrets.GSC_SERVICE_ACCOUNT_JSON }}
+      - name: Remove Pages Web Analytics configuration
+        shell: bash
         run: |
           set -euo pipefail
-          mkdir -p inspection
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&per_page=50" > inspection/runs.json
-          python3 - <<'PY'
-          import json, os, subprocess
-          from pathlib import Path
-          target = os.environ['TARGET_SHA']
-          runs = json.loads(Path('inspection/runs.json').read_text()).get('workflow_runs', [])
-          selected = [r for r in runs if r.get('head_sha') == target or r.get('name') == 'Capture final validation and freeze source']
-          out=[]
-          for r in selected:
-              rid=r['id']
-              jobs=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{rid}/jobs?per_page=100']))
-              arts=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{rid}/artifacts?per_page=100']))
-              out.append({
-                  'id':rid,'name':r.get('name'),'display_title':r.get('display_title'),'head_sha':r.get('head_sha'),
-                  'status':r.get('status'),'conclusion':r.get('conclusion'),'event':r.get('event'),
-                  'created_at':r.get('created_at'),'updated_at':r.get('updated_at'),'html_url':r.get('html_url'),
-                  'jobs':[{'id':j.get('id'),'name':j.get('name'),'status':j.get('status'),'conclusion':j.get('conclusion'),'steps':j.get('steps')} for j in jobs.get('jobs',[])],
-                  'artifacts':[{'id':a.get('id'),'name':a.get('name'),'expired':a.get('expired'),'size_in_bytes':a.get('size_in_bytes')} for a in arts.get('artifacts',[])]
-              })
-          credentials = {
-              'cloudflareApiTokenPresent': bool(os.environ.get('CF_API_TOKEN')),
-              'cloudflareAccountIdVariablePresent': bool(os.environ.get('CF_ACCOUNT_ID_VAR')),
-              'cloudflareZoneIdVariablePresent': bool(os.environ.get('CF_ZONE_ID_VAR')),
-              'gscServiceAccountPresent': bool(os.environ.get('GSC_JSON')),
-          }
-          payload={'targetSha':target,'credentials':credentials,'runs':out}
-          Path('inspection/summary.json').write_text(json.dumps(payload,indent=2))
-          print(json.dumps(payload,indent=2))
-          PY
-          account_id="${CF_ACCOUNT_ID_VAR:-884d1d90bd1fb6ecca14992c6c60d677}"
-          if [ -n "${CF_API_TOKEN:-}" ]; then
-            curl -sS --fail-with-body \
-              -H "Authorization: Bearer $CF_API_TOKEN" \
-              "https://api.cloudflare.com/client/v4/accounts/$account_id/pages/projects/doctor-ghezelbaash" \
-              | jq '{success,errors,result:{name:.result.name,production_branch:.result.production_branch,build_config:{web_analytics_tag:.result.build_config.web_analytics_tag,web_analytics_token_present:(.result.build_config.web_analytics_token != null and .result.build_config.web_analytics_token != "")}}}' \
-              > inspection/cloudflare-project.json
-          else
-            printf '%s\n' '{"available":false}' > inspection/cloudflare-project.json
-          fi
-          cat inspection/cloudflare-project.json
-      - uses: actions/upload-artifact@v4
+          [ -n "$CF_API_TOKEN" ] || { echo 'CLOUDFLARE_API_TOKEN is missing' >&2; exit 1; }
+          [ -n "$CF_ACCOUNT_ID" ] || { echo 'CLOUDFLARE_ACCOUNT_ID is missing' >&2; exit 1; }
+          mkdir -p cloudflare-evidence
+          endpoint="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/$PROJECT_NAME"
+
+          curl -sS --fail-with-body \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            "$endpoint" > cloudflare-evidence/before.raw.json
+
+          jq '{success,errors,result:{name:.result.name,production_branch:.result.production_branch,build_config:{web_analytics_tag:.result.build_config.web_analytics_tag,web_analytics_token_present:(.result.build_config.web_analytics_token != null and .result.build_config.web_analytics_token != "")}}}' \
+            cloudflare-evidence/before.raw.json > cloudflare-evidence/before.json
+
+          curl -sS --fail-with-body -X PATCH \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data '{"build_config":{"web_analytics_tag":null,"web_analytics_token":null}}' \
+            "$endpoint" > cloudflare-evidence/patch.raw.json
+
+          curl -sS --fail-with-body \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            "$endpoint" > cloudflare-evidence/after.raw.json
+
+          jq '{success,errors,result:{name:.result.name,production_branch:.result.production_branch,build_config:{web_analytics_tag:.result.build_config.web_analytics_tag,web_analytics_token_present:(.result.build_config.web_analytics_token != null and .result.build_config.web_analytics_token != "")}}}' \
+            cloudflare-evidence/after.raw.json > cloudflare-evidence/after.json
+
+          jq -e '.success == true and (.result.build_config.web_analytics_tag == null or .result.build_config.web_analytics_tag == "") and .result.build_config.web_analytics_token_present == false' \
+            cloudflare-evidence/after.json >/dev/null
+
+          rm -f cloudflare-evidence/*.raw.json
+          cat cloudflare-evidence/before.json
+          cat cloudflare-evidence/after.json
+
+      - name: Upload sanitized Cloudflare evidence
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: inspect-final-validation-612f
-          path: inspection/
-          retention-days: 1
-# credential-inspection refresh
+          name: cloudflare-pages-analytics-removal
+          path: cloudflare-evidence/
+          retention-days: 7
