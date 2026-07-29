@@ -93,9 +93,9 @@ def wait_for_deployment(expected_sha: str | None, timeout: int) -> Response:
     while expected_sha and time.time() < deadline:
         html = last.body.decode("utf-8", errors="replace")
         marker = deployment_marker(html)
-        if marker and expected_sha.startswith(marker) or marker and marker.startswith(expected_sha):
+        if marker and (expected_sha.startswith(marker) or marker.startswith(expected_sha)):
             return last
-        print(f"Waiting for Cloudflare deployment: expected={expected_sha}, live={marker}")
+        print(f"Waiting for Cloudflare deployment: expected={expected_sha}, live={marker}", flush=True)
         time.sleep(15)
         last = fetch(BASE, follow=True)
     return last
@@ -104,6 +104,11 @@ def wait_for_deployment(expected_sha: str | None, timeout: int) -> Response:
 def same_bytes(label: str, live: bytes, source_path: str) -> None:
     source = Path(source_path).read_bytes()
     require(live == source, f"{label} differs from current source ({hashlib.sha256(live).hexdigest()} != {hashlib.sha256(source).hexdigest()})")
+
+
+def is_compressed(response: Response) -> bool:
+    encodings = {value.strip().lower() for value in response.header("content-encoding").split(",") if value.strip()}
+    return bool(encodings & {"br", "gzip", "zstd"})
 
 
 def main() -> None:
@@ -122,6 +127,7 @@ def main() -> None:
         require(bool(marker), "live HTML has no x-deploy-commit marker")
         require(bool(marker) and (args.expected_sha.startswith(marker) or marker.startswith(args.expected_sha)), f"Cloudflare is not serving expected commit: expected={args.expected_sha}, live={marker}")
     require(len(root.body) < 1_900_000, f"live uncompressed HTML exceeds 1.90 MB: {len(root.body)} bytes")
+    require(is_compressed(root), f"live root is not content-encoded: {root.header('content-encoding') or 'none'}")
     require('rel="canonical" href="https://www.ghezelbaash.ir/"' in root_html or 'href="https://www.ghezelbaash.ir/" rel="canonical"' in root_html, "live canonical link is incorrect")
     require("در حال معاینه بالینی مراجعه‌کننده" not in root_html, "live root contains obsolete Office wording")
     require("PresentationDigitalDocument" in root_html, "live root lacks PresentationDigitalDocument")
@@ -198,6 +204,7 @@ def main() -> None:
         "liveMarker": marker,
         "rootBytes": len(root.body),
         "rootStatus": root.status,
+        "contentEncoding": root.header("content-encoding"),
         "apexStatus": apex.status,
         "httpStatus": http.status,
         "indexStatus": index.status,
