@@ -1,0 +1,63 @@
+name: Inspect final validation workflow state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/inspect-final-run.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: '782d06f3d5394e5bea47657701624087e016842a'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 2
+      - name: Capture target run state and artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf tmp/final-run-inspection
+          mkdir -p tmp/final-run-inspection
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$TARGET_SHA&per_page=20" > tmp/final-run-inspection/runs.json
+          python3 - <<'PY' > /tmp/run-id
+          import json
+          from pathlib import Path
+          data=json.loads(Path('tmp/final-run-inspection/runs.json').read_text())
+          runs=data.get('workflow_runs',[])
+          for r in runs:
+              if r.get('path')=='.github/workflows/validate.yml':
+                  print(r['id'])
+                  break
+          else:
+              raise SystemExit('target validation run not found')
+          PY
+          run_id=$(cat /tmp/run-id)
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/jobs" > tmp/final-run-inspection/jobs.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts" > tmp/final-run-inspection/artifacts.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          runs=json.loads(Path('tmp/final-run-inspection/runs.json').read_text()).get('workflow_runs',[])
+          target=[r for r in runs if r.get('path')=='.github/workflows/validate.yml'][0]
+          jobs=json.loads(Path('tmp/final-run-inspection/jobs.json').read_text()).get('jobs',[])
+          summary={
+              'run':{k:target.get(k) for k in ('id','name','display_title','head_sha','status','conclusion','created_at','updated_at','html_url')},
+              'jobs':[{k:j.get(k) for k in ('id','name','status','conclusion','started_at','completed_at')} for j in jobs],
+          }
+          Path('tmp/final-run-inspection/summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          PY
+          git rm .github/workflows/inspect-final-run.yml
+          git add tmp/final-run-inspection
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Record final validation workflow state [skip ci]'
+          git push origin HEAD:main
