@@ -1,0 +1,47 @@
+name: Preserve deterministic HTML at Cloudflare edge
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-no-transform.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+      - name: Prevent edge HTML transformation and validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('public/_headers')
+          text = path.read_text(encoding='utf-8')
+          old = '  Cache-Control: public, max-age=0, must-revalidate\n'
+          new = '  Cache-Control: public, max-age=0, must-revalidate, no-transform\n'
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one canonical HTML cache policy, found {text.count(old)}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+          npm ci --no-audit --no-fund
+          npm run build
+          python3 -m pip install --quiet rdflib
+          python3 .github/scripts/validate_source.py
+          git rm .github/workflows/apply-no-transform.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/_headers
+          git commit -m 'Preserve deterministic HTML and block edge injection'
+          git push origin HEAD:main
