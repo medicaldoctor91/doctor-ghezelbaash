@@ -1,0 +1,88 @@
+name: Apply Stage 6 live validator script hardening
+
+on:
+  push:
+    branches: [stage6-final-script-20260729]
+    paths:
+      - '.github/workflows/apply-stage6-live-validator-script.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: stage6-final-script-20260729
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+
+      - name: Patch and validate live deployment equivalence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/scripts/validate_live.py')
+          text = path.read_text(encoding='utf-8')
+
+          pages_anchor = 'PAGES = "https://doctor-ghezelbaash.pages.dev/"\n'
+          pages_replacement = '''PAGES = "https://doctor-ghezelbaash.pages.dev/"\nPRODUCTION_PATHS = (\n    "src", "public", "astro.config.mjs", "package.json", "package-lock.json", ".node-version",\n)\n'''
+          if 'PRODUCTION_PATHS = (' not in text:
+              if text.count(pages_anchor) != 1:
+                  raise SystemExit('PAGES anchor not found exactly once')
+              text = text.replace(pages_anchor, pages_replacement)
+
+          curl_anchor = '        "curl", "-sS", "--compressed", "--max-time", str(timeout),\n        "-D", "-", "-o", str(body_path),\n'
+          curl_replacement = '        "curl", "-sS", "--compressed", "--max-time", str(timeout),\n        "-H", "Cache-Control: no-cache",\n        "-D", "-", "-o", str(body_path),\n'
+          if '"Cache-Control: no-cache"' not in text:
+              if text.count(curl_anchor) != 1:
+                  raise SystemExit('curl anchor not found exactly once')
+              text = text.replace(curl_anchor, curl_replacement)
+
+          wait_anchor = 'def wait_for_deployment(expected_sha: str | None, timeout: int) -> Response:\n'
+          helpers = '''def sha_matches(expected_sha: str | None, marker: str | None) -> bool:\n    return bool(expected_sha and marker and (expected_sha.startswith(marker) or marker.startswith(expected_sha)))\n\n\ndef production_equivalent(expected_sha: str | None, marker: str | None) -> bool:\n    if not expected_sha or not marker:\n        return False\n    if not re.fullmatch(r"[0-9a-f]{40}", expected_sha) or not re.fullmatch(r"[0-9a-f]{40}", marker):\n        return False\n    subprocess.run(\n        ["git", "fetch", "--quiet", "--no-tags", "origin", expected_sha, marker],\n        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,\n    )\n    probe = subprocess.run(\n        ["git", "diff", "--quiet", expected_sha, marker, "--", *PRODUCTION_PATHS],\n        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,\n    )\n    return probe.returncode == 0\n\n\n'''
+          if 'def production_equivalent(' not in text:
+              if text.count(wait_anchor) != 1:
+                  raise SystemExit('wait function anchor not found exactly once')
+              text = text.replace(wait_anchor, helpers + wait_anchor)
+
+          old_wait = '        if marker and (expected_sha.startswith(marker) or marker.startswith(expected_sha)):\n            return last\n'
+          new_wait = '        if marker and (sha_matches(expected_sha, marker) or production_equivalent(expected_sha, marker)):\n            return last\n'
+          if new_wait not in text:
+              if text.count(old_wait) != 1:
+                  raise SystemExit('deployment wait condition not found exactly once')
+              text = text.replace(old_wait, new_wait)
+
+          old_assertion = '        require(bool(marker) and (args.expected_sha.startswith(marker) or marker.startswith(args.expected_sha)), f"Cloudflare is not serving expected commit: expected={args.expected_sha}, live={marker}")\n'
+          new_assertion = '        require(bool(marker) and (sha_matches(args.expected_sha, marker) or production_equivalent(args.expected_sha, marker)), f"Cloudflare is not serving expected or production-equivalent commit: expected={args.expected_sha}, live={marker}")\n'
+          if new_assertion not in text:
+              if text.count(old_assertion) != 1:
+                  raise SystemExit('deployment assertion not found exactly once')
+              text = text.replace(old_assertion, new_assertion)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          python3 -m py_compile .github/scripts/validate_live.py
+          npm ci --no-audit --no-fund
+          npm run build
+          python3 -m pip install --quiet rdflib
+          python3 .github/scripts/validate_source.py
+
+      - name: Commit validator script only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add .github/scripts/validate_live.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Harden Stage 6 live deployment validator [skip ci]'
+          git push origin HEAD:stage6-final-script-20260729
