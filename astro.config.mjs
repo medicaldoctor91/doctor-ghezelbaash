@@ -9,7 +9,8 @@ export default defineConfig({
   integrations: [normalizeBuiltHtml()],
   build: {
     format: 'directory',
-    inlineStylesheets: 'always',
+    // Fingerprinted CSS is constrained by validate_source.py and cached immutably.
+    inlineStylesheets: 'never',
   },
   vite: {
     build: {

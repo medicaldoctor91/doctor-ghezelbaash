@@ -223,7 +223,20 @@ counts = Counter(parser.ids)
 require(not [item for item, count in counts.items() if count > 1], "duplicate HTML ids found")
 require(not (set(parser.fragments) - set(parser.ids)), f"broken internal fragments: {sorted(set(parser.fragments) - set(parser.ids))[:40]}")
 require(not parser.external_scripts, f"external scripts found: {parser.external_scripts}")
-require(not parser.stylesheets, f"render-blocking external stylesheets found: {parser.stylesheets}")
+require(1 <= len(parser.stylesheets) <= 3, f"expected 1-3 generated stylesheets, found: {parser.stylesheets}")
+stylesheet_bytes = 0
+for href in parser.stylesheets:
+    require(bool(re.fullmatch(r"/_astro/[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.css", href)), f"stylesheet is not a fingerprinted same-origin Astro asset: {href}")
+    stylesheet_path = DIST / href.lstrip("/")
+    require(stylesheet_path.is_file(), f"stylesheet is absent from dist: {href}")
+    if stylesheet_path.is_file():
+        css_bytes = stylesheet_path.read_bytes()
+        stylesheet_bytes += len(css_bytes)
+        css_text = css_bytes.decode("utf-8", errors="replace")
+        require(len(css_bytes) <= 20_000, f"stylesheet exceeds 20 KB raw gate: {href} ({len(css_bytes)} bytes)")
+        require("@import" not in css_text, f"stylesheet imports another render-blocking resource: {href}")
+        require("http://" not in css_text and "https://" not in css_text, f"stylesheet references a cross-origin resource: {href}")
+require(stylesheet_bytes <= 24_000, f"combined generated CSS exceeds 24 KB raw gate: {stylesheet_bytes} bytes")
 require(not parser.style_attrs, f"inline style attributes found: {parser.style_attrs[:12]}")
 require(not parser.event_attrs, f"inline event attributes found: {parser.event_attrs[:12]}")
 require(not [item.get("src") for item in parser.images if not item.get("width") or not item.get("height")], "images without explicit dimensions found")
@@ -232,6 +245,7 @@ for video in parser.videos:
     require(not video.get("autoplay"), f"autoplay video found: {video.get('poster')}")
 
 headers = read_text("public/_headers")
+require("/_astro/*" in headers and "max-age=31536000, immutable" in headers, "generated Astro assets lack immutable cache policy")
 csp_lines = [line.strip().split(":", 1)[1].strip() for line in headers.splitlines() if line.strip().startswith("Content-Security-Policy:")]
 require(len(csp_lines) == 1, f"expected one CSP header, found {len(csp_lines)}")
 csp = csp_lines[0] if csp_lines else ""

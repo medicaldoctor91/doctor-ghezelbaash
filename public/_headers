@@ -17,7 +17,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
   Content-Language: fa-IR
   Cache-Control: public, max-age=0, must-revalidate
   Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle"
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-uIlyfWz1tAEl84OXdfhuRoH/stGvxU/UZNh6lvToyMw='; script-src-attr 'none'; style-src 'self' 'sha256-FJ6lR3Ffnk18HB1BKZbfxwobHmo0OsWcYNvYpZqCIoA='; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-uIlyfWz1tAEl84OXdfhuRoH/stGvxU/UZNh6lvToyMw='; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
 
 /404.html
   X-Robots-Tag: noindex, nofollow
@@ -75,6 +75,10 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /apple-touch-icon.png
   Cache-Control: public, max-age=31536000, immutable
+
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+  Cross-Origin-Resource-Policy: same-origin
 
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
