@@ -1,5 +1,6 @@
 name: Inspect current workflow runs
 
+# One-shot inspector; removes itself after publishing run state.
 on:
   push:
     branches: [main]
