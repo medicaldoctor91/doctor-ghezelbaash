@@ -1,4 +1,4 @@
-name: Inspect successful final capture and freeze
+name: Inspect completed validated source freeze
 
 on:
   pull_request:
@@ -15,74 +15,97 @@ jobs:
     timeout-minutes: 45
     env:
       GH_TOKEN: ${{ github.token }}
-      TARGET_SHA: b617957b688ac3300d2367f08694418e8d100362
-      VALIDATION_RUN_ID: '30454404017'
-      OLD_CAPTURE_ID: '30454478055'
+      FINALIZER_TRIGGER_SHA: 27b79c19f5f3630bb8bcc5d2e3025f40565573ad
     steps:
-      - name: Wait for successful capture and freeze
+      - name: Wait for finalizer and inspect frozen main
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p inspection
-
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATION_RUN_ID" > inspection/validation-run.json
-          [ "$(jq -r '.status' inspection/validation-run.json)" = completed ]
-          [ "$(jq -r '.conclusion' inspection/validation-run.json)" = success ]
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATION_RUN_ID/jobs?per_page=100" > inspection/validation-jobs.json
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATION_RUN_ID/artifacts?per_page=100" > inspection/validation-artifacts.json
-
-          capture_id=''
+          finalizer_id=''
           for attempt in $(seq 1 120); do
             gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&per_page=100" > inspection/runs.json
-            capture=$(jq -c --arg sha "$TARGET_SHA" --argjson old "$OLD_CAPTURE_ID" '[.workflow_runs[] | select(.head_sha == $sha and .name == "Capture final validation and freeze source" and .id > $old)] | first // empty' inspection/runs.json)
-            if [ -n "$capture" ]; then
-              capture_id=$(jq -r '.id' <<<"$capture")
-              status=$(jq -r '.status' <<<"$capture")
-              conclusion=$(jq -r '.conclusion // ""' <<<"$capture")
-              echo "capture id=$capture_id status=$status conclusion=$conclusion"
+            run=$(jq -c --arg sha "$FINALIZER_TRIGGER_SHA" '[.workflow_runs[] | select(.head_sha == $sha and .name == "Finalize successful production validation")] | first // empty' inspection/runs.json)
+            if [ -n "$run" ]; then
+              finalizer_id=$(jq -r '.id' <<<"$run")
+              status=$(jq -r '.status' <<<"$run")
+              conclusion=$(jq -r '.conclusion // ""' <<<"$run")
+              echo "finalizer id=$finalizer_id status=$status conclusion=$conclusion"
               if [ "$status" = completed ]; then
-                printf '%s\n' "$capture" > inspection/capture-run.json
+                printf '%s\n' "$run" > inspection/finalizer-run.json
                 break
               fi
             else
-              echo 'new capture run not visible yet'
+              echo 'finalizer run not visible yet'
             fi
             sleep 15
           done
+          [ -n "$finalizer_id" ] || { echo 'finalizer run not found' >&2; exit 1; }
+          [ "$(jq -r '.status' inspection/finalizer-run.json)" = completed ]
+          [ "$(jq -r '.conclusion' inspection/finalizer-run.json)" = success ]
 
-          [ -n "$capture_id" ] || { echo 'new capture run was not found' >&2; exit 1; }
-          [ "$(jq -r '.status' inspection/capture-run.json)" = completed ]
-          [ "$(jq -r '.conclusion' inspection/capture-run.json)" = success ]
-
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$capture_id/jobs?per_page=100" > inspection/capture-jobs.json
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$capture_id/artifacts?per_page=100" > inspection/capture-artifacts.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$finalizer_id/jobs?per_page=100" > inspection/finalizer-jobs.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$finalizer_id/artifacts?per_page=100" > inspection/finalizer-artifacts.json
           gh api "repos/$GITHUB_REPOSITORY/commits/main" > inspection/final-main-commit.json
           final_sha=$(jq -r '.sha' inspection/final-main-commit.json)
+          final_message=$(jq -r '.commit.message' inspection/final-main-commit.json)
           gh api "repos/$GITHUB_REPOSITORY/git/trees/$final_sha?recursive=1" > inspection/final-tree.json
 
+          curl -sS --compressed --max-time 90 -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' \
+            "https://www.ghezelbaash.ir/?final-inspection=$(date +%s)" > inspection/live.html
+          FINAL_SHA="$final_sha" python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          html = Path('inspection/live.html').read_text(encoding='utf-8', errors='replace')
+          marker = None
+          for pattern in (
+              r'<meta\s+name=["\']x-deploy-commit["\']\s+content=["\']([0-9a-f]{7,40}|local)["\']',
+              r'<meta\s+content=["\']([0-9a-f]{7,40}|local)["\']\s+name=["\']x-deploy-commit["\']',
+          ):
+              match = re.search(pattern, html, re.I)
+              if match:
+                  marker = match.group(1)
+                  break
+          result = {
+              'expectedSha': os.environ['FINAL_SHA'],
+              'liveMarker': marker,
+              'exactMatch': marker == os.environ['FINAL_SHA'],
+              'cloudflareBeaconPresent': 'cloudflareinsights.com' in html or 'data-cf-beacon' in html,
+              'googleVerificationPresent': '8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ' in html,
+          }
+          Path('inspection/live-summary.json').write_text(json.dumps(result, indent=2) + '\n')
+          if not result['exactMatch'] or result['cloudflareBeaconPresent'] or not result['googleVerificationPresent']:
+              raise SystemExit(1)
+          PY
+          rm -f inspection/live.html
+
           jq -n \
-            --arg target "$TARGET_SHA" \
-            --arg final "$final_sha" \
-            --slurpfile validation inspection/validation-run.json \
-            --slurpfile validationJobs inspection/validation-jobs.json \
-            --slurpfile validationArtifacts inspection/validation-artifacts.json \
-            --slurpfile capture inspection/capture-run.json \
-            --slurpfile captureJobs inspection/capture-jobs.json \
-            --slurpfile captureArtifacts inspection/capture-artifacts.json \
+            --arg finalSha "$final_sha" \
+            --arg finalMessage "$final_message" \
+            --slurpfile run inspection/finalizer-run.json \
+            --slurpfile jobs inspection/finalizer-jobs.json \
+            --slurpfile artifacts inspection/finalizer-artifacts.json \
             --slurpfile tree inspection/final-tree.json \
+            --slurpfile live inspection/live-summary.json \
             '{
-              targetSha:$target,
-              finalMainSha:$final,
-              validation:{run:($validation[0]|{id,status,conclusion,run_attempt,display_title,updated_at}),jobs:[$validationJobs[0].jobs[]|{id,name,status,conclusion,steps}],artifacts:[$validationArtifacts[0].artifacts[]|{id,name,size_in_bytes,expired}]},
-              capture:{run:($capture[0]|{id,status,conclusion,display_title,updated_at}),jobs:[$captureJobs[0].jobs[]|{id,name,status,conclusion,steps}],artifacts:[$captureArtifacts[0].artifacts[]|{id,name,size_in_bytes,expired}]},
-              remainingEngineeringPaths:[$tree[0].tree[]|.path|select(. == ".github/workflows/capture-current-validation.yml" or . == ".github/scripts/.final-validation-trigger" or startswith("tmp/"))]
+              finalMainSha:$finalSha,
+              finalCommitMessage:$finalMessage,
+              finalizerRun:($run[0]|{id,status,conclusion,display_title,updated_at}),
+              jobs:[$jobs[0].jobs[]|{id,name,status,conclusion}],
+              artifacts:[$artifacts[0].artifacts[]|{id,name,size_in_bytes,expired}],
+              live:$live[0],
+              remainingEngineeringPaths:[$tree[0].tree[]|.path|select(. == ".github/workflows/finalize-successful-validation.yml" or . == ".github/workflows/capture-current-validation.yml" or . == ".github/scripts/.final-validation-trigger" or startswith("tmp/"))]
             }' > inspection/summary.json
+
+          [ "$final_message" = 'Freeze validated production source' ]
+          [ "$(jq '.remainingEngineeringPaths | length' inspection/summary.json)" = 0 ]
+          [ "$(jq '[.artifacts[]|select(.name|startswith("final-validated-production-"))]|length' inspection/summary.json)" = 1 ]
           cat inspection/summary.json
 
       - name: Upload final inspection
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: inspect-successful-final-freeze
+          name: inspect-completed-validated-freeze
           path: inspection/
           retention-days: 2
