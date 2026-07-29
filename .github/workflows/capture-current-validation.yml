@@ -1,4 +1,4 @@
-name: Capture current final validation
+name: Capture final validation and freeze source
 
 on:
   workflow_run:
@@ -10,9 +10,10 @@ permissions:
   contents: write
 
 jobs:
-  capture:
-    if: github.event.workflow_run.head_sha == 'd40ee4c97031a4d355c110962bd31e8ff79d121f'
+  capture-and-freeze:
+    if: github.event.workflow_run.display_title == 'Trigger final compressed production validation'
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     env:
       GH_TOKEN: ${{ github.token }}
       RUN_ID: ${{ github.event.workflow_run.id }}
@@ -22,38 +23,41 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 2
+          fetch-depth: 3
 
-      - name: Download validation artifacts
+      - name: Download HTTP and Lighthouse evidence
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf capture-evidence
-          mkdir -p capture-evidence/artifacts
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" --paginate > capture-evidence/artifacts.json
+          rm -rf final-evidence
+          mkdir -p final-evidence/artifacts
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" --paginate > final-evidence/artifacts.json
           python3 - <<'PY'
           import json
           from pathlib import Path
-          payload = json.loads(Path('capture-evidence/artifacts.json').read_text())
+          payload = json.loads(Path('final-evidence/artifacts.json').read_text())
           rows = payload.get('artifacts', []) if isinstance(payload, dict) else []
           selected = [row for row in rows if row.get('name', '').startswith(('lighthouse-', 'live-http-'))]
-          Path('capture-evidence/selected.json').write_text(json.dumps(selected, indent=2))
-          if not selected:
-              raise SystemExit('No Lighthouse or live HTTP artifacts were published')
+          Path('final-evidence/selected.json').write_text(json.dumps(selected, indent=2))
+          names = {row.get('name', '') for row in selected}
+          if not any(name.startswith('live-http-') for name in names):
+              raise SystemExit('live HTTP artifact is missing')
+          if not any(name.startswith('lighthouse-') for name in names):
+              raise SystemExit('Lighthouse artifact is missing')
           PY
           while IFS=$'\t' read -r artifact_id artifact_name; do
-            mkdir -p "capture-evidence/artifacts/$artifact_name"
-            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" > "capture-evidence/$artifact_name.zip"
-            unzip -q "capture-evidence/$artifact_name.zip" -d "capture-evidence/artifacts/$artifact_name"
+            mkdir -p "final-evidence/artifacts/$artifact_name"
+            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" > "final-evidence/$artifact_name.zip"
+            unzip -q "final-evidence/$artifact_name.zip" -d "final-evidence/artifacts/$artifact_name"
           done < <(python3 - <<'PY'
           import json
           from pathlib import Path
-          for row in json.loads(Path('capture-evidence/selected.json').read_text()):
+          for row in json.loads(Path('final-evidence/selected.json').read_text()):
               print(f"{row['id']}\t{row['name']}")
           PY
           )
 
-      - name: Build compact report
+      - name: Build compact final validation report
         shell: bash
         run: |
           set -euo pipefail
@@ -63,8 +67,11 @@ jobs:
           import statistics
           from pathlib import Path
 
-          root = Path('capture-evidence/artifacts')
+          root = Path('final-evidence/artifacts')
           files = [p for p in sorted(root.rglob('lighthouse-*.json')) if p.name != 'lighthouse-summary.json']
+          if len(files) != 6:
+              raise SystemExit(f'expected six Lighthouse reports, found {len(files)}')
+
           modes = {'mobile': [], 'desktop': []}
           for path in files:
               data = json.loads(path.read_text(encoding='utf-8'))
@@ -109,26 +116,66 @@ jobs:
               }
 
           http_paths = list(root.rglob('http-summary.json'))
+          if len(http_paths) != 1:
+              raise SystemExit(f'expected one HTTP summary, found {len(http_paths)}')
           report = {
-              'runId': int(os.environ['RUN_ID']),
+              'validationRunId': int(os.environ['RUN_ID']),
               'auditedSha': os.environ['AUDITED_SHA'],
               'workflowConclusion': os.environ['RUN_CONCLUSION'],
-              'http': json.loads(http_paths[0].read_text()) if http_paths else None,
+              'http': json.loads(http_paths[0].read_text()),
               'lighthouse': summary,
           }
-          Path('tmp').mkdir(exist_ok=True)
-          Path('tmp/final-production-validation-v2.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+          Path('final-evidence/final-production-validation.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
           print(json.dumps(report, ensure_ascii=False, indent=2))
           PY
 
-      - name: Publish report and remove one-shot capture
+      - name: Remove temporary engineering surfaces and commit final freeze
+        id: freeze
         shell: bash
         run: |
           set -euo pipefail
-          git rm .github/workflows/capture-current-validation.yml
-          [ ! -f tmp/final-production-validation.json ] || git rm tmp/final-production-validation.json
-          git add tmp/final-production-validation-v2.json
+          git rm -f .github/workflows/capture-current-validation.yml
+          [ ! -f .github/scripts/.final-validation-trigger ] || git rm -f .github/scripts/.final-validation-trigger
+          [ ! -f tmp/current-workflow-runs.json ] || git rm -f tmp/current-workflow-runs.json
+          [ ! -f tmp/final-production-validation.json ] || git rm -f tmp/final-production-validation.json
+          [ ! -f tmp/final-production-validation-v2.json ] || git rm -f tmp/final-production-validation-v2.json
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'Capture final compressed-delivery validation evidence [skip ci]'
+          git commit -m 'Freeze validated production source'
           git push origin HEAD:main
+          sha=$(git rev-parse HEAD)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$sha" > final-evidence/final-freeze-sha.txt
+
+      - name: Verify exact final freeze commit on Cloudflare
+        id: final_live
+        shell: bash
+        run: |
+          set +e
+          rm -rf live-audit
+          mkdir -p live-audit
+          python3 .github/scripts/validate_live.py --expected-sha "${{ steps.freeze.outputs.sha }}" --deployment-timeout 900
+          status=$?
+          cp -R live-audit final-evidence/final-live-http
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload final evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-validated-production-${{ steps.freeze.outputs.sha }}
+          path: final-evidence/
+          retention-days: 30
+
+      - name: Enforce final validation
+        if: always()
+        shell: bash
+        env:
+          FINAL_LIVE_STATUS: ${{ steps.final_live.outputs.status }}
+        run: |
+          set -euo pipefail
+          [ "$RUN_CONCLUSION" = success ]
+          [ "${FINAL_LIVE_STATUS:-999}" = 0 ]
