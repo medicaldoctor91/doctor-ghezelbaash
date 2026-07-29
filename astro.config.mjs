@@ -9,7 +9,7 @@ export default defineConfig({
   integrations: [normalizeBuiltHtml()],
   build: {
     format: 'directory',
-    inlineStylesheets: 'always',
+    inlineStylesheets: 'never',
   },
   vite: {
     build: {
