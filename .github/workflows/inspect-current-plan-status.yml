@@ -1,0 +1,31 @@
+name: Inspect current plan status
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/inspect-current-plan-status.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture current main workflow state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p inspection
+          gh api "repos/$GITHUB_REPOSITORY/commits/main" > inspection/main-commit.json
+          main_sha=$(jq -r '.sha' inspection/main-commit.json)
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&per_page=30" > inspection/main-runs.json
+          jq --arg sha "$main_sha" '{mainSha:$sha,runs:[.workflow_runs[]|select(.head_sha==$sha)|{id,name,path,display_title,status,conclusion,event,created_at,updated_at,html_url}]}' inspection/main-runs.json > inspection/summary.json
+          cat inspection/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inspect-current-plan-status
+          path: inspection/
+          retention-days: 1
