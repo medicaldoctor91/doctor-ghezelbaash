@@ -1,9 +1,8 @@
 name: Inspect current plan status
 
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/inspect-current-plan-status.yml'
+  push:
+    branches: [inspect-current-plan-status]
 
 permissions:
   actions: read
