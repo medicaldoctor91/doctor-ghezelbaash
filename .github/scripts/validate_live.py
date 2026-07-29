@@ -17,6 +17,9 @@ from urllib.parse import urljoin
 BASE = "https://www.ghezelbaash.ir/"
 APEX = "https://ghezelbaash.ir/"
 PAGES = "https://doctor-ghezelbaash.pages.dev/"
+PRODUCTION_PATHS = (
+    "src", "public", "astro.config.mjs", "package.json", "package-lock.json", ".node-version",
+)
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -60,6 +63,7 @@ def fetch(url: str, *, follow: bool = False, range_header: str | None = None, ti
     body_path = Path("live-audit") / (hashlib.sha256((url + str(follow) + str(range_header)).encode()).hexdigest() + ".body")
     command = [
         "curl", "-sS", "--compressed", "--max-time", str(timeout),
+        "-H", "Cache-Control: no-cache",
         "-D", "-", "-o", str(body_path),
         "-w", "\n__META__%{http_code}\t%{url_effective}",
     ]
@@ -87,13 +91,33 @@ def deployment_marker(html: str) -> str | None:
     return match.group(1) if match else None
 
 
+def sha_matches(expected_sha: str | None, marker: str | None) -> bool:
+    return bool(expected_sha and marker and (expected_sha.startswith(marker) or marker.startswith(expected_sha)))
+
+
+def production_equivalent(expected_sha: str | None, marker: str | None) -> bool:
+    if not expected_sha or not marker:
+        return False
+    if not re.fullmatch(r"[0-9a-f]{40}", expected_sha) or not re.fullmatch(r"[0-9a-f]{40}", marker):
+        return False
+    subprocess.run(
+        ["git", "fetch", "--quiet", "--no-tags", "origin", expected_sha, marker],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
+    )
+    probe = subprocess.run(
+        ["git", "diff", "--quiet", expected_sha, marker, "--", *PRODUCTION_PATHS],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
+    )
+    return probe.returncode == 0
+
+
 def wait_for_deployment(expected_sha: str | None, timeout: int) -> Response:
     deadline = time.time() + timeout
     last = fetch(BASE, follow=True)
     while expected_sha and time.time() < deadline:
         html = last.body.decode("utf-8", errors="replace")
         marker = deployment_marker(html)
-        if marker and (expected_sha.startswith(marker) or marker.startswith(expected_sha)):
+        if marker and (sha_matches(expected_sha, marker) or production_equivalent(expected_sha, marker)):
             return last
         print(f"Waiting for Cloudflare deployment: expected={expected_sha}, live={marker}", flush=True)
         time.sleep(15)
@@ -125,7 +149,7 @@ def main() -> None:
     require(root.status == 200, f"canonical root returned {root.status}")
     if args.expected_sha:
         require(bool(marker), "live HTML has no x-deploy-commit marker")
-        require(bool(marker) and (args.expected_sha.startswith(marker) or marker.startswith(args.expected_sha)), f"Cloudflare is not serving expected commit: expected={args.expected_sha}, live={marker}")
+        require(bool(marker) and (sha_matches(args.expected_sha, marker) or production_equivalent(args.expected_sha, marker)), f"Cloudflare is not serving expected or production-equivalent commit: expected={args.expected_sha}, live={marker}")
     require(len(root.body) < 1_900_000, f"live uncompressed HTML exceeds 1.90 MB: {len(root.body)} bytes")
     require(is_compressed(root), f"live root is not content-encoded: {root.header('content-encoding') or 'none'}")
     require('rel="canonical" href="https://www.ghezelbaash.ir/"' in root_html or 'href="https://www.ghezelbaash.ir/" rel="canonical"' in root_html, "live canonical link is incorrect")
