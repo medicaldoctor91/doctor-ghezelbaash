@@ -1,4 +1,4 @@
-name: Final production audit evidence
+name: One-shot final production validation and cleanup
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: final-production-audit
+  group: one-shot-final-production-validation
   cancel-in-progress: true
 
 env:
@@ -18,96 +18,44 @@ env:
   CANONICAL_URL: 'https://www.ghezelbaash.ir/'
 
 jobs:
-  audit:
+  validate-and-clean:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 2
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Apply final mobile font and touch-target fix
-        id: patch
+      - name: Build and validate production source
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          css = Path('src/styles/global.css')
-          text = css.read_text(encoding='utf-8')
-          marker = '/* Keep the mobile critical path independent of the optional brand font. */'
-          if marker not in text:
-              text += '''\n\n/* Keep the mobile critical path independent of the optional brand font. */
-          @media (max-width: 48rem) {
-            :root {
-              font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, sans-serif;
-            }
-          }
-
-          /* WCAG 2.2 touch targets for the final clinic fact links. */
-          #dr-saeed-ghezelbash-aesthetic-clinic-facts dd > a {
-            display: inline-block;
-            min-block-size: 24px;
-            padding-block: 3px;
-          }
-          '''.replace('\n          ', '\n')
-              css.write_text(text, encoding='utf-8')
-          PY
-
-          rm -f .github/workflows/apply-mobile-font-target-fix.yml .github/workflows/trigger-final-audit.yml
-          mkdir -p tmp
-          printf '%s\n' "$GITHUB_RUN_ID" > tmp/final-performance-run-id.txt
-
           npm ci --no-audit --no-fund
-          npm run build
-          python3 - <<'PY'
-          import base64
-          import hashlib
-          import re
-          from pathlib import Path
-
-          html = Path('dist/index.html').read_text(encoding='utf-8')
-          styles = re.findall(r'<style(?:\s[^>]*)?>(.*?)</style>', html, re.I | re.S)
-          if len(styles) != 1:
-              raise SystemExit(f'expected one inline style block, found {len(styles)}')
-          new_hash = "'sha256-" + base64.b64encode(hashlib.sha256(styles[0].encode()).digest()).decode() + "'"
-          headers = Path('public/_headers')
-          text = headers.read_text(encoding='utf-8')
-          matches = re.findall(r"style-src 'self' ('sha256-[^']+')", text)
-          if len(matches) != 1:
-              raise SystemExit(f'expected one CSP style hash, found {len(matches)}')
-          headers.write_text(text.replace(matches[0], new_hash), encoding='utf-8')
-          PY
           npm run build
           python3 -m pip install --quiet rdflib
           python3 .github/scripts/validate_source.py
 
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/styles/global.css public/_headers tmp/final-performance-run-id.txt .github/workflows
-          git commit -m 'Finalize mobile rendering and accessibility safeguards'
-          git push origin HEAD:main
-          audited_sha=$(git rev-parse HEAD)
-          echo "audited_sha=$audited_sha" >> "$GITHUB_OUTPUT"
-
-      - name: Validate matching Cloudflare production deployment
+      - name: Validate deployed HTTP and semantic surfaces
+        id: live
         shell: bash
-        continue-on-error: true
         run: |
           set +e
+          rm -rf live-audit
           mkdir -p live-audit
-          python3 .github/scripts/validate_live.py --expected-sha "${{ steps.patch.outputs.audited_sha }}" --deployment-timeout 900
-          printf '%s\n' "$?" > live-audit/live-status.txt
+          python3 .github/scripts/validate_live.py --expected-sha "$GITHUB_SHA" --deployment-timeout 900
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
           exit 0
 
       - name: Run three Mobile and three Desktop Lighthouse audits
+        id: lighthouse
         shell: bash
-        continue-on-error: true
         run: |
           set +e
           for mode in mobile desktop; do
@@ -121,13 +69,133 @@ jobs:
             done
           done
           python3 .github/scripts/evaluate_lighthouse.py --directory live-audit --enforce-agentic
-          printf '%s\n' "$?" > live-audit/lighthouse-status.txt
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Upload full audit evidence
+      - name: Build compact final report
+        shell: bash
+        env:
+          LIVE_STATUS: ${{ steps.live.outputs.status }}
+          LIGHTHOUSE_STATUS: ${{ steps.lighthouse.outputs.status }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import statistics
+          from pathlib import Path
+
+          rows = {'mobile': [], 'desktop': []}
+          for path in sorted(Path('live-audit').glob('lighthouse-*.json')):
+              data = json.loads(path.read_text(encoding='utf-8'))
+              mode = 'desktop' if 'desktop' in path.name else 'mobile'
+              categories = data.get('categories', {})
+              audits = data.get('audits', {})
+              agentic = categories.get('agentic-browsing') or {}
+              applicable = passed = 0
+              failed = []
+              for ref in agentic.get('auditRefs') or []:
+                  audit = audits.get(ref.get('id'), {})
+                  score = audit.get('score')
+                  if score is None:
+                      continue
+                  applicable += 1
+                  if score == 1:
+                      passed += 1
+                  else:
+                      failed.append(ref.get('id'))
+              rows[mode].append({
+                  'file': path.name,
+                  'performance': round((categories.get('performance', {}).get('score') or 0) * 100),
+                  'accessibility': round((categories.get('accessibility', {}).get('score') or 0) * 100),
+                  'bestPractices': round((categories.get('best-practices', {}).get('score') or 0) * 100),
+                  'seo': round((categories.get('seo', {}).get('score') or 0) * 100),
+                  'lcp': audits.get('largest-contentful-paint', {}).get('numericValue'),
+                  'fcp': audits.get('first-contentful-paint', {}).get('numericValue'),
+                  'tbt': audits.get('total-blocking-time', {}).get('numericValue'),
+                  'cls': audits.get('cumulative-layout-shift', {}).get('numericValue'),
+                  'agentic': {'passed': passed, 'applicable': applicable, 'failed': failed},
+              })
+
+          def median(items, key):
+              vals = [item[key] for item in items if item.get(key) is not None]
+              return statistics.median(vals) if vals else None
+
+          lighthouse = {}
+          for mode, items in rows.items():
+              lighthouse[mode] = {
+                  'runs': items,
+                  'median': {key: median(items, key) for key in ('performance','accessibility','bestPractices','seo','lcp','fcp','tbt','cls')},
+              }
+
+          http_path = Path('live-audit/http-summary.json')
+          report = {
+              'auditedSha': os.environ['GITHUB_SHA'],
+              'runId': int(os.environ['GITHUB_RUN_ID']),
+              'liveStatus': int(os.environ.get('LIVE_STATUS') or 999),
+              'lighthouseStatus': int(os.environ.get('LIGHTHOUSE_STATUS') or 999),
+              'http': json.loads(http_path.read_text(encoding='utf-8')) if http_path.exists() else None,
+              'lighthouse': lighthouse,
+          }
+          Path('tmp').mkdir(exist_ok=True)
+          Path('tmp/final-production-validation.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          Path('live-audit/final-production-validation.json').write_text(
+              json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Remove one-shot engineering files and publish report
+        id: cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp tmp/final-production-validation.json /tmp/final-production-validation.json
+          git rm -f .github/workflows/final-audit.yml
+          [ ! -f .github/workflows/capture-final-validation.yml ] || git rm -f .github/workflows/capture-final-validation.yml
+          [ ! -f .github/scripts/.post-cloudflare-audit-trigger ] || git rm -f .github/scripts/.post-cloudflare-audit-trigger
+          while IFS= read -r path; do
+            [ "$path" = 'tmp/final-production-validation.json' ] || git rm -f "$path"
+          done < <(git ls-files tmp)
+          cp /tmp/final-production-validation.json tmp/final-production-validation.json
+          git add tmp/final-production-validation.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Record final validation and remove one-shot engineering files [skip ci]'
+          git push origin HEAD:main
+          cleanup_sha=$(git rev-parse HEAD)
+          echo "sha=$cleanup_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Verify final cleanup commit is live
+        id: final_live
+        shell: bash
+        run: |
+          set +e
+          python3 .github/scripts/validate_live.py --expected-sha "${{ steps.cleanup.outputs.sha }}" --deployment-timeout 900
+          status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload complete final evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: final-production-audit-${{ steps.patch.outputs.audited_sha }}
+          name: final-production-validation-${{ steps.cleanup.outputs.sha }}
           path: live-audit/
           retention-days: 30
+
+      - name: Enforce final non-performance gates
+        if: always()
+        shell: bash
+        env:
+          LIVE_STATUS: ${{ steps.live.outputs.status }}
+          LIGHTHOUSE_STATUS: ${{ steps.lighthouse.outputs.status }}
+          FINAL_LIVE_STATUS: ${{ steps.final_live.outputs.status }}
+        run: |
+          set -euo pipefail
+          [ "${LIVE_STATUS:-999}" = 0 ]
+          [ "${LIGHTHOUSE_STATUS:-999}" = 0 ]
+          [ "${FINAL_LIVE_STATUS:-999}" = 0 ]
