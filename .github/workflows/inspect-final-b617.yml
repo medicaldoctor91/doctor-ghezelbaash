@@ -1,4 +1,4 @@
-name: Inspect final b617 validation and freeze
+name: Inspect successful final capture and freeze
 
 on:
   pull_request:
@@ -16,41 +16,25 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       TARGET_SHA: b617957b688ac3300d2367f08694418e8d100362
+      VALIDATION_RUN_ID: '30454404017'
+      OLD_CAPTURE_ID: '30454478055'
     steps:
-      - name: Wait for definitive validation and freeze
+      - name: Wait for successful capture and freeze
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p inspection
 
-          validation_id=''
-          for attempt in $(seq 1 120); do
-            gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&per_page=50" > inspection/runs.json
-            validation=$(jq -c --arg sha "$TARGET_SHA" '[.workflow_runs[] | select(.head_sha == $sha and .name == "Validate production source and live site")] | first // empty' inspection/runs.json)
-            if [ -n "$validation" ]; then
-              validation_id=$(jq -r '.id' <<<"$validation")
-              status=$(jq -r '.status' <<<"$validation")
-              conclusion=$(jq -r '.conclusion // ""' <<<"$validation")
-              echo "validation id=$validation_id status=$status conclusion=$conclusion"
-              if [ "$status" = completed ]; then
-                printf '%s\n' "$validation" > inspection/validation-run.json
-                break
-              fi
-            else
-              echo 'validation run not visible yet'
-            fi
-            sleep 15
-          done
-          [ -n "$validation_id" ] || { echo 'validation run was not found' >&2; exit 1; }
-          [ "$(jq -r '.status' inspection/validation-run.json)" = completed ] || { echo 'validation run did not complete' >&2; exit 1; }
-
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$validation_id/jobs?per_page=100" > inspection/validation-jobs.json
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$validation_id/artifacts?per_page=100" > inspection/validation-artifacts.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATION_RUN_ID" > inspection/validation-run.json
+          [ "$(jq -r '.status' inspection/validation-run.json)" = completed ]
+          [ "$(jq -r '.conclusion' inspection/validation-run.json)" = success ]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATION_RUN_ID/jobs?per_page=100" > inspection/validation-jobs.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATION_RUN_ID/artifacts?per_page=100" > inspection/validation-artifacts.json
 
           capture_id=''
           for attempt in $(seq 1 120); do
-            gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&per_page=50" > inspection/runs-after-validation.json
-            capture=$(jq -c --arg sha "$TARGET_SHA" '[.workflow_runs[] | select(.head_sha == $sha and .name == "Capture final validation and freeze source")] | first // empty' inspection/runs-after-validation.json)
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&per_page=100" > inspection/runs.json
+            capture=$(jq -c --arg sha "$TARGET_SHA" --argjson old "$OLD_CAPTURE_ID" '[.workflow_runs[] | select(.head_sha == $sha and .name == "Capture final validation and freeze source" and .id > $old)] | first // empty' inspection/runs.json)
             if [ -n "$capture" ]; then
               capture_id=$(jq -r '.id' <<<"$capture")
               status=$(jq -r '.status' <<<"$capture")
@@ -61,12 +45,14 @@ jobs:
                 break
               fi
             else
-              echo 'capture run not visible yet'
+              echo 'new capture run not visible yet'
             fi
             sleep 15
           done
-          [ -n "$capture_id" ] || { echo 'capture run was not found' >&2; exit 1; }
-          [ "$(jq -r '.status' inspection/capture-run.json)" = completed ] || { echo 'capture run did not complete' >&2; exit 1; }
+
+          [ -n "$capture_id" ] || { echo 'new capture run was not found' >&2; exit 1; }
+          [ "$(jq -r '.status' inspection/capture-run.json)" = completed ]
+          [ "$(jq -r '.conclusion' inspection/capture-run.json)" = success ]
 
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$capture_id/jobs?per_page=100" > inspection/capture-jobs.json
           gh api "repos/$GITHUB_REPOSITORY/actions/runs/$capture_id/artifacts?per_page=100" > inspection/capture-artifacts.json
@@ -87,8 +73,8 @@ jobs:
             '{
               targetSha:$target,
               finalMainSha:$final,
-              validation:{run:$validation[0],jobs:[$validationJobs[0].jobs[]|{id,name,status,conclusion,steps}],artifacts:[$validationArtifacts[0].artifacts[]|{id,name,size_in_bytes,expired}]},
-              capture:{run:$capture[0],jobs:[$captureJobs[0].jobs[]|{id,name,status,conclusion,steps}],artifacts:[$captureArtifacts[0].artifacts[]|{id,name,size_in_bytes,expired}]},
+              validation:{run:($validation[0]|{id,status,conclusion,run_attempt,display_title,updated_at}),jobs:[$validationJobs[0].jobs[]|{id,name,status,conclusion,steps}],artifacts:[$validationArtifacts[0].artifacts[]|{id,name,size_in_bytes,expired}]},
+              capture:{run:($capture[0]|{id,status,conclusion,display_title,updated_at}),jobs:[$captureJobs[0].jobs[]|{id,name,status,conclusion,steps}],artifacts:[$captureArtifacts[0].artifacts[]|{id,name,size_in_bytes,expired}]},
               remainingEngineeringPaths:[$tree[0].tree[]|.path|select(. == ".github/workflows/capture-current-validation.yml" or . == ".github/scripts/.final-validation-trigger" or startswith("tmp/"))]
             }' > inspection/summary.json
           cat inspection/summary.json
@@ -97,6 +83,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: inspect-final-b617
+          name: inspect-successful-final-freeze
           path: inspection/
           retention-days: 2
