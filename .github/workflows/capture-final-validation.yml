@@ -1,0 +1,146 @@
+name: Capture post-Cloudflare validation evidence
+
+on:
+  workflow_run:
+    workflows: ["Validate production source and live site"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  capture:
+    if: >-
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_sha != '111264665489f99371687bd56bee71ec6cd025ad'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      AUDITED_SHA: ${{ github.event.workflow_run.head_sha }}
+      RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 2
+
+      - name: Download validation artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf capture-evidence
+          mkdir -p capture-evidence/artifacts
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts" --paginate > capture-evidence/artifacts.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          payload = json.loads(Path('capture-evidence/artifacts.json').read_text())
+          rows = payload.get('artifacts', []) if isinstance(payload, dict) else []
+          selected = [row for row in rows if row.get('name', '').startswith(('lighthouse-', 'live-http-'))]
+          Path('capture-evidence/selected.json').write_text(json.dumps(selected, indent=2))
+          if not selected:
+              raise SystemExit('No Lighthouse or live HTTP artifacts were published')
+          PY
+          while IFS=$'\t' read -r artifact_id artifact_name; do
+            mkdir -p "capture-evidence/artifacts/$artifact_name"
+            gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id/zip" > "capture-evidence/$artifact_name.zip"
+            unzip -q "capture-evidence/$artifact_name.zip" -d "capture-evidence/artifacts/$artifact_name"
+          done < <(python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for row in json.loads(Path('capture-evidence/selected.json').read_text()):
+              print(f"{row['id']}\t{row['name']}")
+          PY
+          )
+
+      - name: Build compact validation report
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import statistics
+          from pathlib import Path
+
+          root = Path('capture-evidence/artifacts')
+          lighthouse_files = sorted(root.rglob('lighthouse-*.json'))
+          lighthouse_files = [p for p in lighthouse_files if p.name not in {'lighthouse-summary.json'}]
+          if len(lighthouse_files) < 6:
+              raise SystemExit(f'Expected at least six Lighthouse JSON files, found {len(lighthouse_files)}')
+
+          modes = {'mobile': [], 'desktop': []}
+          for path in lighthouse_files:
+              mode = 'desktop' if 'desktop' in path.name else 'mobile'
+              data = json.loads(path.read_text())
+              categories = data.get('categories', {})
+              audits = data.get('audits', {})
+              agentic = categories.get('agentic-browsing') or {}
+              audit_refs = agentic.get('auditRefs') or []
+              failed = []
+              applicable = 0
+              passed = 0
+              for ref in audit_refs:
+                  audit = audits.get(ref.get('id'), {})
+                  score = audit.get('score')
+                  if score is None:
+                      continue
+                  applicable += 1
+                  if score == 1:
+                      passed += 1
+                  else:
+                      failed.append(ref.get('id'))
+              row = {
+                  'file': path.name,
+                  'performance': round((categories.get('performance', {}).get('score') or 0) * 100),
+                  'accessibility': round((categories.get('accessibility', {}).get('score') or 0) * 100),
+                  'bestPractices': round((categories.get('best-practices', {}).get('score') or 0) * 100),
+                  'seo': round((categories.get('seo', {}).get('score') or 0) * 100),
+                  'lcp': audits.get('largest-contentful-paint', {}).get('numericValue'),
+                  'fcp': audits.get('first-contentful-paint', {}).get('numericValue'),
+                  'tbt': audits.get('total-blocking-time', {}).get('numericValue'),
+                  'cls': audits.get('cumulative-layout-shift', {}).get('numericValue'),
+                  'agentic': {'passed': passed, 'applicable': applicable, 'failed': failed},
+              }
+              modes[mode].append(row)
+
+          def median(rows, key):
+              values = [r[key] for r in rows if r.get(key) is not None]
+              return statistics.median(values) if values else None
+
+          summary = {}
+          for mode, rows in modes.items():
+              summary[mode] = {
+                  'runs': rows,
+                  'median': {key: median(rows, key) for key in ('performance','accessibility','bestPractices','seo','lcp','fcp','tbt','cls')},
+              }
+
+          http_paths = list(root.rglob('http-summary.json'))
+          http = json.loads(http_paths[0].read_text()) if http_paths else None
+          report = {
+              'runId': int(os.environ['RUN_ID']),
+              'auditedSha': os.environ['AUDITED_SHA'],
+              'workflowConclusion': os.environ['RUN_CONCLUSION'],
+              'http': http,
+              'lighthouse': summary,
+          }
+          Path('tmp').mkdir(exist_ok=True)
+          Path('tmp/final-cloudflare-validation.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+          print(json.dumps(report, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Publish compact report and remove one-shot workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/capture-final-validation.yml
+          if [ -f .github/workflows/final-audit.yml ]; then
+            git rm .github/workflows/final-audit.yml
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tmp/final-cloudflare-validation.json
+          git commit -m 'Record post-Cloudflare validation evidence [skip ci]'
+          git push origin HEAD:main
