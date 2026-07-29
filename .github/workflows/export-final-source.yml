@@ -1,0 +1,43 @@
+name: Export frozen final source
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/export-final-source.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_SHA: 87072671c6846d0bf3bf11d596fe0fad667da56c
+      ARCHIVE_NAME: doctor-ghezelbaash-final-source-87072671.zip
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          fetch-depth: 1
+
+      - name: Create exact clean source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD | grep -Fx "$SOURCE_SHA"
+          git archive \
+            --format=zip \
+            --prefix=doctor-ghezelbaash-final-source/ \
+            --output="$ARCHIVE_NAME" \
+            "$SOURCE_SHA"
+          sha256sum "$ARCHIVE_NAME" > "$ARCHIVE_NAME.sha256"
+          unzip -t "$ARCHIVE_NAME"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frozen-final-source-87072671
+          path: |
+            doctor-ghezelbaash-final-source-87072671.zip
+            doctor-ghezelbaash-final-source-87072671.zip.sha256
+          retention-days: 7
+          compression-level: 0
