@@ -1,0 +1,42 @@
+name: Inspect current main validation
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/inspect-main-validation.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: f15ee7618ae42a6a0353e118f322b481c2a23b2b
+    steps:
+      - name: Capture workflow state
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p inspection
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$TARGET_SHA&per_page=20" > inspection/runs.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('inspection/runs.json').read_text())
+          rows = data.get('workflow_runs', [])
+          summary = [
+              {key: row.get(key) for key in ('id','name','path','display_title','head_sha','status','conclusion','event','created_at','updated_at','html_url')}
+              for row in rows
+          ]
+          Path('inspection/summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+          print(json.dumps(summary, indent=2))
+          PY
+      - name: Upload inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: inspect-main-validation
+          path: inspection/
+          retention-days: 1
