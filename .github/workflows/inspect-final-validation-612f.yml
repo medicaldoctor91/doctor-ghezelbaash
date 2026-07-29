@@ -1,4 +1,4 @@
-name: Remove Cloudflare Pages analytics injection
+name: Inspect Cloudflare production deployment
 
 on:
   pull_request:
@@ -9,53 +9,71 @@ permissions:
   contents: read
 
 jobs:
-  patch-pages-project:
+  inspect-pages-deployment:
     runs-on: ubuntu-latest
     env:
       CF_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       PROJECT_NAME: doctor-ghezelbaash
+      TARGET_SHA: b617957b688ac3300d2367f08694418e8d100362
     steps:
-      - name: Remove Pages Web Analytics configuration
+      - name: Inspect project, deployments, and current live HTML
         shell: bash
         run: |
           set -euo pipefail
           [ -n "$CF_API_TOKEN" ] || { echo 'CLOUDFLARE_API_TOKEN is missing' >&2; exit 1; }
           [ -n "$CF_ACCOUNT_ID" ] || { echo 'CLOUDFLARE_ACCOUNT_ID is missing' >&2; exit 1; }
-          mkdir -p cloudflare-evidence
-          endpoint="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/$PROJECT_NAME"
+          mkdir -p cloudflare-inspection
+          project_endpoint="https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/pages/projects/$PROJECT_NAME"
+          deployments_endpoint="$project_endpoint/deployments?env=production&per_page=20"
 
-          curl -sS --fail-with-body \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            "$endpoint" > cloudflare-evidence/before.raw.json
-
-          jq '{success,errors,result:{name:.result.name,production_branch:.result.production_branch,build_config:{web_analytics_tag:.result.build_config.web_analytics_tag,web_analytics_token_present:(.result.build_config.web_analytics_token != null and .result.build_config.web_analytics_token != "")}}}' \
-            cloudflare-evidence/before.raw.json > cloudflare-evidence/before.json
-
-          curl -sS --fail-with-body -X PATCH \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            -H 'Content-Type: application/json' \
-            --data '{"build_config":{"web_analytics_tag":null,"web_analytics_token":null}}' \
-            "$endpoint" > cloudflare-evidence/patch.raw.json
-
-          curl -sS --fail-with-body \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            "$endpoint" > cloudflare-evidence/after.raw.json
+          curl -sS --fail-with-body -H "Authorization: Bearer $CF_API_TOKEN" "$project_endpoint" > cloudflare-inspection/project.raw.json
+          curl -sS --fail-with-body -H "Authorization: Bearer $CF_API_TOKEN" "$deployments_endpoint" > cloudflare-inspection/deployments.raw.json
 
           jq '{success,errors,result:{name:.result.name,production_branch:.result.production_branch,build_config:{web_analytics_tag:.result.build_config.web_analytics_tag,web_analytics_token_present:(.result.build_config.web_analytics_token != null and .result.build_config.web_analytics_token != "")}}}' \
-            cloudflare-evidence/after.raw.json > cloudflare-evidence/after.json
+            cloudflare-inspection/project.raw.json > cloudflare-inspection/project.json
 
-          jq -e '.success == true and (.result.build_config.web_analytics_tag == null or .result.build_config.web_analytics_tag == "") and .result.build_config.web_analytics_token_present == false' \
-            cloudflare-evidence/after.json >/dev/null
+          jq '{success,errors,result:[.result[]|{id,short_id,environment,url,created_on,modified_on,latest_stage,deployment_trigger:{type:.deployment_trigger.type,metadata:{branch:.deployment_trigger.metadata.branch,commit_hash:.deployment_trigger.metadata.commit_hash,commit_message:.deployment_trigger.metadata.commit_message}}}]}' \
+            cloudflare-inspection/deployments.raw.json > cloudflare-inspection/deployments.json
 
-          rm -f cloudflare-evidence/*.raw.json
-          cat cloudflare-evidence/before.json
-          cat cloudflare-evidence/after.json
+          target_count=$(jq --arg sha "$TARGET_SHA" '[.result[]|select(.deployment_trigger.metadata.commit_hash == $sha)]|length' cloudflare-inspection/deployments.json)
+          echo "$target_count" > cloudflare-inspection/target-count.txt
 
-      - name: Upload sanitized Cloudflare evidence
+          curl -sS --compressed --max-time 90 \
+            -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' \
+            "https://www.ghezelbaash.ir/?deployment-check=$(date +%s)" > cloudflare-inspection/live.html
+
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+          html = Path('cloudflare-inspection/live.html').read_text(encoding='utf-8', errors='replace')
+          marker = None
+          for pattern in (
+              r'<meta\s+name=["\']x-deploy-commit["\']\s+content=["\']([0-9a-f]{7,40}|local)["\']',
+              r'<meta\s+content=["\']([0-9a-f]{7,40}|local)["\']\s+name=["\']x-deploy-commit["\']',
+          ):
+              match = re.search(pattern, html, re.I)
+              if match:
+                  marker = match.group(1)
+                  break
+          out = {
+              'liveMarker': marker,
+              'cloudflareBeaconPresent': 'cloudflareinsights.com' in html or 'data-cf-beacon' in html,
+              'googleVerificationPresent': '8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ' in html,
+              'htmlBytes': len(html.encode('utf-8')),
+          }
+          Path('cloudflare-inspection/live-summary.json').write_text(json.dumps(out, indent=2))
+          print(json.dumps(out, indent=2))
+          PY
+
+          cat cloudflare-inspection/project.json
+          cat cloudflare-inspection/deployments.json
+          rm -f cloudflare-inspection/*.raw.json cloudflare-inspection/live.html
+
+      - name: Upload sanitized deployment inspection
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cloudflare-pages-analytics-removal
-          path: cloudflare-evidence/
+          name: cloudflare-production-deployment-inspection
+          path: cloudflare-inspection/
           retention-days: 7
