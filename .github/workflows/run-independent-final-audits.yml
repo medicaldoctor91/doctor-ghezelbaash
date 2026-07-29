@@ -1,0 +1,62 @@
+name: Run independent final live audits
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/run-independent-final-audits.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  final-live-audits:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      NODE_VERSION: '24.18.0'
+      CANONICAL_URL: 'https://www.ghezelbaash.ir/'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Record Range behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit-evidence
+          video=$(find public/media/videos -type f -name '*.mp4' | sort | head -n1)
+          url="https://www.ghezelbaash.ir/${video#public/}"
+          status=$(curl -sS --compressed --max-time 90 -H 'Range: bytes=0-1023' -o audit-evidence/video-range.body -D audit-evidence/video-range.headers -w '%{http_code}' "$url")
+          case "$status" in
+            200) echo 'Cloudflare Pages full-response Range behavior accepted.' ;;
+            206) grep -qi '^content-range:' audit-evidence/video-range.headers ;;
+            *) echo "Unexpected Range response: $status" >&2; exit 1 ;;
+          esac
+          printf '%s\n' "$status" > audit-evidence/video-range-status.txt
+          printf '%s\n' "$url" > audit-evidence/video-range-url.txt
+      - name: Run three Mobile and three Desktop Lighthouse audits
+        shell: bash
+        run: |
+          set +e
+          for mode in mobile desktop; do
+            for run in 1 2 3; do
+              preset=''
+              [ "$mode" = desktop ] && preset='--preset=desktop'
+              npx --yes lighthouse@latest "$CANONICAL_URL" $preset \
+                --output=json --output-path="audit-evidence/lighthouse-${mode}-${run}.json" \
+                --only-categories=performance,accessibility,best-practices,seo,agentic-browsing \
+                --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+            done
+          done
+          exit 0
+      - name: Evaluate Lighthouse evidence
+        run: python3 .github/scripts/evaluate_lighthouse.py --directory audit-evidence --enforce-agentic
+      - name: Upload independent final audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-final-live-audits
+          path: audit-evidence/
+          retention-days: 7
