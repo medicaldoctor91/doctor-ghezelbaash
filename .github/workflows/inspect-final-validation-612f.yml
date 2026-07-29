@@ -1,0 +1,49 @@
+name: Inspect final validation 612f
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/inspect-final-validation-612f.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture final validation state
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: 612f305452969410d1ec7aa783466a948793df16
+        run: |
+          set -euo pipefail
+          mkdir -p inspection
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs?branch=main&per_page=50" > inspection/runs.json
+          python3 - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          target = os.environ['TARGET_SHA']
+          runs = json.loads(Path('inspection/runs.json').read_text()).get('workflow_runs', [])
+          selected = [r for r in runs if r.get('head_sha') == target or r.get('name') == 'Capture final validation and freeze source']
+          out=[]
+          for r in selected:
+              rid=r['id']
+              jobs=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{rid}/jobs?per_page=100']))
+              arts=json.loads(subprocess.check_output(['gh','api',f'repos/{os.environ["GITHUB_REPOSITORY"]}/actions/runs/{rid}/artifacts?per_page=100']))
+              out.append({
+                  'id':rid,'name':r.get('name'),'display_title':r.get('display_title'),'head_sha':r.get('head_sha'),
+                  'status':r.get('status'),'conclusion':r.get('conclusion'),'event':r.get('event'),
+                  'created_at':r.get('created_at'),'updated_at':r.get('updated_at'),'html_url':r.get('html_url'),
+                  'jobs':[{'id':j.get('id'),'name':j.get('name'),'status':j.get('status'),'conclusion':j.get('conclusion'),'steps':j.get('steps')} for j in jobs.get('jobs',[])],
+                  'artifacts':[{'id':a.get('id'),'name':a.get('name'),'expired':a.get('expired'),'size_in_bytes':a.get('size_in_bytes')} for a in arts.get('artifacts',[])]
+              })
+          Path('inspection/summary.json').write_text(json.dumps({'targetSha':target,'runs':out},indent=2))
+          print(Path('inspection/summary.json').read_text())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inspect-final-validation-612f
+          path: inspection/
+          retention-days: 1
