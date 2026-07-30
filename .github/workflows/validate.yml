@@ -1,139 +1,211 @@
-name: Apply current Knowledge Panel alias ordering
+name: Validate production source and live site
 
 on:
-  pull_request:
+  push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.node-version'
+      - '.github/scripts/**'
+      - '.github/workflows/validate.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.node-version'
+      - '.github/scripts/**'
+      - '.github/workflows/validate.yml'
+  workflow_dispatch:
+    inputs:
+      run_live_audit:
+        description: 'Audit the deployed production site and canonical machine surfaces'
+        required: true
+        type: boolean
+        default: true
+      run_lighthouse:
+        description: 'Run three Mobile and three Desktop Lighthouse audits'
+        required: true
+        type: boolean
+        default: true
+      enforce_performance_100:
+        description: 'Fail unless Performance is 100 in every Lighthouse run'
+        required: true
+        type: boolean
+        default: false
+      enforce_agentic:
+        description: 'Fail unless every applicable Agentic Browsing check passes'
+        required: true
+        type: boolean
+        default: true
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: knowledge-panel-alias-${{ github.ref }}
+  group: production-validation-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '24.18.0'
+  CANONICAL_URL: 'https://www.ghezelbaash.ir/'
+
 jobs:
-  migrate:
-    if: github.head_ref == 'align-knowledge-panel-alias-2026-07-30'
+  changes:
+    name: Detect production-surface changes
+    runs-on: ubuntu-latest
+    outputs:
+      production: ${{ steps.detect.outputs.production }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - id: detect
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo 'production=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          before="$BEFORE_SHA"
+          if [ -z "$before" ] || [ "$before" = '0000000000000000000000000000000000000000' ]; then
+            before='HEAD^'
+          fi
+          files=$(git diff --name-only "$before" HEAD || true)
+          printf '%s\n' "$files"
+          if printf '%s\n' "$files" | grep -Eq '^(src/|public/|astro\.config\.mjs$|package(-lock)?\.json$|\.node-version$|\.github/scripts/|\.github/workflows/validate\.yml$)'; then
+            echo 'production=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'production=false' >> "$GITHUB_OUTPUT"
+          fi
+
+  source:
+    name: Source build graph and CSP validation
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: align-knowledge-panel-alias-2026-07-30
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24.18.0'
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Reorder physician aliases
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          doctor_id = "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-          panel_name = "Mohammad Saeed Ghezelbash"
-          required_targets = (
-              "public/graph.jsonld",
-              "src/data/semantic/head-graph.min.jsonld",
-          )
-
-          for filename in required_targets:
-              path = Path(filename)
-              data = json.loads(path.read_text(encoding="utf-8"))
-              graph = data.get("@graph")
-              if not isinstance(graph, list):
-                  raise RuntimeError(f"{filename}: @graph is missing or invalid")
-              matches = [node for node in graph if isinstance(node, dict) and node.get("@id") == doctor_id]
-              if len(matches) != 1:
-                  raise RuntimeError(f"{filename}: expected exactly one Person node, found {len(matches)}")
-              doctor = matches[0]
-              aliases = doctor.get("alternateName")
-              if not isinstance(aliases, list) or panel_name not in aliases:
-                  raise RuntimeError(f"{filename}: current Knowledge Panel name is absent from Person.alternateName")
-              doctor["alternateName"] = [panel_name] + [value for value in aliases if value != panel_name]
-              path.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-
-          validator = Path(".github/scripts/validate_source.py")
-          text = validator.read_text(encoding="utf-8")
-          anchor = 'SCHOLAR_URL = "https://scholar.google.com/citations?user=BcWBirUAAAAJ"\n'
-          if "KNOWLEDGE_PANEL_NAME" not in text:
-              if anchor not in text:
-                  raise RuntimeError("validator constant insertion anchor missing")
-              text = text.replace(anchor, anchor + 'KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"\n', 1)
-
-          full_anchor = 'require({"Person", "IndividualPhysician"} <= types(doctor), f"doctor types are incomplete: {types(doctor)}")\n'
-          if "Full Graph Person.alternateName must begin" not in text:
-              if full_anchor not in text:
-                  raise RuntimeError("Full Graph validator insertion anchor missing")
-              text = text.replace(
-                  full_anchor,
-                  full_anchor + 'require(isinstance(doctor.get("alternateName"), list) and doctor["alternateName"] and doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Full Graph Person.alternateName must begin with the current Google Knowledge Panel name")\n',
-                  1,
-              )
-
-          head_anchor = 'head_doctor = head_by.get(DOCTOR, {})\n'
-          if "Head Graph Person.alternateName must begin" not in text:
-              if head_anchor not in text:
-                  raise RuntimeError("Head Graph validator insertion anchor missing")
-              text = text.replace(
-                  head_anchor,
-                  head_anchor + 'require(isinstance(head_doctor.get("alternateName"), list) and head_doctor["alternateName"] and head_doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Head Graph Person.alternateName must begin with the current Google Knowledge Panel name")\n',
-                  1,
-              )
-          validator.write_text(text, encoding="utf-8")
-
-          llms = Path("public/llms.txt")
-          text = llms.read_text(encoding="utf-8")
-          old_identity = "Dr. Saeed Ghezelbash (Mohammadsaeed Ghezelbash)"
-          new_identity = "Dr. Saeed Ghezelbash (Mohammad Saeed Ghezelbash)"
-          if old_identity not in text:
-              raise RuntimeError("llms.txt identity spelling anchor missing")
-          llms.write_text(text.replace(old_identity, new_identity, 1), encoding="utf-8")
-          PY
-
-      - name: Build and synchronize CSP hash
-        shell: bash
+      - name: Install and build
         run: |
           set -euo pipefail
           npm ci --no-audit --no-fund
           npm run build
-          python3 - <<'PY'
-          import base64
-          import hashlib
-          import re
-          from pathlib import Path
-
-          html = Path("dist/index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, re.I)
-          if len(scripts) != 1:
-              raise RuntimeError(f"expected exactly one inline script/JSON-LD block, found {len(scripts)}")
-          digest = "sha256-" + base64.b64encode(hashlib.sha256(scripts[0].encode()).digest()).decode()
-
-          path = Path("public/_headers")
-          text = path.read_text(encoding="utf-8")
-          updated, count = re.subn(r"sha256-[A-Za-z0-9+/=]+", digest, text, count=1)
-          if count != 1:
-              raise RuntimeError(f"expected exactly one CSP script hash, replaced {count}")
-          path.write_text(updated, encoding="utf-8")
-          PY
-          npm run build
           python3 -m pip install --quiet rdflib
-          python3 .github/scripts/validate_source.py
 
-      - name: Commit validated clean change set
+      - name: Validate immutable production contract
+        run: python3 .github/scripts/validate_source.py
+
+      - name: Upload generated build for forensic comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build-${{ github.sha }}
+          path: dist/
+          retention-days: 14
+
+  live:
+    name: Live deployment HTTP and semantic validation
+    needs: [changes, source]
+    if: >-
+      (github.event_name == 'push' && needs.changes.outputs.production == 'true') ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_live_audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for and validate the matching Cloudflare deployment
+        run: python3 .github/scripts/validate_live.py --expected-sha "${{ github.sha }}" --deployment-timeout 600
+
+      - name: Record Cloudflare Pages range behavior
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin main
-          git checkout origin/main -- .github/workflows/validate.yml
-          rm -f .github/workflows/apply-knowledge-panel-alias.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/scripts/validate_source.py public/graph.jsonld public/llms.txt public/_headers src/data/semantic/head-graph.min.jsonld .github/workflows/validate.yml .github/workflows/apply-knowledge-panel-alias.yml
-          git commit -m "Prioritize current Knowledge Panel name in physician aliases"
-          git push origin HEAD:align-knowledge-panel-alias-2026-07-30
+          video=$(find public/media/videos -type f -name '*.mp4' | sort | head -n1)
+          url="https://www.ghezelbaash.ir/${video#public/}"
+          status=$(curl -sS --compressed --max-time 90 -H 'Range: bytes=0-1023' -o /dev/null -D live-audit/video-range.headers -w '%{http_code}' "$url")
+          case "$status" in
+            200) echo 'Cloudflare Pages returned its documented full-response behavior for a Range request.' ;;
+            206) grep -qi '^content-range:' live-audit/video-range.headers ;;
+            *) echo "Unexpected Range response: $status" >&2; exit 1 ;;
+          esac
+          printf '%s\n' "$status" > live-audit/video-range-status.txt
+
+      - name: Upload live HTTP evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-http-${{ github.sha }}
+          path: live-audit/
+          retention-days: 30
+
+  lighthouse:
+    name: Repeated Mobile Desktop and Agentic Lighthouse audit
+    needs: [changes, live]
+    if: >-
+      (github.event_name == 'push' && needs.changes.outputs.production == 'true' && needs.live.result == 'success') ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_lighthouse)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Run repeated Lighthouse audits
+        shell: bash
+        run: |
+          set +e
+          mkdir -p live-audit
+          google-chrome --version || chromium --version || true
+          for mode in mobile desktop; do
+            for run in 1 2 3; do
+              preset=''
+              [ "$mode" = desktop ] && preset='--preset=desktop'
+              npx --yes lighthouse@latest "$CANONICAL_URL" $preset \
+                --output=json --output-path="live-audit/lighthouse-${mode}-${run}.json" \
+                --only-categories=performance,accessibility,best-practices,seo,agentic-browsing \
+                --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+            done
+          done
+          exit 0
+
+      - name: Evaluate Lighthouse results
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          if [ "${{ github.event_name }}" = 'push' ]; then
+            args+=(--enforce-agentic)
+          else
+            [ "${{ inputs.enforce_performance_100 }}" = 'true' ] && args+=(--enforce-performance-100)
+            [ "${{ inputs.enforce_agentic }}" = 'true' ] && args+=(--enforce-agentic)
+          fi
+          python3 .github/scripts/evaluate_lighthouse.py --directory live-audit "${args[@]}"
+
+      - name: Upload Lighthouse evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-${{ github.sha }}
+          path: live-audit/
+          retention-days: 30
