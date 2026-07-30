@@ -9,7 +9,6 @@ const baseURL = Astro.site ?? Astro.url;
 const canonicalURL = new URL(url ?? Astro.url.pathname, baseURL);
 const ogImageURL = new URL('/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.jpg', baseURL);
 const deployCommit = process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA ?? 'local';
-const structuredData = headGraph;
 
 const title = frontmatter.title;
 const description = frontmatter.description;
@@ -35,6 +34,6 @@ const robots = frontmatter.robots ?? 'index, follow';
       <slot />
     </main>
     <FloatingActionDock />
-    <script type="application/ld+json" set:html={structuredData}></script>
+    <script type="application/ld+json" set:html={headGraph}></script>
   </body>
 </html>

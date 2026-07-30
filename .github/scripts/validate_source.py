@@ -188,7 +188,7 @@ required_files = [
     "public/graph.jsonld", "public/graph.ttl",
     "src/data/semantic/head-graph.min.jsonld", "public/_headers", "public/_redirects",
     "public/robots.txt", "public/sitemap.xml", "public/llms.txt",
-    "src/pages/llms-full.txt.ts", "src/lib/page-projections.ts", "dist/llms-full.txt",
+    "src/pages/llms-full.txt.ts", "dist/llms-full.txt",
     "public/datasets/historical-patient-origin-summary.json",
     "public/doctor.vcf", "public/clinic.vcf", "public/favicon.svg", "public/favicon.ico",
     "public/favicon-48x48.png", "public/apple-touch-icon.png", "public/site.webmanifest",

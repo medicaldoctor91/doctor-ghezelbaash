@@ -2322,8 +2322,8 @@
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/measurementTechnique> "Manual aggregation of patient-origin cities from clinic records" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/name> "Historical patient-origin summary" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/publisher> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#country-iran> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#country-iraq> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> _:cb0 .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> _:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/temporalCoverage> "historical" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/url> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json> .
 <https://www.ghezelbaash.ir/#hyaluronidase-filler-dissolution-limitations> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
@@ -3877,7 +3877,7 @@
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "Berlin, Germany"@en .
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "برلین، آلمان"@fa .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:N09de2e6c0fc04af8bd75e8f95a81f469 .
+<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/containedInPlace> <https://www.ghezelbaash.ir/#place-berlin-germany> .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/name> "Messe Berlin / CityCube Berlin" .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q700236> .
@@ -7429,8 +7429,16 @@
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/identifier> <urn:sha256-property:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/name> "Google Maps clinic reputation snapshot — 2026-07-25" .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/width> <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590-width> .
-_:N09de2e6c0fc04af8bd75e8f95a81f469 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
-_:N09de2e6c0fc04af8bd75e8f95a81f469 <https://schema.org/addressCountry> "DE" .
-_:N09de2e6c0fc04af8bd75e8f95a81f469 <https://schema.org/addressLocality> "Berlin" .
-_:N09de2e6c0fc04af8bd75e8f95a81f469 <https://schema.org/postalCode> "14055" .
-_:N09de2e6c0fc04af8bd75e8f95a81f469 <https://schema.org/streetAddress> "Jafféstraße" .
+_:cb0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
+_:cb0 <https://schema.org/alternateName> "عراق" .
+_:cb0 <https://schema.org/name> "Iraq" .
+_:cb0 <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q796> .
+_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
+_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <https://schema.org/addressCountry> "DE" .
+_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <https://schema.org/addressLocality> "Berlin" .
+_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <https://schema.org/postalCode> "14055" .
+_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <https://schema.org/streetAddress> "Jafféstraße" .
+_:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
+_:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec <https://schema.org/alternateName> "ایران" .
+_:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec <https://schema.org/name> "Iran" .
+_:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q794> .
