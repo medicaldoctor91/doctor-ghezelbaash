@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -29,17 +30,13 @@ function graphNodes(document) {
 
 async function removeInvalidEventStatusFromJson(filePath) {
   const raw = await readFile(filePath, 'utf8');
-  const document = JSON.parse(raw);
+  const property = String.raw`"eventStatus"\s*:\s*"https:\/\/schema\.org\/EventCompleted"`;
+  const normalized = raw
+    .replace(new RegExp(`,\\s*${property}`, 'g'), '')
+    .replace(new RegExp(`${property}\\s*,`, 'g'), '');
+  const document = JSON.parse(normalized);
   const nodes = graphNodes(document);
   const event = nodes.find((node) => node?.['@id'] === EVENT_ID);
-  let changed = false;
-
-  for (const node of nodes) {
-    if (node?.eventStatus === EVENT_COMPLETED) {
-      delete node.eventStatus;
-      changed = true;
-    }
-  }
 
   if (event) {
     requireCondition(!Object.hasOwn(event, 'eventStatus'), `${filePath}: WPA XVII eventStatus must be omitted`);
@@ -51,7 +48,7 @@ async function removeInvalidEventStatusFromJson(filePath) {
     requireCondition(node?.eventStatus !== EVENT_COMPLETED, `${filePath}: invalid EventCompleted remains on ${node?.['@id'] ?? 'unknown node'}`);
   }
 
-  if (changed) await writeFile(filePath, `${JSON.stringify(document)}\n`, 'utf8');
+  if (normalized !== raw) await writeFile(filePath, normalized, 'utf8');
 }
 
 async function removeInvalidEventStatusFromTurtle(filePath) {
@@ -99,6 +96,11 @@ async function generateMarkdownProjection() {
   await writeFile(paths.markdownProjection, projection, 'utf8');
 }
 
+async function headGraphCspHash() {
+  const headGraph = await readFile(paths.headGraph, 'utf8');
+  return `'sha256-${createHash('sha256').update(headGraph).digest('base64')}'`;
+}
+
 async function updateHeaders() {
   let headers = await readFile(paths.headers, 'utf8');
   const rootLink = '  Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle", </index.md>; rel="alternate"; type="text/markdown"; hreflang="fa-IR", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"';
@@ -109,6 +111,11 @@ async function updateHeaders() {
 
   const indexBlock = `\n/index.md\n  Content-Type: text/markdown; charset=utf-8\n  X-Robots-Tag: noindex, follow\n  X-Content-Type-Options: nosniff\n  Link: <${HOME}>; rel="canonical"\n  Access-Control-Allow-Origin: *\n`;
   if (!/^\/index\.md$/m.test(headers)) headers = `${headers.trimEnd()}\n${indexBlock}`;
+
+  const graphHash = await headGraphCspHash();
+  if (!headers.includes(graphHash)) {
+    headers = headers.replace(/(Content-Security-Policy:.*?script-src[^;\n]*)(;)/, `$1 ${graphHash}$2`);
+  }
 
   await writeFile(paths.headers, headers, 'utf8');
 }
