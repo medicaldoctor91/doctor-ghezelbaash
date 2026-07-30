@@ -503,7 +503,7 @@ for path in ("/graph.jsonld", "/graph.ttl", "/llms.txt", "/datasets/historical-p
     block = header_block(path)
     require("X-Robots-Tag: index, follow" in block, f"{path} is not explicitly indexable")
     require("noindex" not in block.lower(), f"{path} is accidentally noindex")
-for path in ("/index.md", "/llms-full.txt", "/datasets/*.geojson"):
+for path in ("/index.md", "/llms-full.txt"):
     block = header_block(path)
     require("X-Robots-Tag: noindex, follow" in block, f"{path} is not a noindex, follow projection/distribution")
 for path in ("/doctor.vcf", "/clinic.vcf", "/site.webmanifest"):

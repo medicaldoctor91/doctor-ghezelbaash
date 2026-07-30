@@ -108,13 +108,6 @@ https://:version.doctor-ghezelbaash.pages.dev/*
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
-/datasets/*.geojson
-  Content-Type: application/geo+json; charset=utf-8
-  X-Robots-Tag: noindex, follow
-  Link: <https://www.ghezelbaash.ir/#historical-patient-origin-summary>; rel="about", </datasets/historical-patient-origin-summary.json>; rel="describedby"; type="application/json"
-  Access-Control-Allow-Origin: *
-  Cross-Origin-Resource-Policy: cross-origin
-
 /media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg
   Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg>; rel="describedby", <https://creativecommons.org/licenses/by/4.0/>; rel="license", <https://commons.wikimedia.org/wiki/Special:Redirect/file/Saeed-Ghezelbaash-physician-portrait.jpg>; rel="duplicate"
 

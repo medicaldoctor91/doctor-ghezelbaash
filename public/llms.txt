@@ -33,7 +33,6 @@ This Dataset is an independently discoverable, indexable first-party research as
 - `https://www.ghezelbaash.ir/` is the canonical human-readable page and primary search document.
 - `graph.jsonld`, `graph.ttl`, `llms.txt` and the canonical historical Dataset distribution are intentionally indexable and explicitly listed in the XML sitemap as authoritative first-party resources.
 - `index.md` and `llms-full.txt` are complete non-canonical page projections served as `noindex, follow`.
-- Lower-level GeoJSON distributions remain linked and crawlable as distributions of the canonical Dataset.
 - vCards and the web manifest remain utility resources rather than independent search documents.
 
 ## Physician identity
