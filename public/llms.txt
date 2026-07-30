@@ -37,6 +37,7 @@ This Dataset is an independently discoverable, indexable first-party research as
 
 ## Physician identity
 
+- Google Knowledge Graph ID: `/g/11nqdfk76c` — current entity identifier for Mohammad Saeed Ghezelbash.
 - [Wikidata — Dr. Saeed Ghezelbash](https://www.wikidata.org/wiki/Q140287622): Public entity identifier for the physician.
 - [Iran Medical Council profile](https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e): Medical council profile; code 167430.
 - [ORCID](https://orcid.org/0009-0001-9346-8475): Researcher identifier.
