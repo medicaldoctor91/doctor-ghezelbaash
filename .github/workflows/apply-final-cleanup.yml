@@ -6,6 +6,12 @@ on:
     paths:
       - '.github/scripts/apply_final_cleanup.py'
       - '.github/final-cleanup-trigger'
+  pull_request:
+    branches: [image-entity-hardening-v3]
+    paths:
+      - '.github/scripts/apply_final_cleanup.py'
+      - '.github/workflows/apply-final-cleanup.yml'
+      - '.github/final-cleanup-trigger'
 
 permissions:
   contents: write
