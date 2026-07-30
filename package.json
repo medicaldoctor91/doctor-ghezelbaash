@@ -5,6 +5,8 @@
   "type": "module",
   "packageManager": "npm@11.16.0",
   "scripts": {
+    "prepare:semantic": "node scripts/prepare-semantic-artifacts.mjs",
+    "prebuild": "npm run prepare:semantic",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",

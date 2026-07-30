@@ -34,6 +34,7 @@ ARTICLE_2021 = BASE + "#article-mdd-attachment-dissociation-trauma-2021"
 COUNTRY_IR = BASE + "#country-iran"
 COUNTRY_IQ = BASE + "#country-iraq"
 DATASET = BASE + "graph.jsonld#dataset"
+COMMONS_IMAGE_IDS = {PORTRAIT, TEAM, OFFICE}
 
 errors: list[str] = []
 
@@ -169,7 +170,8 @@ class DocumentParser(HTMLParser):
 
 
 required_files = [
-    "dist/index.html", "dist/404.html", "public/graph.jsonld", "public/graph.ttl",
+    "dist/index.html", "dist/404.html", "public/index.md", "dist/index.md",
+    "public/graph.jsonld", "public/graph.ttl",
     "src/data/semantic/head-graph.min.jsonld", "public/_headers", "public/_redirects",
     "public/robots.txt", "public/sitemap.xml", "public/llms.txt", "public/llms-full.txt",
     "public/doctor.vcf", "public/clinic.vcf", "public/favicon.svg", "public/favicon.ico",
@@ -183,7 +185,7 @@ for filename in required_files:
     require(Path(filename).is_file(), f"missing required file: {filename}")
 
 for filename in (
-    "graph.jsonld", "graph.ttl", "_headers", "_redirects", "robots.txt", "sitemap.xml",
+    "index.md", "graph.jsonld", "graph.ttl", "_headers", "_redirects", "robots.txt", "sitemap.xml",
     "llms.txt", "llms-full.txt", "doctor.vcf", "clinic.vcf", "favicon.svg", "favicon.ico",
     "favicon-48x48.png", "apple-touch-icon.png", "site.webmanifest",
 ):
@@ -210,6 +212,8 @@ require(html_bytes < 1_900_000, f"HTML exceeds 1.90 MB safety gate: {html_bytes}
 require('rel="canonical"' in html and BASE in html, "canonical homepage link is missing")
 require('/graph.jsonld' in html and 'rel="describedby"' in html, "HTML does not discover graph.jsonld")
 require('/graph.ttl' in html and 'rel="describedby"' in html, "HTML does not discover graph.ttl")
+require('rel="alternate" type="text/markdown" hreflang="fa-IR" href="https://www.ghezelbaash.ir/index.md"' in html, "HTML does not discover index.md")
+require('rel="about" href="https://www.ghezelbaash.ir/#saeed-ghezelbash"' in html, "HTML does not expose the physician about relation")
 require('type="application/ld+json"' in html, "inline Head Graph is missing")
 require("در حال معاینه بالینی مراجعه‌کننده" not in html, "obsolete Office wording remains in HTML")
 require("PresentationDigitalDocument" in html, "2017 presentation type is absent from inline graph")
@@ -246,6 +250,12 @@ for video in parser.videos:
 
 headers = read_text("public/_headers")
 require("/_astro/*" in headers and "max-age=31536000, immutable" in headers, "generated Astro assets lack immutable cache policy")
+require("/index.md\n" in headers and "Content-Type: text/markdown; charset=utf-8" in headers, "index.md header block is missing")
+require("X-Robots-Tag: noindex, follow" in headers, "index.md is not excluded from indexing")
+require('</index.md>; rel="alternate"; type="text/markdown"; hreflang="fa-IR"' in headers, "homepage Markdown Link header is missing")
+require('<https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"' in headers, "homepage physician about Link header is missing")
+require('Link: </graph.ttl>; rel="alternate"; type="text/turtle"' in headers, "graph.jsonld alternate Link header is incorrect")
+require('Link: </graph.jsonld>; rel="alternate"; type="application/ld+json"' in headers, "graph.ttl alternate Link header is incorrect")
 csp_lines = [line.strip().split(":", 1)[1].strip() for line in headers.splitlines() if line.strip().startswith("Content-Security-Policy:")]
 require(len(csp_lines) == 1, f"expected one CSP header, found {len(csp_lines)}")
 csp = csp_lines[0] if csp_lines else ""
@@ -303,7 +313,10 @@ require(bool(course.get("description")), "Course description is missing")
 event = full_by.get(EVENT, {})
 require(event.get("startDate") == "2017-10-08" and event.get("endDate") == "2017-10-12", "WPA XVII event dates are incorrect")
 require(bool(refs(event.get("organizer"))), "WPA XVII organizer is missing")
-require(event.get("eventStatus") == "https://schema.org/EventCompleted", "WPA XVII eventStatus is not EventCompleted")
+require("eventStatus" not in event, "WPA XVII eventStatus must be omitted for this completed historical event")
+for node in full_nodes:
+    if isinstance(node, dict):
+        require(node.get("eventStatus") != "https://schema.org/EventCompleted", f"{node.get('@id')}: invalid EventCompleted status")
 require("PresentationDigitalDocument" in types(full_by.get(PRESENTATION, {})), "2017 congress work is not PresentationDigitalDocument")
 for article_id in (ARTICLE_2016, ARTICLE_2021):
     article = full_by.get(article_id, {})
@@ -314,14 +327,29 @@ for article_id in (ARTICLE_2016, ARTICLE_2021):
 require(full_by.get(COUNTRY_IR, {}).get("identifier") == "IR", "Iran country code is not IR")
 require(full_by.get(COUNTRY_IQ, {}).get("identifier") == "IQ", "Iraq country code is not IQ")
 require(full_by.get(BASE + "#clinic-postal-address", {}).get("addressCountry") == "IR", "clinic addressCountry is not IR")
-for image_id in (PORTRAIT, TEAM, OFFICE):
+for image_id in COMMONS_IMAGE_IDS:
     image = full_by.get(image_id, {})
     for property_name in ("contentUrl", "creditText", "copyrightNotice", "license", "acquireLicensePage", "creator", "copyrightHolder"):
+        require(bool(image.get(property_name)), f"{image_id}: {property_name} is missing")
+for image_id, image in full_by.items():
+    if image_id in COMMONS_IMAGE_IDS or "ImageObject" not in types(image) or not image_id.endswith("-master"):
+        continue
+    for property_name in ("contentUrl", "creator", "copyrightHolder", "copyrightNotice"):
         require(bool(image.get(property_name)), f"{image_id}: {property_name} is missing")
 require({DOCTOR, CLINIC} <= set(refs(full_by.get(TEAM, {}).get("about"))), "Team master does not describe both Doctor and Clinic")
 require({DOCTOR, CLINIC} <= set(refs(full_by.get(OFFICE, {}).get("about"))), "Office master does not describe both Doctor and Clinic")
 formats = {full_by.get(identifier, {}).get("encodingFormat") for identifier in refs(full_by.get(DATASET, {}).get("distribution"))}
 require({"application/ld+json", "text/turtle"} <= formats, "Dataset lacks JSON-LD and Turtle distributions")
+
+markdown_projection = read_text("public/index.md")
+require(bool(markdown_projection.strip()), "public/index.md is empty")
+require('canonical: "https://www.ghezelbaash.ir/"' in markdown_projection, "index.md canonical frontmatter is missing")
+require('<h1 id="saeed-ghezelbash-aesthetic-medicine">' in markdown_projection, "index.md canonical H1 is missing")
+require(not re.search(r"<script\b|<style\b|application/ld\+json", markdown_projection, re.I), "index.md contains prohibited executable or JSON-LD markup")
+source_page = read_text("src/pages/index.md")
+source_h2_ids = re.findall(r'<h2\s+id="([^"]+)"', source_page, re.I)
+projection_h2_ids = re.findall(r'<h2\s+id="([^"]+)"', markdown_projection, re.I)
+require(projection_h2_ids == source_h2_ids, "index.md H2 projection differs from canonical source")
 
 try:
     json_graph = Graph().parse("public/graph.jsonld", format="json-ld")
@@ -341,6 +369,7 @@ try:
     namespace = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
     locations = [element.text for element in ET.parse("public/sitemap.xml").getroot().findall("sm:url/sm:loc", namespace)]
     require(locations == [BASE], f"sitemap must contain exactly the canonical homepage, found: {locations}")
+    require(BASE + "index.md" not in locations, "index.md entered sitemap.xml")
 except Exception as exc:
     errors.append(f"sitemap.xml parse failure: {exc}")
 
