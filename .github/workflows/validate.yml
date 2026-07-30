@@ -36,11 +36,17 @@ jobs:
           import json
           import re
           from pathlib import Path
+
           from rdflib import Graph
+          from rdflib.compare import graph_diff, isomorphic
 
           BASE = "https://www.ghezelbaash.ir/"
+          SCHEMA = "https://schema.org/"
+          RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
           HISTORICAL = BASE + "#historical-patient-origin-summary"
           LOGO = BASE + "#image-doctor-ghezelbaash-clinic-logo"
+          COUNTRY_IR = BASE + "#country-iran"
+          COUNTRY_IQ = BASE + "#country-iraq"
           ARTICLE_IMAGES = [
               {"@id": BASE + "#image-saeed-ghezelbash-portrait-square-1200"},
               {"@id": BASE + "#image-saeed-ghezelbash-portrait-4x3-1200"},
@@ -60,28 +66,37 @@ jobs:
                   "image": ARTICLE_IMAGES,
               },
           }
-          PLACES = [
-              {"@type": "Place", "name": "Iran", "alternateName": "ایران", "sameAs": "https://www.wikidata.org/entity/Q794", "identifier": "IR"},
-              {"@type": "Place", "name": "Iraq", "alternateName": "عراق", "sameAs": "https://www.wikidata.org/entity/Q796", "identifier": "IQ"},
-          ]
 
-          def types(node):
+          def types(node: dict) -> set[str]:
               value = node.get("@type", [])
               return set(value if isinstance(value, list) else [value])
 
-          def repair(path):
-              data = json.loads(Path(path).read_text(encoding="utf-8"))
+          def add_type(node: dict, type_name: str) -> None:
+              values = node.get("@type", [])
+              values = list(values) if isinstance(values, list) else [values]
+              if type_name not in values:
+                  values.append(type_name)
+              node["@type"] = values
+
+          def repair_jsonld(path: str) -> dict:
+              target = Path(path)
+              data = json.loads(target.read_text(encoding="utf-8"))
               nodes = data.get("@graph")
               if not isinstance(nodes, list):
-                  raise RuntimeError(f"{path}: missing @graph")
+                  raise RuntimeError(f"{path}: missing @graph array")
+              seen: set[str] = set()
               for node in nodes:
                   if not isinstance(node, dict):
                       continue
                   identifier = node.get("@id")
+                  if isinstance(identifier, str):
+                      if identifier in seen:
+                          raise RuntimeError(f"{path}: duplicate @id {identifier}")
+                      seen.add(identifier)
                   if "ImageObject" in types(node) and isinstance(node.get("contentUrl"), str):
                       node["url"] = node["contentUrl"]
-                  if identifier == HISTORICAL:
-                      node["spatialCoverage"] = PLACES
+                  if identifier in (COUNTRY_IR, COUNTRY_IQ):
+                      add_type(node, "Place")
                   if identifier == LOGO:
                       node.update({
                           "url": node.get("contentUrl"),
@@ -92,26 +107,91 @@ jobs:
                       })
                   if identifier in ARTICLE_FIXES:
                       node.update(ARTICLE_FIXES[identifier])
-              text = json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
-              Path(path).write_text(text, encoding="utf-8")
+              target.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
               return data
 
-          full = repair("public/graph.jsonld")
-          head = repair("src/data/semantic/head-graph.min.jsonld")
-          full_by = {node.get("@id"): node for node in full["@graph"] if isinstance(node, dict)}
-          head_by = {node.get("@id"): node for node in head["@graph"] if isinstance(node, dict)}
-          required = [HISTORICAL, LOGO, *ARTICLE_FIXES]
+          full = repair_jsonld("public/graph.jsonld")
+          head = repair_jsonld("src/data/semantic/head-graph.min.jsonld")
+          full_by = {node.get("@id"): node for node in full["@graph"] if isinstance(node, dict) and node.get("@id")}
+          head_by = {node.get("@id"): node for node in head["@graph"] if isinstance(node, dict) and node.get("@id")}
+
+          required = [HISTORICAL, LOGO, COUNTRY_IR, COUNTRY_IQ, *ARTICLE_FIXES]
           for identifier in required:
               if identifier not in full_by or identifier not in head_by:
                   raise RuntimeError(f"missing Head/Full node: {identifier}")
-          for identifier in required:
-              keys = ["spatialCoverage"] if identifier == HISTORICAL else (["url", "creditText", "license", "acquireLicensePage", "copyrightNotice"] if identifier == LOGO else ["datePublished", "dateModified", "url", "image"])
+          if full_by[HISTORICAL].get("spatialCoverage") != head_by[HISTORICAL].get("spatialCoverage"):
+              raise RuntimeError("Head/Full historical spatialCoverage mismatch")
+          for identifier in (COUNTRY_IR, COUNTRY_IQ):
+              if "Place" not in types(full_by[identifier]) or "Place" not in types(head_by[identifier]):
+                  raise RuntimeError(f"country is not also typed Place: {identifier}")
+          for identifier in (LOGO, *ARTICLE_FIXES):
+              keys = ["url", "creditText", "license", "acquireLicensePage", "copyrightNotice"] if identifier == LOGO else ["datePublished", "dateModified", "url", "image"]
               for key in keys:
                   if head_by[identifier].get(key) != full_by[identifier].get(key):
                       raise RuntimeError(f"Head/Full mismatch: {identifier} {key}")
 
-          rdf = Graph().parse(data=json.dumps(full, ensure_ascii=False), format="json-ld")
-          rdf.serialize(destination="public/graph.ttl", format="turtle", encoding="utf-8")
+          def iri(value: str) -> str:
+              return f"<{value}>"
+
+          def literal(value: str) -> str:
+              return json.dumps(value, ensure_ascii=False)
+
+          def triple_iri(subject: str, predicate: str, obj: str) -> str:
+              return f"{iri(subject)} {iri(predicate)} {iri(obj)} ."
+
+          def triple_literal(subject: str, predicate: str, obj: str) -> str:
+              return f"{iri(subject)} {iri(predicate)} {literal(obj)} ."
+
+          ttl_path = Path("public/graph.ttl")
+          original_lines = [line.strip() for line in ttl_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+          replace_pairs: set[tuple[str, str]] = set()
+          additions: list[str] = []
+
+          image_nodes = [node for node in full["@graph"] if isinstance(node, dict) and "ImageObject" in types(node) and isinstance(node.get("contentUrl"), str) and isinstance(node.get("@id"), str)]
+          for node in image_nodes:
+              subject = node["@id"]
+              replace_pairs.add((subject, SCHEMA + "url"))
+              additions.append(triple_iri(subject, SCHEMA + "url", node["contentUrl"]))
+
+          logo = full_by[LOGO]
+          for property_name in ("creditText", "copyrightNotice"):
+              replace_pairs.add((LOGO, SCHEMA + property_name))
+              additions.append(triple_literal(LOGO, SCHEMA + property_name, logo[property_name]))
+          for property_name in ("license", "acquireLicensePage"):
+              replace_pairs.add((LOGO, SCHEMA + property_name))
+              additions.append(triple_iri(LOGO, SCHEMA + property_name, logo[property_name]))
+
+          for article_id, article_fix in ARTICLE_FIXES.items():
+              for property_name in ("datePublished", "dateModified"):
+                  replace_pairs.add((article_id, SCHEMA + property_name))
+                  additions.append(triple_literal(article_id, SCHEMA + property_name, article_fix[property_name]))
+              replace_pairs.add((article_id, SCHEMA + "url"))
+              additions.append(triple_iri(article_id, SCHEMA + "url", article_fix["url"]))
+              replace_pairs.add((article_id, SCHEMA + "image"))
+              for image in article_fix["image"]:
+                  additions.append(triple_iri(article_id, SCHEMA + "image", image["@id"]))
+
+          additions.extend([
+              triple_iri(COUNTRY_IR, RDF_TYPE, SCHEMA + "Place"),
+              triple_iri(COUNTRY_IQ, RDF_TYPE, SCHEMA + "Place"),
+          ])
+
+          prefixes = {(f"<{subject}> <{predicate}> ") for subject, predicate in replace_pairs}
+          retained = [line for line in original_lines if not any(line.startswith(prefix) for prefix in prefixes)]
+          ttl_path.write_text("\n".join(sorted(set(retained + additions))) + "\n", encoding="utf-8")
+
+          json_graph = Graph().parse("public/graph.jsonld", format="json-ld")
+          ttl_graph = Graph().parse("public/graph.ttl", format="turtle")
+          if not isomorphic(json_graph, ttl_graph):
+              both, only_json, only_ttl = graph_diff(json_graph, ttl_graph)
+              print(f"graph mismatch: shared={len(both)} only_json={len(only_json)} only_ttl={len(only_ttl)}")
+              print("JSON-only sample:")
+              for item in list(only_json)[:20]:
+                  print(item)
+              print("TTL-only sample:")
+              for item in list(only_ttl)[:20]:
+                  print(item)
+              raise RuntimeError("Full JSON-LD and Turtle are not RDF-isomorphic after direct patch")
 
           layout_path = Path("src/layouts/BaseLayout.astro")
           layout = layout_path.read_text(encoding="utf-8")
