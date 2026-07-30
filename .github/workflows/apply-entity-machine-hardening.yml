@@ -1,0 +1,62 @@
+name: Apply entity and machine-surface hardening
+
+on:
+  push:
+    branches:
+      - strengthen-entity-machine-surfaces-2026-07-30
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: strengthen-entity-machine-surfaces-2026-07-30
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install transformation dependencies
+        run: python -m pip install --quiet rdflib
+
+      - name: Apply canonical entity, graph and indexing contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/tmp/entity-hardening/transform.part* | base64 -d > /tmp/transform.py
+          python /tmp/transform.py
+
+      - name: Build and synchronize CSP
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run build
+          cat .github/tmp/entity-hardening/csp.part* | base64 -d > /tmp/csp_sync.py
+          python /tmp/csp_sync.py
+          npm run build
+          python3 .github/scripts/validate_source.py
+
+      - name: Commit clean final source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .github/tmp/entity-hardening
+          rm -f .github/workflows/apply-entity-machine-hardening.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Strengthen canonical entity and machine discovery contracts'
+          git push origin HEAD:strengthen-entity-machine-surfaces-2026-07-30
