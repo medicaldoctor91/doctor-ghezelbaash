@@ -32,22 +32,31 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
+          import json
           from pathlib import Path
 
-          old = '"alternateName":["Saeed Ghezelbash","Dr. Saeed Ghezelbash","Dr. Saeed Ghezelbaash","دکتر محمدسعید قزلباش","Mohammad Saeed Ghezelbash","Saeed Ghezelbaash"]'
-          new = '"alternateName":["Mohammad Saeed Ghezelbash","Saeed Ghezelbash","Dr. Saeed Ghezelbash","Dr. Saeed Ghezelbaash","دکتر محمدسعید قزلباش","Saeed Ghezelbaash"]'
-
+          doctor_id = "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+          panel_name = "Mohammad Saeed Ghezelbash"
           required_targets = (
               "public/graph.jsonld",
               "src/data/semantic/head-graph.min.jsonld",
           )
+
           for filename in required_targets:
               path = Path(filename)
-              text = path.read_text(encoding="utf-8")
-              count = text.count(old)
-              if count != 1:
-                  raise RuntimeError(f"{filename}: expected exactly one canonical Person alternateName sequence, found {count}")
-              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+              data = json.loads(path.read_text(encoding="utf-8"))
+              graph = data.get("@graph")
+              if not isinstance(graph, list):
+                  raise RuntimeError(f"{filename}: @graph is missing or invalid")
+              matches = [node for node in graph if isinstance(node, dict) and node.get("@id") == doctor_id]
+              if len(matches) != 1:
+                  raise RuntimeError(f"{filename}: expected exactly one Person node, found {len(matches)}")
+              doctor = matches[0]
+              aliases = doctor.get("alternateName")
+              if not isinstance(aliases, list) or panel_name not in aliases:
+                  raise RuntimeError(f"{filename}: current Knowledge Panel name is absent from Person.alternateName")
+              doctor["alternateName"] = [panel_name] + [value for value in aliases if value != panel_name]
+              path.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
           validator = Path(".github/scripts/validate_source.py")
           text = validator.read_text(encoding="utf-8")
