@@ -11,8 +11,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "https://www.ghezelbaash.ir/"
 DOCTOR = BASE + "#saeed-ghezelbash"
-GRAPH_DATASET = BASE + "graph.jsonld#dataset"
-VERSION = "1.2.2"
 ALIASES = [
     "Mohammad Saeed Ghezelbash",
     "Dr. Mohammad Saeed Ghezelbash",
@@ -44,7 +42,10 @@ def load(path: str) -> dict:
 
 
 def dump(path: str, data: dict) -> None:
-    (ROOT / path).write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    (ROOT / path).write_text(
+        json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
 
 
 def by_id(data: dict, identifier: str) -> dict:
@@ -58,56 +59,44 @@ full = load("public/graph.jsonld")
 head = load("src/data/semantic/head-graph.min.jsonld")
 for graph in (full, head):
     by_id(graph, DOCTOR)["alternateName"] = list(ALIASES)
-    by_id(graph, GRAPH_DATASET)["version"] = VERSION
-
 dump("public/graph.jsonld", full)
 dump("src/data/semantic/head-graph.min.jsonld", head)
 
 llms_path = ROOT / "public/llms.txt"
 llms = llms_path.read_text(encoding="utf-8")
-alias_line = "Canonical aliases, ordered: " + " | ".join(ALIASES)
-if re.search(r"^Canonical aliases, ordered:.*$", llms, flags=re.M):
-    llms = re.sub(r"^Canonical aliases, ordered:.*$", alias_line, llms, flags=re.M)
+alias_line = "- Canonical ordered aliases: " + " | ".join(ALIASES)
+if re.search(r"^- Canonical ordered aliases:.*$", llms, flags=re.M):
+    llms = re.sub(r"^- Canonical ordered aliases:.*$", alias_line, llms, flags=re.M)
 else:
-    marker = "Current Google Knowledge Panel name: Mohammad Saeed Ghezelbash"
+    marker = "- Google Knowledge Graph ID: `/g/11nqdfk76c` — current entity identifier for Mohammad Saeed Ghezelbash."
     if marker not in llms:
-        raise RuntimeError("llms identity marker is missing")
+        raise RuntimeError("llms physician identity marker is missing")
     llms = llms.replace(marker, marker + "\n" + alias_line, 1)
 llms_path.write_text(llms, encoding="utf-8")
 
-page_path = ROOT / "src/pages/index.md"
-page = page_path.read_text(encoding="utf-8")n
-page, count = re.subn(
-    r"(Current live graph version</strong></dt>\s*<dd><a href=\"/graph\.jsonld\" type=\"application/ld\+json\">Version )1\.2\.1",
-    r"\g<1>1.2.2",
-    page,
-    count=1,
-)
-if count != 1:
-    raise RuntimeError("visible current graph version was not updated")
-page_path.write_text(page, encoding="utf-8")
-
 validator_path = ROOT / ".github/scripts/validate_source.py"
 validator = validator_path.read_text(encoding="utf-8")
-validator, count = re.subn(r'GRAPH_VERSION = "1\.2\.1"', 'GRAPH_VERSION = "1.2.2"', validator, count=1)
-if count != 1:
-    raise RuntimeError("validator graph version was not updated")
 constant = "PERSON_ALIASES = " + repr(ALIASES) + "\n"
 if "PERSON_ALIASES = " not in validator:
-    validator = validator.replace(
-        'KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"\n',
-        'KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"\n' + constant,
-        1,
-    )
+    marker = 'KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"\n'
+    if marker not in validator:
+        raise RuntimeError("validator Knowledge Panel constant is missing")
+    validator = validator.replace(marker, marker + constant, 1)
 else:
-    validator = re.sub(r"PERSON_ALIASES = \[[^\n]*\]\n", constant, validator, count=1)
+    validator, count = re.subn(r"PERSON_ALIASES = \[[^\n]*\]\n", constant, validator, count=1)
+    if count != 1:
+        raise RuntimeError("existing alias registry constant could not be replaced")
+full_check = 'require(isinstance(doctor.get("alternateName"), list) and doctor["alternateName"] and doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Full Graph Person.alternateName must begin with the current Google Knowledge Panel name")'
+head_check = 'require(isinstance(head_doctor.get("alternateName"), list) and head_doctor["alternateName"] and head_doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Head Graph Person.alternateName must begin with the current Google Knowledge Panel name")'
+if full_check not in validator or head_check not in validator:
+    raise RuntimeError("legacy first-item alias checks are missing")
 validator = validator.replace(
-    'require(isinstance(doctor.get("alternateName"), list) and doctor["alternateName"] and doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Full Graph Person.alternateName must begin with the current Google Knowledge Panel name")',
+    full_check,
     'require(doctor.get("alternateName") == PERSON_ALIASES, "Full Graph Person.alternateName differs from the canonical ordered registry")',
     1,
 )
 validator = validator.replace(
-    'require(isinstance(head_doctor.get("alternateName"), list) and head_doctor["alternateName"] and head_doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Head Graph Person.alternateName must begin with the current Google Knowledge Panel name")',
+    head_check,
     'require(head_doctor.get("alternateName") == PERSON_ALIASES, "Head Graph Person.alternateName differs from the canonical ordered registry")',
     1,
 )
@@ -116,24 +105,9 @@ validator_path.write_text(validator, encoding="utf-8")
 from rdflib import Graph
 
 rdf = Graph().parse(str(ROOT / "public/graph.jsonld"), format="json-ld")
-ttl = rdf.serialize(format="longturtle")
-(ROOT / "public/graph.ttl").write_text(ttl.rstrip() + "\n", encoding="utf-8")
-
-source = page_path.read_text(encoding="utf-8")
-body = re.sub(r"\A---\r?\n[\s\S]*?\r?\n---\r?\n?", "", source, count=1)
-body = re.sub(r"<script\b[^>]*>[\s\S]*?</script>", "", body, flags=re.I)
-body = re.sub(r"<style\b[^>]*>[\s\S]*?</style>", "", body, flags=re.I)
-body = re.sub(r"<script\b[^>]*/\s*>", "", body, flags=re.I)
-body = re.sub(r"\s+type=[\"']application/ld\+json[\"']", "", body, flags=re.I)
-body = re.sub(r"\n{3,}", "\n\n", body).strip()
-projection = (
-    "# Dr. Saeed Ghezelbash — Full canonical page export\n\n"
-    f"Canonical: {BASE}\nAbout: {DOCTOR}\nSource: {BASE}\nLanguage: fa-IR\n"
-    "Indexing: noindex, follow\nPurpose: deterministic machine-readable projection of the complete canonical page content\n\n---\n\n"
-    + body
-    + "\n"
-)
-(ROOT / "public/llms-full.txt").write_text(projection, encoding="utf-8")
+nt = rdf.serialize(format="nt")
+lines = sorted(line.strip() for line in nt.splitlines() if line.strip())
+(ROOT / "public/graph.ttl").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def run(*args: str) -> None:
