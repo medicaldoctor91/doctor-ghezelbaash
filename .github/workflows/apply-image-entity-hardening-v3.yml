@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
 
+# Synchronization trigger for PR #112.
 concurrency:
   group: image-entity-hardening-v3-${{ github.event.pull_request.number }}
   cancel-in-progress: false
