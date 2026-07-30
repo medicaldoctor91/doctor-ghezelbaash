@@ -3391,7 +3391,7 @@
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "Berlin, Germany"@en .
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "برلین، آلمان"@fa .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:Na293ec1b58ad4710b4729960f6c73603 .
+<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:N41e196665cad4c1da087a11f821007a6 .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/containedInPlace> <https://www.ghezelbaash.ir/#place-berlin-germany> .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/name> "Messe Berlin / CityCube Berlin" .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q700236> .
@@ -6119,8 +6119,11 @@
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "Mohammadssaeed Ghezelbaash" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "Mohammadssaeed Ghezelbash" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "Saeed Ghezelbaash" .
+<https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "Saeed Ghezelbash" .
+<https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "دکتر سعید قزلباش" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "دکتر محمد سعید قزلباش" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "دکتر محمدسعید قزلباش" .
+<https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "سعید قزلباش" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "محمد سعید قزلباش" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alternateName> "محمدسعید قزلباش" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash> <https://schema.org/alumniOf> <https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences> .
@@ -6940,8 +6943,8 @@
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/identifier> <urn:sha256-property:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/name> "Google Maps clinic reputation snapshot — 2026-07-25" .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/width> <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590-width> .
-_:Na293ec1b58ad4710b4729960f6c73603 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
-_:Na293ec1b58ad4710b4729960f6c73603 <https://schema.org/addressCountry> "DE" .
-_:Na293ec1b58ad4710b4729960f6c73603 <https://schema.org/addressLocality> "Berlin" .
-_:Na293ec1b58ad4710b4729960f6c73603 <https://schema.org/postalCode> "14055" .
-_:Na293ec1b58ad4710b4729960f6c73603 <https://schema.org/streetAddress> "Jafféstraße" .
+_:N41e196665cad4c1da087a11f821007a6 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
+_:N41e196665cad4c1da087a11f821007a6 <https://schema.org/addressCountry> "DE" .
+_:N41e196665cad4c1da087a11f821007a6 <https://schema.org/addressLocality> "Berlin" .
+_:N41e196665cad4c1da087a11f821007a6 <https://schema.org/postalCode> "14055" .
+_:N41e196665cad4c1da087a11f821007a6 <https://schema.org/streetAddress> "Jafféstraße" .
