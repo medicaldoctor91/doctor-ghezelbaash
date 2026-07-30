@@ -109,6 +109,30 @@ jobs:
           sed -i 's/21dfd32cfe2540e3c2594559f8c52599973118bfa38fd87a1f64e6ab0862a697/21dfd32cfe25febe5b5ac92887dc9116853aa56ca1649f4a9497104e60eb6109/' .github/scripts/apply_image_entity_hardening_v3.py
           python3 -m pip install --quiet rdflib pillow
           python3 .github/scripts/apply_image_entity_hardening_v3.py
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          base = 'https://www.ghezelbaash.ir/'
+          doctor = base + '#saeed-ghezelbash'
+          markdown = Path('src/pages/index.md').read_text(encoding='utf-8')
+          body = re.sub(r'\A---\r?\n[\s\S]*?\r?\n---\r?\n?', '', markdown, count=1)
+          body = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', body, flags=re.I)
+          body = re.sub(r'<style\b[^>]*>[\s\S]*?</style>', '', body, flags=re.I)
+          body = re.sub(r'<script\b[^>]*/\s*>', '', body, flags=re.I)
+          body = re.sub(r'\s+type=["\']application/ld\+json["\']', '', body, flags=re.I)
+          body = re.sub(r'\n{3,}', '\n\n', body).strip()
+          projection = (
+              '# Dr. Saeed Ghezelbash — Full canonical page export\n\n'
+              f'Canonical: {base}\n'
+              f'About: {doctor}\n'
+              f'Source: {base}\n'
+              'Language: fa-IR\n'
+              'Indexing: noindex, follow\n'
+              'Purpose: deterministic machine-readable projection of the complete canonical page content\n\n'
+              '---\n\n' + body + '\n'
+          )
+          Path('public/llms-full.txt').write_text(projection, encoding='utf-8')
+          PY
 
       - uses: actions/setup-node@v4
         with:
@@ -139,6 +163,7 @@ jobs:
             src/data/semantic/head-graph.min.jsonld \
             public/graph.jsonld \
             public/graph.ttl \
+            public/llms-full.txt \
             public/_headers \
             public/sitemap.xml \
             .github/scripts/apply_image_entity_hardening_v3.py \
