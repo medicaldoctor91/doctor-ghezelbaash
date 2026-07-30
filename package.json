@@ -5,9 +5,7 @@
   "type": "module",
   "packageManager": "npm@11.16.0",
   "scripts": {
-    "prebuild": "node scripts/sync-rich-results-csp.mjs",
-    "build": "astro build",
-    "repair-trigger": "true"
+    "build": "astro build"
   },
   "devDependencies": {
     "astro": "7.1.3"
