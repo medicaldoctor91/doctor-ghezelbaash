@@ -40,6 +40,7 @@ HISTORICAL_DOWNLOAD = BASE + "datasets/historical-patient-origin-summary.json#do
 GRAPH_VERSION = "1.2.0"
 SCHOLAR_ID = BASE + "#identifier-person-google-scholar"
 SCHOLAR_URL = "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
+KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"
 VIDEO_UPLOAD_DATES = {
     BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": "2024-12-18",
     BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": "2025-01-16",
@@ -307,6 +308,7 @@ for identifier in (DOCTOR, CLINIC, PORTRAIT, TEAM, OFFICE, COURSE, COURSE_INSTAN
 doctor = full_by.get(DOCTOR, {})
 clinic = full_by.get(CLINIC, {})
 require({"Person", "IndividualPhysician"} <= types(doctor), f"doctor types are incomplete: {types(doctor)}")
+require(isinstance(doctor.get("alternateName"), list) and doctor["alternateName"] and doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Full Graph Person.alternateName must begin with the current Google Knowledge Panel name")
 require(doctor.get("priceRange") == "$$$$", "doctor priceRange is not $$$$")
 require(clinic.get("priceRange") == "$$$$", "clinic priceRange is not $$$$")
 require(CLINIC in refs(doctor.get("owns")), "Doctor → owns → Clinic is missing")
@@ -323,6 +325,7 @@ require(scholar.get("@type") == "PropertyValue", "Google Scholar identifier node
 require(scholar.get("propertyID") == "Google Scholar Author ID", "Google Scholar propertyID is incorrect")
 require(scholar.get("value") == "BcWBirUAAAAJ" and scholar.get("url") == SCHOLAR_URL, "Google Scholar identifier value or URL is incorrect")
 head_doctor = head_by.get(DOCTOR, {})
+require(isinstance(head_doctor.get("alternateName"), list) and head_doctor["alternateName"] and head_doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Head Graph Person.alternateName must begin with the current Google Knowledge Panel name")
 require(SCHOLAR_ID in refs(head_doctor.get("identifier")), "Head Graph Person.identifier lacks Google Scholar")
 require(SCHOLAR_URL in refs(head_doctor.get("sameAs")), "Head Graph Person.sameAs lacks Google Scholar")
 require(head_by.get(SCHOLAR_ID) == scholar, "Head Graph Google Scholar identifier differs from Full Graph")
