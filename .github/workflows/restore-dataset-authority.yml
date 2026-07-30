@@ -35,7 +35,18 @@ jobs:
         run: python -m pip install --disable-pip-version-check rdflib
 
       - name: Apply deterministic Dataset authority migration
-        run: python scripts/upgrade_dataset_authority.py
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('scripts/upgrade_dataset_authority.py')
+          text = path.read_text(encoding='utf-8')
+          old = '<link rel="describedby" type="text/plain" href="https://www.ghezelbaash.ir/llms.txt" />'
+          new = '<link rel="describedby" href="https://www.ghezelbaash.ir/llms.txt" type="text/plain" />'
+          if text.count(old) != 1:
+              raise SystemExit('unexpected migration anchor state')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+          python scripts/upgrade_dataset_authority.py
 
       - name: Install project dependencies
         run: npm ci
