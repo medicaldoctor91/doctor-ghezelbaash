@@ -81,12 +81,13 @@ function buildMarkdownProjection(source) {
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
     .replace(/<script\b[^>]*\/\s*>/gi, '')
+    .replace(/\s+type=["']application\/ld\+json["']/gi, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
   requireCondition(!/<script\b/i.test(cleaned), 'index.md projection contains script markup');
   requireCondition(!/<style\b/i.test(cleaned), 'index.md projection contains style markup');
-  requireCondition(!/application\/ld\+json/i.test(cleaned), 'index.md projection contains JSON-LD');
+  requireCondition(!/"@context"\s*:|"@graph"\s*:/i.test(cleaned), 'index.md projection contains embedded JSON-LD');
   requireCondition(/<h1\s+id=/i.test(cleaned), 'index.md projection is missing the canonical H1');
 
   return `---\ntitle: ${JSON.stringify(title)}\ncanonical: "${HOME}"\nlang: "fa-IR"\nabout: "${PERSON}"\nsource: "${HOME}"\n---\n\n${cleaned}\n`;
