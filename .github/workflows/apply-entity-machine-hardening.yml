@@ -1,9 +1,6 @@
 name: Apply entity and machine-surface hardening
 
 on:
-  push:
-    branches:
-      - strengthen-entity-machine-surfaces-2026-07-30
   pull_request:
     branches:
       - main
@@ -38,6 +35,20 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/pages/index.md')
+          value = path.read_text(encoding='utf-8')
+          old = '''<details id="doctor-ghezelbaash-structured-data-section"
+          class="final-collapsible-section"
+          lang="en"
+          dir="ltr"
+          style="direction: ltr; text-align: left;">'''
+          new = '<details id="doctor-ghezelbaash-structured-data-section" class="final-collapsible-section">'
+          if value.count(old) != 1:
+              raise SystemExit(f'expected one multiline structured-data container, found {value.count(old)}')
+          path.write_text(value.replace(old, new, 1), encoding='utf-8')
+          PY
           cat .github/tmp/entity-hardening/transform.part* | base64 -d > /tmp/transform.py
           python /tmp/transform.py
 
