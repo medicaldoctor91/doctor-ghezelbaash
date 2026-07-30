@@ -1,0 +1,41 @@
+name: Patch third visible caption once
+
+on:
+  push:
+    branches:
+      - image-entity-hardening-v3
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: image-entity-hardening-v3
+          fetch-depth: 0
+      - name: Apply exact caption change and self-remove
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          old = 'سعید قزلباش همراه اعضای تیم بالینی'
+          new = 'دکتر سعید قزلباش همراه اعضای تیم بالینی'
+          paths = [Path('src/pages/index.md'), Path('public/llms-full.txt')]
+          for path in paths:
+              text = path.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one old caption, found {count}')
+              path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          Path('.github/workflows/patch-third-caption-once.yml').unlink()
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/pages/index.md public/llms-full.txt .github/workflows/patch-third-caption-once.yml
+          git commit -m 'Prefix doctor title in third visible image caption'
+          git push origin HEAD:image-entity-hardening-v3
