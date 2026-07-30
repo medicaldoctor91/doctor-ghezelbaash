@@ -1,0 +1,55 @@
+name: Apply visible physician captions
+
+on:
+  push:
+    branches: [image-entity-hardening-v3]
+    paths:
+      - '.github/workflows/apply-visible-captions.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: image-entity-hardening-v3
+
+      - name: Update visible captions and deterministic projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              '<figcaption>دکتر سعید قزلباش، پزشک ایرانی</figcaption>':
+                  '<figcaption>دکتر سعید قزلباش، پزشک زیبایی</figcaption>',
+              '<figcaption>سعید قزلباش در محیط بالینی</figcaption>':
+                  '<figcaption>دکتر سعید قزلباش در محیط بالینی</figcaption>',
+          }
+
+          for filename in ('src/pages/index.md', 'public/llms-full.txt'):
+              path = Path(filename)
+              text = path.read_text(encoding='utf-8')
+              for old, new in replacements.items():
+                  count = text.count(old)
+                  if count != 1:
+                      raise SystemExit(f'{filename}: expected exactly one occurrence of {old!r}, found {count}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text, encoding='utf-8')
+          PY
+
+          rm .github/workflows/apply-visible-captions.yml
+
+      - name: Commit final visible-only caption changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/pages/index.md public/llms-full.txt .github/workflows/apply-visible-captions.yml
+          git commit -m 'Update visible physician captions'
+          git push origin HEAD:image-entity-hardening-v3
