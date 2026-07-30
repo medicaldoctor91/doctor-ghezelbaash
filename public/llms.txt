@@ -8,8 +8,9 @@ Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The ph
 
 - [Official website](https://www.ghezelbaash.ir/): Canonical human-readable mega-landing page covering clinical reasoning, services, complications, revision, second opinion, education, research, clinic identity, and contact information.
 - [Full Knowledge Graph](https://www.ghezelbaash.ir/graph.jsonld): Authoritative JSON-LD graph for Dr. Saeed Ghezelbash, the clinic, services, research, education, media, geography, and identity reconciliation.
-- [Full Knowledge Graph — Turtle](https://www.ghezelbaash.ir/graph.ttl): RDF/Turtle serialization derived from the same authoritative graph; entity separation and canonical IRIs are preserved.
+- [Full Knowledge Graph — Turtle](https://www.ghezelbaash.ir/graph.ttl): Deterministic canonical N-Triples serialization published as a valid RDF 1.1 Turtle subset of the authoritative graph; datatypes, entity separation and canonical IRIs are preserved.
 - [Full LLM-readable page export](https://www.ghezelbaash.ir/llms-full.txt): Deterministic machine-oriented rendering of the complete canonical page content.
+- [Markdown page projection](https://www.ghezelbaash.ir/index.md): Deterministic non-canonical Markdown projection of the canonical single-page website; served with `noindex, follow` and excluded from the XML sitemap.
 - [Historical patient-origin dataset](https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json): Supporting geographic summary of historical patient origins; it is not a statement of current service availability.
 
 ## Physician identity
@@ -18,6 +19,7 @@ Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The ph
 - [Iran Medical Council profile](https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e): Medical council profile; code 167430.
 - [ORCID](https://orcid.org/0009-0001-9346-8475): Researcher identifier.
 - [OpenAlex](https://openalex.org/A5064828898): Research author identity.
+- [Google Scholar](https://scholar.google.com/citations?user=BcWBirUAAAAJ): Google Scholar author profile for Dr. Saeed Ghezelbash.
 
 ## Canonical image identity
 
