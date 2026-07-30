@@ -30,23 +30,33 @@ function graphNodes(document) {
 async function removeInvalidEventStatusFromJson(filePath) {
   const raw = await readFile(filePath, 'utf8');
   const document = JSON.parse(raw);
-  const event = graphNodes(document).find((node) => node?.['@id'] === EVENT_ID);
+  const nodes = graphNodes(document);
+  const event = nodes.find((node) => node?.['@id'] === EVENT_ID);
+  let changed = false;
+
+  for (const node of nodes) {
+    if (node?.eventStatus === EVENT_COMPLETED) {
+      delete node.eventStatus;
+      changed = true;
+    }
+  }
 
   if (event) {
-    delete event.eventStatus;
+    requireCondition(!Object.hasOwn(event, 'eventStatus'), `${filePath}: WPA XVII eventStatus must be omitted`);
     requireCondition(event.startDate === '2017-10-08', `${filePath}: unexpected WPA XVII startDate`);
     requireCondition(event.endDate === '2017-10-12', `${filePath}: unexpected WPA XVII endDate`);
   }
 
-  for (const node of graphNodes(document)) {
+  for (const node of nodes) {
     requireCondition(node?.eventStatus !== EVENT_COMPLETED, `${filePath}: invalid EventCompleted remains on ${node?.['@id'] ?? 'unknown node'}`);
   }
 
-  await writeFile(filePath, `${JSON.stringify(document)}\n`, 'utf8');
+  if (changed) await writeFile(filePath, `${JSON.stringify(document)}\n`, 'utf8');
 }
 
 async function removeInvalidEventStatusFromTurtle(filePath) {
   let ttl = await readFile(filePath, 'utf8');
+  const original = ttl;
 
   ttl = ttl
     .replace(/^[ \t]*(?:schema:eventStatus|<https:\/\/schema\.org\/eventStatus>)[ \t]+(?:schema:EventCompleted|<https:\/\/schema\.org\/EventCompleted>)[ \t]*[;.]?[ \t]*\r?\n/gm, '')
@@ -54,7 +64,7 @@ async function removeInvalidEventStatusFromTurtle(filePath) {
     .replace(/(?:schema:eventStatus|<https:\/\/schema\.org\/eventStatus>)[ \t]+(?:schema:EventCompleted|<https:\/\/schema\.org\/EventCompleted>)[ \t]*;[ \t]*/g, '');
 
   requireCondition(!ttl.includes('EventCompleted'), `${filePath}: EventCompleted remains after normalization`);
-  await writeFile(filePath, ttl, 'utf8');
+  if (ttl !== original) await writeFile(filePath, ttl, 'utf8');
 }
 
 function parseFrontmatter(markdown) {
@@ -126,4 +136,4 @@ for (const optionalGraphPath of [paths.headGraph, paths.publicHeadGraph]) {
 await generateMarkdownProjection();
 await updateHeaders();
 await updateLlms();
-console.log('Semantic artifacts prepared: event status removed, Markdown projection generated, discovery surfaces synchronized.');
+console.log('Semantic artifacts prepared: invalid EventCompleted values removed, Markdown projection generated, discovery surfaces synchronized.');
