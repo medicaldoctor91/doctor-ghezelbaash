@@ -53,13 +53,14 @@ jobs:
           python /tmp/transform.py
           python - <<'PY'
           from pathlib import Path
-          path = Path('src/pages/index.md')
-          value = path.read_text(encoding='utf-8')
           old = '<details id="doctor-ghezelbaash-structured-data-project" class="mega-section full-bleed">'
           final = '<details id="doctor-ghezelbaash-structured-data-project" class="final-collapsible-section" lang="en" dir="ltr">'
-          if value.count(old) != 1:
-              raise SystemExit(f'expected one transformed project container, found {value.count(old)}')
-          path.write_text(value.replace(old, final, 1), encoding='utf-8')
+          for filename in ('src/pages/index.md', 'public/llms-full.txt'):
+              path = Path(filename)
+              value = path.read_text(encoding='utf-8')
+              if value.count(old) != 1:
+                  raise SystemExit(f'{filename}: expected one transformed project container, found {value.count(old)}')
+              path.write_text(value.replace(old, final, 1), encoding='utf-8')
           PY
 
       - name: Build and synchronize CSP
