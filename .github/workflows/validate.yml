@@ -46,7 +46,7 @@ on:
         default: true
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: production-validation-${{ github.ref }}
@@ -95,44 +95,6 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
-          fetch-depth: 2
-          persist-credentials: true
-
-      - name: Apply approved image entity hardening
-        if: github.event_name == 'pull_request' && github.head_ref == 'image-entity-hardening-v3'
-        run: |
-          set -euo pipefail
-          sed -i 's/7bee37db6dba91f9d6dfd9e6be53a4adbf8c11f2bdb74a24f25a450f22cb522b/7bee37db6dba336a2cc1a344a6ca0ebd05338a0277b23581816982bc9901bc30/' .github/scripts/apply_image_entity_hardening_v3.py
-          sed -i 's/cff5c8d9cb28c3856241853238115ae85a3cf120ff834e9729cfdd846cda8b19/cff5c8d9cb2873d428fb79c98958eac941289cee5bb75b88a6f1293aa4ac455a/' .github/scripts/apply_image_entity_hardening_v3.py
-          sed -i 's/21dfd32cfe2540e3c2594559f8c52599973118bfa38fd87a1f64e6ab0862a697/21dfd32cfe25febe5b5ac92887dc9116853aa56ca1649f4a9497104e60eb6109/' .github/scripts/apply_image_entity_hardening_v3.py
-          python3 -m pip install --quiet rdflib pillow
-          python3 .github/scripts/apply_image_entity_hardening_v3.py
-          python3 - <<'PY'
-          import re
-          from pathlib import Path
-          base = 'https://www.ghezelbaash.ir/'
-          doctor = base + '#saeed-ghezelbash'
-          markdown = Path('src/pages/index.md').read_text(encoding='utf-8')
-          body = re.sub(r'\A---\r?\n[\s\S]*?\r?\n---\r?\n?', '', markdown, count=1)
-          body = re.sub(r'<script\b[^>]*>[\s\S]*?</script>', '', body, flags=re.I)
-          body = re.sub(r'<style\b[^>]*>[\s\S]*?</style>', '', body, flags=re.I)
-          body = re.sub(r'<script\b[^>]*/\s*>', '', body, flags=re.I)
-          body = re.sub(r'\s+type=["\']application/ld\+json["\']', '', body, flags=re.I)
-          body = re.sub(r'\n{3,}', '\n\n', body).strip()
-          projection = (
-              '# Dr. Saeed Ghezelbash — Full canonical page export\n\n'
-              f'Canonical: {base}\n'
-              f'About: {doctor}\n'
-              f'Source: {base}\n'
-              'Language: fa-IR\n'
-              'Indexing: noindex, follow\n'
-              'Purpose: deterministic machine-readable projection of the complete canonical page content\n\n'
-              '---\n\n' + body + '\n'
-          )
-          Path('public/llms-full.txt').write_text(projection, encoding='utf-8')
-          PY
 
       - uses: actions/setup-node@v4
         with:
@@ -148,32 +110,6 @@ jobs:
 
       - name: Validate immutable production contract
         run: python3 .github/scripts/validate_source.py
-
-      - name: Commit generated image and graph surfaces
-        if: github.event_name == 'pull_request' && github.head_ref == 'image-entity-hardening-v3'
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add \
-            public/media/images/physician \
-            src/pages/index.md \
-            src/components/DocumentHead.astro \
-            src/data/semantic/head-graph.min.jsonld \
-            public/graph.jsonld \
-            public/graph.ttl \
-            public/llms-full.txt \
-            public/_headers \
-            public/sitemap.xml \
-            .github/scripts/apply_image_entity_hardening_v3.py \
-            .github/scripts/validate_source.py
-          if git diff --cached --quiet; then
-            echo 'No generated changes.'
-            exit 0
-          fi
-          git commit -m 'Align image assets and entity graph [image-hardening-generated]'
-          git push origin HEAD:image-entity-hardening-v3
 
       - name: Upload generated build for forensic comparison
         if: always()
