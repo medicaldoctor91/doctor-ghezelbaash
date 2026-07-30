@@ -1,7 +1,7 @@
 # Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld
-# Source SHA-256: 66f07b41d76665b92a25774313589dd5d66dba35eded105d8cc1bf98cf37f36b
-# RDF triples: 6966
-# Canonical sorted N-Triples SHA-256: cfb05fd80d1d0d8777165fb16194c7f6f865a7767ce811c766e44fbc6bd51318
+# Source SHA-256: 791d58ee4c89d83190f81dd630d3715e4522f6b76db2ed507ca1bb62b31d32dc
+# RDF triples: 6970
+# Canonical sorted N-Triples SHA-256: f11024e827df85f693dfd9cf4c928fd06559e571bcd37fb316f577232eab845a
 
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -20,7 +20,6 @@
     schema:description "WPA XVII World Congress of Psychiatry, held in Berlin from 8 to 12 October 2017 under the theme “Psychiatry of the 21st Century: Context, Controversies and Commitment”." ;
     schema:endDate "2017-10-12" ;
     schema:eventAttendanceMode schema:OfflineEventAttendanceMode ;
-    schema:eventStatus schema:EventCompleted ;
     schema:location <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> ;
     schema:name "WPA XVII World Congress of Psychiatry" ;
     schema:organizer <https://www.ghezelbaash.ir/#dgppn>,
@@ -99,6 +98,7 @@
     schema:sameAs <https://www.instagram.com/reel/DDty1BcujKB/> ;
     schema:sha256 "53576d39dcd4d2f12b03bc52e569d90c221d21d8fb6f4fc8bf62237674bb2521" ;
     schema:thumbnailUrl <https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.webp> ;
+    schema:uploadDate "2024-12-18" ;
     schema:url <https://www.ghezelbaash.ir/#jalupro-vs-profhilo-selection> ;
     schema:width <https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo-width> .
 
@@ -121,6 +121,7 @@
     schema:sameAs <https://www.instagram.com/reel/DE5QDlepCe7/> ;
     schema:sha256 "519133e7b317dc58279f1dfb713410357b919877aa21e83a31beea4b57dae9d7" ;
     schema:thumbnailUrl <https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-subcision-technique.webp> ;
+    schema:uploadDate "2025-01-16" ;
     schema:url <https://www.ghezelbaash.ir/#subcision-for-tethered-acne-scars> ;
     schema:width <https://www.ghezelbaash.ir/#video-subcision-technique-width> .
 
@@ -1249,8 +1250,8 @@
         "جمعه: تعطیل"@fa .
 
 <https://www.ghezelbaash.ir/#clinic-geo> a schema:GeoCoordinates ;
-    schema:latitude "34.3401243"^^xsd:double ;
-    schema:longitude "47.0851778"^^xsd:double .
+    schema:latitude 3.434012e+01 ;
+    schema:longitude 4.708518e+01 .
 
 <https://www.ghezelbaash.ir/#clinic-opening-hours-sat-thu> a schema:OpeningHoursSpecification ;
     schema:closes "22:00" ;
@@ -2607,6 +2608,7 @@
     schema:sameAs <https://www.instagram.com/reel/DE_39nRIakj/> ;
     schema:sha256 "94101e9c6ac902bf9e7589dbece50157bea962c5369ef4ae8d4c2364d1de6f16" ;
     schema:thumbnailUrl <https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-thread-lift-workshop.webp> ;
+    schema:uploadDate "2025-01-19" ;
     schema:url <https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions> ;
     schema:width <https://www.ghezelbaash.ir/#video-thread-lift-workshop-width> .
 
@@ -2702,7 +2704,6 @@
     schema:audience <https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-audience> ;
     schema:description "ورکشاپ پیشرفته لیفت نخ دکتر سعید قزلباش، برگزارشده در بهمن ۱۴۰۳ در تهران برای متخصصان زیبایی از سراسر ایران." ;
     schema:eventAttendanceMode schema:OfflineEventAttendanceMode ;
-    schema:eventStatus schema:EventCompleted ;
     schema:instructor <https://www.ghezelbaash.ir/#saeed-ghezelbash> ;
     schema:location <https://www.ghezelbaash.ir/#city-tehran> ;
     schema:name "Advanced Thread Lift Workshop in Tehran"@en,
@@ -4284,6 +4285,7 @@
     schema:sameAs <https://www.instagram.com/reel/DIy6sUWOK6-/> ;
     schema:sha256 "fa008bcc63b51d4f46f49acdce2d2e42500bad42c3c7b024a3b8847e93734edb" ;
     schema:thumbnailUrl <https://www.ghezelbaash.ir/media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.webp> ;
+    schema:uploadDate "2025-04-23" ;
     schema:url <https://www.ghezelbaash.ir/#aesthetic-physician-ratings-patient-satisfaction-ckb-iq> ;
     schema:width <https://www.ghezelbaash.ir/#video-kurdish-patient-experience-width> .
 
@@ -7626,6 +7628,7 @@
         "دکتر"@fa ;
     schema:identifier <https://www.ghezelbaash.ir/#identifier-person-github>,
         <https://www.ghezelbaash.ir/#identifier-person-google-kgid>,
+        <https://www.ghezelbaash.ir/#identifier-person-google-scholar>,
         <https://www.ghezelbaash.ir/#identifier-person-huggingface>,
         <https://www.ghezelbaash.ir/#identifier-person-instagram>,
         <https://www.ghezelbaash.ir/#identifier-person-irimc>,
@@ -7664,6 +7667,7 @@
     schema:sameAs <https://about.me/ghezelbaash>,
         <https://openalex.org/A5064828898>,
         <https://orcid.org/0009-0001-9346-8475>,
+        <https://scholar.google.com/citations?user=BcWBirUAAAAJ>,
         <https://twitter.com/Qezelbaash>,
         <https://www.facebook.com/Doctor.Ghezelbaash>,
         <https://www.facebook.com/Ghezelbaash>,

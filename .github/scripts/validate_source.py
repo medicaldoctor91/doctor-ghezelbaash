@@ -34,6 +34,14 @@ ARTICLE_2021 = BASE + "#article-mdd-attachment-dissociation-trauma-2021"
 COUNTRY_IR = BASE + "#country-iran"
 COUNTRY_IQ = BASE + "#country-iraq"
 DATASET = BASE + "graph.jsonld#dataset"
+SCHOLAR_ID = BASE + "#identifier-person-google-scholar"
+SCHOLAR_URL = "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
+VIDEO_UPLOAD_DATES = {
+    BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": "2024-12-18",
+    BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": "2025-01-16",
+    BASE + "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4": "2025-01-19",
+    BASE + "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4": "2025-04-23",
+}
 COMMONS_IMAGE_IDS = {PORTRAIT, TEAM, OFFICE}
 
 errors: list[str] = []
@@ -170,7 +178,7 @@ class DocumentParser(HTMLParser):
 
 
 required_files = [
-    "dist/index.html", "dist/404.html", "public/index.md", "dist/index.md",
+    "dist/index.html", "dist/404.html", "src/pages/index.md.ts", "dist/index.md",
     "public/graph.jsonld", "public/graph.ttl",
     "src/data/semantic/head-graph.min.jsonld", "public/_headers", "public/_redirects",
     "public/robots.txt", "public/sitemap.xml", "public/llms.txt", "public/llms-full.txt",
@@ -185,7 +193,7 @@ for filename in required_files:
     require(Path(filename).is_file(), f"missing required file: {filename}")
 
 for filename in (
-    "index.md", "graph.jsonld", "graph.ttl", "_headers", "_redirects", "robots.txt", "sitemap.xml",
+    "graph.jsonld", "graph.ttl", "_headers", "_redirects", "robots.txt", "sitemap.xml",
     "llms.txt", "llms-full.txt", "doctor.vcf", "clinic.vcf", "favicon.svg", "favicon.ico",
     "favicon-48x48.png", "apple-touch-icon.png", "site.webmanifest",
 ):
@@ -286,8 +294,9 @@ require(set(head_ids) <= set(full_ids), f"Head Graph nodes absent from Full Grap
 first_party_head_refs = {identifier for identifier in collect_ids(head_nodes) if identifier.startswith(BASE)}
 require(first_party_head_refs <= set(full_ids), f"first-party Head references absent from Full Graph: {sorted(first_party_head_refs - set(full_ids))[:30]}")
 full_by = {item["@id"]: item for item in full_nodes if isinstance(item, dict) and item.get("@id")}
+head_by = {item["@id"]: item for item in head_nodes if isinstance(item, dict) and item.get("@id")}
 
-for identifier in (DOCTOR, CLINIC, PORTRAIT, TEAM, OFFICE, COURSE, COURSE_INSTANCE, PRESENTATION, EVENT, ARTICLE_2016, ARTICLE_2021, COUNTRY_IR, COUNTRY_IQ, DATASET):
+for identifier in (DOCTOR, CLINIC, PORTRAIT, TEAM, OFFICE, COURSE, COURSE_INSTANCE, PRESENTATION, EVENT, ARTICLE_2016, ARTICLE_2021, COUNTRY_IR, COUNTRY_IQ, DATASET, SCHOLAR_ID):
     require(identifier in full_by, f"required Full Graph node missing: {identifier}")
 
 doctor = full_by.get(DOCTOR, {})
@@ -302,6 +311,16 @@ require(DOCTOR in refs(clinic.get("owner")), "Clinic → owner → Doctor is mis
 require(DOCTOR in refs(clinic.get("founder")), "Clinic → founder → Doctor is missing")
 require(PORTRAIT in refs(doctor.get("image")), "canonical portrait is absent from Person.image")
 require(TEAM not in refs(doctor.get("image")) and OFFICE not in refs(doctor.get("image")), "contextual image is incorrectly a primary Person image")
+require(SCHOLAR_ID in refs(doctor.get("identifier")), "Google Scholar identifier is absent from Person.identifier")
+require(SCHOLAR_URL in refs(doctor.get("sameAs")), "Google Scholar profile is absent from Person.sameAs")
+scholar = full_by.get(SCHOLAR_ID, {})
+require(scholar.get("@type") == "PropertyValue", "Google Scholar identifier node is not PropertyValue")
+require(scholar.get("propertyID") == "Google Scholar Author ID", "Google Scholar propertyID is incorrect")
+require(scholar.get("value") == "BcWBirUAAAAJ" and scholar.get("url") == SCHOLAR_URL, "Google Scholar identifier value or URL is incorrect")
+head_doctor = head_by.get(DOCTOR, {})
+require(SCHOLAR_ID in refs(head_doctor.get("identifier")), "Head Graph Person.identifier lacks Google Scholar")
+require(SCHOLAR_URL in refs(head_doctor.get("sameAs")), "Head Graph Person.sameAs lacks Google Scholar")
+require(head_by.get(SCHOLAR_ID) == scholar, "Head Graph Google Scholar identifier differs from Full Graph")
 
 course = full_by.get(COURSE, {})
 instance = full_by.get(COURSE_INSTANCE, {})
@@ -314,9 +333,10 @@ event = full_by.get(EVENT, {})
 require(event.get("startDate") == "2017-10-08" and event.get("endDate") == "2017-10-12", "WPA XVII event dates are incorrect")
 require(bool(refs(event.get("organizer"))), "WPA XVII organizer is missing")
 require("eventStatus" not in event, "WPA XVII eventStatus must be omitted for this completed historical event")
-for node in full_nodes:
-    if isinstance(node, dict):
-        require(node.get("eventStatus") != "https://schema.org/EventCompleted", f"{node.get('@id')}: invalid EventCompleted status")
+for graph_name, nodes in (("Full Graph", full_nodes), ("Head Graph", head_nodes)):
+    for node in nodes:
+        if isinstance(node, dict):
+            require(node.get("eventStatus") != "https://schema.org/EventCompleted", f"{graph_name} {node.get('@id')}: invalid EventCompleted status")
 require("PresentationDigitalDocument" in types(full_by.get(PRESENTATION, {})), "2017 congress work is not PresentationDigitalDocument")
 for article_id in (ARTICLE_2016, ARTICLE_2021):
     article = full_by.get(article_id, {})
@@ -340,8 +360,21 @@ require({DOCTOR, CLINIC} <= set(refs(full_by.get(TEAM, {}).get("about"))), "Team
 require({DOCTOR, CLINIC} <= set(refs(full_by.get(OFFICE, {}).get("about"))), "Office master does not describe both Doctor and Clinic")
 formats = {full_by.get(identifier, {}).get("encodingFormat") for identifier in refs(full_by.get(DATASET, {}).get("distribution"))}
 require({"application/ld+json", "text/turtle"} <= formats, "Dataset lacks JSON-LD and Turtle distributions")
+full_videos = {node.get("contentUrl"): node for node in full_nodes if isinstance(node, dict) and "VideoObject" in types(node) and node.get("contentUrl") in VIDEO_UPLOAD_DATES}
+require(set(full_videos) == set(VIDEO_UPLOAD_DATES), f"Full Graph video set differs from canonical mapping: {sorted(full_videos)}")
+for content_url, expected_date in VIDEO_UPLOAD_DATES.items():
+    video = full_videos.get(content_url, {})
+    require(video.get("uploadDate") == expected_date, f"{content_url}: uploadDate is not {expected_date}")
+    asset = ROOT / "public" / content_url.removeprefix(BASE)
+    require(asset.is_file(), f"VideoObject contentUrl asset is missing: {asset}")
+for head_video in (node for node in head_nodes if isinstance(node, dict) and "VideoObject" in types(node)):
+    content_url = head_video.get("contentUrl")
+    require(content_url in full_videos, f"Head Graph VideoObject is absent from Full Graph: {content_url}")
+    full_video = full_videos.get(content_url, {})
+    for property_name in ("@id", "contentUrl", "uploadDate", "sameAs"):
+        require(head_video.get(property_name) == full_video.get(property_name), f"Head/Full VideoObject mismatch for {content_url}: {property_name}")
 
-markdown_projection = read_text("public/index.md")
+markdown_projection = read_text("dist/index.md")
 require(bool(markdown_projection.strip()), "public/index.md is empty")
 require('canonical: "https://www.ghezelbaash.ir/"' in markdown_projection, "index.md canonical frontmatter is missing")
 require('<h1 id="saeed-ghezelbash-aesthetic-medicine">' in markdown_projection, "index.md canonical H1 is missing")
@@ -366,10 +399,18 @@ robots = read_text("public/robots.txt")
 require("Sitemap: https://www.ghezelbaash.ir/sitemap.xml" in robots, "robots.txt does not advertise the canonical sitemap")
 require(not re.search(r"^\s*Disallow:\s*/(?:graph\.jsonld|graph\.ttl)", robots, re.M | re.I), "robots.txt blocks a graph resource")
 try:
-    namespace = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-    locations = [element.text for element in ET.parse("public/sitemap.xml").getroot().findall("sm:url/sm:loc", namespace)]
+    namespace = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9", "video": "http://www.google.com/schemas/sitemap-video/1.1"}
+    sitemap_root = ET.parse("public/sitemap.xml").getroot()
+    locations = [element.text for element in sitemap_root.findall("sm:url/sm:loc", namespace)]
     require(locations == [BASE], f"sitemap must contain exactly the canonical homepage, found: {locations}")
     require(BASE + "index.md" not in locations, "index.md entered sitemap.xml")
+    sitemap_video_dates = {}
+    for video in sitemap_root.findall("sm:url/video:video", namespace):
+        content = video.findtext("video:content_loc", namespaces=namespace)
+        publication_date = video.findtext("video:publication_date", namespaces=namespace)
+        if content:
+            sitemap_video_dates[content] = publication_date
+    require(sitemap_video_dates == VIDEO_UPLOAD_DATES, f"video sitemap dates differ from Full Graph: {sitemap_video_dates}")
 except Exception as exc:
     errors.append(f"sitemap.xml parse failure: {exc}")
 
