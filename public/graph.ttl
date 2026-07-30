@@ -1,7 +1,7 @@
 # Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld
-# Source SHA-256: 791d58ee4c89d83190f81dd630d3715e4522f6b76db2ed507ca1bb62b31d32dc
-# RDF triples: 6970
-# Canonical sorted N-Triples SHA-256: f11024e827df85f693dfd9cf4c928fd06559e571bcd37fb316f577232eab845a
+# Source SHA-256: d284cff57bb79fec8608f86382dfd11d0b209ad6aba1f5523a46e4526e72ca92
+# RDF triples: 6974
+# Canonical sorted N-Triples SHA-256: c0635cc017ce23590f47fc15c0024252b67baccdb57d75a2ba76eec3c30933c0
 
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
@@ -1418,6 +1418,11 @@
     schema:propertyID "Google Knowledge Graph ID" ;
     schema:url <https://www.google.com/search?kgmid=/g/11nqdfk76c> ;
     schema:value "/g/11nqdfk76c" .
+
+<https://www.ghezelbaash.ir/#identifier-person-google-scholar> a schema:PropertyValue ;
+    schema:propertyID "Google Scholar Author ID" ;
+    schema:url <https://scholar.google.com/citations?user=BcWBirUAAAAJ> ;
+    schema:value "BcWBirUAAAAJ" .
 
 <https://www.ghezelbaash.ir/#identifier-person-huggingface> a schema:PropertyValue ;
     schema:propertyID "Hugging Face user ID" ;
