@@ -8218,7 +8218,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
       decoding="async"
     />
   </picture>
-  <figcaption>سعید قزلباش همراه اعضای تیم بالینی</figcaption>
+  <figcaption>دکتر سعید قزلباش همراه اعضای تیم بالینی</figcaption>
 </figure>
 
 <h3 id="clinic-consultation-treatment-and-follow-up-path"><a href="https://www.instagram.com/doctor.ghezelbaash/" rel="me external">مسیر مراجعه؛ از سؤال اولیه تا تصمیم و پیگیری</a></h3>
