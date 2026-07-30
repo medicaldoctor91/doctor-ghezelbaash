@@ -29,9 +29,9 @@ Purpose: deterministic machine-readable projection of the complete canonical pag
       width="640"
       height="427"
       alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه"
-      loading="lazy"
+      loading="eager"
       decoding="async"
-      fetchpriority="low"
+      fetchpriority="high"
     />
   </picture>
   <figcaption>دکتر سعید قزلباش، پزشک ایرانی</figcaption>
@@ -83,7 +83,7 @@ Purpose: deterministic machine-readable projection of the complete canonical pag
     <li><a href="#complications-aftercare-and-follow-up">عوارض، مراقبت، اصلاح و پیگیری</a></li>
     <li><a href="#saeed-ghezelbash-diagnostic-philosophy">فلسفه تشخیصی دکتر سعید قزلباش</a></li>
     <li><a href="#aesthetic-treatment-failure-from-diagnostic-error">شکست درمان، نظر دوم و اصلاح نتایج قبلی</a></li>
-    <li><a href="#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک دکتر سعید قزلباش در کرمانشاه و مسیر مراجعه</a></li>
+    <li><a href="#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه و مسیر مراجعه</a></li>
   </ol>
 </nav>
 
@@ -8196,7 +8196,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
 
 <p>برای ارزیابی اولیه می‌توانید اطلاعات را از <a href="https://ig.me/m/doctor.ghezelbaash">دایرکت مستقیم با دکتر سعید قزلباش</a> بفرستید یا با <a href="tel:+989308209494">۰۹۳۰ ۸۲۰ ۹۴۹۴</a> تماس بگیرید. این ارزیابی اولیه جای معاینه را نمی‌گیرد، اما می‌تواند روشن کند آیا پرونده ارزش مراجعه حضوری دارد، چه مدارکی لازم است و آیا احتمال چند مرحله درمان وجود دارد.</p>
 
-<h2 id="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"><a href="/graph.jsonld">کلینیک دکتر سعید قزلباش در کرمانشاه؛ معاینه، درمان، اصلاح و پیگیری مستقیم</a></h2>
+<h2 id="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"><a href="/graph.jsonld">کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ معاینه، درمان، اصلاح و پیگیری مستقیم</a></h2>
 
 <p class="section-answer"><strong>محور تصمیم درمان دکتر سعید قزلباش است؛ کلینیک جایی است که معاینه، درمان و پیگیری او در آن انجام می‌شود.</strong> <a href="#diagnosis-before-aesthetic-treatment-selection">معاینه</a>، قبول یا رد درمان، طراحی روش، توضیح ریسک و برنامه پیگیری با مسئولیت مستقیم دکتر سعید قزلباش انجام می‌شود؛ از اولین ارزیابی تا تصمیم درباره ترمیم، <a href="#aesthetic-treatment-failure-from-diagnostic-error">اصلاح</a> یا ارجاع.</p>
 
@@ -8280,7 +8280,7 @@ AAD توصیه می‌کند بعد از تزریق، برای کاهش قرمز
 
 <p>قبل از مراجعه، فهرست داروها، بیماری‌های زمینه‌ای، حساسیت‌ها، جراحی‌ها، تزریق‌ها و درمان‌های قبلی را آماده کنید. در درمان زیبایی، پنهان‌کردن سابقه فیلر یا دارو برای «ساده‌تر شدن پرونده» پرونده را ساده نمی‌کند؛ تصمیم را کور می‌کند.</p>
 
-<h3 id="saeed-ghezelbash-clinic-contact-and-location"><a href="https://www.instagram.com/doctor.ghezelbaash/" rel="me external">آدرس و تماس رسمی کلینیک دکتر سعید قزلباش در کرمانشاه</a></h3>
+<h3 id="saeed-ghezelbash-clinic-contact-and-location"><a href="https://www.instagram.com/doctor.ghezelbaash/" rel="me external">آدرس و تماس رسمی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه</a></h3>
 
 <address style="font-style: normal;">نشانی مراجعه حضوری: کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا، کلینیک زیبایی دکتر سعید قزلباش. برای هماهنگی با شماره <a href="tel:+989308209494">۰۹۳۰ ۸۲۰ ۹۴۹۴</a> تماس بگیرید یا از طریق <a href="https://www.instagram.com/doctor.ghezelbaash/" rel="me">صفحه رسمی اینستاگرام دکتر سعید قزلباش</a> پیام بفرستید. <a href="https://www.google.com/maps?cid=12350483144643112463" rel="external">موقعیت کلینیک در Google Maps</a> نیز برای مسیریابی در دسترس است.</address>
 
@@ -9870,7 +9870,7 @@ in Kermanshah, Iran.
 </p>
 
 <p>
-The project publishes canonical entity identifiers, public clinic information, service taxonomy, linked-source relationships and reusable JSON and JSON-LD files. The
+The project publishes canonical entity identifiers, public clinic information, service taxonomy, linked-source relationships and reusable JSON and JSON-LD files. The current live knowledge graph is version 1.2.1; version 1.0.0 remains the archived DOI release. The
 <a href="https://github.com/medicaldoctor91/doctor-ghezelbaash">GitHub source repository</a>
 is its version-controlled code and structured-data hub. The
 <a href="https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/v1.0.0">version 1.0.0 release</a>,
@@ -9918,7 +9918,10 @@ and
 <dt><strong>Source repository</strong></dt>
 <dd><a href="https://github.com/medicaldoctor91/doctor-ghezelbaash">medicaldoctor91/doctor-ghezelbaash</a></dd>
 
-<dt><strong>Published release</strong></dt>
+<dt><strong>Current live graph version</strong></dt>
+<dd>Version 1.2.1 — synchronized canonical JSON-LD and Turtle serializations</dd>
+
+<dt><strong>Archived DOI release</strong></dt>
 <dd><a href="https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/v1.0.0">Version 1.0.0</a> — 25 February 2026</dd>
 
 <dt><strong>Archived DOI record</strong></dt>
@@ -9938,7 +9941,7 @@ and
 </dl>
 
 <p>
-<strong>Preferred citation:</strong>
+<strong>Archived DOI release citation:</strong>
 Saeed Ghezelbash. <em>Doctor Ghezelbash — Public Brand Knowledge Base &amp; Knowledge Graph (JSON/JSON-LD)</em>. Version 1.0.0, 25 February 2026. Zenodo.
 <a href="https://doi.org/10.5281/zenodo.18765169">https://doi.org/10.5281/zenodo.18765169</a>.
 </p>

@@ -105,7 +105,7 @@
 <https://www.ghezelbaash.ir/#acne-scar-resurfacing-microneedling-fractional-laser-and-peeling> <https://schema.org/url> <https://www.ghezelbaash.ir/#acne-scar-resurfacing-microneedling-fractional-laser-and-peeling> .
 <https://www.ghezelbaash.ir/#action-contact-clinic> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/CommunicateAction> .
 <https://www.ghezelbaash.ir/#action-contact-clinic> <https://schema.org/agent> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#action-contact-clinic> <https://schema.org/name> "تماس با کلینیک دکتر سعید قزلباش" .
+<https://www.ghezelbaash.ir/#action-contact-clinic> <https://schema.org/name> "تماس با کلینیک زیبایی دکتر سعید قزلباش" .
 <https://www.ghezelbaash.ir/#action-contact-clinic> <https://schema.org/target> <tel:+989308209494> .
 <https://www.ghezelbaash.ir/#action-follow-instagram> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/FollowAction> .
 <https://www.ghezelbaash.ir/#action-follow-instagram> <https://schema.org/name> "مشاهده صفحه رسمی دکتر سعید قزلباش" .
@@ -3910,7 +3910,7 @@
 <https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction> <https://schema.org/alternateName> "کرایولیپولیز در کرمانشاه" .
 <https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction> <https://schema.org/bodyLocation> "Body" .
 <https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction> <https://schema.org/description> "A localized-fat reduction service provided after physician-led candidacy assessment at Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah."@en .
-<https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction> <https://schema.org/description> "خدمت ارزیابی و درمان چربی موضعی با رویکرد انتخاب بیمار و کانتورینگ بدن در کلینیک دکتر سعید قزلباش در کرمانشاه."@fa .
+<https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction> <https://schema.org/description> "خدمت ارزیابی و درمان چربی موضعی با رویکرد انتخاب بیمار و کانتورینگ بدن در کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه."@fa .
 <https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction> <https://schema.org/name> "Cryolipolysis and localized fat reduction"@en .
 <https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction> <https://schema.org/name> "کرایولیپولیز و کاهش چربی موضعی"@fa .
 <https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction> <https://schema.org/procedureType> <https://schema.org/NoninvasiveProcedure> .
@@ -6074,7 +6074,7 @@
 <https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location> <https://schema.org/inLanguage> "fa-IR" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/#webpage> .
-<https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location> <https://schema.org/name> "آدرس و تماس رسمی کلینیک دکتر سعید قزلباش در کرمانشاه" .
+<https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location> <https://schema.org/name> "آدرس و تماس رسمی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location> <https://schema.org/position> "1006"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location> <https://schema.org/url> <https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location> .
 <https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-role> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/OrganizationRole> .
