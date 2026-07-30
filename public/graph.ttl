@@ -2300,6 +2300,7 @@
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/distribution> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/isAccessibleForFree> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/isBasedOn> <https://www.ghezelbaash.ir/#webpage> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/graph.jsonld#dataset> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "Iran" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "Iraq" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "Kermanshah aesthetic clinic" .
@@ -2312,6 +2313,7 @@
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#country-iran> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#country-iraq> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/temporalCoverage> "historical" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/url> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json> .
 <https://www.ghezelbaash.ir/#hyaluronidase-filler-dissolution-limitations> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
 <https://www.ghezelbaash.ir/#hyaluronidase-filler-dissolution-limitations> <https://schema.org/about> <https://www.ghezelbaash.ir/#biomedical-concept-dermal-fillers> .
 <https://www.ghezelbaash.ir/#hyaluronidase-filler-dissolution-limitations> <https://schema.org/about> <https://www.ghezelbaash.ir/#biomedical-concept-hyaluronidase> .
@@ -3389,7 +3391,7 @@
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "Berlin, Germany"@en .
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "برلین، آلمان"@fa .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:cb0 .
+<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:Na293ec1b58ad4710b4729960f6c73603 .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/containedInPlace> <https://www.ghezelbaash.ir/#place-berlin-germany> .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/name> "Messe Berlin / CityCube Berlin" .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q700236> .
@@ -6907,7 +6909,7 @@
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/mentions> <https://www.ghezelbaash.ir/#presentation-attachment-style-dissociative-depression-2017> .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/name> "Dr. Saeed Ghezelbaash Public Knowledge Graph" .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/publisher> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/version> "1.2.0" .
+<https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/version> "1.2.1" .
 <https://www.ghezelbaash.ir/graph.jsonld#download> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/DataDownload> .
 <https://www.ghezelbaash.ir/graph.jsonld#download> <https://schema.org/contentUrl> <https://www.ghezelbaash.ir/graph.jsonld> .
 <https://www.ghezelbaash.ir/graph.jsonld#download> <https://schema.org/encodingFormat> "application/ld+json" .
@@ -6938,8 +6940,8 @@
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/identifier> <urn:sha256-property:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/name> "Google Maps clinic reputation snapshot — 2026-07-25" .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/width> <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590-width> .
-_:cb0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
-_:cb0 <https://schema.org/addressCountry> "DE" .
-_:cb0 <https://schema.org/addressLocality> "Berlin" .
-_:cb0 <https://schema.org/postalCode> "14055" .
-_:cb0 <https://schema.org/streetAddress> "Jafféstraße" .
+_:Na293ec1b58ad4710b4729960f6c73603 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
+_:Na293ec1b58ad4710b4729960f6c73603 <https://schema.org/addressCountry> "DE" .
+_:Na293ec1b58ad4710b4729960f6c73603 <https://schema.org/addressLocality> "Berlin" .
+_:Na293ec1b58ad4710b4729960f6c73603 <https://schema.org/postalCode> "14055" .
+_:Na293ec1b58ad4710b4729960f6c73603 <https://schema.org/streetAddress> "Jafféstraße" .

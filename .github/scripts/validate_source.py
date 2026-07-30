@@ -37,7 +37,7 @@ DATASET = BASE + "graph.jsonld#dataset"
 PROJECT = BASE + "#doctor-ghezelbaash-structured-data-project"
 HISTORICAL_DATASET = BASE + "#historical-patient-origin-summary"
 HISTORICAL_DOWNLOAD = BASE + "datasets/historical-patient-origin-summary.json#download"
-GRAPH_VERSION = "1.2.0"
+GRAPH_VERSION = "1.2.1"
 SCHOLAR_ID = BASE + "#identifier-person-google-scholar"
 SCHOLAR_URL = "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
 KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"
@@ -187,6 +187,7 @@ required_files = [
     "public/graph.jsonld", "public/graph.ttl",
     "src/data/semantic/head-graph.min.jsonld", "public/_headers", "public/_redirects",
     "public/robots.txt", "public/sitemap.xml", "public/llms.txt", "public/llms-full.txt",
+    "public/datasets/historical-patient-origin-summary.json",
     "public/doctor.vcf", "public/clinic.vcf", "public/favicon.svg", "public/favicon.ico",
     "public/favicon-48x48.png", "public/apple-touch-icon.png", "public/site.webmanifest",
     "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg",
@@ -199,7 +200,8 @@ for filename in required_files:
 
 for filename in (
     "graph.jsonld", "graph.ttl", "_headers", "_redirects", "robots.txt", "sitemap.xml",
-    "llms.txt", "llms-full.txt", "doctor.vcf", "clinic.vcf", "favicon.svg", "favicon.ico",
+    "llms.txt", "llms-full.txt", "datasets/historical-patient-origin-summary.json",
+    "doctor.vcf", "clinic.vcf", "favicon.svg", "favicon.ico",
     "favicon-48x48.png", "apple-touch-icon.png", "site.webmanifest",
 ):
     source = ROOT / "public" / filename
@@ -226,6 +228,7 @@ require('rel="canonical"' in html and BASE in html, "canonical homepage link is 
 require('/graph.jsonld' in html and 'rel="describedby"' in html, "HTML does not discover graph.jsonld")
 require('/graph.ttl' in html and 'rel="describedby"' in html, "HTML does not discover graph.ttl")
 require('/llms.txt' in html and 'rel="describedby"' in html, "HTML does not discover llms.txt")
+require('/datasets/historical-patient-origin-summary.json' in html and 'type="application/json"' in html, "HTML does not discover the historical Dataset")
 require('rel="alternate" type="text/markdown" hreflang="fa-IR" href="https://www.ghezelbaash.ir/index.md"' in html, "HTML does not discover index.md")
 require('rel="about" href="https://www.ghezelbaash.ir/#saeed-ghezelbash"' in html, "HTML does not expose the physician about relation")
 require('type="application/ld+json"' in html, "inline Head Graph is missing")
@@ -413,7 +416,7 @@ try:
     namespace = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9", "video": "http://www.google.com/schemas/sitemap-video/1.1"}
     sitemap_root = ET.parse("public/sitemap.xml").getroot()
     locations = [element.text for element in sitemap_root.findall("sm:url/sm:loc", namespace)]
-    expected_locations = [BASE, BASE + "graph.jsonld", BASE + "graph.ttl", BASE + "llms.txt"]
+    expected_locations = [BASE, BASE + "graph.jsonld", BASE + "graph.ttl", BASE + "llms.txt", BASE + "datasets/historical-patient-origin-summary.json"]
     require(locations == expected_locations, f"sitemap discovery set differs from the canonical policy: {locations}")
     require(BASE + "index.md" not in locations, "index.md entered sitemap.xml")
     sitemap_video_dates = {}
@@ -481,22 +484,36 @@ require(historical_download.get("contentUrl") == BASE + "datasets/historical-pat
 require(historical_download.get("encodingFormat") == "application/json", "historical DataDownload encodingFormat is incorrect")
 require(HISTORICAL_DATASET in refs(full_by.get(PROJECT, {}).get("hasPart")), "structured-data project does not include the historical Dataset")
 require(HISTORICAL_DATASET in refs(full_by.get(DATASET, {}).get("hasPart")), "Full Graph Dataset does not include the historical Dataset")
+require(HISTORICAL_DATASET in head_by, "historical Dataset is absent from the inline Head Graph")
+require(HISTORICAL_DOWNLOAD in head_by, "historical DataDownload is absent from the inline Head Graph")
+for property_name in ("@type", "name", "url", "creator", "publisher", "datePublished", "dateModified", "license", "distribution"):
+    require(head_by.get(HISTORICAL_DATASET, {}).get(property_name) == historical.get(property_name), f"Head/Full historical Dataset mismatch: {property_name}")
+require(historical.get("url") == BASE + "datasets/historical-patient-origin-summary.json", "historical Dataset URL is not its canonical JSON distribution")
+require(historical.get("isAccessibleForFree") is True, "historical Dataset is not declared freely accessible")
 raw_historical = load_json("public/datasets/historical-patient-origin-summary.json")
 require(raw_historical.get("datasetId") == HISTORICAL_DATASET, "raw historical datasetId differs from graph identity")
 require(raw_historical.get("dateModified") == "2026-07-30", "raw historical dataset dateModified is stale")
 require(raw_historical.get("license") == "https://creativecommons.org/licenses/by/4.0/", "raw historical dataset license is missing")
 require(raw_historical.get("creator") == DOCTOR and raw_historical.get("publisher") == DOCTOR, "raw historical dataset attribution differs from Person identity")
+require(raw_historical.get("canonicalUrl") == BASE + "datasets/historical-patient-origin-summary.json", "raw historical Dataset canonicalUrl is incorrect")
+indexing_policy = str(raw_historical.get("indexingPolicy", ""))
+require("index, follow" in indexing_policy and "noindex" not in indexing_policy.lower(), "raw historical Dataset indexing policy is not index, follow")
 
-for path in ("/graph.jsonld", "/graph.ttl", "/llms.txt"):
+for path in ("/graph.jsonld", "/graph.ttl", "/llms.txt", "/datasets/historical-patient-origin-summary.json"):
     block = header_block(path)
     require("X-Robots-Tag: index, follow" in block, f"{path} is not explicitly indexable")
     require("noindex" not in block.lower(), f"{path} is accidentally noindex")
-for path in ("/index.md", "/llms-full.txt", "/datasets/*"):
+for path in ("/index.md", "/llms-full.txt"):
     block = header_block(path)
     require("X-Robots-Tag: noindex, follow" in block, f"{path} is not a noindex, follow projection/distribution")
 for path in ("/doctor.vcf", "/clinic.vcf", "/site.webmanifest"):
     require("X-Robots-Tag: noindex" in header_block(path), f"{path} utility resource is indexable")
 require('</llms.txt>; rel="describedby"; type="text/plain"' in headers, "homepage HTTP Link header does not discover llms.txt")
+require('</datasets/historical-patient-origin-summary.json>; rel="describedby"; type="application/json"' in headers, "homepage HTTP Link header does not discover the historical Dataset")
+llms_index = read_text("public/llms.txt")
+for marker in ("## Authoritative First-Party Dataset", HISTORICAL_DATASET, BASE + "datasets/historical-patient-origin-summary.json", "independently discoverable, indexable first-party research asset"):
+    require(marker in llms_index, f"llms.txt does not promote the historical Dataset: {marker}")
+require("supporting distribution" not in llms_index.lower() and "raw historical dataset distributions are intentionally crawlable but noindex" not in llms_index.lower(), "llms.txt still devalues the historical Dataset")
 
 def expected_full_projection(markdown: str) -> str:
     body = re.sub(r"\A---\r?\n[\s\S]*?\r?\n---\r?\n?", "", markdown, count=1)
