@@ -1,0 +1,45 @@
+name: Apply approved entity upgrades
+
+on:
+  push:
+    branches: [apply-approved-entity-upgrades-2026-07-30]
+    paths:
+      - '.github/scripts/apply_approved_upgrades.py'
+      - '.github/workflows/apply-approved-upgrades.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply approved source changes
+        run: python3 .github/scripts/apply_approved_upgrades.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+
+      - name: Build and validate
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run build
+          python3 -m pip install --quiet rdflib
+          python3 .github/scripts/validate_source.py
+
+      - name: Commit final source tree
+        run: |
+          set -euo pipefail
+          rm .github/scripts/apply_approved_upgrades.py
+          rm .github/workflows/apply-approved-upgrades.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Apply approved entity authority upgrades'
+          git push origin HEAD:apply-approved-entity-upgrades-2026-07-30
