@@ -1,0 +1,45 @@
+name: Repair physician alias registry
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/repair-person-alias-registry.py'
+      - '.github/workflows/repair-person-alias-registry.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.head_ref == 'repair-physician-alias-registry-2026-07-30'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+
+      - name: Install RDF validator dependency
+        run: python3 -m pip install --quiet rdflib
+
+      - name: Repair and validate the complete ordered alias registry
+        run: python3 scripts/repair-person-alias-registry.py
+
+      - name: Commit final project files and remove migration machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f scripts/repair-person-alias-registry.py .github/workflows/repair-person-alias-registry.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Repair and lock the physician alias registry'
+          git push origin "HEAD:${{ github.head_ref }}"
