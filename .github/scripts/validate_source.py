@@ -37,16 +37,22 @@ DATASET = BASE + "graph.jsonld#dataset"
 PROJECT = BASE + "#doctor-ghezelbaash-structured-data-project"
 HISTORICAL_DATASET = BASE + "#historical-patient-origin-summary"
 HISTORICAL_DOWNLOAD = BASE + "datasets/historical-patient-origin-summary.json#download"
-GRAPH_VERSION = "1.2.1"
+GRAPH_VERSION = "1.2.2"
 SCHOLAR_ID = BASE + "#identifier-person-google-scholar"
 SCHOLAR_URL = "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
 KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"
 PERSON_ALIASES = ['Mohammad Saeed Ghezelbash', 'Dr. Mohammad Saeed Ghezelbash', 'Mohammad Saeed Ghezelbaash', 'Dr. Mohammad Saeed Ghezelbaash', 'Saeed Ghezelbash', 'Dr. Saeed Ghezelbash', 'Saeed Ghezelbaash', 'Dr. Saeed Ghezelbaash', 'دکتر محمدسعید قزلباش', 'دکتر محمد سعید قزلباش', 'محمدسعید قزلباش', 'محمد سعید قزلباش', 'دکتر سعید قزلباش', 'سعید قزلباش', 'MohammadSaeed Ghezelbash', 'Mohamadsaeed Ghezelbash', 'Mohammadssaeed Ghezelbash', 'Mohammadssaeed Ghezelbaash', 'Mohammad Saeed Ghazlbash', 'Dr. Mohammad Saeed Ghazlbash', 'Doctor Ghezelbaash', 'Ghezelbash MS']
 VIDEO_UPLOAD_DATES = {
-    BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": "2024-12-18",
-    BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": "2025-01-16",
-    BASE + "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4": "2025-01-19",
-    BASE + "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4": "2025-04-23",
+    BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": "2024-12-18T09:58:51.282Z",
+    BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": "2025-01-16T17:17:17.334Z",
+    BASE + "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4": "2025-01-19T07:01:26.523Z",
+    BASE + "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4": "2025-04-23T16:20:44.677Z",
+}
+VIDEO_DESCRIPTIONS = {
+    BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": "توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.",
+    BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": "توضیحات دکتر سعید قزلباش درباره سابسیژن.",
+    BASE + "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4": "بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.",
+    BASE + "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4": "ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش.",
 }
 COMMONS_IMAGE_IDS = {PORTRAIT, TEAM, OFFICE}
 
@@ -410,6 +416,7 @@ event = full_by.get(EVENT, {})
 require(event.get("startDate") == "2017-10-08" and event.get("endDate") == "2017-10-12", "WPA XVII event dates are incorrect")
 require(bool(refs(event.get("organizer"))), "WPA XVII organizer is missing")
 require("eventStatus" not in event, "WPA XVII eventStatus must be omitted for this completed historical event")
+require(EVENT not in head_by, "historical WPA Event must stay out of the inline Rich Results projection")
 for graph_name, nodes in (("Full Graph", full_nodes), ("Head Graph", head_nodes)):
     for node in nodes:
         if isinstance(node, dict):
@@ -444,13 +451,15 @@ require(set(full_videos) == set(VIDEO_UPLOAD_DATES), f"Full Graph video set diff
 for content_url, expected_date in VIDEO_UPLOAD_DATES.items():
     video = full_videos.get(content_url, {})
     require(video.get("uploadDate") == expected_date, f"{content_url}: uploadDate is not {expected_date}")
+    require(valid_iso_date(video.get("uploadDate")) and "T" in str(video.get("uploadDate")), f"{content_url}: uploadDate must be a timezone-qualified DateTime")
+    require(video.get("description") == VIDEO_DESCRIPTIONS[content_url], f"{content_url}: visible-content description mismatch")
     asset = ROOT / "public" / content_url.removeprefix(BASE)
     require(asset.is_file(), f"VideoObject contentUrl asset is missing: {asset}")
 for head_video in (node for node in head_nodes if isinstance(node, dict) and "VideoObject" in types(node)):
     content_url = head_video.get("contentUrl")
     require(content_url in full_videos, f"Head Graph VideoObject is absent from Full Graph: {content_url}")
     full_video = full_videos.get(content_url, {})
-    for property_name in ("@id", "contentUrl", "uploadDate", "sameAs"):
+    for property_name in ("@id", "contentUrl", "uploadDate", "description", "sameAs"):
         require(head_video.get(property_name) == full_video.get(property_name), f"Head/Full VideoObject mismatch for {content_url}: {property_name}")
 
 markdown_projection = read_text("dist/index.md")

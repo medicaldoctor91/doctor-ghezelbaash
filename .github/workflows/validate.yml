@@ -1,269 +1,118 @@
-name: One-time canonical Rich Results repair
+name: Validate production source and live site
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.node-version'
+      - '.github/scripts/**'
+      - '.github/workflows/validate.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.node-version'
+      - '.github/scripts/**'
+      - '.github/workflows/validate.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: direct-canonical-rich-results-repair
-  cancel-in-progress: false
+  group: production-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '24.18.0'
+  CANONICAL_URL: 'https://www.ghezelbaash.ir/'
 
 jobs:
-  repair:
+  source:
+    name: Source build graph and CSP validation
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 2
-          persist-credentials: true
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24.18.0'
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Repair canonical Head and Full Graph sources
+      - name: Install and build
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run build
+          python3 -m pip install --quiet rdflib
+
+      - name: Validate immutable production contract
+        run: python3 .github/scripts/validate_source.py
+
+  live:
+    name: Live deployment HTTP and semantic validation
+    needs: source
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for and validate the matching Cloudflare deployment
+        run: python3 .github/scripts/validate_live.py --expected-sha "${{ github.sha }}" --deployment-timeout 600
+
+      - name: Validate Cloudflare Pages range behavior
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m pip install --quiet rdflib
-          python3 <<'PY'
-          from __future__ import annotations
+          mkdir -p live-audit
+          video=$(find public/media/videos -type f -name '*.mp4' | sort | head -n1)
+          url="https://www.ghezelbaash.ir/${video#public/}"
+          status=$(curl -sS --compressed --max-time 90 -H 'Range: bytes=0-1023' -o /dev/null -D live-audit/video-range.headers -w '%{http_code}' "$url")
+          case "$status" in
+            200) echo 'Cloudflare Pages returned its documented full-response behavior for a Range request.' ;;
+            206) grep -qi '^content-range:' live-audit/video-range.headers ;;
+            *) echo "Unexpected Range response: $status" >&2; exit 1 ;;
+          esac
 
-          import base64
-          import hashlib
-          import json
-          import re
-          from pathlib import Path
+  lighthouse:
+    name: Repeated Mobile Desktop and Agentic Lighthouse audit
+    needs: live
+    if: github.event_name == 'push' && needs.live.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
 
-          from rdflib import Graph
-          from rdflib.compare import to_canonical_graph
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
 
-          BASE = "https://www.ghezelbaash.ir/"
-          EVENT = BASE + "#event-wpa-xvii-world-congress-psychiatry-2017"
-          DATASET = BASE + "graph.jsonld#dataset"
-          GRAPH_VERSION = "1.2.2"
+      - name: Run repeated Lighthouse audits
+        shell: bash
+        run: |
+          set +e
+          mkdir -p live-audit
+          for mode in mobile desktop; do
+            for run in 1 2 3; do
+              preset=''
+              [ "$mode" = desktop ] && preset='--preset=desktop'
+              npx --yes lighthouse@latest "$CANONICAL_URL" $preset \
+                --output=json --output-path="live-audit/lighthouse-${mode}-${run}.json" \
+                --only-categories=performance,accessibility,best-practices,seo,agentic-browsing \
+                --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+            done
+          done
+          exit 0
 
-          VIDEOS = {
-              BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": {
-                  "uploadDate": "2024-12-18T09:58:51.282Z",
-                  "description": "توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.",
-              },
-              BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": {
-                  "uploadDate": "2025-01-16T17:17:17.334Z",
-                  "description": "توضیحات دکتر سعید قزلباش درباره سابسیژن.",
-              },
-              BASE + "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4": {
-                  "uploadDate": "2025-01-19T07:01:26.523Z",
-                  "description": "بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.",
-              },
-              BASE + "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4": {
-                  "uploadDate": "2025-04-23T16:20:44.677Z",
-                  "description": "ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش.",
-              },
-          }
-
-          def node_types(node: dict) -> set[str]:
-              value = node.get("@type", [])
-              return set(value if isinstance(value, list) else [value])
-
-          def patch_document(path: Path, *, head: bool) -> tuple[dict, str]:
-              original = path.read_text(encoding="utf-8")
-              document = json.loads(original)
-              graph = document.get("@graph")
-              if not isinstance(graph, list):
-                  raise RuntimeError(f"{path}: @graph must be an array")
-
-              if head:
-                  graph[:] = [
-                      node for node in graph
-                      if not (isinstance(node, dict) and node.get("@id") == EVENT)
-                  ]
-
-              by_id = {
-                  node["@id"]: node
-                  for node in graph
-                  if isinstance(node, dict) and isinstance(node.get("@id"), str)
-              }
-              if head and EVENT in by_id:
-                  raise RuntimeError("Historical Event remains in Head Graph")
-              if not head and EVENT not in by_id:
-                  raise RuntimeError("Historical Event is absent from Full Graph")
-
-              found_videos: set[str] = set()
-              for node in graph:
-                  if not isinstance(node, dict) or "VideoObject" not in node_types(node):
-                      continue
-                  content_url = node.get("contentUrl")
-                  if content_url not in VIDEOS:
-                      continue
-                  node.update(VIDEOS[content_url])
-                  found_videos.add(content_url)
-
-              if found_videos != set(VIDEOS):
-                  raise RuntimeError(
-                      f"{path}: canonical video set mismatch: "
-                      f"missing={sorted(set(VIDEOS) - found_videos)}"
-                  )
-
-              dataset = by_id.get(DATASET)
-              if not isinstance(dataset, dict):
-                  raise RuntimeError(f"{path}: missing graph Dataset")
-              dataset["version"] = GRAPH_VERSION
-
-              text = json.dumps(document, ensure_ascii=False, separators=(",", ":")) + "\n"
-              path.write_text(text, encoding="utf-8")
-              return document, text
-
-          head_path = Path("src/data/semantic/head-graph.min.jsonld")
-          full_path = Path("public/graph.jsonld")
-          old_head_text = head_path.read_text(encoding="utf-8")
-
-          full, full_text = patch_document(full_path, head=False)
-          head, head_text = patch_document(head_path, head=True)
-
-          full_by = {
-              node.get("@id"): node
-              for node in full["@graph"]
-              if isinstance(node, dict) and isinstance(node.get("@id"), str)
-          }
-          head_by = {
-              node.get("@id"): node
-              for node in head["@graph"]
-              if isinstance(node, dict) and isinstance(node.get("@id"), str)
-          }
-          if EVENT in head_by or EVENT not in full_by:
-              raise RuntimeError("Event projection policy failed")
-          for content_url, expected in VIDEOS.items():
-              full_node = next(
-                  node for node in full["@graph"]
-                  if isinstance(node, dict)
-                  and "VideoObject" in node_types(node)
-                  and node.get("contentUrl") == content_url
-              )
-              head_node = next(
-                  node for node in head["@graph"]
-                  if isinstance(node, dict)
-                  and "VideoObject" in node_types(node)
-                  and node.get("contentUrl") == content_url
-              )
-              for key, value in expected.items():
-                  if full_node.get(key) != value or head_node.get(key) != value:
-                      raise RuntimeError(f"{content_url}: {key} parity failed")
-
-          rdf = Graph().parse(data=full_text, format="json-ld")
-          canonical = to_canonical_graph(rdf)
-          nt = canonical.serialize(format="nt")
-          Path("public/graph.ttl").write_text(
-              "\n".join(sorted(line.strip() for line in nt.splitlines() if line.strip())) + "\n",
-              encoding="utf-8",
-          )
-
-          sitemap_path = Path("public/sitemap.xml")
-          sitemap = sitemap_path.read_text(encoding="utf-8")
-          for content_url, values in VIDEOS.items():
-              pattern = (
-                  rf"(<video:content_loc>{re.escape(content_url)}</video:content_loc>\s*"
-                  rf"<video:publication_date>)[^<]+(</video:publication_date>)"
-              )
-              sitemap, count = re.subn(
-                  pattern,
-                  rf"\g<1>{values['uploadDate']}\g<2>",
-                  sitemap,
-                  count=1,
-              )
-              if count != 1:
-                  raise RuntimeError(f"Unable to update sitemap date for {content_url}")
-          sitemap_path.write_text(sitemap, encoding="utf-8")
-
-          validator_path = Path(".github/scripts/validate_source.py")
-          validator = validator_path.read_text(encoding="utf-8")
-          validator = validator.replace('GRAPH_VERSION = "1.2.1"', 'GRAPH_VERSION = "1.2.2"')
-
-          old_mapping = '''VIDEO_UPLOAD_DATES = {
-              BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": "2024-12-18",
-              BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": "2025-01-16",
-              BASE + "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4": "2025-01-19",
-              BASE + "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4": "2025-04-23",
-          }'''
-          new_mapping = '''VIDEO_UPLOAD_DATES = {
-              BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": "2024-12-18T09:58:51.282Z",
-              BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": "2025-01-16T17:17:17.334Z",
-              BASE + "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4": "2025-01-19T07:01:26.523Z",
-              BASE + "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4": "2025-04-23T16:20:44.677Z",
-          }
-          VIDEO_DESCRIPTIONS = {
-              BASE + "media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4": "توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.",
-              BASE + "media/videos/education/saeed-ghezelbash-subcision-technique.mp4": "توضیحات دکتر سعید قزلباش درباره سابسیژن.",
-              BASE + "media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4": "بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.",
-              BASE + "media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4": "ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش.",
-          }'''
-          if old_mapping not in validator:
-              raise RuntimeError("Canonical VIDEO_UPLOAD_DATES block was not found")
-          validator = validator.replace(old_mapping, new_mapping)
-
-          event_anchor = '''require(bool(refs(event.get("organizer"))), "WPA XVII organizer is missing")
-          require("eventStatus" not in event, "WPA XVII eventStatus must be omitted for this completed historical event")'''
-          event_replacement = '''require(bool(refs(event.get("organizer"))), "WPA XVII organizer is missing")
-          require("eventStatus" not in event, "WPA XVII eventStatus must be omitted for this completed historical event")
-          require(EVENT not in head_by, "historical WPA Event must stay out of the inline Rich Results projection")'''
-          if event_anchor not in validator:
-              raise RuntimeError("Event validation anchor was not found")
-          validator = validator.replace(event_anchor, event_replacement)
-
-          old_video_validation = '''for content_url, expected_date in VIDEO_UPLOAD_DATES.items():
-              video = full_videos.get(content_url, {})
-              require(video.get("uploadDate") == expected_date, f"{content_url}: uploadDate is not {expected_date}")
-              asset = ROOT / "public" / content_url.removeprefix(BASE)
-              require(asset.is_file(), f"VideoObject contentUrl asset is missing: {asset}")
-          for head_video in (node for node in head_nodes if isinstance(node, dict) and "VideoObject" in types(node)):
-              content_url = head_video.get("contentUrl")
-              require(content_url in full_videos, f"Head Graph VideoObject is absent from Full Graph: {content_url}")
-              full_video = full_videos.get(content_url, {})
-              for property_name in ("@id", "contentUrl", "uploadDate", "sameAs"):
-                  require(head_video.get(property_name) == full_video.get(property_name), f"Head/Full VideoObject mismatch for {content_url}: {property_name}")'''
-          new_video_validation = '''for content_url, expected_date in VIDEO_UPLOAD_DATES.items():
-              video = full_videos.get(content_url, {})
-              require(video.get("uploadDate") == expected_date, f"{content_url}: uploadDate is not {expected_date}")
-              require(valid_iso_date(video.get("uploadDate")) and "T" in str(video.get("uploadDate")), f"{content_url}: uploadDate must be a timezone-qualified DateTime")
-              require(video.get("description") == VIDEO_DESCRIPTIONS[content_url], f"{content_url}: visible-content description mismatch")
-              asset = ROOT / "public" / content_url.removeprefix(BASE)
-              require(asset.is_file(), f"VideoObject contentUrl asset is missing: {asset}")
-          for head_video in (node for node in head_nodes if isinstance(node, dict) and "VideoObject" in types(node)):
-              content_url = head_video.get("contentUrl")
-              require(content_url in full_videos, f"Head Graph VideoObject is absent from Full Graph: {content_url}")
-              full_video = full_videos.get(content_url, {})
-              for property_name in ("@id", "contentUrl", "uploadDate", "description", "sameAs"):
-                  require(head_video.get(property_name) == full_video.get(property_name), f"Head/Full VideoObject mismatch for {content_url}: {property_name}")'''
-          if old_video_validation not in validator:
-              raise RuntimeError("Video validation block was not found")
-          validator = validator.replace(old_video_validation, new_video_validation)
-          validator_path.write_text(validator, encoding="utf-8")
-
-          old_hash = base64.b64encode(hashlib.sha256(old_head_text.encode("utf-8")).digest()).decode("ascii")
-          new_hash = base64.b64encode(hashlib.sha256(head_text.encode("utf-8")).digest()).decode("ascii")
-          headers_path = Path("public/_headers")
-          headers = headers_path.read_text(encoding="utf-8")
-          old_token = f"'sha256-{old_hash}'"
-          new_token = f"'sha256-{new_hash}'"
-          if headers.count(old_token) != 1:
-              raise RuntimeError("Existing Head Graph CSP hash was not found exactly once")
-          headers_path.write_text(headers.replace(old_token, new_token, 1), encoding="utf-8")
-          PY
-
-          git show HEAD^:.github/workflows/validate.yml > .github/workflows/validate.yml
-
-          npm ci --no-audit --no-fund
-          npm run build
-          python3 .github/scripts/validate_source.py
-
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git commit -m 'Fix VideoObject Rich Results at canonical source'
-          git push origin HEAD:main
+      - name: Evaluate Lighthouse results
+        run: python3 .github/scripts/evaluate_lighthouse.py --directory live-audit --enforce-agentic

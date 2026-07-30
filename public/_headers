@@ -17,7 +17,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
   Content-Language: fa-IR
   Cache-Control: public, max-age=0, must-revalidate
   Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle", </llms.txt>; rel="describedby"; type="text/plain", </datasets/historical-patient-origin-summary.json>; rel="describedby"; type="application/json", </index.md>; rel="alternate"; type="text/markdown"; hreflang="fa-IR", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-qPRYaEAITrwA6A24RVgyaz0+Vrhpi1ER6mAzs9szGzo='; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-FMVGyF8UqQiWNnK8cHi044kOueyUVl33/oPNqn7CVJM='; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
 
 /404.html
   X-Robots-Tag: noindex, follow
