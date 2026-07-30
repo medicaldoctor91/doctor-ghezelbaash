@@ -1,0 +1,47 @@
+name: Apply final release cleanup
+
+on:
+  push:
+    branches: [release-cleanup-work]
+    paths:
+      - '.github/scripts/apply_final_cleanup.py'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release-cleanup-work
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.18.0'
+          cache: npm
+
+      - name: Apply deterministic release cleanup
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet rdflib
+          python3 .github/scripts/apply_final_cleanup.py
+
+      - name: Build and validate cleaned source
+        run: |
+          set -euo pipefail
+          npm ci --no-audit --no-fund
+          npm run build
+          python3 .github/scripts/validate_source.py
+
+      - name: Commit cleaned tree
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Finalize clean release source'
+          git push origin HEAD:release-cleanup-work
