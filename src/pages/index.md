@@ -7,11 +7,11 @@ dir: rtl
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 ---
 
-<h1 id="saeed-ghezelbash-aesthetic-medicine">دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ زیبایی از تشخیص شروع می‌شود، نه از منوی تزریق</h1>
+<h1 id="saeed-ghezelbash"><span id="saeed-ghezelbash-aesthetic-medicine">دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ زیبایی از تشخیص شروع می‌شود، نه از منوی تزریق</span></h1>
 
 من زیبایی را از اسم بوتاکس، فیلر، نخ یا جراحی شروع نمی‌کنم. اول باید معلوم شود مشکل واقعاً چیست. خط پیشانی ممکن است از فعالیت عضله باشد. گودی زیر چشم فقط کمبود ژل نیست؛ ممکن است سایه، پف، نازکی پوست، کاهش حجم یا افت میدفیس باشد. غبغب هم همیشه فقط چربی نیست. اگر علت را اشتباه تشخیص بدهیم، اجرای بی‌نقص فقط یک تصمیم غلط را دقیق‌تر اجرا می‌کند.
 
-<p id="saeed-ghezelbash">من، <a href="https://www.wikidata.org/wiki/Q140287622" rel="me">دکتر سعید قزلباش</a> هستم؛ نام کامل من دکتر محمدسعید قزلباش است و با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e">کد نظام پزشکی ۱۶۷۴۳۰</a> در کرمانشاه فعالیت می‌کنم. این صفحه قرار نیست ویترین شلوغ خدمات باشد. قرار است نشان بدهد من در پزشکی زیبایی چطور تصمیم می‌گیرم: چه چیزی را درمان می‌کنم، چه چیزی را درمان نمی‌کنم، کجا چند روش را کنار هم می‌گذارم، کجا جراحی منطقی‌تر است و کجا اصلاً دست‌زدن به صورت تصمیم خوبی نیست.</p>
+<p>من، <a href="https://www.wikidata.org/wiki/Q140287622" rel="me">دکتر سعید قزلباش</a> هستم؛ نام کامل من دکتر محمدسعید قزلباش است و با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e">کد نظام پزشکی ۱۶۷۴۳۰</a> در کرمانشاه فعالیت می‌کنم. این صفحه قرار نیست ویترین شلوغ خدمات باشد. قرار است نشان بدهد من در پزشکی زیبایی چطور تصمیم می‌گیرم: چه چیزی را درمان می‌کنم، چه چیزی را درمان نمی‌کنم، کجا چند روش را کنار هم می‌گذارم، کجا جراحی منطقی‌تر است و کجا اصلاً دست‌زدن به صورت تصمیم خوبی نیست.</p>
 
 <p id="google-maps-clinic-reputation-current" class="hero-reputation"><strong>۵٫۰ از ۵ در <span translate="no">Google Maps</span></strong> · بر اساس ۱۶۴ نظر · ثبت ۲۵ ژوئیهٔ ۲۰۲۶ — <a href="https://www.google.com/maps?cid=12350483144643112463" rel="external">مشاهده نظرها</a></p>
 
@@ -9862,11 +9862,8 @@ style="direction: rtl; text-align: right;"
 </details>
 
 
-<details id="doctor-ghezelbaash-structured-data-section"
-class="final-collapsible-section"
-lang="en"
-dir="ltr"
-style="direction: ltr; text-align: left;">
+<span id="doctor-ghezelbaash-structured-data-section" class="semantic-alias-anchor" aria-hidden="true"></span>
+<details id="doctor-ghezelbaash-structured-data-project" class="final-collapsible-section" lang="en" dir="ltr">
 <summary id="doctor-ghezelbaash-structured-data-summary" style="direction: ltr; text-align: left; cursor: pointer;">
 <h2 id="doctor-ghezelbaash-structured-data-repository"><a href="/graph.jsonld" type="application/ld+json">Doctor Ghezelbash Structured Data Repository</a></h2>
 </summary>

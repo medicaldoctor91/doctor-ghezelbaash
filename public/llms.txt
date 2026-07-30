@@ -2,16 +2,24 @@
 
 > Official single-page website of Dr. Saeed Ghezelbash (Mohammadsaeed Ghezelbash), an aesthetic physician in Kermanshah, Iran. The site presents his clinical decision-making, aesthetic medicine services, revision and second-opinion work, educational activity, and three research outputs. In-person care serves patients from Iran and Iraq; a free online initial aesthetic consultation is available worldwide.
 
-Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The physician is the primary entity. The clinic and the structured-data project are subordinate entities. The full JSON-LD graph at https://www.ghezelbaash.ir/graph.jsonld is the authoritative machine-readable entity graph for this website. The site is intentionally static and has one canonical indexable web page.
+Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The physician is the primary entity. The clinic and the structured-data project are subordinate entities. The full JSON-LD graph at https://www.ghezelbaash.ir/graph.jsonld is the authoritative machine-readable entity graph for this website. The site is intentionally static and has one canonical indexable human-readable web page. Its authoritative machine-readable graph serializations and compact retrieval guide are intentionally discoverable and indexable as supporting resources; duplicate full-page projections are crawlable but noindex.
 
 ## Canonical sources
 
 - [Official website](https://www.ghezelbaash.ir/): Canonical human-readable mega-landing page covering clinical reasoning, services, complications, revision, second opinion, education, research, clinic identity, and contact information.
 - [Full Knowledge Graph](https://www.ghezelbaash.ir/graph.jsonld): Authoritative JSON-LD graph for Dr. Saeed Ghezelbash, the clinic, services, research, education, media, geography, and identity reconciliation.
 - [Full Knowledge Graph — Turtle](https://www.ghezelbaash.ir/graph.ttl): Deterministic canonical N-Triples serialization published as a valid RDF 1.1 Turtle subset of the authoritative graph; datatypes, entity separation and canonical IRIs are preserved.
-- [Full LLM-readable page export](https://www.ghezelbaash.ir/llms-full.txt): Deterministic machine-oriented rendering of the complete canonical page content.
+- [LLM retrieval guide](https://www.ghezelbaash.ir/llms.txt): Compact canonical map of the physician-first website and its authoritative sources.
+- [Full LLM-readable page export](https://www.ghezelbaash.ir/llms-full.txt): Deterministic machine-oriented rendering of the complete canonical page content; a non-canonical `noindex, follow` projection.
 - [Markdown page projection](https://www.ghezelbaash.ir/index.md): Deterministic non-canonical Markdown projection of the canonical single-page website; served with `noindex, follow` and excluded from the XML sitemap.
-- [Historical patient-origin dataset](https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json): Supporting geographic summary of historical patient origins; it is not a statement of current service availability.
+- [Historical patient-origin dataset](https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json): Supporting `noindex, follow` JSON distribution of a Dataset defined in the Full Knowledge Graph; it documents historical origins and is not a statement of current service availability.
+
+## Retrieval and indexing policy
+
+- `https://www.ghezelbaash.ir/` is the canonical human-readable page and primary search document.
+- `graph.jsonld`, `graph.ttl` and this compact `llms.txt` guide are intentionally indexable and explicitly listed in the XML sitemap as authoritative supporting resources.
+- `index.md` and `llms-full.txt` are complete non-canonical page projections served as `noindex, follow`.
+- Raw dataset distributions, vCards and the web manifest remain crawlable where useful but are excluded from search indexing and from the XML sitemap.
 
 ## Physician identity
 

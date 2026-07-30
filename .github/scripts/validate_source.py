@@ -34,6 +34,10 @@ ARTICLE_2021 = BASE + "#article-mdd-attachment-dissociation-trauma-2021"
 COUNTRY_IR = BASE + "#country-iran"
 COUNTRY_IQ = BASE + "#country-iraq"
 DATASET = BASE + "graph.jsonld#dataset"
+PROJECT = BASE + "#doctor-ghezelbaash-structured-data-project"
+HISTORICAL_DATASET = BASE + "#historical-patient-origin-summary"
+HISTORICAL_DOWNLOAD = BASE + "datasets/historical-patient-origin-summary.json#download"
+GRAPH_VERSION = "1.2.0"
 SCHOLAR_ID = BASE + "#identifier-person-google-scholar"
 SCHOLAR_URL = "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
 VIDEO_UPLOAD_DATES = {
@@ -220,6 +224,7 @@ require(html_bytes < 1_900_000, f"HTML exceeds 1.90 MB safety gate: {html_bytes}
 require('rel="canonical"' in html and BASE in html, "canonical homepage link is missing")
 require('/graph.jsonld' in html and 'rel="describedby"' in html, "HTML does not discover graph.jsonld")
 require('/graph.ttl' in html and 'rel="describedby"' in html, "HTML does not discover graph.ttl")
+require('/llms.txt' in html and 'rel="describedby"' in html, "HTML does not discover llms.txt")
 require('rel="alternate" type="text/markdown" hreflang="fa-IR" href="https://www.ghezelbaash.ir/index.md"' in html, "HTML does not discover index.md")
 require('rel="about" href="https://www.ghezelbaash.ir/#saeed-ghezelbash"' in html, "HTML does not expose the physician about relation")
 require('type="application/ld+json"' in html, "inline Head Graph is missing")
@@ -379,7 +384,8 @@ for head_video in (node for node in head_nodes if isinstance(node, dict) and "Vi
 markdown_projection = read_text("dist/index.md")
 require(bool(markdown_projection.strip()), "dist/index.md is empty")
 require('canonical: "https://www.ghezelbaash.ir/"' in markdown_projection, "index.md canonical frontmatter is missing")
-require('<h1 id="saeed-ghezelbash-aesthetic-medicine">' in markdown_projection, "index.md canonical H1 is missing")
+require('<h1 id="saeed-ghezelbash">' in markdown_projection, "index.md canonical Person H1 is missing")
+require('<span id="saeed-ghezelbash-aesthetic-medicine">' in markdown_projection, "index.md legacy H1 alias is missing")
 require(not re.search(r"<script\b|<style\b|application/ld\+json", markdown_projection, re.I), "index.md contains prohibited executable or JSON-LD markup")
 source_page = read_text("src/pages/index.md")
 source_h2_ids = re.findall(r'<h2\s+id="([^"]+)"', source_page, re.I)
@@ -404,7 +410,8 @@ try:
     namespace = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9", "video": "http://www.google.com/schemas/sitemap-video/1.1"}
     sitemap_root = ET.parse("public/sitemap.xml").getroot()
     locations = [element.text for element in sitemap_root.findall("sm:url/sm:loc", namespace)]
-    require(locations == [BASE], f"sitemap must contain exactly the canonical homepage, found: {locations}")
+    expected_locations = [BASE, BASE + "graph.jsonld", BASE + "graph.ttl", BASE + "llms.txt"]
+    require(locations == expected_locations, f"sitemap discovery set differs from the canonical policy: {locations}")
     require(BASE + "index.md" not in locations, "index.md entered sitemap.xml")
     sitemap_video_dates = {}
     for video in sitemap_root.findall("sm:url/video:video", namespace):
@@ -420,6 +427,98 @@ manifest = load_json("public/site.webmanifest")
 require(manifest.get("start_url") == "/" and manifest.get("scope") == "/", "manifest root scope/start_url is incorrect")
 require("PHOTO" in read_text("public/doctor.vcf") and "saeed-ghezelbaash-physician-portrait.jpg" in read_text("public/doctor.vcf"), "doctor.vcf does not use the canonical portrait")
 require("LOGO" in read_text("public/clinic.vcf") and "doctor-ghezelbaash-symbol-512.png" in read_text("public/clinic.vcf").replace("\n ", ""), "clinic.vcf does not use the clinic logo")
+
+def dom_tag_for(fragment: str) -> str | None:
+    match = re.search(
+        rf'<([A-Za-z][A-Za-z0-9:-]*)\b[^>]*\bid="{re.escape(fragment)}"(?:\s|>)',
+        html,
+        re.I,
+    )
+    return match.group(1).lower() if match else None
+
+
+def header_block(path: str) -> str:
+    match = re.search(rf"(?m)^{re.escape(path)}\n((?:  .*(?:\n|$))*)", headers)
+    return match.group(1) if match else ""
+
+
+require(dom_tag_for("saeed-ghezelbash") == "h1", "canonical Person @id fragment is not the H1")
+require(dom_tag_for("saeed-ghezelbash-aesthetic-medicine") == "span", "legacy physician H1 alias is missing")
+require(dom_tag_for("dr-saeed-ghezelbash-aesthetic-clinic-kermanshah") == "h2", "canonical Clinic @id fragment is not the clinic H2")
+require(dom_tag_for("doctor-ghezelbaash-structured-data-project") == "details", "canonical structured-data project @id fragment is not the project container")
+require(dom_tag_for("doctor-ghezelbaash-structured-data-repository") == "h2", "structured-data project URL does not target its visible H2")
+require(dom_tag_for("doctor-ghezelbaash-structured-data-section") == "span", "legacy structured-data section alias is missing")
+
+project = full_by.get(PROJECT, {})
+require(PROJECT in head_by, "structured-data project is absent from Head Graph")
+require(clinic.get("url") == CLINIC, "Clinic.url must equal its canonical @id and H2 fragment")
+require(project.get("url") == BASE + "#doctor-ghezelbaash-structured-data-repository", "structured-data project URL is not its visible repository H2")
+for node in full_nodes:
+    if not isinstance(node, dict):
+        continue
+    target = node.get("url")
+    if isinstance(target, str) and target.startswith(BASE + "#"):
+        fragment = target.split("#", 1)[1]
+        require(fragment in parser.ids, f"Full Graph navigational URL has no DOM target: {target}")
+
+require(DATASET in head_by, "Graph Dataset is absent from Head Graph")
+require(full_by.get(DATASET, {}).get("version") == GRAPH_VERSION, "Full Graph version is not the release version")
+require(head_by.get(DATASET, {}).get("version") == GRAPH_VERSION, "Head Graph version is not the release version")
+for property_name in ("version", "dateModified"):
+    require(
+        head_by.get(DATASET, {}).get(property_name) == full_by.get(DATASET, {}).get(property_name),
+        f"Head/Full Dataset metadata mismatch: {property_name}",
+    )
+
+historical = full_by.get(HISTORICAL_DATASET, {})
+historical_download = full_by.get(HISTORICAL_DOWNLOAD, {})
+require("Dataset" in types(historical), "historical patient-origin node is not Dataset")
+require(HISTORICAL_DOWNLOAD in refs(historical.get("distribution")), "historical Dataset lacks its JSON distribution")
+require(historical_download.get("contentUrl") == BASE + "datasets/historical-patient-origin-summary.json", "historical DataDownload contentUrl is incorrect")
+require(historical_download.get("encodingFormat") == "application/json", "historical DataDownload encodingFormat is incorrect")
+require(HISTORICAL_DATASET in refs(full_by.get(PROJECT, {}).get("hasPart")), "structured-data project does not include the historical Dataset")
+require(HISTORICAL_DATASET in refs(full_by.get(DATASET, {}).get("hasPart")), "Full Graph Dataset does not include the historical Dataset")
+raw_historical = load_json("public/datasets/historical-patient-origin-summary.json")
+require(raw_historical.get("datasetId") == HISTORICAL_DATASET, "raw historical datasetId differs from graph identity")
+require(raw_historical.get("dateModified") == "2026-07-30", "raw historical dataset dateModified is stale")
+require(raw_historical.get("license") == "https://creativecommons.org/licenses/by/4.0/", "raw historical dataset license is missing")
+require(raw_historical.get("creator") == DOCTOR and raw_historical.get("publisher") == DOCTOR, "raw historical dataset attribution differs from Person identity")
+
+for path in ("/graph.jsonld", "/graph.ttl", "/llms.txt"):
+    block = header_block(path)
+    require("X-Robots-Tag: index, follow" in block, f"{path} is not explicitly indexable")
+    require("noindex" not in block.lower(), f"{path} is accidentally noindex")
+for path in ("/index.md", "/llms-full.txt", "/datasets/*"):
+    block = header_block(path)
+    require("X-Robots-Tag: noindex, follow" in block, f"{path} is not a noindex, follow projection/distribution")
+for path in ("/doctor.vcf", "/clinic.vcf", "/site.webmanifest"):
+    require("X-Robots-Tag: noindex" in header_block(path), f"{path} utility resource is indexable")
+require('</llms.txt>; rel="describedby"; type="text/plain"' in headers, "homepage HTTP Link header does not discover llms.txt")
+
+def expected_full_projection(markdown: str) -> str:
+    body = re.sub(r"\A---\r?\n[\s\S]*?\r?\n---\r?\n?", "", markdown, count=1)
+    body = re.sub(r"<script\b[^>]*>[\s\S]*?</script>", "", body, flags=re.I)
+    body = re.sub(r"<style\b[^>]*>[\s\S]*?</style>", "", body, flags=re.I)
+    body = re.sub(r"<script\b[^>]*/\s*>", "", body, flags=re.I)
+    body = re.sub(r"\s+type=[\"']application/ld\+json[\"']", "", body, flags=re.I)
+    body = re.sub(r"\n{3,}", "\n\n", body).strip()
+    return (
+        "# Dr. Saeed Ghezelbash — Full canonical page export\n\n"
+        f"Canonical: {BASE}\n"
+        f"About: {DOCTOR}\n"
+        f"Source: {BASE}\n"
+        "Language: fa-IR\n"
+        "Indexing: noindex, follow\n"
+        "Purpose: deterministic machine-readable projection of the complete canonical page content\n\n"
+        "---\n\n"
+        + body
+        + "\n"
+    )
+
+llms_full = read_text("public/llms-full.txt")
+require(bool(llms_full.strip()), "llms-full.txt is empty")
+require(llms_full == expected_full_projection(source_page), "llms-full.txt differs from the canonical page projection")
+require(not re.search(r"<script\b|<style\b|application/ld\+json", llms_full, re.I), "llms-full.txt contains executable or JSON-LD markup")
 
 if errors:
     for message in errors:

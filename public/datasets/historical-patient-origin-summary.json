@@ -300,5 +300,14 @@
       "name": "Kurdistan Region of Iraq",
       "containedInPlace": "https://www.ghezelbaash.ir/#country-iraq"
     }
-  ]
+  ],
+  "datePublished": "2026-07-30",
+  "dateModified": "2026-07-30",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "creator": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+  "publisher": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+  "isBasedOn": "https://www.ghezelbaash.ir/",
+  "distributionUrl": "https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json",
+  "encodingFormat": "application/json",
+  "indexingPolicy": "noindex, follow; discoverable through the canonical page and Full Knowledge Graph"
 }
