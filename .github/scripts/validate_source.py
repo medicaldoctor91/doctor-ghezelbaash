@@ -187,7 +187,8 @@ required_files = [
     "dist/index.html", "dist/404.html", "src/pages/index.md.ts", "dist/index.md",
     "public/graph.jsonld", "public/graph.ttl",
     "src/data/semantic/head-graph.min.jsonld", "public/_headers", "public/_redirects",
-    "public/robots.txt", "public/sitemap.xml", "public/llms.txt", "public/llms-full.txt",
+    "public/robots.txt", "public/sitemap.xml", "public/llms.txt",
+    "src/pages/llms-full.txt.ts", "src/lib/page-projections.ts", "dist/llms-full.txt",
     "public/datasets/historical-patient-origin-summary.json",
     "public/doctor.vcf", "public/clinic.vcf", "public/favicon.svg", "public/favicon.ico",
     "public/favicon-48x48.png", "public/apple-touch-icon.png", "public/site.webmanifest",
@@ -216,7 +217,7 @@ for filename in required_files:
 
 for filename in (
     "graph.jsonld", "graph.ttl", "_headers", "_redirects", "robots.txt", "sitemap.xml",
-    "llms.txt", "llms-full.txt", "datasets/historical-patient-origin-summary.json",
+    "llms.txt", "datasets/historical-patient-origin-summary.json",
     "doctor.vcf", "clinic.vcf", "favicon.svg", "favicon.ico",
     "favicon-48x48.png", "apple-touch-icon.png", "site.webmanifest",
 ):
@@ -600,7 +601,7 @@ def expected_full_projection(markdown: str) -> str:
         + "\n"
     )
 
-llms_full = read_text("public/llms-full.txt")
+llms_full = read_text(DIST / "llms-full.txt")
 require(bool(llms_full.strip()), "llms-full.txt is empty")
 require(llms_full == expected_full_projection(source_page), "llms-full.txt differs from the canonical page projection")
 require(not re.search(r"<script\b|<style\b|application/ld\+json", llms_full, re.I), "llms-full.txt contains executable or JSON-LD markup")

@@ -2553,31 +2553,6 @@
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-height> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/QuantitativeValue> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-height> <https://schema.org/unitText> "px" .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-height> <https://schema.org/value> "1068"^^<http://www.w3.org/2001/XMLSchema#integer> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/ImageObject> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/about> <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/acquireLicensePage> <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/caption> "Saeed Ghezelbaash with members of his clinical team"@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/caption> "سعید قزلباش همراه اعضای تیم بالینی"@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/contentSize> "32070 bytes" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/contentUrl> <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-640.webp> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/copyrightHolder> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/copyrightNotice> "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/creator> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/creditText> "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/dateCreated> "2023-05-29" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/description> "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran."@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/description> "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران."@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/encodingFormat> "image/webp" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/height> "427"^^<http://www.w3.org/2001/XMLSchema#integer> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/isBasedOn> <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/#webpage> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/license> <https://creativecommons.org/licenses/by/4.0/> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/name> "Saeed Ghezelbaash with members of his clinical team"@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/name> "سعید قزلباش همراه اعضای تیم بالینی"@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/representativeOfPage> "false"^^<http://www.w3.org/2001/XMLSchema#boolean> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/sha256> "13ec1a5d632fb1a8549be4b54c2a6ed9d90d0a39ae24bec0726cd8cc57859f61" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-responsive-640> <https://schema.org/width> "640"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail-height> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/QuantitativeValue> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail-height> <https://schema.org/unitText> "px" .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail-height> <https://schema.org/value> "640"^^<http://www.w3.org/2001/XMLSchema#integer> .
@@ -3018,31 +2993,6 @@
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> <https://schema.org/sha256> "cff5c8d9cb2873d428fb79c98958eac941289cee5bb75b88a6f1293aa4ac455a" .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> <https://schema.org/thumbnail> <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> <https://schema.org/width> "4897"^^<http://www.w3.org/2001/XMLSchema#integer> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/ImageObject> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/about> <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/acquireLicensePage> <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/caption> "Saeed Ghezelbaash in a clinical office"@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/caption> "سعید قزلباش در محیط بالینی"@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/contentSize> "27188 bytes" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/contentUrl> <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-640.webp> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/copyrightHolder> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/copyrightNotice> "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/creator> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/creditText> "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/dateCreated> "2023-05-29" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/description> "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, seated at a desk in his clinical office in Kermanshah, Iran, wearing a white coat and stethoscope."@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/description> "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه، ایران."@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/encodingFormat> "image/webp" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/height> "427"^^<http://www.w3.org/2001/XMLSchema#integer> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/isBasedOn> <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/#webpage> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/license> <https://creativecommons.org/licenses/by/4.0/> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/name> "Saeed Ghezelbaash in a clinical office"@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/name> "سعید قزلباش در محیط بالینی"@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/representativeOfPage> "false"^^<http://www.w3.org/2001/XMLSchema#boolean> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/sha256> "9eccca6d05f075c767ed2a4560fe7b6e0c365ced68b59b821af6d1c3491ca19d" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-responsive-640> <https://schema.org/width> "640"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-height> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/QuantitativeValue> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-height> <https://schema.org/unitText> "px" .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-height> <https://schema.org/value> "3266"^^<http://www.w3.org/2001/XMLSchema#integer> .
@@ -3384,30 +3334,6 @@
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> <https://schema.org/sha256> "7bee37db6dba336a2cc1a344a6ca0ebd05338a0277b23581816982bc9901bc30" .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> <https://schema.org/thumbnail> <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> <https://schema.org/width> "4897"^^<http://www.w3.org/2001/XMLSchema#integer> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/ImageObject> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/acquireLicensePage> <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/caption> "Dr. Saeed Ghezelbaash, Iranian physician"@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/caption> "دکتر سعید قزلباش، پزشک ایرانی"@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/contentSize> "25294 bytes" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/contentUrl> <https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-640.webp> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/copyrightHolder> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/copyrightNotice> "© Dr. Saeed Ghezelbaash. Licensed under CC BY 4.0." .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/creator> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/creditText> "Dr. Saeed Ghezelbaash / Wikimedia Commons, CC BY 4.0" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/dateCreated> "2023-05-29" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/description> "Dr. Saeed Ghezelbaash, an Iranian physician in aesthetic medicine, wearing a white medical coat and stethoscope in a clinical setting in Kermanshah, Iran."@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/description> "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با روپوش سفید و گوشی پزشکی در یک محیط بالینی در کرمانشاه، ایران."@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/encodingFormat> "image/webp" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/height> "427"^^<http://www.w3.org/2001/XMLSchema#integer> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/isBasedOn> <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/#webpage> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/license> <https://creativecommons.org/licenses/by/4.0/> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/name> "Dr. Saeed Ghezelbaash, Iranian physician"@en .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/name> "دکتر سعید قزلباش، پزشک ایرانی"@fa .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/representativeOfPage> "false"^^<http://www.w3.org/2001/XMLSchema#boolean> .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/sha256> "8acb652d97064548c8965408dc344893abd78b8f97483cfcd52026ba315f3ba6" .
-<https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-responsive-640> <https://schema.org/width> "640"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-social-1200x630> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/ImageObject> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-social-1200x630> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-social-1200x630> <https://schema.org/acquireLicensePage> <https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg> .
@@ -3909,7 +3835,7 @@
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "Berlin, Germany"@en .
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "برلین، آلمان"@fa .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:N48b36580e70b400cbd9697bd65f675c0 .
+<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:N09de2e6c0fc04af8bd75e8f95a81f469 .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/containedInPlace> <https://www.ghezelbaash.ir/#place-berlin-germany> .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/name> "Messe Berlin / CityCube Berlin" .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q700236> .
@@ -7461,8 +7387,8 @@
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/identifier> <urn:sha256-property:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/name> "Google Maps clinic reputation snapshot — 2026-07-25" .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/width> <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590-width> .
-_:N48b36580e70b400cbd9697bd65f675c0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
-_:N48b36580e70b400cbd9697bd65f675c0 <https://schema.org/addressCountry> "DE" .
-_:N48b36580e70b400cbd9697bd65f675c0 <https://schema.org/addressLocality> "Berlin" .
-_:N48b36580e70b400cbd9697bd65f675c0 <https://schema.org/postalCode> "14055" .
-_:N48b36580e70b400cbd9697bd65f675c0 <https://schema.org/streetAddress> "Jafféstraße" .
+_:N09de2e6c0fc04af8bd75e8f95a81f469 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
+_:N09de2e6c0fc04af8bd75e8f95a81f469 <https://schema.org/addressCountry> "DE" .
+_:N09de2e6c0fc04af8bd75e8f95a81f469 <https://schema.org/addressLocality> "Berlin" .
+_:N09de2e6c0fc04af8bd75e8f95a81f469 <https://schema.org/postalCode> "14055" .
+_:N09de2e6c0fc04af8bd75e8f95a81f469 <https://schema.org/streetAddress> "Jafféstraße" .
