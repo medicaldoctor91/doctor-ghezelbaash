@@ -5,6 +5,7 @@ on:
     branches: [release-cleanup-work]
     paths:
       - '.github/scripts/apply_final_cleanup.py'
+      - '.github/final-cleanup-trigger'
 
 permissions:
   contents: write
