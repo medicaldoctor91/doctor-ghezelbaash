@@ -1,8 +1,8 @@
 # Canonical N-Triples serialization; valid RDF 1.1 Turtle subset
 # Derived losslessly from https://www.ghezelbaash.ir/graph.jsonld
-# Source SHA-256: d284cff57bb79fec8608f86382dfd11d0b209ad6aba1f5523a46e4526e72ca92
+# Source SHA-256: bd23647edaeaacd82039ce4216136cb376d974f696fe33c7547d2bb337364854
 # RDF triples: 6974
-# Canonical sorted N-Triples SHA-256: d9ced995b361baa367fc6b40f7c6132e0ef07bd69362d92a3042a5d814b8b80d
+# Canonical sorted N-Triples SHA-256: 3c2d33f50ad30448290d0c50bea5a66a9ff999c23b7eb6de4e7c72e4f9598931
 
 <https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=33d066a9-34ff-4a1a-b38b-d10983df3300> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPage> .
 <https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=33d066a9-34ff-4a1a-b38b-d10983df3300> <https://schema.org/name> "برچسب رسمی onabotulinumtoxinA" .
@@ -6926,7 +6926,7 @@
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/about> <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/creator> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/dateModified> "2026-07-28" .
+<https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/dateModified> "2026-07-30" .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/datePublished> "2026-07-25" .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/description> "Public physician-first knowledge graph for Dr. Saeed Ghezelbaash covering professional identity, aesthetic-medicine specialty, physician ownership of the clinic and structured-data project, confirmed medical services, geographic reach, research, teaching, canonical Wikimedia-linked image identity, media provenance, dated public reputation observations, external identifiers and curated question-answer content." .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/distribution> <https://www.ghezelbaash.ir/graph.jsonld#download> .

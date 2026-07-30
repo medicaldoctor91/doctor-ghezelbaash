@@ -360,6 +360,8 @@ require({DOCTOR, CLINIC} <= set(refs(full_by.get(TEAM, {}).get("about"))), "Team
 require({DOCTOR, CLINIC} <= set(refs(full_by.get(OFFICE, {}).get("about"))), "Office master does not describe both Doctor and Clinic")
 formats = {full_by.get(identifier, {}).get("encodingFormat") for identifier in refs(full_by.get(DATASET, {}).get("distribution"))}
 require({"application/ld+json", "text/turtle"} <= formats, "Dataset lacks JSON-LD and Turtle distributions")
+require(full_by.get(DATASET, {}).get("dateModified") == "2026-07-30", "Full Graph Dataset dateModified is stale")
+require(head_by.get(DATASET, {}).get("dateModified") == "2026-07-30", "Head Graph Dataset dateModified is stale")
 full_videos = {node.get("contentUrl"): node for node in full_nodes if isinstance(node, dict) and "VideoObject" in types(node) and node.get("contentUrl") in VIDEO_UPLOAD_DATES}
 require(set(full_videos) == set(VIDEO_UPLOAD_DATES), f"Full Graph video set differs from canonical mapping: {sorted(full_videos)}")
 for content_url, expected_date in VIDEO_UPLOAD_DATES.items():
@@ -375,7 +377,7 @@ for head_video in (node for node in head_nodes if isinstance(node, dict) and "Vi
         require(head_video.get(property_name) == full_video.get(property_name), f"Head/Full VideoObject mismatch for {content_url}: {property_name}")
 
 markdown_projection = read_text("dist/index.md")
-require(bool(markdown_projection.strip()), "public/index.md is empty")
+require(bool(markdown_projection.strip()), "dist/index.md is empty")
 require('canonical: "https://www.ghezelbaash.ir/"' in markdown_projection, "index.md canonical frontmatter is missing")
 require('<h1 id="saeed-ghezelbash-aesthetic-medicine">' in markdown_projection, "index.md canonical H1 is missing")
 require(not re.search(r"<script\b|<style\b|application/ld\+json", markdown_projection, re.I), "index.md contains prohibited executable or JSON-LD markup")
