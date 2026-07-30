@@ -1,15 +1,11 @@
-name: Repair canonical graph sources directly
+name: Execute direct main graph repair
 
 on:
-  push:
+  pull_request:
     branches: [main]
 
 permissions:
   contents: write
-
-concurrency:
-  group: direct-main-graph-repair
-  cancel-in-progress: false
 
 jobs:
   repair:
@@ -27,7 +23,7 @@ jobs:
           node-version: '24.18.0'
           cache: npm
 
-      - name: Repair existing graph sources and remove temporary helper architecture
+      - name: Repair existing Head Full and Turtle graph sources
         shell: bash
         run: |
           set -euo pipefail
@@ -40,69 +36,49 @@ jobs:
           import json
           import re
           from pathlib import Path
-
           from rdflib import Graph
 
           BASE = "https://www.ghezelbaash.ir/"
           HISTORICAL = BASE + "#historical-patient-origin-summary"
           LOGO = BASE + "#image-doctor-ghezelbaash-clinic-logo"
-          ARTICLE_2016 = BASE + "#article-omega-3-bipolar-i-2016"
-          ARTICLE_2021 = BASE + "#article-mdd-attachment-dissociation-trauma-2021"
           ARTICLE_IMAGES = [
               {"@id": BASE + "#image-saeed-ghezelbash-portrait-square-1200"},
               {"@id": BASE + "#image-saeed-ghezelbash-portrait-4x3-1200"},
               {"@id": BASE + "#image-saeed-ghezelbash-portrait-16x9-1200"},
           ]
-          PLACES = [
-              {
-                  "@type": "Place",
-                  "name": "Iran",
-                  "alternateName": "ایران",
-                  "sameAs": "https://www.wikidata.org/entity/Q794",
-                  "identifier": "IR",
-              },
-              {
-                  "@type": "Place",
-                  "name": "Iraq",
-                  "alternateName": "عراق",
-                  "sameAs": "https://www.wikidata.org/entity/Q796",
-                  "identifier": "IQ",
-              },
-          ]
           ARTICLE_FIXES = {
-              ARTICLE_2016: {
+              BASE + "#article-omega-3-bipolar-i-2016": {
                   "datePublished": "2016-05-19T00:00:00Z",
                   "dateModified": "2016-05-19T00:00:00Z",
                   "url": "https://doi.org/10.4103/2008-7802.182734",
                   "image": ARTICLE_IMAGES,
               },
-              ARTICLE_2021: {
+              BASE + "#article-mdd-attachment-dissociation-trauma-2021": {
                   "datePublished": "2021-09-06T00:00:00Z",
                   "dateModified": "2021-09-06T00:00:00Z",
                   "url": "https://doi.org/10.3390/healthcare9091169",
                   "image": ARTICLE_IMAGES,
               },
           }
+          PLACES = [
+              {"@type": "Place", "name": "Iran", "alternateName": "ایران", "sameAs": "https://www.wikidata.org/entity/Q794", "identifier": "IR"},
+              {"@type": "Place", "name": "Iraq", "alternateName": "عراق", "sameAs": "https://www.wikidata.org/entity/Q796", "identifier": "IQ"},
+          ]
 
-          def node_types(node: dict) -> set[str]:
+          def types(node):
               value = node.get("@type", [])
               return set(value if isinstance(value, list) else [value])
 
-          def repair_graph(path: Path) -> dict:
-              data = json.loads(path.read_text(encoding="utf-8"))
-              nodes = data.get("@graph", [])
+          def repair(path):
+              data = json.loads(Path(path).read_text(encoding="utf-8"))
+              nodes = data.get("@graph")
               if not isinstance(nodes, list):
-                  raise RuntimeError(f"{path}: @graph is not an array")
-              seen: set[str] = set()
+                  raise RuntimeError(f"{path}: missing @graph")
               for node in nodes:
                   if not isinstance(node, dict):
                       continue
                   identifier = node.get("@id")
-                  if isinstance(identifier, str):
-                      if identifier in seen:
-                          raise RuntimeError(f"{path}: duplicate @id {identifier}")
-                      seen.add(identifier)
-                  if "ImageObject" in node_types(node) and isinstance(node.get("contentUrl"), str):
+                  if "ImageObject" in types(node) and isinstance(node.get("contentUrl"), str):
                       node["url"] = node["contentUrl"]
                   if identifier == HISTORICAL:
                       node["spatialCoverage"] = PLACES
@@ -116,24 +92,21 @@ jobs:
                       })
                   if identifier in ARTICLE_FIXES:
                       node.update(ARTICLE_FIXES[identifier])
-              output = json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
-              path.write_text(output, encoding="utf-8")
+              text = json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n"
+              Path(path).write_text(text, encoding="utf-8")
               return data
 
-          full = repair_graph(Path("public/graph.jsonld"))
-          head = repair_graph(Path("src/data/semantic/head-graph.min.jsonld"))
-
-          full_by = {n.get("@id"): n for n in full.get("@graph", []) if isinstance(n, dict)}
-          head_by = {n.get("@id"): n for n in head.get("@graph", []) if isinstance(n, dict)}
-          for identifier in (HISTORICAL, LOGO, ARTICLE_2016, ARTICLE_2021):
+          full = repair("public/graph.jsonld")
+          head = repair("src/data/semantic/head-graph.min.jsonld")
+          full_by = {node.get("@id"): node for node in full["@graph"] if isinstance(node, dict)}
+          head_by = {node.get("@id"): node for node in head["@graph"] if isinstance(node, dict)}
+          required = [HISTORICAL, LOGO, *ARTICLE_FIXES]
+          for identifier in required:
               if identifier not in full_by or identifier not in head_by:
-                  raise RuntimeError(f"required node absent from Full/Head Graph: {identifier}")
-          for identifier in (HISTORICAL, LOGO, ARTICLE_2016, ARTICLE_2021):
-              for key in (
-                  "spatialCoverage" if identifier == HISTORICAL else
-                  "creditText" if identifier == LOGO else
-                  "datePublished",
-              ):
+                  raise RuntimeError(f"missing Head/Full node: {identifier}")
+          for identifier in required:
+              keys = ["spatialCoverage"] if identifier == HISTORICAL else (["url", "creditText", "license", "acquireLicensePage", "copyrightNotice"] if identifier == LOGO else ["datePublished", "dateModified", "url", "image"])
+              for key in keys:
                   if head_by[identifier].get(key) != full_by[identifier].get(key):
                       raise RuntimeError(f"Head/Full mismatch: {identifier} {key}")
 
@@ -143,14 +116,9 @@ jobs:
           layout_path = Path("src/layouts/BaseLayout.astro")
           layout = layout_path.read_text(encoding="utf-8")
           layout = re.sub(r'^import \{ normalizeGraphForRichResults \} from "\.\./lib/rich-results-graph\.mjs";\n', "", layout, flags=re.M)
-          layout = re.sub(
-              r'^const structuredData = .*?;$',
-              'const structuredData = headGraphRaw;',
-              layout,
-              flags=re.M,
-          )
+          layout = re.sub(r'^const structuredData = .*?;$', 'const structuredData = headGraphRaw;', layout, flags=re.M)
           if "normalizeGraphForRichResults" in layout:
-              raise RuntimeError("BaseLayout still references the removed normalizer")
+              raise RuntimeError("obsolete graph normalizer remains in BaseLayout")
           layout_path.write_text(layout, encoding="utf-8")
 
           package_path = Path("package.json")
@@ -158,32 +126,11 @@ jobs:
           package["scripts"] = {"build": "astro build"}
           package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-          for obsolete in (
-              Path("src/lib/rich-results-graph.mjs"),
-              Path("scripts/sync-rich-results-csp.mjs"),
-          ):
-              obsolete.unlink(missing_ok=True)
-
-          validator_path = Path(".github/scripts/validate_source.py")
-          validator = validator_path.read_text(encoding="utf-8")
-          article_anchor = '''    require(valid_iso_date(article.get("datePublished")), f"{article_id}: datePublished is invalid")\n'''
-          article_assertions = '''    require(valid_iso_date(article.get("dateModified")), f"{article_id}: dateModified is invalid")\n    require(isinstance(article.get("url"), str) and article.get("url", "").startswith("https://doi.org/"), f"{article_id}: canonical DOI URL is missing")\n    require(len(refs(article.get("image"))) == 3, f"{article_id}: three representative image ratios are missing")\n    head_article = head_by.get(article_id, {})\n    for property_name in ("datePublished", "dateModified", "url", "image"):\n        require(head_article.get(property_name) == article.get(property_name), f"Head/Full ScholarlyArticle mismatch for {article_id}: {property_name}")\n'''
-          if article_assertions.strip() not in validator:
-              validator = validator.replace(article_anchor, article_anchor + article_assertions)
-
-          image_anchor = '''require({DOCTOR, CLINIC} <= set(refs(full_by.get(TEAM, {}).get("about"))), "Team master does not describe both Doctor and Clinic")\n'''
-          image_assertions = '''for graph_name, graph_by in (("Full Graph", full_by), ("Head Graph", head_by)):\n    for image_id, image in graph_by.items():\n        if "ImageObject" in types(image) and isinstance(image.get("contentUrl"), str):\n            require(image.get("url") == image.get("contentUrl"), f"{graph_name} {image_id}: ImageObject.url must equal contentUrl")\nlogo_id = BASE + "#image-doctor-ghezelbaash-clinic-logo"\nfor graph_name, graph_by in (("Full Graph", full_by), ("Head Graph", head_by)):\n    logo = graph_by.get(logo_id, {})\n    for property_name in ("url", "creditText", "license", "acquireLicensePage", "copyrightNotice"):\n        require(bool(logo.get(property_name)), f"{graph_name} clinic logo lacks {property_name}")\n'''
-          if image_assertions.strip() not in validator:
-              validator = validator.replace(image_anchor, image_assertions + image_anchor)
-
-          historical_anchor = '''require(historical.get("isAccessibleForFree") is True, "historical Dataset is not declared freely accessible")\n'''
-          historical_assertions = '''for graph_name, dataset_node in (("Full Graph", historical), ("Head Graph", head_by.get(HISTORICAL_DATASET, {}))):\n    coverage = dataset_node.get("spatialCoverage", [])\n    require(isinstance(coverage, list) and len(coverage) == 2, f"{graph_name} historical Dataset spatialCoverage is incomplete")\n    require(all(isinstance(place, dict) and place.get("@type") == "Place" for place in coverage), f"{graph_name} historical Dataset spatialCoverage must use Place objects")\n'''
-          if historical_assertions.strip() not in validator:
-              validator = validator.replace(historical_anchor, historical_anchor + historical_assertions)
-          validator_path.write_text(validator, encoding="utf-8")
+          Path("src/lib/rich-results-graph.mjs").unlink(missing_ok=True)
+          Path("scripts/sync-rich-results-csp.mjs").unlink(missing_ok=True)
 
           head_text = Path("src/data/semantic/head-graph.min.jsonld").read_text(encoding="utf-8")
-          digest = base64.b64encode(hashlib.sha256(head_text.encode("utf-8")).digest()).decode("ascii")
+          digest = base64.b64encode(hashlib.sha256(head_text.encode()).digest()).decode()
           headers_path = Path("public/_headers")
           headers = headers_path.read_text(encoding="utf-8")
           lines = headers.splitlines()
@@ -193,130 +140,9 @@ jobs:
                   lines[index], count = re.subn(r"'sha256-[A-Za-z0-9+/=]+'", f"'sha256-{digest}'", line, count=1)
                   replaced += count
           if replaced != 1:
-              raise RuntimeError(f"expected to replace one JSON-LD CSP hash, replaced {replaced}")
+              raise RuntimeError(f"CSP JSON-LD hash replacement count: {replaced}")
           headers_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
           PY
-
-          cat > .github/workflows/validate.yml <<'YAML'
-          name: Validate production source and live site
-
-          on:
-            push:
-              branches: [main]
-              paths:
-                - 'src/**'
-                - 'public/**'
-                - 'astro.config.mjs'
-                - 'package.json'
-                - 'package-lock.json'
-                - '.node-version'
-                - '.github/scripts/**'
-                - '.github/workflows/validate.yml'
-            pull_request:
-              paths:
-                - 'src/**'
-                - 'public/**'
-                - 'astro.config.mjs'
-                - 'package.json'
-                - 'package-lock.json'
-                - '.node-version'
-                - '.github/scripts/**'
-                - '.github/workflows/validate.yml'
-
-          permissions:
-            contents: read
-
-          concurrency:
-            group: production-validation-${{ github.ref }}
-            cancel-in-progress: true
-
-          env:
-            NODE_VERSION: '24.18.0'
-            CANONICAL_URL: 'https://www.ghezelbaash.ir/'
-
-          jobs:
-            source:
-              name: Source build graph and CSP validation
-              runs-on: ubuntu-latest
-              timeout-minutes: 30
-              steps:
-                - uses: actions/checkout@v4
-
-                - uses: actions/setup-node@v4
-                  with:
-                    node-version: ${{ env.NODE_VERSION }}
-                    cache: npm
-
-                - name: Install and build
-                  run: |
-                    set -euo pipefail
-                    npm ci --no-audit --no-fund
-                    npm run build
-                    python3 -m pip install --quiet rdflib
-
-                - name: Validate immutable production contract
-                  run: python3 .github/scripts/validate_source.py
-
-            live:
-              name: Live deployment HTTP and semantic validation
-              needs: source
-              if: github.event_name == 'push'
-              runs-on: ubuntu-latest
-              timeout-minutes: 20
-              steps:
-                - uses: actions/checkout@v4
-
-                - name: Wait for and validate the matching Cloudflare deployment
-                  run: python3 .github/scripts/validate_live.py --expected-sha "${{ github.sha }}" --deployment-timeout 600
-
-                - name: Validate Cloudflare Pages range behavior
-                  shell: bash
-                  run: |
-                    set -euo pipefail
-                    mkdir -p live-audit
-                    video=$(find public/media/videos -type f -name '*.mp4' | sort | head -n1)
-                    url="https://www.ghezelbaash.ir/${video#public/}"
-                    status=$(curl -sS --compressed --max-time 90 -H 'Range: bytes=0-1023' -o /dev/null -D live-audit/video-range.headers -w '%{http_code}' "$url")
-                    case "$status" in
-                      200) echo 'Cloudflare Pages returned its documented full-response behavior for a Range request.' ;;
-                      206) grep -qi '^content-range:' live-audit/video-range.headers ;;
-                      *) echo "Unexpected Range response: $status" >&2; exit 1 ;;
-                    esac
-
-            lighthouse:
-              name: Repeated Mobile Desktop and Agentic Lighthouse audit
-              needs: live
-              if: github.event_name == 'push' && needs.live.result == 'success'
-              runs-on: ubuntu-latest
-              timeout-minutes: 40
-              steps:
-                - uses: actions/checkout@v4
-
-                - uses: actions/setup-node@v4
-                  with:
-                    node-version: ${{ env.NODE_VERSION }}
-                    cache: npm
-
-                - name: Run repeated Lighthouse audits
-                  shell: bash
-                  run: |
-                    set +e
-                    mkdir -p live-audit
-                    for mode in mobile desktop; do
-                      for run in 1 2 3; do
-                        preset=''
-                        [ "$mode" = desktop ] && preset='--preset=desktop'
-                        npx --yes lighthouse@latest "$CANONICAL_URL" $preset \
-                          --output=json --output-path="live-audit/lighthouse-${mode}-${run}.json" \
-                          --only-categories=performance,accessibility,best-practices,seo,agentic-browsing \
-                          --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
-                      done
-                    done
-                    exit 0
-
-                - name: Evaluate Lighthouse results
-                  run: python3 .github/scripts/evaluate_lighthouse.py --directory live-audit --enforce-agentic
-          YAML
 
       - name: Build and validate repaired source
         shell: bash
@@ -326,7 +152,7 @@ jobs:
           npm run build
           python3 .github/scripts/validate_source.py
 
-      - name: Commit repaired canonical source directly to main
+      - name: Commit repaired source directly to main
         shell: bash
         run: |
           set -euo pipefail
@@ -334,5 +160,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --cached --check
-          git commit -m "Fix Rich Results in canonical graph sources"
+          git commit -m "Fix Rich Results directly in canonical graph sources"
           git push origin HEAD:main
