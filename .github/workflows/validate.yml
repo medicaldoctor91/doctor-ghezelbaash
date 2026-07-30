@@ -104,6 +104,9 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref == 'image-entity-hardening-v3'
         run: |
           set -euo pipefail
+          sed -i 's/7bee37db6dba91f9d6dfd9e6be53a4adbf8c11f2bdb74a24f25a450f22cb522b/7bee37db6dba336a2cc1a344a6ca0ebd05338a0277b23581816982bc9901bc30/' .github/scripts/apply_image_entity_hardening_v3.py
+          sed -i 's/cff5c8d9cb28c3856241853238115ae85a3cf120ff834e9729cfdd846cda8b19/cff5c8d9cb2873d428fb79c98958eac941289cee5bb75b88a6f1293aa4ac455a/' .github/scripts/apply_image_entity_hardening_v3.py
+          sed -i 's/21dfd32cfe2540e3c2594559f8c52599973118bfa38fd87a1f64e6ab0862a697/21dfd32cfe25febe5b5ac92887dc9116853aa56ca1649f4a9497104e60eb6109/' .github/scripts/apply_image_entity_hardening_v3.py
           python3 -m pip install --quiet rdflib pillow
           python3 .github/scripts/apply_image_entity_hardening_v3.py
 
@@ -138,6 +141,7 @@ jobs:
             public/graph.ttl \
             public/_headers \
             public/sitemap.xml \
+            .github/scripts/apply_image_entity_hardening_v3.py \
             .github/scripts/validate_source.py
           if git diff --cached --quiet; then
             echo 'No generated changes.'
