@@ -1,0 +1,93 @@
+name: Apply Knowledge Panel alias ordering
+
+on:
+  push:
+    branches:
+      - align-knowledge-panel-alias-2026-07-30
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Reorder physician aliases and harden validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          old = '"alternateName":["Saeed Ghezelbash","Dr. Saeed Ghezelbash","Dr. Saeed Ghezelbaash","دکتر محمدسعید قزلباش","Mohammad Saeed Ghezelbash","Saeed Ghezelbaash"]'
+          new = '"alternateName":["Mohammad Saeed Ghezelbash","Saeed Ghezelbash","Dr. Saeed Ghezelbash","Dr. Saeed Ghezelbaash","دکتر محمدسعید قزلباش","Saeed Ghezelbaash"]'
+
+          for filename in ("public/graph.jsonld", "src/pages/index.md"):
+              path = Path(filename)
+              text = path.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise RuntimeError(f"{filename}: expected exactly one canonical Person alternateName sequence, found {count}")
+              path.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          validator = Path(".github/scripts/validate_source.py")
+          text = validator.read_text(encoding="utf-8")
+          anchor = 'SCHOLAR_URL = "https://scholar.google.com/citations?user=BcWBirUAAAAJ"\n'
+          addition = anchor + 'KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"\n'
+          if "KNOWLEDGE_PANEL_NAME" not in text:
+              if anchor not in text:
+                  raise RuntimeError("validator constant insertion anchor missing")
+              text = text.replace(anchor, addition, 1)
+
+          full_anchor = 'require({"Person", "IndividualPhysician"} <= types(doctor), f"doctor types are incomplete: {types(doctor)}")\n'
+          full_check = full_anchor + 'require(isinstance(doctor.get("alternateName"), list) and doctor["alternateName"] and doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Full Graph Person.alternateName must begin with the current Google Knowledge Panel name")\n'
+          if "Full Graph Person.alternateName must begin" not in text:
+              if full_anchor not in text:
+                  raise RuntimeError("Full Graph validator insertion anchor missing")
+              text = text.replace(full_anchor, full_check, 1)
+
+          head_anchor = 'head_doctor = head_by.get(DOCTOR, {})\n'
+          head_check = head_anchor + 'require(isinstance(head_doctor.get("alternateName"), list) and head_doctor["alternateName"] and head_doctor["alternateName"][0] == KNOWLEDGE_PANEL_NAME, "Head Graph Person.alternateName must begin with the current Google Knowledge Panel name")\n'
+          if "Head Graph Person.alternateName must begin" not in text:
+              if head_anchor not in text:
+                  raise RuntimeError("Head Graph validator insertion anchor missing")
+              text = text.replace(head_anchor, head_check, 1)
+
+          validator.write_text(text, encoding="utf-8")
+
+          llms = Path("public/llms.txt")
+          text = llms.read_text(encoding="utf-8")
+          old_identity = "Dr. Saeed Ghezelbash (Mohammadsaeed Ghezelbash)"
+          new_identity = "Dr. Saeed Ghezelbash (Mohammad Saeed Ghezelbash)"
+          if old_identity not in text:
+              raise RuntimeError("llms.txt identity spelling anchor missing")
+          llms.write_text(text.replace(old_identity, new_identity, 1), encoding="utf-8")
+          PY
+
+      - name: Build and validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+          python .github/scripts/validate_source.py
+
+      - name: Commit clean final changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/apply-knowledge-panel-alias.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/scripts/validate_source.py public/graph.jsonld public/llms.txt src/pages/index.md .github/workflows/apply-knowledge-panel-alias.yml
+          git commit -m "Prioritize current Knowledge Panel name in physician aliases"
+          git push origin HEAD:align-knowledge-panel-alias-2026-07-30
