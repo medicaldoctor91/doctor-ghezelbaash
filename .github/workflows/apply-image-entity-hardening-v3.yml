@@ -1,24 +1,28 @@
 name: Apply image entity hardening v3
 
 on:
-  push:
-    branches: [image-entity-hardening-v3]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 concurrency:
-  group: image-entity-hardening-v3-${{ github.ref }}
+  group: image-entity-hardening-v3-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
   apply:
-    if: ${{ !contains(github.event.head_commit.message, '[image-hardening-generated]') }}
+    if: >-
+      github.head_ref == 'image-entity-hardening-v3' &&
+      !contains(github.event.pull_request.head.label, '[image-hardening-generated]')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: image-entity-hardening-v3
           fetch-depth: 2
           persist-credentials: true
 
