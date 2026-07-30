@@ -192,8 +192,23 @@ required_files = [
     "public/doctor.vcf", "public/clinic.vcf", "public/favicon.svg", "public/favicon.ico",
     "public/favicon-48x48.png", "public/apple-touch-icon.png", "public/site.webmanifest",
     "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg",
-    "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg",
+    "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.webp",
+    "public/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp",
+    "public/media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-portrait-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-portrait-1600.webp",
     "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg",
+    "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.webp",
+    "public/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp",
+    "public/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp",
+    "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg",
+    "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.webp",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.webp",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp",
     "public/media/brand/doctor-ghezelbaash-symbol-512.png",
 ]
 for filename in required_files:
@@ -212,15 +227,64 @@ for filename in (
         require(source.read_bytes() == built.read_bytes(), f"source → dist byte mismatch: {filename}")
 
 identity_hashes = {
-    "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg": "236fe6eb5f3651de15cf72033a372ab027ceb3c84995074aafe6a6e20cf0d484",
-    "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg": "144576a426ace532ca5b280590c673df2fad830ef8511789990d65538b1345e2",
-    "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg": "09aa6fefed5c6491f270de999db57264049d567fd68cda7966540ea9e3b45c36",
+    "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg": "7bee37db6dba336a2cc1a344a6ca0ebd05338a0277b23581816982bc9901bc30",
+    "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.webp": "eca04fed3b10007387bc322c72c84a1e9f94c82df0b965c51ae2e7c8c381c8b5",
+    "public/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp": "b36117f7120aa7c9cd609370ce69ee11ebb9775dca1f29520b45194ae32f588e",
+    "public/media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp": "8bdaf825435a09eddb9f29b8020b8608c2602dafc0a632ce99da824aed404955",
+    "public/media/images/physician/saeed-ghezelbash-portrait-960.webp": "7755d34d08043f7602553a1dca74441924c292bf963e2a14ee3dbface856c416",
+    "public/media/images/physician/saeed-ghezelbash-portrait-1600.webp": "ca07a4707c8569a179b7da424fc3cf80473507832fd15349175526dfb9566b5b",
+    "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg": "cff5c8d9cb2873d428fb79c98958eac941289cee5bb75b88a6f1293aa4ac455a",
+    "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.webp": "36ded611bea0f3e7b0716f0d78debcbc9e3f4bb605411e871c4dc22cc40d04d0",
+    "public/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp": "458dad6ad2215241e5f294faee331f21136fd8d31b02c394aa0dba4610565d91",
+    "public/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp": "1153fe2adfffc09cc7ae13ff1d846bf48fe357b66828c2e7a0f7cc034a063e81",
+    "public/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp": "2ab875249b93aabf587465e86636a70695e816491a77d7cf31fc294a692ec99d",
+    "public/media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp": "5ce071128c5bfa15c55a6532bb13e5b975cefd73670ee67bb28f6ba23efb3db0",
+    "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg": "21dfd32cfe25febe5b5ac92887dc9116853aa56ca1649f4a9497104e60eb6109",
+    "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.webp": "f5ce023ccd332e78941502c195aecd52289999b6d299216a4bd83565609ec530",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.webp": "6a1dc65fe5cdb5ac8ec2eb9f197db31693fc693332bc8f142371ea75cef5c916",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-960.webp": "cf0ec82780ad27463471f3c29c487ee01248c96f41d5b7854c8308e1c257ba82",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp": "bcc98ea7f8987b2e60476e6fa006b0387e5d8775440f91a5b0b30a2692f5be2e",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp": "01484d9e4dd83212b458c980d426b0d6104252ebe9f96c2c881f8f594b1d9fa5",
     "public/media/brand/doctor-ghezelbaash-symbol-512.png": "5490580757998ac37fa310fac84b013f1ce896262e659004a34732f503eb2e02",
 }
 for filename, expected in identity_hashes.items():
     path = Path(filename)
     if path.is_file():
         require(hashlib.sha256(path.read_bytes()).hexdigest() == expected, f"identity asset hash changed: {filename}")
+
+
+entity_image_assets = [
+    "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg",
+    "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.webp",
+    "public/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp",
+    "public/media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-portrait-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-portrait-1600.webp",
+    "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg",
+    "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.webp",
+    "public/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp",
+    "public/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-clinical-examination-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp",
+    "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg",
+    "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.webp",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.webp",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-960.webp",
+    "public/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp",
+]
+for filename in entity_image_assets:
+    payload = Path(filename).read_bytes()
+    for token in (
+        b"Saeed Ghezelbash",
+        b"Mohammad Saeed Ghezelbash",
+        b"Dr. Saeed Ghezelbash Aesthetic Clinic",
+        b"Q140287622",
+        b"Q140288589",
+        b"/g/11nqdfk76c",
+    ):
+        require(token in payload, f"identity metadata token missing from {filename}: {token!r}")
+    require(b"Dr. Saeed Ghezelbaash Clinic" not in payload, f"obsolete clinic name remains in {filename}")
 
 html = read_text(DIST / "index.html")
 html_bytes = len(html.encode("utf-8"))

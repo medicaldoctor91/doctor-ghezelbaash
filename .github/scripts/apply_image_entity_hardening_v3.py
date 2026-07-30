@@ -51,7 +51,7 @@ ASSETS: dict[str, dict[str, int | str]] = {}
 SUBJECTS = {
     "portrait": {
         "commons_filename": "Saeed-Ghezelbaash-physician-portrait.jpg",
-        "expected_jpeg_sha256": "7bee37db6dba91f9d6dfd9e6be53a4adbf8c11f2bdb74a24f25a450f22cb522b",
+        "expected_jpeg_sha256": "7bee37db6dba336a2cc1a344a6ca0ebd05338a0277b23581816982bc9901bc30",
         "master_id": BASE + "#image-saeed-ghezelbash-portrait-master",
         "master_webp_id": BASE + "#image-saeed-ghezelbash-portrait-master-webp",
         "master_jpg": "public/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg",
@@ -79,7 +79,7 @@ SUBJECTS = {
     },
     "office": {
         "commons_filename": "Saeed-Ghezelbaash-in-clinical-office.jpg",
-        "expected_jpeg_sha256": "cff5c8d9cb28c3856241853238115ae85a3cf120ff834e9729cfdd846cda8b19",
+        "expected_jpeg_sha256": "cff5c8d9cb2873d428fb79c98958eac941289cee5bb75b88a6f1293aa4ac455a",
         "master_id": BASE + "#image-saeed-ghezelbash-clinical-office-master",
         "master_webp_id": BASE + "#image-saeed-ghezelbash-clinical-office-master-webp",
         "master_jpg": "public/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg",
@@ -107,7 +107,7 @@ SUBJECTS = {
     },
     "team": {
         "commons_filename": "Saeed-Ghezelbaash-with-clinical-team.jpg",
-        "expected_jpeg_sha256": "21dfd32cfe2540e3c2594559f8c52599973118bfa38fd87a1f64e6ab0862a697",
+        "expected_jpeg_sha256": "21dfd32cfe25febe5b5ac92887dc9116853aa56ca1649f4a9497104e60eb6109",
         "master_id": BASE + "#image-saeed-ghezelbash-clinical-team-master",
         "master_webp_id": BASE + "#image-saeed-ghezelbash-clinical-team-master-webp",
         "master_jpg": "public/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg",
