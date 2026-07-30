@@ -16,8 +16,8 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 /
   Content-Language: fa-IR
   Cache-Control: public, max-age=0, must-revalidate
-  Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle", </index.md>; rel="alternate"; type="text/markdown"; hreflang="fa-IR", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-NGyOjbYlgJYR2xuTvEFxCDZ+B5aSAoqJ9YK/3a4+LVY='; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
+  Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle", </llms.txt>; rel="describedby"; type="text/plain", </index.md>; rel="alternate"; type="text/markdown"; hreflang="fa-IR", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-Sc22/Oq6p6boX4h2WQlhR9gHH5UKC/cDh8Bffa3sUBY='; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
 
 /404.html
   X-Robots-Tag: noindex, nofollow
@@ -39,6 +39,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /graph.jsonld
   Content-Type: application/ld+json; charset=utf-8
+  X-Robots-Tag: index, follow
   Cache-Control: public, max-age=86400, s-maxage=604800
   Link: </graph.ttl>; rel="alternate"; type="text/turtle"
   Access-Control-Allow-Origin: *
@@ -46,6 +47,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /graph.ttl
   Content-Type: text/turtle; charset=utf-8
+  X-Robots-Tag: index, follow
   Cache-Control: public, max-age=86400, s-maxage=604800
   Link: </graph.jsonld>; rel="alternate"; type="application/ld+json"
   Access-Control-Allow-Origin: *
@@ -53,22 +55,29 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /llms.txt
   Content-Type: text/plain; charset=utf-8
+  X-Robots-Tag: index, follow
+  Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
 
 /llms-full.txt
   Content-Type: text/plain; charset=utf-8
+  X-Robots-Tag: noindex, follow
+  Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
 
 /doctor.vcf
   Content-Type: text/vcard; charset=utf-8
+  X-Robots-Tag: noindex
   Access-Control-Allow-Origin: *
 
 /clinic.vcf
   Content-Type: text/vcard; charset=utf-8
+  X-Robots-Tag: noindex
   Access-Control-Allow-Origin: *
 
 /site.webmanifest
   Content-Type: application/manifest+json; charset=utf-8
+  X-Robots-Tag: noindex
   Cache-Control: public, max-age=86400, s-maxage=604800
 
 /favicon.svg
@@ -93,6 +102,8 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /datasets/*
   Content-Type: application/json; charset=utf-8
+  X-Robots-Tag: noindex, follow
+  Link: <https://www.ghezelbaash.ir/#historical-patient-origin-summary>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json"
   Access-Control-Allow-Origin: *
 
 /media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg

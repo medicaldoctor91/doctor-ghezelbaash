@@ -467,3 +467,11 @@ address {
   min-block-size: 24px;
   padding-block: 3px;
 }
+
+/* Stable fragment aliases preserve legacy deep links without creating duplicate entities. */
+.semantic-alias-anchor {
+  display: block;
+  height: 0;
+  overflow: hidden;
+  scroll-margin-top: 1rem;
+}

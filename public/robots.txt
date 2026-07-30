@@ -15,6 +15,7 @@ Allow: /
 User-agent: Claude-User
 Allow: /
 
+# Non-HTML indexing policy is delivered with X-Robots-Tag HTTP headers.
 Sitemap: https://www.ghezelbaash.ir/sitemap.xml
 
 # Machine-readable entity graph (informational comment; not a robots directive):
