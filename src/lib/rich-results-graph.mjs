@@ -1,3 +1,4 @@
+// Google-specific compatibility projection; canonical entity names and visible copy remain unchanged.
 const BASE = 'https://www.ghezelbaash.ir/';
 const DATASET = `${BASE}#historical-patient-origin-summary`;
 const LOGO = `${BASE}#image-doctor-ghezelbaash-clinic-logo`;
