@@ -49,17 +49,8 @@ jobs:
                   raise SystemExit(f'{path}: expected exactly one replacement target')
               file.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          replace_once(
-              'public/_headers',
-              '''\n/datasets/*.geojson
-  Content-Type: application/geo+json; charset=utf-8
-  X-Robots-Tag: noindex, follow
-  Link: <https://www.ghezelbaash.ir/#historical-patient-origin-summary>; rel="about", </datasets/historical-patient-origin-summary.json>; rel="describedby"; type="application/json"
-  Access-Control-Allow-Origin: *
-  Cross-Origin-Resource-Policy: cross-origin
-''',
-              ''
-          )
+          geojson_block = "\n/datasets/*.geojson\n  Content-Type: application/geo+json; charset=utf-8\n  X-Robots-Tag: noindex, follow\n  Link: <https://www.ghezelbaash.ir/#historical-patient-origin-summary>; rel=\"about\", </datasets/historical-patient-origin-summary.json>; rel=\"describedby\"; type=\"application/json\"\n  Access-Control-Allow-Origin: *\n  Cross-Origin-Resource-Policy: cross-origin\n"
+          replace_once('public/_headers', geojson_block, '')
           replace_once(
               '.github/scripts/validate_source.py',
               'for path in ("/index.md", "/llms-full.txt", "/datasets/*.geojson"):\n',
