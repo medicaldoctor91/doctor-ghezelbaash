@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - strengthen-entity-machine-surfaces-2026-07-30
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
