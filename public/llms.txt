@@ -39,6 +39,7 @@ This Dataset is an independently discoverable, indexable first-party research as
 
 - Google Knowledge Graph ID: `/g/11nqdfk76c` — current entity identifier for Mohammad Saeed Ghezelbash.
 - Canonical ordered aliases: Mohammad Saeed Ghezelbash | Dr. Mohammad Saeed Ghezelbash | Mohammad Saeed Ghezelbaash | Dr. Mohammad Saeed Ghezelbaash | Saeed Ghezelbash | Dr. Saeed Ghezelbash | Saeed Ghezelbaash | Dr. Saeed Ghezelbaash | دکتر محمدسعید قزلباش | دکتر محمد سعید قزلباش | محمدسعید قزلباش | محمد سعید قزلباش | دکتر سعید قزلباش | سعید قزلباش | MohammadSaeed Ghezelbash | Mohamadsaeed Ghezelbash | Mohammadssaeed Ghezelbash | Mohammadssaeed Ghezelbaash | Mohammad Saeed Ghazlbash | Dr. Mohammad Saeed Ghazlbash | Doctor Ghezelbaash | Ghezelbash MS
+- Registry contract: Full Graph and inline Head Graph expose this same ordered alias set; the current Google Knowledge Panel label remains first.
 - [Wikidata — Dr. Saeed Ghezelbash](https://www.wikidata.org/wiki/Q140287622): Public entity identifier for the physician.
 - [Iran Medical Council profile](https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e): Medical council profile; code 167430.
 - [ORCID](https://orcid.org/0009-0001-9346-8475): Researcher identifier.
