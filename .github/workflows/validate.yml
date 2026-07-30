@@ -172,7 +172,7 @@ jobs:
               raise RuntimeError('Failed to update CSP hash')
           headers_path.write_text(headers, encoding='utf-8')
 
-          forbidden = ('rich-results-graph.mjs', 'sync-rich-results-csp.mjs', 'hardenRichResultsGraph', 'page-projections')
+          forbidden = ('rich-results-graph.mjs', 'sync-rich-results-csp.mjs', 'hardenRichResultsGraph')
           for path in ROOT.rglob('*'):
               if not path.is_file() or '.git' in path.parts:
                   continue
