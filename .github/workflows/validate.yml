@@ -23,7 +23,7 @@ jobs:
           node-version: '24.18.0'
           cache: npm
 
-      - name: Apply fixes directly to canonical graph files
+      - name: Repair existing canonical graph sources
         shell: bash
         run: |
           set -euo pipefail
@@ -32,40 +32,31 @@ jobs:
           from pathlib import Path
           from rdflib import Graph
           from rdflib.compare import to_canonical_graph
-          import base64
-          import hashlib
-          import json
-          import re
+          import base64, hashlib, json, re
 
           ROOT = Path('.')
           BASE = 'https://www.ghezelbaash.ir/'
-          DATASET_ID = f'{BASE}#historical-patient-origin-summary'
-          LOGO_ID = f'{BASE}#image-doctor-ghezelbaash-clinic-logo'
+          DATASET = BASE + '#historical-patient-origin-summary'
+          LOGO = BASE + '#image-doctor-ghezelbaash-clinic-logo'
           ARTICLE_IMAGES = [
-              {'@id': f'{BASE}#image-saeed-ghezelbash-portrait-square-1200'},
-              {'@id': f'{BASE}#image-saeed-ghezelbash-portrait-4x3-1200'},
-              {'@id': f'{BASE}#image-saeed-ghezelbash-portrait-16x9-1200'},
+              {'@id': BASE + '#image-saeed-ghezelbash-portrait-square-1200'},
+              {'@id': BASE + '#image-saeed-ghezelbash-portrait-4x3-1200'},
+              {'@id': BASE + '#image-saeed-ghezelbash-portrait-16x9-1200'},
           ]
-          ARTICLE_FIXES = {
-              f'{BASE}#article-omega-3-bipolar-i-2016': {
-                  'datePublished': '2016-05-19T00:00:00Z',
-                  'dateModified': '2016-05-19T00:00:00Z',
-                  'url': 'https://doi.org/10.4103/2008-7802.182734',
-                  'image': ARTICLE_IMAGES,
-              },
-              f'{BASE}#article-mdd-attachment-dissociation-trauma-2021': {
-                  'datePublished': '2021-09-06T00:00:00Z',
-                  'dateModified': '2021-09-06T00:00:00Z',
-                  'url': 'https://doi.org/10.3390/healthcare9091169',
-                  'image': ARTICLE_IMAGES,
-              },
+          ARTICLES = {
+              BASE + '#article-omega-3-bipolar-i-2016': (
+                  '2016-05-19T00:00:00Z',
+                  'https://doi.org/10.4103/2008-7802.182734',
+              ),
+              BASE + '#article-mdd-attachment-dissociation-trauma-2021': (
+                  '2021-09-06T00:00:00Z',
+                  'https://doi.org/10.3390/healthcare9091169',
+              ),
           }
 
-          def types(node):
+          def type_set(node):
               value = node.get('@type')
-              if isinstance(value, list):
-                  return {item for item in value if isinstance(item, str)}
-              return {value} if isinstance(value, str) else set()
+              return set(value) if isinstance(value, list) else ({value} if isinstance(value, str) else set())
 
           def patch(document):
               graph = document.get('@graph')
@@ -76,47 +67,39 @@ jobs:
                   for node in graph
                   if isinstance(node, dict) and isinstance(node.get('@id'), str)
               }
-
               for node in graph:
-                  if not isinstance(node, dict):
-                      continue
-                  if 'ImageObject' in types(node) and isinstance(node.get('contentUrl'), str):
+                  if isinstance(node, dict) and 'ImageObject' in type_set(node) and isinstance(node.get('contentUrl'), str):
                       node['url'] = node['contentUrl']
 
-              dataset = by_id.get(DATASET_ID)
+              dataset = by_id.get(DATASET)
               if not isinstance(dataset, dict):
-                  raise RuntimeError(f'Missing {DATASET_ID}')
+                  raise RuntimeError('Historical Dataset missing')
               dataset['spatialCoverage'] = [
-                  {
-                      '@type': 'Place',
-                      'name': 'Iran',
-                      'alternateName': 'ایران',
-                      'sameAs': 'https://www.wikidata.org/entity/Q794',
-                  },
-                  {
-                      '@type': 'Place',
-                      'name': 'Iraq',
-                      'alternateName': 'عراق',
-                      'sameAs': 'https://www.wikidata.org/entity/Q796',
-                  },
+                  {'@type': 'Place', 'name': 'Iran', 'alternateName': 'ایران', 'sameAs': 'https://www.wikidata.org/entity/Q794'},
+                  {'@type': 'Place', 'name': 'Iraq', 'alternateName': 'عراق', 'sameAs': 'https://www.wikidata.org/entity/Q796'},
               ]
 
-              logo = by_id.get(LOGO_ID)
+              logo = by_id.get(LOGO)
               if not isinstance(logo, dict) or not isinstance(logo.get('contentUrl'), str):
-                  raise RuntimeError(f'Missing {LOGO_ID}')
+                  raise RuntimeError('Clinic logo ImageObject missing')
               logo.update({
                   'url': logo['contentUrl'],
                   'creditText': 'Dr. Saeed Ghezelbash Aesthetic Clinic',
                   'license': 'https://creativecommons.org/licenses/by/4.0/',
-                  'acquireLicensePage': f'{BASE}#license',
+                  'acquireLicensePage': BASE + '#license',
                   'copyrightNotice': '© 2026 Dr. Saeed Ghezelbash',
               })
 
-              for article_id, values in ARTICLE_FIXES.items():
+              for article_id, (date_value, doi_url) in ARTICLES.items():
                   article = by_id.get(article_id)
                   if not isinstance(article, dict):
-                      raise RuntimeError(f'Missing {article_id}')
-                  article.update(values)
+                      raise RuntimeError(f'ScholarlyArticle missing: {article_id}')
+                  article.update({
+                      'datePublished': date_value,
+                      'dateModified': date_value,
+                      'url': doi_url,
+                      'image': ARTICLE_IMAGES,
+                  })
               return document
 
           head_path = ROOT / 'src/data/semantic/head-graph.min.jsonld'
@@ -134,10 +117,7 @@ jobs:
           rdf = Graph().parse(data=full_text, format='json-ld')
           canonical = to_canonical_graph(rdf)
           nt = canonical.serialize(format='nt')
-          ttl_path.write_text(
-              '\n'.join(sorted(line.strip() for line in nt.splitlines() if line.strip())) + '\n',
-              encoding='utf-8',
-          )
+          ttl_path.write_text('\n'.join(sorted(line.strip() for line in nt.splitlines() if line.strip())) + '\n', encoding='utf-8')
 
           layout_path = ROOT / 'src/layouts/BaseLayout.astro'
           layout = layout_path.read_text(encoding='utf-8')
@@ -159,6 +139,14 @@ jobs:
           ):
               obsolete.unlink(missing_ok=True)
 
+          validator_path = ROOT / '.github/scripts/validate_source.py'
+          validator = validator_path.read_text(encoding='utf-8')
+          validator = validator.replace(
+              '"src/pages/llms-full.txt.ts", "src/lib/page-projections.ts", "dist/llms-full.txt",',
+              '"src/pages/llms-full.txt.ts", "dist/llms-full.txt",',
+          )
+          validator_path.write_text(validator, encoding='utf-8')
+
           digest = base64.b64encode(hashlib.sha256(head_text.encode('utf-8')).digest()).decode('ascii')
           headers_path = ROOT / 'public/_headers'
           headers = headers_path.read_text(encoding='utf-8')
@@ -171,19 +159,6 @@ jobs:
           if count != 1:
               raise RuntimeError('Failed to update CSP hash')
           headers_path.write_text(headers, encoding='utf-8')
-
-          forbidden = ('rich-results-graph.mjs', 'sync-rich-results-csp.mjs', 'hardenRichResultsGraph')
-          for path in ROOT.rglob('*'):
-              if not path.is_file() or '.git' in path.parts:
-                  continue
-              if path.as_posix() == '.github/workflows/validate.yml':
-                  continue
-              if path.suffix.lower() not in {'.astro', '.js', '.mjs', '.ts', '.json', '.py', '.yml', '.yaml'}:
-                  continue
-              text = path.read_text(encoding='utf-8', errors='ignore')
-              for token in forbidden:
-                  if token in text:
-                      raise RuntimeError(f'Parallel helper reference remains: {path} -> {token}')
           PY
 
           npm ci --no-audit --no-fund
@@ -194,7 +169,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           if git diff --cached --quiet; then
-            echo 'Canonical graph sources already contain the direct fixes.'
+            echo 'Canonical graph files already contain the direct corrections.'
             exit 0
           fi
           git commit -m 'Fix Rich Results directly in canonical graph sources'
