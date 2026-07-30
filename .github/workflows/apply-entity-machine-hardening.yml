@@ -44,13 +44,23 @@ jobs:
           lang="en"
           dir="ltr"
           style="direction: ltr; text-align: left;">'''
-          new = '<details id="doctor-ghezelbaash-structured-data-section" class="final-collapsible-section">'
+          intermediate = '<details id="doctor-ghezelbaash-structured-data-section" class="mega-section full-bleed">'
           if value.count(old) != 1:
               raise SystemExit(f'expected one multiline structured-data container, found {value.count(old)}')
-          path.write_text(value.replace(old, new, 1), encoding='utf-8')
+          path.write_text(value.replace(old, intermediate, 1), encoding='utf-8')
           PY
           cat .github/tmp/entity-hardening/transform.part* | base64 -d > /tmp/transform.py
           python /tmp/transform.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('src/pages/index.md')
+          value = path.read_text(encoding='utf-8')
+          old = '<details id="doctor-ghezelbaash-structured-data-project" class="mega-section full-bleed">'
+          final = '<details id="doctor-ghezelbaash-structured-data-project" class="final-collapsible-section" lang="en" dir="ltr">'
+          if value.count(old) != 1:
+              raise SystemExit(f'expected one transformed project container, found {value.count(old)}')
+          path.write_text(value.replace(old, final, 1), encoding='utf-8')
+          PY
 
       - name: Build and synchronize CSP
         shell: bash
