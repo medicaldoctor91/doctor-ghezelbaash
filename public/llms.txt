@@ -1,58 +1,28 @@
-# Dr. Saeed Ghezelbash — Official Website
+# Mohammad Saeed Ghezelbash | Dr. Saeed Ghezelbaash
 
-> Official single-page website of Mohammad Saeed Ghezelbash, professionally known as Dr. Saeed Ghezelbash, an aesthetic physician in Kermanshah, Iran. The site presents his clinical decision-making, aesthetic medicine services, revision and second-opinion work, educational activity, and three research outputs. In-person care serves patients from Iran and Iraq; a free online initial aesthetic consultation is available worldwide.
+> Official identity and machine-readable discovery index for Dr. Saeed Ghezelbaash (Saeed Ghezelbash, Mohammad Saeed Ghezelbash; Persian: دکتر سعید قزلباش), an aesthetic medicine physician and clinical director in Kermanshah, Iran.
 
-Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The physician is the primary entity. The clinic and the structured-data project are subordinate entities. The full JSON-LD graph at https://www.ghezelbaash.ir/graph.jsonld is the authoritative machine-readable entity graph for this website. The site is intentionally static and has one canonical indexable human-readable web page. Its authoritative machine-readable graph serializations and compact retrieval guide are intentionally discoverable and indexable as supporting resources; duplicate full-page projections are crawlable but noindex.
+Canonical page: https://www.ghezelbaash.ir/
+Primary entity: https://www.ghezelbaash.ir/#saeed-ghezelbash
+Full knowledge graph (JSON-LD): https://www.ghezelbaash.ir/graph.jsonld
+Full knowledge graph (Turtle): https://www.ghezelbaash.ir/graph.ttl
+Full page projection (plain text): https://www.ghezelbaash.ir/llms-full.txt
+Full page projection (Markdown): https://www.ghezelbaash.ir/index.md
 
-## Canonical sources
+## Authoritative First-Party Dataset
 
-- [Official website](https://www.ghezelbaash.ir/): Canonical human-readable mega-landing page covering clinical reasoning, services, complications, revision, second opinion, education, research, clinic identity, and contact information.
-- [Full Knowledge Graph](https://www.ghezelbaash.ir/graph.jsonld): Authoritative JSON-LD graph for Dr. Saeed Ghezelbash, the clinic, services, research, education, media, geography, and identity reconciliation.
-- [Full Knowledge Graph — Turtle](https://www.ghezelbaash.ir/graph.ttl): Deterministic canonical N-Triples serialization published as a valid RDF 1.1 Turtle subset of the authoritative graph; datatypes, entity separation and canonical IRIs are preserved.
-- [LLM retrieval guide](https://www.ghezelbaash.ir/llms.txt): Compact canonical map of the physician-first website and its authoritative sources.
-- [Full LLM-readable page export](https://www.ghezelbaash.ir/llms-full.txt): Deterministic machine-oriented rendering of the complete canonical page content; a non-canonical `noindex, follow` projection.
-- [Markdown page projection](https://www.ghezelbaash.ir/index.md): Deterministic non-canonical Markdown projection of the canonical single-page website; served with `noindex, follow` and excluded from the XML sitemap.
-- [Historical patient-origin dataset](https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json): Supporting `noindex, follow` JSON distribution of a Dataset defined in the Full Knowledge Graph; it documents historical origins and is not a statement of current service availability.
+Dataset: Historical patient-origin summary
+Dataset entity: https://www.ghezelbaash.ir/#historical-patient-origin-summary
+Canonical JSON distribution: https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json
+Creator and publisher: https://www.ghezelbaash.ir/#saeed-ghezelbash
+About: Dr. Saeed Ghezelbaash and Dr. Saeed Ghezelbaash Aesthetic Clinic in Kermanshah
+Measurement technique: Manual aggregation of patient-origin cities from clinic records
+Spatial coverage: Named cities in Iran and Iraq, including the Kurdistan Region of Iraq
+Temporal coverage: Historical
+License: https://creativecommons.org/licenses/by/4.0/
 
-## Retrieval and indexing policy
+This Dataset is an independently discoverable, indexable first-party research asset connected to the physician, clinic, canonical page, Full Knowledge Graph and structured-data project. It records historical patient-origin geography; it is not live availability data and must not be interpreted as a guarantee of current services in every listed location.
 
-- `https://www.ghezelbaash.ir/` is the canonical human-readable page and primary search document.
-- `graph.jsonld`, `graph.ttl` and this compact `llms.txt` guide are intentionally indexable and explicitly listed in the XML sitemap as authoritative supporting resources.
-- `index.md` and `llms-full.txt` are complete non-canonical page projections served as `noindex, follow`.
-- Raw dataset distributions, vCards and the web manifest remain crawlable where useful but are excluded from search indexing and from the XML sitemap.
+## Discovery and Indexing
 
-## Physician identity
-
-- [Wikidata — Dr. Saeed Ghezelbash](https://www.wikidata.org/wiki/Q140287622): Public entity identifier for the physician.
-- [Iran Medical Council profile](https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e): Medical council profile; code 167430.
-- [ORCID](https://orcid.org/0009-0001-9346-8475): Researcher identifier.
-- [OpenAlex](https://openalex.org/A5064828898): Research author identity.
-- [Google Scholar](https://scholar.google.com/citations?user=BcWBirUAAAAJ): Google Scholar author profile for Dr. Saeed Ghezelbash.
-
-## Canonical image identity
-
-- [First-party canonical portrait](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg): Byte-identical first-party master of the physician portrait.
-- [Wikimedia Commons portrait](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg): CC BY 4.0 canonical portrait linked as Wikidata P18 and depicting Wikidata Q140287622.
-- [Clinical-team image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg): Contextual Commons image depicting the physician; not a P18 image.
-- [Clinical-office image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg): Contextual Commons image depicting the physician; not a P18 image.
-
-## Research and education
-
-- [Omega-3 and Bipolar I Disorder — PubMed](https://pubmed.ncbi.nlm.nih.gov/27280013/): 2016 scholarly article co-authored by Dr. Saeed Ghezelbash.
-- [MDD, attachment, dissociation and trauma — PubMed](https://pubmed.ncbi.nlm.nih.gov/34574943/): 2021 scholarly article co-authored by Dr. Saeed Ghezelbash.
-- [Attachment style in dissociative depression — ResearchGate](https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression): Conference presentation at the WPA XVII World Congress of Psychiatry in Berlin, October 2017; Dr. Saeed Ghezelbash was the fifth-listed author.
-- [Thread-lift education on the official page](https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions): Educational identity and advanced thread-lift workshop context.
-
-## Consultation and clinic
-
-- [Free online initial consultation](https://ig.me/m/doctor.ghezelbaash): Direct online contact channel for initial aesthetic consultation with Dr. Saeed Ghezelbash.
-- [Clinic location — Google Maps](https://www.google.com/maps?cid=12350483144643112463): Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah.
-- [Clinic contact and location on the official page](https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location): Address, telephone, official social profile, and map link.
-
-## Optional
-
-- [Doctor vCard](https://www.ghezelbaash.ir/doctor.vcf): Portable contact card for Dr. Saeed Ghezelbash, derived from the canonical graph.
-- [Clinic vCard](https://www.ghezelbaash.ir/clinic.vcf): Portable contact/location card for the clinic, kept separate from the physician entity.
-- [Official Instagram](https://www.instagram.com/doctor.ghezelbaash/): Clinical and educational media published by Dr. Saeed Ghezelbash.
-- [Clinic Wikidata](https://www.wikidata.org/wiki/Q140288589): Public entity identifier for the clinic.
-- [Structured-data project Wikidata](https://www.wikidata.org/wiki/Q140304972): Public entity identifier for the structured-data project.
+The canonical page, graph.jsonld, graph.ttl, llms.txt and the canonical historical Dataset distribution are intentionally crawlable, indexable and included in the XML sitemap. The complete plain-text and Markdown page projections remain crawlable but noindex, follow because they reproduce the canonical page. Lower-level GeoJSON distributions remain linked and crawlable as Dataset distributions.
