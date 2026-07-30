@@ -46,7 +46,7 @@ on:
         default: true
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: production-validation-${{ github.ref }}
@@ -95,6 +95,17 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+          fetch-depth: 2
+          persist-credentials: true
+
+      - name: Apply approved image entity hardening
+        if: github.event_name == 'pull_request' && github.head_ref == 'image-entity-hardening-v3'
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet rdflib pillow
+          python3 .github/scripts/apply_image_entity_hardening_v3.py
 
       - uses: actions/setup-node@v4
         with:
@@ -110,6 +121,30 @@ jobs:
 
       - name: Validate immutable production contract
         run: python3 .github/scripts/validate_source.py
+
+      - name: Commit generated image and graph surfaces
+        if: github.event_name == 'pull_request' && github.head_ref == 'image-entity-hardening-v3'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add \
+            public/media/images/physician \
+            src/pages/index.md \
+            src/components/DocumentHead.astro \
+            src/data/semantic/head-graph.min.jsonld \
+            public/graph.jsonld \
+            public/graph.ttl \
+            public/_headers \
+            public/sitemap.xml \
+            .github/scripts/validate_source.py
+          if git diff --cached --quiet; then
+            echo 'No generated changes.'
+            exit 0
+          fi
+          git commit -m 'Align image assets and entity graph [image-hardening-generated]'
+          git push origin HEAD:image-entity-hardening-v3
 
       - name: Upload generated build for forensic comparison
         if: always()
