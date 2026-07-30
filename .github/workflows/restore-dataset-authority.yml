@@ -50,6 +50,11 @@ jobs:
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
           PY
           python scripts/upgrade_dataset_authority.py
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('public/graph.ttl')
+          path.write_text(path.read_text(encoding='utf-8').rstrip() + '\n', encoding='utf-8')
+          PY
 
       - name: Install project dependencies
         run: npm ci
