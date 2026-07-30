@@ -31,3 +31,4 @@ jobs:
           git add public/graph.jsonld public/graph.ttl public/_headers src/data/semantic/head-graph.min.jsonld .github/scripts/validate_source.py
           git commit -m 'Resolve Google structured-data warnings'
           git push origin HEAD:release-final-clean
+# merged once to trigger the repair
