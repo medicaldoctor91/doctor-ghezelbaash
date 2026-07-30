@@ -38,3 +38,4 @@ jobs:
           git rm .github/workflows/apply-rich-results-main-once.yml
           git commit -m 'Remove one-time Rich Results workflow'
           git push origin HEAD:main
+# second push intentionally triggers the one-time workflow
