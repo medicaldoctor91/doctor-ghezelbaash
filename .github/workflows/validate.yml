@@ -115,10 +115,12 @@ jobs:
 
           layout_path = Path("src/layouts/BaseLayout.astro")
           layout = layout_path.read_text(encoding="utf-8")
-          layout = re.sub(r'^import \{ normalizeGraphForRichResults \} from "\.\./lib/rich-results-graph\.mjs";\n', "", layout, flags=re.M)
-          layout = re.sub(r'^const structuredData = .*?;$', 'const structuredData = headGraphRaw;', layout, flags=re.M)
-          if "normalizeGraphForRichResults" in layout:
+          layout = re.sub(r'^import .*?from ["\']\.\./lib/rich-results-graph\.mjs["\'];\n', "", layout, flags=re.M)
+          layout = re.sub(r'^const structuredData = .*?;$', 'const structuredData = headGraph;', layout, flags=re.M)
+          if "rich-results-graph.mjs" in layout or "hardenRichResultsGraph" in layout or "normalizeGraphForRichResults" in layout:
               raise RuntimeError("obsolete graph normalizer remains in BaseLayout")
+          if "const structuredData = headGraph;" not in layout:
+              raise RuntimeError("BaseLayout direct Head Graph injection was not restored")
           layout_path.write_text(layout, encoding="utf-8")
 
           package_path = Path("package.json")
