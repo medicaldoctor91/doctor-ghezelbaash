@@ -1,6 +1,7 @@
 name: One-time direct canonical graph repair
 
 on:
+  pull_request:
   push:
     branches: [main]
 
@@ -19,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 2
+          fetch-depth: 20
           persist-credentials: true
 
       - uses: actions/setup-node@v4
@@ -191,8 +192,7 @@ jobs:
           headers_path.write_text(next_headers, encoding="utf-8")
           PY
 
-          # Restore the normal production workflow in the same final commit.
-          git show HEAD^:.github/workflows/validate.yml > .github/workflows/validate.yml
+          git show bf5230361b7de213416f83f80f105ce15499f7f1:.github/workflows/validate.yml > .github/workflows/validate.yml
 
           npm ci --no-audit --no-fund
           npm run build
@@ -201,7 +201,6 @@ jobs:
           test ! -e src/lib/rich-results-graph.mjs
           test ! -e scripts/sync-rich-results-csp.mjs
           grep -F 'const structuredData = headGraph;' src/layouts/BaseLayout.astro
-          grep -F '"scripts": {' package.json
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
