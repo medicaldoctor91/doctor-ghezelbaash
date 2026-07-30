@@ -1,6 +1,6 @@
 # Dr. Saeed Ghezelbash — Official Website
 
-> Official single-page website of Dr. Saeed Ghezelbash (Mohammad Saeed Ghezelbash), an aesthetic physician in Kermanshah, Iran. The site presents his clinical decision-making, aesthetic medicine services, revision and second-opinion work, educational activity, and three research outputs. In-person care serves patients from Iran and Iraq; a free online initial aesthetic consultation is available worldwide.
+> Official single-page website of Mohammad Saeed Ghezelbash, professionally known as Dr. Saeed Ghezelbash, an aesthetic physician in Kermanshah, Iran. The site presents his clinical decision-making, aesthetic medicine services, revision and second-opinion work, educational activity, and three research outputs. In-person care serves patients from Iran and Iraq; a free online initial aesthetic consultation is available worldwide.
 
 Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The physician is the primary entity. The clinic and the structured-data project are subordinate entities. The full JSON-LD graph at https://www.ghezelbaash.ir/graph.jsonld is the authoritative machine-readable entity graph for this website. The site is intentionally static and has one canonical indexable human-readable web page. Its authoritative machine-readable graph serializations and compact retrieval guide are intentionally discoverable and indexable as supporting resources; duplicate full-page projections are crawlable but noindex.
 
