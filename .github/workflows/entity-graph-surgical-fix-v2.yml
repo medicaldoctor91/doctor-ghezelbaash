@@ -67,7 +67,7 @@ jobs:
           pattern = re.compile(
               r"ttl_path = Path\('public/graph\.ttl'\)[\s\S]*?(?=sitemap = read\('public/sitemap\.xml'\))"
           )
-          migration, count = pattern.subn(replacement, migration, count=1)
+          migration, count = pattern.subn(lambda _match: replacement, migration, count=1)
           if count != 1:
               raise RuntimeError(f'expected one Turtle migration block, found {count}')
 
