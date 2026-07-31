@@ -309,6 +309,6 @@
   "isBasedOn": "https://www.ghezelbaash.ir/",
   "distributionUrl": "https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json",
   "encodingFormat": "application/json",
-  "indexingPolicy": "index, follow; canonical first-party Dataset distribution included in the XML sitemap and connected to the physician entity graph",
+  "indexingPolicy": "noindex, follow; canonical first-party Dataset distribution discoverable from the indexable homepage and excluded from the XML sitemap",
   "canonicalUrl": "https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json"
 }

@@ -13,6 +13,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urljoin
+from xml.etree import ElementTree as ET
 
 BASE = "https://www.ghezelbaash.ir/"
 APEX = "https://ghezelbaash.ir/"
@@ -192,10 +193,21 @@ def main() -> None:
     require(ttl.header("access-control-allow-origin") == "*", "Turtle CORS is not public")
     require("graph.ttl" in graph.header("link") and "alternate" in graph.header("link"), "graph Link header lacks Turtle alternate")
     require("graph.jsonld" in ttl.header("link") and "alternate" in ttl.header("link"), "Turtle Link header lacks JSON-LD alternate")
+    for label, response in (("graph", graph), ("ttl", ttl)):
+        require("noindex" in response.header("x-robots-tag").lower(), f"{label} authority distribution competes with the canonical homepage for indexing")
     same_bytes("live graph.jsonld", graph.body, "public/graph.jsonld")
     same_bytes("live graph.ttl", ttl.body, "public/graph.ttl")
     same_bytes("live sitemap.xml", sitemap.body, "public/sitemap.xml")
     same_bytes("live robots.txt", robots.body, "public/robots.txt")
+    sitemap_root = ET.fromstring(sitemap.body)
+    sitemap_locations = [node.text for node in sitemap_root.findall("{http://www.sitemaps.org/schemas/sitemap/0.9}url/{http://www.sitemaps.org/schemas/sitemap/0.9}loc")]
+    require(sitemap_locations == [BASE], f"live sitemap exposes non-canonical search documents: {sitemap_locations}")
+    graph_text = graph.body.decode("utf-8", errors="replace")
+    ttl_text = ttl.body.decode("utf-8", errors="replace")
+    for obsolete in (BASE + "#world-psychiatric-association", BASE + "#dgppn", "Q1645764", "Q1683009"):
+        require(obsolete not in graph_text and obsolete not in ttl_text, f"live graph retains obsolete organization identity: {obsolete}")
+    for required_identity in (BASE + "#organization-world-psychiatric-association", BASE + "#organization-dgppn", "Q2593790", "Q1202963"):
+        require(required_identity in graph_text and required_identity in ttl_text, f"live graph lacks canonical organization identity: {required_identity}")
 
     # Verify native not-found behavior without assigning significance to disposable development URLs.
     response = fetch(urljoin(BASE, "__production-validation-not-found__"), follow=False)

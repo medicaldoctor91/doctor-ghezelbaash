@@ -1563,10 +1563,6 @@
 <https://www.ghezelbaash.ir/#credential-doctor-of-medicine> <https://schema.org/name> "دکترای حرفه‌ای پزشکی"@fa .
 <https://www.ghezelbaash.ir/#credential-doctor-of-medicine> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#evidence-irimc> .
 <https://www.ghezelbaash.ir/#credential-doctor-of-medicine> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#evidence-wikidata-doctor> .
-<https://www.ghezelbaash.ir/#dgppn> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Organization> .
-<https://www.ghezelbaash.ir/#dgppn> <https://schema.org/alternateName> "DGPPN" .
-<https://www.ghezelbaash.ir/#dgppn> <https://schema.org/name> "German Association for Psychiatry, Psychotherapy and Psychosomatics" .
-<https://www.ghezelbaash.ir/#dgppn> <https://schema.org/url> <https://www.dgppn.de/> .
 <https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
 <https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection> <https://schema.org/inLanguage> "fa-IR" .
@@ -1838,8 +1834,8 @@
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/eventAttendanceMode> <https://schema.org/OfflineEventAttendanceMode> .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/location> <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/name> "WPA XVII World Congress of Psychiatry" .
-<https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/organizer> <https://www.ghezelbaash.ir/#dgppn> .
-<https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/organizer> <https://www.ghezelbaash.ir/#world-psychiatric-association> .
+<https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/organizer> <https://www.ghezelbaash.ir/#organization-dgppn> .
+<https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/organizer> <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q140307274> .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/startDate> "2017-10-08" .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/url> <https://wpaberlin2017.com/> .
@@ -3690,6 +3686,7 @@
 <https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/alternateName> "DGPPN" .
 <https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/alternateName> "Deutsche Gesellschaft für Psychiatrie und Psychotherapie, Psychosomatik und Nervenheilkunde" .
 <https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/name> "German Association for Psychiatry, Psychotherapy and Psychosomatics" .
+<https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q1202963> .
 <https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/url> <https://www.dgppn.de/> .
 <https://www.ghezelbaash.ir/#organization-iran-medical-council> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Organization> .
 <https://www.ghezelbaash.ir/#organization-iran-medical-council> <https://schema.org/name> "Iran Medical Council"@en .
@@ -3698,7 +3695,7 @@
 <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Organization> .
 <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/alternateName> "WPA" .
 <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/name> "World Psychiatric Association" .
-<https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q1645764> .
+<https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q2593790> .
 <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/url> <https://www.wpanet.org/> .
 <https://www.ghezelbaash.ir/#out-of-town-aesthetic-patients-iran> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
 <https://www.ghezelbaash.ir/#out-of-town-aesthetic-patients-iran> <https://schema.org/about> <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
@@ -7371,10 +7368,6 @@
 <https://www.ghezelbaash.ir/#website> <https://schema.org/name> "دکتر سعید قزلباش"@fa .
 <https://www.ghezelbaash.ir/#website> <https://schema.org/publisher> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#website> <https://schema.org/url> <https://www.ghezelbaash.ir/> .
-<https://www.ghezelbaash.ir/#world-psychiatric-association> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Organization> .
-<https://www.ghezelbaash.ir/#world-psychiatric-association> <https://schema.org/name> "World Psychiatric Association" .
-<https://www.ghezelbaash.ir/#world-psychiatric-association> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q1683009> .
-<https://www.ghezelbaash.ir/#world-psychiatric-association> <https://schema.org/url> <https://www.wpanet.org/> .
 <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/DataDownload> .
 <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/contentUrl> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json> .
 <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/encodingFormat> "application/json" .

@@ -39,7 +39,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /graph.jsonld
   Content-Type: application/ld+json; charset=utf-8
-  X-Robots-Tag: index, follow
+  X-Robots-Tag: noindex, follow
   Cache-Control: public, max-age=86400, s-maxage=604800
   Link: </graph.ttl>; rel="alternate"; type="text/turtle"
   Access-Control-Allow-Origin: *
@@ -47,7 +47,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /graph.ttl
   Content-Type: text/turtle; charset=utf-8
-  X-Robots-Tag: index, follow
+  X-Robots-Tag: noindex, follow
   Cache-Control: public, max-age=86400, s-maxage=604800
   Link: </graph.jsonld>; rel="alternate"; type="application/ld+json"
   Access-Control-Allow-Origin: *
@@ -55,7 +55,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /llms.txt
   Content-Type: text/plain; charset=utf-8
-  X-Robots-Tag: index, follow
+  X-Robots-Tag: noindex, follow
   Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
 
@@ -102,7 +102,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
 
 /datasets/historical-patient-origin-summary.json
   Content-Type: application/json; charset=utf-8
-  X-Robots-Tag: index, follow, max-snippet:-1
+  X-Robots-Tag: noindex, follow
   Cache-Control: public, max-age=86400, s-maxage=604800
   Link: <https://www.ghezelbaash.ir/#historical-patient-origin-summary>; rel="about", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
   Access-Control-Allow-Origin: *

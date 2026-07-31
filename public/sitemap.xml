@@ -4,7 +4,7 @@
         xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   <url>
     <loc>https://www.ghezelbaash.ir/</loc>
-    <lastmod>2026-07-30</lastmod>
+    <lastmod>2026-07-31</lastmod>
 
     <image:image><image:loc>https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg</image:loc></image:image>
     <image:image><image:loc>https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x1200.jpg</image:loc></image:image>
@@ -60,21 +60,5 @@
       <video:duration>20</video:duration>
       <video:family_friendly>yes</video:family_friendly>
     </video:video>
-  </url>
-  <url>
-    <loc>https://www.ghezelbaash.ir/graph.jsonld</loc>
-    <lastmod>2026-07-30</lastmod>
-  </url>
-  <url>
-    <loc>https://www.ghezelbaash.ir/graph.ttl</loc>
-    <lastmod>2026-07-30</lastmod>
-  </url>
-  <url>
-    <loc>https://www.ghezelbaash.ir/llms.txt</loc>
-    <lastmod>2026-07-30</lastmod>
-  </url>
-  <url>
-    <loc>https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json</loc>
-    <lastmod>2026-07-30</lastmod>
   </url>
 </urlset>

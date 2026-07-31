@@ -473,9 +473,29 @@ source_h2_ids = re.findall(r'<h2\s+id="([^"]+)"', source_page, re.I)
 projection_h2_ids = re.findall(r'<h2\s+id="([^"]+)"', markdown_projection, re.I)
 require(projection_h2_ids == source_h2_ids, "index.md H2 projection differs from canonical source")
 
+graph_json_text = read_text("public/graph.jsonld")
+graph_ttl_text = read_text("public/graph.ttl")
+for obsolete in (
+    BASE + "#world-psychiatric-association",
+    BASE + "#dgppn",
+    "https://www.wikidata.org/entity/Q1645764",
+    "https://www.wikidata.org/entity/Q1683009",
+):
+    require(obsolete not in graph_json_text and obsolete not in graph_ttl_text, f"obsolete or false organization identity remains: {obsolete}")
+for required_identity in (
+    BASE + "#organization-world-psychiatric-association",
+    BASE + "#organization-dgppn",
+    "https://www.wikidata.org/entity/Q2593790",
+    "https://www.wikidata.org/entity/Q1202963",
+):
+    require(required_identity in graph_json_text and required_identity in graph_ttl_text, f"canonical organization identity is absent: {required_identity}")
+
 try:
-    json_graph = Graph().parse("public/graph.jsonld", format="json-ld")
-    ttl_graph = Graph().parse("public/graph.ttl", format="turtle")
+    full_payload = json.loads(graph_json_text)
+    full_ids = [node.get("@id") for node in full_payload.get("@graph", []) if isinstance(node, dict) and node.get("@id")]
+    require(len(full_ids) == len(set(full_ids)), "duplicate top-level @id values found in Full Graph")
+    json_graph = Graph().parse(data=graph_json_text, format="json-ld")
+    ttl_graph = Graph().parse(data=graph_ttl_text, format="turtle")
     require(isomorphic(json_graph, ttl_graph), f"Full JSON-LD and Turtle are not RDF-isomorphic ({len(json_graph)} vs {len(ttl_graph)} triples)")
 except Exception as exc:
     errors.append(f"RDF parse/equivalence failure: {exc}")
@@ -491,7 +511,7 @@ try:
     namespace = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9", "video": "http://www.google.com/schemas/sitemap-video/1.1"}
     sitemap_root = ET.parse("public/sitemap.xml").getroot()
     locations = [element.text for element in sitemap_root.findall("sm:url/sm:loc", namespace)]
-    expected_locations = [BASE, BASE + "graph.jsonld", BASE + "graph.ttl", BASE + "llms.txt", BASE + "datasets/historical-patient-origin-summary.json"]
+    expected_locations = [BASE]
     require(locations == expected_locations, f"sitemap discovery set differs from the canonical policy: {locations}")
     require(BASE + "index.md" not in locations, "index.md entered sitemap.xml")
     sitemap_video_dates = {}
@@ -572,12 +592,12 @@ require(raw_historical.get("license") == "https://creativecommons.org/licenses/b
 require(raw_historical.get("creator") == DOCTOR and raw_historical.get("publisher") == DOCTOR, "raw historical dataset attribution differs from Person identity")
 require(raw_historical.get("canonicalUrl") == BASE + "datasets/historical-patient-origin-summary.json", "raw historical Dataset canonicalUrl is incorrect")
 indexing_policy = str(raw_historical.get("indexingPolicy", ""))
-require("index, follow" in indexing_policy and "noindex" not in indexing_policy.lower(), "raw historical Dataset indexing policy is not index, follow")
+require("noindex, follow" in indexing_policy.lower(), "raw historical Dataset indexing policy is not noindex, follow")
 
 for path in ("/graph.jsonld", "/graph.ttl", "/llms.txt", "/datasets/historical-patient-origin-summary.json"):
     block = header_block(path)
-    require("X-Robots-Tag: index, follow" in block, f"{path} is not explicitly indexable")
-    require("noindex" not in block.lower(), f"{path} is accidentally noindex")
+    require("X-Robots-Tag: noindex, follow" in block, f"{path} is not a noindex, follow authority distribution")
+    require("X-Robots-Tag: index, follow" not in block, f"{path} competes with the canonical homepage for document indexing")
 for path in ("/index.md", "/llms-full.txt"):
     block = header_block(path)
     require("X-Robots-Tag: noindex, follow" in block, f"{path} is not a noindex, follow projection/distribution")
@@ -586,9 +606,9 @@ for path in ("/doctor.vcf", "/clinic.vcf", "/site.webmanifest"):
 require('</llms.txt>; rel="describedby"; type="text/plain"' in headers, "homepage HTTP Link header does not discover llms.txt")
 require('</datasets/historical-patient-origin-summary.json>; rel="describedby"; type="application/json"' in headers, "homepage HTTP Link header does not discover the historical Dataset")
 llms_index = read_text("public/llms.txt")
-for marker in ("## Authoritative First-Party Dataset", HISTORICAL_DATASET, BASE + "datasets/historical-patient-origin-summary.json", "independently discoverable, indexable first-party research asset"):
-    require(marker in llms_index, f"llms.txt does not promote the historical Dataset: {marker}")
-require("supporting distribution" not in llms_index.lower() and "raw historical dataset distributions are intentionally crawlable but noindex" not in llms_index.lower(), "llms.txt still devalues the historical Dataset")
+for marker in ("## Authoritative First-Party Dataset", HISTORICAL_DATASET, BASE + "datasets/historical-patient-origin-summary.json", "independently discoverable first-party research asset", "noindex, follow"):
+    require(marker in llms_index, f"llms.txt does not expose the historical Dataset and consolidated indexing policy: {marker}")
+require("independently discoverable, indexable" not in llms_index.lower(), "llms.txt still assigns competing document indexability to a machine distribution")
 
 def expected_full_projection(markdown: str) -> str:
     body = re.sub(r"\A---\r?\n[\s\S]*?\r?\n---\r?\n?", "", markdown, count=1)
