@@ -1,16 +1,19 @@
 name: One-time canonical indexing and entity graph repair
 
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
       - '.github/workflows/entity-graph-surgical-fix.yml'
+      - 'public/**'
+      - 'src/data/semantic/**'
+      - '.github/scripts/**'
 
 permissions:
   contents: write
 
 concurrency:
-  group: one-time-entity-graph-repair
+  group: one-time-entity-graph-repair-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
@@ -20,6 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
@@ -31,6 +35,8 @@ jobs:
 
       - name: Apply surgical repair
         shell: bash
+        env:
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -187,7 +193,6 @@ jobs:
           if not isomorphic(json_graph, ttl_graph):
               raise RuntimeError(f'JSON-LD/Turtle divergence after repair: {len(json_graph)} vs {len(ttl_graph)} triples')
 
-          # Keep only the canonical search document in the sitemap while retaining all image/video extensions on it.
           sitemap = read('public/sitemap.xml')
           for relative in ('graph.jsonld', 'graph.ttl', 'llms.txt', 'datasets/historical-patient-origin-summary.json'):
               escaped = re.escape(BASE + relative)
@@ -200,7 +205,6 @@ jobs:
               raise RuntimeError(f'sitemap must expose only the canonical homepage: {locations}')
           write('public/sitemap.xml', sitemap.rstrip() + '\n')
 
-          # Machine-readable authority resources remain crawlable/discoverable but are not competing search documents.
           headers = read('public/_headers')
           for path in ('/graph.jsonld', '/graph.ttl', '/llms.txt', '/datasets/historical-patient-origin-summary.json'):
               pattern = re.compile(r'(?ms)^' + re.escape(path) + r'\n(?P<body>(?:  [^\n]*\n)+)')
@@ -271,7 +275,6 @@ jobs:
           live_validator = replace_once(live_validator, old_live_bytes, new_live_bytes, 'live validator sitemap and graph identity contract')
           write('.github/scripts/validate_live.py', live_validator)
 
-          # The migration is one-shot; remove it from the final repository state.
           Path('.github/workflows/entity-graph-surgical-fix.yml').unlink()
           PY
 
@@ -281,4 +284,4 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m 'Consolidate canonical indexing and repair graph identities'
-          git push origin HEAD:main
+          git push origin HEAD:"${HEAD_BRANCH}"
