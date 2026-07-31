@@ -1,0 +1,73 @@
+name: Package final source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/package-final-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production site
+        run: npm run build
+
+      - name: Assemble final source allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          root='doctor-ghezelbaash-final-source'
+          rm -rf "$root"
+          mkdir -p "$root"
+          cp -a .gitattributes .gitignore .node-version .npmrc astro.config.mjs package-lock.json package.json tsconfig.json "$root"/
+          cp -a public src "$root"/
+
+          find "$root" -type f -print0 | sort -z | xargs -0 sha256sum > FINAL-SOURCE-SHA256SUMS.txt
+          find "$root" -type f -printf '%P\n' | LC_ALL=C sort > FINAL-SOURCE-MANIFEST.txt
+          printf 'Source commit: %s\n' "$GITHUB_SHA" > FINAL-SOURCE-BUILD.txt
+          printf 'Node: %s\n' "$(node --version)" >> FINAL-SOURCE-BUILD.txt
+          printf 'npm: %s\n' "$(npm --version)" >> FINAL-SOURCE-BUILD.txt
+          printf 'Build: PASS\n' >> FINAL-SOURCE-BUILD.txt
+          printf 'Packaged directories: src/, public/\n' >> FINAL-SOURCE-BUILD.txt
+          printf 'Packaged root files: .gitattributes .gitignore .node-version .npmrc astro.config.mjs package-lock.json package.json tsconfig.json\n' >> FINAL-SOURCE-BUILD.txt
+          printf 'Excluded: .git/, .github/, node_modules/, dist/, development notes, workflow rules, validation scripts, temporary files\n' >> FINAL-SOURCE-BUILD.txt
+
+          zip -q -r doctor-ghezelbaash-final-source.zip "$root"
+          sha256sum doctor-ghezelbaash-final-source.zip > doctor-ghezelbaash-final-source.zip.sha256
+
+          echo 'Repository inventory:'
+          find . -path './.git' -prune -o -path './node_modules' -prune -o -path './dist' -prune -o -type f -printf '%P\n' | LC_ALL=C sort
+          echo 'Final package inventory:'
+          cat FINAL-SOURCE-MANIFEST.txt
+
+      - name: Upload final source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-ghezelbaash-final-source
+          path: |
+            doctor-ghezelbaash-final-source.zip
+            doctor-ghezelbaash-final-source.zip.sha256
+            FINAL-SOURCE-MANIFEST.txt
+            FINAL-SOURCE-SHA256SUMS.txt
+            FINAL-SOURCE-BUILD.txt
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
