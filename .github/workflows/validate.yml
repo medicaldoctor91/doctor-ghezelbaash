@@ -33,6 +33,7 @@ concurrency:
 env:
   NODE_VERSION: '24.18.0'
   CANONICAL_URL: 'https://www.ghezelbaash.ir/'
+  LIGHTHOUSE_VERSION: '13.4.1'
 
 jobs:
   source:
@@ -106,7 +107,7 @@ jobs:
             for run in 1 2 3; do
               preset=''
               [ "$mode" = desktop ] && preset='--preset=desktop'
-              npx --yes lighthouse@latest "$CANONICAL_URL" $preset \
+              npx --yes "lighthouse@${LIGHTHOUSE_VERSION}" "$CANONICAL_URL" $preset \
                 --output=json --output-path="live-audit/lighthouse-${mode}-${run}.json" \
                 --only-categories=performance,accessibility,best-practices,seo,agentic-browsing \
                 --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
