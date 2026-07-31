@@ -71,6 +71,12 @@ jobs:
           if count != 1:
               raise RuntimeError(f'expected one Turtle migration block, found {count}')
 
+          old_header_line = r"body, count = re.subn(r'^  X-Robots-Tag: index, follow, max-image-preview:large$', '  X-Robots-Tag: noindex, follow', body, count=1, flags=re.M)"
+          new_header_line = r"body, count = re.subn(r'^  X-Robots-Tag: index, follow(?:, [^\n]+)?$', '  X-Robots-Tag: noindex, follow', body, count=1, flags=re.M)"
+          if migration.count(old_header_line) != 1:
+              raise RuntimeError('expected one machine-resource header conversion line')
+          migration = migration.replace(old_header_line, new_header_line, 1)
+
           compiled = compile(migration, '<entity-graph-surgical-migration>', 'exec')
           exec(compiled, {'__name__': '__main__'})
 
