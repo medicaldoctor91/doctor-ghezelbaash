@@ -1563,10 +1563,6 @@
 <https://www.ghezelbaash.ir/#credential-doctor-of-medicine> <https://schema.org/name> "دکترای حرفه‌ای پزشکی"@fa .
 <https://www.ghezelbaash.ir/#credential-doctor-of-medicine> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#evidence-irimc> .
 <https://www.ghezelbaash.ir/#credential-doctor-of-medicine> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#evidence-wikidata-doctor> .
-<https://www.ghezelbaash.ir/#dgppn> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Organization> .
-<https://www.ghezelbaash.ir/#dgppn> <https://schema.org/alternateName> "DGPPN" .
-<https://www.ghezelbaash.ir/#dgppn> <https://schema.org/name> "German Association for Psychiatry, Psychotherapy and Psychosomatics" .
-<https://www.ghezelbaash.ir/#dgppn> <https://schema.org/url> <https://www.dgppn.de/> .
 <https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
 <https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection> <https://schema.org/inLanguage> "fa-IR" .
@@ -1838,8 +1834,8 @@
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/eventAttendanceMode> <https://schema.org/OfflineEventAttendanceMode> .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/location> <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/name> "WPA XVII World Congress of Psychiatry" .
-<https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/organizer> <https://www.ghezelbaash.ir/#dgppn> .
-<https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/organizer> <https://www.ghezelbaash.ir/#world-psychiatric-association> .
+<https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/organizer> <https://www.ghezelbaash.ir/#organization-dgppn> .
+<https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/organizer> <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q140307274> .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/startDate> "2017-10-08" .
 <https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017> <https://schema.org/url> <https://wpaberlin2017.com/> .
@@ -2322,8 +2318,8 @@
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/measurementTechnique> "Manual aggregation of patient-origin cities from clinic records" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/name> "Historical patient-origin summary" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/publisher> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> _:cb0 .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> _:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> _:N0f122b70c3e342a58f0364d9e7d2a352 .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> _:N8b4b9cab415d4ba29a66428077af30b2 .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/temporalCoverage> "historical" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/url> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json> .
 <https://www.ghezelbaash.ir/#hyaluronidase-filler-dissolution-limitations> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
@@ -3690,6 +3686,7 @@
 <https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/alternateName> "DGPPN" .
 <https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/alternateName> "Deutsche Gesellschaft für Psychiatrie und Psychotherapie, Psychosomatik und Nervenheilkunde" .
 <https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/name> "German Association for Psychiatry, Psychotherapy and Psychosomatics" .
+<https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q1202963> .
 <https://www.ghezelbaash.ir/#organization-dgppn> <https://schema.org/url> <https://www.dgppn.de/> .
 <https://www.ghezelbaash.ir/#organization-iran-medical-council> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Organization> .
 <https://www.ghezelbaash.ir/#organization-iran-medical-council> <https://schema.org/name> "Iran Medical Council"@en .
@@ -3698,7 +3695,7 @@
 <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Organization> .
 <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/alternateName> "WPA" .
 <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/name> "World Psychiatric Association" .
-<https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q1645764> .
+<https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q2593790> .
 <https://www.ghezelbaash.ir/#organization-world-psychiatric-association> <https://schema.org/url> <https://www.wpanet.org/> .
 <https://www.ghezelbaash.ir/#out-of-town-aesthetic-patients-iran> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
 <https://www.ghezelbaash.ir/#out-of-town-aesthetic-patients-iran> <https://schema.org/about> <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
@@ -3877,7 +3874,7 @@
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "Berlin, Germany"@en .
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "برلین، آلمان"@fa .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe .
+<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:N2711c84a3fa241639f28223b97488c39 .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/containedInPlace> <https://www.ghezelbaash.ir/#place-berlin-germany> .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/name> "Messe Berlin / CityCube Berlin" .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q700236> .
@@ -7371,10 +7368,6 @@
 <https://www.ghezelbaash.ir/#website> <https://schema.org/name> "دکتر سعید قزلباش"@fa .
 <https://www.ghezelbaash.ir/#website> <https://schema.org/publisher> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#website> <https://schema.org/url> <https://www.ghezelbaash.ir/> .
-<https://www.ghezelbaash.ir/#world-psychiatric-association> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Organization> .
-<https://www.ghezelbaash.ir/#world-psychiatric-association> <https://schema.org/name> "World Psychiatric Association" .
-<https://www.ghezelbaash.ir/#world-psychiatric-association> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q1683009> .
-<https://www.ghezelbaash.ir/#world-psychiatric-association> <https://schema.org/url> <https://www.wpanet.org/> .
 <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/DataDownload> .
 <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/contentUrl> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json> .
 <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/encodingFormat> "application/json" .
@@ -7385,7 +7378,7 @@
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/about> <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/creator> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/dateModified> "2026-07-30" .
+<https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/dateModified> "2026-07-31" .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/datePublished> "2026-07-25" .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/description> "Public physician-first knowledge graph for Dr. Saeed Ghezelbaash covering professional identity, aesthetic-medicine specialty, physician ownership of the clinic and structured-data project, confirmed medical services, geographic reach, research, teaching, canonical Wikimedia-linked image identity, media provenance, dated public reputation observations, external identifiers and curated question-answer content." .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/distribution> <https://www.ghezelbaash.ir/graph.jsonld#download> .
@@ -7402,7 +7395,7 @@
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/mentions> <https://www.ghezelbaash.ir/#presentation-attachment-style-dissociative-depression-2017> .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/name> "Dr. Saeed Ghezelbaash Public Knowledge Graph" .
 <https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/publisher> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/version> "1.2.2" .
+<https://www.ghezelbaash.ir/graph.jsonld#dataset> <https://schema.org/version> "1.2.3" .
 <https://www.ghezelbaash.ir/graph.jsonld#download> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/DataDownload> .
 <https://www.ghezelbaash.ir/graph.jsonld#download> <https://schema.org/contentUrl> <https://www.ghezelbaash.ir/graph.jsonld> .
 <https://www.ghezelbaash.ir/graph.jsonld#download> <https://schema.org/encodingFormat> "application/ld+json" .
@@ -7433,16 +7426,16 @@
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/identifier> <urn:sha256-property:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/name> "Google Maps clinic reputation snapshot — 2026-07-25" .
 <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590> <https://schema.org/width> <urn:sha256:de6ec4d635389cf87c3a13be960e4a2f4961b01a16d54451010f2980521b2590-width> .
-_:cb0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-_:cb0 <https://schema.org/alternateName> "عراق" .
-_:cb0 <https://schema.org/name> "Iraq" .
-_:cb0 <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q796> .
-_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
-_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <https://schema.org/addressCountry> "DE" .
-_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <https://schema.org/addressLocality> "Berlin" .
-_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <https://schema.org/postalCode> "14055" .
-_:cb11dcc7fd5d63f93f2dea9c02353d50bf16d8e243d1567e67f46f58ef066ab60fe <https://schema.org/streetAddress> "Jafféstraße" .
-_:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-_:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec <https://schema.org/alternateName> "ایران" .
-_:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec <https://schema.org/name> "Iran" .
-_:cb3b8525e7accf00c345fd8f1e7869ed76802a0b19bec535ea390bb468f3a376ec <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q794> .
+_:N0f122b70c3e342a58f0364d9e7d2a352 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
+_:N0f122b70c3e342a58f0364d9e7d2a352 <https://schema.org/alternateName> "عراق" .
+_:N0f122b70c3e342a58f0364d9e7d2a352 <https://schema.org/name> "Iraq" .
+_:N0f122b70c3e342a58f0364d9e7d2a352 <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q796> .
+_:N2711c84a3fa241639f28223b97488c39 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
+_:N2711c84a3fa241639f28223b97488c39 <https://schema.org/addressCountry> "DE" .
+_:N2711c84a3fa241639f28223b97488c39 <https://schema.org/addressLocality> "Berlin" .
+_:N2711c84a3fa241639f28223b97488c39 <https://schema.org/postalCode> "14055" .
+_:N2711c84a3fa241639f28223b97488c39 <https://schema.org/streetAddress> "Jafféstraße" .
+_:N8b4b9cab415d4ba29a66428077af30b2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
+_:N8b4b9cab415d4ba29a66428077af30b2 <https://schema.org/alternateName> "ایران" .
+_:N8b4b9cab415d4ba29a66428077af30b2 <https://schema.org/name> "Iran" .
+_:N8b4b9cab415d4ba29a66428077af30b2 <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q794> .

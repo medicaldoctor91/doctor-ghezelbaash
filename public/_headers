@@ -17,7 +17,7 @@ https://:version.doctor-ghezelbaash.pages.dev/*
   Content-Language: fa-IR
   Cache-Control: public, max-age=0, must-revalidate
   Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", </graph.ttl>; rel="describedby"; type="text/turtle", </llms.txt>; rel="describedby"; type="text/plain", </datasets/historical-patient-origin-summary.json>; rel="describedby"; type="application/json", </index.md>; rel="alternate"; type="text/markdown"; hreflang="fa-IR", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-FMVGyF8UqQiWNnK8cHi044kOueyUVl33/oPNqn7CVJM='; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-hxn/UVQ9CF7Pj6qAhiSzfojAjRVu5TgRl+DLrojCUvc='; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
 
 /404.html
   X-Robots-Tag: noindex, follow
@@ -36,34 +36,39 @@ https://:version.doctor-ghezelbaash.pages.dev/*
   X-Content-Type-Options: nosniff
   Link: <https://www.ghezelbaash.ir/>; rel="canonical"
   Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, X-Robots-Tag
 
 /graph.jsonld
   Content-Type: application/ld+json; charset=utf-8
   X-Robots-Tag: index, follow
   Cache-Control: public, max-age=86400, s-maxage=604800
-  Link: </graph.ttl>; rel="alternate"; type="text/turtle"
+  Link: </graph.ttl>; rel="alternate"; type="text/turtle", <https://www.ghezelbaash.ir/graph.jsonld>; rel="canonical"
   Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, X-Robots-Tag
   Cross-Origin-Resource-Policy: cross-origin
 
 /graph.ttl
   Content-Type: text/turtle; charset=utf-8
   X-Robots-Tag: index, follow
   Cache-Control: public, max-age=86400, s-maxage=604800
-  Link: </graph.jsonld>; rel="alternate"; type="application/ld+json"
+  Link: </graph.jsonld>; rel="alternate"; type="application/ld+json", <https://www.ghezelbaash.ir/graph.ttl>; rel="canonical"
   Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, X-Robots-Tag
   Cross-Origin-Resource-Policy: cross-origin
 
 /llms.txt
   Content-Type: text/plain; charset=utf-8
   X-Robots-Tag: index, follow
-  Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
+  Link: </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/llms.txt>; rel="canonical"
   Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, X-Robots-Tag
 
 /llms-full.txt
   Content-Type: text/plain; charset=utf-8
   X-Robots-Tag: noindex, follow
   Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, X-Robots-Tag
 
 /doctor.vcf
   Content-Type: text/vcard; charset=utf-8
@@ -104,8 +109,9 @@ https://:version.doctor-ghezelbaash.pages.dev/*
   Content-Type: application/json; charset=utf-8
   X-Robots-Tag: index, follow, max-snippet:-1
   Cache-Control: public, max-age=86400, s-maxage=604800
-  Link: <https://www.ghezelbaash.ir/#historical-patient-origin-summary>; rel="about", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
+  Link: <https://www.ghezelbaash.ir/#historical-patient-origin-summary>; rel="about", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", </graph.jsonld>; rel="describedby"; type="application/ld+json", <https://creativecommons.org/licenses/by/4.0/>; rel="license", <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json>; rel="canonical"
   Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, X-Robots-Tag
   Cross-Origin-Resource-Policy: cross-origin
 
 /media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg

@@ -197,6 +197,68 @@ def main() -> None:
     same_bytes("live sitemap.xml", sitemap.body, "public/sitemap.xml")
     same_bytes("live robots.txt", robots.body, "public/robots.txt")
 
+
+    # Canonical machine resources and organization resolution.
+    llms = fetch(BASE + "llms.txt", follow=True)
+    historical = fetch(BASE + "datasets/historical-patient-origin-summary.json", follow=True)
+    for label, response, source_path, canonical_url in (
+        ("graph", graph, "public/graph.jsonld", BASE + "graph.jsonld"),
+        ("ttl", ttl, "public/graph.ttl", BASE + "graph.ttl"),
+        ("llms", llms, "public/llms.txt", BASE + "llms.txt"),
+        ("historical dataset", historical, "public/datasets/historical-patient-origin-summary.json", BASE + "datasets/historical-patient-origin-summary.json"),
+    ):
+        require(response.status == 200, f"{label} returned {response.status}")
+        robots_header = response.header("x-robots-tag").lower()
+        require("index" in robots_header and "follow" in robots_header and "noindex" not in robots_header, f"{label} is not explicitly index, follow: {robots_header or 'missing'}")
+        require(f'<{canonical_url}>; rel="canonical"' in response.header("link"), f"{label} lacks its self-canonical HTTP Link")
+        exposed = response.header("access-control-expose-headers").lower()
+        require("link" in exposed and "x-robots-tag" in exposed, f"{label} does not expose Link and X-Robots-Tag")
+        same_bytes(f"live {label}", response.body, source_path)
+
+    try:
+        live_full = json.loads(graph.body)
+        live_nodes = live_full.get("@graph", []) if isinstance(live_full, dict) else []
+        live_by = {
+            node.get("@id"): node
+            for node in live_nodes
+            if isinstance(node, dict) and isinstance(node.get("@id"), str)
+        }
+        live_ids: set[str] = set()
+        live_strings: set[str] = set()
+        stack: list[object] = [live_full]
+        while stack:
+            current = stack.pop()
+            if isinstance(current, str):
+                live_strings.add(current)
+            elif isinstance(current, dict):
+                identifier = current.get("@id")
+                if isinstance(identifier, str):
+                    live_ids.add(identifier)
+                stack.extend(current.values())
+            elif isinstance(current, list):
+                stack.extend(current)
+        deprecated_ids = {
+            BASE + "#world-psychiatric-association",
+            BASE + "#organization-american-psychiatric-association",
+            BASE + "#dgppn",
+            BASE + "#organization-german-psychiatric-association",
+            BASE + "#organization-german-society-psychiatry",
+        }
+        forbidden_qids = {
+            "Q1645764", "Q1683009",
+            "https://www.wikidata.org/entity/Q1645764",
+            "https://www.wikidata.org/entity/Q1683009",
+        }
+        require(not (deprecated_ids & live_ids), f"live graph exposes deprecated organization aliases: {sorted(deprecated_ids & live_ids)}")
+        require(not (forbidden_qids & live_strings), f"live graph exposes unrelated organization Wikidata IDs: {sorted(forbidden_qids & live_strings)}")
+        require("https://www.wikidata.org/entity/Q2593790" in live_strings, "live graph lacks canonical WPA Wikidata identity")
+        require("https://www.wikidata.org/entity/Q1202963" in live_strings, "live graph lacks canonical DGPPN Wikidata identity")
+        live_dataset = live_by.get(BASE + "graph.jsonld#dataset", {})
+        require(live_dataset.get("version") == "1.2.3", "live graph version is not 1.2.3")
+        require(live_dataset.get("dateModified") == "2026-07-31", "live graph dateModified is not 2026-07-31")
+    except Exception as exc:
+        errors.append(f"live graph semantic validation failed: {exc}")
+
     # Verify native not-found behavior without assigning significance to disposable development URLs.
     response = fetch(urljoin(BASE, "__production-validation-not-found__"), follow=False)
     require(response.status in {404, 410}, f"unknown path returned {response.status}, expected 404 or 410")

@@ -37,7 +37,7 @@ DATASET = BASE + "graph.jsonld#dataset"
 PROJECT = BASE + "#doctor-ghezelbaash-structured-data-project"
 HISTORICAL_DATASET = BASE + "#historical-patient-origin-summary"
 HISTORICAL_DOWNLOAD = BASE + "datasets/historical-patient-origin-summary.json#download"
-GRAPH_VERSION = "1.2.2"
+GRAPH_VERSION = "1.2.3"
 SCHOLAR_ID = BASE + "#identifier-person-google-scholar"
 SCHOLAR_URL = "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
 KNOWLEDGE_PANEL_NAME = "Mohammad Saeed Ghezelbash"
@@ -444,8 +444,8 @@ require({DOCTOR, CLINIC} <= set(refs(full_by.get(TEAM, {}).get("about"))), "Team
 require({DOCTOR, CLINIC} <= set(refs(full_by.get(OFFICE, {}).get("about"))), "Office master does not describe both Doctor and Clinic")
 formats = {full_by.get(identifier, {}).get("encodingFormat") for identifier in refs(full_by.get(DATASET, {}).get("distribution"))}
 require({"application/ld+json", "text/turtle"} <= formats, "Dataset lacks JSON-LD and Turtle distributions")
-require(full_by.get(DATASET, {}).get("dateModified") == "2026-07-30", "Full Graph Dataset dateModified is stale")
-require(head_by.get(DATASET, {}).get("dateModified") == "2026-07-30", "Head Graph Dataset dateModified is stale")
+require(full_by.get(DATASET, {}).get("dateModified") == "2026-07-31", "Full Graph Dataset dateModified is stale")
+require(head_by.get(DATASET, {}).get("dateModified") == "2026-07-31", "Head Graph Dataset dateModified is stale")
 full_videos = {node.get("contentUrl"): node for node in full_nodes if isinstance(node, dict) and "VideoObject" in types(node) and node.get("contentUrl") in VIDEO_UPLOAD_DATES}
 require(set(full_videos) == set(VIDEO_UPLOAD_DATES), f"Full Graph video set differs from canonical mapping: {sorted(full_videos)}")
 for content_url, expected_date in VIDEO_UPLOAD_DATES.items():
@@ -614,6 +614,65 @@ llms_full = read_text(DIST / "llms-full.txt")
 require(bool(llms_full.strip()), "llms-full.txt is empty")
 require(llms_full == expected_full_projection(source_page), "llms-full.txt differs from the canonical page projection")
 require(not re.search(r"<script\b|<style\b|application/ld\+json", llms_full, re.I), "llms-full.txt contains executable or JSON-LD markup")
+
+
+# Canonical organization and machine-resource contract (release 1.2.3).
+def all_string_values(value: object) -> set[str]:
+    found: set[str] = set()
+    stack = [value]
+    while stack:
+        current = stack.pop()
+        if isinstance(current, str):
+            found.add(current)
+        elif isinstance(current, dict):
+            stack.extend(current.values())
+        elif isinstance(current, list):
+            stack.extend(current)
+    return found
+
+canonical_wpa = BASE + "#organization-world-psychiatric-association"
+canonical_dgppn = BASE + "#organization-dgppn"
+deprecated_organization_ids = {
+    BASE + "#world-psychiatric-association",
+    BASE + "#organization-american-psychiatric-association",
+    BASE + "#dgppn",
+    BASE + "#organization-german-psychiatric-association",
+    BASE + "#organization-german-society-psychiatry",
+}
+forbidden_organization_qids = {
+    "Q1645764", "Q1683009",
+    "https://www.wikidata.org/entity/Q1645764",
+    "https://www.wikidata.org/entity/Q1683009",
+}
+require(not (deprecated_organization_ids & collect_ids(full)), f"deprecated organization aliases remain: {sorted(deprecated_organization_ids & collect_ids(full))}")
+full_strings = all_string_values(full)
+require(not (forbidden_organization_qids & full_strings), f"unrelated organization Wikidata IDs remain: {sorted(forbidden_organization_qids & full_strings)}")
+require(canonical_wpa in full_by and canonical_dgppn in full_by, "canonical WPA or DGPPN node is missing")
+require("https://www.wikidata.org/entity/Q2593790" in all_string_values(full_by.get(canonical_wpa, {})), "WPA Wikidata identity is not Q2593790")
+require("https://www.wikidata.org/entity/Q1202963" in all_string_values(full_by.get(canonical_dgppn, {})), "DGPPN Wikidata identity is not Q1202963")
+require(full_by.get(canonical_wpa, {}).get("url") == "https://www.wpanet.org/", "WPA official URL is incorrect")
+require(full_by.get(canonical_dgppn, {}).get("url") == "https://www.dgppn.de/", "DGPPN official URL is incorrect")
+require(canonical_wpa in refs(full_by.get(EVENT, {}).get("organizer")), "WPA XVII organizer does not resolve to canonical WPA")
+
+self_canonical_resources = {
+    "/graph.jsonld": BASE + "graph.jsonld",
+    "/graph.ttl": BASE + "graph.ttl",
+    "/llms.txt": BASE + "llms.txt",
+    "/datasets/historical-patient-origin-summary.json": BASE + "datasets/historical-patient-origin-summary.json",
+}
+for path, canonical_url in self_canonical_resources.items():
+    block = header_block(path)
+    require(f'<{canonical_url}>; rel="canonical"' in block, f"{path} lacks a self-canonical HTTP Link")
+    require("Access-Control-Expose-Headers: Link, X-Robots-Tag" in block, f"{path} does not expose Link and X-Robots-Tag to CORS clients")
+for path in ("/index.md", "/llms-full.txt"):
+    require("Access-Control-Expose-Headers: Link, X-Robots-Tag" in header_block(path), f"{path} does not expose its projection headers")
+
+ttl_projection = read_text("public/graph.ttl")
+ttl_projection_lines = [line.strip() for line in ttl_projection.splitlines() if line.strip()]
+require(ttl_projection_lines == sorted(ttl_projection_lines), "graph.ttl is not deterministically sorted")
+require(len(ttl_projection_lines) == len(set(ttl_projection_lines)), "graph.ttl contains duplicate statements")
+require(all(line.endswith(" .") for line in ttl_projection_lines), "graph.ttl is not a valid deterministic N-Triples subset")
+require(not any(line.startswith(("@prefix", "PREFIX")) for line in ttl_projection_lines), "graph.ttl unexpectedly depends on prefix serialization")
 
 if errors:
     for message in errors:
