@@ -5,6 +5,8 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - '.github/scripts/repair_entity_graph.py'
+      - '.github/scripts/canonicalize_head_graph.py'
+      - '.github/workflows/entity-graph-surgical-fix.yml'
   workflow_dispatch:
 
 permissions:
@@ -40,6 +42,9 @@ jobs:
           npm ci --no-audit --no-fund
           python3 -m pip install --quiet "rdflib==${RDFLIB_VERSION}"
 
+      - name: Canonicalize Head Graph aliases
+        run: python3 .github/scripts/canonicalize_head_graph.py
+
       - name: Apply canonical graph surgery
         run: python3 .github/scripts/repair_entity_graph.py
 
@@ -54,6 +59,7 @@ jobs:
           REPAIR_BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
           rm -f .github/scripts/repair_entity_graph.py
+          rm -f .github/scripts/canonicalize_head_graph.py
           rm -f .github/workflows/entity-graph-surgical-fix.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
