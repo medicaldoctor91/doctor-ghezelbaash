@@ -27,6 +27,7 @@ const robots = frontmatter.robots ?? 'index, follow';
       ogImageURL={ogImageURL}
     />
     <meta name="x-deploy-commit" content={deployCommit} />
+    <script type="application/ld+json" set:html={headGraph}></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>
@@ -34,6 +35,5 @@ const robots = frontmatter.robots ?? 'index, follow';
       <slot />
     </main>
     <FloatingActionDock />
-    <script type="application/ld+json" set:html={headGraph}></script>
   </body>
 </html>
