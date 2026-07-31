@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .astro/
+__pycache__/
+*.py[cod]
 .env
 .env.*
 .DS_Store
