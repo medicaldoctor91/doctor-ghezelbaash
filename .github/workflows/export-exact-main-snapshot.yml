@@ -33,7 +33,7 @@ jobs:
           node --version | tee runtime-node.txt
           npm --version | tee runtime-npm.txt
           git rev-parse HEAD | tee validation-head.txt
-          git rev-parse main | tee baseline-main.txt
+          git rev-parse origin/main | tee baseline-main.txt
 
       - name: Apply local non-visible CSP correction under test
         shell: bash
@@ -86,7 +86,6 @@ jobs:
             https://raw.githubusercontent.com/schemaorg/schemaorg/v30.0/data/schema.ttl \
             --output schemaorg-v30.0.ttl
           python3 - <<'PY' | tee schemaorg-vocabulary-audit.txt
-          from pathlib import Path
           from rdflib import Graph, RDF, RDFS, URIRef
           SCHEMA = 'https://schema.org/'
           project = Graph().parse('public/graph.jsonld', format='json-ld')
