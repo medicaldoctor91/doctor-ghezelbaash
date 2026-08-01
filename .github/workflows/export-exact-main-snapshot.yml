@@ -1,0 +1,39 @@
+name: Export exact main snapshot
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create exact ZIP from pinned main commit
+        shell: bash
+        run: |
+          git archive \
+            --format=zip \
+            --prefix=doctor-ghezelbaash-main-feb74f67/ \
+            --output=doctor-ghezelbaash-main-feb74f67.zip \
+            feb74f67da82956afde488d78ae50d5c80a89852
+          sha256sum doctor-ghezelbaash-main-feb74f67.zip > doctor-ghezelbaash-main-feb74f67.zip.sha256
+
+      - name: Upload exact source archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: doctor-ghezelbaash-main-feb74f67
+          path: |
+            doctor-ghezelbaash-main-feb74f67.zip
+            doctor-ghezelbaash-main-feb74f67.zip.sha256
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
