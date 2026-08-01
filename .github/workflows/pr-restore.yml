@@ -1,0 +1,47 @@
+name: Run final V1 restoration
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: restore-final-v1
+          fetch-depth: 1
+
+      - name: Execute verified restoration payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          workflow = Path('.github/workflows/restore-final-v1.yml').read_text(encoding='utf-8')
+          marker = '      - name: Rebuild clean static release from verified production\n'
+          start = workflow.index(marker)
+          run_marker = '        run: |\n'
+          run_start = workflow.index(run_marker, start) + len(run_marker)
+          end = workflow.index('\n      - name: Commit clean final V1', run_start)
+          lines = workflow[run_start:end].splitlines()
+          script = '\n'.join(line[10:] if line.startswith('          ') else line for line in lines) + '\n'
+          Path('/tmp/run-restoration.sh').write_text(script, encoding='utf-8')
+          PY
+          bash /tmp/run-restoration.sh
+          rm -f /tmp/run-restoration.sh
+
+      - name: Commit clean final V1
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Restore clean final V1 production snapshot"
+          git push origin HEAD:restore-final-v1
