@@ -19,6 +19,7 @@ const robots = frontmatter.robots ?? 'index, follow';
 <!doctype html>
 <html lang={lang} dir={dir}>
   <head>
+    <script type="application/ld+json" set:html={headGraph}></script>
     <DocumentHead
       title={title}
       description={description}
@@ -27,7 +28,6 @@ const robots = frontmatter.robots ?? 'index, follow';
       ogImageURL={ogImageURL}
     />
     <meta name="x-deploy-commit" content={deployCommit} />
-    <script type="application/ld+json" set:html={headGraph}></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>
