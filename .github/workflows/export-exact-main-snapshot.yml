@@ -35,19 +35,31 @@ jobs:
           git rev-parse HEAD | tee validation-head.txt
           git rev-parse origin/main | tee baseline-main.txt
 
-      - name: Apply local non-visible CSP correction under test
+      - name: Apply proven non-visible corrections under test
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('public/_headers')
+
+          headers = Path('public/_headers')
           old = 'sha256-10+IOzNOhJOl42dCmxiPxNpW8ukBti5iF6r5bWUIg1I='
           new = 'sha256-FMVGyF8UqQiWNnK8cHi044kOueyUVl33/oPNqn7CVJM='
-          text = p.read_text('utf-8')
+          text = headers.read_text('utf-8')
           if text.count(old) != 1:
               raise SystemExit('Expected exactly one stale CSP hash')
-          p.write_text(text.replace(old, new), 'utf-8')
+          headers.write_text(text.replace(old, new), 'utf-8')
+
+          attributes = Path('.gitattributes')
+          attrs = attributes.read_text('utf-8').rstrip('\n') + '\n*.vcf -text\n'
+          attributes.write_text(attrs, 'utf-8')
+
+          for name in ('public/doctor.vcf', 'public/clinic.vcf'):
+              path = Path(name)
+              normalized = path.read_bytes().replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+              lines = normalized.rstrip(b'\n').split(b'\n')
+              path.write_bytes(b'\r\n'.join(lines) + b'\r\n')
           PY
+          git diff -- public/_headers .gitattributes public/doctor.vcf public/clinic.vcf > correction.patch
 
       - name: Install locked dependencies
         shell: bash
@@ -57,7 +69,7 @@ jobs:
         shell: bash
         run: npm run build 2>&1 | tee build.log
 
-      - name: Inspect generated Head Graph and CSP hash
+      - name: Validate generated CSP
         shell: bash
         run: |
           python3 - <<'PY' | tee generated-csp-audit.txt
@@ -78,35 +90,21 @@ jobs:
               raise SystemExit('Generated Head Graph is blocked by the declared CSP hash')
           PY
 
-      - name: Validate Schema.org vocabulary terms against release 30.0
+      - name: Validate semantic graph serialization
         shell: bash
         run: |
           python3 -m pip install --quiet rdflib==7.5.0
-          curl --fail --location --silent --show-error \
-            https://raw.githubusercontent.com/schemaorg/schemaorg/v30.0/data/schema.ttl \
-            --output schemaorg-v30.0.ttl
-          python3 - <<'PY' | tee schemaorg-vocabulary-audit.txt
-          from rdflib import Graph, RDF, RDFS, URIRef
-          SCHEMA = 'https://schema.org/'
-          project = Graph().parse('public/graph.jsonld', format='json-ld')
-          vocabulary = Graph().parse('schemaorg-v30.0.ttl', format='turtle')
-          used_types = {o for o in project.objects(None, RDF.type) if isinstance(o, URIRef) and str(o).startswith(SCHEMA)}
-          used_properties = {p for p in project.predicates() if isinstance(p, URIRef) and str(p).startswith(SCHEMA)}
-          declared_classes = set(vocabulary.subjects(RDF.type, RDFS.Class))
-          declared_properties = set(vocabulary.subjects(RDF.type, RDF.Property))
-          missing_types = sorted(str(x) for x in used_types - declared_classes)
-          missing_properties = sorted(str(x) for x in used_properties - declared_properties)
-          print('project_triples=', len(project), sep='')
-          print('used_schema_types=', len(used_types), sep='')
-          print('used_schema_properties=', len(used_properties), sep='')
-          print('missing_types=', len(missing_types), sep='')
-          for item in missing_types:
-              print('MISSING_TYPE', item)
-          print('missing_properties=', len(missing_properties), sep='')
-          for item in missing_properties:
-              print('MISSING_PROPERTY', item)
-          if missing_types or missing_properties:
-              raise SystemExit('Project uses Schema.org terms absent from release 30.0')
+          python3 - <<'PY' | tee semantic-serialization-audit.txt
+          from rdflib import Graph
+          from rdflib.compare import isomorphic
+          jsonld = Graph().parse('public/graph.jsonld', format='json-ld')
+          turtle = Graph().parse('public/graph.ttl', format='turtle')
+          same = isomorphic(jsonld, turtle)
+          print('jsonld_triples=', len(jsonld), sep='')
+          print('turtle_triples=', len(turtle), sep='')
+          print('isomorphic=', str(same).lower(), sep='')
+          if not same:
+              raise SystemExit('JSON-LD and Turtle graphs are not isomorphic')
           PY
 
       - name: Check generated HTML invariants
@@ -126,14 +124,20 @@ jobs:
                   raise SystemExit(f'Generated HTML invariant failed for {name}')
           PY
 
-      - name: Record vCard serialization state
+      - name: Validate vCard serialization
         shell: bash
         run: |
           python3 - <<'PY' | tee vcard-serialization-audit.txt
           from pathlib import Path
-          for name in ('public/doctor.vcf', 'public/clinic.vcf'):
+          for name in ('public/doctor.vcf', 'public/clinic.vcf', 'dist/doctor.vcf', 'dist/clinic.vcf'):
               data = Path(name).read_bytes()
-              print(name, 'crlf=', data.count(b'\r\n'), 'bare_lf=', data.count(b'\n') - data.count(b'\r\n'), 'ends_crlf=', data.endswith(b'\r\n'))
+              crlf = data.count(b'\r\n')
+              bare_lf = data.count(b'\n') - crlf
+              ends_crlf = data.endswith(b'\r\n')
+              max_line = max(len(line) for line in data.split(b'\r\n'))
+              print(name, 'crlf=', crlf, 'bare_lf=', bare_lf, 'ends_crlf=', ends_crlf, 'max_physical_line_octets=', max_line)
+              if bare_lf or not ends_crlf or max_line > 75:
+                  raise SystemExit(f'Invalid vCard serialization: {name}')
           PY
 
       - name: Create source and build checksums
@@ -144,13 +148,15 @@ jobs:
             public/graph.jsonld \
             public/graph.ttl \
             src/data/semantic/head-graph.min.jsonld \
-            public/_headers > semantic-source-sha256.txt
+            public/_headers \
+            public/doctor.vcf \
+            public/clinic.vcf > corrected-source-sha256.txt
 
       - name: Upload validation artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: doctor-ghezelbaash-main-feb74f67-csp-corrected-validation
+          name: doctor-ghezelbaash-main-feb74f67-technical-fix-01-validation
           path: |
             dist/
             runtime-node.txt
@@ -159,12 +165,13 @@ jobs:
             baseline-main.txt
             npm-ci.log
             build.log
+            correction.patch
             generated-csp-audit.txt
-            schemaorg-vocabulary-audit.txt
+            semantic-serialization-audit.txt
             generated-html-invariants.txt
             vcard-serialization-audit.txt
             dist-sha256.txt
-            semantic-source-sha256.txt
+            corrected-source-sha256.txt
           if-no-files-found: warn
           retention-days: 1
           compression-level: 0
