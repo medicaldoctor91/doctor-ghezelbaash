@@ -1,4 +1,4 @@
-name: Export exact main snapshot
+name: Validate exact main snapshot
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  export:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository history
@@ -17,23 +17,77 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create exact ZIP from pinned main commit
+      - name: Checkout pinned main commit
+        shell: bash
+        run: git checkout --detach feb74f67da82956afde488d78ae50d5c80a89852
+
+      - name: Set up exact Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - name: Set up exact npm runtime
+        shell: bash
+        run: npm install --global npm@11.16.0
+
+      - name: Record runtime versions
         shell: bash
         run: |
-          git archive \
-            --format=zip \
-            --prefix=doctor-ghezelbaash-main-feb74f67/ \
-            --output=doctor-ghezelbaash-main-feb74f67.zip \
-            feb74f67da82956afde488d78ae50d5c80a89852
-          sha256sum doctor-ghezelbaash-main-feb74f67.zip > doctor-ghezelbaash-main-feb74f67.zip.sha256
+          node --version | tee runtime-node.txt
+          npm --version | tee runtime-npm.txt
 
-      - name: Upload exact source archive
+      - name: Install locked dependencies
+        shell: bash
+        run: npm ci 2>&1 | tee npm-ci.log
+
+      - name: Build pinned source
+        shell: bash
+        run: npm run build 2>&1 | tee build.log
+
+      - name: Inspect generated Head Graph and CSP hash
+        shell: bash
+        run: |
+          python3 - <<'PY' | tee generated-csp-audit.txt
+          import base64, hashlib, pathlib, re
+          html = pathlib.Path('dist/index.html').read_text('utf-8')
+          match = re.search(r'<script\b[^>]*type=["\']application/ld\+json["\'][^>]*>([\s\S]*?)</script>', html, re.I)
+          if not match:
+              raise SystemExit('No inline application/ld+json script found in dist/index.html')
+          payload = match.group(1).encode('utf-8')
+          calculated = 'sha256-' + base64.b64encode(hashlib.sha256(payload).digest()).decode()
+          headers = pathlib.Path('public/_headers').read_text('utf-8')
+          declared = sorted(set(re.findall(r'sha256-[A-Za-z0-9+/=]+', headers)))
+          print('generated_payload_bytes=', len(payload), sep='')
+          print('calculated=', calculated, sep='')
+          print('declared=', ','.join(declared), sep='')
+          print('match=', str(calculated in declared).lower(), sep='')
+          PY
+
+      - name: Create source and build checksums
+        shell: bash
+        run: |
+          find dist -type f -print0 | sort -z | xargs -0 sha256sum > dist-sha256.txt
+          sha256sum \
+            public/graph.jsonld \
+            public/graph.ttl \
+            src/data/semantic/head-graph.min.jsonld \
+            public/_headers > semantic-source-sha256.txt
+
+      - name: Upload validation artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: doctor-ghezelbaash-main-feb74f67
+          name: doctor-ghezelbaash-main-feb74f67-validation
           path: |
-            doctor-ghezelbaash-main-feb74f67.zip
-            doctor-ghezelbaash-main-feb74f67.zip.sha256
-          if-no-files-found: error
+            dist/
+            runtime-node.txt
+            runtime-npm.txt
+            npm-ci.log
+            build.log
+            generated-csp-audit.txt
+            dist-sha256.txt
+            semantic-source-sha256.txt
+          if-no-files-found: warn
           retention-days: 1
           compression-level: 0
