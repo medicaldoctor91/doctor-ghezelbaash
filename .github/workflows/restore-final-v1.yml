@@ -1,0 +1,434 @@
+name: Restore final V1
+
+on:
+  push:
+    branches: [restore-final-v1]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: restore-final-v1
+  cancel-in-progress: false
+
+jobs:
+  restore:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: restore-final-v1
+          fetch-depth: 1
+
+      - name: Rebuild clean static release from verified production
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/restore.py <<'PY'
+          from __future__ import annotations
+
+          import hashlib
+          import html
+          import json
+          import re
+          import shutil
+          import sys
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          ORIGIN = "https://www.ghezelbaash.ir"
+          ROOT = Path.cwd()
+          UA = "Mozilla/5.0 (compatible; GhezelbaashReleaseRestorer/1.0; +https://www.ghezelbaash.ir/)"
+
+          TITLE = "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه، تشخیص و درمان"
+          DESCRIPTION = (
+              "وب‌سایت رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ راهنمای جامع "
+              "بوتاکس، فیلر، لیفت نخ، پوست، مو، کانتورینگ، جراحی زیبایی، عوارض، Revision، "
+              "نظر دوم و ارزیابی پرونده‌های پیچیده برای مراجعه‌کنندگان از سراسر ایران و عراق."
+          )
+          H1_TEXT = (
+              "دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ زیبایی از تشخیص شروع می‌شود، "
+              "نه از منوی تزریق"
+          )
+
+          V7_SOURCE_BLOCK = r'''<h1 id="saeed-ghezelbash"><span id="saeed-ghezelbash-aesthetic-medicine">دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ زیبایی از تشخیص شروع می‌شود، نه از منوی تزریق</span></h1>
+
+          سوزن همیشه مقصر نیست. خیلی وقت‌ها فاجعه از چند دقیقه قبل‌تر شروع شده؛ همان لحظه‌ای که یک پف را گودی دیده‌اند، افتادگی را کمبود ژل حساب کرده‌اند یا برای پوستی که اضافه آمده، نسخه بوتاکس نوشته‌اند. اجرای تمیز، تشخیص غلط را نجات نمی‌دهد. فقط اشتباه را تمیزتر اجرا می‌کند.
+
+          <p>من، <a href="https://www.wikidata.org/wiki/Q140287622" rel="me">دکتر سعید قزلباش</a> هستم و با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e">کد نظام پزشکی ۱۶۷۴۳۰</a> در کرمانشاه فعالیت می‌کنم. این صفحه منوی بوتاکس و فیلر نیست. قرار است ببینید وقتی یک صورت روبه‌روی من می‌نشیند، دقیقاً دنبال چه می‌گردم؛ کجا تزریق را قبول می‌کنم، کجا چند لایه باید هم‌زمان دیده شوند، کجا جراحی از بازی با سرنگ صادقانه‌تر است و کجا بهترین تصمیم پزشکی این است که اصلاً کاری نکنیم.</p>
+
+          <p id="google-maps-clinic-reputation-current" class="hero-reputation"><strong>۵٫۰ از ۵ در <span translate="no">Google Maps</span></strong> · بر اساس ۱۶۴ نظر · ثبت ۲۵ ژوئیهٔ ۲۰۲۶ — <a href="https://www.google.com/maps?cid=12350483144643112463" rel="external">مشاهده نظرها</a></p>
+
+          <figure>
+            <picture>
+              <source
+                type="image/webp"
+                srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.webp 1600w"
+                sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"
+              />
+              <img
+                src="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp"
+                width="640"
+                height="427"
+                alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+              />
+            </picture>
+            <figcaption>دکتر سعید قزلباش، پزشک زیبایی</figcaption>
+          </figure>
+
+          یک عکس ثابت درباره صورت دروغ‌های زیادی می‌گوید. ممکن است خطی که در عکس عمیق دیده می‌شود فقط هنگام اخم ساخته شود. ممکن است گودی زیر چشم با یک نور دیگر ناپدید شود، چون اصلاً گودی نبوده؛ سایه بوده. صورت را در استراحت می‌بینم، بعد هنگام اخم، لبخند و حرف‌زدن. پوست را لمس می‌کنم. حرکت عضله، جای چربی، حمایت استخوان، التهاب، عدم تقارن و اثر تزریق‌های قبلی را کنار هم می‌گذارم. بعد درباره درمان حرف می‌زنم. نه زودتر.
+
+          <figure>
+            <picture>
+              <source
+                type="image/webp"
+                srcset="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp 640w, /media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp 1600w"
+                sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"
+              />
+              <img
+                src="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp"
+                width="640"
+                height="427"
+                alt="دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
+            <figcaption>دکتر سعید قزلباش در محیط بالینی</figcaption>
+          </figure>
+
+          «صورتم را بهتر کن» درخواست ساده‌ای نیست. بهتر یعنی چه؟ جوان‌تر؟ باریک‌تر؟ شبیه عکس فیلترشده؟ یا فقط کمتر خسته؟ گاهی یک تغییر آناتومیک روشن وجود دارد و درمان می‌تواند منطقی باشد. گاهی بیمار دارد با صورتی می‌جنگد که مشکل اصلی‌اش مقایسه بی‌وقفه با تصاویر غیرواقعی است. پزشک قرار نیست هر نارضایتی را به تعداد سرنگ ترجمه کند. بعضی صورت‌ها به درمان نیاز دارند. بعضی خواسته‌ها به اصلاح. اشتباه گرفتن این دو، همان جایی است که چهره کم‌کم از صاحبش جدا می‌شود.
+
+          تکنیک آخر کار است. کسی که از همان ابتدا درباره برند فیلر، تعداد نخ یا واحد بوتاکس حرف می‌زند، هنوز مهم‌ترین سؤال را نپرسیده: این بافت واقعاً چه مشکلی دارد؟ شاید چیزی که ژل می‌خواهد حجم ازدست‌رفته باشد. شاید همان برجستگی که بیمار می‌خواهد پر شود، پف باشد و با تزریق بدتر شود. شاید لک فقط رنگدانه نباشد و التهاب و عروق هم زیر آن کار کنند. شاید ریزش مو با PRP شروع نشود؛ با فهمیدن علت شروع شود. روش، اجازه ورودش را از تشخیص می‌گیرد. نه از ترند، نه از قیمت و نه از اصرار بیمار.
+
+          برای ارزیابی اولیه می‌توانید از طریق <a href="https://ig.me/m/doctor.ghezelbaash">دایرکت مستقیم صفحه رسمی من</a> پیام بفرستید یا با <a href="tel:+989308209494">۰۹۳۰ ۸۲۰ ۹۴۹۴</a> تماس بگیرید. اما از همین ابتدا روشن باشد: «یک سی‌سی فیلر می‌خواهم» تشخیص نیست. «بوتاکس کامل صورت» هم برنامه درمانی نیست. گفت‌وگوی اولیه فقط مشخص می‌کند قدم بعدی چیست؛ تصمیم پزشکی زمانی شکل می‌گیرد که صورت، بافت، حرکت و سابقه درمانی واقعاً بررسی شده باشند. قبل از آن، هر پاسخ قطعی بیشتر حدس است تا طبابت.'''
+
+          V7_HTML_BLOCK = r'''<h1 id="saeed-ghezelbash"><span id="saeed-ghezelbash-aesthetic-medicine">دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ زیبایی از تشخیص شروع می‌شود، نه از منوی تزریق</span></h1>
+          <p>سوزن همیشه مقصر نیست. خیلی وقت‌ها فاجعه از چند دقیقه قبل‌تر شروع شده؛ همان لحظه‌ای که یک پف را گودی دیده‌اند، افتادگی را کمبود ژل حساب کرده‌اند یا برای پوستی که اضافه آمده، نسخه بوتاکس نوشته‌اند. اجرای تمیز، تشخیص غلط را نجات نمی‌دهد. فقط اشتباه را تمیزتر اجرا می‌کند.</p>
+          <p>من، <a href="https://www.wikidata.org/wiki/Q140287622" rel="me">دکتر سعید قزلباش</a> هستم و با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e">کد نظام پزشکی ۱۶۷۴۳۰</a> در کرمانشاه فعالیت می‌کنم. این صفحه منوی بوتاکس و فیلر نیست. قرار است ببینید وقتی یک صورت روبه‌روی من می‌نشیند، دقیقاً دنبال چه می‌گردم؛ کجا تزریق را قبول می‌کنم، کجا چند لایه باید هم‌زمان دیده شوند، کجا جراحی از بازی با سرنگ صادقانه‌تر است و کجا بهترین تصمیم پزشکی این است که اصلاً کاری نکنیم.</p>
+          <p id="google-maps-clinic-reputation-current" class="hero-reputation"><strong>۵٫۰ از ۵ در <span translate="no">Google Maps</span></strong> · بر اساس ۱۶۴ نظر · ثبت ۲۵ ژوئیهٔ ۲۰۲۶ — <a href="https://www.google.com/maps?cid=12350483144643112463" rel="external">مشاهده نظرها</a></p>
+          <figure><picture><source type="image/webp" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-delivery-960.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.webp 1600w" sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"><img src="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp" width="640" height="427" alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" loading="eager" decoding="async" fetchpriority="high"></picture><figcaption>دکتر سعید قزلباش، پزشک زیبایی</figcaption></figure>
+          <p>یک عکس ثابت درباره صورت دروغ‌های زیادی می‌گوید. ممکن است خطی که در عکس عمیق دیده می‌شود فقط هنگام اخم ساخته شود. ممکن است گودی زیر چشم با یک نور دیگر ناپدید شود، چون اصلاً گودی نبوده؛ سایه بوده. صورت را در استراحت می‌بینم، بعد هنگام اخم، لبخند و حرف‌زدن. پوست را لمس می‌کنم. حرکت عضله، جای چربی، حمایت استخوان، التهاب، عدم تقارن و اثر تزریق‌های قبلی را کنار هم می‌گذارم. بعد درباره درمان حرف می‌زنم. نه زودتر.</p>
+          <figure><picture><source type="image/webp" srcset="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp 640w, /media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-960.webp 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp 1600w" sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"><img src="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.webp" width="640" height="427" alt="دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه" loading="lazy" decoding="async"></picture><figcaption>دکتر سعید قزلباش در محیط بالینی</figcaption></figure>
+          <p>«صورتم را بهتر کن» درخواست ساده‌ای نیست. بهتر یعنی چه؟ جوان‌تر؟ باریک‌تر؟ شبیه عکس فیلترشده؟ یا فقط کمتر خسته؟ گاهی یک تغییر آناتومیک روشن وجود دارد و درمان می‌تواند منطقی باشد. گاهی بیمار دارد با صورتی می‌جنگد که مشکل اصلی‌اش مقایسه بی‌وقفه با تصاویر غیرواقعی است. پزشک قرار نیست هر نارضایتی را به تعداد سرنگ ترجمه کند. بعضی صورت‌ها به درمان نیاز دارند. بعضی خواسته‌ها به اصلاح. اشتباه گرفتن این دو، همان جایی است که چهره کم‌کم از صاحبش جدا می‌شود.</p>
+          <p>تکنیک آخر کار است. کسی که از همان ابتدا درباره برند فیلر، تعداد نخ یا واحد بوتاکس حرف می‌زند، هنوز مهم‌ترین سؤال را نپرسیده: این بافت واقعاً چه مشکلی دارد؟ شاید چیزی که ژل می‌خواهد حجم ازدست‌رفته باشد. شاید همان برجستگی که بیمار می‌خواهد پر شود، پف باشد و با تزریق بدتر شود. شاید لک فقط رنگدانه نباشد و التهاب و عروق هم زیر آن کار کنند. شاید ریزش مو با PRP شروع نشود؛ با فهمیدن علت شروع شود. روش، اجازه ورودش را از تشخیص می‌گیرد. نه از ترند، نه از قیمت و نه از اصرار بیمار.</p>
+          <p>برای ارزیابی اولیه می‌توانید از طریق <a href="https://ig.me/m/doctor.ghezelbaash">دایرکت مستقیم صفحه رسمی من</a> پیام بفرستید یا با <a href="tel:+989308209494">۰۹۳۰ ۸۲۰ ۹۴۹۴</a> تماس بگیرید. اما از همین ابتدا روشن باشد: «یک سی‌سی فیلر می‌خواهم» تشخیص نیست. «بوتاکس کامل صورت» هم برنامه درمانی نیست. گفت‌وگوی اولیه فقط مشخص می‌کند قدم بعدی چیست؛ تصمیم پزشکی زمانی شکل می‌گیرد که صورت، بافت، حرکت و سابقه درمانی واقعاً بررسی شده باشند. قبل از آن، هر پاسخ قطعی بیشتر حدس است تا طبابت.</p>'''
+
+          def request_bytes(url: str, required: bool = True) -> bytes | None:
+              req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*"})
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as response:
+                      if response.status != 200:
+                          raise RuntimeError(f"HTTP {response.status}")
+                      return response.read()
+              except Exception as exc:
+                  if required:
+                      raise RuntimeError(f"download failed: {url}: {exc}") from exc
+                  print(f"optional download skipped: {url}: {exc}", file=sys.stderr)
+                  return None
+
+          def request_text(url: str, required: bool = True) -> str | None:
+              data = request_bytes(url, required=required)
+              if data is None:
+                  return None
+              for encoding in ("utf-8-sig", "utf-8"):
+                  try:
+                      return data.decode(encoding)
+                  except UnicodeDecodeError:
+                      pass
+              return data.decode("utf-8", errors="strict")
+
+          def clean_root() -> None:
+              for path in ROOT.iterdir():
+                  if path.name == ".git":
+                      continue
+                  if path.is_dir():
+                      shutil.rmtree(path)
+                  else:
+                      path.unlink()
+
+          def patch_graph_heading_links(text: str) -> tuple[str, dict[str, int]]:
+              pattern = re.compile(
+                  r'(<h([34])\b[^>]*>\s*<a\b[^>]*href="/graph\.jsonld"[^>]*>)',
+                  re.IGNORECASE,
+              )
+              counts = {"3": 0, "4": 0}
+
+              def replace(match: re.Match[str]) -> str:
+                  tag = match.group(1)
+                  level = match.group(2)
+                  counts[level] += 1
+                  tag = tag.replace('href="/graph.jsonld"', 'href="/graph.ttl"')
+                  if re.search(r'\btype="[^"]*"', tag):
+                      tag = re.sub(r'\btype="[^"]*"', 'type="text/turtle"', tag, count=1)
+                  else:
+                      tag = tag[:-1] + ' type="text/turtle">'
+                  return tag
+
+              output = pattern.sub(replace, text)
+              if counts != {"3": 2, "4": 3}:
+                  raise RuntimeError(f"unexpected graph heading distribution: {counts}")
+              return output, counts
+
+          def patch_source(source: str) -> str:
+              h1_start = source.find('<h1 id="saeed-ghezelbash">')
+              nav_start = source.find('<nav id="aesthetic-medicine-table-of-contents"')
+              if h1_start < 0 or nav_start <= h1_start:
+                  raise RuntimeError("source intro boundaries not found")
+              source = source[:h1_start] + V7_SOURCE_BLOCK.strip() + "\n\n" + source[nav_start:]
+              source, _ = patch_graph_heading_links(source)
+
+              if f'title: "{TITLE}"' not in source:
+                  raise RuntimeError("final title missing from source")
+              if f'description: "{DESCRIPTION}"' not in source:
+                  raise RuntimeError("final description missing from source")
+              if source.count('<h1 id="saeed-ghezelbash">') != 1:
+                  raise RuntimeError("source H1 count mismatch")
+              if source.count(H1_TEXT) != 1:
+                  raise RuntimeError("source H1 text mismatch")
+              return source
+
+          def patch_html(document: str) -> str:
+              h1_start = document.find('<h1 id="saeed-ghezelbash">')
+              nav_start = document.find('<nav id="aesthetic-medicine-table-of-contents"')
+              if h1_start < 0 or nav_start <= h1_start:
+                  raise RuntimeError("HTML intro boundaries not found")
+              document = document[:h1_start] + V7_HTML_BLOCK.strip() + document[nav_start:]
+              document, _ = patch_graph_heading_links(document)
+              return document
+
+          def validate_html(document: str) -> None:
+              if document.count("<title>") != 1 or f"<title>{TITLE}</title>" not in document:
+                  raise RuntimeError("title validation failed")
+              description_tag = re.search(r'<meta\b[^>]*\bname="description"[^>]*>', document, re.IGNORECASE)
+              if not description_tag:
+                  raise RuntimeError("description tag missing")
+              content_match = re.search(r'\bcontent="([^"]*)"', description_tag.group(0), re.IGNORECASE)
+              if not content_match or html.unescape(content_match.group(1)) != DESCRIPTION:
+                  raise RuntimeError("description validation failed")
+              h1_tags = re.findall(r"<h1\b[^>]*>", document, flags=re.IGNORECASE)
+              if len(h1_tags) != 1 or H1_TEXT not in document:
+                  raise RuntimeError("HTML H1 validation failed")
+              if len(document.encode("utf-8")) >= 1_850_000:
+                  raise RuntimeError("HTML exceeds 1,850,000-byte release budget")
+              if re.search(r'<h[34]\b[^>]*>\s*<a\b[^>]*href="/graph\.jsonld"', document, re.IGNORECASE):
+                  raise RuntimeError("graph.jsonld remains on H3/H4")
+
+              ids = re.findall(r'\bid="([^"]+)"', document)
+              seen = set()
+              duplicates = set()
+              for value in ids:
+                  if value in seen:
+                      duplicates.add(value)
+                  seen.add(value)
+              if duplicates:
+                  raise RuntimeError(f"duplicate IDs: {sorted(duplicates)[:20]}")
+              fragments = {
+                  urllib.parse.unquote(value)
+                  for value in re.findall(r'href="#([^"]+)"', document)
+                  if value
+              }
+              missing = sorted(fragments - seen)
+              if missing:
+                  raise RuntimeError(f"broken internal fragments: {missing[:20]}")
+              if re.search(r'<script\b[^>]*\bsrc=', document, re.IGNORECASE):
+                  raise RuntimeError("unexpected client-side JavaScript")
+              if document.count('fetchpriority="high"') != 1:
+                  raise RuntimeError("fetchpriority high must occur exactly once")
+
+          def local_path_from_url(url: str) -> Path | None:
+              parsed = urllib.parse.urlparse(urllib.parse.urljoin(ORIGIN + "/", url))
+              if parsed.scheme not in ("http", "https") or parsed.netloc != "www.ghezelbaash.ir":
+                  return None
+              path = urllib.parse.unquote(parsed.path)
+              if path in ("", "/") or path.endswith("/"):
+                  return None
+              if ".." in Path(path).parts:
+                  return None
+              return ROOT / path.lstrip("/")
+
+          def extract_local_urls(text: str) -> set[str]:
+              urls: set[str] = set()
+              for match in re.findall(r'''(?:src|href|poster|content)=["']([^"'<>]+)["']''', text, flags=re.IGNORECASE):
+                  if match.startswith("#") or match.startswith("data:") or match.startswith("mailto:") or match.startswith("tel:"):
+                      continue
+                  parsed = urllib.parse.urlparse(urllib.parse.urljoin(ORIGIN + "/", html.unescape(match)))
+                  if parsed.netloc == "www.ghezelbaash.ir" and parsed.path not in ("", "/"):
+                      urls.add(parsed.path + (("?" + parsed.query) if parsed.query else ""))
+              for srcset in re.findall(r'''srcset=["']([^"']+)["']''', text, flags=re.IGNORECASE):
+                  for item in html.unescape(srcset).split(","):
+                      candidate = item.strip().split()[0]
+                      parsed = urllib.parse.urlparse(urllib.parse.urljoin(ORIGIN + "/", candidate))
+                      if parsed.netloc == "www.ghezelbaash.ir" and parsed.path not in ("", "/"):
+                          urls.add(parsed.path + (("?" + parsed.query) if parsed.query else ""))
+              return urls
+
+          def save_url(path_or_url: str, required: bool = False) -> Path | None:
+              absolute = urllib.parse.urljoin(ORIGIN + "/", path_or_url)
+              destination = local_path_from_url(absolute)
+              if destination is None:
+                  return None
+              data = request_bytes(absolute, required=required)
+              if data is None:
+                  return None
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              destination.write_bytes(data)
+              return destination
+
+          def mirror_css_dependencies(css_files: list[Path]) -> None:
+              queue = list(css_files)
+              seen: set[Path] = set()
+              while queue:
+                  css_file = queue.pop()
+                  if css_file in seen or not css_file.exists():
+                      continue
+                  seen.add(css_file)
+                  text = css_file.read_text("utf-8", errors="ignore")
+                  base_url = ORIGIN + "/" + css_file.relative_to(ROOT).as_posix()
+                  for raw in re.findall(r"url\(([^)]+)\)", text):
+                      value = raw.strip().strip("\"'")
+                      if not value or value.startswith(("data:", "#")):
+                          continue
+                      absolute = urllib.parse.urljoin(base_url, value)
+                      parsed = urllib.parse.urlparse(absolute)
+                      if parsed.netloc != "www.ghezelbaash.ir":
+                          continue
+                      saved = save_url(parsed.path + (("?" + parsed.query) if parsed.query else ""), required=True)
+                      if saved and saved.suffix.lower() == ".css":
+                          queue.append(saved)
+
+          def graph_local_urls(graph_text: str) -> set[str]:
+              found = set()
+              payload = json.loads(graph_text)
+
+              def walk(value):
+                  if isinstance(value, dict):
+                      for item in value.values():
+                          walk(item)
+                  elif isinstance(value, list):
+                      for item in value:
+                          walk(item)
+                  elif isinstance(value, str):
+                      parsed = urllib.parse.urlparse(urllib.parse.urljoin(ORIGIN + "/", value))
+                      if parsed.netloc == "www.ghezelbaash.ir" and parsed.path not in ("", "/") and not parsed.fragment:
+                          found.add(parsed.path)
+
+              walk(payload)
+              return found
+
+          clean_root()
+
+          source_live = request_text(ORIGIN + "/index.md", required=True)
+          html_live = request_text(ORIGIN + "/", required=True)
+          assert source_live is not None and html_live is not None
+
+          source_final = patch_source(source_live)
+          html_final = patch_html(html_live)
+          validate_html(html_final)
+
+          (ROOT / "index.md").write_text(source_final, encoding="utf-8", newline="\n")
+          (ROOT / "llms-full.txt").write_text(source_final, encoding="utf-8", newline="\n")
+          (ROOT / "index.html").write_text(html_final, encoding="utf-8", newline="\n")
+
+          explicit = [
+              "/graph.jsonld", "/graph.ttl", "/llms.txt", "/robots.txt", "/sitemap.xml",
+              "/manifest.webmanifest", "/favicon.ico", "/favicon.svg", "/apple-touch-icon.png",
+              "/og-image.webp", "/404.html",
+          ]
+
+          urls = extract_local_urls(html_final)
+          urls.update(explicit)
+          css_files: list[Path] = []
+          for url in sorted(urls):
+              if url in ("/index.md", "/llms-full.txt"):
+                  continue
+              saved = save_url(url, required=False)
+              if saved and saved.suffix.lower() == ".css":
+                  css_files.append(saved)
+
+          graph_path = ROOT / "graph.jsonld"
+          if not graph_path.exists():
+              raise RuntimeError("graph.jsonld was not mirrored")
+          graph_text = graph_path.read_text("utf-8-sig")
+          json.loads(graph_text)
+          for url in sorted(graph_local_urls(graph_text)):
+              save_url(url, required=False)
+
+          ttl_path = ROOT / "graph.ttl"
+          if not ttl_path.exists() or not ttl_path.read_text("utf-8-sig").strip():
+              raise RuntimeError("graph.ttl was not mirrored")
+
+          mirror_css_dependencies(css_files)
+
+          if not (ROOT / "404.html").exists():
+              (ROOT / "404.html").write_text(
+                  '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8">'
+                  '<meta name="robots" content="noindex,follow"><title>صفحه پیدا نشد</title>'
+                  '<main><h1>صفحه پیدا نشد</h1><p><a href="/">بازگشت به صفحه اصلی</a></p></main></html>',
+                  encoding="utf-8",
+              )
+
+          (ROOT / ".nojekyll").write_text("", encoding="utf-8")
+          (ROOT / "CNAME").write_text("github.ghezelbaash.ir\n", encoding="utf-8")
+          (ROOT / "_headers").write_text(
+              "/*\n"
+              "  X-Content-Type-Options: nosniff\n"
+              "  Referrer-Policy: strict-origin-when-cross-origin\n"
+              "  Permissions-Policy: camera=(), microphone=(), geolocation=()\n"
+              "/index.md\n  X-Robots-Tag: noindex, follow\n"
+              "/llms.txt\n  X-Robots-Tag: noindex, follow\n"
+              "/llms-full.txt\n  X-Robots-Tag: noindex, follow\n"
+              "/graph.jsonld\n  X-Robots-Tag: noindex, follow\n"
+              "/graph.ttl\n  X-Robots-Tag: noindex, follow\n",
+              encoding="utf-8",
+          )
+
+          forbidden_patterns = [
+              "*.patch", "*.zip", "*.sha256", "*CHECKSUM*", "*AUDIT*", "*REPORT*",
+              "TECHNICAL_OPERATIONS.md", "CAPTIONS_REQUIRED.md", "package.json",
+              "package-lock.json", "node_modules", "src", "scripts", ".github",
+          ]
+          for pattern in forbidden_patterns:
+              for path in ROOT.glob(pattern):
+                  if path.name == ".git":
+                      continue
+                  if path.is_dir():
+                      shutil.rmtree(path)
+                  else:
+                      path.unlink()
+
+          required_files = [
+              ROOT / "index.html", ROOT / "index.md", ROOT / "llms-full.txt",
+              ROOT / "graph.jsonld", ROOT / "graph.ttl", ROOT / "CNAME", ROOT / ".nojekyll",
+          ]
+          missing = [str(path.relative_to(ROOT)) for path in required_files if not path.exists()]
+          if missing:
+              raise RuntimeError(f"required files missing: {missing}")
+
+          validate_html((ROOT / "index.html").read_text("utf-8"))
+          file_count = sum(1 for path in ROOT.rglob("*") if path.is_file() and ".git" not in path.parts)
+          total_bytes = sum(path.stat().st_size for path in ROOT.rglob("*") if path.is_file() and ".git" not in path.parts)
+          print(json.dumps({
+              "status": "pass", "version": "1", "files": file_count, "bytes": total_bytes,
+              "index_html_sha256": hashlib.sha256((ROOT / "index.html").read_bytes()).hexdigest(),
+              "index_md_sha256": hashlib.sha256((ROOT / "index.md").read_bytes()).hexdigest(),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+          python /tmp/restore.py
+          rm -f /tmp/restore.py
+
+      - name: Commit clean final V1
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Restore clean final V1 production snapshot"
+          git push origin HEAD:restore-final-v1
