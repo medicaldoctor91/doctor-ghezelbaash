@@ -1,52 +1,86 @@
 ---
-import '../styles/global.css';
-import FloatingActionDock from '../components/FloatingActionDock.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const frontmatter = {
+  title: 'صفحه پیدا نشد | دکتر سعید قزلباش',
+  description: 'صفحه درخواستی پیدا نشد؛ از مسیرهای اصلی وب‌سایت رسمی دکتر سعید قزلباش و کلینیک زیبایی دکتر سعید قزلباش استفاده کنید.',
+  lang: 'fa-IR',
+  dir: 'rtl',
+  robots: 'noindex, follow',
+};
 ---
-<!doctype html>
-<html lang="fa-IR" dir="rtl">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>صفحه پیدا نشد | دکتر سعید قزلباش</title>
-    <meta name="description" content="صفحه درخواستی پیدا نشد؛ از مسیرهای اصلی وب‌سایت رسمی دکتر سعید قزلباش و کلینیک زیبایی دکتر سعید قزلباش استفاده کنید." />
-    <meta name="robots" content="noindex, follow" />
-    <meta name="theme-color" content="#075244" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
-    <link rel="manifest" href="/site.webmanifest" />
-  </head>
-  <body>
-    <main id="main-content" class="not-found-page">
-      <p class="not-found-page__code" aria-hidden="true">404</p>
-      <h1>این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1>
-      <p>این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد. برای ادامه، مستقیماً به بخش موردنظر در راهنمای پزشکی زیبایی یا اطلاعات کلینیک زیبایی دکتر سعید قزلباش بروید.</p>
-      <nav class="not-found-page__links" aria-label="مسیرهای اصلی وب‌سایت دکتر سعید قزلباش">
-        <a href="/#botox">بوتاکس</a>
-        <a href="/#filler">فیلر</a>
-        <a href="/#thread-lift">لیفت نخ</a>
-        <a href="/#acne-pigmentation-and-scars">جوش، لک و اسکار</a>
-        <a href="/#hair-loss">ریزش مو</a>
-        <a href="/#aesthetic-treatment-failure-from-diagnostic-error">اصلاح نتایج و نظر دوم</a>
-        <a href="/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی دکتر سعید قزلباش</a>
-      </nav>
-      <div class="not-found-page__actions">
-        <a class="not-found-page__primary" href="/">بازگشت به صفحه اصلی</a>
-        <a href="tel:+989308209494">تماس با کلینیک زیبایی</a>
-        <a href="https://ig.me/m/doctor.ghezelbaash" rel="external">ارزیابی اولیه آنلاین</a>
-        <a href="https://www.google.com/maps?cid=12350483144643112463" rel="external">مسیریابی در Google Maps</a>
-      </div>
-    </main>
-    <FloatingActionDock />
-  </body>
-</html>
+
+<BaseLayout frontmatter={frontmatter} url="/404">
+  <div class="not-found-page">
+    <p class="not-found-page__code" aria-hidden="true">404</p>
+    <h1>این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1>
+    <p>این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد. برای ادامه، مستقیماً به بخش موردنظر در راهنمای پزشکی زیبایی یا اطلاعات کلینیک زیبایی دکتر سعید قزلباش بروید.</p>
+    <nav class="not-found-page__links" aria-label="مسیرهای اصلی وب‌سایت دکتر سعید قزلباش">
+      <a href="/#botox">بوتاکس</a>
+      <a href="/#filler">فیلر</a>
+      <a href="/#thread-lift">لیفت نخ</a>
+      <a href="/#acne-pigmentation-and-scars">جوش، لک و اسکار</a>
+      <a href="/#hair-loss">ریزش مو</a>
+      <a href="/#aesthetic-treatment-failure-from-diagnostic-error">اصلاح نتایج و نظر دوم</a>
+      <a href="/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی دکتر سعید قزلباش</a>
+    </nav>
+    <div class="not-found-page__actions">
+      <a class="not-found-page__primary" href="/">بازگشت به صفحه اصلی</a>
+      <a href="tel:+989308209494">تماس با کلینیک زیبایی</a>
+      <a href="https://ig.me/m/doctor.ghezelbaash" rel="external">ارزیابی اولیه آنلاین</a>
+      <a href="https://www.google.com/maps?cid=12350483144643112463" rel="external">مسیریابی در Google Maps</a>
+    </div>
+  </div>
+</BaseLayout>
 
 <style>
-  .not-found-page { min-height: 100svh; display: grid; align-content: center; gap: 1rem; padding-block: clamp(2rem, 8vw, 7rem) 8rem; }
-  .not-found-page__code { margin: 0; color: var(--accent); font-size: clamp(4rem, 18vw, 10rem); font-weight: 900; line-height: 0.8; letter-spacing: -0.06em; }
-  .not-found-page h1 { max-width: 18ch; margin-block: 0.4rem 0.8rem; }
-  .not-found-page__links, .not-found-page__actions { display: flex; flex-wrap: wrap; gap: 0.7rem; max-width: var(--reading-measure); }
-  .not-found-page__links { margin-block: 1rem; padding: 1rem; border: 1px solid var(--line); border-radius: 1rem; background: var(--surface-soft); }
-  .not-found-page__links a, .not-found-page__actions a { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0.55rem 0.85rem; border: 1px solid #cfe3dc; border-radius: 999px; background: #fff; font-weight: 720; text-decoration: none; }
-  .not-found-page__actions .not-found-page__primary { background: var(--accent-strong); color: #fff; }
+  .not-found-page {
+    min-height: 100svh;
+    display: grid;
+    align-content: center;
+    gap: 1rem;
+    padding-block: clamp(2rem, 8vw, 7rem) 8rem;
+  }
+  .not-found-page__code {
+    margin: 0;
+    color: var(--accent);
+    font-size: clamp(4rem, 18vw, 10rem);
+    font-weight: 900;
+    line-height: 0.8;
+    letter-spacing: -0.06em;
+  }
+  .not-found-page h1 {
+    max-width: 18ch;
+    margin-block: 0.4rem 0.8rem;
+  }
+  .not-found-page__links,
+  .not-found-page__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    max-width: var(--reading-measure);
+  }
+  .not-found-page__links {
+    margin-block: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-soft);
+  }
+  .not-found-page__links a,
+  .not-found-page__actions a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid #cfe3dc;
+    border-radius: 999px;
+    background: #fff;
+    font-weight: 720;
+    text-decoration: none;
+  }
+  .not-found-page__actions .not-found-page__primary {
+    background: var(--accent-strong);
+    color: #fff;
+  }
 </style>
