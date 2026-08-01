@@ -12,14 +12,10 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository history
+      - name: Checkout validation branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Checkout pinned main commit
-        shell: bash
-        run: git checkout --detach feb74f67da82956afde488d78ae50d5c80a89852
 
       - name: Set up exact Node runtime
         uses: actions/setup-node@v4
@@ -31,17 +27,33 @@ jobs:
         shell: bash
         run: npm install --global npm@11.16.0
 
-      - name: Record runtime versions
+      - name: Record runtime and source versions
         shell: bash
         run: |
           node --version | tee runtime-node.txt
           npm --version | tee runtime-npm.txt
+          git rev-parse HEAD | tee validation-head.txt
+          git rev-parse main | tee baseline-main.txt
+
+      - name: Apply local non-visible CSP correction under test
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('public/_headers')
+          old = 'sha256-10+IOzNOhJOl42dCmxiPxNpW8ukBti5iF6r5bWUIg1I='
+          new = 'sha256-FMVGyF8UqQiWNnK8cHi044kOueyUVl33/oPNqn7CVJM='
+          text = p.read_text('utf-8')
+          if text.count(old) != 1:
+              raise SystemExit('Expected exactly one stale CSP hash')
+          p.write_text(text.replace(old, new), 'utf-8')
+          PY
 
       - name: Install locked dependencies
         shell: bash
         run: npm ci 2>&1 | tee npm-ci.log
 
-      - name: Build pinned source
+      - name: Build corrected source
         shell: bash
         run: npm run build 2>&1 | tee build.log
 
@@ -56,12 +68,73 @@ jobs:
               raise SystemExit('No inline application/ld+json script found in dist/index.html')
           payload = match.group(1).encode('utf-8')
           calculated = 'sha256-' + base64.b64encode(hashlib.sha256(payload).digest()).decode()
-          headers = pathlib.Path('public/_headers').read_text('utf-8')
+          headers = pathlib.Path('dist/_headers').read_text('utf-8')
           declared = sorted(set(re.findall(r'sha256-[A-Za-z0-9+/=]+', headers)))
           print('generated_payload_bytes=', len(payload), sep='')
           print('calculated=', calculated, sep='')
           print('declared=', ','.join(declared), sep='')
           print('match=', str(calculated in declared).lower(), sep='')
+          if calculated not in declared:
+              raise SystemExit('Generated Head Graph is blocked by the declared CSP hash')
+          PY
+
+      - name: Validate Schema.org vocabulary terms against release 30.0
+        shell: bash
+        run: |
+          python3 -m pip install --quiet rdflib==7.5.0
+          curl --fail --location --silent --show-error \
+            https://raw.githubusercontent.com/schemaorg/schemaorg/v30.0/data/schema.ttl \
+            --output schemaorg-v30.0.ttl
+          python3 - <<'PY' | tee schemaorg-vocabulary-audit.txt
+          from pathlib import Path
+          from rdflib import Graph, RDF, RDFS, URIRef
+          SCHEMA = 'https://schema.org/'
+          project = Graph().parse('public/graph.jsonld', format='json-ld')
+          vocabulary = Graph().parse('schemaorg-v30.0.ttl', format='turtle')
+          used_types = {o for o in project.objects(None, RDF.type) if isinstance(o, URIRef) and str(o).startswith(SCHEMA)}
+          used_properties = {p for p in project.predicates() if isinstance(p, URIRef) and str(p).startswith(SCHEMA)}
+          declared_classes = set(vocabulary.subjects(RDF.type, RDFS.Class))
+          declared_properties = set(vocabulary.subjects(RDF.type, RDF.Property))
+          missing_types = sorted(str(x) for x in used_types - declared_classes)
+          missing_properties = sorted(str(x) for x in used_properties - declared_properties)
+          print('project_triples=', len(project), sep='')
+          print('used_schema_types=', len(used_types), sep='')
+          print('used_schema_properties=', len(used_properties), sep='')
+          print('missing_types=', len(missing_types), sep='')
+          for item in missing_types:
+              print('MISSING_TYPE', item)
+          print('missing_properties=', len(missing_properties), sep='')
+          for item in missing_properties:
+              print('MISSING_PROPERTY', item)
+          if missing_types or missing_properties:
+              raise SystemExit('Project uses Schema.org terms absent from release 30.0')
+          PY
+
+      - name: Check generated HTML invariants
+        shell: bash
+        run: |
+          python3 - <<'PY' | tee generated-html-invariants.txt
+          from pathlib import Path
+          import re
+          for name in ('index.html', '404.html'):
+              html = Path('dist', name).read_text('utf-8')
+              ids = re.findall(r'\bid=["\']([^"\']+)["\']', html, re.I)
+              duplicates = sorted({x for x in ids if ids.count(x) > 1})
+              jsonld = re.findall(r'<script\b[^>]*type=["\']application/ld\+json["\'][^>]*>', html, re.I)
+              inline_styles = re.findall(r'\sstyle=["\']', html, re.I)
+              print(name, 'bytes=', len(html.encode('utf-8')), 'ids=', len(ids), 'duplicate_ids=', len(duplicates), 'jsonld_scripts=', len(jsonld), 'inline_styles=', len(inline_styles))
+              if duplicates or len(jsonld) != 1 or inline_styles:
+                  raise SystemExit(f'Generated HTML invariant failed for {name}')
+          PY
+
+      - name: Record vCard serialization state
+        shell: bash
+        run: |
+          python3 - <<'PY' | tee vcard-serialization-audit.txt
+          from pathlib import Path
+          for name in ('public/doctor.vcf', 'public/clinic.vcf'):
+              data = Path(name).read_bytes()
+              print(name, 'crlf=', data.count(b'\r\n'), 'bare_lf=', data.count(b'\n') - data.count(b'\r\n'), 'ends_crlf=', data.endswith(b'\r\n'))
           PY
 
       - name: Create source and build checksums
@@ -78,14 +151,19 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: doctor-ghezelbaash-main-feb74f67-validation
+          name: doctor-ghezelbaash-main-feb74f67-csp-corrected-validation
           path: |
             dist/
             runtime-node.txt
             runtime-npm.txt
+            validation-head.txt
+            baseline-main.txt
             npm-ci.log
             build.log
             generated-csp-audit.txt
+            schemaorg-vocabulary-audit.txt
+            generated-html-invariants.txt
+            vcard-serialization-audit.txt
             dist-sha256.txt
             semantic-source-sha256.txt
           if-no-files-found: warn
