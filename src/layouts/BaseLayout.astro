@@ -1,0 +1,55 @@
+---
+import '../styles/global.css';
+import headGraph from '../data/semantic/head-graph.min.jsonld?raw';
+import DocumentHead from '../components/DocumentHead.astro';
+import FloatingActionDock from '../components/FloatingActionDock.astro';
+
+interface Frontmatter {
+  title: string;
+  description: string;
+  lang?: string;
+  dir?: 'ltr' | 'rtl' | 'auto';
+  robots?: string;
+}
+
+interface Props {
+  frontmatter: Frontmatter;
+  url?: string;
+  preloadHero?: boolean;
+  includeHeadGraph?: boolean;
+}
+
+const { frontmatter, url, preloadHero = true, includeHeadGraph: includeHeadGraphProp } = Astro.props;
+const baseURL = Astro.site ?? Astro.url;
+const canonicalURL = new URL(url ?? Astro.url.pathname, baseURL);
+const ogImageURL = new URL('/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.jpg', baseURL);
+
+const title = frontmatter.title;
+const description = frontmatter.description;
+const lang = frontmatter.lang ?? 'fa-IR';
+const dir = frontmatter.dir ?? 'rtl';
+const robots = frontmatter.robots ?? 'index, follow';
+const includeHeadGraph = includeHeadGraphProp ?? !/(?:^|,)\s*noindex\b/i.test(robots);
+---
+<!doctype html>
+<html lang={lang} dir={dir}>
+  <head>
+    <meta charset="utf-8" />
+    <DocumentHead
+      title={title}
+      description={description}
+      robots={robots}
+      canonicalURL={canonicalURL}
+      ogImageURL={ogImageURL}
+      preloadHero={preloadHero}
+    />
+    {includeHeadGraph && <script is:inline type="application/ld+json" set:html={headGraph}></script>}
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>
+    <main id="main-content">
+      <slot />
+    </main>
+    <FloatingActionDock />
+  </body>
+</html>
