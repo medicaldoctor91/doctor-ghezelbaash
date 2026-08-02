@@ -1,0 +1,42 @@
+name: Validate Astro build
+
+on:
+  push:
+    branches:
+      - main
+      - upgrade-2026-stack
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Type-check and build
+        run: npm run validate
+
+      - name: Upload production build
+        uses: actions/upload-artifact@v7
+        with:
+          name: astro-production-build
+          path: dist/
+          if-no-files-found: error
+          retention-days: 3
