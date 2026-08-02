@@ -1,5 +1,5 @@
 {
-  "release": "2026-08-02-toolchain-upgrade-1",
+  "release": "2026-08-02-rich-results-1",
   "runtime": {
     "node": "24.18.0",
     "npm": "11.16.0"
