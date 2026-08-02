@@ -1,0 +1,91 @@
+name: Purge repository history
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  actions: write
+  contents: write
+  deployments: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      EMPTY_MAIN_SHA: d4c15edff3b2681c4be8ef230ed4d99a22a34c21
+    steps:
+      - name: Redact and close all pull requests
+        shell: bash
+        run: |
+          set -u
+          while read -r number; do
+            [ -n "$number" ] || continue
+            gh api -X PATCH "repos/$REPO/pulls/$number" \
+              -f title='Archived' -f body='' -f state='closed' \
+              -F maintainer_can_modify=false >/dev/null || true
+            gh api -X PUT "repos/$REPO/issues/$number/lock" \
+              -f lock_reason='resolved' >/dev/null || true
+          done < <(gh api --paginate "repos/$REPO/pulls?state=all&per_page=100" --jq '.[].number')
+
+      - name: Redact standalone issues
+        shell: bash
+        run: |
+          set -u
+          while read -r number; do
+            [ -n "$number" ] || continue
+            gh api -X PATCH "repos/$REPO/issues/$number" \
+              -f title='Archived' -f body='' -f state='closed' >/dev/null || true
+            gh api -X PUT "repos/$REPO/issues/$number/lock" \
+              -f lock_reason='resolved' >/dev/null || true
+          done < <(gh api --paginate "repos/$REPO/issues?state=all&per_page=100" --jq '.[] | select(has("pull_request") | not) | .number')
+
+      - name: Delete releases tags artifacts caches deployments and old runs
+        shell: bash
+        run: |
+          set -u
+          while read -r id; do [ -n "$id" ] && gh api -X DELETE "repos/$REPO/releases/$id" >/dev/null || true; done \
+            < <(gh api --paginate "repos/$REPO/releases?per_page=100" --jq '.[].id')
+
+          while read -r ref; do
+            [ -n "$ref" ] || continue
+            gh api -X DELETE "repos/$REPO/git/refs/${ref#refs/}" >/dev/null || true
+          done < <(gh api --paginate "repos/$REPO/git/matching-refs/tags/" --jq '.[].ref')
+
+          while read -r id; do [ -n "$id" ] && gh api -X DELETE "repos/$REPO/actions/artifacts/$id" >/dev/null || true; done \
+            < <(gh api --paginate "repos/$REPO/actions/artifacts?per_page=100" --jq '.artifacts[].id')
+
+          while read -r id; do [ -n "$id" ] && gh api -X DELETE "repos/$REPO/actions/caches/$id" >/dev/null || true; done \
+            < <(gh api --paginate "repos/$REPO/actions/caches?per_page=100" --jq '.actions_caches[].id')
+
+          while read -r id; do
+            [ -n "$id" ] || continue
+            gh api -X POST "repos/$REPO/deployments/$id/statuses" -f state='inactive' >/dev/null || true
+            gh api -X DELETE "repos/$REPO/deployments/$id" >/dev/null || true
+          done < <(gh api --paginate "repos/$REPO/deployments?per_page=100" --jq '.[].id')
+
+          while read -r id; do
+            [ -n "$id" ] || continue
+            [ "$id" = "$GITHUB_RUN_ID" ] && continue
+            gh api -X DELETE "repos/$REPO/actions/runs/$id" >/dev/null || true
+          done < <(gh api --paginate "repos/$REPO/actions/runs?per_page=100" --jq '.workflow_runs[].id')
+
+      - name: Delete every non-main branch and restore empty main
+        if: always()
+        shell: bash
+        run: |
+          set -u
+          while read -r branch; do
+            [ -n "$branch" ] || continue
+            [ "$branch" = 'main' ] && continue
+            gh api -X DELETE "repos/$REPO/git/refs/heads/$branch" >/dev/null || true
+          done < <(gh api --paginate "repos/$REPO/branches?per_page=100" --jq '.[].name')
+
+          gh api -X PATCH "repos/$REPO/git/refs/heads/main" \
+            -f sha="$EMPTY_MAIN_SHA" -F force=true >/dev/null
