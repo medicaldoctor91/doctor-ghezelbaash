@@ -3,6 +3,7 @@ name: Validate Astro build
 on:
   push:
     branches:
+      - main
       - upgrade-2026-stack
   pull_request:
     branches:
@@ -10,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
@@ -19,8 +20,6 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -28,33 +27,16 @@ jobs:
           node-version-file: .node-version
           cache: npm
 
-      - name: Install and refresh lockfile
-        run: npm install --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
 
-      - name: Commit regenerated lockfile
-        if: github.event_name == 'push'
-        run: |
-          if git diff --quiet -- package-lock.json; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          git commit -m "chore: regenerate lockfile for validated toolchain"
-          git push
+      - name: Type-check and build
+        run: npm run validate
 
-      - name: Type and content checks
-        run: npm run check
-
-      - name: Production build
-        run: npm run build
-
-      - name: Upload regenerated lockfile and build
+      - name: Upload production build
         uses: actions/upload-artifact@v7
         with:
-          name: astro-validation-output
-          path: |
-            package-lock.json
-            dist/
+          name: astro-production-build
+          path: dist/
           if-no-files-found: error
           retention-days: 3
