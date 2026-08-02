@@ -1,9 +1,8 @@
 name: Purge repository history
 
 on:
-  push:
-    branches:
-      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   actions: write
@@ -14,6 +13,7 @@ permissions:
 
 jobs:
   purge:
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
