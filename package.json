@@ -17,6 +17,9 @@
     "astro": "7.1.4",
     "typescript": "6.0.3"
   },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  },
   "engines": {
     "node": ">=24.18.0 <25",
     "npm": ">=11.16.0 <12"
