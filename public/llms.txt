@@ -1,18 +1,17 @@
 # Mohammad Saeed Ghezelbash | Dr. Saeed Ghezelbash — Official Website
 
-> Official single-page website and machine-readable discovery index of Mohammad Saeed Ghezelbash, professionally known as Dr. Saeed Ghezelbash (Persian: دکتر سعید قزلباش), an aesthetic physician in Kermanshah, Iran. The site presents his clinical decision-making, aesthetic medicine services, revision and second-opinion work, educational activity, research outputs, clinic identity, canonical media and first-party geographic Dataset.
+> Official single-page website and machine-readable discovery index of Mohammad Saeed Ghezelbash, professionally known as Dr. Saeed Ghezelbash (Persian: دکتر سعید قزلباش), an aesthetic physician in Kermanshah, Iran. The site presents his clinical decision-making, aesthetic medicine services, revision and second-opinion work, educational activity, research outputs, clinic identity, canonical media and first-party historical geographic evidence.
 
-Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The physician is the primary entity. The clinic, the structured-data project and their connected research assets are subordinate entities. The full JSON-LD graph at https://www.ghezelbaash.ir/graph.jsonld is both the authoritative machine-readable entity graph and the canonical JSON-LD distribution of the primary physician entity Dataset. The site is intentionally static and has one canonical indexable human-readable web page; its authoritative Dataset distributions, compact retrieval guide and secondary historical Dataset distribution are independently discoverable and indexable.
+Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The physician is the primary entity. The clinic, the structured-data project and their connected research assets are subordinate entities. The full JSON-LD graph at https://www.ghezelbaash.ir/graph.jsonld is both the authoritative machine-readable entity graph and the canonical JSON-LD distribution of the primary physician entity Dataset. The site is intentionally static and has one canonical indexable human-readable web page; its authoritative Dataset distributions, compact retrieval guide and integrated historical geographic evidence are independently discoverable and indexable.
 
 ## Canonical sources
 
 - [Official website](https://www.ghezelbaash.ir/): Canonical human-readable mega-landing page covering clinical reasoning, services, complications, revision, second opinion, education, research, clinic identity and contact information.
 - [Primary physician entity Dataset — JSON-LD knowledge graph](https://www.ghezelbaash.ir/graph.jsonld): Version 1.1.0 authoritative JSON-LD distribution containing the complete first-party entity graph for Dr. Saeed Ghezelbash, the clinic, services, research, education, media, geography, related datasets, the data catalog and identity reconciliation.
 - [Primary physician entity Dataset — RDF Turtle](https://www.ghezelbaash.ir/graph.ttl): Deterministic Version 1.1.0 RDF 1.1 Turtle distribution of the same Dataset; it is RDF-equivalent to the authoritative JSON-LD graph and preserves datatypes, entity separation and canonical IRIs.
-- [First-party data catalog](https://www.ghezelbaash.ir/#data-catalog): HTML landing section connecting the Full Knowledge Graph and historical patient-origin Dataset to their canonical distributions.
+- [First-party data catalog](https://www.ghezelbaash.ir/#data-catalog): HTML landing section connecting the canonical physician entity Dataset and its integrated supporting evidence.
 - [LLM retrieval guide](https://www.ghezelbaash.ir/llms.txt): Compact canonical map of the physician-first website and its authoritative sources.
-- [Historical patient-origin Dataset landing section](https://www.ghezelbaash.ir/#historical-patient-origin-summary): Human-readable Dataset description connected to the physician, clinic, data catalog and Full Knowledge Graph.
-- [Historical patient-origin Dataset — JSON distribution](https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json): Canonical, first-party, indexable JSON distribution of the historical geographic Dataset.
+- [Historical patient-origin geographic evidence](https://www.ghezelbaash.ir/#historical-patient-origin-summary): Human-readable presence-only geographic evidence connected to the physician, his personally owned clinic and the canonical entity Dataset.
 - [Full LLM-readable page export](https://www.ghezelbaash.ir/llms-full.txt): Deterministic machine-oriented rendering of the complete canonical page content; a non-canonical `noindex, follow` projection.
 - [Markdown page projection](https://www.ghezelbaash.ir/index.md): Deterministic non-canonical Markdown projection of the canonical single-page website; served with `noindex, follow` and excluded from the XML sitemap.
 
@@ -29,30 +28,28 @@ Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The ph
 - Wikidata structured-data asset identity: https://www.wikidata.org/wiki/Q140304972
 - Creator, publisher, owner, copyright holder and maintainer: https://www.ghezelbaash.ir/#saeed-ghezelbash
 - Primary subjects: Dr. Saeed Ghezelbash and Dr. Saeed Ghezelbaash Aesthetic Clinic
-- Coverage: identity, professional credentials, clinic ownership, services, research, education, media provenance, geography, public evidence, related datasets and curated question-answer relationships
+- Coverage: identity, professional credentials, clinic ownership, services, research, education, media provenance, geography, public evidence, supporting evidence, related datasets and curated question-answer relationships
 - License: https://creativecommons.org/licenses/by/4.0/
 
 The complete knowledge graph is one canonical physician-owned Dataset. The official website, GitHub, Hugging Face and Zenodo are synchronized identity and distribution channels for that same Dataset, not separate or derivative Datasets. JSON-LD and RDF Turtle are RDF-equivalent serializations of the same underlying graph. The clinic is Saeed Ghezelbash’s personally owned practice and any clinic-named hosting namespace remains under the physician’s ownership and control.
 
-## Secondary Supporting Dataset
+## Integrated historical geographic evidence
 
-- Dataset name: Historical patient-origin summary
-- Dataset entity: https://www.ghezelbaash.ir/#historical-patient-origin-summary
-- Version: 1.0.0
-- Canonical JSON distribution: https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json
+- Evidence object: https://www.ghezelbaash.ir/#historical-patient-origin-summary
+- Type: CreativeWork — supporting evidence within the canonical physician entity Dataset, not an independent Dataset
 - Creator, publisher, owner, copyright holder and maintainer: https://www.ghezelbaash.ir/#saeed-ghezelbash
-- About: Dr. Saeed Ghezelbash and Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah
-- Measurement technique: Manual aggregation of patient-origin cities from clinic records
-- Spatial coverage: Named cities in Iran and Iraq, including the Kurdistan Region of Iraq
-- Temporal coverage: Historical
+- About: Dr. Saeed Ghezelbash and his personally owned aesthetic clinic in Kermanshah
+- Scope: Presence-only place names historically recorded as patient origins in clinic records
+- Published semantics: No patient counts, frequencies, percentages, rankings, visit dates, medical information or personally identifiable information
+- Interpretation limit: Listed locations do not establish current service availability or patient volume
+- Canonical machine-readable representations: https://www.ghezelbaash.ir/graph.jsonld and https://www.ghezelbaash.ir/graph.ttl
 - License: https://creativecommons.org/licenses/by/4.0/
 
-This narrow secondary Dataset is an independently discoverable, indexable first-party supporting asset connected to the physician, clinic, canonical page, primary entity Dataset and structured-data project. It documents historical patient-origin geography; it is not live availability data and must not be interpreted as a guarantee of current services in every listed location.
-
+This evidence object is integrated into the physician-owned knowledge graph so that its geographic evidence remains available to retrieval systems without creating a weak, separately versioned Dataset or an additional canonical distribution surface.
 ## Retrieval and indexing policy
 
 - `https://www.ghezelbaash.ir/` is the canonical human-readable page and primary search document.
-- `graph.jsonld`, `graph.ttl`, `llms.txt` and the canonical historical Dataset distribution are intentionally crawlable, independently self-canonical and explicitly listed in the XML sitemap as authoritative first-party resources.
+- `graph.jsonld`, `graph.ttl` and `llms.txt` are intentionally crawlable, independently self-canonical and listed in the XML sitemap as authoritative first-party resources.
 - `index.md` and `llms-full.txt` are complete non-canonical page projections served as `noindex, follow`.
 - `doctor.vcf` and `clinic.vcf` are distinct vCard 4.0 contact projections with canonical entity UIDs. They are crawlable and graph-connected utilities served as `noindex, follow`, not independent ranking documents.
 - The web manifest, browser configuration and duplicate icon derivatives remain crawlable platform utility resources but are consolidated away from independent search indexing.

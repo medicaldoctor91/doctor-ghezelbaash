@@ -49,12 +49,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add \
+          git add -A -- \
             src/pages/index.md \
-            public/llms.txt \
+            src/components/DocumentHead.astro \
             src/data/semantic/head-graph.min.jsonld \
             public/graph.jsonld \
-            public/graph.ttl
+            public/graph.ttl \
+            public/llms.txt \
+            public/_headers \
+            public/_redirects \
+            public/sitemap.xml
+
+          HISTORICAL_DISTRIBUTION="public/datasets/historical-patient-origin-summary.json"
+          if git ls-files --error-unmatch "$HISTORICAL_DISTRIBUTION" >/dev/null 2>&1 || [[ -e "$HISTORICAL_DISTRIBUTION" ]]; then
+            git add -A -- "$HISTORICAL_DISTRIBUTION"
+          fi
 
           if git diff --cached --quiet; then
             echo "Canonical outputs are already materialized."
@@ -64,5 +73,5 @@ jobs:
           TARGET_BRANCH="${GITHUB_HEAD_REF:-main}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(structured-data): materialize canonical Dataset outputs"
+          git commit -m "chore(structured-data): materialize integrated historical evidence"
           git push origin "HEAD:${TARGET_BRANCH}"
