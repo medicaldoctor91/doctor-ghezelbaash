@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   validate:
-    name: Astro, edge routing, and production build
+    name: Astro, Pages Functions, and production build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -31,5 +31,12 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Validate source and build output
+      - name: Compile Cloudflare Pages Functions
+        run: |
+          mkdir -p .wrangler-validation
+          npx --yes wrangler@4.114.0 pages functions build functions \
+            --outfile=.wrangler-validation/functions-worker.js \
+            --output-routes-path=.wrangler-validation/_routes.generated.json
+
+      - name: Validate Astro source, edge behavior, and production output
         run: npm run validate
