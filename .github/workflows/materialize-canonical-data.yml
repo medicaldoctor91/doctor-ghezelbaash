@@ -1,6 +1,9 @@
 name: Materialize Canonical Data
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -10,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: materialize-canonical-data
+  group: materialize-canonical-data-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -18,10 +21,10 @@ jobs:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out main
+      - name: Check out target branch
         uses: actions/checkout@v6
         with:
-          ref: main
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || 'main' }}
           fetch-depth: 0
 
       - name: Use Node.js 24
@@ -58,7 +61,8 @@ jobs:
             exit 0
           fi
 
+          TARGET_BRANCH="${GITHUB_HEAD_REF:-main}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(structured-data): materialize canonical Dataset outputs"
-          git push origin HEAD:main
+          git push origin "HEAD:${TARGET_BRANCH}"
