@@ -39,6 +39,11 @@ function headerSection(source, pathname) {
   return nextSection === -1 ? remainder : remainder.slice(0, nextSection + 1);
 }
 
+function headerTokens(section, name) {
+  const value = section.match(new RegExp(`^\\s*${name}:\\s*([^\\n]+)$`, 'mi'))?.[1] ?? '';
+  return value.split(',').map((token) => token.trim().toLowerCase()).filter(Boolean);
+}
+
 async function assertNotFoundResponse(response, { expectBody = true } = {}) {
   assert.equal(response.status, 404);
   assert.equal(response.statusText, 'Not Found');
@@ -64,8 +69,7 @@ test('the canonical root is static and no longer invokes a negotiation Function'
   assert.match(root, /Content-Location: \/(?:\r?\n|$)/);
   assert.ok(root.includes(`Content-Signal: ${CONTENT_SIGNAL}`));
   assert.match(root, /X-Robots-Tag: all/);
-  assert.match(root, /Vary: Accept-Encoding(?:\r?\n|$)/);
-  assert.equal(/Vary:[^\n]*\bAccept\b/.test(root), false);
+  assert.deepEqual(headerTokens(root, 'Vary'), ['accept-encoding']);
   assert.equal(routes.include.includes('/'), false);
 });
 
