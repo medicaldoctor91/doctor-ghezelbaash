@@ -6,14 +6,10 @@
   "packageManager": "npm@11.19.0",
   "scripts": {
     "normalize:dataset": "node scripts/normalize-visible-dataset-copy.mjs && node scripts/retire-duplicate-datasets.mjs && node scripts/normalize-dataset-entity.mjs",
-    "predev": "npm run normalize:dataset",
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
-    "prebuild": "npm run normalize:dataset",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "precheck": "npm run normalize:dataset",
     "check": "ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
-    "pretest": "npm run normalize:dataset",
     "test": "node --test tests/*.test.mjs",
     "validate": "npm run check && npm run test && npm run build",
     "verify:live": "node scripts/verify-live.mjs"
