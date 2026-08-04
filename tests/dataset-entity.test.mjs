@@ -8,6 +8,7 @@ const PROJECT_ID = 'https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-da
 const CATALOG_ID = 'https://www.ghezelbaash.ir/#data-catalog';
 const PRIMARY_DATASET_ID = 'https://www.ghezelbaash.ir/graph.jsonld#dataset';
 const HISTORICAL_DATASET_ID = 'https://www.ghezelbaash.ir/#historical-patient-origin-summary';
+const REPUTATION_SNAPSHOT_ID = 'https://www.ghezelbaash.ir/#google-maps-reputation-snapshot-current';
 const LEGACY_DATASET_ID = 'https://www.ghezelbaash.ir/#project-huggingface-dataset';
 const HF_DATASET_URL = 'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data';
 const ZENODO_DOI_URL = 'https://doi.org/10.5281/zenodo.18765169';
@@ -22,6 +23,7 @@ const readJson = async (file) => JSON.parse(await readFile(file, 'utf8'));
 const asArray = (value) => (value == null ? [] : Array.isArray(value) ? value : [value]);
 const findNode = (document, id) => document['@graph'].find((node) => node?.['@id'] === id);
 const referenceIds = (value) => asArray(value).map((item) => item?.['@id']).filter(Boolean);
+const datasetNodes = (document) => document['@graph'].filter((node) => asArray(node?.['@type']).includes('Dataset'));
 
 function datasetProjection(node) {
   return {
@@ -46,20 +48,18 @@ function datasetProjection(node) {
 }
 
 for (const [label, file] of Object.entries(files)) {
-  test(`${label} graph has one canonical physician Dataset and no Hugging Face duplicate`, async () => {
+  test(`${label} graph has one canonical Dataset and no duplicate Hugging Face Dataset`, async () => {
     const document = await readJson(file);
     const serialized = JSON.stringify(document);
     assert.equal(serialized.includes(LEGACY_DATASET_ID), false, 'retired duplicate Dataset identifier must be absent');
 
-    const datasets = document['@graph'].filter((node) => asArray(node?.['@type']).includes('Dataset'));
-    assert.equal(datasets.length, 2, 'only the canonical entity Dataset and historical supporting Dataset should remain');
-    assert.deepEqual(
-      new Set(datasets.map((node) => node['@id'])),
-      new Set([PRIMARY_DATASET_ID, HISTORICAL_DATASET_ID]),
-    );
+    const datasets = datasetNodes(document);
+    assert.equal(datasets.filter((node) => node['@id'] === PRIMARY_DATASET_ID).length, 1);
+    assert.ok(datasets.some((node) => node['@id'] === HISTORICAL_DATASET_ID));
+    if (label === 'public') assert.ok(datasets.some((node) => node['@id'] === REPUTATION_SNAPSHOT_ID));
   });
 
-  test(`${label} graph makes Saeed Ghezelbash the Dataset authority`, async () => {
+  test(`${label} graph makes Saeed Ghezelbash the canonical Dataset authority`, async () => {
     const document = await readJson(file);
     const dataset = findNode(document, PRIMARY_DATASET_ID);
     assert.ok(dataset, 'canonical Dataset node is required');
@@ -86,15 +86,32 @@ for (const [label, file] of Object.entries(files)) {
     );
   });
 
+  test(`${label} graph preserves distinct supporting Datasets under physician ownership`, async () => {
+    const document = await readJson(file);
+    const supporting = datasetNodes(document).filter((node) => node['@id'] !== PRIMARY_DATASET_ID);
+    assert.ok(supporting.length >= 1);
+
+    for (const dataset of supporting) {
+      assert.equal(dataset.creator?.['@id'], PERSON_ID, `${dataset['@id']} creator`);
+      assert.equal(dataset.publisher?.['@id'], PERSON_ID, `${dataset['@id']} publisher`);
+      assert.equal(dataset.copyrightHolder?.['@id'], PERSON_ID, `${dataset['@id']} copyrightHolder`);
+      assert.equal(dataset.maintainer?.['@id'], PERSON_ID, `${dataset['@id']} maintainer`);
+      assert.equal(dataset.accountablePerson?.['@id'], PERSON_ID, `${dataset['@id']} accountablePerson`);
+      assert.equal(dataset.includedInDataCatalog?.['@id'], CATALOG_ID, `${dataset['@id']} catalog`);
+      assert.equal(dataset.isPartOf?.['@id'], PRIMARY_DATASET_ID, `${dataset['@id']} parent Dataset`);
+    }
+  });
+
   test(`${label} graph keeps reciprocal catalog and repository links`, async () => {
     const document = await readJson(file);
     const catalog = findNode(document, CATALOG_ID);
     const project = findNode(document, PROJECT_ID);
     const person = findNode(document, PERSON_ID);
     const clinic = findNode(document, CLINIC_ID);
+    const allDatasetIds = datasetNodes(document).map((node) => node['@id']);
 
-    assert.deepEqual(new Set(referenceIds(catalog.dataset)), new Set([PRIMARY_DATASET_ID, HISTORICAL_DATASET_ID]));
-    assert.ok(referenceIds(project.hasPart).includes(PRIMARY_DATASET_ID));
+    assert.deepEqual(new Set(referenceIds(catalog.dataset)), new Set(allDatasetIds));
+    for (const id of allDatasetIds) assert.ok(referenceIds(project.hasPart).includes(id), `repository must include ${id}`);
     assert.ok(referenceIds(person.subjectOf).includes(PRIMARY_DATASET_ID));
     assert.ok(referenceIds(clinic.subjectOf).includes(PRIMARY_DATASET_ID));
     assert.equal(project.owner?.['@id'], PERSON_ID);
@@ -112,7 +129,7 @@ test('embedded and public JSON-LD expose the same canonical Dataset statement', 
   );
 });
 
-test('Turtle is non-empty and carries the canonical Dataset ownership triples', async () => {
+test('Turtle is non-empty and carries canonical ownership without the retired duplicate', async () => {
   const turtle = await readFile('public/graph.ttl', 'utf8');
   assert.ok(turtle.length > 1000, 'Turtle distribution must contain the generated public graph');
   assert.match(
@@ -121,5 +138,6 @@ test('Turtle is non-empty and carries the canonical Dataset ownership triples', 
   );
   assert.ok(turtle.includes(`<${PRIMARY_DATASET_ID}> <https://schema.org/publisher> <${PERSON_ID}> .`));
   assert.ok(turtle.includes(`<${PRIMARY_DATASET_ID}> <https://schema.org/copyrightHolder> <${PERSON_ID}> .`));
+  assert.ok(turtle.includes(`<${REPUTATION_SNAPSHOT_ID}> <https://schema.org/publisher> <${PERSON_ID}> .`));
   assert.equal(turtle.includes(LEGACY_DATASET_ID), false);
 });
