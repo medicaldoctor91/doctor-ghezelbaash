@@ -8,8 +8,11 @@ const PROJECT_ID = 'https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-da
 const CATALOG_ID = 'https://www.ghezelbaash.ir/#data-catalog';
 const PRIMARY_DATASET_ID = 'https://www.ghezelbaash.ir/graph.jsonld#dataset';
 const HISTORICAL_SUMMARY_ID = 'https://www.ghezelbaash.ir/#historical-patient-origin-summary';
-const HISTORICAL_DISTRIBUTION_ID = 'https://www.ghezelbaash.ir/#historical-patient-origin-summary-json';
 const HISTORICAL_DISTRIBUTION_URL = 'https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json';
+const HISTORICAL_DISTRIBUTION_IDS = [
+  `${HISTORICAL_DISTRIBUTION_URL}#download`,
+  'https://www.ghezelbaash.ir/#historical-patient-origin-summary-json',
+];
 const REPUTATION_SNAPSHOT_ID = 'https://www.ghezelbaash.ir/#google-maps-reputation-snapshot-current';
 const LEGACY_DATASET_ID = 'https://www.ghezelbaash.ir/#project-huggingface-dataset';
 const HF_DATASET_URL = 'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data';
@@ -43,7 +46,6 @@ function datasetProjection(node) {
     identifier: node.identifier,
     distribution: node.distribution,
     includedInDataCatalog: node.includedInDataCatalog,
-    hasPart: node.hasPart,
     isAccessibleForFree: node.isAccessibleForFree,
     license: node.license,
     version: node.version,
@@ -55,7 +57,9 @@ for (const [label, file] of Object.entries(files)) {
     const document = await readJson(file);
     const serialized = JSON.stringify(document);
     assert.equal(serialized.includes(LEGACY_DATASET_ID), false, 'retired duplicate Dataset identifier must be absent');
-    assert.equal(serialized.includes(HISTORICAL_DISTRIBUTION_ID), false, 'retired historical distribution node must be absent');
+    for (const retiredId of HISTORICAL_DISTRIBUTION_IDS) {
+      assert.equal(serialized.includes(retiredId), false, `retired historical distribution node must be absent: ${retiredId}`);
+    }
     assert.equal(serialized.includes(HISTORICAL_DISTRIBUTION_URL), false, 'retired historical distribution URL must be absent');
 
     const datasets = datasetNodes(document);
@@ -186,7 +190,7 @@ test('Turtle carries integrated historical CreativeWork semantics without retire
   assert.ok(turtle.includes(`<${HISTORICAL_SUMMARY_ID}> <https://schema.org/isPartOf> <${PRIMARY_DATASET_ID}> .`));
   assert.equal(turtle.includes(`<${HISTORICAL_SUMMARY_ID}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Dataset> .`), false);
   assert.equal(turtle.includes(LEGACY_DATASET_ID), false);
-  assert.equal(turtle.includes(HISTORICAL_DISTRIBUTION_ID), false);
+  for (const retiredId of HISTORICAL_DISTRIBUTION_IDS) assert.equal(turtle.includes(retiredId), false);
   assert.equal(turtle.includes(HISTORICAL_DISTRIBUTION_URL), false);
 });
 
