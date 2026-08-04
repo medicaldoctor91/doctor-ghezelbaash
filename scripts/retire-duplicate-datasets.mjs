@@ -39,6 +39,31 @@ function unique(values) {
   });
 }
 
+function normalizeHistoricalPlace(value) {
+  if (!value || typeof value !== 'object') return value;
+  const output = {};
+  if (typeof value.id === 'string') output['@id'] = value.id;
+  if (typeof value.type === 'string' || Array.isArray(value.type)) output['@type'] = value.type;
+  for (const [key, child] of Object.entries(value)) {
+    if (key === 'id' || key === 'type') continue;
+    if (key === 'containedInPlace' && typeof child === 'string') output[key] = { '@id': child };
+    else output[key] = child;
+  }
+  return output;
+}
+
+let historicalSpatialCoverage = [];
+try {
+  const historicalDistribution = JSON.parse(await readFile(HISTORICAL_PUBLIC_PATH, 'utf8'));
+  historicalSpatialCoverage = unique(
+    (Array.isArray(historicalDistribution.spatialCoverage) ? historicalDistribution.spatialCoverage : [])
+      .map(normalizeHistoricalPlace)
+      .filter((item) => item?.['@id'] || item?.name),
+  );
+} catch (error) {
+  if (error?.code !== 'ENOENT') throw error;
+}
+
 function rewriteReferences(value) {
   if (Array.isArray(value)) return unique(value.map(rewriteReferences).filter(Boolean));
   if (!value || typeof value !== 'object') {
@@ -95,6 +120,13 @@ for (const filePath of GRAPH_PATHS) {
       .filter((id) => id && RETIRED_DATASET_IDS.has(id)),
   );
 
+  const historicalSummary = document['@graph'].find(
+    (node) => node?.['@id'] === 'https://www.ghezelbaash.ir/#historical-patient-origin-summary',
+  );
+  if (historicalSummary && historicalSpatialCoverage.length > 0) {
+    historicalSummary.spatialCoverage = historicalSpatialCoverage;
+  }
+
   document['@graph'] = document['@graph']
     .filter((node) => !RETIRED_DATASET_IDS.has(node?.['@id']))
     .map(rewriteReferences)
@@ -105,6 +137,10 @@ for (const filePath of GRAPH_PATHS) {
     `${path.relative(ROOT, filePath)}: retired ${presentRetiredIds.size} obsolete Dataset/distribution node(s)` +
       (presentRetiredIds.size ? ` — ${[...presentRetiredIds].join(', ')}` : ''),
   );
+}
+
+if (historicalSpatialCoverage.length > 0) {
+  console.log(`Integrated ${historicalSpatialCoverage.length} historical place records into the canonical graphs.`);
 }
 
 await rm(HISTORICAL_PUBLIC_PATH, { force: true });
