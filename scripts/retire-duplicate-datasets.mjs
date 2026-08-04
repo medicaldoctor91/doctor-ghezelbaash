@@ -9,9 +9,9 @@ const GRAPH_PATHS = [
 ];
 
 const PRIMARY_DATASET_ID = 'https://www.ghezelbaash.ir/graph.jsonld#dataset';
-const HISTORICAL_DATASET_ID = 'https://www.ghezelbaash.ir/#historical-patient-origin-summary';
+const LEGACY_HUGGINGFACE_DATASET_ID = 'https://www.ghezelbaash.ir/#project-huggingface-dataset';
+const RETIRED_DATASET_IDS = new Set([LEGACY_HUGGINGFACE_DATASET_ID]);
 
-const asArray = (value) => (value == null ? [] : Array.isArray(value) ? value : [value]);
 const keyFor = (value) => {
   if (value && typeof value === 'object' && typeof value['@id'] === 'string') return `@id:${value['@id']}`;
   return JSON.stringify(value);
@@ -27,14 +27,14 @@ function unique(values) {
   });
 }
 
-function rewriteReferences(value, retiredIds) {
-  if (Array.isArray(value)) return unique(value.map((item) => rewriteReferences(item, retiredIds)));
+function rewriteReferences(value) {
+  if (Array.isArray(value)) return unique(value.map(rewriteReferences));
   if (!value || typeof value !== 'object') return value;
 
   const output = {};
   for (const [key, child] of Object.entries(value)) {
-    if (key === '@id' && retiredIds.has(child)) output[key] = PRIMARY_DATASET_ID;
-    else output[key] = rewriteReferences(child, retiredIds);
+    if (key === '@id' && RETIRED_DATASET_IDS.has(child)) output[key] = PRIMARY_DATASET_ID;
+    else output[key] = rewriteReferences(child);
   }
   return output;
 }
@@ -43,20 +43,19 @@ for (const filePath of GRAPH_PATHS) {
   const document = JSON.parse(await readFile(filePath, 'utf8'));
   if (!Array.isArray(document['@graph'])) throw new Error(`${path.relative(ROOT, filePath)} has no @graph array.`);
 
-  const retiredIds = new Set(
+  const presentRetiredIds = new Set(
     document['@graph']
-      .filter((node) => asArray(node?.['@type']).includes('Dataset'))
       .map((node) => node?.['@id'])
-      .filter((id) => id && id !== PRIMARY_DATASET_ID && id !== HISTORICAL_DATASET_ID),
+      .filter((id) => id && RETIRED_DATASET_IDS.has(id)),
   );
 
   document['@graph'] = document['@graph']
-    .filter((node) => !retiredIds.has(node?.['@id']))
-    .map((node) => rewriteReferences(node, retiredIds));
+    .filter((node) => !RETIRED_DATASET_IDS.has(node?.['@id']))
+    .map(rewriteReferences);
 
   await writeFile(filePath, `${JSON.stringify(document)}\n`, 'utf8');
   console.log(
-    `${path.relative(ROOT, filePath)}: retired ${retiredIds.size} duplicate Dataset node(s)` +
-      (retiredIds.size ? ` — ${[...retiredIds].join(', ')}` : ''),
+    `${path.relative(ROOT, filePath)}: retired ${presentRetiredIds.size} known duplicate Dataset node(s)` +
+      (presentRetiredIds.size ? ` — ${[...presentRetiredIds].join(', ')}` : ''),
   );
 }
