@@ -25,7 +25,7 @@ function createAssetBinding() {
         });
       }
 
-      if (pathname === '/404.html') {
+      if (pathname === '/404') {
         return new Response(request.method === 'HEAD' ? null : NOT_FOUND, {
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
