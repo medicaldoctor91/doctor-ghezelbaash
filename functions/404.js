@@ -11,7 +11,7 @@ export async function onRequest(context) {
   }
 
   const assetURL = new URL(request.url);
-  assetURL.pathname = '/404';
+  assetURL.pathname = '/404.html';
   assetURL.search = '';
 
   const assetResponse = await env.ASSETS.fetch(
