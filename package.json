@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "npm@11.19.0",
   "scripts": {
-    "normalize:dataset": "node scripts/retire-duplicate-datasets.mjs && node scripts/normalize-dataset-entity.mjs",
+    "normalize:dataset": "node scripts/normalize-visible-dataset-copy.mjs && node scripts/retire-duplicate-datasets.mjs && node scripts/normalize-dataset-entity.mjs",
     "predev": "npm run normalize:dataset",
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "prebuild": "npm run normalize:dataset",
