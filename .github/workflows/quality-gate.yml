@@ -31,6 +31,12 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Verify committed semantic outputs are current
+        run: |
+          npm run normalize:dataset
+          git diff --exit-code
+          test -z "$(git status --porcelain)"
+
       - name: Compile Cloudflare Pages Functions
         run: |
           mkdir -p .wrangler-validation
