@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import { onRequest as onHomeRequest } from '../functions/index.js';
 import { onRequest as on404Request } from '../functions/404.js';
+import { onRequest as on404HtmlRequest } from '../functions/404.html.js';
 
 const HTML = '<!doctype html><html lang="fa-IR"><body>canonical HTML</body></html>';
 const MARKDOWN = '# canonical Markdown\n';
@@ -24,7 +25,7 @@ function createAssetBinding() {
         });
       }
 
-      if (pathname === '/404') {
+      if (pathname === '/404.html') {
         return new Response(request.method === 'HEAD' ? null : NOT_FOUND, {
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
@@ -49,6 +50,16 @@ function contextFor(url, init = {}) {
     request: new Request(url, init),
     env: { ASSETS: createAssetBinding() },
   };
+}
+
+async function assertNotFoundResponse(response) {
+  assert.equal(response.status, 404);
+  assert.equal(response.statusText, 'Not Found');
+  assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, follow');
+  assert.equal(response.headers.get('Content-Location'), '/404.html');
+  assert.equal(response.headers.get('X-Frame-Options'), 'DENY');
+  assert.equal(await response.text(), NOT_FOUND);
 }
 
 test('ordinary browser navigation remains HTML and receives bounded caching', async () => {
@@ -122,15 +133,15 @@ test('HEAD negotiation mirrors headers without emitting a body', async () => {
 });
 
 test('the public /404 route always emits a real 404 response', async () => {
-  const response = await on404Request(contextFor('https://www.ghezelbaash.ir/404'));
+  await assertNotFoundResponse(
+    await on404Request(contextFor('https://www.ghezelbaash.ir/404')),
+  );
+});
 
-  assert.equal(response.status, 404);
-  assert.equal(response.statusText, 'Not Found');
-  assert.equal(response.headers.get('Cache-Control'), 'no-store');
-  assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, follow');
-  assert.equal(response.headers.get('Content-Location'), '/404.html');
-  assert.equal(response.headers.get('X-Frame-Options'), 'DENY');
-  assert.equal(await response.text(), NOT_FOUND);
+test('the generated /404.html alias also emits a real 404 response', async () => {
+  await assertNotFoundResponse(
+    await on404HtmlRequest(contextFor('https://www.ghezelbaash.ir/404.html')),
+  );
 });
 
 test('unsupported methods on /404 fail closed', async () => {
