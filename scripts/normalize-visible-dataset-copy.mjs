@@ -101,8 +101,21 @@ function normalizeLlmsGuide(source) {
     )
     .replaceAll('secondary historical Dataset distribution', 'integrated historical geographic evidence')
     .replaceAll('first-party geographic Dataset', 'first-party historical geographic evidence')
-    .replaceAll('related datasets and curated question-answer relationships', 'supporting evidence, related datasets and curated question-answer relationships')
-    .replaceAll(RETIRED_DISTRIBUTION_URL, CANONICAL_GRAPH_URL);
+    .replaceAll(RETIRED_DISTRIBUTION_URL, CANONICAL_GRAPH_URL)
+    .replace(
+      /^- \[First-party data catalog\].*$/m,
+      '- [First-party data catalog](https://www.ghezelbaash.ir/#data-catalog): HTML landing section connecting the canonical physician entity Dataset and its integrated supporting evidence.',
+    )
+    .replace(
+      /^- \[Historical patient-origin Dataset landing section\].*$/m,
+      '- [Historical patient-origin geographic evidence](https://www.ghezelbaash.ir/#historical-patient-origin-summary): Human-readable presence-only geographic evidence connected to the physician, his personally owned clinic and the canonical entity Dataset.',
+    )
+    .replace(
+      /^- Coverage:.*$/m,
+      '- Coverage: identity, professional credentials, clinic ownership, services, research, education, media provenance, geography, public evidence, supporting evidence, related datasets and curated question-answer relationships',
+    )
+    .replace(/^- \[Historical patient-origin Dataset — JSON distribution\].*\n?/gm, '')
+    .replace(/(?:supporting evidence,\s*){2,}/g, 'supporting evidence, ');
 
   const distributionLines = [
     '- Hugging Face Dataset identity and distribution endpoint: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data',
@@ -141,9 +154,17 @@ This evidence object is integrated into the physician-owned knowledge graph so t
 
   output = output
     .split('\n')
-    .filter((line) => !line.includes('- Historical patient-origin Dataset — JSON distribution'))
     .filter((line) => !line.includes('canonical historical Dataset distribution'))
     .join('\n');
+
+  const retrievalPolicyLine =
+    '- `graph.jsonld`, `graph.ttl` and `llms.txt` are intentionally crawlable, independently self-canonical and listed in the XML sitemap as authoritative first-party resources.';
+  if (!output.includes(retrievalPolicyLine)) {
+    const retrievalAnchor = '- `https://www.ghezelbaash.ir/` is the canonical human-readable page and primary search document.';
+    if (output.includes(retrievalAnchor)) {
+      output = output.replace(retrievalAnchor, `${retrievalAnchor}\n${retrievalPolicyLine}`);
+    }
+  }
 
   if (!output.includes('One canonical physician-owned Dataset') && !output.includes('one canonical physician-owned Dataset')) {
     throw new Error('llms.txt did not receive the canonical Dataset ownership statement.');
@@ -153,6 +174,12 @@ This evidence object is integrated into the physician-owned knowledge graph so t
   }
   if (!output.includes('## Integrated historical geographic evidence')) {
     throw new Error('llms.txt does not describe the historical geography as integrated supporting evidence.');
+  }
+  if (output.includes('Historical patient-origin Dataset')) {
+    throw new Error('llms.txt still labels historical geographic evidence as an independent Dataset.');
+  }
+  if (output.includes('supporting evidence, supporting evidence')) {
+    throw new Error('llms.txt contains duplicated supporting-evidence wording.');
   }
   if (output.includes(RETIRED_DISTRIBUTION_URL)) {
     throw new Error('llms.txt still links to the retired historical Dataset distribution.');
