@@ -35,11 +35,11 @@ function header(response, name) {
   return response.headers.get(name) ?? '';
 }
 
-function assertContainsHeaderToken(response, name, token) {
-  const values = header(response, name)
+function headerTokens(response, name) {
+  return header(response, name)
     .split(',')
-    .map((value) => value.trim().toLowerCase());
-  assert.ok(values.includes(token.toLowerCase()), `${name} must include ${token}; received ${header(response, name)}`);
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
 }
 
 async function verifyCanonicalHTML() {
@@ -50,8 +50,10 @@ async function verifyCanonicalHTML() {
   assert.equal(response.status, 200, `canonical HTML returned ${response.status}`);
   assert.match(header(response, 'content-type'), /^text\/html\b/i);
   assert.match(header(response, 'cache-control'), /(?:^|,)\s*max-age=300(?:,|$)/i);
-  assertContainsHeaderToken(response, 'vary', 'Accept');
+  assert.equal(headerTokens(response, 'vary').includes('accept'), false, 'static root must not vary on Accept');
+  assert.equal(header(response, 'content-location'), '/');
   assert.equal(header(response, 'content-signal'), CONTENT_SIGNAL);
+  assert.match(header(response, 'x-robots-tag'), /\ball\b/i);
   assert.match(body, /<html\b[^>]*\blang=["']fa-IR["']/i);
   assert.match(body, /<link\b[^>]*\brel=["']canonical["'][^>]*\bhref=["']https:\/\/www\.ghezelbaash\.ir\/?["']/i);
 
@@ -82,20 +84,27 @@ async function verifyCanonicalHTML() {
   assert.match(css, /contain-intrinsic-size:\s*none/i, 'fragment materialization does not clear intrinsic placeholders');
 }
 
-async function verifyMarkdownNegotiation() {
-  const { response, body } = await request('/', {
+async function verifyExplicitRepresentations() {
+  const negotiated = await request('/', {
     accept: 'text/markdown, text/html;q=0.2',
   });
+  assert.equal(negotiated.response.status, 200);
+  assert.match(header(negotiated.response, 'content-type'), /^text\/html\b/i);
+  assert.match(negotiated.body, /<html\b/i);
 
-  assert.equal(response.status, 200, `Markdown representation returned ${response.status}`);
-  assert.match(header(response, 'content-type'), /^text\/markdown\b/i);
-  assert.equal(header(response, 'content-location'), '/index.md');
-  assert.equal(header(response, 'content-language'), 'fa-IR');
-  assert.match(header(response, 'x-robots-tag'), /\bnoindex\b/i);
-  assertContainsHeaderToken(response, 'vary', 'Accept');
-  assert.equal(header(response, 'content-signal'), CONTENT_SIGNAL);
-  assert.match(body, /^---\n[\s\S]*?\n---\n/m, 'Markdown projection is missing canonical frontmatter');
-  assert.match(body, /canonical:\s*["']https:\/\/www\.ghezelbaash\.ir\/?["']/i);
+  const markdown = await request('/index.md', { accept: 'text/markdown,*/*;q=0.1' });
+  assert.equal(markdown.response.status, 200, `index.md returned ${markdown.response.status}`);
+  assert.match(header(markdown.response, 'content-type'), /^text\/markdown\b/i);
+  assert.equal(header(markdown.response, 'content-language'), 'fa-IR');
+  assert.match(header(markdown.response, 'x-robots-tag'), /\bnoindex\b/i);
+  assert.match(markdown.body, /^---\n[\s\S]*?\n---\n/m, 'Markdown projection is missing canonical frontmatter');
+  assert.match(markdown.body, /canonical:\s*["']https:\/\/www\.ghezelbaash\.ir\/?["']/i);
+
+  const fullText = await request('/llms-full.txt', { accept: 'text/plain,*/*;q=0.1' });
+  assert.equal(fullText.response.status, 200, `llms-full.txt returned ${fullText.response.status}`);
+  assert.match(header(fullText.response, 'content-type'), /^text\/plain\b/i);
+  assert.equal(header(fullText.response, 'content-language'), 'fa-IR');
+  assert.match(header(fullText.response, 'x-robots-tag'), /\bnoindex\b/i);
 }
 
 async function verifyRobotsPolicy() {
@@ -128,7 +137,7 @@ async function verify404Aliases() {
 async function verifyLiveContract() {
   await verifyRobotsPolicy();
   await verifyCanonicalHTML();
-  await verifyMarkdownNegotiation();
+  await verifyExplicitRepresentations();
   await verify404Aliases();
 }
 
