@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import '../styles/fragment-navigation.css';
 import headGraph from '../data/semantic/head-graph.min.jsonld?raw';
 import DocumentHead from '../components/DocumentHead.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
@@ -42,6 +43,14 @@ const includeHeadGraph = includeHeadGraphProp ?? !/(?:^|,)\s*noindex\b/i.test(ro
       canonicalURL={canonicalURL}
       ogImageURL={ogImageURL}
       preloadHero={preloadHero}
+    />
+    <link
+      rel="preload"
+      href="/fonts/vazirmatn-nl-wght.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+      media="(min-width: 48.001rem)"
     />
     {includeHeadGraph && <script is:inline type="application/ld+json" set:html={headGraph}></script>}
   </head>
