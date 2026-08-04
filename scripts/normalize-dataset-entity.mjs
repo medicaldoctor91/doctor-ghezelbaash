@@ -15,6 +15,7 @@ const PROJECT_ID = 'https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-da
 const CATALOG_ID = 'https://www.ghezelbaash.ir/#data-catalog';
 const PRIMARY_DATASET_ID = 'https://www.ghezelbaash.ir/graph.jsonld#dataset';
 const HISTORICAL_DATASET_ID = 'https://www.ghezelbaash.ir/#historical-patient-origin-summary';
+const REPUTATION_SNAPSHOT_ID = 'https://www.ghezelbaash.ir/#google-maps-reputation-snapshot-current';
 const LEGACY_HUGGINGFACE_DATASET_ID = 'https://www.ghezelbaash.ir/#project-huggingface-dataset';
 const JSONLD_DOWNLOAD_ID = 'https://www.ghezelbaash.ir/graph.jsonld#download';
 const TURTLE_DOWNLOAD_ID = 'https://www.ghezelbaash.ir/graph.ttl#download';
@@ -46,11 +47,8 @@ function replaceLegacyReference(value) {
 
   const output = {};
   for (const [key, child] of Object.entries(value)) {
-    if (key === '@id' && child === LEGACY_HUGGINGFACE_DATASET_ID) {
-      output[key] = PRIMARY_DATASET_ID;
-    } else {
-      output[key] = replaceLegacyReference(child);
-    }
+    if (key === '@id' && child === LEGACY_HUGGINGFACE_DATASET_ID) output[key] = PRIMARY_DATASET_ID;
+    else output[key] = replaceLegacyReference(child);
   }
   return output;
 }
@@ -59,6 +57,19 @@ function findRequiredNode(graph, id, label) {
   const node = graph.find((entry) => entry?.['@id'] === id);
   if (!node) throw new Error(`Missing ${label}: ${id}`);
   return node;
+}
+
+function normalizeOwnedSupportingDataset(node) {
+  if (!node) return;
+  node.creator = ref(PERSON_ID);
+  node.publisher = ref(PERSON_ID);
+  node.copyrightHolder = ref(PERSON_ID);
+  node.maintainer = ref(PERSON_ID);
+  node.accountablePerson = ref(PERSON_ID);
+  node.includedInDataCatalog = ref(CATALOG_ID);
+  node.isPartOf = ref(PRIMARY_DATASET_ID);
+  if (!Object.hasOwn(node, 'isAccessibleForFree')) node.isAccessibleForFree = true;
+  if (!node.license) node.license = 'https://creativecommons.org/licenses/by/4.0/';
 }
 
 function normalizeDocument(document, sourceLabel) {
@@ -73,12 +84,14 @@ function normalizeDocument(document, sourceLabel) {
   const graph = document['@graph'];
   const primary = findRequiredNode(graph, PRIMARY_DATASET_ID, 'primary Dataset');
   const historical = findRequiredNode(graph, HISTORICAL_DATASET_ID, 'historical Dataset');
+  const reputationSnapshot = graph.find((entry) => entry?.['@id'] === REPUTATION_SNAPSHOT_ID);
   const person = findRequiredNode(graph, PERSON_ID, 'physician Person');
   const clinic = findRequiredNode(graph, CLINIC_ID, 'physician-owned clinic');
   const project = findRequiredNode(graph, PROJECT_ID, 'structured-data repository');
   const catalog = findRequiredNode(graph, CATALOG_ID, 'DataCatalog');
   const jsonDownload = findRequiredNode(graph, JSONLD_DOWNLOAD_ID, 'JSON-LD distribution');
   const turtleDownload = findRequiredNode(graph, TURTLE_DOWNLOAD_ID, 'Turtle distribution');
+  const supportingDatasetIds = [HISTORICAL_DATASET_ID, ...(reputationSnapshot ? [REPUTATION_SNAPSHOT_ID] : [])];
 
   Object.assign(primary, {
     '@type': 'Dataset',
@@ -108,7 +121,7 @@ function normalizeDocument(document, sourceLabel) {
     license: 'https://creativecommons.org/licenses/by/4.0/',
     isAccessibleForFree: true,
     includedInDataCatalog: ref(CATALOG_ID),
-    hasPart: [ref(HISTORICAL_DATASET_ID)],
+    hasPart: supportingDatasetIds.map(ref),
     keywords: [
       'Saeed Ghezelbash',
       'Mohammad Saeed Ghezelbash',
@@ -126,11 +139,8 @@ function normalizeDocument(document, sourceLabel) {
   delete primary.isPartOf;
   delete primary.isBasedOn;
 
-  historical.creator = ref(PERSON_ID);
-  historical.publisher = ref(PERSON_ID);
-  historical.copyrightHolder = ref(PERSON_ID);
-  historical.includedInDataCatalog = ref(CATALOG_ID);
-  historical.isPartOf = ref(PRIMARY_DATASET_ID);
+  normalizeOwnedSupportingDataset(historical);
+  normalizeOwnedSupportingDataset(reputationSnapshot);
 
   Object.assign(project, {
     creator: ref(PERSON_ID),
@@ -141,10 +151,10 @@ function normalizeDocument(document, sourceLabel) {
     accountablePerson: ref(PERSON_ID),
     hasPart: unique([
       ref(PRIMARY_DATASET_ID),
-      ref(HISTORICAL_DATASET_ID),
+      ...supportingDatasetIds.map(ref),
       ref(CATALOG_ID),
       ...asArray(project.hasPart).filter(
-        (item) => ![PRIMARY_DATASET_ID, HISTORICAL_DATASET_ID, CATALOG_ID, LEGACY_HUGGINGFACE_DATASET_ID].includes(item?.['@id']),
+        (item) => ![PRIMARY_DATASET_ID, ...supportingDatasetIds, CATALOG_ID, LEGACY_HUGGINGFACE_DATASET_ID].includes(item?.['@id']),
       ),
     ]),
     dateModified: DATE_MODIFIED,
@@ -154,7 +164,7 @@ function normalizeDocument(document, sourceLabel) {
     creator: ref(PERSON_ID),
     publisher: ref(PERSON_ID),
     about: [ref(PERSON_ID), ref(CLINIC_ID)],
-    dataset: [ref(PRIMARY_DATASET_ID), ref(HISTORICAL_DATASET_ID)],
+    dataset: [ref(PRIMARY_DATASET_ID), ...supportingDatasetIds.map(ref)],
     dateModified: DATE_MODIFIED,
   });
 
@@ -179,6 +189,7 @@ function normalizeDocument(document, sourceLabel) {
   if (primaryNodes.length !== 1) {
     throw new Error(`${sourceLabel} must contain exactly one primary Dataset node; found ${primaryNodes.length}.`);
   }
+  console.log(`${sourceLabel}: Dataset inventory — ${datasetNodes.map((node) => node?.['@id']).filter(Boolean).join(', ')}`);
 
   return document;
 }
@@ -190,9 +201,7 @@ function expandIri(value, context, useVocab = false) {
     const prefix = value.slice(0, colon);
     const suffix = value.slice(colon + 1);
     const prefixValue = context?.[prefix];
-    if (typeof prefixValue === 'string' && /^[a-z][a-z0-9+.-]*:/i.test(prefixValue)) {
-      return `${prefixValue}${suffix}`;
-    }
+    if (typeof prefixValue === 'string' && /^[a-z][a-z0-9+.-]*:/i.test(prefixValue)) return `${prefixValue}${suffix}`;
     return value;
   }
   if (useVocab) {
@@ -205,9 +214,7 @@ function expandIri(value, context, useVocab = false) {
 function propertyIri(key, context) {
   const definition = context?.[key];
   if (typeof definition === 'string') return expandIri(definition, context, true);
-  if (definition && typeof definition === 'object' && typeof definition['@id'] === 'string') {
-    return expandIri(definition['@id'], context, true);
-  }
+  if (definition && typeof definition === 'object' && typeof definition['@id'] === 'string') return expandIri(definition['@id'], context, true);
   return expandIri(key, context, true);
 }
 
@@ -249,7 +256,7 @@ function jsonLdToTurtle(document) {
     }
     if (typeof value['@id'] === 'string') {
       const subject = iri(expandIri(value['@id'], context));
-      if (Object.keys(value).some((key) => !['@id'].includes(key))) emitNode(value, subject);
+      if (Object.keys(value).some((key) => key !== '@id')) emitNode(value, subject);
       return subject;
     }
 
@@ -295,22 +302,19 @@ function jsonLdToTurtle(document) {
 }
 
 async function readJson(filePath) {
-  const content = await readFile(filePath, 'utf8');
-  return JSON.parse(content);
+  return JSON.parse(await readFile(filePath, 'utf8'));
 }
 
 async function main() {
   const normalized = new Map();
   for (const filePath of JSON_GRAPH_PATHS) {
     const document = normalizeDocument(await readJson(filePath), path.relative(ROOT, filePath));
-    const serialized = `${JSON.stringify(document)}\n`;
-    await writeFile(filePath, serialized, 'utf8');
+    await writeFile(filePath, `${JSON.stringify(document)}\n`, 'utf8');
     normalized.set(filePath, document);
   }
 
   const publicDocument = normalized.get(path.join(ROOT, 'public/graph.jsonld'));
   await writeFile(TURTLE_PATH, jsonLdToTurtle(publicDocument), 'utf8');
-
   console.log('Canonical physician-owned Dataset normalized in embedded JSON-LD, public JSON-LD and Turtle.');
 }
 
