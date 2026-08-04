@@ -1,6 +1,7 @@
 const MARKDOWN_MEDIA_TYPES = ['text/markdown', 'application/markdown'];
 const HTML_MEDIA_TYPES = ['text/html', 'application/xhtml+xml'];
 const CONTENT_SIGNAL = 'search=yes, ai-input=yes, ai-train=yes, use=reference';
+const HTML_CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=60, stale-if-error=86400';
 
 function parseAccept(value) {
   if (!value) return [];
@@ -127,7 +128,10 @@ export async function onRequest(context) {
     appendVary(headers, 'Accept');
     headers.set('Content-Signal', CONTENT_SIGNAL);
 
-    if (!serveMarkdown) return;
+    if (!serveMarkdown) {
+      headers.set('Cache-Control', HTML_CACHE_CONTROL);
+      return;
+    }
 
     headers.set('Content-Type', 'text/markdown; charset=utf-8');
     headers.set('Content-Language', 'fa-IR');
