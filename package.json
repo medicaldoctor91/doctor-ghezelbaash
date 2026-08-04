@@ -21,5 +21,8 @@
   "engines": {
     "node": ">=24.0.0 <25",
     "npm": ">=11.19.0 <12"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
   }
 }
