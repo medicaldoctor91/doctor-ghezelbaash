@@ -10,8 +10,11 @@ const GRAPH_PATHS = [
 
 const PRIMARY_DATASET_ID = 'https://www.ghezelbaash.ir/graph.jsonld#dataset';
 const LEGACY_HUGGINGFACE_DATASET_ID = 'https://www.ghezelbaash.ir/#project-huggingface-dataset';
-const HISTORICAL_DISTRIBUTION_ID = 'https://www.ghezelbaash.ir/#historical-patient-origin-summary-json';
 const HISTORICAL_DISTRIBUTION_URL = 'https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json';
+const HISTORICAL_DISTRIBUTION_IDS = new Set([
+  `${HISTORICAL_DISTRIBUTION_URL}#download`,
+  'https://www.ghezelbaash.ir/#historical-patient-origin-summary-json',
+]);
 const HISTORICAL_PUBLIC_PATH = path.join(ROOT, 'public/datasets/historical-patient-origin-summary.json');
 const REDIRECTS_PATH = path.join(ROOT, 'public/_redirects');
 const HEADERS_PATH = path.join(ROOT, 'public/_headers');
@@ -19,7 +22,7 @@ const SITEMAP_PATH = path.join(ROOT, 'public/sitemap.xml');
 const DOCUMENT_HEAD_PATH = path.join(ROOT, 'src/components/DocumentHead.astro');
 const LLMS_PATH = path.join(ROOT, 'public/llms.txt');
 const REDIRECT_RULE = '/datasets/historical-patient-origin-summary.json /graph.jsonld 301';
-const RETIRED_DATASET_IDS = new Set([LEGACY_HUGGINGFACE_DATASET_ID, HISTORICAL_DISTRIBUTION_ID]);
+const RETIRED_DATASET_IDS = new Set([LEGACY_HUGGINGFACE_DATASET_ID, ...HISTORICAL_DISTRIBUTION_IDS]);
 
 const keyFor = (value) => {
   if (value && typeof value === 'object' && typeof value['@id'] === 'string') return `@id:${value['@id']}`;
@@ -41,7 +44,7 @@ function rewriteReferences(value) {
   if (!value || typeof value !== 'object') {
     return value === HISTORICAL_DISTRIBUTION_URL ? null : value;
   }
-  if (value['@id'] === HISTORICAL_DISTRIBUTION_ID) return null;
+  if (HISTORICAL_DISTRIBUTION_IDS.has(value['@id'])) return null;
 
   const output = {};
   for (const [key, child] of Object.entries(value)) {
