@@ -17,7 +17,7 @@ jobs:
   verify-preview:
     name: Native static 404 HTTP contract
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 3
 
     steps:
       - name: Check out repository
@@ -32,6 +32,6 @@ jobs:
       - name: Verify deployed Cloudflare branch preview
         env:
           LIVE_ORIGIN: https://refactor-phase-4-native-stat.doctor-ghezelbaash.pages.dev
-          LIVE_VERIFY_ATTEMPTS: 20
-          LIVE_VERIFY_DELAY_MS: 15000
+          LIVE_VERIFY_ATTEMPTS: 4
+          LIVE_VERIFY_DELAY_MS: 3000
         run: node scripts/verify-native-404-preview.mjs
