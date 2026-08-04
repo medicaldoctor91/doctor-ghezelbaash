@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   validate:
-    name: Astro, Pages Functions, and production build
+    name: Astro, optional Pages Functions, and production build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -40,13 +40,17 @@ jobs:
             public/graph.ttl \
             public/llms.txt
 
-      - name: Compile Cloudflare Pages Functions
+      - name: Compile Cloudflare Pages Functions when present
         run: |
-          mkdir -p .wrangler-validation
-          npx --yes --allow-scripts=esbuild,workerd wrangler@4.114.0 \
-            pages functions build functions \
-            --outfile=.wrangler-validation/functions-worker.js \
-            --output-routes-path=.wrangler-validation/_routes.generated.json
+          if find functions -type f -name '*.js' -print -quit 2>/dev/null | grep -q .; then
+            mkdir -p .wrangler-validation
+            npx --yes --allow-scripts=esbuild,workerd wrangler@4.114.0 \
+              pages functions build functions \
+              --outfile=.wrangler-validation/functions-worker.js \
+              --output-routes-path=.wrangler-validation/_routes.generated.json
+          else
+            echo "No Cloudflare Pages Functions are present; validating a fully static deployment."
+          fi
 
       - name: Validate Astro source, edge behavior, and production output
         run: npm run validate
