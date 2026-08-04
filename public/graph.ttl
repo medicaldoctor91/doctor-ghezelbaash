@@ -1571,7 +1571,6 @@
 <https://www.ghezelbaash.ir/#data-catalog> <https://schema.org/alternateName> "فهرست داده‌های ساختاریافته دکتر سعید قزلباش" .
 <https://www.ghezelbaash.ir/#data-catalog> <https://schema.org/creator> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#data-catalog> <https://schema.org/dataset> <https://www.ghezelbaash.ir/#google-maps-reputation-snapshot-current> .
-<https://www.ghezelbaash.ir/#data-catalog> <https://schema.org/dataset> <https://www.ghezelbaash.ir/#historical-patient-origin-summary> .
 <https://www.ghezelbaash.ir/#data-catalog> <https://schema.org/dataset> <https://www.ghezelbaash.ir/graph.jsonld#dataset> .
 <https://www.ghezelbaash.ir/#data-catalog> <https://schema.org/dateModified> "2026-08-04" .
 <https://www.ghezelbaash.ir/#data-catalog> <https://schema.org/description> "Canonical first-party data catalog for Dr. Saeed Ghezelbaash. Its primary Dataset is the complete physician entity knowledge graph, with JSON-LD and RDF Turtle distributions; the historical patient-origin city summary is a separate secondary supporting Dataset." .
@@ -1847,6 +1846,7 @@
 <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#evidence-tajrobe-wiki> .
 <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#evidence-wikidata-clinic> .
 <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#evidence-yandex-clinic> .
+<https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#historical-patient-origin-summary> .
 <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#profile-facebook-doctor-ghezelbaash> .
 <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#profile-facebook-ghezelbaash> .
 <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> <https://schema.org/subjectOf> <https://www.ghezelbaash.ir/#profile-pinterest-qezelbaash> .
@@ -2338,37 +2338,82 @@
 <https://www.ghezelbaash.ir/#hand-rejuvenation> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/#webpage> .
 <https://www.ghezelbaash.ir/#hand-rejuvenation> <https://schema.org/name> "جوان‌سازی دست؛ پشت دست فقط با پرکردن جوان نمی‌شود" .
 <https://www.ghezelbaash.ir/#hand-rejuvenation> <https://schema.org/url> <https://www.ghezelbaash.ir/#hand-rejuvenation> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Dataset> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/CreativeWork> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/about> <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/accountablePerson> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/alternateName> "خلاصه تاریخی مبدأ جغرافیایی مراجعه‌کنندگان" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/alternateName> "Historical patient-origin locations — presence-only summary" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/alternateName> "خلاصه تاریخی پوشش جغرافیایی مبدأ مراجعان" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/copyrightHolder> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/creator> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/dateModified> "2026-08-01" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/dateModified> "2026-08-04" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/datePublished> "2026-07-30" .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/description> "A separate secondary supporting Dataset containing a historical aggregation of patient-origin cities from clinic records. It documents past geographic reach and is not the primary physician entity Dataset, a statement of current service availability, or a statement of patient volume." .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/distribution> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/description> "A presence-only historical geographic coverage summary derived from patient-origin place names recorded in the personally owned clinic records of Saeed Ghezelbash. The published summary contains no patient-level identifiers, counts, frequencies, percentages, rankings, visit dates or medical information, and it must not be interpreted as evidence of current service availability in any listed location." .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/identifier> "https://www.ghezelbaash.ir/#historical-patient-origin-summary" .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/includedInDataCatalog> <https://www.ghezelbaash.ir/#data-catalog> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/isAccessibleForFree> true .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/isBasedOn> <https://www.ghezelbaash.ir/#webpage> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/graph.jsonld#dataset> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "Iran" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "Iraq" .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "Kermanshah aesthetic clinic" .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "geographic reach" .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "patient origin" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "Kermanshah" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "Saeed Ghezelbash" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "historical patient-origin geography" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/keywords> "presence-only geographic summary" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/license> <https://creativecommons.org/licenses/by/4.0/> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/mainEntityOfPage> <https://www.ghezelbaash.ir/> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/maintainer> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/measurementTechnique> "Manual aggregation of patient-origin cities from clinic records" .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/name> "Historical patient-origin summary" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/name> "Historical patient-origin geographic coverage summary" .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/publisher> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> _:b1 .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> _:b2 .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#country-iran> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#country-iraq> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-ahvaz> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-arak> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-ardabil> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-baghdad> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-bandar-abbas> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-baneh> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-birjand> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-bojnurd> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-bushehr> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-erbil> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-eslamabad-e-gharb> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-gorgan> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-hamadan> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-harsin> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-ilam> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-isfahan> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-javanrud> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-kalar> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-kamiyaran> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-karaj> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-kerend-e-gharb> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-kerman> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-kermanshah> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-khanaqin> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-khorramabad> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-malayer> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-mashhad> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-qasr-e-shirin> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-qazvin> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-qom> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-rasht> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-sanandaj> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-sari> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-sarpol-e-zahab> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-semnan> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-shahrekord> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-shiraz> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-sulaymaniyah> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-tabriz> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-tehran> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-tuyserkan> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-urmia> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-yasuj> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-yazd> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-zahedan> .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/spatialCoverage> <https://www.ghezelbaash.ir/#patient-origin-city-zanjan> .
 <https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/url> <https://www.ghezelbaash.ir/#historical-patient-origin-summary> .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/variableMeasured> "Patient-origin city" .
-<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/version> "1.0.0" .
+<https://www.ghezelbaash.ir/#historical-patient-origin-summary> <https://schema.org/version> "1.1.0" .
 <https://www.ghezelbaash.ir/#hyaluronidase-filler-dissolution-limitations> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
 <https://www.ghezelbaash.ir/#hyaluronidase-filler-dissolution-limitations> <https://schema.org/about> <https://www.ghezelbaash.ir/#biomedical-concept-dermal-fillers> .
 <https://www.ghezelbaash.ir/#hyaluronidase-filler-dissolution-limitations> <https://schema.org/about> <https://www.ghezelbaash.ir/#biomedical-concept-hyaluronidase> .
@@ -3581,14 +3626,8 @@
 <https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences> <https://schema.org/name> "دانشگاه علوم پزشکی کرمانشاه"@fa .
 <https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q6393994> .
 <https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/AdministrativeArea> .
-<https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/alternateName> "Iraqi Kurdistan region" .
-<https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/alternateName> "KRI" .
-<https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/alternateName> "Kurdistan Region" .
 <https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/containedInPlace> <https://www.ghezelbaash.ir/#country-iraq> .
-<https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/name> "Kurdistan Region of Iraq"@en .
-<https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/name> "اقلیم کردستان عراق"@fa .
-<https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/name> "هەرێمی کوردستان"@ckb .
-<https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q205047> .
+<https://www.ghezelbaash.ir/#kurdistan-region-of-iraq> <https://schema.org/name> "Kurdistan Region of Iraq" .
 <https://www.ghezelbaash.ir/#liquid-thread-marketing-term-risk> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPageElement> .
 <https://www.ghezelbaash.ir/#liquid-thread-marketing-term-risk> <https://schema.org/inLanguage> "fa-IR" .
 <https://www.ghezelbaash.ir/#liquid-thread-marketing-term-risk> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/#webpage> .
@@ -3867,7 +3906,7 @@
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "Berlin, Germany"@en .
 <https://www.ghezelbaash.ir/#place-berlin-germany> <https://schema.org/name> "برلین، آلمان"@fa .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:b3 .
+<https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/address> _:b1 .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/containedInPlace> <https://www.ghezelbaash.ir/#place-berlin-germany> .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/name> "Messe Berlin / CityCube Berlin" .
 <https://www.ghezelbaash.ir/#place-messe-berlin-citycube> <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q700236> .
@@ -7403,7 +7442,6 @@
 <https://www.ghezelbaash.ir/#webpage> <https://schema.org/primaryImageOfPage> <https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master> .
 <https://www.ghezelbaash.ir/#webpage> <https://schema.org/publisher> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
 <https://www.ghezelbaash.ir/#webpage> <https://schema.org/relatedLink> <https://www.ghezelbaash.ir/clinic.vcf> .
-<https://www.ghezelbaash.ir/#webpage> <https://schema.org/relatedLink> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json> .
 <https://www.ghezelbaash.ir/#webpage> <https://schema.org/relatedLink> <https://www.ghezelbaash.ir/doctor.vcf> .
 <https://www.ghezelbaash.ir/#webpage> <https://schema.org/relatedLink> <https://www.ghezelbaash.ir/graph.jsonld> .
 <https://www.ghezelbaash.ir/#webpage> <https://schema.org/relatedLink> <https://www.ghezelbaash.ir/graph.ttl> .
@@ -7451,15 +7489,6 @@
 <https://www.ghezelbaash.ir/clinic.vcf#document> <https://schema.org/thumbnailUrl> <https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.png> .
 <https://www.ghezelbaash.ir/clinic.vcf#document> <https://schema.org/url> <https://www.ghezelbaash.ir/clinic.vcf> .
 <https://www.ghezelbaash.ir/clinic.vcf#document> <https://schema.org/version> "1.0.0" .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/DataDownload> .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/contentUrl> <https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json> .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/dateModified> "2026-08-01" .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/encodingFormat> "application/json" .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/isAccessibleForFree> true .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/isPartOf> <https://www.ghezelbaash.ir/#historical-patient-origin-summary> .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/license> <https://creativecommons.org/licenses/by/4.0/> .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/name> "Historical patient-origin summary — JSON distribution" .
-<https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json#download> <https://schema.org/version> "1.0.0" .
 <https://www.ghezelbaash.ir/doctor.vcf#document> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/DigitalDocument> .
 <https://www.ghezelbaash.ir/doctor.vcf#document> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/MediaObject> .
 <https://www.ghezelbaash.ir/doctor.vcf#document> <https://schema.org/about> <https://www.ghezelbaash.ir/#saeed-ghezelbash> .
@@ -7551,16 +7580,8 @@
 <https://www.plasticsurgery.org/cosmetic-procedures/thread-lift/safety> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/WebPage> .
 <https://www.plasticsurgery.org/cosmetic-procedures/thread-lift/safety> <https://schema.org/name> "راهنمای ایمنی ASPS برای لیفت نخ" .
 <https://www.plasticsurgery.org/cosmetic-procedures/thread-lift/safety> <https://schema.org/url> <https://www.plasticsurgery.org/cosmetic-procedures/thread-lift/safety> .
-_:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-_:b1 <https://schema.org/alternateName> "ایران" .
-_:b1 <https://schema.org/name> "Iran" .
-_:b1 <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q794> .
-_:b2 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Place> .
-_:b2 <https://schema.org/alternateName> "عراق" .
-_:b2 <https://schema.org/name> "Iraq" .
-_:b2 <https://schema.org/sameAs> <https://www.wikidata.org/entity/Q796> .
-_:b3 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
-_:b3 <https://schema.org/addressCountry> "DE" .
-_:b3 <https://schema.org/addressLocality> "Berlin" .
-_:b3 <https://schema.org/postalCode> "14055" .
-_:b3 <https://schema.org/streetAddress> "Jafféstraße" .
+_:b1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/PostalAddress> .
+_:b1 <https://schema.org/addressCountry> "DE" .
+_:b1 <https://schema.org/addressLocality> "Berlin" .
+_:b1 <https://schema.org/postalCode> "14055" .
+_:b1 <https://schema.org/streetAddress> "Jafféstraße" .

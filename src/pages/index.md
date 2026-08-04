@@ -9985,14 +9985,21 @@ Saeed Ghezelbash. <em>Doctor Ghezelbash — Public Brand Knowledge Base &amp; Kn
 <a href="https://doi.org/10.5281/zenodo.18765169">https://doi.org/10.5281/zenodo.18765169</a>.
 </p>
 
-<h3 id="historical-patient-origin-summary">Secondary historical patient-origin Dataset</h3>
+
+<aside id="historical-coverage-data-semantics" aria-labelledby="historical-coverage-data-semantics-title">
+  <h3 id="historical-coverage-data-semantics-title">دامنه و محدودیت شواهد جغرافیایی تاریخی</h3>
+  <p>این بخش یک خلاصه حضورمحور از نام شهرهای ثبت‌شده به‌عنوان مبدأ مراجعان در سوابق مطب شخصی دکتر سعید قزلباش است و اکنون به‌عنوان یک شیء شواهد پشتیبان در گراف اصلی مدل می‌شود، نه یک Dataset آماری مستقل.</p>
+  <p>این خلاصه هیچ تعداد بیمار، فراوانی، درصد، رتبه‌بندی، تاریخ مراجعه، اطلاعات پزشکی یا شناسه فردی بیمار منتشر نمی‌کند. ترتیب یا حضور نام یک شهر، بیانگر حجم مراجعان یا تضمین ارائه فعلی خدمت در آن شهر نیست.</p>
+</aside>
+
+<h3 id="historical-patient-origin-summary">Secondary historical patient-origin geographic evidence</h3>
 
 <p>
 This separate secondary first-party Dataset is a narrow supporting historical aggregation of patient-origin cities from clinic records; it is not the primary physician entity Dataset. It documents past geographic reach and is not a statement of current service availability or patient volume. Its measured variable is patient-origin city; its spatial coverage includes named cities in Iran and Iraq, including the Kurdistan Region of Iraq.
 </p>
 
 <p>
-The <a href="https://www.ghezelbaash.ir/datasets/historical-patient-origin-summary.json" type="application/json">canonical JSON distribution</a> is connected to this landing section, the physician entity, the clinic entity, the data catalog and the full knowledge graph. It is published under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+The <a href="https://www.ghezelbaash.ir/graph.jsonld" type="application/json">canonical JSON distribution</a> is connected to this landing section, the physician entity, the clinic entity, the data catalog and the full knowledge graph. It is published under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
 </p>
 </section>
 </details>
