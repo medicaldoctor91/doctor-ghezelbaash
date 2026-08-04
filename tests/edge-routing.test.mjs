@@ -30,10 +30,13 @@ function contextFor(url, init = {}) {
 }
 
 function headerSection(source, pathname) {
-  const escaped = pathname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = source.match(new RegExp(`^${escaped}\\n([\\s\\S]*?)(?=^\\S|\\Z)`, 'm'));
-  assert.ok(match, `missing ${pathname} header section`);
-  return match[1];
+  const marker = `${pathname}\n`;
+  const start = source.indexOf(marker);
+  assert.notEqual(start, -1, `missing ${pathname} header section`);
+
+  const remainder = source.slice(start + marker.length);
+  const nextSection = remainder.search(/\n(?=\S)/);
+  return nextSection === -1 ? remainder : remainder.slice(0, nextSection + 1);
 }
 
 async function assertNotFoundResponse(response, { expectBody = true } = {}) {
