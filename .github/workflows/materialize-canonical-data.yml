@@ -58,8 +58,12 @@ jobs:
             public/llms.txt \
             public/_headers \
             public/_redirects \
-            public/sitemap.xml \
-            public/datasets
+            public/sitemap.xml
+
+          HISTORICAL_DISTRIBUTION="public/datasets/historical-patient-origin-summary.json"
+          if git ls-files --error-unmatch "$HISTORICAL_DISTRIBUTION" >/dev/null 2>&1 || [[ -e "$HISTORICAL_DISTRIBUTION" ]]; then
+            git add -A -- "$HISTORICAL_DISTRIBUTION"
+          fi
 
           if git diff --cached --quiet; then
             echo "Canonical outputs are already materialized."
