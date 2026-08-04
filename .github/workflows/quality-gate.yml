@@ -31,6 +31,20 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Verify committed semantic outputs are current
+        run: |
+          npm run normalize:dataset
+          git diff --exit-code -- \
+            src/pages/index.md \
+            src/components/DocumentHead.astro \
+            src/data/semantic/head-graph.min.jsonld \
+            public/graph.jsonld \
+            public/graph.ttl \
+            public/llms.txt \
+            public/_headers \
+            public/_redirects \
+            public/sitemap.xml
+
       - name: Compile Cloudflare Pages Functions
         run: |
           mkdir -p .wrangler-validation
