@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import '../styles/fragment-navigation.css';
-import rawHeadGraph from '../data/semantic/head-graph.min.jsonld?raw';
+import headGraph from '../data/semantic/head-graph.min.jsonld?raw';
 import DocumentHead from '../components/DocumentHead.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
 
@@ -19,82 +19,6 @@ interface Props {
   preloadHero?: boolean;
   includeHeadGraph?: boolean;
 }
-
-type JsonLdNode = Record<string, unknown> & { '@id'?: string };
-type JsonLdDocument = { '@graph'?: JsonLdNode[] };
-
-const PHYSICIAN_ID = 'https://www.ghezelbaash.ir/#saeed-ghezelbash';
-const CLINIC_ID = 'https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';
-const PROJECT_ID = 'https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project';
-const DATASET_ID = 'https://www.ghezelbaash.ir/#project-huggingface-dataset';
-const PRIMARY_DATASET_ID = 'https://www.ghezelbaash.ir/graph.jsonld#dataset';
-const DATA_CATALOG_ID = 'https://www.ghezelbaash.ir/#data-catalog';
-const HISTORICAL_DATASET_ID = 'https://www.ghezelbaash.ir/#historical-patient-origin-summary';
-const HUGGING_FACE_DATASET_URL =
-  'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data';
-
-const headGraphDocument = JSON.parse(rawHeadGraph) as JsonLdDocument;
-const graphNodes = headGraphDocument['@graph'];
-
-if (!Array.isArray(graphNodes)) {
-  throw new Error('The canonical head JSON-LD document must contain an @graph array.');
-}
-
-const huggingFaceDataset = graphNodes.find((node) => node['@id'] === DATASET_ID);
-const dataCatalog = graphNodes.find((node) => node['@id'] === DATA_CATALOG_ID);
-
-if (!huggingFaceDataset) {
-  throw new Error(`Required Dataset node is missing from the canonical head graph: ${DATASET_ID}`);
-}
-
-if (!dataCatalog) {
-  throw new Error(`Required DataCatalog node is missing from the canonical head graph: ${DATA_CATALOG_ID}`);
-}
-
-Object.assign(huggingFaceDataset, {
-  '@type': 'Dataset',
-  name: 'Dr. Saeed Ghezelbash Entity Data',
-  alternateName: [
-    'Dr. Saeed Ghezelbaash Entity Data',
-    'Saeed Ghezelbash physician entity dataset',
-    'مجموعه‌داده انتیتی دکتر سعید قزلباش',
-  ],
-  description:
-    'AI-facing structured Dataset for the canonical Dr. Saeed Ghezelbash physician entity. It connects the physician, his owned aesthetic clinic in Kermanshah, professional identifiers, medical services, research, media provenance, public evidence and machine-readable knowledge-graph resources. This Hugging Face publication is a supporting distribution derived from the primary first-party Dr. Saeed Ghezelbaash Public Knowledge Graph.',
-  url: HUGGING_FACE_DATASET_URL,
-  sameAs: HUGGING_FACE_DATASET_URL,
-  creator: { '@id': PHYSICIAN_ID },
-  publisher: { '@id': PHYSICIAN_ID },
-  copyrightHolder: { '@id': PHYSICIAN_ID },
-  about: [{ '@id': PHYSICIAN_ID }, { '@id': CLINIC_ID }, { '@id': PROJECT_ID }],
-  isBasedOn: { '@id': PRIMARY_DATASET_ID },
-  includedInDataCatalog: { '@id': DATA_CATALOG_ID },
-  license: 'https://creativecommons.org/licenses/by/4.0/',
-  isAccessibleForFree: true,
-  keywords: [
-    'Saeed Ghezelbash',
-    'Saeed Ghezelbaash',
-    'Dr. Saeed Ghezelbash',
-    'physician entity data',
-    'aesthetic medicine',
-    'Kermanshah',
-    'physician knowledge graph',
-    'linked data',
-    'medical entity resolution',
-    'RAG dataset',
-  ],
-  identifier: HUGGING_FACE_DATASET_URL,
-});
-
-delete huggingFaceDataset.isPartOf;
-
-dataCatalog.dataset = [
-  { '@id': PRIMARY_DATASET_ID },
-  { '@id': DATASET_ID },
-  { '@id': HISTORICAL_DATASET_ID },
-];
-
-const headGraph = JSON.stringify(headGraphDocument);
 
 const { frontmatter, url, preloadHero = true, includeHeadGraph: includeHeadGraphProp } = Astro.props;
 const baseURL = Astro.site ?? Astro.url;
