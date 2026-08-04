@@ -2,32 +2,7 @@ import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-import { onRequest as on404Request } from '../functions/404.js';
-import { onRequest as on404HtmlRequest } from '../functions/404.html.js';
-
-const NOT_FOUND = '<!doctype html><html lang="fa-IR"><body>404</body></html>';
 const CONTENT_SIGNAL = 'search=yes, ai-input=yes, ai-train=yes, use=reference';
-
-function createAssetBinding() {
-  return {
-    async fetch(input) {
-      const request = input instanceof Request ? input : new Request(input);
-      return new Response(request.method === 'HEAD' ? null : NOT_FOUND, {
-        headers: {
-          'Content-Type': 'text/html; charset=utf-8',
-          'X-Frame-Options': 'DENY',
-        },
-      });
-    },
-  };
-}
-
-function contextFor(url, init = {}) {
-  return {
-    request: new Request(url, init),
-    env: { ASSETS: createAssetBinding() },
-  };
-}
 
 function headerSection(source, pathname) {
   const marker = `${pathname}\n`;
@@ -44,24 +19,10 @@ function headerTokens(section, name) {
   return value.split(',').map((token) => token.trim().toLowerCase()).filter(Boolean);
 }
 
-async function assertNotFoundResponse(response, { expectBody = true } = {}) {
-  assert.equal(response.status, 404);
-  assert.equal(response.statusText, 'Not Found');
-  assert.equal(response.headers.get('Cache-Control'), 'no-store');
-  assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, follow');
-  assert.equal(response.headers.get('Content-Location'), '/404.html');
-  assert.equal(response.headers.get('Content-Signal'), CONTENT_SIGNAL);
-  assert.equal(response.headers.get('X-Frame-Options'), 'DENY');
-  assert.equal(await response.text(), expectBody ? NOT_FOUND : '');
-}
-
-test('the canonical root is static and no longer invokes a negotiation Function', async () => {
+test('the canonical root remains static and preserves its HTTP contract', async () => {
   await assert.rejects(access('functions/index.js'));
 
-  const [headers, routes] = await Promise.all([
-    readFile('public/_headers', 'utf8'),
-    JSON.parse(await readFile('public/_routes.json', 'utf8')),
-  ]);
+  const headers = await readFile('public/_headers', 'utf8');
   const root = headerSection(headers, '/');
 
   assert.match(root, /Content-Type: text\/html; charset=utf-8/);
@@ -70,7 +31,6 @@ test('the canonical root is static and no longer invokes a negotiation Function'
   assert.ok(root.includes(`Content-Signal: ${CONTENT_SIGNAL}`));
   assert.match(root, /X-Robots-Tag: all/);
   assert.deepEqual(headerTokens(root, 'Vary'), ['accept-encoding']);
-  assert.equal(routes.include.includes('/'), false);
 });
 
 test('Markdown and full-text representations remain explicit static URLs', async () => {
@@ -84,36 +44,17 @@ test('Markdown and full-text representations remain explicit static URLs', async
   assert.match(fullText, /Link: <https:\/\/www\.ghezelbaash\.ir\/>; rel="canonical"/);
 });
 
-test('only explicit 404 aliases invoke Pages Functions', async () => {
-  const routes = JSON.parse(await readFile('public/_routes.json', 'utf8'));
-  assert.deepEqual(routes.include, ['/404', '/404/', '/404.html']);
-  assert.deepEqual(routes.exclude, []);
+test('the phase 4 experiment contains no Pages Functions or routing manifest', async () => {
+  await assert.rejects(access('functions/404.js'));
+  await assert.rejects(access('functions/404.html.js'));
+  await assert.rejects(access('public/_routes.json'));
 });
 
-test('the public /404 route always emits a real 404 response', async () => {
-  await assertNotFoundResponse(
-    await on404Request(contextFor('https://www.ghezelbaash.ir/404')),
-  );
-});
+test('the generated 404 document remains explicitly noindex and uncacheable', async () => {
+  const headers = await readFile('public/_headers', 'utf8');
+  const notFound = headerSection(headers, '/404.html');
 
-test('the generated /404.html alias also emits a real 404 response', async () => {
-  await assertNotFoundResponse(
-    await on404HtmlRequest(contextFor('https://www.ghezelbaash.ir/404.html')),
-  );
-});
-
-test('HEAD on a 404 alias preserves the contract without a body', async () => {
-  await assertNotFoundResponse(
-    await on404Request(contextFor('https://www.ghezelbaash.ir/404', { method: 'HEAD' })),
-    { expectBody: false },
-  );
-});
-
-test('unsupported methods on /404 fail closed', async () => {
-  const response = await on404Request(
-    contextFor('https://www.ghezelbaash.ir/404', { method: 'POST' }),
-  );
-
-  assert.equal(response.status, 405);
-  assert.equal(response.headers.get('Allow'), 'GET, HEAD');
+  assert.match(notFound, /Content-Type: text\/html; charset=utf-8/);
+  assert.match(notFound, /X-Robots-Tag: noindex, follow/);
+  assert.match(notFound, /Cache-Control: no-store/);
 });
