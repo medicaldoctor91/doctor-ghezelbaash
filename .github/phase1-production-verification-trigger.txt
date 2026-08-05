@@ -1,0 +1,1 @@
+Temporary synchronization trigger for PR #142. This branch is verification-only and will never be merged.
