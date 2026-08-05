@@ -1,12 +1,21 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { pathToFileURL } from 'node:url';
+import process from 'node:process';
 
 const ORIGIN = process.env.LIVE_ORIGIN ?? 'https://www.ghezelbaash.ir';
 const ATTEMPTS = Number.parseInt(process.env.LIVE_VERIFY_ATTEMPTS ?? '20', 10);
 const DELAY_MS = Number.parseInt(process.env.LIVE_VERIFY_DELAY_MS ?? '15000', 10);
+const DEPLOYMENT_ATTEMPTS = Number.parseInt(process.env.DEPLOYMENT_VERIFY_ATTEMPTS ?? '30', 10);
+const DEPLOYMENT_DELAY_MS = Number.parseInt(process.env.DEPLOYMENT_VERIFY_DELAY_MS ?? '10000', 10);
 const EXPECTED_DEPLOYMENT_SHA = process.env.EXPECTED_DEPLOYMENT_SHA?.trim().toLowerCase() ?? '';
+const EXPECTED_HTML_SHA256 = process.env.EXPECTED_HTML_SHA256?.trim().toLowerCase() ?? '';
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? '';
+const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY ?? '';
 const IS_PAGES_PREVIEW = new URL(ORIGIN).hostname.endsWith('.pages.dev');
 const CONTENT_SIGNAL = 'search=yes, ai-input=yes, ai-train=yes, use=reference';
+const CLOUDFLARE_CHECK_NAME = 'Cloudflare Pages';
+const CLOUDFLARE_APP_NAME = 'Cloudflare Workers and Pages';
 
 function sleep(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -26,14 +35,11 @@ async function request(pathname, { accept, redirect = 'manual' } = {}) {
   const headers = new Headers({
     'Cache-Control': 'no-cache',
     Pragma: 'no-cache',
-    'User-Agent': 'doctor-ghezelbaash-live-contract/1.0',
+    'User-Agent': 'doctor-ghezelbaash-live-contract/2.0',
   });
   if (accept) headers.set('Accept', accept);
 
-  const response = await fetch(cacheBustedURL(pathname), {
-    headers,
-    redirect,
-  });
+  const response = await fetch(cacheBustedURL(pathname), { headers, redirect });
   const body = await response.text();
   return { response, body };
 }
@@ -49,41 +55,70 @@ function headerTokens(response, name) {
     .filter(Boolean);
 }
 
-async function verifyBuildProvenance() {
-  const pathname = '/.well-known/build-provenance.json';
-  const { response, body } = await request(pathname, { accept: 'application/json,*/*;q=0.1' });
-
-  assert.equal(response.status, 200, `${pathname} returned ${response.status}`);
-  assert.match(header(response, 'content-type'), /^application\/json\b/i);
-  assert.match(header(response, 'cache-control'), /\bno-store\b/i);
-  assert.match(header(response, 'x-robots-tag'), /\bnoindex\b/i);
-  assert.equal(header(response, 'content-location'), pathname);
-
-  let provenance;
-  assert.doesNotThrow(() => {
-    provenance = JSON.parse(body);
-  }, 'build provenance is not valid JSON');
-
-  assert.equal(provenance.schemaVersion, 1);
-  assert.equal(provenance.artifact, 'doctor-ghezelbaash-canonical-page');
-  assert.equal(provenance.canonicalOrigin, 'https://www.ghezelbaash.ir');
-  assert.equal(provenance.platform, 'cloudflare-pages');
-  assert.match(provenance.commit, /^[a-f0-9]{40}$/i);
-  assert.match(provenance.indexHtmlSha256, /^[a-f0-9]{64}$/i);
-
-  if (EXPECTED_DEPLOYMENT_SHA) {
-    assert.match(EXPECTED_DEPLOYMENT_SHA, /^[a-f0-9]{40}$/i, 'EXPECTED_DEPLOYMENT_SHA must be a full commit SHA');
-    assert.equal(
-      provenance.commit.toLowerCase(),
-      EXPECTED_DEPLOYMENT_SHA,
-      `origin serves ${provenance.commit}, waiting for ${EXPECTED_DEPLOYMENT_SHA}`,
-    );
-  }
-
-  return provenance;
+export function selectCloudflarePagesCheck(checkRuns) {
+  return [...checkRuns]
+    .filter((check) => check.name === CLOUDFLARE_CHECK_NAME && check.app?.name === CLOUDFLARE_APP_NAME)
+    .sort((left, right) => {
+      const leftTime = Date.parse(left.started_at ?? left.created_at ?? 0) || 0;
+      const rightTime = Date.parse(right.started_at ?? right.created_at ?? 0) || 0;
+      return rightTime - leftTime;
+    })[0] ?? null;
 }
 
-async function verifyCanonicalHTML(expectedHtmlSha256) {
+export function cloudflareCheckState(check) {
+  if (!check) return 'missing';
+  if (check.status !== 'completed') return 'pending';
+  return check.conclusion === 'success' ? 'success' : 'failure';
+}
+
+async function fetchCloudflarePagesCheck() {
+  assert.match(EXPECTED_DEPLOYMENT_SHA, /^[a-f0-9]{40}$/i, 'EXPECTED_DEPLOYMENT_SHA must be a full commit SHA');
+  assert.ok(GITHUB_TOKEN, 'GITHUB_TOKEN is required for revision-aware deployment verification');
+  assert.match(GITHUB_REPOSITORY, /^[^/]+\/[^/]+$/, 'GITHUB_REPOSITORY must use owner/repository form');
+
+  const response = await fetch(
+    `https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${EXPECTED_DEPLOYMENT_SHA}/check-runs?per_page=100`,
+    {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'doctor-ghezelbaash-deployment-contract/1.0',
+      },
+    },
+  );
+
+  assert.equal(response.status, 200, `GitHub check-runs API returned ${response.status}`);
+  const payload = await response.json();
+  assert.ok(Array.isArray(payload.check_runs), 'GitHub check-runs response is malformed');
+  return selectCloudflarePagesCheck(payload.check_runs);
+}
+
+async function waitForExactCloudflareDeployment() {
+  if (!EXPECTED_DEPLOYMENT_SHA) return;
+
+  for (let attempt = 1; attempt <= DEPLOYMENT_ATTEMPTS; attempt += 1) {
+    const check = await fetchCloudflarePagesCheck();
+    const state = cloudflareCheckState(check);
+
+    if (state === 'success') {
+      console.log(`Cloudflare Pages completed successfully for ${EXPECTED_DEPLOYMENT_SHA} on attempt ${attempt}/${DEPLOYMENT_ATTEMPTS}.`);
+      return;
+    }
+
+    if (state === 'failure') {
+      throw new Error(`Cloudflare Pages concluded ${check.conclusion} for ${EXPECTED_DEPLOYMENT_SHA}`);
+    }
+
+    const status = check ? check.status : 'not published yet';
+    console.log(`Cloudflare Pages check is ${status} for ${EXPECTED_DEPLOYMENT_SHA}; attempt ${attempt}/${DEPLOYMENT_ATTEMPTS}.`);
+    if (attempt < DEPLOYMENT_ATTEMPTS) await sleep(DEPLOYMENT_DELAY_MS);
+  }
+
+  throw new Error(`Cloudflare Pages did not complete successfully for ${EXPECTED_DEPLOYMENT_SHA}`);
+}
+
+async function verifyCanonicalHTML() {
   const { response, body } = await request('/', {
     accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   });
@@ -96,7 +131,12 @@ async function verifyCanonicalHTML(expectedHtmlSha256) {
   assert.equal(header(response, 'content-signal'), CONTENT_SIGNAL);
   if (IS_PAGES_PREVIEW) assert.match(header(response, 'x-robots-tag'), /\bnoindex\b/i);
   else assert.match(header(response, 'x-robots-tag'), /\ball\b/i);
-  assert.equal(sha256(body), expectedHtmlSha256, 'live canonical HTML does not match its deployment provenance');
+
+  if (EXPECTED_HTML_SHA256) {
+    assert.match(EXPECTED_HTML_SHA256, /^[a-f0-9]{64}$/i, 'EXPECTED_HTML_SHA256 must be a SHA-256 digest');
+    assert.equal(sha256(body), EXPECTED_HTML_SHA256, 'live canonical HTML does not match the validated build artifact');
+  }
+
   assert.match(body, /<html\b[^>]*\blang=["']fa-IR["']/i);
   assert.match(body, /<link\b[^>]*\brel=["']canonical["'][^>]*\bhref=["']https:\/\/www\.ghezelbaash\.ir\/?["']/i);
 
@@ -128,9 +168,7 @@ async function verifyCanonicalHTML(expectedHtmlSha256) {
 }
 
 async function verifyExplicitRepresentations() {
-  const negotiated = await request('/', {
-    accept: 'text/markdown, text/html;q=0.2',
-  });
+  const negotiated = await request('/', { accept: 'text/markdown, text/html;q=0.2' });
   assert.equal(negotiated.response.status, 200);
   assert.match(header(negotiated.response, 'content-type'), /^text\/html\b/i);
   assert.match(negotiated.body, /<html\b/i);
@@ -178,24 +216,30 @@ async function verify404Aliases() {
 }
 
 async function verifyLiveContract() {
-  const provenance = await verifyBuildProvenance();
   await verifyRobotsPolicy();
-  await verifyCanonicalHTML(provenance.indexHtmlSha256);
+  await verifyCanonicalHTML();
   await verifyExplicitRepresentations();
   await verify404Aliases();
 }
 
-let lastError;
-for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
-  try {
-    await verifyLiveContract();
-    console.log(`Live contract verified against ${ORIGIN} on attempt ${attempt}/${ATTEMPTS}.`);
-    process.exit(0);
-  } catch (error) {
-    lastError = error;
-    console.error(`Live verification attempt ${attempt}/${ATTEMPTS} failed: ${error.message}`);
-    if (attempt < ATTEMPTS) await sleep(DELAY_MS);
+export async function main() {
+  await waitForExactCloudflareDeployment();
+
+  let lastError;
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+    try {
+      await verifyLiveContract();
+      console.log(`Live contract verified against ${ORIGIN} on attempt ${attempt}/${ATTEMPTS}.`);
+      return;
+    } catch (error) {
+      lastError = error;
+      console.error(`Live verification attempt ${attempt}/${ATTEMPTS} failed: ${error.message}`);
+      if (attempt < ATTEMPTS) await sleep(DELAY_MS);
+    }
   }
+
+  throw lastError;
 }
 
-throw lastError;
+const isDirectExecution = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isDirectExecution) await main();
