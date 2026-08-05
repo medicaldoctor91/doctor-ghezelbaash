@@ -6,6 +6,10 @@ import process from 'node:process';
 import { brotliCompressSync, constants as zlibConstants, gzipSync } from 'node:zlib';
 import { parse } from 'parse5';
 
+const IDENTITY_TEXT_MARKER = 'دکتر سعید قزلباش';
+const IDENTITY_TEXT_PATTERN = /دکتر\s+(?:محمد\s*)?سعید\s+قزلباش/u;
+const IDENTITY_LEAD_PATTERN = /دکتر\s+(?:محمد\s*)?سعید/u;
+
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
@@ -59,6 +63,8 @@ export function inspectHtml(html) {
   const fragmentIds = [];
   const imageAlts = [];
   const jsonLdScripts = [];
+  const stylesheets = [];
+  const preloads = [];
   let totalElements = 0;
   let maxDepth = 0;
   let head = null;
@@ -87,6 +93,22 @@ export function inspectHtml(html) {
       }
 
       if (node.tagName === 'img') imageAlts.push(attribute(node, 'alt'));
+
+      if (node.tagName === 'link') {
+        const rel = attribute(node, 'rel').toLowerCase().split(/\s+/).filter(Boolean);
+        const href = attribute(node, 'href');
+        if (rel.includes('stylesheet')) stylesheets.push(href);
+        if (rel.includes('preload')) {
+          preloads.push({
+            href,
+            as: attribute(node, 'as'),
+            type: attribute(node, 'type'),
+            media: attribute(node, 'media'),
+            fetchpriority: attribute(node, 'fetchpriority'),
+          });
+        }
+      }
+
       if (node.tagName === 'script' && attribute(node, 'type').toLowerCase() === 'application/ld+json') {
         const markup = sourceMarkup(html, node);
         const payload = scriptPayload(html, node);
@@ -101,6 +123,9 @@ export function inspectHtml(html) {
 
   const count = (tagName) => tagCounts.get(tagName) ?? 0;
   const mainDirectChildren = main?.childNodes?.filter(isElement).length ?? 0;
+  const tagHistogram = Object.fromEntries(
+    [...tagCounts.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  );
 
   return {
     document,
@@ -113,6 +138,9 @@ export function inspectHtml(html) {
     headings,
     fragmentIds,
     imageAlts,
+    stylesheets,
+    preloads,
+    tagHistogram,
     counts: {
       images: count('img'),
       links: count('a'),
@@ -129,6 +157,12 @@ export function analyzeHtml(html, source = {}) {
   const headMarkup = sourceMarkup(html, inspected.head);
   const mainMarkup = sourceMarkup(html, inspected.main);
   const normalizedMainText = normalizedText(inspected.main ?? { childNodes: [] });
+  const identityMatch = IDENTITY_TEXT_PATTERN.exec(normalizedMainText);
+  const normalizedIdentityCharacterOffset = identityMatch?.index ?? -1;
+  const rawIdentityCharacterOffset = identityMatch ? html.search(IDENTITY_LEAD_PATTERN) : -1;
+  const rawIdentityByteOffset = rawIdentityCharacterOffset < 0
+    ? null
+    : byteLength(html.slice(0, rawIdentityCharacterOffset));
   const rawBytes = byteLength(html);
   const gzipBytes = gzipSync(Buffer.from(html), { level: 9 }).byteLength;
   const brotliBytes = brotliCompressSync(Buffer.from(html), {
@@ -139,6 +173,8 @@ export function analyzeHtml(html, source = {}) {
   }).byteLength;
   const jsonLdMarkup = inspected.jsonLdScripts.map(({ markup }) => markup).join('\n');
   const jsonLdPayload = inspected.jsonLdScripts.map(({ payload }) => payload).join('\n');
+  const headBytes = byteLength(headMarkup);
+  const mainBytes = byteLength(mainMarkup);
 
   return {
     schemaVersion: 2,
@@ -150,10 +186,20 @@ export function analyzeHtml(html, source = {}) {
       gzipBytes,
       brotliBytes,
       sha256: sha256(html),
+      compressionRatios: {
+        gzip: rawBytes ? Number((gzipBytes / rawBytes).toFixed(6)) : 0,
+        brotli: rawBytes ? Number((brotliBytes / rawBytes).toFixed(6)) : 0,
+      },
     },
     regions: {
-      head: { rawBytes: byteLength(headMarkup) },
-      main: { rawBytes: byteLength(mainMarkup) },
+      head: {
+        rawBytes: headBytes,
+        shareOfDocument: rawBytes ? Number((headBytes / rawBytes).toFixed(6)) : 0,
+      },
+      main: {
+        rawBytes: mainBytes,
+        shareOfDocument: rawBytes ? Number((mainBytes / rawBytes).toFixed(6)) : 0,
+      },
       inlineJsonLd: {
         count: inspected.jsonLdScripts.length,
         markupBytes: byteLength(jsonLdMarkup),
@@ -168,6 +214,21 @@ export function analyzeHtml(html, source = {}) {
       headings: inspected.headings.length,
       fragmentIds: inspected.fragmentIds.length,
       ...inspected.counts,
+      tagHistogram: inspected.tagHistogram,
+    },
+    criticalPathInventory: {
+      stylesheets: inspected.stylesheets,
+      preloads: inspected.preloads,
+      identityText: {
+        marker: IDENTITY_TEXT_MARKER,
+        matchedText: identityMatch?.[0] ?? null,
+        found: normalizedIdentityCharacterOffset >= 0,
+        normalizedTextCharacterOffset: normalizedIdentityCharacterOffset,
+        rawByteOffset: rawIdentityByteOffset,
+        shareOfNormalizedMainText: normalizedIdentityCharacterOffset >= 0 && normalizedMainText.length
+          ? Number((normalizedIdentityCharacterOffset / normalizedMainText.length).toFixed(6))
+          : null,
+      },
     },
     fingerprints: {
       normalizedMainTextSha256: sha256(normalizedMainText),
