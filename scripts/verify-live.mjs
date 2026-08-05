@@ -5,6 +5,7 @@ const ORIGIN = process.env.LIVE_ORIGIN ?? 'https://www.ghezelbaash.ir';
 const ATTEMPTS = Number.parseInt(process.env.LIVE_VERIFY_ATTEMPTS ?? '20', 10);
 const DELAY_MS = Number.parseInt(process.env.LIVE_VERIFY_DELAY_MS ?? '15000', 10);
 const EXPECTED_DEPLOYMENT_SHA = process.env.EXPECTED_DEPLOYMENT_SHA?.trim().toLowerCase() ?? '';
+const IS_PAGES_PREVIEW = new URL(ORIGIN).hostname.endsWith('.pages.dev');
 const CONTENT_SIGNAL = 'search=yes, ai-input=yes, ai-train=yes, use=reference';
 
 function sleep(milliseconds) {
@@ -75,7 +76,7 @@ async function verifyBuildProvenance() {
     assert.equal(
       provenance.commit.toLowerCase(),
       EXPECTED_DEPLOYMENT_SHA,
-      `production serves ${provenance.commit}, waiting for ${EXPECTED_DEPLOYMENT_SHA}`,
+      `origin serves ${provenance.commit}, waiting for ${EXPECTED_DEPLOYMENT_SHA}`,
     );
   }
 
@@ -93,7 +94,8 @@ async function verifyCanonicalHTML(expectedHtmlSha256) {
   assert.equal(headerTokens(response, 'vary').includes('accept'), false, 'static root must not vary on Accept');
   assert.equal(header(response, 'content-location'), '/');
   assert.equal(header(response, 'content-signal'), CONTENT_SIGNAL);
-  assert.match(header(response, 'x-robots-tag'), /\ball\b/i);
+  if (IS_PAGES_PREVIEW) assert.match(header(response, 'x-robots-tag'), /\bnoindex\b/i);
+  else assert.match(header(response, 'x-robots-tag'), /\ball\b/i);
   assert.equal(sha256(body), expectedHtmlSha256, 'live canonical HTML does not match its deployment provenance');
   assert.match(body, /<html\b[^>]*\blang=["']fa-IR["']/i);
   assert.match(body, /<link\b[^>]*\brel=["']canonical["'][^>]*\bhref=["']https:\/\/www\.ghezelbaash\.ir\/?["']/i);
