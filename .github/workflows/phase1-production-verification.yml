@@ -1,0 +1,38 @@
+name: Phase 1 Production Verification
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase1-production-verification-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify-production:
+    if: github.head_ref == 'verify-phase1-production'
+    name: Exact canonical production revision and HTTP contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Verify merged Phase 1 on canonical production
+        env:
+          LIVE_ORIGIN: https://www.ghezelbaash.ir
+          EXPECTED_DEPLOYMENT_SHA: bae4a2b7ea1a5d276a70927df4a90a22cf27615f
+          LIVE_VERIFY_ATTEMPTS: 50
+          LIVE_VERIFY_DELAY_MS: 10000
+        run: node scripts/verify-live.mjs
