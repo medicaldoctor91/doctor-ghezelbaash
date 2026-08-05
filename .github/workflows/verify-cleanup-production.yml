@@ -1,0 +1,86 @@
+name: Verify Cleanup Production
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
+  checks: read
+
+jobs:
+  verify:
+    if: github.head_ref == 'verify-cleanup-production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Confirm the merged push workflow completed both jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TARGET_SHA: 4d9006a485b2f160da4b9d51ae6894b74bb6953a
+        run: |
+          node <<'NODE'
+          import assert from 'node:assert/strict';
+
+          const { GH_TOKEN, REPOSITORY, TARGET_SHA } = process.env;
+          const headers = {
+            Accept: 'application/vnd.github+json',
+            Authorization: `Bearer ${GH_TOKEN}`,
+            'X-GitHub-Api-Version': '2022-11-28',
+            'User-Agent': 'doctor-ghezelbaash-cleanup-verifier/1.0',
+          };
+          const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+          for (let attempt = 1; attempt <= 50; attempt += 1) {
+            const runsResponse = await fetch(
+              `https://api.github.com/repos/${REPOSITORY}/actions/runs?head_sha=${TARGET_SHA}&event=push&per_page=100`,
+              { headers },
+            );
+            assert.equal(runsResponse.status, 200);
+            const runs = await runsResponse.json();
+            const run = runs.workflow_runs.find((item) => item.name === 'Quality Gate');
+
+            if (run?.status === 'completed') {
+              assert.equal(run.conclusion, 'success', `Quality Gate concluded ${run.conclusion}`);
+              const jobsResponse = await fetch(`${run.jobs_url}?per_page=100`, { headers });
+              assert.equal(jobsResponse.status, 200);
+              const jobs = await jobsResponse.json();
+              const validate = jobs.jobs.find((job) => job.name === 'Astro, Pages Functions, production build, and performance baseline');
+              const production = jobs.jobs.find((job) => job.name === 'Exact Cloudflare deployment and production contract');
+              assert.equal(validate?.conclusion, 'success', `validate job concluded ${validate?.conclusion}`);
+              assert.equal(production?.conclusion, 'success', `production job concluded ${production?.conclusion}`);
+              console.log(`Merged push workflow ${run.id} completed both jobs successfully.`);
+              process.exit(0);
+            }
+
+            console.log(`Merged push workflow is ${run?.status ?? 'not visible yet'}; attempt ${attempt}/50.`);
+            if (attempt < 50) await sleep(10000);
+          }
+
+          throw new Error('Merged push workflow did not complete successfully');
+          NODE
+
+      - name: Reverify canonical production from the validated build digest
+        env:
+          EXPECTED_DEPLOYMENT_SHA: 4d9006a485b2f160da4b9d51ae6894b74bb6953a
+          EXPECTED_HTML_SHA256: 9e4095020d428a70e1f7c3554ae6361b30f7f348837c221a9c71820067a1c1dc
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          DEPLOYMENT_VERIFY_ATTEMPTS: 40
+          DEPLOYMENT_VERIFY_DELAY_MS: 10000
+          LIVE_VERIFY_ATTEMPTS: 20
+          LIVE_VERIFY_DELAY_MS: 10000
+        run: node scripts/verify-live.mjs
