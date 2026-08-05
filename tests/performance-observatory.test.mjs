@@ -13,19 +13,32 @@ test('parse5 analyzer measures DOM nodes without counting HTML-like JSON-LD text
   assert.equal(inspected.maxDepth, 5);
   assert.equal(inspected.headings[0].text, 'خدمات');
   assert.equal(inspected.jsonLdScripts.length, 1);
+  assert.deepEqual(inspected.stylesheets, ['/a.css']);
+  assert.deepEqual(inspected.preloads, []);
+  assert.equal(inspected.tagHistogram.script, 1);
 });
 
-test('performance report records stable size and authority-preserving fingerprints', () => {
+test('performance report records compact authority and critical-path observability', () => {
   const report = analyzeHtml(FIXTURE, { commit: 'fixture' });
   assert.equal(report.schemaVersion, 2);
   assert.equal(report.regions.inlineJsonLd.count, 1);
   assert.equal(report.dom.totalElements, 13);
   assert.equal(report.dom.mainDirectChildren, 3);
+  assert.equal(report.dom.tagHistogram.main, 1);
   assert.match(report.document.sha256, /^[a-f0-9]{64}$/);
+  assert.ok(report.document.compressionRatios.gzip > 0);
+  assert.ok(report.document.compressionRatios.brotli > 0);
+  assert.ok(report.regions.head.shareOfDocument > 0);
+  assert.ok(report.regions.main.shareOfDocument > 0);
+  assert.deepEqual(report.criticalPathInventory.stylesheets, ['/a.css']);
+  assert.deepEqual(report.criticalPathInventory.preloads, []);
+  assert.equal(report.criticalPathInventory.identityText.marker, 'دکتر سعید قزلباش');
+  assert.equal(report.criticalPathInventory.identityText.matchedText, 'دکتر سعید قزلباش');
+  assert.equal(report.criticalPathInventory.identityText.found, true);
+  assert.ok(report.criticalPathInventory.identityText.rawByteOffset >= 0);
   assert.match(report.fingerprints.normalizedMainTextSha256, /^[a-f0-9]{64}$/);
   assert.match(report.fingerprints.headingSequenceSha256, /^[a-f0-9]{64}$/);
   assert.equal(report.budgets.enforcement, 'observation-only');
-  assert.equal('criticalPathInventory' in report, false);
 });
 
 test('Cloudflare check selection only accepts the official app and newest exact check', () => {
