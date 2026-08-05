@@ -10,7 +10,8 @@ const VOID_ELEMENTS = new Set([
   'param', 'source', 'track', 'wbr',
 ]);
 const RAW_TEXT_ELEMENTS = new Set(['script', 'style', 'textarea', 'title']);
-const IDENTITY_TEXT_MARKER = 'من، دکتر سعید قزلباش هستم';
+const IDENTITY_TEXT_MARKER = 'دکتر سعید قزلباش هستم';
+const IDENTITY_TEXT_PATTERN = /دکتر\s+سعید\s+قزلباش\s+هستم/u;
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -222,7 +223,8 @@ export function analyzeHtml(html, source = {}) {
     },
   }).byteLength;
   const normalizedMainText = normalizeText(main.markup);
-  const identityCharacterOffset = html.indexOf(IDENTITY_TEXT_MARKER);
+  const identityMatch = IDENTITY_TEXT_PATTERN.exec(html);
+  const identityCharacterOffset = identityMatch?.index ?? -1;
   const identityByteOffset = identityCharacterOffset < 0 ? -1 : byteLength(html.slice(0, identityCharacterOffset));
 
   return {
@@ -275,6 +277,7 @@ export function analyzeHtml(html, source = {}) {
       preloads: inspected.preloads,
       identityText: {
         marker: IDENTITY_TEXT_MARKER,
+        matchedText: identityMatch?.[0] ?? null,
         found: identityCharacterOffset >= 0,
         byteOffset: identityByteOffset,
         shareOfDocument: identityByteOffset >= 0 && rawBytes ? Number((identityByteOffset / rawBytes).toFixed(6)) : null,
