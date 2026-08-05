@@ -1,12 +1,19 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 
 const ORIGIN = process.env.LIVE_ORIGIN ?? 'https://www.ghezelbaash.ir';
 const ATTEMPTS = Number.parseInt(process.env.LIVE_VERIFY_ATTEMPTS ?? '20', 10);
 const DELAY_MS = Number.parseInt(process.env.LIVE_VERIFY_DELAY_MS ?? '15000', 10);
+const EXPECTED_DEPLOYMENT_SHA = process.env.EXPECTED_DEPLOYMENT_SHA?.trim().toLowerCase() ?? '';
+const IS_PAGES_PREVIEW = new URL(ORIGIN).hostname.endsWith('.pages.dev');
 const CONTENT_SIGNAL = 'search=yes, ai-input=yes, ai-train=yes, use=reference';
 
 function sleep(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+function sha256(value) {
+  return createHash('sha256').update(value).digest('hex');
 }
 
 function cacheBustedURL(pathname) {
@@ -42,7 +49,41 @@ function headerTokens(response, name) {
     .filter(Boolean);
 }
 
-async function verifyCanonicalHTML() {
+async function verifyBuildProvenance() {
+  const pathname = '/.well-known/build-provenance.json';
+  const { response, body } = await request(pathname, { accept: 'application/json,*/*;q=0.1' });
+
+  assert.equal(response.status, 200, `${pathname} returned ${response.status}`);
+  assert.match(header(response, 'content-type'), /^application\/json\b/i);
+  assert.match(header(response, 'cache-control'), /\bno-store\b/i);
+  assert.match(header(response, 'x-robots-tag'), /\bnoindex\b/i);
+  assert.equal(header(response, 'content-location'), pathname);
+
+  let provenance;
+  assert.doesNotThrow(() => {
+    provenance = JSON.parse(body);
+  }, 'build provenance is not valid JSON');
+
+  assert.equal(provenance.schemaVersion, 1);
+  assert.equal(provenance.artifact, 'doctor-ghezelbaash-canonical-page');
+  assert.equal(provenance.canonicalOrigin, 'https://www.ghezelbaash.ir');
+  assert.equal(provenance.platform, 'cloudflare-pages');
+  assert.match(provenance.commit, /^[a-f0-9]{40}$/i);
+  assert.match(provenance.indexHtmlSha256, /^[a-f0-9]{64}$/i);
+
+  if (EXPECTED_DEPLOYMENT_SHA) {
+    assert.match(EXPECTED_DEPLOYMENT_SHA, /^[a-f0-9]{40}$/i, 'EXPECTED_DEPLOYMENT_SHA must be a full commit SHA');
+    assert.equal(
+      provenance.commit.toLowerCase(),
+      EXPECTED_DEPLOYMENT_SHA,
+      `origin serves ${provenance.commit}, waiting for ${EXPECTED_DEPLOYMENT_SHA}`,
+    );
+  }
+
+  return provenance;
+}
+
+async function verifyCanonicalHTML(expectedHtmlSha256) {
   const { response, body } = await request('/', {
     accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   });
@@ -53,7 +94,9 @@ async function verifyCanonicalHTML() {
   assert.equal(headerTokens(response, 'vary').includes('accept'), false, 'static root must not vary on Accept');
   assert.equal(header(response, 'content-location'), '/');
   assert.equal(header(response, 'content-signal'), CONTENT_SIGNAL);
-  assert.match(header(response, 'x-robots-tag'), /\ball\b/i);
+  if (IS_PAGES_PREVIEW) assert.match(header(response, 'x-robots-tag'), /\bnoindex\b/i);
+  else assert.match(header(response, 'x-robots-tag'), /\ball\b/i);
+  assert.equal(sha256(body), expectedHtmlSha256, 'live canonical HTML does not match its deployment provenance');
   assert.match(body, /<html\b[^>]*\blang=["']fa-IR["']/i);
   assert.match(body, /<link\b[^>]*\brel=["']canonical["'][^>]*\bhref=["']https:\/\/www\.ghezelbaash\.ir\/?["']/i);
 
@@ -135,8 +178,9 @@ async function verify404Aliases() {
 }
 
 async function verifyLiveContract() {
+  const provenance = await verifyBuildProvenance();
   await verifyRobotsPolicy();
-  await verifyCanonicalHTML();
+  await verifyCanonicalHTML(provenance.indexHtmlSha256);
   await verifyExplicitRepresentations();
   await verify404Aliases();
 }
