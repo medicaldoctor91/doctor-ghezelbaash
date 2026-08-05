@@ -1,0 +1,45 @@
+name: Cleanup Preview Contract
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  checks: read
+
+jobs:
+  verify-preview:
+    if: github.head_ref == 'cleanup/performance-observability'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Verify exact Cloudflare Preview and HTTP contract
+        env:
+          LIVE_ORIGIN: https://cleanup-performance-observab.doctor-ghezelbaash.pages.dev
+          EXPECTED_DEPLOYMENT_SHA: ${{ github.event.pull_request.head.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          DEPLOYMENT_VERIFY_ATTEMPTS: 50
+          DEPLOYMENT_VERIFY_DELAY_MS: 10000
+          LIVE_VERIFY_ATTEMPTS: 20
+          LIVE_VERIFY_DELAY_MS: 10000
+        run: node scripts/verify-live.mjs
+
+      - name: Confirm the retired provenance endpoint is absent
+        run: |
+          URL="https://cleanup-performance-observab.doctor-ghezelbaash.pages.dev/.well-known/build-provenance.json?__verify=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          STATUS="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "$URL")"
+          test "$STATUS" = '404'
