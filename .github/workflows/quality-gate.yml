@@ -5,9 +5,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
+  checks: read
 
 jobs:
   validate:
@@ -63,3 +66,44 @@ jobs:
           path: ${{ runner.temp }}/performance-baseline.json
           if-no-files-found: error
           retention-days: 30
+
+  verify-production:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    name: Exact Cloudflare deployment and production contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Download the validated build baseline
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-baseline-${{ github.sha }}
+          path: ${{ runner.temp }}/performance-baseline
+
+      - name: Load the validated HTML digest
+        run: |
+          REPORT='${{ runner.temp }}/performance-baseline/performance-baseline.json'
+          EXPECTED_HTML_SHA256="$(jq -r '.document.sha256' "$REPORT")"
+          [[ "$EXPECTED_HTML_SHA256" =~ ^[a-f0-9]{64}$ ]]
+          echo "EXPECTED_HTML_SHA256=$EXPECTED_HTML_SHA256" >> "$GITHUB_ENV"
+
+      - name: Verify the exact Cloudflare deployment and live contract
+        env:
+          EXPECTED_DEPLOYMENT_SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          DEPLOYMENT_VERIFY_ATTEMPTS: 40
+          DEPLOYMENT_VERIFY_DELAY_MS: 10000
+          LIVE_VERIFY_ATTEMPTS: 20
+          LIVE_VERIFY_DELAY_MS: 15000
+        run: node scripts/verify-live.mjs
