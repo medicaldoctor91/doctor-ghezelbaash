@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify-live:
-    name: No-cache HTTP and representation contract
+    name: Revision-aware no-cache HTTP and representation contract
     runs-on: ubuntu-latest
     timeout-minutes: 8
 
@@ -29,8 +29,9 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
-      - name: Verify deployed Cloudflare contract
+      - name: Verify exact deployed Cloudflare revision and contract
         env:
+          EXPECTED_DEPLOYMENT_SHA: ${{ github.sha }}
           LIVE_VERIFY_ATTEMPTS: 20
           LIVE_VERIFY_DELAY_MS: 15000
         run: node scripts/verify-live.mjs
