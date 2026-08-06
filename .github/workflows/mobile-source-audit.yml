@@ -1,0 +1,126 @@
+name: Mobile Source Audit
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    if: github.head_ref == 'refactor/minimal-mobile-source'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refactor/minimal-mobile-source
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm install --global npm@11.19.0
+      - run: npm ci
+      - name: Validate and build cleaned source
+        run: npm run validate
+      - name: Serve static build
+        shell: bash
+        run: |
+          npx --yes http-server dist -p 4173 -c-1 > /tmp/http-server.log 2>&1 &
+          echo $! > /tmp/http-server.pid
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/http-server.log
+          exit 1
+      - name: Run mobile and desktop Lighthouse
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p lighthouse
+          for run in 1 2 3; do
+            npx --yes lighthouse http://127.0.0.1:4173/ \
+              --only-categories=performance \
+              --output=json \
+              --output-path="lighthouse/mobile-${run}.json" \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --quiet
+          done
+          for run in 1 2; do
+            npx --yes lighthouse http://127.0.0.1:4173/ \
+              --preset=desktop \
+              --only-categories=performance \
+              --output=json \
+              --output-path="lighthouse/desktop-${run}.json" \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --quiet
+          done
+      - name: Extract decisive diagnostics
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const files = fs.readdirSync('lighthouse').filter((name) => name.endsWith('.json')).sort();
+          const auditIds = [
+            'first-contentful-paint',
+            'largest-contentful-paint',
+            'speed-index',
+            'total-blocking-time',
+            'cumulative-layout-shift',
+            'server-response-time',
+            'mainthread-work-breakdown',
+            'bootup-time',
+            'dom-size',
+            'total-byte-weight',
+            'network-requests',
+            'render-blocking-resources',
+            'largest-contentful-paint-element',
+            'lcp-lazy-loaded',
+            'prioritize-lcp-image',
+            'uses-responsive-images',
+            'uses-optimized-images',
+            'offscreen-images',
+            'font-display',
+            'third-party-summary',
+          ];
+          const reports = files.map((name) => {
+            const lhr = JSON.parse(fs.readFileSync(path.join('lighthouse', name), 'utf8'));
+            const audits = {};
+            for (const id of auditIds) {
+              const a = lhr.audits[id];
+              if (!a) continue;
+              audits[id] = {
+                score: a.score,
+                numericValue: a.numericValue,
+                displayValue: a.displayValue,
+                details: a.details,
+              };
+            }
+            return {
+              name,
+              performance: lhr.categories.performance.score * 100,
+              fetchTime: lhr.fetchTime,
+              userAgent: lhr.userAgent,
+              configSettings: lhr.configSettings,
+              audits,
+            };
+          });
+          fs.writeFileSync('lighthouse/summary.json', JSON.stringify(reports, null, 2));
+          console.log(JSON.stringify(reports.map((r) => ({
+            name: r.name,
+            performance: r.performance,
+            fcp: r.audits['first-contentful-paint']?.numericValue,
+            lcp: r.audits['largest-contentful-paint']?.numericValue,
+            tbt: r.audits['total-blocking-time']?.numericValue,
+            cls: r.audits['cumulative-layout-shift']?.numericValue,
+            dom: r.audits['dom-size']?.numericValue,
+            bytes: r.audits['total-byte-weight']?.numericValue,
+          })), null, 2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cleaned-source-lighthouse
+          path: lighthouse/
+          retention-days: 1
