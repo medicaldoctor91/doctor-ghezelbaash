@@ -194,3 +194,17 @@ test('llms.txt exposes one Dataset with synchronized website, GitHub, Hugging Fa
   assert.ok(llms.includes('Zenodo archival identity and distribution endpoint'));
   assert.equal(llms.includes('Hugging Face publisher'), false);
 });
+
+test('canonical page stays within the measured mobile content budget', async () => {
+  const source = await readFile(pagePath, 'utf8');
+  const sourceBytes = Buffer.byteLength(source, 'utf8');
+  assert.ok(sourceBytes <= 700_000, `canonical Markdown exceeds mobile budget: ${sourceBytes} bytes`);
+  assert.equal((source.match(/<h2\b/g) ?? []).length, 19);
+  assert.equal((source.match(/<h3\b/g) ?? []).length, 158);
+  assert.equal((source.match(/<h4\b/g) ?? []).length, 624);
+  assert.equal((source.match(/<h5\b/g) ?? []).length, 0);
+
+  const ids = new Set([...source.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]));
+  const targets = new Set([...source.matchAll(/href="#([^"]+)"/g)].map((match) => match[1]));
+  for (const target of targets) assert.ok(ids.has(target), `broken fragment target: #${target}`);
+});

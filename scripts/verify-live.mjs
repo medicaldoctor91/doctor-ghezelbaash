@@ -167,6 +167,12 @@ async function verifyCanonicalHTML() {
   if (IS_PAGES_PREVIEW) assert.match(header(response, 'x-robots-tag'), /\bnoindex\b/i);
   else assert.match(header(response, 'x-robots-tag'), /\ball\b/i);
 
+  const canonicalHtmlBytes = Buffer.byteLength(body, 'utf8');
+  assert.ok(
+    canonicalHtmlBytes <= 800_000,
+    `live canonical HTML exceeds the mobile budget: ${canonicalHtmlBytes} bytes`,
+  );
+
   assert.match(body, /<html\b[^>]*\blang=["']fa-IR["']/i);
   assert.match(body, /<link\b[^>]*\brel=["']canonical["'][^>]*\bhref=["']https:\/\/www\.ghezelbaash\.ir\/?["']/i);
 
