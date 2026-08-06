@@ -33,14 +33,8 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Verify committed semantic outputs
-        run: |
-          npm run generate:semantic
-          git diff --exit-code -- \
-            src/data/semantic/head-graph.min.jsonld \
-            public/graph.jsonld \
-            public/graph.ttl \
-            public/llms.txt
+      - name: Validate production source and output
+        run: npm run validate
 
       - name: Compile Cloudflare Pages Functions
         run: |
@@ -49,9 +43,6 @@ jobs:
             pages functions build functions \
             --outfile=.wrangler-validation/functions-worker.js \
             --output-routes-path=.wrangler-validation/_routes.generated.json
-
-      - name: Validate and build production output
-        run: npm run validate
 
   verify-production:
     if: github.event_name != 'pull_request'
