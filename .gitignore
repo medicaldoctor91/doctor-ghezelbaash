@@ -3,6 +3,6 @@ dist/
 .astro/
 .wrangler-validation/
 
-# Deterministic build products generated from public/graph.jsonld
+# Build-time projections generated from the single canonical public/graph.jsonld source
 src/data/semantic/head-graph.min.jsonld
 public/graph.ttl
