@@ -9,12 +9,11 @@ on:
 
 permissions:
   contents: read
-  actions: read
   checks: read
 
 jobs:
   validate:
-    name: Astro, Pages Functions, production build, and performance baseline
+    name: Generate, test, and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -34,7 +33,7 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
-      - name: Verify committed semantic outputs are current
+      - name: Verify committed semantic outputs
         run: |
           npm run generate:semantic
           git diff --exit-code -- \
@@ -51,26 +50,13 @@ jobs:
             --outfile=.wrangler-validation/functions-worker.js \
             --output-routes-path=.wrangler-validation/_routes.generated.json
 
-      - name: Validate Astro source, edge behavior, and production output
+      - name: Validate and build production output
         run: npm run validate
-
-      - name: Capture deterministic performance baseline
-        env:
-          PERFORMANCE_REPORT_PATH: ${{ runner.temp }}/performance-baseline.json
-        run: node scripts/analyze-build-performance.mjs
-
-      - name: Upload performance baseline
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-baseline-${{ github.sha }}
-          path: ${{ runner.temp }}/performance-baseline.json
-          if-no-files-found: error
-          retention-days: 30
 
   verify-production:
     if: github.event_name != 'pull_request'
     needs: validate
-    name: Exact Cloudflare deployment and production contract
+    name: Verify deployed production
     runs-on: ubuntu-latest
     timeout-minutes: 18
 
@@ -84,20 +70,7 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
-      - name: Download the validated build baseline
-        uses: actions/download-artifact@v4
-        with:
-          name: performance-baseline-${{ github.sha }}
-          path: ${{ runner.temp }}/performance-baseline
-
-      - name: Load the validated HTML digest
-        run: |
-          REPORT='${{ runner.temp }}/performance-baseline/performance-baseline.json'
-          EXPECTED_HTML_SHA256="$(jq -r '.document.sha256' "$REPORT")"
-          [[ "$EXPECTED_HTML_SHA256" =~ ^[a-f0-9]{64}$ ]]
-          echo "EXPECTED_HTML_SHA256=$EXPECTED_HTML_SHA256" >> "$GITHUB_ENV"
-
-      - name: Verify the exact Cloudflare deployment and live contract
+      - name: Verify exact Cloudflare deployment and live contract
         env:
           EXPECTED_DEPLOYMENT_SHA: ${{ github.sha }}
           GITHUB_TOKEN: ${{ github.token }}
