@@ -9,9 +9,9 @@
     "dev": "npm run generate:semantic && ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build": "npm run generate:semantic && ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
-    "test": "node --test tests/*.test.mjs",
-    "validate": "npm run generate:semantic && npm run check && npm run test && ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "check": "npm run generate:semantic && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
+    "test": "npm run generate:semantic && node --test tests/*.test.mjs",
+    "validate": "npm run generate:semantic && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning && node --test tests/*.test.mjs && ASTRO_TELEMETRY_DISABLED=1 astro build",
     "verify:live": "node scripts/verify-live.mjs"
   },
   "devDependencies": {
