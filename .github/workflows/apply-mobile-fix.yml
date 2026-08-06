@@ -1,21 +1,20 @@
 name: Apply Measured Mobile Fix
 
 on:
-  push:
-    branches:
-      - refactor/minimal-mobile-source
+  pull_request:
 
 permissions:
   contents: write
 
 jobs:
   apply:
+    if: github.head_ref == 'refactor/minimal-mobile-final'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: refactor/minimal-mobile-source
+          ref: refactor/minimal-mobile-final
       - name: Apply measured canonical-page reduction
         shell: bash
         run: |
@@ -127,4 +126,4 @@ test('canonical page stays within the measured mobile content budget', async () 
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
           git commit -m "perf(mobile): reduce canonical HTML and DOM"
-          git push origin HEAD:refactor/minimal-mobile-source
+          git push origin HEAD:refactor/minimal-mobile-final
