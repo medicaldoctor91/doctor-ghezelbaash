@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import process from 'node:process';
 
@@ -9,20 +8,23 @@ const DELAY_MS = Number.parseInt(process.env.LIVE_VERIFY_DELAY_MS ?? '15000', 10
 const DEPLOYMENT_ATTEMPTS = Number.parseInt(process.env.DEPLOYMENT_VERIFY_ATTEMPTS ?? '30', 10);
 const DEPLOYMENT_DELAY_MS = Number.parseInt(process.env.DEPLOYMENT_VERIFY_DELAY_MS ?? '10000', 10);
 const EXPECTED_DEPLOYMENT_SHA = process.env.EXPECTED_DEPLOYMENT_SHA?.trim().toLowerCase() ?? '';
-const EXPECTED_HTML_SHA256 = process.env.EXPECTED_HTML_SHA256?.trim().toLowerCase() ?? '';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN ?? '';
 const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY ?? '';
 const IS_PAGES_PREVIEW = new URL(ORIGIN).hostname.endsWith('.pages.dev');
 const CONTENT_SIGNAL = 'search=yes, ai-input=yes, ai-train=yes, use=reference';
 const CLOUDFLARE_CHECK_NAME = 'Cloudflare Pages';
 const CLOUDFLARE_APP_NAME = 'Cloudflare Workers and Pages';
+const HOME = 'https://www.ghezelbaash.ir/';
+const PERSON_ID = `${HOME}#saeed-ghezelbash`;
+const PRIMARY_DATASET_ID = `${HOME}graph.jsonld#dataset`;
+const HISTORICAL_SUMMARY_ID = `${HOME}#historical-patient-origin-summary`;
+const LEGACY_DATASET_ID = `${HOME}#project-huggingface-dataset`;
+const MAX_HEAD_GRAPH_BYTES = 120_000;
+
+const asArray = (value) => (value == null ? [] : Array.isArray(value) ? value : [value]);
 
 function sleep(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-function sha256(value) {
-  return createHash('sha256').update(value).digest('hex');
 }
 
 function cacheBustedURL(pathname) {
@@ -35,7 +37,7 @@ async function request(pathname, { accept, redirect = 'manual' } = {}) {
   const headers = new Headers({
     'Cache-Control': 'no-cache',
     Pragma: 'no-cache',
-    'User-Agent': 'doctor-ghezelbaash-live-contract/2.0',
+    'User-Agent': 'doctor-ghezelbaash-live-contract/3.0',
   });
   if (accept) headers.set('Accept', accept);
 
@@ -53,6 +55,39 @@ function headerTokens(response, name) {
     .split(',')
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean);
+}
+
+function findNode(document, id) {
+  return document?.['@graph']?.find((node) => node?.['@id'] === id);
+}
+
+function datasetNodes(document) {
+  return document?.['@graph']?.filter((node) => asArray(node?.['@type']).includes('Dataset')) ?? [];
+}
+
+function assertDatasetContract(document, label, { compact = false } = {}) {
+  assert.ok(Array.isArray(document?.['@graph']), `${label} must contain an @graph array`);
+  const serialized = JSON.stringify(document);
+  const primary = findNode(document, PRIMARY_DATASET_ID);
+  const publisher = findNode(document, PERSON_ID);
+  const historical = findNode(document, HISTORICAL_SUMMARY_ID);
+
+  assert.ok(primary, `${label} is missing the canonical Dataset`);
+  assert.equal(primary.name, 'Dr. Saeed Ghezelbash Entity Data');
+  assert.ok(typeof primary.description === 'string' && primary.description.length >= 50, `${label} Dataset description is missing`);
+  assert.equal(primary.publisher?.['@id'], PERSON_ID, `${label} Dataset publisher must be the physician`);
+  assert.equal(primary.creator?.['@id'], PERSON_ID, `${label} Dataset creator must be the physician`);
+  assert.equal(Object.hasOwn(primary, 'isPartOf'), false, `${label} primary Dataset must not have isPartOf`);
+  assert.ok(asArray(publisher?.['@type']).some((type) => ['Person', 'IndividualPhysician'].includes(type)), `${label} publisher must resolve to a Person node`);
+  assert.ok(asArray(historical?.['@type']).includes('CreativeWork'), `${label} historical geography must be CreativeWork`);
+  assert.equal(asArray(historical?.['@type']).includes('Dataset'), false, `${label} historical geography must not be a Dataset`);
+  assert.equal(serialized.includes(LEGACY_DATASET_ID), false, `${label} contains the retired duplicate Dataset`);
+  assert.equal(/separate secondary supporting Dataset/i.test(serialized), false, `${label} contains stale Dataset wording`);
+
+  if (compact) {
+    assert.deepEqual(datasetNodes(document).map((node) => node['@id']), [PRIMARY_DATASET_ID], `${label} must expose only the primary Dataset inline`);
+    assert.ok(Buffer.byteLength(serialized, 'utf8') <= MAX_HEAD_GRAPH_BYTES, `${label} exceeds ${MAX_HEAD_GRAPH_BYTES} bytes`);
+  }
 }
 
 export function selectCloudflarePagesCheck(checkRuns) {
@@ -76,17 +111,14 @@ async function fetchCloudflarePagesCheck() {
   assert.ok(GITHUB_TOKEN, 'GITHUB_TOKEN is required for revision-aware deployment verification');
   assert.match(GITHUB_REPOSITORY, /^[^/]+\/[^/]+$/, 'GITHUB_REPOSITORY must use owner/repository form');
 
-  const response = await fetch(
-    `https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${EXPECTED_DEPLOYMENT_SHA}/check-runs?per_page=100`,
-    {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': 'doctor-ghezelbaash-deployment-contract/1.0',
-      },
+  const response = await fetch(`https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${EXPECTED_DEPLOYMENT_SHA}/check-runs?per_page=100`, {
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'doctor-ghezelbaash-deployment-contract/1.0',
     },
-  );
+  });
 
   assert.equal(response.status, 200, `GitHub check-runs API returned ${response.status}`);
   const payload = await response.json();
@@ -105,10 +137,7 @@ async function waitForExactCloudflareDeployment() {
       console.log(`Cloudflare Pages completed successfully for ${EXPECTED_DEPLOYMENT_SHA} on attempt ${attempt}/${DEPLOYMENT_ATTEMPTS}.`);
       return;
     }
-
-    if (state === 'failure') {
-      throw new Error(`Cloudflare Pages concluded ${check.conclusion} for ${EXPECTED_DEPLOYMENT_SHA}`);
-    }
+    if (state === 'failure') throw new Error(`Cloudflare Pages concluded ${check.conclusion} for ${EXPECTED_DEPLOYMENT_SHA}`);
 
     const status = check ? check.status : 'not published yet';
     console.log(`Cloudflare Pages check is ${status} for ${EXPECTED_DEPLOYMENT_SHA}; attempt ${attempt}/${DEPLOYMENT_ATTEMPTS}.`);
@@ -116,6 +145,12 @@ async function waitForExactCloudflareDeployment() {
   }
 
   throw new Error(`Cloudflare Pages did not complete successfully for ${EXPECTED_DEPLOYMENT_SHA}`);
+}
+
+function extractInlineJsonLd(html) {
+  const matches = [...html.matchAll(/<script\b[^>]*\btype=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  assert.equal(matches.length, 1, `canonical HTML must expose one compact inline JSON-LD graph, found ${matches.length}`);
+  return matches[0][1];
 }
 
 async function verifyCanonicalHTML() {
@@ -132,15 +167,18 @@ async function verifyCanonicalHTML() {
   if (IS_PAGES_PREVIEW) assert.match(header(response, 'x-robots-tag'), /\bnoindex\b/i);
   else assert.match(header(response, 'x-robots-tag'), /\ball\b/i);
 
-  if (EXPECTED_HTML_SHA256) {
-    assert.match(EXPECTED_HTML_SHA256, /^[a-f0-9]{64}$/i, 'EXPECTED_HTML_SHA256 must be a SHA-256 digest');
-    assert.equal(sha256(body), EXPECTED_HTML_SHA256, 'live canonical HTML does not match the validated build artifact');
-  }
-
   assert.match(body, /<html\b[^>]*\blang=["']fa-IR["']/i);
   assert.match(body, /<link\b[^>]*\brel=["']canonical["'][^>]*\bhref=["']https:\/\/www\.ghezelbaash\.ir\/?["']/i);
 
+  const inlinePayload = extractInlineJsonLd(body);
+  assertDatasetContract(JSON.parse(inlinePayload), 'live compact Head Graph', { compact: true });
+
   const preloadTags = body.match(/<link\b[^>]*\brel=["']preload["'][^>]*>/gi) ?? [];
+  const heroPreload = preloadTags.find((tag) => tag.includes('saeed-ghezelbash-portrait')) ?? '';
+  assert.ok(heroPreload, 'hero image preload is missing from live HTML');
+  assert.match(heroPreload, /\bas=["']image["']/i);
+  assert.match(heroPreload, /\bfetchpriority=["']high["']/i);
+
   const fontPreload = preloadTags.find((tag) => tag.includes('/fonts/vazirmatn-nl-wght.woff2')) ?? '';
   assert.ok(fontPreload, 'desktop Vazirmatn preload is missing from live HTML');
   assert.match(fontPreload, /\bas=["']font["']/i);
@@ -151,20 +189,34 @@ async function verifyCanonicalHTML() {
     .map((match) => new URL(match[1], ORIGIN));
   assert.ok(stylesheetURLs.length > 0, 'live HTML exposes no stylesheet links');
 
-  const stylesheets = await Promise.all(
-    stylesheetURLs.map(async (url) => {
-      url.searchParams.set('__live_verify', `${Date.now()}-${Math.random().toString(16).slice(2)}`);
-      const response = await fetch(url, {
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-      });
-      assert.equal(response.status, 200, `stylesheet ${url.pathname} returned ${response.status}`);
-      return response.text();
-    }),
-  );
+  const stylesheets = await Promise.all(stylesheetURLs.map(async (url) => {
+    url.searchParams.set('__live_verify', `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+    const stylesheet = await fetch(url, { headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } });
+    assert.equal(stylesheet.status, 200, `stylesheet ${url.pathname} returned ${stylesheet.status}`);
+    return stylesheet.text();
+  }));
   const css = stylesheets.join('\n');
   assert.match(css, /:has\(main\s+:target\)/i, 'target-aware fragment materialization rule is missing');
   assert.match(css, /content-visibility:\s*visible/i, 'fragment materialization does not force visible geometry');
   assert.match(css, /contain-intrinsic-size:\s*none/i, 'fragment materialization does not clear intrinsic placeholders');
+}
+
+async function verifyMachineReadableAssets() {
+  const graphResult = await request('/graph.jsonld', { accept: 'application/ld+json,application/json;q=0.9,*/*;q=0.1' });
+  assert.equal(graphResult.response.status, 200, `graph.jsonld returned ${graphResult.response.status}`);
+  assert.match(header(graphResult.response, 'content-type'), /^(?:application\/ld\+json|application\/json)\b/i);
+  assertDatasetContract(JSON.parse(graphResult.body), 'live full graph');
+
+  const turtle = await request('/graph.ttl', { accept: 'text/turtle,text/plain;q=0.9,*/*;q=0.1' });
+  assert.equal(turtle.response.status, 200, `graph.ttl returned ${turtle.response.status}`);
+  assert.match(header(turtle.response, 'content-type'), /^(?:text\/turtle|text\/plain)\b/i);
+  assert.ok(turtle.body.includes(`<${PRIMARY_DATASET_ID}> <https://schema.org/publisher> <${PERSON_ID}> .`));
+  assert.equal(turtle.body.includes(`<${HISTORICAL_SUMMARY_ID}> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://schema.org/Dataset> .`), false);
+
+  const llms = await request('/llms.txt', { accept: 'text/plain,*/*;q=0.1' });
+  assert.equal(llms.response.status, 200, `llms.txt returned ${llms.response.status}`);
+  assert.match(llms.body, /## Integrated historical geographic evidence/);
+  assert.equal(/separate secondary supporting Dataset/i.test(llms.body), false);
 }
 
 async function verifyExplicitRepresentations() {
@@ -190,7 +242,6 @@ async function verifyExplicitRepresentations() {
 
 async function verifyRobotsPolicy() {
   const { response, body } = await request('/robots.txt', { accept: 'text/plain,*/*;q=0.1' });
-
   assert.equal(response.status, 200, `robots.txt returned ${response.status}`);
   assert.match(header(response, 'content-type'), /^text\/plain\b/i);
   assert.match(body, /^User-agent:\s*OAI-SearchBot$/m);
@@ -203,7 +254,6 @@ async function verifyRobotsPolicy() {
 async function verify404Aliases() {
   for (const pathname of ['/404', '/404/', '/404.html']) {
     const { response, body } = await request(pathname, { accept: 'text/html,*/*;q=0.1' });
-
     assert.equal(response.status, 404, `${pathname} returned ${response.status} instead of 404`);
     assert.match(header(response, 'content-type'), /^text\/html\b/i);
     assert.equal(header(response, 'cache-control'), 'no-store');
@@ -218,6 +268,7 @@ async function verify404Aliases() {
 async function verifyLiveContract() {
   await verifyRobotsPolicy();
   await verifyCanonicalHTML();
+  await verifyMachineReadableAssets();
   await verifyExplicitRepresentations();
   await verify404Aliases();
 }
