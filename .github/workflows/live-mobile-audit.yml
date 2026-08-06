@@ -1,0 +1,88 @@
+name: Live Mobile Audit
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse-live:
+    if: github.head_ref == 'refactor/minimal-mobile-source'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Capture real compressed response headers
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://www.ghezelbaash.ir/?__mobile_audit=$(date +%s)"
+          curl --compressed --http2 -sS -D live-headers.txt -o live.html \
+            -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "$URL"
+          wc -c live.html > live-size.txt
+          grep -Ei '^(HTTP/|content-type:|content-encoding:|content-length:|cache-control:|cf-cache-status:|server-timing:)' live-headers.txt || true
+          cat live-size.txt
+      - name: Run canonical mobile and desktop Lighthouse
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' '{"Cache-Control":"no-cache","Pragma":"no-cache"}' > extra-headers.json
+          URL="https://www.ghezelbaash.ir/?__mobile_audit=$(date +%s)"
+          mkdir -p live-lighthouse
+          for run in 1 2; do
+            npx --yes lighthouse "$URL&run=$run" \
+              --only-categories=performance \
+              --extra-headers=extra-headers.json \
+              --output=json \
+              --output-path="live-lighthouse/mobile-${run}.json" \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --quiet
+          done
+          npx --yes lighthouse "$URL&desktop=1" \
+            --preset=desktop \
+            --only-categories=performance \
+            --extra-headers=extra-headers.json \
+            --output=json \
+            --output-path="live-lighthouse/desktop.json" \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+            --quiet
+      - name: Extract live diagnostics
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const output = [];
+          for (const name of fs.readdirSync('live-lighthouse').filter(x => x.endsWith('.json')).sort()) {
+            const lhr = JSON.parse(fs.readFileSync(path.join('live-lighthouse', name), 'utf8'));
+            const a = lhr.audits;
+            const request = a['network-requests']?.details?.items?.find(x => x.resourceType === 'Document');
+            const lcp = a['lcp-breakdown-insight']?.details?.items?.find(x => x.type === 'node');
+            output.push({
+              name,
+              performance: lhr.categories.performance.score * 100,
+              fcp: a['first-contentful-paint']?.numericValue,
+              lcp: a['largest-contentful-paint']?.numericValue,
+              tbt: a['total-blocking-time']?.numericValue,
+              cls: a['cumulative-layout-shift']?.numericValue,
+              mainThread: a['mainthread-work-breakdown']?.numericValue,
+              documentTransfer: request?.transferSize,
+              documentResource: request?.resourceSize,
+              lcpSelector: lcp?.selector,
+              lcpLabel: lcp?.nodeLabel,
+            });
+          }
+          fs.writeFileSync('live-lighthouse/summary.json', JSON.stringify(output, null, 2));
+          fs.copyFileSync('live-headers.txt', 'live-lighthouse/live-headers.txt');
+          fs.copyFileSync('live-size.txt', 'live-lighthouse/live-size.txt');
+          console.log(JSON.stringify(output, null, 2));
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: canonical-live-mobile-audit
+          path: live-lighthouse/
+          retention-days: 1
