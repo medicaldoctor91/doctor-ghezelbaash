@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+.wrangler-validation/
+
+# Deterministic build products generated from public/graph.jsonld
+src/data/semantic/head-graph.min.jsonld
+public/graph.ttl
