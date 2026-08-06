@@ -1,0 +1,208 @@
+name: Apply Minimal Cleanup
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.head_ref == 'refactor/minimal-mobile-source'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refactor/minimal-mobile-source
+      - name: Apply one-source cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          python <<'PY'
+          from pathlib import Path
+
+          def split_astro(text):
+              if not text.startswith('---\n'):
+                  raise RuntimeError('Astro frontmatter missing')
+              end = text.index('\n---\n', 4)
+              return text[4:end], text[end + 5:]
+
+          base_path = Path('src/layouts/BaseLayout.astro')
+          head_path = Path('src/components/DocumentHead.astro')
+          base_front, base_body = split_astro(base_path.read_text())
+          head_front, head_body = split_astro(head_path.read_text())
+          base_front = base_front.replace("import '../styles/fragment-navigation.css';\n", '')
+          base_front = base_front.replace("import DocumentHead from '../components/DocumentHead.astro';\n", '')
+          extra = head_front[head_front.index('const portraitAlt'):]
+          merged_front = base_front.rstrip() + '\n\n' + extra.rstrip() + '\n'
+          start = base_body.index('    <DocumentHead\n')
+          end = base_body.index('    />\n', start) + len('    />\n')
+          indented_head = '\n'.join(('    ' + line if line else '') for line in head_body.rstrip().splitlines()) + '\n'
+          base_path.write_text('---\n' + merged_front + '---\n' + base_body[:start] + indented_head + base_body[end:])
+
+          global_path = Path('src/styles/global.css')
+          fragment_path = Path('src/styles/fragment-navigation.css')
+          global_path.write_text(global_path.read_text().rstrip() + '\n\n' + fragment_path.read_text().strip() + '\n')
+
+          Path('astro.config.mjs').write_text("""import { defineConfig } from 'astro/config';
+
+          export default defineConfig({
+            site: 'https://www.ghezelbaash.ir',
+            output: 'static',
+            trailingSlash: 'always',
+            compressHTML: true,
+            build: {
+              format: 'directory',
+              inlineStylesheets: 'never',
+            },
+            vite: {
+              build: {
+                sourcemap: false,
+              },
+            },
+          });
+          """.replace('\n          ', '\n').lstrip())
+
+          dataset_path = Path('tests/dataset-entity.test.mjs')
+          dataset = dataset_path.read_text().rstrip()
+          visible = Path('tests/visible-dataset-copy.test.mjs').read_text()
+          visible_tests = visible[visible.index("test('visible page"):].strip()
+          dataset = dataset.replace("readFile('src/components/DocumentHead.astro', 'utf8')", "readFile('src/layouts/BaseLayout.astro', 'utf8')")
+          if "const pagePath = 'src/pages/index.md';" not in dataset:
+              dataset = dataset.replace("const files = {\n", "const pagePath = 'src/pages/index.md';\nconst llmsPath = 'public/llms.txt';\n\nconst files = {\n")
+          dataset_path.write_text(dataset + '\n\n' + visible_tests + '\n')
+
+          Path('public/_headers').write_text(r'''/*
+            X-Content-Type-Options: nosniff
+            X-Frame-Options: DENY
+            Referrer-Policy: strict-origin-when-cross-origin
+            Permissions-Policy: camera=(), geolocation=(), microphone=(), payment=(), usb=()
+            Strict-Transport-Security: max-age=31536000
+            Cross-Origin-Opener-Policy: same-origin
+            X-Permitted-Cross-Domain-Policies: none
+            X-XSS-Protection: 0
+            Content-Security-Policy: default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'none'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data:; media-src 'self'; font-src 'self'; connect-src 'self'; manifest-src 'self'; worker-src 'none'; frame-src 'none'; upgrade-insecure-requests
+
+          https://doctor-ghezelbaash.pages.dev/*
+            X-Robots-Tag: noindex
+
+          https://:version.doctor-ghezelbaash.pages.dev/*
+            X-Robots-Tag: noindex
+
+          /
+            Content-Type: text/html; charset=utf-8
+            Content-Language: fa-IR
+            Cache-Control: public, max-age=300, stale-while-revalidate=60, stale-if-error=86400
+            Content-Location: /
+            Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=reference
+            X-Robots-Tag: all
+            Vary: Accept-Encoding
+            Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/graph.ttl>; rel="describedby"; type="text/turtle", <https://www.ghezelbaash.ir/llms.txt>; rel="describedby"; type="text/plain", <https://www.ghezelbaash.ir/index.md>; rel="alternate"; type="text/markdown", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="author", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
+
+          /404.html
+            Content-Type: text/html; charset=utf-8
+            X-Robots-Tag: noindex, follow
+            Cache-Control: no-store
+
+          /robots.txt
+            Content-Type: text/plain; charset=utf-8
+            X-Robots-Tag: noindex
+            Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=600
+
+          /sitemap.xml
+            Content-Type: application/xml; charset=utf-8
+            X-Robots-Tag: noindex
+            Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=600
+
+          /index.md
+            Content-Type: text/markdown; charset=utf-8
+            Content-Language: fa-IR
+            X-Robots-Tag: noindex, follow
+            Link: <https://www.ghezelbaash.ir/>; rel="canonical"
+            Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=600
+            Access-Control-Allow-Origin: *
+            Cross-Origin-Resource-Policy: cross-origin
+
+          /graph.jsonld
+            Content-Type: application/ld+json; charset=utf-8
+            X-Robots-Tag: index, follow, max-snippet:-1
+            Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=600
+            Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.ttl>; rel="alternate"; type="text/turtle", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
+            Access-Control-Allow-Origin: *
+            Cross-Origin-Resource-Policy: cross-origin
+
+          /graph.ttl
+            Content-Type: text/turtle; charset=utf-8
+            X-Robots-Tag: index, follow, max-snippet:-1
+            Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=600
+            Link: <https://www.ghezelbaash.ir/graph.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="alternate"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://creativecommons.org/licenses/by/4.0/>; rel="license"
+            Access-Control-Allow-Origin: *
+            Cross-Origin-Resource-Policy: cross-origin
+
+          /llms.txt
+            Content-Type: text/plain; charset=utf-8
+            Content-Language: en
+            X-Robots-Tag: index, follow, max-snippet:-1
+            Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=600
+            Link: <https://www.ghezelbaash.ir/llms.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
+            Access-Control-Allow-Origin: *
+            Cross-Origin-Resource-Policy: cross-origin
+
+          /llms-full.txt
+            Content-Type: text/plain; charset=utf-8
+            Content-Language: fa-IR
+            X-Robots-Tag: noindex, follow
+            Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=600
+            Link: <https://www.ghezelbaash.ir/>; rel="canonical"
+            Access-Control-Allow-Origin: *
+            Cross-Origin-Resource-Policy: cross-origin
+
+          /*.vcf
+            Content-Type: text/vcard; charset=utf-8
+            Content-Language: fa-IR
+            X-Robots-Tag: noindex, follow
+            Cache-Control: public, max-age=3600, s-maxage=86400, stale-while-revalidate=600
+            Access-Control-Allow-Origin: *
+            Cross-Origin-Resource-Policy: cross-origin
+
+          /site.webmanifest
+            Content-Type: application/manifest+json; charset=utf-8
+            X-Robots-Tag: noindex
+            Cache-Control: public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400
+
+          /browserconfig.xml
+            Content-Type: application/xml; charset=utf-8
+            X-Robots-Tag: noindex
+            Cache-Control: public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400
+
+          /favicon.svg
+            Content-Type: image/svg+xml
+            Cache-Control: public, max-age=604800, s-maxage=31536000, immutable
+
+          /fonts/*
+            Cache-Control: public, max-age=604800, s-maxage=31536000, immutable
+            Access-Control-Allow-Origin: *
+
+          /media/*
+            Cache-Control: public, max-age=604800, s-maxage=31536000, immutable
+            Access-Control-Allow-Origin: *
+            Cross-Origin-Resource-Policy: cross-origin
+          '''.replace('\n          ', '\n').lstrip())
+
+          for pathname in [
+              'src/components/DocumentHead.astro',
+              'src/integrations/assert-built-html.mjs',
+              'src/styles/fragment-navigation.css',
+              'tests/pipeline-contract.test.mjs',
+              'tests/visible-dataset-copy.test.mjs',
+              '.github/workflows/apply-minimal-cleanup.yml',
+          ]:
+              Path(pathname).unlink(missing_ok=True)
+          PY
+          git diff --check
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "refactor: remove redundant source layers"
+          git push origin HEAD:refactor/minimal-mobile-source
