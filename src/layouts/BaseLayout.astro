@@ -1,8 +1,6 @@
 ---
 import '../styles/global.css';
-import '../styles/fragment-navigation.css';
 import headGraph from '../data/semantic/head-graph.min.jsonld?raw';
-import DocumentHead from '../components/DocumentHead.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
 
 interface Frontmatter {
@@ -31,19 +29,112 @@ const lang = frontmatter.lang ?? 'fa-IR';
 const dir = frontmatter.dir ?? 'rtl';
 const robots = frontmatter.robots ?? 'index, follow';
 const includeHeadGraph = includeHeadGraphProp ?? !/(?:^|,)\s*noindex\b/i.test(robots);
+
+const portraitAlt = 'دکتر سعید قزلباش، پزشک ایرانی در محیط بالینی کرمانشاه';
+const physicianIdentityLinks = [
+  ['https://www.wikidata.org/entity/Q140287622', 'Wikidata — Saeed Ghezelbash'],
+  ['https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash', 'Wikimedia Commons — Saeed Ghezelbash'],
+  ['https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e', 'Iran Medical Council — registration 167430'],
+  ['https://orcid.org/0009-0001-9346-8475', 'ORCID — 0009-0001-9346-8475'],
+  ['https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/', 'NCBI — public bibliography'],
+  ['https://openalex.org/A5064828898', 'OpenAlex — A5064828898'],
+  ['https://www.semanticscholar.org/author/-/3786699', 'Semantic Scholar — author 3786699'],
+  ['https://scholar.google.com/citations?user=BcWBirUAAAAJ', 'Google Scholar — BcWBirUAAAAJ'],
+  ['https://github.com/medicaldoctor91', 'GitHub — medicaldoctor91'],
+  ['https://huggingface.co/Ghezelbaash', 'Hugging Face — Ghezelbaash'],
+  ['https://www.linkedin.com/in/saeed-ghezelbash-93310a96/', 'LinkedIn — Saeed Ghezelbash'],
+  ['https://www.instagram.com/doctor.ghezelbaash/', 'Instagram — doctor.ghezelbaash'],
+] as const;
+const clinicIdentityLinks = [
+  ['https://www.wikidata.org/entity/Q140288589', 'Wikidata — Dr. Saeed Ghezelbash Aesthetic Clinic'],
+  ['https://www.google.com/maps?cid=12350483144643112463', 'Google Maps — clinic CID 12350483144643112463'],
+  ['https://www.openstreetmap.org/node/13530287096', 'OpenStreetMap — clinic node 13530287096'],
+  ['https://huggingface.co/doctor-ghezelbaash', 'Hugging Face — clinic organization'],
+] as const;
+const projectIdentityLinks = [
+  ['https://www.wikidata.org/entity/Q140304972', 'Wikidata — structured-data project'],
+  ['https://github.com/medicaldoctor91/doctor-ghezelbaash', 'GitHub — canonical project repository'],
+  ['https://doi.org/10.5281/zenodo.18765169', 'Zenodo DOI — project release 1.0.0'],
+  ['https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data', 'Hugging Face — entity dataset'],
+] as const;
+const knowledgeGraphIdentifierLinks = [
+  ['https://www.google.com/search?kgmid=/g/11nqdfk76c', 'Google Knowledge Graph ID — physician /g/11nqdfk76c'],
+  ['https://www.google.com/search?kgmid=/g/11r3rzdtb3', 'Google Knowledge Graph ID — clinic /g/11r3rzdtb3'],
+] as const;
 ---
 <!doctype html>
 <html lang={lang} dir={dir}>
   <head>
     <meta charset="utf-8" />
-    <DocumentHead
-      title={title}
-      description={description}
-      robots={robots}
-      canonicalURL={canonicalURL}
-      ogImageURL={ogImageURL}
-      preloadHero={preloadHero}
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <meta name="google-site-verification" content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" />
+    <meta name="author" content="دکتر سعید قزلباش" />
+    <meta name="application-name" content="دکتر سعید قزلباش" />
+    <meta name="apple-mobile-web-app-title" content="دکتر قزلباش" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#075244" />
+    <meta name="msapplication-TileColor" content="#075244" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    <link rel="canonical" href={canonicalURL} />
+    {preloadHero && (
+      <link
+        rel="preload"
+        as="image"
+        href="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp"
+        type="image/webp"
+        imagesrcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-960.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.webp 1600w"
+        imagesizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px"
+        fetchpriority="high"
+      />
+    )}
+    <link rel="describedby" href="https://www.ghezelbaash.ir/graph.jsonld" type="application/ld+json" title="Canonical full knowledge graph — JSON-LD" />
+    <link rel="describedby" href="https://www.ghezelbaash.ir/graph.ttl" type="text/turtle" title="Canonical full knowledge graph — Turtle" />
+    <link rel="describedby" href="https://www.ghezelbaash.ir/llms.txt" type="text/plain" title="Machine-readable site and entity guide" />
+    <link rel="related" type="text/vcard" href="https://www.ghezelbaash.ir/doctor.vcf" title="Canonical physician contact projection — vCard 4.0" />
+    <link rel="related" type="text/vcard" href="https://www.ghezelbaash.ir/clinic.vcf" title="Canonical clinic contact projection — vCard 4.0" />
+    <link rel="alternate" type="text/markdown" href="https://www.ghezelbaash.ir/index.md" title="Markdown projection of the canonical page" />
+    <link rel="alternate" type="text/plain" href="https://www.ghezelbaash.ir/llms-full.txt" title="Full text projection of the canonical page" />
+    <link rel="author" href="https://www.ghezelbaash.ir/#saeed-ghezelbash" />
+    <link rel="about" href="https://www.ghezelbaash.ir/#saeed-ghezelbash" />
+    <link rel="about" href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" />
+    {physicianIdentityLinks.map(([href, linkTitle]) => <link rel="me" href={href} title={linkTitle} />)}
+    {clinicIdentityLinks.map(([href, linkTitle]) => <link rel="about" href={href} title={linkTitle} />)}
+    {projectIdentityLinks.map(([href, linkTitle]) => <link rel="related" href={href} title={linkTitle} />)}
+    {knowledgeGraphIdentifierLinks.map(([href, linkTitle]) => <link rel="related" href={href} title={linkTitle} />)}
+    <link rel="license" href="https://creativecommons.org/licenses/by/4.0/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-48x48.png" sizes="48x48" type="image/png" />
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png" />
+    <link rel="shortcut icon" href="/favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#075244" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fa_IR" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="دکتر سعید قزلباش" />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:secure_url" content={ogImageURL} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={portraitAlt} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@Qezelbaash" />
+    <meta name="twitter:creator" content="@Qezelbaash" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:image" content={ogImageURL} />
+    <meta name="twitter:image:alt" content={portraitAlt} />
     <link
       rel="preload"
       href="/fonts/vazirmatn-nl-wght.woff2"

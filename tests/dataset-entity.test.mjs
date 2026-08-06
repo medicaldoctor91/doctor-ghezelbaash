@@ -16,6 +16,9 @@ const HISTORICAL_DISTRIBUTION_IDS = [
   `${HOME}#historical-patient-origin-summary-json`,
 ];
 
+const pagePath = 'src/pages/index.md';
+const llmsPath = 'public/llms.txt';
+
 const files = {
   head: 'src/data/semantic/head-graph.min.jsonld',
   full: 'public/graph.jsonld',
@@ -162,7 +165,7 @@ test('retired historical distribution stays removed and redirected', async () =>
     readFile('public/_redirects', 'utf8'),
     readFile('public/_headers', 'utf8'),
     readFile('public/sitemap.xml', 'utf8'),
-    readFile('src/components/DocumentHead.astro', 'utf8'),
+    readFile('src/layouts/BaseLayout.astro', 'utf8'),
     readFile('public/llms.txt', 'utf8'),
   ]);
 
@@ -171,4 +174,23 @@ test('retired historical distribution stays removed and redirected', async () =>
     assert.equal(source.includes(HISTORICAL_DISTRIBUTION_URL), false, `${label} must not advertise retired distribution`);
   }
   assert.ok(llms.includes('## Integrated historical geographic evidence'));
+});
+
+test('visible page states physician ownership and does not call the clinic the Hugging Face publisher', async () => {
+  const page = await readFile(pagePath, 'utf8');
+  assert.ok(page.includes('id="canonical-dataset-ownership"'));
+  assert.ok(page.includes('یک Dataset کانونیکال واحد'));
+  assert.ok(page.includes('Saeed Ghezelbash is the creator, publisher, owner, copyright holder and maintainer'));
+  assert.equal(page.includes('Hugging Face publisher'), false);
+});
+
+test('llms.txt exposes one Dataset with synchronized website, GitHub, Hugging Face and Zenodo distributions', async () => {
+  const llms = await readFile(llmsPath, 'utf8');
+  assert.ok(llms.includes('Dataset name: Dr. Saeed Ghezelbash Entity Data'));
+  assert.ok(llms.includes('Version: 1.1.0'));
+  assert.ok(llms.includes('Creator, publisher, owner, copyright holder and maintainer'));
+  assert.ok(llms.includes('one canonical physician-owned Dataset'));
+  assert.ok(llms.includes('Hugging Face Dataset identity and distribution endpoint'));
+  assert.ok(llms.includes('Zenodo archival identity and distribution endpoint'));
+  assert.equal(llms.includes('Hugging Face publisher'), false);
 });
