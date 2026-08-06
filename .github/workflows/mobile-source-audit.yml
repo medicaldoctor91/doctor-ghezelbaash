@@ -21,6 +21,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tests/dataset-entity.test.mjs')
+          path.write_text(path.read_text().rstrip() + '\n')
+          PY
           git diff --check
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
