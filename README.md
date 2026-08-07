@@ -1,3 +1,0 @@
-# doctor-ghezelbaash
-
-Repository cleaned.
