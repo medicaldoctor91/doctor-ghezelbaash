@@ -1,0 +1,92 @@
+name: Extract V5 source
+
+on:
+  push:
+    paths:
+      - '.github/workflows/unzip-v5-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Safely extract and verify exact GitHub ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ZIP='doctor-ghezelbaash-max-power-source-v5-production-clean-2026-08-07 2.zip'
+          test -f "$ZIP"
+
+          mapfile -t entries < <(zipinfo -1 "$ZIP")
+          if (( ${#entries[@]} == 0 )); then
+            echo 'Archive is empty.' >&2
+            exit 1
+          fi
+
+          file_count=0
+          for entry in "${entries[@]}"; do
+            case "$entry" in
+              /*|../*|*/../*|*/..)
+                echo "Unsafe archive path: $entry" >&2
+                exit 1
+                ;;
+            esac
+
+            if [[ "$entry" != */ ]]; then
+              ((file_count+=1))
+              if [[ -e "$entry" ]]; then
+                echo "Refusing to overwrite existing path: $entry" >&2
+                exit 1
+              fi
+            fi
+          done
+
+          echo "Archive entries: ${#entries[@]}"
+          echo "Archive files: $file_count"
+
+          unzip -q "$ZIP" -d .
+
+          verified=0
+          for entry in "${entries[@]}"; do
+            [[ "$entry" == */ ]] && continue
+            test -f "$entry"
+            archive_sha="$(unzip -p "$ZIP" "$entry" | sha256sum | awk '{print $1}')"
+            extracted_sha="$(sha256sum "$entry" | awk '{print $1}')"
+            if [[ "$archive_sha" != "$extracted_sha" ]]; then
+              echo "SHA-256 mismatch after extraction: $entry" >&2
+              exit 1
+            fi
+            ((verified+=1))
+          done
+
+          if (( verified != file_count )); then
+            echo "Verified file count mismatch: expected $file_count, got $verified" >&2
+            exit 1
+          fi
+
+          test -f "$ZIP"
+          echo "Verified all $verified extracted files; original ZIP preserved."
+
+      - name: Commit extracted source and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/unzip-v5-source.yml
+          rmdir .github/workflows 2>/dev/null || true
+          rmdir .github 2>/dev/null || true
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git status --short
+          git diff --cached --quiet && { echo 'Nothing to commit.'; exit 0; }
+          git commit -m 'Extract V5 production source from uploaded ZIP'
+          git push origin HEAD:main
