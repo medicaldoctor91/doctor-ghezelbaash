@@ -1,0 +1,166 @@
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { readFile, access, readdir } from 'node:fs/promises';
+const root=process.cwd(),data=path.join(root,'src/data');
+const inv=JSON.parse(await readFile(path.join(data,'release-invariants.json'),'utf8'));
+const release=JSON.parse(await readFile(path.join(data,'release.json'),'utf8'));
+const fail=m=>{throw new Error(m)};
+const sha=x=>createHash('sha256').update(x).digest('hex');
+async function walk(d){let out=[];for(const e of await readdir(d,{withFileTypes:true})){const p=path.join(d,e.name);e.isDirectory()?out.push(...await walk(p)):out.push(p)}return out;}
+const required=['src/content/home.md','src/content-source/000-frontmatter.md','src/layouts/BaseLayout.astro','src/components/DocumentHead.astro','src/components/FloatingActionDock.astro','src/components/GuideNavigator.astro','src/data/semantic/knowledge-graph.jsonld','src/data/semantic/knowledge-graph.ttl','src/data/semantic/rdf-lock.json','src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/support-profile.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/projections/provenance.jsonld','src/styles/global.css','scripts/generate-projections.mjs','scripts/generate-rdf.py','scripts/finalize-dist.mjs','scripts/validate-dist.mjs','src/data/render-calibration.json'];
+for(const f of required) await access(path.join(root,f));
+const graphText=await readFile(path.join(data,'semantic/knowledge-graph.jsonld'),'utf8'),graph=JSON.parse(graphText),content=await readFile(path.join(root,'src/content/home.md'),'utf8'),pkg=JSON.parse(await readFile(path.join(root,'package.json'),'utf8')),robots=await readFile(path.join(root,'public/robots.txt'),'utf8'),llms=await readFile(path.join(data,'projections/llms.txt'),'utf8'),markdown=await readFile(path.join(data,'projections/index.md'),'utf8'),llmsFull=await readFile(path.join(data,'projections/llms-full.txt'),'utf8'),headersTemplate=await readFile(path.join(data,'templates/headers.template'),'utf8'),css=await readFile(path.join(root,'src/styles/global.css'),'utf8'),guide=await readFile(path.join(root,'src/components/GuideNavigator.astro'),'utf8'),headRaw=await readFile(path.join(data,'semantic/head-graph.json'),'utf8'),head=JSON.parse(headRaw),rdfLock=JSON.parse(await readFile(path.join(data,'semantic/rdf-lock.json'),'utf8'));
+const supportRaw=await readFile(path.join(data,'semantic/support-graph.json'),'utf8'),support=JSON.parse(supportRaw),supportProfile=JSON.parse(await readFile(path.join(data,'semantic/support-profile.json'),'utf8'));
+if(pkg.version!==inv.release||release.release!==inv.release) fail('Release mismatch');
+if(!pkg.engines.node.includes('24.18.0')) fail('Node 24.18.0 pin missing');
+for(const x of [...inv.aliases,inv.postalCode,inv.placeId,inv.googleKg,inv.clinicKg]) if(!graphText.includes(x)&&!content.includes(x)) fail(`Missing canonical truth ${x}`);
+const stalePlace=['ChIJBT','OYDOTt-j8RD-7mAPy6Zas'].join('');
+if(graphText.includes(stalePlace)||content.includes(stalePlace)) fail('Stale Place ID in semantic/human source');
+if(!content.includes('جمعه تعطیل')) fail('Owner-confirmed Friday closure missing from visible content');
+if(release.clinic.postalCode!==inv.postalCode||!graphText.includes(inv.postalCode)) fail('Owner-confirmed postal code missing from release/graph');
+if(release.clinic.priceRange!==inv.priceRange) fail('Owner-confirmed clinic priceRange drift');
+if(!robots.includes('Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full')) fail('robots Content-Signal missing');
+for(const bot of ['Google-Extended','Google-CloudVertexBot','GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-SearchBot','Claude-User','PerplexityBot','Perplexity-User','Applebot','Applebot-Extended','DuckAssistBot','Cloudflare-AI-Search']) if(!robots.includes(`User-agent: ${bot}\nAllow: /`)) fail(`AI/search crawler explicit allow missing: ${bot}`);
+if(headersTemplate.includes('/.well-known/security.txt')) fail('Dead security.txt header rule must not ship');
+if(!/\/graph\.jsonld[\s\S]*X-Robots-Tag: index, follow, max-snippet:-1/.test(headersTemplate)) fail('Aggressive machine indexing rule missing');
+if(!/\/\n\s+Content-Type: text\/html[\s\S]{0,250}X-Robots-Tag: index, follow/.test(headersTemplate)) fail('Canonical HTML indexing rule missing');
+
+// Canonical modular source must deterministically reproduce home.md.
+const srcDir=path.join(root,'src/content-source');const sectionNames=(await readdir(srcDir)).filter(x=>/\.(?:md|html)$/.test(x)).sort();
+if(sectionNames.length<100) fail('Modular source is not sufficiently sectioned');
+let assembled='';for(const n of sectionNames) assembled+=await readFile(path.join(srcDir,n),'utf8');
+if(assembled!==content) fail('Generated home.md drifted from modular canonical source');
+// Render calibration is a measured, hashed release artifact.
+const chunkHeightBytes=await readFile(path.join(root,'src/data/render-calibration.json')),chunkHeights=JSON.parse(chunkHeightBytes),calWidths=[360,390,430,768,1024,1440];
+const calBase=(chunkHeights['360']?.chunks||[]).map(x=>x.id);if(calBase.length!==inv.renderChunkCount||new Set(calBase).size!==inv.renderChunkCount) fail('Chunk calibration ID/count drift');
+for(const w of calWidths){const rows=chunkHeights[String(w)]?.chunks||[];if(rows.length!==inv.renderChunkCount||rows.some((x,i)=>x.id!==calBase[i]||!Number.isFinite(Number(x.h))||Number(x.h)<=0)) fail(`Invalid chunk calibration at ${w}px`)}
+const calibrationSha=sha(chunkHeightBytes);if(!css.includes(`/*V5_CHUNK_CALIBRATION_SHA256:${calibrationSha}*/`)) fail('Measured render calibration hash drifted from CSS');
+if((css.match(/#rc\d+\{--cis:/g)||[]).length!==inv.renderChunkCount*7) fail('Render calibration rule count drift');
+if(!css.includes('/*V5_CHUNK_INTRINSIC_START*/')||!css.includes('/*V5_CHUNK_INTRINSIC_END*/')) fail('Render calibration boundaries missing');
+const retrievalHeadingAliases=[...content.matchAll(/<h[2-4]\b[^>]*data-retrieval-alias=["']([^"']+)["'][^>]*>/gi)].map(m=>m[1]);
+if(retrievalHeadingAliases.length!==inv.exactBestDoctorHeadingCount) fail(`Clinical retrieval-alias heading contract drift ${retrievalHeadingAliases.length}`);
+const exactBestDoctorH4=[...content.matchAll(/<h4\b[^>]*data-retrieval-alias=["'][^"']+["'][^>]*>\s*<a\b[^>]*href=["']https:\/\/www\.instagram\.com\/doctor\.ghezelbaash\/["'][^>]*rel=["']external me noopener["'][^>]*>\s*([^<]*بهترین دکتر[^<]*)<\/a>\s*<\/h4>/gi)];
+if(exactBestDoctorH4.length!==inv.exactBestDoctorHeadingCount) fail(`Exact best-doctor H4 restore drift ${exactBestDoctorH4.length}`);
+const instagramHeadingLinks=exactBestDoctorH4.length;if(instagramHeadingLinks!==inv.instagramHeadingLinkCount) fail(`Instagram heading-link restore drift ${instagramHeadingLinks}`);
+if(!content.includes('id="best-doctor-query-matrix"')||!content.includes('id="verified-physician-identity-core"')) fail('V5 exact-query matrix / visible identity core missing');
+if(!content.includes('id="medical-content-governance"')||!content.includes('اطلاعات حساس پزشکی')||!content.includes('جایگزین معاینه، تشخیص فردی یا ارزیابی اورژانسی نیست')) fail('Visible medical governance/trust layer missing');
+
+const flat=v=>Array.isArray(v)?v:[v].filter(Boolean), refs=v=>flat(v).map(x=>x?.['@id']).filter(Boolean), text=v=>flat(v).map(x=>x?.['@value']??x).join(' | ');
+const durationSeconds=v=>{const m=String(v??'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/);return m?(Number(m[1]||0)*3600+Number(m[2]||0)*60+Number(m[3]||0)):NaN};
+const byId=new Map(graph['@graph'].filter(n=>n['@id']).map(n=>[n['@id'],n]));
+const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),webpage=byId.get(`${release.canonicalUrl}#webpage`),website=byId.get(`${release.canonicalUrl}#website`);
+if(!person||!clinic||!webpage||!website) fail('Core entity missing');
+if(clinic.priceRange!==inv.priceRange) fail('Clinic priceRange missing from canonical graph');
+const fridayId=`${release.canonicalUrl}#clinic-friday-closed`,friday=byId.get(fridayId);if(!friday||!flat(friday['@type']).includes('OpeningHoursSpecification')||!text(friday.dayOfWeek).includes('Friday')||friday.opens!=='00:00'||friday.closes!=='00:00'||!refs(clinic.openingHoursSpecification).includes(fridayId)) fail('Owner-confirmed Friday closure is not modeled as OpeningHoursSpecification 00:00-00:00');
+const alt=flat(person.alternateName).map(x=>x?.['@value']??x),expected=[...release.primaryEntity.officialAliases,...(release.primaryEntity.reconciliationAliases||[])];
+if(expected.some(x=>!alt.includes(x))||alt.some(x=>!expected.includes(x))) fail('Person.alternateName does not match official + reconciliation tiers');
+for(const x of release.primaryEntity.retrievalVariants) if(alt.includes(x)) fail(`Retrieval-only variant leaked into Person.alternateName: ${x}`);
+if(text(person.familyName).includes('Ghezelbaash')||!text(person.familyName).includes('Ghezelbash')) fail('Canonical family name drift');
+if(!text(website.name).includes('Dr. Saeed Ghezelbash')||text(website.name).includes('Dr. Saeed Ghezelbaash')) fail('WebSite English name drift');
+if(!String(webpage.name).startsWith('دکتر سعید قزلباش')) fail('WebPage name is not entity-first');
+if(!content.startsWith('---\ntitle: "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه"')) fail('Frontmatter title is not entity-first');
+if(content.includes('no later release version is asserted')) fail('Obsolete v1 current-release assertion remains in visible content');
+const fmDescription=(content.match(/^description:\s*"([^"]+)"/m)||[])[1];if(!fmDescription||String(webpage.description)!==fmDescription) fail('WebPage.description drifted from canonical meta description');
+const sourceDataPackage=JSON.parse(await readFile(path.join(data,'projections/datapackage.json'),'utf8')),sourceCroissant=JSON.parse(await readFile(path.join(data,'projections/croissant.json'),'utf8')),sourceDcat=await readFile(path.join(data,'projections/dcat.ttl'),'utf8'),sourceVoid=await readFile(path.join(data,'projections/void.ttl'),'utf8');
+if(sourceDataPackage.version!==inv.release||sourceCroissant.version!==inv.release||!sourceDcat.includes(`schema:version "${inv.release}"`)||!sourceVoid.includes(`void:triples ${inv.externalRdfTripleCount}`)) fail('Source descriptor release/triple metadata drift');
+for(const f of ['public/doctor.vcf','public/clinic.vcf']){const v=await readFile(path.join(root,f),'utf8'),u=v.replace(/\r?\n[ \t]/g,'');if(!u.includes(`X-ENTITY-VERSION:${inv.release}`)||!u.includes(`Entity Contact Projection ${inv.release}`)||!u.includes('REV:20260807T000000Z')||u.includes('ساختمانویستا')) fail(`vCard release/address drift: ${f}`);for(const m of u.matchAll(/https:\/\/www\.ghezelbaash\.ir\/(media\/[^\r\n;]+)/g)){const rel=m[1].split(/[?#]/)[0];if(!await access(path.join(root,'public',rel)).then(()=>true).catch(()=>false)) fail(`Broken first-party vCard media URL in ${f}: ${rel}`)}}
+for(const f of ['public/favicon.svg','public/safari-pinned-tab.svg','public/media/brand/doctor-ghezelbaash-symbol.fc1c78effd30.svg']){const v=await readFile(path.join(root,f),'utf8');if(!v.includes(`<entity:Version>${inv.release}</entity:Version>`)) fail(`Entity media release metadata drift: ${f}`)}
+const hasRef=(obj,key,id)=>refs(obj[key]).includes(id);
+if(!hasRef(person,'owns',release.clinic.id)||!hasRef(person,'practicesAt',release.clinic.id)||!hasRef(clinic,'owner',release.primaryEntity.id)||!hasRef(clinic,'founder',release.primaryEntity.id)) fail('Physician->clinic hierarchy broken');
+if(!hasRef(webpage,'mainEntity',release.primaryEntity.id)||!hasRef(webpage,'author',release.primaryEntity.id)||!hasRef(webpage,'publisher',release.primaryEntity.id)) fail('Physician not dominant WebPage entity');
+for(const id of [`${release.canonicalUrl}#action-contact-clinic`,`${release.canonicalUrl}#action-online-initial-consultation`,`${release.canonicalUrl}#action-view-clinic-map`,`${release.canonicalUrl}#action-follow-instagram`]) if(!refs(person.potentialAction).includes(id)||!refs(webpage.potentialAction).includes(id)) fail(`Action not connected to primary entity/page: ${id}`);
+if(!hasRef(clinic,'contactPoint',`${release.canonicalUrl}#online-consultation-contact-point`)) fail('Clinic contactPoint missing');
+const logo=byId.get(`${release.canonicalUrl}#image-doctor-ghezelbaash-clinic-logo`);if(flat(logo?.identifier).some(x=>/^Q\d+$/.test(String(x)))) fail('Person/Clinic QID incorrectly used as ImageObject identifier');
+if(webpage.primaryImageOfPage?.['@id']!==`${release.canonicalUrl}#image-saeed-ghezelbash-portrait-master`) fail('Canonical portrait chain broken');
+
+// Early graph: compact, connected, physician-first.
+if(Buffer.byteLength(headRaw)>inv.maxHeadGraphBytes) fail(`Head graph exceeds ${inv.maxHeadGraphBytes}`);
+const headIds=new Set(head['@graph'].map(n=>n['@id'])); const incoming=new Map([...headIds].map(x=>[x,0]));
+function scan(v,owner){if(Array.isArray(v))for(const x of v)scan(x,owner);else if(v&&typeof v==='object'){if(v['@id']&&headIds.has(v['@id'])&&v['@id']!==owner)incoming.set(v['@id'],incoming.get(v['@id'])+1);for(const x of Object.values(v))scan(x,owner)}}
+for(const n of head['@graph']) scan(n,n['@id']);
+const coreRoots=new Set([release.primaryEntity.id,`${release.canonicalUrl}#webpage`,`${release.canonicalUrl}#website`]);
+const orphan=[...incoming].filter(([id,c])=>c===0&&!coreRoots.has(id)).map(([id])=>id);if(orphan.length) fail(`Detached Head nodes: ${orphan.join(',')}`);
+const headPerson=head['@graph'].find(n=>n['@id']===release.primaryEntity.id);if((headPerson?.availableService||headPerson?.subjectOf)) fail('Long-tail Person edges leaked into Head');
+const headPage=head['@graph'].find(n=>n['@id']===`${release.canonicalUrl}#webpage`);if(headPage?.hasPart||headPage?.citation||headPage?.mentions) fail('Long-tail WebPage edges leaked into Head');
+if(Buffer.byteLength(supportRaw)>inv.maxSupportGraphBytes||supportProfile.maxBytes!==inv.maxSupportGraphBytes) fail(`Support Graph budget drift: ${Buffer.byteLength(supportRaw)}`);
+// Extreme-ceiling identity lane: Head keeps only strongest externally corroborated aliases/identity anchors.
+if((flat(headPerson?.sameAs)).length!==inv.headSameAsCount) fail(`Head sameAs count drift ${(flat(headPerson?.sameAs)).length}`);
+if((flat(headPerson?.alternateName)).length!==inv.headAlternateNameCount) fail(`Head alternateName count drift ${(flat(headPerson?.alternateName)).length}`);
+if(!headPage?.speakable) fail('Early speakable restoration missing');
+// Full graph closure: every named graph node must have an inbound relationship; redundant orphan nodes are forbidden.
+const fullIds=new Set(graph['@graph'].filter(n=>n['@id']).map(n=>n['@id'])),fullIncoming=new Map([...fullIds].map(id=>[id,0]));
+function scanFull(v,owner){if(Array.isArray(v))for(const x of v)scanFull(x,owner);else if(v&&typeof v==='object'){if(v['@id']&&fullIds.has(v['@id'])&&v['@id']!==owner)fullIncoming.set(v['@id'],fullIncoming.get(v['@id'])+1);for(const x of Object.values(v))scanFull(x,owner)}}
+for(const n of graph['@graph']) scanFull(n,n['@id']);
+const fullOrphans=[...fullIncoming].filter(([,c])=>c===0).map(([id])=>id);if(fullOrphans.length>inv.maxOrphanGraphNodes) fail(`Unjustified full-graph orphan nodes: ${fullOrphans.join(',')}`);
+if(graph['@graph'].length!==inv.fullGraphNodeCount) fail(`Full graph node-count invariant drift ${graph['@graph'].length}`);
+const supportClips=support['@graph'].filter(n=>flat(n['@type']).includes('Clip'));if(supportClips.length!==inv.inlineSemanticClipCount) fail(`Inline semantic Clip count mismatch ${supportClips.length}`);
+const eligibleSupportClips=supportClips.filter(c=>{const parent=byId.get(c.isPartOf?.['@id']);return parent&&durationSeconds(parent.duration)>=30});if(eligibleSupportClips.length!==inv.inlineEligibleClipCount) fail(`Inline Google-eligible Clip count mismatch ${eligibleSupportClips.length}`);
+const kurdishSupportClips=supportClips.filter(c=>String(c['@id']).includes('kurdish-patient-experience'));if(kurdishSupportClips.length!==3) fail(`Kurdish semantic Clip restoration drift ${kurdishSupportClips.length}`);
+if(support['@graph'].length!==inv.supportNodeTarget) fail(`Support node target drift ${support['@graph'].length}/${inv.supportNodeTarget}`);
+
+// RDF release lock: exact source+distribution bytes and declared triple count.
+const ttl=await readFile(path.join(data,'semantic/knowledge-graph.ttl'));
+if(rdfLock.release!==inv.release||rdfLock.jsonldSha256!==sha(Buffer.from(graphText))||rdfLock.ttlSha256!==sha(ttl)||rdfLock.triples!==inv.externalRdfTripleCount) fail('RDF lock mismatch');
+
+// Media: all metadata preserved but stale Place ID forbidden; fingerprints must equal bytes.
+const mediaFiles=await walk(path.join(root,'public/media'));let currentPlaceHits=0;
+for(const f of mediaFiles){const b=await readFile(f);if(b.includes(Buffer.from(stalePlace))) fail(`Stale Place ID in media metadata: ${path.relative(root,f)}`);if(b.includes(Buffer.from(inv.placeId))) currentPlaceHits++;const m=path.basename(f).match(/\.([0-9a-f]{12})\.[^.]+$/);if(!m) fail(`Media asset lacks fingerprint: ${path.relative(root,f)}`);const isSelfReferentialSvg=f.endsWith('.svg')&&b.includes(Buffer.from(path.basename(f)));if(isSelfReferentialSvg){if(!b.includes(Buffer.from(`https://www.ghezelbaash.ir/media/brand/${path.basename(f)}`))) fail(`Self-referential SVG URL mismatch: ${path.relative(root,f)}`)}else if(sha(b).slice(0,12)!==m[1]) fail(`Media fingerprint mismatch: ${path.relative(root,f)}`)}
+if(currentPlaceHits<20) fail(`Expected entity metadata Place ID in media; found ${currentPlaceHits}`);
+
+// Performance/UX architecture gates.
+if(css.includes(':has(:target)')) fail('Expensive :has(:target) remains on mega-page chunks');
+if(!css.includes('.render-chunk.is-target-chunk')) fail('Target chunk class strategy missing');
+if(!guide.includes("addEventListener('hashchange',syncTarget")||!guide.includes("e.key==='/'")) fail('Guide navigation progressive enhancement missing');
+if(!guide.includes("main h2[id],main h3[id],main h4[id]")||!guide.includes('data-entity-aliases')) fail('Guide Search does not cover H2-H4 plus entity aliases');
+if(!guide.includes('x.dataset.retrievalAlias')||!guide.includes("text+' '+headingAlias")) fail('Guide Search does not preserve clinical retrieval heading aliases');
+if(!content.includes('aria-keyshortcuts="/"')||!content.includes('aria-haspopup="dialog"')) fail('Accessible Guide search trigger metadata missing');
+const captionTracks=[...content.matchAll(/<track\b[^>]*kind=["']captions["'][^>]*src=["']([^"']+)["'][^>]*>/gi)].map(m=>m[1]);if(captionTracks.length!==inv.captionTrackTarget) fail(`Verified caption track count mismatch ${captionTracks.length}`);for(const u of captionTracks){if(!/\.captions\.fa\.[0-9a-f]{12}\.vtt$/.test(u))fail(`Caption track not fingerprinted/typed ${u}`);const b=await readFile(path.join(root,'public',u.slice(1)),'utf8');if(!b.startsWith('WEBVTT')||!b.includes('Verified transcription of burned-in Persian subtitles'))fail(`Caption provenance missing ${u}`)}for(const id of [`${release.canonicalUrl}#video-jalupro-vs-profhilo`,`${release.canonicalUrl}#video-subcision-technique`]){const v=byId.get(id);if(!v?.transcript||!v?.caption)fail(`Verified VideoObject transcript/caption missing ${id}`)}for(const id of [`${release.canonicalUrl}#video-thread-lift-workshop`,`${release.canonicalUrl}#video-kurdish-patient-experience`]){const v=byId.get(id);if(v?.transcript||v?.caption)fail(`Unverified transcript/caption fabricated ${id}`)}
+if(!css.includes('@media(prefers-contrast:more)')) fail('High-contrast UX enhancement missing');
+
+// Evidence/claim provenance and SHACL constitution are release artifacts, not decorative files.
+const evidenceRegistry=JSON.parse(await readFile(path.join(data,'evidence-registry.json'),'utf8'));
+const evidenceSnapshot=JSON.parse(await readFile(path.join(data,'evidence-snapshot.json'),'utf8'));
+const provenance=JSON.parse(await readFile(path.join(data,'projections/provenance.jsonld'),'utf8'));
+const shapes=await readFile(path.join(data,'semantic/shapes.ttl'),'utf8');
+const tierAIds=new Set((evidenceRegistry.evidence||[]).filter(x=>x.tier==='A').map(x=>x.id));
+if(tierAIds.size<8||evidenceSnapshot.release!==inv.release) fail('Evidence registry/snapshot release contract drift');
+const provNodes=provenance['@graph']||[],provPassages=provNodes.filter(n=>String(n['@id']||'').includes('provenance.jsonld#passage-')),provAnswers=provNodes.filter(n=>String(n['@id']||'').includes('provenance.jsonld#answer-'));
+const provenanceExpectedPassages=(llmsFull.match(/^\[PASSAGE\]$/gm)||[]).length;if(provPassages.length!==provenanceExpectedPassages||provAnswers.length!==125) fail(`Provenance coverage drift passages=${provPassages.length}/${provenanceExpectedPassages} answers=${provAnswers.length}/125`);
+const knownEvidence=new Set((evidenceRegistry.evidence||[]).map(x=>x.id));
+let claimPrimarySourceNodes=0;for(const n of [...provPassages,...provAnswers]){const digest=flat(n.identifier).find(x=>x?.propertyID==='SHA-256')?.value;if(!/^[0-9a-f]{64}$/.test(String(digest||'')))fail(`Provenance SHA-256 missing ${n['@id']}`);const derived=refs(n['prov:wasDerivedFrom']);if(!derived.length)fail(`Canonical source provenance missing ${n['@id']}`);const claimSources=refs(n['prov:hadPrimarySource']);for(const id of claimSources)if(!knownEvidence.has(id))fail(`Unknown claim evidence ${id} on ${n['@id']}`);if(claimSources.length)claimPrimarySourceNodes++;}
+if(claimPrimarySourceNodes<10)fail(`Explicit claim-evidence coverage unexpectedly sparse ${claimPrimarySourceNodes}`);
+for(const ev of evidenceRegistry.evidence||[]){if(!provNodes.some(n=>n['@id']===ev.id&&n.url===ev.url&&String(n.additionalType||'')===`EvidenceTier${ev.tier}`))fail(`Evidence node missing from provenance graph ${ev.id}`)}
+for(const token of ['sh:targetNode ex:saeed-ghezelbash','sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah','sh:targetNode ex:webpage','sh:hasValue "$$$$"']) if(!shapes.includes(token)) fail(`SHACL constitution invariant missing: ${token}`);
+
+// Machine projections must now be truly structured and consolidated.
+if(markdown===content||!markdown.startsWith('# دکتر سعید قزلباش')||(markdown.match(/^#{1,6} /gm)||[]).length<100) fail('index.md is not a true semantic Markdown projection');
+const passages=(llmsFull.match(/^\[PASSAGE\]$/gm)||[]).length,declaredPassages=Number((llmsFull.match(/^PASSAGE_COUNT:\s*(\d+)/m)||[])[1]);if(passages<100||declaredPassages!==passages) fail(`llms-full passage count drift declared=${declaredPassages} emitted=${passages}`);if((llmsFull.match(/^EVIDENCE_IDS:/gm)||[]).length!==passages||(llmsFull.match(/^CLAIM_EVIDENCE_IDS:/gm)||[]).length!==passages||(llmsFull.match(/^ENTITY_EVIDENCE_IDS:/gm)||[]).length!==passages||(llmsFull.match(/^TIER_A_EVIDENCE_IDS:/gm)||[]).length!==passages||(llmsFull.match(/^GRAPH_NODE_ID:/gm)||[]).length!==passages) fail('RAG provenance fields missing from passages');const blocks=llmsFull.split(/^\[PASSAGE\]$/m).slice(1),passageIds=new Set();for(const b of blocks){const id=(b.match(/^PASSAGE_ID:\s*(\S+)/m)||[])[1],txt=(b.match(/^TEXT:\s*([\s\S]*?)\n\[\/PASSAGE\]/m)||[])[1]??'';if(!id||passageIds.has(id))fail(`Missing/duplicate passage id ${id}`);passageIds.add(id);if(txt.trim().length>inv.maxRagPassageChars)fail(`RAG passage too large ${id}: ${txt.trim().length}`);if(!/^SOURCE_HASH_SHA256:\s*[0-9a-f]{64}$/m.test(b))fail(`Passage source hash missing ${id}`)}
+const ragEntityEvidenceNonEmpty=[...llmsFull.matchAll(/^ENTITY_EVIDENCE_IDS:[ \t]*(.+)$/gm)].filter(m=>m[1].trim()).length;const ragClaimEvidenceNonEmpty=[...llmsFull.matchAll(/^CLAIM_EVIDENCE_IDS:[ \t]*(.+)$/gm)].filter(m=>m[1].trim()).length;if(ragEntityEvidenceNonEmpty!==passages||ragClaimEvidenceNonEmpty<inv.minClaimEvidencePassages)fail(`RAG evidence tier coverage drift entity=${ragEntityEvidenceNonEmpty}/${passages} claim=${ragClaimEvidenceNonEmpty}`);
+const answersProjection=await readFile(path.join(data,'projections/answers.txt'),'utf8');if((answersProjection.match(/^QUESTION_ID:/gm)||[]).length!==125||(answersProjection.match(/^SOURCE_HASH_SHA256:\s*[0-9a-f]{64}$/gm)||[]).length!==125||(answersProjection.match(/^EVIDENCE_IDS:/gm)||[]).length!==125||(answersProjection.match(/^CLAIM_EVIDENCE_IDS:/gm)||[]).length!==125||(answersProjection.match(/^ENTITY_EVIDENCE_IDS:/gm)||[]).length!==125) fail('Evidence-aware direct-answer projection incomplete');const answerEntityEvidenceNonEmpty=[...answersProjection.matchAll(/^ENTITY_EVIDENCE_IDS:[ \t]*(.+)$/gm)].filter(m=>m[1].trim()).length;if(answerEntityEvidenceNonEmpty<20)fail(`Answer entity-evidence coverage unexpectedly sparse ${answerEntityEvidenceNonEmpty}`);
+if(!llmsFull.includes(`IDENTITY_FINGERPRINT_SHA256: ${inv.identityFingerprintSha256}`)) fail('Identity fingerprint hash drift in RAG projection');
+const sitemapText=await readFile(path.join(data,'projections/sitemap.xml'),'utf8');
+const sitemapUrlCount=(sitemapText.match(/<url>/g)||[]).length;if(sitemapUrlCount!==1+inv.machineIndexableResourceMinimum) fail(`Aggressive sitemap URL count drift ${sitemapUrlCount}`);for(const rel of ['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json']) if(!sitemapText.includes(`<loc>${release.canonicalUrl}${rel}</loc>`)) fail(`Machine sitemap URL missing ${rel}`);
+for(const d of [...sitemapText.matchAll(/<video:duration>([^<]+)<\/video:duration>/g)].map(m=>m[1])) if(!/^\d+$/.test(d)||Number(d)<1||Number(d)>28800) fail(`Invalid video sitemap duration ${d}`);
+if(!llms.includes('Verified reconciliation aliases')||!llms.includes('retrieval variants (not canonical names)')) fail('Alias taxonomy missing in llms.txt');
+for(const a of release.primaryEntity.officialAliases) if(!llms.includes(a)) fail(`Official alias missing in llms ${a}`);
+for(const a of release.primaryEntity.reconciliationAliases||[]) if(!llms.includes(a)) fail(`Reconciliation alias missing in llms ${a}`);
+for(const a of release.primaryEntity.retrievalVariants) if(!llms.includes(a)) fail(`Retrieval variant missing in llms ${a}`);
+
+
+// Source-level HTML/reference integrity, so the repository can fail before Astro compilation.
+const footer=await readFile(path.join(data,'templates/footer.html'),'utf8'),quick=await readFile(path.join(data,'templates/quick-actions.html'),'utf8'),mainHead=await readFile(path.join(data,'templates/main-head.html'),'utf8'),baseLayoutSource=await readFile(path.join(root,'src/layouts/BaseLayout.astro'),'utf8');
+const relMeHrefs=[...mainHead.matchAll(/<link\b[^>]*>/gi)].map(m=>m[0]).filter(t=>/\brel=["']me["']/i.test(t)).map(t=>(t.match(/\bhref=["']([^"']+)["']/i)||[])[1]).filter(Boolean);if(new Set(relMeHrefs).size<inv.headSameAsCount) fail(`rel=me identity mesh too small ${new Set(relMeHrefs).size}`);for(const u of flat(headPerson?.sameAs)) if(!relMeHrefs.some(x=>x===String(u)||x.replace(/\/$/,'')===String(u).replace(/\/$/,''))) fail(`Head sameAs missing rel=me identity link ${u}`);
+const answerCapsules=[...content.matchAll(/<article\b[^>]*data-answer-id=["']([^"']+)["'][^>]*>[\s\S]*?<h4>[\s\S]*?<\/h4>\s*<p>([\s\S]*?)<\/p>/gi)];if(answerCapsules.length!==inv.directAnswerCapsuleCount) fail(`Direct Answer Capsule count drift ${answerCapsules.length}`);const answerNodes=new Map(graph['@graph'].filter(n=>flat(n['@type']).includes('Answer')).map(n=>[n['@id'],n]));const strip=x=>String(x).replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();for(const [,id,txt] of answerCapsules){const resolved=id.startsWith('#')?release.canonicalUrl+id:id,a=answerNodes.get(resolved);if(!a||strip(a.text)!==strip(txt)) fail(`Direct Answer Capsule is not exact canonical Answer.text: ${id}`);}const visibleEvidenceCapsules=(content.match(/<article\b[^>]*data-answer-id=["'][^"']+["'][^>]*>[\s\S]*?<p>منابع:/gi)||[]).length;if(visibleEvidenceCapsules<inv.minVisibleEvidenceCapsules)fail(`Visible direct-evidence capsule coverage drift ${visibleEvidenceCapsules}`);
+const assembledUi=`${content}\n${footer}\n${quick}\n${guide}\n${baseLayoutSource}`;
+const htmlIds=[...assembledUi.matchAll(/\bid=["']([^"']+)["']/gi)].map(m=>m[1]),htmlIdSet=new Set(htmlIds);if(htmlIds.length!==htmlIdSet.size) fail('Duplicate HTML IDs in source composition');
+const sourceFragments=[...assembledUi.matchAll(/\bhref=["']#([^"']+)["']/gi)].map(m=>m[1]);const missingSourceFragments=[...new Set(sourceFragments.filter(x=>!htmlIdSet.has(x)))];if(missingSourceFragments.length) fail(`Broken source fragments: ${missingSourceFragments.join(',')}`);
+const endpointPaths=new Set(['/','/graph.jsonld','/graph.ttl','/entity-facts.csv','/answers.txt','/knowledge.xml','/llms.txt','/llms-full.txt','/index.md','/datapackage.json','/linkset.json','/void.ttl','/dcat.ttl','/croissant.json','/provenance.jsonld','/evidence-snapshot.json','/shapes.ttl','/sitemap.xml','/artifact-manifest.json']);
+const localPaths=new Set();for(const textBlob of [content,mainHead,footer,quick,guide,await readFile(path.join(root,'public/site.webmanifest'),'utf8')]){for(const m of textBlob.matchAll(/\b(?:src|href|poster)=["'](\/[^"'#?]*)/gi)) localPaths.add(m[1]);for(const m of textBlob.matchAll(/\bsrcset=["']([^"']+)/gi)) for(const part of m[1].split(',')){const u=part.trim().split(/\s+/)[0];if(u.startsWith('/'))localPaths.add(u.split(/[?#]/)[0])}}
+for(const u of localPaths){if(endpointPaths.has(u)||u.endsWith('/'))continue;const target=path.join(root,'public',u.slice(1));if(!await access(target).then(()=>true).catch(()=>false)) fail(`Missing source-referenced local asset: ${u}`)}
+const headerLines=headersTemplate.split(/\r?\n/);if(headerLines.some(l=>l.trim().length>2000)) fail('Cloudflare header line exceeds 2000 chars');const headerRuleCount=headerLines.filter(l=>l&&!/^\s/.test(l)&&!l.startsWith('#')).length;if(headerRuleCount>100) fail(`Cloudflare _headers rule count ${headerRuleCount}>100`);
+
+const packageScript=await readFile(path.join(root,'scripts/package-dist.mjs'),'utf8');if(packageScript.includes('dist-v1')||!packageScript.includes('releaseMeta.release')) fail('Release package naming is not dynamic/current');
+const pages=await readdir(path.join(root,'src/pages'));if(pages.some(x=>x.includes('[...'))) fail('Dynamic catch-all forbidden');
+const layout=await readFile(path.join(root,'src/layouts/BaseLayout.astro'),'utf8');if(/client:(load|idle|visible|media|only)/.test(layout)) fail('Hydrated island found');
+if(await access(path.join(root,'public/.well-known/security.txt')).then(()=>true).catch(()=>false)) fail('Non-operational security.txt must not ship');
+console.log(JSON.stringify({valid:true,release:inv.release,pages:pages.length,graphNodes:graph['@graph'].length,headNodes:head['@graph'].length,headBytes:Buffer.byteLength(headRaw),supportBytes:Buffer.byteLength(supportRaw),inlineSemanticClips:supportClips.length,inlineEligibleClips:eligibleSupportClips.length,captionTracks:captionTracks.length,aliases:{official:release.primaryEntity.officialAliases.length,reconciliation:(release.primaryEntity.reconciliationAliases||[]).length,retrieval:release.primaryEntity.retrievalVariants.length},mediaFiles:mediaFiles.length,mediaWithCurrentPlaceId:currentPlaceHits,contentSourceFiles:sectionNames.length,markdownHeadings:(markdown.match(/^#{1,6} /gm)||[]).length,llmPassages:(llmsFull.match(/^\[PASSAGE\]$/gm)||[]).length},null,2));

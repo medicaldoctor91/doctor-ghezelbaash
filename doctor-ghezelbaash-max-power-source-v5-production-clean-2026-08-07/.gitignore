@@ -1,0 +1,15 @@
+node_modules/
+dist/
+release/
+.DS_Store
+*.log
+
+# Deterministic build outputs — regenerated from canonical source.
+src/content/home.md
+src/data/projections/
+src/data/semantic/head-graph.json
+src/data/semantic/support-graph.json
+src/data/semantic/knowledge-graph.ttl
+src/data/semantic/rdf-lock.json
+public/doctor.vcf
+public/clinic.vcf
