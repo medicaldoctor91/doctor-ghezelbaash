@@ -18,7 +18,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Hash staged V1 delta chunks and decoded patch
+      - name: Reconstruct staged V1 patch and report hashes
         shell: bash
         run: |
           set -euo pipefail
@@ -35,4 +35,12 @@ jobs:
           base64 -d /tmp/all.b64 > /tmp/v1.patch.zst
           printf 'DECODED_PATCH bytes=%s sha256=%s\n' "$(wc -c < /tmp/v1.patch.zst)" "$(sha256sum /tmp/v1.patch.zst | awk '{print $1}')"
           test "$(wc -c < /tmp/all.b64)" -eq 21412
-          test "$(sha256sum /tmp/v1.patch.zst | awk '{print $1}')" = '6da1ed618cff17d5fbe5de98122a73e7540dc71e88ae2d7b897ea319304b7ac7'
+          mkdir -p staged-patch
+          cp /tmp/v1.patch.zst staged-patch/v1-wrong.patch.zst
+      - name: Upload staged decoded patch
+        uses: actions/upload-artifact@v4
+        with:
+          name: staged-v1-decoded-patch
+          path: staged-patch/v1-wrong.patch.zst
+          compression-level: 0
+          retention-days: 1
