@@ -1,0 +1,47 @@
+name: Diagnose historical video deltas
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.publish-v1/video-diagnose-trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'publish-v1-exact-2026-08-08'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Probe historical video streams
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=61c30ba506688205aec72718e57f69d464631518
+          paths=(
+            public/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4
+            public/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm
+            public/media/videos/education/saeed-ghezelbash-subcision-technique.mp4
+            public/media/videos/education/saeed-ghezelbash-subcision-technique.webm
+            public/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4
+            public/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm
+            public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4
+            public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm
+          )
+          mkdir -p /tmp/old
+          i=0
+          for p in "${paths[@]}"; do
+            f="/tmp/old/$i.${p##*.}"
+            git show "$C:$p" > "$f"
+            echo "OLD[$i] path=$p size=$(stat -c %s "$f") sha256=$(sha256sum "$f" | awk '{print $1}')"
+            if command -v ffmpeg >/dev/null; then
+              echo -n "OLD[$i] video_stream_"; ffmpeg -v error -i "$f" -map 0:v:0 -c copy -f hash -hash md5 - 2>/dev/null || true
+              echo -n "OLD[$i] audio_stream_"; ffmpeg -v error -i "$f" -map 0:a:0 -c copy -f hash -hash md5 - 2>/dev/null || true
+            fi
+            i=$((i+1))
+          done
