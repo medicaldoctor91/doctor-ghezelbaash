@@ -31,7 +31,13 @@ else
   SOURCE_ROOT="/tmp/v5-unzip/${PACKAGE_ENTRY%/package.json}"
 fi
 test -d "$SOURCE_ROOT"
-test "$(find "$SOURCE_ROOT" -type f | wc -l)" -eq "${EXPECTED_FILES}"
+RAW_COUNT="$(find "$SOURCE_ROOT" -type f | wc -l)"
+echo "Historical source-root raw file count: $RAW_COUNT"
+find "$SOURCE_ROOT" -type f \( -name '.DS_Store' -o -name '._*' \) -print | sed 's#^#Removing macOS metadata: #' || true
+find "$SOURCE_ROOT" -type f \( -name '.DS_Store' -o -name '._*' \) -delete
+CLEAN_COUNT="$(find "$SOURCE_ROOT" -type f | wc -l)"
+echo "Historical source-root canonical file count: $CLEAN_COUNT"
+test "$CLEAN_COUNT" -eq "${EXPECTED_FILES}"
 cp -a "$SOURCE_ROOT/." /tmp/v5-src/
 test "$(find /tmp/v5-src -type f | wc -l)" -eq "${EXPECTED_FILES}"
 
