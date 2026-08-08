@@ -5,7 +5,6 @@ V5_COMMIT='35280ed0dafc7c32815afe22b597a0a4b08fa1f4'
 V5_ZIP_PATH='doctor-ghezelbaash-max-power-source-v5-production-clean-2026-08-07 2.zip'
 VIDEO_COMMIT='61c30ba506688205aec72718e57f69d464631518'
 V5_TAR_SHA='c87d4f327a4f0f6230f72e21ded46b8c0fa465cb48235486384e3d14a39fe829'
-VIDEO_DELTA_B64_SHA='002b4ff37fb207348391365655119cd926c9b1ec31839fd3f5db6fa4e153700d'
 VIDEO_DELTA_ARCHIVE_SHA='bfe38cea0ad65f67953f5fd7b707e7f076c66053c0fb86ad80857a4a091673d7'
 PATCH_SHA='6da1ed618cff17d5fbe5de98122a73e7540dc71e88ae2d7b897ea319304b7ac7'
 V1_TAR_SHA='5af601eef6a44adc2776b3a82255213bd8e283b356c15ceb0b5122b1c6f1a0d2'
@@ -37,8 +36,8 @@ cp -a "$SOURCE_ROOT/." /tmp/v5-src/
 for part in 00 01 02 03; do
   git show "origin/${STAGING}:.publish-v1/video-delta.part${part}"
 done | tr -d '\r\n\t ' > /tmp/video-deltas.b64
-echo "${VIDEO_DELTA_B64_SHA}  /tmp/video-deltas.b64" | sha256sum -c -
 base64 -d /tmp/video-deltas.b64 > /tmp/video-deltas.tar.zst
+echo "Decoded video-delta archive SHA-256: $(sha256sum /tmp/video-deltas.tar.zst | awk '{print $1}')"
 echo "${VIDEO_DELTA_ARCHIVE_SHA}  /tmp/video-deltas.tar.zst" | sha256sum -c -
 zstd -d -f /tmp/video-deltas.tar.zst -o /tmp/video-deltas.tar >/dev/null
 tar -xf /tmp/video-deltas.tar -C /tmp/vd
