@@ -1,0 +1,35 @@
+{
+  "name": "doctor-ghezelbaash-max-power-v1",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.5.2",
+  "scripts": {
+    "rdf:deps": "python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input -r requirements-rdf.txt",
+    "prepare:generated": "npm run rdf:deps && npm run rdf:generate && npm run generate",
+    "dev": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "check": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
+    "generate": "node scripts/generate-projections.mjs",
+    "rdf:generate": "python scripts/generate-rdf.py",
+    "validate:source": "node scripts/validate-source.mjs",
+    "validate:media": "node scripts/validate-media.mjs",
+    "validate:evidence": "node scripts/validate-evidence.mjs",
+    "validate:shacl": "python scripts/validate-shacl.py",
+    "validate:reproducibility": "node scripts/validate-reproducibility.mjs",
+    "build": "npm run prepare:generated && npm run validate:source && ASTRO_TELEMETRY_DISABLED=1 astro build && node scripts/finalize-dist.mjs && node scripts/validate-dist.mjs",
+    "release:prepare": "npm run prepare:generated && npm run validate:source && npm run validate:media && npm run validate:evidence && npm run validate:shacl && npm run validate:reproducibility",
+    "release": "npm run build && npm run validate:media && npm run validate:evidence && npm run validate:shacl && npm run validate:reproducibility && node scripts/package-dist.mjs",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "verify:production": "node scripts/verify-production.mjs"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "24.13.3",
+    "astro": "7.1.6",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "npm": ">=11 <12"
+  }
+}

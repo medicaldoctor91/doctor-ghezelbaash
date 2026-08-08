@@ -1,0 +1,560 @@
+{
+  "release": "1.0.0",
+  "verifiedAt": "2026-08-07",
+  "tiers": {
+    "A": "official/authority-control or first-order scholarly/local identity evidence",
+    "B": "major scholarly/professional corroboration",
+    "C": "secondary directory/media/local corroboration"
+  },
+  "evidence": [
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-irimc",
+      "tier": "A",
+      "supports": [
+        "medical-license",
+        "legal-professional-name",
+        "practice-jurisdiction"
+      ],
+      "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+      "liveStatus": "verified",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "محمدسعید قزلباش",
+        "167430",
+        "دکترای حرفه‌ای پزشکی",
+        "کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor",
+      "tier": "A",
+      "supports": [
+        "person-identity",
+        "canonical-name",
+        "aliases",
+        "occupation",
+        "work-location",
+        "clinic-ownership"
+      ],
+      "url": "https://www.wikidata.org/wiki/Q140287622",
+      "liveStatus": "verified",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "Saeed Ghezelbash",
+        "Q140287622"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-orcid",
+      "tier": "A",
+      "supports": [
+        "person-identity",
+        "researcher-identity"
+      ],
+      "url": "https://orcid.org/0009-0001-9346-8475",
+      "liveStatus": "reachable-requires-js",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "0009-0001-9346-8475"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-ncbi-bibliography",
+      "tier": "A",
+      "supports": [
+        "research-bibliography",
+        "author-name-variant"
+      ],
+      "url": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+      "liveStatus": "verified",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "Saeed Ghezelbash's Bibliography",
+        "Ghezelbash MS"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-openalex-author",
+      "tier": "A",
+      "supports": [
+        "researcher-identity"
+      ],
+      "url": "https://openalex.org/A5064828898",
+      "liveStatus": "reachable-requires-js",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "A5064828898"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
+      "tier": "A",
+      "supports": [
+        "researcher-identity"
+      ],
+      "url": "https://www.semanticscholar.org/author/-/3786699",
+      "liveStatus": "declared-in-canonical-graph",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "3786699"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
+      "tier": "A",
+      "supports": [
+        "clinic-local-identity",
+        "place-id",
+        "cid",
+        "phone",
+        "rating",
+        "review-count",
+        "opening-hours"
+      ],
+      "url": "https://www.google.com/maps?cid=12350483144643112463",
+      "liveStatus": "verified",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+        "12350483144643112463",
+        "164",
+        "5.0"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
+      "tier": "A",
+      "supports": [
+        "clinic-identity",
+        "clinic-ownership",
+        "clinic-founder",
+        "clinic-local-kg"
+      ],
+      "url": "https://www.wikidata.org/wiki/Q140288589",
+      "liveStatus": "verified",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "Q140288589",
+        "/g/11r3rzdtb3"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership",
+      "tier": "A",
+      "supports": [
+        "clinic-ownership"
+      ],
+      "url": "https://qr.mojavez.ir/track/19949827",
+      "liveStatus": "declared-in-canonical-graph",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "19949827"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-linkedin",
+      "tier": "B",
+      "supports": [
+        "person-identity",
+        "professional-profile"
+      ],
+      "url": "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
+      "liveStatus": "declared-in-canonical-graph",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
+      "tier": "B",
+      "supports": [
+        "person-identity",
+        "aesthetic-medicine-context"
+      ],
+      "url": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
+      "liveStatus": "declared-in-canonical-graph",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-openstreetmap-clinic",
+      "tier": "C",
+      "supports": [
+        "clinic-local-corroboration"
+      ],
+      "url": "https://www.openstreetmap.org/node/13530287096",
+      "liveStatus": "known-external-conflict-on-postal-code-owner-truth-prevails",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-linktr-ee-doctor-ghezelbaash",
+      "tier": "B",
+      "supports": [
+        "person-identity",
+        "identity-hub",
+        "cross-platform-profile-mesh"
+      ],
+      "url": "https://linktr.ee/Doctor.ghezelbaash",
+      "liveStatus": "verified-live-web",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "Doctor.ghezelbaash"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-threads-com-doctor-ghezelbaash",
+      "tier": "C",
+      "supports": [
+        "person-identity",
+        "social-profile"
+      ],
+      "url": "https://www.threads.com/@doctor.ghezelbaash",
+      "liveStatus": "verified-via-official-linktree",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "doctor.ghezelbaash"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-youtube-com-ghezelbaash",
+      "tier": "C",
+      "supports": [
+        "person-identity",
+        "video-profile"
+      ],
+      "url": "https://www.youtube.com/@ghezelbaash",
+      "liveStatus": "verified-via-official-linktree",
+      "verifiedAt": "2026-08-07",
+      "expectedMarkers": [
+        "ghezelbaash"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-accessdata-fda-gov-drugsatfda-docs-label-2024-103000s5316s5319s5323s5326s533",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/103000s5316s5319s5323s5326s5331lbl.pdf",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-medical-devices-aesthetic-cosmetic-devices-dermal-fillers-soft-tissu",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/dermal-fillers-soft-tissue-fillers",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-consumers-consumer-updates-dermal-filler-dos-and-donts-wrinkles-lips",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.fda.gov/consumers/consumer-updates/dermal-filler-dos-and-donts-wrinkles-lips-and-more",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-41988336",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/41988336/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-plasticsurgery-org-cosmetic-procedures-thread-lift-safety",
+      "tier": "B",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.plasticsurgery.org/cosmetic-procedures/thread-lift/safety",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-a-z-melasma-treatment",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/diseases/a-z/melasma-treatment",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-rosacea-treatment-diagnosis-treat",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/diseases/rosacea/treatment/diagnosis-treat",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-rosacea-treatment-lasers-lights",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/diseases/rosacea/treatment/lasers-lights",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-acne-derm-treat-scars-treatment",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/diseases/acne/derm-treat/scars/treatment",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-36315903",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/36315903/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-30856634",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/30856634/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-cosmetic-scars-stretch-marks-microneedling-fade-scars",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/cosmetic/scars-stretch-marks/microneedling-fade-scars",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-medical-devices-recently-approved-devices-sculptra-p030050s039",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.fda.gov/medical-devices/recently-approved-devices/sculptra-p030050s039",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-40118148",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/40118148/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-hair-loss-causes-18-causes",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/diseases/hair-loss/causes/18-causes",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-hair-loss-types-ccca",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/diseases/hair-loss/types/ccca",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-hair-loss-treatment-diagnosis-treat",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/diseases/hair-loss/treatment/diagnosis-treat",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-38284294",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/38284294/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-plasticsurgery-org-cosmetic-procedures-chin-surgery",
+      "tier": "B",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.plasticsurgery.org/cosmetic-procedures/chin-surgery",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-accessdata-fda-gov-drugsatfda-docs-label-2020-206333s002s003lbl-pdf",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/206333s002s003lbl.pdf",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-drugs-buying-using-medicine-safely-using-fat-dissolving-injections-a",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.fda.gov/drugs/buying-using-medicine-safely/using-fat-dissolving-injections-are-not-fda-approved-can-be-harmful",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-dailymed-nlm-nih-gov-dailymed-fda-fdadrugxsl-cfm-setid-33d066a9-34ff-4a1a-b38b-d",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=33d066a9-34ff-4a1a-b38b-d10983df3300",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-medical-devices-aesthetic-cosmetic-devices-fda-approved-dermal-fille",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/fda-approved-dermal-fillers",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-cosmetic-wrinkles-botulinum-toxin-faqs",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.aad.org/public/cosmetic/wrinkles/botulinum-toxin-faqs",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-41517528",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/41517528/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-34840662",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/34840662/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pmc-ncbi-nlm-nih-gov-articles-pmc11702150",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11702150/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-27280013",
+      "tier": "A",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-www-mdpi-com-2227-9032-9-9-1169",
+      "tier": "B",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://www.mdpi.com/2227-9032/9/9/1169",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#evidence-doi-org-10-5281-zenodo-18765169",
+      "tier": "B",
+      "supports": [
+        "medical-claim-context",
+        "canonical-visible-citation"
+      ],
+      "url": "https://doi.org/10.5281/zenodo.18765169",
+      "liveStatus": "source-cited-in-canonical-content",
+      "verifiedAt": "2026-08-07"
+    }
+  ]
+}
