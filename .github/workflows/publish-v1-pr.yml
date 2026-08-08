@@ -26,5 +26,14 @@ jobs:
           set -euo pipefail
           git fetch origin publish-v1-exact-2026-08-08:refs/remotes/origin/publish-v1-exact-2026-08-08
           git show origin/publish-v1-exact-2026-08-08:.publish-v1/publish.sh > /tmp/publish-v1.sh
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('/tmp/publish-v1.sh')
+          s = p.read_text()
+          old = 'for part in 00 01 02 03; do git show "origin/${STAGING}:.publish-v1/patch.part${part}"; done | base64 -d > /tmp/v1.patch.zst'
+          new = 'for part in 00 01 02 03; do git show "origin/${STAGING}:.publish-v1/patch.part${part}"; done | tr -d "\\r\\n\\t " | base64 -d > /tmp/v1.patch.zst\necho "Decoded V1 patch SHA-256: $(sha256sum /tmp/v1.patch.zst | awk \'{print $1}\')"'
+          assert old in s
+          p.write_text(s.replace(old, new))
+          PY
           chmod +x /tmp/publish-v1.sh
           /tmp/publish-v1.sh
