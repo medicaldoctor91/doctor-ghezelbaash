@@ -1,1 +1,1 @@
-probe historical video elementary streams with ffmpeg
+export historical video artifact for exact delta generation
