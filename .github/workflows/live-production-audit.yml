@@ -1,0 +1,124 @@
+name: Live production no-cache audit
+
+on:
+  pull_request:
+    branches: [audit-live-base-2026-08-08]
+    paths: [.audit-trigger]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Fetch production with explicit no-cache controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p live-audit/fetches live-audit/lighthouse
+          TS="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$(date +%s)"
+          BASE='https://www.ghezelbaash.ir'
+          UA='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 V1-Live-Audit/2026'
+          printf '%s\n' "$TS" > live-audit/audit-id.txt
+          printf '%s\n' "$BASE" > live-audit/base-url.txt
+          fetch() {
+            key="$1"; path="$2"; expected="$3"
+            if [ "$path" = '/' ]; then url="$BASE/?__liveaudit=$TS-$key"; else url="$BASE/$path?__liveaudit=$TS-$key"; fi
+            curl -sS --compressed -L \
+              -H 'Cache-Control: no-cache, no-store, max-age=0' \
+              -H 'Pragma: no-cache' \
+              -H "User-Agent: $UA" \
+              --connect-timeout 20 --max-time 90 \
+              -D "live-audit/fetches/$key.headers" \
+              -o "live-audit/fetches/$key.body" \
+              -w 'http_code=%{http_code}\nurl_effective=%{url_effective}\nremote_ip=%{remote_ip}\ntime_namelookup=%{time_namelookup}\ntime_connect=%{time_connect}\ntime_appconnect=%{time_appconnect}\ntime_starttransfer=%{time_starttransfer}\ntime_total=%{time_total}\nsize_download=%{size_download}\ncontent_type=%{content_type}\n' \
+              "$url" > "live-audit/fetches/$key.metrics"
+            code="$(awk -F= '/^http_code=/{print $2}' "live-audit/fetches/$key.metrics")"
+            test "$code" = "$expected"
+            sha256sum "live-audit/fetches/$key.body" > "live-audit/fetches/$key.sha256"
+          }
+          fetch root1 '/' 200
+          fetch root2 '/' 200
+          fetch robots 'robots.txt' 200
+          fetch sitemap 'sitemap.xml' 200
+          fetch llms 'llms.txt' 200
+          fetch graph_jsonld 'graph.jsonld' 200
+          fetch graph_ttl 'graph.ttl' 200
+          fetch answers 'answers.txt' 200
+          fetch entity_facts 'entity-facts.csv' 200
+          fetch knowledge 'knowledge.xml' 200
+          fetch index_md 'index.md' 200
+          fetch llms_full 'llms-full.txt' 200
+          fetch linkset 'linkset.json' 200
+          fetch datapackage 'datapackage.json' 200
+          fetch void_ttl 'void.ttl' 200
+          fetch dcat_ttl 'dcat.ttl' 200
+          fetch croissant 'croissant.json' 200
+          fetch provenance 'provenance.jsonld' 200
+          fetch evidence_snapshot 'evidence-snapshot.json' 200
+          fetch shapes 'shapes.ttl' 200
+          fetch artifact_manifest 'artifact-manifest.json' 200
+          fetch doctor_vcf 'doctor.vcf' 200
+          fetch clinic_vcf 'clinic.vcf' 200
+          fetch missing_404 "__liveaudit-definitely-missing-$TS" 404
+          # Redirect/canonical behavior without following so the original edge response is preserved.
+          curl -sS -o /dev/null -D live-audit/fetches/apex.headers -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' -A "$UA" "https://ghezelbaash.ir/?__liveaudit=$TS-apex" || true
+          curl -sS -o /dev/null -D live-audit/fetches/http.headers -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' -A "$UA" "http://www.ghezelbaash.ir/?__liveaudit=$TS-http" || true
+          # Browser availability / basic live rendering probe.
+          (google-chrome --version || chromium --version || chromium-browser --version || true) > live-audit/chrome-version.txt 2>&1
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -n "$CHROME_BIN" ]; then
+            "$CHROME_BIN" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --virtual-time-budget=10000 --dump-dom "$BASE/?__liveaudit=$TS-chrome" > live-audit/browser-dom.html 2>live-audit/browser-stderr.txt || true
+          fi
+      - name: Run Lighthouse mobile and desktop against live deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          TS="$(cat live-audit/audit-id.txt)"
+          BASE='https://www.ghezelbaash.ir/'
+          for i in 1 2; do
+            npx --yes lighthouse@latest "${BASE}?__liveaudit=${TS}-lh-mobile-${i}" \
+              --quiet --output=json --output-path="live-audit/lighthouse/mobile-${i}.json" \
+              --only-categories=performance,accessibility,best-practices,seo \
+              --chrome-flags='--headless --no-sandbox --disable-gpu --disable-dev-shm-usage' || true
+          done
+          npx --yes lighthouse@latest "${BASE}?__liveaudit=${TS}-lh-desktop-1" \
+            --quiet --preset=desktop --output=json --output-path='live-audit/lighthouse/desktop-1.json' \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags='--headless --no-sandbox --disable-gpu --disable-dev-shm-usage' || true
+          node - <<'NODE'
+          const fs=require('fs'), path=require('path');
+          const out=[];
+          for (const f of fs.readdirSync('live-audit/lighthouse').filter(x=>x.endsWith('.json')).sort()) {
+            const j=JSON.parse(fs.readFileSync(path.join('live-audit/lighthouse',f)));
+            const c=j.categories||{}; const a=j.audits||{};
+            out.push({file:f,fetchTime:j.fetchTime,finalDisplayedUrl:j.finalDisplayedUrl,
+              performance:Math.round((c.performance?.score??0)*100),
+              accessibility:Math.round((c.accessibility?.score??0)*100),
+              bestPractices:Math.round((c['best-practices']?.score??0)*100),
+              seo:Math.round((c.seo?.score??0)*100),
+              fcp:a['first-contentful-paint']?.numericValue,
+              lcp:a['largest-contentful-paint']?.numericValue,
+              cls:a['cumulative-layout-shift']?.numericValue,
+              tbt:a['total-blocking-time']?.numericValue,
+              speedIndex:a['speed-index']?.numericValue,
+              tti:a['interactive']?.numericValue,
+              totalByteWeight:a['total-byte-weight']?.numericValue,
+              domSize:a['dom-size']?.numericValue,
+              errors:j.runtimeError||null});
+          }
+          fs.writeFileSync('live-audit/lighthouse-summary.json',JSON.stringify(out,null,2));
+          console.log(JSON.stringify(out,null,2));
+          NODE
+      - name: Upload raw live audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-production-no-cache-audit
+          path: live-audit/
+          compression-level: 0
+          retention-days: 1
