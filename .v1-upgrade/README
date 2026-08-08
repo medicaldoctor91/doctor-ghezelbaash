@@ -1,0 +1,1 @@
+Temporary isolated V1.0.0 upgrade payload. Never merged into production source; audit workflow applies only deterministic patch to current main and publishes exactly 13 source files after official Node 24/Astro validation.
