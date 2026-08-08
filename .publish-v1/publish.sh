@@ -3,6 +3,7 @@ set -euo pipefail
 
 V5_COMMIT='35280ed0dafc7c32815afe22b597a0a4b08fa1f4'
 V5_ZIP_PATH='doctor-ghezelbaash-max-power-source-v5-production-clean-2026-08-07 2.zip'
+VIDEO_COMMIT='61c30ba506688205aec72718e57f69d464631518'
 V5_TAR_SHA='c87d4f327a4f0f6230f72e21ded46b8c0fa465cb48235486384e3d14a39fe829'
 PATCH_SHA='6da1ed618cff17d5fbe5de98122a73e7540dc71e88ae2d7b897ea319304b7ac7'
 V1_TAR_SHA='5af601eef6a44adc2776b3a82255213bd8e283b356c15ceb0b5122b1c6f1a0d2'
@@ -10,12 +11,10 @@ V1_ZIP_SHA='aadc1c5ce0cb97298026250bf08041b059e05d7eda18d691746d846ac96a2d79'
 EXPECTED_FILES=243
 HISTORICAL_FILES=235
 STAGING='publish-v1-exact-2026-08-08'
-CANONICAL='https://www.ghezelbaash.ir'
 
 command -v zstd >/dev/null
 command -v unzip >/dev/null
 command -v python >/dev/null
-command -v curl >/dev/null
 
 git fetch origin "${STAGING}:refs/remotes/origin/${STAGING}"
 rm -rf /tmp/v5-unzip /tmp/v5-src /tmp/v1-src /tmp/v5.zip /tmp/v5.det.tar /tmp/v1.det.tar /tmp/v1.patch.zst /tmp/v1.zip /tmp/v1.index
@@ -40,24 +39,23 @@ echo "Historical canonical source files before video hydration: $CLEAN_COUNT"
 test "$CLEAN_COUNT" -eq "$HISTORICAL_FILES"
 cp -a "$SOURCE_ROOT/." /tmp/v5-src/
 
-while read -r expected path; do
+while IFS='|' read -r expected oldpath newpath; do
   [[ -z "${expected:-}" ]] && continue
-  dest="/tmp/v5-src/$path"
+  dest="/tmp/v5-src/$newpath"
   test ! -e "$dest"
   mkdir -p "$(dirname "$dest")"
-  echo "Hydrating verified first-party video: $path"
-  curl --fail --location --retry 3 --retry-all-errors --silent --show-error \
-    "$CANONICAL/$path" -o "$dest"
+  echo "Hydrating verified historical video blob: $newpath"
+  git show "${VIDEO_COMMIT}:${oldpath}" > "$dest"
   echo "$expected  $dest" | sha256sum -c -
 done <<'VIDEOS'
-aff435cccd222d0f091012a7f9a026021b46bb7c04e168d1f50e44a5609ea6ce public/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.aff435cccd22.mp4
-f06e1ba35b87796e71b604bc8f45dda66c3d6113906dc5715bed11cfa72cb782 public/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.f06e1ba35b87.webm
-227db9d75deeeb92bf21798ac5b202494078304d563c7071ae76937de0528d16 public/media/videos/education/saeed-ghezelbash-subcision-technique.227db9d75dee.mp4
-527a6302d8ead3439c17a459bc1ae03c56dfcd71a87d8a6f88b750a7494b1e41 public/media/videos/education/saeed-ghezelbash-subcision-technique.527a6302d8ea.webm
-7638d175c10bf55b6edff4d66bce79ae7fe717970b7f0449336cc8bed5c0c7b9 public/media/videos/education/saeed-ghezelbash-thread-lift-workshop.7638d175c10b.mp4
-a2cbeff182a325b02d710f0d267f515791deea8072378c058ddf6c7118b37759 public/media/videos/education/saeed-ghezelbash-thread-lift-workshop.a2cbeff182a3.webm
-bbe6cef83a2d3b8aa05505d1027f513d788b8e38d87ed28aa63f542bb0eae127 public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.bbe6cef83a2d.mp4
-dc1a7d6cd4396c1e10b807ec2878b543395d18598e6d6e67f706d185ee56f4b9 public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.dc1a7d6cd439.webm
+aff435cccd222d0f091012a7f9a026021b46bb7c04e168d1f50e44a5609ea6ce|public/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.mp4|public/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.aff435cccd22.mp4
+f06e1ba35b87796e71b604bc8f45dda66c3d6113906dc5715bed11cfa72cb782|public/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.webm|public/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.f06e1ba35b87.webm
+227db9d75deeeb92bf21798ac5b202494078304d563c7071ae76937de0528d16|public/media/videos/education/saeed-ghezelbash-subcision-technique.mp4|public/media/videos/education/saeed-ghezelbash-subcision-technique.227db9d75dee.mp4
+527a6302d8ead3439c17a459bc1ae03c56dfcd71a87d8a6f88b750a7494b1e41|public/media/videos/education/saeed-ghezelbash-subcision-technique.webm|public/media/videos/education/saeed-ghezelbash-subcision-technique.527a6302d8ea.webm
+7638d175c10bf55b6edff4d66bce79ae7fe717970b7f0449336cc8bed5c0c7b9|public/media/videos/education/saeed-ghezelbash-thread-lift-workshop.mp4|public/media/videos/education/saeed-ghezelbash-thread-lift-workshop.7638d175c10b.mp4
+a2cbeff182a325b02d710f0d267f515791deea8072378c058ddf6c7118b37759|public/media/videos/education/saeed-ghezelbash-thread-lift-workshop.webm|public/media/videos/education/saeed-ghezelbash-thread-lift-workshop.a2cbeff182a3.webm
+bbe6cef83a2d3b8aa05505d1027f513d788b8e38d87ed28aa63f542bb0eae127|public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4|public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.bbe6cef83a2d.mp4
+dc1a7d6cd4396c1e10b807ec2878b543395d18598e6d6e67f706d185ee56f4b9|public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm|public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.dc1a7d6cd439.webm
 VIDEOS
 
 test "$(find /tmp/v5-src -type f | wc -l)" -eq "${EXPECTED_FILES}"
