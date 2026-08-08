@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+STAGING='publish-v1-exact-2026-08-08'
+git fetch origin "$STAGING:refs/remotes/origin/$STAGING"
+git show "origin/$STAGING:.publish-v1/publish.sh" > /tmp/publish-v1.sh
+python - <<'PY'
+from pathlib import Path
+p=Path('/tmp/publish-v1.sh')
+s=p.read_text()
+old='for part in 00 01 02 03; do git show "origin/${STAGING}:.publish-v1/patch.part${part}"; done | base64 -d > /tmp/v1.patch.zst'
+new=r'''for part in 00 01 02 03; do git show "origin/${STAGING}:.publish-v1/patch.part${part}"; done | tr -d '\r\n\t ' | base64 -d > /tmp/v1.patch.wrong.zst
+echo '80a3f441db51b62ec3861fdf2bc920a51131b780a676b8d332e45cdd28bc1298  /tmp/v1.patch.wrong.zst' | sha256sum -c -
+git show "origin/${STAGING}:.publish-v1/v1patch-correction.b64" | tr -d '\r\n\t ' | base64 -d > /tmp/v1patch-correction.zst
+echo 'a9aaace2c1cef0e8da9756f9c20d995f242e2ffb32091f24703d277dc19eaf21  /tmp/v1patch-correction.zst' | sha256sum -c -
+zstd -d --patch-from=/tmp/v1.patch.wrong.zst -f /tmp/v1patch-correction.zst -o /tmp/v1.patch.zst >/dev/null
+echo "Corrected V1 patch SHA-256: $(sha256sum /tmp/v1.patch.zst | awk '{print $1}')"'''
+assert old in s
+p.write_text(s.replace(old,new))
+PY
+chmod +x /tmp/publish-v1.sh
+exec /tmp/publish-v1.sh
