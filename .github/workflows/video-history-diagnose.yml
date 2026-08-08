@@ -18,6 +18,8 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+      - name: Install ffmpeg for elementary-stream verification
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Probe historical video streams
         shell: bash
         run: |
@@ -39,9 +41,7 @@ jobs:
             f="/tmp/old/$i.${p##*.}"
             git show "$C:$p" > "$f"
             echo "OLD[$i] path=$p size=$(stat -c %s "$f") sha256=$(sha256sum "$f" | awk '{print $1}')"
-            if command -v ffmpeg >/dev/null; then
-              echo -n "OLD[$i] video_stream_"; ffmpeg -v error -i "$f" -map 0:v:0 -c copy -f hash -hash md5 - 2>/dev/null || true
-              echo -n "OLD[$i] audio_stream_"; ffmpeg -v error -i "$f" -map 0:a:0 -c copy -f hash -hash md5 - 2>/dev/null || true
-            fi
+            echo -n "OLD[$i] video_stream_"; ffmpeg -v error -i "$f" -map 0:v:0 -c copy -f hash -hash md5 - 2>/dev/null || true
+            echo -n "OLD[$i] audio_stream_"; ffmpeg -v error -i "$f" -map 0:a:0 -c copy -f hash -hash md5 - 2>/dev/null || true
             i=$((i+1))
           done
