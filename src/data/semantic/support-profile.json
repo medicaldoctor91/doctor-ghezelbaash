@@ -126,10 +126,10 @@
         "copyrightHolder",
         "representativeOfPage",
         "mainEntityOfPage",
+        "copyrightNotice",
         "license",
         "acquireLicensePage",
         "creditText",
-        "creator",
         "identifier"
       ]
     },

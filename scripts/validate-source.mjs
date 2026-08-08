@@ -98,10 +98,12 @@ function scanFull(v,owner){if(Array.isArray(v))for(const x of v)scanFull(x,owner
 for(const n of graph['@graph']) scanFull(n,n['@id']);
 const fullOrphans=[...fullIncoming].filter(([,c])=>c===0).map(([id])=>id);if(fullOrphans.length>inv.maxOrphanGraphNodes) fail(`Unjustified full-graph orphan nodes: ${fullOrphans.join(',')}`);
 if(graph['@graph'].length!==inv.fullGraphNodeCount) fail(`Full graph node-count invariant drift ${graph['@graph'].length}`);
+const fullClips=graph['@graph'].filter(n=>flat(n['@type']).includes('Clip'));for(const c of fullClips){if(!Number.isInteger(c.startOffset)||!Number.isInteger(c.endOffset)||c.endOffset<=c.startOffset)fail(`Clip offset integer/boundary drift ${c['@id']}`)}
 const supportClips=support['@graph'].filter(n=>flat(n['@type']).includes('Clip'));if(supportClips.length!==inv.inlineSemanticClipCount) fail(`Inline semantic Clip count mismatch ${supportClips.length}`);
 const eligibleSupportClips=supportClips.filter(c=>{const parent=byId.get(c.isPartOf?.['@id']);return parent&&durationSeconds(parent.duration)>=30});if(eligibleSupportClips.length!==inv.inlineEligibleClipCount) fail(`Inline Google-eligible Clip count mismatch ${eligibleSupportClips.length}`);
-const kurdishSupportClips=supportClips.filter(c=>String(c['@id']).includes('kurdish-patient-experience'));if(kurdishSupportClips.length!==3) fail(`Kurdish semantic Clip restoration drift ${kurdishSupportClips.length}`);
+const kurdishSupportClips=supportClips.filter(c=>String(c['@id']).includes('kurdish-patient-experience'));if(kurdishSupportClips.length!==0) fail(`Sub-30s Kurdish Clips must stay out of Google-facing Support Graph ${kurdishSupportClips.length}`);
 if(support['@graph'].length!==inv.supportNodeTarget) fail(`Support node target drift ${support['@graph'].length}/${inv.supportNodeTarget}`);
+const supportDatasets=support['@graph'].filter(n=>flat(n['@type']).includes('Dataset'));if(supportDatasets.length!==1)fail(`Google-facing Dataset count drift ${supportDatasets.length}`);const googleDataset=supportDatasets[0];if(googleDataset.version!=='1.0.0'||!googleDataset.name||!googleDataset.description)fail('Google-facing Dataset required fields/version drift');const supportDownloads=support['@graph'].filter(n=>flat(n['@type']).includes('DataDownload'));if(supportDownloads.length!==6)fail(`Google-facing Dataset distribution count drift ${supportDownloads.length}`);for(const n of supportDownloads){if(!n.contentUrl||!n.encodingFormat)fail(`Google-facing DataDownload incomplete ${n['@id']}`)}
 
 // RDF release lock: exact source+distribution bytes and declared triple count.
 const ttl=await readFile(path.join(data,'semantic/knowledge-graph.ttl'));

@@ -11,7 +11,7 @@
     "محمد‌سعید قزلباش"
   ],
   "redirectsSha256": "090c87cd57143a0ccc4a620656e87f45fa39b56172c36e0a5d6197b1f965002c",
-  "externalRdfTripleCount": 8254,
+  "externalRdfTripleCount": 8262,
   "renderChunkCount": 134,
   "clipCount": 16,
   "chapterTrackCount": 4,
@@ -64,10 +64,10 @@
   "evidenceSnapshotMaxAgeDays": 45,
   "headAlternateNameMax": 17,
   "identityFingerprintSha256": "8da41af46c66295c58d20e771d9608e941da01144b0ac108ee90f01dbec92161",
-  "inlineSemanticClipCount": 16,
+  "inlineSemanticClipCount": 13,
   "exactBestDoctorHeadingCount": 17,
   "instagramHeadingLinkCount": 17,
-  "supportNodeTarget": 128,
+  "supportNodeTarget": 126,
   "headSameAsCount": 19,
   "headAlternateNameCount": 17,
   "directAnswerCapsuleCount": 53,
@@ -87,5 +87,9 @@
   "maxSupportGraphEndByte": 1940000,
   "directAnswerHeadingLevel": 3,
   "maxCriticalCssBytes": 10000,
-  "minExternalCssBytes": 45000
+  "minExternalCssBytes": 45000,
+  "googleDatasetProjectionNodeCount": 1,
+  "googleDatasetDistributionCount": 6,
+  "googleFacingImageCount": 10,
+  "lazyVideoPosterCount": 4
 }

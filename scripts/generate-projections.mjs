@@ -116,7 +116,10 @@ const pruneInlineRefs=v=>{
 const supportNodes=[];
 for(const id of supportIds){
   const node=byId.get(id); if(!node) throw new Error(`Support selection missing ${id}`);
-  supportNodes.push(supportProfile.mode==='full' ? structuredClone(node) : pruneInlineRefs(projectNode(node,profileFor(node)||{})));
+  const projected=supportProfile.mode==='full' ? structuredClone(node) : pruneInlineRefs(projectNode(node,profileFor(node)||{}));
+  if(types(projected).includes('Dataset')){const keep=new Set(['@id','@type','name','alternateName','description','creator','publisher','license','version','datePublished','dateModified','identifier','isAccessibleForFree','sameAs','distribution','keywords']);for(const k of Object.keys(projected))if(!keep.has(k))delete projected[k];if(Array.isArray(projected.distribution))projected.distribution=projected.distribution.filter(x=>x?.['@id']&&supportSelected.has(x['@id']));}
+  if(types(projected).includes('VideoObject')){const m=String(projected.duration??'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/);const seconds=m?(Number(m[1]||0)*3600+Number(m[2]||0)*60+Number(m[3]||0)):NaN;if(seconds<30)delete projected.hasPart;}
+  supportNodes.push(projected);
 }
 const supportRaw=`${JSON.stringify({'@context':graph['@context'],'@graph':supportNodes})}
 `;
