@@ -1,0 +1,86 @@
+name: Post-publish V1.0.0 live DIST audit
+
+on:
+  pull_request:
+    branches: [post-v1-live-audit-base-2026-08-08]
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: main, fetch-depth: 1}
+      - uses: actions/setup-node@v4
+        with: {node-version: 24.18.0, cache: npm}
+      - name: Build exact current V1.0.0 DIST
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = '431ca5255c5f3d0d3712c90744e0241e8359de10'
+          npm ci --ignore-scripts
+          npm run build
+      - name: Wait for Cloudflare and byte-compare served DIST with no-cache fetches
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://www.ghezelbaash.ir'
+          UA='Mozilla/5.0 (compatible; V1-PostPublish-Audit/2026)'
+          target="$(sha256sum dist/index.html|awk '{print $1}')"
+          ok=0
+          for i in $(seq 1 18); do
+            q="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-$i-$(date +%s)"
+            curl -fsS --compressed -H 'Cache-Control: no-cache, no-store, max-age=0' -H 'Pragma: no-cache' -H "User-Agent: $UA" "$BASE/?__v1post=$q" -o /tmp/root.html
+            got="$(sha256sum /tmp/root.html|awk '{print $1}')"
+            echo "attempt=$i target=$target live=$got"
+            if [ "$got" = "$target" ]; then ok=1; break; fi
+            sleep 10
+          done
+          test "$ok" -eq 1
+          mkdir -p /tmp/live-bodies /tmp/live-headers
+          : >/tmp/mismatches
+          compared=0
+          while IFS= read -r local; do
+            rel="${local#dist/}"
+            case "$rel" in _headers|_redirects|404.html) continue;; esac
+            if [ "$rel" = index.html ]; then url="$BASE/?__byte=$GITHUB_RUN_ID-$(date +%s%N)"; else url="$BASE/$rel?__byte=$GITHUB_RUN_ID-$(date +%s%N)"; fi
+            key="$(printf '%s' "$rel"|sha256sum|cut -c1-16)"
+            code=$(curl -sS --compressed -L -H 'Cache-Control: no-cache, no-store, max-age=0' -H 'Pragma: no-cache' -H "User-Agent: $UA" -D "/tmp/live-headers/$key" -o "/tmp/live-bodies/$key" -w '%{http_code}' "$url")
+            lsha="$(sha256sum "$local"|awk '{print $1}')"; rsha="$(sha256sum "/tmp/live-bodies/$key"|awk '{print $1}')"
+            compared=$((compared+1)); [ "$code" = 200 ] && [ "$lsha" = "$rsha" ] || printf '%s\t%s\t%s\t%s\n' "$rel" "$code" "$lsha" "$rsha" >>/tmp/mismatches
+          done < <(find dist -type f | LC_ALL=C sort)
+          echo "compared=$compared mismatches=$(wc -l </tmp/mismatches)"
+          cat /tmp/mismatches
+          test ! -s /tmp/mismatches
+          curl -sS --compressed -H 'Cache-Control: no-cache, no-store, max-age=0' -H 'Pragma: no-cache' "$BASE/__v1-definitely-missing-$GITHUB_RUN_ID" -o /tmp/404.html -w '%{http_code}' >/tmp/404.status
+          test "$(cat /tmp/404.status)" = 404
+          test "$(sha256sum dist/404.html|awk '{print $1}')" = "$(sha256sum /tmp/404.html|awk '{print $1}')"
+      - name: Verify production policy and new semantic/media contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run verify:production -- https://www.ghezelbaash.ir/
+          curl -fsS --compressed -H 'Cache-Control: no-cache, no-store, max-age=0' -H 'Pragma: no-cache' "https://www.ghezelbaash.ir/?__semantic=$GITHUB_RUN_ID-$(date +%s%N)" -o /tmp/live.html
+          curl -fsS --compressed -H 'Cache-Control: no-cache, no-store, max-age=0' -H 'Pragma: no-cache' "https://www.ghezelbaash.ir/graph.jsonld?__semantic=$GITHUB_RUN_ID-$(date +%s%N)" -o /tmp/graph.jsonld
+          python - <<'PY'
+          from pathlib import Path
+          import json,re,hashlib
+          html=Path('/tmp/live.html').read_text(); g=json.loads(Path('/tmp/graph.jsonld').read_text())
+          m=next(x for x in re.finditer(r'<script\b([^>]*)>([\s\S]*?)</script>',html,re.I) if 'entity-support' in x.group(1)); sup=json.loads(m.group(2))
+          def types(n):
+              t=n.get('@type',[]); return t if isinstance(t,list) else [t]
+          ds=[n for n in sup['@graph'] if 'Dataset' in types(n)]; dd=[n for n in sup['@graph'] if 'DataDownload' in types(n)]; clips=[n for n in sup['@graph'] if 'Clip' in types(n)]
+          assert len(ds)==1 and ds[0].get('version')=='1.0.0' and len(ds[0].get('distribution',[]))==6
+          assert len(dd)==6 and len(clips)==13 and not any('kurdish-patient-experience' in n.get('@id','') for n in clips)
+          assert all(isinstance(n.get('startOffset'),int) and isinstance(n.get('endOffset'),int) for n in clips)
+          assert html.count('data-poster=')==4 and not re.search(r'<video\b[^>]*\sposter=',html,re.I)
+          assert 'id="image-rights"' in html
+          assert len(g['@graph'])==793 and sum('Clip' in types(n) for n in g['@graph'])==16
+          assert all(n.get('version','1.0.0')=='1.0.0' for n in g['@graph'])
+          print('live_html_bytes=',len(html.encode()))
+          print('live_html_sha256=',hashlib.sha256(html.encode()).hexdigest())
+          print('support_nodes=',len(sup['@graph']),'dataset=1 downloads=6 google_clips=13 full_clips=16 lazy_posters=4')
+          print('LIVE_V1_CONTRACTS=PASS')
+          PY
