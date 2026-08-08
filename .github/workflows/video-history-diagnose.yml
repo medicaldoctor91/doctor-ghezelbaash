@@ -18,9 +18,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Install ffmpeg for elementary-stream verification
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-      - name: Probe historical video streams
+      - name: Export historical videos
         shell: bash
         run: |
           set -euo pipefail
@@ -35,13 +33,18 @@ jobs:
             public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.mp4
             public/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.webm
           )
-          mkdir -p /tmp/old
+          mkdir -p historical-videos
           i=0
           for p in "${paths[@]}"; do
-            f="/tmp/old/$i.${p##*.}"
+            f="historical-videos/$i.${p##*.}"
             git show "$C:$p" > "$f"
-            echo "OLD[$i] path=$p size=$(stat -c %s "$f") sha256=$(sha256sum "$f" | awk '{print $1}')"
-            echo -n "OLD[$i] video_stream_"; ffmpeg -v error -i "$f" -map 0:v:0 -c copy -f hash -hash md5 - 2>/dev/null || true
-            echo -n "OLD[$i] audio_stream_"; ffmpeg -v error -i "$f" -map 0:a:0 -c copy -f hash -hash md5 - 2>/dev/null || true
+            echo "OLD[$i] size=$(stat -c %s "$f") sha256=$(sha256sum "$f" | awk '{print $1}')"
             i=$((i+1))
           done
+      - name: Upload historical video artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: historical-videos-exact
+          path: historical-videos/
+          compression-level: 0
+          retention-days: 1
