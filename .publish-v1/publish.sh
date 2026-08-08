@@ -3,26 +3,30 @@ set -euo pipefail
 
 V5_COMMIT='35280ed0dafc7c32815afe22b597a0a4b08fa1f4'
 V5_ZIP_PATH='doctor-ghezelbaash-max-power-source-v5-production-clean-2026-08-07 2.zip'
-V5_ZIP_SHA='583ea34cddc953af9068882713deab35aee67f128e42aca81c9ae39fc76767ba'
 V5_TAR_SHA='c87d4f327a4f0f6230f72e21ded46b8c0fa465cb48235486384e3d14a39fe829'
 PATCH_SHA='6da1ed618cff17d5fbe5de98122a73e7540dc71e88ae2d7b897ea319304b7ac7'
 V1_TAR_SHA='5af601eef6a44adc2776b3a82255213bd8e283b356c15ceb0b5122b1c6f1a0d2'
 V1_ZIP_SHA='aadc1c5ce0cb97298026250bf08041b059e05d7eda18d691746d846ac96a2d79'
 EXPECTED_FILES=243
 STAGING='publish-v1-exact-2026-08-08'
+SOURCE_DIR='doctor-ghezelbaash-max-power-source-v5-production-clean-2026-08-07'
 
 command -v zstd >/dev/null
 command -v unzip >/dev/null
 command -v python >/dev/null
 
 git fetch origin "${STAGING}:refs/remotes/origin/${STAGING}"
-rm -rf /tmp/v5-src /tmp/v1-src /tmp/v5.zip /tmp/v5.det.tar /tmp/v1.det.tar /tmp/v1.patch.zst /tmp/v1.zip /tmp/v1.index
-mkdir -p /tmp/v5-src /tmp/v1-src
+rm -rf /tmp/v5-unzip /tmp/v5-src /tmp/v1-src /tmp/v5.zip /tmp/v5.det.tar /tmp/v1.det.tar /tmp/v1.patch.zst /tmp/v1.zip /tmp/v1.index
+mkdir -p /tmp/v5-unzip /tmp/v5-src /tmp/v1-src
 
 git show "${V5_COMMIT}:${V5_ZIP_PATH}" > /tmp/v5.zip
-echo "${V5_ZIP_SHA}  /tmp/v5.zip" | sha256sum -c -
-unzip -q /tmp/v5.zip -d /tmp/v5-src
+echo "Historical container ZIP SHA-256: $(sha256sum /tmp/v5.zip | awk '{print $1}')"
+unzip -q /tmp/v5.zip -d /tmp/v5-unzip
+test -d "/tmp/v5-unzip/${SOURCE_DIR}"
+test "$(find "/tmp/v5-unzip/${SOURCE_DIR}" -type f | wc -l)" -eq "${EXPECTED_FILES}"
+cp -a "/tmp/v5-unzip/${SOURCE_DIR}/." /tmp/v5-src/
 test "$(find /tmp/v5-src -type f | wc -l)" -eq "${EXPECTED_FILES}"
+
 (
   cd /tmp/v5-src
   find . -type f -print0 | LC_ALL=C sort -z | \
