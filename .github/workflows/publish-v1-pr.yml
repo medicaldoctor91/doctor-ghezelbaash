@@ -1,0 +1,30 @@
+name: Verify and publish exact V1 via PR
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.publish-v1/**'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'publish-v1-exact-2026-08-08'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Execute staged byte-exact publisher
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin publish-v1-exact-2026-08-08:refs/remotes/origin/publish-v1-exact-2026-08-08
+          git show origin/publish-v1-exact-2026-08-08:.publish-v1/publish.sh > /tmp/publish-v1.sh
+          chmod +x /tmp/publish-v1.sh
+          /tmp/publish-v1.sh
