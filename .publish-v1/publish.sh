@@ -36,7 +36,7 @@ cp -a "$SOURCE_ROOT/." /tmp/v5-src/
 # elementary streams plus a tiny deterministic binary delta payload.
 for part in 00 01 02 03; do
   git show "origin/${STAGING}:.publish-v1/video-delta.part${part}"
-done > /tmp/video-deltas.b64
+done | tr -d '\r\n\t ' > /tmp/video-deltas.b64
 echo "${VIDEO_DELTA_B64_SHA}  /tmp/video-deltas.b64" | sha256sum -c -
 base64 -d /tmp/video-deltas.b64 > /tmp/video-deltas.tar.zst
 echo "${VIDEO_DELTA_ARCHIVE_SHA}  /tmp/video-deltas.tar.zst" | sha256sum -c -
