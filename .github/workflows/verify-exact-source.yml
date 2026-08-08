@@ -1,0 +1,71 @@
+name: Verify exact V1 source identity
+
+on:
+  pull_request:
+    branches:
+      - verify-exact-source-base-2026-08-08
+    paths:
+      - '.verify-exact-source-trigger'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out production main exactly
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Verify main and v1.0.0 tag are identical
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin refs/tags/v1.0.0:refs/tags/v1.0.0
+          MAIN_COMMIT="$(git rev-parse HEAD)"
+          TAG_COMMIT="$(git rev-list -n1 v1.0.0)"
+          echo "main_commit=$MAIN_COMMIT"
+          echo "tag_commit=$TAG_COMMIT"
+          test "$MAIN_COMMIT" = '7c24987a4fd3649f485121aaff893845319f95b9'
+          test "$TAG_COMMIT" = "$MAIN_COMMIT"
+          git diff --exit-code "$TAG_COMMIT" "$MAIN_COMMIT" --
+          test "$(git ls-tree -r --name-only "$MAIN_COMMIT" | wc -l)" -eq 243
+      - name: Rebuild deterministic reference ZIP and verify exact bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile, hashlib, sys
+          root=Path('.')
+          files=sorted(p for p in root.rglob('*') if p.is_file() and '.git' not in p.parts)
+          assert len(files)==243, len(files)
+          # Independent content-manifest identity: path + SHA-256 for every file.
+          h=hashlib.sha256()
+          for p in files:
+              rel=p.relative_to(root).as_posix()
+              h.update(rel.encode()); h.update(b'\0'); h.update(hashlib.sha256(p.read_bytes()).digest())
+          manifest=h.hexdigest()
+          expected_manifest='59c8dddea515edaa69172e6c1acd8efea4dd6134aa73f528f57e25caf369e179'
+          print('file_count=',len(files))
+          print('manifest_sha256=',manifest)
+          assert manifest==expected_manifest, (manifest,expected_manifest)
+          out=Path('/tmp/current-main-exact.zip')
+          with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9,strict_timestamps=True) as z:
+              for p in files:
+                  rel=p.relative_to(root).as_posix()
+                  zi=zipfile.ZipInfo(rel,date_time=(2026,8,8,0,0,0))
+                  zi.create_system=3
+                  zi.external_attr=(0o100644<<16)
+                  zi.compress_type=zipfile.ZIP_DEFLATED
+                  z.writestr(zi,p.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
+          sha=hashlib.sha256(out.read_bytes()).hexdigest()
+          expected='aadc1c5ce0cb97298026250bf08041b059e05d7eda18d691746d846ac96a2d79'
+          print('rebuilt_zip_bytes=',out.stat().st_size)
+          print('rebuilt_zip_sha256=',sha)
+          print('expected_zip_sha256=',expected)
+          assert sha==expected,(sha,expected)
+          print('EXACT_SOURCE_IDENTITY=PASS')
+          PY
