@@ -9,7 +9,6 @@ V1_TAR_SHA='5af601eef6a44adc2776b3a82255213bd8e283b356c15ceb0b5122b1c6f1a0d2'
 V1_ZIP_SHA='aadc1c5ce0cb97298026250bf08041b059e05d7eda18d691746d846ac96a2d79'
 EXPECTED_FILES=243
 STAGING='publish-v1-exact-2026-08-08'
-SOURCE_DIR='doctor-ghezelbaash-max-power-source-v5-production-clean-2026-08-07'
 
 command -v zstd >/dev/null
 command -v unzip >/dev/null
@@ -22,9 +21,18 @@ mkdir -p /tmp/v5-unzip /tmp/v5-src /tmp/v1-src
 git show "${V5_COMMIT}:${V5_ZIP_PATH}" > /tmp/v5.zip
 echo "Historical container ZIP SHA-256: $(sha256sum /tmp/v5.zip | awk '{print $1}')"
 unzip -q /tmp/v5.zip -d /tmp/v5-unzip
-test -d "/tmp/v5-unzip/${SOURCE_DIR}"
-test "$(find "/tmp/v5-unzip/${SOURCE_DIR}" -type f | wc -l)" -eq "${EXPECTED_FILES}"
-cp -a "/tmp/v5-unzip/${SOURCE_DIR}/." /tmp/v5-src/
+mapfile -t PACKAGE_ENTRIES < <(unzip -Z1 /tmp/v5.zip | grep -E '(^|/)package\.json$' | grep -v '^__MACOSX/' || true)
+printf 'Candidate package roots: %s\n' "${PACKAGE_ENTRIES[*]:-none}"
+test "${#PACKAGE_ENTRIES[@]}" -eq 1
+PACKAGE_ENTRY="${PACKAGE_ENTRIES[0]}"
+if [[ "$PACKAGE_ENTRY" == 'package.json' ]]; then
+  SOURCE_ROOT='/tmp/v5-unzip'
+else
+  SOURCE_ROOT="/tmp/v5-unzip/${PACKAGE_ENTRY%/package.json}"
+fi
+test -d "$SOURCE_ROOT"
+test "$(find "$SOURCE_ROOT" -type f | wc -l)" -eq "${EXPECTED_FILES}"
+cp -a "$SOURCE_ROOT/." /tmp/v5-src/
 test "$(find /tmp/v5-src -type f | wc -l)" -eq "${EXPECTED_FILES}"
 
 (
