@@ -1,0 +1,1 @@
+Isolated verification only. Production main is checked out read-only by the workflow.
