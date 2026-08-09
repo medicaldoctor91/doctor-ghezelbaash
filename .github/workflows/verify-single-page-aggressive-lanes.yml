@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, os, time, urllib.error, urllib.parse, urllib.request, xml.etree.ElementTree as ET
+          import json, os, urllib.error, urllib.parse, urllib.request, xml.etree.ElementTree as ET
 
           H=os.environ['CANONICAL_HOST']; P=os.environ['PROJECT']; A=os.environ['CLOUDFLARE_ACCOUNT_ID']; T=os.environ['CLOUDFLARE_API_TOKEN']; K=os.environ['INDEXNOW_KEY']
           C=f'https://{H}'; ROOT=C+'/'; BASE='https://api.cloudflare.com/client/v4'
@@ -34,7 +34,7 @@ jobs:
               def redirect_request(self, req, fp, code, msg, headers, newurl): return None
           no_redirect=urllib.request.build_opener(NoRedirect)
 
-          def fetch(url, ua='ghezelbaash-single-page-audit/1.0', follow=True):
+          def fetch(url, ua='ghezelbaash-single-page-audit/1.1', follow=True):
               req=urllib.request.Request(url,headers={'User-Agent':ua,'Accept':'*/*','Cache-Control':'no-cache','Pragma':'no-cache'})
               opener=urllib.request.urlopen if follow else no_redirect.open
               try:
@@ -42,7 +42,7 @@ jobs:
               except urllib.error.HTTPError as e: return e.code, e.read(), e.headers, e.geturl()
 
           def cf(path):
-              req=urllib.request.Request(BASE+path,headers={'Authorization':f'Bearer {T}','Accept':'application/json','User-Agent':'ghezelbaash-single-page-audit/1.0'})
+              req=urllib.request.Request(BASE+path,headers={'Authorization':f'Bearer {T}','Accept':'application/json','User-Agent':'ghezelbaash-single-page-audit/1.1'})
               try:
                   with urllib.request.urlopen(req,timeout=30) as r: return r.status,json.loads(r.read().decode() or '{}')
               except urllib.error.HTTPError as e:
@@ -51,7 +51,6 @@ jobs:
                   except Exception:p={}
                   return e.code,p
 
-          # Canonical HTML is the sole searchable landing page.
           st,body,h,_=fetch(ROOT,ua='Googlebot')
           xrobots=' | '.join(h.get_all('X-Robots-Tag') or [])
           print('ROOT_GOOGLEBOT',st,'xrobots=',xrobots)
@@ -59,9 +58,15 @@ jobs:
 
           sm_url=C+'/sitemap.xml'; st,sm_bytes,_,_=fetch(sm_url)
           if st!=200: raise SystemExit(f'sitemap HTTP {st}')
-          sm=ET.fromstring(sm_bytes); locs=[e.text.strip() for e in sm.iter() if e.tag.rsplit('}',1)[-1]=='loc' and e.text]
-          print('SITEMAP_LOCS',locs)
-          if locs!=[ROOT]: raise SystemExit(f'Sitemap is not single-page canonical only: {locs!r}')
+          sm=ET.fromstring(sm_bytes)
+          locs=[]
+          for url_el in list(sm):
+              if url_el.tag.rsplit('}',1)[-1] != 'url': continue
+              for child in list(url_el):
+                  if child.tag.rsplit('}',1)[-1]=='loc' and child.text:
+                      locs.append(child.text.strip()); break
+          print('SITEMAP_PAGE_LOCS',locs)
+          if locs!=[ROOT]: raise SystemExit(f'Sitemap page lane is not single-page canonical only: {locs!r}')
 
           st,robots,_,_=fetch(C+'/robots.txt')
           robots_text=robots.decode('utf-8','replace')
@@ -69,7 +74,6 @@ jobs:
           if st!=200 or any(x not in robots_text for x in required): raise SystemExit('robots.txt aggressive crawler lane incomplete')
           print('ROBOTS_AI_LANE_OK')
 
-          # Machine lane: all live RFC 9264 semantic representations are public but Googlebot-scoped noindex.
           st,ls_bytes,_,_=fetch(C+'/linkset.json')
           if st!=200: raise SystemExit('linkset missing')
           ls=json.loads(ls_bytes)
@@ -89,6 +93,7 @@ jobs:
           for u in urls:
               st,b,h,_=fetch(u)
               if st!=200: raise SystemExit(f'non-200 semantic URL {u}: {st}')
+
           st,b,h,_=fetch(C+'/graph.jsonld',ua='Googlebot')
           gx=' | '.join(h.get_all('X-Robots-Tag') or [])
           print('GRAPH_GOOGLEBOT_XROBOTS',gx)
@@ -98,7 +103,6 @@ jobs:
           print('GRAPH_GENERIC_XROBOTS',bx)
           if 'index' not in bx.lower() or 'follow' not in bx.lower(): raise SystemExit('Generic machine-resource indexing lane missing')
 
-          # Canonicalize both stable Pages hostname and current unique deployment hostname.
           st,p=cf(f'/accounts/{A}/pages/projects/{P}')
           if st!=200 or p.get('success') is not True: raise SystemExit(f'Pages project lookup failed {st}: {p}')
           r=p.get('result') or {}; unique=((r.get('canonical_deployment') or {}).get('url') or (r.get('latest_deployment') or {}).get('url'))
@@ -108,11 +112,10 @@ jobs:
               print('PAGES_CANONICAL',st,u,'->',loc)
               if st!=301 or loc!=C+'/single-page-canonical-proof?q=1': raise SystemExit(f'Pages hostname canonicalization failed {u}')
 
-          # Exercise the complete semantic notification lane now.
           key_url=C+'/'+K+'.txt'; st,key_bytes,_,_=fetch(key_url)
           if st!=200 or key_bytes!=(K+'\n').encode(): raise SystemExit('IndexNow key verification failed')
           payload=json.dumps({'host':H,'key':K,'keyLocation':key_url,'urlList':urls},separators=(',',':')).encode()
-          req=urllib.request.Request('https://api.indexnow.org/indexnow',data=payload,method='POST',headers={'Content-Type':'application/json; charset=utf-8','User-Agent':'ghezelbaash-single-page-audit/1.0'})
+          req=urllib.request.Request('https://api.indexnow.org/indexnow',data=payload,method='POST',headers={'Content-Type':'application/json; charset=utf-8','User-Agent':'ghezelbaash-single-page-audit/1.1'})
           try:
               with urllib.request.urlopen(req,timeout=30) as resp: ist=resp.status; ib=resp.read().decode('utf-8','replace')
           except urllib.error.HTTPError as e: ist=e.code; ib=e.read().decode('utf-8','replace')
