@@ -20,11 +20,11 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import datetime as dt, json, os, urllib.error, urllib.parse, urllib.request
+          import datetime as dt, json, os, urllib.error, urllib.request
           A=os.environ['CLOUDFLARE_ACCOUNT_ID']; M=os.environ['CLOUDFLARE_API_TOKEN']; Z=os.environ['ZONE_ID']; B='https://api.cloudflare.com/client/v4'
           def call(tok,method,path,body=None):
               data=None if body is None else json.dumps(body,separators=(',',':')).encode()
-              req=urllib.request.Request(B+path,data=data,method=method,headers={'Authorization':f'Bearer {tok}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-ai-policy-readback/1.0'})
+              req=urllib.request.Request(B+path,data=data,method=method,headers={'Authorization':f'Bearer {tok}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-ai-policy-readback/1.1'})
               try:
                   with urllib.request.urlopen(req,timeout=40) as r:
                       raw=r.read().decode('utf-8','replace'); return r.status,json.loads(raw) if raw else {}
@@ -50,8 +50,10 @@ jobs:
               print('BOT_MANAGEMENT_STATUS',st)
               if st==200 and b.get('success') is True:
                   r=b.get('result') or {}
-                  keep={k:r.get(k) for k in ('fight_mode','ai_bots_protection','crawler_protection','enable_js','using_latest_model') if k in r}
-                  print('BOT_MANAGEMENT_CONTROLS',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+                  print('BOT_MANAGEMENT_KEYS',json.dumps(sorted(r.keys())))
+                  terms=('ai','search','agent','train','crawler','bot','fight','model','js')
+                  keep={k:v for k,v in r.items() if any(t in k.lower() for t in terms)}
+                  print('BOT_MANAGEMENT_RELEVANT',json.dumps(keep,ensure_ascii=False,sort_keys=True))
           finally:
               st,r=call(M,'DELETE',f'/accounts/{A}/tokens/{tid}')
               print('TEMP_TOKEN_REVOKED',st,r.get('success'))
