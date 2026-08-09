@@ -1,0 +1,66 @@
+name: Finalize Cloudflare Pages deletion
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.run-cloudflare-pages-finalize'
+
+permissions:
+  contents: read
+
+jobs:
+  finalize:
+    if: github.event.pull_request.number == 161 && github.head_ref == 'probe-cloudflare-secret-20260809'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      PROJECT_NAME: doctor-ghezelbaash
+    steps:
+      - name: Remove Pages custom-domain associations
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}"
+          auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+
+          curl --fail-with-body --silent --show-error -H "$auth" "$base/domains" > /tmp/domains.json
+          jq -e '.success == true' /tmp/domains.json >/dev/null
+          jq -r '.result[]?.name // empty' /tmp/domains.json > /tmp/domain-names.txt
+
+          echo "Pages custom domains to detach:"
+          cat /tmp/domain-names.txt || true
+
+          while IFS= read -r domain; do
+            [ -n "$domain" ] || continue
+            encoded="$(python -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$domain")"
+            curl --fail-with-body --silent --show-error -X DELETE -H "$auth" "$base/domains/$encoded" > /tmp/domain-delete.json
+            jq -e '.success == true' /tmp/domain-delete.json >/dev/null
+            echo "Detached Pages domain: $domain"
+          done < /tmp/domain-names.txt
+
+          sleep 2
+          curl --fail-with-body --silent --show-error -H "$auth" "$base/domains" > /tmp/domains-after.json
+          jq -e '.success == true and (.result | length == 0)' /tmp/domains-after.json >/dev/null
+
+      - name: Delete Cloudflare Pages project
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}"
+          auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          curl --fail-with-body --silent --show-error -X DELETE -H "$auth" "$base" > /tmp/project-delete.json
+          jq -e '.success == true' /tmp/project-delete.json >/dev/null
+          echo 'Cloudflare Pages project delete accepted.'
+
+      - name: Verify project is gone
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}"
+          auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          code="$(curl --silent --output /tmp/project-check.json --write-out '%{http_code}' -H "$auth" "$base")"
+          echo "Post-delete lookup HTTP status: $code"
+          test "$code" != '200'
