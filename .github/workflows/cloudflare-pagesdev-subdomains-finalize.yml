@@ -1,0 +1,79 @@
+name: Finalize pages.dev and deployment-subdomain canonicalization
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  canonicalize:
+    if: github.event.pull_request.head.ref == 'cloudflare-pagesdev-subdomains-finalize-20260809'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      LIST_NAME: ghezelbaash_pages_dev_to_canonical
+      PROJECT: doctor-ghezelbaash
+      CANONICAL_HOST: www.ghezelbaash.ir
+    steps:
+      - name: Canonicalize project pages.dev plus all deployment and preview subdomains
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.request
+          A=os.environ['CLOUDFLARE_ACCOUNT_ID']; T=os.environ['CLOUDFLARE_API_TOKEN']; L=os.environ['LIST_NAME']; P=os.environ['PROJECT']; H=os.environ['CANONICAL_HOST']; B='https://api.cloudflare.com/client/v4'
+          HD={'Authorization':f'Bearer {T}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-pagesdev-canonicalizer/1.0'}
+          def call(m,p,b=None):
+            req=urllib.request.Request(B+p,data=None if b is None else json.dumps(b,separators=(',',':')).encode(),method=m,headers=HD)
+            try:
+              with urllib.request.urlopen(req,timeout=40) as r:
+                raw=r.read().decode('utf-8','replace'); return r.status,json.loads(raw) if raw else {}
+            except urllib.error.HTTPError as e:
+              raw=e.read().decode('utf-8','replace')
+              try:x=json.loads(raw) if raw else {}
+              except Exception:x={'raw':raw[:1200]}
+              return e.code,x
+          s,p=call('GET',f'/accounts/{A}/rules/lists?per_page=100')
+          if s!=200 or p.get('success') is not True: raise SystemExit(f'List enumeration failed HTTP {s}: {p}')
+          row=next((x for x in (p.get('result') or []) if x.get('name')==L),None)
+          if not row: raise SystemExit(f'Bulk Redirect list {L} not found')
+          lid=row['id']
+          body=[{'redirect':{'source_url':f'https://{P}.pages.dev/','target_url':f'https://{H}/','status_code':301,'include_subdomains':True,'subpath_matching':True,'preserve_query_string':True,'preserve_path_suffix':True},'comment':'Canonicalize Pages project hostname and every Pages deployment/preview subdomain to the physician canonical www host'}]
+          s,p=call('PUT',f'/accounts/{A}/rules/lists/{lid}/items',body)
+          if s not in (200,201) or p.get('success') is not True: raise SystemExit(f'List replacement failed HTTP {s}: {p}')
+          op=(p.get('result') or {}).get('operation_id')
+          if op:
+            for i in range(30):
+              x,y=call('GET',f'/accounts/{A}/rules/lists/bulk_operations/{op}')
+              state=(y.get('result') or {}).get('status') if x==200 and y.get('success') is True else None
+              print('BULK_OPERATION',i+1,state)
+              if state=='completed': break
+              if state=='failed': raise SystemExit(f'Bulk list operation failed: {y}')
+              time.sleep(2)
+            else: raise SystemExit('Bulk list update did not complete in time')
+          s,p=call('GET',f'/accounts/{A}/rules/lists/{lid}/items?per_page=100')
+          if s!=200 or p.get('success') is not True: raise SystemExit(f'List read-back failed HTTP {s}: {p}')
+          items=p.get('result') or []
+          r=(items[0].get('redirect') or {}) if items else {}
+          print('REDIRECT_FINAL',json.dumps(r,ensure_ascii=False,sort_keys=True))
+          required={'source_url':f'https://{P}.pages.dev/','target_url':f'https://{H}/','status_code':301,'include_subdomains':True,'subpath_matching':True,'preserve_query_string':True,'preserve_path_suffix':True}
+          for k,v in required.items():
+            if r.get(k)!=v: raise SystemExit(f'Redirect read-back mismatch {k}: {r.get(k)!r} != {v!r}')
+          PY
+
+          for u in \
+            'https://doctor-ghezelbaash.pages.dev/final-canonical-test?q=1' \
+            'https://35ec1e27.doctor-ghezelbaash.pages.dev/final-canonical-test?q=1'; do
+            echo "--- $u"
+            h="$(mktemp)"
+            code="$(curl -sS -D "$h" -o /dev/null --max-redirs 0 -w '%{http_code}' "$u" || true)"
+            loc="$(tr -d '\r' < "$h" | awk 'BEGIN{IGNORECASE=1} /^location:/{sub(/^location:[[:space:]]*/,""); print; exit}')"
+            echo "HTTP=$code LOCATION=$loc"
+            test "$code" = '301'
+            test "$loc" = 'https://www.ghezelbaash.ir/final-canonical-test?q=1'
+          done
