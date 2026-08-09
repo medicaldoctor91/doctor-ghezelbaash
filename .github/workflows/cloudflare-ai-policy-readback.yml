@@ -1,0 +1,22 @@
+name: Cloudflare AI policy readback
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+permissions:
+  contents: read
+jobs:
+  readback:
+    if: github.event.pull_request.head.ref == 'cloudflare-ai-policy-readback-20260810'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      ZONE_ID: 5fc0f0a745ed95c6fb9f79ac7386e370
+    steps:
+      - name: Read public crawler-impacting zone controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H "Accept: application/json" "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/settings" \
+            | jq -c '[.result[] | select((.id|test("bot|crawler|robot|hint|brain|rocket|brotli|http3|minify";"i"))) | {id,value,editable}]'
