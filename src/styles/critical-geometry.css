@@ -1,0 +1,7 @@
+.skip-link{position:fixed;inset-inline-start:1rem;top:-5rem;z-index:1200;padding:.65rem .85rem;border:1px solid var(--ink);border-radius:.6rem;background:#fff;box-shadow:0 8px 24px rgb(0 0 0/.12)}
+.skip-link:focus{top:1rem}
+.render-chunk{content-visibility:auto;contain:layout style paint;contain-intrinsic-size:auto var(--cis,1600px)}
+@media(max-width:48rem){:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,Arial,sans-serif}}
+@media(max-width:720px){main{width:min(100% - 1rem,78rem);padding:1rem .85rem calc(7.2rem + env(safe-area-inset-bottom));border-inline:0;border-radius:0;box-shadow:none}h1{font-size:clamp(1.85rem,8.3vw,2.65rem)}h2{margin-top:3.8rem}.hero-action[href^="tel:"]{direction:rtl;unicode-bidi:isolate;white-space:normal}.quick-actions__top{width:2.15rem;height:2.15rem}.quick-actions__top::before{inset:-.35rem}}
+@media(max-width:480px){.quick-actions__bar{grid-template-columns:minmax(0,.9fr) minmax(0,1.2fr) minmax(0,.9fr)}.quick-actions__item{padding:.3rem .2rem;font-size:clamp(.67rem,2.9vw,.76rem)}.quick-actions__item--consultation{gap:.3rem}.quick-actions__consultation-copy small{font-size:.78em}}
+@media(max-width:340px){.quick-actions__item{gap:.16rem;padding-inline:.08rem;font-size:.64rem}.quick-actions__item svg{width:.9rem;height:.9rem}.quick-actions__item--consultation{gap:.18rem}.quick-actions__consultation-copy small{font-size:.76em}}

@@ -2,8 +2,9 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
+import {splitCssDelivery} from '../src/lib/css-delivery.mjs';
 const root=process.cwd();
-const cssSource=await readFile(path.join(root,'src/styles/global.css'),'utf8'),cssMarker='/*DIST_CRITICAL_CSS_END*/',cssAt=cssSource.indexOf(cssMarker);if(cssAt<0)throw new Error('Critical CSS split marker missing');const externalCss=cssSource.slice(cssAt+cssMarker.length),cssHash=createHash('sha256').update(externalCss).digest('hex').slice(0,12),cssAsset=`public/assets/site.${cssHash}.css`;
+const cssSource=await readFile(path.join(root,'src/styles/global.css'),'utf8'),stableGeometryCss=await readFile(path.join(root,'src/styles/critical-geometry.css'),'utf8'),{externalCss}=splitCssDelivery(cssSource,stableGeometryCss),cssHash=createHash('sha256').update(externalCss).digest('hex').slice(0,12),cssAsset=`public/assets/site.${cssHash}.css`;
 const files=[
  'src/content/home.md',
  'src/data/semantic/head-graph.json','src/data/semantic/support-graph.json',

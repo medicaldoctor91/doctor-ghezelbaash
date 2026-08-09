@@ -88,6 +88,6 @@
   "maxSupportGraphEndByte": 1940000,
   "directAnswerHeadingLevel": 0,
   "contentSectionCount": 15,
-  "maxCriticalCssBytes": 10000,
-  "minExternalCssBytes": 45000
+  "maxCriticalCssBytes": 45000,
+  "minExternalCssBytes": 18000
 }

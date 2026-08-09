@@ -35,8 +35,11 @@ Useful integrity operations:
 npm run media:enrich
 npm run render:calibration:apply -- path/to/chromium-measurements.json
 npm run release:prepare
+npm run validate:browser
 npm run verify:production -- https://www.ghezelbaash.ir/
 ```
+
+`validate:browser` requires Chrome or Chromium (`CHROME_PATH` may be supplied explicitly) and blocks release on delayed-CSS layout shift, mobile clipping, broken TOC/search targets, failed video deep links or Range requests, console errors, broken Manifest assets, and missing internal machine resources.
 
 `media:enrich` is idempotent and preserves pixel dimensions. The render-calibration command validates all 134 chunk identities across the six measured viewport widths before atomically updating the canonical JSON and its CSS interpolation rules. Production verification checks asynchronous CSS delivery, response-budget safety, native answer integration, crawler access, machine-resource headers and the real 404 contract.
 

@@ -4,7 +4,7 @@ import {readFile,readdir,writeFile} from 'node:fs/promises';
 const root=process.cwd();
 const mediaRoot=path.join(root,'public/media');
 const rasterPattern=/\.(?:avif|webp|jpe?g|png)$/i;
-const textPattern=/\.(?:astro|css|html|js|json|jsonld|md|mjs|ts|txt|vcf|xml|yaml|yml)$/i;
+const textPattern=/\.(?:astro|css|html|js|json|jsonld|md|mjs|ts|txt|vcf|webmanifest|xml|yaml|yml)$/i;
 const fingerprintPattern=/\.([0-9a-f]{12})\.[^.]+$/;
 const escapeRegExp=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 

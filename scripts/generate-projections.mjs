@@ -2,6 +2,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir, readdir, unlink } from 'node:fs/promises';
 import { assembleCanonicalContent } from './lib/assemble-content.mjs';
+import { splitCssDelivery } from '../src/lib/css-delivery.mjs';
 
 const root=process.cwd();
 const data=path.join(root,'src/data');
@@ -45,10 +46,9 @@ await writeFile(path.join(root,'src/content/home.md'),assembledCanonical.content
 
 // ---- CSS delivery: one canonical source -> critical inline slice + fingerprinted external remainder.
 const cssSource=await readFile(path.join(root,'src/styles/global.css'),'utf8');
-const cssSplitMarker='/*DIST_CRITICAL_CSS_END*/',cssSplitAt=cssSource.indexOf(cssSplitMarker);
-if(cssSplitAt<0) throw new Error('Critical CSS split marker missing');
-const externalCss=cssSource.slice(cssSplitAt+cssSplitMarker.length);
-if(!externalCss.includes('/*DIST_CHUNK_INTRINSIC_START*/')||!externalCss.includes('/*DIST_CHUNK_INTRINSIC_END*/')) throw new Error('External CSS lost render calibration');
+const stableGeometryCss=await readFile(path.join(root,'src/styles/critical-geometry.css'),'utf8');
+const {criticalCss,externalCss}=splitCssDelivery(cssSource,stableGeometryCss);
+if(!criticalCss.includes('/*DIST_CHUNK_INTRINSIC_START*/')||!criticalCss.includes('/*DIST_CHUNK_INTRINSIC_END*/')||externalCss.includes('/*DIST_CHUNK_INTRINSIC_START*/')) throw new Error('Critical render calibration extraction drift');
 const externalCssHash=createHash('sha256').update(externalCss).digest('hex').slice(0,12);
 const cssAssetDir=path.join(root,'public/assets');await mkdir(cssAssetDir,{recursive:true});
 for(const name of await readdir(cssAssetDir)) if(/^site\.[0-9a-f]{12}\.css$/.test(name)&&name!==`site.${externalCssHash}.css`) await unlink(path.join(cssAssetDir,name));
@@ -382,7 +382,7 @@ let sitemap=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.s
 for(const u of imageLocs) sitemap+=`    <image:image><image:loc>${xmlEsc(u)}</image:loc></image:image>\n`;
 for(const v of videos){
   const thumb=valueText(v.thumbnailUrl||v.thumbnail?.contentUrl||v.thumbnail), content=valueText(v.contentUrl||v.url), title=valueText(v.name), desc=valueText(v.description), date=valueText(v.uploadDate||v.datePublished), duration=isoDurationSeconds(valueText(v.duration));
-  sitemap+=`    <video:video><video:thumbnail_loc>${xmlEsc(thumb)}</video:thumbnail_loc><video:title>${xmlEsc(title)}</video:title><video:description>${xmlEsc(desc)}</video:description><video:content_loc>${xmlEsc(content)}</video:content_loc>${date?`<video:publication_date>${xmlEsc(date)}</video:publication_date>`:''}${duration?`<video:duration>${duration}</video:duration>`:''}</video:video>\n`;
+  sitemap+=`    <video:video><video:thumbnail_loc>${xmlEsc(thumb)}</video:thumbnail_loc><video:title>${xmlEsc(title)}</video:title><video:description>${xmlEsc(desc)}</video:description><video:content_loc>${xmlEsc(content)}</video:content_loc>${date?`<video:publication_date>${xmlEsc(date)}</video:publication_date>`:''}${duration?`<video:duration>${duration}</video:duration>`:''}<video:uploader info="${xmlEsc(release.primaryEntity.id)}">${xmlEsc(release.primaryEntity.name)}</video:uploader></video:video>\n`;
 }
 sitemap+='  </url>\n</urlset>\n';
 await writeFile(path.join(projections,'sitemap.xml'),sitemap);
