@@ -1,1 +1,2 @@
 trigger 2026-08-09 canonical cache + smart tiered
+reverify after propagation
