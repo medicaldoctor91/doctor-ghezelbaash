@@ -24,7 +24,7 @@ jobs:
           A=os.environ['CLOUDFLARE_ACCOUNT_ID']; M=os.environ['CLOUDFLARE_API_TOKEN']; Z=os.environ['ZONE_ID']; B='https://api.cloudflare.com/client/v4'
           def call(tok,method,path,body=None):
               data=None if body is None else json.dumps(body,separators=(',',':')).encode()
-              req=urllib.request.Request(B+path,data=data,method=method,headers={'Authorization':f'Bearer {tok}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-ai-policy-readback/1.1'})
+              req=urllib.request.Request(B+path,data=data,method=method,headers={'Authorization':f'Bearer {tok}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-ai-policy-readback/1.2'})
               try:
                   with urllib.request.urlopen(req,timeout=40) as r:
                       raw=r.read().decode('utf-8','replace'); return r.status,json.loads(raw) if raw else {}
@@ -51,9 +51,24 @@ jobs:
               if st==200 and b.get('success') is True:
                   r=b.get('result') or {}
                   print('BOT_MANAGEMENT_KEYS',json.dumps(sorted(r.keys())))
-                  terms=('ai','search','agent','train','crawler','bot','fight','model','js')
+                  terms=('ai','search','agent','train','crawler','bot','fight','model','js','robot')
                   keep={k:v for k,v in r.items() if any(t in k.lower() for t in terms)}
                   print('BOT_MANAGEMENT_RELEVANT',json.dumps(keep,ensure_ascii=False,sort_keys=True))
+
+              st,rs=call(T,'GET',f'/zones/{Z}/rulesets')
+              if st==200 and rs.get('success') is True:
+                  relevant=[]
+                  for meta in rs.get('result') or []:
+                      phase=meta.get('phase')
+                      if phase not in ('http_request_firewall_custom','http_request_cache_settings','http_request_dynamic_redirect'):
+                          continue
+                      rid=meta.get('id'); xst,x=call(T,'GET',f'/zones/{Z}/rulesets/{rid}')
+                      if xst!=200 or x.get('success') is not True: continue
+                      rules=[]
+                      for q in (x.get('result') or {}).get('rules') or []:
+                          rules.append({'description':q.get('description'),'action':q.get('action'),'expression':q.get('expression'),'enabled':q.get('enabled',True),'action_parameters':q.get('action_parameters')})
+                      relevant.append({'phase':phase,'kind':meta.get('kind'),'name':meta.get('name'),'rules':rules})
+                  print('RELEVANT_RULESETS',json.dumps(relevant,ensure_ascii=False,sort_keys=True))
           finally:
               st,r=call(M,'DELETE',f'/accounts/{A}/tokens/{tid}')
               print('TEMP_TOKEN_REVOKED',st,r.get('success'))
