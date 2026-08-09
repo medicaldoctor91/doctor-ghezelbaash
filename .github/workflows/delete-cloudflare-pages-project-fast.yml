@@ -41,7 +41,7 @@ jobs:
               'Authorization': f'Bearer {token}',
               'Accept': 'application/json',
               'Content-Type': 'application/json',
-              'User-Agent': 'doctor-ghezelbaash-pages-cleanup/2.0',
+              'User-Agent': 'doctor-ghezelbaash-pages-cleanup/2.1',
           }
 
           def api(method, url, attempts=8):
@@ -95,13 +95,14 @@ jobs:
           deleted = 0
           round_no = 0
           stalled = 0
+          per_page = 20
 
           while True:
               round_no += 1
-              if round_no > 80:
+              if round_no > 200:
                   raise SystemExit('Exceeded cleanup round safety limit')
 
-              st, first = api('GET', base + '/deployments?' + urllib.parse.urlencode({'page': 1, 'per_page': 100}))
+              st, first = api('GET', base + '/deployments?' + urllib.parse.urlencode({'page': 1, 'per_page': per_page}))
               if not success(st, first):
                   if st == 404:
                       print('Project disappeared during cleanup; treating as deleted.')
@@ -119,25 +120,20 @@ jobs:
               need = total - 90
               candidates = []
               seen = set()
-              pages_to_try = []
-              for p in range(total_pages, max(0, total_pages - 4), -1):
-                  pages_to_try.append(p)
-
-              for p in pages_to_try:
-                  st, page_payload = api('GET', base + '/deployments?' + urllib.parse.urlencode({'page': p, 'per_page': 100}))
+              for p in range(total_pages, max(0, total_pages - 8), -1):
+                  st, page_payload = api('GET', base + '/deployments?' + urllib.parse.urlencode({'page': p, 'per_page': per_page}))
                   if not success(st, page_payload):
                       continue
-                  rows = page_payload.get('result') or []
-                  rows = sorted(rows, key=lambda d: d.get('created_on') or '')
+                  rows = sorted(page_payload.get('result') or [], key=lambda d: d.get('created_on') or '')
                   for dep in rows:
                       dep_id = dep.get('id')
                       if not dep_id or dep_id in protected or dep_id in seen:
                           continue
                       seen.add(dep_id)
                       candidates.append(dep_id)
-                      if len(candidates) >= min(160, need + 30):
+                      if len(candidates) >= min(120, need + 20):
                           break
-                  if len(candidates) >= min(160, need + 30):
+                  if len(candidates) >= min(120, need + 20):
                       break
 
               if not candidates:
@@ -169,16 +165,12 @@ jobs:
                   for dep_id, st, msg in failures[:5]:
                       print(f'  blocked {dep_id}: HTTP {st}: {msg}')
 
-              if progress == 0:
-                  stalled += 1
-              else:
-                  stalled = 0
+              stalled = stalled + 1 if progress == 0 else 0
               if stalled >= 2:
                   raise SystemExit('Cleanup stalled for two consecutive rounds')
 
           print(f'Deployment count is now <=100. Total successful/absent delete operations: {deleted}')
 
-          # Use the documented Pages project DELETE endpoint once the high-deployment blocker is removed.
           st, payload = api('DELETE', base)
           if not success(st, payload) and st != 404:
               raise SystemExit(f'Project delete failed: HTTP {st}, errors={payload.get("errors")}, messages={payload.get("messages")}')
