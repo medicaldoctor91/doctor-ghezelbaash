@@ -1,0 +1,158 @@
+name: Deploy Cloudflare Pages production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-pages-production
+  cancel-in-progress: false
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CF_PROJECT: doctor-ghezelbaash
+  PRODUCTION_BRANCH: main
+  CANONICAL_HOST: www.ghezelbaash.ir
+
+jobs:
+  build-deploy-verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact production source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Use Node 24.18.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install locked Node dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build and validate exact static DIST
+        env:
+          ASTRO_TELEMETRY_DISABLED: '1'
+        run: npm run build
+
+      - name: Ensure direct-upload Pages project exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, urllib.error, urllib.request
+          account=os.environ['CLOUDFLARE_ACCOUNT_ID']; token=os.environ['CLOUDFLARE_API_TOKEN']; project=os.environ['CF_PROJECT']
+          base='https://api.cloudflare.com/client/v4'
+          headers={'Authorization':f'Bearer {token}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-pages-deploy/1.0'}
+          def call(method,path,body=None):
+              data=None if body is None else json.dumps(body,separators=(',',':')).encode()
+              req=urllib.request.Request(base+path,data=data,method=method,headers=headers)
+              try:
+                  with urllib.request.urlopen(req,timeout=45) as r:
+                      raw=r.read().decode('utf-8','replace'); return r.status,json.loads(raw) if raw else {}
+              except urllib.error.HTTPError as e:
+                  raw=e.read().decode('utf-8','replace')
+                  try: p=json.loads(raw) if raw else {}
+                  except Exception: p={'raw':raw[:1000]}
+                  return e.code,p
+          path=f'/accounts/{account}/pages/projects/{project}'
+          st,p=call('GET',path)
+          if st==404:
+              st,p=call('POST',f'/accounts/{account}/pages/projects',{'name':project,'production_branch':'main'})
+              if st not in (200,201) or p.get('success') is not True:
+                  raise SystemExit(f'Pages project create failed HTTP {st}: {p}')
+              print('PAGES_PROJECT_CREATED')
+          elif st==200 and p.get('success') is True:
+              print('PAGES_PROJECT_ALREADY_EXISTS')
+          else:
+              raise SystemExit(f'Pages project lookup failed HTTP {st}: {p}')
+          PY
+
+      - name: Deploy DIST to production
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4 pages deploy dist --project-name="$CF_PROJECT" --branch="$PRODUCTION_BRANCH"
+
+      - name: Ensure canonical custom domain is attached
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.parse, urllib.request
+          account=os.environ['CLOUDFLARE_ACCOUNT_ID']; token=os.environ['CLOUDFLARE_API_TOKEN']; project=os.environ['CF_PROJECT']; host=os.environ['CANONICAL_HOST']
+          base='https://api.cloudflare.com/client/v4'; headers={'Authorization':f'Bearer {token}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-pages-domain/1.0'}
+          def call(method,path,body=None):
+              data=None if body is None else json.dumps(body,separators=(',',':')).encode()
+              req=urllib.request.Request(base+path,data=data,method=method,headers=headers)
+              try:
+                  with urllib.request.urlopen(req,timeout=45) as r:
+                      raw=r.read().decode('utf-8','replace'); return r.status,json.loads(raw) if raw else {}
+              except urllib.error.HTTPError as e:
+                  raw=e.read().decode('utf-8','replace')
+                  try: p=json.loads(raw) if raw else {}
+                  except Exception: p={'raw':raw[:1200]}
+                  return e.code,p
+          list_path=f'/accounts/{account}/pages/projects/{project}/domains'
+          st,p=call('GET',list_path)
+          if st!=200 or p.get('success') is not True: raise SystemExit(f'Domain list failed HTTP {st}: {p}')
+          rows=p.get('result') or []
+          if not any(x.get('name')==host for x in rows):
+              st,p=call('POST',list_path,{'name':host})
+              if st not in (200,201) or p.get('success') is not True: raise SystemExit(f'Attach domain failed HTTP {st}: {p}')
+              print('CUSTOM_DOMAIN_ATTACHED')
+          else:
+              print('CUSTOM_DOMAIN_ALREADY_ATTACHED')
+          for i in range(24):
+              st,p=call('GET',list_path)
+              rows=(p.get('result') or []) if st==200 and p.get('success') is True else []
+              row=next((x for x in rows if x.get('name')==host),{})
+              status=row.get('status')
+              print(f'CUSTOM_DOMAIN_STATUS attempt={i+1} status={status}')
+              if status=='active': break
+              time.sleep(5)
+          PY
+
+      - name: Verify canonical production contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os, time, urllib.error, urllib.request
+          host=os.environ['CANONICAL_HOST']; project=os.environ['CF_PROJECT']
+          urls=[
+            f'https://{host}/',
+            f'https://{host}/robots.txt',
+            f'https://{host}/sitemap.xml',
+            f'https://{host}/graph.jsonld',
+            f'https://{host}/llms.txt',
+            f'https://{host}/this-path-must-be-a-real-404-7f3d9a',
+          ]
+          def fetch(url):
+              req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','Pragma':'no-cache','User-Agent':'ghezelbaash-production-verifier/1.0'})
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as r: return r.status,dict(r.headers),r.read(4096)
+              except urllib.error.HTTPError as e: return e.code,dict(e.headers),e.read(4096)
+          for attempt in range(24):
+              st,_,_=fetch(urls[0])
+              if st==200: break
+              time.sleep(5)
+          expected=[200,200,200,200,200,404]
+          for url,want in zip(urls,expected):
+              st,h,b=fetch(url)
+              print('VERIFY',st,url,'cf-cache-status=',h.get('CF-Cache-Status'),'x-robots-tag=',h.get('X-Robots-Tag'),'bytes_sample=',len(b))
+              if st!=want: raise SystemExit(f'Unexpected HTTP {st} for {url}, expected {want}')
+          PY
