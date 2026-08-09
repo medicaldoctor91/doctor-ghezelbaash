@@ -1,0 +1,170 @@
+name: Final Cloudflare crawler and edge optimizations
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  optimize:
+    if: github.event.pull_request.head.ref == 'cloudflare-zone-audit-20260809'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      ZONE_NAME: ghezelbaash.ir
+    steps:
+      - name: Optimize crawler discoverability and eliminate unnecessary edge rewrites
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import datetime as dt
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          ACCOUNT=os.environ['CLOUDFLARE_ACCOUNT_ID']
+          ZONE_NAME=os.environ['ZONE_NAME']
+          MGMT=os.environ['CLOUDFLARE_API_TOKEN']
+          BASE='https://api.cloudflare.com/client/v4'
+
+          def call(token, method, path, body=None):
+              data=None if body is None else json.dumps(body,separators=(',',':')).encode()
+              req=urllib.request.Request(BASE+path, data=data, method=method, headers={
+                  'Authorization':f'Bearer {token}',
+                  'Accept':'application/json',
+                  'Content-Type':'application/json',
+                  'User-Agent':'ghezelbaash-edge-final/1.0',
+              })
+              try:
+                  with urllib.request.urlopen(req, timeout=45) as r:
+                      raw=r.read().decode('utf-8','replace')
+                      return r.status, json.loads(raw) if raw else {}
+              except urllib.error.HTTPError as e:
+                  raw=e.read().decode('utf-8','replace')
+                  try: payload=json.loads(raw) if raw else {}
+                  except Exception: payload={'raw':raw[:1200]}
+                  return e.code,payload
+              except Exception as e:
+                  return 0,{'error':type(e).__name__,'detail':str(e)[:300]}
+
+          def ok(st,p):
+              return 200 <= st < 300 and p.get('success',True) is not False
+
+          q=urllib.parse.urlencode({'name':ZONE_NAME,'account.id':ACCOUNT,'per_page':50})
+          st,z=call(MGMT,'GET','/zones?'+q)
+          if st!=200 or z.get('success') is not True or not z.get('result'):
+              raise SystemExit(f'Zone lookup failed HTTP {st}: {z.get("errors")}')
+          zone=z['result'][0]; ZONE=zone['id']
+
+          st,pg=call(MGMT,'GET',f'/accounts/{ACCOUNT}/tokens/permission_groups?scope=com.cloudflare.api.account.zone')
+          if st!=200 or pg.get('success') is not True: raise SystemExit(f'Permission groups failed HTTP {st}')
+          groups=[{'id':g['id']} for g in (pg.get('result') or []) if 'com.cloudflare.api.account.zone' in (g.get('scopes') or [])]
+          expires=(dt.datetime.now(dt.timezone.utc)+dt.timedelta(hours=1)).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          ts,tp=call(MGMT,'POST',f'/accounts/{ACCOUNT}/tokens',{'name':'Temporary Ghezelbaash Edge Optimizer','expires_on':expires,'policies':[{'effect':'allow','resources':{f'com.cloudflare.api.account.zone.{ZONE}':'*'},'permission_groups':groups}]})
+          if ts not in (200,201) or tp.get('success') is not True: raise SystemExit(f'Temporary token failed HTTP {ts}: {tp.get("errors")}')
+          tr=tp.get('result') or {}; TEMP=tr.get('value'); TEMP_ID=tr.get('id')
+          if not TEMP or not TEMP_ID: raise SystemExit('Temporary token missing id/value')
+
+          changes=[]; notes=[]
+
+          def set_if_available(sid,value):
+              gs,gp=call(TEMP,'GET',f'/zones/{ZONE}/settings/{sid}')
+              if not ok(gs,gp):
+                  notes.append({'setting':sid,'status':'unavailable','http':gs,'errors':gp.get('errors')})
+                  return
+              before=gp.get('result') or {}
+              if before.get('editable') is False:
+                  notes.append({'setting':sid,'status':'not-editable','value':before.get('value')})
+                  return
+              if before.get('value')==value:
+                  notes.append({'setting':sid,'status':'already-optimal','value':value})
+                  return
+              ps,pp=call(TEMP,'PATCH',f'/zones/{ZONE}/settings/{sid}',{'value':value})
+              if not ok(ps,pp):
+                  notes.append({'setting':sid,'status':'patch-failed','http':ps,'errors':pp.get('errors')})
+                  return
+              changes.append({'setting':sid,'before':before.get('value'),'after':(pp.get('result') or {}).get('value')})
+
+          try:
+              # Crawler Hints proactively announces content changes via IndexNow.
+              # The other toggles prevent Cloudflare from rewriting this carefully built
+              # single-page static output or blocking its media when embedded/crawled.
+              set_if_available('crawler_hints','on')
+              set_if_available('email_obfuscation','off')
+              set_if_available('server_side_exclude','off')
+              set_if_available('hotlink_protection','off')
+              set_if_available('fonts','off')
+
+              # Speed Brain is excellent for multi-page follow-up navigations but cannot
+              # improve the first-page visit and adds no material benefit to this permanent
+              # single-page architecture, so keep the canonical response path minimal.
+              set_if_available('speed_brain','off')
+
+              # Give Cloudflare-verified crawlers a deterministic path through the
+              # application-security stack. cf.client.bot is Cloudflare's verified-bot
+              # signal and cannot be spoofed merely by changing User-Agent.
+              ep_path=f'/zones/{ZONE}/rulesets/phases/http_request_firewall_custom/entrypoint'
+              es,ep=call(TEMP,'GET',ep_path)
+              entry=None
+              if ok(es,ep):
+                  entry=ep.get('result') or {}
+              elif es==404:
+                  body={
+                      'name':'Crawler-safe application security',
+                      'description':'Keep verified search and AI crawlers out of challenge/block paths while retaining protections for ordinary traffic.',
+                      'kind':'zone',
+                      'phase':'http_request_firewall_custom',
+                      'rules':[],
+                  }
+                  cs,cp=call(TEMP,'POST',f'/zones/{ZONE}/rulesets',body)
+                  if not ok(cs,cp): raise SystemExit(f'Cannot create custom firewall entry point HTTP {cs}: {cp.get("errors")}')
+                  entry=cp.get('result') or {}
+              else:
+                  raise SystemExit(f'Cannot read custom firewall entry point HTTP {es}: {ep.get("errors")}')
+
+              rid=entry.get('id')
+              gs,gp=call(TEMP,'GET',f'/zones/{ZONE}/rulesets/{rid}')
+              rules=(gp.get('result') or {}).get('rules') or [] if ok(gs,gp) else []
+              marker='Verified crawlers bypass application-security challenge layers'
+              existing=next((r for r in rules if r.get('description')==marker),None)
+              if existing:
+                  notes.append({'setting':'verified-crawler WAF skip','status':'already-present','enabled':existing.get('enabled')})
+              else:
+                  rule={
+                      'action':'skip',
+                      'action_parameters':{
+                          'ruleset':'current',
+                          'phases':['http_ratelimit','http_request_sbfm','http_request_firewall_managed'],
+                          'products':['zoneLockdown','uaBlock','bic','hot','securityLevel','rateLimit','waf'],
+                      },
+                      'expression':'cf.client.bot',
+                      'description':marker,
+                      'enabled':True,
+                      'logging':{'enabled':True},
+                  }
+                  xs,xp=call(TEMP,'POST',f'/zones/{ZONE}/rulesets/{rid}/rules',rule)
+                  if not ok(xs,xp): raise SystemExit(f'Cannot create verified-crawler skip rule HTTP {xs}: {xp.get("errors")}')
+                  changes.append({'setting':'verified-crawler WAF skip','before':'absent','after':'enabled for cf.client.bot'})
+
+              verify={}
+              for sid in ('crawler_hints','email_obfuscation','server_side_exclude','hotlink_protection','fonts','speed_brain'):
+                  vs,vp=call(TEMP,'GET',f'/zones/{ZONE}/settings/{sid}')
+                  verify[sid]=(vp.get('result') or {}).get('value') if ok(vs,vp) else {'http':vs,'errors':vp.get('errors')}
+              gs,gp=call(TEMP,'GET',f'/zones/{ZONE}/rulesets/{rid}')
+              verify['firewall_custom_rules']=[{'description':r.get('description'),'expression':r.get('expression'),'action':r.get('action'),'enabled':r.get('enabled'),'action_parameters':r.get('action_parameters')} for r in ((gp.get('result') or {}).get('rules') or [])] if ok(gs,gp) else {'http':gs}
+
+              print('FINAL_EDGE_OPTIMIZATION_BEGIN')
+              print(json.dumps({'changes':changes,'notes':notes,'verify':verify},ensure_ascii=False,indent=2,sort_keys=True))
+              print('FINAL_EDGE_OPTIMIZATION_END')
+          finally:
+              rv,rp=call(MGMT,'DELETE',f'/accounts/{ACCOUNT}/tokens/{TEMP_ID}')
+              print(f'TEMP_TOKEN_REVOKE_HTTP={rv} success={rp.get("success")}')
+          PY
