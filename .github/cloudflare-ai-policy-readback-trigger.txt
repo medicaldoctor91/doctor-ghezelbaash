@@ -1,1 +1,1 @@
-trigger 2026-08-10 v6
+trigger 2026-08-10 v7
