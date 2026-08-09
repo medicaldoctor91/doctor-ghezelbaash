@@ -1,0 +1,137 @@
+name: Delete Cloudflare Pages project
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.run-cloudflare-pages-delete'
+
+permissions:
+  contents: read
+
+jobs:
+  delete-pages-project:
+    if: github.event.pull_request.number == 161 && github.head_ref == 'probe-cloudflare-secret-20260809'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      PROJECT_NAME: doctor-ghezelbaash
+      WRANGLER_VERSION: 4.114.0
+    steps:
+      - name: Verify existing token can manage the target Pages project
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}" || { echo 'CLOUDFLARE_API_TOKEN is empty'; exit 1; }
+          response="$(curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}")"
+          python - "$response" <<'PY'
+          import json, sys
+          payload = json.loads(sys.argv[1])
+          if payload.get('success') is not True:
+              raise SystemExit('Cloudflare token could not read the target Pages project')
+          result = payload.get('result') or {}
+          if result.get('name') != 'doctor-ghezelbaash':
+              raise SystemExit('Unexpected Cloudflare Pages project returned')
+          print('Verified Cloudflare Pages access for doctor-ghezelbaash.')
+          PY
+
+      - name: Delete old Pages deployments until only undeletable active deployment remains
+        shell: bash
+        run: |
+          set -euo pipefail
+          prod_id=""
+          deleted_total=0
+          rounds=0
+
+          while :; do
+            rounds=$((rounds + 1))
+            if [ "$rounds" -gt 400 ]; then
+              echo 'Safety stop: too many cleanup rounds.' >&2
+              exit 1
+            fi
+
+            ids="$(npx --yes "wrangler@${WRANGLER_VERSION}" pages deployment list \
+              --project-name "${PROJECT_NAME}" --json | jq -r '.[].Id')"
+
+            to_delete="$(printf '%s\n' "$ids" | grep -v -F -x "$prod_id" | grep . || true)"
+            if [ -z "$to_delete" ]; then
+              echo "Deployment cleanup complete. Active production deployment retained: ${prod_id:-none}"
+              break
+            fi
+
+            batch_count="$(printf '%s\n' "$to_delete" | wc -l | tr -d ' ')"
+            echo "Round ${rounds}: attempting to delete ${batch_count} deployment(s)."
+            progress=0
+
+            while IFS= read -r id; do
+              [ -n "$id" ] || continue
+              output="$(npx --yes "wrangler@${WRANGLER_VERSION}" pages deployment delete "$id" \
+                --project-name "${PROJECT_NAME}" --force 2>&1 || true)"
+
+              if grep -q 'Successfully deleted' <<<"$output"; then
+                deleted_total=$((deleted_total + 1))
+                progress=$((progress + 1))
+              elif grep -qi 'active production deployment' <<<"$output"; then
+                prod_id="$id"
+                echo "Retaining active production deployment: $prod_id"
+              else
+                echo "Delete attempt for $id returned:"
+                echo "$output"
+              fi
+            done <<< "$to_delete"
+
+            echo "Deleted so far: ${deleted_total}"
+            if [ "$progress" -eq 0 ] && [ -z "$prod_id" ]; then
+              echo 'No cleanup progress and no active-production blocker was identified.' >&2
+              exit 1
+            fi
+          done
+
+          echo "DELETED_DEPLOYMENTS=${deleted_total}" >> "$GITHUB_ENV"
+
+      - name: Confirm deployment count is below the Cloudflare high-deployment deletion threshold
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}/deployments?page=1&per_page=20")"
+          remaining="$(python - "$response" <<'PY'
+          import json, sys
+          payload = json.loads(sys.argv[1])
+          if payload.get('success') is not True:
+              raise SystemExit('Could not read remaining deployment count')
+          info = payload.get('result_info') or {}
+          print(info.get('total_count', len(payload.get('result') or [])))
+          PY
+          )"
+          echo "Remaining deployments before project deletion: ${remaining}"
+          if [ "$remaining" -gt 100 ]; then
+            echo "Cloudflare still reports more than 100 deployments (${remaining}); refusing premature project delete." >&2
+            exit 1
+          fi
+
+      - name: Delete the Cloudflare Pages project
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes "wrangler@${WRANGLER_VERSION}" pages project delete "${PROJECT_NAME}" --yes
+
+      - name: Verify the Pages project no longer exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          code="$(curl --silent --output /tmp/cf-project-after.json --write-out '%{http_code}' \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}")"
+          echo "Post-delete project lookup HTTP status: ${code}"
+          if [ "$code" = '200' ]; then
+            cat /tmp/cf-project-after.json
+            echo 'Cloudflare Pages project still exists after delete command.' >&2
+            exit 1
+          fi
+          echo "Cloudflare Pages project ${PROJECT_NAME} is deleted. Deleted deployments: ${DELETED_DEPLOYMENTS:-unknown}."
