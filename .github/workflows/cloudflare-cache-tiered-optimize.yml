@@ -1,0 +1,114 @@
+name: Optimize Cloudflare canonical cache and tiered delivery
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  optimize:
+    if: github.event.pull_request.head.ref == 'cloudflare-cache-tiered-optimize-20260809'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      ZONE_NAME: ghezelbaash.ir
+      CANONICAL_HOST: www.ghezelbaash.ir
+    steps:
+      - name: Enable canonical static caching and Smart Tiered Cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import datetime as dt, json, os, urllib.error, urllib.parse, urllib.request
+          A=os.environ['CLOUDFLARE_ACCOUNT_ID']; M=os.environ['CLOUDFLARE_API_TOKEN']; ZN=os.environ['ZONE_NAME']; HST=os.environ['CANONICAL_HOST']; B='https://api.cloudflare.com/client/v4'
+          def call(tok,m,p,b=None):
+            h={'Authorization':f'Bearer {tok}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-cache-tiered-finalizer/1.0'}
+            req=urllib.request.Request(B+p,data=None if b is None else json.dumps(b,separators=(',',':')).encode(),method=m,headers=h)
+            try:
+              with urllib.request.urlopen(req,timeout=45) as r:
+                raw=r.read().decode('utf-8','replace'); return r.status,json.loads(raw) if raw else {}
+            except urllib.error.HTTPError as e:
+              raw=e.read().decode('utf-8','replace')
+              try:x=json.loads(raw) if raw else {}
+              except Exception:x={'raw':raw[:1600]}
+              return e.code,x
+          def ok(s,p): return 200 <= s < 300 and p.get('success',True) is not False
+          q=urllib.parse.urlencode({'name':ZN,'account.id':A,'per_page':50}); s,z=call(M,'GET','/zones?'+q)
+          if s!=200 or z.get('success') is not True or not z.get('result'): raise SystemExit(f'zone lookup failed {s} {z}')
+          Z=z['result'][0]['id']
+          s,pg=call(M,'GET',f'/accounts/{A}/tokens/permission_groups?scope=com.cloudflare.api.account.zone')
+          groups=[{'id':g['id']} for g in (pg.get('result') or []) if 'com.cloudflare.api.account.zone' in (g.get('scopes') or [])]
+          exp=(dt.datetime.now(dt.timezone.utc)+dt.timedelta(hours=1)).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          s,t=call(M,'POST',f'/accounts/{A}/tokens',{'name':'Temporary Ghezelbaash Cache Optimizer','expires_on':exp,'policies':[{'effect':'allow','resources':{f'com.cloudflare.api.account.zone.{Z}':'*'},'permission_groups':groups}]})
+          if s not in (200,201) or t.get('success') is not True: raise SystemExit(f'temp token failed {s} {t}')
+          R=t.get('result') or {}; T=R.get('value'); TID=R.get('id')
+          changes=[]; notes=[]
+          try:
+            # Tiered Cache + Smart Topology are available on Free and improve cache reuse.
+            s,p=call(T,'GET',f'/zones/{Z}/argo/tiered_caching')
+            before=(p.get('result') or {}).get('value') if ok(s,p) else None
+            if before!='on':
+              x,y=call(T,'PATCH',f'/zones/{Z}/argo/tiered_caching',{'value':'on'})
+              if ok(x,y): changes.append({'setting':'tiered_caching','before':before,'after':(y.get('result') or {}).get('value')})
+              else: notes.append({'setting':'tiered_caching','http':x,'errors':y.get('errors')})
+            else: notes.append({'setting':'tiered_caching','status':'already-on'})
+
+            s,p=call(T,'GET',f'/zones/{Z}/cache/tiered_cache_smart_topology_enable')
+            before=(p.get('result') or {}).get('value') if ok(s,p) else None
+            if before!='on':
+              x,y=call(T,'PATCH',f'/zones/{Z}/cache/tiered_cache_smart_topology_enable',{'value':'on'})
+              if ok(x,y): changes.append({'setting':'smart_tiered_cache','before':before,'after':(y.get('result') or {}).get('value')})
+              else: notes.append({'setting':'smart_tiered_cache','http':x,'errors':y.get('errors')})
+            else: notes.append({'setting':'smart_tiered_cache','status':'already-on'})
+
+            # Pure-static Pages project: mark all canonical-host responses cache-eligible.
+            # Per-resource Cloudflare-CDN-Cache-Control from DIST remains authoritative for TTL;
+            # no browser TTL is overridden and no 404 no-store policy is weakened.
+            marker='Canonical pure-static Pages cache eligibility; honor DIST Cloudflare-CDN-Cache-Control'
+            rule={
+              'action':'set_cache_settings',
+              'expression':f'(http.host eq "{HST}")',
+              'description':marker,
+              'enabled':True,
+              'action_parameters':{'cache':True,'cache_key':{'cache_deception_armor':True}},
+            }
+            ep=f'/zones/{Z}/rulesets/phases/http_request_cache_settings/entrypoint'
+            s,p=call(T,'GET',ep)
+            if s==404:
+              x,y=call(T,'POST',f'/zones/{Z}/rulesets',{'name':'Canonical static cache policy','description':'Cache eligibility for immutable/safely-versioned static Pages output','kind':'zone','phase':'http_request_cache_settings','rules':[rule]})
+              if not ok(x,y): raise SystemExit(f'cache ruleset create failed {x} {y}')
+              changes.append({'setting':'canonical_cache_rule','before':'absent','after':'created'})
+            elif ok(s,p):
+              entry=p.get('result') or {}; rules=entry.get('rules') or []
+              if not any(r.get('description')==marker for r in rules):
+                x,y=call(T,'POST',f'/zones/{Z}/rulesets/{entry.get("id")}/rules',rule)
+                if not ok(x,y): raise SystemExit(f'cache rule add failed {x} {y}')
+                changes.append({'setting':'canonical_cache_rule','before':'absent','after':'created'})
+              else: notes.append({'setting':'canonical_cache_rule','status':'already-present'})
+            else: raise SystemExit(f'cache entrypoint read failed {s} {p}')
+
+            # Read back exact final state.
+            verify={}
+            for name,path in [('tiered_caching',f'/zones/{Z}/argo/tiered_caching'),('smart_tiered_cache',f'/zones/{Z}/cache/tiered_cache_smart_topology_enable')]:
+              x,y=call(T,'GET',path); verify[name]=y.get('result') or {'http':x,'errors':y.get('errors')}
+            x,y=call(T,'GET',ep); verify['cache_ruleset']=y.get('result') or {'http':x,'errors':y.get('errors')}
+            print('CACHE_TIERED_RESULT',json.dumps({'changes':changes,'notes':notes,'verify':verify},ensure_ascii=False,indent=2,sort_keys=True))
+          finally:
+            s,p=call(M,'DELETE',f'/accounts/{A}/tokens/{TID}'); print('TEMP_TOKEN_REVOKE',s,p.get('success'))
+          PY
+
+          echo '--- CACHE WARM #1 ---'
+          curl -sS -D - -o /dev/null 'https://www.ghezelbaash.ir/' | tr -d '\r' | grep -Ei '^(HTTP/|cf-cache-status:|age:|cache-control:|strict-transport-security:|x-robots-tag:|content-signal:)' || true
+          sleep 2
+          echo '--- CACHE WARM #2 ---'
+          curl -sS -D - -o /dev/null 'https://www.ghezelbaash.ir/' | tr -d '\r' | grep -Ei '^(HTTP/|cf-cache-status:|age:|cache-control:|strict-transport-security:|x-robots-tag:|content-signal:)' || true
+          echo '--- GRAPH CACHE WARM #1 ---'
+          curl -sS -D - -o /dev/null 'https://www.ghezelbaash.ir/graph.jsonld' | tr -d '\r' | grep -Ei '^(HTTP/|cf-cache-status:|age:|cache-control:|x-robots-tag:|content-signal:|content-type:)' || true
+          sleep 2
+          echo '--- GRAPH CACHE WARM #2 ---'
+          curl -sS -D - -o /dev/null 'https://www.ghezelbaash.ir/graph.jsonld' | tr -d '\r' | grep -Ei '^(HTTP/|cf-cache-status:|age:|cache-control:|x-robots-tag:|content-signal:|content-type:)' || true
