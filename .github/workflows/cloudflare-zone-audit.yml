@@ -18,76 +18,62 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
       ZONE_NAME: ghezelbaash.ir
     steps:
-      - name: Audit Cloudflare zone and account resources relevant to the site
+      - name: Audit Cloudflare access and target-zone configuration
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           import json, os, urllib.parse, urllib.request, urllib.error
-
-          token=os.environ['CLOUDFLARE_API_TOKEN']
-          account=os.environ['CLOUDFLARE_ACCOUNT_ID']
-          zone_name=os.environ['ZONE_NAME']
+          token=os.environ['CLOUDFLARE_API_TOKEN']; account=os.environ['CLOUDFLARE_ACCOUNT_ID']; zone_name=os.environ['ZONE_NAME']
           base='https://api.cloudflare.com/client/v4'
-          headers={'Authorization':f'Bearer {token}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-cloudflare-audit/1.1'}
-
+          headers={'Authorization':f'Bearer {token}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-cloudflare-audit/1.2'}
           def api(path, method='GET'):
               req=urllib.request.Request(base+path, method=method, headers=headers)
               try:
                   with urllib.request.urlopen(req, timeout=30) as r:
-                      raw=r.read().decode('utf-8','replace')
-                      return r.status, json.loads(raw) if raw else {}
+                      raw=r.read().decode('utf-8','replace'); return r.status, json.loads(raw) if raw else {}
               except urllib.error.HTTPError as e:
                   raw=e.read().decode('utf-8','replace')
-                  try: payload=json.loads(raw) if raw else {}
-                  except Exception: payload={'raw':raw[:500]}
-                  return e.code,payload
-              except Exception as e:
-                  return 0,{'error':type(e).__name__}
+                  try: p=json.loads(raw) if raw else {}
+                  except Exception: p={'raw':raw[:500]}
+                  return e.code,p
+              except Exception as e: return 0,{'error':type(e).__name__}
+
+          report={'token':{},'zone':{},'settings':{},'ssl_universal':{},'dnssec':{},'dns_records_access':{},'rulesets':[],'pages_projects_access':{},'errors':[]}
+
+          st,v=api(f'/accounts/{account}/tokens/verify')
+          report['token']['verify_http']=st
+          token_id=(v.get('result') or {}).get('id') if st==200 and v.get('success') is True else None
+          report['token']['status']=(v.get('result') or {}).get('status') if token_id else None
+          if token_id:
+              st,t=api(f'/accounts/{account}/tokens/{token_id}')
+              report['token']['details_http']=st
+              if st==200 and t.get('success') is True:
+                  tr=t.get('result') or {}
+                  report['token']['name']=tr.get('name')
+                  report['token']['policies']=[{'effect':p.get('effect'),'permission_groups':[g.get('name') for g in (p.get('permission_groups') or [])],'resources':sorted((p.get('resources') or {}).keys())} for p in (tr.get('policies') or [])]
+              else: report['token']['details_errors']=t.get('errors')
 
           q=urllib.parse.urlencode({'name':zone_name,'account.id':account,'per_page':50})
           st,zones=api('/zones?'+q)
-          if st!=200 or zones.get('success') is not True or not zones.get('result'):
-              raise SystemExit(f'Zone lookup failed: HTTP {st} {zones.get("errors")}')
-          zone=zones['result'][0]
-          zid=zone['id']
+          if st!=200 or zones.get('success') is not True or not zones.get('result'): raise SystemExit(f'Zone lookup failed: HTTP {st} {zones.get("errors")}')
+          zone=zones['result'][0]; zid=zone['id']
+          report['zone']={'id_masked':zid[:6]+'…'+zid[-6:],'name':zone.get('name'),'status':zone.get('status'),'paused':zone.get('paused'),'type':zone.get('type'),'plan':(zone.get('plan') or {}).get('name'),'name_servers':zone.get('name_servers')}
 
-          report={'zone':{'id_masked':zid[:6]+'…'+zid[-6:],'name':zone.get('name'),'status':zone.get('status'),'paused':zone.get('paused'),'type':zone.get('type'),'plan':(zone.get('plan') or {}).get('name'),'name_servers':zone.get('name_servers')},'settings':{},'ssl_universal':{},'dnssec':{},'dns_records':[],'rulesets':[],'pages_projects':[],'errors':[]}
-
-          settings=['ssl','always_use_https','tls_1_3','min_tls_version','http2','http3','brotli','early_hints','automatic_https_rewrites','ipv6','websockets','rocket_loader','browser_check','security_level','challenge_ttl','browser_cache_ttl','cache_level','security_header','0rtt']
-          for sid in settings:
+          for sid in ['ssl','always_use_https','tls_1_3','min_tls_version','http2','http3','brotli','early_hints','automatic_https_rewrites','ipv6','websockets','rocket_loader','browser_check','security_level','challenge_ttl','browser_cache_ttl','cache_level','security_header','0rtt']:
               s,p=api(f'/zones/{zid}/settings/{sid}')
               if s==200 and p.get('success') is True:
                   r=p.get('result') or {}; report['settings'][sid]={'value':r.get('value'),'editable':r.get('editable')}
               else: report['settings'][sid]={'http_status':s,'errors':p.get('errors')}
 
-          s,p=api(f'/zones/{zid}/ssl/universal/settings')
-          report['ssl_universal']=(p.get('result') or {}) if s==200 and p.get('success') is True else {'http_status':s,'errors':p.get('errors')}
-
-          s,p=api(f'/zones/{zid}/dnssec')
-          if s==200 and p.get('success') is True:
-              r=p.get('result') or {}; report['dnssec']={k:r.get(k) for k in ('status','flags','algorithm','digest_algorithm','modified_on')}
-          else: report['dnssec']={'http_status':s,'errors':p.get('errors')}
-
-          s,p=api(f'/zones/{zid}/dns_records?per_page=500')
-          if s==200 and p.get('success') is True:
-              for r in p.get('result') or []:
-                  content=r.get('content')
-                  if r.get('type')=='TXT' and isinstance(content,str) and len(content)>140: content=content[:80]+'…'+content[-40:]
-                  report['dns_records'].append({'id_masked':(r.get('id') or '')[:6]+'…','type':r.get('type'),'name':r.get('name'),'content':content,'proxied':r.get('proxied'),'ttl':r.get('ttl')})
-          else: report['errors'].append({'dns_records_http':s,'errors':p.get('errors')})
-
+          s,p=api(f'/zones/{zid}/ssl/universal/settings'); report['ssl_universal']=(p.get('result') or {}) if s==200 and p.get('success') is True else {'http_status':s,'errors':p.get('errors')}
+          s,p=api(f'/zones/{zid}/dnssec'); report['dnssec']=(p.get('result') or {}) if s==200 and p.get('success') is True else {'http_status':s,'errors':p.get('errors')}
+          s,p=api(f'/zones/{zid}/dns_records?per_page=100'); report['dns_records_access']={'http_status':s,'success':p.get('success')}
           s,p=api(f'/zones/{zid}/rulesets')
           if s==200 and p.get('success') is True:
-              for r in p.get('result') or []: report['rulesets'].append({'id_masked':(r.get('id') or '')[:6]+'…','name':r.get('name'),'kind':r.get('kind'),'phase':r.get('phase'),'version':r.get('version')})
+              report['rulesets']=[{'name':r.get('name'),'kind':r.get('kind'),'phase':r.get('phase'),'version':r.get('version')} for r in (p.get('result') or [])]
           else: report['errors'].append({'rulesets_http':s,'errors':p.get('errors')})
+          s,p=api(f'/accounts/{account}/pages/projects?page=1&per_page=20'); report['pages_projects_access']={'http_status':s,'success':p.get('success'),'count':len(p.get('result') or []) if isinstance(p.get('result'),list) else None}
 
-          s,p=api(f'/accounts/{account}/pages/projects?per_page=100')
-          if s==200 and p.get('success') is True:
-              for r in p.get('result') or []: report['pages_projects'].append({'name':r.get('name'),'subdomain':r.get('subdomain'),'production_branch':r.get('production_branch'),'created_on':r.get('created_on')})
-          else: report['errors'].append({'pages_projects_http':s,'errors':p.get('errors')})
-
-          print('CLOUDFLARE_AUDIT_JSON_BEGIN')
-          print(json.dumps(report,ensure_ascii=False,indent=2))
-          print('CLOUDFLARE_AUDIT_JSON_END')
+          print('CLOUDFLARE_AUDIT_JSON_BEGIN'); print(json.dumps(report,ensure_ascii=False,indent=2)); print('CLOUDFLARE_AUDIT_JSON_END')
           PY
