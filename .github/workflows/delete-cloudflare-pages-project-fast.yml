@@ -1,0 +1,192 @@
+name: Fast delete Cloudflare Pages project
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.run-cloudflare-pages-delete-fast'
+
+permissions:
+  contents: read
+
+jobs:
+  fast-delete:
+    if: github.event.pull_request.number == 161 && github.head_ref == 'probe-cloudflare-secret-20260809'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      PROJECT_NAME: doctor-ghezelbaash
+    steps:
+      - name: Delete old deployments concurrently and delete project
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import concurrent.futures
+          import json
+          import os
+          import random
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          token = os.environ['CLOUDFLARE_API_TOKEN']
+          account = os.environ['CLOUDFLARE_ACCOUNT_ID']
+          project = os.environ['PROJECT_NAME']
+          base = f'https://api.cloudflare.com/client/v4/accounts/{account}/pages/projects/{project}'
+          headers = {
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'User-Agent': 'doctor-ghezelbaash-pages-cleanup/2.0',
+          }
+
+          def api(method, url, attempts=8):
+              last = None
+              for attempt in range(attempts):
+                  req = urllib.request.Request(url, method=method, headers=headers)
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as r:
+                          raw = r.read().decode('utf-8', 'replace')
+                          payload = json.loads(raw) if raw else {}
+                          return r.status, payload
+                  except urllib.error.HTTPError as e:
+                      raw = e.read().decode('utf-8', 'replace')
+                      try:
+                          payload = json.loads(raw) if raw else {}
+                      except Exception:
+                          payload = {'raw': raw[:1000]}
+                      last = (e.code, payload)
+                      if e.code == 429 or 500 <= e.code < 600:
+                          retry_after = e.headers.get('Retry-After')
+                          delay = float(retry_after) if retry_after and retry_after.isdigit() else min(20, 0.5 * (2 ** attempt))
+                          time.sleep(delay + random.random() * 0.25)
+                          continue
+                      return e.code, payload
+                  except Exception as e:
+                      last = (0, {'error': type(e).__name__})
+                      time.sleep(min(10, 0.5 * (2 ** attempt)) + random.random() * 0.25)
+              return last or (0, {'error': 'request failed'})
+
+          def success(status, payload):
+              return 200 <= status < 300 and payload.get('success', True) is not False
+
+          status, project_payload = api('GET', base)
+          if status == 404:
+              print('Project is already deleted.')
+              raise SystemExit(0)
+          if not success(status, project_payload):
+              raise SystemExit(f'Cannot access target Pages project: HTTP {status}, errors={project_payload.get("errors")}')
+
+          result = project_payload.get('result') or {}
+          if result.get('name') != project:
+              raise SystemExit('Cloudflare returned an unexpected project')
+
+          protected = set()
+          for key in ('canonical_deployment', 'production_deployment'):
+              dep = result.get(key)
+              if isinstance(dep, dict) and dep.get('id'):
+                  protected.add(dep['id'])
+          print(f'Protected active deployment IDs: {len(protected)}')
+
+          deleted = 0
+          round_no = 0
+          stalled = 0
+
+          while True:
+              round_no += 1
+              if round_no > 80:
+                  raise SystemExit('Exceeded cleanup round safety limit')
+
+              st, first = api('GET', base + '/deployments?' + urllib.parse.urlencode({'page': 1, 'per_page': 100}))
+              if not success(st, first):
+                  if st == 404:
+                      print('Project disappeared during cleanup; treating as deleted.')
+                      raise SystemExit(0)
+                  raise SystemExit(f'Could not list deployments: HTTP {st}, errors={first.get("errors")}')
+
+              info = first.get('result_info') or {}
+              total = int(info.get('total_count') or len(first.get('result') or []))
+              total_pages = int(info.get('total_pages') or 1)
+              print(f'Round {round_no}: total deployments={total}, pages={total_pages}, deleted={deleted}')
+
+              if total <= 100:
+                  break
+
+              need = total - 90
+              candidates = []
+              seen = set()
+              pages_to_try = []
+              for p in range(total_pages, max(0, total_pages - 4), -1):
+                  pages_to_try.append(p)
+
+              for p in pages_to_try:
+                  st, page_payload = api('GET', base + '/deployments?' + urllib.parse.urlencode({'page': p, 'per_page': 100}))
+                  if not success(st, page_payload):
+                      continue
+                  rows = page_payload.get('result') or []
+                  rows = sorted(rows, key=lambda d: d.get('created_on') or '')
+                  for dep in rows:
+                      dep_id = dep.get('id')
+                      if not dep_id or dep_id in protected or dep_id in seen:
+                          continue
+                      seen.add(dep_id)
+                      candidates.append(dep_id)
+                      if len(candidates) >= min(160, need + 30):
+                          break
+                  if len(candidates) >= min(160, need + 30):
+                      break
+
+              if not candidates:
+                  raise SystemExit('No deletable deployment candidates found while total remains above 100')
+
+              def delete_one(dep_id):
+                  url = base + '/deployments/' + urllib.parse.quote(dep_id) + '?force=true'
+                  st, payload = api('DELETE', url)
+                  if success(st, payload) or st == 404:
+                      return dep_id, True, st, None
+                  errors = payload.get('errors') or []
+                  msg = '; '.join(str(e.get('message', e)) for e in errors if isinstance(e, dict)) or str(errors)
+                  return dep_id, False, st, msg[:500]
+
+              progress = 0
+              failures = []
+              with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
+                  futures = [pool.submit(delete_one, dep_id) for dep_id in candidates]
+                  for fut in concurrent.futures.as_completed(futures):
+                      dep_id, ok, st, msg = fut.result()
+                      if ok:
+                          progress += 1
+                      else:
+                          failures.append((dep_id, st, msg))
+
+              deleted += progress
+              print(f'Round {round_no}: deleted/absent={progress}, blocked/failed={len(failures)}')
+              if failures:
+                  for dep_id, st, msg in failures[:5]:
+                      print(f'  blocked {dep_id}: HTTP {st}: {msg}')
+
+              if progress == 0:
+                  stalled += 1
+              else:
+                  stalled = 0
+              if stalled >= 2:
+                  raise SystemExit('Cleanup stalled for two consecutive rounds')
+
+          print(f'Deployment count is now <=100. Total successful/absent delete operations: {deleted}')
+
+          # Use the documented Pages project DELETE endpoint once the high-deployment blocker is removed.
+          st, payload = api('DELETE', base)
+          if not success(st, payload) and st != 404:
+              raise SystemExit(f'Project delete failed: HTTP {st}, errors={payload.get("errors")}, messages={payload.get("messages")}')
+          print(f'Project DELETE returned HTTP {st}.')
+
+          time.sleep(2)
+          st, payload = api('GET', base, attempts=3)
+          if st == 200 and payload.get('success') is True:
+              raise SystemExit('Project still exists after DELETE')
+          print(f'Verified project is gone; post-delete lookup HTTP {st}.')
+          PY
