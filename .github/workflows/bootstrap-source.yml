@@ -1,0 +1,96 @@
+name: Bootstrap full source
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - doctor-ghezelbash-source.zip
+      - doctor-ghezelbash-videos.zip
+      - .github/workflows/bootstrap-source.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bootstrap-full-source
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify archive integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f doctor-ghezelbash-source.zip
+          test -f doctor-ghezelbash-videos.zip
+          echo '8b51d6bcb173a4dbf30b6a46bde50bdef638ed6e20b376c1a788a1d82099e204  doctor-ghezelbash-source.zip' | sha256sum -c -
+          echo '58ffc7337063d27fc152bd502274836b63321530d48d62b702e5267527046976  doctor-ghezelbash-videos.zip' | sha256sum -c -
+
+      - name: Validate archive paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          for archive in doctor-ghezelbash-source.zip doctor-ghezelbash-videos.zip; do
+            if unzip -Z1 "$archive" | grep -Eq '(^/|(^|/)\.\.(/|$))'; then
+              echo "Unsafe archive path detected in $archive" >&2
+              exit 1
+            fi
+          done
+
+      - name: Reconstruct exact source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          STAGE="$RUNNER_TEMP/ghezelbaash-bootstrap"
+          ROOT="$STAGE/doctor-ghezelbaash-max-power-source-v1.0.0"
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
+
+          unzip -q doctor-ghezelbash-source.zip -d "$STAGE"
+          unzip -q doctor-ghezelbash-videos.zip -d "$STAGE"
+
+          test -f "$ROOT/package.json"
+          test -f "$ROOT/package-lock.json"
+          test -f "$ROOT/astro.config.mjs"
+          test -d "$ROOT/src"
+          test -d "$ROOT/public/media/videos"
+
+          VIDEO_COUNT="$(find "$ROOT/public/media/videos" -type f | wc -l | tr -d ' ')"
+          test "$VIDEO_COUNT" = "8"
+
+          git rm -r -f --ignore-unmatch .
+          cp -a "$ROOT"/. .
+
+          test -f package.json
+          test -f package-lock.json
+          test -f astro.config.mjs
+          test -d src
+          test -d public/media/videos
+          test "$(find public/media/videos -type f | wc -l | tr -d ' ')" = "8"
+
+      - name: Commit reconstructed source to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo 'Repository already matches the reconstructed source.'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'build: reconstruct complete source tree'
+          git push origin HEAD:main
