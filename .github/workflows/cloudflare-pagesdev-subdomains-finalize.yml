@@ -1,4 +1,4 @@
-name: Finalize pages.dev and deployment-subdomain canonicalization
+name: Verify pages.dev canonicalization
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  canonicalize:
+  verify:
     if: github.event.pull_request.head.ref == 'cloudflare-pagesdev-subdomains-finalize-20260809'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -20,16 +20,16 @@ jobs:
       PROJECT: doctor-ghezelbaash
       CANONICAL_HOST: www.ghezelbaash.ir
     steps:
-      - name: Canonicalize project pages.dev and current production deployment hostname
+      - name: Read back Bulk Redirect state and verify stable/current Pages hosts
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           import json, os, time, urllib.error, urllib.request
           A=os.environ['CLOUDFLARE_ACCOUNT_ID']; T=os.environ['CLOUDFLARE_API_TOKEN']; L=os.environ['LIST_NAME']; P=os.environ['PROJECT']; H=os.environ['CANONICAL_HOST']; B='https://api.cloudflare.com/client/v4'
-          HD={'Authorization':f'Bearer {T}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-pagesdev-canonicalizer/1.1'}
-          def call(m,p,b=None):
-            req=urllib.request.Request(B+p,data=None if b is None else json.dumps(b,separators=(',',':')).encode(),method=m,headers=HD)
+          HD={'Authorization':f'Bearer {T}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-pagesdev-readback/1.0'}
+          def call(path):
+            req=urllib.request.Request(B+path,headers=HD)
             try:
               with urllib.request.urlopen(req,timeout=40) as r:
                 raw=r.read().decode('utf-8','replace'); return r.status,json.loads(raw) if raw else {}
@@ -38,73 +38,49 @@ jobs:
               try:x=json.loads(raw) if raw else {}
               except Exception:x={'raw':raw[:1200]}
               return e.code,x
-          def wait_op(payload):
-            op=(payload.get('result') or {}).get('operation_id')
-            if not op: return
-            for i in range(30):
-              x,y=call('GET',f'/accounts/{A}/rules/lists/bulk_operations/{op}')
-              state=(y.get('result') or {}).get('status') if x==200 and y.get('success') is True else None
-              print('BULK_OPERATION',i+1,state)
-              if state=='completed': return
-              if state=='failed': raise SystemExit(f'Bulk list operation failed: {y}')
-              time.sleep(2)
-            raise SystemExit('Bulk list update did not complete in time')
 
-          s,p=call('GET',f'/accounts/{A}/rules/lists?per_page=100')
+          s,p=call(f'/accounts/{A}/rules/lists?per_page=100')
           if s!=200 or p.get('success') is not True: raise SystemExit(f'List enumeration failed HTTP {s}: {p}')
           row=next((x for x in (p.get('result') or []) if x.get('name')==L),None)
-          if not row: raise SystemExit(f'Bulk Redirect list {L} not found')
+          if not row: raise SystemExit(f'Bulk Redirect list {L} missing')
           lid=row['id']
 
-          # Keep the stable project hostname as the first canonicalization rule.
-          base_item={'redirect':{'source_url':f'https://{P}.pages.dev/','target_url':f'https://{H}/','status_code':301,'include_subdomains':True,'subpath_matching':True,'preserve_query_string':True,'preserve_path_suffix':True},'comment':'Canonicalize the stable Pages project hostname to the physician canonical www host'}
-          s,p=call('PUT',f'/accounts/{A}/rules/lists/{lid}/items',[base_item])
-          if s not in (200,201) or p.get('success') is not True: raise SystemExit(f'Base list replacement failed HTTP {s}: {p}')
-          wait_op(p)
-
-          # Cloudflare production deployments also receive unique <short-id>.<project>.pages.dev URLs.
-          # Explicitly add the current one because those hostnames can outlive a deployment and should
-          # consolidate instead of exposing a second crawlable copy.
-          s,project=call('GET',f'/accounts/{A}/pages/projects/{P}')
+          s,project=call(f'/accounts/{A}/pages/projects/{P}')
           if s!=200 or project.get('success') is not True: raise SystemExit(f'Project lookup failed HTTP {s}: {project}')
           pr=project.get('result') or {}
           latest=((pr.get('canonical_deployment') or {}).get('url') or (pr.get('latest_deployment') or {}).get('url'))
-          if not latest: raise SystemExit('Current Pages deployment URL was not returned by Cloudflare')
+          if not latest: raise SystemExit('Current Pages deployment URL missing')
           latest=latest.rstrip('/')+'/'
-          explicit={'redirect':{'source_url':latest,'target_url':f'https://{H}/','status_code':301,'include_subdomains':False,'subpath_matching':True,'preserve_query_string':True,'preserve_path_suffix':True},'comment':'Canonicalize the current unique Pages production deployment hostname to the physician canonical www host'}
-          s,p=call('POST',f'/accounts/{A}/rules/lists/{lid}/items',[explicit])
-          if s not in (200,201) or p.get('success') is not True:
-            # Duplicate exact source is fine; any other failure is not.
-            errs=p.get('errors') or []
-            if not any('duplicate' in str(e).lower() or 'already' in str(e).lower() for e in errs):
-              raise SystemExit(f'Explicit deployment redirect add failed HTTP {s}: {p}')
-          else:
-            wait_op(p)
 
-          s,p=call('GET',f'/accounts/{A}/rules/lists/{lid}/items?per_page=100')
+          s,p=call(f'/accounts/{A}/rules/lists/{lid}/items?per_page=100')
           if s!=200 or p.get('success') is not True: raise SystemExit(f'List read-back failed HTTP {s}: {p}')
-          redirects=[(x.get('redirect') or {}) for x in (p.get('result') or [])]
-          print('REDIRECTS_FINAL',json.dumps(redirects,ensure_ascii=False,sort_keys=True))
-          base=next((r for r in redirects if r.get('source_url')==f'https://{P}.pages.dev/'),None)
+          redirects=[x.get('redirect') or {} for x in (p.get('result') or [])]
+          stable=f'https://{P}.pages.dev/'
+          base=next((r for r in redirects if r.get('source_url')==stable),None)
           current=next((r for r in redirects if r.get('source_url')==latest),None)
-          if not base: raise SystemExit('Stable pages.dev redirect missing after read-back')
-          if not current: raise SystemExit('Current unique deployment redirect missing after read-back')
-          if base.get('include_subdomains') is not True: raise SystemExit('Stable pages.dev redirect does not include subdomains')
           print('CURRENT_DEPLOYMENT_URL',latest)
+          print('PAGES_REDIRECT_LIST',json.dumps(redirects,ensure_ascii=False,sort_keys=True))
+          if not base or base.get('status_code')!=301 or base.get('include_subdomains') is not True or base.get('subpath_matching') is not True or base.get('preserve_query_string') is not True or base.get('preserve_path_suffix') is not True:
+            raise SystemExit('Stable Pages redirect is not in the required canonical state')
+          if not current or current.get('status_code')!=301 or current.get('subpath_matching') is not True or current.get('preserve_query_string') is not True or current.get('preserve_path_suffix') is not True:
+            raise SystemExit('Current unique deployment redirect is not in the required canonical state')
 
-          # Persist the current deployment URL for shell verification.
-          with open('/tmp/current-pages-url','w',encoding='utf-8') as f: f.write(latest)
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl): return None
+          opener=urllib.request.build_opener(NoRedirect)
+          expected=f'https://{H}/final-canonical-test?q=1'
+          for src in (stable,latest):
+            url=src+'final-canonical-test?q=1'
+            good=False
+            for i in range(12):
+              req=urllib.request.Request(url,headers={'User-Agent':'ghezelbaash-pagesdev-live-readback/1.0'})
+              try:
+                with opener.open(req,timeout=30) as r: code=r.status; loc=r.headers.get('Location')
+              except urllib.error.HTTPError as e: code=e.code; loc=e.headers.get('Location')
+              print('LIVE_REDIRECT',i+1,code,url,'location=',loc)
+              if code==301 and loc==expected:
+                good=True
+                break
+              time.sleep(2)
+            if not good: raise SystemExit(f'Live canonical redirect failed for {url}')
           PY
-
-          current="$(cat /tmp/current-pages-url)"
-          for u in \
-            'https://doctor-ghezelbaash.pages.dev/final-canonical-test?q=1' \
-            "${current}final-canonical-test?q=1"; do
-            echo "--- $u"
-            h="$(mktemp)"
-            code="$(curl -sS -D "$h" -o /dev/null --max-redirs 0 -w '%{http_code}' "$u" || true)"
-            loc="$(tr -d '\r' < "$h" | awk 'BEGIN{IGNORECASE=1} /^location:/{sub(/^location:[[:space:]]*/,""); print; exit}')"
-            echo "HTTP=$code LOCATION=$loc"
-            test "$code" = '301'
-            test "$loc" = 'https://www.ghezelbaash.ir/final-canonical-test?q=1'
-          done
