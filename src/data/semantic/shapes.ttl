@@ -1,0 +1,54 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix schema: <https://schema.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ex: <https://www.ghezelbaash.ir/#> .
+
+ex:PhysicianEntityShape a sh:NodeShape ;
+  sh:targetNode ex:saeed-ghezelbash ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Person ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:IndividualPhysician ] ;
+  sh:property [ sh:path schema:name ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:owns ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:practicesAt ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:worksFor ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:affiliation ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:availableService ; sh:minCount 120 ] ;
+  sh:property [ sh:path schema:identifier ; sh:minCount 4 ] ;
+  sh:property [ sh:path schema:sameAs ; sh:minCount 7 ] .
+
+ex:ClinicAssetShape a sh:NodeShape ;
+  sh:targetNode ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:MedicalClinic ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:PhysiciansOffice ] ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:LocalBusiness ] ;
+  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:founder ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:employee ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:availableService ; sh:minCount 120 ] ;
+  sh:property [ sh:path schema:identifier ; sh:minCount 5 ] ;
+  sh:property [ sh:path schema:openingHoursSpecification ; sh:minCount 2 ] ;
+  sh:property [ sh:path schema:priceRange ; sh:hasValue "$$$$" ] .
+
+ex:WebPageDominanceShape a sh:NodeShape ;
+  sh:targetNode ex:webpage ;
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:author ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] .
+
+ex:FridayClosedShape a sh:NodeShape ;
+  sh:targetNode ex:clinic-friday-closed ;
+  sh:property [ sh:path schema:opens ; sh:hasValue "00:00" ] ;
+  sh:property [ sh:path schema:closes ; sh:hasValue "00:00" ] .
+
+ex:AvailableServiceProviderShape a sh:NodeShape ;
+  sh:targetObjectsOf schema:availableService ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Service ] ;
+  sh:property [ sh:path schema:provider ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:ImageLicenseShape a sh:NodeShape ;
+  sh:targetClass schema:ImageObject ;
+  sh:property [ sh:path schema:license ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:copyrightNotice ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:acquireLicensePage ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:creditText ; sh:minCount 1 ] .

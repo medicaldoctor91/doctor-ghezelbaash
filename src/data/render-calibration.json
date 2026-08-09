@@ -1,0 +1,4856 @@
+{
+  "360": {
+    "total": 753571,
+    "chunks": [
+      {
+        "i": 0,
+        "id": "rc1",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1",
+        "h": 3829.4375
+      },
+      {
+        "i": 1,
+        "id": "rc117",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1-split-2",
+        "h": 3604.5625
+      },
+      {
+        "i": 2,
+        "id": "rc2",
+        "key": "diagnosis-before-aesthetic-treatment-selection-2",
+        "h": 557.34375
+      },
+      {
+        "i": 3,
+        "id": "rc3",
+        "key": "facial-aging-differential-diagnosis-1",
+        "h": 6974.734375
+      },
+      {
+        "i": 4,
+        "id": "rc4",
+        "key": "botox-1",
+        "h": 6211.0625
+      },
+      {
+        "i": 5,
+        "id": "rc5",
+        "key": "botox-2",
+        "h": 5138.390625
+      },
+      {
+        "i": 6,
+        "id": "rc112",
+        "key": "botox-2-split-2",
+        "h": 5279.5
+      },
+      {
+        "i": 7,
+        "id": "rc6",
+        "key": "botox-3",
+        "h": 4526.625
+      },
+      {
+        "i": 8,
+        "id": "rc121",
+        "key": "botox-3-split-2",
+        "h": 5097.0625
+      },
+      {
+        "i": 9,
+        "id": "rc7",
+        "key": "botox-4",
+        "h": 6453.28125
+      },
+      {
+        "i": 10,
+        "id": "rc8",
+        "key": "botox-5",
+        "h": 7667.109375
+      },
+      {
+        "i": 11,
+        "id": "rc9",
+        "key": "botox-6",
+        "h": 6281.8125
+      },
+      {
+        "i": 12,
+        "id": "rc10",
+        "key": "botox-7",
+        "h": 3912.109375
+      },
+      {
+        "i": 13,
+        "id": "rc124",
+        "key": "botox-7-split-2",
+        "h": 3240.703125
+      },
+      {
+        "i": 14,
+        "id": "rc11",
+        "key": "botox-8",
+        "h": 7163.140625
+      },
+      {
+        "i": 15,
+        "id": "rc12",
+        "key": "botox-9",
+        "h": 7693.421875
+      },
+      {
+        "i": 16,
+        "id": "rc13",
+        "key": "botox-10",
+        "h": 7453.546875
+      },
+      {
+        "i": 17,
+        "id": "rc14",
+        "key": "botox-11",
+        "h": 4708.59375
+      },
+      {
+        "i": 18,
+        "id": "rc122",
+        "key": "botox-11-split-2",
+        "h": 4643.171875
+      },
+      {
+        "i": 19,
+        "id": "rc15",
+        "key": "botox-12",
+        "h": 4863.203125
+      },
+      {
+        "i": 20,
+        "id": "rc123",
+        "key": "botox-12-split-2",
+        "h": 4949.234375
+      },
+      {
+        "i": 21,
+        "id": "rc16",
+        "key": "botox-13",
+        "h": 4761.484375
+      },
+      {
+        "i": 22,
+        "id": "rc134",
+        "key": "botox-13-split-2",
+        "h": 4126.4375
+      },
+      {
+        "i": 23,
+        "id": "rc17",
+        "key": "botox-14",
+        "h": 7741.25
+      },
+      {
+        "i": 24,
+        "id": "rc18",
+        "key": "botox-15",
+        "h": 6870.625
+      },
+      {
+        "i": 25,
+        "id": "rc19",
+        "key": "botox-16",
+        "h": 4389.578125
+      },
+      {
+        "i": 26,
+        "id": "rc20",
+        "key": "filler-1",
+        "h": 7629.671875
+      },
+      {
+        "i": 27,
+        "id": "rc21",
+        "key": "filler-2",
+        "h": 6381.828125
+      },
+      {
+        "i": 28,
+        "id": "rc22",
+        "key": "filler-3",
+        "h": 6562.046875
+      },
+      {
+        "i": 29,
+        "id": "rc100",
+        "key": "filler-3-continued",
+        "h": 5773.578125
+      },
+      {
+        "i": 30,
+        "id": "rc23",
+        "key": "filler-4",
+        "h": 4713.046875
+      },
+      {
+        "i": 31,
+        "id": "rc116",
+        "key": "filler-4-split-2",
+        "h": 5066.75
+      },
+      {
+        "i": 32,
+        "id": "rc24",
+        "key": "filler-5",
+        "h": 6270.09375
+      },
+      {
+        "i": 33,
+        "id": "rc25",
+        "key": "filler-6",
+        "h": 6187.453125
+      },
+      {
+        "i": 34,
+        "id": "rc26",
+        "key": "filler-7",
+        "h": 7036.875
+      },
+      {
+        "i": 35,
+        "id": "rc27",
+        "key": "filler-8",
+        "h": 4599.03125
+      },
+      {
+        "i": 36,
+        "id": "rc131",
+        "key": "filler-8-split-2",
+        "h": 4643.078125
+      },
+      {
+        "i": 37,
+        "id": "rc28",
+        "key": "filler-9",
+        "h": 6848.09375
+      },
+      {
+        "i": 38,
+        "id": "rc29",
+        "key": "thread-lift-1",
+        "h": 7056.3125
+      },
+      {
+        "i": 39,
+        "id": "rc30",
+        "key": "thread-lift-2",
+        "h": 6404.609375
+      },
+      {
+        "i": 40,
+        "id": "rc31",
+        "key": "thread-lift-3",
+        "h": 7251.46875
+      },
+      {
+        "i": 41,
+        "id": "rc32",
+        "key": "thread-lift-4",
+        "h": 7323.71875
+      },
+      {
+        "i": 42,
+        "id": "rc101",
+        "key": "thread-lift-4-continued",
+        "h": 6254.109375
+      },
+      {
+        "i": 43,
+        "id": "rc33",
+        "key": "thread-lift-5",
+        "h": 6431.703125
+      },
+      {
+        "i": 44,
+        "id": "rc34",
+        "key": "thread-lift-6",
+        "h": 6774.4375
+      },
+      {
+        "i": 45,
+        "id": "rc35",
+        "key": "thread-lift-7",
+        "h": 5279.625
+      },
+      {
+        "i": 46,
+        "id": "rc130",
+        "key": "thread-lift-7-split-2",
+        "h": 5051.625
+      },
+      {
+        "i": 47,
+        "id": "rc36",
+        "key": "thread-lift-8",
+        "h": 4798.65625
+      },
+      {
+        "i": 48,
+        "id": "rc113",
+        "key": "thread-lift-8-split-2",
+        "h": 4576.71875
+      },
+      {
+        "i": 49,
+        "id": "rc37",
+        "key": "thread-lift-9",
+        "h": 6362.34375
+      },
+      {
+        "i": 50,
+        "id": "rc38",
+        "key": "thread-lift-10",
+        "h": 7590.1875
+      },
+      {
+        "i": 51,
+        "id": "rc39",
+        "key": "thread-lift-11",
+        "h": 6960.9375
+      },
+      {
+        "i": 52,
+        "id": "rc40",
+        "key": "thread-lift-12",
+        "h": 7004.6875
+      },
+      {
+        "i": 53,
+        "id": "rc41",
+        "key": "thread-lift-13",
+        "h": 6894
+      },
+      {
+        "i": 54,
+        "id": "rc42",
+        "key": "thread-lift-14",
+        "h": 6749.5625
+      },
+      {
+        "i": 55,
+        "id": "rc43",
+        "key": "acne-pigmentation-and-scars-1",
+        "h": 5634.625
+      },
+      {
+        "i": 56,
+        "id": "rc114",
+        "key": "acne-pigmentation-and-scars-1-split-2",
+        "h": 6015.5625
+      },
+      {
+        "i": 57,
+        "id": "rc44",
+        "key": "acne-pigmentation-and-scars-2",
+        "h": 6191.9375
+      },
+      {
+        "i": 58,
+        "id": "rc45",
+        "key": "acne-pigmentation-and-scars-3",
+        "h": 8459.03125
+      },
+      {
+        "i": 59,
+        "id": "rc46",
+        "key": "acne-pigmentation-and-scars-4",
+        "h": 3405.375
+      },
+      {
+        "i": 60,
+        "id": "rc110",
+        "key": "acne-pigmentation-and-scars-4-split-2",
+        "h": 2160.75
+      },
+      {
+        "i": 61,
+        "id": "rc125",
+        "key": "acne-pigmentation-and-scars-4-split-2-split-2",
+        "h": 1378.25
+      },
+      {
+        "i": 62,
+        "id": "rc47",
+        "key": "acne-pigmentation-and-scars-5",
+        "h": 3453.6875
+      },
+      {
+        "i": 63,
+        "id": "rc118",
+        "key": "acne-pigmentation-and-scars-5-split-2",
+        "h": 3486.375
+      },
+      {
+        "i": 64,
+        "id": "rc48",
+        "key": "acne-pigmentation-and-scars-6",
+        "h": 6301.8125
+      },
+      {
+        "i": 65,
+        "id": "rc49",
+        "key": "acne-pigmentation-and-scars-7",
+        "h": 6588.15625
+      },
+      {
+        "i": 66,
+        "id": "rc50",
+        "key": "acne-pigmentation-and-scars-8",
+        "h": 2686.34375
+      },
+      {
+        "i": 67,
+        "id": "rc51",
+        "key": "skin-rejuvenation-1",
+        "h": 6731.46875
+      },
+      {
+        "i": 68,
+        "id": "rc52",
+        "key": "skin-rejuvenation-2",
+        "h": 6551.875
+      },
+      {
+        "i": 69,
+        "id": "rc53",
+        "key": "skin-rejuvenation-3",
+        "h": 3358.59375
+      },
+      {
+        "i": 70,
+        "id": "rc127",
+        "key": "skin-rejuvenation-3-split-2",
+        "h": 2769.9375
+      },
+      {
+        "i": 71,
+        "id": "rc54",
+        "key": "skin-rejuvenation-4",
+        "h": 7622.03125
+      },
+      {
+        "i": 72,
+        "id": "rc55",
+        "key": "skin-rejuvenation-5",
+        "h": 7352.3125
+      },
+      {
+        "i": 73,
+        "id": "rc56",
+        "key": "skin-rejuvenation-6",
+        "h": 6202.375
+      },
+      {
+        "i": 74,
+        "id": "rc57",
+        "key": "skin-rejuvenation-7",
+        "h": 7221.625
+      },
+      {
+        "i": 75,
+        "id": "rc58",
+        "key": "skin-rejuvenation-8",
+        "h": 2006.0625
+      },
+      {
+        "i": 76,
+        "id": "rc59",
+        "key": "hair-loss-1",
+        "h": 7882.71875
+      },
+      {
+        "i": 77,
+        "id": "rc60",
+        "key": "hair-loss-2",
+        "h": 7089.375
+      },
+      {
+        "i": 78,
+        "id": "rc61",
+        "key": "hair-loss-3",
+        "h": 6738
+      },
+      {
+        "i": 79,
+        "id": "rc62",
+        "key": "hair-loss-4",
+        "h": 2935.375
+      },
+      {
+        "i": 80,
+        "id": "rc63",
+        "key": "chin-jawline-and-facial-contouring-1",
+        "h": 6387.71875
+      },
+      {
+        "i": 81,
+        "id": "rc64",
+        "key": "chin-jawline-and-facial-contouring-2",
+        "h": 7371.8125
+      },
+      {
+        "i": 82,
+        "id": "rc102",
+        "key": "chin-jawline-and-facial-contouring-2-continued",
+        "h": 5200.1875
+      },
+      {
+        "i": 83,
+        "id": "rc65",
+        "key": "chin-jawline-and-facial-contouring-3",
+        "h": 6486.40625
+      },
+      {
+        "i": 84,
+        "id": "rc66",
+        "key": "chin-jawline-and-facial-contouring-4",
+        "h": 6351.59375
+      },
+      {
+        "i": 85,
+        "id": "rc67",
+        "key": "chin-jawline-and-facial-contouring-5",
+        "h": 6668.8125
+      },
+      {
+        "i": 86,
+        "id": "rc68",
+        "key": "chin-jawline-and-facial-contouring-6",
+        "h": 7708.78125
+      },
+      {
+        "i": 87,
+        "id": "rc69",
+        "key": "chin-jawline-and-facial-contouring-7",
+        "h": 6418.3125
+      },
+      {
+        "i": 88,
+        "id": "rc70",
+        "key": "chin-jawline-and-facial-contouring-8",
+        "h": 6687.1875
+      },
+      {
+        "i": 89,
+        "id": "rc103",
+        "key": "chin-jawline-and-facial-contouring-8-continued",
+        "h": 6830.4375
+      },
+      {
+        "i": 90,
+        "id": "rc71",
+        "key": "chin-jawline-and-facial-contouring-9",
+        "h": 6310.3125
+      },
+      {
+        "i": 91,
+        "id": "rc72",
+        "key": "chin-jawline-and-facial-contouring-10",
+        "h": 4535.75
+      },
+      {
+        "i": 92,
+        "id": "rc73",
+        "key": "aesthetic-treatment-selection-1",
+        "h": 5645.5
+      },
+      {
+        "i": 93,
+        "id": "rc104",
+        "key": "aesthetic-treatment-selection-1-continued",
+        "h": 4550.6875
+      },
+      {
+        "i": 94,
+        "id": "rc74",
+        "key": "aesthetic-treatment-selection-2",
+        "h": 6823.1875
+      },
+      {
+        "i": 95,
+        "id": "rc75",
+        "key": "aesthetic-treatment-selection-3",
+        "h": 6492.5625
+      },
+      {
+        "i": 96,
+        "id": "rc76",
+        "key": "aesthetic-treatment-selection-4",
+        "h": 6878.25
+      },
+      {
+        "i": 97,
+        "id": "rc77",
+        "key": "aesthetic-treatment-selection-5",
+        "h": 8287.6875
+      },
+      {
+        "i": 98,
+        "id": "rc78",
+        "key": "aesthetic-treatment-selection-6",
+        "h": 4707.75
+      },
+      {
+        "i": 99,
+        "id": "rc133",
+        "key": "aesthetic-treatment-selection-6-split-2",
+        "h": 3711.4375
+      },
+      {
+        "i": 100,
+        "id": "rc105",
+        "key": "aesthetic-treatment-selection-6-continued",
+        "h": 5023.5625
+      },
+      {
+        "i": 101,
+        "id": "rc79",
+        "key": "aesthetic-treatment-selection-7",
+        "h": 3894.3125
+      },
+      {
+        "i": 102,
+        "id": "rc80",
+        "key": "aesthetic-treatment-candidacy-1",
+        "h": 4392.1875
+      },
+      {
+        "i": 103,
+        "id": "rc120",
+        "key": "aesthetic-treatment-candidacy-1-split-2",
+        "h": 3960.875
+      },
+      {
+        "i": 104,
+        "id": "rc81",
+        "key": "aesthetic-treatment-candidacy-2",
+        "h": 3275.9375
+      },
+      {
+        "i": 105,
+        "id": "rc132",
+        "key": "aesthetic-treatment-candidacy-2-split-2",
+        "h": 3487.875
+      },
+      {
+        "i": 106,
+        "id": "rc82",
+        "key": "aesthetic-treatment-candidacy-3",
+        "h": 6578.875
+      },
+      {
+        "i": 107,
+        "id": "rc106",
+        "key": "aesthetic-treatment-candidacy-3-continued",
+        "h": 3134.0625
+      },
+      {
+        "i": 108,
+        "id": "rc126",
+        "key": "aesthetic-treatment-candidacy-3-continued-split-2",
+        "h": 1847.75
+      },
+      {
+        "i": 109,
+        "id": "rc83",
+        "key": "aesthetic-treatment-candidacy-4",
+        "h": 8819.9375
+      },
+      {
+        "i": 110,
+        "id": "rc84",
+        "key": "aesthetic-treatment-candidacy-5",
+        "h": 4818.4375
+      },
+      {
+        "i": 111,
+        "id": "rc128",
+        "key": "aesthetic-treatment-candidacy-5-split-2",
+        "h": 4737.8125
+      },
+      {
+        "i": 112,
+        "id": "rc85",
+        "key": "complications-aftercare-and-follow-up-1",
+        "h": 3919.75
+      },
+      {
+        "i": 113,
+        "id": "rc119",
+        "key": "complications-aftercare-and-follow-up-1-split-2",
+        "h": 3361.8125
+      },
+      {
+        "i": 114,
+        "id": "rc86",
+        "key": "complications-aftercare-and-follow-up-2",
+        "h": 5196.5
+      },
+      {
+        "i": 115,
+        "id": "rc107",
+        "key": "complications-aftercare-and-follow-up-2-continued",
+        "h": 4946.9375
+      },
+      {
+        "i": 116,
+        "id": "rc87",
+        "key": "complications-aftercare-and-follow-up-3",
+        "h": 6565.9375
+      },
+      {
+        "i": 117,
+        "id": "rc88",
+        "key": "complications-aftercare-and-follow-up-4",
+        "h": 5263.875
+      },
+      {
+        "i": 118,
+        "id": "rc111",
+        "key": "complications-aftercare-and-follow-up-4-split-2",
+        "h": 4781.375
+      },
+      {
+        "i": 119,
+        "id": "rc89",
+        "key": "complications-aftercare-and-follow-up-5",
+        "h": 6493.875
+      },
+      {
+        "i": 120,
+        "id": "rc90",
+        "key": "complications-aftercare-and-follow-up-6",
+        "h": 6478.9375
+      },
+      {
+        "i": 121,
+        "id": "rc91",
+        "key": "complications-aftercare-and-follow-up-7",
+        "h": 5048.75
+      },
+      {
+        "i": 122,
+        "id": "rc115",
+        "key": "complications-aftercare-and-follow-up-7-split-2",
+        "h": 4585.5625
+      },
+      {
+        "i": 123,
+        "id": "rc92",
+        "key": "complications-aftercare-and-follow-up-8",
+        "h": 6541.3125
+      },
+      {
+        "i": 124,
+        "id": "rc93",
+        "key": "complications-aftercare-and-follow-up-9",
+        "h": 6663.5625
+      },
+      {
+        "i": 125,
+        "id": "rc94",
+        "key": "complications-aftercare-and-follow-up-10",
+        "h": 950
+      },
+      {
+        "i": 126,
+        "id": "rc95",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1",
+        "h": 6212.0625
+      },
+      {
+        "i": 127,
+        "id": "rc108",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1-continued",
+        "h": 3726.875
+      },
+      {
+        "i": 128,
+        "id": "rc96",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-2",
+        "h": 685.1875
+      },
+      {
+        "i": 129,
+        "id": "rc97",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-1",
+        "h": 9206.8125
+      },
+      {
+        "i": 130,
+        "id": "rc98",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-2",
+        "h": 956.125
+      },
+      {
+        "i": 131,
+        "id": "rc99",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1",
+        "h": 2760.75
+      },
+      {
+        "i": 132,
+        "id": "rc129",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-split-2",
+        "h": 2924.125
+      },
+      {
+        "i": 133,
+        "id": "rc109",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-continued",
+        "h": 2025.75
+      }
+    ]
+  },
+  "390": {
+    "total": 704444,
+    "chunks": [
+      {
+        "i": 0,
+        "id": "rc1",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1",
+        "h": 3545.578125
+      },
+      {
+        "i": 1,
+        "id": "rc117",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1-split-2",
+        "h": 3289.75
+      },
+      {
+        "i": 2,
+        "id": "rc2",
+        "key": "diagnosis-before-aesthetic-treatment-selection-2",
+        "h": 498.578125
+      },
+      {
+        "i": 3,
+        "id": "rc3",
+        "key": "facial-aging-differential-diagnosis-1",
+        "h": 6601.328125
+      },
+      {
+        "i": 4,
+        "id": "rc4",
+        "key": "botox-1",
+        "h": 5775.78125
+      },
+      {
+        "i": 5,
+        "id": "rc5",
+        "key": "botox-2",
+        "h": 4790.4375
+      },
+      {
+        "i": 6,
+        "id": "rc112",
+        "key": "botox-2-split-2",
+        "h": 4962.6875
+      },
+      {
+        "i": 7,
+        "id": "rc6",
+        "key": "botox-3",
+        "h": 4147.203125
+      },
+      {
+        "i": 8,
+        "id": "rc121",
+        "key": "botox-3-split-2",
+        "h": 4779.734375
+      },
+      {
+        "i": 9,
+        "id": "rc7",
+        "key": "botox-4",
+        "h": 5958.640625
+      },
+      {
+        "i": 10,
+        "id": "rc8",
+        "key": "botox-5",
+        "h": 7296.5625
+      },
+      {
+        "i": 11,
+        "id": "rc9",
+        "key": "botox-6",
+        "h": 5937.296875
+      },
+      {
+        "i": 12,
+        "id": "rc10",
+        "key": "botox-7",
+        "h": 3651.765625
+      },
+      {
+        "i": 13,
+        "id": "rc124",
+        "key": "botox-7-split-2",
+        "h": 2978.359375
+      },
+      {
+        "i": 14,
+        "id": "rc11",
+        "key": "botox-8",
+        "h": 6549.484375
+      },
+      {
+        "i": 15,
+        "id": "rc12",
+        "key": "botox-9",
+        "h": 7118.796875
+      },
+      {
+        "i": 16,
+        "id": "rc13",
+        "key": "botox-10",
+        "h": 7021.828125
+      },
+      {
+        "i": 17,
+        "id": "rc14",
+        "key": "botox-11",
+        "h": 4359.46875
+      },
+      {
+        "i": 18,
+        "id": "rc122",
+        "key": "botox-11-split-2",
+        "h": 4301.515625
+      },
+      {
+        "i": 19,
+        "id": "rc15",
+        "key": "botox-12",
+        "h": 4544.6875
+      },
+      {
+        "i": 20,
+        "id": "rc123",
+        "key": "botox-12-split-2",
+        "h": 4540.921875
+      },
+      {
+        "i": 21,
+        "id": "rc16",
+        "key": "botox-13",
+        "h": 4382.6875
+      },
+      {
+        "i": 22,
+        "id": "rc134",
+        "key": "botox-13-split-2",
+        "h": 3927.25
+      },
+      {
+        "i": 23,
+        "id": "rc17",
+        "key": "botox-14",
+        "h": 7270.984375
+      },
+      {
+        "i": 24,
+        "id": "rc18",
+        "key": "botox-15",
+        "h": 6526.703125
+      },
+      {
+        "i": 25,
+        "id": "rc19",
+        "key": "botox-16",
+        "h": 4137.453125
+      },
+      {
+        "i": 26,
+        "id": "rc20",
+        "key": "filler-1",
+        "h": 6967.75
+      },
+      {
+        "i": 27,
+        "id": "rc21",
+        "key": "filler-2",
+        "h": 6037.46875
+      },
+      {
+        "i": 28,
+        "id": "rc22",
+        "key": "filler-3",
+        "h": 6067.203125
+      },
+      {
+        "i": 29,
+        "id": "rc100",
+        "key": "filler-3-continued",
+        "h": 5469.46875
+      },
+      {
+        "i": 30,
+        "id": "rc23",
+        "key": "filler-4",
+        "h": 4496.296875
+      },
+      {
+        "i": 31,
+        "id": "rc116",
+        "key": "filler-4-split-2",
+        "h": 4820.859375
+      },
+      {
+        "i": 32,
+        "id": "rc24",
+        "key": "filler-5",
+        "h": 5786.078125
+      },
+      {
+        "i": 33,
+        "id": "rc25",
+        "key": "filler-6",
+        "h": 5733.328125
+      },
+      {
+        "i": 34,
+        "id": "rc26",
+        "key": "filler-7",
+        "h": 6444.265625
+      },
+      {
+        "i": 35,
+        "id": "rc27",
+        "key": "filler-8",
+        "h": 4460.453125
+      },
+      {
+        "i": 36,
+        "id": "rc131",
+        "key": "filler-8-split-2",
+        "h": 4384.203125
+      },
+      {
+        "i": 37,
+        "id": "rc28",
+        "key": "filler-9",
+        "h": 6495.71875
+      },
+      {
+        "i": 38,
+        "id": "rc29",
+        "key": "thread-lift-1",
+        "h": 6562.703125
+      },
+      {
+        "i": 39,
+        "id": "rc30",
+        "key": "thread-lift-2",
+        "h": 5879.0625
+      },
+      {
+        "i": 40,
+        "id": "rc31",
+        "key": "thread-lift-3",
+        "h": 6706.0625
+      },
+      {
+        "i": 41,
+        "id": "rc32",
+        "key": "thread-lift-4",
+        "h": 6789.09375
+      },
+      {
+        "i": 42,
+        "id": "rc101",
+        "key": "thread-lift-4-continued",
+        "h": 5920.703125
+      },
+      {
+        "i": 43,
+        "id": "rc33",
+        "key": "thread-lift-5",
+        "h": 6057.40625
+      },
+      {
+        "i": 44,
+        "id": "rc34",
+        "key": "thread-lift-6",
+        "h": 6392.421875
+      },
+      {
+        "i": 45,
+        "id": "rc35",
+        "key": "thread-lift-7",
+        "h": 4872.125
+      },
+      {
+        "i": 46,
+        "id": "rc130",
+        "key": "thread-lift-7-split-2",
+        "h": 4616.78125
+      },
+      {
+        "i": 47,
+        "id": "rc36",
+        "key": "thread-lift-8",
+        "h": 4449.671875
+      },
+      {
+        "i": 48,
+        "id": "rc113",
+        "key": "thread-lift-8-split-2",
+        "h": 4208.40625
+      },
+      {
+        "i": 49,
+        "id": "rc37",
+        "key": "thread-lift-9",
+        "h": 5956.46875
+      },
+      {
+        "i": 50,
+        "id": "rc38",
+        "key": "thread-lift-10",
+        "h": 7157.96875
+      },
+      {
+        "i": 51,
+        "id": "rc39",
+        "key": "thread-lift-11",
+        "h": 6443.78125
+      },
+      {
+        "i": 52,
+        "id": "rc40",
+        "key": "thread-lift-12",
+        "h": 6676.3125
+      },
+      {
+        "i": 53,
+        "id": "rc41",
+        "key": "thread-lift-13",
+        "h": 6425.65625
+      },
+      {
+        "i": 54,
+        "id": "rc42",
+        "key": "thread-lift-14",
+        "h": 6320.90625
+      },
+      {
+        "i": 55,
+        "id": "rc43",
+        "key": "acne-pigmentation-and-scars-1",
+        "h": 5205.0625
+      },
+      {
+        "i": 56,
+        "id": "rc114",
+        "key": "acne-pigmentation-and-scars-1-split-2",
+        "h": 5621.625
+      },
+      {
+        "i": 57,
+        "id": "rc44",
+        "key": "acne-pigmentation-and-scars-2",
+        "h": 5771.375
+      },
+      {
+        "i": 58,
+        "id": "rc45",
+        "key": "acne-pigmentation-and-scars-3",
+        "h": 7788.59375
+      },
+      {
+        "i": 59,
+        "id": "rc46",
+        "key": "acne-pigmentation-and-scars-4",
+        "h": 3060.1875
+      },
+      {
+        "i": 60,
+        "id": "rc110",
+        "key": "acne-pigmentation-and-scars-4-split-2",
+        "h": 2076.46875
+      },
+      {
+        "i": 61,
+        "id": "rc125",
+        "key": "acne-pigmentation-and-scars-4-split-2-split-2",
+        "h": 1403.4375
+      },
+      {
+        "i": 62,
+        "id": "rc47",
+        "key": "acne-pigmentation-and-scars-5",
+        "h": 3342.875
+      },
+      {
+        "i": 63,
+        "id": "rc118",
+        "key": "acne-pigmentation-and-scars-5-split-2",
+        "h": 3284.96875
+      },
+      {
+        "i": 64,
+        "id": "rc48",
+        "key": "acne-pigmentation-and-scars-6",
+        "h": 5934.65625
+      },
+      {
+        "i": 65,
+        "id": "rc49",
+        "key": "acne-pigmentation-and-scars-7",
+        "h": 6274.1875
+      },
+      {
+        "i": 66,
+        "id": "rc50",
+        "key": "acne-pigmentation-and-scars-8",
+        "h": 2512.9375
+      },
+      {
+        "i": 67,
+        "id": "rc51",
+        "key": "skin-rejuvenation-1",
+        "h": 6357.21875
+      },
+      {
+        "i": 68,
+        "id": "rc52",
+        "key": "skin-rejuvenation-2",
+        "h": 6064.5625
+      },
+      {
+        "i": 69,
+        "id": "rc53",
+        "key": "skin-rejuvenation-3",
+        "h": 3013.28125
+      },
+      {
+        "i": 70,
+        "id": "rc127",
+        "key": "skin-rejuvenation-3-split-2",
+        "h": 2596.5
+      },
+      {
+        "i": 71,
+        "id": "rc54",
+        "key": "skin-rejuvenation-4",
+        "h": 7332.9375
+      },
+      {
+        "i": 72,
+        "id": "rc55",
+        "key": "skin-rejuvenation-5",
+        "h": 6769.5625
+      },
+      {
+        "i": 73,
+        "id": "rc56",
+        "key": "skin-rejuvenation-6",
+        "h": 5767
+      },
+      {
+        "i": 74,
+        "id": "rc57",
+        "key": "skin-rejuvenation-7",
+        "h": 6638.03125
+      },
+      {
+        "i": 75,
+        "id": "rc58",
+        "key": "skin-rejuvenation-8",
+        "h": 1868.28125
+      },
+      {
+        "i": 76,
+        "id": "rc59",
+        "key": "hair-loss-1",
+        "h": 7399.1875
+      },
+      {
+        "i": 77,
+        "id": "rc60",
+        "key": "hair-loss-2",
+        "h": 6550.34375
+      },
+      {
+        "i": 78,
+        "id": "rc61",
+        "key": "hair-loss-3",
+        "h": 6311.125
+      },
+      {
+        "i": 79,
+        "id": "rc62",
+        "key": "hair-loss-4",
+        "h": 2672.15625
+      },
+      {
+        "i": 80,
+        "id": "rc63",
+        "key": "chin-jawline-and-facial-contouring-1",
+        "h": 5922.46875
+      },
+      {
+        "i": 81,
+        "id": "rc64",
+        "key": "chin-jawline-and-facial-contouring-2",
+        "h": 7042.0625
+      },
+      {
+        "i": 82,
+        "id": "rc102",
+        "key": "chin-jawline-and-facial-contouring-2-continued",
+        "h": 4973.625
+      },
+      {
+        "i": 83,
+        "id": "rc65",
+        "key": "chin-jawline-and-facial-contouring-3",
+        "h": 5938.25
+      },
+      {
+        "i": 84,
+        "id": "rc66",
+        "key": "chin-jawline-and-facial-contouring-4",
+        "h": 6104.9375
+      },
+      {
+        "i": 85,
+        "id": "rc67",
+        "key": "chin-jawline-and-facial-contouring-5",
+        "h": 6234.9375
+      },
+      {
+        "i": 86,
+        "id": "rc68",
+        "key": "chin-jawline-and-facial-contouring-6",
+        "h": 7247.1875
+      },
+      {
+        "i": 87,
+        "id": "rc69",
+        "key": "chin-jawline-and-facial-contouring-7",
+        "h": 5923.15625
+      },
+      {
+        "i": 88,
+        "id": "rc70",
+        "key": "chin-jawline-and-facial-contouring-8",
+        "h": 6319.75
+      },
+      {
+        "i": 89,
+        "id": "rc103",
+        "key": "chin-jawline-and-facial-contouring-8-continued",
+        "h": 6397.21875
+      },
+      {
+        "i": 90,
+        "id": "rc71",
+        "key": "chin-jawline-and-facial-contouring-9",
+        "h": 5935.03125
+      },
+      {
+        "i": 91,
+        "id": "rc72",
+        "key": "chin-jawline-and-facial-contouring-10",
+        "h": 4307.03125
+      },
+      {
+        "i": 92,
+        "id": "rc73",
+        "key": "aesthetic-treatment-selection-1",
+        "h": 5238.4375
+      },
+      {
+        "i": 93,
+        "id": "rc104",
+        "key": "aesthetic-treatment-selection-1-continued",
+        "h": 4352.21875
+      },
+      {
+        "i": 94,
+        "id": "rc74",
+        "key": "aesthetic-treatment-selection-2",
+        "h": 6324.875
+      },
+      {
+        "i": 95,
+        "id": "rc75",
+        "key": "aesthetic-treatment-selection-3",
+        "h": 5982.125
+      },
+      {
+        "i": 96,
+        "id": "rc76",
+        "key": "aesthetic-treatment-selection-4",
+        "h": 6534.5625
+      },
+      {
+        "i": 97,
+        "id": "rc77",
+        "key": "aesthetic-treatment-selection-5",
+        "h": 7636.875
+      },
+      {
+        "i": 98,
+        "id": "rc78",
+        "key": "aesthetic-treatment-selection-6",
+        "h": 4396.25
+      },
+      {
+        "i": 99,
+        "id": "rc133",
+        "key": "aesthetic-treatment-selection-6-split-2",
+        "h": 3450.375
+      },
+      {
+        "i": 100,
+        "id": "rc105",
+        "key": "aesthetic-treatment-selection-6-continued",
+        "h": 4735.5625
+      },
+      {
+        "i": 101,
+        "id": "rc79",
+        "key": "aesthetic-treatment-selection-7",
+        "h": 3482.3125
+      },
+      {
+        "i": 102,
+        "id": "rc80",
+        "key": "aesthetic-treatment-candidacy-1",
+        "h": 4102.75
+      },
+      {
+        "i": 103,
+        "id": "rc120",
+        "key": "aesthetic-treatment-candidacy-1-split-2",
+        "h": 3640.25
+      },
+      {
+        "i": 104,
+        "id": "rc81",
+        "key": "aesthetic-treatment-candidacy-2",
+        "h": 3103.8125
+      },
+      {
+        "i": 105,
+        "id": "rc132",
+        "key": "aesthetic-treatment-candidacy-2-split-2",
+        "h": 3316.625
+      },
+      {
+        "i": 106,
+        "id": "rc82",
+        "key": "aesthetic-treatment-candidacy-3",
+        "h": 6174.375
+      },
+      {
+        "i": 107,
+        "id": "rc106",
+        "key": "aesthetic-treatment-candidacy-3-continued",
+        "h": 2931.625
+      },
+      {
+        "i": 108,
+        "id": "rc126",
+        "key": "aesthetic-treatment-candidacy-3-continued-split-2",
+        "h": 1762.5
+      },
+      {
+        "i": 109,
+        "id": "rc83",
+        "key": "aesthetic-treatment-candidacy-4",
+        "h": 8214.4375
+      },
+      {
+        "i": 110,
+        "id": "rc84",
+        "key": "aesthetic-treatment-candidacy-5",
+        "h": 4499.9375
+      },
+      {
+        "i": 111,
+        "id": "rc128",
+        "key": "aesthetic-treatment-candidacy-5-split-2",
+        "h": 4407.4375
+      },
+      {
+        "i": 112,
+        "id": "rc85",
+        "key": "complications-aftercare-and-follow-up-1",
+        "h": 3636.1875
+      },
+      {
+        "i": 113,
+        "id": "rc119",
+        "key": "complications-aftercare-and-follow-up-1-split-2",
+        "h": 3220.125
+      },
+      {
+        "i": 114,
+        "id": "rc86",
+        "key": "complications-aftercare-and-follow-up-2",
+        "h": 4739.5625
+      },
+      {
+        "i": 115,
+        "id": "rc107",
+        "key": "complications-aftercare-and-follow-up-2-continued",
+        "h": 4568.5625
+      },
+      {
+        "i": 116,
+        "id": "rc87",
+        "key": "complications-aftercare-and-follow-up-3",
+        "h": 5992.0625
+      },
+      {
+        "i": 117,
+        "id": "rc88",
+        "key": "complications-aftercare-and-follow-up-4",
+        "h": 4863.5625
+      },
+      {
+        "i": 118,
+        "id": "rc111",
+        "key": "complications-aftercare-and-follow-up-4-split-2",
+        "h": 4383.75
+      },
+      {
+        "i": 119,
+        "id": "rc89",
+        "key": "complications-aftercare-and-follow-up-5",
+        "h": 5953.125
+      },
+      {
+        "i": 120,
+        "id": "rc90",
+        "key": "complications-aftercare-and-follow-up-6",
+        "h": 6074.5
+      },
+      {
+        "i": 121,
+        "id": "rc91",
+        "key": "complications-aftercare-and-follow-up-7",
+        "h": 4730.6875
+      },
+      {
+        "i": 122,
+        "id": "rc115",
+        "key": "complications-aftercare-and-follow-up-7-split-2",
+        "h": 4296.875
+      },
+      {
+        "i": 123,
+        "id": "rc92",
+        "key": "complications-aftercare-and-follow-up-8",
+        "h": 6204.75
+      },
+      {
+        "i": 124,
+        "id": "rc93",
+        "key": "complications-aftercare-and-follow-up-9",
+        "h": 6206.875
+      },
+      {
+        "i": 125,
+        "id": "rc94",
+        "key": "complications-aftercare-and-follow-up-10",
+        "h": 930
+      },
+      {
+        "i": 126,
+        "id": "rc95",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1",
+        "h": 5685
+      },
+      {
+        "i": 127,
+        "id": "rc108",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1-continued",
+        "h": 3638.5625
+      },
+      {
+        "i": 128,
+        "id": "rc96",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-2",
+        "h": 626.5625
+      },
+      {
+        "i": 129,
+        "id": "rc97",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-1",
+        "h": 8535.75
+      },
+      {
+        "i": 130,
+        "id": "rc98",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-2",
+        "h": 898.375
+      },
+      {
+        "i": 131,
+        "id": "rc99",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1",
+        "h": 2707.5
+      },
+      {
+        "i": 132,
+        "id": "rc129",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-split-2",
+        "h": 2750.125
+      },
+      {
+        "i": 133,
+        "id": "rc109",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-continued",
+        "h": 1910.25
+      }
+    ]
+  },
+  "430": {
+    "total": 650331,
+    "chunks": [
+      {
+        "i": 0,
+        "id": "rc1",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1",
+        "h": 3227.96875
+      },
+      {
+        "i": 1,
+        "id": "rc117",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1-split-2",
+        "h": 3092.171875
+      },
+      {
+        "i": 2,
+        "id": "rc2",
+        "key": "diagnosis-before-aesthetic-treatment-selection-2",
+        "h": 500.984375
+      },
+      {
+        "i": 3,
+        "id": "rc3",
+        "key": "facial-aging-differential-diagnosis-1",
+        "h": 6084.578125
+      },
+      {
+        "i": 4,
+        "id": "rc4",
+        "key": "botox-1",
+        "h": 5354.859375
+      },
+      {
+        "i": 5,
+        "id": "rc5",
+        "key": "botox-2",
+        "h": 4406.21875
+      },
+      {
+        "i": 6,
+        "id": "rc112",
+        "key": "botox-2-split-2",
+        "h": 4602.671875
+      },
+      {
+        "i": 7,
+        "id": "rc6",
+        "key": "botox-3",
+        "h": 3855.359375
+      },
+      {
+        "i": 8,
+        "id": "rc121",
+        "key": "botox-3-split-2",
+        "h": 4317
+      },
+      {
+        "i": 9,
+        "id": "rc7",
+        "key": "botox-4",
+        "h": 5440.796875
+      },
+      {
+        "i": 10,
+        "id": "rc8",
+        "key": "botox-5",
+        "h": 6572.296875
+      },
+      {
+        "i": 11,
+        "id": "rc9",
+        "key": "botox-6",
+        "h": 5429.96875
+      },
+      {
+        "i": 12,
+        "id": "rc10",
+        "key": "botox-7",
+        "h": 3312.3125
+      },
+      {
+        "i": 13,
+        "id": "rc124",
+        "key": "botox-7-split-2",
+        "h": 2779.953125
+      },
+      {
+        "i": 14,
+        "id": "rc11",
+        "key": "botox-8",
+        "h": 6071.671875
+      },
+      {
+        "i": 15,
+        "id": "rc12",
+        "key": "botox-9",
+        "h": 6487.390625
+      },
+      {
+        "i": 16,
+        "id": "rc13",
+        "key": "botox-10",
+        "h": 6417.375
+      },
+      {
+        "i": 17,
+        "id": "rc14",
+        "key": "botox-11",
+        "h": 4106.375
+      },
+      {
+        "i": 18,
+        "id": "rc122",
+        "key": "botox-11-split-2",
+        "h": 3873.890625
+      },
+      {
+        "i": 19,
+        "id": "rc15",
+        "key": "botox-12",
+        "h": 4201.375
+      },
+      {
+        "i": 20,
+        "id": "rc123",
+        "key": "botox-12-split-2",
+        "h": 4209.53125
+      },
+      {
+        "i": 21,
+        "id": "rc16",
+        "key": "botox-13",
+        "h": 4039.34375
+      },
+      {
+        "i": 22,
+        "id": "rc134",
+        "key": "botox-13-split-2",
+        "h": 3582
+      },
+      {
+        "i": 23,
+        "id": "rc17",
+        "key": "botox-14",
+        "h": 6721.078125
+      },
+      {
+        "i": 24,
+        "id": "rc18",
+        "key": "botox-15",
+        "h": 6024.71875
+      },
+      {
+        "i": 25,
+        "id": "rc19",
+        "key": "botox-16",
+        "h": 3799.5625
+      },
+      {
+        "i": 26,
+        "id": "rc20",
+        "key": "filler-1",
+        "h": 6604.953125
+      },
+      {
+        "i": 27,
+        "id": "rc21",
+        "key": "filler-2",
+        "h": 5428.015625
+      },
+      {
+        "i": 28,
+        "id": "rc22",
+        "key": "filler-3",
+        "h": 5670.296875
+      },
+      {
+        "i": 29,
+        "id": "rc100",
+        "key": "filler-3-continued",
+        "h": 4960.078125
+      },
+      {
+        "i": 30,
+        "id": "rc23",
+        "key": "filler-4",
+        "h": 4175.40625
+      },
+      {
+        "i": 31,
+        "id": "rc116",
+        "key": "filler-4-split-2",
+        "h": 4479
+      },
+      {
+        "i": 32,
+        "id": "rc24",
+        "key": "filler-5",
+        "h": 5388.046875
+      },
+      {
+        "i": 33,
+        "id": "rc25",
+        "key": "filler-6",
+        "h": 5274.359375
+      },
+      {
+        "i": 34,
+        "id": "rc26",
+        "key": "filler-7",
+        "h": 5843.40625
+      },
+      {
+        "i": 35,
+        "id": "rc27",
+        "key": "filler-8",
+        "h": 3993.671875
+      },
+      {
+        "i": 36,
+        "id": "rc131",
+        "key": "filler-8-split-2",
+        "h": 4106.90625
+      },
+      {
+        "i": 37,
+        "id": "rc28",
+        "key": "filler-9",
+        "h": 5900.78125
+      },
+      {
+        "i": 38,
+        "id": "rc29",
+        "key": "thread-lift-1",
+        "h": 6114.515625
+      },
+      {
+        "i": 39,
+        "id": "rc30",
+        "key": "thread-lift-2",
+        "h": 5511.46875
+      },
+      {
+        "i": 40,
+        "id": "rc31",
+        "key": "thread-lift-3",
+        "h": 6161.125
+      },
+      {
+        "i": 41,
+        "id": "rc32",
+        "key": "thread-lift-4",
+        "h": 6315.4375
+      },
+      {
+        "i": 42,
+        "id": "rc101",
+        "key": "thread-lift-4-continued",
+        "h": 5473.3125
+      },
+      {
+        "i": 43,
+        "id": "rc33",
+        "key": "thread-lift-5",
+        "h": 5577.09375
+      },
+      {
+        "i": 44,
+        "id": "rc34",
+        "key": "thread-lift-6",
+        "h": 5919.734375
+      },
+      {
+        "i": 45,
+        "id": "rc35",
+        "key": "thread-lift-7",
+        "h": 4469.890625
+      },
+      {
+        "i": 46,
+        "id": "rc130",
+        "key": "thread-lift-7-split-2",
+        "h": 4315.28125
+      },
+      {
+        "i": 47,
+        "id": "rc36",
+        "key": "thread-lift-8",
+        "h": 4147.375
+      },
+      {
+        "i": 48,
+        "id": "rc113",
+        "key": "thread-lift-8-split-2",
+        "h": 3984.75
+      },
+      {
+        "i": 49,
+        "id": "rc37",
+        "key": "thread-lift-9",
+        "h": 5467.84375
+      },
+      {
+        "i": 50,
+        "id": "rc38",
+        "key": "thread-lift-10",
+        "h": 6624.296875
+      },
+      {
+        "i": 51,
+        "id": "rc39",
+        "key": "thread-lift-11",
+        "h": 6016.875
+      },
+      {
+        "i": 52,
+        "id": "rc40",
+        "key": "thread-lift-12",
+        "h": 6098.78125
+      },
+      {
+        "i": 53,
+        "id": "rc41",
+        "key": "thread-lift-13",
+        "h": 5975.59375
+      },
+      {
+        "i": 54,
+        "id": "rc42",
+        "key": "thread-lift-14",
+        "h": 5862.75
+      },
+      {
+        "i": 55,
+        "id": "rc43",
+        "key": "acne-pigmentation-and-scars-1",
+        "h": 4781.3125
+      },
+      {
+        "i": 56,
+        "id": "rc114",
+        "key": "acne-pigmentation-and-scars-1-split-2",
+        "h": 5143.28125
+      },
+      {
+        "i": 57,
+        "id": "rc44",
+        "key": "acne-pigmentation-and-scars-2",
+        "h": 5373.375
+      },
+      {
+        "i": 58,
+        "id": "rc45",
+        "key": "acne-pigmentation-and-scars-3",
+        "h": 7206.125
+      },
+      {
+        "i": 59,
+        "id": "rc46",
+        "key": "acne-pigmentation-and-scars-4",
+        "h": 2899.96875
+      },
+      {
+        "i": 60,
+        "id": "rc110",
+        "key": "acne-pigmentation-and-scars-4-split-2",
+        "h": 1813.25
+      },
+      {
+        "i": 61,
+        "id": "rc125",
+        "key": "acne-pigmentation-and-scars-4-split-2-split-2",
+        "h": 1417.125
+      },
+      {
+        "i": 62,
+        "id": "rc47",
+        "key": "acne-pigmentation-and-scars-5",
+        "h": 2964.15625
+      },
+      {
+        "i": 63,
+        "id": "rc118",
+        "key": "acne-pigmentation-and-scars-5-split-2",
+        "h": 3027.28125
+      },
+      {
+        "i": 64,
+        "id": "rc48",
+        "key": "acne-pigmentation-and-scars-6",
+        "h": 5484.3125
+      },
+      {
+        "i": 65,
+        "id": "rc49",
+        "key": "acne-pigmentation-and-scars-7",
+        "h": 5672.53125
+      },
+      {
+        "i": 66,
+        "id": "rc50",
+        "key": "acne-pigmentation-and-scars-8",
+        "h": 2282.0625
+      },
+      {
+        "i": 67,
+        "id": "rc51",
+        "key": "skin-rejuvenation-1",
+        "h": 5899.71875
+      },
+      {
+        "i": 68,
+        "id": "rc52",
+        "key": "skin-rejuvenation-2",
+        "h": 5682.625
+      },
+      {
+        "i": 69,
+        "id": "rc53",
+        "key": "skin-rejuvenation-3",
+        "h": 2906.125
+      },
+      {
+        "i": 70,
+        "id": "rc127",
+        "key": "skin-rejuvenation-3-split-2",
+        "h": 2403.34375
+      },
+      {
+        "i": 71,
+        "id": "rc54",
+        "key": "skin-rejuvenation-4",
+        "h": 6865.75
+      },
+      {
+        "i": 72,
+        "id": "rc55",
+        "key": "skin-rejuvenation-5",
+        "h": 6243.28125
+      },
+      {
+        "i": 73,
+        "id": "rc56",
+        "key": "skin-rejuvenation-6",
+        "h": 5368.53125
+      },
+      {
+        "i": 74,
+        "id": "rc57",
+        "key": "skin-rejuvenation-7",
+        "h": 6106.9375
+      },
+      {
+        "i": 75,
+        "id": "rc58",
+        "key": "skin-rejuvenation-8",
+        "h": 1725.40625
+      },
+      {
+        "i": 76,
+        "id": "rc59",
+        "key": "hair-loss-1",
+        "h": 6834.0625
+      },
+      {
+        "i": 77,
+        "id": "rc60",
+        "key": "hair-loss-2",
+        "h": 6011.34375
+      },
+      {
+        "i": 78,
+        "id": "rc61",
+        "key": "hair-loss-3",
+        "h": 5793.375
+      },
+      {
+        "i": 79,
+        "id": "rc62",
+        "key": "hair-loss-4",
+        "h": 2478.9375
+      },
+      {
+        "i": 80,
+        "id": "rc63",
+        "key": "chin-jawline-and-facial-contouring-1",
+        "h": 5403.375
+      },
+      {
+        "i": 81,
+        "id": "rc64",
+        "key": "chin-jawline-and-facial-contouring-2",
+        "h": 6449.28125
+      },
+      {
+        "i": 82,
+        "id": "rc102",
+        "key": "chin-jawline-and-facial-contouring-2-continued",
+        "h": 4552.6875
+      },
+      {
+        "i": 83,
+        "id": "rc65",
+        "key": "chin-jawline-and-facial-contouring-3",
+        "h": 5517.8125
+      },
+      {
+        "i": 84,
+        "id": "rc66",
+        "key": "chin-jawline-and-facial-contouring-4",
+        "h": 5533.21875
+      },
+      {
+        "i": 85,
+        "id": "rc67",
+        "key": "chin-jawline-and-facial-contouring-5",
+        "h": 5687.5625
+      },
+      {
+        "i": 86,
+        "id": "rc68",
+        "key": "chin-jawline-and-facial-contouring-6",
+        "h": 6710.84375
+      },
+      {
+        "i": 87,
+        "id": "rc69",
+        "key": "chin-jawline-and-facial-contouring-7",
+        "h": 5502.8125
+      },
+      {
+        "i": 88,
+        "id": "rc70",
+        "key": "chin-jawline-and-facial-contouring-8",
+        "h": 5900.125
+      },
+      {
+        "i": 89,
+        "id": "rc103",
+        "key": "chin-jawline-and-facial-contouring-8-continued",
+        "h": 5941.1875
+      },
+      {
+        "i": 90,
+        "id": "rc71",
+        "key": "chin-jawline-and-facial-contouring-9",
+        "h": 5506.28125
+      },
+      {
+        "i": 91,
+        "id": "rc72",
+        "key": "chin-jawline-and-facial-contouring-10",
+        "h": 3977.6875
+      },
+      {
+        "i": 92,
+        "id": "rc73",
+        "key": "aesthetic-treatment-selection-1",
+        "h": 4818.15625
+      },
+      {
+        "i": 93,
+        "id": "rc104",
+        "key": "aesthetic-treatment-selection-1-continued",
+        "h": 3928.25
+      },
+      {
+        "i": 94,
+        "id": "rc74",
+        "key": "aesthetic-treatment-selection-2",
+        "h": 5848.84375
+      },
+      {
+        "i": 95,
+        "id": "rc75",
+        "key": "aesthetic-treatment-selection-3",
+        "h": 5451.5625
+      },
+      {
+        "i": 96,
+        "id": "rc76",
+        "key": "aesthetic-treatment-selection-4",
+        "h": 5971.40625
+      },
+      {
+        "i": 97,
+        "id": "rc77",
+        "key": "aesthetic-treatment-selection-5",
+        "h": 7063.25
+      },
+      {
+        "i": 98,
+        "id": "rc78",
+        "key": "aesthetic-treatment-selection-6",
+        "h": 4112.375
+      },
+      {
+        "i": 99,
+        "id": "rc133",
+        "key": "aesthetic-treatment-selection-6-split-2",
+        "h": 3143.875
+      },
+      {
+        "i": 100,
+        "id": "rc105",
+        "key": "aesthetic-treatment-selection-6-continued",
+        "h": 4453.34375
+      },
+      {
+        "i": 101,
+        "id": "rc79",
+        "key": "aesthetic-treatment-selection-7",
+        "h": 2951.78125
+      },
+      {
+        "i": 102,
+        "id": "rc80",
+        "key": "aesthetic-treatment-candidacy-1",
+        "h": 3696.9375
+      },
+      {
+        "i": 103,
+        "id": "rc120",
+        "key": "aesthetic-treatment-candidacy-1-split-2",
+        "h": 3342.40625
+      },
+      {
+        "i": 104,
+        "id": "rc81",
+        "key": "aesthetic-treatment-candidacy-2",
+        "h": 2890
+      },
+      {
+        "i": 105,
+        "id": "rc132",
+        "key": "aesthetic-treatment-candidacy-2-split-2",
+        "h": 3013.125
+      },
+      {
+        "i": 106,
+        "id": "rc82",
+        "key": "aesthetic-treatment-candidacy-3",
+        "h": 5655.9375
+      },
+      {
+        "i": 107,
+        "id": "rc106",
+        "key": "aesthetic-treatment-candidacy-3-continued",
+        "h": 2672.0625
+      },
+      {
+        "i": 108,
+        "id": "rc126",
+        "key": "aesthetic-treatment-candidacy-3-continued-split-2",
+        "h": 1649.3125
+      },
+      {
+        "i": 109,
+        "id": "rc83",
+        "key": "aesthetic-treatment-candidacy-4",
+        "h": 7713.375
+      },
+      {
+        "i": 110,
+        "id": "rc84",
+        "key": "aesthetic-treatment-candidacy-5",
+        "h": 4209.375
+      },
+      {
+        "i": 111,
+        "id": "rc128",
+        "key": "aesthetic-treatment-candidacy-5-split-2",
+        "h": 4184
+      },
+      {
+        "i": 112,
+        "id": "rc85",
+        "key": "complications-aftercare-and-follow-up-1",
+        "h": 3349.625
+      },
+      {
+        "i": 113,
+        "id": "rc119",
+        "key": "complications-aftercare-and-follow-up-1-split-2",
+        "h": 2992
+      },
+      {
+        "i": 114,
+        "id": "rc86",
+        "key": "complications-aftercare-and-follow-up-2",
+        "h": 4370.5
+      },
+      {
+        "i": 115,
+        "id": "rc107",
+        "key": "complications-aftercare-and-follow-up-2-continued",
+        "h": 4297.4375
+      },
+      {
+        "i": 116,
+        "id": "rc87",
+        "key": "complications-aftercare-and-follow-up-3",
+        "h": 5549.125
+      },
+      {
+        "i": 117,
+        "id": "rc88",
+        "key": "complications-aftercare-and-follow-up-4",
+        "h": 4438.4375
+      },
+      {
+        "i": 118,
+        "id": "rc111",
+        "key": "complications-aftercare-and-follow-up-4-split-2",
+        "h": 4081.625
+      },
+      {
+        "i": 119,
+        "id": "rc89",
+        "key": "complications-aftercare-and-follow-up-5",
+        "h": 5471.8125
+      },
+      {
+        "i": 120,
+        "id": "rc90",
+        "key": "complications-aftercare-and-follow-up-6",
+        "h": 5662.125
+      },
+      {
+        "i": 121,
+        "id": "rc91",
+        "key": "complications-aftercare-and-follow-up-7",
+        "h": 4274.1875
+      },
+      {
+        "i": 122,
+        "id": "rc115",
+        "key": "complications-aftercare-and-follow-up-7-split-2",
+        "h": 3929.8125
+      },
+      {
+        "i": 123,
+        "id": "rc92",
+        "key": "complications-aftercare-and-follow-up-8",
+        "h": 5664.0625
+      },
+      {
+        "i": 124,
+        "id": "rc93",
+        "key": "complications-aftercare-and-follow-up-9",
+        "h": 5750.1875
+      },
+      {
+        "i": 125,
+        "id": "rc94",
+        "key": "complications-aftercare-and-follow-up-10",
+        "h": 782.75
+      },
+      {
+        "i": 126,
+        "id": "rc95",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1",
+        "h": 5103.0625
+      },
+      {
+        "i": 127,
+        "id": "rc108",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1-continued",
+        "h": 3418.4375
+      },
+      {
+        "i": 128,
+        "id": "rc96",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-2",
+        "h": 598.8125
+      },
+      {
+        "i": 129,
+        "id": "rc97",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-1",
+        "h": 7782.1875
+      },
+      {
+        "i": 130,
+        "id": "rc98",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-2",
+        "h": 841.6875
+      },
+      {
+        "i": 131,
+        "id": "rc99",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1",
+        "h": 2747.4375
+      },
+      {
+        "i": 132,
+        "id": "rc129",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-split-2",
+        "h": 2427.4375
+      },
+      {
+        "i": 133,
+        "id": "rc109",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-continued",
+        "h": 1736.375
+      }
+    ]
+  },
+  "768": {
+    "total": 455758,
+    "chunks": [
+      {
+        "i": 0,
+        "id": "rc1",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1",
+        "h": 2187.21875
+      },
+      {
+        "i": 1,
+        "id": "rc117",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1-split-2",
+        "h": 2140.1875
+      },
+      {
+        "i": 2,
+        "id": "rc2",
+        "key": "diagnosis-before-aesthetic-treatment-selection-2",
+        "h": 329.75
+      },
+      {
+        "i": 3,
+        "id": "rc3",
+        "key": "facial-aging-differential-diagnosis-1",
+        "h": 3954
+      },
+      {
+        "i": 4,
+        "id": "rc4",
+        "key": "botox-1",
+        "h": 3577.578125
+      },
+      {
+        "i": 5,
+        "id": "rc5",
+        "key": "botox-2",
+        "h": 2965.34375
+      },
+      {
+        "i": 6,
+        "id": "rc112",
+        "key": "botox-2-split-2",
+        "h": 3114.9375
+      },
+      {
+        "i": 7,
+        "id": "rc6",
+        "key": "botox-3",
+        "h": 2578.203125
+      },
+      {
+        "i": 8,
+        "id": "rc121",
+        "key": "botox-3-split-2",
+        "h": 2869.53125
+      },
+      {
+        "i": 9,
+        "id": "rc7",
+        "key": "botox-4",
+        "h": 3693.515625
+      },
+      {
+        "i": 10,
+        "id": "rc8",
+        "key": "botox-5",
+        "h": 4483.828125
+      },
+      {
+        "i": 11,
+        "id": "rc9",
+        "key": "botox-6",
+        "h": 3740.40625
+      },
+      {
+        "i": 12,
+        "id": "rc10",
+        "key": "botox-7",
+        "h": 2230.484375
+      },
+      {
+        "i": 13,
+        "id": "rc124",
+        "key": "botox-7-split-2",
+        "h": 1856.40625
+      },
+      {
+        "i": 14,
+        "id": "rc11",
+        "key": "botox-8",
+        "h": 4142.671875
+      },
+      {
+        "i": 15,
+        "id": "rc12",
+        "key": "botox-9",
+        "h": 4585.40625
+      },
+      {
+        "i": 16,
+        "id": "rc13",
+        "key": "botox-10",
+        "h": 4337.234375
+      },
+      {
+        "i": 17,
+        "id": "rc14",
+        "key": "botox-11",
+        "h": 2755.984375
+      },
+      {
+        "i": 18,
+        "id": "rc122",
+        "key": "botox-11-split-2",
+        "h": 2715.515625
+      },
+      {
+        "i": 19,
+        "id": "rc15",
+        "key": "botox-12",
+        "h": 2878.890625
+      },
+      {
+        "i": 20,
+        "id": "rc123",
+        "key": "botox-12-split-2",
+        "h": 2816.203125
+      },
+      {
+        "i": 21,
+        "id": "rc16",
+        "key": "botox-13",
+        "h": 2652.046875
+      },
+      {
+        "i": 22,
+        "id": "rc134",
+        "key": "botox-13-split-2",
+        "h": 2314.96875
+      },
+      {
+        "i": 23,
+        "id": "rc17",
+        "key": "botox-14",
+        "h": 5015.96875
+      },
+      {
+        "i": 24,
+        "id": "rc18",
+        "key": "botox-15",
+        "h": 4499.25
+      },
+      {
+        "i": 25,
+        "id": "rc19",
+        "key": "botox-16",
+        "h": 2681.78125
+      },
+      {
+        "i": 26,
+        "id": "rc20",
+        "key": "filler-1",
+        "h": 4510.875
+      },
+      {
+        "i": 27,
+        "id": "rc21",
+        "key": "filler-2",
+        "h": 3690.4375
+      },
+      {
+        "i": 28,
+        "id": "rc22",
+        "key": "filler-3",
+        "h": 3783.640625
+      },
+      {
+        "i": 29,
+        "id": "rc100",
+        "key": "filler-3-continued",
+        "h": 3441.625
+      },
+      {
+        "i": 30,
+        "id": "rc23",
+        "key": "filler-4",
+        "h": 2938.671875
+      },
+      {
+        "i": 31,
+        "id": "rc116",
+        "key": "filler-4-split-2",
+        "h": 3127.765625
+      },
+      {
+        "i": 32,
+        "id": "rc24",
+        "key": "filler-5",
+        "h": 3729.3125
+      },
+      {
+        "i": 33,
+        "id": "rc25",
+        "key": "filler-6",
+        "h": 3626.84375
+      },
+      {
+        "i": 34,
+        "id": "rc26",
+        "key": "filler-7",
+        "h": 4106.75
+      },
+      {
+        "i": 35,
+        "id": "rc27",
+        "key": "filler-8",
+        "h": 3088.953125
+      },
+      {
+        "i": 36,
+        "id": "rc131",
+        "key": "filler-8-split-2",
+        "h": 3058.03125
+      },
+      {
+        "i": 37,
+        "id": "rc28",
+        "key": "filler-9",
+        "h": 4706.28125
+      },
+      {
+        "i": 38,
+        "id": "rc29",
+        "key": "thread-lift-1",
+        "h": 4169.484375
+      },
+      {
+        "i": 39,
+        "id": "rc30",
+        "key": "thread-lift-2",
+        "h": 3667.9375
+      },
+      {
+        "i": 40,
+        "id": "rc31",
+        "key": "thread-lift-3",
+        "h": 4160.9375
+      },
+      {
+        "i": 41,
+        "id": "rc32",
+        "key": "thread-lift-4",
+        "h": 4296.9375
+      },
+      {
+        "i": 42,
+        "id": "rc101",
+        "key": "thread-lift-4-continued",
+        "h": 3887.578125
+      },
+      {
+        "i": 43,
+        "id": "rc33",
+        "key": "thread-lift-5",
+        "h": 3782.046875
+      },
+      {
+        "i": 44,
+        "id": "rc34",
+        "key": "thread-lift-6",
+        "h": 4246.28125
+      },
+      {
+        "i": 45,
+        "id": "rc35",
+        "key": "thread-lift-7",
+        "h": 3102.546875
+      },
+      {
+        "i": 46,
+        "id": "rc130",
+        "key": "thread-lift-7-split-2",
+        "h": 3015.0625
+      },
+      {
+        "i": 47,
+        "id": "rc36",
+        "key": "thread-lift-8",
+        "h": 2922.546875
+      },
+      {
+        "i": 48,
+        "id": "rc113",
+        "key": "thread-lift-8-split-2",
+        "h": 2893.515625
+      },
+      {
+        "i": 49,
+        "id": "rc37",
+        "key": "thread-lift-9",
+        "h": 3892.828125
+      },
+      {
+        "i": 50,
+        "id": "rc38",
+        "key": "thread-lift-10",
+        "h": 4645.96875
+      },
+      {
+        "i": 51,
+        "id": "rc39",
+        "key": "thread-lift-11",
+        "h": 4398.65625
+      },
+      {
+        "i": 52,
+        "id": "rc40",
+        "key": "thread-lift-12",
+        "h": 4452.0625
+      },
+      {
+        "i": 53,
+        "id": "rc41",
+        "key": "thread-lift-13",
+        "h": 4451.046875
+      },
+      {
+        "i": 54,
+        "id": "rc42",
+        "key": "thread-lift-14",
+        "h": 4274.734375
+      },
+      {
+        "i": 55,
+        "id": "rc43",
+        "key": "acne-pigmentation-and-scars-1",
+        "h": 3243.125
+      },
+      {
+        "i": 56,
+        "id": "rc114",
+        "key": "acne-pigmentation-and-scars-1-split-2",
+        "h": 3520.65625
+      },
+      {
+        "i": 57,
+        "id": "rc44",
+        "key": "acne-pigmentation-and-scars-2",
+        "h": 3541.46875
+      },
+      {
+        "i": 58,
+        "id": "rc45",
+        "key": "acne-pigmentation-and-scars-3",
+        "h": 4833.515625
+      },
+      {
+        "i": 59,
+        "id": "rc46",
+        "key": "acne-pigmentation-and-scars-4",
+        "h": 1913.296875
+      },
+      {
+        "i": 60,
+        "id": "rc110",
+        "key": "acne-pigmentation-and-scars-4-split-2",
+        "h": 1262.453125
+      },
+      {
+        "i": 61,
+        "id": "rc125",
+        "key": "acne-pigmentation-and-scars-4-split-2-split-2",
+        "h": 1696.125
+      },
+      {
+        "i": 62,
+        "id": "rc47",
+        "key": "acne-pigmentation-and-scars-5",
+        "h": 1971.953125
+      },
+      {
+        "i": 63,
+        "id": "rc118",
+        "key": "acne-pigmentation-and-scars-5-split-2",
+        "h": 2005.25
+      },
+      {
+        "i": 64,
+        "id": "rc48",
+        "key": "acne-pigmentation-and-scars-6",
+        "h": 3578.921875
+      },
+      {
+        "i": 65,
+        "id": "rc49",
+        "key": "acne-pigmentation-and-scars-7",
+        "h": 3812.859375
+      },
+      {
+        "i": 66,
+        "id": "rc50",
+        "key": "acne-pigmentation-and-scars-8",
+        "h": 1534.140625
+      },
+      {
+        "i": 67,
+        "id": "rc51",
+        "key": "skin-rejuvenation-1",
+        "h": 3943.453125
+      },
+      {
+        "i": 68,
+        "id": "rc52",
+        "key": "skin-rejuvenation-2",
+        "h": 3914.15625
+      },
+      {
+        "i": 69,
+        "id": "rc53",
+        "key": "skin-rejuvenation-3",
+        "h": 1927.515625
+      },
+      {
+        "i": 70,
+        "id": "rc127",
+        "key": "skin-rejuvenation-3-split-2",
+        "h": 1618.484375
+      },
+      {
+        "i": 71,
+        "id": "rc54",
+        "key": "skin-rejuvenation-4",
+        "h": 5420.703125
+      },
+      {
+        "i": 72,
+        "id": "rc55",
+        "key": "skin-rejuvenation-5",
+        "h": 4275.421875
+      },
+      {
+        "i": 73,
+        "id": "rc56",
+        "key": "skin-rejuvenation-6",
+        "h": 3741.40625
+      },
+      {
+        "i": 74,
+        "id": "rc57",
+        "key": "skin-rejuvenation-7",
+        "h": 4154.765625
+      },
+      {
+        "i": 75,
+        "id": "rc58",
+        "key": "skin-rejuvenation-8",
+        "h": 1202.5
+      },
+      {
+        "i": 76,
+        "id": "rc59",
+        "key": "hair-loss-1",
+        "h": 4507.9375
+      },
+      {
+        "i": 77,
+        "id": "rc60",
+        "key": "hair-loss-2",
+        "h": 4135.71875
+      },
+      {
+        "i": 78,
+        "id": "rc61",
+        "key": "hair-loss-3",
+        "h": 3907.5
+      },
+      {
+        "i": 79,
+        "id": "rc62",
+        "key": "hair-loss-4",
+        "h": 1664.59375
+      },
+      {
+        "i": 80,
+        "id": "rc63",
+        "key": "chin-jawline-and-facial-contouring-1",
+        "h": 3671.75
+      },
+      {
+        "i": 81,
+        "id": "rc64",
+        "key": "chin-jawline-and-facial-contouring-2",
+        "h": 4341.125
+      },
+      {
+        "i": 82,
+        "id": "rc102",
+        "key": "chin-jawline-and-facial-contouring-2-continued",
+        "h": 3159.8125
+      },
+      {
+        "i": 83,
+        "id": "rc65",
+        "key": "chin-jawline-and-facial-contouring-3",
+        "h": 3753.9375
+      },
+      {
+        "i": 84,
+        "id": "rc66",
+        "key": "chin-jawline-and-facial-contouring-4",
+        "h": 3852.03125
+      },
+      {
+        "i": 85,
+        "id": "rc67",
+        "key": "chin-jawline-and-facial-contouring-5",
+        "h": 3953.25
+      },
+      {
+        "i": 86,
+        "id": "rc68",
+        "key": "chin-jawline-and-facial-contouring-6",
+        "h": 4615.65625
+      },
+      {
+        "i": 87,
+        "id": "rc69",
+        "key": "chin-jawline-and-facial-contouring-7",
+        "h": 3704.6875
+      },
+      {
+        "i": 88,
+        "id": "rc70",
+        "key": "chin-jawline-and-facial-contouring-8",
+        "h": 4217.625
+      },
+      {
+        "i": 89,
+        "id": "rc103",
+        "key": "chin-jawline-and-facial-contouring-8-continued",
+        "h": 4000.9375
+      },
+      {
+        "i": 90,
+        "id": "rc71",
+        "key": "chin-jawline-and-facial-contouring-9",
+        "h": 3845.0625
+      },
+      {
+        "i": 91,
+        "id": "rc72",
+        "key": "chin-jawline-and-facial-contouring-10",
+        "h": 2696.3125
+      },
+      {
+        "i": 92,
+        "id": "rc73",
+        "key": "aesthetic-treatment-selection-1",
+        "h": 3253.8125
+      },
+      {
+        "i": 93,
+        "id": "rc104",
+        "key": "aesthetic-treatment-selection-1-continued",
+        "h": 2800.3125
+      },
+      {
+        "i": 94,
+        "id": "rc74",
+        "key": "aesthetic-treatment-selection-2",
+        "h": 4082.8125
+      },
+      {
+        "i": 95,
+        "id": "rc75",
+        "key": "aesthetic-treatment-selection-3",
+        "h": 3733.4375
+      },
+      {
+        "i": 96,
+        "id": "rc76",
+        "key": "aesthetic-treatment-selection-4",
+        "h": 4462.8125
+      },
+      {
+        "i": 97,
+        "id": "rc77",
+        "key": "aesthetic-treatment-selection-5",
+        "h": 5228.4375
+      },
+      {
+        "i": 98,
+        "id": "rc78",
+        "key": "aesthetic-treatment-selection-6",
+        "h": 2944.375
+      },
+      {
+        "i": 99,
+        "id": "rc133",
+        "key": "aesthetic-treatment-selection-6-split-2",
+        "h": 2243.4375
+      },
+      {
+        "i": 100,
+        "id": "rc105",
+        "key": "aesthetic-treatment-selection-6-continued",
+        "h": 3352.1875
+      },
+      {
+        "i": 101,
+        "id": "rc79",
+        "key": "aesthetic-treatment-selection-7",
+        "h": 1884.1875
+      },
+      {
+        "i": 102,
+        "id": "rc80",
+        "key": "aesthetic-treatment-candidacy-1",
+        "h": 2453.5625
+      },
+      {
+        "i": 103,
+        "id": "rc120",
+        "key": "aesthetic-treatment-candidacy-1-split-2",
+        "h": 2206.6875
+      },
+      {
+        "i": 104,
+        "id": "rc81",
+        "key": "aesthetic-treatment-candidacy-2",
+        "h": 1985.75
+      },
+      {
+        "i": 105,
+        "id": "rc132",
+        "key": "aesthetic-treatment-candidacy-2-split-2",
+        "h": 2052.71875
+      },
+      {
+        "i": 106,
+        "id": "rc82",
+        "key": "aesthetic-treatment-candidacy-3",
+        "h": 3965.34375
+      },
+      {
+        "i": 107,
+        "id": "rc106",
+        "key": "aesthetic-treatment-candidacy-3-continued",
+        "h": 1904.4375
+      },
+      {
+        "i": 108,
+        "id": "rc126",
+        "key": "aesthetic-treatment-candidacy-3-continued-split-2",
+        "h": 1130.625
+      },
+      {
+        "i": 109,
+        "id": "rc83",
+        "key": "aesthetic-treatment-candidacy-4",
+        "h": 5324
+      },
+      {
+        "i": 110,
+        "id": "rc84",
+        "key": "aesthetic-treatment-candidacy-5",
+        "h": 2913.9375
+      },
+      {
+        "i": 111,
+        "id": "rc128",
+        "key": "aesthetic-treatment-candidacy-5-split-2",
+        "h": 3123.375
+      },
+      {
+        "i": 112,
+        "id": "rc85",
+        "key": "complications-aftercare-and-follow-up-1",
+        "h": 2281.75
+      },
+      {
+        "i": 113,
+        "id": "rc119",
+        "key": "complications-aftercare-and-follow-up-1-split-2",
+        "h": 2013.625
+      },
+      {
+        "i": 114,
+        "id": "rc86",
+        "key": "complications-aftercare-and-follow-up-2",
+        "h": 3038.15625
+      },
+      {
+        "i": 115,
+        "id": "rc107",
+        "key": "complications-aftercare-and-follow-up-2-continued",
+        "h": 2954.71875
+      },
+      {
+        "i": 116,
+        "id": "rc87",
+        "key": "complications-aftercare-and-follow-up-3",
+        "h": 3839.96875
+      },
+      {
+        "i": 117,
+        "id": "rc88",
+        "key": "complications-aftercare-and-follow-up-4",
+        "h": 3129.25
+      },
+      {
+        "i": 118,
+        "id": "rc111",
+        "key": "complications-aftercare-and-follow-up-4-split-2",
+        "h": 2701.625
+      },
+      {
+        "i": 119,
+        "id": "rc89",
+        "key": "complications-aftercare-and-follow-up-5",
+        "h": 3773.03125
+      },
+      {
+        "i": 120,
+        "id": "rc90",
+        "key": "complications-aftercare-and-follow-up-6",
+        "h": 3904.0625
+      },
+      {
+        "i": 121,
+        "id": "rc91",
+        "key": "complications-aftercare-and-follow-up-7",
+        "h": 2914
+      },
+      {
+        "i": 122,
+        "id": "rc115",
+        "key": "complications-aftercare-and-follow-up-7-split-2",
+        "h": 2611.5625
+      },
+      {
+        "i": 123,
+        "id": "rc92",
+        "key": "complications-aftercare-and-follow-up-8",
+        "h": 3854.65625
+      },
+      {
+        "i": 124,
+        "id": "rc93",
+        "key": "complications-aftercare-and-follow-up-9",
+        "h": 3835.03125
+      },
+      {
+        "i": 125,
+        "id": "rc94",
+        "key": "complications-aftercare-and-follow-up-10",
+        "h": 534.84375
+      },
+      {
+        "i": 126,
+        "id": "rc95",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1",
+        "h": 3379.625
+      },
+      {
+        "i": 127,
+        "id": "rc108",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1-continued",
+        "h": 3149.09375
+      },
+      {
+        "i": 128,
+        "id": "rc96",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-2",
+        "h": 398.09375
+      },
+      {
+        "i": 129,
+        "id": "rc97",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-1",
+        "h": 5262.34375
+      },
+      {
+        "i": 130,
+        "id": "rc98",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-2",
+        "h": 524.15625
+      },
+      {
+        "i": 131,
+        "id": "rc99",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1",
+        "h": 3116.84375
+      },
+      {
+        "i": 132,
+        "id": "rc129",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-split-2",
+        "h": 1774.5
+      },
+      {
+        "i": 133,
+        "id": "rc109",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-continued",
+        "h": 1321.15625
+      }
+    ]
+  },
+  "1024": {
+    "total": 472575,
+    "chunks": [
+      {
+        "i": 0,
+        "id": "rc1",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1",
+        "h": 2309.171875
+      },
+      {
+        "i": 1,
+        "id": "rc117",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1-split-2",
+        "h": 2195.484375
+      },
+      {
+        "i": 2,
+        "id": "rc2",
+        "key": "diagnosis-before-aesthetic-treatment-selection-2",
+        "h": 338.3125
+      },
+      {
+        "i": 3,
+        "id": "rc3",
+        "key": "facial-aging-differential-diagnosis-1",
+        "h": 3989.1875
+      },
+      {
+        "i": 4,
+        "id": "rc4",
+        "key": "botox-1",
+        "h": 3735.078125
+      },
+      {
+        "i": 5,
+        "id": "rc5",
+        "key": "botox-2",
+        "h": 3078.4375
+      },
+      {
+        "i": 6,
+        "id": "rc112",
+        "key": "botox-2-split-2",
+        "h": 3257.1875
+      },
+      {
+        "i": 7,
+        "id": "rc6",
+        "key": "botox-3",
+        "h": 2706.859375
+      },
+      {
+        "i": 8,
+        "id": "rc121",
+        "key": "botox-3-split-2",
+        "h": 2975.15625
+      },
+      {
+        "i": 9,
+        "id": "rc7",
+        "key": "botox-4",
+        "h": 3820.09375
+      },
+      {
+        "i": 10,
+        "id": "rc8",
+        "key": "botox-5",
+        "h": 4660.953125
+      },
+      {
+        "i": 11,
+        "id": "rc9",
+        "key": "botox-6",
+        "h": 3838.640625
+      },
+      {
+        "i": 12,
+        "id": "rc10",
+        "key": "botox-7",
+        "h": 2359.734375
+      },
+      {
+        "i": 13,
+        "id": "rc124",
+        "key": "botox-7-split-2",
+        "h": 1935.4375
+      },
+      {
+        "i": 14,
+        "id": "rc11",
+        "key": "botox-8",
+        "h": 4310.703125
+      },
+      {
+        "i": 15,
+        "id": "rc12",
+        "key": "botox-9",
+        "h": 4827.6875
+      },
+      {
+        "i": 16,
+        "id": "rc13",
+        "key": "botox-10",
+        "h": 4643.15625
+      },
+      {
+        "i": 17,
+        "id": "rc14",
+        "key": "botox-11",
+        "h": 2887.109375
+      },
+      {
+        "i": 18,
+        "id": "rc122",
+        "key": "botox-11-split-2",
+        "h": 2783.1875
+      },
+      {
+        "i": 19,
+        "id": "rc15",
+        "key": "botox-12",
+        "h": 2953.109375
+      },
+      {
+        "i": 20,
+        "id": "rc123",
+        "key": "botox-12-split-2",
+        "h": 2887.171875
+      },
+      {
+        "i": 21,
+        "id": "rc16",
+        "key": "botox-13",
+        "h": 2783.859375
+      },
+      {
+        "i": 22,
+        "id": "rc134",
+        "key": "botox-13-split-2",
+        "h": 2374.875
+      },
+      {
+        "i": 23,
+        "id": "rc17",
+        "key": "botox-14",
+        "h": 5233.890625
+      },
+      {
+        "i": 24,
+        "id": "rc18",
+        "key": "botox-15",
+        "h": 4638.984375
+      },
+      {
+        "i": 25,
+        "id": "rc19",
+        "key": "botox-16",
+        "h": 2750.078125
+      },
+      {
+        "i": 26,
+        "id": "rc20",
+        "key": "filler-1",
+        "h": 4752.953125
+      },
+      {
+        "i": 27,
+        "id": "rc21",
+        "key": "filler-2",
+        "h": 3849.453125
+      },
+      {
+        "i": 28,
+        "id": "rc22",
+        "key": "filler-3",
+        "h": 3977.1875
+      },
+      {
+        "i": 29,
+        "id": "rc100",
+        "key": "filler-3-continued",
+        "h": 3527.375
+      },
+      {
+        "i": 30,
+        "id": "rc23",
+        "key": "filler-4",
+        "h": 3042.75
+      },
+      {
+        "i": 31,
+        "id": "rc116",
+        "key": "filler-4-split-2",
+        "h": 3237.28125
+      },
+      {
+        "i": 32,
+        "id": "rc24",
+        "key": "filler-5",
+        "h": 3951
+      },
+      {
+        "i": 33,
+        "id": "rc25",
+        "key": "filler-6",
+        "h": 3813.3125
+      },
+      {
+        "i": 34,
+        "id": "rc26",
+        "key": "filler-7",
+        "h": 4215.953125
+      },
+      {
+        "i": 35,
+        "id": "rc27",
+        "key": "filler-8",
+        "h": 3224.140625
+      },
+      {
+        "i": 36,
+        "id": "rc131",
+        "key": "filler-8-split-2",
+        "h": 3159.578125
+      },
+      {
+        "i": 37,
+        "id": "rc28",
+        "key": "filler-9",
+        "h": 4847.75
+      },
+      {
+        "i": 38,
+        "id": "rc29",
+        "key": "thread-lift-1",
+        "h": 4338.78125
+      },
+      {
+        "i": 39,
+        "id": "rc30",
+        "key": "thread-lift-2",
+        "h": 3787.875
+      },
+      {
+        "i": 40,
+        "id": "rc31",
+        "key": "thread-lift-3",
+        "h": 4298.109375
+      },
+      {
+        "i": 41,
+        "id": "rc32",
+        "key": "thread-lift-4",
+        "h": 4500.125
+      },
+      {
+        "i": 42,
+        "id": "rc101",
+        "key": "thread-lift-4-continued",
+        "h": 4077.546875
+      },
+      {
+        "i": 43,
+        "id": "rc33",
+        "key": "thread-lift-5",
+        "h": 3939.546875
+      },
+      {
+        "i": 44,
+        "id": "rc34",
+        "key": "thread-lift-6",
+        "h": 4349.453125
+      },
+      {
+        "i": 45,
+        "id": "rc35",
+        "key": "thread-lift-7",
+        "h": 3211.578125
+      },
+      {
+        "i": 46,
+        "id": "rc130",
+        "key": "thread-lift-7-split-2",
+        "h": 3217.203125
+      },
+      {
+        "i": 47,
+        "id": "rc36",
+        "key": "thread-lift-8",
+        "h": 3024.453125
+      },
+      {
+        "i": 48,
+        "id": "rc113",
+        "key": "thread-lift-8-split-2",
+        "h": 2963.265625
+      },
+      {
+        "i": 49,
+        "id": "rc37",
+        "key": "thread-lift-9",
+        "h": 4170.890625
+      },
+      {
+        "i": 50,
+        "id": "rc38",
+        "key": "thread-lift-10",
+        "h": 4821.484375
+      },
+      {
+        "i": 51,
+        "id": "rc39",
+        "key": "thread-lift-11",
+        "h": 4507.0625
+      },
+      {
+        "i": 52,
+        "id": "rc40",
+        "key": "thread-lift-12",
+        "h": 4489.109375
+      },
+      {
+        "i": 53,
+        "id": "rc41",
+        "key": "thread-lift-13",
+        "h": 4694.875
+      },
+      {
+        "i": 54,
+        "id": "rc42",
+        "key": "thread-lift-14",
+        "h": 4435.09375
+      },
+      {
+        "i": 55,
+        "id": "rc43",
+        "key": "acne-pigmentation-and-scars-1",
+        "h": 3464.640625
+      },
+      {
+        "i": 56,
+        "id": "rc114",
+        "key": "acne-pigmentation-and-scars-1-split-2",
+        "h": 3640.640625
+      },
+      {
+        "i": 57,
+        "id": "rc44",
+        "key": "acne-pigmentation-and-scars-2",
+        "h": 3673.46875
+      },
+      {
+        "i": 58,
+        "id": "rc45",
+        "key": "acne-pigmentation-and-scars-3",
+        "h": 5085.84375
+      },
+      {
+        "i": 59,
+        "id": "rc46",
+        "key": "acne-pigmentation-and-scars-4",
+        "h": 2025.984375
+      },
+      {
+        "i": 60,
+        "id": "rc110",
+        "key": "acne-pigmentation-and-scars-4-split-2",
+        "h": 1294.984375
+      },
+      {
+        "i": 61,
+        "id": "rc125",
+        "key": "acne-pigmentation-and-scars-4-split-2-split-2",
+        "h": 2128.296875
+      },
+      {
+        "i": 62,
+        "id": "rc47",
+        "key": "acne-pigmentation-and-scars-5",
+        "h": 2021.296875
+      },
+      {
+        "i": 63,
+        "id": "rc118",
+        "key": "acne-pigmentation-and-scars-5-split-2",
+        "h": 2087.421875
+      },
+      {
+        "i": 64,
+        "id": "rc48",
+        "key": "acne-pigmentation-and-scars-6",
+        "h": 3769.453125
+      },
+      {
+        "i": 65,
+        "id": "rc49",
+        "key": "acne-pigmentation-and-scars-7",
+        "h": 3978.203125
+      },
+      {
+        "i": 66,
+        "id": "rc50",
+        "key": "acne-pigmentation-and-scars-8",
+        "h": 1605.34375
+      },
+      {
+        "i": 67,
+        "id": "rc51",
+        "key": "skin-rejuvenation-1",
+        "h": 4144.46875
+      },
+      {
+        "i": 68,
+        "id": "rc52",
+        "key": "skin-rejuvenation-2",
+        "h": 4042.578125
+      },
+      {
+        "i": 69,
+        "id": "rc53",
+        "key": "skin-rejuvenation-3",
+        "h": 2040.703125
+      },
+      {
+        "i": 70,
+        "id": "rc127",
+        "key": "skin-rejuvenation-3-split-2",
+        "h": 1662
+      },
+      {
+        "i": 71,
+        "id": "rc54",
+        "key": "skin-rejuvenation-4",
+        "h": 5891.8125
+      },
+      {
+        "i": 72,
+        "id": "rc55",
+        "key": "skin-rejuvenation-5",
+        "h": 4575.890625
+      },
+      {
+        "i": 73,
+        "id": "rc56",
+        "key": "skin-rejuvenation-6",
+        "h": 3868.25
+      },
+      {
+        "i": 74,
+        "id": "rc57",
+        "key": "skin-rejuvenation-7",
+        "h": 4356.90625
+      },
+      {
+        "i": 75,
+        "id": "rc58",
+        "key": "skin-rejuvenation-8",
+        "h": 1233.125
+      },
+      {
+        "i": 76,
+        "id": "rc59",
+        "key": "hair-loss-1",
+        "h": 4631
+      },
+      {
+        "i": 77,
+        "id": "rc60",
+        "key": "hair-loss-2",
+        "h": 4273.0625
+      },
+      {
+        "i": 78,
+        "id": "rc61",
+        "key": "hair-loss-3",
+        "h": 4041.34375
+      },
+      {
+        "i": 79,
+        "id": "rc62",
+        "key": "hair-loss-4",
+        "h": 1735.78125
+      },
+      {
+        "i": 80,
+        "id": "rc63",
+        "key": "chin-jawline-and-facial-contouring-1",
+        "h": 3829.5625
+      },
+      {
+        "i": 81,
+        "id": "rc64",
+        "key": "chin-jawline-and-facial-contouring-2",
+        "h": 4514.9375
+      },
+      {
+        "i": 82,
+        "id": "rc102",
+        "key": "chin-jawline-and-facial-contouring-2-continued",
+        "h": 3269.53125
+      },
+      {
+        "i": 83,
+        "id": "rc65",
+        "key": "chin-jawline-and-facial-contouring-3",
+        "h": 3915.53125
+      },
+      {
+        "i": 84,
+        "id": "rc66",
+        "key": "chin-jawline-and-facial-contouring-4",
+        "h": 3981.03125
+      },
+      {
+        "i": 85,
+        "id": "rc67",
+        "key": "chin-jawline-and-facial-contouring-5",
+        "h": 4084.15625
+      },
+      {
+        "i": 86,
+        "id": "rc68",
+        "key": "chin-jawline-and-facial-contouring-6",
+        "h": 4762.0625
+      },
+      {
+        "i": 87,
+        "id": "rc69",
+        "key": "chin-jawline-and-facial-contouring-7",
+        "h": 3892.1875
+      },
+      {
+        "i": 88,
+        "id": "rc70",
+        "key": "chin-jawline-and-facial-contouring-8",
+        "h": 4412.5
+      },
+      {
+        "i": 89,
+        "id": "rc103",
+        "key": "chin-jawline-and-facial-contouring-8-continued",
+        "h": 4130.84375
+      },
+      {
+        "i": 90,
+        "id": "rc71",
+        "key": "chin-jawline-and-facial-contouring-9",
+        "h": 3976.28125
+      },
+      {
+        "i": 91,
+        "id": "rc72",
+        "key": "chin-jawline-and-facial-contouring-10",
+        "h": 2767.34375
+      },
+      {
+        "i": 92,
+        "id": "rc73",
+        "key": "aesthetic-treatment-selection-1",
+        "h": 3405.90625
+      },
+      {
+        "i": 93,
+        "id": "rc104",
+        "key": "aesthetic-treatment-selection-1-continued",
+        "h": 2900.375
+      },
+      {
+        "i": 94,
+        "id": "rc74",
+        "key": "aesthetic-treatment-selection-2",
+        "h": 4216.84375
+      },
+      {
+        "i": 95,
+        "id": "rc75",
+        "key": "aesthetic-treatment-selection-3",
+        "h": 3892.4375
+      },
+      {
+        "i": 96,
+        "id": "rc76",
+        "key": "aesthetic-treatment-selection-4",
+        "h": 4630.6875
+      },
+      {
+        "i": 97,
+        "id": "rc77",
+        "key": "aesthetic-treatment-selection-5",
+        "h": 5478.8125
+      },
+      {
+        "i": 98,
+        "id": "rc78",
+        "key": "aesthetic-treatment-selection-6",
+        "h": 3050.0625
+      },
+      {
+        "i": 99,
+        "id": "rc133",
+        "key": "aesthetic-treatment-selection-6-split-2",
+        "h": 2331.40625
+      },
+      {
+        "i": 100,
+        "id": "rc105",
+        "key": "aesthetic-treatment-selection-6-continued",
+        "h": 3464.34375
+      },
+      {
+        "i": 101,
+        "id": "rc79",
+        "key": "aesthetic-treatment-selection-7",
+        "h": 1772.125
+      },
+      {
+        "i": 102,
+        "id": "rc80",
+        "key": "aesthetic-treatment-candidacy-1",
+        "h": 2615.6875
+      },
+      {
+        "i": 103,
+        "id": "rc120",
+        "key": "aesthetic-treatment-candidacy-1-split-2",
+        "h": 2294.875
+      },
+      {
+        "i": 104,
+        "id": "rc81",
+        "key": "aesthetic-treatment-candidacy-2",
+        "h": 2052.78125
+      },
+      {
+        "i": 105,
+        "id": "rc132",
+        "key": "aesthetic-treatment-candidacy-2-split-2",
+        "h": 2168.03125
+      },
+      {
+        "i": 106,
+        "id": "rc82",
+        "key": "aesthetic-treatment-candidacy-3",
+        "h": 4128.15625
+      },
+      {
+        "i": 107,
+        "id": "rc106",
+        "key": "aesthetic-treatment-candidacy-3-continued",
+        "h": 1951.25
+      },
+      {
+        "i": 108,
+        "id": "rc126",
+        "key": "aesthetic-treatment-candidacy-3-continued-split-2",
+        "h": 1158.40625
+      },
+      {
+        "i": 109,
+        "id": "rc83",
+        "key": "aesthetic-treatment-candidacy-4",
+        "h": 5525.9375
+      },
+      {
+        "i": 110,
+        "id": "rc84",
+        "key": "aesthetic-treatment-candidacy-5",
+        "h": 3049.0625
+      },
+      {
+        "i": 111,
+        "id": "rc128",
+        "key": "aesthetic-treatment-candidacy-5-split-2",
+        "h": 3196.21875
+      },
+      {
+        "i": 112,
+        "id": "rc85",
+        "key": "complications-aftercare-and-follow-up-1",
+        "h": 2406.4375
+      },
+      {
+        "i": 113,
+        "id": "rc119",
+        "key": "complications-aftercare-and-follow-up-1-split-2",
+        "h": 2098.65625
+      },
+      {
+        "i": 114,
+        "id": "rc86",
+        "key": "complications-aftercare-and-follow-up-2",
+        "h": 3209.625
+      },
+      {
+        "i": 115,
+        "id": "rc107",
+        "key": "complications-aftercare-and-follow-up-2-continued",
+        "h": 3059
+      },
+      {
+        "i": 116,
+        "id": "rc87",
+        "key": "complications-aftercare-and-follow-up-3",
+        "h": 3966.75
+      },
+      {
+        "i": 117,
+        "id": "rc88",
+        "key": "complications-aftercare-and-follow-up-4",
+        "h": 3206.8125
+      },
+      {
+        "i": 118,
+        "id": "rc111",
+        "key": "complications-aftercare-and-follow-up-4-split-2",
+        "h": 2897.75
+      },
+      {
+        "i": 119,
+        "id": "rc89",
+        "key": "complications-aftercare-and-follow-up-5",
+        "h": 3900.4375
+      },
+      {
+        "i": 120,
+        "id": "rc90",
+        "key": "complications-aftercare-and-follow-up-6",
+        "h": 4031.25
+      },
+      {
+        "i": 121,
+        "id": "rc91",
+        "key": "complications-aftercare-and-follow-up-7",
+        "h": 3020.78125
+      },
+      {
+        "i": 122,
+        "id": "rc115",
+        "key": "complications-aftercare-and-follow-up-7-split-2",
+        "h": 2740.8125
+      },
+      {
+        "i": 123,
+        "id": "rc92",
+        "key": "complications-aftercare-and-follow-up-8",
+        "h": 3952.25
+      },
+      {
+        "i": 124,
+        "id": "rc93",
+        "key": "complications-aftercare-and-follow-up-9",
+        "h": 3965.875
+      },
+      {
+        "i": 125,
+        "id": "rc94",
+        "key": "complications-aftercare-and-follow-up-10",
+        "h": 548.84375
+      },
+      {
+        "i": 126,
+        "id": "rc95",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1",
+        "h": 3353
+      },
+      {
+        "i": 127,
+        "id": "rc108",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1-continued",
+        "h": 3535.59375
+      },
+      {
+        "i": 128,
+        "id": "rc96",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-2",
+        "h": 411.40625
+      },
+      {
+        "i": 129,
+        "id": "rc97",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-1",
+        "h": 5026.6875
+      },
+      {
+        "i": 130,
+        "id": "rc98",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-2",
+        "h": 541.0625
+      },
+      {
+        "i": 131,
+        "id": "rc99",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1",
+        "h": 3133.21875
+      },
+      {
+        "i": 132,
+        "id": "rc129",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-split-2",
+        "h": 1628.375
+      },
+      {
+        "i": 133,
+        "id": "rc109",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-continued",
+        "h": 1330.75
+      }
+    ]
+  },
+  "1440": {
+    "total": 483640,
+    "chunks": [
+      {
+        "i": 0,
+        "id": "rc1",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1",
+        "h": 2367.828125
+      },
+      {
+        "i": 1,
+        "id": "rc117",
+        "key": "diagnosis-before-aesthetic-treatment-selection-1-split-2",
+        "h": 2251.140625
+      },
+      {
+        "i": 2,
+        "id": "rc2",
+        "key": "diagnosis-before-aesthetic-treatment-selection-2",
+        "h": 345.390625
+      },
+      {
+        "i": 3,
+        "id": "rc3",
+        "key": "facial-aging-differential-diagnosis-1",
+        "h": 3957.546875
+      },
+      {
+        "i": 4,
+        "id": "rc4",
+        "key": "botox-1",
+        "h": 3823.171875
+      },
+      {
+        "i": 5,
+        "id": "rc5",
+        "key": "botox-2",
+        "h": 3165.796875
+      },
+      {
+        "i": 6,
+        "id": "rc112",
+        "key": "botox-2-split-2",
+        "h": 3322.953125
+      },
+      {
+        "i": 7,
+        "id": "rc6",
+        "key": "botox-3",
+        "h": 2761.375
+      },
+      {
+        "i": 8,
+        "id": "rc121",
+        "key": "botox-3-split-2",
+        "h": 3036.515625
+      },
+      {
+        "i": 9,
+        "id": "rc7",
+        "key": "botox-4",
+        "h": 3898.75
+      },
+      {
+        "i": 10,
+        "id": "rc8",
+        "key": "botox-5",
+        "h": 4755.359375
+      },
+      {
+        "i": 11,
+        "id": "rc9",
+        "key": "botox-6",
+        "h": 3928.84375
+      },
+      {
+        "i": 12,
+        "id": "rc10",
+        "key": "botox-7",
+        "h": 2408.203125
+      },
+      {
+        "i": 13,
+        "id": "rc124",
+        "key": "botox-7-split-2",
+        "h": 1974.859375
+      },
+      {
+        "i": 14,
+        "id": "rc11",
+        "key": "botox-8",
+        "h": 4397.796875
+      },
+      {
+        "i": 15,
+        "id": "rc12",
+        "key": "botox-9",
+        "h": 4923.875
+      },
+      {
+        "i": 16,
+        "id": "rc13",
+        "key": "botox-10",
+        "h": 4716.546875
+      },
+      {
+        "i": 17,
+        "id": "rc14",
+        "key": "botox-11",
+        "h": 2943.40625
+      },
+      {
+        "i": 18,
+        "id": "rc122",
+        "key": "botox-11-split-2",
+        "h": 2839.203125
+      },
+      {
+        "i": 19,
+        "id": "rc15",
+        "key": "botox-12",
+        "h": 3024.46875
+      },
+      {
+        "i": 20,
+        "id": "rc123",
+        "key": "botox-12-split-2",
+        "h": 2946.046875
+      },
+      {
+        "i": 21,
+        "id": "rc16",
+        "key": "botox-13",
+        "h": 2840.765625
+      },
+      {
+        "i": 22,
+        "id": "rc134",
+        "key": "botox-13-split-2",
+        "h": 2424.515625
+      },
+      {
+        "i": 23,
+        "id": "rc17",
+        "key": "botox-14",
+        "h": 5355.984375
+      },
+      {
+        "i": 24,
+        "id": "rc18",
+        "key": "botox-15",
+        "h": 4728.375
+      },
+      {
+        "i": 25,
+        "id": "rc19",
+        "key": "botox-16",
+        "h": 2816.46875
+      },
+      {
+        "i": 26,
+        "id": "rc20",
+        "key": "filler-1",
+        "h": 4858.90625
+      },
+      {
+        "i": 27,
+        "id": "rc21",
+        "key": "filler-2",
+        "h": 3938.765625
+      },
+      {
+        "i": 28,
+        "id": "rc22",
+        "key": "filler-3",
+        "h": 4069.03125
+      },
+      {
+        "i": 29,
+        "id": "rc100",
+        "key": "filler-3-continued",
+        "h": 3598.625
+      },
+      {
+        "i": 30,
+        "id": "rc23",
+        "key": "filler-4",
+        "h": 3103.078125
+      },
+      {
+        "i": 31,
+        "id": "rc116",
+        "key": "filler-4-split-2",
+        "h": 3302.109375
+      },
+      {
+        "i": 32,
+        "id": "rc24",
+        "key": "filler-5",
+        "h": 3997.234375
+      },
+      {
+        "i": 33,
+        "id": "rc25",
+        "key": "filler-6",
+        "h": 3889.53125
+      },
+      {
+        "i": 34,
+        "id": "rc26",
+        "key": "filler-7",
+        "h": 4336
+      },
+      {
+        "i": 35,
+        "id": "rc27",
+        "key": "filler-8",
+        "h": 3283.71875
+      },
+      {
+        "i": 36,
+        "id": "rc131",
+        "key": "filler-8-split-2",
+        "h": 3217.421875
+      },
+      {
+        "i": 37,
+        "id": "rc28",
+        "key": "filler-9",
+        "h": 4948.453125
+      },
+      {
+        "i": 38,
+        "id": "rc29",
+        "key": "thread-lift-1",
+        "h": 4436.578125
+      },
+      {
+        "i": 39,
+        "id": "rc30",
+        "key": "thread-lift-2",
+        "h": 3861.046875
+      },
+      {
+        "i": 40,
+        "id": "rc31",
+        "key": "thread-lift-3",
+        "h": 4385.484375
+      },
+      {
+        "i": 41,
+        "id": "rc32",
+        "key": "thread-lift-4",
+        "h": 4600.078125
+      },
+      {
+        "i": 42,
+        "id": "rc101",
+        "key": "thread-lift-4-continued",
+        "h": 4123.59375
+      },
+      {
+        "i": 43,
+        "id": "rc33",
+        "key": "thread-lift-5",
+        "h": 4017.6875
+      },
+      {
+        "i": 44,
+        "id": "rc34",
+        "key": "thread-lift-6",
+        "h": 4444.625
+      },
+      {
+        "i": 45,
+        "id": "rc35",
+        "key": "thread-lift-7",
+        "h": 3275.890625
+      },
+      {
+        "i": 46,
+        "id": "rc130",
+        "key": "thread-lift-7-split-2",
+        "h": 3280.484375
+      },
+      {
+        "i": 47,
+        "id": "rc36",
+        "key": "thread-lift-8",
+        "h": 3082.71875
+      },
+      {
+        "i": 48,
+        "id": "rc113",
+        "key": "thread-lift-8-split-2",
+        "h": 3021.203125
+      },
+      {
+        "i": 49,
+        "id": "rc37",
+        "key": "thread-lift-9",
+        "h": 4214.828125
+      },
+      {
+        "i": 50,
+        "id": "rc38",
+        "key": "thread-lift-10",
+        "h": 4924.578125
+      },
+      {
+        "i": 51,
+        "id": "rc39",
+        "key": "thread-lift-11",
+        "h": 4590.5
+      },
+      {
+        "i": 52,
+        "id": "rc40",
+        "key": "thread-lift-12",
+        "h": 4572.078125
+      },
+      {
+        "i": 53,
+        "id": "rc41",
+        "key": "thread-lift-13",
+        "h": 4762.96875
+      },
+      {
+        "i": 54,
+        "id": "rc42",
+        "key": "thread-lift-14",
+        "h": 4525.4375
+      },
+      {
+        "i": 55,
+        "id": "rc43",
+        "key": "acne-pigmentation-and-scars-1",
+        "h": 3547.109375
+      },
+      {
+        "i": 56,
+        "id": "rc114",
+        "key": "acne-pigmentation-and-scars-1-split-2",
+        "h": 3714.140625
+      },
+      {
+        "i": 57,
+        "id": "rc44",
+        "key": "acne-pigmentation-and-scars-2",
+        "h": 3760.109375
+      },
+      {
+        "i": 58,
+        "id": "rc45",
+        "key": "acne-pigmentation-and-scars-3",
+        "h": 5200.375
+      },
+      {
+        "i": 59,
+        "id": "rc46",
+        "key": "acne-pigmentation-and-scars-4",
+        "h": 2067.046875
+      },
+      {
+        "i": 60,
+        "id": "rc110",
+        "key": "acne-pigmentation-and-scars-4-split-2",
+        "h": 1321.890625
+      },
+      {
+        "i": 61,
+        "id": "rc125",
+        "key": "acne-pigmentation-and-scars-4-split-2-split-2",
+        "h": 2546.65625
+      },
+      {
+        "i": 62,
+        "id": "rc47",
+        "key": "acne-pigmentation-and-scars-5",
+        "h": 2062.125
+      },
+      {
+        "i": 63,
+        "id": "rc118",
+        "key": "acne-pigmentation-and-scars-5-split-2",
+        "h": 2129.328125
+      },
+      {
+        "i": 64,
+        "id": "rc48",
+        "key": "acne-pigmentation-and-scars-6",
+        "h": 3858.765625
+      },
+      {
+        "i": 65,
+        "id": "rc49",
+        "key": "acne-pigmentation-and-scars-7",
+        "h": 4081.5
+      },
+      {
+        "i": 66,
+        "id": "rc50",
+        "key": "acne-pigmentation-and-scars-8",
+        "h": 1638.15625
+      },
+      {
+        "i": 67,
+        "id": "rc51",
+        "key": "skin-rejuvenation-1",
+        "h": 4262.3125
+      },
+      {
+        "i": 68,
+        "id": "rc52",
+        "key": "skin-rejuvenation-2",
+        "h": 4122.6875
+      },
+      {
+        "i": 69,
+        "id": "rc53",
+        "key": "skin-rejuvenation-3",
+        "h": 2082.1875
+      },
+      {
+        "i": 70,
+        "id": "rc127",
+        "key": "skin-rejuvenation-3-split-2",
+        "h": 1707.90625
+      },
+      {
+        "i": 71,
+        "id": "rc54",
+        "key": "skin-rejuvenation-4",
+        "h": 6385.578125
+      },
+      {
+        "i": 72,
+        "id": "rc55",
+        "key": "skin-rejuvenation-5",
+        "h": 4668.1875
+      },
+      {
+        "i": 73,
+        "id": "rc56",
+        "key": "skin-rejuvenation-6",
+        "h": 3957.25
+      },
+      {
+        "i": 74,
+        "id": "rc57",
+        "key": "skin-rejuvenation-7",
+        "h": 4455.78125
+      },
+      {
+        "i": 75,
+        "id": "rc58",
+        "key": "skin-rejuvenation-8",
+        "h": 1258.4375
+      },
+      {
+        "i": 76,
+        "id": "rc59",
+        "key": "hair-loss-1",
+        "h": 4736.3125
+      },
+      {
+        "i": 77,
+        "id": "rc60",
+        "key": "hair-loss-2",
+        "h": 4370.5625
+      },
+      {
+        "i": 78,
+        "id": "rc61",
+        "key": "hair-loss-3",
+        "h": 4145.8125
+      },
+      {
+        "i": 79,
+        "id": "rc62",
+        "key": "hair-loss-4",
+        "h": 1768.625
+      },
+      {
+        "i": 80,
+        "id": "rc63",
+        "key": "chin-jawline-and-facial-contouring-1",
+        "h": 3917.90625
+      },
+      {
+        "i": 81,
+        "id": "rc64",
+        "key": "chin-jawline-and-facial-contouring-2",
+        "h": 4606.6875
+      },
+      {
+        "i": 82,
+        "id": "rc102",
+        "key": "chin-jawline-and-facial-contouring-2-continued",
+        "h": 3334.5
+      },
+      {
+        "i": 83,
+        "id": "rc65",
+        "key": "chin-jawline-and-facial-contouring-3",
+        "h": 4005.875
+      },
+      {
+        "i": 84,
+        "id": "rc66",
+        "key": "chin-jawline-and-facial-contouring-4",
+        "h": 4071.625
+      },
+      {
+        "i": 85,
+        "id": "rc67",
+        "key": "chin-jawline-and-facial-contouring-5",
+        "h": 4166.375
+      },
+      {
+        "i": 86,
+        "id": "rc68",
+        "key": "chin-jawline-and-facial-contouring-6",
+        "h": 4867.1875
+      },
+      {
+        "i": 87,
+        "id": "rc69",
+        "key": "chin-jawline-and-facial-contouring-7",
+        "h": 3969.0625
+      },
+      {
+        "i": 88,
+        "id": "rc70",
+        "key": "chin-jawline-and-facial-contouring-8",
+        "h": 4473.84375
+      },
+      {
+        "i": 89,
+        "id": "rc103",
+        "key": "chin-jawline-and-facial-contouring-8-continued",
+        "h": 4212.59375
+      },
+      {
+        "i": 90,
+        "id": "rc71",
+        "key": "chin-jawline-and-facial-contouring-9",
+        "h": 4078.59375
+      },
+      {
+        "i": 91,
+        "id": "rc72",
+        "key": "chin-jawline-and-facial-contouring-10",
+        "h": 2835.96875
+      },
+      {
+        "i": 92,
+        "id": "rc73",
+        "key": "aesthetic-treatment-selection-1",
+        "h": 3498.53125
+      },
+      {
+        "i": 93,
+        "id": "rc104",
+        "key": "aesthetic-treatment-selection-1-continued",
+        "h": 2957.28125
+      },
+      {
+        "i": 94,
+        "id": "rc74",
+        "key": "aesthetic-treatment-selection-2",
+        "h": 4311.6875
+      },
+      {
+        "i": 95,
+        "id": "rc75",
+        "key": "aesthetic-treatment-selection-3",
+        "h": 3948.6875
+      },
+      {
+        "i": 96,
+        "id": "rc76",
+        "key": "aesthetic-treatment-selection-4",
+        "h": 4717.4375
+      },
+      {
+        "i": 97,
+        "id": "rc77",
+        "key": "aesthetic-treatment-selection-5",
+        "h": 5593.125
+      },
+      {
+        "i": 98,
+        "id": "rc78",
+        "key": "aesthetic-treatment-selection-6",
+        "h": 3121.71875
+      },
+      {
+        "i": 99,
+        "id": "rc133",
+        "key": "aesthetic-treatment-selection-6-split-2",
+        "h": 2378.375
+      },
+      {
+        "i": 100,
+        "id": "rc105",
+        "key": "aesthetic-treatment-selection-6-continued",
+        "h": 3531.25
+      },
+      {
+        "i": 101,
+        "id": "rc79",
+        "key": "aesthetic-treatment-selection-7",
+        "h": 1685.84375
+      },
+      {
+        "i": 102,
+        "id": "rc80",
+        "key": "aesthetic-treatment-candidacy-1",
+        "h": 2681.5
+      },
+      {
+        "i": 103,
+        "id": "rc120",
+        "key": "aesthetic-treatment-candidacy-1-split-2",
+        "h": 2341.84375
+      },
+      {
+        "i": 104,
+        "id": "rc81",
+        "key": "aesthetic-treatment-candidacy-2",
+        "h": 2105.34375
+      },
+      {
+        "i": 105,
+        "id": "rc132",
+        "key": "aesthetic-treatment-candidacy-2-split-2",
+        "h": 2211.28125
+      },
+      {
+        "i": 106,
+        "id": "rc82",
+        "key": "aesthetic-treatment-candidacy-3",
+        "h": 4220.75
+      },
+      {
+        "i": 107,
+        "id": "rc106",
+        "key": "aesthetic-treatment-candidacy-3-continued",
+        "h": 1990.0625
+      },
+      {
+        "i": 108,
+        "id": "rc126",
+        "key": "aesthetic-treatment-candidacy-3-continued-split-2",
+        "h": 1181.46875
+      },
+      {
+        "i": 109,
+        "id": "rc83",
+        "key": "aesthetic-treatment-candidacy-4",
+        "h": 5634.6875
+      },
+      {
+        "i": 110,
+        "id": "rc84",
+        "key": "aesthetic-treatment-candidacy-5",
+        "h": 3108.875
+      },
+      {
+        "i": 111,
+        "id": "rc128",
+        "key": "aesthetic-treatment-candidacy-5-split-2",
+        "h": 3256.90625
+      },
+      {
+        "i": 112,
+        "id": "rc85",
+        "key": "complications-aftercare-and-follow-up-1",
+        "h": 2467.34375
+      },
+      {
+        "i": 113,
+        "id": "rc119",
+        "key": "complications-aftercare-and-follow-up-1-split-2",
+        "h": 2152.8125
+      },
+      {
+        "i": 114,
+        "id": "rc86",
+        "key": "complications-aftercare-and-follow-up-2",
+        "h": 3273.46875
+      },
+      {
+        "i": 115,
+        "id": "rc107",
+        "key": "complications-aftercare-and-follow-up-2-continued",
+        "h": 3119.46875
+      },
+      {
+        "i": 116,
+        "id": "rc87",
+        "key": "complications-aftercare-and-follow-up-3",
+        "h": 4045.65625
+      },
+      {
+        "i": 117,
+        "id": "rc88",
+        "key": "complications-aftercare-and-follow-up-4",
+        "h": 3271
+      },
+      {
+        "i": 118,
+        "id": "rc111",
+        "key": "complications-aftercare-and-follow-up-4-split-2",
+        "h": 2922.78125
+      },
+      {
+        "i": 119,
+        "id": "rc89",
+        "key": "complications-aftercare-and-follow-up-5",
+        "h": 3989.65625
+      },
+      {
+        "i": 120,
+        "id": "rc90",
+        "key": "complications-aftercare-and-follow-up-6",
+        "h": 4110.40625
+      },
+      {
+        "i": 121,
+        "id": "rc91",
+        "key": "complications-aftercare-and-follow-up-7",
+        "h": 3092.9375
+      },
+      {
+        "i": 122,
+        "id": "rc115",
+        "key": "complications-aftercare-and-follow-up-7-split-2",
+        "h": 2795.8125
+      },
+      {
+        "i": 123,
+        "id": "rc92",
+        "key": "complications-aftercare-and-follow-up-8",
+        "h": 4042.875
+      },
+      {
+        "i": 124,
+        "id": "rc93",
+        "key": "complications-aftercare-and-follow-up-9",
+        "h": 4057.9375
+      },
+      {
+        "i": 125,
+        "id": "rc94",
+        "key": "complications-aftercare-and-follow-up-10",
+        "h": 560.4375
+      },
+      {
+        "i": 126,
+        "id": "rc95",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1",
+        "h": 3271.5
+      },
+      {
+        "i": 127,
+        "id": "rc108",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-1-continued",
+        "h": 4018.21875
+      },
+      {
+        "i": 128,
+        "id": "rc96",
+        "key": "saeed-ghezelbash-diagnostic-philosophy-2",
+        "h": 432.3125
+      },
+      {
+        "i": 129,
+        "id": "rc97",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-1",
+        "h": 5175.1875
+      },
+      {
+        "i": 130,
+        "id": "rc98",
+        "key": "aesthetic-treatment-failure-from-diagnostic-error-2",
+        "h": 565
+      },
+      {
+        "i": 131,
+        "id": "rc99",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1",
+        "h": 3181.40625
+      },
+      {
+        "i": 132,
+        "id": "rc129",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-split-2",
+        "h": 1681.4375
+      },
+      {
+        "i": 133,
+        "id": "rc109",
+        "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-continued",
+        "h": 1383.5
+      }
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "id": "/",
+  "name": "دکتر سعید قزلباش",
+  "short_name": "دکتر قزلباش",
+  "description": "وب‌سایت رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه",
+  "lang": "fa-IR",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#075244",
+  "categories": [
+    "medical",
+    "health"
+  ],
+  "icons": [
+    {
+      "src": "/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/media/brand/doctor-ghezelbaash-symbol-192.66ea4c5bfc7d.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/media/brand/doctor-ghezelbaash-symbol-512.a9b648294d3e.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/media/brand/doctor-ghezelbaash-symbol-maskable-512.bd6880f5a15a.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "shortcuts": [
+    {
+      "name": "اطلاعات و تماس کلینیک",
+      "short_name": "کلینیک",
+      "url": "/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+      "icons": [
+        {
+          "src": "/media/brand/doctor-ghezelbaash-symbol-192.66ea4c5bfc7d.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "راهنمای جامع بوتاکس",
+      "short_name": "بوتاکس",
+      "url": "/#botox",
+      "icons": [
+        {
+          "src": "/media/brand/doctor-ghezelbaash-symbol-192.66ea4c5bfc7d.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "راهنمای جامع فیلر",
+      "short_name": "فیلر",
+      "url": "/#filler",
+      "icons": [
+        {
+          "src": "/media/brand/doctor-ghezelbaash-symbol-192.66ea4c5bfc7d.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
