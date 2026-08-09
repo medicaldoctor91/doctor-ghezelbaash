@@ -35,7 +35,7 @@ jobs:
           key_url=f'{canonical}/{key}.txt'
           expected=(key+'\n').encode()
 
-          def fetch(url, *, accept='*/*', user_agent='ghezelbaash-indexnow-verifier/2.1'):
+          def fetch(url, *, accept='*/*', user_agent='ghezelbaash-indexnow-verifier/2.2'):
               req=urllib.request.Request(
                   url,
                   headers={
@@ -51,7 +51,6 @@ jobs:
               except urllib.error.HTTPError as e:
                   return e.code, e.read(), dict(e.headers)
 
-          # Refuse to submit until the ownership key from the new production deployment is live and exact.
           for attempt in range(24):
               status,body,_=fetch(key_url,accept='text/plain')
               print('INDEXNOW_KEY_VERIFY',attempt+1,status,len(body))
@@ -61,9 +60,8 @@ jobs:
           else:
               raise SystemExit('IndexNow ownership key did not become live in time')
 
-          # The website is intentionally a one-page website. Keep the Google/search sitemap lane
-          # strictly collapsed to the single canonical HTML document; machine representations must
-          # never become additional sitemap landing pages.
+          # One HTML page only. Count only direct sitemap <url>/<loc> entries; nested image:loc
+          # elements are media annotations for that same page and are not additional web pages.
           sitemap_url=f'{canonical}/sitemap.xml'
           status,sitemap_bytes,_=fetch(sitemap_url,accept='application/xml,text/xml')
           if status!=200:
@@ -73,16 +71,17 @@ jobs:
           except ET.ParseError as exc:
               raise SystemExit(f'sitemap.xml is invalid XML: {exc}')
           locs=[]
-          for el in sm.iter():
-              if el.tag.rsplit('}',1)[-1]=='loc' and el.text:
-                  locs.append(el.text.strip())
+          for url_el in list(sm):
+              if url_el.tag.rsplit('}',1)[-1] != 'url':
+                  continue
+              for child in list(url_el):
+                  if child.tag.rsplit('}',1)[-1]=='loc' and child.text:
+                      locs.append(child.text.strip())
+                      break
           if locs != [root]:
               raise SystemExit(f'Single-page sitemap invariant broken: {locs!r}')
           print('SINGLE_PAGE_SITEMAP_OK',locs)
 
-          # Machine/AI lane: discover every first-party semantic representation from the live RFC 9264
-          # linkset rather than using a small hard-coded list. These resources stay outside the sitemap,
-          # but they remain directly fetchable and change-notified for engines that consume IndexNow.
           linkset_url=f'{canonical}/linkset.json'
           status,body,_=fetch(linkset_url,accept='application/linkset+json, application/json')
           if status!=200:
@@ -102,7 +101,6 @@ jobs:
                       if href:
                           discovered.append(href)
 
-          # Same-host, fragment-free, canonical HTTPS URLs only. Preserve source order and dedupe.
           urls=[]
           seen=set()
           for url in discovered:
@@ -122,7 +120,6 @@ jobs:
           if len(urls)>10000:
               raise SystemExit(f'IndexNow URL set unexpectedly exceeds protocol batch limit: {len(urls)}')
 
-          # Prove every notified representation is actually live before publishing the change signal.
           live=[]
           for url in urls:
               status,body,headers=fetch(url)
@@ -148,7 +145,7 @@ jobs:
                   method='POST',
                   headers={
                       'Content-Type':'application/json; charset=utf-8',
-                      'User-Agent':'ghezelbaash-indexnow-publisher/2.1',
+                      'User-Agent':'ghezelbaash-indexnow-publisher/2.2',
                   },
               )
               try:
