@@ -20,7 +20,11 @@ const deferredLinkPattern=/<link\b[^>]*\bdata-deferred-stylesheet\b[^>]*>/i;
 const deferredTag=sourceHtml.match(deferredLinkPattern)?.[0];
 const deferredHref=(deferredTag?.match(/\bhref=["']([^"']+)["']/i)||[])[1];
 if(!deferredTag||!deferredHref)fail('deferred stylesheet link missing from DIST HTML');
-const gateTag=deferredTag.replace(/\s+href=["'][^"']+["']/i,'').replace(/\s+as=["']style["']/i,'').replace(/\bdata-deferred-stylesheet\b/i,`data-deferred-stylesheet data-gate-href="${deferredHref}"`);
+const externalCssPath=path.resolve(dist,deferredHref.replace(/^\/+/,''));
+if(externalCssPath!==dist&&!externalCssPath.startsWith(dist+path.sep))fail('deferred stylesheet path escaped DIST');
+const externalCss=await readFile(externalCssPath,'utf8');
+if(!externalCss.trim())fail('deferred stylesheet is empty');
+const gateTag=deferredTag.replace(/\s+href=["'][^"']+["']/i,'').replace(/\s+as=["']style["']/i,'').replace(/\bdata-deferred-stylesheet\b/i,'data-deferred-stylesheet data-gate-inert');
 const gateHtml=sourceHtml.replace(deferredTag,gateTag);
 const server=createServer(async(req,res)=>{
   try{
@@ -65,6 +69,7 @@ const snapshotExpression=`(()=>{const rect=e=>{if(!e)return null;const r=e.getBo
 const num=v=>Number.parseFloat(String(v));
 const close=(a,b,t=0.35)=>Math.abs(num(a)-num(b))<=t;
 const compareRect=(name,a,b,props=['x','y','width','height','paddingTop','paddingRight','paddingBottom','paddingLeft'])=>{if(!a||!b)fail(`${name} missing from snapshot`);for(const p of props)if(!close(a[p],b[p]))fail(`${name}.${p} changed ${a[p]} -> ${b[p]}`)};
+const externalCssLiteral=JSON.stringify(externalCss);
 
 const widths=[320,360,390,430];
 try{
@@ -76,8 +81,7 @@ try{
     await evalValue(cdp,`(()=>{window.__gateCls=0;new PerformanceObserver(list=>{for(const e of list.getEntries())if(!e.hadRecentInput)window.__gateCls+=e.value}).observe({type:'layout-shift'});return true})()`);
     if(before.stylesheetRel!=='preload')fail(`${width}px deferred stylesheet activated before initial snapshot`);
     if(before.scrollWidth>before.innerWidth+1)fail(`${width}px horizontal overflow before deferred CSS: ${before.scrollWidth}/${before.innerWidth}`);
-    await evalValue(cdp,`(()=>{const l=document.querySelector('link[data-deferred-stylesheet]');if(!l||!l.dataset.gateHref)throw new Error('gate href missing');l.href=l.dataset.gateHref;l.rel='stylesheet';l.removeAttribute('data-gate-href');return l.href})()`);
-    for(let i=0;i<200;i++){const active=await evalValue(cdp,`[...document.styleSheets].some(s=>/\/assets\/site\.[0-9a-f]{12}\.css$/.test(s.href||''))`);if(active)break;if(i===199)fail(`${width}px deferred stylesheet did not activate`);await delay(50)}
+    await evalValue(cdp,`(()=>{const s=document.createElement('style');s.id='gate-external-css';s.textContent=${externalCssLiteral};document.head.appendChild(s);return s.sheet?.cssRules?.length??0})()`);
     await evalValue(cdp,'new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
     const after=await evalValue(cdp,snapshotExpression),cls=await evalValue(cdp,'window.__gateCls||0');
     compareRect(`${width}px main`,before.main,after.main,['x','y','width','paddingTop','paddingRight','paddingBottom','paddingLeft']);
@@ -94,7 +98,7 @@ try{
     cdp.ws.close();
     console.log(`CSS_CONVERGENCE width=${width} cls=${cls.toFixed(6)} main=${before.main.width.toFixed(2)} dockTop=${before.top.width.toFixed(2)}`);
   }
-  console.log('Browser CSS convergence validated at 320/360/390/430px with deferred stylesheet suppressed until after initial geometry capture.');
+  console.log('Browser CSS convergence validated at 320/360/390/430px by applying the exact built deferred stylesheet after the critical-only geometry snapshot.');
 }finally{
   server.close();chrome.kill('SIGTERM');await delay(150).catch(()=>{});await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }
