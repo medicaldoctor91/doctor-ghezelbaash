@@ -1,0 +1,154 @@
+name: Temporary post-fix Lighthouse A/B audit
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  ASTRO_TELEMETRY_DISABLED: 1
+  BASELINE_SHA: 89d2d0079d1ae7eb35e9caccac2e8ad8c5e4cf94
+  LIVE_URL: https://www.ghezelbaash.ir/
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout fixed source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use Node 24.18.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+
+      - name: Verify fixed CSS is actually live
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 3 --retry-all-errors -fsS "$LIVE_URL" -o /tmp/live.html
+          if grep -Fq '.quick-actions__top{width:2.15rem;height:2.15rem}' /tmp/live.html \
+             && grep -Fq '.verified-identity-core{margin:.85rem 0;padding:.65rem .8rem' /tmp/live.html \
+             && grep -Fq 'padding-inline:.78rem' /tmp/live.html; then
+            echo 'LIVE_DEPLOY_MARKER=fixed' | tee /tmp/live-marker.txt
+          else
+            echo 'LIVE_DEPLOY_MARKER=not-fixed' | tee /tmp/live-marker.txt
+            exit 1
+          fi
+
+      - name: Install Lighthouse
+        run: npm install --global lighthouse
+
+      - name: Build fixed DIST
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Build baseline DIST
+        shell: bash
+        run: |
+          set -euo pipefail
+          git worktree add /tmp/baseline "$BASELINE_SHA"
+          cd /tmp/baseline
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Serve both DISTs
+        shell: bash
+        run: |
+          set -euo pipefail
+          nohup python3 -m http.server 4173 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE/dist" >/tmp/fixed-server.log 2>&1 &
+          nohup python3 -m http.server 4174 --bind 127.0.0.1 --directory /tmp/baseline/dist >/tmp/baseline-server.log 2>&1 &
+          for port in 4173 4174; do
+            for i in {1..50}; do
+              curl -fsS "http://127.0.0.1:${port}/" >/dev/null && break
+              sleep .2
+              test "$i" -lt 50
+            done
+          done
+
+      - name: Run matched mobile Lighthouse A/B samples
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variant in baseline fixed; do
+            if [ "$variant" = baseline ]; then port=4174; else port=4173; fi
+            for run in 1 2 3; do
+              lighthouse "http://127.0.0.1:${port}/" \
+                --only-categories=performance \
+                --form-factor=mobile \
+                --throttling-method=simulate \
+                --output=json \
+                --output-path="/tmp/${variant}-${run}.json" \
+                --chrome-flags='--headless=new --no-sandbox --disable-dev-shm-usage' \
+                --quiet
+            done
+          done
+
+      - name: Run one mobile Lighthouse sample against live production
+        shell: bash
+        run: |
+          set -euo pipefail
+          lighthouse "$LIVE_URL" \
+            --only-categories=performance \
+            --form-factor=mobile \
+            --throttling-method=simulate \
+            --output=json \
+            --output-path=/tmp/live.json \
+            --chrome-flags='--headless=new --no-sandbox --disable-dev-shm-usage' \
+            --quiet
+
+      - name: Print comparable results
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const metrics=path=>{
+            const r=JSON.parse(fs.readFileSync(path,'utf8'));
+            const a=r.audits;
+            return {
+              score:Math.round(r.categories.performance.score*100),
+              fcp:Math.round(a['first-contentful-paint'].numericValue),
+              lcp:Math.round(a['largest-contentful-paint'].numericValue),
+              si:Math.round(a['speed-index'].numericValue),
+              tbt:Math.round(a['total-blocking-time'].numericValue),
+              cls:Number(a['cumulative-layout-shift'].numericValue.toFixed(6))
+            };
+          };
+          const med=v=>[...v].sort((a,b)=>a-b)[Math.floor(v.length/2)];
+          const summarize=name=>{
+            const rows=[1,2,3].map(i=>metrics(`/tmp/${name}-${i}.json`));
+            const keys=['score','fcp','lcp','si','tbt','cls'];
+            const median=Object.fromEntries(keys.map(k=>[k,med(rows.map(r=>r[k]))]));
+            return {rows,median};
+          };
+          const baseline=summarize('baseline');
+          const fixed=summarize('fixed');
+          const live=metrics('/tmp/live.json');
+          const delta={
+            score:fixed.median.score-baseline.median.score,
+            fcp:fixed.median.fcp-baseline.median.fcp,
+            lcp:fixed.median.lcp-baseline.median.lcp,
+            si:fixed.median.si-baseline.median.si,
+            tbt:fixed.median.tbt-baseline.median.tbt,
+            cls:Number((fixed.median.cls-baseline.median.cls).toFixed(6))
+          };
+          console.log('BASELINE_RUNS='+JSON.stringify(baseline.rows));
+          console.log('FIXED_RUNS='+JSON.stringify(fixed.rows));
+          console.log('BASELINE_MEDIAN='+JSON.stringify(baseline.median));
+          console.log('FIXED_MEDIAN='+JSON.stringify(fixed.median));
+          console.log('DELTA_FIXED_MINUS_BASELINE='+JSON.stringify(delta));
+          console.log('LIVE_SAMPLE='+JSON.stringify(live));
+          NODE
