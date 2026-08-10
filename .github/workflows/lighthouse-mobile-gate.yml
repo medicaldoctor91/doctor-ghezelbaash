@@ -6,15 +6,25 @@ on:
     types: [completed]
 
 permissions:
-  contents: read
+  contents: write
   statuses: write
+
+concurrency:
+  group: lighthouse-mobile-production
+  cancel-in-progress: true
 
 jobs:
   mobile-lighthouse:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
+      - name: Checkout performance result branch
+        uses: actions/checkout@v4
+        with:
+          ref: perf-results
+          fetch-depth: 1
+
       - name: Run three mobile Lighthouse probes
         shell: bash
         env:
@@ -67,6 +77,50 @@ jobs:
           source lh/summary.env
           if [ "$MEDIAN_SCORE" -lt 95 ]; then
             exit 1
+          fi
+
+      - name: Persist latest mobile result
+        if: always()
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          set -euo pipefail
+          source lh/summary.env 2>/dev/null || true
+          mkdir -p performance
+          export MEDIAN_SCORE="${MEDIAN_SCORE:-0}" FCP_MS="${FCP_MS:-0}" LCP_MS="${LCP_MS:-0}" TBT_MS="${TBT_MS:-0}" CLS="${CLS:-0}" SI_MS="${SI_MS:-0}" RUN_SCORES="${RUN_SCORES:-}"
+          python - <<'PY' > performance/latest-mobile.json
+          import json, os, datetime
+          scores=[int(x) for x in os.environ.get('RUN_SCORES','').split(',') if x]
+          out={
+              'source_sha': os.environ['SOURCE_SHA'],
+              'source_deploy_workflow_run_id': int(os.environ['SOURCE_RUN_ID']),
+              'tested_at_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'target': 'https://www.ghezelbaash.ir/',
+              'form_factor': 'mobile',
+              'throttling_method': 'simulate',
+              'run_scores': scores,
+              'median_score': int(os.environ['MEDIAN_SCORE']),
+              'metrics': {
+                  'fcp_ms': int(float(os.environ['FCP_MS'])),
+                  'lcp_ms': int(float(os.environ['LCP_MS'])),
+                  'tbt_ms': int(float(os.environ['TBT_MS'])),
+                  'cls': float(os.environ['CLS']),
+                  'speed_index_ms': int(float(os.environ['SI_MS'])),
+              },
+              'gate': {'minimum_score': 95, 'passed': int(os.environ['MEDIAN_SCORE']) >= 95},
+          }
+          print(json.dumps(out, ensure_ascii=False, indent=2))
+          PY
+          git config user.name "ghezelbaash-performance-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add performance/latest-mobile.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+          else
+            git commit -m "Record mobile Lighthouse for ${SOURCE_SHA:0:12}"
+            git push origin HEAD:perf-results
           fi
 
       - name: Publish commit status
