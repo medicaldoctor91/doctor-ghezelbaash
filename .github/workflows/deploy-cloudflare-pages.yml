@@ -319,12 +319,15 @@ jobs:
                   return None
           no_redirect=urllib.request.build_opener(NoRedirect)
 
+          def normalized(headers):
+              return {str(k).lower():v for k,v in headers.items()}
+
           def fetch(url, follow=True):
               req=urllib.request.Request(url,headers={'User-Agent':'ghezelbaash-production-verifier/1.1','Accept':'*/*'})
               opener=urllib.request.urlopen if follow else no_redirect.open
               try:
-                  with opener(req,timeout=30) as r: return r.status,dict(r.headers),r.geturl(),r.read(4096)
-              except urllib.error.HTTPError as e: return e.code,dict(e.headers),e.geturl(),e.read(4096)
+                  with opener(req,timeout=30) as r: return r.status,normalized(r.headers),r.geturl(),r.read(4096)
+              except urllib.error.HTTPError as e: return e.code,normalized(e.headers),e.geturl(),e.read(4096)
 
           root=f'https://{host}/'
           for attempt in range(36):
@@ -346,25 +349,25 @@ jobs:
           for url,want in tests:
               st,h,final,b=fetch(url)
               observed[url]=(st,h,final,b)
-              print('VERIFY',st,'requested=',url,'final=',final,'cf-cache-status=',h.get('CF-Cache-Status'),'x-robots-tag=',h.get('X-Robots-Tag'),'bytes_sample=',len(b))
+              print('VERIFY',st,'requested=',url,'final=',final,'cf-cache-status=',h.get('cf-cache-status'),'x-robots-tag=',h.get('x-robots-tag'),'bytes_sample=',len(b))
               if st!=want: raise SystemExit(f'Unexpected HTTP {st} for {url}, expected {want}')
 
           root_headers=observed[root][1]
-          hsts=root_headers.get('Strict-Transport-Security') or ''
+          hsts=root_headers.get('strict-transport-security') or ''
           if enforce_hsts and ('max-age=63072000' not in hsts or 'includeSubDomains' not in hsts or 'preload' not in hsts):
               raise SystemExit(f'Canonical HSTS contract drift: {hsts}')
           if not enforce_hsts:
               print('HSTS_SCOPE_GAP_LIVE_READBACK',hsts)
           missing_url=f'https://{host}/this-path-must-be-a-real-404-7f3d9a'
           missing_headers=observed[missing_url][1]
-          if enforce_404 and 'noindex' not in (missing_headers.get('X-Robots-Tag') or '').lower():
-              raise SystemExit(f'Real 404 noindex edge contract drift: {missing_headers.get("X-Robots-Tag")}')
-          if missing_headers.get('Cache-Control')!='no-store':
+          if enforce_404 and 'noindex' not in (missing_headers.get('x-robots-tag') or '').lower():
+              raise SystemExit(f'Real 404 noindex edge contract drift: {missing_headers.get("x-robots-tag")}')
+          if missing_headers.get('cache-control')!='no-store':
               raise SystemExit('Real 404 no-store cache contract drift')
-          if enforce_404 and (not missing_headers.get('Content-Security-Policy') or missing_headers.get('Content-Language')!='fa-IR'):
+          if enforce_404 and (not missing_headers.get('content-security-policy') or missing_headers.get('content-language')!='fa-IR'):
               raise SystemExit('Real 404 cache/CSP edge contract drift')
           if not enforce_404:
-              print('REAL_404_TRANSFORM_SCOPE_GAP',missing_headers.get('X-Robots-Tag'),missing_headers.get('Content-Security-Policy'))
+              print('REAL_404_TRANSFORM_SCOPE_GAP',missing_headers.get('x-robots-tag'),missing_headers.get('content-security-policy'))
 
           redirect_tests=[
               (f'https://{project}.pages.dev/canonical-contract/path?q=1',f'https://{host}/canonical-contract/path?q=1'),
@@ -372,7 +375,7 @@ jobs:
           ]
           for url,want_location in redirect_tests:
               st,h,_,_=fetch(url,follow=False)
-              location=h.get('Location') or h.get('location')
+              location=h.get('location')
               print('REDIRECT_VERIFY',st,url,'location=',location)
               if st!=301 or location!=want_location: raise SystemExit(f'Canonical redirect contract failed for {url}: HTTP {st}, Location={location}')
 
@@ -385,8 +388,8 @@ jobs:
               if st!=200: raise SystemExit(f'Cache warm failed for {url}: HTTP {st}')
               time.sleep(2)
               st,h,_,_=fetch(url)
-              cache=(h.get('CF-Cache-Status') or '').upper()
-              age=h.get('Age')
+              cache=(h.get('cf-cache-status') or '').upper()
+              age=h.get('age')
               print('CACHE_VERIFY',url,'status=',st,'cf-cache-status=',cache,'age=',age)
               if st!=200 or (enforce_cache and cache not in {'HIT','REVALIDATED'}):
                   raise SystemExit(f'Expected a cached response for {url}; got HTTP {st}, CF-Cache-Status={cache}')
