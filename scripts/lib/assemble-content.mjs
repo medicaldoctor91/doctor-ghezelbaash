@@ -24,6 +24,18 @@ const headingFor=(content,fragment)=>{
   if(matches.length!==1) throw new Error(`Expected one native heading; found ${matches.length} at #${fragment}`);
   return matches[0];
 };
+const dedupeExactPlainParagraphs=html=>{
+  const seen=new Set();let removed=0,removedBytes=0;
+  const content=String(html).replace(/<p\b[^>]*>[\s\S]*?<\/p>/gi,block=>{
+    const open=block.slice(0,block.indexOf('>')+1);
+    if(/\b(?:id|class|itemprop|itemscope|data-[\w-]+|aria-[\w-]+)=/i.test(open)) return block;
+    const key=block.replace(/\s+/g,' ').trim();
+    if(!key||!normalizeVisible(block)) return block;
+    if(seen.has(key)){removed++;removedBytes+=Buffer.byteLength(block);return ''}
+    seen.add(key);return block;
+  });
+  return {content,removed,removedBytes};
+};
 
 export async function canonicalSourceNames(root=process.cwd()){
   const sourceDir=path.join(root,'src/content-source');
@@ -37,6 +49,7 @@ export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
   const canonicalGraph=graph??JSON.parse(await readFile(path.join(root,'src/data/semantic/knowledge-graph.jsonld'),'utf8'));
   const names=await canonicalSourceNames(root);
   let content=(await Promise.all(names.map(name=>readFile(path.join(sourceDir,name),'utf8')))).join('');
+  const deduped=dedupeExactPlainParagraphs(content);content=deduped.content;
   const byId=new Map(canonicalGraph['@graph'].filter(node=>node['@id']).map(node=>[node['@id'],node]));
   let inserted=0;
   for(const question of canonicalGraph['@graph'].filter(node=>hasType(node,'Question'))){
@@ -62,7 +75,7 @@ export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
     content=content.slice(0,at)+paragraph+content.slice(at);
     fullInserted++;
   }
-  return {content,names,inserted,fullInserted};
+  return {content,names,inserted,fullInserted,dedupedParagraphs:deduped.removed,dedupedParagraphBytes:deduped.removedBytes};
 }
 
 export const retiredDirectAnswerProjection=retiredProjection;
