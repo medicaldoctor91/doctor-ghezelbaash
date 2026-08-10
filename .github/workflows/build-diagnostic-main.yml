@@ -3,12 +3,14 @@ name: Main build diagnostic
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
 
 concurrency:
-  group: main-build-diagnostic
+  group: main-build-diagnostic-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -16,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - name: Checkout exact main
+      - name: Checkout exact source
         uses: actions/checkout@v4
         with:
           path: source
@@ -48,8 +50,10 @@ jobs:
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           echo "$code" > ../results/performance/main-build-exit-code.txt
+          tail -n 260 ../results/performance/main-build.log
           exit 0
-      - name: Persist result
+      - name: Persist result on push runs
+        if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -65,4 +69,6 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add performance/main-build.log performance/main-build-tail.log performance/main-build-exit-code.txt performance/main-build-status.json
           git commit -m "Record main build diagnostic $sha" || exit 0
+          git fetch origin perf-results
+          git rebase origin/perf-results || { git rebase --abort || true; exit 0; }
           git push origin HEAD:perf-results
