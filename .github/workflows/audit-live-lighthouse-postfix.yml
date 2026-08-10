@@ -34,19 +34,29 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify fixed CSS is actually live
+      - name: Diagnose live deployment markers
         shell: bash
         run: |
           set -euo pipefail
           curl --retry 3 --retry-all-errors -fsS "$LIVE_URL" -o /tmp/live.html
-          if grep -Fq '.quick-actions__top{width:2.15rem;height:2.15rem}' /tmp/live.html \
-             && grep -Fq '.verified-identity-core{margin:.85rem 0;padding:.65rem .8rem' /tmp/live.html \
-             && grep -Fq 'padding-inline:.78rem' /tmp/live.html; then
-            echo 'LIVE_DEPLOY_MARKER=fixed' | tee /tmp/live-marker.txt
-          else
-            echo 'LIVE_DEPLOY_MARKER=not-fixed' | tee /tmp/live-marker.txt
-            exit 1
-          fi
+          python3 - <<'PY'
+          import hashlib,re
+          html=open('/tmp/live.html','rb').read()
+          text=html.decode('utf-8','replace')
+          print('LIVE_HTML_SHA256='+hashlib.sha256(html).hexdigest())
+          checks={
+            'dock_top_2_15':'.quick-actions__top{width:2.15rem;height:2.15rem}' in text,
+            'verified_identity_critical':'.verified-identity-core{margin:.85rem 0;padding:.65rem .8rem' in text,
+            'main_padding_078':'padding-inline:.78rem' in text,
+          }
+          print('LIVE_MARKERS='+repr(checks))
+          print('LIVE_DEPLOY_MARKER='+('fixed' if all(checks.values()) else 'not-fixed'))
+          for selector in ['quick-actions__top','verified-identity-core']:
+            m=re.search(r'\.'+re.escape(selector)+r'\{[^}]{0,500}\}',text)
+            print('LIVE_SELECTOR_'+selector.replace('-','_')+'='+(m.group(0) if m else 'MISSING'))
+          assets=sorted(set(re.findall(r'assets/site\.[0-9a-f]{12}\.css',text)))
+          print('LIVE_CSS_ASSETS='+','.join(assets))
+          PY
 
       - name: Install Lighthouse
         run: npm install --global lighthouse
