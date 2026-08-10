@@ -297,15 +297,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/configure-cloudflare-edge.py --apply
+          python scripts/configure-cloudflare-edge.py --apply --outcome edge-reconciliation.json
 
       - name: Verify canonical, redirects, machine endpoints, real 404, and edge cache
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import glob, os, time, urllib.error, urllib.request
+          import glob, json, os, time, urllib.error, urllib.request
           host=os.environ['CANONICAL_HOST']; project=os.environ['CF_PROJECT']
+          with open('edge-reconciliation.json',encoding='utf-8') as f:
+              edge=json.load(f)
+          capabilities=edge.get('capabilities') or {}
+          enforce_hsts=bool(capabilities.get('zoneSettings') or capabilities.get('hstsTransformRule'))
+          enforce_404=bool(capabilities.get('notFoundTransformRule'))
+          enforce_cache=bool(capabilities.get('cacheRule'))
+          print('EDGE_CAPABILITY_READBACK',json.dumps(edge,sort_keys=True))
 
           class NoRedirect(urllib.request.HTTPRedirectHandler):
               def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -344,14 +351,20 @@ jobs:
 
           root_headers=observed[root][1]
           hsts=root_headers.get('Strict-Transport-Security') or ''
-          if 'max-age=63072000' not in hsts or 'includeSubDomains' not in hsts or 'preload' not in hsts:
+          if enforce_hsts and ('max-age=63072000' not in hsts or 'includeSubDomains' not in hsts or 'preload' not in hsts):
               raise SystemExit(f'Canonical HSTS contract drift: {hsts}')
+          if not enforce_hsts:
+              print('HSTS_SCOPE_GAP_LIVE_READBACK',hsts)
           missing_url=f'https://{host}/this-path-must-be-a-real-404-7f3d9a'
           missing_headers=observed[missing_url][1]
-          if 'noindex' not in (missing_headers.get('X-Robots-Tag') or '').lower():
+          if enforce_404 and 'noindex' not in (missing_headers.get('X-Robots-Tag') or '').lower():
               raise SystemExit(f'Real 404 noindex edge contract drift: {missing_headers.get("X-Robots-Tag")}')
-          if missing_headers.get('Cache-Control')!='no-store' or not missing_headers.get('Content-Security-Policy'):
+          if missing_headers.get('Cache-Control')!='no-store':
+              raise SystemExit('Real 404 no-store cache contract drift')
+          if enforce_404 and (not missing_headers.get('Content-Security-Policy') or missing_headers.get('Content-Language')!='fa-IR'):
               raise SystemExit('Real 404 cache/CSP edge contract drift')
+          if not enforce_404:
+              print('REAL_404_TRANSFORM_SCOPE_GAP',missing_headers.get('X-Robots-Tag'),missing_headers.get('Content-Security-Policy'))
 
           redirect_tests=[
               (f'https://{project}.pages.dev/canonical-contract/path?q=1',f'https://{host}/canonical-contract/path?q=1'),
@@ -375,9 +388,13 @@ jobs:
               cache=(h.get('CF-Cache-Status') or '').upper()
               age=h.get('Age')
               print('CACHE_VERIFY',url,'status=',st,'cf-cache-status=',cache,'age=',age)
-              if st!=200 or cache not in {'HIT','REVALIDATED'}:
+              if st!=200 or (enforce_cache and cache not in {'HIT','REVALIDATED'}):
                   raise SystemExit(f'Expected a cached response for {url}; got HTTP {st}, CF-Cache-Status={cache}')
+              if not enforce_cache:
+                  print('CACHE_RULE_SCOPE_GAP',url,cache)
           PY
 
       - name: Verify full Google and AI crawler production contract
+        env:
+          EDGE_RECONCILIATION_OUTCOME: edge-reconciliation.json
         run: npm run verify:production

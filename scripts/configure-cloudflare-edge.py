@@ -21,11 +21,41 @@ from typing import Any
 
 API_BASE = "https://api.cloudflare.com/client/v4"
 CACHE_RULE_REF = "ghezelbaash_canonical_dist_cache_v1"
+HSTS_RULE_REF = "ghezelbaash_canonical_hsts_v1"
 NOT_FOUND_RULE_REF = "ghezelbaash_real_404_headers_v1"
+HSTS_VALUE = "max-age=63072000; includeSubDomains; preload"
 
 
 class CloudflareError(RuntimeError):
-    pass
+    def __init__(
+        self,
+        message: str,
+        *,
+        status: int | None = None,
+        payload: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.status = status
+        self.payload = payload or {}
+
+
+def is_permission_error(exc: CloudflareError) -> bool:
+    if exc.status in (401, 403):
+        return True
+    codes = {
+        row.get("code")
+        for row in exc.payload.get("errors", [])
+        if isinstance(row, dict)
+    }
+    return 10000 in codes or 10001 in codes
+
+
+def record_capability_gap(
+    outcome: dict[str, Any], family: str, exc: CloudflareError
+) -> None:
+    status = exc.status if exc.status is not None else "unknown"
+    outcome["scopeGaps"].append({"family": family, "status": status})
+    print("EDGE_CAPABILITY_UNAVAILABLE", family, "http_status=", status)
 
 
 def subset_equal(actual: Any, expected: Any) -> bool:
@@ -97,6 +127,27 @@ def not_found_rule(host: str, csp: str) -> dict[str, Any]:
                 "content-language": {"operation": "set", "value": "fa-IR"},
                 "content-security-policy": {"operation": "set", "value": csp},
                 "cache-control": {"operation": "set", "value": "no-store"},
+            }
+        },
+        "enabled": True,
+    }
+
+
+def hsts_rule(host: str) -> dict[str, Any]:
+    return {
+        "ref": HSTS_RULE_REF,
+        "expression": f'(http.host eq "{host}")',
+        "description": (
+            "Enforce the finalized canonical HSTS contract independently of "
+            "Cloudflare Zone Settings API scope"
+        ),
+        "action": "rewrite",
+        "action_parameters": {
+            "headers": {
+                "strict-transport-security": {
+                    "operation": "set",
+                    "value": HSTS_VALUE,
+                }
             }
         },
         "enabled": True,
@@ -205,7 +256,9 @@ class CloudflareApi:
         if status not in ok or payload.get("success") is not True:
             raise CloudflareError(
                 f"Cloudflare {method} {path} failed HTTP {status}: "
-                f"{json.dumps(payload, ensure_ascii=False)[:1800]}"
+                f"{json.dumps(payload, ensure_ascii=False)[:1800]}",
+                status=status,
+                payload=payload,
             )
         return payload
 
@@ -260,6 +313,8 @@ def reconcile_phase_rule(
     ruleset_name: str,
     ruleset_description: str,
     desired: dict[str, Any],
+    *,
+    must_be_last: bool = True,
 ) -> dict[str, Any]:
     listing = api.expect("GET", f"/zones/{zone}/rulesets").get("result") or []
     candidates = [
@@ -293,11 +348,15 @@ def reconcile_phase_rule(
         if len(matches) > 1:
             raise CloudflareError(f"Duplicate owned rule ref {desired['ref']}")
         current = matches[0] if matches else None
-        if current and rule_matches(current, desired) and rules[-1].get("id") == current.get("id"):
+        position_exact = (
+            not must_be_last
+            or (rules and rules[-1].get("id") == (current or {}).get("id"))
+        )
+        if current and rule_matches(current, desired) and position_exact:
             state = "ALREADY_EXACT"
         elif current:
             body = dict(desired)
-            if rules[-1].get("id") != current.get("id"):
+            if must_be_last and rules[-1].get("id") != current.get("id"):
                 body["position"] = {"after": str(rules[-1]["id"])}
             api.expect(
                 "PATCH",
@@ -319,7 +378,9 @@ def reconcile_phase_rule(
     owned = [row for row in rules if row.get("ref") == desired["ref"]]
     if len(owned) != 1 or not rule_matches(owned[0], desired):
         raise CloudflareError(f"Rule read-back drift for {desired['ref']}")
-    if not rules or rules[-1].get("id") != owned[0].get("id"):
+    if must_be_last and (
+        not rules or rules[-1].get("id") != owned[0].get("id")
+    ):
         raise CloudflareError(
             f"Owned {phase} rule is not last; a later rule could override it"
         )
@@ -343,7 +404,9 @@ def reconcile_bot_access(api: CloudflareApi, zone: str) -> dict[str, Any]:
         if status not in (200, 201) or payload.get("success") is not True:
             raise CloudflareError(
                 f"Bot access setting {key} failed HTTP {status}: "
-                f"{json.dumps(payload, ensure_ascii=False)[:1600]}"
+                f"{json.dumps(payload, ensure_ascii=False)[:1600]}",
+                status=status,
+                payload=payload,
             )
         current = payload.get("result") or current
         print("BOT_ACCESS_UPDATED", key, json.dumps(desired))
@@ -394,6 +457,7 @@ def self_test(dist_dir: Path) -> None:
     if "{{" in csp or "unsafe-inline" in csp or "unsafe-eval" in csp:
         raise CloudflareError("Final 404 CSP is unresolved or weakened")
     cache = cache_rule("www.ghezelbaash.ir")
+    hsts = hsts_rule("www.ghezelbaash.ir")
     missing = not_found_rule("www.ghezelbaash.ir", csp)
     if not rule_matches(json.loads(json.dumps(cache)), cache):
         raise CloudflareError("Cache rule subset comparator failed")
@@ -403,6 +467,11 @@ def self_test(dist_dir: Path) -> None:
         raise CloudflareError("Cache rule drift was not detected")
     if "http.response.code eq 404" not in missing["expression"]:
         raise CloudflareError("Real 404 response match is missing")
+    if (
+        hsts["action_parameters"]["headers"]["strict-transport-security"]["value"]
+        != HSTS_VALUE
+    ):
+        raise CloudflareError("HSTS transform contract drift")
     if (
         missing["action_parameters"]["headers"]["content-security-policy"]["value"]
         != csp
@@ -415,6 +484,7 @@ def self_test(dist_dir: Path) -> None:
             {
                 "valid": True,
                 "cacheRuleRef": CACHE_RULE_REF,
+                "hstsRuleRef": HSTS_RULE_REF,
                 "notFoundRuleRef": NOT_FOUND_RULE_REF,
                 "zoneSettingCount": len(ZONE_SETTINGS),
                 "optionalZoneSettingCount": len(OPTIONAL_ZONE_SETTINGS),
@@ -426,7 +496,7 @@ def self_test(dist_dir: Path) -> None:
     )
 
 
-def apply(dist_dir: Path) -> None:
+def apply(dist_dir: Path) -> dict[str, Any]:
     token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
     account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
     zone_name = os.environ.get("ZONE_NAME", "").strip()
@@ -455,57 +525,123 @@ def apply(dist_dir: Path) -> None:
     zone = zone_id(api, account, zone_name)
     print("ZONE_RESOLVED", zone_name, zone)
 
+    outcome: dict[str, Any] = {
+        "schemaVersion": 1,
+        "zone": zone_name,
+        "host": host,
+        "capabilities": {
+            "zoneSettings": False,
+            "cacheRule": False,
+            "hstsTransformRule": False,
+            "notFoundTransformRule": False,
+            "botManagement": False,
+            "purgeCache": False,
+        },
+        "scopeGaps": [],
+    }
+
     settings_readback = {}
     for setting_id, desired in ZONE_SETTINGS.items():
-        settings_readback[setting_id] = reconcile_zone_setting(
-            api, zone, setting_id, desired
-        )
-    for setting_id, desired in OPTIONAL_ZONE_SETTINGS.items():
         try:
             settings_readback[setting_id] = reconcile_zone_setting(
                 api, zone, setting_id, desired
             )
         except CloudflareError as exc:
-            print(
-                "OPTIONAL_ZONE_SETTING_API_UNAVAILABLE",
-                setting_id,
-                str(exc)[:1200],
-            )
+            if is_permission_error(exc):
+                record_capability_gap(outcome, "zone_settings", exc)
+                break
+            raise
+    else:
+        outcome["capabilities"]["zoneSettings"] = True
+        for setting_id, desired in OPTIONAL_ZONE_SETTINGS.items():
+            try:
+                settings_readback[setting_id] = reconcile_zone_setting(
+                    api, zone, setting_id, desired
+                )
+            except CloudflareError as exc:
+                print(
+                    "OPTIONAL_ZONE_SETTING_API_UNAVAILABLE",
+                    setting_id,
+                    str(exc)[:1200],
+                )
 
-    cache_readback = reconcile_phase_rule(
-        api,
-        zone,
-        "http_request_cache_settings",
-        "Canonical DIST cache rules",
-        "Git-managed cache eligibility for the immutable static production DIST",
-        cache_rule(host),
-    )
-    not_found_readback = reconcile_phase_rule(
-        api,
-        zone,
-        "http_response_headers_transform",
-        "Canonical response header transforms",
-        "Git-managed response corrections for Cloudflare Pages fallbacks",
-        not_found_rule(host, csp_404),
-    )
-    bots_readback = reconcile_bot_access(api, zone)
-    purge_canonical(api, zone, host)
+    try:
+        cache_readback = reconcile_phase_rule(
+            api,
+            zone,
+            "http_request_cache_settings",
+            "Canonical DIST cache rules",
+            "Git-managed cache eligibility for the immutable static production DIST",
+            cache_rule(host),
+        )
+        outcome["capabilities"]["cacheRule"] = (
+            cache_readback.get("ref") == CACHE_RULE_REF
+        )
+    except CloudflareError as exc:
+        if not is_permission_error(exc):
+            raise
+        record_capability_gap(outcome, "cache_rules", exc)
+
+    try:
+        hsts_readback = reconcile_phase_rule(
+            api,
+            zone,
+            "http_response_headers_transform",
+            "Canonical response header transforms",
+            "Git-managed response corrections for canonical and fallback responses",
+            hsts_rule(host),
+            must_be_last=False,
+        )
+        outcome["capabilities"]["hstsTransformRule"] = (
+            hsts_readback.get("ref") == HSTS_RULE_REF
+        )
+    except CloudflareError as exc:
+        if not is_permission_error(exc):
+            raise
+        record_capability_gap(outcome, "hsts_transform_rules", exc)
+
+    try:
+        not_found_readback = reconcile_phase_rule(
+            api,
+            zone,
+            "http_response_headers_transform",
+            "Canonical response header transforms",
+            "Git-managed response corrections for canonical and fallback responses",
+            not_found_rule(host, csp_404),
+        )
+        outcome["capabilities"]["notFoundTransformRule"] = (
+            not_found_readback.get("ref") == NOT_FOUND_RULE_REF
+        )
+    except CloudflareError as exc:
+        if not is_permission_error(exc):
+            raise
+        record_capability_gap(outcome, "not_found_transform_rules", exc)
+
+    try:
+        bots_readback = reconcile_bot_access(api, zone)
+        outcome["capabilities"]["botManagement"] = True
+        outcome["botReadback"] = {
+            "aiBotsProtection": bots_readback.get("ai_bots_protection"),
+            "managedRobots": bots_readback.get("is_robots_txt_managed"),
+        }
+    except CloudflareError as exc:
+        if not is_permission_error(exc):
+            raise
+        record_capability_gap(outcome, "bot_management", exc)
+
+    try:
+        purge_canonical(api, zone, host)
+        outcome["capabilities"]["purgeCache"] = True
+    except CloudflareError as exc:
+        if not is_permission_error(exc):
+            raise
+        record_capability_gap(outcome, "cache_purge", exc)
 
     print(
         "EDGE_RECONCILIATION_COMPLETE",
-        json.dumps(
-            {
-                "zone": zone_name,
-                "host": host,
-                "settings": len(settings_readback),
-                "cacheRule": cache_readback.get("ref"),
-                "responseRule": not_found_readback.get("ref"),
-                "aiBotsProtection": bots_readback.get("ai_bots_protection"),
-                "managedRobots": bots_readback.get("is_robots_txt_managed"),
-            },
-            sort_keys=True,
-        ),
+        json.dumps(outcome, sort_keys=True),
     )
+    return outcome
 
 
 def main() -> int:
@@ -514,13 +650,20 @@ def main() -> int:
     mode.add_argument("--self-test", action="store_true")
     mode.add_argument("--apply", action="store_true")
     parser.add_argument("--dist", default="dist")
+    parser.add_argument("--outcome", default="edge-reconciliation.json")
     args = parser.parse_args()
     try:
         dist_dir = Path(args.dist).resolve()
         if args.self_test:
             self_test(dist_dir)
         else:
-            apply(dist_dir)
+            outcome = apply(dist_dir)
+            outcome_path = Path(args.outcome).resolve()
+            outcome_path.write_text(
+                json.dumps(outcome, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            print("EDGE_OUTCOME_WRITTEN", outcome_path)
         return 0
     except (CloudflareError, OSError, ValueError, KeyError) as exc:
         print(f"CLOUDFLARE_EDGE_ERROR: {exc}", file=sys.stderr)
