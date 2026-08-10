@@ -15,18 +15,23 @@ for(const candidate of chromeCandidates)if(await access(candidate,fsConstants.X_
 if(!chromePath)fail('Chrome/Chromium executable not found; set CHROME_PATH');
 
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.jsonld':'application/ld+json; charset=utf-8','.xml':'application/xml; charset=utf-8','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.webp':'image/webp','.avif':'image/avif','.woff2':'font/woff2','.mp4':'video/mp4','.webm':'video/webm','.vtt':'text/vtt; charset=utf-8','.ttl':'text/turtle; charset=utf-8','.txt':'text/plain; charset=utf-8','.md':'text/markdown; charset=utf-8','.csv':'text/csv; charset=utf-8'};
-const cssWaiters=[];let releaseCss=false;
+const sourceHtml=await readFile(path.join(dist,'index.html'),'utf8');
+const deferredLinkPattern=/<link\b[^>]*\bdata-deferred-stylesheet\b[^>]*>/i;
+const deferredTag=sourceHtml.match(deferredLinkPattern)?.[0];
+const deferredHref=(deferredTag?.match(/\bhref=["']([^"']+)["']/i)||[])[1];
+if(!deferredTag||!deferredHref)fail('deferred stylesheet link missing from DIST HTML');
+const gateTag=deferredTag.replace(/\s+href=["'][^"']+["']/i,'').replace(/\s+as=["']style["']/i,'').replace(/\bdata-deferred-stylesheet\b/i,`data-deferred-stylesheet data-gate-href="${deferredHref}"`);
+const gateHtml=sourceHtml.replace(deferredTag,gateTag);
 const server=createServer(async(req,res)=>{
   try{
     const url=new URL(req.url||'/','http://127.0.0.1');
     let rel=decodeURIComponent(url.pathname).replace(/^\/+/, '');
-    if(!rel)rel='index.html';
+    if(!rel||rel==='index.html'){const body=Buffer.from(gateHtml);res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Content-Length':body.length,'Cache-Control':'no-store'});return res.end(body)}
     let abs=path.resolve(dist,rel);
     if(abs!==dist&&!abs.startsWith(dist+path.sep))return res.writeHead(403).end('Forbidden');
     let s=await stat(abs).catch(()=>null);
     if(s?.isDirectory()){abs=path.join(abs,'index.html');s=await stat(abs).catch(()=>null)}
     if(!s?.isFile())return res.writeHead(404,{'Content-Type':'text/plain'}).end('Not found');
-    if(/\/assets\/site\.[0-9a-f]{12}\.css$/i.test(url.pathname)&&!releaseCss)await new Promise(resolve=>cssWaiters.push(resolve));
     const ext=path.extname(abs).toLowerCase();
     res.writeHead(200,{'Content-Type':mime[ext]||'application/octet-stream','Content-Length':s.size,'Cache-Control':'no-store'});
     createReadStream(abs).pipe(res);
@@ -64,7 +69,6 @@ const compareRect=(name,a,b,props=['x','y','width','height','paddingTop','paddin
 const widths=[320,360,390,430];
 try{
   for(const width of widths){
-    releaseCss=false;
     const cdp=await openPage();await cdp.send('Page.enable');await cdp.send('Runtime.enable');await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:true});
     const domReady=cdp.wait('Page.domContentEventFired',20000);await cdp.send('Page.navigate',{url:`http://127.0.0.1:${serverPort}/?gate=${width}`});await domReady;
     await evalValue(cdp,'new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
@@ -72,8 +76,8 @@ try{
     await evalValue(cdp,`(()=>{window.__gateCls=0;new PerformanceObserver(list=>{for(const e of list.getEntries())if(!e.hadRecentInput)window.__gateCls+=e.value}).observe({type:'layout-shift'});return true})()`);
     if(before.stylesheetRel!=='preload')fail(`${width}px deferred stylesheet activated before initial snapshot`);
     if(before.scrollWidth>before.innerWidth+1)fail(`${width}px horizontal overflow before deferred CSS: ${before.scrollWidth}/${before.innerWidth}`);
-    releaseCss=true;while(cssWaiters.length)cssWaiters.shift()();
-    for(let i=0;i<100;i++){const active=await evalValue(cdp,`document.querySelector('link[data-deferred-stylesheet]')?.rel==='stylesheet'&&[...document.styleSheets].some(s=>/\/assets\/site\.[0-9a-f]{12}\.css$/.test(s.href||''))`);if(active)break;if(i===99)fail(`${width}px deferred stylesheet did not activate`);await delay(50)}
+    await evalValue(cdp,`(()=>{const l=document.querySelector('link[data-deferred-stylesheet]');if(!l||!l.dataset.gateHref)throw new Error('gate href missing');l.href=l.dataset.gateHref;l.rel='stylesheet';l.removeAttribute('data-gate-href');return l.href})()`);
+    for(let i=0;i<200;i++){const active=await evalValue(cdp,`[...document.styleSheets].some(s=>/\/assets\/site\.[0-9a-f]{12}\.css$/.test(s.href||''))`);if(active)break;if(i===199)fail(`${width}px deferred stylesheet did not activate`);await delay(50)}
     await evalValue(cdp,'new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
     const after=await evalValue(cdp,snapshotExpression),cls=await evalValue(cdp,'window.__gateCls||0');
     compareRect(`${width}px main`,before.main,after.main,['x','y','width','paddingTop','paddingRight','paddingBottom','paddingLeft']);
@@ -90,8 +94,7 @@ try{
     cdp.ws.close();
     console.log(`CSS_CONVERGENCE width=${width} cls=${cls.toFixed(6)} main=${before.main.width.toFixed(2)} dockTop=${before.top.width.toFixed(2)}`);
   }
-  console.log('Browser CSS convergence validated at 320/360/390/430px with deferred stylesheet held until after initial geometry capture.');
+  console.log('Browser CSS convergence validated at 320/360/390/430px with deferred stylesheet suppressed until after initial geometry capture.');
 }finally{
-  releaseCss=true;while(cssWaiters.length)cssWaiters.shift()();
   server.close();chrome.kill('SIGTERM');await delay(150).catch(()=>{});await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }
