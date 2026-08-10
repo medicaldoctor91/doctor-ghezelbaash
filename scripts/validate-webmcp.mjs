@@ -38,32 +38,47 @@ async function findChrome(){
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 async function jsonEndpoint(port){for(let i=0;i<60;i++){try{return await (await fetch(`http://127.0.0.1:${port}/json`,{cache:'no-store'})).json()}catch{await delay(250)}}fail('Chrome DevTools endpoint did not become ready')}
 async function cdpSession(wsUrl){
-  const ws=new WebSocket(wsUrl),pending=new Map();let id=0;
+  const ws=new WebSocket(wsUrl),pending=new Map(),events=[];let id=0;
   await new Promise((resolve,reject)=>{ws.addEventListener('open',resolve,{once:true});ws.addEventListener('error',reject,{once:true})});
-  ws.addEventListener('message',e=>{const m=JSON.parse(String(e.data));if(m.id&&pending.has(m.id)){const {resolve,reject}=pending.get(m.id);pending.delete(m.id);m.error?reject(new Error(m.error.message||'CDP error')):resolve(m.result)}});
+  ws.addEventListener('message',e=>{const m=JSON.parse(String(e.data));if(m.id&&pending.has(m.id)){const {resolve,reject}=pending.get(m.id);pending.delete(m.id);m.error?reject(new Error(m.error.message||'CDP error')):resolve(m.result)}else if(m.method)events.push(m)});
   const call=(method,params={})=>new Promise((resolve,reject)=>{const n=++id;pending.set(n,{resolve,reject});ws.send(JSON.stringify({id:n,method,params}))});
-  return {call,close:()=>ws.close()};
+  return {call,events,close:()=>ws.close()};
+}
+async function waitForEvent(cdp,method,predicate=()=>true,timeoutMs=6000){
+  const started=Date.now();
+  while(Date.now()-started<timeoutMs){const hit=cdp.events.find(e=>e.method===method&&predicate(e.params||{}));if(hit)return hit.params;await delay(50)}
+  fail(`Timed out waiting for Chrome DevTools ${method}`);
 }
 async function chromeContract(target){
   const chrome=await findChrome();if(!chrome)fail('Chrome executable unavailable for required WebMCP runtime verification');
   const profile=await mkdtemp(path.join(os.tmpdir(),'ghezelbash-webmcp-')),port=9337;
   const child=spawn(chrome,['--headless=new','--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--no-first-run','--remote-allow-origins=*',`--remote-debugging-port=${port}`,`--user-data-dir=${profile}`,'--enable-experimental-web-platform-features',target],{stdio:'ignore'});
   try{
-    const pages=await jsonEndpoint(port),page=pages.find(x=>x.type==='page');if(!page?.webSocketDebuggerUrl)fail('Chrome page DevTools target unavailable');
+    const pages=await jsonEndpoint(port),targetUrl=new URL(target).href,page=pages.find(x=>x.type==='page'&&x.url===targetUrl)||pages.find(x=>x.type==='page'&&x.url?.startsWith(targetUrl))||pages.find(x=>x.type==='page');
+    if(!page?.webSocketDebuggerUrl)fail('Chrome page DevTools target unavailable');
     const cdp=await cdpSession(page.webSocketDebuggerUrl);
     try{
       for(let i=0;i<40;i++){const r=await cdp.call('Runtime.evaluate',{expression:'document.readyState',returnByValue:true});if(r.result?.value==='complete')break;await delay(250)}
       await delay(250);
-      const expression=`(async()=>{const mc=document.modelContext;if(!mc)return {error:'document.modelContext unavailable'};const tools=await mc.getTools();const tool=tools.find(t=>t.name===${JSON.stringify(TOOL_NAME)});if(!tool)return {error:'expected tool not registered',tools:tools.map(t=>t.name)};const schema=typeof tool.inputSchema==='string'?JSON.parse(tool.inputSchema):tool.inputSchema;let raw;try{raw=await mc.executeTool(tool,JSON.stringify({query:'بوتاکس'}))}catch(e){return {error:e.name+': '+e.message,tool:{name:tool.name,description:tool.description,inputSchema:schema}}}return {tool:{name:tool.name,description:tool.description,inputSchema:schema},raw,dialogOpen:document.getElementById('guide-search')?.open===true}})()`;
-      const r=await cdp.call('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(r.exceptionDetails)fail(`Chrome WebMCP evaluation exception: ${r.exceptionDetails.text||'unknown'}`);
-      const v=r.result?.value;if(!v||v.error)fail(`Chrome WebMCP runtime failed: ${v?.error||'empty result'}`);
-      if(v.tool?.name!==TOOL_NAME||v.tool?.description!==TOOL_DESCRIPTION)fail('Chrome registered tool identity/description drift');
-      const schema=v.tool?.inputSchema,query=schema?.properties?.query;if(schema?.type!=='object'||query?.type!=='string'||query?.description!==PARAM_DESCRIPTION||!Array.isArray(schema.required)||!schema.required.includes('query'))fail('Chrome-generated WebMCP inputSchema drift');
-      const output=typeof v.raw==='string'?JSON.parse(v.raw):v.raw;if(output?.query!=='بوتاکس'||!Number.isInteger(output?.count)||output.count<1||!Array.isArray(output.results)||output.results.length!==output.count)fail('Chrome WebMCP structured search output drift');
+      await cdp.call('WebMCP.enable');
+      const added=await waitForEvent(cdp,'WebMCP.toolsAdded',p=>Array.isArray(p.tools)&&p.tools.some(t=>t.name===TOOL_NAME));
+      const tools=cdp.events.filter(e=>e.method==='WebMCP.toolsAdded').flatMap(e=>e.params?.tools||[]),matching=tools.filter(t=>t.name===TOOL_NAME);
+      if(matching.length!==1)fail(`Chrome registered ${matching.length} instances of ${TOOL_NAME}; expected exactly one`);
+      const tool=matching[0],schema=tool.inputSchema,query=schema?.properties?.query;
+      if(tool.description!==TOOL_DESCRIPTION)fail('Chrome registered tool description drift');
+      if(schema?.type!=='object'||query?.type!=='string'||query?.description!==PARAM_DESCRIPTION||!Array.isArray(schema.required)||!schema.required.includes('query'))fail('Chrome-generated WebMCP inputSchema drift');
+      if(tool.annotations?.autosubmit!==true)fail('Chrome declarative WebMCP autosubmit annotation missing');
+      if(!Number.isInteger(tool.backendNodeId)||tool.backendNodeId<1)fail('Chrome did not expose a declarative WebMCP backendNodeId');
+      const frameTree=await cdp.call('Page.getFrameTree'),frameId=tool.frameId||frameTree.frameTree?.frame?.id;if(!frameId)fail('Chrome WebMCP main frame id unavailable');
+      const invocation=await cdp.call('WebMCP.invokeTool',{frameId,toolName:TOOL_NAME,input:{query:'بوتاکس'}});if(!invocation?.invocationId)fail('Chrome WebMCP invocation id unavailable');
+      const responded=await waitForEvent(cdp,'WebMCP.toolResponded',p=>p.invocationId===invocation.invocationId);
+      if(responded.status!=='Completed')fail(`Chrome WebMCP invocation failed with status ${responded.status}: ${responded.errorText||''}`);
+      const output=responded.output;if(output?.query!=='بوتاکس'||!Number.isInteger(output?.count)||output.count<1||!Array.isArray(output.results)||output.results.length!==output.count)fail('Chrome WebMCP structured search output drift');
       for(const hit of output.results){if(!hit?.title||!hit?.id||![2,3,4].includes(hit.headingLevel)||hit.hash!==`#${hit.id}`||!String(hit.url||'').includes(`#${hit.id}`))fail('Chrome WebMCP result anchor contract drift')}
-      return {chrome,path:chrome,tool:TOOL_NAME,count:output.count,schema,dialogOpened:v.dialogOpen};
+      const dialog=await cdp.call('Runtime.evaluate',{expression:"document.getElementById('guide-search')?.open===true",returnByValue:true});if(dialog.result?.value!==true)fail('Chrome WebMCP invocation did not expose the existing guide-search UI');
+      return {chrome,tool:TOOL_NAME,count:output.count,schema,autosubmit:true,declarative:true,dialogOpened:true};
     }finally{cdp.close()}
-  }finally{child.kill('SIGTERM');await delay(100).catch(()=>{});await rm(profile,{recursive:true,force:true}).catch(()=>{})}
+  }finally{child.kill('SIGTERM');await delay(200).catch(()=>{});await rm(profile,{recursive:true,force:true}).catch(()=>{})}
 }
 
 let html,label;
