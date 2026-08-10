@@ -1,10 +1,9 @@
 import path from 'node:path';
 import os from 'node:os';
-import net from 'node:net';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:http';
 import {createReadStream,constants as fsConstants} from 'node:fs';
-import {access,mkdtemp,rm,stat} from 'node:fs/promises';
+import {access,mkdtemp,readFile,rm,stat} from 'node:fs/promises';
 import {setTimeout as delay} from 'node:timers/promises';
 
 const root=process.cwd(),dist=path.resolve(root,process.argv[2]||'dist');
@@ -35,15 +34,16 @@ const server=createServer(async(req,res)=>{
 });
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const serverPort=server.address().port;
-const freePort=await new Promise((resolve,reject)=>{const s=net.createServer();s.once('error',reject);s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>resolve(p))})});
 const profile=await mkdtemp(path.join(os.tmpdir(),'ghezelbaash-css-gate-'));
-const chrome=spawn(chromePath,[`--remote-debugging-port=${freePort}`,'--remote-debugging-address=127.0.0.1',`--user-data-dir=${profile}`,'--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-component-update','--disable-sync','--metrics-recording-only','about:blank'],{stdio:['ignore','ignore','pipe']});
+const chrome=spawn(chromePath,['--remote-debugging-port=0','--remote-debugging-address=127.0.0.1',`--user-data-dir=${profile}`,'--headless=new','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-component-update','--disable-sync','--metrics-recording-only','about:blank'],{stdio:['ignore','ignore','pipe']});
 let chromeErr='';chrome.stderr.on('data',d=>{chromeErr+=d.toString()});
 
 async function json(url,options){const r=await fetch(url,options);if(!r.ok)throw new Error(`${r.status} ${url}`);return r.json()}
-let version;
-for(let i=0;i<80;i++){try{version=await json(`http://127.0.0.1:${freePort}/json/version`);break}catch{await delay(100)}}
-if(!version)fail(`Chrome DevTools endpoint did not start: ${chromeErr.slice(-1200)}`);
+let devtoolsPort;
+for(let i=0;i<120;i++){try{const active=(await readFile(path.join(profile,'DevToolsActivePort'),'utf8')).trim().split(/\r?\n/);devtoolsPort=Number(active[0]);if(Number.isInteger(devtoolsPort)&&devtoolsPort>0)break}catch{}await delay(100)}
+if(!devtoolsPort)fail(`Chrome DevToolsActivePort did not appear: ${chromeErr.slice(-1200)}`);
+let version;for(let i=0;i<40;i++){try{version=await json(`http://127.0.0.1:${devtoolsPort}/json/version`);break}catch{await delay(100)}}
+if(!version)fail(`Chrome DevTools endpoint did not respond on ${devtoolsPort}: ${chromeErr.slice(-1200)}`);
 
 class Cdp{
   constructor(ws){this.ws=ws;this.seq=0;this.pending=new Map();this.waiters=new Map();ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.id){const p=this.pending.get(m.id);if(!p)return;this.pending.delete(m.id);m.error?p.reject(new Error(m.error.message)):p.resolve(m.result);return}const list=this.waiters.get(m.method)||[];this.waiters.delete(m.method);for(const r of list)r(m.params)}}
@@ -51,7 +51,7 @@ class Cdp{
   wait(method,timeout=10000){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error(`CDP timeout ${method}`)),timeout);const list=this.waiters.get(method)||[];list.push(params=>{clearTimeout(timer);resolve(params)});this.waiters.set(method,list)})}
 }
 async function openPage(){
-  const target=await json(`http://127.0.0.1:${freePort}/json/new?${encodeURIComponent('about:blank')}`,{method:'PUT'});
+  const target=await json(`http://127.0.0.1:${devtoolsPort}/json/new?${encodeURIComponent('about:blank')}`,{method:'PUT'});
   const ws=new WebSocket(target.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{ws.onopen=resolve;ws.onerror=()=>reject(new Error('CDP websocket open failed'))});
   return new Cdp(ws);
 }
