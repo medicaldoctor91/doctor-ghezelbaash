@@ -3,6 +3,8 @@ name: Cloudflare Places egress probe
 on:
   push:
     branches: [tmp/test-maps-key]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
