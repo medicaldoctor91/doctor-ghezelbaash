@@ -1,0 +1,68 @@
+name: Main build diagnostic
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: main-build-diagnostic
+  cancel-in-progress: true
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact main
+        uses: actions/checkout@v4
+        with:
+          path: source
+          fetch-depth: 1
+      - name: Checkout result branch
+        uses: actions/checkout@v4
+        with:
+          ref: perf-results
+          path: results
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked dependencies
+        working-directory: source
+        run: npm ci --ignore-scripts
+      - name: Build and capture exact output
+        id: build
+        shell: bash
+        run: |
+          set +e
+          cd source
+          npm run build > ../results/performance/main-build.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          echo "$code" > ../results/performance/main-build-exit-code.txt
+          exit 0
+      - name: Persist result
+        shell: bash
+        run: |
+          set -euo pipefail
+          sha=$(git -C source rev-parse HEAD)
+          export SOURCE_SHA="$sha" EXIT_CODE="${{ steps.build.outputs.exit_code }}"
+          python - <<'PY' > results/performance/main-build-status.json
+          import json, os, datetime
+          print(json.dumps({'source_sha':os.environ['SOURCE_SHA'],'exit_code':int(os.environ['EXIT_CODE']),'tested_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat()},indent=2))
+          PY
+          tail -n 220 results/performance/main-build.log > results/performance/main-build-tail.log
+          cd results
+          git config user.name "ghezelbaash-performance-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add performance/main-build.log performance/main-build-tail.log performance/main-build-exit-code.txt performance/main-build-status.json
+          git commit -m "Record main build diagnostic $sha" || exit 0
+          git push origin HEAD:perf-results
