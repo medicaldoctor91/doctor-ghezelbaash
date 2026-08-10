@@ -2,8 +2,14 @@
 import mainHeadRaw from '../data/templates/main-head.html?raw';
 interface Props { title: string; description: string; robots: string; canonicalURL: URL; isMain?: boolean; }
 const { title, description, robots, canonicalURL, isMain=false } = Astro.props;
+const viewportPattern=/^<meta\b(?=[^>]*\bname="viewport")[^>]*\/>/i;
+const heroPreloadPattern=/<link\b(?=[^>]*\brel="preload")(?=[^>]*\bas="image")(?=[^>]*\bfetchpriority="high")(?=[^>]*\bimagesrcset=)(?=[^>]*saeed-ghezelbash-portrait-delivery-640)[^>]*\/>/i;
+const viewportTag=mainHeadRaw.match(viewportPattern)?.[0]??'';
+const heroPreloadTag=mainHeadRaw.match(heroPreloadPattern)?.[0]??'';
+if(isMain&&(!viewportTag||!heroPreloadTag||mainHeadRaw.match(new RegExp(heroPreloadPattern.source,'gi'))?.length!==1))throw new Error('Main responsive Hero preload contract drift');
+const mainHeadWithoutCriticalHints=isMain?mainHeadRaw.replace(viewportTag,'').replace(heroPreloadTag,''):mainHeadRaw;
 ---
-{isMain ? <Fragment set:html={mainHeadRaw} /> : <>
+{isMain ? <><Fragment set:html={viewportTag} /><Fragment set:html={heroPreloadTag} /><Fragment set:html={mainHeadWithoutCriticalHints} /></> : <>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>{title}</title><meta name="description" content={description} /><meta name="robots" content={robots} />
 <meta name="author" content="دکتر سعید قزلباش" /><meta name="theme-color" content="#075244" />
