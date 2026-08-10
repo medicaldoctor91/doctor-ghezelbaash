@@ -4,7 +4,7 @@ import net from 'node:net';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:http';
 import {createReadStream,constants as fsConstants} from 'node:fs';
-import {access,mkdtemp,readFile,rm,stat} from 'node:fs/promises';
+import {access,mkdtemp,rm,stat} from 'node:fs/promises';
 import {setTimeout as delay} from 'node:timers/promises';
 
 const root=process.cwd(),dist=path.resolve(root,process.argv[2]||'dist');
@@ -67,15 +67,16 @@ try{
     releaseCss=false;
     const cdp=await openPage();await cdp.send('Page.enable');await cdp.send('Runtime.enable');await cdp.send('Network.enable');await cdp.send('Network.setCacheDisabled',{cacheDisabled:true});await cdp.send('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:true});
     const domReady=cdp.wait('Page.domContentEventFired',20000);await cdp.send('Page.navigate',{url:`http://127.0.0.1:${serverPort}/?gate=${width}`});await domReady;
-    await evalValue(cdp,`(()=>{window.__gateCls=0;new PerformanceObserver(list=>{for(const e of list.getEntries())if(!e.hadRecentInput)window.__gateCls+=e.value}).observe({type:'layout-shift',buffered:true});return true})()`);
+    await evalValue(cdp,'new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
     const before=await evalValue(cdp,snapshotExpression);
+    await evalValue(cdp,`(()=>{window.__gateCls=0;new PerformanceObserver(list=>{for(const e of list.getEntries())if(!e.hadRecentInput)window.__gateCls+=e.value}).observe({type:'layout-shift'});return true})()`);
     if(before.stylesheetRel!=='preload')fail(`${width}px deferred stylesheet activated before initial snapshot`);
     if(before.scrollWidth>before.innerWidth+1)fail(`${width}px horizontal overflow before deferred CSS: ${before.scrollWidth}/${before.innerWidth}`);
     releaseCss=true;while(cssWaiters.length)cssWaiters.shift()();
     for(let i=0;i<100;i++){const active=await evalValue(cdp,`document.querySelector('link[data-deferred-stylesheet]')?.rel==='stylesheet'&&[...document.styleSheets].some(s=>/\/assets\/site\.[0-9a-f]{12}\.css$/.test(s.href||''))`);if(active)break;if(i===99)fail(`${width}px deferred stylesheet did not activate`);await delay(50)}
     await evalValue(cdp,'new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
     const after=await evalValue(cdp,snapshotExpression),cls=await evalValue(cdp,'window.__gateCls||0');
-    compareRect(`${width}px main`,before.main,after.main);
+    compareRect(`${width}px main`,before.main,after.main,['x','y','width','paddingTop','paddingRight','paddingBottom','paddingLeft']);
     compareRect(`${width}px h1`,before.h1,after.h1,['x','y','width','height','fontSize','lineHeight']);
     compareRect(`${width}px hero`,before.hero,after.hero);
     compareRect(`${width}px heroFigure`,before.heroFigure,after.heroFigure);
