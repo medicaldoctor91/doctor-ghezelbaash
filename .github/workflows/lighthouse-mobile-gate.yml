@@ -39,7 +39,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY' > lh/summary.env
-          import json, statistics
+          import json
           rows=[]
           for i in range(1,4):
               d=json.load(open(f'lh/run-{i}.json'))
@@ -52,9 +52,7 @@ jobs:
                   'cls': a['cumulative-layout-shift']['numericValue'],
                   'si': a['speed-index']['numericValue'],
               })
-          scores=sorted(r['score'] for r in rows)
-          median=scores[1]
-          # Report the run whose score is the median; deterministic tie handling.
+          median=sorted(r['score'] for r in rows)[1]
           row=next(r for r in rows if r['score']==median)
           print(f"MEDIAN_SCORE={median}")
           print(f"FCP_MS={row['fcp']:.0f}")
@@ -86,13 +84,18 @@ jobs:
           if [ "$score" -lt 95 ]; then state=failure; fi
           desc="mobile ${score}; runs ${RUN_SCORES:-n/a}; LCP ${LCP_MS:-n/a}ms; TBT ${TBT_MS:-n/a}ms; CLS ${CLS:-n/a}"
           desc="${desc:0:140}"
+          export STATE="$state" DESC="$desc"
+          python - <<'PY' > lh/status.json
+          import json, os
+          print(json.dumps({
+              'state': os.environ['STATE'],
+              'context': 'lighthouse/mobile',
+              'description': os.environ['DESC'],
+          }))
+          PY
           curl -fsS -X POST \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             "https://api.github.com/repos/$REPO/statuses/$SHA" \
-            -d "$(python - <<PY
-          import json, os
-          print(json.dumps({'state':os.environ.get('state','success'),'context':'lighthouse/mobile','description':os.environ.get('desc','mobile lighthouse')}))
-          PY
-          )"
+            --data-binary @lh/status.json
