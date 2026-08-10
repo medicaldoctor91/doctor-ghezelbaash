@@ -17,8 +17,8 @@ const supportRaw=await readFile(path.join(data,'semantic/support-graph.json'),'u
 const criticalMobileCss=await readFile(path.join(root,'src/styles/critical-mobile.css'),'utf8'),documentHeadSource=await readFile(path.join(root,'src/components/DocumentHead.astro'),'utf8');
 const deployWorkflow=await readFile(path.join(root,'.github/workflows/deploy-cloudflare-pages.yml'),'utf8'),cloudflareEdgeSource=await readFile(path.join(root,'scripts/configure-cloudflare-edge.py'),'utf8');
 if(/\/accounts\/\{account\}\/tokens/.test(deployWorkflow))fail('Deploy workflow must never mint temporary Cloudflare API tokens');
-if(!deployWorkflow.includes('python scripts/configure-cloudflare-edge.py --apply')||!deployWorkflow.includes('npm run verify:production'))fail('Deploy workflow is missing edge reconciliation or full production verification');
-for(const invariant of ['ghezelbaash_canonical_dist_cache_v1','ghezelbaash_real_404_headers_v1','http.response.code eq 404','crawler_hints','ai_bots_protection','respect_origin'])if(!cloudflareEdgeSource.includes(invariant))fail(`Cloudflare edge contract missing ${invariant}`);
+if(!deployWorkflow.includes('python scripts/configure-cloudflare-edge.py --apply')||!deployWorkflow.includes('--outcome edge-reconciliation.json')||!deployWorkflow.includes('EDGE_RECONCILIATION_OUTCOME: edge-reconciliation.json')||!deployWorkflow.includes('npm run verify:production'))fail('Deploy workflow is missing capability-aware edge reconciliation or full production verification');
+for(const invariant of ['ghezelbaash_canonical_dist_cache_v1','ghezelbaash_canonical_hsts_v1','ghezelbaash_real_404_headers_v1','http.response.code eq 404','crawler_hints','ai_bots_protection','respect_origin','scopeGaps'])if(!cloudflareEdgeSource.includes(invariant))fail(`Cloudflare edge contract missing ${invariant}`);
 if(pkg.version!==inv.release||release.release!==inv.release) fail('Release mismatch');
 if(release.dateModified!==inv.date) fail(`Release freshness drift ${release.dateModified}/${inv.date}`);
 if(!pkg.engines.node.includes('24.18.0')) fail('Node 24.18.0 pin missing');
