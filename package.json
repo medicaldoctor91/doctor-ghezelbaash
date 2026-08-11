@@ -1,6 +1,6 @@
 {
   "name": "doctor-ghezelbaash-max-power-v1",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.5.2",
@@ -8,7 +8,7 @@
     "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
     "prepare:generated": "npm run media:sync && npm run rdf:deps && npm run rdf:generate && npm run generate",
     "dev": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro dev",
-    "check": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
+    "check": "npm run validate:release-contract && npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
     "generate": "node scripts/generate-projections.mjs",
     "rdf:generate": "PYTHONPATH=.python-deps python scripts/generate-rdf.py",
     "indexnow:prepare": "node scripts/write-indexnow-key.mjs",
@@ -23,12 +23,13 @@
     "validate:reproducibility": "node scripts/validate-reproducibility.mjs",
     "render:calibration:apply": "node scripts/apply-render-calibration.mjs",
     "build": "npm run prepare:generated && npm run validate:source && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run indexnow:prepare && node scripts/finalize-dist.mjs && npm run validate:cloudflare && node scripts/validate-dist.mjs && npm run preflight:cloudflare",
-    "release:prepare": "npm run check && npm run validate:source && npm run validate:media && npm run validate:evidence && npm run validate:shacl && npm run validate:reproducibility",
+    "release:prepare": "npm run validate:release-contract && npm run check && npm run validate:source && npm run validate:media && npm run validate:evidence && npm run validate:shacl && npm run validate:reproducibility",
     "release": "npm run release:prepare && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run indexnow:prepare && node scripts/finalize-dist.mjs && npm run validate:cloudflare && node scripts/validate-dist.mjs && node scripts/package-dist.mjs && node scripts/package-source.mjs && node scripts/package-complete.mjs",
     "package:source": "node scripts/package-source.mjs",
     "package:complete": "node scripts/package-complete.mjs",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "verify:production": "node scripts/verify-redirects.mjs && node scripts/verify-production.mjs"
+    "verify:production": "node scripts/verify-redirects.mjs && node scripts/verify-production.mjs",
+    "validate:release-contract": "node scripts/validate-release-contract.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",

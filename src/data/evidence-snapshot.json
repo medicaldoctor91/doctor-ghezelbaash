@@ -1,5 +1,5 @@
 {
-  "release": "1.0.0",
+  "release": "1.1.0",
   "observedAt": "2026-08-07",
   "note": "Release-time evidence health snapshot. Network-dependent live checks are intentionally outside the Cloudflare build path.",
   "primaryEntity": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
@@ -392,7 +392,7 @@
     {
       "id": "https://www.ghezelbaash.ir/#evidence-doi-org-10-5281-zenodo-18765169",
       "tier": "B",
-      "url": "https://doi.org/10.5281/zenodo.18765169",
+      "url": "https://doi.org/10.5281/zenodo.21886743",
       "status": "source-cited-in-canonical-content",
       "verifiedAt": "2026-08-07",
       "expectedMarkers": []

@@ -124,8 +124,8 @@ const ttl=await readFile(path.join(data,'semantic/knowledge-graph.ttl'));
 if(rdfLock.release!==inv.release||rdfLock.jsonldSha256!==sha(Buffer.from(graphText))||rdfLock.ttlSha256!==sha(ttl)||rdfLock.triples!==inv.externalRdfTripleCount) fail('RDF lock mismatch');
 
 
-// Public release/entity truth: Version 1.0.0 must be coherent across canonical source surfaces.
-if(inv.release!=='1.0.0'||release.release!=='1.0.0') fail('Public release identity must be Version 1.0.0');
+// Public release/entity truth: Version 1.1.0 must be coherent across canonical source surfaces.
+if(inv.release!=='1.1.0'||release.release!=='1.1.0') fail('Public release identity must be Version 1.1.0');
 const publicReleaseFiles=['package.json','src/data/release.json','src/data/release-invariants.json','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/content-source/100-rc099.html','src/data/semantic/knowledge-graph.jsonld','public/favicon.svg','public/safari-pinned-tab.svg'];
 for(const rel of publicReleaseFiles){const txt=await readFile(path.join(root,rel),'utf8');if(/\b5\.0\.0\b|\bVersion 5\b|\bRelease 5\b/.test(txt))fail(`Legacy release-version residue: ${rel}`)}
 if(content.includes('github.ghezelbaash.ir')) fail('Broken/ambiguous project interface must not be promoted by canonical HTML');
@@ -133,8 +133,8 @@ if(JSON.stringify(graph).includes('github.ghezelbaash.ir')||byId.has(`${release.
 if(!content.includes('href="https://www.wikidata.org/wiki/Q140288589">Dr. Saeed Ghezelbash Aesthetic Clinic</a>')) fail('Q140288589 visible entity label drift');
 if(content.includes('href="https://www.wikidata.org/wiki/Q140288589">Doctor Ghezelbash structured-data organization</a>')) fail('Clinic Wikidata ID mislabeled as structured-data organization');
 const projectNode=byId.get(`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`),zenodoNode=byId.get(`${release.canonicalUrl}#project-zenodo-release`),datasetNode=byId.get(`${release.canonicalUrl}graph.jsonld#dataset`);
-for(const [label,node] of [['project',projectNode],['zenodo',zenodoNode],['dataset',datasetNode]])if(node?.version!=='1.0.0')fail(`${label} Version 1.0.0 drift`);
-if(projectNode?.dateModified!=='2026-08-08')fail('Project dateModified drift');
+for(const [label,node] of [['project',projectNode],['zenodo',zenodoNode],['dataset',datasetNode]])if(node?.version!==inv.release)fail(`${label} Version ${inv.release} drift`);
+if(projectNode?.dateModified!==inv.date)fail('Project dateModified drift');
 if(zenodoNode?.dateModified)fail('Zenodo archival snapshot must not inherit live-source dateModified');
 
 // Media: all metadata preserved but stale Place ID forbidden; fingerprints must equal bytes.
