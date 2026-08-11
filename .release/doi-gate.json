@@ -1,0 +1,10 @@
+{
+  "stage": "DOI_GATE_LOCKED",
+  "release": "1.1.0",
+  "conceptDoi": "10.5281/zenodo.18765168",
+  "versionDoi": "10.5281/zenodo.21886743",
+  "recordId": "21886743",
+  "draftApi": "https://zenodo.org/api/deposit/depositions/21886743",
+  "coreFrozen": false,
+  "integrity": "PASS"
+}
