@@ -1,4 +1,4 @@
-name: One-shot doctor Maps Place ID redirect
+name: One-shot root cleanup 3 and 4 equivalence
 
 on:
   push:
@@ -7,210 +7,58 @@ on:
       - '.github/workflows/cloudflare-doctor-place-redirect.yml'
 
 permissions:
-  contents: read
-
-env:
-  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
-  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-  ZONE_NAME: ghezelbaash.ir
-  REDIRECT_HOST: doctor.ghezelbaash.ir
-  REDIRECT_TARGET: https://www.google.com/maps/search/?api=1&query=Dr.+Saeed+Ghezelbash+Aesthetic+Clinic&query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas
+  contents: write
 
 jobs:
-  update-and-verify:
+  refactor-and-prove:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
-      - name: Reconcile exact Cloudflare redirect and verify live
-        shell: bash
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/root-cleanup-3-4-20260811
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - name: Build baseline bytes
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json, os, time, urllib.error, urllib.parse, urllib.request
-
-          API='https://api.cloudflare.com/client/v4'
-          token=os.environ['CLOUDFLARE_API_TOKEN'].strip()
-          account=os.environ['CLOUDFLARE_ACCOUNT_ID'].strip()
-          zone_name=os.environ['ZONE_NAME'].strip()
-          host=os.environ['REDIRECT_HOST'].strip()
-          target=os.environ['REDIRECT_TARGET'].strip()
-          old_cid='12350483144643112463'
-          headers={
-              'Authorization':f'Bearer {token}',
-              'Accept':'application/json',
-              'Content-Type':'application/json',
-              'User-Agent':'ghezelbaash-doctor-maps-redirect/1.0',
-          }
-
-          def call(method,path,body=None,ok=(200,)):
-              data=None if body is None else json.dumps(body,separators=(',',':')).encode()
-              req=urllib.request.Request(API+path,data=data,method=method,headers=headers)
-              try:
-                  with urllib.request.urlopen(req,timeout=45) as r:
-                      raw=r.read().decode('utf-8','replace')
-                      payload=json.loads(raw) if raw else {}
-                      status=r.status
-              except urllib.error.HTTPError as e:
-                  raw=e.read().decode('utf-8','replace')
-                  try: payload=json.loads(raw) if raw else {}
-                  except Exception: payload={'raw':raw[:2000]}
-                  status=e.code
-              if status not in ok or payload.get('success') is not True:
-                  raise SystemExit(f'Cloudflare API failure {method} {path} HTTP {status}: {payload}')
-              return payload
-
-          def wait_op(payload):
-              op=(payload.get('result') or {}).get('operation_id')
-              if not op:
-                  return
-              for i in range(40):
-                  p=call('GET',f'/accounts/{account}/rules/lists/bulk_operations/{op}')
-                  state=(p.get('result') or {}).get('status')
-                  print('BULK_OPERATION',i+1,state)
-                  if state=='completed': return
-                  if state=='failed': raise SystemExit(f'Bulk redirect update failed: {p}')
-                  time.sleep(1)
-              raise SystemExit('Bulk redirect update timed out')
-
-          q=urllib.parse.urlencode({'name':zone_name,'account.id':account,'per_page':50})
-          zones=call('GET',f'/zones?{q}').get('result') or []
-          exact=[z for z in zones if z.get('name')==zone_name]
-          if len(exact)!=1:
-              raise SystemExit(f'Expected one exact zone, found {len(exact)}')
-          zone=str(exact[0]['id'])
-          print('ZONE',zone)
-
-          changed=0
-          single_ruleset=None
-          listing=call('GET',f'/zones/{zone}/rulesets').get('result') or []
-          candidates=[r for r in listing if r.get('kind')=='zone' and r.get('phase')=='http_request_dynamic_redirect']
-          if len(candidates)>1:
-              raise SystemExit('Multiple Single Redirect entry-point rulesets found')
-          if candidates:
-              single_ruleset=str(candidates[0]['id'])
-              full=call('GET',f'/zones/{zone}/rulesets/{single_ruleset}').get('result') or {}
-              rules=full.get('rules') or []
-              hits=[]
-              for r in rules:
-                  if r.get('action')!='redirect':
-                      continue
-                  expr=str(r.get('expression') or '')
-                  ap=json.dumps(r.get('action_parameters') or {},sort_keys=True)
-                  if host in expr or old_cid in ap:
-                      hits.append(r)
-              if len(hits)>1:
-                  raise SystemExit(f'Ambiguous Single Redirect matches: {[r.get("id") for r in hits]}')
-              if hits:
-                  r=hits[0]
-                  ap=dict(r.get('action_parameters') or {})
-                  fv=dict(ap.get('from_value') or {})
-                  fv['target_url']={'value':target}
-                  fv['status_code']=int(fv.get('status_code') or 301)
-                  fv['preserve_query_string']=False
-                  ap['from_value']=fv
-                  body={
-                      'action':'redirect',
-                      'action_parameters':ap,
-                      'expression':r.get('expression'),
-                      'description':r.get('description') or 'Redirect doctor.ghezelbaash.ir to exact Google Maps Place ID URL',
-                      'enabled':r.get('enabled',True),
-                  }
-                  if r.get('ref'):
-                      body['ref']=r['ref']
-                  call('PATCH',f'/zones/{zone}/rulesets/{single_ruleset}/rules/{r["id"]}',body)
-                  changed+=1
-                  print('UPDATED_SINGLE_REDIRECT',r.get('id'),'status=',fv['status_code'],'target=',target)
-
-          # Also reconcile any matching Bulk Redirect item so there is no stale CID definition.
-          lists=call('GET',f'/accounts/{account}/rules/lists?per_page=100').get('result') or []
-          for row in lists:
-              if row.get('kind')!='redirect':
-                  continue
-              list_id=str(row['id'])
-              all_items=[]
-              cursor=None
-              while True:
-                  params={'per_page':1000}
-                  if cursor:
-                      params['cursor']=cursor
-                  p=call('GET',f'/accounts/{account}/rules/lists/{list_id}/items?'+urllib.parse.urlencode(params))
-                  all_items.extend(p.get('result') or [])
-                  cursor=((p.get('result_info') or {}).get('cursors') or {}).get('after')
-                  if not cursor:
-                      break
-              local_hits=[]
-              replacement=[]
-              for item in all_items:
-                  rd=dict(item.get('redirect') or {})
-                  if not rd:
-                      continue
-                  src=str(rd.get('source_url') or '')
-                  dst=str(rd.get('target_url') or '')
-                  src_host=(urllib.parse.urlsplit(src).hostname or '').lower()
-                  if src_host==host.lower() or old_cid in dst:
-                      local_hits.append(item.get('id'))
-                      rd['target_url']=target
-                      rd['preserve_query_string']=False
-                  out={'redirect':rd}
-                  if item.get('comment') is not None:
-                      out['comment']=item.get('comment')
-                  replacement.append(out)
-              if local_hits:
-                  p=call('PUT',f'/accounts/{account}/rules/lists/{list_id}/items',replacement,ok=(200,201))
-                  wait_op(p)
-                  changed+=len(local_hits)
-                  print('UPDATED_BULK_REDIRECTS',row.get('name'),local_hits,'target=',target)
-
-          if changed==0:
-              desired={
-                  'ref':'doctor_ghezelbaash_maps_place_id_v1',
-                  'expression':f'(http.host eq "{host}")',
-                  'description':'Redirect doctor.ghezelbaash.ir to exact Google Maps Place ID URL',
-                  'action':'redirect',
-                  'action_parameters':{
-                      'from_value':{
-                          'target_url':{'value':target},
-                          'status_code':301,
-                          'preserve_query_string':False,
-                      }
-                  },
-                  'enabled':True,
-              }
-              if single_ruleset:
-                  desired_with_position=dict(desired)
-                  desired_with_position['position']={'index':1}
-                  call('POST',f'/zones/{zone}/rulesets/{single_ruleset}/rules',desired_with_position,ok=(200,201))
-                  print('CREATED_SINGLE_REDIRECT_IN_EXISTING_RULESET')
-              else:
-                  call('POST',f'/zones/{zone}/rulesets',{
-                      'name':'Doctor Maps redirect',
-                      'description':'Exact doctor subdomain redirect to Google Maps Place ID URL',
-                      'kind':'zone',
-                      'phase':'http_request_dynamic_redirect',
-                      'rules':[desired],
-                  },ok=(200,201))
-                  print('CREATED_SINGLE_REDIRECT_RULESET')
-
-          class NoRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self, req, fp, code, msg, headers, newurl):
-                  return None
-          opener=urllib.request.build_opener(NoRedirect)
-          expected=target
-          ok=False
-          for attempt in range(20):
-              probe=f'https://{host}/?_cf_place_probe={int(time.time())}'
-              req=urllib.request.Request(probe,headers={'User-Agent':'ghezelbaash-live-redirect-verifier/1.0','Cache-Control':'no-cache','Pragma':'no-cache'})
-              try:
-                  with opener.open(req,timeout=30) as r:
-                      code=r.status; location=r.headers.get('Location')
-              except urllib.error.HTTPError as e:
-                  code=e.code; location=e.headers.get('Location')
-              print('LIVE_VERIFY',attempt+1,'status=',code,'location=',location)
-              if code in (301,302,307,308) and location==expected:
-                  ok=True
-                  break
-              time.sleep(1)
-          if not ok:
-              raise SystemExit(f'Live redirect did not converge to expected target: {expected}')
-          print('DOCTOR_MAPS_REDIRECT_VERIFIED',expected)
-          PY
+          npm run build
+          cp dist/index.html /tmp/index.before
+          cp dist/llms.txt /tmp/llms.before
+          cp dist/knowledge.xml /tmp/knowledge.before
+          sha256sum /tmp/index.before /tmp/llms.before /tmp/knowledge.before
+          git reset --hard HEAD
+          git clean -fd -e .python-deps/
+      - name: Apply root cleanups 3 and 4
+        run: python scripts/tmp-root-cleanup-3-4.py
+      - name: Prove zero output drift
+        run: |
+          set -euo pipefail
+          npm run build
+          cmp -s /tmp/index.before dist/index.html
+          cmp -s /tmp/llms.before dist/llms.txt
+          cmp -s /tmp/knowledge.before dist/knowledge.xml
+          echo BYTE_EQ_INDEX=PASS
+          echo BYTE_EQ_LLMS=PASS
+          echo BYTE_EQ_KNOWLEDGE_UNTOUCHED=PASS
+          grep -F '{{EVIDENCE_TIER_DECLARATION}}' src/data/templates/llms.template.txt
+          grep -F 'Tier A = official/authority-control or first-order scholarly/local identity evidence; Tier B = major scholarly/professional corroboration; Tier C = secondary directory/media/local corroboration.' src/data/projections/llms.txt
+          grep -F '<dt><strong>Artifact integrity manifest</strong></dt><dd><a href="/artifact-manifest.json"' src/content-source/100-rc099.html
+          ! grep -F 'canonicalizeMachineResourceDefinitions' scripts/lib/assemble-content.mjs
+          ! grep -F "evidenceRaw from '../data/evidence-registry.json?raw'" src/pages/llms.txt.ts
+      - name: Commit proven cleanup to branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/content-source/100-rc099.html scripts/lib/assemble-content.mjs src/data/templates/llms.template.txt scripts/generate-projections.mjs src/pages/llms.txt.ts src/data/projections/llms.txt
+          git commit -m 'Root canonicalize machine mapping and evidence tiers'
+          git push origin HEAD:fix/root-cleanup-3-4-20260811
