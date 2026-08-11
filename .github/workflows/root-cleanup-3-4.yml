@@ -1,0 +1,136 @@
+name: Root cleanup 3 and 4 equivalence
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  refactor-and-prove:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Use Node 24.18.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - name: Use Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build baseline bytes
+        run: |
+          set -euo pipefail
+          npm run build
+          cp dist/index.html /tmp/index.before
+          cp dist/llms.txt /tmp/llms.before
+          cp dist/knowledge.xml /tmp/knowledge.before
+          sha256sum /tmp/index.before /tmp/llms.before /tmp/knowledge.before
+          git reset --hard HEAD
+          git clean -fd -e .python-deps/
+
+      - name: Apply root-source cleanups only
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          # #4: make the canonical raw content source semantically correct,
+          # then remove the build-time compatibility rewrite.
+          p=Path('src/content-source/100-rc099.html')
+          s=p.read_text(encoding='utf-8')
+          old='''<dt><strong>Machine discovery guide</strong></dt><dd><a href="/llms.txt" type="text/plain">Compact site, entity and canonical-resource map</a></dd><dd><a href="/artifact-manifest.json" type="application/json">File hashes, structural invariants and production artifact metadata</a></dd><dt><strong>Deterministic build provenance</strong></dt><dd><a href="/knowledge.xml" type="application/xml">XML knowledge base for physician, clinic, intent, media and answer retrieval</a></dd><dt><strong>Hierarchical semantic projection</strong></dt><dd><a href="/entity-facts.csv" type="text/csv">CSV projection of entity, predicate, literal, IRI, language and provenance relationships</a></dd><dt><strong>Flat entity-fact distribution</strong></dt><dd><a href="/answers.txt" type="text/plain">125 canonical questions and concise answers linked to exact page anchors</a></dd><dt><strong>Direct-answer retrieval corpus</strong></dt>'''
+          new='''<dt><strong>Machine discovery guide</strong></dt><dd><a href="/llms.txt" type="text/plain">Compact site, entity and canonical-resource map</a></dd><dt><strong>Artifact integrity manifest</strong></dt><dd><a href="/artifact-manifest.json" type="application/json">File hashes, structural invariants and production artifact metadata</a></dd><dt><strong>Hierarchical semantic projection</strong></dt><dd><a href="/knowledge.xml" type="application/xml">XML knowledge base for physician, clinic, intent, media and answer retrieval</a></dd><dt><strong>Flat entity-fact distribution</strong></dt><dd><a href="/entity-facts.csv" type="text/csv">CSV projection of entity, predicate, literal, IRI, language and provenance relationships</a></dd><dt><strong>Direct-answer retrieval corpus</strong></dt><dd><a href="/answers.txt" type="text/plain">125 canonical questions and concise answers linked to exact page anchors</a></dd>'''
+          if s.count(old)!=1:
+              raise SystemExit(f'#4 raw mapping guard failed: expected exactly one legacy block, found {s.count(old)}')
+          p.write_text(s.replace(old,new),encoding='utf-8')
+
+          p=Path('scripts/lib/assemble-content.mjs')
+          s=p.read_text(encoding='utf-8')
+          pattern=r'''\nconst machineResourceDefinitionPattern=.*?\nconst canonicalizeMachineResourceDefinitions=content=>\{.*?\n\};\n'''
+          s2,n=re.subn(pattern,'\n',s,count=1,flags=re.S)
+          if n!=1:
+              raise SystemExit(f'#4 assembler shim guard failed: removed {n} blocks')
+          needle='  content=canonicalizeMachineResourceDefinitions(content);\n'
+          if s2.count(needle)!=1:
+              raise SystemExit('#4 assembler invocation guard failed')
+          p.write_text(s2.replace(needle,''),encoding='utf-8')
+
+          # #3: make evidence-registry.json the generator-time source of truth.
+          p=Path('src/data/templates/llms.template.txt')
+          s=p.read_text(encoding='utf-8')
+          stale='- Evidence tiers: Tier A = authoritative identity/medical/academic/local anchors; Tier B = verified professional/distribution profiles; Tier C = supplemental discovery evidence.'
+          placeholder='{{EVIDENCE_TIER_DECLARATION}}'
+          if s.count(stale)!=1 or placeholder in s:
+              raise SystemExit('#3 template guard failed')
+          p.write_text(s.replace(stale,placeholder),encoding='utf-8')
+
+          p=Path('scripts/generate-projections.mjs')
+          s=p.read_text(encoding='utf-8')
+          anchor="const llmsTemplate=await readFile(path.join(data,'templates/llms.template.txt'),'utf8');\nconst llms=llmsTemplate\n"
+          if s.count(anchor)!=1:
+              raise SystemExit('#3 generator anchor guard failed')
+          replacement="""const llmsTemplate=await readFile(path.join(data,'templates/llms.template.txt'),'utf8');
+const evidenceTiers=evidenceRegistry.tiers||{};
+for(const tier of ['A','B','C']) if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier]) throw new Error(`llms.txt evidence tier ${tier} definition missing from evidence registry`);
+const evidenceTierPlaceholder='{{EVIDENCE_TIER_DECLARATION}}';
+if(llmsTemplate.split(evidenceTierPlaceholder).length!==2) throw new Error('llms.txt template must contain exactly one evidence-tier placeholder');
+const evidenceTierDeclaration=`- Evidence tiers: Tier A = ${evidenceTiers.A}; Tier B = ${evidenceTiers.B}; Tier C = ${evidenceTiers.C}.`;
+const llms=llmsTemplate
+  .replaceAll(evidenceTierPlaceholder,evidenceTierDeclaration)
+"""
+          p.write_text(s.replace(anchor,replacement),encoding='utf-8')
+
+          p=Path('src/pages/llms.txt.ts')
+          p.write_text("""import body from '../data/projections/llms.txt?raw';
+import { staticResponse } from '../lib/static-endpoint';
+
+export const prerender=true;
+export function GET(){return staticResponse(body,'text/plain; charset=utf-8');}
+""",encoding='utf-8')
+          PY
+
+      - name: Rebuild and prove zero output drift
+        run: |
+          set -euo pipefail
+          npm run build
+          cmp -s /tmp/index.before dist/index.html || { echo 'INDEX_BYTE_DRIFT'; sha256sum /tmp/index.before dist/index.html; exit 1; }
+          cmp -s /tmp/llms.before dist/llms.txt || { echo 'LLMS_BYTE_DRIFT'; sha256sum /tmp/llms.before dist/llms.txt; diff -u /tmp/llms.before dist/llms.txt | head -200; exit 1; }
+          cmp -s /tmp/knowledge.before dist/knowledge.xml || { echo 'KNOWLEDGE_XML_CHANGED_UNEXPECTEDLY'; sha256sum /tmp/knowledge.before dist/knowledge.xml; exit 1; }
+          echo 'BYTE_EQ_INDEX=PASS'
+          echo 'BYTE_EQ_LLMS=PASS'
+          echo 'BYTE_EQ_KNOWLEDGE_UNTOUCHED=PASS'
+          grep -F '{{EVIDENCE_TIER_DECLARATION}}' src/data/templates/llms.template.txt
+          grep -F 'Tier A = official/authority-control or first-order scholarly/local identity evidence; Tier B = major scholarly/professional corroboration; Tier C = secondary directory/media/local corroboration.' src/data/projections/llms.txt
+          grep -F '<dt><strong>Artifact integrity manifest</strong></dt><dd><a href="/artifact-manifest.json"' src/content-source/100-rc099.html
+          ! grep -F 'canonicalizeMachineResourceDefinitions' scripts/lib/assemble-content.mjs
+          ! grep -F "evidenceRaw from '../data/evidence-registry.json?raw'" src/pages/llms.txt.ts
+
+      - name: Commit proven refactor to PR branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/content-source/100-rc099.html scripts/lib/assemble-content.mjs src/data/templates/llms.template.txt scripts/generate-projections.mjs src/pages/llms.txt.ts src/data/projections/llms.txt
+          if git diff --cached --quiet; then
+            echo 'No refactor changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Root canonicalize machine mapping and evidence tiers'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
