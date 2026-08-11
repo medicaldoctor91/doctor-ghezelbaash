@@ -1,3 +1,4 @@
+# One-shot temporary harness. Remove after successful equivalence proof.
 name: Temporary root cleanup 3 and 4 harness
 
 on:
