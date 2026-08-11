@@ -3,6 +3,8 @@ name: One-shot HSTS contract preflight
 on:
   push:
     branches: [audit/cloudflare-required-20260811]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: read
@@ -22,7 +24,7 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import datetime as dt, json, os, ssl, urllib.error, urllib.parse, urllib.request
+          import datetime as dt, json, os, urllib.error, urllib.parse, urllib.request
           A=os.environ['CLOUDFLARE_ACCOUNT_ID']; M=os.environ['CLOUDFLARE_API_TOKEN']; ZN=os.environ['ZONE_NAME']; B='https://api.cloudflare.com/client/v4'
           def call(tok,m,p,b=None):
               h={'Authorization':f'Bearer {tok}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-hsts-preflight/1.0'}
