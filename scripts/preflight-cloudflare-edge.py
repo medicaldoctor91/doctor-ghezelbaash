@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 import os
@@ -27,6 +28,12 @@ EXPECTED_HSTS = {
     "preload": True,
     "nosniff": True,
 }
+REQUIRED_ENV = (
+    "CLOUDFLARE_API_TOKEN",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "ZONE_NAME",
+    "CANONICAL_HOST",
+)
 
 
 def fail(message: str) -> None:
@@ -80,25 +87,32 @@ def check_live_apex_hsts(zone_name: str) -> None:
 
 
 def main() -> int:
-    token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
-    account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
-    zone_name = os.environ.get("ZONE_NAME", "").strip()
-    host = os.environ.get("CANONICAL_HOST", "").strip()
-    missing = [
-        name
-        for name, value in {
-            "CLOUDFLARE_API_TOKEN": token,
-            "CLOUDFLARE_ACCOUNT_ID": account,
-            "ZONE_NAME": zone_name,
-            "CANONICAL_HOST": host,
-        }.items()
-        if not value
-    ]
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--if-configured", action="store_true")
+    args = parser.parse_args()
+
+    values = {name: os.environ.get(name, "").strip() for name in REQUIRED_ENV}
+    configured = [name for name, value in values.items() if value]
+    if args.if_configured and not configured:
+        print("CLOUDFLARE_PREFLIGHT_SKIPPED environment_not_configured")
+        return 0
+    missing = [name for name, value in values.items() if not value]
     if missing:
-        print(f"CLOUDFLARE_PREFLIGHT_ERROR: Missing required environment: {', '.join(missing)}", file=sys.stderr)
+        print(
+            f"CLOUDFLARE_PREFLIGHT_ERROR: Missing required environment: {', '.join(missing)}",
+            file=sys.stderr,
+        )
         return 1
+
+    token = values["CLOUDFLARE_API_TOKEN"]
+    account = values["CLOUDFLARE_ACCOUNT_ID"]
+    zone_name = values["ZONE_NAME"]
+    host = values["CANONICAL_HOST"]
     if host != f"www.{zone_name}":
-        print(f"CLOUDFLARE_PREFLIGHT_ERROR: Unexpected canonical host/zone pairing: {host}/{zone_name}", file=sys.stderr)
+        print(
+            f"CLOUDFLARE_PREFLIGHT_ERROR: Unexpected canonical host/zone pairing: {host}/{zone_name}",
+            file=sys.stderr,
+        )
         return 1
 
     try:
