@@ -32,7 +32,7 @@ const request=async(source,{bypass=false,method='GET'}={})=>{
   const response=await fetch(new URL(source,base),{
     method,
     redirect:'manual',
-    cache:'no-store',
+    cache:bypass?'no-store':'default',
     headers,
   });
   if(method!=='HEAD')await response.arrayBuffer();
