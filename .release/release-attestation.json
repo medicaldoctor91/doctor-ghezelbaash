@@ -1,15 +1,20 @@
 {
-  "artifactManifestSha256": "4d228686aa943dc36184eb8d90efb7c904e843539388e5bebbf2d4c6eb8a2d6b",
+  "artifactManifestSha256": "e5baf207ebca4a35873196b4fee5e352c436bafaf6d97095bd3221b037a8f5e3",
   "canonicalDatasetIri": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
   "clinicEntity": "Q140288589",
   "coreFrozen": true,
   "datasetEntity": "Q140304972",
   "distFileCount": 102,
+  "graphJsonldSha256": "a62d77230334598f3a5d73c34831c1dbf93b634c784eae4c4b98185a2fd27ed4",
+  "indexHtmlSha256": "f62dfb340a94994912e0710806fa83fe1b432a1787d24b4bde03b377f7dca9a8",
+  "previousVersionDoi": "10.5281/zenodo.21886743",
   "primaryEntity": "Q140287622",
-  "release": "1.1.0",
-  "sourceCommit": "0becafb2f59c0fc17143f56557c71e1e148ccaa1",
+  "release": "1.1.1",
+  "sourceCommit": "717599391dd39ef1f64d213ca677059fb8f4bc84",
+  "uiBrowserAudit": "PASS",
+  "uiBrowserAuditRunId": "31519632075",
   "validation": "PASS",
   "zenodoConceptDoi": "10.5281/zenodo.18765168",
-  "zenodoRecordId": "21886743",
-  "zenodoVersionDoi": "10.5281/zenodo.21886743"
+  "zenodoRecordId": "21892769",
+  "zenodoVersionDoi": "10.5281/zenodo.21892769"
 }
