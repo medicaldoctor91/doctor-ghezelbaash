@@ -3,14 +3,14 @@ name: Temporary root cleanup 3 and 4 harness
 on:
   pull_request:
     branches: [main]
-    types: [reopened]
+    types: [opened]
 
 permissions:
   contents: write
 
 jobs:
   refactor-and-prove:
-    if: github.event.pull_request.number == 195 && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.ref == 'fix/root-cleanup-3-4-20260811' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout PR head
