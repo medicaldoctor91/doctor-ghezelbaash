@@ -124,8 +124,8 @@ const ttl=await readFile(path.join(data,'semantic/knowledge-graph.ttl'));
 if(rdfLock.release!==inv.release||rdfLock.jsonldSha256!==sha(Buffer.from(graphText))||rdfLock.ttlSha256!==sha(ttl)||rdfLock.triples!==inv.externalRdfTripleCount) fail('RDF lock mismatch');
 
 
-// Public release/entity truth: Version 1.1.0 must be coherent across canonical source surfaces.
-if(inv.release!=='1.1.0'||release.release!=='1.1.0') fail('Public release identity must be Version 1.1.0');
+// Public release/entity truth must be coherent across canonical source surfaces.
+if(inv.release!==release.release) fail(`Public release identity mismatch ${inv.release}/${release.release}`);
 const publicReleaseFiles=['package.json','src/data/release.json','src/data/release-invariants.json','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/content-source/100-rc099.html','src/data/semantic/knowledge-graph.jsonld','public/favicon.svg','public/safari-pinned-tab.svg'];
 for(const rel of publicReleaseFiles){const txt=await readFile(path.join(root,rel),'utf8');if(/\b5\.0\.0\b|\bVersion 5\b|\bRelease 5\b/.test(txt))fail(`Legacy release-version residue: ${rel}`)}
 if(content.includes('github.ghezelbaash.ir')) fail('Broken/ambiguous project interface must not be promoted by canonical HTML');

@@ -297,7 +297,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.d67587e1de85.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -410,7 +410,7 @@
         "https://commons.wikimedia.org/entity/M196320105"
       ],
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-1600.ca147b7595ef.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -523,7 +523,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-960.db655b6d5de3.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -639,7 +639,7 @@
         "https://commons.wikimedia.org/entity/M196320110"
       ],
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-1600.a2a3896fb0d9.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -752,7 +752,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.28ff27753e69.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -868,7 +868,7 @@
         "https://commons.wikimedia.org/entity/M196320111"
       ],
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.a7f8d6c5a135.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -883,7 +883,7 @@
         "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior-thumbnail-height"
       },
       "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.c59330e004f0.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "acquireLicensePage": "https://www.ghezelbaash.ir/#media-license",
@@ -941,7 +941,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.22af9f16a9e1.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "acquireLicensePage": "https://www.ghezelbaash.ir/#media-license",
@@ -973,7 +973,7 @@
         "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception-thumbnail-height"
       },
       "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.cdb8ec75e373.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "acquireLicensePage": "https://www.ghezelbaash.ir/#media-license",
@@ -1031,7 +1031,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.0e46e077a4b4.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "acquireLicensePage": "https://www.ghezelbaash.ir/#media-license",
@@ -6469,7 +6469,7 @@
       "height": {
         "@id": "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo-webm-encoding-height"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo"
@@ -6526,7 +6526,7 @@
       },
       "uploadDate": "2024-12-18T09:58:51.282Z",
       "description": "توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "hasPart": [
         {
@@ -6563,7 +6563,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -6578,7 +6578,7 @@
       "height": {
         "@id": "https://www.ghezelbaash.ir/#video-subcision-technique-webm-encoding-height"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#video-subcision-technique"
@@ -6632,7 +6632,7 @@
       },
       "uploadDate": "2025-01-16T17:17:17.334Z",
       "description": "توضیحات دکتر سعید قزلباش درباره سابسیژن.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "hasPart": [
         {
@@ -6666,7 +6666,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#video-subcision-technique"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -6681,7 +6681,7 @@
       "height": {
         "@id": "https://www.ghezelbaash.ir/#video-thread-lift-workshop-webm-encoding-height"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#video-thread-lift-workshop"
@@ -6735,7 +6735,7 @@
       },
       "uploadDate": "2025-01-19T07:01:26.523Z",
       "description": "بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "hasPart": [
         {
@@ -6767,7 +6767,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#video-thread-lift-workshop"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -6782,7 +6782,7 @@
       "height": {
         "@id": "https://www.ghezelbaash.ir/#video-kurdish-patient-experience-webm-encoding-height"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#video-kurdish-patient-experience"
@@ -6836,7 +6836,7 @@
       },
       "uploadDate": "2025-04-23T16:20:44.677Z",
       "description": "ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش.",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07",
       "hasPart": [
         {
@@ -6865,7 +6865,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#video-kurdish-patient-experience"
       },
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -7670,7 +7670,7 @@
         "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
       },
       "identifier": "https://www.ghezelbaash.ir/#historical-patient-origin-summary",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "temporalCoverage": "historical",
       "schemaVersion": "https://schema.org/version/30.0/"
     },
@@ -7839,7 +7839,7 @@
         "https://www.wikidata.org/entity/Q593744",
         "https://www.wikidata.org/entity/Q33002955"
       ],
-      "version": "1.1.0",
+      "version": "1.1.1",
       "datePublished": "2026-02-25",
       "identifier": [
         {
@@ -7896,7 +7896,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "dateModified": "2026-08-08",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
@@ -7943,7 +7943,7 @@
       "name": "Doctor Ghezelbaash structured data repository — GitHub source",
       "codeRepository": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
       "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -8002,9 +8002,9 @@
         "DataDownload"
       ],
       "name": "Doctor Ghezelbaash — Public Brand Knowledge Base & Knowledge Graph (JSON/JSON-LD)",
-      "url": "https://doi.org/10.5281/zenodo.21886743",
-      "identifier": "DOI:10.5281/zenodo.21886743",
-      "version": "1.1.0",
+      "url": "https://doi.org/10.5281/zenodo.21892769",
+      "identifier": "DOI:10.5281/zenodo.21892769",
+      "version": "1.1.1",
       "datePublished": "2026-08-11",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -8032,7 +8032,7 @@
       "publisher": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "contentUrl": "https://doi.org/10.5281/zenodo.21886743",
+      "contentUrl": "https://doi.org/10.5281/zenodo.21892769",
       "description": "DOI-preserved Version 1.0.0 archival snapshot and distribution access point for the canonical Dr. Saeed Ghezelbash Public Knowledge Graph Dataset."
     },
     {
@@ -8110,7 +8110,7 @@
         }
       ],
       "license": "https://creativecommons.org/licenses/by/4.0/",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "datePublished": "2026-07-25",
       "isBasedOn": [
         "https://www.ghezelbaash.ir/#webpage",
@@ -8166,8 +8166,8 @@
           "@type": "PropertyValue",
           "propertyID": "DOI",
           "name": "Zenodo Version DOI 1.1.0",
-          "value": "10.5281/zenodo.21886743",
-          "url": "https://doi.org/10.5281/zenodo.21886743"
+          "value": "10.5281/zenodo.21892769",
+          "url": "https://doi.org/10.5281/zenodo.21892769"
         }
       ],
       "isAccessibleForFree": true,
@@ -8206,7 +8206,7 @@
       ],
       "sameAs": [
         "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-        "https://doi.org/10.5281/zenodo.21886743",
+        "https://doi.org/10.5281/zenodo.21892769",
         "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
         "https://www.wikidata.org/entity/Q140304972"
       ],
@@ -8248,7 +8248,7 @@
       },
       "schemaVersion": "https://schema.org/version/30.0/",
       "subjectOf": [
-        "https://zenodo.org/records/21886743",
+        "https://zenodo.org/records/21892769",
         "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
       ]
     },
@@ -8264,7 +8264,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "dateModified": "2026-08-08",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -18204,8 +18204,8 @@
       "@type": "PropertyValue",
       "name": "DOI",
       "propertyID": "DOI",
-      "value": "10.5281/zenodo.21886743",
-      "url": "https://doi.org/10.5281/zenodo.21886743"
+      "value": "10.5281/zenodo.21892769",
+      "url": "https://doi.org/10.5281/zenodo.21892769"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#biomedical-concept-bipolar-disorder",
@@ -19448,7 +19448,7 @@
         "https://commons.wikimedia.org/entity/M196320105"
       ],
       "url": "https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.55e6a60c60bc.jpg",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -19573,7 +19573,7 @@
         "https://commons.wikimedia.org/entity/M196320111"
       ],
       "url": "https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.005acd2c0a87.jpg",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -19698,7 +19698,7 @@
         "https://commons.wikimedia.org/entity/M196320110"
       ],
       "url": "https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.da2f60febc2e.jpg",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -19767,7 +19767,7 @@
       "acquireLicensePage": "https://www.ghezelbaash.ir/#license",
       "dateCreated": "2026-08-06",
       "dateModified": "2026-08-07",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "keywords": [
         "Dr. Saeed Ghezelbaash",
         "دکتر سعید قزلباش",
@@ -19845,7 +19845,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "dateModified": "2026-08-08",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -19896,7 +19896,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x1200.2f78e21d29d3.jpg",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -19939,7 +19939,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x900.b90aafee05e7.jpg",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -19982,7 +19982,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x675.0fb9963290fb.jpg",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -20025,7 +20025,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.523bfd034a8d.jpg",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -20097,7 +20097,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.b267bddf872d.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -20172,7 +20172,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.f6a0106c7446.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -20247,7 +20247,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.87655757c9a5.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -20361,7 +20361,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.125260cede25.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -20478,7 +20478,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-in-clinical-office.3d021030c80b.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -20595,7 +20595,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "url": "https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-with-clinical-team.dc4f648f84fd.webp",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-07"
     },
     {
@@ -20609,7 +20609,7 @@
       "url": "https://www.ghezelbaash.ir/doctor.vcf",
       "contentUrl": "https://www.ghezelbaash.ir/doctor.vcf",
       "encodingFormat": "text/vcard",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "mainEntity": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -20651,7 +20651,7 @@
       "url": "https://www.ghezelbaash.ir/clinic.vcf",
       "contentUrl": "https://www.ghezelbaash.ir/clinic.vcf",
       "encodingFormat": "text/vcard",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "mainEntity": {
         "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
@@ -20786,7 +20786,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -20811,7 +20811,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -20836,7 +20836,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -20861,7 +20861,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -20886,7 +20886,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -20982,7 +20982,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -21007,7 +21007,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -21032,7 +21032,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -21057,7 +21057,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -21082,7 +21082,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "dateModified": "2026-08-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
