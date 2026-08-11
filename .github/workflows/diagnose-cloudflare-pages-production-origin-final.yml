@@ -1,0 +1,70 @@
+name: Diagnose actual Cloudflare Pages production origin after purge
+on:
+  push:
+    branches: [final/release-convergence]
+    paths:
+      - .github/workflows/diagnose-cloudflare-pages-production-origin-final.yml
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: '884d1d90bd1fb6ecca14992c6c60d677'
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      PROJECT: 'doctor-ghezelbaash'
+    steps:
+      - name: Read Pages project, domains and recent deployments
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,os,urllib.error,urllib.parse,urllib.request
+          base='https://api.cloudflare.com/client/v4'; account=os.environ['CLOUDFLARE_ACCOUNT_ID']; project=os.environ['PROJECT']; token=os.environ['CLOUDFLARE_API_TOKEN']
+          h={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'ghezelbaash-pages-origin-diagnostic/1.0'}
+          def get(path):
+              req=urllib.request.Request(base+path,headers=h)
+              try:
+                  with urllib.request.urlopen(req,timeout=45) as r:return r.status,json.load(r)
+              except urllib.error.HTTPError as e:
+                  raw=e.read().decode('utf-8','replace')
+                  try:p=json.loads(raw)
+                  except Exception:p={'raw':raw[:1000]}
+                  return e.code,p
+          st,p=get(f'/accounts/{account}/pages/projects/{project}')
+          if st!=200 or p.get('success') is not True: raise SystemExit(f'PROJECT_READ_FAILED {st} {p}')
+          r=p.get('result') or {}
+          keys=['name','subdomain','production_branch','created_on','canonical_deployment','latest_deployment','source']
+          out={k:r.get(k) for k in keys}
+          # trim deployment objects to stable/safe operational fields
+          def trim(d):
+              if not isinstance(d,dict): return d
+              env=d.get('env_vars')
+              return {k:d.get(k) for k in ['id','short_id','project_id','project_name','environment','url','created_on','modified_on','latest_stage','deployment_trigger','aliases']}
+          out['canonical_deployment']=trim(r.get('canonical_deployment'))
+          out['latest_deployment']=trim(r.get('latest_deployment'))
+          print('PROJECT='+json.dumps(out,sort_keys=True,default=str))
+          st,p=get(f'/accounts/{account}/pages/projects/{project}/domains')
+          print('DOMAINS_HTTP=',st)
+          if st==200 and p.get('success') is True:
+              domains=[]
+              for d in p.get('result') or []:
+                  domains.append({k:d.get(k) for k in ['id','name','status','verification_data','validation_data','created_on']})
+              print('DOMAINS='+json.dumps(domains,sort_keys=True,default=str))
+          # get recent production deployments
+          st,p=get(f'/accounts/{account}/pages/projects/{project}/deployments?'+urllib.parse.urlencode({'env':'production','per_page':10}))
+          print('PROD_DEPLOYMENTS_HTTP=',st)
+          if st==200 and p.get('success') is True:
+              rows=[]
+              for d in p.get('result') or []:
+                  rows.append(trim(d))
+              print('PROD_DEPLOYMENTS='+json.dumps(rows,sort_keys=True,default=str))
+          st,p=get(f'/accounts/{account}/pages/projects/{project}/deployments?'+urllib.parse.urlencode({'per_page':10}))
+          print('ALL_DEPLOYMENTS_HTTP=',st)
+          if st==200 and p.get('success') is True:
+              rows=[]
+              for d in p.get('result') or []:
+                  rows.append(trim(d))
+              print('ALL_DEPLOYMENTS='+json.dumps(rows,sort_keys=True,default=str))
+          PY
