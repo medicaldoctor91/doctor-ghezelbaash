@@ -1,0 +1,95 @@
+name: Deploy exact final frozen artifact from main to Cloudflare production
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/deploy-final-frozen-main-production.yml
+permissions:
+  actions: read
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_ACCOUNT_ID: '884d1d90bd1fb6ecca14992c6c60d677'
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      PROJECT: 'doctor-ghezelbaash'
+      FROZEN_RUN: '31520584940'
+      EXPECTED_GRAPH_SHA: 'a62d77230334598f3a5d73c34831c1dbf93b634c784eae4c4b98185a2fd27ed4'
+      EXPECTED_HTML_SHA: 'f62dfb340a94994912e0710806fa83fe1b432a1787d24b4bde03b377f7dca9a8'
+      VERSION_DOI: '10.5281/zenodo.21892769'
+      CANONICAL: 'https://www.ghezelbaash.ir'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - name: Download exact immutable frozen release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dr-saeed-ghezelbash-final-convergence-frozen
+          path: /tmp/final-frozen
+          github-token: ${{ github.token }}
+          repository: medicaldoctor91/doctor-ghezelbaash
+          run-id: 31520584940
+      - name: Verify frozen bytes before production deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path('/tmp/final-frozen'); dist=root/'dist'; hashes=json.loads((root/'dist-sha256.json').read_text()); att=json.loads((root/'release-attestation.json').read_text())
+          assert att['release']=='1.1.1' and att['coreFrozen'] is True and att['integrity']=='PASS'
+          assert hashes['graph.jsonld']==os.environ['EXPECTED_GRAPH_SHA']
+          assert hashes['index.html']==os.environ['EXPECTED_HTML_SHA']
+          for n in ['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','llms-full.txt','index.md','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json']:
+              p=dist/n; assert p.is_file(); assert hashlib.sha256(p.read_bytes()).hexdigest()==hashes[n],n
+          assert os.environ['VERSION_DOI'] in (dist/'graph.jsonld').read_text()
+          assert os.environ['VERSION_DOI'] in (dist/'index.html').read_text()
+          print('EXACT_FROZEN_MAIN_PRODUCTION_INPUT_PASS')
+          PY
+      - name: Deploy frozen DIST from actual production branch context
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.120.0 pages deploy /tmp/final-frozen/dist --project-name="$PROJECT" --branch=main --commit-hash="${GITHUB_SHA}" --commit-message="Final frozen v1.1.1 production convergence" --commit-dirty=true
+      - name: Verify Cloudflare canonical production deployment and exact live bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,time,urllib.error,urllib.request
+          token=os.environ['CLOUDFLARE_API_TOKEN']; account=os.environ['CLOUDFLARE_ACCOUNT_ID']; project=os.environ['PROJECT']; base='https://api.cloudflare.com/client/v4'
+          h={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'ghezelbaash-final-main-production-verifier/1.0'}
+          def api(path):
+              req=urllib.request.Request(base+path,headers=h)
+              with urllib.request.urlopen(req,timeout=45) as r:return json.load(r)
+          canonical=None
+          for i in range(30):
+              p=api(f'/accounts/{account}/pages/projects/{project}')
+              r=p.get('result') or {}; d=r.get('canonical_deployment') or {}
+              canonical={k:d.get(k) for k in ['id','short_id','environment','url','aliases','created_on','latest_stage','deployment_trigger']}
+              print('CANONICAL_DEPLOYMENT_POLL',i+1,json.dumps(canonical,sort_keys=True,default=str))
+              aliases=d.get('aliases') or []
+              stage=d.get('latest_stage') or {}
+              if d.get('environment')=='production' and 'https://www.ghezelbaash.ir' in aliases and stage.get('status')=='success' and (d.get('deployment_trigger') or {}).get('metadata',{}).get('commit_hash')==os.environ['GITHUB_SHA']:
+                  break
+              time.sleep(2)
+          else:
+              raise SystemExit('CANONICAL_PRODUCTION_DEPLOYMENT_DID_NOT_PROMOTE_TO_MAIN_FROZEN_RELEASE')
+          expected={'/':os.environ['EXPECTED_HTML_SHA'],'/graph.jsonld':os.environ['EXPECTED_GRAPH_SHA']}
+          for path,exp in expected.items():
+              ok=False; last=None
+              for i in range(30):
+                  req=urllib.request.Request(os.environ['CANONICAL']+path,headers={'User-Agent':'ghezelbaash-final-main-live-verifier/1.0','Accept-Encoding':'identity','Cache-Control':'no-cache'})
+                  with urllib.request.urlopen(req,timeout=45) as r:
+                      body=r.read(); got=hashlib.sha256(body).hexdigest(); last={'sha256':got,'expected':exp,'cfCacheStatus':r.headers.get('CF-Cache-Status'),'age':r.headers.get('Age'),'etag':r.headers.get('ETag'),'hasFinalDoi':os.environ['VERSION_DOI'].encode() in body}
+                      if path=='/': last['hasFinalUi']=b'hero-action hero-search-launch' in body
+                      print('LIVE_VERIFY',path,i+1,json.dumps(last,sort_keys=True))
+                      if got==exp: ok=True; break
+                  time.sleep(2)
+              if not ok: raise SystemExit(f'LIVE_FINAL_SHA_MISMATCH {path} {last}')
+          print('FINAL_MAIN_PRODUCTION_AND_LIVE_BYTES_PASS')
+          PY
