@@ -121,6 +121,7 @@ jobs:
                   changed+=1
                   print('UPDATED_SINGLE_REDIRECT',r.get('id'),'status=',fv['status_code'],'target=',target)
 
+          # Also reconcile any matching Bulk Redirect item so there is no stale CID definition.
           lists=call('GET',f'/accounts/{account}/rules/lists?per_page=100').get('result') or []
           for row in lists:
               if row.get('kind')!='redirect':
