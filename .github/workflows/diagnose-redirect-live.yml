@@ -1,0 +1,78 @@
+name: Diagnose live redirect root cause
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'diag/redirect-root-cause-20260811'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      ZONE_NAME: ghezelbaash.ir
+      CANONICAL_HOST: www.ghezelbaash.ir
+      CF_PROJECT: doctor-ghezelbaash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe exact live redirects and Cloudflare state
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, urllib.error, urllib.parse, urllib.request, time
+          token=os.environ['CLOUDFLARE_API_TOKEN']; account=os.environ['CLOUDFLARE_ACCOUNT_ID']; zone_name=os.environ['ZONE_NAME']; host=os.environ['CANONICAL_HOST']; project=os.environ['CF_PROJECT']
+          api='https://api.cloudflare.com/client/v4'
+          ah={'Authorization':f'Bearer {token}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-root-cause-diag/1.0'}
+          def call(path):
+            req=urllib.request.Request(api+path,headers=ah)
+            try:
+              with urllib.request.urlopen(req,timeout=30) as r: return r.status,json.loads(r.read().decode() or '{}')
+            except urllib.error.HTTPError as e:
+              raw=e.read().decode('utf-8','replace')
+              try:p=json.loads(raw) if raw else {}
+              except Exception:p={'raw':raw[:1000]}
+              return e.code,p
+          st,z=call('/zones?'+urllib.parse.urlencode({'name':zone_name,'account.id':account,'per_page':50}))
+          zid=((z.get('result') or [{}])[0]).get('id') if st==200 else None
+          print('ZONE',st,zid)
+          for label,path in [
+            ('CACHE_REQUEST',f'/zones/{zid}/rulesets/phases/http_request_cache_settings/entrypoint'),
+            ('CACHE_RESPONSE',f'/zones/{zid}/rulesets/phases/http_response_cache_settings/entrypoint'),
+            ('PAGES_PROJECT',f'/accounts/{account}/pages/projects/{project}'),
+            ('PAGES_DEPLOYMENTS',f'/accounts/{account}/pages/projects/{project}/deployments?per_page=10&page=1'),
+          ]:
+            s,p=call(path); print(label,s,json.dumps(p,ensure_ascii=False,sort_keys=True)[:12000])
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self,req,fp,code,msg,headers,newurl): return None
+          opener=urllib.request.build_opener(NoRedirect)
+          paths=[
+            '/gel-injection-doctor-in-kermanshah/',
+            '/2025/02/blog-post_102.html',
+            '/2025/02/blog-post_49.html',
+            '/2025/02/blog-post_512.html',
+            '/2025/02/blog-post_69.html',
+            '/2025/02/blog-post_344.html',
+            '/2025/02/blog-post_53.html',
+            '/2025/03/blog-post_10.html',
+          ]
+          def probe(path,mode):
+            suffix='' if mode=='normal' else ('?__diag='+str(time.time_ns()))
+            headers={'User-Agent':'ghezelbaash-root-cause-diag/1.0','Accept':'*/*'}
+            if mode!='normal': headers.update({'Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache'})
+            req=urllib.request.Request('https://'+host+path+suffix,headers=headers,method='GET')
+            try:
+              with opener.open(req,timeout=30) as r: code=r.status; h=r.headers
+            except urllib.error.HTTPError as e: code=e.code; h=e.headers
+            out={k:h.get(k) for k in ['Location','CF-Cache-Status','Age','Cache-Control','Cloudflare-CDN-Cache-Control','CF-Ray','Server']}
+            print('PROBE',mode,path,'HTTP',code,json.dumps(out,sort_keys=True))
+          for p in paths:
+            probe(p,'normal'); probe(p,'bypass')
+          PY
