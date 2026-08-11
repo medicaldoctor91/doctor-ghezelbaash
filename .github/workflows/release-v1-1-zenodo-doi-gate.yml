@@ -1,5 +1,6 @@
 name: Release v1.1.0 Zenodo DOI Gate
 
+# Push-triggered release gate; main stays untouched until Zenodo DOI is locked and published.
 on:
   push:
     branches:
