@@ -1,0 +1,79 @@
+name: One-shot required zone settings audit
+
+on:
+  push:
+    branches: [audit/cloudflare-required-20260811]
+
+permissions:
+  contents: write
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  ZONE_NAME: ghezelbaash.ir
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/cloudflare-required-20260811
+          fetch-depth: 1
+      - name: Read exact required zone settings through ephemeral zone token
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import datetime as dt, json, os, urllib.error, urllib.parse, urllib.request
+          B='https://api.cloudflare.com/client/v4'; A=os.environ['CLOUDFLARE_ACCOUNT_ID']; M=os.environ['CLOUDFLARE_API_TOKEN']; ZN=os.environ['ZONE_NAME']
+          def call(tok,method,path,body=None):
+              h={'Authorization':f'Bearer {tok}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-required-zone-audit/1.0'}
+              data=None if body is None else json.dumps(body,separators=(',',':')).encode()
+              req=urllib.request.Request(B+path,data=data,method=method,headers=h)
+              try:
+                  with urllib.request.urlopen(req,timeout=40) as r:
+                      raw=r.read().decode('utf-8','replace'); return r.status,json.loads(raw) if raw else {}
+              except urllib.error.HTTPError as e:
+                  raw=e.read().decode('utf-8','replace')
+                  try:p=json.loads(raw) if raw else {}
+                  except Exception:p={'raw':raw[:1200]}
+                  return e.code,p
+          q=urllib.parse.urlencode({'name':ZN,'account.id':A,'per_page':50}); s,p=call(M,'GET','/zones?'+q)
+          if s!=200 or p.get('success') is not True or not p.get('result'): raise SystemExit(f'zone lookup failed {s} {p}')
+          Z=p['result'][0]['id']
+          s,p=call(M,'GET',f'/accounts/{A}/tokens/permission_groups?scope=com.cloudflare.api.account.zone')
+          groups=[{'id':g['id']} for g in (p.get('result') or []) if 'com.cloudflare.api.account.zone' in (g.get('scopes') or [])]
+          if s!=200 or p.get('success') is not True or not groups: raise SystemExit(f'permission groups failed {s} {p}')
+          exp=(dt.datetime.now(dt.timezone.utc)+dt.timedelta(minutes=15)).replace(microsecond=0).isoformat().replace('+00:00','Z')
+          s,p=call(M,'POST',f'/accounts/{A}/tokens',{'name':'Temporary Required Zone Audit','expires_on':exp,'policies':[{'effect':'allow','resources':{f'com.cloudflare.api.account.zone.{Z}':'*'},'permission_groups':groups}]})
+          if s not in (200,201) or p.get('success') is not True: raise SystemExit(f'temp token failed {s} {p}')
+          R=p.get('result') or {}; T=R.get('value'); TID=R.get('id')
+          desired={
+            'always_use_https':'on','http2':'on','http3':'on','brotli':'on','ipv6':'on','tls_1_3':'zrt','0rtt':'on','early_hints':'on','development_mode':'off','rocket_loader':'off','email_obfuscation':'off','automatic_https_rewrites':'off','hotlink_protection':'off','mirage':'off','polish':'off'
+          }
+          report={'zone':ZN,'desired':desired,'settings':{},'allExact':True}
+          try:
+              for sid,want in desired.items():
+                  s,p=call(T,'GET',f'/zones/{Z}/settings/{sid}')
+                  row=p.get('result') or {}
+                  got=row.get('value') if s==200 and p.get('success') is True else None
+                  report['settings'][sid]={'http':s,'success':p.get('success') is True,'value':got,'editable':row.get('editable'),'exact':got==want,'errors':p.get('errors') or []}
+                  if s!=200 or p.get('success') is not True or got!=want: report['allExact']=False
+          finally:
+              s,p=call(M,'DELETE',f'/accounts/{A}/tokens/{TID}')
+              report['tempTokenRevoked']=(s==200 and p.get('success') is True)
+          open('required-zone-audit.json','w',encoding='utf-8').write(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(report,indent=2,sort_keys=True))
+          if not report['tempTokenRevoked']: raise SystemExit('temporary token revoke failed')
+          PY
+      - name: Commit audit result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add required-zone-audit.json
+          git commit -m 'Record required Cloudflare zone settings audit'
+          git push origin HEAD:audit/cloudflare-required-20260811
