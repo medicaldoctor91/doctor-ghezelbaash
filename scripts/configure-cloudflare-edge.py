@@ -26,6 +26,10 @@ CACHE_RULE_REF = "ghezelbaash_canonical_dist_cache_v1"
 HSTS_RULE_REF = "ghezelbaash_canonical_hsts_v1"
 NOT_FOUND_RULE_REF = "ghezelbaash_real_404_headers_v1"
 HSTS_VALUE = "max-age=63072000; includeSubDomains; preload"
+ZONE_SETTINGS_PERMISSION_IDS = (
+    "517b21aee92c4d89936c976ba6e4be55",  # Zone Settings Read
+    "3030687196b94b638145a3953da2b699",  # Zone Settings Write
+)
 
 
 class CloudflareError(RuntimeError):
@@ -287,16 +291,23 @@ def issue_ephemeral_zone_api(
         "GET",
         f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account.zone",
     ).get("result") or []
-    groups = [
-        {"id": str(row["id"])}
+    available = {
+        str(row["id"])
         for row in permissions
         if row.get("id")
         and "com.cloudflare.api.account.zone" in (row.get("scopes") or [])
+    }
+    missing_permissions = [
+        permission_id
+        for permission_id in ZONE_SETTINGS_PERMISSION_IDS
+        if permission_id not in available
     ]
-    if not groups:
+    if missing_permissions:
         raise CloudflareError(
-            "No zone-scoped permission groups are available for ephemeral edge reconciliation"
+            "Required Zone Settings permission groups unavailable: "
+            + ",".join(missing_permissions)
         )
+    groups = [{"id": permission_id} for permission_id in ZONE_SETTINGS_PERMISSION_IDS]
 
     expires_on = (
         dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)
@@ -305,7 +316,7 @@ def issue_ephemeral_zone_api(
         "POST",
         f"/accounts/{account}/tokens",
         {
-            "name": "Ephemeral Ghezelbaash Edge Reconciler",
+            "name": "Ephemeral Ghezelbaash Zone Settings Reconciler",
             "expires_on": expires_on,
             "policies": [
                 {
@@ -548,7 +559,13 @@ def self_test(dist_dir: Path) -> None:
         != csp
     ):
         raise CloudflareError("Generated 404 CSP is not wired to the edge rule")
-    if ZONE_SETTINGS["security_header"]["strict_transport_security"]["max_age"] != 63_072_000:
+    if ZONE_SETTINGS["security_header"]["strict_transport_security"] != {
+        "enabled": True,
+        "max_age": 63_072_000,
+        "include_subdomains": True,
+        "preload": True,
+        "nosniff": True,
+    }:
         raise CloudflareError("HSTS contract drift")
     if ZONE_SETTINGS.get("tls_1_3") != "zrt" or ZONE_SETTINGS.get("0rtt") != "on":
         raise CloudflareError("TLS 1.3 / 0-RTT contract drift")
@@ -599,7 +616,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     parent_api = CloudflareApi(token)
     zone = zone_id(parent_api, account, zone_name)
     print("ZONE_RESOLVED", zone_name, zone)
-    api, revoke_ephemeral_zone_token = issue_ephemeral_zone_api(
+    zone_api, revoke_ephemeral_zone_token = issue_ephemeral_zone_api(
         parent_api, account, zone
     )
 
@@ -619,24 +636,32 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     }
 
     settings_readback = {}
-    for setting_id, desired in ZONE_SETTINGS.items():
-        settings_readback[setting_id] = reconcile_zone_setting(
-            api, zone, setting_id, desired
-        )
-    outcome["capabilities"]["zoneSettings"] = True
-    outcome["zoneSettingsReadback"] = settings_readback
-
-    for setting_id, desired in OPTIONAL_ZONE_SETTINGS.items():
-        try:
+    try:
+        for setting_id, desired in ZONE_SETTINGS.items():
             settings_readback[setting_id] = reconcile_zone_setting(
-                api, zone, setting_id, desired
+                zone_api, zone, setting_id, desired
             )
-        except CloudflareError as exc:
-            print(
-                "OPTIONAL_ZONE_SETTING_API_UNAVAILABLE",
-                setting_id,
-                str(exc)[:1200],
-            )
+        outcome["capabilities"]["zoneSettings"] = True
+        outcome["zoneSettingsReadback"] = settings_readback
+
+        for setting_id, desired in OPTIONAL_ZONE_SETTINGS.items():
+            try:
+                settings_readback[setting_id] = reconcile_zone_setting(
+                    zone_api, zone, setting_id, desired
+                )
+            except CloudflareError as exc:
+                print(
+                    "OPTIONAL_ZONE_SETTING_API_UNAVAILABLE",
+                    setting_id,
+                    str(exc)[:1200],
+                )
+    finally:
+        revoke_ephemeral_zone_token()
+
+    # Keep the pre-existing capability-aware behavior for rules, bot settings,
+    # and cache purge. The elevated child token is deliberately restricted to
+    # Zone Settings so this hardening cannot mutate unrelated edge families.
+    api = parent_api
 
     try:
         cache_readback = reconcile_phase_rule(
@@ -712,7 +737,6 @@ def apply(dist_dir: Path) -> dict[str, Any]:
 
     if not outcome["capabilities"]["zoneSettings"]:
         raise CloudflareError("Required Cloudflare Zone Settings were not reconciled")
-    revoke_ephemeral_zone_token()
     print(
         "EDGE_RECONCILIATION_COMPLETE",
         json.dumps(outcome, sort_keys=True),
