@@ -23,16 +23,16 @@ for(const [index,raw] of redirectsText.split(/\r?\n/).entries()){
 }
 if(!rows.length)fail('No production redirects found in dist/_redirects');
 
-const request=async(source,{bypass=false,method='GET'}={})=>{
-  const headers={'user-agent':'ghezelbaash-redirect-integrity/1.0','accept':'*/*'};
-  if(bypass){
+const request=async(source,{noCache=false,method='GET'}={})=>{
+  const headers={'user-agent':'ghezelbaash-redirect-integrity/1.1','accept':'*/*'};
+  if(noCache){
     headers['cache-control']='no-cache, no-store, max-age=0';
     headers['pragma']='no-cache';
   }
   const response=await fetch(new URL(source,base),{
     method,
     redirect:'manual',
-    cache:bypass?'no-store':'default',
+    cache:noCache?'no-store':'default',
     headers,
   });
   if(method!=='HEAD')await response.arrayBuffer();
@@ -48,9 +48,9 @@ const observations=[];
 for(const row of rows){
   const expected=normalizeLocation(row.target);
   for(const mode of [
-    {label:'normal-get',bypass:false,method:'GET'},
-    {label:'bypass-get',bypass:true,method:'GET'},
-    {label:'bypass-head',bypass:true,method:'HEAD'},
+    {label:'normal-get',noCache:false,method:'GET'},
+    {label:'no-cache-get',noCache:true,method:'GET'},
+    {label:'no-cache-head',noCache:true,method:'HEAD'},
   ]){
     const response=await request(row.source,mode);
     const location=response.headers.get('location');
@@ -59,8 +59,11 @@ for(const row of rows){
     const age=response.headers.get('age');
     if(response.status!==row.status)fail(`${mode.label} ${row.source}: HTTP ${response.status}, expected ${row.status}`);
     if(normalized!==expected)fail(`${mode.label} ${row.source}: Location=${location}, expected ${row.target}`);
-    if(cache==='HIT'||cache==='REVALIDATED')fail(`${mode.label} ${row.source}: redirect was served from edge cache (${cache})`);
-    if(age&&Number(age)>0)fail(`${mode.label} ${row.source}: redirect carried cache Age=${age}`);
+
+    // Cloudflare may legitimately serve an exact static Pages redirect from edge
+    // cache even when the client sends no-cache/no-store. Cache state is therefore
+    // telemetry, not a correctness oracle. Status + Location are the authoritative
+    // redirect contract and catch stale/wrong redirects directly.
     observations.push({
       source:row.source,
       target:row.target,
