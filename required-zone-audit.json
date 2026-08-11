@@ -1,0 +1,144 @@
+{
+  "allExact": true,
+  "desired": {
+    "0rtt": "on",
+    "always_use_https": "on",
+    "automatic_https_rewrites": "off",
+    "brotli": "on",
+    "development_mode": "off",
+    "early_hints": "on",
+    "email_obfuscation": "off",
+    "hotlink_protection": "off",
+    "http2": "on",
+    "http3": "on",
+    "ipv6": "on",
+    "mirage": "off",
+    "polish": "off",
+    "rocket_loader": "off",
+    "tls_1_3": "zrt"
+  },
+  "settings": {
+    "0rtt": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "on"
+    },
+    "always_use_https": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "on"
+    },
+    "automatic_https_rewrites": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "off"
+    },
+    "brotli": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "on"
+    },
+    "development_mode": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "off"
+    },
+    "early_hints": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "on"
+    },
+    "email_obfuscation": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "off"
+    },
+    "hotlink_protection": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "off"
+    },
+    "http2": {
+      "editable": false,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "on"
+    },
+    "http3": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "on"
+    },
+    "ipv6": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "on"
+    },
+    "mirage": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "off"
+    },
+    "polish": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "off"
+    },
+    "rocket_loader": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "off"
+    },
+    "tls_1_3": {
+      "editable": true,
+      "errors": [],
+      "exact": true,
+      "http": 200,
+      "success": true,
+      "value": "zrt"
+    }
+  },
+  "tempTokenRevoked": true,
+  "zone": "ghezelbaash.ir"
+}
