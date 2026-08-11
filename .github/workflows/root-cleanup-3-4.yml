@@ -1,3 +1,4 @@
+# Temporary byte-equivalence harness; remove before merge.
 name: Root cleanup 3 and 4 equivalence
 
 on:
