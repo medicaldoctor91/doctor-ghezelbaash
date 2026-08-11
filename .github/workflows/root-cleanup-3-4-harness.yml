@@ -7,12 +7,17 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 jobs:
   refactor-and-prove:
     if: contains(github.event.head_commit.message, 'Trigger temporary root cleanup harness')
     runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
+      - name: Report start
+        run: gh issue comment 197 --repo "$GITHUB_REPOSITORY" --body 'ROOT_3_4_HARNESS_START'
       - uses: actions/checkout@v4
         with:
           ref: fix/root-cleanup-3-4-20260811
@@ -26,6 +31,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
+      - name: Report install
+        run: gh issue comment 197 --repo "$GITHUB_REPOSITORY" --body 'ROOT_3_4_NPM_CI_PASS'
       - name: Build baseline
         run: |
           set -euo pipefail
@@ -36,8 +43,12 @@ jobs:
           sha256sum /tmp/index.before /tmp/llms.before /tmp/knowledge.before
           git reset --hard HEAD
           git clean -fd -e .python-deps/
+      - name: Report baseline
+        run: gh issue comment 197 --repo "$GITHUB_REPOSITORY" --body 'ROOT_3_4_BASELINE_BUILD_PASS'
       - name: Apply root cleanups
         run: python scripts/tmp-root-cleanup-3-4.py
+      - name: Report transform
+        run: gh issue comment 197 --repo "$GITHUB_REPOSITORY" --body 'ROOT_3_4_TRANSFORM_PASS'
       - name: Prove zero output drift
         run: |
           set -euo pipefail
@@ -53,6 +64,8 @@ jobs:
           grep -F '<dt><strong>Artifact integrity manifest</strong></dt><dd><a href="/artifact-manifest.json"' src/content-source/100-rc099.html
           ! grep -F 'canonicalizeMachineResourceDefinitions' scripts/lib/assemble-content.mjs
           ! grep -F "evidenceRaw from '../data/evidence-registry.json?raw'" src/pages/llms.txt.ts
+      - name: Report equivalence
+        run: gh issue comment 197 --repo "$GITHUB_REPOSITORY" --body 'ROOT_3_4_EQUIVALENCE_PASS: index.html byte-identical; llms.txt byte-identical; knowledge.xml byte-identical and untouched.'
       - name: Commit proven cleanup to branch
         run: |
           set -euo pipefail
@@ -61,3 +74,5 @@ jobs:
           git add src/content-source/100-rc099.html scripts/lib/assemble-content.mjs src/data/templates/llms.template.txt scripts/generate-projections.mjs src/pages/llms.txt.ts src/data/projections/llms.txt
           git commit -m 'Root canonicalize machine mapping and evidence tiers'
           git push origin HEAD:fix/root-cleanup-3-4-20260811
+      - name: Report push
+        run: gh issue comment 197 --repo "$GITHUB_REPOSITORY" --body 'ROOT_3_4_BRANCH_COMMIT_PASS'
