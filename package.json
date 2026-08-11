@@ -12,7 +12,7 @@
     "generate": "node scripts/generate-projections.mjs",
     "rdf:generate": "PYTHONPATH=.python-deps python scripts/generate-rdf.py",
     "indexnow:prepare": "node scripts/write-indexnow-key.mjs",
-    "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test && python scripts/harden-cloudflare-redirect-cache.py --self-test",
+    "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test",
     "preflight:cloudflare": "python scripts/preflight-cloudflare-edge.py --if-configured",
     "validate:source": "node scripts/validate-source.mjs",
     "media:enrich": "node scripts/enrich-image-metadata.mjs",
@@ -28,7 +28,7 @@
     "package:source": "node scripts/package-source.mjs",
     "package:complete": "node scripts/package-complete.mjs",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "verify:production": "python scripts/harden-cloudflare-redirect-cache.py --apply --outcome redirect-cache-hardening.json && node scripts/verify-redirects.mjs && node scripts/verify-production.mjs"
+    "verify:production": "node scripts/verify-redirects.mjs && node scripts/verify-production.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
