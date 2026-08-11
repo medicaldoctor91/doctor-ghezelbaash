@@ -1,0 +1,160 @@
+name: Publish final frozen convergence to Zenodo
+on:
+  push:
+    branches: [final/release-convergence]
+    paths:
+      - .github/workflows/final-convergence-zenodo-publish.yml
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: final-convergence-zenodo-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+      REC: '21892769'
+      VERSION_DOI: '10.5281/zenodo.21892769'
+      CONCEPT_DOI: '10.5281/zenodo.18765168'
+      FROZEN_RUN: '31520584940'
+      EXPECTED_ARTIFACT_DIGEST: '2c9ac26a96f30fc9c3e443695ef31eeee86c022daaaaa5af8bafc27f9bbf3712'
+      EXPECTED_MANIFEST_SHA: 'e5baf207ebca4a35873196b4fee5e352c436bafaf6d97095bd3221b037a8f5e3'
+      EXPECTED_GRAPH_SHA: 'a62d77230334598f3a5d73c34831c1dbf93b634c784eae4c4b98185a2fd27ed4'
+      EXPECTED_HTML_SHA: 'f62dfb340a94994912e0710806fa83fe1b432a1787d24b4bde03b377f7dca9a8'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: final/release-convergence
+          fetch-depth: 0
+      - name: Verify credential and freeze locator
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          f=json.loads(Path('.release/freeze.json').read_text())
+          assert f['release']=='1.1.1' and f['coreFrozen'] is True and f['integrity']=='PASS'
+          assert str(f['githubRunId'])==os.environ['FROZEN_RUN'] and f['artifactDigest']==os.environ['EXPECTED_ARTIFACT_DIGEST']
+          assert f['versionDoi']==os.environ['VERSION_DOI'] and str(f['zenodoRecordId'])==os.environ['REC']
+          assert f['graphJsonldSha256']==os.environ['EXPECTED_GRAPH_SHA'] and f['indexHtmlSha256']==os.environ['EXPECTED_HTML_SHA']
+          print('FINAL_FREEZE_LOCATOR_PASS')
+          PY
+      - name: Download exact frozen artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dr-saeed-ghezelbash-final-convergence-frozen
+          path: /tmp/final-frozen
+          github-token: ${{ github.token }}
+          repository: medicaldoctor91/doctor-ghezelbaash
+          run-id: 31520584940
+      - name: Verify exact frozen payload, replace draft, remote-hash verify and publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os,time
+          from pathlib import Path
+          from urllib import request,error
+          TOKEN=os.environ['ZENODO_TOKEN']; REC=os.environ['REC']; DOI=os.environ['VERSION_DOI']; CONCEPT=os.environ['CONCEPT_DOI']; BASE='https://zenodo.org/api'
+          ROOT=Path('/tmp/final-frozen'); DIST=ROOT/'dist'; HASHES=json.loads((ROOT/'dist-sha256.json').read_text()); ATT=json.loads((ROOT/'release-attestation.json').read_text())
+          CORE=['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','llms-full.txt','index.md','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json']
+          EXTRA=['release-attestation.json','dist-sha256.json']
+          assert ATT['release']=='1.1.1' and ATT['coreFrozen'] is True and ATT['validation']=='PASS' and ATT['uiBrowserAudit']=='PASS'
+          assert ATT['zenodoVersionDoi']==DOI and str(ATT['zenodoRecordId'])==REC and ATT['zenodoConceptDoi']==CONCEPT
+          assert ATT['artifactManifestSha256']==os.environ['EXPECTED_MANIFEST_SHA'] and ATT['graphJsonldSha256']==os.environ['EXPECTED_GRAPH_SHA'] and ATT['indexHtmlSha256']==os.environ['EXPECTED_HTML_SHA']
+          for n in CORE:
+              p=DIST/n
+              if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest()!=HASHES[n]: raise RuntimeError(f'Frozen byte mismatch {n}')
+          print('LOCAL_FROZEN_BYTES_PASS')
+
+          AUTH={'Authorization':f'Bearer {TOKEN}','Accept':'application/json','User-Agent':'doctor-ghezelbaash-final-preservation/1.0'}
+          def call(method,url,data=None,headers=None,ok=(200,201,202,204),binary=False):
+              h=dict(AUTH); h.update(headers or {}); req=request.Request(url,data=data,headers=h,method=method)
+              try:
+                  with request.urlopen(req,timeout=120) as r:
+                      raw=r.read()
+                      if r.status not in ok: raise RuntimeError(f'HTTP {r.status} {method} {url}')
+                      if binary:return raw
+                      return json.loads(raw.decode()) if raw else {}
+              except error.HTTPError as e:
+                  body=e.read().decode('utf-8','replace')[:5000]
+                  raise RuntimeError(f'Zenodo HTTP {e.code} {method} {url}: {body}') from None
+
+          draft=call('GET',f'{BASE}/deposit/depositions/{REC}')
+          if draft.get('submitted') is True or draft.get('state')=='done': raise RuntimeError('Final Zenodo record already published unexpectedly')
+          pre=(draft.get('metadata') or {}).get('prereserve_doi') or {}
+          if pre.get('doi')!=DOI or str(pre.get('recid') or draft.get('id'))!=REC: raise RuntimeError('Final DOI reservation drift')
+
+          metadata=dict(draft.get('metadata') or {})
+          for stale in ['publication_type','image_type','doi','embargo_date','access_conditions']: metadata.pop(stale,None)
+          metadata.update({
+            'upload_type':'dataset','publication_date':'2026-08-11','title':'Dr. Saeed Ghezelbash Public Knowledge Graph',
+            'creators':[{'name':'Ghezelbash, Saeed','orcid':'0009-0001-9346-8475'}],
+            'description':'<p>Final immutable preservation snapshot of the canonical first-party <strong>Dr. Saeed Ghezelbash Public Knowledge Graph</strong>. Saeed Ghezelbash (Wikidata Q140287622; ORCID 0009-0001-9346-8475) is the creator, owner and first-party publisher. The Dataset authority entity is Q140304972; the physician-owned clinic Q140288589 is a supporting subject.</p><p>Canonical Dataset IRI: <a href="https://www.ghezelbaash.ir/graph.jsonld#dataset">https://www.ghezelbaash.ir/graph.jsonld#dataset</a>. The exact frozen distribution includes the canonical human HTML representation, JSON-LD, RDF Turtle, CSV/XML/text projections, Croissant, DCAT, VoID, Linkset, provenance, SHACL and cryptographic artifact manifests. GitHub is the source/build authority; Zenodo is the persistent preservation layer; Hugging Face is the AI/ML-facing distribution.</p>',
+            'access_right':'open','license':'cc-by-4.0','version':'1.1.1',
+            'keywords':['Saeed Ghezelbash','Dr. Saeed Ghezelbash','knowledge graph','entity resolution','JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data','AI retrieval','RAG','Croissant','DCAT','Kermanshah','aesthetic medicine'],
+            'notes':f'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. Concept DOI: {CONCEPT}. Exact final Version DOI: {DOI}. Frozen source commit, UI browser audit, artifact hashes and cross-platform integrity fields are recorded in release-attestation.json and dist-sha256.json.',
+            'related_identifiers':[
+              {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isIdenticalTo','resource_type':'dataset'},
+              {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash','relation':'isDerivedFrom','resource_type':'software'},
+              {'identifier':'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','relation':'isIdenticalTo','resource_type':'dataset'},
+              {'identifier':'https://www.wikidata.org/wiki/Q140304972','relation':'isIdenticalTo','resource_type':'dataset'}
+            ],
+            'prereserve_doi':True
+          })
+          updated=call('PUT',f'{BASE}/deposit/depositions/{REC}',json.dumps({'metadata':metadata},ensure_ascii=False).encode(),{'Content-Type':'application/json'})
+          um=updated.get('metadata') or {}; upr=um.get('prereserve_doi') or {}
+          if um.get('upload_type')!='dataset' or um.get('version')!='1.1.1' or (um.get('creators') or [{}])[0].get('orcid')!='0009-0001-9346-8475' or upr.get('doi')!=DOI: raise RuntimeError('Zenodo metadata readback mismatch')
+          print('ZENODO_FINAL_METADATA_PASS')
+
+          inherited=call('GET',f'{BASE}/deposit/depositions/{REC}/files')
+          for f in inherited:
+              fid=str(f.get('id') or '')
+              if not fid: raise RuntimeError('Inherited Zenodo file without id')
+              call('DELETE',f'{BASE}/deposit/depositions/{REC}/files/{fid}',ok=(204,))
+          boundary='----ghezelbaashFinalFrozen7MA4YWxk'
+          def upload(name,path):
+              raw=path.read_bytes(); body=(f'--{boundary}\r\nContent-Disposition: form-data; name="name"\r\n\r\n{name}\r\n'.encode()+f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{name}"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode()+raw+b'\r\n'+f'--{boundary}--\r\n'.encode())
+              call('POST',f'{BASE}/deposit/depositions/{REC}/files',body,{'Content-Type':f'multipart/form-data; boundary={boundary}'},ok=(201,))
+          local={}
+          for n in CORE: local[n]=HASHES[n]; upload(n,DIST/n)
+          for n in EXTRA:
+              p=ROOT/n; local[n]=hashlib.sha256(p.read_bytes()).hexdigest(); upload(n,p)
+          remote=call('GET',f'{BASE}/deposit/depositions/{REC}/files')
+          if {f.get('filename') for f in remote}!=set(CORE+EXTRA): raise RuntimeError('Zenodo final file inventory mismatch')
+          for f in remote:
+              n=f['filename']; url=(f.get('links') or {}).get('download')
+              if not url: raise RuntimeError(f'No remote download URL {n}')
+              blob=call('GET',url,ok=(200,),binary=True)
+              got=hashlib.sha256(blob).hexdigest()
+              if got!=local[n]: raise RuntimeError(f'Remote SHA256 mismatch {n}: {got} != {local[n]}')
+          print('ZENODO_FINAL_REMOTE_BYTE_PASS')
+          pub=call('POST',f'{BASE}/deposit/depositions/{REC}/actions/publish',ok=(200,201,202))
+          if (pub.get('doi') or (pub.get('metadata') or {}).get('doi') or DOI)!=DOI: raise RuntimeError('Published DOI mismatch')
+          public=None
+          for _ in range(45):
+              try:
+                  public=call('GET',f'{BASE}/records/{REC}',ok=(200,))
+                  if public.get('doi')==DOI: break
+              except Exception: pass
+              time.sleep(2)
+          if not public or public.get('doi')!=DOI or (public.get('metadata') or {}).get('version')!='1.1.1': raise RuntimeError('Final Zenodo public resolution failure')
+          print(json.dumps({'stage':'FINAL_ZENODO_PUBLISHED','doi':DOI,'recordId':REC,'fileCount':len(remote),'integrity':'PASS'},separators=(',',':')))
+          PY
+      - name: Record verified Zenodo publication on release branch
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p={'stage':'FINAL_ZENODO_PUBLISHED','release':'1.1.1','conceptDoi':'10.5281/zenodo.18765168','versionDoi':'10.5281/zenodo.21892769','recordId':'21892769','frozenRunId':'31520584940','integrity':'PASS'}
+          Path('.release/zenodo-published.json').write_text(json.dumps(p,sort_keys=True,indent=2)+'\n')
+          PY
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git add .release/zenodo-published.json
+          git commit -m 'Record verified final Zenodo publication [final-zenodo]'
+          git push origin HEAD:final/release-convergence
