@@ -1,6 +1,6 @@
 {
   "policyVersion": "1.0",
-  "release": "1.0.0",
+  "release": "1.1.1",
   "verifiedAt": "2026-08-07",
   "maxAgeDays": 30,
   "facts": [
@@ -8,7 +8,7 @@
       "id": "google-maps-rating",
       "entity": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
       "property": "ratingValue",
-      "value": 5.0,
+      "value": 5,
       "source": "Google Maps live place record",
       "sourceId": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
       "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",

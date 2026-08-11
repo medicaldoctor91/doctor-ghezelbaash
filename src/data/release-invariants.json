@@ -1,6 +1,6 @@
 {
-  "release": "1.0.0",
-  "date": "2026-08-08",
+  "release": "1.1.1",
+  "date": "2026-08-11",
   "reviewedBy": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
   "postalCode": "6714657412",
   "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
@@ -11,7 +11,7 @@
     "محمد‌سعید قزلباش"
   ],
   "redirectsSha256": "090c87cd57143a0ccc4a620656e87f45fa39b56172c36e0a5d6197b1f965002c",
-  "externalRdfTripleCount": 8552,
+  "externalRdfTripleCount": 8572,
   "renderChunkCount": 134,
   "clipCount": 16,
   "chapterTrackCount": 4,

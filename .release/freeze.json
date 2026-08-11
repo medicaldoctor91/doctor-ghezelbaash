@@ -1,0 +1,19 @@
+{
+  "artifactDigest": "2c9ac26a96f30fc9c3e443695ef31eeee86c022daaaaa5af8bafc27f9bbf3712",
+  "artifactId": "9112861334",
+  "artifactManifestSha256": "e5baf207ebca4a35873196b4fee5e352c436bafaf6d97095bd3221b037a8f5e3",
+  "artifactName": "dr-saeed-ghezelbash-final-convergence-frozen",
+  "conceptDoi": "10.5281/zenodo.18765168",
+  "coreFrozen": true,
+  "githubRunId": "31520584940",
+  "graphJsonldSha256": "a62d77230334598f3a5d73c34831c1dbf93b634c784eae4c4b98185a2fd27ed4",
+  "indexHtmlSha256": "f62dfb340a94994912e0710806fa83fe1b432a1787d24b4bde03b377f7dca9a8",
+  "integrity": "PASS",
+  "release": "1.1.1",
+  "sourceCommit": "717599391dd39ef1f64d213ca677059fb8f4bc84",
+  "stage": "FINAL_HASH_FREEZE",
+  "uiBrowserAudit": "PASS",
+  "uiBrowserAuditRunId": "31519632075",
+  "versionDoi": "10.5281/zenodo.21892769",
+  "zenodoRecordId": "21892769"
+}

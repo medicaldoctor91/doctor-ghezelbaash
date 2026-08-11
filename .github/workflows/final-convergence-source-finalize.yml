@@ -1,0 +1,111 @@
+name: Final convergence source finalization
+on:
+  push:
+    branches: [final/release-convergence]
+    paths:
+      - .github/workflows/final-convergence-source-finalize.yml
+permissions:
+  contents: write
+concurrency:
+  group: final-convergence-source-finalize
+  cancel-in-progress: false
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: final/release-convergence
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - name: Verify DOI gate exists before source mutation
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('.release/final-doi-gate.json').read_text())
+          assert s['integrity']=='PASS' and s['release']=='1.1.1' and s['coreFrozen'] is False
+          assert s['conceptDoi']=='10.5281/zenodo.18765168'
+          print('FINAL_DOI_GATE_PREREQUISITE_PASS',s['versionDoi'],s['recordId'])
+          PY
+      - name: Apply only final release identity delta
+        run: node scripts/finalize-final-convergence-source.mjs
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Generate deterministic projections and RDF
+        run: npm run prepare:generated
+      - name: Lock generated RDF invariant to current contract
+        run: node scripts/lock-release-rdf-invariants.mjs
+      - name: Run complete source/release audits
+        run: npm run release:prepare
+      - name: Build and validate ephemeral final candidate DIST
+        env:
+          ASTRO_TELEMETRY_DISABLED: '1'
+        run: npm run build
+      - name: Prove UI bytes were not changed by release finalization
+        shell: bash
+        run: |
+          set -euo pipefail
+          for p in src/content-source/001-intro.html src/styles/global.css; do
+            git show d9e681404804aa3f20bd10f780e406fff249310d:"$p" > /tmp/parent
+            cmp --silent /tmp/parent "$p" || { echo "Validated UI file changed unexpectedly: $p" >&2; exit 71; }
+          done
+          # 100-rc099 carries release metadata as well as moved quick-start; verify the quick-start structure remains.
+          python - <<'PY'
+          from pathlib import Path
+          t=Path('src/content-source/100-rc099.html').read_text()
+          assert t.count('id="quick-start-title"')==1
+          assert t.rstrip().endswith('</aside>')
+          print('VALIDATED_UI_STRUCTURE_PRESERVED')
+          PY
+      - name: Prove canonical graph changed only by expected release identity delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show d9e681404804aa3f20bd10f780e406fff249310d:src/data/semantic/knowledge-graph.jsonld > /tmp/parent-graph.jsonld
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          old=json.loads(Path('/tmp/parent-graph.jsonld').read_text())
+          cur=json.loads(Path('src/data/semantic/knowledge-graph.jsonld').read_text())
+          release=json.loads(Path('src/data/release.json').read_text())
+          final=release['dataset']['zenodo']['versionDoi']; rec=str(release['dataset']['zenodo']['recordId'])
+          def norm(v):
+              if isinstance(v,str):
+                  return v.replace(final,'10.5281/zenodo.21886743').replace(f'https://zenodo.org/records/{rec}','https://zenodo.org/records/21886743')
+              if isinstance(v,list): return [norm(x) for x in v]
+              if isinstance(v,dict):
+                  out={k:norm(x) for k,x in v.items()}
+                  if 'version' in out and out['version']=='1.1.1': out['version']='1.1.0'
+                  return out
+              return v
+          if norm(cur)!=old: raise SystemExit('Canonical graph contains changes beyond expected final release identity delta')
+          assert len(cur['@graph'])==793
+          print('SEMANTIC_GRAPH_STRUCTURE_PRESERVED')
+          PY
+      - name: Adversarially verify final UI remains in built HTML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          h=Path('dist/index.html').read_text()
+          assert h.count('class="hero-action hero-search-launch"')==1
+          assert h.count('id="verified-physician-identity-core"')==1
+          assert h.count('id="google-maps-clinic-reputation-current"')==1
+          assert h.count('id="quick-start-title"')==1
+          assert 'class="hero-trust-list"' not in h and 'class="hero-reputation"' not in h
+          assert '10.5281/zenodo.21892769' in h
+          print('FINAL_UI_AND_RELEASE_IDENTITY_DIST_PASS')
+          PY
+      - name: Commit only fully validated final source state
+        run: |
+          set -euo pipefail
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git add package.json package-lock.json src public scripts/validate-source.mjs
+          git diff --cached --quiet && { echo 'No final source delta' >&2; exit 74; }
+          git commit -m 'Finalize DOI-locked cross-platform source convergence [final-source]'
+          git push origin HEAD:final/release-convergence

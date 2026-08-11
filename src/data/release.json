@@ -1,6 +1,6 @@
 {
-  "release": "1.0.0",
-  "dateModified": "2026-08-08",
+  "release": "1.1.1",
+  "dateModified": "2026-08-11",
   "canonicalUrl": "https://www.ghezelbaash.ir/",
   "primaryEntity": {
     "id": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
@@ -104,5 +104,43 @@
       "https://www.threads.com/@doctor.ghezelbaash",
       "https://www.youtube.com/@ghezelbaash"
     ]
+  },
+  "dataset": {
+    "id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
+    "name": "Dr. Saeed Ghezelbash Public Knowledge Graph",
+    "wikidata": "Q140304972",
+    "creator": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "creatorWikidata": "Q140287622",
+    "creatorOrcid": "0009-0001-9346-8475",
+    "publisher": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "supportingClinic": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "supportingClinicWikidata": "Q140288589",
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "github": {
+      "role": "source",
+      "repository": "https://github.com/medicaldoctor91/doctor-ghezelbaash"
+    },
+    "zenodo": {
+      "role": "preservation",
+      "conceptDoi": "10.5281/zenodo.18765168",
+      "versionDoi": "10.5281/zenodo.21892769",
+      "recordId": "21892769",
+      "draftApi": "https://zenodo.org/api/deposit/depositions/21892769",
+      "state": "doi-locked-draft",
+      "previousVersion": {
+        "release": "1.1.0",
+        "recordId": "21886743",
+        "versionDoi": "10.5281/zenodo.21886743"
+      },
+      "historicalVersion": {
+        "release": "1.0.0",
+        "recordId": "18765169",
+        "versionDoi": "10.5281/zenodo.18765169"
+      }
+    },
+    "huggingFace": {
+      "role": "ai-distribution",
+      "dataset": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+    }
   }
 }

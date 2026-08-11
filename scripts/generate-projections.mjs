@@ -328,7 +328,14 @@ const llms=llmsTemplate
   .replaceAll('{{REVIEW_DATE}}',release.dateModified)
   .replaceAll('{{OFFICIAL_ALIASES}}',release.primaryEntity.officialAliases.join(' | '))
   .replaceAll('{{RECONCILIATION_ALIASES}}',(release.primaryEntity.reconciliationAliases||[]).join(' | '))
-  .replaceAll('{{RETRIEVAL_VARIANTS}}',release.primaryEntity.retrievalVariants.join(' | '));
+  .replaceAll('{{RETRIEVAL_VARIANTS}}',release.primaryEntity.retrievalVariants.join(' | '))
+  .replaceAll('{{ZENODO_CONCEPT_DOI}}',release.dataset.zenodo.conceptDoi)
+  .replaceAll('{{ZENODO_CONCEPT_DOI_URL}}',`https://doi.org/${release.dataset.zenodo.conceptDoi}`)
+  .replaceAll('{{ZENODO_VERSION_DOI}}',release.dataset.zenodo.versionDoi)
+  .replaceAll('{{ZENODO_VERSION_DOI_URL}}',`https://doi.org/${release.dataset.zenodo.versionDoi}`)
+  .replaceAll('{{ZENODO_RECORD_ID}}',String(release.dataset.zenodo.recordId))
+  .replaceAll('{{DATASET_WIKIDATA}}',release.dataset.wikidata)
+  .replaceAll('{{HUGGING_FACE_DATASET}}',release.dataset.huggingFace.dataset);
 if(/{{[^}]+}}/.test(llms)) throw new Error('Unresolved llms.txt template placeholder');
 await writeFile(path.join(projections,'llms.txt'),llms);
 

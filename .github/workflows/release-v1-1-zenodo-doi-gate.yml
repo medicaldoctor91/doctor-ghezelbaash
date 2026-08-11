@@ -1,0 +1,83 @@
+name: Release v1.1.0 Zenodo DOI Gate
+
+# Push-triggered release gate; main stays untouched until Zenodo DOI is locked and published.
+on:
+  push:
+    branches:
+      - release/v1.1.0-doi-gate
+    paths:
+      - scripts/zenodo-doi-gate.py
+      - .github/workflows/release-v1-1-zenodo-doi-gate.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-v1-1-zenodo-doi-gate
+  cancel-in-progress: false
+
+jobs:
+  lock-doi:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+    steps:
+      - name: Checkout exact release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/v1.1.0-doi-gate
+          fetch-depth: 0
+
+      - name: Verify secure Zenodo credential is available
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${ZENODO_TOKEN:-}" ]; then
+            echo 'No supported Zenodo secret name resolved. DOI Gate stopped before any Zenodo mutation.' >&2
+            exit 78
+          fi
+          echo 'ZENODO_CREDENTIAL_AVAILABLE'
+
+      - name: Create/reuse New Version draft and lock authoritative DOI identifiers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/zenodo-doi-gate.py
+
+      - name: Validate DOI Gate result without exposing credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          s=json.loads(Path('.release/doi-gate.json').read_text())
+          r=json.loads(Path('src/data/release.json').read_text())
+          z=r['dataset']['zenodo']
+          assert s['integrity']=='PASS'
+          assert r['release']=='1.1.0'
+          assert s['conceptDoi']==z['conceptDoi']
+          assert s['versionDoi']==z['versionDoi']
+          assert str(s['recordId'])==str(z['recordId'])
+          assert z['state']=='doi-locked-draft'
+          assert s['coreFrozen'] is False
+          print('DOI_GATE_VALIDATION_PASS')
+          print('CONCEPT_DOI='+s['conceptDoi'])
+          print('VERSION_DOI='+s['versionDoi'])
+          print('ZENODO_RECORD_ID='+str(s['recordId']))
+          PY
+
+      - name: Commit locked DOI contract back to release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'ghezelbaash-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src/data/release.json .release/doi-gate.json
+          if git diff --cached --quiet; then
+            echo 'DOI_GATE_ALREADY_LOCKED_NO_COMMIT_REQUIRED'
+            exit 0
+          fi
+          git commit -m 'Lock Zenodo v1.1.0 DOI gate [zenodo-doi-lock]'
+          git push origin HEAD:release/v1.1.0-doi-gate

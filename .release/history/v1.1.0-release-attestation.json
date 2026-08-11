@@ -1,0 +1,15 @@
+{
+  "artifactManifestSha256": "4d228686aa943dc36184eb8d90efb7c904e843539388e5bebbf2d4c6eb8a2d6b",
+  "canonicalDatasetIri": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
+  "clinicEntity": "Q140288589",
+  "coreFrozen": true,
+  "datasetEntity": "Q140304972",
+  "distFileCount": 102,
+  "primaryEntity": "Q140287622",
+  "release": "1.1.0",
+  "sourceCommit": "0becafb2f59c0fc17143f56557c71e1e148ccaa1",
+  "validation": "PASS",
+  "zenodoConceptDoi": "10.5281/zenodo.18765168",
+  "zenodoRecordId": "21886743",
+  "zenodoVersionDoi": "10.5281/zenodo.21886743"
+}
