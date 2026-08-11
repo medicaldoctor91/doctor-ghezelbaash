@@ -43,7 +43,7 @@ jobs:
           tail=Path('src/content-source/100-rc099.html').read_text()
           assert intro.count('id="verified-physician-identity-core"')==1
           assert intro.count('id="google-maps-clinic-reputation-current"')==1
-          assert intro.count('class="hero-search-launch"')==1
+          assert intro.count('class="hero-action hero-search-launch"')==1
           assert 'class="hero-trust-list"' not in intro
           assert 'class="hero-reputation"' not in intro
           assert 'class="hero-action hero-action--search"' not in intro
@@ -51,7 +51,7 @@ jobs:
           assert tail.count('id="quick-start-title"')==1
           assert tail.rstrip().endswith('</aside>')
           subtitle=intro.index('<p class="hero-subtitle">')
-          search=intro.index('class="hero-search-launch"')
+          search=intro.index('class="hero-action hero-search-launch"')
           portrait=intro.index('class="hero-figure"')
           assert subtitle < search < portrait
           clinical=intro.index('دکتر سعید قزلباش در محیط بالینی')
@@ -85,17 +85,14 @@ jobs:
           html=Path('dist/index.html').read_text()
           assert html.count('id="verified-physician-identity-core"')==1
           assert html.count('id="google-maps-clinic-reputation-current"')==1
-          assert html.count('class="hero-search-launch"')==1
+          assert html.count('class="hero-action hero-search-launch"')==1
           assert 'class="hero-trust-list"' not in html
           assert 'class="hero-reputation"' not in html
           assert html.count('id="quick-start-title"')==1
-          # Search launcher is directly in the hero flow before the portrait.
-          s=html.index('class="hero-search-launch"'); p=html.index('class="hero-figure"')
+          s=html.index('class="hero-action hero-search-launch"'); p=html.index('class="hero-figure"')
           assert s < p
-          # Verified identity is physically inside the second clinical image caption.
           cap=html.index('class="clinical-figure-caption"'); ident=html.index('id="verified-physician-identity-core"',cap); cap_end=html.index('</figcaption>',cap)
           assert cap < ident < cap_end
-          # Quick navigation has physically moved near the end of the canonical HTML body, not CSS-reordered.
           q=html.index('id="quick-start-title"')
           assert q > int(len(html)*0.90), (q,len(html))
           for signal in ['جمعه تعطیل','Q140287622','0009-0001-9346-8475','/g/11nqdfk76c','10.5281/zenodo.21886743']:
