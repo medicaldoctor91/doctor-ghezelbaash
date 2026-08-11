@@ -1,22 +1,20 @@
 name: Temporary root cleanup 3 and 4 harness
 
 on:
-  pull_request:
+  push:
     branches: [main]
-    types: [opened]
 
 permissions:
   contents: write
 
 jobs:
   refactor-and-prove:
-    if: github.event.pull_request.head.ref == 'fix/root-cleanup-3-4-20260811' && github.event.pull_request.head.repo.full_name == github.repository
+    if: contains(github.event.head_commit.message, 'Trigger temporary root cleanup harness')
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout PR head
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: fix/root-cleanup-3-4-20260811
           fetch-depth: 0
           persist-credentials: true
       - uses: actions/setup-node@v4
@@ -27,7 +25,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - name: Baseline build
+      - name: Build baseline
         run: |
           set -euo pipefail
           npm run build
@@ -37,54 +35,9 @@ jobs:
           sha256sum /tmp/index.before /tmp/llms.before /tmp/knowledge.before
           git reset --hard HEAD
           git clean -fd -e .python-deps/
-      - name: Apply only root cleanups 3 and 4
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('src/content-source/100-rc099.html'); s=p.read_text(encoding='utf-8')
-          old='''<dt><strong>Machine discovery guide</strong></dt><dd><a href="/llms.txt" type="text/plain">Compact site, entity and canonical-resource map</a></dd><dd><a href="/artifact-manifest.json" type="application/json">File hashes, structural invariants and production artifact metadata</a></dd><dt><strong>Deterministic build provenance</strong></dt><dd><a href="/knowledge.xml" type="application/xml">XML knowledge base for physician, clinic, intent, media and answer retrieval</a></dd><dt><strong>Hierarchical semantic projection</strong></dt><dd><a href="/entity-facts.csv" type="text/csv">CSV projection of entity, predicate, literal, IRI, language and provenance relationships</a></dd><dt><strong>Flat entity-fact distribution</strong></dt><dd><a href="/answers.txt" type="text/plain">125 canonical questions and concise answers linked to exact page anchors</a></dd><dt><strong>Direct-answer retrieval corpus</strong></dt>'''
-          new='''<dt><strong>Machine discovery guide</strong></dt><dd><a href="/llms.txt" type="text/plain">Compact site, entity and canonical-resource map</a></dd><dt><strong>Artifact integrity manifest</strong></dt><dd><a href="/artifact-manifest.json" type="application/json">File hashes, structural invariants and production artifact metadata</a></dd><dt><strong>Hierarchical semantic projection</strong></dt><dd><a href="/knowledge.xml" type="application/xml">XML knowledge base for physician, clinic, intent, media and answer retrieval</a></dd><dt><strong>Flat entity-fact distribution</strong></dt><dd><a href="/entity-facts.csv" type="text/csv">CSV projection of entity, predicate, literal, IRI, language and provenance relationships</a></dd><dt><strong>Direct-answer retrieval corpus</strong></dt><dd><a href="/answers.txt" type="text/plain">125 canonical questions and concise answers linked to exact page anchors</a></dd>'''
-          if s.count(old)!=1: raise SystemExit(f'#4 raw mapping guard: {s.count(old)}')
-          p.write_text(s.replace(old,new),encoding='utf-8')
-
-          p=Path('scripts/lib/assemble-content.mjs'); s=p.read_text(encoding='utf-8')
-          pattern=r'''\nconst machineResourceDefinitionPattern=.*?\nconst canonicalizeMachineResourceDefinitions=content=>\{.*?\n\};\n'''
-          s,n=re.subn(pattern,'\n',s,count=1,flags=re.S)
-          if n!=1: raise SystemExit(f'#4 shim guard: {n}')
-          needle='  content=canonicalizeMachineResourceDefinitions(content);\n'
-          if s.count(needle)!=1: raise SystemExit('#4 invocation guard')
-          p.write_text(s.replace(needle,''),encoding='utf-8')
-
-          p=Path('src/data/templates/llms.template.txt'); s=p.read_text(encoding='utf-8')
-          stale='- Evidence tiers: Tier A = authoritative identity/medical/academic/local anchors; Tier B = verified professional/distribution profiles; Tier C = supplemental discovery evidence.'
-          ph='{{EVIDENCE_TIER_DECLARATION}}'
-          if s.count(stale)!=1 or ph in s: raise SystemExit('#3 template guard')
-          p.write_text(s.replace(stale,ph),encoding='utf-8')
-
-          p=Path('scripts/generate-projections.mjs'); s=p.read_text(encoding='utf-8')
-          anchor="const llmsTemplate=await readFile(path.join(data,'templates/llms.template.txt'),'utf8');\nconst llms=llmsTemplate\n"
-          if s.count(anchor)!=1: raise SystemExit('#3 generator anchor guard')
-          replacement="""const llmsTemplate=await readFile(path.join(data,'templates/llms.template.txt'),'utf8');
-const evidenceTiers=evidenceRegistry.tiers||{};
-for(const tier of ['A','B','C']) if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier]) throw new Error(`llms.txt evidence tier ${tier} definition missing from evidence registry`);
-const evidenceTierPlaceholder='{{EVIDENCE_TIER_DECLARATION}}';
-if(llmsTemplate.split(evidenceTierPlaceholder).length!==2) throw new Error('llms.txt template must contain exactly one evidence-tier placeholder');
-const evidenceTierDeclaration=`- Evidence tiers: Tier A = ${evidenceTiers.A}; Tier B = ${evidenceTiers.B}; Tier C = ${evidenceTiers.C}.`;
-const llms=llmsTemplate
-  .replaceAll(evidenceTierPlaceholder,evidenceTierDeclaration)
-"""
-          p.write_text(s.replace(anchor,replacement),encoding='utf-8')
-
-          Path('src/pages/llms.txt.ts').write_text("""import body from '../data/projections/llms.txt?raw';
-import { staticResponse } from '../lib/static-endpoint';
-
-export const prerender=true;
-export function GET(){return staticResponse(body,'text/plain; charset=utf-8');}
-""",encoding='utf-8')
-          PY
-      - name: Rebuild and prove byte equivalence
+      - name: Apply root cleanups
+        run: python scripts/tmp-root-cleanup-3-4.py
+      - name: Prove zero output drift
         run: |
           set -euo pipefail
           npm run build
@@ -99,11 +52,11 @@ export function GET(){return staticResponse(body,'text/plain; charset=utf-8');}
           grep -F '<dt><strong>Artifact integrity manifest</strong></dt><dd><a href="/artifact-manifest.json"' src/content-source/100-rc099.html
           ! grep -F 'canonicalizeMachineResourceDefinitions' scripts/lib/assemble-content.mjs
           ! grep -F "evidenceRaw from '../data/evidence-registry.json?raw'" src/pages/llms.txt.ts
-      - name: Commit proven refactor to PR branch
+      - name: Commit proven cleanup to branch
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/content-source/100-rc099.html scripts/lib/assemble-content.mjs src/data/templates/llms.template.txt scripts/generate-projections.mjs src/pages/llms.txt.ts src/data/projections/llms.txt
           git commit -m 'Root canonicalize machine mapping and evidence tiers'
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git push origin HEAD:fix/root-cleanup-3-4-20260811
