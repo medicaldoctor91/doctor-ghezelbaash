@@ -1,0 +1,37 @@
+name: Inspect v1.1 freeze failed step on issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  actions: read
+  contents: read
+  issues: write
+
+jobs:
+  inspect:
+    if: github.event.issue.title == 'INSPECT-V1.1-FREEZE-STEP'
+    runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - name: Report only sanitized run/job/step status
+        shell: bash
+        run: |
+          set -euo pipefail
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow 'run-v1-1-freeze-dist-on-issue.yml' --limit 1 --json databaseId --jq '.[0].databaseId')"
+          DATA="$(gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json databaseId,status,conclusion,jobs)"
+          RUN_ID="$RUN_ID" DATA="$DATA" python - <<'PY' >/tmp/body.txt
+          import json,os
+          d=json.loads(os.environ['DATA'])
+          lines=[f"V1_1_FREEZE_SANITIZED_STATUS",f"Run ID: {d.get('databaseId')}",f"Status: {d.get('status')}",f"Conclusion: {d.get('conclusion')}"]
+          for job in d.get('jobs',[]):
+              lines.append(f"Job: {job.get('name')} — {job.get('conclusion')}")
+              for s in job.get('steps',[]):
+                  if s.get('conclusion') not in (None,'success','skipped'):
+                      lines.append(f"Failed step: {s.get('name')} — {s.get('conclusion')}")
+          print('\n'.join(lines))
+          PY
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/body.txt
