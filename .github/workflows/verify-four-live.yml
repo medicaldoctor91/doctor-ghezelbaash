@@ -1,0 +1,75 @@
+name: Verify four live fixes
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.head_ref == 'diag/verify-four-live-20260811'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe raw live production
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re, urllib.request, urllib.error
+          BASE='https://www.ghezelbaash.ir'
+          UA='ghezelbaash-four-fix-audit/1.0'
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl): return None
+          no_redirect=urllib.request.build_opener(NoRedirect)
+          def fetch(path, follow=True):
+              headers={'User-Agent':UA,'Accept':'*/*','Cache-Control':'no-cache, no-store, max-age=0','Pragma':'no-cache'}
+              req=urllib.request.Request(BASE+path,headers=headers)
+              opener=urllib.request.urlopen if follow else no_redirect.open
+              try:
+                  with opener(req,timeout=30) as r:return r.status,dict(r.headers.items()),r.read().decode('utf-8','replace')
+              except urllib.error.HTTPError as e:return e.code,dict(e.headers.items()),e.read().decode('utf-8','replace')
+
+          st,h,xml=fetch('/knowledge.xml')
+          tags=['intentClusters','evidence','mediaInventory','answerResources']
+          print('FIX2_STATUS',st)
+          for tag in tags: print('FIX2_TAG',tag,bool(re.search(fr'<{tag}\b',xml)))
+          if st!=200 or not all(re.search(fr'<{tag}\b',xml) for tag in tags): raise SystemExit('FIX2_FAIL')
+
+          st,h,llms=fetch('/llms.txt')
+          expected='- Evidence tiers: Tier A = official/authority-control or first-order scholarly/local identity evidence; Tier B = major scholarly/professional corroboration; Tier C = secondary directory/media/local corroboration.'
+          line=next((x for x in llms.splitlines() if x.startswith('- Evidence tiers:')),None)
+          print('FIX3_STATUS',st); print('FIX3_LINE',line); print('FIX3_EXACT',line==expected)
+          if st!=200 or line!=expected: raise SystemExit('FIX3_FAIL')
+
+          st,h,html=fetch('/')
+          start=html.find('<dt><strong>Machine discovery guide</strong></dt>')
+          end=html.find('<dt><strong>Portable entity contact projections</strong></dt>',start)
+          block=html[start:end] if start>=0 and end>start else ''
+          print('FIX4_STATUS',st); print('FIX4_BLOCK',re.sub(r'\s+',' ',block)[:3500])
+          checks=[('Machine discovery guide','/llms.txt'),('Artifact integrity manifest','/artifact-manifest.json'),('Hierarchical semantic projection','/knowledge.xml'),('Flat entity-fact distribution','/entity-facts.csv'),('Direct-answer retrieval corpus','/answers.txt')]
+          if st!=200 or not block: raise SystemExit('FIX4_FAIL_NO_BLOCK')
+          for label,url in checks:
+              ok=bool(re.search(fr'<dt><strong>{re.escape(label)}</strong></dt>\s*<dd><a href="{re.escape(url)}"',block))
+              print('FIX4_MAP',label,url,ok)
+              if not ok: raise SystemExit('FIX4_FAIL_MAP')
+          if 'Deterministic build provenance' in block: raise SystemExit('FIX4_FAIL_OLD_LABEL')
+
+          redirects=[]
+          with open('public/_redirects',encoding='utf-8') as f:
+              for raw in f:
+                  line=raw.strip()
+                  if not line or line.startswith('#'): continue
+                  source,target,status=line.split()
+                  redirects.append((source,target,int(status)))
+          print('FIX1_RULE_COUNT',len(redirects))
+          for source,target,want in redirects:
+              st,h,_=fetch(source,False); loc=h.get('Location') or h.get('location')
+              print('FIX1_REDIRECT',source,st,loc,'CF=',h.get('CF-Cache-Status'),'Age=',h.get('Age'))
+              if st!=want or loc!=target: raise SystemExit(f'FIX1_FAIL {source} {st} {loc}')
+          print('ALL_FOUR_LIVE_FIXES_PASS')
+          PY
