@@ -1,0 +1,29 @@
+name: Diagnostic doctor redirect live
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  probe:
+    if: github.head_ref == 'diag/doctor-redirect-live-20260811-0954'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Probe doctor redirect uncached
+        shell: bash
+        run: |
+          set -euo pipefail
+          ts=$(date +%s%N)
+          url="https://doctor.ghezelbaash.ir/?_nocache=$ts"
+          echo "PROBE_URL=$url"
+          curl -sS --http1.1 -D headers.txt -o /dev/null --max-redirs 0 \
+            -H 'Cache-Control: no-cache, no-store, max-age=0' \
+            -H 'Pragma: no-cache' \
+            -H 'User-Agent: ghezelbaash-external-live-probe/1.0' \
+            "$url" || true
+          echo '---HEADERS---'
+          cat headers.txt
+          echo '---PARSED---'
+          awk 'BEGIN{IGNORECASE=1} /^HTTP\// || /^location:/ || /^cf-cache-status:/ || /^age:/ || /^cf-ray:/ {print}' headers.txt
