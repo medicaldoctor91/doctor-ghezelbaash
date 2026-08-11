@@ -1,0 +1,46 @@
+name: Debug v1.1 source migration on issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  debug:
+    if: github.event.issue.title == 'DEBUG-V1.1-SOURCE-MIGRATION'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.1.0-doi-gate
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+      - name: Run migration and validator with captured diagnostics
+        shell: bash
+        run: |
+          set +e
+          node scripts/finalize-release-source-v1.1.mjs > /tmp/debug.log 2>&1
+          RC1=$?
+          if [ "$RC1" -eq 0 ]; then
+            node scripts/validate-release-contract.mjs >> /tmp/debug.log 2>&1
+            RC2=$?
+          else
+            RC2=99
+          fi
+          python - <<'PY' > /tmp/body.txt
+          from pathlib import Path
+          text=Path('/tmp/debug.log').read_text(errors='replace')
+          text=text[-5000:]
+          print('V1_1_SOURCE_DEBUG_RESULT\n```text\n'+text.replace('```','` ` `')+'\n```')
+          PY
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/body.txt
+          test "$RC1" -eq 0 && test "$RC2" -eq 0
