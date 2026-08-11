@@ -155,6 +155,8 @@ def self_test(dist_dir: Path) -> dict[str, Any]:
         fail("3xx/4xx response guard missing")
     if "or not" not in expression:
         fail("Unknown/legacy path cache guard missing")
+    if len(expression) > 4096:
+        fail(f"Cache Response Rule expression exceeds Cloudflare limit: {len(expression)}")
     no_store = rule.get("action_parameters", {}).get("no-store", {})
     if (
         rule.get("action") != "set_cache_control"
