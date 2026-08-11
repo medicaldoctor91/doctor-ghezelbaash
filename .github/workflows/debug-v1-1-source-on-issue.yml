@@ -37,6 +37,7 @@ jobs:
           }
           run_cmd node scripts/finalize-release-source-v1.1.mjs
           RC=$?
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/stamp-release-media-v1.1.mjs; RC=$?; fi
           if [ "$RC" -eq 0 ]; then run_cmd node scripts/validate-release-contract.mjs; RC=$?; fi
           if [ "$RC" -eq 0 ]; then run_cmd npm ci; RC=$?; fi
           if [ "$RC" -eq 0 ]; then run_cmd npm run prepare:generated; RC=$?; fi
