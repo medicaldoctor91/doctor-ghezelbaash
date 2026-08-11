@@ -41,7 +41,7 @@ jobs:
           import hashlib,json,os
           from pathlib import Path
           root=Path('/tmp/final-frozen'); dist=root/'dist'; hashes=json.loads((root/'dist-sha256.json').read_text()); att=json.loads((root/'release-attestation.json').read_text())
-          assert att['release']=='1.1.1' and att['coreFrozen'] is True and att['integrity']=='PASS'
+          assert att['release']=='1.1.1' and att['coreFrozen'] is True and att['uiBrowserAudit']=='PASS'
           assert hashes['graph.jsonld']==os.environ['EXPECTED_GRAPH_SHA']
           assert hashes['index.html']==os.environ['EXPECTED_HTML_SHA']
           for n in ['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','llms-full.txt','index.md','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json']:
@@ -60,13 +60,12 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import hashlib,json,os,time,urllib.error,urllib.request
+          import hashlib,json,os,time,urllib.request
           token=os.environ['CLOUDFLARE_API_TOKEN']; account=os.environ['CLOUDFLARE_ACCOUNT_ID']; project=os.environ['PROJECT']; base='https://api.cloudflare.com/client/v4'
           h={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'ghezelbaash-final-main-production-verifier/1.0'}
           def api(path):
               req=urllib.request.Request(base+path,headers=h)
               with urllib.request.urlopen(req,timeout=45) as r:return json.load(r)
-          canonical=None
           for i in range(30):
               p=api(f'/accounts/{account}/pages/projects/{project}')
               r=p.get('result') or {}; d=r.get('canonical_deployment') or {}
@@ -74,7 +73,8 @@ jobs:
               print('CANONICAL_DEPLOYMENT_POLL',i+1,json.dumps(canonical,sort_keys=True,default=str))
               aliases=d.get('aliases') or []
               stage=d.get('latest_stage') or {}
-              if d.get('environment')=='production' and 'https://www.ghezelbaash.ir' in aliases and stage.get('status')=='success' and (d.get('deployment_trigger') or {}).get('metadata',{}).get('commit_hash')==os.environ['GITHUB_SHA']:
+              metadata=(d.get('deployment_trigger') or {}).get('metadata') or {}
+              if d.get('environment')=='production' and 'https://www.ghezelbaash.ir' in aliases and stage.get('status')=='success' and metadata.get('commit_hash')==os.environ['GITHUB_SHA']:
                   break
               time.sleep(2)
           else:
