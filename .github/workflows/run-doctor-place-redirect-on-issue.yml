@@ -1,0 +1,117 @@
+name: Run doctor Place ID redirect on issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  ZONE_NAME: ghezelbaash.ir
+
+jobs:
+  update:
+    if: github.event.issue.title == 'RUN-CLOUDFLARE-DOCTOR-PLACE-REDIRECT'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Update exact doctor subdomain redirect and prove live Location
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, time, urllib.error, urllib.parse, urllib.request
+
+          API='https://api.cloudflare.com/client/v4'
+          token=os.environ['CLOUDFLARE_API_TOKEN'].strip()
+          account=os.environ['CLOUDFLARE_ACCOUNT_ID'].strip()
+          zone_name=os.environ['ZONE_NAME'].strip()
+          host='doctor.ghezelbaash.ir'
+          old_cid='12350483144643112463'
+          target='https://www.google.com/maps/search/?api=1&query=Dr.+Saeed+Ghezelbash+Aesthetic+Clinic&query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas'
+          headers={'Authorization':f'Bearer {token}','Accept':'application/json','Content-Type':'application/json','User-Agent':'ghezelbaash-place-redirect/1.0'}
+
+          def call(method,path,body=None,ok=(200,)):
+              data=None if body is None else json.dumps(body,separators=(',',':')).encode()
+              req=urllib.request.Request(API+path,data=data,method=method,headers=headers)
+              try:
+                  with urllib.request.urlopen(req,timeout=45) as r:
+                      raw=r.read().decode('utf-8','replace'); status=r.status
+                      payload=json.loads(raw) if raw else {}
+              except urllib.error.HTTPError as e:
+                  raw=e.read().decode('utf-8','replace'); status=e.code
+                  try: payload=json.loads(raw) if raw else {}
+                  except Exception: payload={'raw':raw[:1600]}
+              if status not in ok or payload.get('success') is not True:
+                  raise SystemExit(f'Cloudflare API {method} {path} HTTP {status}: {payload}')
+              return payload
+
+          q=urllib.parse.urlencode({'name':zone_name,'account.id':account,'per_page':50})
+          rows=call('GET',f'/zones?{q}').get('result') or []
+          rows=[x for x in rows if x.get('name')==zone_name]
+          if len(rows)!=1: raise SystemExit(f'Zone resolution failed: {len(rows)} matches')
+          zone=str(rows[0]['id'])
+
+          rulesets=call('GET',f'/zones/{zone}/rulesets').get('result') or []
+          rs=[x for x in rulesets if x.get('kind')=='zone' and x.get('phase')=='http_request_dynamic_redirect']
+          if len(rs)>1: raise SystemExit('Multiple dynamic redirect entry-point rulesets')
+
+          desired={
+              'ref':'doctor_ghezelbaash_maps_place_id_v1',
+              'expression':f'(http.host eq "{host}")',
+              'description':'doctor.ghezelbaash.ir -> exact Google Maps Place ID URL',
+              'action':'redirect',
+              'action_parameters':{'from_value':{'target_url':{'value':target},'status_code':301,'preserve_query_string':False}},
+              'enabled':True,
+          }
+
+          if not rs:
+              call('POST',f'/zones/{zone}/rulesets',{'name':'Doctor Maps redirect','description':'Owned doctor subdomain redirect','kind':'zone','phase':'http_request_dynamic_redirect','rules':[desired]},ok=(200,201))
+              print('CREATED_REDIRECT_RULESET',target)
+          else:
+              rid=str(rs[0]['id'])
+              full=call('GET',f'/zones/{zone}/rulesets/{rid}').get('result') or {}
+              rules=full.get('rules') or []
+              hits=[]
+              for r in rules:
+                  if r.get('action')!='redirect': continue
+                  if host in str(r.get('expression') or '') or old_cid in json.dumps(r.get('action_parameters') or {},sort_keys=True):
+                      hits.append(r)
+              if len(hits)>1: raise SystemExit(f'Ambiguous redirect rules: {[r.get("id") for r in hits]}')
+              if hits:
+                  r=hits[0]
+                  ap=dict(r.get('action_parameters') or {})
+                  fv=dict(ap.get('from_value') or {})
+                  fv['target_url']={'value':target}
+                  fv['status_code']=int(fv.get('status_code') or 301)
+                  fv['preserve_query_string']=False
+                  ap['from_value']=fv
+                  body={'action':'redirect','action_parameters':ap,'expression':r.get('expression'),'description':r.get('description') or desired['description'],'enabled':r.get('enabled',True)}
+                  if r.get('ref'): body['ref']=r['ref']
+                  call('PATCH',f'/zones/{zone}/rulesets/{rid}/rules/{r["id"]}',body)
+                  print('UPDATED_EXISTING_SINGLE_REDIRECT',r.get('id'),target)
+              else:
+                  add=dict(desired); add['position']={'index':1}
+                  call('POST',f'/zones/{zone}/rulesets/{rid}/rules',add,ok=(200,201))
+                  print('CREATED_PRIORITY_SINGLE_REDIRECT',target)
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl): return None
+          opener=urllib.request.build_opener(NoRedirect)
+          success=False
+          for attempt in range(20):
+              url=f'https://{host}/?_place_probe={int(time.time())}'
+              req=urllib.request.Request(url,headers={'User-Agent':'ghezelbaash-live-redirect-verifier/1.0','Cache-Control':'no-cache','Pragma':'no-cache'})
+              try:
+                  with opener.open(req,timeout=30) as r: code=r.status; loc=r.headers.get('Location')
+              except urllib.error.HTTPError as e: code=e.code; loc=e.headers.get('Location')
+              print('LIVE',attempt+1,code,loc)
+              if code in (301,302,307,308) and loc==target:
+                  success=True; break
+              time.sleep(1)
+          if not success: raise SystemExit('Live redirect verification failed')
+          print('VERIFIED',target)
+          PY
