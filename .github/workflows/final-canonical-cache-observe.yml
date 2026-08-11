@@ -1,0 +1,31 @@
+name: Observe final canonical cache state
+on:
+  push:
+    branches: [final/release-convergence]
+    paths:
+      - .github/workflows/final-canonical-cache-observe.yml
+permissions:
+  contents: read
+jobs:
+  observe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Read canonical cache headers and hashes without mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,urllib.request
+          expected={'/':'f62dfb340a94994912e0710806fa83fe1b432a1787d24b4bde03b377f7dca9a8','/graph.jsonld':'a62d77230334598f3a5d73c34831c1dbf93b634c784eae4c4b98185a2fd27ed4'}
+          out={}
+          for path,exp in expected.items():
+              req=urllib.request.Request('https://www.ghezelbaash.ir'+path,headers={'User-Agent':'ghezelbaash-final-cache-observer/1.0','Accept-Encoding':'identity'})
+              with urllib.request.urlopen(req,timeout=45) as r:
+                  body=r.read(); got=hashlib.sha256(body).hexdigest()
+                  row={'status':r.status,'sha256':got,'expectedSha256':exp,'matchesFinal':got==exp,'age':r.headers.get('Age'),'cfCacheStatus':r.headers.get('CF-Cache-Status'),'cacheControl':r.headers.get('Cache-Control'),'cloudflareCdnCacheControl':r.headers.get('Cloudflare-CDN-Cache-Control'),'date':r.headers.get('Date'),'etag':r.headers.get('ETag'),'cfRay':r.headers.get('CF-Ray'),'hasFinalDoi':b'10.5281/zenodo.21892769' in body}
+                  if path=='/': row['hasFinalUi']=b'hero-action hero-search-launch' in body
+                  out[path]=row
+          print('FINAL_CANONICAL_CACHE_OBSERVATION')
+          print(json.dumps(out,sort_keys=True,indent=2))
+          PY
