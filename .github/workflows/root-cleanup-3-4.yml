@@ -2,21 +2,21 @@
 name: Root cleanup 3 and 4 equivalence
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [fix/root-cleanup-3-4-20260811]
 
 permissions:
   contents: write
 
 jobs:
   refactor-and-prove:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.head_commit.message != 'Root canonicalize machine mapping and evidence tiers'
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout PR head
+      - name: Checkout branch head
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
           persist-credentials: true
 
@@ -123,15 +123,11 @@ export function GET(){return staticResponse(body,'text/plain; charset=utf-8');}
           ! grep -F 'canonicalizeMachineResourceDefinitions' scripts/lib/assemble-content.mjs
           ! grep -F "evidenceRaw from '../data/evidence-registry.json?raw'" src/pages/llms.txt.ts
 
-      - name: Commit proven refactor to PR branch
+      - name: Commit proven refactor to branch
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/content-source/100-rc099.html scripts/lib/assemble-content.mjs src/data/templates/llms.template.txt scripts/generate-projections.mjs src/pages/llms.txt.ts src/data/projections/llms.txt
-          if git diff --cached --quiet; then
-            echo 'No refactor changes to commit.'
-            exit 0
-          fi
           git commit -m 'Root canonicalize machine mapping and evidence tiers'
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          git push origin HEAD:${{ github.ref_name }}
