@@ -5,7 +5,7 @@ on:
     types: [opened]
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:
@@ -45,6 +45,71 @@ Live no-cache probe completed.
 - Redirect following: disabled
 EOF
 )
+          curl -sS --fail-with-body -X POST \
+            -H 'Accept: application/vnd.github+json' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${{ github.event.issue.number }}/comments" \
+            -d "$(python -c 'import json,sys; print(json.dumps({"body":sys.stdin.read()}))' <<<"$body")"
+
+  root-cleanup-3-4:
+    if: github.event.issue.title == 'RUN-ROOT-CLEANUP-3-4'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/root-cleanup-3-4-20260811
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - name: Build baseline bytes
+        run: |
+          set -euo pipefail
+          npm run build
+          cp dist/index.html /tmp/index.before
+          cp dist/llms.txt /tmp/llms.before
+          cp dist/knowledge.xml /tmp/knowledge.before
+          sha256sum /tmp/index.before /tmp/llms.before /tmp/knowledge.before
+          git reset --hard HEAD
+          git clean -fd -e .python-deps/
+      - name: Apply root fixes 3 and 4
+        run: python scripts/tmp-root-cleanup-3-4.py
+      - name: Prove byte equivalence and untouched issue 2
+        run: |
+          set -euo pipefail
+          npm run build
+          cmp -s /tmp/index.before dist/index.html
+          cmp -s /tmp/llms.before dist/llms.txt
+          cmp -s /tmp/knowledge.before dist/knowledge.xml
+          echo BYTE_EQ_INDEX=PASS
+          echo BYTE_EQ_LLMS=PASS
+          echo BYTE_EQ_KNOWLEDGE_UNTOUCHED=PASS
+          grep -F '{{EVIDENCE_TIER_DECLARATION}}' src/data/templates/llms.template.txt
+          grep -F 'Tier A = official/authority-control or first-order scholarly/local identity evidence; Tier B = major scholarly/professional corroboration; Tier C = secondary directory/media/local corroboration.' src/data/projections/llms.txt
+          grep -F '<dt><strong>Artifact integrity manifest</strong></dt><dd><a href="/artifact-manifest.json"' src/content-source/100-rc099.html
+          ! grep -F 'canonicalizeMachineResourceDefinitions' scripts/lib/assemble-content.mjs
+          ! grep -F "evidenceRaw from '../data/evidence-registry.json?raw'" src/pages/llms.txt.ts
+      - name: Commit proven cleanup to branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/content-source/100-rc099.html scripts/lib/assemble-content.mjs src/data/templates/llms.template.txt scripts/generate-projections.mjs src/pages/llms.txt.ts src/data/projections/llms.txt
+          git commit -m 'Root canonicalize machine mapping and evidence tiers'
+          git push origin HEAD:fix/root-cleanup-3-4-20260811
+      - name: Report success
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body='ROOT_CLEANUP_3_4_EQUIVALENCE_PASS: dist/index.html byte-identical; dist/llms.txt byte-identical; dist/knowledge.xml byte-identical and untouched; root source cleanup committed to fix/root-cleanup-3-4-20260811.'
           curl -sS --fail-with-body -X POST \
             -H 'Accept: application/vnd.github+json' \
             -H "Authorization: Bearer $GH_TOKEN" \
