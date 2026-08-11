@@ -1,0 +1,52 @@
+name: Debug v1.1 full source preparation on issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  debug:
+    if: github.event.issue.title == 'DEBUG-V1.1-FULL-SOURCE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.1.0-doi-gate
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - name: Run full Stage 5 preparation with captured diagnostics
+        shell: bash
+        run: |
+          set +e
+          : > /tmp/debug.log
+          run_cmd() {
+            echo "===== $* =====" >> /tmp/debug.log
+            "$@" >> /tmp/debug.log 2>&1
+            return $?
+          }
+          run_cmd node scripts/finalize-release-source-v1.1.mjs
+          RC=$?
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/stamp-release-media-v1.1.mjs; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/validate-release-contract.mjs; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd npm ci; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd npm run prepare:generated; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd npm run release:prepare; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/validate-release-contract.mjs; RC=$?; fi
+          python - <<'PY' > /tmp/body.txt
+          from pathlib import Path
+          text=Path('/tmp/debug.log').read_text(errors='replace')[-12000:]
+          print('V1_1_FULL_SOURCE_DEBUG_RESULT\n```text\n'+text.replace('```','` ` `')+'\n```')
+          PY
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/body.txt
+          exit "$RC"

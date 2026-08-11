@@ -1,0 +1,60 @@
+name: Run v1.1 Stage 5 fail-closed finalization v3
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  finalize:
+    if: github.event.issue.title == 'RUN-V1.1-FINALIZE-SOURCE-V3'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.1.0-doi-gate
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - name: Execute Stage 5 with fail-closed diagnostics
+        shell: bash
+        run: |
+          set +e
+          : > /tmp/stage5.log
+          run_cmd(){ echo "===== $* =====" >>/tmp/stage5.log; "$@" >>/tmp/stage5.log 2>&1; return $?; }
+          run_cmd node scripts/finalize-release-source-v1.1.mjs; RC=$?
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/finalize-release-support-nodes-v1.1.mjs; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/stamp-release-media-v1.1.mjs; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/validate-release-contract.mjs; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd npm ci; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd npm run prepare:generated; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/lock-release-rdf-invariants-v1.1.mjs; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd npm run release:prepare; RC=$?; fi
+          if [ "$RC" -eq 0 ]; then run_cmd node scripts/validate-release-contract.mjs; RC=$?; fi
+          if [ "$RC" -ne 0 ]; then
+            python - <<'PY' >/tmp/body.txt
+          from pathlib import Path
+          t=Path('/tmp/stage5.log').read_text(errors='replace')[-14000:]
+          print('V1_1_STAGE5_FAIL\n```text\n'+t.replace('```','` ` `')+'\n```\nNo validated Stage 5 commit was authorized.')
+          PY
+            gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/body.txt
+            exit "$RC"
+          fi
+          git config user.name 'ghezelbaash-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add package.json package-lock.json src scripts public
+          if ! git diff --cached --quiet; then
+            git commit -m 'Finalize v1.1.0 semantic source after DOI lock [stage-5]'
+            git push origin HEAD:release/v1.1.0-doi-gate
+          fi
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body 'V1_1_STAGE5_PASS\nRelease: 1.1.0\nConcept DOI: 10.5281/zenodo.18765168\nVersion DOI: 10.5281/zenodo.21886743\nRecord ID: 21886743\nCore: NOT BUILT / NOT FROZEN\nIntegrity: PASS'

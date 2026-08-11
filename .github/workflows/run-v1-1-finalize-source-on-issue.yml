@@ -1,0 +1,80 @@
+name: Run v1.1 semantic source finalization on issue
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  finalize-source:
+    if: github.event.issue.title == 'RUN-V1.1-FINALIZE-SOURCE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - name: Checkout isolated release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/v1.1.0-doi-gate
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Report start
+        run: gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body 'V1_1_FINALIZE_SOURCE_START'
+
+      - name: Setup pinned Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - name: Apply deterministic semantic source migration
+        run: node scripts/finalize-release-source-v1.1.mjs
+
+      - name: Stamp release-aware entity media metadata
+        run: node scripts/stamp-release-media-v1.1.mjs
+
+      - name: Validate release identity immediately after migration
+        run: node scripts/validate-release-contract.mjs
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Regenerate deterministic source projections
+        run: npm run prepare:generated
+
+      - name: Run full source release preparation and audits
+        run: npm run release:prepare
+
+      - name: Revalidate release contract after all source generators
+        run: node scripts/validate-release-contract.mjs
+
+      - name: Commit validated Stage 5 source state
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'ghezelbaash-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add package.json package-lock.json src scripts public
+          if git diff --cached --quiet; then
+            echo 'NO_STAGE5_SOURCE_DIFF'
+          else
+            git commit -m 'Finalize v1.1.0 semantic source after DOI lock [stage-5]'
+            git push origin HEAD:release/v1.1.0-doi-gate
+          fi
+
+      - name: Report PASS
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body 'V1_1_FINALIZE_SOURCE_PASS\nRelease: 1.1.0\nConcept DOI: 10.5281/zenodo.18765168\nVersion DOI: 10.5281/zenodo.21886743\nRecord ID: 21886743\nCore frozen: false\nIntegrity: PASS'
+
+      - name: Report FAIL
+        if: failure()
+        shell: bash
+        run: gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body 'V1_1_FINALIZE_SOURCE_FAIL — inspect Actions job logs; no validated Stage 5 source commit was authorized.'
