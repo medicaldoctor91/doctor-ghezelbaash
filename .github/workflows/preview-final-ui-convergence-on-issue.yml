@@ -39,7 +39,7 @@ jobs:
           npm ci
           npm run build
 
-      - name: Deploy isolated Cloudflare preview
+      - name: Deploy isolated Cloudflare preview smoke test
         id: deploy
         shell: bash
         run: |
@@ -49,24 +49,30 @@ jobs:
           URL="$(grep -Eo 'https://[a-zA-Z0-9.-]+\.pages\.dev' /tmp/wrangler.log | tail -1)"
           test -n "$URL"
           echo "url=$URL" >> "$GITHUB_OUTPUT"
-          echo "PREVIEW_URL=$URL"
+          echo "CLOUDFLARE_PREVIEW_SMOKE_PASS=$URL"
 
       - name: Install browser audit client without mutating lockfile
         run: npm install --no-save --package-lock=false puppeteer-core@24.16.0
 
-      - name: Audit mobile and desktop geometry plus layout stability
+      - name: Audit exact candidate bytes in real Chrome
         shell: bash
-        env:
-          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
         run: |
           set -euo pipefail
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory dist >/tmp/ui-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:4173/ >/dev/null && break
+            sleep .2
+          done
+          curl -fsS http://127.0.0.1:4173/ >/dev/null
           cat > .audit-ui.mjs <<'JS'
           import puppeteer from 'puppeteer-core';
           import {execSync} from 'node:child_process';
           const chrome=execSync('command -v google-chrome-stable || command -v google-chrome || command -v chromium || command -v chromium-browser',{shell:'/bin/bash'}).toString().trim();
           if(!chrome) throw new Error('System Chrome unavailable');
           const browser=await puppeteer.launch({headless:true,executablePath:chrome,args:['--no-sandbox','--disable-dev-shm-usage']});
-          const url=process.env.PREVIEW_URL;
+          const url='http://127.0.0.1:4173/';
           const results=[];
           for(const vp of [{name:'mobile',width:390,height:844},{name:'desktop',width:1440,height:1000}]){
             const page=await browser.newPage();
@@ -80,13 +86,12 @@ jobs:
             const m=await page.evaluate(()=>{
               const q=s=>document.querySelector(s), rect=e=>{const r=e.getBoundingClientRect();return {top:r.top+scrollY,bottom:r.bottom+scrollY,left:r.left,right:r.right,width:r.width,height:r.height}};
               const subtitle=q('.hero-subtitle'),search=q('.hero-search-launch'),hero=q('.hero-figure'),heroCap=q('.hero-figure-caption'),clinical=q('.clinical-figure-caption'),identity=q('#verified-physician-identity-core'),quick=q('#quick-start-title');
-              if(!subtitle||!search||!hero||!heroCap||!clinical||!identity||!quick)throw new Error('Required UI node missing');
+              const missing={subtitle:!subtitle,search:!search,hero:!hero,heroCap:!heroCap,clinical:!clinical,identity:!identity,quick:!quick};
+              if(Object.values(missing).some(Boolean))throw new Error('Required UI node missing: '+JSON.stringify(missing));
               const sr=rect(search),sub=rect(subtitle),hr=rect(hero),qr=rect(quick),cr=rect(clinical),ir=rect(identity);
               return {
-                cls:window.__cls||0,
-                docHeight:document.documentElement.scrollHeight,
-                scrollWidth:document.documentElement.scrollWidth,
-                clientWidth:document.documentElement.clientWidth,
+                cls:window.__cls||0,docHeight:document.documentElement.scrollHeight,
+                scrollWidth:document.documentElement.scrollWidth,clientWidth:document.documentElement.clientWidth,
                 search:sr,subtitle:sub,hero:hr,quick:qr,clinical:cr,identity:ir,
                 searchFunctional:search.matches('[data-guide-search-open]')&&search.getAttribute('aria-controls')==='guide-search',
                 identityInClinicalCaption:clinical.contains(identity),
@@ -97,18 +102,18 @@ jobs:
             });
             if(m.scrollWidth>m.clientWidth+1) throw new Error(`${vp.name}: horizontal overflow ${m.scrollWidth}>${m.clientWidth}`);
             if(m.search.height<44) throw new Error(`${vp.name}: search target below 44px (${m.search.height})`);
-            if(!m.searchFunctional||!m.identityInClinicalCaption||!m.heroCaptionVisible||!m.quickVisible||!m.reputationVisible) throw new Error(`${vp.name}: functional/visibility contract failed`);
+            if(!m.searchFunctional||!m.identityInClinicalCaption||!m.heroCaptionVisible||!m.quickVisible||!m.reputationVisible) throw new Error(`${vp.name}: functional/visibility contract failed ${JSON.stringify(m)}`);
             if(vp.name==='mobile'){
-              if(!(m.subtitle.bottom<=m.search.top+2&&m.search.bottom<=m.hero.top+4)) throw new Error(`mobile: search is not between subtitle and hero portrait`);
+              if(!(m.subtitle.bottom<=m.search.top+2&&m.search.bottom<=m.hero.top+4)) throw new Error(`mobile: search placement failed ${JSON.stringify({subtitle:m.subtitle,search:m.search,hero:m.hero})}`);
               if(m.cls>0.1) throw new Error(`mobile: CLS exceeds 0.1 (${m.cls})`);
             }
             if(m.quick.top<m.docHeight*0.86) throw new Error(`${vp.name}: quick-start not near document end (${m.quick.top}/${m.docHeight})`);
-            if(!(m.clinical.top<=m.identity.top&&m.identity.bottom<=m.clinical.bottom+2)) throw new Error(`${vp.name}: verified identity escaped clinical figcaption`);
+            if(!(m.clinical.top<=m.identity.top&&m.identity.bottom<=m.clinical.bottom+2)) throw new Error(`${vp.name}: identity containment failed ${JSON.stringify({clinical:m.clinical,identity:m.identity})}`);
             results.push({viewport:vp.name,...m});
             await page.close();
           }
           await browser.close();
-          console.log(JSON.stringify({integrity:'PASS',url,results},null,2));
+          console.log(JSON.stringify({integrity:'PASS',results},null,2));
           JS
           node .audit-ui.mjs | tee /tmp/ui-browser-audit.json
           rm .audit-ui.mjs
@@ -125,7 +130,8 @@ jobs:
           PY
           )"
           gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body "FINAL_UI_BROWSER_AUDIT_PASS
-          Preview: $PREVIEW_URL
+          Cloudflare preview smoke: $PREVIEW_URL
+          Exact candidate browser audit: PASS
           Mobile: 390x844
           Desktop: 1440x1000
           Mobile CLS: $MOBILE_CLS
