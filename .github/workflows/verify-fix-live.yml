@@ -1,0 +1,62 @@
+name: Verify corrected production pipeline
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify:
+    if: github.head_ref == 'diag/redirect-root-cause-20260811'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: 3982eb5af7925744a680f0414b70fbe3d79230b4
+      CANONICAL_HOST: www.ghezelbaash.ir
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect target production run and live redirects
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, urllib.error, urllib.parse, urllib.request
+          repo=os.environ['GITHUB_REPOSITORY']; sha=os.environ['TARGET_SHA']; tok=os.environ['GH_TOKEN']; host=os.environ['CANONICAL_HOST']
+          headers={'Authorization':f'Bearer {tok}','Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'ghezelbaash-fix-verifier/1.0'}
+          def get(path):
+            req=urllib.request.Request('https://api.github.com'+path,headers=headers)
+            with urllib.request.urlopen(req,timeout=30) as r:return json.loads(r.read().decode())
+          q=urllib.parse.urlencode({'head_sha':sha,'event':'push','per_page':100})
+          runs=get(f'/repos/{repo}/actions/runs?{q}').get('workflow_runs') or []
+          print('TARGET_RUN_COUNT',len(runs))
+          for run in runs:
+            print('TARGET_RUN',json.dumps({k:run.get(k) for k in ['id','name','status','conclusion','head_sha','event','created_at','updated_at','html_url']},sort_keys=True))
+            jobs=get(f'/repos/{repo}/actions/runs/{run["id"]}/jobs?per_page=100').get('jobs') or []
+            for job in jobs:
+              print('TARGET_JOB',json.dumps({'run_id':run['id'],'id':job.get('id'),'name':job.get('name'),'status':job.get('status'),'conclusion':job.get('conclusion'),'steps':[{k:s.get(k) for k in ['number','name','status','conclusion']} for s in job.get('steps') or []]},sort_keys=True))
+
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self,req,fp,code,msg,headers,newurl): return None
+          opener=urllib.request.build_opener(NoRedirect)
+          paths=[
+            '/gel-injection-doctor-in-kermanshah/',
+            '/2025/02/blog-post_102.html',
+            '/2025/02/blog-post_49.html',
+            '/2025/02/blog-post_512.html',
+            '/2025/02/blog-post_69.html',
+            '/2025/02/blog-post_344.html',
+            '/2025/02/blog-post_53.html',
+            '/2025/03/blog-post_10.html',
+          ]
+          for path in paths:
+            req=urllib.request.Request('https://'+host+path,headers={'User-Agent':'ghezelbaash-fix-verifier/1.0','Accept':'*/*'},method='GET')
+            try:
+              with opener.open(req,timeout=30) as r: code=r.status; h=r.headers
+            except urllib.error.HTTPError as e: code=e.code; h=e.headers
+            print('LIVE_REDIRECT',path,'HTTP',code,'Location=',h.get('Location'),'CF-Cache-Status=',h.get('CF-Cache-Status'),'Age=',h.get('Age'))
+          PY
