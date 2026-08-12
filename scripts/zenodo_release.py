@@ -32,7 +32,7 @@ def metadata(version,date,doi,concept):
       'related_identifiers':[
         {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isDerivedFrom','resource_type':'dataset'},
         {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash','relation':'isDerivedFrom','resource_type':'software'},
-        {'identifier':'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','relation':'isSourceOf','resource_type':'dataset'},
+        {'identifier':'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','relation':'isReferencedBy','resource_type':'dataset'},
         {'identifier':'https://www.wikidata.org/wiki/Q140304972','relation':'isPartOf','resource_type':'dataset'}
       ],'prereserve_doi':True
     }
@@ -103,11 +103,41 @@ def publish(args,token):
     if len(public.get('files') or [])!=len(sources): raise RuntimeError('Zenodo public file-count mismatch')
     print(json.dumps({'stage':'ZENODO_PUBLISHED','recordId':record,'versionDoi':doi,'files':len(sources),'integrity':'PASS'},separators=(',',':')))
 
+def reconcile(args,token):
+    """Repair mutable metadata on an already-published immutable record."""
+    public=call(token,'GET',f'{BASE}/records/{args.record}')
+    public_md=public.get('metadata') or {}
+    if public.get('doi')!=args.doi: raise RuntimeError('Published Zenodo DOI mismatch')
+    if public_md.get('version')!=args.version or public_md.get('publication_date')!=args.date:
+        raise RuntimeError('Published Zenodo version/date mismatch')
+    call(token,'POST',f'{BASE}/deposit/depositions/{args.record}/actions/edit')
+    editable=call(token,'GET',f'{BASE}/deposit/depositions/{args.record}')
+    current_md=dict(editable.get('metadata') or {})
+    for key in ['publication_type','image_type','doi','embargo_date','access_conditions']:
+        current_md.pop(key,None)
+    current_md.update(metadata(args.version,args.date,args.doi,args.concept_doi))
+    current_md.pop('prereserve_doi',None)
+    call(token,'PUT',f'{BASE}/deposit/depositions/{args.record}',json.dumps({'metadata':current_md},ensure_ascii=False).encode())
+    call(token,'POST',f'{BASE}/deposit/depositions/{args.record}/actions/publish')
+    for _ in range(30):
+        verified=call(token,'GET',f'{BASE}/records/{args.record}')
+        relations=(verified.get('metadata') or {}).get('related_identifiers') or []
+        hf=[r for r in relations if r.get('identifier')=='https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data']
+        if verified.get('doi')==args.doi and len(hf)==1 and hf[0].get('relation')=='isReferencedBy':
+            break
+        time.sleep(2)
+    else:
+        raise RuntimeError('Zenodo metadata reconciliation readback failure')
+    print(json.dumps({'stage':'ZENODO_METADATA_RECONCILED','recordId':str(args.record),'version':args.version,'huggingFaceRelation':'isReferencedBy','integrity':'PASS'},separators=(',',':')))
+
 def main():
     parser=argparse.ArgumentParser(); sub=parser.add_subparsers(dest='action',required=True)
     r=sub.add_parser('reserve');r.add_argument('--current-record',required=True);r.add_argument('--current-doi',required=True);r.add_argument('--concept-doi',required=True);r.add_argument('--version',required=True);r.add_argument('--date',required=True);r.add_argument('--output',default='.release/zenodo-reservation.json')
     sub.add_parser('publish')
+    m=sub.add_parser('reconcile');m.add_argument('--record',required=True);m.add_argument('--doi',required=True);m.add_argument('--concept-doi',required=True);m.add_argument('--version',required=True);m.add_argument('--date',required=True)
     args=parser.parse_args();token=os.environ.get('ZENODO_TOKEN','')
     if not token: raise SystemExit('ZENODO_TOKEN is required')
-    reserve(args,token) if args.action=='reserve' else publish(args,token)
+    if args.action=='reserve': reserve(args,token)
+    elif args.action=='publish': publish(args,token)
+    else: reconcile(args,token)
 if __name__=='__main__': main()
