@@ -61,7 +61,7 @@ jobs:
           echo "::add-mask::$CLOUDFLARE_API_TOKEN"
           curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/21892769 >/dev/null
           curl --fail --silent --show-error -H "Authorization: Bearer $HF_TOKEN" https://huggingface.co/api/whoami-v2 >/dev/null
-          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify | python -c 'import json,sys; p=json.load(sys.stdin); assert p.get("success") and p["result"]["status"]=="active"'
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT" | python -c 'import json,sys; p=json.load(sys.stdin); assert p.get("success") is True and p.get("result",{}).get("name")=="doctor-ghezelbaash"'
           python scripts/preflight-cloudflare-edge.py
 
       - name: Reserve DOI and correct prior-version metadata
@@ -93,7 +93,10 @@ jobs:
           set -euo pipefail
           git config user.name ghezelbaash-release-bot
           git config user.email actions@users.noreply.github.com
-          git add -A
+          # Only promotion changes to already tracked canonical files belong in
+          # the frozen source commit. The Zenodo reservation is intentionally
+          # ephemeral and must never become repository truth.
+          git add -u
           git commit -m 'Release synchronized entity stack v1.2.0'
           echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 

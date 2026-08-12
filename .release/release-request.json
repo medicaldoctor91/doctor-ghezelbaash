@@ -4,5 +4,6 @@
   "currentRecordId": "21892769",
   "currentVersionDoi": "10.5281/zenodo.21892769",
   "conceptDoi": "10.5281/zenodo.18765168",
+  "attempt": 2,
   "reason": "Semantic distribution-role repair, manifest integrity closure, PWA icon repair, governed Hugging Face enrichment synchronization, and release-pipeline hardening."
 }
