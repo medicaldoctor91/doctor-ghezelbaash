@@ -106,7 +106,7 @@ jobs:
           # the frozen source commit. The Zenodo reservation is intentionally
           # ephemeral and must never become repository truth.
           git add -u
-          git commit -m 'Release synchronized entity stack v1.2.0'
+          git diff --cached --quiet || git commit -m 'Release synchronized entity stack v1.2.0'
           echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Build, validate and attest exact frozen source

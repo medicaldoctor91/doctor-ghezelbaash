@@ -1,5 +1,5 @@
 {
-  "release": "1.1.1",
+  "release": "1.2.0",
   "verifiedAt": "2026-08-07",
   "tiers": {
     "A": "official/authority-control or first-order scholarly/local identity evidence",
@@ -552,7 +552,7 @@
         "medical-claim-context",
         "canonical-visible-citation"
       ],
-      "url": "https://doi.org/10.5281/zenodo.21892769",
+      "url": "https://doi.org/10.5281/zenodo.21905312",
       "liveStatus": "source-cited-in-canonical-content",
       "verifiedAt": "2026-08-07"
     }

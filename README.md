@@ -46,9 +46,9 @@ Runtime target: Node 24.18.0 / npm 11.x. Deployment target: Cloudflare Pages sta
 
 ## Release and external distribution contract
 
-- Current source release: `1.1.1`
+- Current source release: `1.2.0`
 - Zenodo Concept DOI: `10.5281/zenodo.18765168`
-- Current Zenodo Version DOI: `10.5281/zenodo.21892769`
+- Current Zenodo Version DOI: `10.5281/zenodo.21905312`
 - Hugging Face: `doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data`
 - Wikidata: physician `Q140287622`, clinic `Q140288589`, Dataset `Q140304972`
 
