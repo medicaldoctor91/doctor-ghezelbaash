@@ -5,7 +5,7 @@ import {cp, mkdir, readFile, readdir, rename, rm, writeFile} from 'node:fs/promi
 const [dist='dist',hub='.release/huggingface']=process.argv.slice(2);
 const release=JSON.parse(await readFile('src/data/release.json','utf8'));
 const z=release.dataset.zenodo;
-const core=['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json'];
+const core=['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json'];
 const sha=b=>createHash('sha256').update(b).digest('hex');
 await mkdir(hub,{recursive:true});
 for(const file of core)await cp(path.join(dist,file),path.join(hub,file));

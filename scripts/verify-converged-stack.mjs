@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 
 const release=JSON.parse(await readFile('src/data/release.json','utf8'));
 const z=release.dataset.zenodo;
-const core=['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json'];
+const core=['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json'];
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const fetchBytes=async(url,accept='*/*')=>{
   const response=await fetch(url,{headers:{Accept:accept,'Cache-Control':'no-cache','User-Agent':'doctor-ghezelbaash-convergence-verifier/2.0'}});
@@ -13,7 +13,7 @@ const fetchBytes=async(url,accept='*/*')=>{
 const results=[];
 for(const file of core){
   const local=await readFile(`dist/${file}`),expected=sha(local);
-  const live=await fetchBytes(`${release.canonicalUrl}${file}?verify=${Date.now()}`);
+  const live=await fetchBytes(`${release.canonicalUrl}${file==='index.html'?'':file}?verify=${Date.now()}`);
   const hf=await fetchBytes(`https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/${file}?download=true&verify=${Date.now()}`);
   if(sha(live.bytes)!==expected)throw new Error(`Live content drift ${file}`);
   if(sha(hf.bytes)!==expected)throw new Error(`Hugging Face Core drift ${file}`);

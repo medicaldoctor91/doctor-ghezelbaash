@@ -308,6 +308,25 @@ def issue_ephemeral_zone_api(
             + ",".join(missing_permissions)
         )
     groups = [{"id": permission_id} for permission_id in ZONE_SETTINGS_PERMISSION_IDS]
+    # Cache-all rules can retain an old exact `/` object across a Pages deploy.
+    # The parent credential is a token authority, so add only the two narrow
+    # zone capabilities needed to invalidate that object, then revoke the child
+    # token in the same process. This avoids relying on a broad long-lived
+    # deployment credential for cache mutation.
+    for permission_name in ("Zone Read", "Cache Purge"):
+        matches = [
+            row
+            for row in permissions
+            if row.get("name") == permission_name
+            and "com.cloudflare.api.account.zone" in (row.get("scopes") or [])
+        ]
+        if len(matches) != 1:
+            raise CloudflareError(
+                f"Required {permission_name} permission group count: {len(matches)}"
+            )
+        permission_id = str(matches[0]["id"])
+        if permission_id not in {str(row["id"]) for row in groups}:
+            groups.append({"id": permission_id})
 
     expires_on = (
         dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)
@@ -316,7 +335,7 @@ def issue_ephemeral_zone_api(
         "POST",
         f"/accounts/{account}/tokens",
         {
-            "name": "Ephemeral Ghezelbaash Zone Settings Reconciler",
+            "name": "Ephemeral Ghezelbaash Zone Settings and Cache Reconciler",
             "expires_on": expires_on,
             "policies": [
                 {
@@ -655,6 +674,8 @@ def apply(dist_dir: Path) -> dict[str, Any]:
                     setting_id,
                     str(exc)[:1200],
                 )
+        purge_canonical(zone_api, zone, host)
+        outcome["capabilities"]["purgeCache"] = True
     finally:
         revoke_ephemeral_zone_token()
 
@@ -727,13 +748,14 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             raise
         record_capability_gap(outcome, "bot_management", exc)
 
-    try:
-        purge_canonical(api, zone, host)
-        outcome["capabilities"]["purgeCache"] = True
-    except CloudflareError as exc:
-        if not is_permission_error(exc):
-            raise
-        record_capability_gap(outcome, "cache_purge", exc)
+    if not outcome["capabilities"]["purgeCache"]:
+        try:
+            purge_canonical(api, zone, host)
+            outcome["capabilities"]["purgeCache"] = True
+        except CloudflareError as exc:
+            if not is_permission_error(exc):
+                raise
+            record_capability_gap(outcome, "cache_purge", exc)
 
     if not outcome["capabilities"]["zoneSettings"]:
         raise CloudflareError("Required Cloudflare Zone Settings were not reconciled")
