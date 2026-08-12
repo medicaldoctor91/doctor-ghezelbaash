@@ -534,17 +534,11 @@ def reconcile_bot_access(api: CloudflareApi, zone: str) -> dict[str, Any]:
 
 def purge_canonical(api: CloudflareApi, zone: str, host: str) -> None:
     path = f"/zones/{zone}/purge_cache"
-    status, payload = api.raw("POST", path, {"hosts": [host]})
-    if status in (200, 201) and payload.get("success") is True:
-        print("CANONICAL_HOST_CACHE_PURGED", host)
-        return
-    print(
-        "HOST_PURGE_UNAVAILABLE_FALLING_BACK_TO_ZONE_PURGE",
-        status,
-        json.dumps(payload, ensure_ascii=False)[:800],
-    )
+    # This zone is dedicated to the canonical site. Purge the entire zone so
+    # tiered/regional cache shards and alternate cache-key variants cannot keep
+    # an obsolete root representation after an atomic Pages release.
     api.expect("POST", path, {"purge_everything": True}, ok=(200, 201))
-    print("ZONE_CACHE_PURGED", zone)
+    print("DEDICATED_ZONE_CACHE_PURGED", zone, "canonical_host=", host)
 
 
 def self_test(dist_dir: Path) -> None:

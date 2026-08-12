@@ -28,7 +28,7 @@ for(let attempt=1;attempt<=16;attempt++){
  const liveDigest=`sha-256=:${createHash('sha256').update(Buffer.from(budgetProbe.text)).digest('base64')}:`;
  if(budgetProbe.r.headers.get('content-security-policy')===expectedRootCsp&&budgetProbe.r.headers.get('repr-digest')===liveDigest)break;
  if(attempt===16)fail(`Production root did not converge to finalized CSP/digest after ${attempt} attempts`);
- console.warn(`PRODUCTION_PROPAGATION_WAIT attempt=${attempt}`);
+ console.warn(JSON.stringify({stage:'PRODUCTION_PROPAGATION_WAIT',attempt,expectedCspSha256:createHash('sha256').update(expectedRootCsp).digest('hex'),liveCspSha256:createHash('sha256').update(budgetProbe.r.headers.get('content-security-policy')||'').digest('hex'),expectedDigest:liveDigest,liveDigest:budgetProbe.r.headers.get('repr-digest'),etag:budgetProbe.r.headers.get('etag'),cfCacheStatus:budgetProbe.r.headers.get('cf-cache-status'),age:budgetProbe.r.headers.get('age'),cfRay:budgetProbe.r.headers.get('cf-ray')}));
  await new Promise(resolve=>setTimeout(resolve,4000));
 }
 const budgetBodyBytes=Buffer.byteLength(budgetProbe.text),budgetHeaderBytes=[...budgetProbe.r.headers].reduce((n,[k,v])=>n+Buffer.byteLength(`${k}: ${v}\r\n`),0);
