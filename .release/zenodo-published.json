@@ -1,9 +1,10 @@
 {
+  "stage": "CONVERGED_PUBLISHED",
+  "release": "1.2.0",
   "conceptDoi": "10.5281/zenodo.18765168",
-  "frozenRunId": "31520584940",
-  "integrity": "PASS",
-  "recordId": "21892769",
-  "release": "1.1.1",
-  "stage": "FINAL_ZENODO_PUBLISHED",
-  "versionDoi": "10.5281/zenodo.21892769"
+  "versionDoi": "10.5281/zenodo.21905312",
+  "recordId": "21905312",
+  "sourceCommit": "8aa24ff15ea9c9c444f7fd021d4abd04cb892b20",
+  "verificationRounds": 3,
+  "integrity": "PASS"
 }

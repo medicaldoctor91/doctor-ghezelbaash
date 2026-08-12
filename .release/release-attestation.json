@@ -1,0 +1,26 @@
+{
+  "schema": "https://www.ghezelbaash.ir/release-attestation/v2",
+  "release": "1.2.0",
+  "date": "2026-08-12",
+  "canonicalDatasetIri": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
+  "primaryEntity": "Q140287622",
+  "clinicEntity": "Q140288589",
+  "datasetEntity": "Q140304972",
+  "sourceRepository": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+  "sourceCommit": "8aa24ff15ea9c9c444f7fd021d4abd04cb892b20",
+  "zenodoConceptDoi": "10.5281/zenodo.18765168",
+  "zenodoVersionDoi": "10.5281/zenodo.21905312",
+  "zenodoRecordId": "21905312",
+  "artifactManifestSha256": "b3e7b9efe35a5af69009b446a76d4623a9a230109c92eb945d90f28cb2d2308b",
+  "graphJsonldSha256": "9b48f7928c17700a94bf34dbdee7ddb32057fe105e4482cedb1bb1158466ad2c",
+  "indexHtmlSha256": "66004cde3c0a569c8ac7340428d29b4b4ac7ec81b17a20aa9e43f34a21473b9d",
+  "distFileCount": 102,
+  "validation": "PASS",
+  "distributionRoles": {
+    "website": "canonical-first-party-dataset",
+    "github": "source",
+    "zenodo": "immutable-preservation-distribution",
+    "huggingFace": "secondary-ai-ml-distribution",
+    "huggingFaceEnrichment": "derived-synthetic-non-authoritative"
+  }
+}
