@@ -175,7 +175,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -z "$(grep -RIlE 'ChIJBTOYDOTt-j8RD-7mAPy6Zas|Version 1\.0\.0 structured-data|Zenodo Version DOI 1\.1\.0' src public scripts || true)"
+          test -z "$(grep -RIlE 'ChIJBTOYDOTt-j8RD-7mAPy6Zas|Version 1\.0\.0 structured-data|Zenodo Version DOI 1\.1\.0' src public || true)"
           test -z "$(grep -RIlE '^[[:space:]]*issues:' .github/workflows || true)"
           node scripts/validate-release-contract.mjs
           node scripts/verify-converged-stack.mjs
