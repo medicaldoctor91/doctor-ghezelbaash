@@ -68,12 +68,21 @@ jobs:
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
         run: |
-          python scripts/zenodo_release.py reserve \
-            --current-record 21892769 \
-            --current-doi 10.5281/zenodo.21892769 \
-            --concept-doi 10.5281/zenodo.18765168 \
-            --version 1.2.0 \
-            --date 2026-08-12
+          if node -e "const r=require('./.release/release-request.json');process.exit(r.publishedRecordId&&r.publishedVersionDoi?0:1)"; then
+            node - <<'NODE'
+          const fs=require('fs');
+          const r=require('./.release/release-request.json');
+          fs.writeFileSync('.release/zenodo-reservation.json',JSON.stringify({recordId:String(r.publishedRecordId),versionDoi:r.publishedVersionDoi,recovery:true},null,2)+'\n');
+          NODE
+            node -e "const r=require('./.release/release-request.json');fetch('https://zenodo.org/api/records/'+r.publishedRecordId,{headers:{'cache-control':'no-cache'}}).then(x=>x.json()).then(x=>{if(x.doi!==r.publishedVersionDoi||x.metadata?.version!==r.targetVersion)throw Error('Published Zenodo recovery target drift');console.log('ZENODO_PUBLISHED_RECOVERY_EXACT',x.id,x.doi)})"
+          else
+            python scripts/zenodo_release.py reserve \
+              --current-record 21892769 \
+              --current-doi 10.5281/zenodo.21892769 \
+              --concept-doi 10.5281/zenodo.18765168 \
+              --version 1.2.0 \
+              --date 2026-08-12
+          fi
 
       - name: Promote all canonical source contracts to reserved release
         shell: bash
@@ -113,13 +122,18 @@ jobs:
           set -euo pipefail
           git clone --depth=1 https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data .release/huggingface
           node scripts/prepare-huggingface-distribution.mjs dist .release/huggingface
-          test -z "$(rg -l 'ChIJBTOYDOTt-j8RD-7mAPy6Zas|best-mesotherapy-doctor-kermanshah|hifu-therapy-in-kermanshah' .release/huggingface/enrichment || true)"
+          test -z "$(grep -RIlE 'ChIJBTOYDOTt-j8RD-7mAPy6Zas|best-mesotherapy-doctor-kermanshah|hifu-therapy-in-kermanshah' .release/huggingface/enrichment || true)"
           test "$(wc -l < .release/huggingface/enrichment/instruction_examples_fa_market_positioning.jsonl)" -ge 40
 
       - name: Publish exact Zenodo preservation distribution
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
-        run: python scripts/zenodo_release.py publish
+        run: |
+          if node -e "const r=require('./.release/release-request.json');process.exit(r.publishedRecordId&&r.publishedVersionDoi?0:1)"; then
+            echo 'ZENODO_PUBLISH_SKIPPED_ALREADY_EXACT'
+          else
+            python scripts/zenodo_release.py publish
+          fi
 
       - name: Deploy exact canonical DIST to Cloudflare Pages
         env:
@@ -140,7 +154,7 @@ jobs:
           git -C .release/huggingface config user.name ghezelbaash-release-bot
           git -C .release/huggingface config user.email actions@users.noreply.github.com
           git -C .release/huggingface add -A
-          git -C .release/huggingface commit -m "Synchronize canonical Core v1.2.0 and preserve governed strong enrichment"
+          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Synchronize canonical Core v1.2.0 and preserve governed strong enrichment"
           git -C .release/huggingface remote set-url origin "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
           git -C .release/huggingface push origin HEAD:main
 
@@ -153,8 +167,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -z "$(rg -l 'ChIJBTOYDOTt-j8RD-7mAPy6Zas|Version 1\.0\.0 structured-data|Zenodo Version DOI 1\.1\.0' src public scripts || true)"
-          test -z "$(rg -l 'issues:' .github/workflows || true)"
+          test -z "$(grep -RIlE 'ChIJBTOYDOTt-j8RD-7mAPy6Zas|Version 1\.0\.0 structured-data|Zenodo Version DOI 1\.1\.0' src public scripts || true)"
+          test -z "$(grep -RIlE '^[[:space:]]*issues:' .github/workflows || true)"
           node scripts/validate-release-contract.mjs
           node scripts/verify-converged-stack.mjs
 

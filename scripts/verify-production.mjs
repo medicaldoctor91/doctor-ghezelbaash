@@ -22,7 +22,15 @@ const userAgents=[
  ['Applebot','Applebot/0.1'],['DuckAssistBot','DuckAssistBot/1.0'],['Cloudflare-AI-Search','Cloudflare-AI-Search']
 ];
 const request=async(path,ua,{redirect='follow'}={})=>{const r=await fetch(new URL(path,base),{redirect,cache:'no-store',headers:{...cacheBypass,'user-agent':ua}});return {r,text:await r.text()}};
-const budgetProbe=await request('/','Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)');
+let budgetProbe;
+for(let attempt=1;attempt<=16;attempt++){
+ budgetProbe=await request('/','Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)');
+ const liveDigest=`sha-256=:${createHash('sha256').update(Buffer.from(budgetProbe.text)).digest('base64')}:`;
+ if(budgetProbe.r.headers.get('content-security-policy')===expectedRootCsp&&budgetProbe.r.headers.get('repr-digest')===liveDigest)break;
+ if(attempt===16)fail(`Production root did not converge to finalized CSP/digest after ${attempt} attempts`);
+ console.warn(`PRODUCTION_PROPAGATION_WAIT attempt=${attempt}`);
+ await new Promise(resolve=>setTimeout(resolve,4000));
+}
 const budgetBodyBytes=Buffer.byteLength(budgetProbe.text),budgetHeaderBytes=[...budgetProbe.r.headers].reduce((n,[k,v])=>n+Buffer.byteLength(`${k}: ${v}\r\n`),0);
 if(budgetBodyBytes>=inv.maxHtmlBytes||budgetBodyBytes+budgetHeaderBytes+inv.googlebotSafetyMarginBytes>inv.googlebotFetchBudgetBytes)fail(`Production Googlebot response budget unsafe body=${budgetBodyBytes} headers=${budgetHeaderBytes}`);
 if(budgetProbe.r.headers.get('content-security-policy')!==expectedRootCsp)fail('Production root CSP differs from finalized DIST');
