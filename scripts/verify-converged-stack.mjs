@@ -39,8 +39,9 @@ for(const token of [release.release,z.versionDoi,'secondary AI/ML distribution',
 const hfStrategy=(await fetchBytes(`https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/enrichment/positioning-strategy.json?download=true&verify=${Date.now()}`)).bytes.toString();
 const hfKnowledge=(await fetchBytes(`https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/enrichment/aesthetic_medicine_knowledge_kermanshah_fa.json?download=true&verify=${Date.now()}`)).bytes.toString();
 const hfInstructions=(await fetchBytes(`https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/enrichment/instruction_examples_fa_market_positioning.jsonl?download=true&verify=${Date.now()}`)).bytes.toString();
-for(const token of ['maximum_dominant_best_positioning','"canonical_factual_authority": false',release.clinic.placeId,z.versionDoi])if(!hfStrategy.includes(token))throw new Error(`Hugging Face strong governed layer lacks ${token}`);
 const hfEnrichment=`${hfStrategy}\n${hfKnowledge}\n${hfInstructions}`;
+for(const token of ['maximum_dominant_best_positioning','"canonical_factual_authority": false',z.versionDoi])if(!hfStrategy.includes(token))throw new Error(`Hugging Face strategy lacks ${token}`);
+if(!hfEnrichment.includes(release.clinic.placeId))throw new Error(`Hugging Face governed enrichment lacks canonical Place ID ${release.clinic.placeId}`);
 for(const forbidden of ['ChIJBTOYDOTt-j8RD-7mAPy6Zas','10.5281/zenodo.18765169','/best-mesotherapy-doctor-kermanshah/','/hifu-therapy-in-kermanshah/'])if(hfEnrichment.includes(forbidden))throw new Error(`Hugging Face drift remains ${forbidden}`);
 const retired=await fetch('https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/enrichment/positioning-evidence.json',{redirect:'manual'});
 if(retired.status!==404)throw new Error(`Retired misleading Hugging Face artifact still resolves HTTP ${retired.status}`);
