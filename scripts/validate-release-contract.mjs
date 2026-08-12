@@ -19,22 +19,27 @@ const release=await readJson('src/data/release.json');
 const inv=await readJson('src/data/release-invariants.json');
 const pkg=await readJson('package.json');
 const pkgLock=await readJson('package-lock.json');
+const codemeta=await readJson('codemeta.json');
 const R=release.release, Z=release.dataset?.zenodo;
 if(!/^\d+\.\d+\.\d+$/.test(String(R||''))) fail(`Invalid release label ${R}`);
 if(inv.release!==R||pkg.version!==R||pkgLock.version!==R||pkgLock.packages?.['']?.version!==R) fail('Release version convergence failure');
 if(release.dateModified!==inv.date) fail('Release date convergence failure');
+if(codemeta.softwareVersion!==R||codemeta.dateModified!==inv.date||codemeta.subjectOf?.version!==R||codemeta.subjectOf?.identifier!==`https://doi.org/${Z.versionDoi}`) fail('CodeMeta release convergence failure');
+const citation=await readFile('CITATION.cff','utf8');
+for(const token of [`version: ${R}`,`date-released: ${inv.date}`,`doi: ${Z.versionDoi}`])if(!citation.includes(token))fail(`CITATION.cff release drift: ${token}`);
 if(release.dataset?.id!==stable.dataset||release.dataset?.wikidata!==stable.qDataset) fail('Canonical Dataset IRI/Wikidata contract failure');
 if(release.dataset?.creator!==stable.person||release.dataset?.publisher!==stable.person||release.dataset?.creatorWikidata!==stable.qPerson) fail('Physician-first creator/publisher contract failure');
 if(release.dataset?.supportingClinic!==stable.clinic||release.dataset?.supportingClinicWikidata!==stable.qClinic) fail('Supporting clinic contract failure');
 if(release.dataset?.github?.role!=='source'||release.dataset?.github?.repository!==stable.github) fail('GitHub source-role contract failure');
 if(release.dataset?.huggingFace?.role!=='ai-distribution'||release.dataset?.huggingFace?.dataset!==stable.hf) fail('Hugging Face distribution-role contract failure');
-if(Z?.role!=='preservation'||Z?.conceptDoi!==stable.concept||!/^10\.5281\/zenodo\.\d+$/.test(String(Z?.versionDoi||''))||!/^[0-9]+$/.test(String(Z?.recordId||''))||Z?.state!=='doi-locked-draft') fail('Zenodo current-release lock contract failure');
+if(Z?.role!=='preservation'||Z?.conceptDoi!==stable.concept||!/^10\.5281\/zenodo\.\d+$/.test(String(Z?.versionDoi||''))||!/^[0-9]+$/.test(String(Z?.recordId||''))||!['doi-locked-draft','published'].includes(Z?.state)) fail('Zenodo current-release lifecycle contract failure');
+if(Z.state==='published'&&(Z.publishedApi!==`https://zenodo.org/api/records/${Z.recordId}`||Z.draftApi)) fail('Published Zenodo lifecycle metadata failure');
+if(Z.state==='doi-locked-draft'&&(Z.draftApi!==`https://zenodo.org/api/deposit/depositions/${Z.recordId}`||Z.publishedApi)) fail('Draft Zenodo lifecycle metadata failure');
 if(Z.conceptDoi===Z.versionDoi) fail('Concept DOI and Version DOI collapsed');
 for(const old of [Z?.previousVersion,Z?.historicalVersion].filter(Boolean)){
   if(!/^\d+\.\d+\.\d+$/.test(String(old.release||''))||!/^10\.5281\/zenodo\.\d+$/.test(String(old.versionDoi||''))||!/^[0-9]+$/.test(String(old.recordId||''))) fail('Historical Zenodo provenance malformed');
   if(old.versionDoi===Z.versionDoi||String(old.recordId)===String(Z.recordId)) fail('Current and historical Zenodo identity collapsed');
 }
-if(Z?.previousVersion?.release!=='1.1.0'||Z?.previousVersion?.versionDoi!=='10.5281/zenodo.21886743'||String(Z?.previousVersion?.recordId)!=='21886743') fail('Immediate previous release provenance failure');
 if(Z?.historicalVersion?.release!=='1.0.0'||Z?.historicalVersion?.versionDoi!=='10.5281/zenodo.18765169'||String(Z?.historicalVersion?.recordId)!=='18765169') fail('Historical v1.0.0 provenance failure');
 
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
@@ -46,6 +51,13 @@ if(dataset.version!==R||dataset.dateModified!==inv.date) fail('Dataset release/d
 if(scalar(dataset.creator)!==stable.person||scalar(dataset.publisher)!==stable.person) fail('Dataset creator/publisher not physician-first');
 const about=new Set(arr(dataset.about).map(scalar)); if(!about.has(stable.person)||!about.has(stable.clinic)) fail('Dataset about relation incomplete');
 const sameAs=new Set(arr(dataset.sameAs).map(scalar)); if(!sameAs.has(`https://www.wikidata.org/entity/${stable.qDataset}`)&&!sameAs.has(`https://www.wikidata.org/wiki/${stable.qDataset}`)) fail('Dataset lacks Q140304972 reconciliation');
+if(sameAs.size!==1||[...sameAs].some(x=>x.includes('github.com')||x.includes('huggingface.co')||x.includes('doi.org')||x.includes('zenodo.org'))) fail('Dataset identity collapsed with a source or distribution');
+const githubNode=byId.get('https://www.ghezelbaash.ir/#project-github-source');
+const hfNode=byId.get('https://www.ghezelbaash.ir/#project-huggingface-dataset');
+const zenodoNode=byId.get('https://www.ghezelbaash.ir/#project-zenodo-release');
+if(!arr(githubNode?.['@type']).includes('SoftwareSourceCode')||githubNode?.codeRepository!==stable.github||githubNode?.dateModified!==inv.date) fail('GitHub source node role drift');
+if(!arr(hfNode?.['@type']).includes('DataDownload')||hfNode?.version!==R||hfNode?.dateModified!==inv.date||!arr(hfNode?.encodingFormat).includes('text/turtle')||!String(hfNode?.description||'').toLowerCase().includes('secondary ai/ml distribution')) fail('Hugging Face secondary distribution role drift');
+if(!arr(zenodoNode?.['@type']).includes('DataDownload')||arr(zenodoNode?.['@type']).includes('SoftwareSourceCode')||zenodoNode?.version!==R||zenodoNode?.dateModified!==inv.date||zenodoNode?.sameAs!==`https://zenodo.org/records/${Z.recordId}`||zenodoNode?.codeRepository||!String(zenodoNode?.description||'').includes('secondary distribution')) fail('Zenodo preservation distribution role drift');
 const graphStrings=flattenStrings(graph);
 if(!graphStrings.some(x=>x.includes(stable.concept))||!graphStrings.some(x=>x.includes(Z.versionDoi))) fail('Canonical graph lacks Concept or current Version DOI');
 for(const old of [Z?.previousVersion?.versionDoi,Z?.historicalVersion?.versionDoi].filter(Boolean)) if(graphStrings.some(x=>x.includes(old))) fail(`Historical Version DOI leaked into current graph: ${old}`);
@@ -71,4 +83,4 @@ if(/Public release\/entity truth: Version \d/.test(sourceValidator)||/inv\.relea
 if(!sourceValidator.includes('if(inv.release!==release.release)')) fail('Source validator lacks contract-driven release equality gate');
 if(!pkg.scripts?.['validate:release-contract']?.includes('validate-release-contract.mjs')||!pkg.scripts?.['release:prepare']?.includes('validate:release-contract')||!pkg.scripts?.check?.includes('validate:release-contract')) fail('Fail-closed release contract validator wiring missing');
 
-console.log(JSON.stringify({stage:'FINAL_CONVERGENCE_SOURCE',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),coreFrozen:false,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),state:Z.state,integrity:'PASS'},null,2));

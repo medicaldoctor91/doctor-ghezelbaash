@@ -246,7 +246,9 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
   Link: <https://www.ghezelbaash.ir/artifact-manifest.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
+  Repr-Digest: sha-256=:{{DIGEST:artifact-manifest.json}}:
   Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /*.vcf

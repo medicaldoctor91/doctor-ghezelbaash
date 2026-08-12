@@ -125,8 +125,7 @@
       "conceptDoi": "10.5281/zenodo.18765168",
       "versionDoi": "10.5281/zenodo.21892769",
       "recordId": "21892769",
-      "draftApi": "https://zenodo.org/api/deposit/depositions/21892769",
-      "state": "doi-locked-draft",
+      "state": "published",
       "previousVersion": {
         "release": "1.1.0",
         "recordId": "21886743",
@@ -136,7 +135,8 @@
         "release": "1.0.0",
         "recordId": "18765169",
         "versionDoi": "10.5281/zenodo.18765169"
-      }
+      },
+      "publishedApi": "https://zenodo.org/api/records/21892769"
     },
     "huggingFace": {
       "role": "ai-distribution",

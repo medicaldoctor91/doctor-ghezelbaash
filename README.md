@@ -1,6 +1,8 @@
-# Saeed Ghezelbash — Production Source V1
+# Dr. Saeed Ghezelbash — Canonical Production Source
 
 Pure-static Astro source for the single-page production site at `https://www.ghezelbaash.ir/`.
+
+This repository is the version-controlled **source and generation authority**. The canonical first-party Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`; Zenodo is its immutable preservation distribution and Hugging Face is its secondary AI/ML distribution. These related layers are not identity-equivalent.
 
 ## Canonical source
 
@@ -41,3 +43,13 @@ npm run verify:production -- https://www.ghezelbaash.ir/
 `media:enrich` is idempotent and preserves pixel dimensions. The render-calibration command validates all 134 chunk identities across the six measured viewport widths before atomically updating the canonical JSON and its CSS interpolation rules. Production verification checks asynchronous CSS delivery, response-budget safety, native answer integration, crawler access, machine-resource headers and the real 404 contract.
 
 Runtime target: Node 24.18.0 / npm 11.x. Deployment target: Cloudflare Pages static output.
+
+## Release and external distribution contract
+
+- Current source release: `1.1.1`
+- Zenodo Concept DOI: `10.5281/zenodo.18765168`
+- Current Zenodo Version DOI: `10.5281/zenodo.21892769`
+- Hugging Face: `doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data`
+- Wikidata: physician `Q140287622`, clinic `Q140288589`, Dataset `Q140304972`
+
+The atomic ceiling-release workflow reserves the next DOI, promotes all source contracts, builds once, publishes the same Core bytes to the live site, Zenodo and Hugging Face, preserves the governed aggressive Hugging Face enrichment layer, and runs three verification rounds before it publishes the source commit and version tag.
