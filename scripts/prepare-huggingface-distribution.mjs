@@ -117,7 +117,7 @@ This repository is the **secondary AI/ML distribution** of the canonical first-p
 ## Two-layer integrity model
 
 1. **Core (root):** byte-faithful canonical website artifacts, hashes, provenance and release attestation.
-2. **Enrichment:** aggressive Persian AI-retrieval and market-positioning derivatives, explicitly labeled synthetic and non-authoritative. This layer remains powerful but cannot override Core facts.
+2. **Enrichment:** aggressive Persian AI-retrieval and market-positioning material, explicitly labeled derived, synthetic and non-authoritative. This layer remains powerful but cannot override Core facts.
 
 \`entity-facts.csv\` and the positioning JSONL are separately declared Dataset Viewer configurations. JSON-LD, RDF, DCAT, Croissant, VoID, provenance and integrity files provide complementary machine-readable projections.
 `;

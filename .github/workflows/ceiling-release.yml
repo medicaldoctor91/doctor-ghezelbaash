@@ -141,8 +141,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npx wrangler pages deploy dist --project-name="$CF_PROJECT" --branch=main --commit-hash="$SOURCE_COMMIT" --commit-message="Synchronized entity stack v1.2.0" --commit-dirty=true
-          python scripts/configure-cloudflare-edge.py --apply --outcome edge-reconciliation.json
+          if node -e "const r=require('./.release/release-request.json');process.exit(r.skipLiveDeploy?0:1)"; then
+            echo 'CLOUDFLARE_DEPLOY_SKIPPED_ALREADY_BYTE_EXACT'
+          else
+            npx wrangler pages deploy dist --project-name="$CF_PROJECT" --branch=main --commit-hash="$SOURCE_COMMIT" --commit-message="Synchronized entity stack v1.2.0" --commit-dirty=true
+            python scripts/configure-cloudflare-edge.py --apply --outcome edge-reconciliation.json
+          fi
 
       - name: Publish exact Core and governed enrichment to Hugging Face
         env:
