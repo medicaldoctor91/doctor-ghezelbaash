@@ -10,13 +10,21 @@ const fetchBytes=async(url,accept='*/*')=>{
   if(response.status!==200)throw new Error(`HTTP ${response.status} ${url}`);
   return {response,bytes:Buffer.from(await response.arrayBuffer())};
 };
+const fetchExpected=async(url,expected,label,attempts=12)=>{
+  for(let attempt=1;attempt<=attempts;attempt++){
+    const result=await fetchBytes(url);
+    const observed=sha(result.bytes);
+    if(observed===expected)return result;
+    console.warn(JSON.stringify({stage:'CROSS_PLATFORM_PROPAGATION_WAIT',label,attempt,expected,observed}));
+    if(attempt===attempts)throw new Error(`${label} did not converge after ${attempts} attempts`);
+    await new Promise(resolve=>setTimeout(resolve,5000));
+  }
+};
 const results=[];
 for(const file of core){
   const local=await readFile(`dist/${file}`),expected=sha(local);
-  const live=await fetchBytes(`${release.canonicalUrl}${file==='index.html'?'':file}?verify=${Date.now()}`);
-  const hf=await fetchBytes(`https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/${file}?download=true&verify=${Date.now()}`);
-  if(sha(live.bytes)!==expected)throw new Error(`Live content drift ${file}`);
-  if(sha(hf.bytes)!==expected)throw new Error(`Hugging Face Core drift ${file}`);
+  const live=await fetchExpected(`${release.canonicalUrl}${file==='index.html'?'':file}?verify=${Date.now()}`,expected,`Live ${file}`);
+  const hf=await fetchExpected(`https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/main/${file}?download=true&verify=${Date.now()}`,expected,`Hugging Face Core ${file}`);
   if(file==='artifact-manifest.json'){
     const expectedDigest=`sha-256=:${createHash('sha256').update(local).digest('base64')}:`;
     if(live.response.headers.get('repr-digest')!==expectedDigest)throw new Error('Live artifact-manifest Repr-Digest mismatch');
@@ -44,6 +52,6 @@ const remoteFiles=new Map((zenodo.files||[]).map(x=>[x.key||x.filename,x]));
 for(const file of core){
   const row=remoteFiles.get(file);if(!row)throw new Error(`Zenodo file missing ${file}`);
   const url=row.links?.self||row.links?.download||row.links?.content;
-  const remote=await fetchBytes(url);if(sha(remote.bytes)!==sha(await readFile(`dist/${file}`)))throw new Error(`Zenodo byte drift ${file}`);
+  await fetchExpected(url,sha(await readFile(`dist/${file}`)),`Zenodo ${file}`);
 }
 console.log(JSON.stringify({pass:true,release:release.release,coreFiles:core.length,liveExact:true,huggingFaceCoreExact:true,huggingFaceAggressiveLayerPreserved:true,huggingFaceAuthoritySeparated:true,zenodoExact:true,manifestIconsResolved:true,results},null,2));

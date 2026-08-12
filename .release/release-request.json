@@ -4,8 +4,9 @@
   "currentRecordId": "21892769",
   "currentVersionDoi": "10.5281/zenodo.21892769",
   "conceptDoi": "10.5281/zenodo.18765168",
-  "attempt": 7,
-  "skipLiveDeploy": false,
+  "attempt": 8,
+  "skipLiveDeploy": true,
+  "skipEdgeReconcile": true,
   "publishedRecordId": "21905312",
   "publishedVersionDoi": "10.5281/zenodo.21905312",
   "reason": "Semantic distribution-role repair, manifest integrity closure, PWA icon repair, governed Hugging Face enrichment synchronization, and release-pipeline hardening."
