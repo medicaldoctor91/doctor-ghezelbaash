@@ -50,7 +50,18 @@ jobs:
       - name: Build and validate canonical distribution
         run: npm run build
 
-      - name: Deploy exact DIST to Cloudflare Pages
+      - name: Resume and prove native Cloudflare Git deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+
+      - name: Purge edge cache and prove production bytes
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
@@ -61,12 +72,6 @@ jobs:
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           echo "::add-mask::$CLOUDFLARE_API_TOKEN"
-          npx wrangler pages deploy dist \
-            --project-name="$CF_PROJECT" \
-            --branch=main \
-            --commit-hash="$GITHUB_SHA" \
-            --commit-message="Deploy canonical site $GITHUB_SHA" \
-            --commit-dirty=true
           python scripts/configure-cloudflare-edge.py \
             --purge-cache-only \
             --outcome edge-cache-purge.json
