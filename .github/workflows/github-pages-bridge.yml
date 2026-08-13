@@ -6,7 +6,7 @@ on:
     paths:
       - .github/workflows/github-pages-bridge.yml
       - scripts/build-github-pages-bridge.mjs
-      - src/content/home.md
+      - src/content-source/**
   workflow_dispatch:
 
 permissions:

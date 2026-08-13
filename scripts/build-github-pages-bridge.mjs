@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, readFile, rm, writeFile} from 'node:fs/promises';
+import {mkdtemp, mkdir, readFile, readdir, rm, writeFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
 const root=process.cwd();
 const canonical='https://www.ghezelbaash.ir/';
-const sourceHtml=await readFile(path.join(root,'src/content/home.md'),'utf8');
+const canonicalSourceDir=path.join(root,'src/content-source');
+const canonicalSourceFiles=(await readdir(canonicalSourceDir))
+  .filter(name=>/\.(?:html|md)$/.test(name))
+  .sort();
+assert.ok(canonicalSourceFiles.length>=100,'Canonical modular source inventory is incomplete');
+const sourceHtml=(await Promise.all(canonicalSourceFiles.map(name=>readFile(path.join(canonicalSourceDir,name),'utf8')))).join('\n');
 
 const humanRoutes=[
   ['index.html',canonical,'وب‌سایت رسمی دکتر سعید قزلباش'],
