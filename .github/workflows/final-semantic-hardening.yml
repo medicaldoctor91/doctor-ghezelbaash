@@ -42,21 +42,39 @@ jobs:
       - name: Apply fail-closed final hardening
         run: python scripts/final-hardening.py
 
-      - name: Bind source validator to release truth variables
+      - name: Bind validators and current DOI head surface
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+
           p=Path('scripts/validate-release-contract.mjs')
           text=p.read_text()
           old="for(const token of ['task_categories:','size_categories:','Q140287622','/g/11nqdfk76c','0009-0001-9346-8475','Personal Hugging Face identity'])"
           new="for(const token of ['task_categories:','size_categories:','release.primaryEntity.wikidata','release.primaryEntity.googleKnowledgeGraphId','release.dataset.creatorOrcid','Personal Hugging Face identity'])"
           if text.count(old)!=1: raise SystemExit(f'expected one validator binding, found {text.count(old)}')
-          p.write_text(text.replace(old,new,1))
+          text=text.replace(old,new,1)
+          anchor="const llms=await readFile('src/data/templates/llms.template.txt','utf8');"
+          check="""const mainHead=await readFile('src/data/templates/main-head.html','utf8');
+          for(const token of [`https://doi.org/${Z.versionDoi}`,`Zenodo preservation Version DOI ${R}`]) if(!mainHead.includes(token)) fail(`Main head current Zenodo release drift: ${token}`);
+          for(const old of [Z?.previousVersion?.versionDoi,Z?.historicalVersion?.versionDoi].filter(Boolean)) if(mainHead.includes(`https://doi.org/${old}`)) fail(`Historical DOI remains in main head: ${old}`);
+          """
+          if text.count(anchor)!=1: raise SystemExit('main-head validator anchor drift')
+          text=text.replace(anchor,check+anchor,1)
+          p.write_text(text)
+
+          h=Path('src/data/templates/main-head.html')
+          head=h.read_text()
+          old='https://doi.org/10.5281/zenodo.21892769" rel="related" title="Zenodo preservation Version DOI 1.1.1"'
+          new='https://doi.org/10.5281/zenodo.21905312" rel="related" title="Zenodo preservation Version DOI 1.2.0"'
+          if head.count(old)!=1: raise SystemExit(f'main-head old DOI binding count {head.count(old)}')
+          h.write_text(head.replace(old,new,1))
+
           q=Path('.github/workflows/ceiling-release.yml')
           raw=q.read_text()
           q.write_text('\n'.join(line.rstrip() for line in raw.splitlines())+'\n')
+          Path('ceiling-release.next.yml').write_text(q.read_text())
           PY
 
       - name: Regenerate and validate hardened source
@@ -68,14 +86,14 @@ jobs:
           npm run validate:source
           git diff --check
 
-      - name: Commit hardened source and retire one-shot helpers
+      - name: Push validated non-workflow hardening
         shell: bash
         run: |
           set -euo pipefail
           git config user.name ghezelbaash-release-bot
           git config user.email actions@users.noreply.github.com
+          git restore --source=HEAD -- .github/workflows/ceiling-release.yml
           git add \
-            .github/workflows/ceiling-release.yml \
             scripts/promote-release.mjs \
             scripts/zenodo_release.py \
             scripts/prepare-huggingface-distribution.mjs \
@@ -83,8 +101,9 @@ jobs:
             scripts/validate-release-contract.mjs \
             scripts/validate-source.mjs \
             src/content-source/100-rc099.html \
-            public/_redirects
-          git rm .github/workflows/final-semantic-hardening.yml scripts/final-hardening.py
+            src/data/templates/main-head.html \
+            public/_redirects \
+            ceiling-release.next.yml
           git commit -m "Harden final cross-platform entity convergence"
           git push origin HEAD:main
 
