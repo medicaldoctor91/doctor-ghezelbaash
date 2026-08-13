@@ -183,8 +183,74 @@ class FakeCloudflareApi:
         raise AssertionError((method, path, body))
 
 
+class FakeTokenAuthority:
+    def __init__(self) -> None:
+        self.revoked = False
+
+    def expect(
+        self,
+        method: str,
+        path: str,
+        body: Any | None = None,
+        ok: tuple[int, ...] = (200,),
+    ) -> dict[str, Any]:
+        del ok
+        if method == "GET" and path == (
+            "/accounts/test-account/tokens/permission_groups?"
+            "scope=com.cloudflare.api.account.zone"
+        ):
+            return {
+                "success": True,
+                "result": [
+                    {
+                        "id": "redirect-read",
+                        "name": "Single Redirect Read",
+                        "scopes": ["com.cloudflare.api.account.zone"],
+                    },
+                    {
+                        "id": "redirect-write",
+                        "name": "Dynamic URL Redirects Write",
+                        "scopes": ["com.cloudflare.api.account.zone"],
+                    },
+                ],
+            }
+        if method == "POST" and path == "/accounts/test-account/tokens":
+            policy = body["policies"][0]
+            ids = {row["id"] for row in policy["permission_groups"]}
+            if ids != {"redirect-read", "redirect-write"}:
+                raise AssertionError(ids)
+            if policy["resources"] != {"com.cloudflare.api.account.zone.test-zone": "*"}:
+                raise AssertionError(policy["resources"])
+            return {
+                "success": True,
+                "result": {"id": "ephemeral-redirect-token", "value": "child-secret"},
+            }
+        raise AssertionError((method, path, body))
+
+    def raw(
+        self, method: str, path: str, body: Any | None = None
+    ) -> tuple[int, dict[str, Any]]:
+        if body is not None:
+            raise AssertionError(body)
+        if method != "DELETE" or path != (
+            "/accounts/test-account/tokens/ephemeral-redirect-token"
+        ):
+            raise AssertionError((method, path))
+        self.revoked = True
+        return 200, {"success": True}
+
+
 contract = edge.load_subdomain_redirect_contract(ROOT)
 api = FakeCloudflareApi()
+token_authority = FakeTokenAuthority()
+child_api, revoke_child_api = edge.issue_ephemeral_single_redirect_api(
+    token_authority, "test-account", "test-zone"
+)
+if child_api.token != "child-secret":
+    raise AssertionError("Ephemeral Single Redirect child token was not returned")
+revoke_child_api()
+if not token_authority.revoked:
+    raise AssertionError("Ephemeral Single Redirect child token was not revoked")
 
 # The production entrypoint must establish and verify all exact Bulk Redirects
 # before removing the higher-priority legacy blog Single Redirect.
@@ -221,6 +287,7 @@ print(
             "finalSingleRedirectCount": len(api.zone_rules),
             "firstPassMutations": first_mutations,
             "bulkBeforeSingleRemoval": True,
+            "ephemeralSingleRedirectToken": True,
             "idempotent": True,
         },
         sort_keys=True,

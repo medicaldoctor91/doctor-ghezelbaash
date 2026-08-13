@@ -51,6 +51,15 @@ ZONE_SETTINGS_PERMISSION_IDS = (
     "517b21aee92c4d89936c976ba6e4be55",  # Zone Settings Read
     "3030687196b94b638145a3953da2b699",  # Zone Settings Write
 )
+SUBDOMAIN_SINGLE_REDIRECT_PERMISSION_ALIASES = (
+    ("Dynamic URL Redirects Read", "Single Redirect Read", "Single Redirects Read"),
+    (
+        "Dynamic URL Redirects Write",
+        "Single Redirect Edit",
+        "Single Redirects Edit",
+        "Single Redirect Write",
+    ),
+)
 
 
 class CloudflareError(RuntimeError):
@@ -470,6 +479,84 @@ def issue_ephemeral_zone_api(
 
     atexit.register(revoke)
     print("EPHEMERAL_ZONE_TOKEN_ISSUED", token_id, "expires_on=", expires_on)
+    return CloudflareApi(token_value), lambda: revoke(strict=True)
+
+
+def issue_ephemeral_single_redirect_api(
+    parent_api: CloudflareApi, account: str, zone: str
+) -> tuple[CloudflareApi, Any]:
+    """Issue a 15-minute child token limited to the zone's Single Redirects."""
+    permissions = parent_api.expect(
+        "GET",
+        f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account.zone",
+    ).get("result") or []
+    groups: list[dict[str, str]] = []
+    for aliases in SUBDOMAIN_SINGLE_REDIRECT_PERMISSION_ALIASES:
+        match: dict[str, Any] | None = None
+        for permission_name in aliases:
+            candidates = [
+                row
+                for row in permissions
+                if row.get("name") == permission_name
+                and "com.cloudflare.api.account.zone" in (row.get("scopes") or [])
+            ]
+            if len(candidates) == 1:
+                match = candidates[0]
+                break
+        if match is None:
+            raise CloudflareError(
+                "Required Single Redirect permission group unavailable: "
+                + " | ".join(aliases)
+            )
+        groups.append({"id": str(match["id"])})
+
+    expires_on = (
+        dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)
+    ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    created = parent_api.expect(
+        "POST",
+        f"/accounts/{account}/tokens",
+        {
+            "name": "Ephemeral Ghezelbaash Single Redirect Reconciler",
+            "expires_on": expires_on,
+            "policies": [
+                {
+                    "effect": "allow",
+                    "resources": {f"com.cloudflare.api.account.zone.{zone}": "*"},
+                    "permission_groups": groups,
+                }
+            ],
+        },
+        ok=(200, 201),
+    ).get("result") or {}
+    token_value = str(created.get("value") or "")
+    token_id = str(created.get("id") or "")
+    if not token_value or not token_id:
+        raise CloudflareError("Ephemeral Single Redirect token returned no token/id")
+
+    revoked = False
+
+    def revoke(*, strict: bool = False) -> None:
+        nonlocal revoked
+        if revoked:
+            return
+        status, payload = parent_api.raw(
+            "DELETE", f"/accounts/{account}/tokens/{token_id}"
+        )
+        if status in (200, 204) and payload.get("success") is True:
+            revoked = True
+            print("EPHEMERAL_SINGLE_REDIRECT_TOKEN_REVOKED", token_id)
+            return
+        message = (
+            f"Ephemeral Single Redirect token revoke failed HTTP {status}: "
+            f"{json.dumps(payload, ensure_ascii=False)[:1200]}"
+        )
+        if strict:
+            raise CloudflareError(message, status=status, payload=payload)
+        print("EPHEMERAL_SINGLE_REDIRECT_TOKEN_REVOKE_WARNING", message, file=sys.stderr)
+
+    atexit.register(revoke)
+    print("EPHEMERAL_SINGLE_REDIRECT_TOKEN_ISSUED", token_id, "expires_on=", expires_on)
     return CloudflareApi(token_value), lambda: revoke(strict=True)
 
 
@@ -1305,9 +1392,15 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     # Redirect list and rule have already passed their read-back checks.
     if bulk_ready:
         try:
-            subdomain_readback = reconcile_subdomain_redirects(
-                api, zone, subdomain_contract
+            zone_redirect_api, revoke_zone_redirect_api = (
+                issue_ephemeral_single_redirect_api(api, account, zone)
             )
+            try:
+                subdomain_readback = reconcile_subdomain_redirects(
+                    zone_redirect_api, zone, subdomain_contract
+                )
+            finally:
+                revoke_zone_redirect_api()
             outcome["capabilities"]["subdomainRedirectRules"] = (
                 subdomain_readback.get("managedRuleCount")
                 == len(subdomain_contract["singleRedirects"]["rules"])
@@ -1427,7 +1520,17 @@ def apply_subdomains_only() -> dict[str, Any]:
     expected_bulk_count = len(expand_bulk_redirect_items(contract))
     if bulk_readback.get("itemCount") != expected_bulk_count:
         raise CloudflareError("Historical blog Bulk Redirect read-back count drift")
-    readback = reconcile_subdomain_redirects(api, zone, contract)
+    # The long-lived deployment credential intentionally lacks direct access
+    # to zone Single Redirects. Mint the two-capability child token only after
+    # the account-level Bulk rule has passed all read-back checks, then revoke
+    # it in the same transaction.
+    zone_redirect_api, revoke_zone_redirect_api = issue_ephemeral_single_redirect_api(
+        api, account, zone
+    )
+    try:
+        readback = reconcile_subdomain_redirects(zone_redirect_api, zone, contract)
+    finally:
+        revoke_zone_redirect_api()
     outcome = {
         "schemaVersion": 1,
         "mode": "subdomains-only",
@@ -1444,12 +1547,50 @@ def apply_subdomains_only() -> dict[str, Any]:
     return outcome
 
 
+def purge_cache_only() -> dict[str, Any]:
+    token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
+    account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
+    zone_name = os.environ.get("ZONE_NAME", "").strip()
+    host = os.environ.get("CANONICAL_HOST", "").strip()
+    missing_env = [
+        name
+        for name, value in {
+            "CLOUDFLARE_API_TOKEN": token,
+            "CLOUDFLARE_ACCOUNT_ID": account,
+            "ZONE_NAME": zone_name,
+            "CANONICAL_HOST": host,
+        }.items()
+        if not value
+    ]
+    if missing_env:
+        raise CloudflareError(f"Missing required environment: {', '.join(missing_env)}")
+    if host != f"www.{zone_name}":
+        raise CloudflareError(f"Unexpected canonical host/zone pairing: {host}/{zone_name}")
+    parent_api = CloudflareApi(token)
+    zone = zone_id(parent_api, account, zone_name)
+    zone_api, revoke_zone_api = issue_ephemeral_zone_api(parent_api, account, zone)
+    try:
+        purge_canonical(zone_api, zone, host)
+    finally:
+        revoke_zone_api()
+    outcome = {
+        "schemaVersion": 1,
+        "mode": "cache-purge-only",
+        "zone": zone_name,
+        "host": host,
+        "purged": True,
+    }
+    print("CACHE_PURGE_COMPLETE", json.dumps(outcome, sort_keys=True))
+    return outcome
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--self-test", action="store_true")
     mode.add_argument("--apply", action="store_true")
     mode.add_argument("--apply-subdomains-only", action="store_true")
+    mode.add_argument("--purge-cache-only", action="store_true")
     parser.add_argument("--dist", default="dist")
     parser.add_argument("--outcome", default="edge-reconciliation.json")
     args = parser.parse_args()
@@ -1459,6 +1600,14 @@ def main() -> int:
             self_test(dist_dir)
         elif args.apply_subdomains_only:
             outcome = apply_subdomains_only()
+            outcome_path = Path(args.outcome).resolve()
+            outcome_path.write_text(
+                json.dumps(outcome, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            print("EDGE_OUTCOME_WRITTEN", outcome_path)
+        elif args.purge_cache_only:
+            outcome = purge_cache_only()
             outcome_path = Path(args.outcome).resolve()
             outcome_path.write_text(
                 json.dumps(outcome, indent=2, sort_keys=True) + "\n",
