@@ -140,6 +140,7 @@ jobs:
           meta['configs'] = [
               {
                   'config_name': 'entity_facts',
+                  'default': True,
                   'data_files': [{'split': 'train', 'path': 'entity-facts.csv'}],
               },
               {
@@ -149,10 +150,11 @@ jobs:
           ]
 
           old_sentence = '`entity-facts.csv` and the positioning JSONL are separately declared Dataset Viewer configurations.'
-          new_sentence = '`entity-facts.csv` and a deterministic CSV projection of the positioning JSONL are separately declared Dataset Viewer configurations; the original JSONL remains preserved as the enrichment source.'
+          new_sentence = '`entity-facts.csv` is the default factual Dataset Viewer configuration; a deterministic CSV projection of the positioning JSONL is the secondary Viewer configuration, while the original JSONL remains preserved as the enrichment source.'
           body = body.replace(old_sentence, new_sentence)
+          body = body.replace('`entity-facts.csv` and a deterministic CSV projection of the positioning JSONL are separately declared Dataset Viewer configurations; the original JSONL remains preserved as the enrichment source.', new_sentence)
           marker_pattern = r'<!-- hf-viewer-guard:.*?-->'
-          marker = '<!-- hf-viewer-guard: enabled; public; ungated; full-viewer; positioning=csv-projection -->'
+          marker = '<!-- hf-viewer-guard: enabled; public; ungated; full-viewer; default=entity_facts; positioning=csv-projection -->'
           if re.search(marker_pattern, body):
               body = re.sub(marker_pattern, marker, body, count=1)
           else:
@@ -209,7 +211,7 @@ jobs:
           repo = os.environ['HF_REPO']
           base = 'https://datasets-server.huggingface.co'
           s = requests.Session()
-          s.headers.update({'cache-control': 'no-cache', 'pragma': 'no-cache', 'user-agent': 'ghezelbaash-hf-viewer-guard/3.0'})
+          s.headers.update({'cache-control': 'no-cache', 'pragma': 'no-cache', 'user-agent': 'ghezelbaash-hf-viewer-guard/4.0'})
 
           def request(path, **params):
               params['dataset'] = repo
