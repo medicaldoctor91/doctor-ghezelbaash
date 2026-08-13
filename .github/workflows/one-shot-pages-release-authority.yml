@@ -1,0 +1,68 @@
+name: One-shot make atomic release sole Pages deploy authority
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .release/pages-release-authority.trigger
+
+permissions:
+  contents: read
+
+jobs:
+  configure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      CF_PROJECT: doctor-ghezelbaash
+    steps:
+      - name: Read, disable Git auto-deploys, and read back
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          python - <<'PY'
+          import json, os, urllib.request, urllib.error
+          account=os.environ['CLOUDFLARE_ACCOUNT_ID']; project=os.environ['CF_PROJECT']; token=os.environ['CLOUDFLARE_API_TOKEN']
+          url=f'https://api.cloudflare.com/client/v4/accounts/{account}/pages/projects/{project}'
+          headers={'Authorization':f'Bearer {token}','Content-Type':'application/json'}
+          def request(method,payload=None):
+              data=None if payload is None else json.dumps(payload).encode()
+              req=urllib.request.Request(url,data=data,headers=headers,method=method)
+              with urllib.request.urlopen(req,timeout=30) as r: body=json.load(r)
+              if not body.get('success'): raise SystemExit(body)
+              return body['result']
+          before=request('GET')
+          src=before.get('source') or {}; cfg=(src.get('config') or {})
+          print('PAGES_SOURCE_BEFORE',json.dumps({
+              'type':src.get('type'),
+              'production_branch':cfg.get('production_branch'),
+              'deployments_enabled':cfg.get('deployments_enabled'),
+              'production_deployments_enabled':cfg.get('production_deployments_enabled'),
+              'preview_deployment_setting':cfg.get('preview_deployment_setting'),
+              'repo_name':cfg.get('repo_name')
+          },sort_keys=True))
+          if not src.get('type'): raise SystemExit('Pages project has no Git source configuration')
+          payload={'source':{'type':src['type'],'config':{
+              'deployments_enabled':False,
+              'production_deployments_enabled':False,
+              'preview_deployment_setting':'none'
+          }}}
+          request('PATCH',payload)
+          after=request('GET'); acfg=((after.get('source') or {}).get('config') or {})
+          state={
+              'type':(after.get('source') or {}).get('type'),
+              'production_branch':acfg.get('production_branch'),
+              'deployments_enabled':acfg.get('deployments_enabled'),
+              'production_deployments_enabled':acfg.get('production_deployments_enabled'),
+              'preview_deployment_setting':acfg.get('preview_deployment_setting'),
+              'repo_name':acfg.get('repo_name')
+          }
+          print('PAGES_SOURCE_AFTER',json.dumps(state,sort_keys=True))
+          if acfg.get('production_deployments_enabled') is not False: raise SystemExit('production auto deployment still enabled')
+          if acfg.get('preview_deployment_setting')!='none': raise SystemExit('preview auto deployment still enabled')
+          print('ATOMIC_RELEASE_SOLE_PAGES_DEPLOY_AUTHORITY PASS')
+          PY
