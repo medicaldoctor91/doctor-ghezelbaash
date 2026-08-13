@@ -18,7 +18,7 @@
         <xmp:CreatorTool>OpenAI image edit and deterministic vector tracing — Entity Media Profile 1.0.0</xmp:CreatorTool>
         <xmp:MetadataDate>2026-08-06T00:00:00Z</xmp:MetadataDate>
         <entity:MetadataProfile>Entity Media Profile 1.0.0</entity:MetadataProfile>
-        <entity:Version>1.2.0</entity:Version>
+        <entity:Version>1.2.1</entity:Version>
         <entity:AuthoritativeGraph>https://www.ghezelbaash.ir/graph.jsonld</entity:AuthoritativeGraph>
         <entity:OfficialImageObject>https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo</entity:OfficialImageObject>
         <entity:CanonicalPersonIRI>https://www.ghezelbaash.ir/#saeed-ghezelbash</entity:CanonicalPersonIRI>

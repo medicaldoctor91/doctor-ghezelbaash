@@ -1,6 +1,6 @@
 {
   "policyVersion": "1.0",
-  "release": "1.2.0",
+  "release": "1.2.1",
   "verifiedAt": "2026-08-07",
   "maxAgeDays": 30,
   "facts": [
