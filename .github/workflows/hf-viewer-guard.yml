@@ -1,0 +1,188 @@
+name: Hugging Face viewer and discovery guard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/hf-viewer-guard.yml
+  workflow_run:
+    workflows: ["Atomic ceiling release"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-hf-viewer-guard
+  cancel-in-progress: false
+
+jobs:
+  enforce:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+
+      - name: Install Hub tooling
+        run: python -m pip install --disable-pip-version-check --quiet 'huggingface_hub>=0.34,<2' 'PyYAML>=6,<7' 'requests>=2.32,<3'
+
+      - name: Enforce public, ungated, Viewer-capable dataset and discovery metadata
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"
+          echo "::add-mask::$HF_TOKEN"
+          python - <<'PY'
+          import os, re, tempfile
+          from pathlib import Path
+          import yaml
+          from huggingface_hub import HfApi, hf_hub_download
+
+          repo = os.environ['HF_REPO']
+          token = os.environ['HF_TOKEN']
+          api = HfApi(token=token)
+
+          who = api.whoami()
+          print('HF_AUTHENTICATED_AS', who.get('name') or who.get('fullname') or 'authenticated-user')
+
+          # Maximum public machine accessibility: never private and never gated.
+          api.update_repo_settings(repo_id=repo, repo_type='dataset', private=False, gated=False)
+
+          readme_path = hf_hub_download(repo_id=repo, repo_type='dataset', filename='README.md', token=token, force_download=True)
+          text = Path(readme_path).read_text(encoding='utf-8')
+          m = re.match(r'^---\s*\n(.*?)\n---\s*\n?', text, flags=re.S)
+          if not m:
+              raise SystemExit('Dataset README has no valid YAML front matter')
+
+          meta = yaml.safe_load(m.group(1)) or {}
+          body = text[m.end():]
+
+          # Hugging Face documents viewer:false as the switch that disables Data Studio.
+          # Remove any explicit disable so the supported data configs are processed normally.
+          meta.pop('viewer', None)
+
+          meta['pretty_name'] = 'Dr. Saeed Ghezelbash Public Knowledge Graph'
+          meta['language'] = ['fa', 'en', 'ar', 'ckb']
+          meta['license'] = 'cc-by-4.0'
+          meta['multilinguality'] = ['multilingual']
+          meta['source_datasets'] = ['original']
+          meta['task_categories'] = ['question-answering']
+          meta['size_categories'] = ['1K<n<10K']
+
+          required_tags = [
+              'saeed-ghezelbash', 'dr-saeed-ghezelbash', 'physician-entity',
+              'medical-knowledge-graph', 'knowledge-graph', 'knowledge-base',
+              'entity-resolution', 'json-ld', 'rdf', 'schema-org', 'wikidata',
+              'fair-data', 'question-answering', 'rag', 'ai-retrieval',
+              'aesthetic-medicine', 'healthcare', 'medical', 'physician',
+              'kermanshah', 'iran', 'croissant', 'dcat',
+              # Official Hub-recognized library/modality discovery tags.
+              'datasets', 'pandas', 'mlcroissant', 'text', 'tabular'
+          ]
+          existing = list(meta.get('tags') or [])
+          meta['tags'] = list(dict.fromkeys(existing + required_tags))
+
+          # Explicit supported data-file configurations for Dataset Viewer/Data Studio.
+          meta['configs'] = [
+              {
+                  'config_name': 'entity_facts',
+                  'data_files': [{'split': 'train', 'path': 'entity-facts.csv'}],
+              },
+              {
+                  'config_name': 'positioning_instructions',
+                  'data_files': [{'split': 'train', 'path': 'enrichment/instruction_examples_fa_market_positioning.jsonl'}],
+              },
+          ]
+
+          yaml_text = yaml.safe_dump(meta, sort_keys=False, allow_unicode=True, width=120).strip()
+          marker = '<!-- hf-viewer-guard: enabled; public; ungated; configs=entity_facts,positioning_instructions -->'
+          if marker not in body:
+              body = marker + '\n\n' + body.lstrip()
+          new_text = f'---\n{yaml_text}\n---\n\n{body.rstrip()}\n'
+
+          if new_text != text:
+              with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False, suffix='.md') as f:
+                  f.write(new_text)
+                  tmp = f.name
+              url = api.upload_file(
+                  path_or_fileobj=tmp,
+                  path_in_repo='README.md',
+                  repo_id=repo,
+                  repo_type='dataset',
+                  token=token,
+                  commit_message='Enable Dataset Viewer and maximize Hub discovery metadata',
+              )
+              print('HF_README_UPDATED', url)
+          else:
+              print('HF_README_ALREADY_COMPLIANT')
+          PY
+
+      - name: Verify Dataset Server processing, Viewer, rows and Parquet
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, time
+          import requests
+
+          repo = os.environ['HF_REPO']
+          base = 'https://datasets-server.huggingface.co'
+          s = requests.Session()
+          s.headers.update({'cache-control': 'no-cache', 'pragma': 'no-cache', 'user-agent': 'ghezelbaash-hf-viewer-guard/1.0'})
+
+          last = None
+          for attempt in range(36):
+              r = s.get(base + '/is-valid', params={'dataset': repo, '_': str(time.time_ns())}, timeout=30)
+              try:
+                  last = r.json()
+              except Exception:
+                  last = {'http': r.status_code, 'text': r.text[:500]}
+              print('IS_VALID_ATTEMPT', attempt + 1, json.dumps(last, ensure_ascii=False))
+              if r.ok and last.get('viewer') is True and last.get('preview') is True:
+                  break
+              time.sleep(10)
+          else:
+              raise SystemExit('Dataset Viewer did not reach viewer=true and preview=true')
+
+          def get(path, **params):
+              params['dataset'] = repo
+              params['_'] = str(time.time_ns())
+              r = s.get(base + path, params=params, timeout=45)
+              print(path, 'HTTP', r.status_code)
+              if not r.ok:
+                  print(r.text[:2000])
+                  r.raise_for_status()
+              return r.json()
+
+          splits = get('/splits')
+          pairs = {(x.get('config'), x.get('split')) for x in splits.get('splits', [])}
+          required = {('entity_facts', 'train'), ('positioning_instructions', 'train')}
+          if not required.issubset(pairs):
+              raise SystemExit(f'Missing Viewer configs/splits: {required - pairs}')
+
+          for config in ('entity_facts', 'positioning_instructions'):
+              rows = get('/first-rows', config=config, split='train')
+              if not rows.get('rows'):
+                  raise SystemExit(f'No preview rows for {config}')
+
+          parquet = get('/parquet')
+          if len(parquet.get('parquet_files', [])) < 2:
+              raise SystemExit('Expected Parquet exports for both Viewer configs')
+
+          size = get('/size')
+          if size.get('failed'):
+              raise SystemExit(f'Dataset Server size pipeline failures: {size["failed"]}')
+
+          print('HF_VIEWER_GUARD_PASS', json.dumps(last, ensure_ascii=False))
+          print('HF_SPLITS_PASS', sorted(pairs))
+          print('HF_PARQUET_FILES', len(parquet.get('parquet_files', [])))
+          PY
