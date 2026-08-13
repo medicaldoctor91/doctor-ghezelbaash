@@ -1053,25 +1053,23 @@ def reconcile_subdomain_redirects(
 
         for source, desired in zip(desired_rows, desired_rules):
             rules = read_rules()
+            host = str(source["host"])
             current = next(
                 (row for row in rules if row.get("ref") == desired["ref"]), None
             )
-            if current is None:
-                host = str(source["host"])
-                legacy = [
-                    row
-                    for row in rules
-                    if row.get("ref") not in desired_refs
-                    and host in str(row.get("expression") or "")
-                    and not any(
-                        other in str(row.get("expression") or "")
-                        for other in managed_hosts
-                        if other != host
-                    )
-                ]
-                if len(legacy) > 1:
-                    raise CloudflareError(f"Ambiguous legacy catchalls for {host}")
-                current = legacy[0] if legacy else None
+            legacy = [
+                row
+                for row in rules
+                if row.get("ref") not in desired_refs
+                and host in str(row.get("expression") or "")
+                and not any(
+                    other in str(row.get("expression") or "")
+                    for other in managed_hosts
+                    if other != host
+                )
+            ]
+            if len(legacy) > 1:
+                raise CloudflareError(f"Ambiguous legacy catchalls for {host}")
             if current is None:
                 if len(rules) + 1 > plan_limit:
                     raise CloudflareError("Single Redirect quota would be exceeded")
@@ -1088,7 +1086,21 @@ def reconcile_subdomain_redirects(
                     f"/zones/{zone}/rulesets/{ruleset_id}/rules/{current['id']}",
                     desired,
                 )
-                print("SUBDOMAIN_SINGLE_REDIRECT_ADOPTED_OR_UPDATED", desired["ref"])
+                print("SUBDOMAIN_SINGLE_REDIRECT_UPDATED", desired["ref"])
+
+            # Cloudflare treats a rule ref as immutable. Preserve continuous
+            # redirect service by creating the owned rule first, then remove
+            # the legacy rule. If creation fails, the legacy redirect remains.
+            if legacy:
+                api.expect(
+                    "DELETE",
+                    f"/zones/{zone}/rulesets/{ruleset_id}/rules/{legacy[0]['id']}",
+                )
+                print(
+                    "SUBDOMAIN_SINGLE_REDIRECT_LEGACY_REMOVED_AFTER_CREATE",
+                    host,
+                    legacy[0].get("ref") or legacy[0]["id"],
+                )
 
     readback = api.expect("GET", f"/zones/{zone}/rulesets/{ruleset_id}")
     rules = (readback.get("result") or {}).get("rules") or []

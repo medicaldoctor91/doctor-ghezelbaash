@@ -157,7 +157,13 @@ class FakeCloudflareApi:
             "/zones/test-zone/rulesets/zone-redirect-ruleset/rules/"
         ):
             rule_id = path.rsplit("/", 1)[1]
-            self.mutate("zone:legacy-blog-deleted")
+            current = next(row for row in self.zone_rules if row["id"] == rule_id)
+            event = (
+                "zone:legacy-blog-deleted"
+                if "blog.ghezelbaash.ir" in current["expression"]
+                else "zone:legacy-single-deleted"
+            )
+            self.mutate(event)
             self.zone_rules = [row for row in self.zone_rules if row["id"] != rule_id]
             return {"success": True, "result": None}
         if method in ("PATCH", "POST") and path.startswith(
@@ -170,6 +176,8 @@ class FakeCloudflareApi:
                 index = next(
                     i for i, row in enumerate(self.zone_rules) if row["id"] == rule_id
                 )
+                if desired.get("ref") != self.zone_rules[index].get("ref"):
+                    raise AssertionError("Cloudflare rule refs are immutable")
                 desired["id"] = rule_id
                 self.zone_rules[index] = desired
                 self.mutate("zone:single-rule-updated")
