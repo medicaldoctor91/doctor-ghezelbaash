@@ -634,6 +634,46 @@ def normalized_bulk_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return normalized
 
 
+def bulk_items_drift_summary(
+    actual_items: list[dict[str, Any]], desired_items: list[dict[str, Any]]
+) -> str:
+    """Return a bounded, public-only diagnostic for Cloudflare normalization drift."""
+    actual = normalized_bulk_items(actual_items)
+    desired = normalized_bulk_items(desired_items)
+    actual_by_source = {
+        str(row["redirect"]["source_url"]): row for row in actual
+    }
+    desired_by_source = {
+        str(row["redirect"]["source_url"]): row for row in desired
+    }
+    missing = sorted(set(desired_by_source) - set(actual_by_source))
+    unexpected = sorted(set(actual_by_source) - set(desired_by_source))
+    changed: list[dict[str, Any]] = []
+    for source in sorted(set(actual_by_source) & set(desired_by_source)):
+        if actual_by_source[source] != desired_by_source[source]:
+            changed.append(
+                {
+                    "source": source,
+                    "actual": actual_by_source[source],
+                    "desired": desired_by_source[source],
+                }
+            )
+        if len(changed) == 3:
+            break
+    return json.dumps(
+        {
+            "actualCount": len(actual),
+            "desiredCount": len(desired),
+            "missingSources": missing[:3],
+            "unexpectedSources": unexpected[:3],
+            "fieldMismatches": changed,
+        },
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+
 def wait_bulk_operation(
     api: CloudflareApi, account: str, operation_id: str
 ) -> None:
@@ -767,7 +807,10 @@ def reconcile_bulk_redirects(
 
     actual_items = read_all_list_items(api, account, list_id)
     if normalized_bulk_items(actual_items) != normalized_bulk_items(desired_items):
-        raise CloudflareError("Bulk Redirect list read-back drift")
+        raise CloudflareError(
+            "Bulk Redirect list read-back drift: "
+            + bulk_items_drift_summary(actual_items, desired_items)
+        )
 
     desired_rule = bulk_redirect_rule(contract)
     rulesets = api.expect("GET", f"/accounts/{account}/rulesets").get("result") or []
