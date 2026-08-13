@@ -23,11 +23,12 @@ const userAgents=[
 ];
 const request=async(path,ua,{redirect='follow'}={})=>{const r=await fetch(new URL(path,base),{redirect,cache:'no-store',headers:{...cacheBypass,'user-agent':ua}});return {r,text:await r.text()}};
 let budgetProbe;
-for(let attempt=1;attempt<=16;attempt++){
+const productionPropagationAttempts=46;
+for(let attempt=1;attempt<=productionPropagationAttempts;attempt++){
  budgetProbe=await request('/','Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)');
  const liveDigest=`sha-256=:${createHash('sha256').update(Buffer.from(budgetProbe.text)).digest('base64')}:`;
  if(budgetProbe.r.headers.get('content-security-policy')===expectedRootCsp&&budgetProbe.r.headers.get('repr-digest')===liveDigest)break;
- if(attempt===16)fail(`Production root did not converge to finalized CSP/digest after ${attempt} attempts`);
+ if(attempt===productionPropagationAttempts)fail(`Production root did not converge to finalized CSP/digest after ${attempt} attempts`);
  console.warn(JSON.stringify({stage:'PRODUCTION_PROPAGATION_WAIT',attempt,expectedCspSha256:createHash('sha256').update(expectedRootCsp).digest('hex'),liveCspSha256:createHash('sha256').update(budgetProbe.r.headers.get('content-security-policy')||'').digest('hex'),expectedDigest:liveDigest,liveDigest:budgetProbe.r.headers.get('repr-digest'),etag:budgetProbe.r.headers.get('etag'),cfCacheStatus:budgetProbe.r.headers.get('cf-cache-status'),age:budgetProbe.r.headers.get('age'),cfRay:budgetProbe.r.headers.get('cf-ray')}));
  await new Promise(resolve=>setTimeout(resolve,4000));
 }
