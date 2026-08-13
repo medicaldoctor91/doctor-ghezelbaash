@@ -45,6 +45,26 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts
 
+      - name: Resolve release request
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE' >> "$GITHUB_ENV"
+          const fs=require('fs');
+          const r=JSON.parse(fs.readFileSync('.release/release-request.json','utf8'));
+          for(const k of ['targetVersion','releaseDate','currentRecordId','currentVersionDoi','conceptDoi']) if(!r[k]) throw new Error(`Missing release request field ${k}`);
+          if(!/^\d+\.\d+\.\d+$/.test(r.targetVersion)) throw new Error('Invalid targetVersion');
+          if(!/^\d{4}-\d{2}-\d{2}$/.test(r.releaseDate)) throw new Error('Invalid releaseDate');
+          if(!/^\d+$/.test(String(r.currentRecordId))) throw new Error('Invalid currentRecordId');
+          if(!/^10\.5281\/zenodo\.\d+$/.test(r.currentVersionDoi)) throw new Error('Invalid currentVersionDoi');
+          if(!/^10\.5281\/zenodo\.\d+$/.test(r.conceptDoi)) throw new Error('Invalid conceptDoi');
+          console.log(`TARGET_VERSION=${r.targetVersion}`);
+          console.log(`RELEASE_DATE=${r.releaseDate}`);
+          console.log(`CURRENT_RECORD_ID=${r.currentRecordId}`);
+          console.log(`CURRENT_VERSION_DOI=${r.currentVersionDoi}`);
+          console.log(`CONCEPT_DOI=${r.conceptDoi}`);
+          NODE
+
       - name: Preflight every mutation capability
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
@@ -59,7 +79,7 @@ jobs:
           echo "::add-mask::$ZENODO_TOKEN"
           echo "::add-mask::$HF_TOKEN"
           echo "::add-mask::$CLOUDFLARE_API_TOKEN"
-          curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/21892769 >/dev/null
+          curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/$CURRENT_RECORD_ID >/dev/null
           curl --fail --silent --show-error -H "Authorization: Bearer $HF_TOKEN" https://huggingface.co/api/whoami-v2 >/dev/null
           curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT" | python -c 'import json,sys; p=json.load(sys.stdin); assert p.get("success") is True and p.get("result",{}).get("name")=="doctor-ghezelbaash"'
           python scripts/preflight-cloudflare-edge.py
@@ -77,11 +97,11 @@ jobs:
             node -e "const r=require('./.release/release-request.json');fetch('https://zenodo.org/api/records/'+r.publishedRecordId,{headers:{'cache-control':'no-cache'}}).then(x=>x.json()).then(x=>{if(x.doi!==r.publishedVersionDoi||x.metadata?.version!==r.targetVersion)throw Error('Published Zenodo recovery target drift');console.log('ZENODO_PUBLISHED_RECOVERY_EXACT',x.id,x.doi)})"
           else
             python scripts/zenodo_release.py reserve \
-              --current-record 21892769 \
-              --current-doi 10.5281/zenodo.21892769 \
-              --concept-doi 10.5281/zenodo.18765168 \
-              --version 1.2.0 \
-              --date 2026-08-12
+              --current-record "$CURRENT_RECORD_ID" \
+              --current-doi "$CURRENT_VERSION_DOI" \
+              --concept-doi "$CONCEPT_DOI" \
+              --version "$TARGET_VERSION" \
+              --date "$RELEASE_DATE"
           fi
 
       - name: Promote all canonical source contracts to reserved release
@@ -90,7 +110,7 @@ jobs:
           set -euo pipefail
           REC="$(node -p "JSON.parse(require('fs').readFileSync('.release/zenodo-reservation.json')).recordId")"
           DOI="$(node -p "JSON.parse(require('fs').readFileSync('.release/zenodo-reservation.json')).versionDoi")"
-          node scripts/promote-release.mjs --version=1.2.0 --date=2026-08-12 --zenodo-record="$REC" --zenodo-doi="$DOI" --state=published
+          node scripts/promote-release.mjs --version="$TARGET_VERSION" --date="$RELEASE_DATE" --zenodo-record="$REC" --zenodo-doi="$DOI" --state=published
           npm run prepare:generated
           node scripts/lock-release-rdf-invariants.mjs
           npm run validate:release-contract
@@ -102,11 +122,8 @@ jobs:
           set -euo pipefail
           git config user.name ghezelbaash-release-bot
           git config user.email actions@users.noreply.github.com
-          # Only promotion changes to already tracked canonical files belong in
-          # the frozen source commit. The Zenodo reservation is intentionally
-          # ephemeral and must never become repository truth.
           git add -u
-          git diff --cached --quiet || git commit -m 'Release synchronized entity stack v1.2.0'
+          git diff --cached --quiet || git commit -m "Release synchronized entity stack v$TARGET_VERSION"
           echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Build, validate and attest exact frozen source
@@ -144,7 +161,7 @@ jobs:
           if node -e "const r=require('./.release/release-request.json');process.exit(r.skipLiveDeploy?0:1)"; then
             echo 'CLOUDFLARE_DEPLOY_SKIPPED_ALREADY_BYTE_EXACT'
           else
-            npx wrangler pages deploy dist --project-name="$CF_PROJECT" --branch=main --commit-hash="$SOURCE_COMMIT" --commit-message="Synchronized entity stack v1.2.0" --commit-dirty=true
+            npx wrangler pages deploy dist --project-name="$CF_PROJECT" --branch=main --commit-hash="$SOURCE_COMMIT" --commit-message="Synchronized entity stack v$TARGET_VERSION" --commit-dirty=true
           fi
           if node -e "const r=require('./.release/release-request.json');process.exit(r.skipEdgeReconcile?0:1)"; then
             echo 'CLOUDFLARE_EDGE_RECONCILE_SKIPPED_ALREADY_EXACT'
@@ -162,7 +179,7 @@ jobs:
           git -C .release/huggingface config user.name ghezelbaash-release-bot
           git -C .release/huggingface config user.email actions@users.noreply.github.com
           git -C .release/huggingface add -A
-          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Synchronize canonical Core v1.2.0 and preserve governed strong enrichment"
+          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Synchronize canonical Core v$TARGET_VERSION and preserve governed strong enrichment"
           git -C .release/huggingface remote set-url origin "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
           git -C .release/huggingface push origin HEAD:main
 
@@ -194,8 +211,8 @@ jobs:
           set -euo pipefail
           node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('src/data/release.json'));const p={stage:'CONVERGED_PUBLISHED',release:r.release,conceptDoi:r.dataset.zenodo.conceptDoi,versionDoi:r.dataset.zenodo.versionDoi,recordId:String(r.dataset.zenodo.recordId),sourceCommit:process.env.SOURCE_COMMIT,verificationRounds:3,integrity:'PASS'};fs.writeFileSync('.release/zenodo-published.json',JSON.stringify(p,null,2)+'\\n')"
           git add .release/release-attestation.json .release/zenodo-published.json
-          git commit -m 'Record verified v1.2.0 cross-platform convergence'
-          git tag -a v1.2.0 -m 'Dr. Saeed Ghezelbash entity stack v1.2.0 — verified convergence'
+          git commit -m "Record verified v$TARGET_VERSION cross-platform convergence"
+          git tag -a "v$TARGET_VERSION" -m "Dr. Saeed Ghezelbash entity stack v$TARGET_VERSION — verified convergence"
           git remote set-url origin "https://x-access-token:${GH_PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push origin HEAD:main
-          git push origin v1.2.0
+          git push origin "v$TARGET_VERSION"
