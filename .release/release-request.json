@@ -6,8 +6,8 @@
   "conceptDoi": "10.5281/zenodo.18765168",
   "reservedRecordId": "21910785",
   "reservedVersionDoi": "10.5281/zenodo.21910785",
-  "attempt": 12,
+  "attempt": 13,
   "skipLiveDeploy": false,
   "skipEdgeReconcile": false,
-  "reason": "Resume the already reserved final v1.2.1 DOI after fail-closed head-link validation; continue one exact build through Zenodo, Hugging Face, Cloudflare, cache purge, canonical no-query verification, and final source/tag publication without minting a duplicate DOI."
+  "reason": "Resume the already reserved v1.2.1 DOI after aligning the final migration redirect invariant; validate current main including Google-facing structured-data normalization, then publish one exact build through Zenodo, Hugging Face and Cloudflare, reconcile edge settings, purge cache, verify canonical no-query representations in all three rounds, and publish source truth/tag only after complete convergence."
 }
