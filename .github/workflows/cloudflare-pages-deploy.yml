@@ -1,4 +1,4 @@
-name: Deploy canonical site to Cloudflare Pages
+name: Deploy canonical site through Cloudflare Git
 
 on:
   push:

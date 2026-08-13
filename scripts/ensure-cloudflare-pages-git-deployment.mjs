@@ -130,6 +130,7 @@ async function main() {
 
   let project = await request(base);
   const before = safeProjectState(project);
+  const resumedDuringThisRun = before.deploymentsEnabled === false || before.productionDeploymentsEnabled === false;
   console.log(`CLOUDFLARE_PAGES_PROJECT_BEFORE ${JSON.stringify(before)}`);
   assert.equal(before.name, EXPECTED_PROJECT, 'Cloudflare Pages project name drift');
   assert.equal(before.sourceType, 'github', 'Cloudflare Pages project is not connected to GitHub');
@@ -144,7 +145,8 @@ async function main() {
   assert(projectIsExact(project, expectedRepository), 'Cloudflare Pages production deployment settings did not converge');
 
   let deployment = null;
-  for (let attempt = 1; attempt <= 30 && !deployment; attempt += 1) {
+  const gitEventAttempts = resumedDuringThisRun ? 3 : 30;
+  for (let attempt = 1; attempt <= gitEventAttempts && !deployment; attempt += 1) {
     const deployments = await request(`${base}/deployments?per_page=25`);
     deployment = findGitDeployment(deployments, commitHash);
     if (!deployment) {
@@ -152,7 +154,9 @@ async function main() {
       await sleep(3_000);
     }
   }
-  assert(deployment, `No github:push Pages deployment recorded for ${commitHash}`);
+  assert(deployment, resumedDuringThisRun
+    ? `Cloudflare Pages was resumed after this push; a fresh push is required to create a github:push deployment for ${commitHash}`
+    : `No github:push Pages deployment recorded for ${commitHash}`);
 
   if (deployment.is_skipped === true && deployment.skip_reason === 'production_deployments_disabled') {
     console.log(`CLOUDFLARE_GIT_DEPLOYMENT_RETRY id=${deployment.id} reason=${deployment.skip_reason}`);
