@@ -87,7 +87,7 @@ class FakeCloudflareApi:
             self.redirect_list.update(copy.deepcopy(body))
             return {"success": True, "result": copy.deepcopy(self.redirect_list)}
         if method == "GET" and path == (
-            "/accounts/test-account/rules/lists/blog-list/items?per_page=1000"
+            "/accounts/test-account/rules/lists/blog-list/items?per_page=500"
         ):
             return {"success": True, "result": copy.deepcopy(self.list_items)}
         if method == "PUT" and path == "/accounts/test-account/rules/lists/blog-list/items":

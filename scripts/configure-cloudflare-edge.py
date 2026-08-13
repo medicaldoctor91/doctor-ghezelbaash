@@ -656,6 +656,38 @@ def wait_bulk_operation(
     raise CloudflareError("Timed out waiting for Cloudflare list operation")
 
 
+def read_all_list_items(
+    api: CloudflareApi, account: str, list_id: str
+) -> list[dict[str, Any]]:
+    """Read a Cloudflare account list using its opaque cursor contract."""
+    items: list[dict[str, Any]] = []
+    cursor: str | None = None
+    seen_cursors: set[str] = set()
+    while True:
+        query_values: dict[str, Any] = {"per_page": 500}
+        if cursor:
+            query_values["cursor"] = cursor
+        query = urllib.parse.urlencode(query_values)
+        payload = api.expect(
+            "GET",
+            f"/accounts/{account}/rules/lists/{list_id}/items?{query}",
+        )
+        page = payload.get("result") or []
+        if not isinstance(page, list):
+            raise CloudflareError("Cloudflare List Items returned a non-list result")
+        items.extend(page)
+        after = str(
+            (((payload.get("result_info") or {}).get("cursors") or {}).get("after"))
+            or ""
+        )
+        if not after:
+            return items
+        if after in seen_cursors:
+            raise CloudflareError("Cloudflare List Items cursor cycle detected")
+        seen_cursors.add(after)
+        cursor = after
+
+
 def bulk_redirect_rule(contract: dict[str, Any]) -> dict[str, Any]:
     bulk = contract["bulkRedirects"]
     list_name = str(bulk["listName"])
@@ -719,10 +751,7 @@ def reconcile_bulk_redirects(
         )
         list_state = "BULK_REDIRECT_LIST_METADATA_UPDATED"
 
-    items_query = urllib.parse.urlencode({"per_page": 1000})
-    actual_items = api.expect(
-        "GET", f"/accounts/{account}/rules/lists/{list_id}/items?{items_query}"
-    ).get("result") or []
+    actual_items = read_all_list_items(api, account, list_id)
     if normalized_bulk_items(actual_items) != normalized_bulk_items(desired_items):
         replaced = api.expect(
             "PUT",
@@ -736,9 +765,7 @@ def reconcile_bulk_redirects(
         wait_bulk_operation(api, account, operation_id)
         list_state = "BULK_REDIRECT_LIST_ITEMS_REPLACED"
 
-    actual_items = api.expect(
-        "GET", f"/accounts/{account}/rules/lists/{list_id}/items?{items_query}"
-    ).get("result") or []
+    actual_items = read_all_list_items(api, account, list_id)
     if normalized_bulk_items(actual_items) != normalized_bulk_items(desired_items):
         raise CloudflareError("Bulk Redirect list read-back drift")
 
