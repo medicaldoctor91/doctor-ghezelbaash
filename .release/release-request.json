@@ -1,13 +1,11 @@
 {
-  "targetVersion": "1.2.0",
-  "releaseDate": "2026-08-12",
-  "currentRecordId": "21892769",
-  "currentVersionDoi": "10.5281/zenodo.21892769",
+  "targetVersion": "1.2.1",
+  "releaseDate": "2026-08-13",
+  "currentRecordId": "21905312",
+  "currentVersionDoi": "10.5281/zenodo.21905312",
   "conceptDoi": "10.5281/zenodo.18765168",
-  "attempt": 10,
-  "skipLiveDeploy": true,
-  "skipEdgeReconcile": true,
-  "publishedRecordId": "21905312",
-  "publishedVersionDoi": "10.5281/zenodo.21905312",
-  "reason": "Semantic distribution-role repair, manifest integrity closure, PWA icon repair, governed Hugging Face enrichment synchronization, and release-pipeline hardening."
+  "attempt": 11,
+  "skipLiveDeploy": false,
+  "skipEdgeReconcile": false,
+  "reason": "Final production convergence: canonical cache hardening, semantic role reconciliation across website/Zenodo/Hugging Face, physician-first distribution metadata, migration redirect closure, current DOI head alignment, and cache-safe live verification."
 }
