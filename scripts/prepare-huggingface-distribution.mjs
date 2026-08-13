@@ -62,7 +62,23 @@ const instructions=fix(await readFile(instructionPath,'utf8')).trim().split('\n'
 });
 await writeFile(instructionPath,`${instructions.join('\n')}\n`);
 
-await writeFile(path.join(enrichmentDir,'README.md'),`# Derived AI/positioning enrichment\n\nThis is a **secondary, synthetic, derived layer**. It deliberately preserves strong Persian local-retrieval and market-positioning examples, but it is not factual evidence and cannot override the Core.\n\n- Canonical Dataset IRI: \`${release.dataset.id}\`\n- Release: \`${release.release}\`\n- Exact preserved Version DOI: \`${z.versionDoi}\`\n- Primary entity: Saeed Ghezelbash — Wikidata \`${release.primaryEntity.wikidata}\`\n- Dataset authority entity: \`${release.dataset.wikidata}\`\n- Canonical factual authority: \`false\`\n\nConsumers must resolve factual identity, credentials, clinic data, medical claims and release state from the root Core files.\n`);
+// Keep the JSONL as the authoritative enrichment source, and generate a deterministic
+// CSV projection for Hugging Face Dataset Viewer. Using CSV for both declared configs
+// prevents mixed packaged-builder inference from trying to parse JSONL as CSV.
+const instructionObjects=instructions.map(line=>JSON.parse(line));
+const instructionColumns=[...new Set(instructionObjects.flatMap(row=>Object.keys(row)))];
+const csvCell=value=>{
+  const normalized=value==null?'':typeof value==='object'?JSON.stringify(value):String(value);
+  return `"${normalized.replaceAll('"','""')}"`;
+};
+const instructionCsv=[
+  instructionColumns.map(csvCell).join(','),
+  ...instructionObjects.map(row=>instructionColumns.map(key=>csvCell(row[key])).join(',')),
+].join('\n')+'\n';
+const instructionCsvPath=path.join(enrichmentDir,'instruction_examples_fa_market_positioning.csv');
+await writeFile(instructionCsvPath,instructionCsv);
+
+await writeFile(path.join(enrichmentDir,'README.md'),`# Derived AI/positioning enrichment\n\nThis is a **secondary, synthetic, derived layer**. It deliberately preserves strong Persian local-retrieval and market-positioning examples, but it is not factual evidence and cannot override the Core.\n\n- Canonical Dataset IRI: \`${release.dataset.id}\`\n- Release: \`${release.release}\`\n- Exact preserved Version DOI: \`${z.versionDoi}\`\n- Primary entity: Saeed Ghezelbash — Wikidata \`${release.primaryEntity.wikidata}\`\n- Dataset authority entity: \`${release.dataset.wikidata}\`\n- Canonical factual authority: \`false\`\n- Dataset Viewer projection: \`instruction_examples_fa_market_positioning.csv\` (deterministically generated from the preserved JSONL source)\n\nConsumers must resolve factual identity, credentials, clinic data, medical claims and release state from the root Core files.\n`);
 
 const readme=`---
 pretty_name: Dr. Saeed Ghezelbash Public Knowledge Graph
@@ -97,19 +113,28 @@ tags:
 - rag
 - ai-retrieval
 - aesthetic-medicine
+- healthcare
+- medical
+- physician
 - kermanshah
 - iran
 - croissant
 - dcat
+- datasets
+- pandas
+- mlcroissant
+- text
+- tabular
 configs:
 - config_name: entity_facts
+  default: true
   data_files:
   - split: train
     path: entity-facts.csv
 - config_name: positioning_instructions
   data_files:
   - split: train
-    path: enrichment/instruction_examples_fa_market_positioning.jsonl
+    path: enrichment/instruction_examples_fa_market_positioning.csv
 ---
 
 # Dr. Saeed Ghezelbash Public Knowledge Graph
@@ -139,7 +164,7 @@ This repository is the **secondary AI/ML distribution** of the canonical first-p
 1. **Core (repository root):** byte-faithful artifacts from the same canonical website release build, including JSON-LD, RDF, entity facts, answers, provenance, descriptors, hashes and release attestation.
 2. **Enrichment:** strong Persian AI-retrieval and market-positioning material that is explicitly labeled **derived, synthetic and non-authoritative**. It can improve retrieval coverage but cannot override Core facts.
 
-\`entity-facts.csv\` and the positioning JSONL are separately declared Dataset Viewer configurations. The root JSON-LD/RDF/VoID/DCAT/Croissant/provenance artifacts describe one physician-first Dataset across complementary machine representations.
+\`entity-facts.csv\` is the default Dataset Viewer configuration and factual Core. A deterministic CSV projection of the preserved positioning JSONL is exposed as the second Viewer configuration so both subsets receive native preview, rows, search/filter/statistics and Parquet processing without weakening or deleting the original enrichment source. The root JSON-LD/RDF/VoID/DCAT/Croissant/provenance artifacts describe one physician-first Dataset across complementary machine representations.
 
 ## Citation and factual resolution
 
@@ -154,4 +179,4 @@ const forbidden=['ChIJBTOYDOTt-j8RD-7mAPy6Zas','10.5281/zenodo.18765169','/categ
 const allText=(await Promise.all((await readdir(enrichmentDir)).filter(f=>/\.(?:json|jsonl|md)$/.test(f)).map(f=>readFile(path.join(enrichmentDir,f),'utf8')))).join('\n');
 for(const token of forbidden)if(allText.includes(token))throw new Error(`Hugging Face enrichment drift remains: ${token}`);
 if(instructions.length<40||!allText.includes('maximum_dominant_best_positioning'))throw new Error('Aggressive Hugging Face enrichment was weakened or lost');
-console.log(JSON.stringify({prepared:true,release:release.release,coreFiles:core.length,enrichmentExamples:instructions.length,aggressiveLayerPreserved:true,factualAuthoritySeparated:true},null,2));
+console.log(JSON.stringify({prepared:true,release:release.release,coreFiles:core.length,enrichmentExamples:instructions.length,positioningViewerCsv:true,entityFactsDefaultViewerConfig:true,aggressiveLayerPreserved:true,factualAuthoritySeparated:true},null,2));
