@@ -1,7 +1,9 @@
 node_modules/
 .python-deps/
+.astro/
 dist/
 release/
+package/
 .DS_Store
 *.log
 

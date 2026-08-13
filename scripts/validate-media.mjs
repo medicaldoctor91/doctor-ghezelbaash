@@ -12,6 +12,10 @@ const current='ChIJBT0YDOTt-j8RD-7mAPy6Zas';
 const rasterPattern=/\.(?:avif|webp|jpe?g|png)$/i;
 const sha=buffer=>createHash('sha256').update(buffer).digest('hex');
 const fail=message=>{throw new Error(message)};
+const stableMediaInventory=JSON.parse(await readFile(path.join(project,'src/data/stable-media-aliases.json'),'utf8'));
+const stableSubject=stableMediaInventory.subject||{};
+const authorityMasterTargets=new Set((stableMediaInventory.aliases||[]).map(item=>path.resolve(project,'public',item.target)));
+if(authorityMasterTargets.size!==6)fail(`Authority-master inventory drift: ${authorityMasterTargets.size}`);
 
 async function walk(directory){
   const output=[];
@@ -62,8 +66,10 @@ const metadata=spawnSync(exiftool,[
   '-XMP-iptcCore:CreatorWorkURL','-XMP-plus:ImageCreatorName','-XMP-plus:CopyrightOwnerName',
   '-XMP-plus:LicensorName','-XMP-plus:LicensorURL','-XMP-plus:LicenseID',
   '-XMP-plus:TermsAndConditionsURL','-XMP-plus:TermsAndConditionsText',
-  '-XMP-entity:CanonicalPersonIRI','-XMP-entity:CanonicalClinicIRI','-XMP-entity:GoogleMapsPlaceID',
-  '-XMP-entity:ImageRole','-XMP-entity:MetadataProfileVersion',...rasters
+  '-XMP-entity:CanonicalPersonIRI','-XMP-entity:CanonicalPersonWebIRI','-XMP-entity:CanonicalClinicIRI',
+  '-XMP-entity:GoogleKnowledgeGraphPersonID','-XMP-entity:GoogleMapsPlaceID','-XMP-entity:ImageRole',
+  '-XMP-entity:MetadataProfileVersion','-XMP-iptcExt:PersonInImageId','-XMP-dc:Relation',
+  '-XMP-sem:DoctorIdentifiers','-XMP-sem:EntityGraphJSONLD',...rasters
 ],{encoding:'utf8',maxBuffer:100*1024*1024});
 if(metadata.status!==0)fail(`ExifTool metadata validation failed: ${metadata.stderr}`);
 const rows=JSON.parse(metadata.stdout);
@@ -73,6 +79,9 @@ const values=value=>Array.isArray(value)?value:value===undefined?[]:[value];
 const universalSubjects=['Saeed Ghezelbash','Dr. Saeed Ghezelbash','دکتر سعید قزلباش','Q140287622','Q140288589','IRIMC 167430','Google KG /g/11nqdfk76c',`Google Place ${current}`];
 const rights='© Saeed Ghezelbash. Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0).';
 const usage='CC BY 4.0; attribution required: Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic.';
+const authorityIdentityIris=[stableSubject.canonicalPersonIri,stableSubject.wikidataPersonIri,stableSubject.googleKnowledgeGraphUrl];
+if(authorityIdentityIris.some(value=>!value)||stableSubject.googleKnowledgeGraphId!=='/g/11nqdfk76c')fail('Authority-master subject contract is incomplete');
+const validatedAuthorityMasters=new Set();
 for(const row of rows){
   const file=row.SourceFile;
   const logical=path.relative(project,file).replace(/\.[0-9a-f]{12}(\.[^.]+)$/,'$1');
@@ -85,7 +94,9 @@ for(const row of rows){
     'XMP-iptcCore:CreatorWorkURL':'https://www.ghezelbaash.ir/#saeed-ghezelbash',
     'XMP-plus:ImageCreatorName':'Saeed Ghezelbash','XMP-plus:CopyrightOwnerName':'Saeed Ghezelbash',
     'XMP-plus:LicensorName':'Saeed Ghezelbash','XMP-plus:LicenseID':'https://creativecommons.org/licenses/by/4.0/',
-    'XMP-plus:TermsAndConditionsText':usage,'XMP-entity:CanonicalPersonIRI':'https://www.wikidata.org/entity/Q140287622',
+    'XMP-plus:TermsAndConditionsText':usage,'XMP-entity:CanonicalPersonIRI':stableSubject.wikidataPersonIri,
+    'XMP-entity:CanonicalPersonWebIRI':stableSubject.canonicalPersonIri,
+    'XMP-entity:GoogleKnowledgeGraphPersonID':stableSubject.googleKnowledgeGraphId,
     'XMP-entity:CanonicalClinicIRI':'https://www.wikidata.org/entity/Q140288589','XMP-entity:GoogleMapsPlaceID':current,
     'XMP-entity:MetadataProfileVersion':'3.1.0'
   };
@@ -94,7 +105,20 @@ for(const row of rows){
   const subjects=values(row['XMP-dc:Subject']);
   if(new Set(subjects).size!==subjects.length)fail(`Duplicate XMP subject terms: ${file}`);
   for(const subject of universalSubjects)if(!subjects.includes(subject))fail(`Required XMP subject ${subject} missing: ${file}`);
+  const absoluteFile=path.resolve(file);
+  if(authorityMasterTargets.has(absoluteFile)){
+    for(const field of ['XMP-iptcExt:PersonInImageId','XMP-dc:Relation','XMP-sem:DoctorIdentifiers']){
+      const identifiers=values(row[field]);
+      for(const iri of authorityIdentityIris)if(!identifiers.includes(iri))fail(`Authority-master ${field} missing ${iri}: ${file}`);
+    }
+    let embeddedGraph;
+    try{embeddedGraph=JSON.parse(row['XMP-sem:EntityGraphJSONLD'])}catch{fail(`Authority-master embedded entity graph is invalid JSON: ${file}`)}
+    const embeddedPerson=(embeddedGraph?.['@graph']||[]).find(node=>node?.['@id']===stableSubject.wikidataPersonIri),embeddedIdentifiers=values(embeddedPerson?.identifiers);
+    for(const iri of authorityIdentityIris)if(!embeddedIdentifiers.includes(iri))fail(`Authority-master embedded person graph missing ${iri}: ${file}`);
+    validatedAuthorityMasters.add(absoluteFile);
+  }
 }
+if(validatedAuthorityMasters.size!==authorityMasterTargets.size)fail(`Authority-master Google KG URL coverage drift: ${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`);
 
 const ffprobe=spawnSync('ffprobe',['-version']);
 let videoFiles=0,imageFiles=0;
@@ -115,4 +139,4 @@ if(ffprobe.status===0){
   }
 }
 if(currentHits<49)fail(`Entity Place ID metadata unexpectedly sparse: ${currentHits}`);
-console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'49/49',metadataProfile:'XMP/IPTC Core/PLUS 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));
+console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'49/49',googleKnowledgeGraphRawIdCoverage:'49/49',authorityMasterGoogleKgUrlCoverage:`${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`,authorityMasterIdentityFields:['IPTC PersonInImageId','Dublin Core relation','embedded DoctorIdentifiers','embedded EntityGraphJSONLD'],metadataProfile:'XMP/IPTC Core/PLUS 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));

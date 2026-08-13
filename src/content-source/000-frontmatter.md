@@ -6,6 +6,6 @@ dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 canonical: "https://www.ghezelbaash.ir/"
 about: "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-dateModified: "2026-08-08"
+dateModified: "2026-08-13"
 reviewedBy: "https://www.ghezelbaash.ir/#saeed-ghezelbash"
 ---

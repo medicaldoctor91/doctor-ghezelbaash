@@ -1,0 +1,63 @@
+name: Cloudflare subdomain redirects
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/cloudflare-subdomain-redirects.yml
+      - scripts/configure-cloudflare-edge.py
+      - scripts/validate-subdomain-redirects.mjs
+      - scripts/verify-subdomain-redirects.mjs
+      - src/data/subdomain-redirects.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-cloudflare-subdomain-redirects
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      ZONE_NAME: ghezelbaash.ir
+    steps:
+      - name: Checkout trusted main source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up locked Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.18.0
+
+      - name: Validate source redirect contract
+        run: node scripts/validate-subdomain-redirects.mjs
+
+      - name: Reconcile only Cloudflare subdomain redirects
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          python scripts/configure-cloudflare-edge.py \
+            --apply-subdomains-only \
+            --outcome edge-subdomain-reconciliation.json
+
+      - name: Verify live no-cache redirect contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if node scripts/verify-subdomain-redirects.mjs; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 12 ]; then
+              exit 1
+            fi
+            sleep 5
+          done
