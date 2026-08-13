@@ -23,18 +23,53 @@ def call(token,method,url,body=None,content_type='application/json',ok=(200,201,
 
 def metadata(version,date,doi,concept):
     return {
-      'upload_type':'dataset','publication_date':date,'title':'Dr. Saeed Ghezelbash Public Knowledge Graph',
+      'upload_type':'dataset',
+      'publication_date':date,
+      'title':'Dr. Saeed Ghezelbash Public Knowledge Graph',
       'creators':[{'name':'Ghezelbash, Saeed','orcid':'0009-0001-9346-8475'}],
-      'description':f'<p>Immutable secondary preservation distribution of Version <strong>{version}</strong> of the canonical first-party <strong>Dr. Saeed Ghezelbash Public Knowledge Graph</strong>. Saeed Ghezelbash (Wikidata Q140287622; ORCID 0009-0001-9346-8475) is creator and publisher; Q140304972 identifies the Dataset and Q140288589 identifies the supporting clinic.</p><p>The canonical Dataset IRI is <a href="https://www.ghezelbaash.ir/graph.jsonld#dataset">https://www.ghezelbaash.ir/graph.jsonld#dataset</a>. GitHub is the version-controlled source, Zenodo is this DOI-preserved distribution, and Hugging Face is the secondary AI/ML distribution. These are related access and distribution layers, not identity-equivalent entities.</p>',
-      'access_right':'open','license':'cc-by-4.0','language':'eng','version':version,
-      'keywords':['Saeed Ghezelbash','Dr. Saeed Ghezelbash','knowledge graph','entity resolution','JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data','AI retrieval','RAG','Croissant','DCAT','Kermanshah','aesthetic medicine'],
-      'notes':f'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. Concept DOI: {concept}. Exact Version DOI: {doi}. Cryptographic integrity and cross-platform roles are recorded in release-attestation.json and dist-sha256.json.',
+      'description':(
+        f'<p><strong>Dr. Saeed Ghezelbash Public Knowledge Graph</strong> — immutable DOI-preserved '
+        f'preservation distribution of Version <strong>{version}</strong> of the canonical first-party Dataset '
+        f'at <a href="https://www.ghezelbaash.ir/graph.jsonld#dataset">ghezelbaash.ir</a>.</p>'
+        '<p>The primary subject, creator and publisher authority is <strong>Dr. Saeed Ghezelbash</strong> '
+        '(Wikidata Q140287622; Google Knowledge Graph /g/11nqdfk76c; ORCID 0009-0001-9346-8475; '
+        'Iran Medical Council 167430), an aesthetic physician in Kermanshah, Iran. '
+        'The supporting clinic is Wikidata Q140288589. The continuing Dataset entity is Wikidata Q140304972.</p>'
+        '<p>GitHub is the version-controlled source, Zenodo is the immutable preservation distribution, '
+        'and Hugging Face is the secondary AI/ML distribution. These are linked access/distribution layers '
+        'and are not identity-equivalent to the physician or to the canonical Dataset IRI.</p>'
+      ),
+      'access_right':'open',
+      'license':'cc-by-4.0',
+      'language':'eng',
+      'version':version,
+      'keywords':[
+        'Saeed Ghezelbash','Dr. Saeed Ghezelbash','Mohammad Saeed Ghezelbash',
+        'دکتر سعید قزلباش','محمد سعید قزلباش','physician entity','aesthetic physician',
+        'Kermanshah','Iran','medical knowledge graph','knowledge graph','knowledge base',
+        'entity resolution','JSON-LD','RDF','Schema.org','Wikidata','FAIR data',
+        'machine-readable data','question answering','AI retrieval','RAG','Croissant','DCAT'
+      ],
+      'subjects':[
+        {'term':'Saeed Ghezelbash','identifier':'https://www.wikidata.org/entity/Q140287622','scheme':'url'},
+        {'term':'Dr. Saeed Ghezelbash Public Knowledge Graph','identifier':'https://www.wikidata.org/entity/Q140304972','scheme':'url'},
+        {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':'https://www.wikidata.org/entity/Q140288589','scheme':'url'}
+      ],
+      'notes':(
+        f'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. '
+        f'Concept DOI: {concept}. Exact Version DOI: {doi}. '
+        'Cryptographic integrity and cross-platform roles are recorded in release-attestation.json and dist-sha256.json.'
+      ),
       'related_identifiers':[
         {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isDerivedFrom','resource_type':'dataset'},
+        {'identifier':'https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository','relation':'isDescribedBy','resource_type':'other'},
         {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash','relation':'isDerivedFrom','resource_type':'software'},
         {'identifier':'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','relation':'isReferencedBy','resource_type':'dataset'},
-        {'identifier':'https://www.wikidata.org/wiki/Q140304972','relation':'isPartOf','resource_type':'dataset'}
-      ],'prereserve_doi':True
+        {'identifier':'https://www.wikidata.org/wiki/Q140304972','relation':'isPartOf','resource_type':'dataset'},
+        {'identifier':'https://www.wikidata.org/wiki/Q140287622','relation':'references','resource_type':'other'},
+        {'identifier':'https://www.wikidata.org/wiki/Q140288589','relation':'references','resource_type':'other'}
+      ],
+      'prereserve_doi':True
     }
 
 def reserve(args,token):
@@ -121,14 +156,33 @@ def reconcile(args,token):
     call(token,'POST',f'{BASE}/deposit/depositions/{args.record}/actions/publish')
     for _ in range(30):
         verified=call(token,'GET',f'{BASE}/records/{args.record}')
-        relations=(verified.get('metadata') or {}).get('related_identifiers') or []
-        hf=[r for r in relations if r.get('identifier')=='https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data']
-        if verified.get('doi')==args.doi and len(hf)==1 and hf[0].get('relation')=='isReferencedBy':
+        md=verified.get('metadata') or {}
+        rel={(r.get('identifier'),r.get('relation')) for r in (md.get('related_identifiers') or [])}
+        subjects={s.get('identifier') for s in (md.get('subjects') or [])}
+        creator=(md.get('creators') or [{}])[0]
+        required_rel={
+          ('https://www.ghezelbaash.ir/graph.jsonld#dataset','isDerivedFrom'),
+          ('https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository','isDescribedBy'),
+          ('https://github.com/medicaldoctor91/doctor-ghezelbaash','isDerivedFrom'),
+          ('https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','isReferencedBy'),
+          ('https://www.wikidata.org/wiki/Q140304972','isPartOf'),
+          ('https://www.wikidata.org/wiki/Q140287622','references'),
+          ('https://www.wikidata.org/wiki/Q140288589','references'),
+        }
+        required_subjects={
+          'https://www.wikidata.org/entity/Q140287622',
+          'https://www.wikidata.org/entity/Q140304972',
+          'https://www.wikidata.org/entity/Q140288589',
+        }
+        if (verified.get('doi')==args.doi and md.get('version')==args.version and
+            creator.get('orcid')=='0009-0001-9346-8475' and
+            required_rel.issubset(rel) and required_subjects.issubset(subjects) and
+            'دکتر سعید قزلباش' in (md.get('keywords') or [])):
             break
         time.sleep(2)
     else:
         raise RuntimeError('Zenodo metadata reconciliation readback failure')
-    print(json.dumps({'stage':'ZENODO_METADATA_RECONCILED','recordId':str(args.record),'version':args.version,'huggingFaceRelation':'isReferencedBy','integrity':'PASS'},separators=(',',':')))
+    print(json.dumps({'stage':'ZENODO_METADATA_RECONCILED','recordId':str(args.record),'version':args.version,'physicianWikidata':'Q140287622','huggingFaceRelation':'isReferencedBy','integrity':'PASS'},separators=(',',':')))
 
 def main():
     parser=argparse.ArgumentParser(); sub=parser.add_subparsers(dest='action',required=True)

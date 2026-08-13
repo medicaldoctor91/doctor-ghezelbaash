@@ -18,6 +18,8 @@ const criticalMobileCss=await readFile(path.join(root,'src/styles/critical-mobil
 const deployWorkflow=await readFile(path.join(root,'.github/workflows/ceiling-release.yml'),'utf8'),cloudflareEdgeSource=await readFile(path.join(root,'scripts/configure-cloudflare-edge.py'),'utf8');
 if(/\/accounts\/\{account\}\/tokens/.test(deployWorkflow))fail('Deploy workflow must never mint temporary Cloudflare API tokens');
 if(!deployWorkflow.includes('python scripts/configure-cloudflare-edge.py --apply')||!deployWorkflow.includes('--outcome edge-reconciliation.json')||!deployWorkflow.includes('npm run verify:production')||!deployWorkflow.includes('verify-converged-stack.mjs'))fail('Deploy workflow is missing capability-aware edge reconciliation or full cross-platform verification');
+for(const token of ['TARGET_VERSION','RELEASE_DATE','CURRENT_RECORD_ID','CURRENT_VERSION_DOI','CONCEPT_DOI'])if(!deployWorkflow.includes(token))fail(`Deploy workflow is not release-request-driven: ${token}`);
+if(/--version(?:=| )1\.2\.0|--date(?:=| )2026-08-12|--current-record 21892769/.test(deployWorkflow))fail('Deploy workflow contains hard-coded prior release arguments');
 for(const invariant of ['ghezelbaash_canonical_dist_cache_v1','ghezelbaash_canonical_hsts_v1','ghezelbaash_real_404_headers_v1','http.response.code eq 404','crawler_hints','ai_bots_protection','respect_origin','scopeGaps'])if(!cloudflareEdgeSource.includes(invariant))fail(`Cloudflare edge contract missing ${invariant}`);
 if(pkg.version!==inv.release||release.release!==inv.release) fail('Release mismatch');
 if(release.dateModified!==inv.date) fail(`Release freshness drift ${release.dateModified}/${inv.date}`);
