@@ -1192,8 +1192,24 @@ def purge_canonical(api: CloudflareApi, zone: str, host: str) -> None:
     # This zone is dedicated to the canonical site. Purge the entire zone so
     # tiered/regional cache shards and alternate cache-key variants cannot keep
     # an obsolete root representation after an atomic Pages release.
-    api.expect("POST", path, {"purge_everything": True}, ok=(200, 201))
-    print("DEDICATED_ZONE_CACHE_PURGED", zone, "canonical_host=", host)
+    for attempt in range(1, 9):
+        status, payload = api.raw("POST", path, {"purge_everything": True})
+        if status in (200, 201) and payload.get("success") is True:
+            print("DEDICATED_ZONE_CACHE_PURGED", zone, "canonical_host=", host)
+            return
+        # A freshly issued narrow child token can take a few seconds to reach
+        # every Cloudflare authorization edge. Retry only authentication
+        # propagation; permission denials and other errors remain fail-closed.
+        if status == 401 and attempt < 8:
+            print("CACHE_PURGE_TOKEN_PROPAGATION_WAIT", attempt)
+            time.sleep(1)
+            continue
+        raise CloudflareError(
+            f"Cloudflare POST {path} failed HTTP {status}: "
+            f"{json.dumps(payload, ensure_ascii=False)[:1800]}",
+            status=status,
+            payload=payload,
+        )
 
 
 def self_test(dist_dir: Path) -> None:

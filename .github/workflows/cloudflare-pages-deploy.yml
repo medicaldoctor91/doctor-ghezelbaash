@@ -67,6 +67,4 @@ jobs:
             --commit-hash="$GITHUB_SHA" \
             --commit-message="Deploy canonical site $GITHUB_SHA" \
             --commit-dirty=true
-          python scripts/configure-cloudflare-edge.py \
-            --purge-cache-only \
-            --outcome edge-cache-purge.json
+          node scripts/verify-cloudflare-pages-deployment.mjs
