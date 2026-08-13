@@ -25,14 +25,15 @@ const fetchBytes=async url=>{
 const verifyOne=async rel=>{
   const wanted=expected.get(rel),wantedSha=sha(wanted),url=new URL(routeFor(rel),canonical);
   for(let attempt=1;attempt<=20;attempt++){
+    const ordinary=await fetchBytes(url);
     const bypass=new URL(url);bypass.searchParams.set('__pages_byte_verify',`${Date.now()}-${attempt}`);
     const fresh=await fetchBytes(bypass);
-    const freshSha=sha(fresh.bytes);
-    if(fresh.response.status===200&&freshSha===wantedSha){
-      return {rel,sha256:wantedSha,cacheBusted:fresh.response.status};
+    const ordinarySha=sha(ordinary.bytes),freshSha=sha(fresh.bytes);
+    if(ordinary.response.status===200&&fresh.response.status===200&&ordinarySha===wantedSha&&freshSha===wantedSha){
+      return {rel,sha256:wantedSha,ordinary:ordinary.response.status,cacheBusted:fresh.response.status};
     }
-    if(attempt===20)throw new Error(`Cloudflare Pages byte drift ${rel}: fresh=${fresh.response.status}/${freshSha} expected=${wantedSha}`);
-    console.warn(JSON.stringify({stage:'PAGES_PROPAGATION_WAIT',rel,attempt,freshStatus:fresh.response.status,freshSha,wantedSha}));
+    if(attempt===20)throw new Error(`Cloudflare Pages byte drift ${rel}: ordinary=${ordinary.response.status}/${ordinarySha} fresh=${fresh.response.status}/${freshSha} expected=${wantedSha}`);
+    console.warn(JSON.stringify({stage:'PAGES_PROPAGATION_WAIT',rel,attempt,ordinaryStatus:ordinary.response.status,ordinarySha,freshStatus:fresh.response.status,freshSha,wantedSha}));
     await new Promise(resolve=>setTimeout(resolve,3000));
   }
 };
@@ -40,4 +41,4 @@ const results=[];
 let cursor=0;
 const worker=async()=>{while(cursor<files.length){const index=cursor++;results[index]=await verifyOne(files[index]);}};
 await Promise.all(Array.from({length:Math.min(8,files.length)},worker));
-console.log(JSON.stringify({valid:true,canonical,verifiedFiles:results.length,stableMediaAliases:stable.aliases.length,cacheBustedByteExact:true,results},null,2));
+console.log(JSON.stringify({valid:true,canonical,verifiedFiles:results.length,stableMediaAliases:stable.aliases.length,ordinaryAndCacheBustedByteExact:true,results},null,2));
