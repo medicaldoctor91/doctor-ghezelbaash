@@ -89,5 +89,8 @@
   "directAnswerHeadingLevel": 0,
   "contentSectionCount": 15,
   "maxCriticalCssBytes": 10000,
-  "minExternalCssBytes": 45000
+  "minExternalCssBytes": 45000,
+  "googleInlineSemanticClipCount": 13,
+  "googleInlineSupportNodeTarget": 129,
+  "googleInlineKurdishClipCount": 0
 }
