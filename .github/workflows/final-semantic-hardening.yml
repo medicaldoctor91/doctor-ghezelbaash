@@ -54,6 +54,9 @@ jobs:
           new="for(const token of ['task_categories:','size_categories:','release.primaryEntity.wikidata','release.primaryEntity.googleKnowledgeGraphId','release.dataset.creatorOrcid','Personal Hugging Face identity'])"
           if text.count(old)!=1: raise SystemExit(f'expected one validator binding, found {text.count(old)}')
           p.write_text(text.replace(old,new,1))
+          q=Path('.github/workflows/ceiling-release.yml')
+          raw=q.read_text()
+          q.write_text('\n'.join(line.rstrip() for line in raw.splitlines())+'\n')
           PY
 
       - name: Regenerate and validate hardened source
