@@ -58,6 +58,9 @@ jobs:
           if(!/^\d+$/.test(String(r.currentRecordId))) throw new Error('Invalid currentRecordId');
           if(!/^10\.5281\/zenodo\.\d+$/.test(r.currentVersionDoi)) throw new Error('Invalid currentVersionDoi');
           if(!/^10\.5281\/zenodo\.\d+$/.test(r.conceptDoi)) throw new Error('Invalid conceptDoi');
+          if((r.reservedRecordId&&!r.reservedVersionDoi)||(!r.reservedRecordId&&r.reservedVersionDoi)) throw new Error('Reserved Zenodo recovery fields must be paired');
+          if(r.reservedRecordId&&!/^\d+$/.test(String(r.reservedRecordId))) throw new Error('Invalid reservedRecordId');
+          if(r.reservedVersionDoi&&!/^10\.5281\/zenodo\.\d+$/.test(r.reservedVersionDoi)) throw new Error('Invalid reservedVersionDoi');
           console.log(`TARGET_VERSION=${r.targetVersion}`);
           console.log(`RELEASE_DATE=${r.releaseDate}`);
           console.log(`CURRENT_RECORD_ID=${r.currentRecordId}`);
@@ -87,8 +90,21 @@ jobs:
       - name: Reserve DOI and correct prior-version metadata
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        shell: bash
         run: |
-          if node -e "const r=require('./.release/release-request.json');process.exit(r.publishedRecordId&&r.publishedVersionDoi?0:1)"; then
+          set -euo pipefail
+          if node -e "const r=require('./.release/release-request.json');process.exit(r.reservedRecordId&&r.reservedVersionDoi?0:1)"; then
+            node - <<'NODE'
+          const fs=require('fs');
+          const r=require('./.release/release-request.json');
+          fs.writeFileSync('.release/zenodo-reservation.json',JSON.stringify({recordId:String(r.reservedRecordId),versionDoi:r.reservedVersionDoi,recovery:true},null,2)+'\n');
+          NODE
+            node - <<'NODE'
+          const r=require('./.release/release-request.json');
+          const token=process.env.ZENODO_TOKEN;
+          fetch('https://zenodo.org/api/deposit/depositions/'+r.reservedRecordId,{headers:{Authorization:`Bearer ${token}`,'cache-control':'no-cache'}}).then(async x=>{if(!x.ok)throw Error(`Reserved Zenodo draft HTTP ${x.status}`);return x.json()}).then(x=>{const doi=x.metadata?.prereserve_doi?.doi||x.metadata?.doi||x.doi;if(String(x.id)!==String(r.reservedRecordId)||doi!==r.reservedVersionDoi||x.metadata?.version!==r.targetVersion||x.submitted===true)throw Error('Reserved Zenodo recovery target drift');console.log('ZENODO_DRAFT_RECOVERY_EXACT',x.id,doi,x.metadata.version)})
+          NODE
+          elif node -e "const r=require('./.release/release-request.json');process.exit(r.publishedRecordId&&r.publishedVersionDoi?0:1)"; then
             node - <<'NODE'
           const fs=require('fs');
           const r=require('./.release/release-request.json');
