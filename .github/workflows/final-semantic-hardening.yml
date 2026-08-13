@@ -42,6 +42,20 @@ jobs:
       - name: Apply fail-closed final hardening
         run: python scripts/final-hardening.py
 
+      - name: Bind source validator to release truth variables
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/validate-release-contract.mjs')
+          text=p.read_text()
+          old="for(const token of ['task_categories:','size_categories:','Q140287622','/g/11nqdfk76c','0009-0001-9346-8475','Personal Hugging Face identity'])"
+          new="for(const token of ['task_categories:','size_categories:','release.primaryEntity.wikidata','release.primaryEntity.googleKnowledgeGraphId','release.dataset.creatorOrcid','Personal Hugging Face identity'])"
+          if text.count(old)!=1: raise SystemExit(f'expected one validator binding, found {text.count(old)}')
+          p.write_text(text.replace(old,new,1))
+          PY
+
       - name: Regenerate and validate hardened source
         shell: bash
         run: |
