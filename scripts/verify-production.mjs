@@ -7,6 +7,13 @@ const fail=m=>{throw new Error(m)};
 const edgeOutcomePath=process.env.EDGE_RECONCILIATION_OUTCOME;
 const edgeOutcome=edgeOutcomePath?JSON.parse(await readFile(path.resolve(root,edgeOutcomePath),'utf8')):null;
 const edgeCapabilities=edgeOutcome?.capabilities||null;
+if(edgeOutcomePath){
+ if(edgeOutcome?.schemaVersion!==1)fail('Cloudflare edge outcome schema drift');
+ const required=['pagesProject','dns','zoneSettings','cacheRule','hstsTransformRule','notFoundTransformRule','historicalBlogBulkRedirects','subdomainRedirectRules','botManagement','purgeCache'];
+ const missing=required.filter(name=>edgeCapabilities?.[name]!==true);
+ if(missing.length)fail(`Cloudflare edge outcome is not exact: ${missing.join(', ')}`);
+ if((edgeOutcome?.scopeGaps||[]).length)fail(`Cloudflare edge outcome retains scope gaps: ${JSON.stringify(edgeOutcome.scopeGaps)}`);
+}
 const enforceHsts=!edgeCapabilities||Boolean(edgeCapabilities.zoneSettings||edgeCapabilities.hstsTransformRule);
 const enforce404=!edgeCapabilities||Boolean(edgeCapabilities.notFoundTransformRule);
 const headersText=await readFile(path.join(root,'dist/_headers'),'utf8');

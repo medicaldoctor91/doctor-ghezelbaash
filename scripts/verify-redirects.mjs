@@ -34,6 +34,7 @@ const request=async(source,{noCache=false,method='GET'}={})=>{
     redirect:'manual',
     cache:noCache?'no-store':'default',
     headers,
+    signal:AbortSignal.timeout(20_000),
   });
   if(method!=='HEAD')await response.arrayBuffer();
   return response;
@@ -44,7 +45,7 @@ const normalizeLocation=value=>{
   return new URL(value,base).href;
 };
 
-const observations=[];
+const tasks=[];
 for(const row of rows){
   const expected=normalizeLocation(row.target);
   for(const mode of [
@@ -52,7 +53,22 @@ for(const row of rows){
     {label:'no-cache-get',noCache:true,method:'GET'},
     {label:'no-cache-head',noCache:true,method:'HEAD'},
   ]){
-    const response=await request(row.source,mode);
+    tasks.push({row,expected,mode});
+  }
+}
+
+const observations=new Array(tasks.length);
+let cursor=0;
+const worker=async()=>{
+  while(cursor<tasks.length){
+    const index=cursor++;
+    const {row,expected,mode}=tasks[index];
+    let response;
+    try{
+      response=await request(row.source,mode);
+    }catch(error){
+      fail(`${mode.label} ${row.source}: request failed: ${error instanceof Error?error.message:String(error)}`);
+    }
     const location=response.headers.get('location');
     const normalized=normalizeLocation(location);
     const cache=(response.headers.get('cf-cache-status')||'').toUpperCase();
@@ -64,16 +80,17 @@ for(const row of rows){
     // cache even when the client sends no-cache/no-store. Cache state is therefore
     // telemetry, not a correctness oracle. Status + Location are the authoritative
     // redirect contract and catch stale/wrong redirects directly.
-    observations.push({
+    observations[index]={
       source:row.source,
       target:row.target,
       status:response.status,
       mode:mode.label,
       cfCacheStatus:cache||null,
       age:age||null,
-    });
+    };
   }
-}
+};
+await Promise.all(Array.from({length:Math.min(12,tasks.length)},worker));
 
 console.log(JSON.stringify({
   valid:true,

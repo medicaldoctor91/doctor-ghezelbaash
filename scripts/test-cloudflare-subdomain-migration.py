@@ -248,6 +248,195 @@ class FakeTokenAuthority:
         return 200, {"success": True}
 
 
+class FakeZoneTokenAuthority:
+    def __init__(self) -> None:
+        self.revoked = False
+
+    def expect(
+        self,
+        method: str,
+        path: str,
+        body: Any | None = None,
+        ok: tuple[int, ...] = (200,),
+    ) -> dict[str, Any]:
+        del ok
+        if method == "GET" and path.endswith(
+            "permission_groups?scope=com.cloudflare.api.account.zone"
+        ):
+            rows = [
+                {
+                    "id": edge.ZONE_SETTINGS_PERMISSION_IDS[0],
+                    "name": "Zone Settings Read",
+                    "scopes": ["com.cloudflare.api.account.zone"],
+                },
+                {
+                    "id": edge.ZONE_SETTINGS_PERMISSION_IDS[1],
+                    "name": "Zone Settings Write",
+                    "scopes": ["com.cloudflare.api.account.zone"],
+                },
+            ]
+            for permission_id, name in [
+                ("zone-read", "Zone Read"),
+                ("cache-purge", "Cache Purge"),
+                ("dns-read", "DNS Read"),
+                ("cache-write", "Cache Settings Write"),
+                ("cache-read", "Cache Settings Read"),
+                ("bot-write", "Bot Management Write"),
+                ("bot-read", "Bot Management Read"),
+            ]:
+                rows.append(
+                    {
+                        "id": permission_id,
+                        "name": name,
+                        "scopes": ["com.cloudflare.api.account.zone"],
+                    }
+                )
+            return {"success": True, "result": rows}
+        if method == "GET" and path.endswith(
+            "permission_groups?scope=com.cloudflare.api.account"
+        ):
+            return {
+                "success": True,
+                "result": [
+                    {
+                        "id": "account-rulesets-write",
+                        "name": "Account Rulesets Write",
+                        "scopes": ["com.cloudflare.api.account"],
+                    },
+                    {
+                        "id": "account-rulesets-read",
+                        "name": "Account Rulesets Read",
+                        "scopes": ["com.cloudflare.api.account"],
+                    },
+                    {
+                        "id": "account-lists-write",
+                        "name": "Account Rule Lists Write",
+                        "scopes": ["com.cloudflare.api.account"],
+                    },
+                    {
+                        "id": "account-lists-read",
+                        "name": "Account Rule Lists Read",
+                        "scopes": ["com.cloudflare.api.account"],
+                    },
+                ],
+            }
+        if method == "POST" and path == "/accounts/test-account/tokens":
+            assert isinstance(body, dict)
+            if len(body["policies"]) != 2:
+                raise AssertionError("Control-plane token must have zone and account policies")
+            zone_policy, account_policy = body["policies"]
+            zone_ids = {row["id"] for row in zone_policy["permission_groups"]}
+            required_zone = {
+                *edge.ZONE_SETTINGS_PERMISSION_IDS,
+                "zone-read",
+                "cache-purge",
+                "dns-read",
+                "cache-write",
+                "cache-read",
+                "bot-write",
+                "bot-read",
+            }
+            if zone_ids != required_zone:
+                raise AssertionError(zone_ids)
+            account_ids = {row["id"] for row in account_policy["permission_groups"]}
+            if account_ids != {
+                "account-rulesets-write",
+                "account-rulesets-read",
+                "account-lists-write",
+                "account-lists-read",
+            }:
+                raise AssertionError(account_ids)
+            if zone_policy["resources"] != {
+                "com.cloudflare.api.account.zone.test-zone": "*"
+            } or account_policy["resources"] != {
+                "com.cloudflare.api.account.test-account": "*"
+            }:
+                raise AssertionError(body["policies"])
+            return {
+                "success": True,
+                "result": {"id": "ephemeral-zone-token", "value": "zone-child-secret"},
+            }
+        raise AssertionError((method, path, body))
+
+    def raw(
+        self, method: str, path: str, body: Any | None = None
+    ) -> tuple[int, dict[str, Any]]:
+        if body is not None:
+            raise AssertionError(body)
+        if method != "DELETE" or path != (
+            "/accounts/test-account/tokens/ephemeral-zone-token"
+        ):
+            raise AssertionError((method, path))
+        self.revoked = True
+        return 200, {"success": True}
+
+
+class FakeInventoryApi:
+    def expect(
+        self,
+        method: str,
+        path: str,
+        body: Any | None = None,
+        ok: tuple[int, ...] = (200,),
+    ) -> dict[str, Any]:
+        del body, ok
+        if method == "GET" and path == (
+            "/accounts/test-account/pages/projects/doctor-ghezelbaash"
+        ):
+            return {
+                "success": True,
+                "result": {
+                    "name": "doctor-ghezelbaash",
+                    "production_branch": "main",
+                    "domains": [
+                        "doctor-ghezelbaash.pages.dev",
+                        "www.ghezelbaash.ir",
+                    ],
+                    "source": {
+                        "type": "github",
+                        "config": {
+                            "owner": "medicaldoctor91",
+                            "repo_name": "doctor-ghezelbaash",
+                            "deployments_enabled": True,
+                            "production_deployments_enabled": True,
+                            "preview_deployment_setting": "none",
+                        },
+                    },
+                    "build_config": {
+                        "build_command": "npm ci --ignore-scripts && npm run build",
+                        "destination_dir": "dist",
+                        "root_dir": "",
+                    },
+                },
+            }
+        if method == "GET" and path == "/zones/test-zone/dns_records?per_page=500":
+            records = [
+                {
+                    "type": "CNAME",
+                    "name": "ghezelbaash.ir",
+                    "content": "doctor-ghezelbaash.pages.dev",
+                    "proxied": True,
+                    "ttl": 1,
+                },
+                {
+                    "type": "CNAME",
+                    "name": "www.ghezelbaash.ir",
+                    "content": "doctor-ghezelbaash.pages.dev",
+                    "proxied": True,
+                    "ttl": 1,
+                },
+                {
+                    "type": "CNAME",
+                    "name": "*.ghezelbaash.ir",
+                    "content": "doctor-ghezelbaash.pages.dev",
+                    "proxied": True,
+                    "ttl": 1,
+                },
+            ]
+            return {"success": True, "result": records}
+        raise AssertionError((method, path))
+
+
 contract = edge.load_subdomain_redirect_contract(ROOT)
 api = FakeCloudflareApi()
 token_authority = FakeTokenAuthority()
@@ -259,6 +448,31 @@ if child_api.token != "child-secret":
 revoke_child_api()
 if not token_authority.revoked:
     raise AssertionError("Ephemeral Single Redirect child token was not revoked")
+
+zone_token_authority = FakeZoneTokenAuthority()
+zone_child_api, revoke_zone_child_api = edge.issue_ephemeral_zone_api(
+    zone_token_authority,
+    "test-account",
+    "test-zone",
+    include_control_plane=True,
+)
+if zone_child_api.token != "zone-child-secret":
+    raise AssertionError("Ephemeral control-plane child token was not returned")
+revoke_zone_child_api()
+if not zone_token_authority.revoked:
+    raise AssertionError("Ephemeral control-plane child token was not revoked")
+
+inventory_api = FakeInventoryApi()
+pages_contract = edge.read_pages_contract(
+    inventory_api, "test-account", "www.ghezelbaash.ir"
+)
+dns_contract = edge.read_dns_contract(
+    inventory_api, "test-zone", "ghezelbaash.ir", "www.ghezelbaash.ir"
+)
+if pages_contract["repository"] != "medicaldoctor91/doctor-ghezelbaash":
+    raise AssertionError("Pages repository contract was not read back")
+if not all(dns_contract["requiredHostCoverage"].values()):
+    raise AssertionError("Required DNS host coverage was not read back")
 
 # The production entrypoint must establish and verify all exact Bulk Redirects
 # before removing the higher-priority legacy blog Single Redirect.
@@ -296,6 +510,8 @@ print(
             "firstPassMutations": first_mutations,
             "bulkBeforeSingleRemoval": True,
             "ephemeralSingleRedirectToken": True,
+            "ephemeralControlPlaneToken": True,
+            "pagesAndDnsInventory": True,
             "idempotent": True,
         },
         sort_keys=True,

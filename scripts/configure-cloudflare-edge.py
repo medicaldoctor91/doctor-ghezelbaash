@@ -60,6 +60,27 @@ SUBDOMAIN_SINGLE_REDIRECT_PERMISSION_ALIASES = (
         "Single Redirect Write",
     ),
 )
+ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES = (
+    ("DNS Read",),
+    ("Cache Rules Edit", "Cache Rules Write", "Cache Settings Write"),
+    ("Bot Management Edit", "Bot Management Write"),
+)
+ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES = (
+    ("Cache Rules Read", "Cache Settings Read"),
+    ("Bot Management Read",),
+)
+ACCOUNT_CACHE_REQUIRED_PERMISSION_ALIASES = (
+    ("Account Rulesets Edit", "Account Rulesets Write"),
+    (
+        "Account Filter Lists Edit",
+        "Account Filter Lists Write",
+        "Account Rule Lists Write",
+    ),
+)
+ACCOUNT_CACHE_OPTIONAL_PERMISSION_ALIASES = (
+    ("Account Rulesets Read",),
+    ("Account Filter Lists Read", "Account Rule Lists Read"),
+)
 
 
 class CloudflareError(RuntimeError):
@@ -389,7 +410,11 @@ def zone_id(api: CloudflareApi, account: str, zone_name: str) -> str:
 
 
 def issue_ephemeral_zone_api(
-    parent_api: CloudflareApi, account: str, zone: str
+    parent_api: CloudflareApi,
+    account: str,
+    zone: str,
+    *,
+    include_control_plane: bool = False,
 ) -> tuple[CloudflareApi, Any]:
     permissions = parent_api.expect(
         "GET",
@@ -432,6 +457,107 @@ def issue_ephemeral_zone_api(
         if permission_id not in {str(row["id"]) for row in groups}:
             groups.append({"id": permission_id})
 
+    resolved_permissions: list[str] = []
+    account_groups: list[dict[str, str]] = []
+    if include_control_plane:
+        for aliases in ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES:
+            match = next(
+                (
+                    row
+                    for permission_name in aliases
+                    for row in permissions
+                    if row.get("name") == permission_name
+                    and "com.cloudflare.api.account.zone" in (row.get("scopes") or [])
+                ),
+                None,
+            )
+            if match is None:
+                relevant = sorted(
+                    str(row.get("name"))
+                    for row in permissions
+                    if any(
+                        token in str(row.get("name") or "").lower()
+                        for token in ("cache", "bot", "dns")
+                    )
+                )
+                raise CloudflareError(
+                    "Required zone reconciler permission group unavailable: "
+                    + " | ".join(aliases)
+                    + "; relevant available groups: "
+                    + ", ".join(relevant)
+                )
+            permission_id = str(match["id"])
+            if permission_id not in {str(row["id"]) for row in groups}:
+                groups.append({"id": permission_id})
+            resolved_permissions.append(str(match["name"]))
+
+        for aliases in ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES:
+            match = next(
+                (
+                    row
+                    for permission_name in aliases
+                    for row in permissions
+                    if row.get("name") == permission_name
+                    and "com.cloudflare.api.account.zone" in (row.get("scopes") or [])
+                ),
+                None,
+            )
+            if match is None:
+                continue
+            permission_id = str(match["id"])
+            if permission_id not in {str(row["id"]) for row in groups}:
+                groups.append({"id": permission_id})
+            resolved_permissions.append(str(match["name"]))
+
+        account_permissions = parent_api.expect(
+            "GET",
+            f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account",
+        ).get("result") or []
+        for aliases in ACCOUNT_CACHE_REQUIRED_PERMISSION_ALIASES:
+            match = next(
+                (
+                    row
+                    for permission_name in aliases
+                    for row in account_permissions
+                    if row.get("name") == permission_name
+                    and "com.cloudflare.api.account" in (row.get("scopes") or [])
+                ),
+                None,
+            )
+            if match is None:
+                relevant = sorted(
+                    str(row.get("name"))
+                    for row in account_permissions
+                    if "rule" in str(row.get("name") or "").lower()
+                    or "list" in str(row.get("name") or "").lower()
+                )
+                raise CloudflareError(
+                    "Required account cache permission group unavailable: "
+                    + " | ".join(aliases)
+                    + "; relevant available groups: "
+                    + ", ".join(relevant)
+                )
+            account_groups.append({"id": str(match["id"])})
+            resolved_permissions.append(str(match["name"]))
+
+        for aliases in ACCOUNT_CACHE_OPTIONAL_PERMISSION_ALIASES:
+            match = next(
+                (
+                    row
+                    for permission_name in aliases
+                    for row in account_permissions
+                    if row.get("name") == permission_name
+                    and "com.cloudflare.api.account" in (row.get("scopes") or [])
+                ),
+                None,
+            )
+            if match is None:
+                continue
+            permission_id = str(match["id"])
+            if permission_id not in {str(row["id"]) for row in account_groups}:
+                account_groups.append({"id": permission_id})
+            resolved_permissions.append(str(match["name"]))
+
     expires_on = (
         dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)
     ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -439,14 +565,25 @@ def issue_ephemeral_zone_api(
         "POST",
         f"/accounts/{account}/tokens",
         {
-            "name": "Ephemeral Ghezelbaash Zone Settings and Cache Reconciler",
+            "name": "Ephemeral Ghezelbaash Zone, Cache and Bot Reconciler",
             "expires_on": expires_on,
             "policies": [
                 {
                     "effect": "allow",
                     "resources": {f"com.cloudflare.api.account.zone.{zone}": "*"},
                     "permission_groups": groups,
-                }
+                },
+                *(
+                    [
+                        {
+                            "effect": "allow",
+                            "resources": {f"com.cloudflare.api.account.{account}": "*"},
+                            "permission_groups": account_groups,
+                        }
+                    ]
+                    if account_groups
+                    else []
+                ),
             ],
         },
         ok=(200, 201),
@@ -478,8 +615,126 @@ def issue_ephemeral_zone_api(
         print("EPHEMERAL_ZONE_TOKEN_REVOKE_WARNING", message, file=sys.stderr)
 
     atexit.register(revoke)
-    print("EPHEMERAL_ZONE_TOKEN_ISSUED", token_id, "expires_on=", expires_on)
+    print(
+        "EPHEMERAL_ZONE_TOKEN_ISSUED",
+        token_id,
+        "expires_on=",
+        expires_on,
+        "extra_permissions=",
+        ",".join(resolved_permissions),
+    )
     return CloudflareApi(token_value), lambda: revoke(strict=True)
+
+
+def read_dns_contract(
+    api: CloudflareApi, zone: str, zone_name: str, canonical_host: str
+) -> dict[str, Any]:
+    query = urllib.parse.urlencode({"per_page": 500})
+    records = api.expect(
+        "GET", f"/zones/{zone}/dns_records?{query}"
+    ).get("result") or []
+    routable_types = {"A", "AAAA", "CNAME"}
+    required_hosts = [
+        zone_name,
+        canonical_host,
+        f"blog.{zone_name}",
+        f"doctor.{zone_name}",
+        f"github.{zone_name}",
+        f"ig.{zone_name}",
+    ]
+    wildcard = f"*.{zone_name}"
+
+    def routes(hostname: str) -> list[dict[str, Any]]:
+        return [
+            row
+            for row in records
+            if row.get("type") in routable_types
+            and row.get("name") in {hostname, wildcard}
+            and row.get("proxied") is True
+        ]
+
+    coverage = {hostname: bool(routes(hostname)) for hostname in required_hosts}
+    missing = [hostname for hostname, covered in coverage.items() if not covered]
+    if missing:
+        raise CloudflareError(
+            "Required proxied DNS host coverage missing: " + ", ".join(missing)
+        )
+
+    relevant_names = set(required_hosts) | {wildcard}
+    relevant = [
+        {
+            "type": row.get("type"),
+            "name": row.get("name"),
+            "content": row.get("content"),
+            "proxied": row.get("proxied"),
+            "ttl": row.get("ttl"),
+        }
+        for row in records
+        if row.get("name") in relevant_names
+    ]
+    relevant.sort(key=lambda row: (str(row["name"]), str(row["type"]), str(row["content"])))
+    summary = {
+        "recordCount": len(records),
+        "requiredHostCoverage": coverage,
+        "relevantRecords": relevant,
+    }
+    print("DNS_REQUIRED_HOSTS_EXACT", json.dumps(summary, sort_keys=True))
+    return summary
+
+
+def read_pages_contract(
+    api: CloudflareApi, account: str, canonical_host: str
+) -> dict[str, Any]:
+    project_name = "doctor-ghezelbaash"
+    base = f"/accounts/{account}/pages/projects/{project_name}"
+    project = api.expect("GET", base).get("result") or {}
+    source = project.get("source") or {}
+    source_config = source.get("config") or {}
+    build = project.get("build_config") or {}
+    domains = sorted(str(value) for value in (project.get("domains") or []))
+    summary = {
+        "name": project.get("name"),
+        "productionBranch": project.get("production_branch"),
+        "domains": domains,
+        "sourceType": source.get("type"),
+        "repository": (
+            f"{source_config.get('owner')}/{source_config.get('repo_name')}"
+            if source_config.get("owner") and source_config.get("repo_name")
+            else None
+        ),
+        "deploymentsEnabled": source_config.get("deployments_enabled"),
+        "productionDeploymentsEnabled": source_config.get(
+            "production_deployments_enabled"
+        ),
+        "previewDeploymentSetting": source_config.get(
+            "preview_deployment_setting"
+        ),
+        "buildCommand": build.get("build_command"),
+        "destinationDir": build.get("destination_dir"),
+        "rootDir": build.get("root_dir"),
+    }
+    expected = {
+        "name": project_name,
+        "productionBranch": "main",
+        "sourceType": "github",
+        "repository": "medicaldoctor91/doctor-ghezelbaash",
+        "deploymentsEnabled": True,
+        "productionDeploymentsEnabled": True,
+        "previewDeploymentSetting": "none",
+        "buildCommand": "npm ci --ignore-scripts && npm run build",
+        "destinationDir": "dist",
+    }
+    if canonical_host not in domains:
+        raise CloudflareError(
+            f"Canonical Pages domain missing from project: {canonical_host}"
+        )
+    if not all(summary.get(key) == value for key, value in expected.items()):
+        raise CloudflareError(
+            "Cloudflare Pages project contract drift: "
+            + json.dumps(summary, sort_keys=True)
+        )
+    print("CLOUDFLARE_PAGES_CONTRACT_EXACT", json.dumps(summary, sort_keys=True))
+    return summary
 
 
 def issue_ephemeral_single_redirect_api(
@@ -1135,12 +1390,30 @@ def reconcile_subdomain_redirects(
         "total_rule_count=",
         len(rules),
     )
+    safe_rules = []
+    for position, row in enumerate(rules, start=1):
+        from_value = (row.get("action_parameters") or {}).get("from_value") or {}
+        target = from_value.get("target_url") or {}
+        safe_rules.append(
+            {
+                "position": position,
+                "ref": row.get("ref"),
+                "description": row.get("description"),
+                "expression": row.get("expression"),
+                "action": row.get("action"),
+                "enabled": row.get("enabled"),
+                "statusCode": from_value.get("status_code"),
+                "targetValue": target.get("value"),
+                "targetExpression": target.get("expression"),
+            }
+        )
     return {
         "rulesetId": ruleset_id,
         "managedRuleCount": len(desired_rules),
         "totalRuleCount": len(rules),
         "refs": [row["ref"] for row in desired_rows],
         "blogSingleRedirectCount": 0,
+        "allRules": safe_rules,
     }
 
 
@@ -1169,7 +1442,11 @@ def reconcile_bot_access(api: CloudflareApi, zone: str) -> dict[str, Any]:
 
     after = api.expect("GET", path).get("result") or {}
     for key, desired in BOT_ACCESS_SETTINGS.items():
-        if key in after and after.get(key) != desired:
+        if key not in after:
+            raise CloudflareError(
+                f"Required Bot Management field absent from read-back: {key}"
+            )
+        if after.get(key) != desired:
             raise CloudflareError(
                 f"Bot access read-back drift for {key}: {after.get(key)!r}"
             )
@@ -1349,15 +1626,14 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     parent_api = CloudflareApi(token)
     zone = zone_id(parent_api, account, zone_name)
     print("ZONE_RESOLVED", zone_name, zone)
-    zone_api, revoke_ephemeral_zone_token = issue_ephemeral_zone_api(
-        parent_api, account, zone
-    )
 
     outcome: dict[str, Any] = {
         "schemaVersion": 1,
         "zone": zone_name,
         "host": host,
         "capabilities": {
+            "pagesProject": False,
+            "dns": False,
             "zoneSettings": False,
             "cacheRule": False,
             "hstsTransformRule": False,
@@ -1369,6 +1645,17 @@ def apply(dist_dir: Path) -> dict[str, Any]:
         },
         "scopeGaps": [],
     }
+
+    pages_readback = read_pages_contract(parent_api, account, host)
+    outcome["capabilities"]["pagesProject"] = True
+    outcome["pagesProjectReadback"] = pages_readback
+
+    zone_api, revoke_ephemeral_zone_token = issue_ephemeral_zone_api(
+        parent_api,
+        account,
+        zone,
+        include_control_plane=True,
+    )
 
     settings_readback = {}
     try:
@@ -1390,14 +1677,44 @@ def apply(dist_dir: Path) -> dict[str, Any]:
                     setting_id,
                     str(exc)[:1200],
                 )
+
+        dns_readback = read_dns_contract(zone_api, zone, zone_name, host)
+        outcome["capabilities"]["dns"] = True
+        outcome["dnsReadback"] = dns_readback
+
+        cache_readback = reconcile_phase_rule(
+            zone_api,
+            zone,
+            "http_request_cache_settings",
+            "Canonical DIST cache rules",
+            "Git-managed cache eligibility for the immutable static production DIST",
+            cache_rule(host),
+        )
+        outcome["capabilities"]["cacheRule"] = (
+            cache_readback.get("ref") == CACHE_RULE_REF
+        )
+        outcome["cacheRuleReadback"] = {
+            "ref": cache_readback.get("ref"),
+            "expression": cache_readback.get("expression"),
+            "enabled": cache_readback.get("enabled"),
+        }
+
+        bots_readback = reconcile_bot_access(zone_api, zone)
+        outcome["capabilities"]["botManagement"] = True
+        outcome["botReadback"] = {
+            key: bots_readback.get(key)
+            for key in [*BOT_ACCESS_SETTINGS, *OPTIONAL_BOT_ACCESS_SETTINGS]
+            if key in bots_readback
+        }
+
         purge_canonical(zone_api, zone, host)
         outcome["capabilities"]["purgeCache"] = True
     finally:
         revoke_ephemeral_zone_token()
 
-    # Keep the pre-existing capability-aware behavior for rules, bot settings,
-    # and cache purge. The elevated child token is deliberately restricted to
-    # Zone Settings so this hardening cannot mutate unrelated edge families.
+    # The long-lived token remains the authority for account Bulk Redirects and
+    # Transform Rules. Cache, DNS, Bot Management, Zone Settings and cache purge
+    # have already passed exact read-back through the short-lived child token.
     api = parent_api
 
     bulk_ready = False
@@ -1440,23 +1757,6 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             record_capability_gap(outcome, "subdomain_redirect_rules", exc)
 
     try:
-        cache_readback = reconcile_phase_rule(
-            api,
-            zone,
-            "http_request_cache_settings",
-            "Canonical DIST cache rules",
-            "Git-managed cache eligibility for the immutable static production DIST",
-            cache_rule(host),
-        )
-        outcome["capabilities"]["cacheRule"] = (
-            cache_readback.get("ref") == CACHE_RULE_REF
-        )
-    except CloudflareError as exc:
-        if not is_permission_error(exc):
-            raise
-        record_capability_gap(outcome, "cache_rules", exc)
-
-    try:
         hsts_readback = reconcile_phase_rule(
             api,
             zone,
@@ -1491,18 +1791,6 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             raise
         record_capability_gap(outcome, "not_found_transform_rules", exc)
 
-    try:
-        bots_readback = reconcile_bot_access(api, zone)
-        outcome["capabilities"]["botManagement"] = True
-        outcome["botReadback"] = {
-            "aiBotsProtection": bots_readback.get("ai_bots_protection"),
-            "managedRobots": bots_readback.get("is_robots_txt_managed"),
-        }
-    except CloudflareError as exc:
-        if not is_permission_error(exc):
-            raise
-        record_capability_gap(outcome, "bot_management", exc)
-
     if not outcome["capabilities"]["purgeCache"]:
         try:
             purge_canonical(api, zone, host)
@@ -1512,8 +1800,16 @@ def apply(dist_dir: Path) -> dict[str, Any]:
                 raise
             record_capability_gap(outcome, "cache_purge", exc)
 
-    if not outcome["capabilities"]["zoneSettings"]:
-        raise CloudflareError("Required Cloudflare Zone Settings were not reconciled")
+    missing_capabilities = sorted(
+        name
+        for name, exact in outcome["capabilities"].items()
+        if exact is not True
+    )
+    if missing_capabilities:
+        raise CloudflareError(
+            "Required Cloudflare capabilities were not proven exact: "
+            + ", ".join(missing_capabilities)
+        )
     print(
         "EDGE_RECONCILIATION_COMPLETE",
         json.dumps(outcome, sort_keys=True),
