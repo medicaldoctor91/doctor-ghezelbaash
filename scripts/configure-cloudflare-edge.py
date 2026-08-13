@@ -615,7 +615,12 @@ def normalized_bulk_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         normalized.append(
             {
                 "redirect": {
-                    "source_url": redirect.get("source_url"),
+                    # Cloudflare accepts percent-encoded Blogger paths but its
+                    # List Items API reads them back as decoded Unicode. These
+                    # spellings identify the same URL for our contract.
+                    "source_url": urllib.parse.unquote(
+                        str(redirect.get("source_url") or "")
+                    ),
                     "target_url": redirect.get("target_url"),
                     "status_code": redirect.get("status_code", 301),
                     "include_subdomains": redirect.get("include_subdomains", False),

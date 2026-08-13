@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import urllib.parse
 from pathlib import Path
 from typing import Any
 
@@ -89,7 +90,16 @@ class FakeCloudflareApi:
         if method == "GET" and path == (
             "/accounts/test-account/rules/lists/blog-list/items?per_page=500"
         ):
-            return {"success": True, "result": copy.deepcopy(self.list_items)}
+            # Production Cloudflare decodes percent-encoded UTF-8 source URLs
+            # when reading a redirect list back through the API.
+            result = copy.deepcopy(self.list_items)
+            for row in result:
+                redirect = row.get("redirect") or {}
+                if "source_url" in redirect:
+                    redirect["source_url"] = urllib.parse.unquote(
+                        str(redirect["source_url"])
+                    )
+            return {"success": True, "result": result}
         if method == "PUT" and path == "/accounts/test-account/rules/lists/blog-list/items":
             assert isinstance(body, list)
             self.mutate("account:list-items-replaced")
