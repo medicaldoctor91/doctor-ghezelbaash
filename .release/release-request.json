@@ -6,8 +6,8 @@
   "conceptDoi": "10.5281/zenodo.18765168",
   "publishedRecordId": "21910785",
   "publishedVersionDoi": "10.5281/zenodo.21910785",
-  "attempt": 15,
+  "attempt": 16,
   "skipLiveDeploy": false,
   "skipEdgeReconcile": false,
-  "reason": "Recover the already-published v1.2.1 release after disabling Cloudflare Pages Git automatic production and preview deployments. Rebuild the exact release, redeploy via the atomic Wrangler path as the sole Pages deploy authority, reconcile and purge edge state, confirm Hugging Face and Zenodo exactness, pass all three canonical no-query/cache-busted verification rounds, then push source truth and immutable tag only after convergence."
+  "reason": "Final v1.2.1 convergence from settled main after disabling Cloudflare Pages Git auto-deploys, validating the Google-inline/full-graph split, and hardening the production verifier for observed Cloudflare header propagation without relaxing exact CSP or digest equality. Rebuild and redeploy the exact published release, reconcile and purge edge state, confirm Hugging Face and Zenodo exactness, require all three verification rounds to pass, then publish source truth and immutable tag."
 }
