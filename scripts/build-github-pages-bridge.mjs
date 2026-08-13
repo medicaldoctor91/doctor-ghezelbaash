@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import {mkdtemp, mkdir, readFile, readdir, rm, writeFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import {pathToFileURL} from 'node:url';
 
 const root=process.cwd();
-const canonical='https://www.ghezelbaash.ir/';
+export const canonical='https://www.ghezelbaash.ir/';
 const canonicalSourceDir=path.join(root,'src/content-source');
 const canonicalSourceFiles=(await readdir(canonicalSourceDir))
   .filter(name=>/\.(?:html|md)$/.test(name))
@@ -12,7 +13,7 @@ const canonicalSourceFiles=(await readdir(canonicalSourceDir))
 assert.ok(canonicalSourceFiles.length>=100,'Canonical modular source inventory is incomplete');
 const sourceHtml=(await Promise.all(canonicalSourceFiles.map(name=>readFile(path.join(canonicalSourceDir,name),'utf8')))).join('\n');
 
-const humanRoutes=[
+export const humanRoutes=[
   ['index.html',canonical,'وب‌سایت رسمی دکتر سعید قزلباش'],
   ['contact/index.html',`${canonical}#saeed-ghezelbash-clinic-contact-and-location`,'تماس و نشانی کلینیک دکتر سعید قزلباش'],
   ['dr-saeed-ghezelbash-aesthetic-clinic/index.html',`${canonical}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`,'کلینیک زیبایی دکتر سعید قزلباش'],
@@ -31,7 +32,7 @@ const humanRoutes=[
   ['google-maps-review-evidence.html',`${canonical}#google-maps-clinic-reputation-current`,'شواهد حضور کلینیک در Google Maps'],
 ];
 
-const machineRoutes=[
+export const machineRoutes=[
   ['ai-discovery-index.json',`${canonical}artifact-manifest.json`],
   ['authority-signals.json',`${canonical}evidence-snapshot.json`],
   ['brand-kb.ghezelbaash.ai-public.json',`${canonical}graph.jsonld`],
@@ -49,8 +50,8 @@ const machineRoutes=[
   ['publishing-crosswalk.jsonld',`${canonical}linkset.json`],
 ];
 
-const escapeHtml=value=>value.replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
-const redirectHtml=(target,title)=>`<!doctype html>
+export const escapeHtml=value=>value.replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+export const redirectHtml=(target,title)=>`<!doctype html>
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -71,7 +72,7 @@ async function write(rootDir,relative,content){
   await writeFile(destination,content,'utf8');
 }
 
-async function build(outDir){
+export async function build(outDir){
   await mkdir(outDir,{recursive:false});
   for(const [relative,target,title] of humanRoutes){
     const fragment=new URL(target).hash.slice(1);
@@ -102,12 +103,16 @@ async function build(outDir){
   console.log(JSON.stringify({valid:true,canonical,humanRedirectBridges:humanRoutes.length,machineDeprecationBridges:machineRoutes.length,custom404:true},null,2));
 }
 
-if(process.argv.includes('--self-test')){
-  const temp=await mkdtemp(path.join(os.tmpdir(),'ghezelbaash-pages-bridge-'));
-  const out=path.join(temp,'artifact');
-  try{await build(out)}finally{await rm(temp,{recursive:true,force:true})}
-}else{
-  const out=path.resolve(root,process.argv[2]||'github-pages-bridge-dist');
-  assert.ok(out.startsWith(`${root}${path.sep}`),'Bridge output must remain inside the repository workspace');
-  await build(out);
+const invokedDirectly=process.argv[1]
+  && pathToFileURL(path.resolve(process.argv[1])).href===import.meta.url;
+if(invokedDirectly){
+  if(process.argv.includes('--self-test')){
+    const temp=await mkdtemp(path.join(os.tmpdir(),'ghezelbaash-pages-bridge-'));
+    const out=path.join(temp,'artifact');
+    try{await build(out)}finally{await rm(temp,{recursive:true,force:true})}
+  }else{
+    const out=path.resolve(root,process.argv[2]||'github-pages-bridge-dist');
+    assert.ok(out.startsWith(`${root}${path.sep}`),'Bridge output must remain inside the repository workspace');
+    await build(out);
+  }
 }
