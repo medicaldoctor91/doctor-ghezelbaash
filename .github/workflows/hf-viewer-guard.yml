@@ -46,6 +46,7 @@ jobs:
           from pathlib import Path
           import yaml
           from huggingface_hub import HfApi, hf_hub_download, CommitOperationAdd
+          from huggingface_hub.errors import EntryNotFoundError
 
           repo = os.environ['HF_REPO']
           token = os.environ['HF_TOKEN']
@@ -98,9 +99,8 @@ jobs:
           existing = list(meta.get('tags') or [])
           meta['tags'] = list(dict.fromkeys(existing + required_tags))
 
-          # Mixed CSV+JSONL configs can be inferred through one packaged builder by Dataset Server.
-          # Keep the JSONL source intact, but publish a deterministic CSV projection so both Viewer
-          # configs share one unambiguous tabular format and receive full rows/Parquet/statistics.
+          # Keep JSONL as source, and publish a deterministic CSV projection so both Viewer
+          # configs share one unambiguous tabular builder and receive rows/Parquet/statistics.
           rows = []
           columns = []
           seen = set()
@@ -136,6 +136,7 @@ jobs:
               writer.writerow(cooked)
           csv_bytes = csv_buf.getvalue().encode('utf-8')
 
+          csv_repo_path = 'enrichment/instruction_examples_fa_market_positioning.csv'
           meta['configs'] = [
               {
                   'config_name': 'entity_facts',
@@ -143,7 +144,7 @@ jobs:
               },
               {
                   'config_name': 'positioning_instructions',
-                  'data_files': [{'split': 'train', 'path': 'enrichment/instruction_examples_fa_market_positioning.csv'}],
+                  'data_files': [{'split': 'train', 'path': csv_repo_path}],
               },
           ]
 
@@ -161,13 +162,20 @@ jobs:
           new_text = f'---\n{yaml_text}\n---\n\n{body.rstrip()}\n'
 
           operations = []
-          with tempfile.NamedTemporaryFile('wb', delete=False, suffix='.csv') as f_csv:
-              f_csv.write(csv_bytes)
-              csv_tmp = f_csv.name
-          operations.append(CommitOperationAdd(
-              path_in_repo='enrichment/instruction_examples_fa_market_positioning.csv',
-              path_or_fileobj=csv_tmp,
-          ))
+          try:
+              current_csv_path = hf_hub_download(
+                  repo_id=repo, repo_type='dataset', filename=csv_repo_path,
+                  token=token, force_download=True,
+              )
+              current_csv = Path(current_csv_path).read_bytes()
+          except EntryNotFoundError:
+              current_csv = None
+
+          if current_csv != csv_bytes:
+              with tempfile.NamedTemporaryFile('wb', delete=False, suffix='.csv') as f_csv:
+                  f_csv.write(csv_bytes)
+                  csv_tmp = f_csv.name
+              operations.append(CommitOperationAdd(path_in_repo=csv_repo_path, path_or_fileobj=csv_tmp))
 
           if new_text != text:
               with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False, suffix='.md') as f_md:
@@ -175,14 +183,18 @@ jobs:
                   md_tmp = f_md.name
               operations.append(CommitOperationAdd(path_in_repo='README.md', path_or_fileobj=md_tmp))
 
-          commit = api.create_commit(
-              repo_id=repo,
-              repo_type='dataset',
-              token=token,
-              operations=operations,
-              commit_message='Enable full Dataset Viewer and maximize Hub discovery',
-          )
-          print('HF_DATASET_UPDATED', commit.commit_url)
+          if operations:
+              commit = api.create_commit(
+                  repo_id=repo,
+                  repo_type='dataset',
+                  token=token,
+                  operations=operations,
+                  commit_message='Enforce full Dataset Viewer and Hub discovery metadata',
+              )
+              print('HF_DATASET_UPDATED', commit.commit_url)
+          else:
+              print('HF_DATASET_ALREADY_COMPLIANT')
+
           print('HF_POSITIONING_ROWS', len(rows), 'COLUMNS', len(columns), 'CSV_BYTES', len(csv_bytes))
           PY
 
@@ -197,96 +209,87 @@ jobs:
           repo = os.environ['HF_REPO']
           base = 'https://datasets-server.huggingface.co'
           s = requests.Session()
-          s.headers.update({'cache-control': 'no-cache', 'pragma': 'no-cache', 'user-agent': 'ghezelbaash-hf-viewer-guard/2.0'})
+          s.headers.update({'cache-control': 'no-cache', 'pragma': 'no-cache', 'user-agent': 'ghezelbaash-hf-viewer-guard/3.0'})
 
           def request(path, **params):
               params['dataset'] = repo
               params['_'] = str(time.time_ns())
               return s.get(base + path, params=params, timeout=45)
 
-          valid = None
-          for attempt in range(42):
-              r = request('/is-valid')
-              try:
-                  valid = r.json()
-              except Exception:
-                  valid = {'http': r.status_code, 'text': r.text[:500]}
-              print('IS_VALID_ATTEMPT', attempt + 1, json.dumps(valid, ensure_ascii=False))
-              if r.ok and all(valid.get(k) is True for k in ('viewer', 'preview', 'search', 'filter', 'statistics')):
-                  break
-              time.sleep(10)
-          else:
-              raise SystemExit('Dataset Server did not reach full is-valid=true state')
+          def wait_json(path, predicate, label, attempts=42, delay=10, **params):
+              last_status = None
+              last_text = ''
+              for attempt in range(attempts):
+                  r = request(path, **params)
+                  last_status = r.status_code
+                  last_text = r.text[:1200]
+                  if r.ok:
+                      try:
+                          payload = r.json()
+                      except Exception:
+                          payload = None
+                      if payload is not None and predicate(payload):
+                          print(label, 'PASS', 'ATTEMPT', attempt + 1)
+                          return payload
+                  print(label, 'RETRY', attempt + 1, 'HTTP', r.status_code, last_text[:500])
+                  time.sleep(delay)
+              raise SystemExit(f'{label} did not become healthy: HTTP {last_status} {last_text}')
+
+          valid = wait_json(
+              '/is-valid',
+              lambda x: all(x.get(k) is True for k in ('viewer', 'preview', 'search', 'filter', 'statistics')),
+              'IS_VALID',
+          )
+          print('IS_VALID_PAYLOAD', json.dumps(valid, ensure_ascii=False))
 
           required_configs = ('entity_facts', 'positioning_instructions')
           required_pairs = {(c, 'train') for c in required_configs}
-
-          # Wait for the new README/config commit, not merely an old cached is-valid result.
-          for attempt in range(42):
-              r = request('/splits')
-              if r.ok:
-                  payload = r.json()
-                  pairs = {(x.get('config'), x.get('split')) for x in payload.get('splits', [])}
-                  print('SPLITS_ATTEMPT', attempt + 1, sorted(pairs))
-                  if required_pairs.issubset(pairs):
-                      break
-              else:
-                  print('SPLITS_ATTEMPT', attempt + 1, 'HTTP', r.status_code, r.text[:500])
-              time.sleep(10)
-          else:
-              raise SystemExit('Required configs/splits did not become available')
+          splits = wait_json(
+              '/splits',
+              lambda x: required_pairs.issubset({(s.get('config'), s.get('split')) for s in x.get('splits', [])}),
+              'SPLITS',
+          )
+          pairs = {(x.get('config'), x.get('split')) for x in splits.get('splits', [])}
 
           for config in required_configs:
-              for attempt in range(42):
-                  r = request('/first-rows', config=config, split='train')
-                  if r.ok:
-                      payload = r.json()
-                      if payload.get('rows'):
-                          print('FIRST_ROWS_PASS', config, 'ROWS', len(payload['rows']))
-                          break
-                  print('FIRST_ROWS_ATTEMPT', config, attempt + 1, 'HTTP', r.status_code, r.text[:700])
-                  time.sleep(10)
-              else:
-                  raise SystemExit(f'No healthy first-rows response for {config}')
+              first_rows = wait_json(
+                  '/first-rows', lambda x: bool(x.get('rows')),
+                  f'FIRST_ROWS_{config}', config=config, split='train',
+              )
+              print('FIRST_ROWS_COUNT', config, len(first_rows.get('rows', [])))
 
-              r = request('/rows', config=config, split='train', offset=0, length=5)
-              if not r.ok or not r.json().get('rows'):
-                  raise SystemExit(f'/rows failed for {config}: HTTP {r.status_code} {r.text[:1000]}')
-              print('ROWS_PASS', config)
+              rows = wait_json(
+                  '/rows', lambda x: bool(x.get('rows')),
+                  f'ROWS_{config}', config=config, split='train', offset=0, length=5,
+              )
+              print('ROWS_COUNT', config, len(rows.get('rows', [])))
 
-              r = request('/statistics', config=config, split='train')
-              if not r.ok:
-                  raise SystemExit(f'/statistics failed for {config}: HTTP {r.status_code} {r.text[:1000]}')
-              print('STATISTICS_PASS', config)
+              wait_json(
+                  '/statistics', lambda x: isinstance(x, dict) and len(x) > 0,
+                  f'STATISTICS_{config}', config=config, split='train',
+              )
 
-          for attempt in range(42):
-              r = request('/parquet')
-              if r.ok:
-                  parquet = r.json()
-                  files = parquet.get('parquet_files', [])
-                  configs = {x.get('config') for x in files}
-                  print('PARQUET_ATTEMPT', attempt + 1, 'FILES', len(files), 'CONFIGS', sorted(configs))
-                  if set(required_configs).issubset(configs):
-                      break
-              else:
-                  print('PARQUET_ATTEMPT', attempt + 1, 'HTTP', r.status_code, r.text[:500])
-              time.sleep(10)
-          else:
-              raise SystemExit('Parquet exports for both configs did not become available')
+          parquet = wait_json(
+              '/parquet',
+              lambda x: set(required_configs).issubset({f.get('config') for f in x.get('parquet_files', [])}),
+              'PARQUET',
+          )
+          files = parquet.get('parquet_files', [])
 
-          r = request('/size')
-          if not r.ok:
-              raise SystemExit(f'/size failed: HTTP {r.status_code} {r.text[:1000]}')
-          size = r.json()
-          if size.get('failed'):
-              raise SystemExit(f'Dataset Server size pipeline failures: {size["failed"]}')
+          size = wait_json(
+              '/size',
+              lambda x: not x.get('failed') and isinstance(x.get('size'), dict),
+              'SIZE',
+          )
 
-          r = request('/croissant')
-          if not r.ok:
-              raise SystemExit(f'/croissant failed: HTTP {r.status_code} {r.text[:1000]}')
+          wait_json(
+              '/croissant', lambda x: isinstance(x, dict) and len(x) > 0,
+              'CROISSANT',
+          )
 
           print('HF_VIEWER_GUARD_PASS', json.dumps(valid, ensure_ascii=False))
           print('HF_SPLITS_PASS', sorted(pairs))
           print('HF_PARQUET_FILES', len(files))
+          print('HF_SIZE_PASS', json.dumps(size.get('size', {}).get('dataset', {}), ensure_ascii=False))
           print('HF_CROISSANT_PASS')
           PY
