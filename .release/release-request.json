@@ -4,8 +4,10 @@
   "currentRecordId": "21905312",
   "currentVersionDoi": "10.5281/zenodo.21905312",
   "conceptDoi": "10.5281/zenodo.18765168",
-  "attempt": 11,
+  "reservedRecordId": "21910785",
+  "reservedVersionDoi": "10.5281/zenodo.21910785",
+  "attempt": 12,
   "skipLiveDeploy": false,
   "skipEdgeReconcile": false,
-  "reason": "Final production convergence: canonical cache hardening, semantic role reconciliation across website/Zenodo/Hugging Face, physician-first distribution metadata, migration redirect closure, current DOI head alignment, and cache-safe live verification."
+  "reason": "Resume the already reserved final v1.2.1 DOI after fail-closed head-link validation; continue one exact build through Zenodo, Hugging Face, Cloudflare, cache purge, canonical no-query verification, and final source/tag publication without minting a duplicate DOI."
 }
