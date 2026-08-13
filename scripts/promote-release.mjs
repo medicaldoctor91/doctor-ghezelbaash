@@ -106,7 +106,7 @@ await writeJson('src/data/semantic/knowledge-graph.jsonld',synchronized);
 
 const englishDate=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${next.date}T00:00:00Z`));
 const replacements=[
-  ['src/data/templates/main-head.html',text=>text.replace(/<link href="https:\/\/doi\.org\/10\.5281\/zenodo\.\d+" rel="related" title="Zenodo DOI"\/>/,`<link href="https://doi.org/${next.versionDoi}" rel="related" title="Zenodo preservation Version DOI ${next.release}"/>`)],
+  ['src/data/templates/main-head.html',text=>text.replace(/<link href="https:\/\/doi\.org\/10\.5281\/zenodo\.\d+" rel="related" title="(?:Zenodo DOI|Zenodo preservation Version DOI [^"]+)"\/>/,`<link href="https://doi.org/${next.versionDoi}" rel="related" title="Zenodo preservation Version DOI ${next.release}"/>`)],
   ['src/content-source/100-rc099.html',text=>text
     .replaceAll(`https://doi.org/${old.versionDoi}`,`https://doi.org/${next.versionDoi}`)
     .replaceAll(old.versionDoi,next.versionDoi)
