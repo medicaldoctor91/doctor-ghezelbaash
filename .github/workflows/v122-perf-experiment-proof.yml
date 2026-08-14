@@ -45,8 +45,9 @@ jobs:
           const fs=require('fs');const html=fs.readFileSync('dist/index.html','utf8');
           const core=(html.match(/id="entity-core"/g)||[]).length,support=(html.match(/id="entity-support"/g)||[]).length;
           if(core!==1||support!==1)throw Error(`Inline semantic lane drift core=${core} support=${support}`);
-          const preloads=[...html.matchAll(/<link[^>]+rel="preload"[^>]+as="image"[^>]+type="image\/avif"[^>]*>/g)].map(m=>m[0]);
-          if(preloads.length!==1||!preloads[0].includes('imagesrcset=')||!preloads[0].includes('fetchpriority="high"'))throw Error(`Responsive Hero LCP preload drift count=${preloads.length}`);
+          const links=[...html.matchAll(/<link\b[^>]*>/g)].map(m=>m[0]);
+          const preloads=links.filter(tag=>tag.includes('rel="preload"')&&tag.includes('as="image"')&&tag.includes('type="image/avif"')&&tag.includes('fetchpriority="high"')&&tag.includes('imagesrcset=')&&tag.includes('saeed-ghezelbash-portrait-delivery-640'));
+          if(preloads.length!==1)throw Error(`Responsive Hero LCP preload drift count=${preloads.length}`);
           const viewportAt=html.indexOf('name="viewport"'),preloadAt=html.indexOf(preloads[0]),styleAt=html.indexOf('<style>'),titleAt=html.indexOf('<title>'),coreAt=html.indexOf('id="entity-core"'),heroAt=html.indexOf('class="entity-hero"');
           if(!(viewportAt>=0&&preloadAt>viewportAt&&styleAt>preloadAt&&titleAt>styleAt&&coreAt>titleAt&&heroAt>coreAt))throw Error(`Head ordering invalid viewport=${viewportAt} preload=${preloadAt} style=${styleAt} title=${titleAt} core=${coreAt} hero=${heroAt}`);
           console.log(JSON.stringify({performanceExperimentSourceProof:'PASS',commit:process.env.SOURCE_COMMIT,htmlBytes:Buffer.byteLength(html),ordering:{viewportAt,preloadAt,styleAt,titleAt,coreAt,heroAt},criticalCssImmediatelyAfterCriticalHints:true,duplicateHeroPreload:false,semanticLanes:{core,support}}));
