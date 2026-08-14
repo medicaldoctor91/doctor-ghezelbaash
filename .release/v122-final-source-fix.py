@@ -7,6 +7,13 @@ if raw.count(old)!=1:
     raise SystemExit(f'v2 invariant-reference patch anchor drift: {raw.count(old)}')
 raw=raw.replace(old,new)
 
+# Canonical answer-corpus header explicitly names medical review; align both generated target and validator.
+review_old='# Release ${release.release}; reviewed ${release.medicalReviewedAt};'
+review_new='# Release ${release.release}; medically reviewed ${release.medicalReviewedAt};'
+if raw.count(review_old)<1:
+    raise SystemExit('v2 medical-review header patch anchor drift')
+raw=raw.replace(review_old,review_new)
+
 anchor="inv_path=ROOT/'src/data/release-invariants.json';inv=json.loads(inv_path.read_text())"
 inject=r'''# Production native-answer integrity must be derived from exact local DIST, never a fixed snapshot count.
 p=ROOT/'scripts/verify-production.mjs';vp=p.read_text()
