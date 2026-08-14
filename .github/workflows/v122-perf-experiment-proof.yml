@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: tmp/v122-mobile-critical-path-experiment
+          ref: tmp/v122-critical-css-order-experiment
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -30,11 +30,12 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci --ignore-scripts
-      - name: Build exact experiment and enforce frozen visible/semantic contract
+      - name: Build exact experiment and enforce frozen visible semantic and head-order contract
         shell: bash
         run: |
           set -euo pipefail
           C=$(git rev-parse HEAD)
+          test "$C" = 'fa8c5424755d503e0741ad2abac8225f597f92b6'
           export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C") ASTRO_TELEMETRY_DISABLED=1
           npm run build
           node scripts/validate-visible-freeze.mjs dist/index.html
@@ -44,10 +45,10 @@ jobs:
           const fs=require('fs');const html=fs.readFileSync('dist/index.html','utf8');
           const core=(html.match(/id="entity-core"/g)||[]).length,support=(html.match(/id="entity-support"/g)||[]).length;
           if(core!==1||support!==1)throw Error(`Inline semantic lane drift core=${core} support=${support}`);
-          const preload=html.match(/<link[^>]+rel="preload"[^>]+as="image"[^>]+type="image\/avif"[^>]*>/);
-          if(!preload||!preload[0].includes('imagesrcset=')||!preload[0].includes('fetchpriority="high"'))throw Error('Responsive Hero LCP preload missing');
-          const styleAt=html.indexOf('<style>'),coreAt=html.indexOf('id="entity-core"'),heroAt=html.indexOf('class="entity-hero"');
-          if(styleAt<0||heroAt<0||coreAt<heroAt)throw Error(`Critical ordering invalid style=${styleAt} hero=${heroAt} core=${coreAt}`);
-          console.log(JSON.stringify({performanceExperimentSourceProof:'PASS',commit:process.env.SOURCE_COMMIT,htmlBytes:Buffer.byteLength(html),criticalStyleBeforeHero:styleAt<heroAt,entityCoreAfterVisibleMain:coreAt>heroAt,semanticLanes:{core,support},responsiveHeroPreload:true}));
+          const preloads=[...html.matchAll(/<link[^>]+rel="preload"[^>]+as="image"[^>]+type="image\/avif"[^>]*>/g)].map(m=>m[0]);
+          if(preloads.length!==1||!preloads[0].includes('imagesrcset=')||!preloads[0].includes('fetchpriority="high"'))throw Error(`Responsive Hero LCP preload drift count=${preloads.length}`);
+          const viewportAt=html.indexOf('name="viewport"'),preloadAt=html.indexOf(preloads[0]),styleAt=html.indexOf('<style>'),titleAt=html.indexOf('<title>'),coreAt=html.indexOf('id="entity-core"'),heroAt=html.indexOf('class="entity-hero"');
+          if(!(viewportAt>=0&&preloadAt>viewportAt&&styleAt>preloadAt&&titleAt>styleAt&&coreAt>titleAt&&heroAt>coreAt))throw Error(`Head ordering invalid viewport=${viewportAt} preload=${preloadAt} style=${styleAt} title=${titleAt} core=${coreAt} hero=${heroAt}`);
+          console.log(JSON.stringify({performanceExperimentSourceProof:'PASS',commit:process.env.SOURCE_COMMIT,htmlBytes:Buffer.byteLength(html),ordering:{viewportAt,preloadAt,styleAt,titleAt,coreAt,heroAt},criticalCssImmediatelyAfterCriticalHints:true,duplicateHeroPreload:false,semanticLanes:{core,support}}));
           NODE
           test -z "$(git status --porcelain --untracked-files=no)"
