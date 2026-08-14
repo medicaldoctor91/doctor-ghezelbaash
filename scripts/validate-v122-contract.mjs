@@ -7,6 +7,7 @@ const arr=v=>Array.isArray(v)?v:(v==null?[]:[v]);
 const id=v=>typeof v==='string'?v:v?.['@id'];
 const strings=x=>{const out=[];const walk=v=>{if(typeof v==='string')out.push(v);else if(Array.isArray(v))v.forEach(walk);else if(v&&typeof v==='object')Object.values(v).forEach(walk)};walk(x);return out};
 const release=await readJson('src/data/release.json'),inv=await readJson('src/data/release-invariants.json'),pkg=await readJson('package.json'),lock=await readJson('package-lock.json'),codemeta=await readJson('codemeta.json');
+const releaseRoot=new Set(await readdir(path.join(root,'.release'))),history121=new Set(await readdir(path.join(root,'.release/history/v1.2.1')));for(const f of ['release-attestation.json','release-request.json','zenodo-published.json']){if(releaseRoot.has(f))fail(`Historical v1.2.1 control artifact remains in current .release root: ${f}`);if(!history121.has(f))fail(`Archived v1.2.1 control artifact missing: ${f}`)}await readFile(path.join(root,'scripts/lib/deterministic-build-time.mjs'),'utf8');
 const R=release.release,Z=release.dataset?.zenodo;
 if(!/^\d+\.\d+\.\d+$/.test(R)||inv.release!==R||pkg.version!==R||lock.version!==R||lock.packages?.['']?.version!==R)fail('Release version convergence failure');
 if(release.dateModified!==inv.date)fail('Release publication date convergence failure');

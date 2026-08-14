@@ -1,11 +1,12 @@
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {readFile,writeFile,readdir} from 'node:fs/promises';
+import {resolveDeterministicBuildInstant} from './lib/deterministic-build-time.mjs';
 const root=process.cwd(),dist=path.resolve(root,process.argv[2]||'dist'),data=path.join(root,'src/data');
 const release=JSON.parse(await readFile(path.join(data,'release.json'),'utf8')),volatile=JSON.parse(await readFile(path.join(data,'volatile-facts.json'),'utf8')),visibleContract=JSON.parse(await readFile(path.join(data,'visible-contract.json'),'utf8'));
 const shaHex=b=>createHash('sha256').update(b).digest('hex'),shaB64=b=>createHash('sha256').update(b).digest('base64');
 async function walk(d,p=''){let out=[];for(const e of (await readdir(d,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){const a=path.join(d,e.name),r=p?`${p}/${e.name}`:e.name;if(e.isDirectory())out.push(...await walk(a,r));else if(e.isFile())out.push({abs:a,rel:r});}return out}
-const liveRevision=process.env.CF_PAGES_COMMIT_SHA||process.env.GITHUB_SHA||process.env.SOURCE_COMMIT||'local-unbound',generatedAt=process.env.SOURCE_DATE_EPOCH?new Date(Number(process.env.SOURCE_DATE_EPOCH)*1000).toISOString():`${release.dateModified}T00:00:00.000Z`,createdAt=(release.dataset.zenodo.releaseHistory||[]).map(x=>x.publicationDate).sort()[0]||release.dateModified,datasetName=release.dataset.name;
+const liveRevision=process.env.CF_PAGES_COMMIT_SHA||process.env.SOURCE_COMMIT||process.env.GITHUB_SHA||'local-unbound',generatedAt=resolveDeterministicBuildInstant({releaseDate:release.dateModified}).iso,createdAt=(release.dataset.zenodo.releaseHistory||[]).map(x=>x.publicationDate).sort()[0]||release.dateModified,datasetName=release.dataset.name;
 const fileMeta=async rel=>{const b=await readFile(path.join(dist,rel));return{bytes:b.length,sha256:shaHex(b)}};
 // Phase 1: finalize leaf descriptors that other descriptors hash.
 const dcatPath=path.join(dist,'dcat.ttl');let dcat=await readFile(dcatPath,'utf8');dcat=dcat.replace(/"Doctor Ghezelbash Structured Data Catalog"@en/g,`"${datasetName} — Data Catalog"@en`).replace(/schema:version "[^"]+"/g,`schema:version "${release.release}"`).replace(/dct:modified "\d{4}-\d{2}-\d{2}"\^\^xsd:date/g,`dct:modified "${release.dateModified}"^^xsd:date`);await writeFile(dcatPath,dcat);
