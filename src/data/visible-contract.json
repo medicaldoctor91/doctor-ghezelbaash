@@ -326,5 +326,8 @@
     "structured-data-footer-role-and-doi-normalization",
     "medical-review-date-consistency",
     "google-maps-anchor-label-correction"
-  ]
+  ],
+  "finalVisibleDomSha256": "ed287eee37209a3ab2d85e63f65d836ccaec0fa1b7dd8339ef752c9d0353809d",
+  "finalVisibleDomRecords": 19121,
+  "finalVisibleDomNormalization": "semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel"
 }
