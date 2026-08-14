@@ -1,0 +1,34 @@
+name: v1.2.2 one-shot release patch executor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.release/apply-release-patch-request.json'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+      - name: Apply exact pre-release workflow fixes
+        run: |
+          set -euo pipefail
+          node scripts/patch-v122-release-workflow.mjs
+          rm scripts/patch-v122-release-workflow.mjs
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workflows/ceiling-release.yml scripts/patch-v122-release-workflow.mjs
+          git diff --cached --check
+          git commit -m 'Harden v1.2.2 freeze and publish verified GitHub Release'
+          git push origin HEAD:release/v1.2.2-candidate
