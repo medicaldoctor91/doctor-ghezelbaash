@@ -1,8 +1,8 @@
 {
   "targetVersion": "1.2.2",
   "baseCandidateSha": "2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb",
-  "experimentSha": "2541b0dadd87f7c9a6c33bc1183697c5cd34eded",
+  "experimentSha": "fa8c5424755d503e0741ad2abac8225f597f92b6",
   "requestedAt": "2026-08-15",
-  "scope": "paired-mobile-and-six-viewport-live-proof",
-  "nonce": "critical-path-live-002"
+  "scope": "critical-css-order-paired-mobile-and-six-viewport-live-proof",
+  "nonce": "critical-css-order-live-004"
 }
