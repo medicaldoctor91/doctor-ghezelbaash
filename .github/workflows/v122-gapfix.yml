@@ -14,6 +14,7 @@ concurrency:
 
 env:
   CANDIDATE_BRANCH: release/v1.2.2-candidate
+  TEMP_SOURCE_BRANCH: tmp/v122-gapfix-source
   EXPECTED_HEAD: b811855e3758312810d79a76bdb5aff8c3bbf36d
 
 jobs:
@@ -75,7 +76,7 @@ jobs:
           echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")" >> "$GITHUB_ENV"
           echo "ATOMIC_CANDIDATE_COMMIT=$C"
       - run: npm ci --ignore-scripts
-      - name: Prove exact local commit before Candidate branch mutation
+      - name: Prove exact local commit before any remote source mutation
         shell: bash
         run: |
           set -euo pipefail
@@ -88,10 +89,14 @@ jobs:
           const fs=require('fs');const m=JSON.parse(fs.readFileSync('dist/current-release-matrix.json'));if(m.servicesWithAliasCoverage!==m.serviceCount||m.serviceCount!==124)throw Error(`Query Matrix service coverage ${m.servicesWithAliasCoverage}/${m.serviceCount}`);if(m.sourceCommit!==process.env.CANDIDATE_SHA)throw Error('Current release matrix exact source commit drift');console.log(JSON.stringify({atomicGapfixProof:'PASS',sourceCommit:m.sourceCommit,queryRows:m.queryRows,serviceCoverage:`${m.servicesWithAliasCoverage}/${m.serviceCount}`}));
           NODE
           test -z "$(git status --porcelain --untracked-files=no)"
-      - name: Publish single proven commit to Candidate branch
+      - name: Export proven non-workflow source tree to temporary branch
         shell: bash
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD^)" = "$EXPECTED_HEAD"
-          git push origin "HEAD:$CANDIDATE_BRANCH"
-          echo "V122_ATOMIC_GAPFIX_PASS candidate=$(git rev-parse HEAD)"
+          git checkout "$EXPECTED_HEAD" -- .github/workflows
+          git add .github/workflows
+          git commit --amend --no-edit
+          test "$(git diff --name-only "$EXPECTED_HEAD" HEAD | grep '^.github/workflows/' || true)" = ''
+          git push --force origin "HEAD:$TEMP_SOURCE_BRANCH"
+          echo "V122_PROVEN_SOURCE_EXPORT_PASS temp=$TEMP_SOURCE_BRANCH commit=$(git rev-parse HEAD)"
