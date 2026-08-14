@@ -1,0 +1,29 @@
+name: v1.2.2 Zenodo GitHub integration probe
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/v122-zenodo-github-integration-probe.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Probe known/legacy Zenodo GitHub integration endpoints read-only
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
+          for url in \
+            'https://zenodo.org/api/github/repos' \
+            'https://zenodo.org/api/github/repos/medicaldoctor91/doctor-ghezelbaash' \
+            'https://zenodo.org/api/github/repositories' \
+            'https://zenodo.org/api/github'; do
+            code=$(curl --silent --show-error -o /tmp/body -w '%{http_code}' -H "Authorization: Bearer $ZENODO_TOKEN" -H 'Accept: application/json' "$url" || true)
+            echo "PROBE $code $url"
+            head -c 3000 /tmp/body | tr '\n' ' '; echo
+          done
