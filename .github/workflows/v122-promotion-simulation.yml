@@ -1,0 +1,44 @@
+name: v1.2.2 DOI-bound promotion simulation
+on:
+  push:
+    branches: [release/v1.2.2-candidate]
+    paths:
+      - scripts/promote-release.mjs
+      - scripts/migrate-release-reputation-snapshot.mjs
+      - scripts/validate-v122-contract.mjs
+      - scripts/validate-source.mjs
+      - scripts/validate-dist.mjs
+      - package.json
+      - .github/workflows/v122-promotion-simulation.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  simulate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with: {node-version: 24.18.0, cache: npm}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: '3.12'}
+      - run: npm ci --ignore-scripts
+      - name: Promote an isolated checkout with a syntactically valid fake reserved DOI
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node -p "require('./src/data/release.json').release")" = '1.2.1'
+          node scripts/promote-release.mjs --version=1.2.2 --date=2026-08-14 --zenodo-record=99999999 --zenodo-doi=10.5281/zenodo.99999999
+          node - <<'NODE'
+          const r=require('./src/data/release.json');if(r.release!=='1.2.2'||String(r.dataset.zenodo.recordId)!=='99999999'||r.dataset.zenodo.versionDoi!=='10.5281/zenodo.99999999'||r.dataset.zenodo.conceptDoi!=='10.5281/zenodo.18765168')throw Error('Promotion identity failure');const h=r.dataset.zenodo.releaseHistory;if(!h.some(x=>x.release==='1.0.0')||!h.some(x=>x.release==='1.2.0')||!h.some(x=>x.release==='1.2.1')||!h.some(x=>x.release==='1.2.2'&&x.versionDoi==='10.5281/zenodo.99999999'))throw Error('Release history failure');for(const k of ['state','draftApi','publishedApi','previousVersion','historicalVersion'])if(Object.hasOwn(r.dataset.zenodo,k))throw Error('Operational/legacy Zenodo field leaked: '+k);console.log('PROMOTION_IDENTITY_PASS')
+          NODE
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
+          npm run release:prepare
+          npm run build
+          node scripts/validate-v122-contract.mjs
+          node scripts/validate-dist.mjs
+          node - <<'NODE'
+          const fs=require('fs'),g=JSON.parse(fs.readFileSync('dist/graph.jsonld')),s=JSON.stringify(g);for(const x of ['10.5281/zenodo.99999999','10.5281/zenodo.18765168','Version 1.2.2'])if(!s.includes(x))throw Error('Promoted graph missing '+x);for(const f of ['dist/artifact-manifest.json','dist/current-release-matrix.json','dist/query-matrix.jsonl','dist/answers.txt','dist/datapackage.json','dist/croissant.json']){const t=fs.readFileSync(f,'utf8');if(!t.includes('1.2.2'))throw Error(f+' lacks 1.2.2')}console.log('PROMOTION_FULL_BUILD_PASS')
+          NODE
