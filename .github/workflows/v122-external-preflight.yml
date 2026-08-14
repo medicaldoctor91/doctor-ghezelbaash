@@ -1,0 +1,109 @@
+name: v1.2.2 external capability preflight
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/v122-external-preflight.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      CF_PROJECT: doctor-ghezelbaash
+      PLACE_ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+    steps:
+      - name: Google Places read capability and canonical identity
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GOOGLE_PLACES_API_KEY:-}"
+          echo "::add-mask::$GOOGLE_PLACES_API_KEY"
+          curl --fail --silent --show-error -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' "https://places.googleapis.com/v1/places/$PLACE_ID" > /tmp/place.json
+          python - <<'PY'
+          import json,os
+          p=json.load(open('/tmp/place.json'))
+          assert p['id']==os.environ['PLACE_ID']
+          assert 1<=float(p['rating'])<=5 and int(p['userRatingCount'])>=0
+          assert not p.get('movedPlace') and not p.get('movedPlaceId')
+          print('GOOGLE_PLACES_PREFLIGHT_PASS',p['id'],p['rating'],p['userRatingCount'],p.get('businessStatus'))
+          PY
+      - name: Zenodo token and immutable lineage readback
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
+          for id in 18765169 21905312 21910785; do
+            curl --fail --silent --show-error -H 'Cache-Control: no-cache' "https://zenodo.org/api/records/$id?_=$(date +%s%N)" > "/tmp/z-$id.json"
+          done
+          curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/21910785 > /tmp/z-auth.json
+          python - <<'PY'
+          import json
+          expected={'18765169':('1.0.0','10.5281/zenodo.18765169'),'21905312':('1.2.0','10.5281/zenodo.21905312'),'21910785':('1.2.1','10.5281/zenodo.21910785')}
+          for rid,(version,doi) in expected.items():
+              p=json.load(open('/tmp/z-'+rid+'.json')); m=p.get('metadata') or {}
+              assert str(p['id'])==rid and p['doi']==doi and m.get('version')==version
+              print('ZENODO_HISTORY',rid,version,doi,m.get('publication_date'),(p.get('conceptdoi') or (p.get('metadata') or {}).get('conceptdoi')))
+          a=json.load(open('/tmp/z-auth.json')); assert str(a['id'])=='21910785' and a.get('submitted') is True
+          print('ZENODO_TOKEN_PREFLIGHT_PASS')
+          PY
+      - name: Hugging Face token and public dataset contract
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          curl --fail --silent --show-error -H "Authorization: Bearer $HF_TOKEN" https://huggingface.co/api/whoami-v2 > /tmp/hf-whoami.json
+          curl --fail --silent --show-error -H 'Cache-Control: no-cache' "https://huggingface.co/api/datasets/$HF_REPO?full=true&_=$(date +%s%N)" > /tmp/hf-dataset.json
+          python - <<'PY'
+          import json
+          who=json.load(open('/tmp/hf-whoami.json')); assert who.get('name')
+          d=json.load(open('/tmp/hf-dataset.json')); tags=set(d.get('tags') or [])
+          for x in ['task_categories:question-answering','task_categories:text-retrieval','task_categories:text-generation','language:fa','language:en','language:ar','language:ckb']: assert x in tags,x
+          print('HF_PREFLIGHT_PASS',who['name'],d.get('sha'),d.get('downloads'))
+          PY
+      - name: Cloudflare production isolation and token capability
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT" > /tmp/cf.json
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/cf.json')); assert p.get('success') is True
+          r=p['result']; c=(r.get('source') or {}).get('config') or {}
+          assert r.get('production_branch')=='production/deploy'
+          assert c.get('preview_deployment_setting')=='custom' and c.get('preview_branch_includes')==['staging/deploy']
+          print('CLOUDFLARE_PREFLIGHT_PASS',r.get('production_branch'),c.get('preview_branch_includes'))
+          PY
+      - name: GitHub token scope readback
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          headers=$(mktemp)
+          curl --fail --silent --show-error -D "$headers" -o /tmp/repo.json -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json' "https://api.github.com/repos/$GITHUB_REPOSITORY"
+          grep -i '^x-oauth-scopes:' "$headers" || true
+          python - <<'PY'
+          import json,os
+          p=json.load(open('/tmp/repo.json')); assert p['full_name']==os.environ['GITHUB_REPOSITORY']
+          print('GITHUB_PREFLIGHT_PASS',p['default_branch'])
+          PY
