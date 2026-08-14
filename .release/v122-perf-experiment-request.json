@@ -1,0 +1,8 @@
+{
+  "targetVersion": "1.2.2",
+  "baseCandidate": "2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb",
+  "experimentBranch": "tmp/v122-mobile-critical-path-experiment",
+  "experimentSha": "2541b0dadd87f7c9a6c33bc1183697c5cd34eded",
+  "requestedAt": "2026-08-15",
+  "nonce": "critical-path-001"
+}
