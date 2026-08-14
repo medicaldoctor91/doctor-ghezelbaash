@@ -1,4 +1,4 @@
-name: v1.2.2 bootstrap registries
+name: v1.2.2 foundation migration
 on:
   push:
     branches: [release/v1.2.2-candidate]
@@ -15,17 +15,18 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: true
+          fetch-depth: 0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.18.0
       - run: node scripts/bootstrap-v122-registries.mjs
-      - name: Commit bootstrap registries
+      - name: Commit coherent migration result
         shell: bash
         run: |
           set -euo pipefail
           git config user.name ghezelbaash-release-bot
           git config user.email actions@users.noreply.github.com
-          git add src/data/service-registry.json src/data/answer-registry.json src/data/visible-contract.json src/data/retrieval/query-matrix-policy.json .release/policy/hf-authority-contract.json
+          git add -A
           git diff --cached --quiet && exit 0
-          git commit -m "Bootstrap v1.2.2 semantic registries"
+          git commit -m "Migrate v1.2.2 foundation architecture"
           git push origin HEAD:release/v1.2.2-candidate
