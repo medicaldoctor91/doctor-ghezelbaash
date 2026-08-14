@@ -1,0 +1,226 @@
+name: Harden and prove v1.2.2 release controller
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-controller-hardening-request.json]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+  CF_PROJECT: doctor-ghezelbaash
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CF_PRODUCTION_BRANCH: production/deploy
+  CF_PREVIEW_BRANCH: staging/deploy
+  HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+
+jobs:
+  harden:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Checkout control source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Patch candidate first and make hardening part of Candidate C ancestry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name ghezelbaash-controller-hardener
+          git config user.email actions@users.noreply.github.com
+          git fetch origin "$CANDIDATE_BRANCH" main
+          rm -rf /tmp/v122-hardened
+          git worktree add -B v122-hardening-work /tmp/v122-hardened "origin/$CANDIDATE_BRANCH"
+          cp scripts/harden-v122-release-controller.py /tmp/v122-hardened/scripts/harden-v122-release-controller.py
+          cd /tmp/v122-hardened
+          python -m py_compile scripts/harden-v122-release-controller.py
+          python scripts/harden-v122-release-controller.py
+          node scripts/validate-release-controller.mjs
+          node --check scripts/update-release-control.mjs
+          node --check scripts/verify-release-proof-ledger.mjs
+          node --check scripts/ensure-cloudflare-pages-git-deployment.mjs
+          python -m py_compile scripts/zenodo_release.py
+          git add -A
+          git diff --cached --check
+          git commit -m 'Harden v1.2.2 release controller and resumability'
+          git push origin HEAD:"$CANDIDATE_BRANCH"
+          echo "HARDENED_CANDIDATE=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Synchronize executable orchestration to default branch without triggering release
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name ghezelbaash-controller-hardener
+          git config user.email actions@users.noreply.github.com
+          cp /tmp/v122-hardened/.github/workflows/ceiling-release.yml .github/workflows/ceiling-release.yml
+          cp /tmp/v122-hardened/.github/workflows/v122-release-finalizer.yml .github/workflows/v122-release-finalizer.yml
+          cp /tmp/v122-hardened/.github/workflows/v122-release-trigger-binder.yml .github/workflows/v122-release-trigger-binder.yml
+          python - <<'PY'
+          import json
+          p='.release/release-request-v1.2.2.json'
+          x=json.load(open(p)); x['mode']='maximum-integrated-three-phase';
+          open(p,'w').write(json.dumps(x,ensure_ascii=False,indent=2)+'\n')
+          PY
+          git add .github/workflows/ceiling-release.yml .github/workflows/v122-release-finalizer.yml .github/workflows/v122-release-trigger-binder.yml .release/release-request-v1.2.2.json
+          git diff --cached --check
+          git commit -m 'Install hardened v1.2.2 release orchestration'
+          git push origin HEAD:main
+          echo "HARDENED_MAIN=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Full candidate source, RDF and controller validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/v122-hardened
+          npm ci --ignore-scripts
+          node scripts/validate-release-controller.mjs
+          npm run release:prepare
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --self-test
+
+      - name: Prove corrected native-Git reproducibility with canonical build inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/v122-hardened
+          C="$HARDENED_CANDIDATE"
+          EPOCH="$(git show -s --format=%ct "$C")"
+          export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH="$EPOCH"
+          npm run release
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          python - <<'PY'
+          import hashlib,json,pathlib
+          r=pathlib.Path('dist'); d={str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(r.rglob('*')) if p.is_file()}
+          pathlib.Path('/tmp/harden-dist-a.json').write_text(json.dumps(d,sort_keys=True))
+          z={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(pathlib.Path('release').glob('*.zip'))}
+          pathlib.Path('/tmp/harden-zip-a.json').write_text(json.dumps(z,sort_keys=True))
+          PY
+          rm -rf /tmp/v122-native-repro
+          git worktree add --detach /tmp/v122-native-repro "$C"
+          (
+            cd /tmp/v122-native-repro
+            npm ci --ignore-scripts
+            unset GITHUB_SHA || true
+            export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH="$EPOCH"
+            mkdir -p .release/runtime .release/huggingface
+            printf 'runtime-noise\n' > .release/runtime/repro-noise.txt
+            printf 'hf-noise\n' > .release/huggingface/repro-noise.txt
+            npm run release
+            node scripts/validate-visible-freeze.mjs dist/index.html
+            python - <<'PY'
+          import hashlib,json,pathlib
+          r=pathlib.Path('dist'); d={str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(r.rglob('*')) if p.is_file()}
+          pathlib.Path('/tmp/harden-dist-b.json').write_text(json.dumps(d,sort_keys=True))
+          z={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(pathlib.Path('release').glob('*.zip'))}
+          pathlib.Path('/tmp/harden-zip-b.json').write_text(json.dumps(z,sort_keys=True))
+          PY
+          )
+          cmp /tmp/harden-dist-a.json /tmp/harden-dist-b.json
+          cmp /tmp/harden-zip-a.json /tmp/harden-zip-b.json
+          git worktree remove --force /tmp/v122-native-repro
+          echo "HARDENED_NATIVE_REPRO_PASS commit=$C"
+
+      - name: Prove Hugging Face candidate generation and runtime-tree hygiene without publishing
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$HF_TOKEN"; echo "::add-mask::$HF_TOKEN"
+          cd /tmp/v122-hardened
+          rm -rf .release/huggingface
+          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface
+          node scripts/prepare-huggingface-distribution.mjs dist .release/huggingface
+          test -z "$(git status --porcelain -- .release/huggingface)"
+          test "$(wc -l < .release/huggingface/query-matrix.jsonl)" -ge 800
+          TAG_OBJ=$(git -C .release/huggingface ls-remote origin refs/tags/v1.2.2 | awk '{print $1}')
+          if [ -n "$TAG_OBJ" ]; then
+            TAG_PEELED=$(git -C .release/huggingface ls-remote origin 'refs/tags/v1.2.2^{}' | awk '{print $1}')
+            echo "Existing HF v1.2.2 tag unexpectedly occupies release namespace: ${TAG_PEELED:-$TAG_OBJ}" >&2
+            exit 1
+          fi
+          echo 'HF_CANDIDATE_AND_TAG_NAMESPACE_PASS'
+
+      - name: Verify reserved Zenodo v1.2.2 state before any publication
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ZENODO_TOKEN"; echo "::add-mask::$ZENODO_TOKEN"
+          curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/21930954 >/tmp/v122-zenodo-hardening.json
+          node - <<'NODE'
+          const z=require('/tmp/v122-zenodo-hardening.json');const doi=z.metadata?.prereserve_doi?.doi||z.doi;if(String(z.id)!=='21930954'||doi!=='10.5281/zenodo.21930954')throw Error('Zenodo v1.2.2 reservation identity drift');if(z.submitted===true)throw Error('Zenodo v1.2.2 was published before irreversible gate');console.log('ZENODO_DRAFT_IDENTITY_PASS')
+          NODE
+
+      - name: Repair and prove Cloudflare include-only preview branch contract before any release publication
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_ENVIRONMENT: preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          cd /tmp/v122-hardened
+          export CF_EXPECTED_COMMIT="$HARDENED_CANDIDATE"
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          git push origin "$HARDENED_CANDIDATE":staging/deploy
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?per_page=50" >/tmp/v122-preview-list.json
+          PREVIEW_URL="$(node - <<'NODE'
+          const p=require('/tmp/v122-preview-list.json'),c=process.env.HARDENED_CANDIDATE;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Hardened preview URL missing');console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
+          NODE
+          )"
+          echo "HARDENED_PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
+          VERIFY_BASE_URL="$PREVIEW_URL" node scripts/verify-cloudflare-pages-deployment.mjs
+          echo "CLOUDFLARE_PREVIEW_CONTRACT_PASS $PREVIEW_URL"
+
+      - name: Run six-viewport performance gate on hardened preview before release retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lh-hardening
+          for spec in '360:800:mobile:2:85' '390:844:mobile:2:85' '430:932:mobile:2:85' '768:1024:desktop:1:90' '1024:900:desktop:1:95' '1440:900:desktop:1:95'; do
+            IFS=: read -r width height form dpr minimum <<<"$spec"
+            common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
+            if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
+            npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__lh_harden_base=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-hardening/base-$width.json"
+            npx --yes lighthouse@13.4.1 "${HARDENED_PREVIEW_URL}?__lh_harden_candidate=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-hardening/candidate-$width.json"
+            node - "$width" "$minimum" <<'NODE'
+          const fs=require('fs'),[width,min]=process.argv.slice(2);const b=JSON.parse(fs.readFileSync('/tmp/lh-hardening/base-'+width+'.json')),c=JSON.parse(fs.readFileSync('/tmp/lh-hardening/candidate-'+width+'.json'));const score=x=>Math.round(x.categories.performance.score*100),metric=(x,k)=>x.audits[k].numericValue;const out={width:Number(width),minimum:Number(min),baseline:score(b),candidate:score(c),baselineLcp:metric(b,'largest-contentful-paint'),candidateLcp:metric(c,'largest-contentful-paint'),baselineCls:metric(b,'cumulative-layout-shift'),candidateCls:metric(c,'cumulative-layout-shift')};console.log('HARDENING_LIGHTHOUSE',JSON.stringify(out));if(out.candidate<out.baseline-3||out.candidate<Number(min)||out.candidateCls>0.1||out.candidateCls>out.baselineCls+0.03||out.candidateLcp>Math.max(4000,out.baselineLcp*1.15))throw Error(width+' hardened performance gate failed');
+          NODE
+          done
+          echo 'HARDENED_SIX_VIEWPORT_PERFORMANCE_PASS'
+
+      - name: Prove GitHub release namespace is still clean
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/v122-hardened
+          test -z "$(git ls-remote --tags origin refs/tags/v1.2.2)"
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" >/tmp/v122-gh-releases.json
+          test "$(jq '[.[]|select(.tag_name=="v1.2.2")]|length' /tmp/v122-gh-releases.json)" = 0
+          echo 'GITHUB_RELEASE_NAMESPACE_PASS'
+
+      - name: Hardening proof complete
+        run: |
+          echo "V122_CONTROLLER_HARDENING_COMPLETE candidate=$HARDENED_CANDIDATE main=$HARDENED_MAIN preview=$HARDENED_PREVIEW_URL"
