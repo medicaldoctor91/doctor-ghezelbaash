@@ -1,4 +1,4 @@
-name: Materialize v1.2.2 controller hardening patches
+name: Prove hardened v1.2.2 release controller
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
     paths: [.release/v122-controller-hardening-request.json]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: doctor-ghezelbaash-external-mutation
@@ -14,49 +14,193 @@ concurrency:
 
 env:
   CANDIDATE_BRANCH: release/v1.2.2-candidate
+  CF_PROJECT: doctor-ghezelbaash
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CF_PRODUCTION_BRANCH: production/deploy
+  CF_PREVIEW_BRANCH: staging/deploy
+  HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
 
 jobs:
-  materialize:
+  prove:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: main
+          ref: release/v1.2.2-candidate
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.18.0
+          cache: npm
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Materialize hardened candidate and workflow payloads without GitHub-App workflow writes
+      - name: Resolve exact proof phase and Candidate C
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name ghezelbaash-controller-hardener
-          git config user.email actions@users.noreply.github.com
-          git fetch origin "$CANDIDATE_BRANCH"
-          rm -rf /tmp/v122-hardened
-          git worktree add -B v122-hardening-work /tmp/v122-hardened "origin/$CANDIDATE_BRANCH"
-          cp scripts/harden-v122-release-controller.py /tmp/v122-hardened/scripts/harden-v122-release-controller.py
-          cd /tmp/v122-hardened
-          python -m py_compile scripts/harden-v122-release-controller.py
-          python scripts/harden-v122-release-controller.py
+          git fetch origin main "$CANDIDATE_BRANCH"
+          git reset --hard "origin/$CANDIDATE_BRANCH"
+          git show origin/main:.release/v122-controller-hardening-request.json >/tmp/hardening-request.json
+          PHASE=$(node -p "require('/tmp/hardening-request.json').phase")
+          test "$PHASE" = configure -o "$PHASE" = preview
+          C=$(git rev-parse HEAD)
+          echo "PHASE=$PHASE" >> "$GITHUB_ENV"
+          echo "CANDIDATE_SHA=$C" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")" >> "$GITHUB_ENV"
+          echo "HARDENING_PHASE=$PHASE candidate=$C"
+      - run: npm ci --ignore-scripts
+
+      - name: Controller-of-controller static proof
+        shell: bash
+        run: |
+          set -euo pipefail
           node scripts/validate-release-controller.mjs
           node --check scripts/update-release-control.mjs
           node --check scripts/verify-release-proof-ledger.mjs
           node --check scripts/ensure-cloudflare-pages-git-deployment.mjs
           python -m py_compile scripts/zenodo_release.py
-          mkdir -p .release/controller-patches
-          cp .github/workflows/ceiling-release.yml .release/controller-patches/ceiling-release.yml.txt
-          cp .github/workflows/v122-release-finalizer.yml .release/controller-patches/v122-release-finalizer.yml.txt
-          cp .github/workflows/v122-release-trigger-binder.yml .release/controller-patches/v122-release-trigger-binder.yml.txt
-          git checkout HEAD -- .github/workflows/ceiling-release.yml .github/workflows/v122-release-finalizer.yml
-          rm -f .github/workflows/v122-release-trigger-binder.yml
-          git add -A
-          git diff --cached --check
-          git commit -m 'Materialize non-workflow v1.2.2 controller hardening'
-          git push origin HEAD:"$CANDIDATE_BRANCH"
-          echo "V122_HARDENING_PAYLOAD_READY candidate=$(git rev-parse HEAD)"
+
+      - name: Full semantic, RDF, source and evidence proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$PHASE" = configure ] || exit 0
+          npm run release:prepare
+
+      - name: Native-Git byte reproducibility with one canonical build-input tuple
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$PHASE" = configure ] || exit 0
+          export SOURCE_COMMIT="$CANDIDATE_SHA" CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" SOURCE_DATE_EPOCH
+          npm run release
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          python - <<'PY'
+          import hashlib,json,pathlib
+          r=pathlib.Path('dist'); d={str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(r.rglob('*')) if p.is_file()}
+          pathlib.Path('/tmp/dist-a.json').write_text(json.dumps(d,sort_keys=True))
+          z={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(pathlib.Path('release').glob('*.zip'))}
+          pathlib.Path('/tmp/zips-a.json').write_text(json.dumps(z,sort_keys=True))
+          PY
+          rm -rf /tmp/v122-repro-proof
+          git worktree add --detach /tmp/v122-repro-proof "$CANDIDATE_SHA"
+          (
+            cd /tmp/v122-repro-proof
+            npm ci --ignore-scripts
+            unset GITHUB_SHA || true
+            export SOURCE_COMMIT="$CANDIDATE_SHA" CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH"
+            mkdir -p .release/runtime .release/huggingface
+            printf 'runtime-noise\n' > .release/runtime/repro-noise.txt
+            printf 'hf-noise\n' > .release/huggingface/repro-noise.txt
+            npm run release
+            node scripts/validate-visible-freeze.mjs dist/index.html
+            python - <<'PY'
+          import hashlib,json,pathlib
+          r=pathlib.Path('dist'); d={str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(r.rglob('*')) if p.is_file()}
+          pathlib.Path('/tmp/dist-b.json').write_text(json.dumps(d,sort_keys=True))
+          z={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(pathlib.Path('release').glob('*.zip'))}
+          pathlib.Path('/tmp/zips-b.json').write_text(json.dumps(z,sort_keys=True))
+          PY
+          )
+          cmp /tmp/dist-a.json /tmp/dist-b.json
+          cmp /tmp/zips-a.json /tmp/zips-b.json
+          git worktree remove --force /tmp/v122-repro-proof
+          echo "NATIVE_GIT_REPRODUCIBILITY_PROOF_PASS $CANDIDATE_SHA"
+
+      - name: Hugging Face candidate and immutable tag namespace proof
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$PHASE" = configure ] || exit 0
+          test -n "$HF_TOKEN"; echo "::add-mask::$HF_TOKEN"
+          rm -rf .release/huggingface
+          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface
+          node scripts/prepare-huggingface-distribution.mjs dist .release/huggingface
+          test -z "$(git status --porcelain -- .release/huggingface)"
+          test "$(wc -l < .release/huggingface/query-matrix.jsonl)" -ge 800
+          test -z "$(git -C .release/huggingface ls-remote origin refs/tags/v1.2.2)"
+          echo 'HF_CANDIDATE_NAMESPACE_PROOF_PASS'
+
+      - name: Reserved Zenodo identity and unpublished-state proof
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$PHASE" = configure ] || exit 0
+          test -n "$ZENODO_TOKEN"; echo "::add-mask::$ZENODO_TOKEN"
+          curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/21930954 >/tmp/zenodo-v122-proof.json
+          node - <<'NODE'
+          const z=require('/tmp/zenodo-v122-proof.json');const doi=z.metadata?.prereserve_doi?.doi||z.doi;if(String(z.id)!=='21930954'||doi!=='10.5281/zenodo.21930954'||String(z.metadata?.version||'').replace(/^v/,'')!=='1.2.2')throw Error('Zenodo v1.2.2 identity drift');if(z.submitted===true)throw Error('Zenodo v1.2.2 already published before irreversible gate');console.log('ZENODO_RESERVED_DRAFT_PROOF_PASS')
+          NODE
+
+      - name: Repair and prove exact Cloudflare branch contract before preview ref mutation
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$PHASE" = configure ] || exit 0
+          test -n "$CLOUDFLARE_API_TOKEN"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          echo 'CLOUDFLARE_BRANCH_CONTRACT_PROOF_PASS'
+
+      - name: Prove Cloudflare Preview exact commit after externally gated ref promotion
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_ENVIRONMENT: preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$PHASE" = preview ] || exit 0
+          test -n "$CLOUDFLARE_API_TOKEN"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          export CF_EXPECTED_COMMIT="$CANDIDATE_SHA"
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?per_page=50" >/tmp/cf-preview-proof.json
+          PREVIEW_URL="$(node - <<'NODE'
+          const p=require('/tmp/cf-preview-proof.json'),c=process.env.CANDIDATE_SHA;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Successful exact-commit preview URL missing');console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
+          NODE
+          )"
+          echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
+          VERIFY_BASE_URL="$PREVIEW_URL" node scripts/verify-cloudflare-pages-deployment.mjs
+          VERIFY_BASE_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/' node scripts/verify-cloudflare-pages-deployment.mjs
+          echo "CLOUDFLARE_EXACT_PREVIEW_PROOF_PASS $PREVIEW_URL"
+
+      - name: Six-viewport preview performance and layout proof
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$PHASE" = preview ] || exit 0
+          mkdir -p /tmp/lh-proof
+          for spec in '360:800:mobile:2:85' '390:844:mobile:2:85' '430:932:mobile:2:85' '768:1024:desktop:1:90' '1024:900:desktop:1:95' '1440:900:desktop:1:95'; do
+            IFS=: read -r width height form dpr minimum <<<"$spec"
+            common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
+            if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
+            npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__lh_proof_base=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-proof/base-$width.json"
+            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__lh_proof_candidate=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-proof/candidate-$width.json"
+            node - "$width" "$minimum" <<'NODE'
+          const fs=require('fs'),[width,min]=process.argv.slice(2);const b=JSON.parse(fs.readFileSync('/tmp/lh-proof/base-'+width+'.json')),c=JSON.parse(fs.readFileSync('/tmp/lh-proof/candidate-'+width+'.json'));const score=x=>Math.round(x.categories.performance.score*100),metric=(x,k)=>x.audits[k].numericValue;const out={width:Number(width),minimum:Number(min),baseline:score(b),candidate:score(c),baselineLcp:metric(b,'largest-contentful-paint'),candidateLcp:metric(c,'largest-contentful-paint'),baselineCls:metric(b,'cumulative-layout-shift'),candidateCls:metric(c,'cumulative-layout-shift')};console.log('HARDENED_LIGHTHOUSE_PROOF',JSON.stringify(out));if(out.candidate<out.baseline-3||out.candidate<Number(min)||out.candidateCls>0.1||out.candidateCls>out.baselineCls+0.03||out.candidateLcp>Math.max(4000,out.baselineLcp*1.15))throw Error(width+' preview performance/layout proof failed');
+          NODE
+          done
+          echo 'SIX_VIEWPORT_PREVIEW_PROOF_PASS'
+
+      - name: GitHub v1.2.2 namespace must remain unconsumed before real release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git ls-remote --tags https://github.com/$GITHUB_REPOSITORY refs/tags/v1.2.2)"
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" >/tmp/releases-proof.json
+          test "$(jq '[.[]|select(.tag_name=="v1.2.2")]|length' /tmp/releases-proof.json)" = 0
+          echo 'GITHUB_V122_NAMESPACE_PROOF_PASS'
+
+      - name: Controller hardening phase complete
+        run: echo "V122_CONTROLLER_PROOF_PASS phase=$PHASE candidate=$CANDIDATE_SHA preview=${PREVIEW_URL:-not-applicable}"
