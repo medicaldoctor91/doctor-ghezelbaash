@@ -1,0 +1,73 @@
+name: v1.2.2 one-shot release freeze guard repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.release/freeze-guard-fix-request.json'
+
+permissions:
+  contents: write
+
+env:
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Replace broad git add with fail-closed release-freeze allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/ceiling-release.yml')
+          s=p.read_text()
+          old="""          rm -f .github/workflows/v122-bootstrap-registries.yml .github/workflows/v122-support-migration.yml .github/workflows/v122-cloudflare-control-bootstrap.yml .github/workflows/v122-external-preflight.yml .github/workflows/v122-zenodo-github-integration-probe.yml .github/workflows/v122-performance-baseline.yml scripts/bootstrap-v122-registries.mjs scripts/v122-filter-support.mjs
+          git add -A
+          git commit -m 'Release candidate v1.2.2 — DOI-bound maximum integrated stack'
+          C=$(git rev-parse HEAD); echo \"SOURCE_COMMIT=$C\" >> \"$GITHUB_ENV\"
+"""
+          new="""          rm -f .github/workflows/v122-bootstrap-registries.yml .github/workflows/v122-support-migration.yml .github/workflows/v122-cloudflare-control-bootstrap.yml .github/workflows/v122-external-preflight.yml .github/workflows/v122-zenodo-github-integration-probe.yml .github/workflows/v122-performance-baseline.yml scripts/bootstrap-v122-registries.mjs scripts/v122-filter-support.mjs
+          mapfile -t changed < <(git status --porcelain=v1 | sed -E 's/^.. //' | sed -E 's/.* -> //' | sort)
+          allowed=(
+            CITATION.cff README.md codemeta.json package-lock.json package.json
+            public/favicon.svg public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg public/safari-pinned-tab.svg
+            src/content-source/100-rc099.html src/data/evidence-registry.json src/data/evidence-snapshot.json
+            src/data/release-invariants.json src/data/release.json src/data/semantic/knowledge-graph.jsonld
+            src/data/templates/main-head.html src/data/visible-contract.json src/data/volatile-facts.json
+          )
+          for path in \"${changed[@]}\"; do
+            ok=false
+            for expected in \"${allowed[@]}\"; do [[ \"$path\" == \"$expected\" ]] && ok=true && break; done
+            if [[ \"$ok\" != true ]]; then echo \"Unexpected release-freeze mutation: $path\" >&2; exit 1; fi
+          done
+          if ((${#changed[@]} > 0)); then
+            git add -A -- \"${allowed[@]}\"
+            git diff --cached --check
+            git commit -m \"Release candidate v$TARGET_VERSION — DOI-bound maximum integrated stack\"
+          else
+            echo 'No promotion diff exists; reusing current candidate commit.'
+          fi
+          C=$(git rev-parse HEAD); echo \"SOURCE_COMMIT=$C\" >> \"$GITHUB_ENV\"
+"""
+          if old not in s:
+              raise SystemExit('Expected Step 10 release-freeze block not found')
+          p.write_text(s.replace(old,new))
+          PY
+      - name: Commit workflow guard to candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workflows/ceiling-release.yml
+          git diff --cached --check
+          git commit -m 'Make v1.2.2 candidate freeze fail closed and idempotent'
+          git push origin HEAD:$CANDIDATE_BRANCH
