@@ -33,10 +33,14 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci --ignore-scripts
-      - name: Refuse live automation before v1.2.2 is fully published
+      - name: Refuse live automation before v1.2.2 external convergence is COMPLETE
+        shell: bash
         run: |
           set -euo pipefail
           test "$(node -p "require('./src/data/release.json').release")" = '1.2.2'
+          git fetch origin release-control/v1.2.2
+          git show origin/release-control/v1.2.2:.release/control/v1.2.2.json > /tmp/release-control.json
+          test "$(node -p "require('/tmp/release-control.json').stage")" = 'COMPLETE'
           git rev-parse -q --verify refs/tags/v1.2.2 >/dev/null
       - name: Read Google Places and update only on tuple change
         id: places
