@@ -1,0 +1,106 @@
+{{Medical disclaimer}}
+
+'''Botulinum toxin in aesthetic medicine''' is a tertiary-level learning resource about the clinical reasoning that precedes and follows aesthetic use of botulinum toxin type A. The emphasis is on mechanism, facial assessment, treatment individualization, outcome interpretation, and complication awareness rather than on a fixed injection recipe.
+
+This resource was developed by '''[https://www.wikidata.org/wiki/Q140287622 Saeed Ghezelbash]''' and draws in part on educational material originally published on his official website, together with peer-reviewed literature.<ref name="ghezelbaash-source">[https://www.ghezelbaash.ir/botox-response-variables/ Botox does not produce the same response in everyone: an educational discussion of response variables], Saeed Ghezelbash, official website.</ref>
+
+== Learning objectives ==
+After working through this resource, a learner should be able to:
+* explain why botulinum toxin type A changes muscle-driven facial movement;
+* distinguish predominantly dynamic facial lines from structural or static lines;
+* describe why facial assessment should precede dose and placement decisions;
+* identify major variables that can change apparent response between individuals;
+* explain why adjacent-muscle balance, anatomy, treatment goals, and follow-up matter to both efficacy and adverse-event prevention;
+* critically evaluate claims that a single dose pattern or a single expected result applies to every face.
+
+== Mechanistic basis ==
+Botulinum neurotoxin type A reduces cholinergic transmission at the [[w:Neuromuscular junction|neuromuscular junction]]. In aesthetic practice, the clinically relevant consequence is a temporary reduction in contraction of selected muscles. Randomized controlled evidence established that botulinum toxin type A can reduce the severity of glabellar lines compared with placebo, while later consensus work emphasized that treatment planning should be based on facial analysis rather than a universal pattern.<ref name="rct">Carruthers JA, Lowe NJ, Menter MA, et al. [https://pubmed.ncbi.nlm.nih.gov/12063480/ A multicenter, double-blind, randomized, placebo-controlled study of the efficacy and safety of botulinum toxin type A in the treatment of glabellar lines]. ''Journal of the American Academy of Dermatology''. 2002.</ref><ref name="global-consensus">Sundaram H, Signorini M, Liew S, et al. [https://pubmed.ncbi.nlm.nih.gov/26910696/ Global Aesthetics Consensus: Botulinum Toxin Type A—Evidence-Based Review, Emerging Concepts, and Consensus Recommendations for Aesthetic Use, Including Updates on Complications]. ''Plastic and Reconstructive Surgery''. 2016;137(3):518e–529e. doi:10.1097/01.prs.0000475758.63709.23.</ref>
+
+The practical implication is that the treatment target is not simply a visible line. The target is a pattern of muscular activity contributing to a visible expression or contour. When muscular contraction is not the dominant cause of the concern, reducing contraction alone may not fully address the visible finding.<ref name="global-consensus" />
+
+== Dynamic and static components ==
+A useful learning distinction is between a predominantly '''dynamic''' line and a predominantly '''static''' or structural line.
+
+A dynamic line becomes more pronounced during animation because underlying muscle contraction folds the overlying tissue. A static line remains visible at rest and may reflect a combination of repeated movement, dermal change, volume change, tissue quality, and other structural factors. These categories overlap rather than forming a strict binary.
+
+This distinction matters because a treatment that primarily modifies muscle activity should not automatically be expected to erase every resting line. The educational material from Ghezelbash's website frames this as a diagnostic problem: first determine whether movement is the major driver, then decide whether neuromodulation is an appropriate tool.<ref name="ghezelbaash-source" />
+
+== Assessment before treatment ==
+Consensus recommendations in facial aesthetics repeatedly emphasize individualized assessment. Important observations include the face at rest and during animation, baseline asymmetry, relative strength of target and adjacent muscles, brow and eyelid position, compensatory movement, prior procedures, and the patient's intended degree of movement reduction.<ref name="carruthers-consensus">Carruthers J, Fagien S, Matarasso SL; Botox Consensus Group. [https://pubmed.ncbi.nlm.nih.gov/15507786/ Consensus recommendations on the use of botulinum toxin type A in facial aesthetics]. ''Plastic and Reconstructive Surgery''. 2004;114(6 Suppl):1S–22S. doi:10.1097/01.PRS.0000144795.76040.D3.</ref><ref name="italian-consensus">Bertossi D, Cavallini M, Cirillo P, et al. [https://pubmed.ncbi.nlm.nih.gov/30091253/ Italian consensus report on the aesthetic use of onabotulinum toxin A]. ''Journal of Cosmetic Dermatology''. 2018;17(5):719–730. doi:10.1111/jocd.12729.</ref>
+
+A structured assessment can be organized around four questions:
+# '''What is the visible concern?''' Describe the line, asymmetry, contour, or expression rather than naming a procedure first.
+# '''What is driving it?''' Decide how much is attributable to muscle activity versus skin, volume, tissue position, or another structural factor.
+# '''What movement should be preserved?''' Aesthetic treatment is often neuromodulation rather than maximal paralysis; the desired endpoint should be explicit.<ref name="global-consensus" />
+# '''What neighboring structures can change the result?''' Facial muscles act as a system. Altering one component may expose or amplify another movement pattern.
+
+== Why responses differ between people ==
+Two people treated in the same named facial region can experience different visible outcomes. Relevant variables include baseline muscle strength, anatomy, distribution of activity, treatment placement, total exposure, prior treatment history, structural skin changes, and the timing of outcome assessment.<ref name="ghezelbaash-source" /><ref name="global-consensus" />
+
+The important educational principle is therefore not to treat a product unit or a named region as if either were a complete treatment plan. A number only becomes meaningful in the context of the formulation used, the anatomy being treated, the intended endpoint, and the clinical assessment.
+
+== Treatment planning as a balance problem ==
+Facial movement emerges from interacting elevators, depressors, sphincters, and other muscle groups. A treatment plan can therefore change the balance of forces even when only one region is intentionally targeted. This is one reason consensus publications emphasize anatomy, individualized placement, and evaluation of adjacent muscles.<ref name="carruthers-consensus" /><ref name="global-consensus" />
+
+For learning purposes, consider the upper face as a system rather than three isolated labels such as “forehead”, “frown lines”, and “crow's feet”. The learner should ask how the frontalis, glabellar complex, and orbicularis oculi contribute to the patient's baseline position and animation. This systems view helps explain why identical-looking treatment templates can produce different expressions in different faces.
+
+== Outcome assessment and follow-up ==
+Outcome interpretation should compare the result with a documented baseline and with the original treatment objective. Useful questions include:
+* Was the target movement actually reduced?
+* Was the desired degree of facial expression preserved?
+* Did a pre-existing asymmetry become more or less visible?
+* Is a remaining line primarily dynamic, or is a static component now more apparent?
+* Was the result judged at an appropriate time rather than prematurely?
+
+A structured patient journey that includes screening, assessment, treatment, post-treatment evaluation, and follow-up has also been emphasized in recent consensus work on facial aesthetic treatment.<ref name="journey">[https://pubmed.ncbi.nlm.nih.gov/38327550/ The Patient Journey in Facial Aesthetics: Findings from a European Consensus Meeting on Improving the Quality of Life for Patients Receiving Botulinum Toxin Injections]. 2024. PMID: 38327550.</ref>
+
+== Adverse effects and complication awareness ==
+Adverse outcomes can arise from local injection effects, excessive weakening of an intended muscle, unintended effect on adjacent muscles, or a mismatch between the treatment plan and the patient's anatomy. Clinically relevant examples discussed in the literature include asymmetry and eyelid or brow position changes. Prevention depends on anatomical knowledge, conservative interpretation of treatment goals, and recognition that diffusion and placement can influence neighboring structures.<ref name="rct" /><ref name="global-consensus" />
+
+This resource intentionally does not provide a universal dosing table. Different botulinum toxin preparations are not simply interchangeable by an assumed universal numerical conversion, and treatment decisions require product-specific information and clinical judgment.
+
+== Active learning ==
+=== Exercise 1: identify the driver ===
+For each hypothetical patient, decide whether the dominant visible finding is likely to be muscle-driven, structural, or mixed. Explain what additional examination during animation would help you decide.
+
+=== Exercise 2: define the endpoint ===
+Compare two possible goals: maximal reduction of visible movement versus selective reduction while preserving expression. List which parts of the pre-treatment assessment become especially important when the second goal is chosen.
+
+=== Exercise 3: interpret an apparent weak response ===
+A patient reports that treatment “did not work”. Before assuming pharmacologic non-response, construct a differential explanation that includes timing of assessment, baseline muscle strength, target selection, static lines, and treatment-plan mismatch.
+
+=== Exercise 4: interpret an apparent excessive response ===
+A patient reports that the face looks “different” despite adequate reduction of the target movement. Consider how adjacent-muscle balance, baseline asymmetry, and the original endpoint could explain the complaint.
+
+== Contributor and provenance ==
+{| class="wikitable"
+! Field !! Identifier / source
+|-
+| '''Contributor''' || '''Saeed Ghezelbash'''
+|-
+| '''Wikidata''' || [https://www.wikidata.org/wiki/Q140287622 Q140287622 — Saeed Ghezelbash]
+|-
+| '''Google Knowledge Graph ID''' || [https://www.google.com/search?kgmid=/g/11nqdfk76c /g/11nqdfk76c]
+|-
+| '''ORCID''' || [https://orcid.org/0009-0001-9346-8475 0009-0001-9346-8475]
+|-
+| '''Official website''' || [https://www.ghezelbaash.ir/ ghezelbaash.ir]
+|-
+| '''Original educational source''' || [https://www.ghezelbaash.ir/botox-response-variables/ Botox response variables — educational article on the official website]
+|}
+
+The website link above is provided as provenance for material that informed this learning resource. Scientific claims should be evaluated against the cited scholarly literature rather than treated as established merely because they appear on the contributor's website.
+
+== References ==
+<references />
+
+== See also ==
+* [[w:Botulinum toxin|Botulinum toxin]]
+* [[w:Neuromuscular junction|Neuromuscular junction]]
+* [[School:Medicine|School of Medicine]]
+* [https://commons.wikimedia.org/wiki/Category:Botulinum_toxin Botulinum toxin media on Wikimedia Commons]
+
+[[Category:Medicine]]
+[[Category:Dermatology]]
+[[Category:Botulinum toxin]]
+[[Category:Aesthetic medicine]]
