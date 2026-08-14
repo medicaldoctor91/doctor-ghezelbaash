@@ -2,6 +2,6 @@
   "targetVersion": "1.2.2",
   "requestedAt": "2026-08-14",
   "scope": "release-controller-hardening-and-preview-proof",
-  "phase": "preview",
-  "nonce": "v122-hardening-010"
+  "phase": "configure",
+  "nonce": "v122-hardening-011"
 }
