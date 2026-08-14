@@ -1,3 +1,10 @@
 import {spawnSync} from 'node:child_process';
 import {readFile,writeFile} from 'node:fs/promises';
-const html=process.argv[2]||'dist/index.html',contractPath='src/data/visible-contract.json';const r=spawnSync(process.execPath,['scripts/compute-visible-contract.mjs',html],{encoding:'utf8'});if(r.status!==0)throw new Error(r.stderr||r.stdout);const result=JSON.parse(r.stdout),contract=JSON.parse(await readFile(contractPath,'utf8'));contract.finalVisibleDomSha256=result.sha256;contract.finalVisibleDomRecords=result.records;contract.finalVisibleDomNormalization='semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel';await writeFile(contractPath,JSON.stringify(contract,null,2)+'\n');console.log(JSON.stringify({locked:true,sha256:result.sha256,records:result.records},null,2));
+const html=process.argv[2]||'dist/index.html',contractPath='src/data/visible-contract.json';
+const r=spawnSync(process.execPath,['scripts/compute-visible-contract.mjs',html,'--summary'],{encoding:'utf8',maxBuffer:4*1024*1024});
+if(r.error)throw r.error;if(r.status!==0)throw new Error(r.stderr||r.stdout);
+const result=JSON.parse(r.stdout),contract=JSON.parse(await readFile(contractPath,'utf8'));
+if(!/^[0-9a-f]{64}$/.test(result.sha256)||!Number.isInteger(result.records)||result.records<1)throw new Error('Visible contract summary malformed');
+contract.finalVisibleDomSha256=result.sha256;contract.finalVisibleDomRecords=result.records;contract.finalVisibleDomNormalization='semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel';
+await writeFile(contractPath,JSON.stringify(contract,null,2)+'\n');
+console.log(JSON.stringify({locked:true,sha256:result.sha256,records:result.records,bytes:result.bytes},null,2));
