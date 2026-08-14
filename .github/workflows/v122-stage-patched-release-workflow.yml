@@ -1,0 +1,32 @@
+name: Stage patched v1.2.2 release workflow
+on:
+  push:
+    branches: [release/v1.2.2-candidate]
+    paths: [.github/workflows/v122-stage-patched-release-workflow.yml]
+permissions:
+  contents: write
+jobs:
+  stage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: true}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with: {node-version: 24.18.0}
+      - name: Produce patched workflow as ordinary staging file
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('fs');const f='.github/workflows/ceiling-release.yml';let s=fs.readFileSync(f,'utf8');
+          const a="          node - <<'NODE' >> \"$GITHUB_ENV\"\n          const p=require('/tmp/cf-deployments.json');const c=process.env.SOURCE_COMMIT;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Successful preview URL missing');console.log(`PREVIEW_URL=https://${String(d.url).replace(/^https?:\\/\\//,'').replace(/\\/$/,'')}/`)\n          NODE\n          VERIFY_BASE_URL=\"$PREVIEW_URL\" node scripts/verify-cloudflare-pages-deployment.mjs";
+          const b="          PREVIEW_URL=\"$(node - <<'NODE'\n          const p=require('/tmp/cf-deployments.json');const c=process.env.SOURCE_COMMIT;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Successful preview URL missing');console.log(`https://${String(d.url).replace(/^https?:\\/\\//,'').replace(/\\/$/,'')}/`)\n          NODE\n          )\"\n          test -n \"$PREVIEW_URL\"\n          echo \"PREVIEW_URL=$PREVIEW_URL\" >> \"$GITHUB_ENV\"\n          VERIFY_BASE_URL=\"$PREVIEW_URL\" node scripts/verify-cloudflare-pages-deployment.mjs";
+          if(!s.includes(a))throw Error('preview scope anchor missing');s=s.replace(a,b);
+          fs.mkdirSync('.release',{recursive:true});fs.writeFileSync('.release/ceiling-release-v122.patched.yml',s);
+          NODE
+          grep -q 'PREVIEW_URL="$(node' .release/ceiling-release-v122.patched.yml
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git add .release/ceiling-release-v122.patched.yml
+          git commit -m 'Stage corrected v1.2.2 release workflow bytes'
+          git push origin HEAD:release/v1.2.2-candidate
