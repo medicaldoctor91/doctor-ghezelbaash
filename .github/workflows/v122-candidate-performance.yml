@@ -31,18 +31,22 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
           npm run build
           npx --yes serve@14.2.4 dist -l 4321 --no-clipboard > /tmp/serve.log 2>&1 &
-          echo $! > /tmp/serve.pid
           for i in {1..30}; do curl --fail --silent http://127.0.0.1:4321/ >/dev/null && break; sleep 1; done
-      - name: Compare Lighthouse live baseline and candidate in same runner
+      - name: Compare live baseline and exact candidate, including CLS culprits
         shell: bash
         run: |
           set -euo pipefail
           for mode in mobile desktop; do
             extra=''; [ "$mode" = desktop ] && extra='--preset=desktop'
-            npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__same_runner=$(date +%s%N)" --quiet $extra --chrome-flags='--headless --no-sandbox --disable-gpu' --only-categories=performance --output=json --output-path="/tmp/live-$mode.json"
-            npx --yes lighthouse@13.4.1 "http://127.0.0.1:4321/?__same_runner=$(date +%s%N)" --quiet $extra --chrome-flags='--headless --no-sandbox --disable-gpu' --only-categories=performance --output=json --output-path="/tmp/candidate-$mode.json"
+            npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__same_runner=$(date +%s%N)" --quiet $extra --chrome-flags='--headless --no-sandbox --disable-gpu' --output=json --output-path="/tmp/live-$mode.json"
+            npx --yes lighthouse@13.4.1 "http://127.0.0.1:4321/?__same_runner=$(date +%s%N)" --quiet $extra --chrome-flags='--headless --no-sandbox --disable-gpu' --output=json --output-path="/tmp/candidate-$mode.json"
           done
           node - <<'NODE'
           const fs=require('fs');
-          for(const mode of ['mobile','desktop'])for(const side of ['live','candidate']){const j=JSON.parse(fs.readFileSync(`/tmp/${side}-${mode}.json`)),a=j.audits;console.log('PERF',JSON.stringify({side,mode,score:Math.round(j.categories.performance.score*100),fcp:a['first-contentful-paint'].numericValue,lcp:a['largest-contentful-paint'].numericValue,tbt:a['total-blocking-time'].numericValue,cls:a['cumulative-layout-shift'].numericValue,speedIndex:a['speed-index'].numericValue,mainThread:a['mainthread-work-breakdown']?.numericValue,dom:a['dom-size-insight']?.details?.items?.[0]}))}
+          const ids=['layout-shifts','cls-culprits-insight','mainthread-work-breakdown','long-tasks','dom-size-insight','slow-css-selector-insight','forced-reflow-insight','lcp-breakdown-insight','diagnostics'];
+          for(const mode of ['mobile','desktop'])for(const side of ['live','candidate']){
+            const j=JSON.parse(fs.readFileSync(`/tmp/${side}-${mode}.json`)),a=j.audits;
+            console.log('PERF',JSON.stringify({side,mode,score:Math.round(j.categories.performance.score*100),fcp:a['first-contentful-paint']?.numericValue,lcp:a['largest-contentful-paint']?.numericValue,tbt:a['total-blocking-time']?.numericValue,cls:a['cumulative-layout-shift']?.numericValue,speedIndex:a['speed-index']?.numericValue,mainThread:a['mainthread-work-breakdown']?.numericValue,dom:a['dom-size-insight']?.details?.items?.[0]}));
+            if(mode==='mobile')for(const id of ids){const x=a[id];if(x)console.log('DIAG',JSON.stringify({side,mode,id,score:x.score,numericValue:x.numericValue,displayValue:x.displayValue,details:x.details}));}
+          }
           NODE
