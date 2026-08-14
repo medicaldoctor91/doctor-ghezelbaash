@@ -1,0 +1,211 @@
+name: v1.2.2 one-shot RDFC-1.0 candidate repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.release/rdf-canonicalization-fix-request.json'
+
+permissions:
+  contents: write
+
+env:
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+  PRE_PROMOTION_SHA: e097c9b435ab06dab7a5310e655f889e3321a787
+  RDF_CANONIZE_VERSION: 5.0.0
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pre-promotion candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_BRANCH }}
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - name: Reset only the candidate branch to the proven pre-promotion base
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "$PRE_PROMOTION_SHA"
+          git reset --hard "$PRE_PROMOTION_SHA"
+          test "$(node -p "require('./package.json').version")" = "1.2.1"
+          test "$(node -e "process.stdout.write(require('./src/data/release.json').release)")" = "1.2.1"
+
+      - name: Install current-standard RDF canonicalizer and update lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --save-dev --save-exact rdf-canonize@"$RDF_CANONIZE_VERSION"
+          node - <<'NODE'
+          const pkg = require('./node_modules/rdf-canonize/package.json');
+          if(pkg.version !== '5.0.0') throw new Error(`Unexpected rdf-canonize ${pkg.version}`);
+          NODE
+
+      - name: Write RDFC-1.0 bridge and deterministic RDF generator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > requirements-rdf.txt <<'EOF'
+          rdflib==7.1.4
+          pyparsing==3.3.2
+          EOF
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('package.json')
+          pkg=json.loads(p.read_text())
+          pkg['scripts']['rdf:deps']='PYTHONPATH=.python-deps python -c "import rdflib" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt'
+          pkg['scripts']['validate:rdf-reproducibility']='node scripts/validate-rdf-byte-repro.mjs'
+          prep=pkg['scripts']['release:prepare']
+          if 'validate:rdf-reproducibility' not in prep:
+              pkg['scripts']['release:prepare']=prep + ' && npm run validate:rdf-reproducibility'
+          p.write_text(json.dumps(pkg, ensure_ascii=False, indent=2)+'\n')
+          PY
+
+          cat > scripts/canonicalize-rdf.mjs <<'EOF'
+          import fs from 'node:fs';
+          import rdfCanonize from 'rdf-canonize';
+
+          const input = fs.readFileSync(0, 'utf8');
+          const canonical = await rdfCanonize.canonize(input, {
+            algorithm: 'RDFC-1.0',
+            inputFormat: 'application/n-quads',
+            format: 'application/n-quads',
+            maxWorkFactor: 3,
+            rejectURDNA2015: true,
+          });
+          process.stdout.write(canonical);
+          EOF
+
+          cat > scripts/generate-rdf.py <<'PY'
+          from pathlib import Path
+          from hashlib import sha256
+          import json
+          import subprocess
+          from rdflib import Graph
+
+          root = Path(__file__).resolve().parents[1]
+          source = root / 'src/data/semantic/knowledge-graph.jsonld'
+          target = root / 'src/data/semantic/knowledge-graph.ttl'
+          lock_path = root / 'src/data/semantic/rdf-lock.json'
+          release = json.loads((root / 'src/data/release.json').read_text(encoding='utf-8'))
+
+          g = Graph()
+          g.parse(source, format='json-ld')
+          raw_ntriples = g.serialize(format='nt')
+
+          proc = subprocess.run(
+              ['node', str(root / 'scripts/canonicalize-rdf.mjs')],
+              input=raw_ntriples,
+              text=True,
+              stdout=subprocess.PIPE,
+              stderr=subprocess.PIPE,
+              check=False,
+          )
+          if proc.returncode != 0:
+              raise SystemExit('RDFC-1.0 canonicalization failed:\n' + proc.stderr)
+          text = proc.stdout
+          if not text.endswith('\n'):
+              text += '\n'
+          target.write_text(text, encoding='utf-8')
+
+          check = Graph()
+          check.parse(target, format='nt')
+          if len(check) != len(g):
+              raise SystemExit(f'RDF round-trip mismatch: source={len(g)} ttl={len(check)}')
+
+          lock = {
+              'release': release['release'],
+              'source': 'src/data/semantic/knowledge-graph.jsonld',
+              'distribution': 'src/data/semantic/knowledge-graph.ttl',
+              'triples': len(g),
+              'jsonldSha256': sha256(source.read_bytes()).hexdigest(),
+              'ttlSha256': sha256(target.read_bytes()).hexdigest(),
+              'canonicalizedBlankNodes': True,
+              'canonicalizationAlgorithm': 'RDFC-1.0',
+              'canonicalizationLibrary': 'rdf-canonize',
+              'canonicalizationLibraryVersion': '5.0.0',
+              'canonicalSyntax': 'canonical-n-quads-default-graph-as-ntriples-compatible-turtle',
+              'generated': release['dateModified'],
+          }
+          lock_path.write_text(json.dumps(lock, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(lock, indent=2))
+          PY
+
+          cat > scripts/validate-rdf-byte-repro.mjs <<'EOF'
+          import fs from 'node:fs';
+          import {spawnSync} from 'node:child_process';
+          import crypto from 'node:crypto';
+
+          const ttl = 'src/data/semantic/knowledge-graph.ttl';
+          const lock = 'src/data/semantic/rdf-lock.json';
+          const run = () => {
+            fs.rmSync(ttl, {force: true});
+            fs.rmSync(lock, {force: true});
+            const p = spawnSync('python', ['scripts/generate-rdf.py'], {
+              env: {...process.env, PYTHONPATH: '.python-deps'},
+              encoding: 'utf8',
+              stdio: ['ignore', 'pipe', 'pipe'],
+            });
+            if(p.status !== 0) throw new Error(`RDF generation failed: ${p.stderr}`);
+            const bytes = fs.readFileSync(ttl);
+            return {
+              bytes,
+              sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+            };
+          };
+          const a = run();
+          const b = run();
+          if(!a.bytes.equals(b.bytes)) {
+            throw new Error(`RDF byte reproducibility failed: ${a.sha256} != ${b.sha256}`);
+          }
+          console.log(JSON.stringify({rdfByteReproducibility: 'PASS', sha256: a.sha256, bytes: a.bytes.length}));
+          EOF
+
+      - name: Make release freeze idempotent and reject unexpected tracked mutations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/ceiling-release.yml')
+          s=p.read_text()
+          old='''          git add -A\n          git commit -m "Release candidate v${{ steps.meta.outputs.target_version }}"\n          CANDIDATE_SHA=$(git rev-parse HEAD)\n'''
+          new='''          mapfile -t changed < <(git status --porcelain=v1 | sed -E 's/^.. //' | sed -E 's/.* -> //' | sort)\n          allowed=(\n            CITATION.cff README.md codemeta.json package-lock.json package.json\n            public/favicon.svg public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg public/safari-pinned-tab.svg\n            src/content-source/100-rc099.html src/data/evidence-registry.json src/data/evidence-snapshot.json\n            src/data/release-invariants.json src/data/release.json src/data/semantic/knowledge-graph.jsonld\n            src/data/templates/main-head.html src/data/visible-contract.json src/data/volatile-facts.json\n          )\n          for path in "${changed[@]}"; do\n            ok=false\n            for expected in "${allowed[@]}"; do [[ "$path" == "$expected" ]] && ok=true && break; done\n            if [[ "$ok" != true ]]; then echo "Unexpected release-freeze mutation: $path" >&2; exit 1; fi\n          done\n          if ((${#changed[@]} == 0)); then\n            echo "No promotion diff exists; reusing current candidate commit."\n          else\n            git add -A -- "${allowed[@]}"\n            git commit -m "Release candidate v${{ steps.meta.outputs.target_version }}"\n          fi\n          CANDIDATE_SHA=$(git rev-parse HEAD)\n'''
+          if old not in s:
+              raise SystemExit('Expected release freeze block not found')
+          p.write_text(s.replace(old,new))
+          PY
+
+      - name: Prove RDF bytes across repeated isolated processes before push
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run rdf:deps
+          npm run prepare:generated
+          npm run validate:rdf-reproducibility
+          python - <<'PY'
+          import json
+          d=json.load(open('src/data/semantic/rdf-lock.json'))
+          assert d['canonicalizationAlgorithm']=='RDFC-1.0'
+          assert d['canonicalizationLibrary']=='rdf-canonize'
+          assert d['canonicalizationLibraryVersion']=='5.0.0'
+          print(json.dumps(d, indent=2))
+          PY
+
+      - name: Commit coherent pre-promotion repair and force-with-lease candidate only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add package.json package-lock.json requirements-rdf.txt scripts/canonicalize-rdf.mjs scripts/generate-rdf.py scripts/validate-rdf-byte-repro.mjs .github/workflows/ceiling-release.yml .gitignore
+          git diff --cached --check
+          git commit -m "Use RDFC-1.0 canonical RDF release bytes"
+          NEW_SHA=$(git rev-parse HEAD)
+          git push --force-with-lease origin HEAD:"$CANDIDATE_BRANCH"
+          echo "Candidate pre-promotion repair: $NEW_SHA"
