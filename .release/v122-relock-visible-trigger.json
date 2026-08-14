@@ -1,0 +1,6 @@
+{
+  "targetVersion": "1.2.2",
+  "candidateBeforeRelock": "f7413e4c815101ad3aa2c671ac91cf232a63172e",
+  "reason": "intentional visible DOI href repair requires new protected DOM hash",
+  "runNonce": "2026-08-15-visible-relock-r1"
+}
