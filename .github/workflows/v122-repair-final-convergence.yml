@@ -27,47 +27,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Patch main release-control wiring without triggering publication
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name ghezelbaash-v122-repair
-          git config user.email actions@users.noreply.github.com
-          python - <<'PY'
-          from pathlib import Path
-
-          def patch_ceiling(path):
-              p=Path(path); s=p.read_text()
-              s=s.replace("  RELEASE_DATE: '2026-08-14'\n","")
-              marker="      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020\n"
-              step="""      - name: Resolve authoritative v1.2.2 release request\n        shell: bash\n        run: |\n          set -euo pipefail\n          REQUEST_DATE=$(node -p \"require('./.release/release-request-v1.2.2.json').releaseDate\")\n          SOURCE_DATE=$(node -p \"require('./src/data/release.json').dateModified\")\n          test \"$REQUEST_DATE\" = \"$SOURCE_DATE\"\n          test \"$(node -p \"require('./.release/release-request-v1.2.2.json').targetVersion\")\" = \"$TARGET_VERSION\"\n          echo \"RELEASE_DATE=$REQUEST_DATE\" >> \"$GITHUB_ENV\"\n          echo \"AUTHORITATIVE_RELEASE_DATE_PASS date=$REQUEST_DATE\"\n"""
-              if 'Resolve authoritative v1.2.2 release request' not in s:
-                  if marker not in s: raise SystemExit(f'ceiling setup-node marker missing: {path}')
-                  s=s.replace(marker,step+marker,1)
-              p.write_text(s)
-
-          patch_ceiling('.github/workflows/ceiling-release.yml')
-
-          p=Path('.github/workflows/v122-rebind-control-ledger.yml'); s=p.read_text()
-          s=s.replace("a.versionDoi!=='10.5281/zenodo.21910785'","a.zenodoVersionDoi!=='10.5281/zenodo.21910785'")
-          old="""          test \"$C\" = '4d876ce562539c77f178aeb547913bdf5b91272a'\n          test \"$DATE\" = '2026-08-15'\n          test \"$DOI\" = '10.5281/zenodo.21930954'\n          test \"$RECORD\" = '21930954'\n          test \"$(git rev-parse origin/$CANDIDATE_BRANCH)\" = \"$C\"\n"""
-          new="""          test \"$(git rev-parse origin/$CANDIDATE_BRANCH)\" = \"$C\"\n          git show \"$C:src/data/release.json\" >/tmp/candidate-release.json\n          test \"$DATE\" = \"$(node -p \"require('/tmp/candidate-release.json').dateModified\")\"\n          test \"$DOI\" = \"$(node -p \"require('/tmp/candidate-release.json').dataset.zenodo.versionDoi\")\"\n          test \"$RECORD\" = \"$(node -p \"String(require('/tmp/candidate-release.json').dataset.zenodo.recordId)\")\"\n"""
-          if old in s: s=s.replace(old,new)
-          p.write_text(s)
-
-          p=Path('.github/workflows/v122-release-trigger-binder.yml'); s=p.read_text()
-          needle="""          git show \"$GITHUB_SHA:.release/release-request-v1.2.2.json\" > .release/release-request-v1.2.2.json\n          git add .release/release-request-v1.2.2.json\n"""
-          repl="""          git show \"$GITHUB_SHA:.release/release-request-v1.2.2.json\" > .release/release-request-v1.2.2.json\n          node - <<'NODE'\n          const fs=require('fs'),q=JSON.parse(fs.readFileSync('.release/release-request-v1.2.2.json')),r=JSON.parse(fs.readFileSync('src/data/release.json'));\n          if(q.targetVersion!==r.release||q.releaseDate!==r.dateModified)throw Error(`Release request/source truth drift request=${q.targetVersion}/${q.releaseDate} source=${r.release}/${r.dateModified}`);\n          NODE\n          git add .release/release-request-v1.2.2.json\n"""
-          if 'Release request/source truth drift request=' not in s:
-              if needle not in s: raise SystemExit('binder insertion marker missing')
-              s=s.replace(needle,repl,1)
-          p.write_text(s)
-          PY
-          git diff --check
-          git add .github/workflows/ceiling-release.yml .github/workflows/v122-rebind-control-ledger.yml .github/workflows/v122-release-trigger-binder.yml
-          git diff --cached --quiet || git commit -m 'Harden v1.2.2 release wiring against date and control drift'
-          git push origin HEAD:main
-
       - name: Patch candidate source and permanent validators
         shell: bash
         run: |
@@ -81,32 +40,6 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          def patch_ceiling(path):
-              p=Path(path); s=p.read_text()
-              s=s.replace("  RELEASE_DATE: '2026-08-14'\n","")
-              marker="      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020\n"
-              step="""      - name: Resolve authoritative v1.2.2 release request\n        shell: bash\n        run: |\n          set -euo pipefail\n          REQUEST_DATE=$(node -p \"require('./.release/release-request-v1.2.2.json').releaseDate\")\n          SOURCE_DATE=$(node -p \"require('./src/data/release.json').dateModified\")\n          test \"$REQUEST_DATE\" = \"$SOURCE_DATE\"\n          test \"$(node -p \"require('./.release/release-request-v1.2.2.json').targetVersion\")\" = \"$TARGET_VERSION\"\n          echo \"RELEASE_DATE=$REQUEST_DATE\" >> \"$GITHUB_ENV\"\n          echo \"AUTHORITATIVE_RELEASE_DATE_PASS date=$REQUEST_DATE\"\n"""
-              if 'Resolve authoritative v1.2.2 release request' not in s:
-                  if marker not in s: raise SystemExit(f'ceiling setup-node marker missing: {path}')
-                  s=s.replace(marker,step+marker,1)
-              p.write_text(s)
-          patch_ceiling('.github/workflows/ceiling-release.yml')
-
-          p=Path('.github/workflows/v122-rebind-control-ledger.yml'); s=p.read_text()
-          s=s.replace("a.versionDoi!=='10.5281/zenodo.21910785'","a.zenodoVersionDoi!=='10.5281/zenodo.21910785'")
-          old="""          test \"$C\" = '4d876ce562539c77f178aeb547913bdf5b91272a'\n          test \"$DATE\" = '2026-08-15'\n          test \"$DOI\" = '10.5281/zenodo.21930954'\n          test \"$RECORD\" = '21930954'\n          test \"$(git rev-parse origin/$CANDIDATE_BRANCH)\" = \"$C\"\n"""
-          new="""          test \"$(git rev-parse origin/$CANDIDATE_BRANCH)\" = \"$C\"\n          git show \"$C:src/data/release.json\" >/tmp/candidate-release.json\n          test \"$DATE\" = \"$(node -p \"require('/tmp/candidate-release.json').dateModified\")\"\n          test \"$DOI\" = \"$(node -p \"require('/tmp/candidate-release.json').dataset.zenodo.versionDoi\")\"\n          test \"$RECORD\" = \"$(node -p \"String(require('/tmp/candidate-release.json').dataset.zenodo.recordId)\")\"\n"""
-          if old in s: s=s.replace(old,new)
-          p.write_text(s)
-
-          p=Path('.github/workflows/v122-release-trigger-binder.yml'); s=p.read_text()
-          needle="""          git show \"$GITHUB_SHA:.release/release-request-v1.2.2.json\" > .release/release-request-v1.2.2.json\n          git add .release/release-request-v1.2.2.json\n"""
-          repl="""          git show \"$GITHUB_SHA:.release/release-request-v1.2.2.json\" > .release/release-request-v1.2.2.json\n          node - <<'NODE'\n          const fs=require('fs'),q=JSON.parse(fs.readFileSync('.release/release-request-v1.2.2.json')),r=JSON.parse(fs.readFileSync('src/data/release.json'));\n          if(q.targetVersion!==r.release||q.releaseDate!==r.dateModified)throw Error(`Release request/source truth drift request=${q.targetVersion}/${q.releaseDate} source=${r.release}/${r.dateModified}`);\n          NODE\n          git add .release/release-request-v1.2.2.json\n"""
-          if 'Release request/source truth drift request=' not in s:
-              if needle not in s: raise SystemExit('candidate binder insertion marker missing')
-              s=s.replace(needle,repl,1)
-          p.write_text(s)
-
           p=Path('src/content-source/100-rc099.html'); s=p.read_text()
           bad='href="https://doi.org/10.5281/zenodo.21910785">https://doi.org/10.5281/zenodo.21930954</a>'
           good='href="https://doi.org/10.5281/zenodo.21930954">https://doi.org/10.5281/zenodo.21930954</a>'
@@ -116,6 +49,17 @@ jobs:
 
           p=Path('scripts/update-release-control.mjs'); s=p.read_text()
           s=s.replace("const rank={PREFLIGHT_STARTED:10,","const rank={SOURCE_PROMOTED:5,PREFLIGHT_STARTED:10,")
+          marker="const now=new Date().toISOString();"
+          inject="""const now=new Date().toISOString();
+if(stage==='PREFLIGHT_STARTED'){
+  const sourceRelease=JSON.parse(await readFile('src/data/release.json','utf8'));
+  if(patch.targetVersion&&patch.targetVersion!==sourceRelease.release)throw new Error(`PREFLIGHT targetVersion/source drift ${patch.targetVersion} != ${sourceRelease.release}`);
+  patch.releaseDate=sourceRelease.dateModified;
+}
+"""
+          if 'PREFLIGHT targetVersion/source drift' not in s:
+              if marker not in s: raise SystemExit('release-control insertion marker missing')
+              s=s.replace(marker,inject,1)
           p.write_text(s)
 
           p=Path('scripts/verify-release-proof-ledger.mjs'); s=p.read_text()
@@ -134,7 +78,7 @@ jobs:
           p.write_text(s)
           PY
           git diff --check
-          git add .github/workflows/ceiling-release.yml .github/workflows/v122-rebind-control-ledger.yml .github/workflows/v122-release-trigger-binder.yml src/content-source/100-rc099.html scripts/update-release-control.mjs scripts/verify-release-proof-ledger.mjs scripts/validate-v122-contract.mjs
+          git add src/content-source/100-rc099.html scripts/update-release-control.mjs scripts/verify-release-proof-ledger.mjs scripts/validate-v122-contract.mjs
           git diff --cached --quiet || git commit -m 'Repair final v1.2.2 convergence invariants'
           C=$(git rev-parse HEAD)
           git push origin "HEAD:$CANDIDATE_BRANCH"
@@ -184,7 +128,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate repaired candidate before any release trigger
+      - name: Validate repaired candidate before release trigger
         shell: bash
         run: |
           set -euo pipefail
