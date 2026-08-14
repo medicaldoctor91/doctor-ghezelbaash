@@ -14,7 +14,7 @@
     "indexnow:prepare": "node scripts/write-indexnow-key.mjs",
     "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test && python scripts/test-cloudflare-subdomain-migration.py",
     "preflight:cloudflare": "python scripts/preflight-cloudflare-edge.py --if-configured",
-    "validate:source": "node scripts/validate-source.mjs && node scripts/validate-critical-hero-geometry.mjs && node scripts/validate-subdomain-redirects.mjs && node scripts/build-github-pages-bridge.mjs --self-test && node scripts/verify-github-pages-bridge.mjs --self-test",
+    "validate:source": "node scripts/validate-source.mjs && node scripts/validate-critical-hero-geometry.mjs && node scripts/test-reputation-observation.mjs && node scripts/validate-subdomain-redirects.mjs && node scripts/build-github-pages-bridge.mjs --self-test && node scripts/verify-github-pages-bridge.mjs --self-test",
     "media:enrich": "node scripts/enrich-image-metadata.mjs",
     "media:sync": "node scripts/sync-media-references.mjs",
     "validate:media": "node scripts/validate-media.mjs",
