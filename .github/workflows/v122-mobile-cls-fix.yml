@@ -15,7 +15,7 @@ concurrency:
 jobs:
   fix:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -55,7 +55,10 @@ jobs:
           a.write_text(x)
 
           intro=Path('src/content-source/001-intro.html'); y=intro.read_text()
-          y=y.replace(' · آخرین دریافت از Google: ۷ اوت ۲۰۲۶ — ',' · دریافت ۷ اوت ۲۰۲۶ — ',1)
+          old_intro=' · آخرین دریافت از Google: ۷ اوت ۲۰۲۶ — '
+          new_intro=' · دریافت ۷ اوت ۲۰۲۶ — '
+          if old_intro in y: y=y.replace(old_intro,new_intro,1)
+          elif new_intro not in y: raise SystemExit('intro reputation fallback drift')
           intro.write_text(y)
           PY
           cat > scripts/validate-critical-hero-geometry.mjs <<'NODE'
@@ -82,24 +85,41 @@ jobs:
           node - <<'NODE'
           const fs=require('fs'),p='package.json',x=JSON.parse(fs.readFileSync(p));const old='node scripts/validate-source.mjs && node scripts/validate-subdomain-redirects.mjs';const next='node scripts/validate-source.mjs && node scripts/validate-critical-hero-geometry.mjs && node scripts/validate-subdomain-redirects.mjs';if(x.scripts['validate:source'].includes('validate-critical-hero-geometry.mjs')){}else if(x.scripts['validate:source'].includes(old))x.scripts['validate:source']=x.scripts['validate:source'].replace(old,next);else throw Error('validate:source command drift');fs.writeFileSync(p,JSON.stringify(x,null,2)+'\n');
           NODE
-          npm run validate:source
-      - name: Build exact candidate and prove visible freeze plus semantic contracts
-        shell: bash
-        run: |
-          set -euo pipefail
-          export SOURCE_COMMIT="$(git rev-parse HEAD)" CF_PAGES_COMMIT_SHA="$(git rev-parse HEAD)" SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
-          npm run release:prepare
-          npm run build
-          node scripts/validate-visible-freeze.mjs dist/index.html
-          node - <<'NODE'
-          const fs=require('fs'),h=fs.readFileSync('dist/index.html','utf8');const m=h.match(/<div class="hero-caption-reputation" id="google-maps-clinic-reputation-current">([\s\S]*?)<\/div>/);if(!m)throw Error('reputation slot missing');const t=m[1].replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();if(t.includes('آخرین دریافت از Google'))throw Error('long reputation wording survived build');if(!t.includes('دریافت ۷ اوت ۲۰۲۶'))throw Error('compact observation wording missing');console.log('COMPACT_REPUTATION_VISIBLE_PASS chars='+[...t].length+' text='+t)
-          NODE
-      - name: Commit only the root-cause fix and its permanent guard
+          node scripts/validate-critical-hero-geometry.mjs
+      - name: Freeze fix locally before proving the exact resulting commit
         shell: bash
         run: |
           set -euo pipefail
           git add src/styles/global.css scripts/lib/assemble-content.mjs src/content-source/001-intro.html scripts/validate-critical-hero-geometry.mjs package.json
           git diff --cached --check
           git commit -m 'Eliminate mobile hero CLS by criticalizing final geometry'
+          C=$(git rev-parse HEAD)
+          echo "CLS_FIXED_CANDIDATE=$C" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")" >> "$GITHUB_ENV"
+      - name: Generate prerequisites and run source guard against exact fixed commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_COMMIT="$CLS_FIXED_CANDIDATE" CF_PAGES_COMMIT_SHA="$CLS_FIXED_CANDIDATE" SOURCE_DATE_EPOCH
+          npm run prepare:generated
+          npm run validate:source
+          test -z "$(git status --porcelain --untracked-files=all | grep -v '^?? \.python-deps/' | grep -v '^?? dist/' | grep -v '^?? release/' || true)"
+      - name: Build exact fixed candidate and prove visible freeze plus semantic contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_COMMIT="$CLS_FIXED_CANDIDATE" CF_PAGES_COMMIT_SHA="$CLS_FIXED_CANDIDATE" SOURCE_DATE_EPOCH
+          npm run release:prepare
+          npm run build
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          node - <<'NODE'
+          const fs=require('fs'),h=fs.readFileSync('dist/index.html','utf8');const m=h.match(/<div class="hero-caption-reputation" id="google-maps-clinic-reputation-current">([\s\S]*?)<\/div>/);if(!m)throw Error('reputation slot missing');const t=m[1].replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();if(t.includes('آخرین دریافت از Google'))throw Error('long reputation wording survived build');if(!t.includes('دریافت ۷ اوت ۲۰۲۶'))throw Error('compact observation wording missing');console.log('COMPACT_REPUTATION_VISIBLE_PASS chars='+[...t].length+' text='+t)
+          NODE
+          test -z "$(git status --porcelain --untracked-files=all | grep -v '^?? \.python-deps/' | grep -v '^?? dist/' | grep -v '^?? release/' || true)"
+      - name: Publish only the already-proven exact fix commit to candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CLS_FIXED_CANDIDATE"
           git push origin HEAD:release/v1.2.2-candidate
-          echo "CLS_FIXED_CANDIDATE=$(git rev-parse HEAD)"
+          echo "CLS_FIXED_CANDIDATE_PUBLISHED=$CLS_FIXED_CANDIDATE"
