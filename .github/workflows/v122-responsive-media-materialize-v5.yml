@@ -60,7 +60,7 @@ jobs:
           test "$(find public/media/images/physician -maxdepth 1 -type f \( -name 'saeed-ghezelbash-portrait-720.*.avif' -o -name 'saeed-ghezelbash-portrait-800.*.avif' -o -name 'saeed-ghezelbash-clinical-examination-720.*.avif' -o -name 'saeed-ghezelbash-clinical-examination-800.*.avif' \) | wc -l)" -eq 4
           git diff --check
           git status --short
-      - name: Commit exactly once then prove complete media and visible contract
+      - name: Commit exactly once then prove canonical generated-source release contract
         shell: bash
         run: |
           set -euo pipefail
@@ -71,9 +71,7 @@ jobs:
           E=$(git rev-parse HEAD)
           test "$(git rev-parse HEAD^)" = "$BASE_CANDIDATE_SHA"
           export SOURCE_COMMIT="$E" CF_PAGES_COMMIT_SHA="$E" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$E") ASTRO_TELEMETRY_DISABLED=1
-          npm run validate:media
-          npm run validate:source
-          npm run media:sync
+          npm run release:prepare
           npm run build
           node scripts/validate-visible-freeze.mjs dist/index.html
           node scripts/validate-dist.mjs
@@ -84,7 +82,7 @@ jobs:
           const hero720=(html.match(/saeed-ghezelbash-portrait-720\.[0-9a-f]{12}\.avif 720w/g)||[]).length;
           if(hero720<2)throw Error(`Hero 720 AVIF must exist in preload and picture, got ${hero720}`);
           if(!html.includes('saeed-ghezelbash-portrait-delivery-640.b267bddf872d.webp 640w')||!html.includes('saeed-ghezelbash-portrait-960.d67587e1de85.webp 960w'))throw Error('Existing WebP fallback drifted');
-          console.log(JSON.stringify({responsiveMediaExperimentV5:'PASS',commit:process.env.SOURCE_COMMIT,htmlBytes:Buffer.byteLength(html),mediaInventory:53,hero720Occurrences:hero720,webpFallbackUnchanged:true}));
+          console.log(JSON.stringify({responsiveMediaExperimentV5:'PASS',commit:process.env.SOURCE_COMMIT,htmlBytes:Buffer.byteLength(html),mediaInventory:53,hero720Occurrences:hero720,webpFallbackUnchanged:true,canonicalReleasePreparation:true}));
           NODE
           test -z "$(git status --porcelain --untracked-files=no)"
       - name: Push only fully proven experiment
