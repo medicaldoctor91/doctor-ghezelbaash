@@ -1,0 +1,125 @@
+name: Measure combined v1.2.2 performance experiment live
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-combined-perf-live-request.json]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-v122-combined-perf-live
+  cancel-in-progress: true
+
+env:
+  EXPERIMENT_BRANCH: tmp/v122-combined-perf-experiment
+  STAGING_BRANCH: staging/deploy
+  CF_PROJECT: doctor-ghezelbaash
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  BASE_CANDIDATE_SHA: 2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb
+  EXPERIMENT_SHA_PIN: 8944041dd5a676bd0b1ccc5987915698dadbe607
+  BASE_CANDIDATE_URL: https://885cc5a5.doctor-ghezelbaash.pages.dev/
+
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: tmp/v122-combined-perf-experiment
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - name: Resolve exact successful combined Preview and prove bytes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPERIMENT_SHA=$(git rev-parse HEAD)
+          test "$EXPERIMENT_SHA" = "$EXPERIMENT_SHA_PIN"
+          git fetch origin "$STAGING_BRANCH" release/v1.2.2-candidate
+          test "$(git rev-parse origin/$STAGING_BRANCH)" = "$EXPERIMENT_SHA"
+          test "$(git rev-parse origin/release/v1.2.2-candidate)" = "$BASE_CANDIDATE_SHA"
+          SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$EXPERIMENT_SHA")
+          export EXPERIMENT_SHA SOURCE_DATE_EPOCH
+          echo "EXPERIMENT_SHA=$EXPERIMENT_SHA" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> "$GITHUB_ENV"
+          test -n "$CLOUDFLARE_API_TOKEN"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          for poll in $(seq 1 30); do
+            curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?env=preview&per_page=25" >/tmp/cf.json
+            EXPERIMENT_URL=$(node - <<'NODE'
+          const p=require('/tmp/cf.json'),c=process.env.EXPERIMENT_SHA;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(d?.url)console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
+          NODE
+            )
+            if [ -n "$EXPERIMENT_URL" ]; then break; fi
+            sleep 10
+          done
+          test -n "${EXPERIMENT_URL:-}"
+          echo "EXPERIMENT_URL=$EXPERIMENT_URL" >> "$GITHUB_ENV"
+          export CANDIDATE_SHA="$EXPERIMENT_SHA" SOURCE_COMMIT="$EXPERIMENT_SHA" CF_PAGES_COMMIT_SHA="$EXPERIMENT_SHA"
+          VERIFY_BASE_URL="$EXPERIMENT_URL" node scripts/verify-cloudflare-pages-deployment.mjs
+          VERIFY_BASE_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/' node scripts/verify-cloudflare-pages-deployment.mjs
+          echo "COMBINED_EXACT_PREVIEW_BYTES_PASS sha=$EXPERIMENT_SHA url=$EXPERIMENT_URL"
+      - name: Paired repeated mobile comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lh-combined
+          run_lh(){
+            local url="$1" width="$2" height="$3" form="$4" dpr="$5" out="$6" label="$7" ok=0
+            for attempt in 1 2 3; do
+              rm -f "$out"
+              common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
+              if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
+              if npx --yes lighthouse@13.4.1 "${url}?__combined=${label}_${attempt}_$(date +%s%N)" "${common[@]}" --output-path="$out"; then
+                if node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$out"; then ok=1; break; fi
+              fi
+              echo "LIGHTHOUSE_TRANSIENT_RETRY label=$label attempt=$attempt" >&2
+              sleep 3
+            done
+            test "$ok" = 1
+          }
+          for width in 360 390 430; do
+            for run in 1 2 3; do
+              run_lh "$BASE_CANDIDATE_URL" "$width" 844 mobile 2 "/tmp/lh-combined/base-${width}-${run}.json" "base_${width}_${run}"
+              run_lh "$EXPERIMENT_URL" "$width" 844 mobile 2 "/tmp/lh-combined/experiment-${width}-${run}.json" "experiment_${width}_${run}"
+              node - "$width" "$run" <<'NODE'
+          const fs=require('fs'),[w,r]=process.argv.slice(2),read=s=>JSON.parse(fs.readFileSync(`/tmp/lh-combined/${s}-${w}-${r}.json`));const m=(x,id)=>x.audits[id]?.numericValue,row=x=>({score:Math.round(x.categories.performance.score*100),fcp:m(x,'first-contentful-paint'),lcp:m(x,'largest-contentful-paint'),tbt:m(x,'total-blocking-time'),cls:m(x,'cumulative-layout-shift'),speedIndex:m(x,'speed-index')});console.log('PAIRED_COMBINED_RUN',JSON.stringify({width:Number(w),run:Number(r),base:row(read('base')),experiment:row(read('experiment'))}));
+          NODE
+            done
+          done
+          node <<'NODE'
+          const fs=require('fs'),widths=[360,390,430],runs=[1,2,3],m=(x,id)=>x.audits[id]?.numericValue,median=a=>a.slice().sort((x,y)=>x-y)[Math.floor(a.length/2)];let fail=false;const summary=[];for(const w of widths){const rows={};for(const side of ['base','experiment']){const docs=runs.map(r=>JSON.parse(fs.readFileSync(`/tmp/lh-combined/${side}-${w}-${r}.json`)));rows[side]={scoreMedian:median(docs.map(x=>Math.round(x.categories.performance.score*100))),scoreMin:Math.min(...docs.map(x=>Math.round(x.categories.performance.score*100))),fcpMedian:median(docs.map(x=>m(x,'first-contentful-paint'))),lcpMedian:median(docs.map(x=>m(x,'largest-contentful-paint'))),tbtMedian:median(docs.map(x=>m(x,'total-blocking-time'))),clsMax:Math.max(...docs.map(x=>m(x,'cumulative-layout-shift')))};}summary.push({width:w,...rows});if(rows.experiment.scoreMedian<85||rows.experiment.clsMax>0.1||rows.experiment.lcpMedian>4000||rows.experiment.scoreMedian<rows.base.scoreMedian-1)fail=true;}console.log('PAIRED_COMBINED_SUMMARY',JSON.stringify(summary,null,2));if(fail)throw Error('Combined experiment did not robustly clear paired mobile gate');
+          NODE
+      - name: Full six viewport combined ceiling check
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_lh(){
+            local url="$1" width="$2" height="$3" form="$4" dpr="$5" out="$6" label="$7" ok=0
+            for attempt in 1 2 3; do
+              rm -f "$out"
+              common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
+              if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
+              if npx --yes lighthouse@13.4.1 "${url}?__combined_six=${label}_${attempt}_$(date +%s%N)" "${common[@]}" --output-path="$out"; then if node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$out"; then ok=1;break;fi;fi
+              echo "LIGHTHOUSE_TRANSIENT_RETRY six=$label attempt=$attempt" >&2;sleep 3
+            done
+            test "$ok" = 1
+          }
+          for spec in '360:800:mobile:2:85' '390:844:mobile:2:85' '430:932:mobile:2:85' '768:1024:desktop:1:90' '1024:900:desktop:1:95' '1440:900:desktop:1:95'; do
+            IFS=: read -r width height form dpr minimum <<<"$spec";OUT="/tmp/lh-combined/six-$width.json";run_lh "$EXPERIMENT_URL" "$width" "$height" "$form" "$dpr" "$OUT" "$width"
+            node - "$width" "$minimum" <<'NODE'
+          const fs=require('fs'),[w,min]=process.argv.slice(2),x=JSON.parse(fs.readFileSync(`/tmp/lh-combined/six-${w}.json`)),req=x.audits['network-requests']?.details?.items||[],hero=req.find(r=>/saeed-ghezelbash-portrait-(720|800)\.[0-9a-f]{12}\.avif/.test(r.url||''));const out={width:Number(w),minimum:Number(min),score:Math.round(x.categories.performance.score*100),fcp:x.audits['first-contentful-paint']?.numericValue,lcp:x.audits['largest-contentful-paint']?.numericValue,tbt:x.audits['total-blocking-time']?.numericValue,cls:x.audits['cumulative-layout-shift']?.numericValue,selectedResponsiveHero:hero?.url||null};console.log('COMBINED_SIX_VIEWPORT',JSON.stringify(out));if(out.score<Number(min)||out.cls>0.1||out.lcp>4000)throw Error(`${w} combined ceiling failed`);if(Number(w)>=390&&Number(w)<=430&&!out.selectedResponsiveHero)throw Error(`${w} responsive Hero selection missing`);
+          NODE
+          done
+          echo 'COMBINED_FULL_SIX_VIEWPORT_PASS'
