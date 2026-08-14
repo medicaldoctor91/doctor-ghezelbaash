@@ -1,0 +1,46 @@
+name: Audit v1.2.2 obsolete invariant dependencies
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-invariant-ref-audit-request.json]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Map every obsolete invariant to exact direct consumers
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re,json
+          keys=['renderChunkCount','clipCount','chapterTrackCount','targetHtmlBytes','fullGraphNodeCount','inlineEligibleClipCount','captionTrackTarget','inlineSemanticClipCount','exactBestDoctorHeadingCount','instagramHeadingLinkCount','supportNodeTarget','headSameAsCount','headAlternateNameCount','directAnswerCapsuleCount','minVisibleEvidenceCapsules','machineResourceCount','googleSitemapMachineUrlCount','googleSearchLandingCount','directAnswerExecutiveCount','directAnswerFullCount','integratedFullAnswerCount','canonicalAnswerTextVisibleCount','directAnswerHeadingLevel','contentSectionCount','googleInlineSemanticClipCount','googleInlineSupportNodeTarget','googleInlineKurdishClipCount']
+          roots=[Path('scripts'),Path('src'),Path('.release')]
+          files=[]
+          for root in roots:
+            if not root.exists(): continue
+            files += [p for p in root.rglob('*') if p.is_file() and 'history' not in p.parts]
+          out={}
+          for key in keys:
+            pat=re.compile(rf'(?<![A-Za-z0-9_.])(?:inv|invariants)\s*\.\s*{re.escape(key)}\b')
+            hits=[]
+            for p in files:
+              try: text=p.read_text()
+              except Exception: continue
+              for i,line in enumerate(text.splitlines(),1):
+                if pat.search(line): hits.append({'path':str(p),'line':i,'text':line.strip()[:500]})
+            out[key]=hits
+          print('OBSOLETE_INVARIANT_DEPENDENCY_MAP')
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          print('DIRECT_CONSUMED_KEYS',json.dumps([k for k,v in out.items() if v]))
+          print('UNUSED_KEYS',json.dumps([k for k,v in out.items() if not v]))
+          PY
