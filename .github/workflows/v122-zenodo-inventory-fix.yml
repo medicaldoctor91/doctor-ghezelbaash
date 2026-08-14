@@ -1,0 +1,60 @@
+name: v1.2.2 Zenodo inventory isolation fix
+on:
+  push:
+    branches: [release/v1.2.2-candidate]
+    paths: [.github/workflows/v122-zenodo-inventory-fix.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+      - name: Recompute immutable release DIST inventory immediately before Zenodo stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/zenodo_release.py')
+          s=p.read_text()
+          old="""def exact_sources():
+    sources={name:Path('dist')/name for name in CORE}
+    att=RUNTIME/'release-attestation.json'
+    if att.exists(): sources['release-attestation.json']=att
+    hashes=RUNTIME/'dist-sha256.json'
+    if hashes.exists(): sources['dist-sha256.json']=hashes
+    missing=[name for name,p in sources.items() if not p.exists()]
+    if missing: raise RuntimeError(f'Zenodo stage source files missing: {missing}')
+    return sources
+"""
+          new="""def exact_sources():
+    # Rebuild the release-snapshot inventory from the exact current DIST bytes.
+    # HF has its own inventory and may be prepared between Candidate proof and Zenodo stage;
+    # it must never redefine the Zenodo Release Snapshot inventory.
+    dist_root=Path('dist')
+    full_inventory={str(p.relative_to(dist_root)):sha256(p) for p in sorted(dist_root.rglob('*')) if p.is_file()}
+    if not full_inventory or 'index.html' not in full_inventory or 'artifact-manifest.json' not in full_inventory:
+        raise RuntimeError('Canonical DIST inventory is incomplete before Zenodo stage')
+    hashes=RUNTIME/'dist-sha256.json'
+    hashes.write_text(json.dumps(full_inventory,sort_keys=True,separators=(',',':'))+'\\n')
+    sources={name:dist_root/name for name in CORE}
+    att=RUNTIME/'release-attestation.json'
+    if att.exists(): sources['release-attestation.json']=att
+    sources['dist-sha256.json']=hashes
+    missing=[name for name,p in sources.items() if not p.exists()]
+    if missing: raise RuntimeError(f'Zenodo stage source files missing: {missing}')
+    return sources
+"""
+          if old not in s: raise SystemExit('exact_sources anchor not found')
+          p.write_text(s.replace(old,new))
+          PY
+          python -m py_compile scripts/zenodo_release.py
+          grep -q 'HF has its own inventory' scripts/zenodo_release.py
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git add scripts/zenodo_release.py
+          git commit -m 'Isolate Zenodo release inventory from Hugging Face inventory'
+          git push origin HEAD:release/v1.2.2-candidate
