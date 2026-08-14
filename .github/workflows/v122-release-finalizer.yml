@@ -70,9 +70,10 @@ jobs:
           const z=require('/tmp/zenodo-public.json');const doi=z.doi||z.pids?.doi?.identifier;
           if(String(z.id)!==String(process.env.RECORD_ID)||doi!==process.env.VERSION_DOI) throw Error('Public Zenodo readback drift');
           NODE
-          HF_TAG=$(git ls-remote "https://huggingface.co/datasets/$HF_REPO" refs/tags/v1.2.2 | awk '{print $1}')
-          test -n "$HF_TAG"
-          test "$HF_TAG" = "$HF_RELEASE_SHA"
+          HF_TAG_OBJ=$(git ls-remote "https://huggingface.co/datasets/$HF_REPO" refs/tags/v1.2.2 | awk '{print $1}')
+          HF_TAG_PEELED=$(git ls-remote "https://huggingface.co/datasets/$HF_REPO" 'refs/tags/v1.2.2^{}' | awk '{print $1}')
+          test -n "$HF_TAG_OBJ"
+          test "${HF_TAG_PEELED:-$HF_TAG_OBJ}" = "$HF_RELEASE_SHA"
           echo "EXTERNAL_RELEASE_OBJECTS_PASS source=$SOURCE_COMMIT hf=$HF_RELEASE_SHA zenodo=$VERSION_DOI github_release_id=$RID"
       - name: Reverify current serving and frozen release truth after main integration
         shell: bash
