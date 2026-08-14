@@ -3,5 +3,6 @@
   "releaseDate": "2026-08-14",
   "candidateBranch": "release/v1.2.2-candidate",
   "mode": "maximum-integrated-two-phase",
-  "manualStep": "wikidata-quickstatements-only-after-external-convergence"
+  "manualStep": "wikidata-quickstatements-only-after-external-convergence",
+  "rerunNonce": "2026-08-14T10:24:00Z-rdf-repro-fix"
 }
