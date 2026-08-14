@@ -1,8 +1,9 @@
 {
   "targetVersion": "1.2.2",
   "baseCandidate": "2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb",
-  "experimentBranch": "tmp/v122-mobile-critical-path-experiment",
-  "experimentSha": "2541b0dadd87f7c9a6c33bc1183697c5cd34eded",
+  "experimentBranch": "tmp/v122-critical-css-order-experiment",
+  "experimentSha": "fa8c5424755d503e0741ad2abac8225f597f92b6",
   "requestedAt": "2026-08-15",
-  "nonce": "critical-path-001"
+  "scope": "critical-css-after-hero-hints-before-metadata",
+  "nonce": "critical-css-order-002"
 }
