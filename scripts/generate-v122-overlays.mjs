@@ -202,8 +202,8 @@ for(const row of rows){
   const key=`${row.language}|${row.query}`;
   const serviceIds=[...new Set([...(arr(row.service_ids)),...(row.service_id?[row.service_id]:[])])];
   const serviceFamilies=[...new Set([...(arr(row.service_families)),...(row.service_family?[row.service_family]:[])])];
-  const normalized={...row,service_ids:serviceIds,service_families:serviceFamilies};
-  delete normalized.service_id;delete normalized.service_family;
+  const {service_id:_legacyServiceId,service_family:_legacyServiceFamily,...rowWithoutLegacyServiceKeys}=row;
+  const normalized={...rowWithoutLegacyServiceKeys,service_ids:serviceIds,service_families:serviceFamilies};
   const prior=mergedRows.get(key);
   if(!prior){mergedRows.set(key,normalized);continue;}
   const preferIntent=prior.row_kind==='intent_alias'?prior:normalized.row_kind==='intent_alias'?normalized:prior;
