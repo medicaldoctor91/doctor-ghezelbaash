@@ -106,7 +106,6 @@ jobs:
           g = Graph()
           g.parse(source, format='json-ld')
           raw_ntriples = g.serialize(format='nt')
-
           proc = subprocess.run(
               ['node', str(root / 'scripts/canonicalize-rdf.mjs')],
               input=raw_ntriples,
@@ -162,10 +161,7 @@ jobs:
             });
             if(p.status !== 0) throw new Error(`RDF generation failed: ${p.stderr}`);
             const bytes = fs.readFileSync(ttl);
-            return {
-              bytes,
-              sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
-            };
+            return {bytes, sha256: crypto.createHash('sha256').update(bytes).digest('hex')};
           };
           const a = run();
           const b = run();
@@ -183,8 +179,31 @@ jobs:
           from pathlib import Path
           p=Path('.github/workflows/ceiling-release.yml')
           s=p.read_text()
-          old='''          git add -A\n          git commit -m "Release candidate v${{ steps.meta.outputs.target_version }}"\n          CANDIDATE_SHA=$(git rev-parse HEAD)\n'''
-          new='''          mapfile -t changed < <(git status --porcelain=v1 | sed -E 's/^.. //' | sed -E 's/.* -> //' | sort)\n          allowed=(\n            CITATION.cff README.md codemeta.json package-lock.json package.json\n            public/favicon.svg public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg public/safari-pinned-tab.svg\n            src/content-source/100-rc099.html src/data/evidence-registry.json src/data/evidence-snapshot.json\n            src/data/release-invariants.json src/data/release.json src/data/semantic/knowledge-graph.jsonld\n            src/data/templates/main-head.html src/data/visible-contract.json src/data/volatile-facts.json\n          )\n          for path in "${changed[@]}"; do\n            ok=false\n            for expected in "${allowed[@]}"; do [[ "$path" == "$expected" ]] && ok=true && break; done\n            if [[ "$ok" != true ]]; then echo "Unexpected release-freeze mutation: $path" >&2; exit 1; fi\n          done\n          if ((${#changed[@]} == 0)); then\n            echo "No promotion diff exists; reusing current candidate commit."\n          else\n            git add -A -- "${allowed[@]}"\n            git commit -m "Release candidate v${{ steps.meta.outputs.target_version }}"\n          fi\n          CANDIDATE_SHA=$(git rev-parse HEAD)\n'''
+          old="""          git add -A
+          git commit -m 'Release candidate v1.2.2 — DOI-bound maximum integrated stack'
+          C=$(git rev-parse HEAD); echo \"SOURCE_COMMIT=$C\" >> \"$GITHUB_ENV\"
+"""
+          new="""          mapfile -t changed < <(git status --porcelain=v1 | sed -E 's/^.. //' | sed -E 's/.* -> //' | sort)
+          allowed=(
+            CITATION.cff README.md codemeta.json package-lock.json package.json
+            public/favicon.svg public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg public/safari-pinned-tab.svg
+            src/content-source/100-rc099.html src/data/evidence-registry.json src/data/evidence-snapshot.json
+            src/data/release-invariants.json src/data/release.json src/data/semantic/knowledge-graph.jsonld
+            src/data/templates/main-head.html src/data/visible-contract.json src/data/volatile-facts.json
+          )
+          for path in \"${changed[@]}\"; do
+            ok=false
+            for expected in \"${allowed[@]}\"; do [[ \"$path\" == \"$expected\" ]] && ok=true && break; done
+            if [[ \"$ok\" != true ]]; then echo \"Unexpected release-freeze mutation: $path\" >&2; exit 1; fi
+          done
+          if ((${#changed[@]} == 0)); then
+            echo \"No promotion diff exists; reusing current candidate commit.\"
+          else
+            git add -A -- \"${allowed[@]}\"
+            git commit -m \"Release candidate v$TARGET_VERSION — DOI-bound maximum integrated stack\"
+          fi
+          C=$(git rev-parse HEAD); echo \"SOURCE_COMMIT=$C\" >> \"$GITHUB_ENV\"
+"""
           if old not in s:
               raise SystemExit('Expected release freeze block not found')
           p.write_text(s.replace(old,new))
