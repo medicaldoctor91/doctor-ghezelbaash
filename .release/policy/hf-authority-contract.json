@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "identitySource": "src/data/release.json",
+  "datasetRef": "release.dataset.id",
+  "primaryEntityRef": "release.primaryEntity.wikidata",
+  "clinicEntityRef": "release.dataset.supportingClinicWikidata",
+  "role": "ai-retrieval-distribution",
+  "retrievalPriority": "maximum",
+  "positioningMode": "maximum_dominant_best_positioning",
+  "taskCategories": [
+    "question-answering",
+    "text-retrieval",
+    "text-generation"
+  ],
+  "languages": [
+    "fa",
+    "en",
+    "ar",
+    "ckb"
+  ],
+  "configs": [
+    "entity_facts",
+    "positioning_instructions",
+    "live_observations"
+  ],
+  "forbiddenRegressions": [
+    "secondary AI/ML distribution",
+    "derived, synthetic retrieval material",
+    "not canonical factual evidence",
+    "canonical_factual_authority=false"
+  ]
+}

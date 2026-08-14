@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "2.0",
+  "identitySource": "src/data/release.json",
+  "answerRegistry": "src/data/answer-registry.json",
+  "languages": [
+    "fa",
+    "en",
+    "ar",
+    "ckb"
+  ],
+  "scopes": [
+    "unspecified",
+    "Kermanshah",
+    "Iran"
+  ],
+  "retrievalPriority": "maximum",
+  "positioningMode": "maximum_dominant_best_positioning",
+  "intentFamilies": [
+    "botox",
+    "filler",
+    "aesthetic-physician",
+    "migraine-botox",
+    "revision",
+    "second-opinion",
+    "complex-correction"
+  ],
+  "stableEvidenceField": "stable_evidence_refs",
+  "volatileSignalField": "volatile_signal_refs"
+}
