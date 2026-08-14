@@ -1,0 +1,106 @@
+name: Rebind v1.2.2 release-control ledger to final Candidate epoch
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-rebind-control-ledger-request.json]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+env:
+  CONTROL_BRANCH: release-control/v1.2.2
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+
+jobs:
+  rebind:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release-control/v1.2.2
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Resolve exact request and Candidate C
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main "$CONTROL_BRANCH" "$CANDIDATE_BRANCH"
+          git show origin/main:.release/v122-rebind-control-ledger-request.json >/tmp/request.json
+          C=$(node -p "require('/tmp/request.json').candidateSha")
+          DATE=$(node -p "require('/tmp/request.json').releaseDate")
+          DOI=$(node -p "require('/tmp/request.json').versionDoi")
+          RECORD=$(node -p "require('/tmp/request.json').recordId")
+          test "$C" = '4d876ce562539c77f178aeb547913bdf5b91272a'
+          test "$DATE" = '2026-08-15'
+          test "$DOI" = '10.5281/zenodo.21930954'
+          test "$RECORD" = '21930954'
+          test "$(git rev-parse origin/$CANDIDATE_BRANCH)" = "$C"
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/$CONTROL_BRANCH)"
+          echo "C=$C" >> "$GITHUB_ENV"
+          echo "RELEASE_DATE=$DATE" >> "$GITHUB_ENV"
+
+      - name: Archive immutable v1.2.1 root control artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for f in release-attestation.json release-request.json zenodo-published.json; do test -f ".release/$f"; done
+          node - <<'NODE'
+          const fs=require('fs');
+          const a=JSON.parse(fs.readFileSync('.release/release-attestation.json')),q=JSON.parse(fs.readFileSync('.release/release-request.json')),z=JSON.parse(fs.readFileSync('.release/zenodo-published.json'));
+          if(a.release!=='1.2.1'||a.versionDoi!=='10.5281/zenodo.21910785')throw Error('Historical release-attestation identity drift');
+          if(q.targetVersion!=='1.2.1')throw Error('Historical release-request identity drift');
+          if(z.release!=='1.2.1'||z.versionDoi!=='10.5281/zenodo.21910785'||String(z.recordId)!=='21910785')throw Error('Historical zenodo-published identity drift');
+          NODE
+          mkdir -p .release/history/v1.2.1
+          test ! -e .release/history/v1.2.1/release-attestation.json
+          test ! -e .release/history/v1.2.1/release-request.json
+          test ! -e .release/history/v1.2.1/zenodo-published.json
+          mv .release/release-attestation.json .release/history/v1.2.1/
+          mv .release/release-request.json .release/history/v1.2.1/
+          mv .release/zenodo-published.json .release/history/v1.2.1/
+
+      - name: Reset stale proof epoch and record SOURCE_PROMOTED, not frozen
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('fs'),p='.release/control/v1.2.2.json',x=JSON.parse(fs.readFileSync(p));
+          const C=process.env.C,releaseDate=process.env.RELEASE_DATE,now=new Date().toISOString();
+          if(x.targetVersion!=='1.2.2'||x.versionDoi!=='10.5281/zenodo.21930954'||String(x.recordId)!=='21930954'||x.conceptDoi!=='10.5281/zenodo.18765168')throw Error('Control ledger reserved identity drift');
+          const previousSource=x.sourceCommit||null;
+          x.releaseDate=releaseDate;
+          x.candidateBranch='release/v1.2.2-candidate';
+          x.candidateHead=C;
+          x.sourceCommit=C;
+          x.preparedCandidate=C;
+          delete x.candidateEpoch;
+          x.proofs={};
+          x.stage='SOURCE_PROMOTED';
+          x.highestStage='SOURCE_PROMOTED';
+          x.lastEvent='SOURCE_PROMOTED';
+          x.updatedAt=now;
+          x.history=[...(x.history||[]),{stage:'SOURCE_PROMOTED',at:now,sourceCommit:C,previousSourceCommit:previousSource,releaseDate,recordId:'21930954',versionDoi:'10.5281/zenodo.21930954',reason:'final field-specific release-date rollover and source convergence; pre-freeze proof epoch reset'}];
+          fs.writeFileSync(p,JSON.stringify(x,null,2)+'\n');
+          console.log(JSON.stringify({ledgerRebind:'PASS',stage:x.stage,sourceCommit:x.sourceCommit,releaseDate:x.releaseDate,proofCount:Object.keys(x.proofs).length}));
+          NODE
+          git diff --check
+          test ! -e .release/release-attestation.json
+          test ! -e .release/release-request.json
+          test ! -e .release/zenodo-published.json
+
+      - name: Commit one atomic control-plane transition
+        shell: bash
+        run: |
+          set -euo pipefail
+          git status --short
+          git config user.name ghezelbaash-v122-release-control
+          git config user.email actions@users.noreply.github.com
+          git add -A .release/control/v1.2.2.json .release/history/v1.2.1 .release/release-attestation.json .release/release-request.json .release/zenodo-published.json
+          git commit -m 'Rebind v1.2.2 control ledger to final source-promoted Candidate'
+          git push origin "HEAD:$CONTROL_BRANCH"
+          echo "CONTROL_LEDGER_SOURCE_PROMOTED_PASS C=$C"
