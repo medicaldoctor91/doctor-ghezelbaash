@@ -1,0 +1,35 @@
+name: v1.2.2 final DOI-bound promotion simulation
+on:
+  push:
+    branches: [release/v1.2.2-candidate]
+    paths: [.github/workflows/v122-final-promotion-simulation.yml]
+permissions:
+  contents: read
+jobs:
+  simulate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with: {persist-credentials: false, fetch-depth: 0}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with: {node-version: 24.18.0, cache: npm}
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with: {python-version: '3.12'}
+      - run: npm ci --ignore-scripts
+      - name: Simulate exact DOI bootstrap and full release build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node -p "require('./src/data/release.json').release")" = '1.2.1'
+          node scripts/promote-release.mjs --version=1.2.2 --date=2026-08-14 --zenodo-record=99999999 --zenodo-doi=10.5281/zenodo.99999999
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
+          npm run release:prepare
+          npm run build
+          node scripts/validate-v122-contract.mjs
+          node scripts/validate-query-matrix.mjs dist/query-matrix.jsonl
+          node scripts/validate-dist.mjs
+          python -m py_compile scripts/zenodo_release.py
+          node - <<'NODE'
+          const fs=require('fs');const r=require('./src/data/release.json');if(r.release!=='1.2.2'||String(r.dataset.zenodo.recordId)!=='99999999'||r.dataset.zenodo.versionDoi!=='10.5281/zenodo.99999999'||r.dataset.zenodo.conceptDoi!=='10.5281/zenodo.18765168')throw Error('Promotion identity failure');const h=r.dataset.zenodo.releaseHistory;if(!h.some(x=>x.release==='1.0.0')||!h.some(x=>x.release==='1.2.0')||!h.some(x=>x.release==='1.2.1')||!h.some(x=>x.release==='1.2.2'&&x.versionDoi==='10.5281/zenodo.99999999'))throw Error('Release history failure');const g=fs.readFileSync('dist/graph.jsonld','utf8');for(const x of ['10.5281/zenodo.99999999','10.5281/zenodo.18765168','1.2.2'])if(!g.includes(x))throw Error('Graph missing '+x);for(const f of ['artifact-manifest.json','current-release-matrix.json','query-matrix.jsonl','answers.txt','datapackage.json','croissant.json','live-observations.jsonld']){const t=fs.readFileSync('dist/'+f,'utf8');if(f!=='live-observations.jsonld'&&!t.includes('1.2.2'))throw Error(f+' lacks release')}console.log('FINAL_PROMOTION_SIMULATION_PASS')
+          NODE
