@@ -29,18 +29,21 @@ jobs:
           git config user.email actions@users.noreply.github.com
           python - <<'PY'
           from pathlib import Path
-          import re
           src=Path('.github/workflows/ceiling-release.yml').read_text()
-          pattern=re.compile(r'''          curl --fail --silent --show-error -H "Authorization: Bearer \$CLOUDFLARE_API_TOKEN" "https://api\.cloudflare\.com/client/v4/accounts/\$CLOUDFLARE_ACCOUNT_ID/pages/projects/\$CF_PROJECT/deployments\?env=preview" >/tmp/cf-deployments\.json\n          PREVIEW_URL="\$\(node - <<'NODE'\n.*?          \)"\n          test -n "\$PREVIEW_URL"\n''',re.S)
-          replacement="""          PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'
-          echo "CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT"
-          """
-          src,n=pattern.subn(replacement,src,count=1)
-          if n!=1: raise SystemExit(f'expected exactly one redundant Cloudflare preview-list block, replaced {n}')
+          old="""          PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'
+echo \"CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT\"
+          echo \"PREVIEW_URL=$PREVIEW_URL\" >> \"$GITHUB_ENV\"
+"""
+          new="""          PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'
+          echo \"CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT\"
+          echo \"PREVIEW_URL=$PREVIEW_URL\" >> \"$GITHUB_ENV\"
+"""
+          if src.count(old)!=1: raise SystemExit(f'expected one malformed alias indentation block, found {src.count(old)}')
+          src=src.replace(old,new,1)
           Path('.release/ceiling-release.v1.2.2.patched.yml.txt').write_text(src)
           PY
           git add .release/ceiling-release.v1.2.2.patched.yml.txt
           git diff --cached --check
-          git commit -m 'Materialize atomic preview alias simplification'
+          git commit -m 'Materialize atomic preview alias YAML indentation repair'
           git push origin HEAD:release/v1.2.2-candidate
           echo "ATOMIC_PATCH_PAYLOAD_READY $(git rev-parse HEAD)"
