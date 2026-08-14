@@ -70,6 +70,49 @@ jobs:
           [ "$PHASE" = configure ] || exit 0
           npm run release:prepare
 
+      - name: Real Google unchanged tuple and synthetic reputation pipeline proof
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ "$PHASE" = configure ] || exit 0
+          test -n "${GOOGLE_PLACES_API_KEY:-}"; echo "::add-mask::$GOOGLE_PLACES_API_KEY"
+          PLACE_ID=$(node -p "require('./src/data/release.json').clinic.placeId")
+          curl --fail --silent --show-error -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' "https://places.googleapis.com/v1/places/$PLACE_ID" >/tmp/place-real.json
+          cp src/data/volatile-facts.json /tmp/volatile-real-proof.json
+          : >/tmp/reputation-real-output
+          GOOGLE_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" GITHUB_OUTPUT=/tmp/reputation-real-output node scripts/process-google-reputation.mjs /tmp/place-real.json /tmp/volatile-real-proof.json src/data/release.json
+          cat /tmp/reputation-real-output
+          test "$(awk -F= '$1=="changed"{print $2}' /tmp/reputation-real-output)" = false
+          cmp src/data/volatile-facts.json /tmp/volatile-real-proof.json
+          node scripts/test-reputation-observation.mjs
+          rm -rf /tmp/v122-reputation-fixture
+          git worktree add --detach /tmp/v122-reputation-fixture "$CANDIDATE_SHA"
+          (
+            cd /tmp/v122-reputation-fixture
+            npm ci --ignore-scripts
+            node - <<'NODE'
+          const fs=require('fs'),r=require('./src/data/release.json'),v=require('./src/data/volatile-facts.json');fs.writeFileSync('/tmp/place-synthetic.json',JSON.stringify({id:r.clinic.placeId,rating:Number(v.rating),userRatingCount:Number(v.reviewCount)+1,businessStatus:'OPERATIONAL'}));
+          NODE
+            GOOGLE_CHECKED_AT='2026-08-14T12:34:56Z' node scripts/process-google-reputation.mjs /tmp/place-synthetic.json
+            test "$(git status --porcelain --untracked-files=no | awk '{print $2}')" = 'src/data/volatile-facts.json'
+            export SOURCE_COMMIT="$CANDIDATE_SHA" CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH"
+            npm run build
+            node scripts/validate-visible-freeze.mjs dist/index.html
+            rm -rf /tmp/hf-live-writer-proof && mkdir -p /tmp/hf-live-writer-proof
+            printf 'core-sentinel\n' >/tmp/hf-live-writer-proof/entity_facts.csv
+            printf 'readme-sentinel\n' >/tmp/hf-live-writer-proof/README.md
+            CORE_BEFORE=$(sha256sum /tmp/hf-live-writer-proof/entity_facts.csv /tmp/hf-live-writer-proof/README.md)
+            node scripts/sync-hf-live-observations.mjs /tmp/hf-live-writer-proof
+            CORE_AFTER=$(sha256sum /tmp/hf-live-writer-proof/entity_facts.csv /tmp/hf-live-writer-proof/README.md)
+            test "$CORE_BEFORE" = "$CORE_AFTER"
+            test -f /tmp/hf-live-writer-proof/live_observations.csv
+            test -f /tmp/hf-live-writer-proof/live-observation-attestation.json
+          )
+          git worktree remove --force /tmp/v122-reputation-fixture
+          echo 'REAL_UNCHANGED_AND_SYNTHETIC_REPUTATION_PIPELINE_PASS'
+
       - name: Native-Git byte reproducibility with one canonical build-input tuple
         shell: bash
         run: |
