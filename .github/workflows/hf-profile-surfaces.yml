@@ -1,181 +1,44 @@
-name: Hugging Face profile authority surfaces
+name: Hugging Face profile authority verifier
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/hf-profile-surfaces.yml
-  workflow_run:
-    workflows: ["Atomic ceiling release"]
-    types: [completed]
+  schedule:
+    - cron: '53 4 * * 2'
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: doctor-ghezelbaash-hf-profile-surfaces
-  cancel-in-progress: true
-
 jobs:
-  enforce:
+  verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    env:
-      HF_DATASET: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
-      HF_ORG_CARD: doctor-ghezelbaash/README
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-
-      - name: Install Hugging Face Hub client
-        run: python -m pip install --disable-pip-version-check --quiet 'huggingface_hub>=0.34,<2'
-
-      - name: Enforce physician-first collections and organization card
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      - name: Verify physician-first public HF topology without mutation
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${HF_TOKEN:-}"
-          echo "::add-mask::$HF_TOKEN"
           python - <<'PY'
-          import os
-          from huggingface_hub import (
-              HfApi,
-              CommitOperationAdd,
-              add_collection_item,
-              create_collection,
-              list_collections,
-              update_collection_metadata,
-          )
-
-          token = os.environ['HF_TOKEN']
-          dataset = os.environ['HF_DATASET']
-          org_card = os.environ['HF_ORG_CARD']
-          api = HfApi(token=token)
-
-          title = 'Dr. Saeed Ghezelbash — Entity Knowledge Graph'
-          description = 'Public AI/ML knowledge-graph dataset for physician Saeed Ghezelbash (Wikidata Q140287622), linked to ghezelbaash.ir.'
-          note = (
-              "AI/ML distribution of Dr. Saeed Ghezelbash's canonical first-party knowledge-graph dataset. "
-              'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset · Wikidata: Q140287622.'
-          )
-
-          def ensure_collection(namespace):
-              existing = next((c for c in list_collections(owner=namespace, token=token) if c.title == title), None)
-              if existing is None:
-                  collection = create_collection(
-                      title=title,
-                      namespace=namespace,
-                      description=description,
-                      private=False,
-                      token=token,
-                  )
-                  print('COLLECTION_CREATED', namespace, collection.slug)
-              else:
-                  collection = existing
-                  print('COLLECTION_FOUND', namespace, collection.slug)
-
-              collection = update_collection_metadata(
-                  collection.slug,
-                  title=title,
-                  description=description,
-                  position=0,
-                  private=False,
-                  token=token,
-              )
-              add_collection_item(
-                  collection.slug,
-                  item_id=dataset,
-                  item_type='dataset',
-                  note=note,
-                  exists_ok=True,
-                  token=token,
-              )
-              print('COLLECTION_ENFORCED', namespace, collection.slug, dataset)
-              return collection.slug
-
-          personal = ensure_collection('Ghezelbaash')
-          organization = ensure_collection('doctor-ghezelbaash')
-
-          # Hugging Face Organization Cards are rendered from a public Space named README.
-          api.create_repo(
-              repo_id=org_card,
-              repo_type='space',
-              space_sdk='static',
-              private=False,
-              exist_ok=True,
-              token=token,
-          )
-          api.update_repo_settings(repo_id=org_card, repo_type='space', private=False)
-
-          card_readme = '''---
-          title: Dr. Saeed Ghezelbash
-          emoji: 🩺
-          colorFrom: blue
-          colorTo: indigo
-          sdk: static
-          pinned: false
-          license: cc-by-4.0
-          ---
-
-          # Dr. Saeed Ghezelbash — Physician Entity & Public AI/ML Knowledge Distribution
-
-          **doctor-ghezelbaash is the supporting Hugging Face publication namespace for Dr. Saeed Ghezelbash (Saeed Ghezelbash / سعید قزلباش), not a separate physician identity.**
-
-          - **Primary physician:** Dr. Saeed Ghezelbash — Wikidata `Q140287622`
-          - **Canonical website:** [ghezelbaash.ir](https://www.ghezelbaash.ir/)
-          - **Canonical Dataset IRI:** [graph.jsonld#dataset](https://www.ghezelbaash.ir/graph.jsonld#dataset)
-          - **Hugging Face Dataset:** [Dr. Saeed Ghezelbash Public Knowledge Graph](https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data)
-          - **Personal Hugging Face identity:** [Ghezelbaash](https://huggingface.co/Ghezelbaash)
-          - **ORCID:** [0009-0001-9346-8475](https://orcid.org/0009-0001-9346-8475)
-          - **Wikidata:** [Q140287622](https://www.wikidata.org/wiki/Q140287622)
-          - **GitHub source/build authority:** [medicaldoctor91/doctor-ghezelbaash](https://github.com/medicaldoctor91/doctor-ghezelbaash)
-
-          ## What this organization publishes
-
-          This namespace distributes machine-readable representations and AI/ML retrieval assets for the physician entity: JSON-LD, RDF/Turtle, CSV, Parquet-backed Dataset Viewer configs, Croissant/DCAT/VoID descriptors, provenance, entity-resolution material, question-answering data and retrieval-oriented enrichment.
-
-          The **canonical first-party factual authority remains the physician website and its canonical knowledge graph**. Hugging Face is the public AI/ML distribution and discovery surface for that same physician-first dataset lineage.
-          '''
-          # Dedent the YAML/Markdown while keeping the workflow source readable.
-          import textwrap
-          card_readme = textwrap.dedent(card_readme).lstrip()
-
-          index_html = '''<!doctype html>
-          <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width,initial-scale=1">
-            <title>Dr. Saeed Ghezelbash — Hugging Face AI/ML Distribution</title>
-            <meta name="description" content="Supporting Hugging Face AI/ML distribution namespace for physician Dr. Saeed Ghezelbash (Wikidata Q140287622).">
-            <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
-            <link rel="canonical" href="https://www.ghezelbaash.ir/">
-            <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Dr. Saeed Ghezelbash — Hugging Face AI/ML Distribution","about":{"@type":"Person","name":"Saeed Ghezelbash","alternateName":["Dr. Saeed Ghezelbash","دکتر سعید قزلباش"],"sameAs":["https://www.wikidata.org/wiki/Q140287622","https://orcid.org/0009-0001-9346-8475","https://huggingface.co/Ghezelbaash","https://www.ghezelbaash.ir/"]},"isPartOf":{"@type":"Dataset","@id":"https://www.ghezelbaash.ir/graph.jsonld#dataset","name":"Dr. Saeed Ghezelbash Public Knowledge Graph"}}</script>
-          </head>
-          <body>
-            <main>
-              <h1>Dr. Saeed Ghezelbash — AI/ML Knowledge Distribution</h1>
-              <p>This Hugging Face organization is a supporting publication namespace for the physician entity Dr. Saeed Ghezelbash.</p>
-              <p><a href="https://www.ghezelbaash.ir/">Canonical physician website</a> · <a href="https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data">Public Knowledge Graph dataset</a> · <a href="https://www.wikidata.org/wiki/Q140287622">Wikidata Q140287622</a></p>
-            </main>
-          </body>
-          </html>'''
-          index_html = textwrap.dedent(index_html).lstrip()
-
-          commit = api.create_commit(
-              repo_id=org_card,
-              repo_type='space',
-              token=token,
-              operations=[
-                  CommitOperationAdd(path_in_repo='README.md', path_or_fileobj=card_readme.encode('utf-8')),
-                  CommitOperationAdd(path_in_repo='index.html', path_or_fileobj=index_html.encode('utf-8')),
-              ],
-              commit_message='Enforce physician-first Hugging Face organization card',
-          )
-          print('ORG_CARD_ENFORCED', commit.commit_url)
-          print('HF_PROFILE_SURFACES_PASS', personal, organization, org_card)
+          import json,time,urllib.request
+          def text(url):
+              req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'ghezelbaash-hf-profile-verifier/1.0'})
+              with urllib.request.urlopen(req,timeout=45) as r:return r.read().decode('utf-8','replace')
+          dataset='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          meta=json.loads(text('https://huggingface.co/api/datasets/'+dataset+'?full=true&_='+str(time.time_ns())))
+          if meta.get('private') or meta.get('gated') not in (False,None,'false','auto'):
+              raise SystemExit('HF Dataset unexpectedly private/gated')
+          readme=text('https://huggingface.co/datasets/'+dataset+'/resolve/main/README.md?download=true&_='+str(time.time_ns()))
+          for token in ['Q140287622','Q140288589','Q140304972','Dr. Saeed Ghezelbash Public Knowledge Graph','AI/retrieval distribution']:
+              if token not in readme: raise SystemExit('Dataset authority topology missing '+token)
+          # Organization profile is supporting publication namespace; absence/mutation is never repaired here.
+          try:
+              org=text('https://huggingface.co/doctor-ghezelbaash/raw/main/README.md?_='+str(time.time_ns()))
+              for token in ['Q140287622','Q140288589']:
+                  if token not in org: raise SystemExit('HF organization card topology missing '+token)
+              org_ok=True
+          except Exception as e:
+              raise SystemExit('HF organization profile verification failed: '+str(e))
+          print(json.dumps({'HF_PROFILE_TOPOLOGY_PASS':True,'dataset':dataset,'organizationVerified':org_ok}))
           PY
