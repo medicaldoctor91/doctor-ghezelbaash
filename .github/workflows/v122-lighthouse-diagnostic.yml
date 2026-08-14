@@ -1,4 +1,4 @@
-name: Diagnose v1.2.2 390px CLS
+name: Diagnose v1.2.2 mobile Lighthouse
 
 on:
   push:
@@ -47,40 +47,43 @@ jobs:
           NODE
           )
           echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
-          echo "CLS_DIAGNOSTIC_TARGET candidate=$C preview=$PREVIEW_URL"
-      - name: Reproduce 390px CLS three times and dump culprits
+          echo "MOBILE_PERF_DIAGNOSTIC_TARGET candidate=$C preview=$PREVIEW_URL"
+      - name: Reproduce 390px three times with weighted score decomposition
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/lh390
+          mkdir -p /tmp/lhdiag
           for run in 1 2 3; do
-            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__cls390=${run}_$(date +%s%N)" \
+            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__perf390=${run}_$(date +%s%N)" \
               --quiet --only-categories=performance --output=json \
               --chrome-flags='--headless --no-sandbox --disable-gpu' \
               --form-factor=mobile --screenEmulation.mobile=true \
               --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=2 \
-              --output-path="/tmp/lh390/candidate-${run}.json"
+              --output-path="/tmp/lhdiag/candidate-${run}.json"
             node - "$run" <<'NODE'
-          const fs=require('fs');const run=process.argv[2],x=JSON.parse(fs.readFileSync(`/tmp/lh390/candidate-${run}.json`));
-          const perf=Math.round(x.categories.performance.score*100),cls=x.audits['cumulative-layout-shift']?.numericValue,lcp=x.audits['largest-contentful-paint']?.numericValue;
-          console.log('CLS390_SUMMARY',JSON.stringify({run:Number(run),performance:perf,cls,lcp}));
-          const ids=Object.keys(x.audits).filter(id=>/(layout|shift|cls)/i.test(id));
-          for(const id of ids){const a=x.audits[id];const items=a?.details?.items;console.log('CLS390_AUDIT',id,JSON.stringify({title:a?.title,score:a?.score,numericValue:a?.numericValue,displayValue:a?.displayValue,detailsType:a?.details?.type,items:Array.isArray(items)?items.slice(0,30):a?.details},null,2));}
-          for(const id of ['largest-contentful-paint-element','lcp-breakdown-insight','image-delivery-insight','font-display-insight']){const a=x.audits[id];if(a)console.log('CLS390_CONTEXT',id,JSON.stringify({title:a.title,score:a.score,numericValue:a.numericValue,displayValue:a.displayValue,details:a.details},null,2));}
+          const fs=require('fs');const run=process.argv[2],x=JSON.parse(fs.readFileSync(`/tmp/lhdiag/candidate-${run}.json`));
+          const ids=['first-contentful-paint','largest-contentful-paint','total-blocking-time','cumulative-layout-shift','speed-index','interactive','max-potential-fid'];
+          const metrics=Object.fromEntries(ids.map(id=>[id,{score:x.audits[id]?.score,numericValue:x.audits[id]?.numericValue,displayValue:x.audits[id]?.displayValue}]));
+          const weighted=(x.categories.performance.auditRefs||[]).filter(r=>r.weight>0).map(r=>({id:r.id,weight:r.weight,score:x.audits[r.id]?.score,numericValue:x.audits[r.id]?.numericValue,displayValue:x.audits[r.id]?.displayValue}));
+          console.log('MOBILE390_SCORE',JSON.stringify({run:Number(run),performance:Math.round(x.categories.performance.score*100),metrics,weighted}));
+          if(run==='1'){
+            for(const id of ['server-response-time','bootup-time','mainthread-work-breakdown','total-byte-weight','unused-css-rules','unused-javascript','render-blocking-insight','network-dependency-tree-insight','image-delivery-insight','document-latency-insight','lcp-discovery-insight','lcp-breakdown-insight','dom-size-insight','third-parties-insight']){const a=x.audits[id];if(a)console.log('MOBILE390_AUDIT',id,JSON.stringify({score:a.score,numericValue:a.numericValue,displayValue:a.displayValue,details:a.details},null,2));}
+            const req=x.audits['network-requests']?.details?.items||[];console.log('MOBILE390_NETWORK_TOP_BYTES',JSON.stringify(req.slice().sort((a,b)=>(b.transferSize||0)-(a.transferSize||0)).slice(0,20).map(r=>({url:r.url,resourceType:r.resourceType,transferSize:r.transferSize,resourceSize:r.resourceSize,startTime:r.startTime,endTime:r.endTime,statusCode:r.statusCode,mimeType:r.mimeType})),null,2));
+          }
           NODE
           done
-      - name: Compare neighboring widths once
+      - name: Neighbor widths weighted summary
         shell: bash
         run: |
           set -euo pipefail
-          for width in 360 380 390 400 410 420 430; do
-            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__cls_width=${width}_$(date +%s%N)" \
+          for width in 360 430; do
+            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__perf_width=${width}_$(date +%s%N)" \
               --quiet --only-categories=performance --output=json \
               --chrome-flags='--headless --no-sandbox --disable-gpu' \
               --form-factor=mobile --screenEmulation.mobile=true \
               --screenEmulation.width="$width" --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=2 \
-              --output-path="/tmp/lh390/w-${width}.json"
+              --output-path="/tmp/lhdiag/w-${width}.json"
             node - "$width" <<'NODE'
-          const fs=require('fs'),w=process.argv[2],x=JSON.parse(fs.readFileSync(`/tmp/lh390/w-${w}.json`));console.log('CLS_WIDTH_SWEEP',JSON.stringify({width:Number(w),performance:Math.round(x.categories.performance.score*100),cls:x.audits['cumulative-layout-shift']?.numericValue,lcp:x.audits['largest-contentful-paint']?.numericValue}));
+          const fs=require('fs'),w=process.argv[2],x=JSON.parse(fs.readFileSync(`/tmp/lhdiag/w-${w}.json`));const ids=['first-contentful-paint','largest-contentful-paint','total-blocking-time','cumulative-layout-shift','speed-index'];const metrics=Object.fromEntries(ids.map(id=>[id,x.audits[id]?.numericValue]));console.log('MOBILE_WIDTH_SCORE',JSON.stringify({width:Number(w),performance:Math.round(x.categories.performance.score*100),metrics}));
           NODE
           done
