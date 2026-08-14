@@ -21,8 +21,7 @@ jobs:
           npx --yes lighthouse@13.4.1 "$URL" --quiet --chrome-flags='--headless --no-sandbox --disable-gpu' --output=json --output-path=/tmp/lh.json
           node - <<'NODE'
           const fs=require('fs'),j=JSON.parse(fs.readFileSync('/tmp/lh.json')),a=j.audits;
-          const ids=['mainthread-work-breakdown','bootup-time','long-tasks','dom-size','render-blocking-insight','forced-reflow-insight','lcp-breakdown-insight','network-dependency-tree-insight','third-parties-insight','legacy-javascript-insight','unused-javascript','unused-css-rules','total-byte-weight','network-requests','diagnostics','largest-contentful-paint-element','critical-request-chains'];
-          console.log('PERF_SCORE',Math.round(j.categories.performance.score*100));
-          for(const id of ids){const x=a[id];if(!x)continue;const out={id,title:x.title,score:x.score,numericValue:x.numericValue,numericUnit:x.numericUnit,displayValue:x.displayValue,details:x.details};console.log('AUDIT',JSON.stringify(out));}
-          const timing=j.timing||{};console.log('LH_TIMING',JSON.stringify(timing));
+          console.log('PERF_METRICS',JSON.stringify({score:Math.round(j.categories.performance.score*100),fcp:a['first-contentful-paint']?.numericValue,lcp:a['largest-contentful-paint']?.numericValue,tbt:a['total-blocking-time']?.numericValue,cls:a['cumulative-layout-shift']?.numericValue,speedIndex:a['speed-index']?.numericValue,interactive:a['interactive']?.numericValue}));
+          const ids=['mainthread-work-breakdown','bootup-time','long-tasks','dom-size-insight','slow-css-selector-insight','render-blocking-insight','forced-reflow-insight','lcp-breakdown-insight','network-dependency-tree-insight','third-parties-insight','total-byte-weight','diagnostics'];
+          for(const id of ids){const x=a[id];if(!x)continue;console.log('AUDIT',JSON.stringify({id,title:x.title,score:x.score,numericValue:x.numericValue,numericUnit:x.numericUnit,displayValue:x.displayValue,details:x.details}));}
           NODE
