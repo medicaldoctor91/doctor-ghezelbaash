@@ -39,39 +39,29 @@ jobs:
           cd /tmp/v122-candidate
           python - <<'PY'
           from pathlib import Path
-
           p=Path('src/content-source/100-rc099.html'); s=p.read_text()
           bad='href="https://doi.org/10.5281/zenodo.21910785">https://doi.org/10.5281/zenodo.21930954</a>'
           good='href="https://doi.org/10.5281/zenodo.21930954">https://doi.org/10.5281/zenodo.21930954</a>'
           if bad in s: s=s.replace(bad,good,1)
           if bad in s: raise SystemExit('stale visible DOI href remains')
           p.write_text(s)
-
           p=Path('scripts/update-release-control.mjs'); s=p.read_text()
           s=s.replace("const rank={PREFLIGHT_STARTED:10,","const rank={SOURCE_PROMOTED:5,PREFLIGHT_STARTED:10,")
           marker="const now=new Date().toISOString();"
-          inject="""const now=new Date().toISOString();
-if(stage==='PREFLIGHT_STARTED'){
-  const sourceRelease=JSON.parse(await readFile('src/data/release.json','utf8'));
-  if(patch.targetVersion&&patch.targetVersion!==sourceRelease.release)throw new Error(`PREFLIGHT targetVersion/source drift ${patch.targetVersion} != ${sourceRelease.release}`);
-  patch.releaseDate=sourceRelease.dateModified;
-}
-"""
+          inject="const now=new Date().toISOString();\nif(stage==='PREFLIGHT_STARTED'){\n  const sourceRelease=JSON.parse(await readFile('src/data/release.json','utf8'));\n  if(patch.targetVersion&&patch.targetVersion!==sourceRelease.release)throw new Error(`PREFLIGHT targetVersion/source drift ${patch.targetVersion} != ${sourceRelease.release}`);\n  patch.releaseDate=sourceRelease.dateModified;\n}\n"
           if 'PREFLIGHT targetVersion/source drift' not in s:
               if marker not in s: raise SystemExit('release-control insertion marker missing')
               s=s.replace(marker,inject,1)
           p.write_text(s)
-
           p=Path('scripts/verify-release-proof-ledger.mjs'); s=p.read_text()
           old="if(String(x.recordId||'')!=='21930954'||x.versionDoi!=='10.5281/zenodo.21930954')throw new Error('Ledger Zenodo identity drift');"
           new="if(String(x.recordId||'')!==String(release.dataset?.zenodo?.recordId||'')||x.versionDoi!==release.dataset?.zenodo?.versionDoi||x.releaseDate!==release.dateModified)throw new Error('Ledger/source release identity drift');"
           if old not in s and new not in s: raise SystemExit('proof-ledger identity marker missing')
           s=s.replace(old,new)
           p.write_text(s)
-
           p=Path('scripts/validate-v122-contract.mjs'); s=p.read_text()
           marker="if(!content.includes('Google Maps')||!content.includes('google-maps-clinic-reputation-current'))fail('Visible reputation slot missing');"
-          insert="""if(!content.includes('Google Maps')||!content.includes('google-maps-clinic-reputation-current'))fail('Visible reputation slot missing');const archivedCitation=content.match(/Archived DOI release citation:<\\/strong>[\\s\\S]{0,1400}?href=\\\"https:\\/\\/doi\\.org\\/([^\\\"]+)\\\">https:\\/\\/doi\\.org\\/([^<]+)<\\/a>/);if(!archivedCitation||archivedCitation[1]!==Z.versionDoi||archivedCitation[2]!==Z.versionDoi)fail(`Visible archived DOI citation drift href=${archivedCitation?.[1]||'missing'} text=${archivedCitation?.[2]||'missing'} expected=${Z.versionDoi}`);"""
+          insert="if(!content.includes('Google Maps')||!content.includes('google-maps-clinic-reputation-current'))fail('Visible reputation slot missing');const archivedCitation=content.match(/Archived DOI release citation:<\\/strong>[\\s\\S]{0,1400}?href=\\\"https:\\/\\/doi\\.org\\/([^\\\"]+)\\\">https:\\/\\/doi\\.org\\/([^<]+)<\\/a>/);if(!archivedCitation||archivedCitation[1]!==Z.versionDoi||archivedCitation[2]!==Z.versionDoi)fail(`Visible archived DOI citation drift href=${archivedCitation?.[1]||'missing'} text=${archivedCitation?.[2]||'missing'} expected=${Z.versionDoi}`);"
           if 'Visible archived DOI citation drift' not in s:
               if marker not in s: raise SystemExit('validator visible reputation marker missing')
               s=s.replace(marker,insert,1)
