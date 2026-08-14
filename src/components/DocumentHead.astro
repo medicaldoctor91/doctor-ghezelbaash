@@ -9,8 +9,8 @@ const heroPreloadTag=mainHeadRaw.match(heroPreloadPattern)?.[0]??'';
 if(isMain&&(!viewportTag||!heroPreloadTag||mainHeadRaw.match(new RegExp(heroPreloadPattern.source,'gi'))?.length!==1))throw new Error('Main responsive Hero preload contract drift');
 const mainHeadWithoutCriticalHints=isMain?mainHeadRaw.replace(viewportTag,'').replace(heroPreloadTag,''):mainHeadRaw;
 ---
-{isMain ? <><Fragment set:html={viewportTag} /><Fragment set:html={heroPreloadTag} /><Fragment set:html={mainHeadWithoutCriticalHints} /></> : <>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+{isMain ? <><Fragment set:html={viewportTag} /><Fragment set:html={heroPreloadTag} /><slot /><Fragment set:html={mainHeadWithoutCriticalHints} /></> : <>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" /><slot />
 <title>{title}</title><meta name="description" content={description} /><meta name="robots" content={robots} />
 <meta name="author" content="دکتر سعید قزلباش" /><meta name="theme-color" content="#075244" />
 <link rel="canonical" href={canonicalURL} /><link rel="icon" href="/favicon.svg" type="image/svg+xml" />
