@@ -1,87 +1,58 @@
-name: Deploy canonical site through Cloudflare Git
+name: Verify canonical Cloudflare Git production
 
 on:
   push:
-    branches: [main]
-    paths:
-      - .github/workflows/cloudflare-pages-deploy.yml
-      - package.json
-      - package-lock.json
-      - astro.config.mjs
-      - tsconfig.json
-      - requirements-rdf.txt
-      - public/**
-      - scripts/**
-      - src/**
+    branches: [production/deploy]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: doctor-ghezelbaash-cloudflare-control-plane
-  cancel-in-progress: false
+  group: doctor-ghezelbaash-cloudflare-production-verifier
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 35
     env:
       ASTRO_TELEMETRY_DISABLED: '1'
       CF_PROJECT: doctor-ghezelbaash
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      CF_PRODUCTION_BRANCH: production/deploy
+      CF_PREVIEW_BRANCH: staging/deploy
+      CF_EXPECTED_ENVIRONMENT: production
     steps:
-      - name: Checkout trusted main source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
-      - name: Set up locked Node runtime
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.18.0
           cache: npm
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-
-      - name: Install locked dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Build and validate canonical distribution
-        run: npm run build
-
-      - name: Resume and prove native Cloudflare Git deployment
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      - run: npm ci --ignore-scripts
+      - name: Rebuild exact production commit
         shell: bash
         run: |
           set -euo pipefail
-          test -n "$CLOUDFLARE_API_TOKEN"
-          echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
+          npm run build
+      - name: Verify native Git deployment identity
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
-
-      - name: Reconcile the complete edge contract
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
-          ZONE_NAME: ghezelbaash.ir
-          CANONICAL_HOST: www.ghezelbaash.ir
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "$CLOUDFLARE_API_TOKEN"
-          echo "::add-mask::$CLOUDFLARE_API_TOKEN"
-          python scripts/configure-cloudflare-edge.py \
-            --apply \
-            --outcome edge-reconciliation.json
-
-      - name: Prove production bytes, headers, crawlers and redirects
-        env:
-          EDGE_RECONCILIATION_OUTCOME: edge-reconciliation.json
+      - name: Verify served bytes and production contract
         run: |
           set -euo pipefail
           node scripts/verify-cloudflare-pages-deployment.mjs
           npm run verify:production
+          node scripts/verify-current-serving.mjs
