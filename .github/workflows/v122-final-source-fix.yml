@@ -87,7 +87,7 @@ jobs:
           set -euo pipefail
           mapfile -t changed < <(git status --porcelain --untracked-files=all | sed -E 's/^.. //' | sort)
           printf '%s\n' "${changed[@]}"
-          allowed='^(\.release/release-request-v1\.2\.2\.json|CITATION\.cff|codemeta\.json|scripts/(rollover-release-date\.mjs|generate-projections\.mjs|finalize-dist\.mjs|validate-dist\.mjs|validate-v122-contract\.mjs)|src/content-source/100-rc099\.html|src/data/(release\.json|release-invariants\.json|visible-contract\.json|semantic/knowledge-graph\.jsonld))$'
+          allowed='^(\.release/release-request-v1\.2\.2\.json|CITATION\.cff|codemeta\.json|scripts/(rollover-release-date\.mjs|generate-projections\.mjs|finalize-dist\.mjs|validate-dist\.mjs|validate-v122-contract\.mjs|verify-production\.mjs)|src/content-source/100-rc099\.html|src/data/(release\.json|release-invariants\.json|visible-contract\.json|semantic/knowledge-graph\.jsonld))$'
           for f in "${changed[@]}"; do [[ "$f" =~ $allowed ]] || { echo "Unexpected atomic source path: $f"; exit 1; }; done
           test ${#changed[@]} -ge 8
           git config user.name ghezelbaash-v122-final
