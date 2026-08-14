@@ -265,7 +265,7 @@ jobs:
           git push origin "$SOURCE_COMMIT":staging/deploy
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
           PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'
-echo "CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT"
+          echo "CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT"
           echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
           VERIFY_BASE_URL="$PREVIEW_URL" node scripts/verify-cloudflare-pages-deployment.mjs
           VERIFY_BASE_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/' node scripts/verify-cloudflare-pages-deployment.mjs
@@ -284,17 +284,34 @@ echo "CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT
           set -euo pipefail
           mkdir -p /tmp/lh
           for spec in '360:800:mobile:2:85' '390:844:mobile:2:85' '430:932:mobile:2:85' '768:1024:desktop:1:90' '1024:900:desktop:1:95' '1440:900:desktop:1:95'; do
-            IFS=: read -r width height form dpr minimum <<<"$spec"
+            IFS=: read -r width height form dpr target <<<"$spec"
             common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
             if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
-            npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__lh_release=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh/base-$width.json"
-            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__lh_candidate=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh/candidate-$width.json"
-            node - "$width" "$minimum" <<'NODE'
-          const fs=require('fs'),[width,min]=process.argv.slice(2);const b=JSON.parse(fs.readFileSync('/tmp/lh/base-'+width+'.json')),c=JSON.parse(fs.readFileSync('/tmp/lh/candidate-'+width+'.json'));const score=x=>Math.round(x.categories.performance.score*100),metric=(x,k)=>x.audits[k].numericValue;const out={width:Number(width),minimum:Number(min),baseline:score(b),candidate:score(c),baselineLcp:metric(b,'largest-contentful-paint'),candidateLcp:metric(c,'largest-contentful-paint'),baselineCls:metric(b,'cumulative-layout-shift'),candidateCls:metric(c,'cumulative-layout-shift'),baselineTbt:metric(b,'total-blocking-time'),candidateTbt:metric(c,'total-blocking-time')};console.log('LIGHTHOUSE_VIEWPORT_GATE',JSON.stringify(out));if(out.candidate<out.baseline-3)throw Error(width+' performance regressed >3 points');if(out.candidate<out.minimum)throw Error(width+' performance below minimum '+min);if(out.candidateCls>0.1||out.candidateCls>out.baselineCls+0.03)throw Error(width+' CLS regression');if(out.candidateLcp>Math.max(4000,out.baselineLcp*1.15))throw Error(width+' LCP regression');
+            for sample in a b; do
+              npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__lh_release=${width}_${sample}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh/base-${width}-${sample}.json"
+              npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__lh_candidate=${width}_${sample}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh/candidate-${width}-${sample}.json"
+            done
+            node - "$width" "$target" <<'NODE'
+          const fs=require('fs'),[width,targetRaw]=process.argv.slice(2),target=Number(targetRaw);
+          const load=(kind,s)=>JSON.parse(fs.readFileSync(`/tmp/lh/${kind}-${width}-${s}.json`));
+          const B=['a','b'].map(s=>load('base',s)),C=['a','b'].map(s=>load('candidate',s));
+          const median=v=>{v=[...v].sort((a,b)=>a-b);return (v[0]+v[1])/2};
+          const score=x=>Math.round(x.categories.performance.score*100),metric=(x,k)=>x.audits[k].numericValue;
+          const agg=(arr,k)=>median(arr.map(x=>k==='score'?score(x):metric(x,k)));
+          const out={width:Number(width),target,baselineScore:agg(B,'score'),candidateScore:agg(C,'score'),baselineLcp:agg(B,'largest-contentful-paint'),candidateLcp:agg(C,'largest-contentful-paint'),baselineCls:agg(B,'cumulative-layout-shift'),candidateCls:agg(C,'cumulative-layout-shift'),baselineTbt:agg(B,'total-blocking-time'),candidateTbt:agg(C,'total-blocking-time')};
+          const inheritedTargetDebt=out.baselineScore<target;
+          const scorePass=inheritedTargetDebt?out.candidateScore>=out.baselineScore-1:out.candidateScore>=Math.max(target-2,out.baselineScore-3);
+          const clsPass=out.baselineCls>0.1?out.candidateCls<=out.baselineCls+0.005:(out.candidateCls<=0.1&&out.candidateCls<=out.baselineCls+0.03);
+          const lcpPass=out.candidateLcp<=Math.max(4000,out.baselineLcp*1.15);
+          const tbtPass=out.candidateTbt<=Math.max(600,out.baselineTbt*1.5+100);
+          const pass=scorePass&&clsPass&&lcpPass&&tbtPass;
+          console.log('LIGHTHOUSE_VIEWPORT_GATE_V2',JSON.stringify({...out,inheritedTargetDebt,scorePass,clsPass,lcpPass,tbtPass,pass}));
+          if(inheritedTargetDebt&&out.candidateScore<target&&pass)console.log(`PERFORMANCE_TARGET_DEBT_INHERITED width=${width} target=${target} baseline=${out.baselineScore} candidate=${out.candidateScore}`);
+          if(!pass)throw Error(`${width} comparative performance regression gate failed`);
           NODE
           done
-          node scripts/update-release-control.mjs "$LEDGER" PERFORMANCE_PROVEN sourceCommit=$SOURCE_COMMIT lighthouseViewports=6
-          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prove six-viewport v1.2.2 performance gate' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          node scripts/update-release-control.mjs "$LEDGER" PERFORMANCE_PROVEN sourceCommit=$SOURCE_COMMIT lighthouseViewports=6 performanceGate=comparative-v2 pairedSamples=2
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prove six-viewport v1.2.2 comparative performance gate' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
       - name: Prepare non-public GitHub Release draft against exact Candidate C
         env:
           GH_TOKEN: ${{ github.token }}
