@@ -6,6 +6,11 @@ must(w.includes('REPRO_SHA="$SOURCE_COMMIT"')&&w.includes('SOURCE_COMMIT="$REPRO
 must(cf.includes('preview_branch_excludes:[]')&&cf.includes('s.previewBranchExcludes.length===0'),'Cloudflare wildcard preview exclusion remains');
 must(!w.includes('/deployments?'),'Atomic workflow still performs redundant Cloudflare deployment-list lookup after exact helper proof');
 must(w.includes("PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'"),'Atomic workflow does not use stable staging branch alias after exact deployment proof');
+must(!w.includes('\necho "CLOUDFLARE_PREVIEW_ALIAS_SELECTED'),'Atomic workflow contains malformed preview alias YAML indentation');
+must(w.includes('LIGHTHOUSE_VIEWPORT_GATE_V2')&&w.includes('PERFORMANCE_TARGET_DEBT_INHERITED'),'Comparative performance gate v2 missing');
+must(w.includes("for sample in a b; do"),'Paired Lighthouse sampling missing');
+must(w.includes('performanceGate=comparative-v2 pairedSamples=2'),'Durable performance-gate policy identity missing');
+must(!w.includes("out.candidate<out.minimum")&&!w.includes('out.candidateCls>0.1||'),'Legacy false-negative absolute Lighthouse gate remains');
 const preview=w.indexOf('git push origin "$SOURCE_COMMIT":staging/deploy'),previewConfigure=w.lastIndexOf('node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure',preview);
 must(preview>0&&previewConfigure>0&&previewConfigure<preview,'Cloudflare Preview config is not proven before branch push');
 const production=w.indexOf('git push origin "$SOURCE_COMMIT":production/deploy'),productionConfigure=w.lastIndexOf('node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure',production);
@@ -19,4 +24,4 @@ must(w.includes('PERFORMANCE_PROVEN sourceCommit=$SOURCE_COMMIT'),'Performance p
 must(w.includes('PREVIEW_PROVEN sourceCommit=$SOURCE_COMMIT'),'Preview proof is not durable');
 must(w.includes('verify-release-proof-ledger.mjs "$LEDGER" "$SOURCE_COMMIT"'),'Irreversible gate lacks exact-commit proof ledger');
 must(w.indexOf('verify-release-proof-ledger.mjs "$LEDGER" "$SOURCE_COMMIT"')<w.indexOf('python scripts/zenodo_release.py publish'),'Irreversible proof ledger is not enforced before Zenodo publication');
-console.log(JSON.stringify({releaseControllerHardening:'PASS',step12:'canonical-input-bound',cloudflare:'include-only-preview+stable-alias+config-before-push',zenodo:'source-commit-bound-idempotent',hfTag:'immutable-peeled',ledger:'commit-bound-proofs-before-irreversible',runtimeHygiene:'PASS'}));
+console.log(JSON.stringify({releaseControllerHardening:'PASS',step12:'canonical-input-bound',cloudflare:'include-only-preview+stable-alias+config-before-push',performance:'paired-comparative-v2-no-false-negative-absolute-blocker',zenodo:'source-commit-bound-idempotent',hfTag:'immutable-peeled',ledger:'commit-bound-proofs-before-irreversible',runtimeHygiene:'PASS'}));
