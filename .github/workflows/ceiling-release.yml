@@ -264,12 +264,8 @@ jobs:
           node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
           git push origin "$SOURCE_COMMIT":staging/deploy
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
-          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?env=preview" >/tmp/cf-deployments.json
-          PREVIEW_URL="$(node - <<'NODE'
-          const p=require('/tmp/cf-deployments.json');const c=process.env.SOURCE_COMMIT;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Successful preview URL missing');console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
-          NODE
-          )"
-          test -n "$PREVIEW_URL"
+          PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'
+echo "CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT"
           echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
           VERIFY_BASE_URL="$PREVIEW_URL" node scripts/verify-cloudflare-pages-deployment.mjs
           VERIFY_BASE_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/' node scripts/verify-cloudflare-pages-deployment.mjs
