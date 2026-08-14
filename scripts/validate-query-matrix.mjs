@@ -37,10 +37,13 @@ for(const row of rows){
   for(const ref of stable)if(!evidenceIds.has(ref))fail(`Unresolved stable evidence ${ref} in ${key}`);
   const volatile=arr(row.volatile_signal_refs);
   if(volatile.length!==1||volatile[0]!==liveObservationId)fail(`Volatile signal topology drift ${key}`);
+  const targets=arr(row.service_ids);
+  if(new Set(targets).size!==targets.length)fail(`Duplicate service target in ${key}`);
+  for(const sid of targets)if(!serviceIds.has(sid))fail(`Unknown service target ${sid} in ${key}`);
   if(row.row_kind==='intent_alias')intentAliasRows++;
   else if(row.row_kind==='service_alias'){
     serviceAliasRows++;
-    if(!serviceIds.has(row.service_id))fail(`Unknown service_id ${row.service_id} in ${key}`);
+    if(targets.length===0)fail(`Service alias row lacks service target ${key}`);
     if(row.intent_family!=='service')fail(`Service alias intent_family drift ${key}`);
   }else fail(`Unknown row_kind ${row.row_kind} in ${key}`);
 }
@@ -54,7 +57,7 @@ if(intentAliasRows<minimumIntentRows)fail(`Intent alias coverage sparse ${intent
 const servicesWithAliases=publishable.filter(s=>arr(s.aliases).some(a=>String(a).trim()));
 if(policy.serviceAliasCoverage?.enabled){
   for(const service of servicesWithAliases){
-    const serviceRows=rows.filter(r=>r.row_kind==='service_alias'&&r.service_id===service.id);
+    const serviceRows=rows.filter(r=>arr(r.service_ids).includes(service.id));
     if(!serviceRows.length)fail(`Service alias coverage missing ${service.id}`);
     for(const alias of [...new Set(arr(service.aliases).map(x=>String(x).trim()).filter(Boolean))]){
       if(!serviceRows.some(r=>r.query===alias))fail(`Exact canonical service alias missing ${service.id}: ${alias}`);
@@ -63,6 +66,7 @@ if(policy.serviceAliasCoverage?.enabled){
 }
 
 if(rows.some(r=>arr(r.stable_evidence_refs).includes(liveObservationId)))fail('Mutable live observation leaked into stable evidence lane');
+const coveredServices=new Set(rows.flatMap(r=>arr(r.service_ids)));
 console.log(JSON.stringify({
   valid:true,
   file:path.relative(root,target),
@@ -70,7 +74,7 @@ console.log(JSON.stringify({
   rows:rows.length,
   intentAliasRows,
   serviceAliasRows,
-  servicesWithAliasCoverage:new Set(rows.filter(r=>r.row_kind==='service_alias').map(r=>r.service_id)).size,
+  servicesWithAliasCoverage:coveredServices.size,
   expectedServicesWithAliases:servicesWithAliases.length,
   rowsWithStableEvidence:rows.filter(r=>arr(r.stable_evidence_refs).length>0).length,
   stableEvidenceRegistrySize:evidenceIds.size,
