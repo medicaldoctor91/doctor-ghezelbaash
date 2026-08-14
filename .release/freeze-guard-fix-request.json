@@ -1,0 +1,5 @@
+{
+  "target": "release/v1.2.2-candidate",
+  "requestedAt": "2026-08-14T11:22:00Z",
+  "purpose": "fail-closed-idempotent-release-freeze"
+}
