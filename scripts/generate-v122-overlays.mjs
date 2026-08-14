@@ -197,12 +197,30 @@ for(const service of publishableServices){
   }
 }
 
-const dedup=[...new Map(rows.map(r=>[`${r.language}|${r.query}`,r])).values()];
+const mergedRows=new Map();
+for(const row of rows){
+  const key=`${row.language}|${row.query}`;
+  const serviceIds=[...new Set([...(arr(row.service_ids)),...(row.service_id?[row.service_id]:[])])];
+  const serviceFamilies=[...new Set([...(arr(row.service_families)),...(row.service_family?[row.service_family]:[])])];
+  const normalized={...row,service_ids:serviceIds,service_families:serviceFamilies};
+  delete normalized.service_id;delete normalized.service_family;
+  const prior=mergedRows.get(key);
+  if(!prior){mergedRows.set(key,normalized);continue;}
+  const preferIntent=prior.row_kind==='intent_alias'?prior:normalized.row_kind==='intent_alias'?normalized:prior;
+  const other=preferIntent===prior?normalized:prior;
+  mergedRows.set(key,{...preferIntent,
+    service_ids:[...new Set([...arr(preferIntent.service_ids),...arr(other.service_ids)])],
+    service_families:[...new Set([...arr(preferIntent.service_families),...arr(other.service_families)])],
+    stable_evidence_refs:[...new Set([...arr(preferIntent.stable_evidence_refs),...arr(other.stable_evidence_refs)])],
+    volatile_signal_refs:[...new Set([...arr(preferIntent.volatile_signal_refs),...arr(other.volatile_signal_refs)])]
+  });
+}
+const dedup=[...mergedRows.values()];
 const missingEvidence=dedup.filter(r=>!r.stable_evidence_refs?.length);
 if(missingEvidence.length)throw new Error(`Query Matrix rows missing stable evidence: ${missingEvidence.length}`);
 for(const row of dedup)for(const ref of row.stable_evidence_refs)if(!evidenceById.has(ref))throw new Error(`Query Matrix unresolved evidence ref ${ref}`);
 const servicesWithAliases=publishableServices.filter(s=>arr(s.aliases).some(x=>String(x).trim())).map(s=>s.id);
-const uncoveredServices=servicesWithAliases.filter(s=>!dedup.some(r=>r.row_kind==='service_alias'&&r.service_id===s));
+const uncoveredServices=servicesWithAliases.filter(s=>!dedup.some(r=>arr(r.service_ids).includes(s)));
 if(uncoveredServices.length)throw new Error(`Query Matrix service alias coverage missing ${uncoveredServices.length} services`);
 
 await write('src/data/projections/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
@@ -234,7 +252,7 @@ const matrix={
   queryRows:dedup.length,
   intentAliasRows:dedup.filter(r=>r.row_kind==='intent_alias').length,
   serviceAliasRows:dedup.filter(r=>r.row_kind==='service_alias').length,
-  servicesWithAliasCoverage:new Set(dedup.filter(r=>r.row_kind==='service_alias').map(r=>r.service_id)).size,
+  servicesWithAliasCoverage:new Set(dedup.flatMap(r=>arr(r.service_ids))).size,
   serviceCount:registered.size,
   medicalReviewedAt:reviewedAt,
   reputation:{rating:Number(rating),reviewCount:Number(reviewCount),observedAt}
