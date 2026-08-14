@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXPERIMENT_BRANCH: tmp/v122-mobile-critical-path-experiment
+  EXPERIMENT_BRANCH: tmp/v122-critical-css-order-experiment
   STAGING_BRANCH: staging/deploy
   CF_PROJECT: doctor-ghezelbaash
   CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: tmp/v122-mobile-critical-path-experiment
+          ref: tmp/v122-critical-css-order-experiment
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -45,7 +45,7 @@ jobs:
         run: |
           set -euo pipefail
           EXPERIMENT_SHA=$(git rev-parse HEAD)
-          test "$EXPERIMENT_SHA" = '2541b0dadd87f7c9a6c33bc1183697c5cd34eded'
+          test "$EXPERIMENT_SHA" = 'fa8c5424755d503e0741ad2abac8225f597f92b6'
           git fetch origin "$STAGING_BRANCH" release/v1.2.2-candidate
           test "$(git rev-parse origin/$STAGING_BRANCH)" = "$EXPERIMENT_SHA"
           test "$(git rev-parse origin/release/v1.2.2-candidate)" = "$BASE_CANDIDATE_SHA"
