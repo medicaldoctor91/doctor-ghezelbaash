@@ -34,6 +34,9 @@ jobs:
         with:
           node-version: 24.18.0
           cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
       - name: Resolve exact candidate
         shell: bash
         run: |
@@ -43,8 +46,19 @@ jobs:
           C=$(git rev-parse HEAD)
           test "$(git rev-parse origin/staging/deploy)" = "$C"
           echo "CANDIDATE_SHA=$C" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")" >> "$GITHUB_ENV"
           echo "EXACT_PREVIEW_REF_PASS candidate=$C"
       - run: npm ci --ignore-scripts
+      - name: Build exact local candidate bytes required by remote verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_COMMIT="$CANDIDATE_SHA" CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" SOURCE_DATE_EPOCH
+          npm run build
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          test -f dist/answers.txt
+          test -f dist/graph.jsonld
+          echo 'LOCAL_EXACT_DIST_FOR_PREVIEW_VERIFY_PASS'
       - name: Prove controller and exact native Cloudflare deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
