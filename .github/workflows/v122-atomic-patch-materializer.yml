@@ -29,16 +29,18 @@ jobs:
           git config user.email actions@users.noreply.github.com
           python - <<'PY'
           from pathlib import Path
+          import re
           src=Path('.github/workflows/ceiling-release.yml').read_text()
-          old='pages/projects/$CF_PROJECT/deployments?per_page=50'
-          new='pages/projects/$CF_PROJECT/deployments?env=preview'
-          if src.count(old)!=1: raise SystemExit(f'expected exactly one old Cloudflare deployment-list query, found {src.count(old)}')
-          src=src.replace(old,new,1)
-          src=src.replace('tag_created=false','tag_state=exact-or-created-on-publish')
+          pattern=re.compile(r'''          curl --fail --silent --show-error -H "Authorization: Bearer \$CLOUDFLARE_API_TOKEN" "https://api\.cloudflare\.com/client/v4/accounts/\$CLOUDFLARE_ACCOUNT_ID/pages/projects/\$CF_PROJECT/deployments\?env=preview" >/tmp/cf-deployments\.json\n          PREVIEW_URL="\$\(node - <<'NODE'\n.*?          \)"\n          test -n "\$PREVIEW_URL"\n''',re.S)
+          replacement="""          PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'
+          echo "CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT"
+"""
+          src,n=pattern.subn(replacement,src,count=1)
+          if n!=1: raise SystemExit(f'expected exactly one redundant Cloudflare preview-list block, replaced {n}')
           Path('.release/ceiling-release.v1.2.2.patched.yml.txt').write_text(src)
           PY
           git add .release/ceiling-release.v1.2.2.patched.yml.txt
           git diff --cached --check
-          git commit -m 'Materialize atomic preview-list compatibility fix'
+          git commit -m 'Materialize atomic preview alias simplification'
           git push origin HEAD:release/v1.2.2-candidate
           echo "ATOMIC_PATCH_PAYLOAD_READY $(git rev-parse HEAD)"
