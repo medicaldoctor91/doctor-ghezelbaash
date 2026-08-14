@@ -13,11 +13,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  EXPERIMENT_BRANCH: tmp/v122-critical-css-order-experiment
+  EXPERIMENT_BRANCH: tmp/v122-responsive-media-experiment
   STAGING_BRANCH: staging/deploy
   CF_PROJECT: doctor-ghezelbaash
   CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
   BASE_CANDIDATE_SHA: 2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb
+  EXPERIMENT_SHA_PIN: 5d8b1e926c49bcd4f638df6441db0715951f3641
   BASE_CANDIDATE_URL: https://885cc5a5.doctor-ghezelbaash.pages.dev/
 
 jobs:
@@ -27,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: tmp/v122-critical-css-order-experiment
+          ref: tmp/v122-responsive-media-experiment
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -38,14 +39,14 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci --ignore-scripts
-      - name: Resolve and prove exact experiment Preview deployment
+      - name: Resolve and prove exact responsive-media Preview deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
           EXPERIMENT_SHA=$(git rev-parse HEAD)
-          test "$EXPERIMENT_SHA" = 'fa8c5424755d503e0741ad2abac8225f597f92b6'
+          test "$EXPERIMENT_SHA" = "$EXPERIMENT_SHA_PIN"
           git fetch origin "$STAGING_BRANCH" release/v1.2.2-candidate
           test "$(git rev-parse origin/$STAGING_BRANCH)" = "$EXPERIMENT_SHA"
           test "$(git rev-parse origin/release/v1.2.2-candidate)" = "$BASE_CANDIDATE_SHA"
@@ -68,7 +69,7 @@ jobs:
           export CANDIDATE_SHA="$EXPERIMENT_SHA" SOURCE_COMMIT="$EXPERIMENT_SHA" CF_PAGES_COMMIT_SHA="$EXPERIMENT_SHA"
           VERIFY_BASE_URL="$EXPERIMENT_URL" node scripts/verify-cloudflare-pages-deployment.mjs
           VERIFY_BASE_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/' node scripts/verify-cloudflare-pages-deployment.mjs
-          echo "EXPERIMENT_EXACT_PREVIEW_BYTES_PASS sha=$EXPERIMENT_SHA url=$EXPERIMENT_URL"
+          echo "RESPONSIVE_MEDIA_EXACT_PREVIEW_BYTES_PASS sha=$EXPERIMENT_SHA url=$EXPERIMENT_URL"
       - name: Paired repeated mobile comparison against exact Candidate Preview
         shell: bash
         run: |
@@ -78,7 +79,7 @@ jobs:
             for run in 1 2 3; do
               for side in base experiment; do
                 if [ "$side" = base ]; then URL="$BASE_CANDIDATE_URL"; else URL="$EXPERIMENT_URL"; fi
-                npx --yes lighthouse@13.4.1 "${URL}?__paired=${width}_${run}_${side}_$(date +%s%N)" \
+                npx --yes lighthouse@13.4.1 "${URL}?__paired_media=${width}_${run}_${side}_$(date +%s%N)" \
                   --quiet --only-categories=performance --output=json \
                   --chrome-flags='--headless --no-sandbox --disable-gpu' \
                   --form-factor=mobile --screenEmulation.mobile=true \
@@ -86,14 +87,14 @@ jobs:
                   --output-path="/tmp/lh-paired/${side}-${width}-${run}.json"
               done
               node - "$width" "$run" <<'NODE'
-          const fs=require('fs'),[w,r]=process.argv.slice(2);const read=s=>JSON.parse(fs.readFileSync(`/tmp/lh-paired/${s}-${w}-${r}.json`));const metric=(x,id)=>x.audits[id]?.numericValue;const row=x=>({score:Math.round(x.categories.performance.score*100),fcp:metric(x,'first-contentful-paint'),lcp:metric(x,'largest-contentful-paint'),tbt:metric(x,'total-blocking-time'),cls:metric(x,'cumulative-layout-shift'),speedIndex:metric(x,'speed-index')});console.log('PAIRED_MOBILE_RUN',JSON.stringify({width:Number(w),run:Number(r),base:row(read('base')),experiment:row(read('experiment'))}));
+          const fs=require('fs'),[w,r]=process.argv.slice(2);const read=s=>JSON.parse(fs.readFileSync(`/tmp/lh-paired/${s}-${w}-${r}.json`));const metric=(x,id)=>x.audits[id]?.numericValue;const row=x=>({score:Math.round(x.categories.performance.score*100),fcp:metric(x,'first-contentful-paint'),lcp:metric(x,'largest-contentful-paint'),tbt:metric(x,'total-blocking-time'),cls:metric(x,'cumulative-layout-shift'),speedIndex:metric(x,'speed-index')});console.log('PAIRED_RESPONSIVE_MEDIA_RUN',JSON.stringify({width:Number(w),run:Number(r),base:row(read('base')),experiment:row(read('experiment'))}));
           NODE
             done
           done
           node <<'NODE'
-          const fs=require('fs');const widths=[360,390,430],runs=[1,2,3],metric=(x,id)=>x.audits[id]?.numericValue;const median=a=>a.slice().sort((x,y)=>x-y)[Math.floor(a.length/2)];const summary=[];let hardFail=false;for(const w of widths){const rows={};for(const side of ['base','experiment']){const docs=runs.map(r=>JSON.parse(fs.readFileSync(`/tmp/lh-paired/${side}-${w}-${r}.json`)));rows[side]={scoreMedian:median(docs.map(x=>Math.round(x.categories.performance.score*100))),scoreMin:Math.min(...docs.map(x=>Math.round(x.categories.performance.score*100))),fcpMedian:median(docs.map(x=>metric(x,'first-contentful-paint'))),lcpMedian:median(docs.map(x=>metric(x,'largest-contentful-paint'))),tbtMedian:median(docs.map(x=>metric(x,'total-blocking-time'))),clsMax:Math.max(...docs.map(x=>metric(x,'cumulative-layout-shift')))};}summary.push({width:w,...rows});if(rows.experiment.scoreMedian<85||rows.experiment.clsMax>0.1||rows.experiment.lcpMedian>4000)hardFail=true;}console.log('PAIRED_MOBILE_SUMMARY',JSON.stringify(summary,null,2));if(hardFail)throw Error('Experiment did not robustly clear mobile floor');
+          const fs=require('fs');const widths=[360,390,430],runs=[1,2,3],metric=(x,id)=>x.audits[id]?.numericValue;const median=a=>a.slice().sort((x,y)=>x-y)[Math.floor(a.length/2)];const summary=[];let hardFail=false;for(const w of widths){const rows={};for(const side of ['base','experiment']){const docs=runs.map(r=>JSON.parse(fs.readFileSync(`/tmp/lh-paired/${side}-${w}-${r}.json`)));rows[side]={scoreMedian:median(docs.map(x=>Math.round(x.categories.performance.score*100))),scoreMin:Math.min(...docs.map(x=>Math.round(x.categories.performance.score*100))),fcpMedian:median(docs.map(x=>metric(x,'first-contentful-paint'))),lcpMedian:median(docs.map(x=>metric(x,'largest-contentful-paint'))),tbtMedian:median(docs.map(x=>metric(x,'total-blocking-time'))),clsMax:Math.max(...docs.map(x=>metric(x,'cumulative-layout-shift')))};}summary.push({width:w,...rows});if(rows.experiment.scoreMedian<85||rows.experiment.clsMax>0.1||rows.experiment.lcpMedian>4000||rows.experiment.scoreMedian<rows.base.scoreMedian-1)hardFail=true;}console.log('PAIRED_RESPONSIVE_MEDIA_SUMMARY',JSON.stringify(summary,null,2));if(hardFail)throw Error('Responsive-media experiment did not robustly clear mobile floor/no-regression gate');
           NODE
-      - name: Full six viewport experiment-only ceiling check
+      - name: Full six viewport responsive-media ceiling check
         shell: bash
         run: |
           set -euo pipefail
@@ -101,9 +102,9 @@ jobs:
             IFS=: read -r width height form dpr minimum <<<"$spec"
             common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
             if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
-            npx --yes lighthouse@13.4.1 "${EXPERIMENT_URL}?__six=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-paired/six-$width.json"
+            npx --yes lighthouse@13.4.1 "${EXPERIMENT_URL}?__six_media=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-paired/six-$width.json"
             node - "$width" "$minimum" <<'NODE'
-          const fs=require('fs'),[w,min]=process.argv.slice(2),x=JSON.parse(fs.readFileSync(`/tmp/lh-paired/six-${w}.json`));const out={width:Number(w),minimum:Number(min),score:Math.round(x.categories.performance.score*100),fcp:x.audits['first-contentful-paint']?.numericValue,lcp:x.audits['largest-contentful-paint']?.numericValue,tbt:x.audits['total-blocking-time']?.numericValue,cls:x.audits['cumulative-layout-shift']?.numericValue};console.log('EXPERIMENT_SIX_VIEWPORT',JSON.stringify(out));if(out.score<Number(min)||out.cls>0.1||out.lcp>4000)throw Error(`${w} experiment ceiling failed`);
+          const fs=require('fs'),[w,min]=process.argv.slice(2),x=JSON.parse(fs.readFileSync(`/tmp/lh-paired/six-${w}.json`));const req=x.audits['network-requests']?.details?.items||[];const selectedHero=req.find(r=>/saeed-ghezelbash-portrait-(720|800)\.[0-9a-f]{12}\.avif/.test(r.url||''));const out={width:Number(w),minimum:Number(min),score:Math.round(x.categories.performance.score*100),fcp:x.audits['first-contentful-paint']?.numericValue,lcp:x.audits['largest-contentful-paint']?.numericValue,tbt:x.audits['total-blocking-time']?.numericValue,cls:x.audits['cumulative-layout-shift']?.numericValue,selectedResponsiveHero:selectedHero?selectedHero.url:null};console.log('RESPONSIVE_MEDIA_SIX_VIEWPORT',JSON.stringify(out));if(out.score<Number(min)||out.cls>0.1||out.lcp>4000)throw Error(`${w} responsive-media ceiling failed`);if(Number(w)>=390&&Number(w)<=430&&!out.selectedResponsiveHero)throw Error(`${w} did not select calibrated 720/800 Hero AVIF`);
           NODE
           done
-          echo 'EXPERIMENT_FULL_SIX_VIEWPORT_PASS'
+          echo 'RESPONSIVE_MEDIA_FULL_SIX_VIEWPORT_PASS'
