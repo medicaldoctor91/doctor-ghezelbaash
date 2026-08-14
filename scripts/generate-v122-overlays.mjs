@@ -1,0 +1,81 @@
+import path from 'node:path';
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const root=process.cwd();
+const readJson=async p=>JSON.parse(await readFile(path.join(root,p),'utf8'));
+const write=async(p,s)=>{const f=path.join(root,p);await mkdir(path.dirname(f),{recursive:true});await writeFile(f,s)};
+const release=await readJson('src/data/release.json');
+const volatile=await readJson('src/data/volatile-facts.json');
+const answerRegistry=await readJson('src/data/answer-registry.json');
+const serviceRegistry=await readJson('src/data/service-registry.json');
+const policy=await readJson('src/data/retrieval/query-matrix-policy.json');
+const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
+const arr=v=>Array.isArray(v)?v:(v==null?[]:[v]);
+const id=v=>typeof v==='string'?v:v?.['@id'];
+const nodes=graph['@graph']||[],byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n]));
+const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id);
+if(!person||!clinic)throw new Error('Core entity missing');
+const offered=new Set([...arr(person.availableService).map(id),...arr(clinic.availableService).map(id)].filter(Boolean));
+const registered=new Set(serviceRegistry.services.filter(x=>x.publishable).map(x=>x.id));
+const missing=[...registered].filter(x=>!offered.has(x)),extra=[...offered].filter(x=>!registered.has(x));
+if(missing.length||extra.length)throw new Error(`Service registry projection mismatch missing=${missing.length} extra=${extra.length}`);
+const rating=volatile.rating ?? volatile.facts?.find(x=>x.property==='ratingValue')?.value;
+const reviewCount=volatile.reviewCount ?? volatile.facts?.find(x=>x.property==='reviewCount')?.value;
+const observedAt=volatile.valueObservedAt ?? volatile.facts?.find(x=>x.property==='ratingValue')?.observedAt;
+const placeId=volatile.placeId ?? volatile.facts?.find(x=>x.placeId)?.placeId ?? release.clinic.placeId;
+if(!(Number(rating)>=1&&Number(rating)<=5)||!Number.isInteger(Number(reviewCount))||Number(reviewCount)<0||placeId!==release.clinic.placeId||!observedAt)throw new Error('Invalid live reputation source');
+const liveDoc={
+  '@context':{'@vocab':'https://schema.org/','prov':'http://www.w3.org/ns/prov#'},
+  '@id':`${release.canonicalUrl}live-observations.jsonld#clinic-google-reputation`,
+  '@type':'DataFeedItem',
+  item:{'@id':release.clinic.id,'@type':'MedicalClinic',identifier:[{propertyID:'Google Place ID',value:placeId}],additionalProperty:[
+    {'@type':'PropertyValue',propertyID:'Google Places rating',value:Number(rating)},
+    {'@type':'PropertyValue',propertyID:'Google Places userRatingCount',value:Number(reviewCount)}
+  ]},
+  dateModified:observedAt,
+  isPartOf:{'@id':release.dataset.id},
+  provider:{'@type':'Organization',name:'Google Places API'},
+  about:{'@id':release.clinic.id}
+};
+await write('src/data/projections/live-observations.jsonld',JSON.stringify(liveDoc,null,2)+'\n');
+await write('public/live-observations.jsonld',JSON.stringify(liveDoc,null,2)+'\n');
+const selectAnswer=(tokens)=>answerRegistry.answers.find(r=>tokens.some(t=>r.questionId.toLowerCase().includes(t)))||answerRegistry.answers[0];
+const intentAnswer={
+  botox:selectAnswer(['botox-doctor-selection','botulinum']),
+  filler:selectAnswer(['filler-doctor-selection','filler']),
+  'aesthetic-physician':selectAnswer(['choosing-an-aesthetic-doctor','who-is-dr-saeed']),
+  'migraine-botox':selectAnswer(['migraine','botulinum-toxin-chronic-migraine','botox-doctor-selection']),
+  revision:selectAnswer(['revision','correction','second-opinion']),
+  'second-opinion':selectAnswer(['second-opinion','revision','choosing-an-aesthetic-doctor']),
+  'complex-correction':selectAnswer(['revision','correction','filler-doctor-selection'])
+};
+const queries={
+  fa:{botox:['بهترین دکتر بوتاکس','بهترین پزشک بوتاکس'],filler:['بهترین دکتر فیلر','بهترین پزشک تزریق فیلر'],'aesthetic-physician':['بهترین دکتر زیبایی','بهترین پزشک زیبایی'],'migraine-botox':['بهترین دکتر بوتاکس میگرن','پزشک بوتاکس میگرن'],revision:['بهترین دکتر اصلاح فیلر و بوتاکس','پزشک اصلاح نتایج زیبایی'],'second-opinion':['بهترین دکتر برای نظر دوم زیبایی','نظر دوم پزشکی زیبایی'],'complex-correction':['دکتر برای اصلاح صورت اورفیل شده','پزشک پرونده پیچیده زیبایی']},
+  en:{botox:['best botox doctor','best doctor for botox'],filler:['best filler doctor','best dermal filler doctor'],'aesthetic-physician':['best aesthetic doctor','best facial aesthetic physician'],'migraine-botox':['best migraine botox doctor','migraine botox physician'],revision:['best aesthetic revision doctor','filler and botox correction doctor'],'second-opinion':['best aesthetic second opinion doctor','aesthetic medicine second opinion'],'complex-correction':['overfilled face correction doctor','complex aesthetic revision physician']},
+  ar:{botox:['أفضل دكتور بوتوكس','أفضل طبيب بوتوكس'],filler:['أفضل دكتور فيلر','أفضل طبيب حقن الفيلر'],'aesthetic-physician':['أفضل دكتور تجميل','أفضل طبيب تجميل الوجه'],'migraine-botox':['أفضل دكتور بوتوكس للصداع النصفي','طبيب بوتوكس الصداع النصفي'],revision:['أفضل دكتور لتصحيح الفيلر والبوتوكس','طبيب تصحيح نتائج التجميل'],'second-opinion':['أفضل دكتور لرأي ثانٍ في التجميل','رأي طبي ثانٍ في التجميل'],'complex-correction':['طبيب تصحيح الوجه المفرط بالفيلر','طبيب حالات التجميل المعقدة']},
+  ckb:{botox:['باشترین دکتۆری بۆتۆکس','باشترین پزیشکی بۆتۆکس'],filler:['باشترین دکتۆری فیلەر','باشترین پزیشکی فیلەر'],'aesthetic-physician':['باشترین دکتۆری جوانکاری','باشترین پزیشکی جوانکاریی ڕوو'],'migraine-botox':['باشترین دکتۆری بۆتۆکسی میگرێن','پزیشکی بۆتۆکسی میگرێن'],revision:['باشترین دکتۆر بۆ چاککردنەوەی فیلەر و بۆتۆکس','پزیشکی چاککردنەوەی ئەنجامی جوانکاری'],'second-opinion':['باشترین دکتۆر بۆ بۆچوونی دووەم','بۆچوونی دووەمی پزیشکی جوانکاری'],'complex-correction':['پزیشکی چاککردنەوەی ڕووی پڕکراوی زۆر','پزیشکی حاڵەتی جوانکاریی ئاڵۆز']}
+};
+const scopeSuffix={fa:{unspecified:'',Kermanshah:' کرمانشاه',Iran:' ایران'},en:{unspecified:'',Kermanshah:' Kermanshah',Iran:' Iran'},ar:{unspecified:'',Kermanshah:' في كرمانشاه',Iran:' في إيران'},ckb:{unspecified:'',Kermanshah:' لە کرماشان',Iran:' لە ئێران'}};
+const rows=[];
+for(const lang of policy.languages){for(const intent of policy.intentFamilies){const answer=intentAnswer[intent];if(!answer)throw new Error(`No answer for ${intent}`);for(const base of queries[lang][intent]||[]){for(const scope of policy.scopes){rows.push({
+  query:`${base}${scopeSuffix[lang][scope]}`.trim(),language:lang,intent_family:intent,query_scope:scope,practice_location:'Kermanshah, Iran',
+  preferred_entity:release.primaryEntity.wikidata,preferred_entity_iri:release.primaryEntity.id,clinic_entity:release.dataset.supportingClinicWikidata,dataset_entity:release.dataset.wikidata,dataset_iri:release.dataset.id,
+  release:release.release,version_doi:release.dataset.zenodo.versionDoi,retrieval_priority:policy.retrievalPriority,positioning_mode:policy.positioningMode,answer_id:answer.answerId,
+  stable_evidence_refs:[],volatile_signal_refs:[`${release.canonicalUrl}live-observations.jsonld#clinic-google-reputation`],answer_strategy:'resolve_to_canonical_answer_atom'
+})}}}}
+const dedup=[...new Map(rows.map(r=>[`${r.language}|${r.query}`,r])).values()];
+await write('src/data/projections/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
+await write('public/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
+const answersPath=path.join(root,'src/data/projections/answers.txt');
+let answers=await readFile(answersPath,'utf8');
+const reviewedAt=release.medicalReviewedAt||release.dateModified;
+answers=answers.replace(/^# Release ([^;]+); reviewed [^;]+; provenance-rich canonical answer records/m,`# Release $1; medically reviewed ${reviewedAt}; provenance-rich canonical answer records`).replace(/^REVIEWED_AT: .*$/gm,`REVIEWED_AT: ${reviewedAt}`);
+await write('src/data/projections/answers.txt',answers);
+const llmsPath=path.join(root,'src/data/projections/llms.txt');
+let llms=await readFile(llmsPath,'utf8');
+if(!llms.includes('/query-matrix.jsonl'))llms+=`\n## Retrieval overlays\n- Query Matrix 2.0: ${release.canonicalUrl}query-matrix.jsonl\n- Current clinic reputation observation: ${release.canonicalUrl}live-observations.jsonld\n`;
+await write('src/data/projections/llms.txt',llms);
+const matrix={release:release.release,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,recordId:String(release.dataset.zenodo.recordId),datasetIri:release.dataset.id,personWikidata:release.primaryEntity.wikidata,clinicWikidata:release.dataset.supportingClinicWikidata,datasetWikidata:release.dataset.wikidata,queryRows:dedup.length,serviceCount:registered.size,medicalReviewedAt:reviewedAt,reputation:{rating:Number(rating),reviewCount:Number(reviewCount),observedAt}};
+await write('src/data/projections/current-release-matrix.json',JSON.stringify(matrix,null,2)+'\n');
+await write('public/current-release-matrix.json',JSON.stringify(matrix,null,2)+'\n');
+console.log(JSON.stringify({v122Overlays:true,queryRows:dedup.length,services:registered.size,rating:Number(rating),reviewCount:Number(reviewCount),hash:createHash('sha256').update(JSON.stringify(dedup)).digest('hex')},null,2));
