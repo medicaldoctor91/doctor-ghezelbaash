@@ -1,0 +1,110 @@
+name: Current Google reputation refresh
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      PLACE_ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      CF_PROJECT: doctor-ghezelbaash
+      CF_PRODUCTION_BRANCH: production/deploy
+      CF_PREVIEW_BRANCH: staging/deploy
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - name: Read Google Places and update only on tuple change
+        id: places
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GOOGLE_PLACES_API_KEY:-}"
+          echo "::add-mask::$GOOGLE_PLACES_API_KEY"
+          curl --fail --silent --show-error \
+            -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" \
+            -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' \
+            "https://places.googleapis.com/v1/places/$PLACE_ID" > /tmp/place.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const place=JSON.parse(fs.readFileSync('/tmp/place.json'));
+          const src=JSON.parse(fs.readFileSync('src/data/volatile-facts.json'));
+          if(place.id!==process.env.PLACE_ID)throw Error('Google Place identity drift');
+          if(place.movedPlace||place.movedPlaceId)throw Error('Google Place moved/merged: reconciliation required');
+          if(!Number.isFinite(place.rating)||place.rating<1||place.rating>5||!Number.isInteger(place.userRatingCount)||place.userRatingCount<0)throw Error('Malformed Google reputation fields');
+          const changed=Number(src.rating)!==Number(place.rating)||Number(src.reviewCount)!==Number(place.userRatingCount);
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,`changed=${changed}\n`);
+          if(!changed){console.log('GOOGLE_REPUTATION_UNCHANGED',place.rating,place.userRatingCount);process.exit(0)}
+          const now=new Date().toISOString();src.rating=Number(place.rating);src.reviewCount=Number(place.userRatingCount);src.valueObservedAt=now;src.source='Google Places API (New)';src.placeId=place.id;src.release=JSON.parse(fs.readFileSync('src/data/release.json')).release;
+          src.facts=(src.facts||[]).map(x=>x.property==='ratingValue'?{...x,value:src.rating,observedAt:now,source:src.source}:x.property==='reviewCount'?{...x,value:src.reviewCount,observedAt:now,source:src.source}:x);
+          fs.writeFileSync('src/data/volatile-facts.json',JSON.stringify(src,null,2)+'\n');
+          console.log('GOOGLE_REPUTATION_CHANGED',src.rating,src.reviewCount,src.valueObservedAt,place.businessStatus||'UNKNOWN');
+          NODE
+      - name: Build, validate, freeze visible diff and commit current source
+        if: steps.places.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run release:prepare
+          npm run build
+          git diff --exit-code -- src/content-source src/data/semantic/knowledge-graph.jsonld src/data/service-registry.json src/data/answer-registry.json src/data/retrieval/query-matrix-policy.json .release/policy/hf-authority-contract.json
+          git config user.name ghezelbaash-reputation-bot
+          git config user.email actions@users.noreply.github.com
+          git add src/data/volatile-facts.json
+          git commit -m "Refresh live Google reputation observation"
+          LIVE_SHA="$(git rev-parse HEAD)"
+          echo "LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
+          git push origin HEAD:main
+          git push origin HEAD:production/deploy
+      - name: Prove native Cloudflare production deployment and purge canonical cache
+        if: steps.places.outputs.changed == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_COMMIT: ${{ env.LIVE_SHA }}
+          CF_EXPECTED_ENVIRONMENT: production
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+          python scripts/configure-cloudflare-edge.py --purge-cache-only
+          SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$LIVE_SHA" npm run build
+          node scripts/verify-current-serving.mjs
+      - name: Synchronize only Hugging Face live observations
+        if: steps.places.outputs.changed == 'true'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"
+          echo "::add-mask::$HF_TOKEN"
+          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-live
+          node scripts/sync-hf-live-observations.mjs .release/huggingface-live
+          git -C .release/huggingface-live config user.name ghezelbaash-reputation-bot
+          git -C .release/huggingface-live config user.email actions@users.noreply.github.com
+          git -C .release/huggingface-live add live_observations.csv live-observation-attestation.json
+          git -C .release/huggingface-live diff --cached --quiet || git -C .release/huggingface-live commit -m "Refresh current Google reputation observation"
+          git -C .release/huggingface-live push origin HEAD:main
+          node scripts/verify-current-serving.mjs
