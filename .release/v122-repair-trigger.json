@@ -1,8 +1,8 @@
 {
   "targetVersion": "1.2.2",
-  "requestedAt": "2026-08-15T03:18:00+03:30",
+  "requestedAt": "2026-08-15T03:22:00+03:30",
   "mode": "repair-only-no-publication",
   "preserveZenodoReservation": "10.5281/zenodo.21930954",
   "preserveZenodoRecordId": "21930954",
-  "runNonce": "repair-r2"
+  "runNonce": "repair-r3-source-control"
 }
