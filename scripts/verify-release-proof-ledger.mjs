@@ -9,5 +9,5 @@ if(x.candidateEpoch!==sourceCommit)throw new Error(`Ledger candidate epoch drift
 for(const stage of ['CANDIDATE_FROZEN','CANDIDATE_PROVEN','ZENODO_STAGED','PREVIEW_PROVEN','PERFORMANCE_PROVEN','GITHUB_RELEASE_DRAFT_READY']){
   const p=x.proofs?.[stage];if(!p||p.sourceCommit!==sourceCommit)throw new Error(`Missing exact-commit proof ${stage} for ${sourceCommit}`);
 }
-if(String(x.recordId||'')!=='21930954'||x.versionDoi!=='10.5281/zenodo.21930954')throw new Error('Ledger Zenodo identity drift');
+if(String(x.recordId||'')!==String(release.dataset?.zenodo?.recordId||'')||x.versionDoi!==release.dataset?.zenodo?.versionDoi||x.releaseDate!==release.dateModified)throw new Error('Ledger/source release identity drift');
 console.log(JSON.stringify({releaseProofLedger:'PASS',sourceCommit,proofs:Object.keys(x.proofs||{}).length,recordId:String(x.recordId),versionDoi:x.versionDoi}));
