@@ -6,7 +6,7 @@
   "packageManager": "npm@11.5.2",
   "scripts": {
     "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
-    "prepare:generated": "npm run media:sync && npm run rdf:deps && npm run rdf:generate && npm run generate",
+    "prepare:generated": "npm run media:sync && node scripts/migrate-release-reputation-snapshot.mjs && npm run rdf:deps && npm run rdf:generate && npm run generate",
     "dev": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "check": "npm run validate:release-contract && npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
     "generate": "node scripts/generate-projections.mjs && node scripts/generate-v122-overlays.mjs",
