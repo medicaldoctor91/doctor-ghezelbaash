@@ -1,0 +1,47 @@
+name: v1.2.2 one-shot GitHub Release draft lifecycle compiler
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/v122-compile-draft-lifecycle.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Compile current hardened workflow plus exact Draft lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/patch-v122-draft-lifecycle.py
+          python scripts/patch-v122-draft-lifecycle.py
+          git diff --check
+          grep -q 'GITHUB_RELEASE_DRAFT_READY_PASS' .github/workflows/ceiling-release.yml
+          grep -q 'Publish the pre-created GitHub Release against exact C' .github/workflows/ceiling-release.yml
+          mkdir -p .release/control-plane
+          cp .github/workflows/ceiling-release.yml .release/control-plane/ceiling-release.v1.2.2.draft-ready.yml.txt
+          sha256sum .release/control-plane/ceiling-release.v1.2.2.draft-ready.yml.txt
+      - name: Commit only compiled control artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          git restore .github/workflows/ceiling-release.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .release/control-plane/ceiling-release.v1.2.2.draft-ready.yml.txt
+          git diff --cached --check
+          git commit -m 'Compile exact v1.2.2 GitHub Release draft lifecycle'
+          git push origin HEAD:main
+          echo 'V122_DRAFT_LIFECYCLE_CONTROL_ARTIFACT_PASS'
