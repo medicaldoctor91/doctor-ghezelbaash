@@ -1,8 +1,8 @@
 {
   "targetVersion": "1.2.2",
   "baseCandidateSha": "2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb",
-  "experimentSha": "fa8c5424755d503e0741ad2abac8225f597f92b6",
+  "experimentSha": "5d8b1e926c49bcd4f638df6441db0715951f3641",
   "requestedAt": "2026-08-15",
-  "scope": "critical-css-order-paired-mobile-and-six-viewport-live-proof",
-  "nonce": "critical-css-order-live-004"
+  "scope": "responsive-avif-paired-mobile-and-six-viewport-live-proof",
+  "nonce": "responsive-avif-live-005"
 }
