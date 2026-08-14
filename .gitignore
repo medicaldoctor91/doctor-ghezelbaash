@@ -6,6 +6,8 @@ release/
 package/
 .DS_Store
 *.log
+__pycache__/
+*.py[cod]
 
 # Deterministic build outputs — regenerated from canonical source.
 src/content/home.md
