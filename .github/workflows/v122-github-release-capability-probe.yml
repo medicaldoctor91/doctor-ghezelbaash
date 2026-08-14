@@ -1,0 +1,50 @@
+name: v1.2.2 reversible GitHub Release capability probe
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/v122-github-release-capability-probe.yml]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Create and destroy a draft Release probe, recording tag behavior
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="v122-capability-probe-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          trap 'gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$RID" >/dev/null 2>&1 || true; git push origin ":refs/tags/$TAG" >/dev/null 2>&1 || true' EXIT
+          payload=$(jq -n --arg tag "$TAG" --arg target "$GITHUB_SHA" '{tag_name:$tag,target_commitish:$target,name:"v1.2.2 release capability probe",body:"Temporary reversible pre-publication capability probe.",draft:true,prerelease:false,generate_release_notes:false}')
+          printf '%s' "$payload" | gh api --method POST "repos/$GITHUB_REPOSITORY/releases" --input - > /tmp/release-probe.json
+          RID=$(jq -r '.id' /tmp/release-probe.json)
+          export RID
+          test -n "$RID" && test "$RID" != null
+          test "$(jq -r '.draft' /tmp/release-probe.json)" = true
+          test "$(jq -r '.tag_name' /tmp/release-probe.json)" = "$TAG"
+          test "$(jq -r '.target_commitish' /tmp/release-probe.json)" = "$GITHUB_SHA"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/tmp/tag-probe 2>/dev/null; then
+            TAG_CREATED=true
+          else
+            TAG_CREATED=false
+          fi
+          echo "GITHUB_DRAFT_RELEASE_CAPABILITY_PASS release_id=$RID draft=true target=$GITHUB_SHA tag_created=$TAG_CREATED"
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$RID" >/dev/null
+          RID=0
+          if [ "$TAG_CREATED" = true ]; then git push origin ":refs/tags/$TAG"; fi
+          test -z "$(git ls-remote --tags origin "refs/tags/$TAG")"
+          echo "GITHUB_DRAFT_RELEASE_PROBE_CLEANUP_PASS tag=$TAG"
