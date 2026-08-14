@@ -106,8 +106,9 @@ jobs:
           NODE
           curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT" >/tmp/cf.json
           node - <<'NODE'
-          const p=require('/tmp/cf.json');const r=p.result,c=r.source?.config||{};if(!p.success||r.production_branch!=='production/deploy'||c.preview_deployment_setting!=='custom'||c.preview_branch_includes?.[0]!=='staging/deploy')throw Error('Cloudflare production isolation drift');console.log('CLOUDFLARE_PREFLIGHT_PASS')
+          const p=require('/tmp/cf.json');const r=p.result,c=r.source?.config||{};const inc=c.preview_branch_includes||[],exc=c.preview_branch_excludes||[];if(!p.success||r.production_branch!=='production/deploy'||c.deployments_enabled!==true||c.production_deployments_enabled!==true||c.preview_deployment_setting!=='custom'||inc.length!==1||inc[0]!=='staging/deploy'||exc.length!==0)throw Error('Cloudflare production/preview isolation drift');console.log('CLOUDFLARE_PREFLIGHT_PASS')
           NODE
+          node scripts/validate-release-controller.mjs
           npm run release:prepare
           node scripts/update-release-control.mjs "$LEDGER" PREFLIGHTED
           git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'v1.2.2 preflight passed' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
@@ -142,7 +143,7 @@ jobs:
             rec=$(node -p "require('./.release/runtime/zenodo-reservation.json').recordId")
             curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" "https://zenodo.org/api/deposit/depositions/$rec" >/tmp/reserved.json
             node - <<'NODE'
-          const r=require('/tmp/reserved.json'),e=require('./.release/runtime/zenodo-reservation.json');const doi=r.metadata?.prereserve_doi?.doi||r.doi;if(String(r.id)!==String(e.recordId)||doi!==e.versionDoi||r.submitted===true)throw Error('Persisted Zenodo reservation drift')
+          const r=require('/tmp/reserved.json'),e=require('./.release/runtime/zenodo-reservation.json');const doi=r.metadata?.prereserve_doi?.doi||r.doi;if(String(r.id)!==String(e.recordId)||doi!==e.versionDoi)throw Error('Persisted Zenodo reservation drift');if(r.submitted===true&&String(r.metadata?.version||'').replace(/^v/,'')!=='1.2.2')throw Error('Persisted published Zenodo version drift');console.log(r.submitted===true?'ZENODO_RESERVATION_ALREADY_PUBLISHED_EXACT':'ZENODO_RESERVATION_DRAFT_EXACT')
           NODE
           else
             python scripts/zenodo_release.py reserve --current-record 21910785 --current-doi 10.5281/zenodo.21910785 --current-version 1.2.1 --concept-doi 10.5281/zenodo.18765168 --version "$TARGET_VERSION" --date "$RELEASE_DATE"
@@ -208,9 +209,12 @@ jobs:
           rel=pathlib.Path('release'); z={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(rel.glob('*.zip'))}
           pathlib.Path('/tmp/zips-a.json').write_text(json.dumps(z,sort_keys=True))
           PY
+          REPRO_SHA="$SOURCE_COMMIT"
+          REPRO_EPOCH="$SOURCE_DATE_EPOCH"
+          export REPRO_SHA REPRO_EPOCH
           rm -rf /tmp/v122-repro
-          git worktree add --detach /tmp/v122-repro "$SOURCE_COMMIT"
-          (cd /tmp/v122-repro && npm ci --ignore-scripts && unset SOURCE_DATE_EPOCH SOURCE_COMMIT GITHUB_SHA || true && export CF_PAGES_COMMIT_SHA="$SOURCE_COMMIT" && mkdir -p .release/runtime .release/huggingface && printf 'native-runtime-noise\n' > .release/runtime/repro-noise.txt && printf 'native-hf-noise\n' > .release/huggingface/repro-noise.txt && npm run release && node scripts/validate-visible-freeze.mjs dist/index.html && python - <<'PY'
+          git worktree add --detach /tmp/v122-repro "$REPRO_SHA"
+          (cd /tmp/v122-repro && npm ci --ignore-scripts && unset GITHUB_SHA || true && export SOURCE_COMMIT="$REPRO_SHA" CF_PAGES_COMMIT_SHA="$REPRO_SHA" SOURCE_DATE_EPOCH="$REPRO_EPOCH" && mkdir -p .release/runtime .release/huggingface && printf 'native-runtime-noise\n' > .release/runtime/repro-noise.txt && printf 'native-hf-noise\n' > .release/huggingface/repro-noise.txt && npm run release && node scripts/validate-visible-freeze.mjs dist/index.html && python - <<'PY'
           import hashlib,json,pathlib
           root=pathlib.Path('dist'); out={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*')) if p.is_file()}
           pathlib.Path('/tmp/dist-b.json').write_text(json.dumps(out,sort_keys=True))
@@ -256,8 +260,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git push origin "$SOURCE_COMMIT":staging/deploy
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure
           node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          git push origin "$SOURCE_COMMIT":staging/deploy
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
           curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?per_page=50" >/tmp/cf-deployments.json
           PREVIEW_URL="$(node - <<'NODE'
@@ -292,13 +297,16 @@ jobs:
           const fs=require('fs'),[width,min]=process.argv.slice(2);const b=JSON.parse(fs.readFileSync('/tmp/lh/base-'+width+'.json')),c=JSON.parse(fs.readFileSync('/tmp/lh/candidate-'+width+'.json'));const score=x=>Math.round(x.categories.performance.score*100),metric=(x,k)=>x.audits[k].numericValue;const out={width:Number(width),minimum:Number(min),baseline:score(b),candidate:score(c),baselineLcp:metric(b,'largest-contentful-paint'),candidateLcp:metric(c,'largest-contentful-paint'),baselineCls:metric(b,'cumulative-layout-shift'),candidateCls:metric(c,'cumulative-layout-shift'),baselineTbt:metric(b,'total-blocking-time'),candidateTbt:metric(c,'total-blocking-time')};console.log('LIGHTHOUSE_VIEWPORT_GATE',JSON.stringify(out));if(out.candidate<out.baseline-3)throw Error(width+' performance regressed >3 points');if(out.candidate<out.minimum)throw Error(width+' performance below minimum '+min);if(out.candidateCls>0.1||out.candidateCls>out.baselineCls+0.03)throw Error(width+' CLS regression');if(out.candidateLcp>Math.max(4000,out.baselineLcp*1.15))throw Error(width+' LCP regression');
           NODE
           done
+          node scripts/update-release-control.mjs "$LEDGER" PERFORMANCE_PROVEN sourceCommit=$SOURCE_COMMIT lighthouseViewports=6
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prove six-viewport v1.2.2 performance gate' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
       - name: Prepare non-public GitHub Release draft against exact Candidate C
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          test -z "$(git ls-remote --tags origin refs/tags/v1.2.2)"
+          REMOTE_GH_TAG=$(git ls-remote --tags origin refs/tags/v1.2.2 | awk '{print $1}')
+          if [ -n "$REMOTE_GH_TAG" ]; then git fetch origin refs/tags/v1.2.2:refs/tags/v1.2.2; test "$(git rev-list -n1 v1.2.2)" = "$SOURCE_COMMIT"; fi
           gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > /tmp/releases-before.json
           RID=$(jq -r '[.[] | select(.tag_name=="v1.2.2")][0].id // empty' /tmp/releases-before.json)
           if [ -z "$RID" ]; then
@@ -311,7 +319,8 @@ jobs:
           test "$(jq -r '.draft' /tmp/release-draft.json)" = true
           test "$(jq -r '.tag_name' /tmp/release-draft.json)" = v1.2.2
           test "$(jq -r '.target_commitish' /tmp/release-draft.json)" = "$SOURCE_COMMIT"
-          test -z "$(git ls-remote --tags origin refs/tags/v1.2.2)"
+          REMOTE_GH_TAG=$(git ls-remote --tags origin refs/tags/v1.2.2 | awk '{print $1}')
+          if [ -n "$REMOTE_GH_TAG" ]; then git fetch origin refs/tags/v1.2.2:refs/tags/v1.2.2; test "$(git rev-list -n1 v1.2.2)" = "$SOURCE_COMMIT"; fi
           echo "GITHUB_RELEASE_DRAFT_ID=$RID" >> "$GITHUB_ENV"
           node scripts/update-release-control.mjs "$LEDGER" GITHUB_RELEASE_DRAFT_READY sourceCommit=$SOURCE_COMMIT githubReleaseDraftId=$RID
           git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prepare non-public GitHub v1.2.2 Release draft' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
@@ -330,6 +339,7 @@ jobs:
           node scripts/validate-visible-freeze.mjs dist/index.html
           test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
           test -z "$(git status --porcelain)"
+          node scripts/verify-release-proof-ledger.mjs "$LEDGER" "$SOURCE_COMMIT"
           node scripts/update-release-control.mjs "$LEDGER" IRREVERSIBLE_GATE_PASS sourceCommit=$SOURCE_COMMIT
           git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Pass v1.2.2 irreversible gate' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
       - name: Publish exact Zenodo v1.2.2 preservation snapshot
@@ -348,8 +358,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git push origin "$SOURCE_COMMIT":production/deploy
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure
           node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          git push origin "$SOURCE_COMMIT":production/deploy
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
           python scripts/configure-cloudflare-edge.py --purge-cache-only
           VERIFY_BASE_URL='https://www.ghezelbaash.ir/' node scripts/verify-cloudflare-pages-deployment.mjs
@@ -368,8 +379,15 @@ jobs:
           git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m 'Publish Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2'
           HF_SHA=$(git -C .release/huggingface rev-parse HEAD); echo "HF_RELEASE_SHA=$HF_SHA" >> "$GITHUB_ENV"
           git -C .release/huggingface push origin HEAD:main
-          git -C .release/huggingface tag -f -a v1.2.2 -m 'Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2' "$HF_SHA"
-          git -C .release/huggingface push origin refs/tags/v1.2.2 --force
+          HF_TAG_OBJ=$(git -C .release/huggingface ls-remote origin refs/tags/v1.2.2 | awk '{print $1}')
+          if [ -z "$HF_TAG_OBJ" ]; then
+            git -C .release/huggingface tag -a v1.2.2 -m 'Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2' "$HF_SHA"
+            git -C .release/huggingface push origin refs/tags/v1.2.2
+          else
+            HF_TAG_PEELED=$(git -C .release/huggingface ls-remote origin 'refs/tags/v1.2.2^{}' | awk '{print $1}')
+            test "${HF_TAG_PEELED:-$HF_TAG_OBJ}" = "$HF_SHA"
+          fi
+          test "$(git -C .release/huggingface ls-remote origin refs/heads/main | awk '{print $1}')" = "$HF_SHA"
           node scripts/verify-current-serving.mjs
           node scripts/update-release-control.mjs "$LEDGER" HF_PUBLISHED sourceCommit=$SOURCE_COMMIT hfCommit=$HF_SHA
           git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Publish HF v1.2.2 release and tag' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
