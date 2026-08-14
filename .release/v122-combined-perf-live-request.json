@@ -1,0 +1,8 @@
+{
+  "targetVersion": "1.2.2",
+  "baseCandidateSha": "2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb",
+  "combinedExperimentSha": "8944041dd5a676bd0b1ccc5987915698dadbe607",
+  "requestedAt": "2026-08-15",
+  "scope": "responsive-avif-plus-early-critical-css-paired-and-six-viewport",
+  "nonce": "combined-perf-live-001"
+}
