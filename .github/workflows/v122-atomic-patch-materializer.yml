@@ -34,7 +34,7 @@ jobs:
           pattern=re.compile(r'''          curl --fail --silent --show-error -H "Authorization: Bearer \$CLOUDFLARE_API_TOKEN" "https://api\.cloudflare\.com/client/v4/accounts/\$CLOUDFLARE_ACCOUNT_ID/pages/projects/\$CF_PROJECT/deployments\?env=preview" >/tmp/cf-deployments\.json\n          PREVIEW_URL="\$\(node - <<'NODE'\n.*?          \)"\n          test -n "\$PREVIEW_URL"\n''',re.S)
           replacement="""          PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'
           echo "CLOUDFLARE_PREVIEW_ALIAS_SELECTED $PREVIEW_URL exact_commit=$SOURCE_COMMIT"
-"""
+          """
           src,n=pattern.subn(replacement,src,count=1)
           if n!=1: raise SystemExit(f'expected exactly one redundant Cloudflare preview-list block, replaced {n}')
           Path('.release/ceiling-release.v1.2.2.patched.yml.txt').write_text(src)
