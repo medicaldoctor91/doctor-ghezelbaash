@@ -1,0 +1,124 @@
+name: Prove final v1.2.2 Preview and performance contract
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-final-preview-proof-request.json]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+  STAGING_BRANCH: staging/deploy
+  CF_PROJECT: doctor-ghezelbaash
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  PRODUCTION_BASE_URL: https://www.ghezelbaash.ir/
+
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+
+      - name: Pin exact Candidate C and staging ref from request
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main "$CANDIDATE_BRANCH" "$STAGING_BRANCH"
+          git show origin/main:.release/v122-final-preview-proof-request.json >/tmp/request.json
+          REQ_C=$(node -p "require('/tmp/request.json').candidateSha")
+          C=$(git rev-parse HEAD)
+          test "$C" = "$REQ_C"
+          test "$(git rev-parse origin/$CANDIDATE_BRANCH)" = "$C"
+          test "$(git rev-parse origin/$STAGING_BRANCH)" = "$C"
+          SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
+          echo "CANDIDATE_SHA=$C" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> "$GITHUB_ENV"
+          echo "FINAL_PREVIEW_PIN_PASS C=$C"
+
+      - name: Resolve exact Cloudflare Preview and prove local bytes
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          export CANDIDATE_SHA SOURCE_COMMIT="$CANDIDATE_SHA" CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" SOURCE_DATE_EPOCH
+          for poll in $(seq 1 36); do
+            curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?env=preview&per_page=30" >/tmp/cf.json
+            PREVIEW_URL=$(node - <<'NODE'
+          const p=require('/tmp/cf.json'),c=process.env.CANDIDATE_SHA;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(d?.url)console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
+          NODE
+            )
+            if [ -n "${PREVIEW_URL:-}" ]; then break; fi
+            sleep 10
+          done
+          test -n "${PREVIEW_URL:-}"
+          echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
+          VERIFY_BASE_URL="$PREVIEW_URL" node scripts/verify-cloudflare-pages-deployment.mjs
+          VERIFY_BASE_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/' node scripts/verify-cloudflare-pages-deployment.mjs
+          echo "FINAL_EXACT_PREVIEW_BYTES_PASS C=$CANDIDATE_SHA URL=$PREVIEW_URL"
+
+      - name: Static six-viewport UI/DOM contract prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_COMMIT="$CANDIDATE_SHA" CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" SOURCE_DATE_EPOCH ASTRO_TELEMETRY_DISABLED=1
+          npm run build
+          node scripts/validate-critical-hero-geometry.mjs
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          node scripts/validate-current-context.mjs dist
+          node - <<'NODE'
+          const fs=require('fs'),{parse}=require('parse5'),html=fs.readFileSync('dist/index.html','utf8'),doc=parse(html);const nodes=[];const walk=n=>{nodes.push(n);for(const c of n.childNodes||[])walk(c);if(n.content)walk(n.content)};walk(doc);const elems=nodes.filter(n=>n.tagName),attr=(n,k)=>n.attrs?.find(x=>x.name===k)?.value,ids=new Set(elems.map(n=>attr(n,'id')).filter(Boolean)),links=elems.filter(n=>n.tagName==='a').map(n=>attr(n,'href')).filter(Boolean),missing=links.filter(x=>x.startsWith('#')&&!ids.has(decodeURIComponent(x.slice(1))));if(missing.length)throw Error('Broken in-page navigation targets: '+[...new Set(missing)].join(','));for(const id of ['guide-search','guide-search-input','guide-search-results','site-runtime'])if(!ids.has(id))throw Error('Interactive guide contract missing '+id);if(!html.includes('data-guide-search-open')||!html.includes('data-guide-search-close'))throw Error('Guide open/close controls missing');const h=elems.find(n=>attr(n,'id')==='google-maps-clinic-reputation-current');if(!h)throw Error('Stable reputation slot missing');console.log(JSON.stringify({staticUiContract:'PASS',fragmentLinks:links.filter(x=>x.startsWith('#')).length,ids:ids.size,guide:true,reputationSlot:true}));
+          NODE
+
+      - name: Repeated six-viewport Lighthouse baseline-relative gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lh-final
+          run_lh(){
+            local url="$1" width="$2" height="$3" form="$4" dpr="$5" out="$6" label="$7" ok=0
+            for attempt in 1 2 3; do
+              rm -f "$out"
+              common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
+              if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
+              if npx --yes lighthouse@13.4.1 "${url}?__finalperf=${label}_${attempt}_$(date +%s%N)" "${common[@]}" --output-path="$out"; then
+                if node -e "const x=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));if(!x?.categories?.performance)process.exit(1)" "$out"; then ok=1; break; fi
+              fi
+              echo "LIGHTHOUSE_TRANSIENT_RETRY label=$label attempt=$attempt" >&2
+              sleep 3
+            done
+            test "$ok" = 1
+          }
+          specs=('360 800 mobile 2' '390 844 mobile 2' '430 932 mobile 2' '768 1024 mobile 1' '1024 768 desktop 1' '1440 900 desktop 1')
+          for spec in "${specs[@]}"; do
+            read -r width height form dpr <<<"$spec"
+            for run in 1 2 3; do
+              run_lh "$PRODUCTION_BASE_URL" "$width" "$height" "$form" "$dpr" "/tmp/lh-final/base-${width}-${run}.json" "base_${width}_${run}"
+              run_lh "$PREVIEW_URL" "$width" "$height" "$form" "$dpr" "/tmp/lh-final/candidate-${width}-${run}.json" "candidate_${width}_${run}"
+            done
+          done
+          node <<'NODE'
+          const fs=require('fs'),widths=[360,390,430,768,1024,1440],runs=[1,2,3],m=(x,id)=>Number(x.audits[id]?.numericValue||0),med=a=>a.slice().sort((a,b)=>a-b)[1],score=x=>Math.round(x.categories.performance.score*100);let fail=false;const summary=[];
+          for(const w of widths){const row={width:w};for(const side of ['base','candidate']){const docs=runs.map(r=>JSON.parse(fs.readFileSync(`/tmp/lh-final/${side}-${w}-${r}.json`)));row[side]={scoreMedian:med(docs.map(score)),scoreMin:Math.min(...docs.map(score)),fcpMedian:med(docs.map(x=>m(x,'first-contentful-paint'))),lcpMedian:med(docs.map(x=>m(x,'largest-contentful-paint'))),tbtMedian:med(docs.map(x=>m(x,'total-blocking-time'))),clsMax:Math.max(...docs.map(x=>m(x,'cumulative-layout-shift'))),speedIndexMedian:med(docs.map(x=>m(x,'speed-index')))};}const b=row.base,c=row.candidate;const checks={scoreNoRegression:c.scoreMedian>=b.scoreMedian-1,clsStable:c.clsMax<=0.1&&c.clsMax<=b.clsMax+0.02,lcpStable:c.lcpMedian<=Math.max(4000,b.lcpMedian*1.10),fcpStable:c.fcpMedian<=b.fcpMedian*1.10,tbtStable:c.tbtMedian<=Math.max(200,b.tbtMedian*1.25+25)};row.checks=checks;if(Object.values(checks).some(x=>!x))fail=true;summary.push(row)}
+          console.log('FINAL_SIX_VIEWPORT_PERFORMANCE',JSON.stringify(summary,null,2));if(fail)throw Error('Final baseline-relative six-viewport performance/layout contract failed');
+          NODE
