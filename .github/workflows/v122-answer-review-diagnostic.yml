@@ -1,0 +1,42 @@
+name: Diagnose v1.2.2 answer medical-review truth
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-answer-review-diagnostic-request.json]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Materialize exact pending source without committing
+        run: |
+          git fetch origin main
+          git show origin/main:.release/v122-final-source-fix.py >/tmp/fix.py
+          python /tmp/fix.py
+          node scripts/rollover-release-date.mjs --date=2026-08-15
+      - run: npm ci --ignore-scripts
+      - name: Generate projections and report exact review fields
+        run: |
+          npm run prepare:generated
+          node - <<'NODE'
+          const fs=require('fs'),r=require('./src/data/release.json'),a=fs.readFileSync('src/data/projections/answers.txt','utf8'),md=fs.readFileSync('src/data/projections/index.md','utf8');
+          const reviewLines=[...new Set(a.split(/\r?\n/).filter(x=>x.startsWith('REVIEWED_AT:')).slice(0,5))];
+          const header=a.split(/\r?\n/).slice(0,3);
+          console.log(JSON.stringify({releaseDate:r.dateModified,medicalReviewedAt:r.medicalReviewedAt,reviewLines,header,indexReviewed:md.split(/\r?\n/).find(x=>x.includes('Reviewed:'))||null,expectedReviewPresent:a.includes('REVIEWED_AT: '+r.medicalReviewedAt),releaseDateReviewLeak:a.includes('REVIEWED_AT: '+r.dateModified)},null,2));
+          NODE
