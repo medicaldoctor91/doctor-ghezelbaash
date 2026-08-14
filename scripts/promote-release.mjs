@@ -1,4 +1,4 @@
-import {readFile,writeFile,rm} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
 
 const args=Object.fromEntries(process.argv.slice(2).map(x=>{const [k,...v]=x.replace(/^--/,'').split('=');return [k,v.join('=')]}));
 const readJson=async file=>JSON.parse(await readFile(file,'utf8'));
@@ -17,39 +17,59 @@ must(/^10\.5281\/zenodo\.\d+$/.test(next.versionDoi||''),'Invalid --zenodo-doi')
 must(next.versionDoi!==z.conceptDoi,'Concept DOI cannot be the Version DOI');
 if(next.release===old.release){
   must(next.versionDoi===old.versionDoi&&next.recordId===old.recordId&&next.date===old.date,'Idempotent promotion request drifted from current release');
-  await rm('.release/release-request-v1.2.2.json',{force:true});
   console.log(JSON.stringify({promoted:false,idempotent:true,current:old},null,2));process.exit(0);
 }
 const existing=z.releaseHistory.find(x=>x.release===next.release);
 if(existing)must(existing.versionDoi===next.versionDoi&&String(existing.recordId)===next.recordId&&existing.publicationDate===next.date,'Target release already exists with different identity');
 else z.releaseHistory.push({release:next.release,recordId:next.recordId,versionDoi:next.versionDoi,publicationDate:next.date});
 z.releaseHistory.sort((a,b)=>a.publicationDate.localeCompare(b.publicationDate)||a.release.localeCompare(b.release,undefined,{numeric:true}));
-release.release=next.release;release.dateModified=next.date;z.recordId=next.recordId;z.versionDoi=next.versionDoi;
-const updateReleaseScopedDates=obj=>{if(!obj||typeof obj!=='object')return;if(Array.isArray(obj)){obj.forEach(updateReleaseScopedDates);return}for(const [k,v] of Object.entries(obj)){if(k==='dateModified'&&v===old.date)obj[k]=next.date;else if(k==='version'&&v===old.release)obj[k]=next.release;else updateReleaseScopedDates(v)}};
-updateReleaseScopedDates(release);
-release.medicalReviewedAt=release.medicalReviewedAt||old.date;
-release.evidencePolicy=release.evidencePolicy||{};
+z.versionDoi=next.versionDoi;z.recordId=next.recordId;
+release.release=next.release;release.dateModified=next.date;
 await writeJson('src/data/release.json',release);
-
-const inv=await readJson('src/data/release-invariants.json');inv.release=next.release;inv.date=next.date;delete inv.personAvailableServiceCount;delete inv.clinicAvailableServiceCount;delete inv.fullGraphNodeCount;delete inv.externalRdfTripleCount;delete inv.renderChunkCount;delete inv.directAnswerExecutiveCount;delete inv.integratedFullAnswerCount;delete inv.supportNodeTarget;await writeJson('src/data/release-invariants.json',inv);
-
-const pkg=await readJson('package.json');pkg.version=next.release;await writeJson('package.json',pkg);
-const lock=await readJson('package-lock.json');lock.version=next.release;if(lock.packages?.[''])lock.packages[''].version=next.release;await writeJson('package-lock.json',lock);
-const codemeta=await readJson('codemeta.json');codemeta.softwareVersion=next.release;codemeta.dateModified=next.date;if(codemeta.subjectOf){codemeta.subjectOf.version=next.release;codemeta.subjectOf.identifier=`https://doi.org/${next.versionDoi}`;codemeta.subjectOf.url=`https://doi.org/${next.versionDoi}`;}await writeJson('codemeta.json',codemeta);
-
-let citation=await readFile('CITATION.cff','utf8');citation=citation.replace(/^version: .*$/m,`version: ${next.release}`).replace(/^date-released: .*$/m,`date-released: ${next.date}`).replace(/^doi: .*$/m,`doi: ${next.versionDoi}`);await writeFile('CITATION.cff',citation);
-let front=await readFile('src/content-source/000-frontmatter.md','utf8');front=front.replace(/^dateModified:.*$/m,`dateModified: "${next.date}"`);await writeFile('src/content-source/000-frontmatter.md',front);
+for(const file of ['package.json','package-lock.json']){const value=await readJson(file);value.version=next.release;if(value.packages?.[''])value.packages[''].version=next.release;await writeJson(file,value)}
+const inv=await readJson('src/data/release-invariants.json');inv.release=next.release;inv.date=next.date;await writeJson('src/data/release-invariants.json',inv);
+for(const file of ['src/data/volatile-facts.json','src/data/evidence-snapshot.json','src/data/evidence-registry.json']){const value=await readJson(file);if(Object.hasOwn(value,'release'))value.release=next.release;await writeJson(file,value)}
 
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
-const currentIds=new Set(['https://www.ghezelbaash.ir/graph.jsonld#dataset','https://www.ghezelbaash.ir/#project-huggingface-dataset','https://www.ghezelbaash.ir/#project-zenodo-release','https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project']);
-const walkGraph=v=>{if(Array.isArray(v)){v.forEach(walkGraph);return}if(!v||typeof v!=='object')return;const isCurrent=currentIds.has(v['@id']);for(const [k,x] of Object.entries(v)){if(isCurrent&&k==='version'&&x===old.release)v[k]=next.release;else if(isCurrent&&k==='dateModified'&&x===old.date)v[k]=next.date;else if(isCurrent&&typeof x==='string'){v[k]=x.replaceAll(`https://doi.org/${old.versionDoi}`,`https://doi.org/${next.versionDoi}`).replaceAll(`https://zenodo.org/records/${old.recordId}`,`https://zenodo.org/records/${next.recordId}`)}else walkGraph(x)}};
-walkGraph(graph);await writeJson('src/data/semantic/knowledge-graph.jsonld',graph);
+const nodes=graph['@graph'];must(Array.isArray(nodes),'Canonical graph lacks @graph');
+const byId=new Map(nodes.filter(x=>x?.['@id']).map(x=>[x['@id'],x]));
+const dataset=byId.get(release.dataset.id),project=byId.get(`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`),github=byId.get(`${release.canonicalUrl}#project-github-source`),hf=byId.get(`${release.canonicalUrl}#project-huggingface-dataset`),zenodo=byId.get(`${release.canonicalUrl}#project-zenodo-release`),catalog=byId.get(`${release.canonicalUrl}#data-catalog`);
+for(const [name,node] of Object.entries({dataset,project,github,hf,zenodo,catalog}))must(node,`Canonical graph node missing: ${name}`);
+// Only known current-release nodes advance. Historical release nodes are never globally rewritten.
+for(const node of [dataset,project,github,hf,zenodo,catalog]){if(Object.hasOwn(node,'version'))node.version=next.release;if(Object.hasOwn(node,'dateModified'))node.dateModified=next.date}
+dataset.version=next.release;dataset.dateModified=next.date;dataset.sameAs=[`https://www.wikidata.org/entity/${release.dataset.wikidata}`];dataset.url=release.canonicalUrl;
+dataset.description='Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is its AI/retrieval distribution layer; these access points are related resources, not identity-equivalent entities.';
+const identifiers=Array.isArray(dataset.identifier)?dataset.identifier:[];
+const keep=identifiers.filter(x=>!(x&&typeof x==='object'&&['DOI','Zenodo Version DOI','Zenodo Concept DOI'].includes(String(x.propertyID||''))));
+keep.push({'@type':'PropertyValue',propertyID:'Zenodo Concept DOI',name:'Zenodo Concept DOI for the continuing Dataset lineage',value:z.conceptDoi,url:`https://doi.org/${z.conceptDoi}`});
+keep.push({'@type':'PropertyValue',propertyID:'Zenodo Version DOI',name:`Zenodo Version DOI ${next.release}`,value:next.versionDoi,url:`https://doi.org/${next.versionDoi}`});
+dataset.identifier=keep;
+project.version=next.release;project.dateModified=next.date;project.description=`Version-controlled source project for Version ${next.release} of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable DOI preservation, and Hugging Face is AI/retrieval distribution.`;
+github.version=next.release;github.dateModified=next.date;github.description=`Version-controlled GitHub source for Version ${next.release} of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.`;
+hf.version=next.release;hf.dateModified=next.date;hf['@type']='DataDownload';hf.encodingFormat=['application/ld+json','text/turtle','text/csv','text/plain','application/json','application/xml','application/jsonl'];hf.description=`AI and retrieval distribution of Version ${next.release} of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core plus separately governed retrieval positioning and live-observation layers.`;delete hf.additionalType;
+zenodo['@type']='DataDownload';zenodo.name=`Dr. Saeed Ghezelbash Public Knowledge Graph — Zenodo preservation distribution ${next.release}`;zenodo.url=`https://doi.org/${next.versionDoi}`;zenodo.contentUrl=`https://doi.org/${next.versionDoi}`;zenodo.identifier=`DOI:${next.versionDoi}`;zenodo.version=next.release;zenodo.datePublished=next.date;zenodo.dateModified=next.date;zenodo.sameAs=`https://zenodo.org/records/${next.recordId}`;delete zenodo.codeRepository;zenodo.description=`Immutable DOI-preserved Version ${next.release} distribution of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph Dataset.`;
+catalog.version=next.release;catalog.dateModified=next.date;catalog.name='Dr. Saeed Ghezelbash Public Knowledge Graph — Data Catalog';catalog.description='First-party machine-readable catalog for the Dr. Saeed Ghezelbash Public Knowledge Graph, preserving physician-first identity and explicit source, preservation, AI/retrieval and live-observation roles.';
+// Explicit release-history nodes make provenance machine-resolvable without leaking old values into current fields.
+for(const h of z.releaseHistory){const rid=`${release.canonicalUrl}graph.jsonld#release-${h.release.replaceAll('.','-')}`;let n=byId.get(rid);if(!n){n={'@id':rid};nodes.push(n);byId.set(rid,n)}Object.assign(n,{'@type':'CreativeWork',additionalType:'DatasetRelease',name:`Dr. Saeed Ghezelbash Public Knowledge Graph — Version ${h.release}`,version:h.release,datePublished:h.publicationDate,identifier:[{'@type':'PropertyValue',propertyID:'Zenodo Version DOI',value:h.versionDoi,url:`https://doi.org/${h.versionDoi}`},{'@type':'PropertyValue',propertyID:'Zenodo Record ID',value:String(h.recordId)}],isPartOf:{'@id':release.dataset.id},url:`https://doi.org/${h.versionDoi}`})}
+dataset.citation=z.releaseHistory.map(h=>({'@id':`${release.canonicalUrl}graph.jsonld#release-${h.release.replaceAll('.','-')}`}));
+await writeJson('src/data/semantic/knowledge-graph.jsonld',graph);
 
-for(const file of ['src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json']){const x=await readJson(file);if(Object.hasOwn(x,'release'))x.release=next.release;await writeJson(file,x)}
-
-for(const file of ['src/data/templates/main-head.html','src/data/templates/llms.template.txt','README.md']){let t=await readFile(file,'utf8');t=t.replaceAll(old.release,next.release).replaceAll(old.versionDoi,next.versionDoi).replaceAll(old.recordId,next.recordId);await writeFile(file,t)}
-let content=await readFile('src/content-source/100-rc099.html','utf8');
-content=content.replaceAll(`Version ${old.release}`,`Version ${next.release}`).replaceAll(old.versionDoi,next.versionDoi).replaceAll(old.recordId,next.recordId).replaceAll(`published ${new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(old.date+'T00:00:00Z'))}`,`published ${new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(next.date+'T00:00:00Z'))}`);
-await writeFile('src/content-source/100-rc099.html',content);
-await rm('.release/release-request-v1.2.2.json',{force:true});
-console.log(JSON.stringify({promoted:true,from:old,to:next,conceptDoi:z.conceptDoi,history:z.releaseHistory,operationalRequestRemoved:true},null,2));
+const englishDate=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${next.date}T00:00:00Z`));
+const medicalEnglishDate=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${release.medicalReviewedAt}T00:00:00Z`));
+let head=await readFile('src/data/templates/main-head.html','utf8');head=head.replace(/<link href="https:\/\/doi\.org\/10\.5281\/zenodo\.\d+" rel="related" title="(?:Zenodo DOI|Zenodo preservation Version DOI [^"]+)"\/>/,`<link href="https://doi.org/${next.versionDoi}" rel="related" title="Zenodo preservation Version DOI ${next.release}"/>`);await writeFile('src/data/templates/main-head.html',head);
+let visible=await readFile('src/content-source/100-rc099.html','utf8');
+visible=visible.replace(/Current source graph version<\/strong><\/dt><dd>Version \d+\.\d+\.\d+/,`Current source graph version</strong></dt><dd>Version ${next.release}`)
+.replace(/DOI-backed Version \d+\.\d+\.\d+ snapshot<\/strong><\/dt><dd><a href="https:\/\/github\.com\/medicaldoctor91\/doctor-ghezelbaash">Version \d+\.\d+\.\d+<\/a> — published \d{1,2} [A-Za-z]+ \d{4}/,`DOI-backed Version ${next.release} snapshot</strong></dt><dd><a href="https://github.com/medicaldoctor91/doctor-ghezelbaash">Version ${next.release}</a> — published ${englishDate}`)
+.replace(/<dt><strong>Zenodo DOI<\/strong><\/dt><dd>Version DOI: <a href="https:\/\/doi\.org\/10\.5281\/zenodo\.\d+">10\.5281\/zenodo\.\d+<\/a> · Concept DOI: <a href="https:\/\/doi\.org\/10\.5281\/zenodo\.18765168">10\.5281\/zenodo\.18765168<\/a><\/dd>/,`<dt><strong>Zenodo DOI</strong></dt><dd>Version DOI: <a href="https://doi.org/${next.versionDoi}">${next.versionDoi}</a> · Concept DOI: <a href="https://doi.org/${z.conceptDoi}">${z.conceptDoi}</a></dd>`)
+.replace(/Version \d+\.\d+\.\d+, \d{1,2} [A-Za-z]+ \d{4}\. Zenodo\./,`Version ${next.release}, ${englishDate}. Zenodo.`)
+.replace(/https:\/\/doi\.org\/10\.5281\/zenodo\.\d+(?=<\/a>\.\s*<\/p><h3 id="historical-patient-origin-summary")/,`https://doi.org/${next.versionDoi}`)
+.replace(/10\.5281\/zenodo\.\d+(?=<\/a>\.\s*<\/p><h3 id="historical-patient-origin-summary")/,next.versionDoi)
+.replace(/reviewed on \d{1,2} [A-Za-z]+ \d{4}/,`reviewed on ${medicalEnglishDate}`)
+.replace(/published on \d{1,2} [A-Za-z]+ \d{4}/,`published on ${englishDate}`)
+.replace(/pid=10\.5281%2Fzenodo\.\d+/,`pid=${encodeURIComponent(next.versionDoi)}`);
+await writeFile('src/content-source/100-rc099.html',visible);
+let readme=await readFile('README.md','utf8');readme=readme.replace(/Current source release: `[^`]+`/,`Current source release: \`${next.release}\``).replace(/Current Zenodo Version DOI: `[^`]+`/,`Current Zenodo Version DOI: \`${next.versionDoi}\``);await writeFile('README.md',readme);
+let citation=await readFile('CITATION.cff','utf8');citation=citation.replace(/^version: .+$/m,`version: ${next.release}`).replace(/^date-released: .+$/m,`date-released: ${next.date}`).replace(/^doi: .+$/m,`doi: ${next.versionDoi}`);await writeFile('CITATION.cff',citation);
+const codemeta=await readJson('codemeta.json');codemeta.softwareVersion=next.release;codemeta.dateModified=next.date;if(codemeta.subjectOf){codemeta.subjectOf.version=next.release;codemeta.subjectOf.identifier=`https://doi.org/${next.versionDoi}`;codemeta.subjectOf.name='Dr. Saeed Ghezelbash Public Knowledge Graph'}await writeJson('codemeta.json',codemeta);
+for(const file of ['public/favicon.svg','public/safari-pinned-tab.svg','public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg']){let s=await readFile(file,'utf8');s=s.replaceAll(`X-ENTITY-VERSION:${old.release}`,`X-ENTITY-VERSION:${next.release}`).replaceAll(`Entity Contact Projection ${old.release}`,`Entity Contact Projection ${next.release}`).replaceAll(`<entity:Version>${old.release}</entity:Version>`,`<entity:Version>${next.release}>`).replaceAll(`REV:${old.date.replaceAll('-','')}T000000Z`,`REV:${next.date.replaceAll('-','')}T000000Z`);s=s.replaceAll(`<entity:Version>${next.release}>`,`<entity:Version>${next.release}</entity:Version>`);await writeFile(file,s)}
+console.log(JSON.stringify({promoted:true,from:old,to:next,conceptDoi:z.conceptDoi,history:z.releaseHistory},null,2));
