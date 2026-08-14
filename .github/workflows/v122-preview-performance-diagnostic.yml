@@ -25,17 +25,20 @@ jobs:
           set -euo pipefail
           test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
           api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?per_page=25"
+          preview=''
           for i in {1..30}; do
             curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api" > /tmp/deployments.json
-            if node - <<'NODE' >> "$GITHUB_ENV"
+            preview=$(node - <<'NODE'
           const p=require('/tmp/deployments.json'),sha=process.env.CANDIDATE_SHA;
           const d=(p.result||[]).find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===sha&&x.latest_stage?.status==='success');
-          if(!d?.url)process.exit(1);console.log(`PREVIEW_URL=https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`);console.error('PREVIEW_DEPLOYMENT',JSON.stringify({id:d.id,url:d.url,environment:d.environment,commit:d.deployment_trigger?.metadata?.commit_hash,created_on:d.created_on}));
+          if(!d?.url)process.exit(1);console.error('PREVIEW_DEPLOYMENT',JSON.stringify({id:d.id,url:d.url,environment:d.environment,commit:d.deployment_trigger?.metadata?.commit_hash,created_on:d.created_on}));console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`);
           NODE
-            then break; fi
+          ) || true
+            [ -n "$preview" ] && break
             sleep 5
           done
-          test -n "${PREVIEW_URL:-}"
+          test -n "$preview"
+          echo "PREVIEW_URL=$preview" >> "$GITHUB_ENV"
       - name: Lighthouse live vs real Preview in same runner
         shell: bash
         run: |
