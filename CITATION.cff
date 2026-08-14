@@ -3,7 +3,7 @@ message: Cite the exact Zenodo Version DOI when using a frozen release; use the 
 title: Dr. Saeed Ghezelbash Public Knowledge Graph
 type: dataset
 version: 1.2.2
-date-released: 2026-08-14
+date-released: 2026-08-15
 authors:
   - family-names: Ghezelbash
     given-names: Saeed

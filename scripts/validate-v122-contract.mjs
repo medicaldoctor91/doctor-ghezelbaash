@@ -9,6 +9,8 @@ const strings=x=>{const out=[];const walk=v=>{if(typeof v==='string')out.push(v)
 const release=await readJson('src/data/release.json'),inv=await readJson('src/data/release-invariants.json'),pkg=await readJson('package.json'),lock=await readJson('package-lock.json'),codemeta=await readJson('codemeta.json');
 const releaseRoot=new Set(await readdir(path.join(root,'.release'))),history121=new Set(await readdir(path.join(root,'.release/history/v1.2.1')));for(const f of ['release-attestation.json','release-request.json','zenodo-published.json']){if(releaseRoot.has(f))fail(`Historical v1.2.1 control artifact remains in current .release root: ${f}`);if(!history121.has(f))fail(`Archived v1.2.1 control artifact missing: ${f}`)}await readFile(path.join(root,'scripts/lib/deterministic-build-time.mjs'),'utf8');
 const R=release.release,Z=release.dataset?.zenodo;
+if(Object.hasOwn(inv,'targetHtmlBytes'))fail('Obsolete targetHtmlBytes ceiling/fill target remains');
+if(!inv.contractClasses?.architectural||!inv.contractClasses?.strategic||!inv.contractClasses?.releaseDerivedMeasurements)fail('Invariant classification contract missing');
 if(!/^\d+\.\d+\.\d+$/.test(R)||inv.release!==R||pkg.version!==R||lock.version!==R||lock.packages?.['']?.version!==R)fail('Release version convergence failure');
 if(release.dateModified!==inv.date)fail('Release publication date convergence failure');
 if(!/^\d{4}-\d{2}-\d{2}$/.test(release.medicalReviewedAt||''))fail('medicalReviewedAt must be an explicit ISO date');

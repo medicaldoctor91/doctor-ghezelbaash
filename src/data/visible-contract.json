@@ -327,7 +327,10 @@
     "medical-review-date-consistency",
     "google-maps-anchor-label-correction"
   ],
-  "finalVisibleDomSha256": "ed287eee37209a3ab2d85e63f65d836ccaec0fa1b7dd8339ef752c9d0353809d",
+  "finalVisibleDomSha256": "4f0d3a09dc3ca9c5751a2f9e0723d15c22a1146527efafe3deb6a968d4e3165c",
   "finalVisibleDomRecords": 19121,
-  "finalVisibleDomNormalization": "semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel"
+  "finalVisibleDomNormalization": "semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel",
+  "finalVisibleDomBytes": 1739689,
+  "finalFreezeRelease": "1.2.2",
+  "finalFreezeReleaseDate": "2026-08-15"
 }

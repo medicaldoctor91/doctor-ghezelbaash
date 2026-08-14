@@ -1,8 +1,8 @@
 {
   "targetVersion": "1.2.2",
-  "releaseDate": "2026-08-14",
+  "releaseDate": "2026-08-15",
   "candidateBranch": "release/v1.2.2-candidate",
   "mode": "maximum-integrated-three-phase",
   "manualStep": "wikidata-quickstatements-only-after-external-convergence",
-  "rerunNonce": "2026-08-14-final-145-locked-r1"
+  "rerunNonce": "2026-08-15-final-145-locked-rollover"
 }

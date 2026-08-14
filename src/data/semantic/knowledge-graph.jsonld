@@ -7883,7 +7883,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-14",
+      "dateModified": "2026-08-15",
       "description": "Version-controlled source project for Version 1.2.2 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable DOI preservation, and Hugging Face is AI/retrieval distribution.",
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -7919,7 +7919,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-14",
+      "dateModified": "2026-08-15",
       "version": "1.2.2",
       "hasPart": [
         {
@@ -7985,7 +7985,7 @@
       },
       "contentUrl": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
       "description": "Version-controlled GitHub source for Version 1.2.2 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
-      "dateModified": "2026-08-14"
+      "dateModified": "2026-08-15"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset",
@@ -8025,7 +8025,7 @@
         "application/jsonl"
       ],
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-14",
+      "dateModified": "2026-08-15",
       "version": "1.2.2"
     },
     {
@@ -8035,7 +8035,7 @@
       "url": "https://doi.org/10.5281/zenodo.21930954",
       "identifier": "DOI:10.5281/zenodo.21930954",
       "version": "1.2.2",
-      "datePublished": "2026-08-14",
+      "datePublished": "2026-08-15",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -8063,7 +8063,7 @@
       },
       "contentUrl": "https://doi.org/10.5281/zenodo.21930954",
       "description": "Immutable DOI-preserved Version 1.2.2 distribution of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph Dataset.",
-      "dateModified": "2026-08-14"
+      "dateModified": "2026-08-15"
     },
     {
       "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
@@ -8175,7 +8175,7 @@
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
         }
       ],
-      "dateModified": "2026-08-14",
+      "dateModified": "2026-08-15",
       "url": "https://www.ghezelbaash.ir/",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld#dataset",
@@ -21463,7 +21463,7 @@
       },
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Version 1.2.2",
       "version": "1.2.2",
-      "datePublished": "2026-08-14",
+      "datePublished": "2026-08-15",
       "identifier": [
         {
           "@type": "PropertyValue",
