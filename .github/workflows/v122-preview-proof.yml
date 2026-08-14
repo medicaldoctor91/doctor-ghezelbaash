@@ -1,0 +1,102 @@
+name: Prove exact v1.2.2 preview and performance
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-preview-proof-request.json]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+  CF_PROJECT: doctor-ghezelbaash
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CF_PRODUCTION_BRANCH: production/deploy
+  CF_PREVIEW_BRANCH: staging/deploy
+  PREVIEW_URL: https://staging-deploy.doctor-ghezelbaash.pages.dev/
+
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - name: Resolve exact candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "$CANDIDATE_BRANCH" staging/deploy
+          git reset --hard "origin/$CANDIDATE_BRANCH"
+          C=$(git rev-parse HEAD)
+          test "$(git rev-parse origin/staging/deploy)" = "$C"
+          echo "CANDIDATE_SHA=$C" >> "$GITHUB_ENV"
+          echo "EXACT_PREVIEW_REF_PASS candidate=$C"
+      - run: npm ci --ignore-scripts
+      - name: Prove controller and exact native Cloudflare deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_ENVIRONMENT: preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          export CF_EXPECTED_COMMIT="$CANDIDATE_SHA"
+          node scripts/validate-release-controller.mjs
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+          VERIFY_BASE_URL="$PREVIEW_URL" node scripts/verify-cloudflare-pages-deployment.mjs
+          xr=$(curl --silent --show-error --max-redirs 0 -D - -o /dev/null "$PREVIEW_URL" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1}/^x-robots-tag:/{sub(/^[^:]+:[[:space:]]*/,"");print;exit}')
+          echo "$xr" | grep -Eiq 'noindex'
+          echo "EXACT_NATIVE_PREVIEW_PASS candidate=$CANDIDATE_SHA url=$PREVIEW_URL"
+      - name: Six-viewport Lighthouse regression proof with confirmation rerun on any marginal first sample
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lh-proof
+          for spec in '360:800:mobile:2:85' '390:844:mobile:2:85' '430:932:mobile:2:85' '768:1024:desktop:1:90' '1024:900:desktop:1:95' '1440:900:desktop:1:95'; do
+            IFS=: read -r width height form dpr minimum <<<"$spec"
+            common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
+            if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
+            run_pair() {
+              local suffix="$1"
+              npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__lh_v122_base=${width}_${suffix}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-proof/base-${width}-${suffix}.json"
+              npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__lh_v122_candidate=${width}_${suffix}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-proof/candidate-${width}-${suffix}.json"
+            }
+            evaluate() {
+              node - "$width" "$minimum" "$1" <<'NODE'
+          const fs=require('fs'),[width,min,suffix]=process.argv.slice(2);const b=JSON.parse(fs.readFileSync(`/tmp/lh-proof/base-${width}-${suffix}.json`)),c=JSON.parse(fs.readFileSync(`/tmp/lh-proof/candidate-${width}-${suffix}.json`));const score=x=>Math.round(x.categories.performance.score*100),metric=(x,k)=>x.audits[k].numericValue;const out={width:Number(width),minimum:Number(min),baseline:score(b),candidate:score(c),baselineLcp:metric(b,'largest-contentful-paint'),candidateLcp:metric(c,'largest-contentful-paint'),baselineCls:metric(b,'cumulative-layout-shift'),candidateCls:metric(c,'cumulative-layout-shift'),baselineTbt:metric(b,'total-blocking-time'),candidateTbt:metric(c,'total-blocking-time')};const pass=out.candidate>=out.baseline-3&&out.candidate>=Number(min)&&out.candidateCls<=0.1&&out.candidateCls<=out.baselineCls+0.03&&out.candidateLcp<=Math.max(4000,out.baselineLcp*1.15);console.log('LIGHTHOUSE_PROOF',JSON.stringify({...out,pass,suffix}));process.exit(pass?0:42)
+          NODE
+            }
+            run_pair a
+            if ! evaluate a; then
+              echo "Marginal/failed first Lighthouse sample at width=$width; executing confirmation sample"
+              run_pair b
+              evaluate b
+            fi
+          done
+          echo 'SIX_VIEWPORT_LIGHTHOUSE_PROOF_PASS'
+      - name: Prove no premature release namespace consumption
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git ls-remote --tags https://github.com/$GITHUB_REPOSITORY refs/tags/v1.2.2)"
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=20" >/tmp/releases.json
+          test "$(jq '[.[]|select(.tag_name=="v1.2.2")]|length' /tmp/releases.json)" = 0
+          echo 'PREPUBLICATION_NAMESPACE_PASS'
+      - name: Preview proof complete
+        run: echo "V122_PREVIEW_PERFORMANCE_PROOF_PASS candidate=$CANDIDATE_SHA"
