@@ -79,12 +79,22 @@ jobs:
             for run in 1 2 3; do
               for side in base experiment; do
                 if [ "$side" = base ]; then URL="$BASE_CANDIDATE_URL"; else URL="$EXPERIMENT_URL"; fi
-                npx --yes lighthouse@13.4.1 "${URL}?__paired_media=${width}_${run}_${side}_$(date +%s%N)" \
-                  --quiet --only-categories=performance --output=json \
-                  --chrome-flags='--headless --no-sandbox --disable-gpu' \
-                  --form-factor=mobile --screenEmulation.mobile=true \
-                  --screenEmulation.width="$width" --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=2 \
-                  --output-path="/tmp/lh-paired/${side}-${width}-${run}.json"
+                OUT="/tmp/lh-paired/${side}-${width}-${run}.json"
+                ok=0
+                for attempt in 1 2 3; do
+                  rm -f "$OUT"
+                  if npx --yes lighthouse@13.4.1 "${URL}?__paired_media=${width}_${run}_${side}_${attempt}_$(date +%s%N)" \
+                    --quiet --only-categories=performance --output=json \
+                    --chrome-flags='--headless --no-sandbox --disable-gpu' \
+                    --form-factor=mobile --screenEmulation.mobile=true \
+                    --screenEmulation.width="$width" --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=2 \
+                    --output-path="$OUT"; then
+                    if node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$OUT"; then ok=1; break; fi
+                  fi
+                  echo "LIGHTHOUSE_TRANSIENT_RETRY side=$side width=$width run=$run attempt=$attempt" >&2
+                  sleep 3
+                done
+                test "$ok" = 1
               done
               node - "$width" "$run" <<'NODE'
           const fs=require('fs'),[w,r]=process.argv.slice(2);const read=s=>JSON.parse(fs.readFileSync(`/tmp/lh-paired/${s}-${w}-${r}.json`));const metric=(x,id)=>x.audits[id]?.numericValue;const row=x=>({score:Math.round(x.categories.performance.score*100),fcp:metric(x,'first-contentful-paint'),lcp:metric(x,'largest-contentful-paint'),tbt:metric(x,'total-blocking-time'),cls:metric(x,'cumulative-layout-shift'),speedIndex:metric(x,'speed-index')});console.log('PAIRED_RESPONSIVE_MEDIA_RUN',JSON.stringify({width:Number(w),run:Number(r),base:row(read('base')),experiment:row(read('experiment'))}));
@@ -102,7 +112,17 @@ jobs:
             IFS=: read -r width height form dpr minimum <<<"$spec"
             common=(--quiet --only-categories=performance --output=json --chrome-flags='--headless --no-sandbox --disable-gpu' --screenEmulation.width="$width" --screenEmulation.height="$height" --screenEmulation.deviceScaleFactor="$dpr")
             if [ "$form" = mobile ]; then common+=(--form-factor=mobile --screenEmulation.mobile=true); else common+=(--preset=desktop --screenEmulation.mobile=false); fi
-            npx --yes lighthouse@13.4.1 "${EXPERIMENT_URL}?__six_media=${width}_$(date +%s%N)" "${common[@]}" --output-path="/tmp/lh-paired/six-$width.json"
+            OUT="/tmp/lh-paired/six-$width.json"
+            ok=0
+            for attempt in 1 2 3; do
+              rm -f "$OUT"
+              if npx --yes lighthouse@13.4.1 "${EXPERIMENT_URL}?__six_media=${width}_${attempt}_$(date +%s%N)" "${common[@]}" --output-path="$OUT"; then
+                if node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$OUT"; then ok=1; break; fi
+              fi
+              echo "LIGHTHOUSE_TRANSIENT_RETRY six_width=$width attempt=$attempt" >&2
+              sleep 3
+            done
+            test "$ok" = 1
             node - "$width" "$minimum" <<'NODE'
           const fs=require('fs'),[w,min]=process.argv.slice(2),x=JSON.parse(fs.readFileSync(`/tmp/lh-paired/six-${w}.json`));const req=x.audits['network-requests']?.details?.items||[];const selectedHero=req.find(r=>/saeed-ghezelbash-portrait-(720|800)\.[0-9a-f]{12}\.avif/.test(r.url||''));const out={width:Number(w),minimum:Number(min),score:Math.round(x.categories.performance.score*100),fcp:x.audits['first-contentful-paint']?.numericValue,lcp:x.audits['largest-contentful-paint']?.numericValue,tbt:x.audits['total-blocking-time']?.numericValue,cls:x.audits['cumulative-layout-shift']?.numericValue,selectedResponsiveHero:selectedHero?selectedHero.url:null};console.log('RESPONSIVE_MEDIA_SIX_VIEWPORT',JSON.stringify(out));if(out.score<Number(min)||out.cls>0.1||out.lcp>4000)throw Error(`${w} responsive-media ceiling failed`);if(Number(w)>=390&&Number(w)<=430&&!out.selectedResponsiveHero)throw Error(`${w} did not select calibrated 720/800 Hero AVIF`);
           NODE
