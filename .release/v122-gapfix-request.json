@@ -1,0 +1,7 @@
+{
+  "targetVersion": "1.2.2",
+  "expectedCandidate": "b811855e3758312810d79a76bdb5aff8c3bbf36d",
+  "requestedAt": "2026-08-14",
+  "scope": "locked-ceiling-gap-fixes",
+  "nonce": "v122-gapfix-001"
+}
