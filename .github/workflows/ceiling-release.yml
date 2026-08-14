@@ -264,7 +264,7 @@ jobs:
           node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
           git push origin "$SOURCE_COMMIT":staging/deploy
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
-          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?per_page=50" >/tmp/cf-deployments.json
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?env=preview" >/tmp/cf-deployments.json
           PREVIEW_URL="$(node - <<'NODE'
           const p=require('/tmp/cf-deployments.json');const c=process.env.SOURCE_COMMIT;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Successful preview URL missing');console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
           NODE
@@ -324,7 +324,7 @@ jobs:
           echo "GITHUB_RELEASE_DRAFT_ID=$RID" >> "$GITHUB_ENV"
           node scripts/update-release-control.mjs "$LEDGER" GITHUB_RELEASE_DRAFT_READY sourceCommit=$SOURCE_COMMIT githubReleaseDraftId=$RID
           git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prepare non-public GitHub v1.2.2 Release draft' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
-          echo "GITHUB_RELEASE_DRAFT_READY_PASS id=$RID target=$SOURCE_COMMIT tag_created=false"
+          echo "GITHUB_RELEASE_DRAFT_READY_PASS id=$RID target=$SOURCE_COMMIT tag_state=exact-or-created-on-publish"
       - name: Final irreversible publication gate
         shell: bash
         run: |
