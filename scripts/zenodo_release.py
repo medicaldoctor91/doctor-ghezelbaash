@@ -118,10 +118,16 @@ def exact_sources():
     return sources
 
 def stage(args,token):
-    release=load_release(); z=release['dataset']['zenodo']; record=str(z['recordId']); doi=z['versionDoi']
+    release=load_release(); z=release['dataset']['zenodo']; record=str(z['recordId']); doi=z['versionDoi']; source_commit=os.environ.get('SOURCE_COMMIT','').strip()
+    if len(source_commit)!=40 or any(c not in '0123456789abcdef' for c in source_commit): raise RuntimeError('SOURCE_COMMIT must bind Zenodo stage to exact Candidate C')
     if release['release']!=args.version: raise RuntimeError('Source release differs from stage target')
     draft_url=f'{BASE}/deposit/depositions/{record}'; draft=call(token,'GET',draft_url)
-    if draft.get('submitted') is True: raise RuntimeError('Cannot stage an already-published draft')
+    if draft.get('submitted') is True:
+        sources=exact_sources(); hashes={name:sha256(file) for name,file in sources.items()}; att=RUNTIME/'release-attestation.json'
+        if not att.exists() or json.loads(att.read_text()).get('sourceCommit')!=source_commit: raise RuntimeError('Release attestation is not bound to SOURCE_COMMIT before Zenodo public retry proof')
+        verified=verify_public_record(token,record,doi,release['release'],z['conceptDoi'],hashes)
+        state={'stage':'ZENODO_STAGED','release':release['release'],'recordId':record,'versionDoi':doi,'conceptDoi':z['conceptDoi'],'sourceCommit':source_commit,'files':len(sources),'sha256':hashes,'remoteSha256':dict(hashes),'alreadyPublished':True,'publicIntegrity':verified.get('integrity')}
+        write_state('zenodo-stage.json',state); print(json.dumps({k:v for k,v in state.items() if k not in ('sha256','remoteSha256')},separators=(',',':'))); return
     prere=(draft.get('metadata') or {}).get('prereserve_doi') or {}
     if prere.get('doi')!=doi: raise RuntimeError('Reserved DOI drift before stage')
     md=sanitize_metadata(draft.get('metadata')); md.update(metadata(release['release'],release['dateModified'],doi,z['conceptDoi']))
@@ -130,7 +136,9 @@ def stage(args,token):
         call(token,'DELETE',f"{draft_url}/files/{item['id']}",ok=(204,))
     draft=call(token,'GET',draft_url); bucket=(draft.get('links') or {}).get('bucket')
     if not bucket: raise RuntimeError('Zenodo draft bucket missing at stage')
-    sources=exact_sources(); hashes={}
+    sources=exact_sources(); att=RUNTIME/'release-attestation.json'
+    if not att.exists() or json.loads(att.read_text()).get('sourceCommit')!=source_commit: raise RuntimeError('Release attestation is not bound to SOURCE_COMMIT before Zenodo stage')
+    hashes={}
     for name,file in sources.items():
         raw=file.read_bytes(); hashes[name]=hashlib.sha256(raw).hexdigest(); call(token,'PUT',f'{bucket}/{parse.quote(name)}',raw,'application/octet-stream')
     remote=call(token,'GET',f'{draft_url}/files')
@@ -142,13 +150,13 @@ def stage(args,token):
     readback=call(token,'GET',draft_url); rmd=readback.get('metadata') or {}; prere=rmd.get('prereserve_doi') or {}
     if readback.get('submitted') is True or prere.get('doi')!=doi or rmd.get('version')!=release['release'] or rmd.get('publication_date')!=release['dateModified']:
         raise RuntimeError('Zenodo staged metadata readback drift')
-    state={'stage':'ZENODO_STAGED','release':release['release'],'recordId':record,'versionDoi':doi,'conceptDoi':z['conceptDoi'],'files':len(sources),'sha256':hashes,'remoteSha256':remote_hashes}
+    state={'stage':'ZENODO_STAGED','release':release['release'],'recordId':record,'versionDoi':doi,'conceptDoi':z['conceptDoi'],'sourceCommit':source_commit,'files':len(sources),'sha256':hashes,'remoteSha256':remote_hashes}
     write_state('zenodo-stage.json',state); print(json.dumps({k:v for k,v in state.items() if k not in ('sha256','remoteSha256')},separators=(',',':')))
 
 def publish(args,token):
-    release=load_release(); z=release['dataset']['zenodo']; record=str(z['recordId']); doi=z['versionDoi']; draft_url=f'{BASE}/deposit/depositions/{record}'
+    release=load_release(); z=release['dataset']['zenodo']; record=str(z['recordId']); doi=z['versionDoi']; draft_url=f'{BASE}/deposit/depositions/{record}'; source_commit=os.environ.get('SOURCE_COMMIT','').strip()
     staged=json.loads((RUNTIME/'zenodo-stage.json').read_text())
-    if staged.get('recordId')!=record or staged.get('versionDoi')!=doi or staged.get('release')!=release['release']: raise RuntimeError('Zenodo stage ledger mismatch')
+    if staged.get('recordId')!=record or staged.get('versionDoi')!=doi or staged.get('release')!=release['release'] or staged.get('sourceCommit')!=source_commit: raise RuntimeError('Zenodo stage ledger mismatch or stale Candidate C binding')
     # Re-download every staged file immediately before the irreversible publish action.
     remote=call(token,'GET',f'{draft_url}/files')
     if {x.get('filename') for x in remote}!=set(staged['sha256']): raise RuntimeError('Zenodo inventory drift after stage')
@@ -156,7 +164,9 @@ def publish(args,token):
         blob=call(token,'GET',(item.get('links') or {}).get('download'),ok=(200,),binary=True)
         if hashlib.sha256(blob).hexdigest()!=staged['sha256'][item['filename']]: raise RuntimeError(f"Zenodo pre-publish drift: {item['filename']}")
     draft=call(token,'GET',draft_url); md=draft.get('metadata') or {}; prere=md.get('prereserve_doi') or {}
-    if draft.get('submitted') is True: raise RuntimeError('Zenodo draft unexpectedly already published')
+    if draft.get('submitted') is True:
+        state=verify_public_record(token,record,doi,release['release'],z['conceptDoi'],staged['sha256']); state['idempotentAlreadyPublished']=True; state['sourceCommit']=source_commit
+        write_state('zenodo-published.json',state); print(json.dumps(state,separators=(',',':'))); return
     if prere.get('doi')!=doi or md.get('version')!=release['release']: raise RuntimeError('Zenodo identity drift before publish')
     call(token,'POST',f'{draft_url}/actions/publish')
     state=verify_public_record(token,record,doi,release['release'],z['conceptDoi'],staged['sha256'])

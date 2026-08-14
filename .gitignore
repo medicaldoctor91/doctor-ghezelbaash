@@ -24,3 +24,4 @@ public/assets/site.*.css
 public/live-observations.jsonld
 public/query-matrix.jsonl
 public/current-release-matrix.json
+.release/huggingface/

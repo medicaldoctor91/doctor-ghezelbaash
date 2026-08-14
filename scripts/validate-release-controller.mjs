@@ -1,0 +1,15 @@
+import {readFile} from 'node:fs/promises';
+const f=async p=>readFile(p,'utf8'),w=await f('.github/workflows/ceiling-release.yml'),cf=await f('scripts/ensure-cloudflare-pages-git-deployment.mjs'),z=await f('scripts/zenodo_release.py'),fin=await f('.github/workflows/v122-release-finalizer.yml'),gi=await f('.gitignore');
+const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
+must(!w.includes('unset SOURCE_DATE_EPOCH SOURCE_COMMIT GITHUB_SHA'),'Step12 still destroys canonical commit input');
+must(w.includes('REPRO_SHA="$SOURCE_COMMIT"')&&w.includes('SOURCE_COMMIT="$REPRO_SHA" CF_PAGES_COMMIT_SHA="$REPRO_SHA" SOURCE_DATE_EPOCH="$REPRO_EPOCH"'),'Step12 canonical build input binding missing');
+must(cf.includes('preview_branch_excludes:[]')&&cf.includes('s.previewBranchExcludes.length===0'),'Cloudflare wildcard preview exclusion remains');
+const preview=w.indexOf('git push origin "$SOURCE_COMMIT":staging/deploy'),configure=w.lastIndexOf('node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure',preview);
+must(preview>0&&configure>0&&configure<preview,'Cloudflare Preview config is not proven before branch push');
+must(!w.includes('tag -f -a v1.2.2')&&!w.includes('push origin refs/tags/v1.2.2 --force'),'Mutable HF release-tag path remains');
+must(fin.includes("'refs/tags/v1.2.2^{}'"),'Finalizer does not peel annotated HF tag');
+must(gi.split(/\r?\n/).includes('.release/huggingface/'),'HF runtime clone is not ignored');
+must(z.includes("'sourceCommit':source_commit")&&z.includes("staged.get('sourceCommit')!=source_commit"),'Zenodo stage/publish is not bound to Candidate C');
+must(w.includes('PERFORMANCE_PROVEN sourceCommit=$SOURCE_COMMIT'),'Performance proof is not durable');
+must(w.includes('verify-release-proof-ledger.mjs "$LEDGER" "$SOURCE_COMMIT"'),'Irreversible gate lacks exact-commit proof ledger');
+console.log(JSON.stringify({releaseControllerHardening:'PASS',step12:'canonical-input-bound',cloudflare:'include-only-preview',zenodo:'source-commit-bound-idempotent',hfTag:'immutable-peeled',ledger:'commit-bound-proofs',runtimeHygiene:'PASS'}));
