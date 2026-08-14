@@ -55,11 +55,11 @@ def metadata(version,date,doi,concept):
         {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':'https://www.wikidata.org/entity/Q140288589','scheme':'url'}],
       'notes':f'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. Concept DOI: {concept}. Exact Version DOI: {doi}. Current live observations: https://www.ghezelbaash.ir/live-observations.jsonld.',
       'related_identifiers':[
-        {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isDerivedFrom','resource_type':'dataset'},
+        {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isIdenticalTo','resource_type':'dataset'},
         {'identifier':'https://www.ghezelbaash.ir/','relation':'isDescribedBy','resource_type':'other'},
         {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash','relation':'isDerivedFrom','resource_type':'software'},
         {'identifier':'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','relation':'isReferencedBy','resource_type':'dataset'},
-        {'identifier':'https://www.wikidata.org/entity/Q140304972','relation':'isPartOf','resource_type':'dataset'},
+        {'identifier':'https://www.wikidata.org/entity/Q140304972','relation':'isIdenticalTo','resource_type':'dataset'},
         {'identifier':'https://www.wikidata.org/entity/Q140287622','relation':'references','resource_type':'other'},
         {'identifier':'https://www.wikidata.org/entity/Q140288589','relation':'references','resource_type':'other'}],
       'prereserve_doi':True
