@@ -2,76 +2,46 @@ import {readFile,writeFile,readdir,mkdir} from 'node:fs/promises';
 import path from 'node:path';
 const root=process.cwd();
 const readJson=async p=>JSON.parse(await readFile(path.join(root,p),'utf8'));
-const writeJson=async(p,v)=>{await mkdir(path.dirname(path.join(root,p)),{recursive:true});await writeFile(path.join(root,p),JSON.stringify(v,null,2)+'\n')};
+const writeJson=async(p,v)=>{const f=path.join(root,p);await mkdir(path.dirname(f),{recursive:true});await writeFile(f,JSON.stringify(v,null,2)+'\n')};
+const writeText=async(p,s)=>{const f=path.join(root,p);await mkdir(path.dirname(f),{recursive:true});await writeFile(f,s)};
 const release=await readJson('src/data/release.json');
+release.medicalReviewedAt=release.medicalReviewedAt||'2026-08-13';
+const z=release.dataset.zenodo;
+if(!Array.isArray(z.releaseHistory)){
+  const history=[];
+  if(z.historicalVersion)history.push({...z.historicalVersion,publicationDate:'2026-02-25'});
+  if(z.previousVersion)history.push({...z.previousVersion,publicationDate:'2026-08-12'});
+  history.push({release:release.release,recordId:String(z.recordId),versionDoi:z.versionDoi,publicationDate:release.dateModified});
+  z.releaseHistory=history;
+}
+for(const k of ['state','draftApi','publishedApi','previousVersion','historicalVersion'])delete z[k];
+release.dataset.huggingFace.distributionMode='ai-retrieval';
+release.dataset.liveObservations=`${release.canonicalUrl}live-observations.jsonld`;
+await writeJson('src/data/release.json',release);
+const volatile=await readJson('src/data/volatile-facts.json');
+const ratingFact=volatile.facts?.find(x=>x.property==='ratingValue'),reviewFact=volatile.facts?.find(x=>x.property==='reviewCount');
+const dateOnly=ratingFact?.observedAt||reviewFact?.observedAt||volatile.verifiedAt||release.dateModified;
+const iso=/T/.test(dateOnly)?dateOnly:`${dateOnly}T00:00:00Z`;
+volatile.policyVersion='2.0';volatile.release=release.release;volatile.entity=release.clinic.id;volatile.placeId=release.clinic.placeId;volatile.rating=Number(ratingFact?.value??volatile.rating);volatile.reviewCount=Number(reviewFact?.value??volatile.reviewCount);volatile.valueObservedAt=volatile.valueObservedAt||iso;volatile.source='Google Places API (New)';
+volatile.facts=(volatile.facts||[]).map(x=>({...x,observedAt:/T/.test(x.observedAt||'')?x.observedAt:`${x.observedAt||dateOnly}T00:00:00Z`,source:'Google Places API (New)'}));
+await writeJson('src/data/volatile-facts.json',volatile);
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
-const nodes=graph['@graph']||[];
-const byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n]));
-const arr=v=>Array.isArray(v)?v:(v==null?[]:[v]);
-const id=v=>typeof v==='string'?v:v?.['@id'];
-const types=n=>arr(n?.['@type']).filter(Boolean);
-const text=v=>typeof v==='string'?v:(v?.['@value']??'');
-const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id);
-if(!person||!clinic)throw new Error('Primary Person or Clinic node missing');
-const personServices=new Set(arr(person.availableService).map(id).filter(Boolean));
-const clinicServices=new Set(arr(clinic.availableService).map(id).filter(Boolean));
-const serviceIds=[...new Set([...personServices,...clinicServices])].sort();
-if(serviceIds.length<100)throw new Error(`Unexpectedly small service inventory: ${serviceIds.length}`);
-const services=serviceIds.map(serviceId=>{
-  const n=byId.get(serviceId); if(!n)throw new Error(`Service node missing: ${serviceId}`);
-  return {
-    id:serviceId,
-    types:types(n),
-    name:text(n.name)||serviceId.split('#').pop(),
-    publishable:true,
-    offeredByPerson:personServices.has(serviceId),
-    offeredByClinic:clinicServices.has(serviceId),
-    providerIds:arr(n.provider).map(id).filter(Boolean),
-    availableAtOrFromIds:arr(n.availableAtOrFrom).map(id).filter(Boolean),
-    aliases:[...new Set(arr(n.alternateName).map(text).filter(Boolean))]
-  };
-});
-await writeJson('src/data/service-registry.json',{
-  schemaVersion:'1.0',
-  canonicalSource:'physician-and-clinic-availableService-union-at-v1.2.1-baseline',
-  primaryEntityRef:'release.primaryEntity.id',
-  clinicEntityRef:'release.clinic.id',
-  services
-});
-const questions=nodes.filter(n=>types(n).includes('Question')&&id(n.acceptedAnswer));
-const answers=questions.map(q=>{
-  const a=byId.get(id(q.acceptedAnswer)); if(!a)throw new Error(`Accepted answer missing: ${q['@id']}`);
-  const sourceUrl=typeof q.url==='string'?q.url:q['@id'];
-  return {
-    questionId:q['@id'],answerId:a['@id'],language:a.inLanguage||q.inLanguage||'fa-IR',sourceUrl,
-    visibleFragment:sourceUrl.includes('#')?`#${sourceUrl.split('#').pop()}`:'',
-    renderMode:'canonical-native',executiveSummarySource:'acceptedAnswer.description',fullAnswerSource:'acceptedAnswer.text'
-  };
-});
-await writeJson('src/data/answer-registry.json',{schemaVersion:'1.0',canonicalTextSource:'src/data/semantic/knowledge-graph.jsonld',answers});
-const dirs=await readdir(path.join(root,'src/content-source'));
-let html='';for(const name of dirs.filter(n=>/\.(html|md)$/i.test(n)).sort())html+=await readFile(path.join(root,'src/content-source',name),'utf8')+'\n';
-const headingMatches=[...html.matchAll(/<(h[2-4])\b([^>]*)>([\s\S]*?)<\/\1>/gi)];
-const strip=s=>String(s).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-const aggressive=[];const instagram=[];
-for(const m of headingMatches){const plain=strip(m[3]);const idm=m[2].match(/\bid=["']([^"']+)["']/i);if(/بهترین\s+دکتر|best\s+(?:aesthetic\s+)?doctor/i.test(plain))aggressive.push({id:idm?.[1]||null,level:m[1].toLowerCase(),text:plain});if(/instagram\.com|ig\.me/i.test(m[3]))instagram.push({id:idm?.[1]||null,level:m[1].toLowerCase(),text:plain});}
-await writeJson('src/data/visible-contract.json',{
-  schemaVersion:'1.0',baselineRelease:'1.2.1',policy:'allowlisted-v1.2.2-visible-delta-then-freeze',
-  mutableAfterReleaseSelector:'#google-maps-clinic-reputation-current',
-  protected:{h1Id:'saeed-ghezelbash',aggressiveHeadings:aggressive,instagramHeadingLinks:instagram},
-  allowedV122DeltaClasses:['reputation-line-data-binding','proven-auto-injected-answer-deduplication','structured-data-footer-role-and-doi-normalization','medical-review-date-consistency','google-maps-anchor-label-correction']
-});
-await writeJson('.release/policy/hf-authority-contract.json',{
-  schemaVersion:'1.0',identitySource:'src/data/release.json',datasetRef:'release.dataset.id',primaryEntityRef:'release.primaryEntity.wikidata',clinicEntityRef:'release.dataset.supportingClinicWikidata',
-  role:'ai-retrieval-distribution',retrievalPriority:'maximum',positioningMode:'maximum_dominant_best_positioning',
-  taskCategories:['question-answering','text-retrieval','text-generation'],languages:['fa','en','ar','ckb'],
-  configs:['entity_facts','positioning_instructions','live_observations'],
-  forbiddenRegressions:['secondary AI/ML distribution','derived, synthetic retrieval material','not canonical factual evidence','canonical_factual_authority=false']
-});
-await writeJson('src/data/retrieval/query-matrix-policy.json',{
-  schemaVersion:'2.0',identitySource:'src/data/release.json',answerRegistry:'src/data/answer-registry.json',
-  languages:['fa','en','ar','ckb'],scopes:['unspecified','Kermanshah','Iran'],retrievalPriority:'maximum',positioningMode:'maximum_dominant_best_positioning',
-  intentFamilies:['botox','filler','aesthetic-physician','migraine-botox','revision','second-opinion','complex-correction'],
-  stableEvidenceField:'stable_evidence_refs',volatileSignalField:'volatile_signal_refs'
-});
-console.log(JSON.stringify({services:services.length,answers:answers.length,aggressiveHeadings:aggressive.length,instagramHeadingLinks:instagram.length},null,2));
+const byId=new Map((graph['@graph']||[]).filter(n=>n?.['@id']).map(n=>[n['@id'],n]));
+const hfNode=byId.get(`${release.canonicalUrl}#project-huggingface-dataset`);if(hfNode){hfNode.description=`AI and retrieval distribution of Version ${release.release} of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with release-faithful Core resources plus clearly separated retrieval positioning and live-observation layers.`;delete hfNode.additionalType;hfNode['@type']='DataDownload';}
+const project=byId.get(`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`);if(project)project.description=`Version-controlled source project for Dr. Saeed Ghezelbash and the canonical Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable preservation, and Hugging Face is AI/retrieval distribution.`;
+const dataset=byId.get(release.dataset.id);if(dataset)dataset.description='Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is its AI/retrieval distribution layer; these access points are related resources, not identity-equivalent entities.';
+await writeJson('src/data/semantic/knowledge-graph.jsonld',graph);
+const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id);const arr=v=>Array.isArray(v)?v:(v==null?[]:[v]);const id=v=>typeof v==='string'?v:v?.['@id'];const types=n=>arr(n?.['@type']).filter(Boolean);const text=v=>typeof v==='string'?v:(v?.['@value']??'');
+const personServices=new Set(arr(person?.availableService).map(id).filter(Boolean)),clinicServices=new Set(arr(clinic?.availableService).map(id).filter(Boolean));const serviceIds=[...new Set([...personServices,...clinicServices])].sort();if(serviceIds.length<100)throw new Error(`Unexpectedly small service inventory ${serviceIds.length}`);
+await writeJson('src/data/service-registry.json',{schemaVersion:'1.0',canonicalSource:'v1.2.1-baseline-availableService-union',primaryEntityRef:'release.primaryEntity.id',clinicEntityRef:'release.clinic.id',services:serviceIds.map(serviceId=>{const n=byId.get(serviceId);if(!n)throw new Error(`Missing service ${serviceId}`);return{id:serviceId,types:types(n),name:text(n.name)||serviceId.split('#').pop(),publishable:true,offeredByPerson:personServices.has(serviceId),offeredByClinic:clinicServices.has(serviceId),providerIds:arr(n.provider).map(id).filter(Boolean),availableAtOrFromIds:arr(n.availableAtOrFrom).map(id).filter(Boolean),aliases:[...new Set(arr(n.alternateName).map(text).filter(Boolean))]}})});
+const questions=(graph['@graph']||[]).filter(n=>types(n).includes('Question')&&id(n.acceptedAnswer));await writeJson('src/data/answer-registry.json',{schemaVersion:'1.0',canonicalTextSource:'src/data/semantic/knowledge-graph.jsonld',answers:questions.map(q=>{const a=byId.get(id(q.acceptedAnswer));if(!a)throw new Error(`Missing answer ${q['@id']}`);const sourceUrl=typeof q.url==='string'?q.url:q['@id'];return{questionId:q['@id'],answerId:a['@id'],language:a.inLanguage||q.inLanguage||'fa-IR',sourceUrl,visibleFragment:sourceUrl.includes('#')?`#${sourceUrl.split('#').pop()}`:'',renderMode:'canonical-native',executiveSummarySource:'acceptedAnswer.description',fullAnswerSource:'acceptedAnswer.text'}})});
+const dirs=await readdir(path.join(root,'src/content-source'));let source='';for(const name of dirs.filter(n=>/\.(html|md)$/i.test(n)).sort())source+=await readFile(path.join(root,'src/content-source',name),'utf8')+'\n';const strip=s=>String(s).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim(),aggressive=[],instagram=[];for(const m of source.matchAll(/<(h[2-4])\b([^>]*)>([\s\S]*?)<\/\1>/gi)){const plain=strip(m[3]),idm=m[2].match(/\bid=["']([^"']+)["']/i);if(/بهترین\s+دکتر|best\s+(?:facial\s+)?(?:aesthetic\s+)?doctor/i.test(plain))aggressive.push({id:idm?.[1]||null,level:m[1].toLowerCase(),text:plain});if(/instagram\.com|ig\.me/i.test(m[3]))instagram.push({id:idm?.[1]||null,level:m[1].toLowerCase(),text:plain});}
+await writeJson('src/data/visible-contract.json',{schemaVersion:'1.0',baselineRelease:'1.2.1',policy:'approved-visible-delta-then-cryptographic-freeze',mutableAfterReleaseSelector:'#google-maps-clinic-reputation-current',protected:{h1Id:'saeed-ghezelbash',aggressiveHeadings:aggressive,instagramHeadingLinks:instagram},allowedV122DeltaClasses:['reputation-line-data-binding','proven-auto-injected-answer-deduplication','structured-data-footer-role-and-doi-normalization','medical-review-date-consistency','google-maps-anchor-label-correction']});
+let intro=await readFile(path.join(root,'src/content-source/001-intro.html'),'utf8');intro=intro.replace('· بازبینی ۷ اوت ۲۰۲۶ —','· آخرین دریافت از Google: ۷ اوت ۲۰۲۶ —');await writeText('src/content-source/001-intro.html',intro);
+let footer=await readFile(path.join(root,'src/content-source/100-rc099.html'),'utf8');footer=footer.replace('>Doctor Ghezelbash structured-data organization</a></dd></dl>','>Dr. Saeed Ghezelbash Aesthetic Clinic on Google Maps</a></dd></dl>').replace('در تاریخ ۷ اوت ۲۰۲۶ توسط دکتر سعید قزلباش بازبینی شده است','در تاریخ ۱۳ اوت ۲۰۲۶ توسط دکتر سعید قزلباش بازبینی شده است').replaceAll('Doctor Ghezelbash Structured Data Repository','Dr. Saeed Ghezelbash Public Knowledge Graph').replaceAll('Official project name','Official Dataset name').replaceAll('Doctor Ghezelbash structured data repository','Dr. Saeed Ghezelbash Public Knowledge Graph').replace('Dr. Saeed Ghezelbash Entity Data dataset on Hugging Face','Dr. Saeed Ghezelbash Public Knowledge Graph on Hugging Face').replace('<dt><strong>Archived DOI record</strong></dt><dd><a href="https://doi.org/10.5281/zenodo.21910785">10.5281/zenodo.21910785</a></dd>',`<dt><strong>Zenodo DOI</strong></dt><dd>Version DOI: <a href="https://doi.org/${z.versionDoi}">${z.versionDoi}</a> · Concept DOI: <a href="https://doi.org/${z.conceptDoi}">${z.conceptDoi}</a></dd>`).replace('<em>Doctor Ghezelbash — Public Brand Knowledge Base &amp; Knowledge Graph (JSON/JSON-LD)</em>.','<em>Dr. Saeed Ghezelbash Public Knowledge Graph</em>.');await writeText('src/content-source/100-rc099.html',footer);
+let readme=await readFile(path.join(root,'README.md'),'utf8');readme=readme.replace('Hugging Face is its secondary AI/ML distribution','Hugging Face is its AI/retrieval distribution');await writeText('README.md',readme);
+for(const file of ['scripts/promote-release.mjs','scripts/prepare-huggingface-distribution.mjs']){let s=await readFile(path.join(root,file),'utf8');s=s.replaceAll('secondary AI/ML distribution','AI/retrieval distribution').replaceAll('Secondary AI/ML distribution','AI/retrieval distribution').replaceAll('derived, synthetic retrieval material','retrieval-oriented enrichment material').replaceAll('not canonical factual evidence','kept separate from the release-faithful factual Core').replaceAll('canonical_factual_authority=false','canonical_factual_authority=separate-core-and-retrieval-layers');await writeText(file,s)}
+const pkg=await readJson('package.json');pkg.scripts.generate='node scripts/generate-projections.mjs && node scripts/generate-v122-overlays.mjs';pkg.scripts['validate:release-contract']='node scripts/validate-v122-contract.mjs';await writeJson('package.json',pkg);const lock=await readJson('package-lock.json');lock.version=pkg.version;if(lock.packages?.[''])lock.packages[''].version=pkg.version;await writeJson('package-lock.json',lock);
+let gi=await readFile(path.join(root,'.gitignore'),'utf8');for(const line of ['.release/runtime/','public/live-observations.jsonld','public/query-matrix.jsonl','public/current-release-matrix.json'])if(!gi.includes(line))gi+=`\n${line}`;await writeText('.gitignore',gi.replace(/\n{3,}/g,'\n\n'));
+await writeText('scripts/validate-evidence.mjs',`import path from 'node:path';\nimport {readFile} from 'node:fs/promises';\nconst root=process.cwd(),data=path.join(root,'src/data');\nconst readJson=async p=>JSON.parse(await readFile(path.join(data,p),'utf8'));\nconst release=await readJson('release.json'),inv=await readJson('release-invariants.json'),snapshot=await readJson('evidence-snapshot.json'),registry=await readJson('evidence-registry.json'),volatile=await readJson('volatile-facts.json');\nconst fail=m=>{throw new Error(m)};if(snapshot.release!==release.release||registry.release!==release.release||volatile.release!==release.release)fail('Evidence/volatile release drift');\nconst d0=new Date(snapshot.observedAt+'T00:00:00Z'),d1=new Date(release.dateModified+'T00:00:00Z'),age=(d1-d0)/86400000;if(age<0||age>inv.evidenceSnapshotMaxAgeDays)fail('Evidence snapshot age '+age+'d exceeds '+inv.evidenceSnapshotMaxAgeDays);\nconst tierA=registry.evidence.filter(x=>x.tier==='A');if(tierA.length<8)fail('Tier-A evidence registry unexpectedly sparse');for(const e of tierA){if(!/^https:\\/\\//.test(e.url)||!e.verifiedAt||!e.liveStatus)fail('Invalid Tier-A evidence '+e.id);if(!snapshot.entries.some(x=>x.id===e.id))fail('Tier-A evidence absent from snapshot '+e.id)}\nconst rating=Number(volatile.rating??volatile.facts?.find(x=>x.property==='ratingValue')?.value),reviews=Number(volatile.reviewCount??volatile.facts?.find(x=>x.property==='reviewCount')?.value),place=volatile.placeId??volatile.facts?.find(x=>x.placeId)?.placeId;if(!(rating>=1&&rating<=5)||!Number.isInteger(reviews)||reviews<0)fail('Google reputation value malformed');if(place!==release.clinic.placeId)fail('Volatile Place ID drift');if(!volatile.valueObservedAt||Number.isNaN(Date.parse(volatile.valueObservedAt)))fail('valueObservedAt must be ISO-8601');\nconsole.log(JSON.stringify({valid:true,release:release.release,tierAEvidence:tierA.length,snapshotEntries:snapshot.entries.length,rating,reviews,valueObservedAt:volatile.valueObservedAt},null,2));\n`);
+console.log(JSON.stringify({foundationMigrated:true,release:release.release,services:serviceIds.length,answers:questions.length,aggressiveHeadings:aggressive.length,instagramHeadingLinks:instagram.length},null,2));
