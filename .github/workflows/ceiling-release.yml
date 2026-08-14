@@ -292,6 +292,30 @@ jobs:
           const fs=require('fs'),[width,min]=process.argv.slice(2);const b=JSON.parse(fs.readFileSync('/tmp/lh/base-'+width+'.json')),c=JSON.parse(fs.readFileSync('/tmp/lh/candidate-'+width+'.json'));const score=x=>Math.round(x.categories.performance.score*100),metric=(x,k)=>x.audits[k].numericValue;const out={width:Number(width),minimum:Number(min),baseline:score(b),candidate:score(c),baselineLcp:metric(b,'largest-contentful-paint'),candidateLcp:metric(c,'largest-contentful-paint'),baselineCls:metric(b,'cumulative-layout-shift'),candidateCls:metric(c,'cumulative-layout-shift'),baselineTbt:metric(b,'total-blocking-time'),candidateTbt:metric(c,'total-blocking-time')};console.log('LIGHTHOUSE_VIEWPORT_GATE',JSON.stringify(out));if(out.candidate<out.baseline-3)throw Error(width+' performance regressed >3 points');if(out.candidate<out.minimum)throw Error(width+' performance below minimum '+min);if(out.candidateCls>0.1||out.candidateCls>out.baselineCls+0.03)throw Error(width+' CLS regression');if(out.candidateLcp>Math.max(4000,out.baselineLcp*1.15))throw Error(width+' LCP regression');
           NODE
           done
+      - name: Prepare non-public GitHub Release draft against exact Candidate C
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git ls-remote --tags origin refs/tags/v1.2.2)"
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > /tmp/releases-before.json
+          RID=$(jq -r '[.[] | select(.tag_name=="v1.2.2")][0].id // empty' /tmp/releases-before.json)
+          if [ -z "$RID" ]; then
+            jq -n --arg target "$SOURCE_COMMIT" '{tag_name:"v1.2.2",target_commitish:$target,name:"Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2",body:"Pre-publication draft for the exact verified Candidate C. Assets and final notes are attached immediately before publication.",draft:true,prerelease:false,generate_release_notes:false}' > /tmp/release-draft-create.json
+            gh api --method POST "repos/$GITHUB_REPOSITORY/releases" --input /tmp/release-draft-create.json > /tmp/release-draft.json
+          else
+            gh api "repos/$GITHUB_REPOSITORY/releases/$RID" > /tmp/release-draft.json
+          fi
+          RID=$(jq -r '.id' /tmp/release-draft.json)
+          test "$(jq -r '.draft' /tmp/release-draft.json)" = true
+          test "$(jq -r '.tag_name' /tmp/release-draft.json)" = v1.2.2
+          test "$(jq -r '.target_commitish' /tmp/release-draft.json)" = "$SOURCE_COMMIT"
+          test -z "$(git ls-remote --tags origin refs/tags/v1.2.2)"
+          echo "GITHUB_RELEASE_DRAFT_ID=$RID" >> "$GITHUB_ENV"
+          node scripts/update-release-control.mjs "$LEDGER" GITHUB_RELEASE_DRAFT_READY sourceCommit=$SOURCE_COMMIT githubReleaseDraftId=$RID
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prepare non-public GitHub v1.2.2 Release draft' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          echo "GITHUB_RELEASE_DRAFT_READY_PASS id=$RID target=$SOURCE_COMMIT tag_created=false"
       - name: Final irreversible publication gate
         shell: bash
         run: |
@@ -359,7 +383,7 @@ jobs:
             git tag -a v1.2.2 "$SOURCE_COMMIT" -m 'Dr. Saeed Ghezelbash entity stack v1.2.2 — exact DOI-bound release'
             git push origin refs/tags/v1.2.2
           fi
-      - name: Publish GitHub Release targeting exact C with attestation and SHA inventory
+      - name: Publish the pre-created GitHub Release against exact C with attestation and SHA inventory
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -367,6 +391,13 @@ jobs:
           set -euo pipefail
           REC=$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")
           DOI=$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > /tmp/releases-publish.json
+          RID=$(jq -r '[.[] | select(.tag_name=="v1.2.2")][0].id // empty' /tmp/releases-publish.json)
+          test -n "$RID"
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RID" > /tmp/release-before.json
+          test "$(jq -r '.draft' /tmp/release-before.json)" = true
+          test "$(jq -r '.target_commitish' /tmp/release-before.json)" = "$SOURCE_COMMIT"
+          test "$(git rev-list -n1 v1.2.2)" = "$SOURCE_COMMIT"
           cat > /tmp/release-notes.md <<EOF
           # Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2
 
@@ -383,20 +414,16 @@ jobs:
           - Release attestation asset: `release-attestation-v1.2.2.json`
           - SHA-256 inventory asset: `dist-sha256-v1.2.2.json`
           EOF
-          if gh release view v1.2.2 >/dev/null 2>&1; then
-            gh release view v1.2.2 --json isDraft,tagName > /tmp/gh-before.json
-            node -e "const r=require('/tmp/gh-before.json');if(r.tagName!=='v1.2.2'||r.isDraft!==true)throw Error('Unexpected pre-existing GitHub Release state')"
-          else
-            gh release create v1.2.2 --target "$SOURCE_COMMIT" --title 'Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2' --notes-file /tmp/release-notes.md --draft
-          fi
           cp .release/runtime/release-attestation.json /tmp/release-attestation-v1.2.2.json
           cp .release/runtime/dist-sha256.json /tmp/dist-sha256-v1.2.2.json
           gh release upload v1.2.2 /tmp/release-attestation-v1.2.2.json /tmp/dist-sha256-v1.2.2.json --clobber
-          gh release edit v1.2.2 --notes-file /tmp/release-notes.md --draft=false --latest
-          gh release view v1.2.2 --json isDraft,tagName,url > /tmp/gh-after.json
-          node -e "const r=require('/tmp/gh-after.json');if(r.tagName!=='v1.2.2'||r.isDraft!==false)throw Error('GitHub Release publication drift');console.log('GITHUB_RELEASE_PUBLIC_PASS',r.url)"
+          jq -n --rawfile body /tmp/release-notes.md '{name:"Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2",body:$body,draft:false,prerelease:false,make_latest:"true"}' > /tmp/release-publish.json
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RID" --input /tmp/release-publish.json > /tmp/release-after.json
+          test "$(jq -r '.draft' /tmp/release-after.json)" = false
+          test "$(jq -r '.tag_name' /tmp/release-after.json)" = v1.2.2
           test "$(git rev-list -n1 v1.2.2)" = "$SOURCE_COMMIT"
-          node scripts/update-release-control.mjs "$LEDGER" GITHUB_RELEASE_PUBLISHED sourceCommit=$SOURCE_COMMIT hfCommit=$HF_RELEASE_SHA
+          echo "GITHUB_RELEASE_PUBLIC_PASS $(jq -r '.html_url' /tmp/release-after.json)"
+          node scripts/update-release-control.mjs "$LEDGER" GITHUB_RELEASE_PUBLISHED sourceCommit=$SOURCE_COMMIT hfCommit=$HF_RELEASE_SHA githubReleaseId=$RID
           git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Publish GitHub v1.2.2 Release against exact C' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
       - name: Fast-forward default source branch to exact Candidate C after GitHub Release publication
         shell: bash

@@ -20,20 +20,21 @@ jobs:
   finalize:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: main
           fetch-depth: 0
           persist-credentials: true
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.18.0
-      - name: Re-open the durable verified release ledger
+      - name: Re-open durable VERIFIED release ledger
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin "$CONTROL_BRANCH"
+          git fetch origin "$CONTROL_BRANCH" main --tags
           rm -rf /tmp/v122-final-control
           git worktree add --detach /tmp/v122-final-control "origin/$CONTROL_BRANCH"
           LEDGER=/tmp/v122-final-control/.release/control/v1.2.2.json
@@ -42,61 +43,58 @@ jobs:
           const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/v122-final-control/.release/control/v1.2.2.json'));
           if(x.stage!=='VERIFIED') throw Error(`Finalizer requires VERIFIED ledger, got ${x.stage}`);
           if(!/^[0-9a-f]{40}$/.test(x.sourceCommit||'')) throw Error('Verified sourceCommit missing');
+          if(!/^[0-9a-f]{40}$/.test(x.hfCommit||'')) throw Error('Verified hfCommit missing');
           if(String(x.recordId||'')!=='21930954'||x.versionDoi!=='10.5281/zenodo.21930954') throw Error('Verified Zenodo identity drift');
           NODE
           echo "LEDGER=$LEDGER" >> "$GITHUB_ENV"
           echo "SOURCE_COMMIT=$(node -p "require('$LEDGER').sourceCommit")" >> "$GITHUB_ENV"
+          echo "HF_RELEASE_SHA=$(node -p "require('$LEDGER').hfCommit")" >> "$GITHUB_ENV"
           echo "RECORD_ID=$(node -p "require('$LEDGER').recordId")" >> "$GITHUB_ENV"
           echo "VERSION_DOI=$(node -p "require('$LEDGER').versionDoi")" >> "$GITHUB_ENV"
-      - name: Reverify immutable tag, public Zenodo and cache-busted canonical serving truth
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch --tags origin
-          test "$(git rev-list -n1 v1.2.2)" = "$SOURCE_COMMIT"
-          curl --fail --silent --show-error "https://zenodo.org/api/records/$RECORD_ID" >/tmp/zenodo-public.json
-          node - <<'NODE'
-          const z=require('/tmp/zenodo-public.json');
-          const doi=z.doi||z.pids?.doi?.identifier;
-          if(String(z.id)!==String(process.env.RECORD_ID)||doi!==process.env.VERSION_DOI) throw Error('Public Zenodo readback drift');
-          NODE
-          BUST=$(date +%s%N)
-          curl --fail --silent --show-error -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/current-release-matrix.json?finalizer=$BUST" >/tmp/current-release.json
-          node - <<'NODE'
-          const x=require('/tmp/current-release.json');
-          const text=JSON.stringify(x);
-          if(!text.includes('1.2.2')||!text.includes(process.env.VERSION_DOI)||!text.includes(process.env.SOURCE_COMMIT)) throw Error('Cache-busted canonical release matrix drift');
-          NODE
-      - name: Publish the already-verified GitHub Release
+      - name: Reverify Git source tag, public GitHub Release, Zenodo and Hugging Face frozen tag
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          gh release view v1.2.2 --json isDraft,tagName,targetCommitish,url >/tmp/release-before.json
+          test "$(git rev-parse origin/main)" = "$SOURCE_COMMIT"
+          test "$(git rev-list -n1 v1.2.2)" = "$SOURCE_COMMIT"
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > /tmp/releases-final.json
+          RID=$(jq -r '[.[] | select(.tag_name=="v1.2.2")][0].id // empty' /tmp/releases-final.json)
+          test -n "$RID"
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RID" > /tmp/github-release-final.json
+          test "$(jq -r '.draft' /tmp/github-release-final.json)" = false
+          test "$(jq -r '.tag_name' /tmp/github-release-final.json)" = v1.2.2
+          curl --fail --silent --show-error "https://zenodo.org/api/records/$RECORD_ID" >/tmp/zenodo-public.json
           node - <<'NODE'
-          const r=require('/tmp/release-before.json');
-          if(r.isDraft!==true||r.tagName!=='v1.2.2') throw Error('Expected verified v1.2.2 draft is missing');
-          if(r.targetCommitish && ![process.env.SOURCE_COMMIT,'main'].includes(r.targetCommitish)) throw Error(`GitHub Release target drift: ${r.targetCommitish}`);
+          const z=require('/tmp/zenodo-public.json');const doi=z.doi||z.pids?.doi?.identifier;
+          if(String(z.id)!==String(process.env.RECORD_ID)||doi!==process.env.VERSION_DOI) throw Error('Public Zenodo readback drift');
           NODE
-          gh release edit v1.2.2 --draft=false --latest
-          gh release view v1.2.2 --json isDraft,tagName,url >/tmp/release-after.json
+          HF_TAG=$(git ls-remote "https://huggingface.co/datasets/$HF_REPO" refs/tags/v1.2.2 | awk '{print $1}')
+          test -n "$HF_TAG"
+          test "$HF_TAG" = "$HF_RELEASE_SHA"
+          echo "EXTERNAL_RELEASE_OBJECTS_PASS source=$SOURCE_COMMIT hf=$HF_RELEASE_SHA zenodo=$VERSION_DOI github_release_id=$RID"
+      - name: Reverify current serving and frozen release truth after main integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUST=$(date +%s%N)
+          curl --fail --silent --show-error -H 'Cache-Control: no-cache' "https://www.ghezelbaash.ir/current-release-matrix.json?finalizer=$BUST" >/tmp/current-release.json
           node - <<'NODE'
-          const r=require('/tmp/release-after.json');
-          if(r.isDraft!==false||r.tagName!=='v1.2.2') throw Error('GitHub Release did not become public');
-          console.log('GITHUB_RELEASE_PUBLIC_PASS',r.url);
+          const x=require('/tmp/current-release.json');const text=JSON.stringify(x);
+          if(!text.includes('1.2.2')||!text.includes(process.env.VERSION_DOI)||!text.includes(process.env.SOURCE_COMMIT)) throw Error('Cache-busted canonical release matrix drift');
           NODE
-      - name: Mark durable release control GITHUB_RELEASE_PUBLISHED then COMPLETE
+          node scripts/verify-current-serving.mjs
+          node scripts/verify-release-snapshot.mjs
+          echo 'FINAL_EXTERNAL_CONVERGENCE_REVERIFY_PASS'
+      - name: Mark durable release control COMPLETE only after all final re-verification passes
         shell: bash
         run: |
           set -euo pipefail
           git config user.name ghezelbaash-release-finalizer
           git config user.email actions@users.noreply.github.com
-          node scripts/update-release-control.mjs "$LEDGER" GITHUB_RELEASE_PUBLISHED sourceCommit=$SOURCE_COMMIT githubRelease=v1.2.2
+          node scripts/update-release-control.mjs "$LEDGER" COMPLETE sourceCommit=$SOURCE_COMMIT hfCommit=$HF_RELEASE_SHA githubRelease=v1.2.2 externalConvergence=true
           git -C /tmp/v122-final-control add .release/control/v1.2.2.json
-          git -C /tmp/v122-final-control commit -m 'Publish verified GitHub v1.2.2 Release'
+          git -C /tmp/v122-final-control commit -m 'Complete v1.2.2 external convergence after final re-verification'
           git -C /tmp/v122-final-control push origin HEAD:$CONTROL_BRANCH
-          node scripts/update-release-control.mjs "$LEDGER" COMPLETE sourceCommit=$SOURCE_COMMIT externalConvergence=true
-          git -C /tmp/v122-final-control add .release/control/v1.2.2.json
-          git -C /tmp/v122-final-control commit -m 'Complete v1.2.2 external convergence'
-          git -C /tmp/v122-final-control push origin HEAD:$CONTROL_BRANCH
+          echo "V122_RELEASE_COMPLETE_PASS source=$SOURCE_COMMIT"
