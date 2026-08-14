@@ -1,0 +1,8 @@
+import {createHash} from 'node:crypto';
+import {readFile} from 'node:fs/promises';
+import {parse} from 'parse5';
+const html=await readFile(process.argv[2]||'dist/index.html','utf8');
+const doc=parse(html),skip=new Set(['script','style','template','noscript','meta','link','head']),attrsKeep=new Set(['id','href','src','alt','title','aria-label','role']);
+const norm=s=>String(s??'').replace(/\s+/g,' ').trim();
+const find=(node,name)=>node?.tagName===name?node:(node?.childNodes||[]).map(x=>find(x,name)).find(Boolean);const body=find(doc,'body');if(!body)throw new Error('HTML body missing');
+const out=[];const walk=node=>{if(node.nodeName==='#text'){const t=norm(node.value);if(t)out.push(`T:${t}`);return}if(!node.tagName)return (node.childNodes||[]).forEach(walk);const tag=node.tagName;if(skip.has(tag))return;const attrs=Object.fromEntries((node.attrs||[]).map(x=>[x.name,x.value]));if(attrs.id==='google-maps-clinic-reputation-current'){out.push('E:div#google-maps-clinic-reputation-current:[LIVE_REPUTATION]');return}const kept=(node.attrs||[]).filter(x=>attrsKeep.has(x.name)).sort((a,b)=>a.name.localeCompare(b.name)).map(x=>`${x.name}=${norm(x.value)}`).join('|');out.push(`O:${tag}${kept?'|'+kept:''}`);for(const c of node.childNodes||[])walk(c);out.push(`C:${tag}`)};walk(body);const canonical=out.join('\n')+'\n',sha256=createHash('sha256').update(canonical).digest('hex');console.log(JSON.stringify({sha256,records:out.length,bytes:Buffer.byteLength(canonical),canonical},null,2));

@@ -11,7 +11,7 @@ concurrency:
 jobs:
   refresh:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 40
     env:
       PLACE_ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas
       HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
@@ -33,6 +33,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci --ignore-scripts
+      - name: Refuse live automation before v1.2.2 is fully published
+        run: |
+          set -euo pipefail
+          test "$(node -p "require('./src/data/release.json').release")" = '1.2.2'
+          git rev-parse -q --verify refs/tags/v1.2.2 >/dev/null
       - name: Read Google Places and update only on tuple change
         id: places
         env:
@@ -40,44 +45,33 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${GOOGLE_PLACES_API_KEY:-}"
-          echo "::add-mask::$GOOGLE_PLACES_API_KEY"
-          curl --fail --silent --show-error \
-            -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" \
-            -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' \
-            "https://places.googleapis.com/v1/places/$PLACE_ID" > /tmp/place.json
+          test -n "${GOOGLE_PLACES_API_KEY:-}"; echo "::add-mask::$GOOGLE_PLACES_API_KEY"
+          curl --fail --silent --show-error -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' "https://places.googleapis.com/v1/places/$PLACE_ID" > /tmp/place.json
           node - <<'NODE'
-          const fs=require('fs');
-          const place=JSON.parse(fs.readFileSync('/tmp/place.json'));
-          const src=JSON.parse(fs.readFileSync('src/data/volatile-facts.json'));
-          if(place.id!==process.env.PLACE_ID)throw Error('Google Place identity drift');
-          if(place.movedPlace||place.movedPlaceId)throw Error('Google Place moved/merged: reconciliation required');
-          if(!Number.isFinite(place.rating)||place.rating<1||place.rating>5||!Number.isInteger(place.userRatingCount)||place.userRatingCount<0)throw Error('Malformed Google reputation fields');
-          const changed=Number(src.rating)!==Number(place.rating)||Number(src.reviewCount)!==Number(place.userRatingCount);
-          fs.appendFileSync(process.env.GITHUB_OUTPUT,`changed=${changed}\n`);
-          if(!changed){console.log('GOOGLE_REPUTATION_UNCHANGED',place.rating,place.userRatingCount);process.exit(0)}
-          const now=new Date().toISOString();src.rating=Number(place.rating);src.reviewCount=Number(place.userRatingCount);src.valueObservedAt=now;src.source='Google Places API (New)';src.placeId=place.id;src.release=JSON.parse(fs.readFileSync('src/data/release.json')).release;
-          src.facts=(src.facts||[]).map(x=>x.property==='ratingValue'?{...x,value:src.rating,observedAt:now,source:src.source}:x.property==='reviewCount'?{...x,value:src.reviewCount,observedAt:now,source:src.source}:x);
-          fs.writeFileSync('src/data/volatile-facts.json',JSON.stringify(src,null,2)+'\n');
-          console.log('GOOGLE_REPUTATION_CHANGED',src.rating,src.reviewCount,src.valueObservedAt,place.businessStatus||'UNKNOWN');
+          const fs=require('fs'),place=JSON.parse(fs.readFileSync('/tmp/place.json')),src=JSON.parse(fs.readFileSync('src/data/volatile-facts.json'));
+          if(place.id!==process.env.PLACE_ID)throw Error('Google Place identity drift');if(place.movedPlace||place.movedPlaceId)throw Error('Google Place moved/merged: reconciliation required');if(place.businessStatus&&place.businessStatus!=='OPERATIONAL')throw Error(`Google businessStatus changed: ${place.businessStatus}`);if(!Number.isFinite(place.rating)||place.rating<1||place.rating>5||!Number.isInteger(place.userRatingCount)||place.userRatingCount<0)throw Error('Malformed Google reputation fields');
+          const changed=Number(src.rating)!==Number(place.rating)||Number(src.reviewCount)!==Number(place.userRatingCount);fs.appendFileSync(process.env.GITHUB_OUTPUT,`changed=${changed}\n`);if(!changed){console.log('GOOGLE_REPUTATION_UNCHANGED',place.rating,place.userRatingCount);process.exit(0)}
+          const now=new Date().toISOString();src.rating=Number(place.rating);src.reviewCount=Number(place.userRatingCount);src.valueObservedAt=now;src.source='Google Places API (New)';src.placeId=place.id;src.release=JSON.parse(fs.readFileSync('src/data/release.json')).release;src.facts=(src.facts||[]).map(x=>x.property==='ratingValue'?{...x,value:src.rating,observedAt:now,source:src.source}:x.property==='reviewCount'?{...x,value:src.reviewCount,observedAt:now,source:src.source}:x);fs.writeFileSync('src/data/volatile-facts.json',JSON.stringify(src,null,2)+'\n');console.log('GOOGLE_REPUTATION_CHANGED',src.rating,src.reviewCount,src.valueObservedAt);
           NODE
-      - name: Build, validate, freeze visible diff and commit current source
+      - name: Build and prove only the approved mutable visible slot changed
         if: steps.places.outputs.changed == 'true'
         shell: bash
         run: |
           set -euo pipefail
           npm run release:prepare
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export CF_PAGES_COMMIT_SHA="$(git rev-parse HEAD)"
           npm run build
-          git diff --exit-code -- src/content-source src/data/semantic/knowledge-graph.jsonld src/data/service-registry.json src/data/answer-registry.json src/data/retrieval/query-matrix-policy.json .release/policy/hf-authority-contract.json
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          git diff --exit-code -- src/content-source src/data/semantic/knowledge-graph.jsonld src/data/service-registry.json src/data/answer-registry.json src/data/retrieval/query-matrix-policy.json src/data/visible-contract.json .release/policy/hf-authority-contract.json
           git config user.name ghezelbaash-reputation-bot
           git config user.email actions@users.noreply.github.com
           git add src/data/volatile-facts.json
           git commit -m "Refresh live Google reputation observation"
-          LIVE_SHA="$(git rev-parse HEAD)"
-          echo "LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
+          LIVE_SHA="$(git rev-parse HEAD)"; echo "LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
           git push origin HEAD:main
           git push origin HEAD:production/deploy
-      - name: Prove native Cloudflare production deployment and purge canonical cache
+      - name: Prove website deployment before touching HF
         if: steps.places.outputs.changed == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -89,8 +83,11 @@ jobs:
           node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
           python scripts/configure-cloudflare-edge.py --purge-cache-only
-          SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$LIVE_SHA" npm run build
-          node scripts/verify-current-serving.mjs
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$LIVE_SHA"
+          npm run build
+          node scripts/verify-cloudflare-pages-deployment.mjs
+          npm run verify:production
+          node scripts/validate-visible-freeze.mjs dist/index.html
       - name: Synchronize only Hugging Face live observations
         if: steps.places.outputs.changed == 'true'
         env:
@@ -98,8 +95,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${HF_TOKEN:-}"
-          echo "::add-mask::$HF_TOKEN"
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
           git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-live
           node scripts/sync-hf-live-observations.mjs .release/huggingface-live
           git -C .release/huggingface-live config user.name ghezelbaash-reputation-bot
