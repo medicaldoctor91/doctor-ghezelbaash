@@ -4,5 +4,5 @@
   "candidateBranch": "release/v1.2.2-candidate",
   "mode": "maximum-integrated-two-phase",
   "manualStep": "wikidata-quickstatements-only-after-external-convergence",
-  "rerunNonce": "2026-08-14T11:45:00Z-rdfc10-full-release"
+  "rerunNonce": "2026-08-14T11:25:00Z-jsonld-rdf-proven"
 }
