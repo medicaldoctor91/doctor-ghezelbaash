@@ -1,0 +1,5 @@
+{
+  "targetVersion": "1.2.2",
+  "purpose": "fix-preview-yaml-and-comparative-performance-gate",
+  "nonce": "final-atomic-001"
+}
