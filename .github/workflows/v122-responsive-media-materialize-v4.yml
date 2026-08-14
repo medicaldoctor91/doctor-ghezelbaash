@@ -1,0 +1,90 @@
+name: Materialize pinned-tooling v1.2.2 responsive media experiment
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-responsive-media-v4-request.json]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-v122-responsive-media-v4
+  cancel-in-progress: true
+
+env:
+  EXPERIMENT_BRANCH: tmp/v122-responsive-media-experiment
+  BASE_CANDIDATE_SHA: 2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: tmp/v122-responsive-media-experiment
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Pin exact clean base and load compiler from trusted main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main "$EXPERIMENT_BRANCH" release/v1.2.2-candidate
+          test "$(git rev-parse origin/release/v1.2.2-candidate)" = "$BASE_CANDIDATE_SHA"
+          test "$(git rev-parse HEAD)" = "$BASE_CANDIDATE_SHA"
+          test -z "$(git status --porcelain)"
+          git show origin/main:scripts/v122-responsive-media-experiment.py >/tmp/v122-responsive-media-experiment.py
+          python -m py_compile /tmp/v122-responsive-media-experiment.py
+      - name: Install pinned image tooling and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends imagemagick libavif-bin ffmpeg >/dev/null
+          convert -version | head -4
+          avifenc --version
+          ffmpeg -version | head -3
+          npm ci --ignore-scripts
+      - name: Compile calibrated metadata-complete responsive variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          python /tmp/v122-responsive-media-experiment.py
+          git diff --check
+          git status --short
+      - name: Commit exactly once then prove media source build and visible contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name ghezelbaash-responsive-media-experiment
+          git config user.email actions@users.noreply.github.com
+          git add public/media/images/physician src/content-source/001-intro.html src/data/templates/main-head.html src/data/media-dimensions.tsv scripts/sync-media-references.mjs scripts/validate-media.mjs
+          git commit -m 'Experiment with calibrated metadata-safe 720w and 800w responsive media'
+          E=$(git rev-parse HEAD)
+          test "$(git rev-parse HEAD^)" = "$BASE_CANDIDATE_SHA"
+          export SOURCE_COMMIT="$E" CF_PAGES_COMMIT_SHA="$E" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$E") ASTRO_TELEMETRY_DISABLED=1
+          npm run validate:media
+          npm run validate:source
+          npm run media:sync
+          npm run build
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          node scripts/validate-dist.mjs
+          node scripts/validate-current-context.mjs dist
+          node - <<'NODE'
+          const fs=require('fs'),html=fs.readFileSync('dist/index.html','utf8');for(const w of [720,800])for(const stem of ['saeed-ghezelbash-portrait','saeed-ghezelbash-clinical-examination'])for(const ext of ['avif','webp'])if(!new RegExp(`${stem}-${w}\\.[0-9a-f]{12}\\.${ext}`).test(html))throw Error(`Missing responsive ${stem}-${w}.${ext}`);console.log(JSON.stringify({responsiveMediaExperimentV4:'PASS',commit:process.env.SOURCE_COMMIT,htmlBytes:Buffer.byteLength(html),mediaInventory:57}));
+          NODE
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Push only fully proven experiment
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "HEAD:$EXPERIMENT_BRANCH"
+          echo "RESPONSIVE_MEDIA_EXPERIMENT_V4_PROVEN sha=$(git rev-parse HEAD)"
