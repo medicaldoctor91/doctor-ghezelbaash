@@ -1,5 +1,2 @@
 rdflib==7.1.4
-PyLD==3.1.0
-cachetools==7.1.6
-frozendict==2.4.7
-lxml==6.1.1
+pyparsing==3.3.2

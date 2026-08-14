@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "npm@11.5.2",
   "scripts": {
-    "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib, pyld\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
+    "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
     "prepare:generated": "npm run media:sync && node scripts/migrate-release-reputation-snapshot.mjs && npm run rdf:deps && npm run rdf:generate && npm run generate",
     "dev": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "check": "npm run validate:release-contract && npm run prepare:generated && npm run validate:query-matrix && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
@@ -25,14 +25,15 @@
     "render:calibration:apply": "node scripts/apply-render-calibration.mjs",
     "finalize:serving": "node scripts/finalize-v122-serving.mjs",
     "build": "npm run prepare:generated && npm run validate:query-matrix && npm run validate:source && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run indexnow:prepare && node scripts/finalize-dist.mjs && npm run finalize:serving && npm run validate:cloudflare && node scripts/validate-dist.mjs && node scripts/validate-query-matrix.mjs dist/query-matrix.jsonl && npm run preflight:cloudflare",
-    "release:prepare": "npm run validate:release-contract && npm run check && npm run validate:source && npm run validate:media && npm run validate:evidence && npm run validate:shacl && npm run validate:reproducibility",
+    "release:prepare": "npm run validate:release-contract && npm run check && npm run validate:source && npm run validate:media && npm run validate:evidence && npm run validate:shacl && npm run validate:reproducibility && npm run validate:rdf-reproducibility",
     "release": "npm run release:prepare && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run indexnow:prepare && node scripts/finalize-dist.mjs && npm run finalize:serving && npm run validate:cloudflare && node scripts/validate-dist.mjs && node scripts/validate-query-matrix.mjs dist/query-matrix.jsonl && node scripts/package-dist.mjs && node scripts/package-source.mjs && node scripts/package-complete.mjs",
     "package:source": "node scripts/package-source.mjs",
     "package:complete": "node scripts/package-complete.mjs",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "verify:subdomains": "node scripts/verify-subdomain-redirects.mjs",
     "verify:production": "node scripts/verify-redirects.mjs && npm run verify:subdomains && node scripts/verify-production.mjs",
-    "validate:release-contract": "node scripts/validate-v122-contract.mjs"
+    "validate:release-contract": "node scripts/validate-v122-contract.mjs",
+    "validate:rdf-reproducibility": "node scripts/validate-rdf-byte-repro.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
@@ -40,6 +41,7 @@
     "astro": "7.1.6",
     "exiftool-vendored": "37.1.0",
     "parse5": "7.3.0",
+    "rdf-canonize": "5.0.0",
     "typescript": "6.0.3",
     "wrangler": "4.120.0"
   },
