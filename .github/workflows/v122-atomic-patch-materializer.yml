@@ -1,0 +1,44 @@
+name: Materialize v1.2.2 atomic preview fix
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-atomic-patch-request.json]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Materialize corrected atomic workflow as ordinary payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name ghezelbaash-atomic-patch-materializer
+          git config user.email actions@users.noreply.github.com
+          python - <<'PY'
+          from pathlib import Path
+          src=Path('.github/workflows/ceiling-release.yml').read_text()
+          old='pages/projects/$CF_PROJECT/deployments?per_page=50'
+          new='pages/projects/$CF_PROJECT/deployments?env=preview'
+          if src.count(old)!=1: raise SystemExit(f'expected exactly one old Cloudflare deployment-list query, found {src.count(old)}')
+          src=src.replace(old,new,1)
+          src=src.replace('tag_created=false','tag_state=exact-or-created-on-publish')
+          Path('.release/ceiling-release.v1.2.2.patched.yml.txt').write_text(src)
+          PY
+          git add .release/ceiling-release.v1.2.2.patched.yml.txt
+          git diff --cached --check
+          git commit -m 'Materialize atomic preview-list compatibility fix'
+          git push origin HEAD:release/v1.2.2-candidate
+          echo "ATOMIC_PATCH_PAYLOAD_READY $(git rev-parse HEAD)"
