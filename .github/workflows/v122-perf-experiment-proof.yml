@@ -1,0 +1,53 @@
+name: Prove v1.2.2 performance experiment
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-perf-experiment-request.json]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-v122-perf-experiment
+  cancel-in-progress: true
+
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: tmp/v122-mobile-critical-path-experiment
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - name: Build exact experiment and enforce frozen visible/semantic contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=$(git rev-parse HEAD)
+          export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C") ASTRO_TELEMETRY_DISABLED=1
+          npm run build
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          node scripts/validate-dist.mjs
+          node scripts/validate-current-context.mjs dist
+          node - <<'NODE'
+          const fs=require('fs');const html=fs.readFileSync('dist/index.html','utf8');
+          const core=(html.match(/id="entity-core"/g)||[]).length,support=(html.match(/id="entity-support"/g)||[]).length;
+          if(core!==1||support!==1)throw Error(`Inline semantic lane drift core=${core} support=${support}`);
+          const preload=html.match(/<link[^>]+rel="preload"[^>]+as="image"[^>]+type="image\/avif"[^>]*>/);
+          if(!preload||!preload[0].includes('imagesrcset=')||!preload[0].includes('fetchpriority="high"'))throw Error('Responsive Hero LCP preload missing');
+          const styleAt=html.indexOf('<style>'),coreAt=html.indexOf('id="entity-core"'),heroAt=html.indexOf('class="entity-hero"');
+          if(styleAt<0||heroAt<0||coreAt<heroAt)throw Error(`Critical ordering invalid style=${styleAt} hero=${heroAt} core=${coreAt}`);
+          console.log(JSON.stringify({performanceExperimentSourceProof:'PASS',commit:process.env.SOURCE_COMMIT,htmlBytes:Buffer.byteLength(html),criticalStyleBeforeHero:styleAt<heroAt,entityCoreAfterVisibleMain:coreAt>heroAt,semanticLanes:{core,support},responsiveHeroPreload:true}));
+          NODE
+          test -z "$(git status --porcelain --untracked-files=no)"
