@@ -1,234 +1,331 @@
-name: Atomic ceiling release
+name: Atomic v1.2.2 maximum integrated release
 
 on:
   push:
     branches: [main]
-    paths:
-      - .release/release-request.json
+    paths: [.release/release-request-v1.2.2.json]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: doctor-ghezelbaash-ceiling-release
+  group: doctor-ghezelbaash-external-mutation
   cancel-in-progress: false
 
-jobs:
-  converge:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
-    env:
-      ASTRO_TELEMETRY_DISABLED: '1'
-      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
-      ZONE_NAME: ghezelbaash.ir
-      CF_PROJECT: doctor-ghezelbaash
-      CANONICAL_HOST: www.ghezelbaash.ir
-    steps:
-      - name: Checkout trusted main source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+env:
+  TARGET_VERSION: '1.2.2'
+  RELEASE_DATE: '2026-08-14'
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+  CONTROL_BRANCH: release-control/v1.2.2
+  CF_PROJECT: doctor-ghezelbaash
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CF_PRODUCTION_BRANCH: production/deploy
+  CF_PREVIEW_BRANCH: staging/deploy
+  HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+  PLACE_ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas
 
-      - name: Set up locked Node runtime
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Checkout isolated candidate source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.18.0
           cache: npm
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-
-      - name: Install locked dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Resolve release request
-        shell: bash
-        run: |
-          set -euo pipefail
-          node - <<'NODE' >> "$GITHUB_ENV"
-          const fs=require('fs');
-          const r=JSON.parse(fs.readFileSync('.release/release-request.json','utf8'));
-          for(const k of ['targetVersion','releaseDate','currentRecordId','currentVersionDoi','conceptDoi']) if(!r[k]) throw new Error(`Missing release request field ${k}`);
-          if(!/^\d+\.\d+\.\d+$/.test(r.targetVersion)) throw new Error('Invalid targetVersion');
-          if(!/^\d{4}-\d{2}-\d{2}$/.test(r.releaseDate)) throw new Error('Invalid releaseDate');
-          if(!/^\d+$/.test(String(r.currentRecordId))) throw new Error('Invalid currentRecordId');
-          if(!/^10\.5281\/zenodo\.\d+$/.test(r.currentVersionDoi)) throw new Error('Invalid currentVersionDoi');
-          if(!/^10\.5281\/zenodo\.\d+$/.test(r.conceptDoi)) throw new Error('Invalid conceptDoi');
-          if((r.reservedRecordId&&!r.reservedVersionDoi)||(!r.reservedRecordId&&r.reservedVersionDoi)) throw new Error('Reserved Zenodo recovery fields must be paired');
-          if(r.reservedRecordId&&!/^\d+$/.test(String(r.reservedRecordId))) throw new Error('Invalid reservedRecordId');
-          if(r.reservedVersionDoi&&!/^10\.5281\/zenodo\.\d+$/.test(r.reservedVersionDoi)) throw new Error('Invalid reservedVersionDoi');
-          console.log(`TARGET_VERSION=${r.targetVersion}`);
-          console.log(`RELEASE_DATE=${r.releaseDate}`);
-          console.log(`CURRENT_RECORD_ID=${r.currentRecordId}`);
-          console.log(`CURRENT_VERSION_DOI=${r.currentVersionDoi}`);
-          console.log(`CONCEPT_DOI=${r.conceptDoi}`);
-          NODE
-
-      - name: Preflight every mutation capability
-        env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${ZENODO_TOKEN:-}"
-          test -n "${HF_TOKEN:-}"
-          test -n "${CLOUDFLARE_API_TOKEN:-}"
-          echo "::add-mask::$ZENODO_TOKEN"
-          echo "::add-mask::$HF_TOKEN"
-          echo "::add-mask::$CLOUDFLARE_API_TOKEN"
-          curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/$CURRENT_RECORD_ID >/dev/null
-          curl --fail --silent --show-error -H "Authorization: Bearer $HF_TOKEN" https://huggingface.co/api/whoami-v2 >/dev/null
-          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT" | python -c 'import json,sys; p=json.load(sys.stdin); assert p.get("success") is True and p.get("result",{}).get("name")=="doctor-ghezelbaash"'
-          python scripts/preflight-cloudflare-edge.py
-
-      - name: Reserve DOI and correct prior-version metadata
-        env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          if node -e "const r=require('./.release/release-request.json');process.exit(r.reservedRecordId&&r.reservedVersionDoi?0:1)"; then
-            node - <<'NODE'
-          const fs=require('fs');
-          const r=require('./.release/release-request.json');
-          fs.writeFileSync('.release/zenodo-reservation.json',JSON.stringify({recordId:String(r.reservedRecordId),versionDoi:r.reservedVersionDoi,recovery:true},null,2)+'\n');
-          NODE
-            node - <<'NODE'
-          const r=require('./.release/release-request.json');
-          const token=process.env.ZENODO_TOKEN;
-          fetch('https://zenodo.org/api/deposit/depositions/'+r.reservedRecordId,{headers:{Authorization:`Bearer ${token}`,'cache-control':'no-cache'}}).then(async x=>{if(!x.ok)throw Error(`Reserved Zenodo draft HTTP ${x.status}`);return x.json()}).then(x=>{const doi=x.metadata?.prereserve_doi?.doi||x.metadata?.doi||x.doi;if(String(x.id)!==String(r.reservedRecordId)||doi!==r.reservedVersionDoi||x.metadata?.version!==r.targetVersion||x.submitted===true)throw Error('Reserved Zenodo recovery target drift');console.log('ZENODO_DRAFT_RECOVERY_EXACT',x.id,doi,x.metadata.version)})
-          NODE
-          elif node -e "const r=require('./.release/release-request.json');process.exit(r.publishedRecordId&&r.publishedVersionDoi?0:1)"; then
-            node - <<'NODE'
-          const fs=require('fs');
-          const r=require('./.release/release-request.json');
-          fs.writeFileSync('.release/zenodo-reservation.json',JSON.stringify({recordId:String(r.publishedRecordId),versionDoi:r.publishedVersionDoi,recovery:true},null,2)+'\n');
-          NODE
-            node -e "const r=require('./.release/release-request.json');fetch('https://zenodo.org/api/records/'+r.publishedRecordId,{headers:{'cache-control':'no-cache'}}).then(x=>x.json()).then(x=>{if(x.doi!==r.publishedVersionDoi||x.metadata?.version!==r.targetVersion)throw Error('Published Zenodo recovery target drift');console.log('ZENODO_PUBLISHED_RECOVERY_EXACT',x.id,x.doi)})"
-          else
-            python scripts/zenodo_release.py reserve \
-              --current-record "$CURRENT_RECORD_ID" \
-              --current-doi "$CURRENT_VERSION_DOI" \
-              --concept-doi "$CONCEPT_DOI" \
-              --version "$TARGET_VERSION" \
-              --date "$RELEASE_DATE"
-          fi
-
-      - name: Promote all canonical source contracts to reserved release
-        shell: bash
-        run: |
-          set -euo pipefail
-          REC="$(node -p "JSON.parse(require('fs').readFileSync('.release/zenodo-reservation.json')).recordId")"
-          DOI="$(node -p "JSON.parse(require('fs').readFileSync('.release/zenodo-reservation.json')).versionDoi")"
-          node scripts/promote-release.mjs --version="$TARGET_VERSION" --date="$RELEASE_DATE" --zenodo-record="$REC" --zenodo-doi="$DOI" --state=published
-          npm run prepare:generated
-          node scripts/lock-release-rdf-invariants.mjs
-          npm run validate:release-contract
-          npm run validate:source
-
-      - name: Freeze exact source commit locally
+      - run: npm ci --ignore-scripts
+      - name: Initialize durable out-of-band release ledger
         shell: bash
         run: |
           set -euo pipefail
           git config user.name ghezelbaash-release-bot
           git config user.email actions@users.noreply.github.com
-          git add -u
-          git diff --cached --quiet || git commit -m "Release synchronized entity stack v$TARGET_VERSION"
-          echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-
-      - name: Build, validate and attest exact frozen source
-        run: |
-          npm run release
-          node scripts/write-release-attestation.mjs
-
-      - name: Prepare governed strong Hugging Face distribution
+          git fetch origin "$CONTROL_BRANCH"
+          rm -rf /tmp/v122-control
+          git worktree add --detach /tmp/v122-control "origin/$CONTROL_BRANCH"
+          mkdir -p /tmp/v122-control/.release/control
+          LEDGER=/tmp/v122-control/.release/control/v1.2.2.json
+          node scripts/update-release-control.mjs "$LEDGER" PREFLIGHT_STARTED targetVersion=$TARGET_VERSION releaseDate=$RELEASE_DATE candidateBranch=$CANDIDATE_BRANCH
+          git -C /tmp/v122-control add .release/control/v1.2.2.json
+          git -C /tmp/v122-control commit -m 'Record v1.2.2 release preflight' || true
+          git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          echo "LEDGER=$LEDGER" >> "$GITHUB_ENV"
+      - name: Preflight all external capabilities again before any irreversible mutation
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git clone --depth=1 https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data .release/huggingface
-          node scripts/prepare-huggingface-distribution.mjs dist .release/huggingface
-          test -z "$(grep -RIlE 'ChIJBTOYDOTt-j8RD-7mAPy6Zas|best-mesotherapy-doctor-kermanshah|hifu-therapy-in-kermanshah' .release/huggingface/enrichment || true)"
-          test "$(wc -l < .release/huggingface/enrichment/instruction_examples_fa_market_positioning.jsonl)" -ge 40
-
-      - name: Publish exact Zenodo preservation distribution
-        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
           ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
-        run: |
-          if node -e "const r=require('./.release/release-request.json');process.exit(r.publishedRecordId&&r.publishedVersionDoi?0:1)"; then
-            echo 'ZENODO_PUBLISH_SKIPPED_ALREADY_EXACT'
-          else
-            python scripts/zenodo_release.py publish
-          fi
-
-      - name: Deploy exact canonical DIST to Cloudflare Pages
-        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          if node -e "const r=require('./.release/release-request.json');process.exit(r.skipLiveDeploy?0:1)"; then
-            echo 'CLOUDFLARE_DEPLOY_SKIPPED_ALREADY_BYTE_EXACT'
-          else
-            npx wrangler pages deploy dist --project-name="$CF_PROJECT" --branch=main --commit-hash="$SOURCE_COMMIT" --commit-message="Synchronized entity stack v$TARGET_VERSION" --commit-dirty=true
+          for v in GOOGLE_PLACES_API_KEY ZENODO_TOKEN HF_TOKEN CLOUDFLARE_API_TOKEN; do test -n "${!v:-}"; echo "::add-mask::${!v}"; done
+          curl --fail --silent --show-error -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' "https://places.googleapis.com/v1/places/$PLACE_ID" > /tmp/place.json
+          node - <<'NODE'
+          const p=require('/tmp/place.json');if(p.id!==process.env.PLACE_ID||p.movedPlace||p.movedPlaceId||p.businessStatus!=='OPERATIONAL'||!(p.rating>=1&&p.rating<=5)||!Number.isInteger(p.userRatingCount))throw Error('Google Places canonical identity/reputation preflight failed');console.log('GOOGLE_PREFLIGHT_PASS',p.id,p.rating,p.userRatingCount)
+          NODE
+          curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" https://zenodo.org/api/deposit/depositions/21910785 >/tmp/zenodo-current.json
+          node - <<'NODE'
+          const z=require('/tmp/zenodo-current.json');if(String(z.id)!=='21910785'||String(z.metadata?.version||'').replace(/^v/,'')!=='1.2.1')throw Error('Zenodo baseline preflight drift');console.log('ZENODO_PREFLIGHT_PASS')
+          NODE
+          curl --fail --silent --show-error -H "Authorization: Bearer $HF_TOKEN" https://huggingface.co/api/whoami-v2 >/tmp/hf.json
+          node - <<'NODE'
+          if(!require('/tmp/hf.json').name)throw Error('HF token preflight failed');console.log('HF_PREFLIGHT_PASS')
+          NODE
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT" >/tmp/cf.json
+          node - <<'NODE'
+          const p=require('/tmp/cf.json');const r=p.result,c=r.source?.config||{};if(!p.success||r.production_branch!=='production/deploy'||c.preview_deployment_setting!=='custom'||c.preview_branch_includes?.[0]!=='staging/deploy')throw Error('Cloudflare production isolation drift');console.log('CLOUDFLARE_PREFLIGHT_PASS')
+          NODE
+          npm run release:prepare
+          node scripts/update-release-control.mjs "$LEDGER" PREFLIGHTED
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'v1.2.2 preflight passed' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Freeze fresh official Google reputation snapshot into candidate source
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' "https://places.googleapis.com/v1/places/$PLACE_ID" > /tmp/place.json
+          node - <<'NODE'
+          const fs=require('fs'),p=require('/tmp/place.json'),f='src/data/volatile-facts.json',v=JSON.parse(fs.readFileSync(f));if(p.id!==process.env.PLACE_ID||p.movedPlace||p.movedPlaceId||p.businessStatus!=='OPERATIONAL')throw Error('Google Place identity/status drift');const changed=Number(v.rating)!==Number(p.rating)||Number(v.reviewCount)!==Number(p.userRatingCount);if(changed){const now=new Date().toISOString();v.rating=Number(p.rating);v.reviewCount=Number(p.userRatingCount);v.valueObservedAt=now;v.placeId=p.id;v.source='Google Places API (New)';v.facts=(v.facts||[]).map(x=>x.property==='ratingValue'?{...x,value:v.rating,observedAt:now,source:v.source}:x.property==='reviewCount'?{...x,value:v.reviewCount,observedAt:now,source:v.source}:x);fs.writeFileSync(f,JSON.stringify(v,null,2)+'\n')}console.log('RELEASE_REPUTATION_SNAPSHOT',p.rating,p.userRatingCount,'changed='+changed)
+          NODE
+          if ! git diff --quiet -- src/data/volatile-facts.json; then
+            git add src/data/volatile-facts.json
+            git commit -m 'Freeze fresh Google reputation for v1.2.2 candidate'
+            git push origin HEAD:$CANDIDATE_BRANCH
           fi
-          if node -e "const r=require('./.release/release-request.json');process.exit(r.skipEdgeReconcile?0:1)"; then
-            echo 'CLOUDFLARE_EDGE_RECONCILE_SKIPPED_ALREADY_EXACT'
+          node scripts/update-release-control.mjs "$LEDGER" REPUTATION_FROZEN candidateHead=$(git rev-parse HEAD) rating=$(node -p "require('./src/data/volatile-facts.json').rating") reviewCount=$(node -p "require('./src/data/volatile-facts.json').reviewCount") valueObservedAt=$(node -p "require('./src/data/volatile-facts.json').valueObservedAt")
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Freeze v1.2.2 reputation snapshot' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Reserve the exact v1.2.2 Zenodo DOI without mutating v1.2.1
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .release/runtime
+          if node -e "const fs=require('fs');const f=process.env.LEDGER;const x=JSON.parse(fs.readFileSync(f));process.exit(x.recordId&&x.versionDoi?0:1)"; then
+            node - <<'NODE'
+          const fs=require('fs'),x=JSON.parse(fs.readFileSync(process.env.LEDGER));fs.writeFileSync('.release/runtime/zenodo-reservation.json',JSON.stringify({stage:'DOI_RESERVED',release:'1.2.2',recordId:String(x.recordId),versionDoi:x.versionDoi,conceptDoi:'10.5281/zenodo.18765168'},null,2)+'\n')
+          NODE
+            rec=$(node -p "require('./.release/runtime/zenodo-reservation.json').recordId")
+            curl --fail --silent --show-error -H "Authorization: Bearer $ZENODO_TOKEN" "https://zenodo.org/api/deposit/depositions/$rec" >/tmp/reserved.json
+            node - <<'NODE'
+          const r=require('/tmp/reserved.json'),e=require('./.release/runtime/zenodo-reservation.json');const doi=r.metadata?.prereserve_doi?.doi||r.doi;if(String(r.id)!==String(e.recordId)||doi!==e.versionDoi||r.submitted===true)throw Error('Persisted Zenodo reservation drift')
+          NODE
           else
-            python scripts/configure-cloudflare-edge.py --apply --outcome edge-reconciliation.json
+            python scripts/zenodo_release.py reserve --current-record 21910785 --current-doi 10.5281/zenodo.21910785 --current-version 1.2.1 --concept-doi 10.5281/zenodo.18765168 --version "$TARGET_VERSION" --date "$RELEASE_DATE"
+            REC=$(node -p "require('./.release/runtime/zenodo-reservation.json').recordId")
+            DOI=$(node -p "require('./.release/runtime/zenodo-reservation.json').versionDoi")
+            node scripts/update-release-control.mjs "$LEDGER" DOI_RESERVED recordId=$REC versionDoi=$DOI conceptDoi=10.5281/zenodo.18765168
+            git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Reserve v1.2.2 Zenodo DOI' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
           fi
-
-      - name: Publish exact Core and governed enrichment to Hugging Face
+      - name: Inject reserved DOI into every canonical release surface and freeze Candidate C
+        shell: bash
+        run: |
+          set -euo pipefail
+          REC=$(node -p "require('./.release/runtime/zenodo-reservation.json').recordId")
+          DOI=$(node -p "require('./.release/runtime/zenodo-reservation.json').versionDoi")
+          CUR=$(node -p "require('./src/data/release.json').release")
+          if [ "$CUR" = '1.2.1' ]; then node scripts/promote-release.mjs --version="$TARGET_VERSION" --date="$RELEASE_DATE" --zenodo-record="$REC" --zenodo-doi="$DOI"; fi
+          node -e "const r=require('./src/data/release.json');if(r.release!=='1.2.2'||String(r.dataset.zenodo.recordId)!=='$REC'||r.dataset.zenodo.versionDoi!=='$DOI')throw Error('Promoted release identity drift')"
+          npm run prepare:generated
+          node scripts/lock-release-rdf-invariants.mjs
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$(git rev-parse HEAD)"
+          npm run build
+          node scripts/lock-visible-contract.mjs dist/index.html
+          rm -f .github/workflows/v122-bootstrap-registries.yml .github/workflows/v122-support-migration.yml .github/workflows/v122-cloudflare-control-bootstrap.yml .github/workflows/v122-external-preflight.yml .github/workflows/v122-zenodo-github-integration-probe.yml .github/workflows/v122-performance-baseline.yml scripts/bootstrap-v122-registries.mjs scripts/v122-filter-support.mjs
+          git add -A
+          git commit -m 'Release candidate v1.2.2 — DOI-bound maximum integrated stack'
+          C=$(git rev-parse HEAD); echo "SOURCE_COMMIT=$C" >> "$GITHUB_ENV"
+          git push origin HEAD:$CANDIDATE_BRANCH
+          node scripts/update-release-control.mjs "$LEDGER" CANDIDATE_FROZEN sourceCommit=$C recordId=$REC versionDoi=$DOI
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Freeze exact v1.2.2 Candidate C' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Build Candidate C twice and prove byte-for-byte reproducibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct $SOURCE_COMMIT)" CF_PAGES_COMMIT_SHA="$SOURCE_COMMIT" SOURCE_COMMIT="$SOURCE_COMMIT"
+          npm run release
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          python - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('dist'); out={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*')) if p.is_file()}
+          pathlib.Path('/tmp/dist-a.json').write_text(json.dumps(out,sort_keys=True))
+          PY
+          rm -rf /tmp/v122-repro
+          git worktree add --detach /tmp/v122-repro "$SOURCE_COMMIT"
+          (cd /tmp/v122-repro && npm ci --ignore-scripts && export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$SOURCE_COMMIT" SOURCE_COMMIT="$SOURCE_COMMIT" && npm run build && python - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('dist'); out={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*')) if p.is_file()}
+          pathlib.Path('/tmp/dist-b.json').write_text(json.dumps(out,sort_keys=True))
+          PY
+          )
+          cmp /tmp/dist-a.json /tmp/dist-b.json
+          git worktree remove --force /tmp/v122-repro
+          mkdir -p .release/runtime
+          cp /tmp/dist-a.json .release/runtime/dist-sha256.json
+          SOURCE_COMMIT="$SOURCE_COMMIT" node scripts/write-release-attestation.mjs
+          node scripts/update-release-control.mjs "$LEDGER" CANDIDATE_PROVEN sourceCommit=$SOURCE_COMMIT
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prove reproducible v1.2.2 Candidate C' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Prepare Hugging Face release candidate without publishing it
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          echo "::add-mask::$HF_TOKEN"
+          rm -rf .release/huggingface
+          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface
+          node scripts/prepare-huggingface-distribution.mjs dist .release/huggingface
+          cp .release/huggingface/dist-sha256.json .release/runtime/dist-sha256.json
+          test "$(wc -l < .release/huggingface/enrichment/instruction_examples_fa_market_positioning.jsonl)" -ge 40
+          grep -q 'config_name: query_matrix' .release/huggingface/README.md
+          grep -q 'config_name: live_observations' .release/huggingface/README.md
+      - name: Stage exact Candidate C bytes on reserved Zenodo draft and prove remote hashes
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          python scripts/zenodo_release.py stage --version "$TARGET_VERSION"
+          node scripts/update-release-control.mjs "$LEDGER" ZENODO_STAGED sourceCommit=$SOURCE_COMMIT
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Stage exact v1.2.2 bytes on Zenodo' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Deploy exact Candidate C to isolated Cloudflare Preview branch
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_COMMIT: ${{ env.SOURCE_COMMIT }}
+          CF_EXPECTED_ENVIRONMENT: preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "$SOURCE_COMMIT":staging/deploy
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?per_page=50" >/tmp/cf-deployments.json
+          node - <<'NODE' >> "$GITHUB_ENV"
+          const p=require('/tmp/cf-deployments.json');const c=process.env.SOURCE_COMMIT;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Successful preview URL missing');console.log(`PREVIEW_URL=https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
+          NODE
+          VERIFY_BASE_URL="$PREVIEW_URL" node scripts/verify-cloudflare-pages-deployment.mjs
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          node scripts/update-release-control.mjs "$LEDGER" PREVIEW_PROVEN sourceCommit=$SOURCE_COMMIT previewUrl=$PREVIEW_URL
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prove v1.2.2 Cloudflare Preview' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Lighthouse performance ceiling gate on live baseline versus Candidate Preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mode in mobile desktop; do
+            extra=''; [ "$mode" = desktop ] && extra='--preset=desktop'
+            npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__lh_release=$(date +%s%N)" --quiet $extra --chrome-flags='--headless --no-sandbox --disable-gpu' --only-categories=performance --output=json --output-path="/tmp/base-$mode.json"
+            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__lh_candidate=$(date +%s%N)" --quiet $extra --chrome-flags='--headless --no-sandbox --disable-gpu' --only-categories=performance --output=json --output-path="/tmp/candidate-$mode.json"
+          done
+          node - <<'NODE'
+          const fs=require('fs');for(const mode of ['mobile','desktop']){const b=JSON.parse(fs.readFileSync(`/tmp/base-${mode}.json`)),c=JSON.parse(fs.readFileSync(`/tmp/candidate-${mode}.json`));const score=x=>Math.round(x.categories.performance.score*100),metric=(x,k)=>x.audits[k].numericValue;const out={mode,baseline:score(b),candidate:score(c),baselineLcp:metric(b,'largest-contentful-paint'),candidateLcp:metric(c,'largest-contentful-paint'),baselineCls:metric(b,'cumulative-layout-shift'),candidateCls:metric(c,'cumulative-layout-shift'),baselineTbt:metric(b,'total-blocking-time'),candidateTbt:metric(c,'total-blocking-time')};console.log('LIGHTHOUSE_GATE',JSON.stringify(out));if(out.candidate<out.baseline-3)throw Error(`${mode} performance regressed >3 points`);if(mode==='desktop'&&out.candidate<95)throw Error('Desktop performance below 95');if(mode==='mobile'&&out.candidate<85)throw Error('Mobile performance below 85');if(out.candidateCls>0.1||out.candidateCls>out.baselineCls+0.03)throw Error(`${mode} CLS regression`);if(out.candidateLcp>Math.max(4000,out.baselineLcp*1.15))throw Error(`${mode} LCP regression`)}
+          NODE
+      - name: Final irreversible publication gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/validate-v122-contract.mjs
+          npm run validate:source
+          npm run validate:evidence
+          npm run validate:shacl
+          npm run validate:reproducibility
+          node scripts/validate-dist.mjs
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test -z "$(git status --porcelain)"
+          node scripts/update-release-control.mjs "$LEDGER" IRREVERSIBLE_GATE_PASS sourceCommit=$SOURCE_COMMIT
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Pass v1.2.2 irreversible gate' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Publish exact Zenodo v1.2.2 preservation snapshot
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          python scripts/zenodo_release.py publish
+          node scripts/update-release-control.mjs "$LEDGER" ZENODO_PUBLISHED sourceCommit=$SOURCE_COMMIT
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Publish immutable Zenodo v1.2.2' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Promote exact Candidate C to native Cloudflare production and purge stale current resources
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_COMMIT: ${{ env.SOURCE_COMMIT }}
+          CF_EXPECTED_ENVIRONMENT: production
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "$SOURCE_COMMIT":production/deploy
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+          python scripts/configure-cloudflare-edge.py --purge-cache-only
+          VERIFY_BASE_URL='https://www.ghezelbaash.ir/' node scripts/verify-cloudflare-pages-deployment.mjs
+          npm run verify:production
+          node scripts/update-release-control.mjs "$LEDGER" PRODUCTION_PUBLISHED sourceCommit=$SOURCE_COMMIT
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Publish v1.2.2 canonical production' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Publish exact Hugging Face release Core, Query Matrix and frozen v1.2.2 tag
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
           git -C .release/huggingface config user.name ghezelbaash-release-bot
           git -C .release/huggingface config user.email actions@users.noreply.github.com
           git -C .release/huggingface add -A
-          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Synchronize canonical Core v$TARGET_VERSION and preserve governed strong enrichment"
-          git -C .release/huggingface remote set-url origin "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m 'Publish Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2'
+          HF_SHA=$(git -C .release/huggingface rev-parse HEAD); echo "HF_RELEASE_SHA=$HF_SHA" >> "$GITHUB_ENV"
           git -C .release/huggingface push origin HEAD:main
-
-      - name: Verification Round 1 — consistency
-        run: |
-          npm run verify:production
-          node scripts/verify-converged-stack.mjs
-
-      - name: Verification Round 2 — residual error elimination
+          git -C .release/huggingface tag -f -a v1.2.2 -m 'Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2' "$HF_SHA"
+          git -C .release/huggingface push origin refs/tags/v1.2.2 --force
+          node scripts/verify-current-serving.mjs
+          node scripts/update-release-control.mjs "$LEDGER" HF_PUBLISHED sourceCommit=$SOURCE_COMMIT hfCommit=$HF_SHA
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Publish HF v1.2.2 release and tag' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Publish immutable Git tag and fast-forward default source branch to Candidate C
         shell: bash
         run: |
           set -euo pipefail
-          test -z "$(grep -RIlE 'ChIJBTOYDOTt-j8RD-7mAPy6Zas|Version 1\.0\.0 structured-data|Zenodo Version DOI 1\.1\.0' src public || true)"
-          test -z "$(grep -RIlE '^[[:space:]]*issues:' .github/workflows || true)"
-          node scripts/validate-release-contract.mjs
-          node scripts/verify-converged-stack.mjs
-
-      - name: Verification Round 3 — ceiling confirmation
-        run: |
-          npm run validate:reproducibility
-          npm run verify:production
-          node scripts/verify-converged-stack.mjs
-
-      - name: Publish source truth and immutable tag only after all rounds pass
+          git tag -a v1.2.2 "$SOURCE_COMMIT" -m 'Dr. Saeed Ghezelbash entity stack v1.2.2 — exact DOI-bound release'
+          git push origin refs/tags/v1.2.2
+          git fetch origin main
+          git merge-base --is-ancestor origin/main "$SOURCE_COMMIT"
+          git push origin "$SOURCE_COMMIT":main
+          node scripts/update-release-control.mjs "$LEDGER" SOURCE_PUBLISHED sourceCommit=$SOURCE_COMMIT
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Publish v1.2.2 Git source/tag' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Create a non-triggering GitHub Release draft tied exactly to C
         env:
-          GH_PUSH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          node -e "const fs=require('fs');const r=JSON.parse(fs.readFileSync('src/data/release.json'));const p={stage:'CONVERGED_PUBLISHED',release:r.release,conceptDoi:r.dataset.zenodo.conceptDoi,versionDoi:r.dataset.zenodo.versionDoi,recordId:String(r.dataset.zenodo.recordId),sourceCommit:process.env.SOURCE_COMMIT,verificationRounds:3,integrity:'PASS'};fs.writeFileSync('.release/zenodo-published.json',JSON.stringify(p,null,2)+'\\n')"
-          git add .release/release-attestation.json .release/zenodo-published.json
-          git commit -m "Record verified v$TARGET_VERSION cross-platform convergence"
-          git tag -a "v$TARGET_VERSION" -m "Dr. Saeed Ghezelbash entity stack v$TARGET_VERSION — verified convergence"
-          git remote set-url origin "https://x-access-token:${GH_PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push origin HEAD:main
-          git push origin "v$TARGET_VERSION"
+          cat > /tmp/release-notes.md <<EOF
+          # Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2
+
+          - Exact source commit: \`$SOURCE_COMMIT\`
+          - Canonical Dataset: \`https://www.ghezelbaash.ir/graph.jsonld#dataset\`
+          - Person: \`Q140287622\`
+          - Clinic: \`Q140288589\`
+          - Dataset: \`Q140304972\`
+          - Zenodo Concept DOI: \`10.5281/zenodo.18765168\`
+          - Zenodo Version DOI: \`$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")\`
+          - Hugging Face frozen tag: \`v1.2.2\`
+          EOF
+          gh release view v1.2.2 >/dev/null 2>&1 || gh release create v1.2.2 --target "$SOURCE_COMMIT" --title 'Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2' --notes-file /tmp/release-notes.md --draft
+          node scripts/update-release-control.mjs "$LEDGER" GITHUB_RELEASE_DRAFT_READY sourceCommit=$SOURCE_COMMIT
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Prepare GitHub v1.2.2 Release draft' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+      - name: Cooldown verification against ordinary and cache-busted public resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/verify-current-serving.mjs
+          sleep 120
+          node scripts/verify-current-serving.mjs
+          sleep 180
+          node scripts/verify-current-serving.mjs
+          node scripts/verify-release-snapshot.mjs
+          node scripts/update-release-control.mjs "$LEDGER" VERIFIED sourceCommit=$SOURCE_COMMIT hfCommit=$HF_RELEASE_SHA
+          git -C /tmp/v122-control add .release/control/v1.2.2.json && git -C /tmp/v122-control commit -m 'Verify v1.2.2 public serving and frozen snapshot truth' && git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
