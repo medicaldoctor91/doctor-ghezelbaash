@@ -1,4 +1,4 @@
-name: Weekly public stack integrity monitor
+name: Public stack integrity monitor
 
 on:
   schedule:
@@ -11,19 +11,34 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.18.0
           cache: npm
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
       - run: npm ci --ignore-scripts
-      - run: npm run build
-      - run: npm run verify:production
-      - run: node scripts/verify-converged-stack.mjs
+      - name: Verify current serving truth
+        run: |
+          set -euo pipefail
+          npm run build
+          npm run verify:production
+          node scripts/verify-current-serving.mjs
+      - name: Verify frozen release snapshot truth
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="v$(node -p "require('./src/data/release.json').release")"
+          git reset --hard HEAD
+          git clean -fdx
+          git checkout --detach "$TAG"
+          npm ci --ignore-scripts
+          npm run build
+          node scripts/verify-release-snapshot.mjs
