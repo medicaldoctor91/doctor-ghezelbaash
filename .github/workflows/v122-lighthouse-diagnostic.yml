@@ -38,6 +38,7 @@ jobs:
         run: |
           set -euo pipefail
           C=$(git rev-parse HEAD)
+          export CANDIDATE_SHA="$C"
           echo "CANDIDATE_SHA=$C" >> "$GITHUB_ENV"
           test -n "$CLOUDFLARE_API_TOKEN"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
           curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?env=preview&per_page=25" >/tmp/cf.json
