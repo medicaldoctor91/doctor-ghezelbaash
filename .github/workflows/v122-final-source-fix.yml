@@ -1,0 +1,130 @@
+name: Build final atomic v1.2.2 Candidate C
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-final-source-fix-request.json]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+env:
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+  EXPECTED_HEAD: 2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb
+  TARGET_RELEASE_DATE: '2026-08-15'
+
+jobs:
+  converge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Pin exact current Candidate and load trusted materializer
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main "$CANDIDATE_BRANCH"
+          git reset --hard "origin/$CANDIDATE_BRANCH"
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          test -z "$(git status --porcelain)"
+          git show origin/main:.release/v122-final-source-fix.py >/tmp/v122-final-source-fix.py
+          python -m py_compile /tmp/v122-final-source-fix.py
+
+      - name: Materialize final source truth and field-specific date rollover
+        shell: bash
+        run: |
+          set -euo pipefail
+          python /tmp/v122-final-source-fix.py
+          node --check scripts/rollover-release-date.mjs
+          node scripts/rollover-release-date.mjs --date="$TARGET_RELEASE_DATE"
+          git diff --check
+          node - <<'NODE'
+          const r=require('./src/data/release.json');
+          if(r.release!=='1.2.2'||r.dateModified!=='2026-08-15')throw Error('Release date rollover failed');
+          if(r.medicalReviewedAt!=='2026-08-13')throw Error('Medical review date was coupled to release rollover');
+          if(r.dataset.zenodo.versionDoi!=='10.5281/zenodo.21930954'||String(r.dataset.zenodo.recordId)!=='21930954')throw Error('Existing DOI reservation was not preserved');
+          const h=r.dataset.zenodo.releaseHistory;if(h.find(x=>x.release==='1.2.1').publicationDate!=='2026-08-13'||h.find(x=>x.release==='1.2.2').publicationDate!=='2026-08-15')throw Error('Release history rollover drift');
+          console.log('FIELD_SPECIFIC_ROLLOVER_IDENTITY_PASS');
+          NODE
+
+      - run: npm ci --ignore-scripts
+
+      - name: Pre-commit build to freeze the approved final visible DOM
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$EXPECTED_HEAD")
+          export SOURCE_COMMIT="$EXPECTED_HEAD" CF_PAGES_COMMIT_SHA="$EXPECTED_HEAD" ASTRO_TELEMETRY_DISABLED=1
+          npm run build
+          node scripts/compute-visible-contract.mjs dist/index.html --summary >/tmp/visible-final.json
+          node - <<'NODE'
+          const fs=require('fs');const p='src/data/visible-contract.json';const v=JSON.parse(fs.readFileSync(p)),s=JSON.parse(fs.readFileSync('/tmp/visible-final.json'));
+          v.finalVisibleDomSha256=s.sha256;v.finalVisibleDomRecords=s.records;v.finalVisibleDomBytes=s.bytes;v.finalFreezeRelease='1.2.2';v.finalFreezeReleaseDate='2026-08-15';
+          fs.writeFileSync(p,JSON.stringify(v,null,2)+'\n');
+          console.log(JSON.stringify({visiblePreFreeze:'PASS',sha256:s.sha256,records:s.records,bytes:s.bytes}));
+          NODE
+          git diff --check
+
+      - name: Assert atomic source scope and create Candidate C once
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git status --porcelain --untracked-files=all | sed -E 's/^.. //' | sort)
+          printf '%s\n' "${changed[@]}"
+          allowed='^(\.release/release-request-v1\.2\.2\.json|CITATION\.cff|codemeta\.json|scripts/(rollover-release-date\.mjs|generate-projections\.mjs|finalize-dist\.mjs|validate-dist\.mjs|validate-v122-contract\.mjs)|src/content-source/100-rc099\.html|src/data/(release\.json|release-invariants\.json|visible-contract\.json|semantic/knowledge-graph\.jsonld))$'
+          for f in "${changed[@]}"; do [[ "$f" =~ $allowed ]] || { echo "Unexpected atomic source path: $f"; exit 1; }; done
+          test ${#changed[@]} -ge 8
+          git config user.name ghezelbaash-v122-final
+          git config user.email actions@users.noreply.github.com
+          git add .release/release-request-v1.2.2.json CITATION.cff codemeta.json scripts src/content-source/100-rc099.html src/data
+          git commit -m 'Finalize v1.2.2 release-date and source truth convergence'
+          C=$(git rev-parse HEAD)
+          test "$(git rev-parse HEAD^)" = "$EXPECTED_HEAD"
+          echo "CANDIDATE_SHA=$C" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")" >> "$GITHUB_ENV"
+          echo "FINAL_CANDIDATE_C=$C"
+
+      - name: Full exact-C release proof before remote Candidate mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_COMMIT="$CANDIDATE_SHA" CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" SOURCE_DATE_EPOCH ASTRO_TELEMETRY_DISABLED=1
+          npm run release
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          node scripts/validate-current-context.mjs dist
+          node - <<'NODE'
+          const fs=require('fs'),r=require('./src/data/release.json'),inv=require('./src/data/release-invariants.json');
+          const a=fs.readFileSync('dist/answers.txt','utf8'),dp=JSON.parse(fs.readFileSync('dist/datapackage.json')),cr=JSON.parse(fs.readFileSync('dist/croissant.json')),dcat=fs.readFileSync('dist/dcat.ttl','utf8'),m=JSON.parse(fs.readFileSync('dist/current-release-matrix.json'));
+          if(!a.includes('REVIEWED_AT: '+r.medicalReviewedAt)||a.includes('REVIEWED_AT: '+r.dateModified))throw Error('Medical review/release timestamp coupling remains');
+          if(dp.title!==r.dataset.name+' — Data Package'||cr.name!==r.dataset.name||!dcat.includes(r.dataset.name+' — Data Catalog'))throw Error('Descriptor identity normalization failed');
+          if(Object.hasOwn(inv,'targetHtmlBytes'))throw Error('Obsolete targetHtmlBytes remains');
+          if(m.sourceCommit!==process.env.CANDIDATE_SHA)throw Error('Current matrix not bound to final C');
+          if(m.versionDoi!==r.dataset.zenodo.versionDoi||m.recordId!==String(r.dataset.zenodo.recordId))throw Error('DOI matrix drift');
+          console.log(JSON.stringify({finalCandidateSourceProof:'PASS',C:process.env.CANDIDATE_SHA,releaseDate:r.dateModified,medicalReviewedAt:r.medicalReviewedAt,versionDoi:r.dataset.zenodo.versionDoi,recordId:String(r.dataset.zenodo.recordId),queryRows:m.queryRows,serviceCoverage:`${m.servicesWithAliasCoverage}/${m.serviceCount}`}));
+          NODE
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Publish only the already-proven atomic Candidate C ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "$CANDIDATE_BRANCH"
+          test "$(git rev-parse origin/$CANDIDATE_BRANCH)" = "$EXPECTED_HEAD"
+          git push origin "HEAD:$CANDIDATE_BRANCH"
+          echo "FINAL_ATOMIC_CANDIDATE_PUBLISHED $CANDIDATE_SHA"
