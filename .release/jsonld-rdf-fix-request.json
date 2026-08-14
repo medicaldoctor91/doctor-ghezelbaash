@@ -1,0 +1,8 @@
+{
+  "target": "release/v1.2.2-candidate",
+  "base": "236281fde493cdfaef5f8f1ad2bcaffbcd41c6fb",
+  "jsonld": "9.0.0",
+  "rdfCanonize": "5.0.0",
+  "algorithm": "RDFC-1.0",
+  "requestedAt": "2026-08-14T11:50:00Z"
+}
