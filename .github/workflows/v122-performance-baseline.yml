@@ -1,0 +1,31 @@
+name: v1.2.2 current live performance baseline
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/v122-performance-baseline.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lighthouse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with: {node-version: 24.18.0}
+      - name: Lighthouse mobile and desktop against cache-busted canonical live URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://www.ghezelbaash.ir/?__lh_baseline=$(date +%s%N)"
+          npx --yes lighthouse@13.4.1 "$URL" --quiet --chrome-flags='--headless --no-sandbox --disable-gpu' --only-categories=performance --output=json --output-path=/tmp/mobile.json
+          npx --yes lighthouse@13.4.1 "$URL" --quiet --preset=desktop --chrome-flags='--headless --no-sandbox --disable-gpu' --only-categories=performance --output=json --output-path=/tmp/desktop.json
+          node - <<'NODE'
+          const fs=require('fs');
+          for(const mode of ['mobile','desktop']){
+            const j=JSON.parse(fs.readFileSync(`/tmp/${mode}.json`));
+            const a=j.audits;
+            const out={mode,performance:Math.round(j.categories.performance.score*100),fcp:a['first-contentful-paint'].numericValue,lcp:a['largest-contentful-paint'].numericValue,cls:a['cumulative-layout-shift'].numericValue,tbt:a['total-blocking-time'].numericValue,speedIndex:a['speed-index'].numericValue,ttfb:a['server-response-time'].numericValue};
+            console.log('LIGHTHOUSE_BASELINE',JSON.stringify(out));
+          }
+          NODE
