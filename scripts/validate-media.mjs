@@ -32,11 +32,11 @@ const expectedDimensions=new Map(dimensionRows.map(line=>{
   const [logical,width,height]=line.split('|');
   return [logical,{width:Number(width),height:Number(height)}];
 }));
-if(expectedDimensions.size!==49)fail(`Expected dimension inventory drift: ${expectedDimensions.size}`);
+if(expectedDimensions.size!==53)fail(`Expected dimension inventory drift: ${expectedDimensions.size}`);
 
 const all=await walk(root);
 const rasters=all.filter(file=>rasterPattern.test(file)).sort();
-if(rasters.length!==49)fail(`Expected exactly 49 raster images, found ${rasters.length}`);
+if(rasters.length!==53)fail(`Expected exactly 53 raster images, found ${rasters.length}`);
 let currentHits=0,selfReferencedSvg=0;
 const logicalAssets=new Set();
 for(const file of all){
@@ -57,7 +57,7 @@ for(const file of all){
     logicalAssets.add(logical);
   }
 }
-if(logicalAssets.size!==49)fail(`Logical raster inventory drift: ${logicalAssets.size}`);
+if(logicalAssets.size!==53)fail(`Logical raster inventory drift: ${logicalAssets.size}`);
 
 const metadata=spawnSync(exiftool,[
   '-config',exiftoolConfig,'-j','-G1','-s','-ImageWidth','-ImageHeight','-XMP-dc:Creator','-XMP-dc:Rights',
@@ -73,7 +73,7 @@ const metadata=spawnSync(exiftool,[
 ],{encoding:'utf8',maxBuffer:100*1024*1024});
 if(metadata.status!==0)fail(`ExifTool metadata validation failed: ${metadata.stderr}`);
 const rows=JSON.parse(metadata.stdout);
-if(rows.length!==49)fail(`Embedded metadata row count drift: ${rows.length}`);
+if(rows.length!==53)fail(`Embedded metadata row count drift: ${rows.length}`);
 const scalar=(row,key)=>row[key]??Object.entries(row).find(([candidate])=>candidate.endsWith(`:${key}`))?.[1];
 const values=value=>Array.isArray(value)?value:value===undefined?[]:[value];
 const universalSubjects=['Saeed Ghezelbash','Dr. Saeed Ghezelbash','دکتر سعید قزلباش','Q140287622','Q140288589','IRIMC 167430','Google KG /g/11nqdfk76c',`Google Place ${current}`];
@@ -138,5 +138,5 @@ if(ffprobe.status===0){
     if(!stream||stream.codec_type!=='video'||!stream.width||!stream.height)fail(`Invalid image stream ${file}`);
   }
 }
-if(currentHits<49)fail(`Entity Place ID metadata unexpectedly sparse: ${currentHits}`);
-console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'49/49',googleKnowledgeGraphRawIdCoverage:'49/49',authorityMasterGoogleKgUrlCoverage:`${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`,authorityMasterIdentityFields:['IPTC PersonInImageId','Dublin Core relation','embedded DoctorIdentifiers','embedded EntityGraphJSONLD'],metadataProfile:'XMP/IPTC Core/PLUS 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));
+if(currentHits<53)fail(`Entity Place ID metadata unexpectedly sparse: ${currentHits}`);
+console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'53/53',googleKnowledgeGraphRawIdCoverage:'53/53',authorityMasterGoogleKgUrlCoverage:`${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`,authorityMasterIdentityFields:['IPTC PersonInImageId','Dublin Core relation','embedded DoctorIdentifiers','embedded EntityGraphJSONLD'],metadataProfile:'XMP/IPTC Core/PLUS 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));

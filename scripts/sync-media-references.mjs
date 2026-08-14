@@ -20,7 +20,7 @@ async function walk(directory,{skip=[]}={}){
 }
 
 const rasters=(await walk(mediaRoot)).filter(file=>rasterPattern.test(file)).sort();
-if(rasters.length!==49)throw new Error(`Expected 49 canonical raster assets, found ${rasters.length}`);
+if(rasters.length!==53)throw new Error(`Expected 53 canonical raster assets, found ${rasters.length}`);
 const canonical=[];
 for(const file of rasters){
   const basename=path.basename(file),extension=path.extname(basename);
