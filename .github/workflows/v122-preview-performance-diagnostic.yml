@@ -1,0 +1,50 @@
+name: v1.2.2 Cloudflare Preview performance diagnostics
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/v122-preview-performance-diagnostic.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      CF_PROJECT: doctor-ghezelbaash
+      CANDIDATE_SHA: 36484442e89ff9ad840c70bd98ebb93f7c8cce17
+    steps:
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with: {node-version: 24.18.0}
+      - name: Resolve successful exact candidate Preview deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          api="https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?per_page=50"
+          for i in {1..30}; do
+            curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$api" > /tmp/deployments.json
+            if node - <<'NODE' >> "$GITHUB_ENV"
+          const p=require('/tmp/deployments.json'),sha=process.env.CANDIDATE_SHA;
+          const d=(p.result||[]).find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===sha&&x.latest_stage?.status==='success');
+          if(!d?.url)process.exit(1);console.log(`PREVIEW_URL=https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`);console.error('PREVIEW_DEPLOYMENT',JSON.stringify({id:d.id,url:d.url,environment:d.environment,commit:d.deployment_trigger?.metadata?.commit_hash,created_on:d.created_on}));
+          NODE
+            then break; fi
+            sleep 5
+          done
+          test -n "${PREVIEW_URL:-}"
+      - name: Lighthouse live vs real Preview in same runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mode in mobile desktop; do
+            extra=''; [ "$mode" = desktop ] && extra='--preset=desktop'
+            npx --yes lighthouse@13.4.1 "https://www.ghezelbaash.ir/?__preview_diag=$(date +%s%N)" --quiet $extra --chrome-flags='--headless --no-sandbox --disable-gpu' --output=json --output-path="/tmp/live-$mode.json"
+            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__preview_diag=$(date +%s%N)" --quiet $extra --chrome-flags='--headless --no-sandbox --disable-gpu' --output=json --output-path="/tmp/preview-$mode.json"
+          done
+          node - <<'NODE'
+          const fs=require('fs');for(const mode of ['mobile','desktop'])for(const side of ['live','preview']){const j=JSON.parse(fs.readFileSync(`/tmp/${side}-${mode}.json`)),a=j.audits;console.log('PERF',JSON.stringify({side,mode,score:Math.round(j.categories.performance.score*100),fcp:a['first-contentful-paint']?.numericValue,lcp:a['largest-contentful-paint']?.numericValue,tbt:a['total-blocking-time']?.numericValue,cls:a['cumulative-layout-shift']?.numericValue,speedIndex:a['speed-index']?.numericValue,mainThread:a['mainthread-work-breakdown']?.numericValue,dom:a['dom-size-insight']?.details?.items?.[0]}));if(mode==='mobile'&&side==='preview')for(const id of ['layout-shifts','cls-culprits-insight','mainthread-work-breakdown','long-tasks','dom-size-insight','slow-css-selector-insight']){const x=a[id];if(x)console.log('PREVIEW_DIAG',JSON.stringify({id,score:x.score,numericValue:x.numericValue,displayValue:x.displayValue,details:x.details}))}}
+          NODE
