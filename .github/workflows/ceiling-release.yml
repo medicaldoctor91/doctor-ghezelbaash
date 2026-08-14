@@ -210,9 +210,12 @@ jobs:
           node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
           curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?per_page=50" >/tmp/cf-deployments.json
-          node - <<'NODE' >> "$GITHUB_ENV"
-          const p=require('/tmp/cf-deployments.json');const c=process.env.SOURCE_COMMIT;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Successful preview URL missing');console.log(`PREVIEW_URL=https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
+          PREVIEW_URL="$(node - <<'NODE'
+          const p=require('/tmp/cf-deployments.json');const c=process.env.SOURCE_COMMIT;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error('Successful preview URL missing');console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
           NODE
+          )"
+          test -n "$PREVIEW_URL"
+          echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
           VERIFY_BASE_URL="$PREVIEW_URL" node scripts/verify-cloudflare-pages-deployment.mjs
           node scripts/validate-visible-freeze.mjs dist/index.html
           node scripts/update-release-control.mjs "$LEDGER" PREVIEW_PROVEN sourceCommit=$SOURCE_COMMIT previewUrl=$PREVIEW_URL
