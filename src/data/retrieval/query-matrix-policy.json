@@ -29,14 +29,15 @@
   "serviceAliasCoverage": {
     "enabled": true,
     "source": "src/data/service-registry.json",
-    "coverage": "all-publishable-services-with-aliases",
+    "coverage": "all-publishable-services",
     "expandUnscopedAliasesTo": [
       "unspecified",
       "Kermanshah",
       "Iran"
     ],
     "preserveNativeAliasLanguage": true,
-    "rowKind": "service_alias"
+    "rowKind": "service_alias",
+    "emptyAliasFallback": "canonical-service-name"
   },
   "evidencePolicy": {
     "requireStableEvidenceOnEveryRow": true,

@@ -45,7 +45,7 @@ def metadata(version,date,doi,concept):
         '<p>GitHub is the version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is the AI/retrieval distribution. '
         'These roles are linked without collapsing the physician, clinic, Dataset, source repository or distribution records into one identity.</p>'
       ),
-      'access_right':'open','license':'cc-by-4.0','language':'eng','version':version,
+      'access_right':'open','license':'cc-by-4.0','language':'mul','version':version,
       'keywords':['Saeed Ghezelbash','Dr. Saeed Ghezelbash','Mohammad Saeed Ghezelbash','دکتر سعید قزلباش','محمد سعید قزلباش',
         'physician entity','aesthetic physician','Kermanshah','Iran','medical knowledge graph','knowledge graph','knowledge base','entity resolution',
         'JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data','question answering','text retrieval','AI retrieval','RAG','Croissant','DCAT'],
@@ -55,11 +55,11 @@ def metadata(version,date,doi,concept):
         {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':'https://www.wikidata.org/entity/Q140288589','scheme':'url'}],
       'notes':f'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. Concept DOI: {concept}. Exact Version DOI: {doi}. Current live observations: https://www.ghezelbaash.ir/live-observations.jsonld.',
       'related_identifiers':[
-        {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isIdenticalTo','resource_type':'dataset'},
+        {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isDerivedFrom','resource_type':'dataset'},
         {'identifier':'https://www.ghezelbaash.ir/','relation':'isDescribedBy','resource_type':'other'},
         {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash','relation':'isDerivedFrom','resource_type':'software'},
         {'identifier':'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','relation':'isReferencedBy','resource_type':'dataset'},
-        {'identifier':'https://www.wikidata.org/entity/Q140304972','relation':'isIdenticalTo','resource_type':'dataset'},
+        {'identifier':'https://www.wikidata.org/entity/Q140304972','relation':'isDescribedBy','resource_type':'dataset'},
         {'identifier':'https://www.wikidata.org/entity/Q140287622','relation':'references','resource_type':'other'},
         {'identifier':'https://www.wikidata.org/entity/Q140288589','relation':'references','resource_type':'other'}],
       'prereserve_doi':True

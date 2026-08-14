@@ -20,7 +20,7 @@ const bindLiveReputation=async(root,content)=>{
   const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
   const rating=Number(volatile.rating),reviewCount=Number(volatile.reviewCount),observedAt=volatile.valueObservedAt;
   if(!(rating>=1&&rating<=5)||!Number.isInteger(reviewCount)||reviewCount<0||volatile.placeId!==release.clinic.placeId||Number.isNaN(Date.parse(observedAt)))throw new Error('Invalid live reputation source for visible binding');
-  const replacement=`<div class="hero-caption-reputation" id="google-maps-clinic-reputation-current"><strong>${persianNumber(rating,1)} از ۵ در <span translate="no">Google Maps</span></strong> · بر اساس ${persianNumber(reviewCount)} نظر · دریافت ${persianGregorianDate(observedAt)} — <a href="https://www.google.com/maps?cid=${release.clinic.cid}" rel="external noopener">مشاهده نظرها</a></div>`;
+  const replacement=`<div class="hero-caption-reputation" id="google-maps-clinic-reputation-current"><strong>${persianNumber(rating,1)} از ۵ در <span translate="no">Google Maps</span></strong> · بر اساس ${persianNumber(reviewCount)} نظر · آخرین دریافت از Google: ${persianGregorianDate(observedAt)} — <a href="https://www.google.com/maps?cid=${release.clinic.cid}" rel="external noopener">مشاهده نظرها</a></div>`;
   const pattern=/<div\b(?=[^>]*\bid=["']google-maps-clinic-reputation-current["'])[^>]*>[\s\S]*?<\/div>/i;
   const matches=content.match(new RegExp(pattern.source,'gi'))||[];if(matches.length!==1)throw new Error(`Expected one visible reputation slot; found ${matches.length}`);
   return content.replace(pattern,replacement);

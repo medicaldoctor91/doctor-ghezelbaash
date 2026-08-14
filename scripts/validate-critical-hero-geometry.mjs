@@ -9,6 +9,7 @@ must('.hero-caption-reputation{padding-top:.32rem','Hero reputation geometry is 
 must('@media(max-width:720px){.hero-search-launch{min-height:3.1rem','Mobile hero search geometry is deferred');
 must('.hero-caption-facts{display:grid;gap:.08rem;font-size:.8rem}','Mobile hero caption geometry is deferred');
 must('@media(max-width:430px){.hero-search-launch{grid-template-columns:1.15rem minmax(0,1fr)','Narrow mobile hero geometry is deferred');
-if(source.includes('آخرین دریافت از Google:'))throw new Error('Reputation wording exceeds frozen mobile geometry footprint');
-if(!source.includes(' · دریافت ${persianGregorianDate(observedAt)} — '))throw new Error('Compact reputation observation wording missing');
-console.log(JSON.stringify({criticalHeroGeometry:'PASS',mobileBreakpoints:[720,430],reputationFootprint:'compact',finalComputedStyleChange:false}));
+if(!source.includes(' · آخرین دریافت از Google: ${persianGregorianDate(observedAt)} — '))throw new Error('Locked reputation observation wording missing');
+if(source.includes(' · دریافت ${persianGregorianDate(observedAt)} — '))throw new Error('Compact reputation wording regression detected');
+must('.hero-caption-reputation{min-block-size:4rem','Narrow-mobile reputation geometry is not reserved');
+console.log(JSON.stringify({criticalHeroGeometry:'PASS',mobileBreakpoints:[720,430],reputationFootprint:'contract-exact-reserved',finalComputedStyleChange:false}));

@@ -54,19 +54,23 @@ for(const intent of policy.intentFamilies)if(!rows.some(r=>r.row_kind==='intent_
 const minimumIntentRows=policy.languages.length*policy.scopes.length*policy.intentFamilies.length;
 if(intentAliasRows<minimumIntentRows)fail(`Intent alias coverage sparse ${intentAliasRows}/${minimumIntentRows}`);
 
-const servicesWithAliases=publishable.filter(s=>arr(s.aliases).some(a=>String(a).trim()));
 if(policy.serviceAliasCoverage?.enabled){
-  for(const service of servicesWithAliases){
+  for(const service of publishable){
+    const explicitAliases=[...new Set(arr(service.aliases).map(x=>String(x).trim()).filter(Boolean))];
+    const canonicalFallback=String(service.name||service.id.split('#').pop()||'').trim().replace(/^procedure-/,'').replace(/-/g,' ');
+    const expectedAliases=explicitAliases.length?explicitAliases:[canonicalFallback].filter(Boolean);
+    if(!expectedAliases.length)fail(`Publishable service has no retrieval label ${service.id}`);
     const serviceRows=rows.filter(r=>arr(r.service_ids).includes(service.id));
-    if(!serviceRows.length)fail(`Service alias coverage missing ${service.id}`);
-    for(const alias of [...new Set(arr(service.aliases).map(x=>String(x).trim()).filter(Boolean))]){
-      if(!serviceRows.some(r=>r.query===alias))fail(`Exact canonical service alias missing ${service.id}: ${alias}`);
+    if(!serviceRows.length)fail(`Publishable service coverage missing ${service.id}`);
+    for(const alias of expectedAliases){
+      if(!serviceRows.some(r=>r.query===alias))fail(`Exact service retrieval label missing ${service.id}: ${alias}`);
     }
   }
 }
 
 if(rows.some(r=>arr(r.stable_evidence_refs).includes(liveObservationId)))fail('Mutable live observation leaked into stable evidence lane');
 const coveredServices=new Set(rows.flatMap(r=>arr(r.service_ids)));
+if(policy.serviceAliasCoverage?.enabled&&coveredServices.size!==publishable.length)fail(`Publishable service set coverage drift ${coveredServices.size}/${publishable.length}`);
 console.log(JSON.stringify({
   valid:true,
   file:path.relative(root,target),
@@ -75,7 +79,8 @@ console.log(JSON.stringify({
   intentAliasRows,
   serviceAliasRows,
   servicesWithAliasCoverage:coveredServices.size,
-  expectedServicesWithAliases:servicesWithAliases.length,
+  expectedServicesWithAliases:publishable.length,
+  expectedPublishableServices:publishable.length,
   rowsWithStableEvidence:rows.filter(r=>arr(r.stable_evidence_refs).length>0).length,
   stableEvidenceRegistrySize:evidenceIds.size,
   integrity:'PASS'

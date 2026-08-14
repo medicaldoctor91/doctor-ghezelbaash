@@ -170,8 +170,10 @@ const serviceAnswerFor=service=>{
 };
 let serviceAliases=0;
 for(const service of publishableServices){
-  const aliases=[...new Set(arr(service.aliases).map(x=>String(x).trim()).filter(Boolean))];
-  if(!aliases.length)continue;
+  const explicitAliases=[...new Set(arr(service.aliases).map(x=>String(x).trim()).filter(Boolean))];
+  const canonicalFallback=String(service.name||service.id.split('#').pop()||'').trim().replace(/^procedure-/,'').replace(/-/g,' ');
+  const aliases=explicitAliases.length?explicitAliases:[canonicalFallback].filter(Boolean);
+  if(!aliases.length)throw new Error(`Publishable service has no retrieval label ${service.id}`);
   const answer=serviceAnswerFor(service);
   const stable=[...new Set([...(answerEvidence.get(answer.answerId)||baselineEvidence),...relatedEvidenceFor(`${service.id} ${aliases.join(' ')}`)])];
   for(const alias of aliases){
@@ -219,9 +221,8 @@ const dedup=[...mergedRows.values()];
 const missingEvidence=dedup.filter(r=>!r.stable_evidence_refs?.length);
 if(missingEvidence.length)throw new Error(`Query Matrix rows missing stable evidence: ${missingEvidence.length}`);
 for(const row of dedup)for(const ref of row.stable_evidence_refs)if(!evidenceById.has(ref))throw new Error(`Query Matrix unresolved evidence ref ${ref}`);
-const servicesWithAliases=publishableServices.filter(s=>arr(s.aliases).some(x=>String(x).trim())).map(s=>s.id);
-const uncoveredServices=servicesWithAliases.filter(s=>!dedup.some(r=>arr(r.service_ids).includes(s)));
-if(uncoveredServices.length)throw new Error(`Query Matrix service alias coverage missing ${uncoveredServices.length} services`);
+const uncoveredServices=publishableServices.map(s=>s.id).filter(s=>!dedup.some(r=>arr(r.service_ids).includes(s)));
+if(uncoveredServices.length)throw new Error(`Query Matrix publishable service coverage missing ${uncoveredServices.length} services: ${uncoveredServices.join(', ')}`);
 
 await write('src/data/projections/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
 await write('public/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');

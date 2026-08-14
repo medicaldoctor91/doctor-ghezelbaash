@@ -24,16 +24,19 @@
     "validate:query-matrix": "node scripts/validate-query-matrix.mjs",
     "render:calibration:apply": "node scripts/apply-render-calibration.mjs",
     "finalize:serving": "node scripts/finalize-v122-serving.mjs",
-    "build": "npm run prepare:generated && npm run validate:query-matrix && npm run validate:source && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run indexnow:prepare && node scripts/finalize-dist.mjs && npm run finalize:serving && npm run validate:cloudflare && node scripts/validate-dist.mjs && node scripts/validate-query-matrix.mjs dist/query-matrix.jsonl && npm run preflight:cloudflare",
+    "build": "npm run prepare:generated && npm run validate:query-matrix && npm run validate:source && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run indexnow:prepare && node scripts/finalize-dist.mjs && npm run finalize:serving && npm run validate:cloudflare && node scripts/validate-dist.mjs && node scripts/validate-query-matrix.mjs dist/query-matrix.jsonl && npm run validate:current-context && npm run preflight:cloudflare",
     "release:prepare": "npm run validate:release-contract && npm run check && npm run validate:source && npm run validate:media && npm run validate:evidence && npm run validate:shacl && npm run validate:reproducibility && npm run validate:rdf-reproducibility",
-    "release": "npm run release:prepare && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run indexnow:prepare && node scripts/finalize-dist.mjs && npm run finalize:serving && npm run validate:cloudflare && node scripts/validate-dist.mjs && node scripts/validate-query-matrix.mjs dist/query-matrix.jsonl && node scripts/package-dist.mjs && node scripts/package-source.mjs && node scripts/package-complete.mjs",
+    "release": "npm run release:prepare && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run indexnow:prepare && node scripts/finalize-dist.mjs && npm run finalize:serving && npm run validate:cloudflare && node scripts/validate-dist.mjs && node scripts/validate-query-matrix.mjs dist/query-matrix.jsonl && npm run validate:current-context && node scripts/package-dist.mjs && node scripts/package-source.mjs && node scripts/package-complete.mjs",
     "package:source": "node scripts/package-source.mjs",
     "package:complete": "node scripts/package-complete.mjs",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "verify:subdomains": "node scripts/verify-subdomain-redirects.mjs",
     "verify:production": "node scripts/verify-redirects.mjs && npm run verify:subdomains && node scripts/verify-production.mjs",
     "validate:release-contract": "node scripts/validate-v122-contract.mjs",
-    "validate:rdf-reproducibility": "node scripts/validate-rdf-byte-repro.mjs"
+    "validate:rdf-reproducibility": "node scripts/validate-rdf-byte-repro.mjs",
+    "indexnow:submit": "node scripts/submit-indexnow.mjs",
+    "validate:current-context": "node scripts/validate-current-context.mjs dist",
+    "verify:public-discovery": "node scripts/verify-public-discovery-freshness.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
