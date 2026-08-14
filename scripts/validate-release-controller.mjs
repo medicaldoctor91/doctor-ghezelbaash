@@ -4,8 +4,8 @@ const must=(ok,msg)=>{if(!ok)throw new Error(msg)};
 must(!w.includes('unset SOURCE_DATE_EPOCH SOURCE_COMMIT GITHUB_SHA'),'Step12 still destroys canonical commit input');
 must(w.includes('REPRO_SHA="$SOURCE_COMMIT"')&&w.includes('SOURCE_COMMIT="$REPRO_SHA" CF_PAGES_COMMIT_SHA="$REPRO_SHA" SOURCE_DATE_EPOCH="$REPRO_EPOCH"'),'Step12 canonical build input binding missing');
 must(cf.includes('preview_branch_excludes:[]')&&cf.includes('s.previewBranchExcludes.length===0'),'Cloudflare wildcard preview exclusion remains');
-must(!w.includes('deployments?per_page=50'),'Unsupported/redundant Cloudflare deployment-list pagination remains');
-must(w.includes('deployments?env=preview'),'Cloudflare Preview list lookup is not environment-scoped');
+must(!w.includes('/deployments?'),'Atomic workflow still performs redundant Cloudflare deployment-list lookup after exact helper proof');
+must(w.includes("PREVIEW_URL='https://staging-deploy.doctor-ghezelbaash.pages.dev/'"),'Atomic workflow does not use stable staging branch alias after exact deployment proof');
 const preview=w.indexOf('git push origin "$SOURCE_COMMIT":staging/deploy'),previewConfigure=w.lastIndexOf('node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure',preview);
 must(preview>0&&previewConfigure>0&&previewConfigure<preview,'Cloudflare Preview config is not proven before branch push');
 const production=w.indexOf('git push origin "$SOURCE_COMMIT":production/deploy'),productionConfigure=w.lastIndexOf('node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure',production);
@@ -19,4 +19,4 @@ must(w.includes('PERFORMANCE_PROVEN sourceCommit=$SOURCE_COMMIT'),'Performance p
 must(w.includes('PREVIEW_PROVEN sourceCommit=$SOURCE_COMMIT'),'Preview proof is not durable');
 must(w.includes('verify-release-proof-ledger.mjs "$LEDGER" "$SOURCE_COMMIT"'),'Irreversible gate lacks exact-commit proof ledger');
 must(w.indexOf('verify-release-proof-ledger.mjs "$LEDGER" "$SOURCE_COMMIT"')<w.indexOf('python scripts/zenodo_release.py publish'),'Irreversible proof ledger is not enforced before Zenodo publication');
-console.log(JSON.stringify({releaseControllerHardening:'PASS',step12:'canonical-input-bound',cloudflare:'include-only-preview+compatible-list+config-before-push',zenodo:'source-commit-bound-idempotent',hfTag:'immutable-peeled',ledger:'commit-bound-proofs-before-irreversible',runtimeHygiene:'PASS'}));
+console.log(JSON.stringify({releaseControllerHardening:'PASS',step12:'canonical-input-bound',cloudflare:'include-only-preview+stable-alias+config-before-push',zenodo:'source-commit-bound-idempotent',hfTag:'immutable-peeled',ledger:'commit-bound-proofs-before-irreversible',runtimeHygiene:'PASS'}));
