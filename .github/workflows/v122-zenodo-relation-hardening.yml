@@ -1,0 +1,39 @@
+name: v1.2.2 Zenodo relation hardening
+on:
+  push:
+    branches: [release/v1.2.2-candidate]
+    paths: [.github/workflows/v122-zenodo-relation-hardening.yml]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+      - name: Harden DataCite relation semantics
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/zenodo_release.py')
+          s=p.read_text()
+          old1="{'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isDerivedFrom','resource_type':'dataset'}"
+          new1="{'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isIdenticalTo','resource_type':'dataset'}"
+          old2="{'identifier':'https://www.wikidata.org/entity/Q140304972','relation':'isPartOf','resource_type':'dataset'}"
+          new2="{'identifier':'https://www.wikidata.org/entity/Q140304972','relation':'isIdenticalTo','resource_type':'dataset'}"
+          if old1 not in s or old2 not in s:
+              raise SystemExit('Expected Zenodo relation anchors not found')
+          s=s.replace(old1,new1).replace(old2,new2)
+          p.write_text(s)
+          PY
+          python -m py_compile scripts/zenodo_release.py
+          grep -q "graph.jsonld#dataset','relation':'isIdenticalTo'" scripts/zenodo_release.py
+          grep -q "Q140304972','relation':'isIdenticalTo'" scripts/zenodo_release.py
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git add scripts/zenodo_release.py
+          git commit -m 'Use identity-preserving Zenodo relations for canonical Dataset'
+          git push origin HEAD:release/v1.2.2-candidate
