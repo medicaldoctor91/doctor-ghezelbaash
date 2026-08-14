@@ -17,3 +17,8 @@ src/data/semantic/rdf-lock.json
 public/doctor.vcf
 public/clinic.vcf
 public/assets/site.*.css
+
+.release/runtime/
+public/live-observations.jsonld
+public/query-matrix.jsonl
+public/current-release-matrix.json

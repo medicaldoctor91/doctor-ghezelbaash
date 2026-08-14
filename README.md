@@ -2,7 +2,7 @@
 
 Pure-static Astro source for the single-page production site at `https://www.ghezelbaash.ir/`.
 
-This repository is the version-controlled **source and generation authority**. The canonical first-party Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`; Zenodo is its immutable preservation distribution and Hugging Face is its secondary AI/ML distribution. These related layers are not identity-equivalent.
+This repository is the version-controlled **source and generation authority**. The canonical first-party Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`; Zenodo is its immutable preservation distribution and Hugging Face is its AI/retrieval distribution. These related layers are not identity-equivalent.
 
 ## Canonical source
 

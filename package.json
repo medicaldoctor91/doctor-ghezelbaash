@@ -9,7 +9,7 @@
     "prepare:generated": "npm run media:sync && npm run rdf:deps && npm run rdf:generate && npm run generate",
     "dev": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "check": "npm run validate:release-contract && npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
-    "generate": "node scripts/generate-projections.mjs",
+    "generate": "node scripts/generate-projections.mjs && node scripts/generate-v122-overlays.mjs",
     "rdf:generate": "PYTHONPATH=.python-deps python scripts/generate-rdf.py",
     "indexnow:prepare": "node scripts/write-indexnow-key.mjs",
     "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test && python scripts/test-cloudflare-subdomain-migration.py",
@@ -30,7 +30,7 @@
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "verify:subdomains": "node scripts/verify-subdomain-redirects.mjs",
     "verify:production": "node scripts/verify-redirects.mjs && npm run verify:subdomains && node scripts/verify-production.mjs",
-    "validate:release-contract": "node scripts/validate-release-contract.mjs"
+    "validate:release-contract": "node scripts/validate-v122-contract.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",

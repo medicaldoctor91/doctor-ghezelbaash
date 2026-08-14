@@ -73,7 +73,7 @@ for(const node of nodes){
   if(node.dateModified===old.date||node.dateModified==='2026-08-08')node.dateModified=next.date;
 }
 const project=byId.get('https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project');
-project.description=`First-party Version ${next.release} structured-data project for Dr. Saeed Ghezelbash and his aesthetic clinic. The canonical website Dataset is generated from this source; GitHub is the version-controlled source, Zenodo is the immutable preservation distribution, and Hugging Face is the secondary AI/ML distribution.`;
+project.description=`First-party Version ${next.release} structured-data project for Dr. Saeed Ghezelbash and his aesthetic clinic. The canonical website Dataset is generated from this source; GitHub is the version-controlled source, Zenodo is the immutable preservation distribution, and Hugging Face is the AI/retrieval distribution.`;
 project.dateModified=next.date;
 const github=byId.get('https://www.ghezelbaash.ir/#project-github-source');
 github.version=next.release;github.dateModified=next.date;
@@ -81,7 +81,7 @@ github.description=`Version-controlled source for Version ${next.release} of the
 const hf=byId.get('https://www.ghezelbaash.ir/#project-huggingface-dataset');
 hf.version=next.release;hf.dateModified=next.date;
 hf.encodingFormat=['application/ld+json','text/turtle','text/csv','text/plain','application/json','application/xml'];
-hf.description=`Secondary AI/ML distribution of Version ${next.release}. Its Core files are byte-faithful mirrors of the canonical website Dataset; its clearly labeled enrichment layer is derived, synthetic retrieval material and is not canonical factual evidence.`;
+hf.description=`AI/retrieval distribution of Version ${next.release}. Its Core files are byte-faithful mirrors of the canonical website Dataset; its clearly labeled enrichment layer is retrieval-oriented enrichment material and is kept separate from the release-faithful factual Core.`;
 hf.additionalType='https://schema.org/DataDownload';
 const zenodo=byId.get('https://www.ghezelbaash.ir/#project-zenodo-release');
 zenodo['@type']='DataDownload';
@@ -97,7 +97,7 @@ const dataset=byId.get('https://www.ghezelbaash.ir/graph.jsonld#dataset');
 dataset.version=next.release;dataset.dateModified=next.date;
 dataset.sameAs=['https://www.wikidata.org/entity/Q140304972'];
 dataset.url='https://www.ghezelbaash.ir/';
-dataset.description=`Canonical first-party Dataset for Dr. Saeed Ghezelbash and Dr. Saeed Ghezelbash Aesthetic Clinic. The website JSON-LD is the canonical graph representation. GitHub is its source repository, Zenodo is an immutable preservation distribution, and Hugging Face is a secondary AI/ML distribution; those access points are related distributions, not identity-equivalent entities.`;
+dataset.description=`Canonical first-party Dataset for Dr. Saeed Ghezelbash and Dr. Saeed Ghezelbash Aesthetic Clinic. The website JSON-LD is the canonical graph representation. GitHub is its source repository, Zenodo is an immutable preservation distribution, and Hugging Face is a AI/retrieval distribution; those access points are related distributions, not identity-equivalent entities.`;
 for(const id of dataset.identifier||[])if(id?.propertyID==='DOI'&&id?.value===next.versionDoi)id.name=`Zenodo Version DOI ${next.release}`;
 const catalog=byId.get('https://www.ghezelbaash.ir/#data-catalog');
 catalog.dateModified=next.date;catalog.version=next.release;

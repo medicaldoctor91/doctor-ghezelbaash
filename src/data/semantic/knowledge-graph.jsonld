@@ -7860,7 +7860,7 @@
       },
       "isAccessibleForFree": true,
       "dateModified": "2026-08-13",
-      "description": "First-party Version 1.2.1 structured-data project for Dr. Saeed Ghezelbash and his aesthetic clinic. The canonical website Dataset is generated from this source; GitHub is the version-controlled source, Zenodo is the immutable preservation distribution, and Hugging Face is the secondary AI/ML distribution.",
+      "description": "Version-controlled source project for Dr. Saeed Ghezelbash and the canonical Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable preservation, and Hugging Face is AI/retrieval distribution.",
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -7990,7 +7990,7 @@
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#distribution-platform-hugging-face"
       },
-      "description": "Secondary AI/ML distribution of Version 1.2.1. Its Core files are byte-faithful mirrors of the canonical website Dataset; its clearly labeled enrichment layer is derived, synthetic retrieval material and is not canonical factual evidence.",
+      "description": "AI and retrieval distribution of Version 1.2.1 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with release-faithful Core resources plus clearly separated retrieval positioning and live-observation layers.",
       "encodingFormat": [
         "application/ld+json",
         "text/turtle",
@@ -8001,8 +8001,7 @@
       ],
       "isAccessibleForFree": true,
       "dateModified": "2026-08-13",
-      "version": "1.2.1",
-      "additionalType": "https://schema.org/DataDownload"
+      "version": "1.2.1"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-zenodo-release",
@@ -8122,7 +8121,7 @@
         "https://www.ghezelbaash.ir/#webpage",
         "https://github.com/medicaldoctor91/doctor-ghezelbaash"
       ],
-      "description": "Canonical first-party Dataset for Dr. Saeed Ghezelbash and Dr. Saeed Ghezelbash Aesthetic Clinic. The website JSON-LD is the canonical graph representation. GitHub is its source repository, Zenodo is an immutable preservation distribution, and Hugging Face is a secondary AI/ML distribution; those access points are related distributions, not identity-equivalent entities.",
+      "description": "Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is its AI/retrieval distribution layer; these access points are related resources, not identity-equivalent entities.",
       "mentions": [
         {
           "@id": "https://www.ghezelbaash.ir/#evidence-irimc"

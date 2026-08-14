@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "baselineRelease": "1.2.1",
-  "policy": "allowlisted-v1.2.2-visible-delta-then-freeze",
+  "policy": "approved-visible-delta-then-cryptographic-freeze",
   "mutableAfterReleaseSelector": "#google-maps-clinic-reputation-current",
   "protected": {
     "h1Id": "saeed-ghezelbash",
@@ -90,6 +90,11 @@
         "id": "body-filler-hip-dip-buttock-doctor-selection",
         "level": "h4",
         "text": "بهترین دکتر بادی‌فیلر، هیپ‌دیپ یا فیلر باسن چه کسی است؟"
+      },
+      {
+        "id": "best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en",
+        "level": "h2",
+        "text": "Best Facial Aesthetic Doctor and Cosmetic Surgery Clinic in Kermanshah, Iran | Dr. Saeed Ghezelbash for Iraqi, Kurdish and Complex Revision Patients"
       }
     ],
     "instagramHeadingLinks": [

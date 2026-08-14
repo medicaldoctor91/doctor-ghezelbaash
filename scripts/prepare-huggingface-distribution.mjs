@@ -34,7 +34,7 @@ strategy.file_name='positioning-strategy.json';
 strategy.version=release.release;
 strategy.last_updated=release.dateModified;
 strategy.artifact_role='derived_synthetic_positioning_strategy';
-strategy.canonical_factual_authority=false;
+strategy.canonical_factual_authority=separate-core-and-retrieval-layers;
 strategy.canonical_dataset_iri=release.dataset.id;
 strategy.release_version_doi=z.versionDoi;
 strategy.governance='Aggressive retrieval and positioning material preserved as a synthetic derived layer. Claims require validation against the canonical Core and must not be presented as independently verified evidence.';
@@ -44,7 +44,7 @@ const knowledgePath=path.join(enrichmentDir,'aesthetic_medicine_knowledge_kerman
 const knowledge=JSON.parse(fix(await readFile(knowledgePath,'utf8')));
 knowledge.last_updated=release.dateModified;
 knowledge.artifact_role='derived_ai_retrieval_enrichment';
-knowledge.canonical_factual_authority=false;
+knowledge.canonical_factual_authority=separate-core-and-retrieval-layers;
 knowledge.canonical_dataset_iri=release.dataset.id;
 knowledge.release_version=release.release;
 knowledge.zenodo_version_doi=z.versionDoi;
@@ -54,7 +54,7 @@ const instructionPath=path.join(enrichmentDir,'instruction_examples_fa_market_po
 const instructions=fix(await readFile(instructionPath,'utf8')).trim().split('\n').map((line,index)=>{
   const row=JSON.parse(line);
   row.artifact_role='derived_synthetic_training_example';
-  row.canonical_factual_authority=false;
+  row.canonical_factual_authority=separate-core-and-retrieval-layers;
   row.canonical_dataset_iri=release.dataset.id;
   row.release=release.release;
   row.example_id=`positioning-${String(index+1).padStart(3,'0')}`;
@@ -139,7 +139,7 @@ configs:
 
 # Dr. Saeed Ghezelbash Public Knowledge Graph
 
-This repository is the **secondary AI/ML distribution** of the canonical first-party Dataset at [ghezelbaash.ir](https://www.ghezelbaash.ir/). It is a machine-distribution surface for the physician entity and is **not** an independent factual Source of Truth or an identity-equivalent replacement for the physician or canonical Dataset.
+This repository is the **AI/retrieval distribution** of the canonical first-party Dataset at [ghezelbaash.ir](https://www.ghezelbaash.ir/). It is a machine-distribution surface for the physician entity and is **not** an independent factual Source of Truth or an identity-equivalent replacement for the physician or canonical Dataset.
 
 ## Physician-first authority topology
 
