@@ -1,0 +1,85 @@
+name: Diagnose v1.2.2 390px CLS
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/v122-lighthouse-diagnostic-request.json]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-v122-lighthouse-diagnostic
+  cancel-in-progress: true
+
+env:
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+  CF_PROJECT: doctor-ghezelbaash
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - name: Resolve exact successful Preview for Candidate
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=$(git rev-parse HEAD)
+          echo "CANDIDATE_SHA=$C" >> "$GITHUB_ENV"
+          test -n "$CLOUDFLARE_API_TOKEN"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          curl --fail --silent --show-error -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/$CF_PROJECT/deployments?env=preview&per_page=25" >/tmp/cf.json
+          PREVIEW_URL=$(node - <<'NODE'
+          const p=require('/tmp/cf.json'),c=process.env.CANDIDATE_SHA;const d=p.result.find(x=>x.environment==='preview'&&x.deployment_trigger?.metadata?.commit_hash===c&&x.latest_stage?.status==='success');if(!d?.url)throw Error(`Exact successful Preview missing for ${c}`);console.log(`https://${String(d.url).replace(/^https?:\/\//,'').replace(/\/$/,'')}/`)
+          NODE
+          )
+          echo "PREVIEW_URL=$PREVIEW_URL" >> "$GITHUB_ENV"
+          echo "CLS_DIAGNOSTIC_TARGET candidate=$C preview=$PREVIEW_URL"
+      - name: Reproduce 390px CLS three times and dump culprits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lh390
+          for run in 1 2 3; do
+            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__cls390=${run}_$(date +%s%N)" \
+              --quiet --only-categories=performance --output=json \
+              --chrome-flags='--headless --no-sandbox --disable-gpu' \
+              --form-factor=mobile --screenEmulation.mobile=true \
+              --screenEmulation.width=390 --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=2 \
+              --output-path="/tmp/lh390/candidate-${run}.json"
+            node - "$run" <<'NODE'
+          const fs=require('fs');const run=process.argv[2],x=JSON.parse(fs.readFileSync(`/tmp/lh390/candidate-${run}.json`));
+          const perf=Math.round(x.categories.performance.score*100),cls=x.audits['cumulative-layout-shift']?.numericValue,lcp=x.audits['largest-contentful-paint']?.numericValue;
+          console.log('CLS390_SUMMARY',JSON.stringify({run:Number(run),performance:perf,cls,lcp}));
+          const ids=Object.keys(x.audits).filter(id=>/(layout|shift|cls)/i.test(id));
+          for(const id of ids){const a=x.audits[id];const items=a?.details?.items;console.log('CLS390_AUDIT',id,JSON.stringify({title:a?.title,score:a?.score,numericValue:a?.numericValue,displayValue:a?.displayValue,detailsType:a?.details?.type,items:Array.isArray(items)?items.slice(0,30):a?.details},null,2));}
+          for(const id of ['largest-contentful-paint-element','lcp-breakdown-insight','image-delivery-insight','font-display-insight']){const a=x.audits[id];if(a)console.log('CLS390_CONTEXT',id,JSON.stringify({title:a.title,score:a.score,numericValue:a.numericValue,displayValue:a.displayValue,details:a.details},null,2));}
+          NODE
+          done
+      - name: Compare neighboring widths once
+        shell: bash
+        run: |
+          set -euo pipefail
+          for width in 360 380 390 400 410 420 430; do
+            npx --yes lighthouse@13.4.1 "${PREVIEW_URL}?__cls_width=${width}_$(date +%s%N)" \
+              --quiet --only-categories=performance --output=json \
+              --chrome-flags='--headless --no-sandbox --disable-gpu' \
+              --form-factor=mobile --screenEmulation.mobile=true \
+              --screenEmulation.width="$width" --screenEmulation.height=844 --screenEmulation.deviceScaleFactor=2 \
+              --output-path="/tmp/lh390/w-${width}.json"
+            node - "$width" <<'NODE'
+          const fs=require('fs'),w=process.argv[2],x=JSON.parse(fs.readFileSync(`/tmp/lh390/w-${w}.json`));console.log('CLS_WIDTH_SWEEP',JSON.stringify({width:Number(w),performance:Math.round(x.categories.performance.score*100),cls:x.audits['cumulative-layout-shift']?.numericValue,lcp:x.audits['largest-contentful-paint']?.numericValue}));
+          NODE
+          done
