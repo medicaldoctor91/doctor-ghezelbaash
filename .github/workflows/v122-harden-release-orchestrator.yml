@@ -1,4 +1,4 @@
-name: v1.2.2 one-shot release orchestrator hardener
+name: v1.2.2 one-shot release orchestrator compiler
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  harden:
+  compile:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -21,7 +21,7 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-      - name: Compile and validate final release orchestrator
+      - name: Compile final orchestrator into a non-workflow control artifact
         shell: bash
         run: |
           set -euo pipefail
@@ -32,32 +32,18 @@ jobs:
           grep -q 'CANDIDATE_NATIVE_GIT_REPRODUCIBILITY_PASS' .github/workflows/ceiling-release.yml
           grep -q 'Six-viewport Lighthouse performance' .github/workflows/ceiling-release.yml
           grep -q 'GITHUB_RELEASE_PUBLISHED' .github/workflows/ceiling-release.yml
-          grep -q 'Fast-forward default source branch to exact Candidate C after GitHub Release publication' .github/workflows/ceiling-release.yml
-      - name: Commit hardened orchestrator to main
+          mkdir -p .release/control-plane
+          cp .github/workflows/ceiling-release.yml .release/control-plane/ceiling-release.v1.2.2.final.yml.txt
+          sha256sum .release/control-plane/ceiling-release.v1.2.2.final.yml.txt
+      - name: Publish only the compiled control artifact
         shell: bash
         run: |
           set -euo pipefail
+          git restore .github/workflows/ceiling-release.yml
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add .github/workflows/ceiling-release.yml
+          git add .release/control-plane/ceiling-release.v1.2.2.final.yml.txt
           git diff --cached --check
-          git commit -m 'Harden v1.2.2 final release orchestration'
+          git commit -m 'Compile hardened v1.2.2 release orchestrator artifact'
           git push origin HEAD:main
-      - name: Copy identical hardened orchestrator into candidate source tree
-        shell: bash
-        run: |
-          set -euo pipefail
-          cp .github/workflows/ceiling-release.yml /tmp/ceiling-release.yml
-          git fetch origin release/v1.2.2-candidate
-          git checkout -B release/v1.2.2-candidate origin/release/v1.2.2-candidate
-          cp /tmp/ceiling-release.yml .github/workflows/ceiling-release.yml
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          if ! git diff --quiet -- .github/workflows/ceiling-release.yml; then
-            git add .github/workflows/ceiling-release.yml
-            git diff --cached --check
-            git commit -m 'Carry hardened v1.2.2 orchestrator in Candidate C'
-            git push origin HEAD:release/v1.2.2-candidate
-          fi
-          cmp .github/workflows/ceiling-release.yml /tmp/ceiling-release.yml
-          echo 'FINAL_RELEASE_ORCHESTRATOR_MAIN_CANDIDATE_CONVERGENCE_PASS'
+          echo 'V122_ORCHESTRATOR_CONTROL_ARTIFACT_PASS'
