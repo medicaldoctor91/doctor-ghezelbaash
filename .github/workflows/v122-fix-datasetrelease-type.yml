@@ -65,9 +65,9 @@ jobs:
           export SOURCE_COMMIT="$FIX_SHA"
           npm run build
           node scripts/lock-visible-contract.mjs dist/index.html
-          node - <<'NODE'
-          const fs=require('fs');
-          const jsonld=require('jsonld');
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          import jsonld from 'jsonld';
           const g=JSON.parse(fs.readFileSync('src/data/semantic/knowledge-graph.jsonld','utf8'));
           await jsonld.toRDF(g,{format:'application/n-quads',safe:true});
           const text=JSON.stringify(g);
