@@ -1,0 +1,234 @@
+name: Repair Wikidata publication duplicates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wikidata-repair-publication-duplicates.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Remove wrong reverse edge, merge duplicates, and verify originals
+        shell: python
+        run: |
+          import json, os, time, requests
+
+          WD='https://www.wikidata.org/w/api.php'
+          PERSON='Q140287622'
+          AUTHOR='Q482980'
+          ORIGINALS={
+              'Q36942316': {'pmid':'27280013','doi':'10.4103/2008-7802.182734','ref':'https://pubmed.ncbi.nlm.nih.gov/27280013/'},
+              'Q140298431': {'pmid':'34574943','doi':'10.3390/healthcare9091169','ref':'https://pubmed.ncbi.nlm.nih.gov/34574943/'},
+              'Q140306302': {'pmid':None,'doi':None,'ref':None},
+          }
+          DUPLICATES={
+              'Q141099144':'Q36942316',
+              'Q141099146':'Q140298431',
+          }
+          UA='Medicaldoctor91WikidataDuplicateRepair/1.0 (https://www.ghezelbaash.ir/)'
+
+          anon=requests.Session(); anon.headers['User-Agent']=UA
+          auth=requests.Session(); auth.headers['User-Agent']=UA
+
+          def get(session, params):
+              r=session.get(WD,params={**params,'format':'json','formatversion':2},timeout=90)
+              r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+
+          def post(data, retries=8):
+              waits=[10,20,30,45,60,75,90,120]
+              last=None
+              for i in range(retries):
+                  r=auth.post(WD,data={**data,'format':'json','formatversion':2,'maxlag':5},timeout=120)
+                  r.raise_for_status(); d=r.json()
+                  if 'error' not in d:
+                      return d
+                  last=d['error']
+                  blob=json.dumps(last,ensure_ascii=False).lower()
+                  if 'actionthrottled' in blob or last.get('code') in {'maxlag','ratelimited','failed-save'}:
+                      time.sleep(waits[min(i,len(waits)-1)])
+                      continue
+                  raise RuntimeError(last)
+              raise RuntimeError({'after_retries':last})
+
+          def entity(session,q):
+              return get(session,{'action':'wbgetentities','ids':q,'props':'claims|labels|descriptions|sitelinks|info','languages':'en|fa'})['entities'][q]
+
+          def qid(snak):
+              v=snak.get('datavalue',{}).get('value')
+              return v.get('id') if isinstance(v,dict) else None
+
+          def scalar(snak):
+              v=snak.get('datavalue',{}).get('value')
+              if isinstance(v,dict) and 'text' in v: return v['text']
+              return v
+
+          def item_value(q):
+              return json.dumps({'entity-type':'item','numeric-id':int(q[1:])},separators=(',',':'))
+
+          # Authenticate.
+          lt=get(auth,{'action':'query','meta':'tokens','type':'login'})['query']['tokens']['logintoken']
+          login=post({'action':'login','lgname':os.environ['WIKIMEDIA_USERNAME'],'lgpassword':os.environ['WIKIMEDIA_BOT_PASSWORD'],'lgtoken':lt})
+          if login.get('login',{}).get('result')!='Success':
+              raise RuntimeError({'login':login})
+          ui=get(auth,{'action':'query','meta':'userinfo','uiprop':'rights|groups'})['query']['userinfo']
+          if 'edit' not in set(ui.get('rights',[])) or 'item-merge' not in set(ui.get('rights',[])):
+              raise RuntimeError({'missing_rights':ui.get('rights',[])})
+          csrf=get(auth,{'action':'query','meta':'tokens','type':'csrf'})['query']['tokens']['csrftoken']
+
+          # Hard preflight: originals and accidental duplicates must be exact same works by identifiers.
+          preflight={}
+          for dup,orig in DUPLICATES.items():
+              de=entity(anon,dup); oe=entity(anon,orig)
+              def ids(e,p): return {str(scalar(c.get('mainsnak',{}))).lower() for c in e.get('claims',{}).get(p,[]) if scalar(c.get('mainsnak',{})) is not None}
+              ddoi,odoi=ids(de,'P356'),ids(oe,'P356')
+              dpmid,opmid=ids(de,'P698'),ids(oe,'P698')
+              if not (ddoi and ddoi==odoi and dpmid and dpmid==opmid):
+                  raise RuntimeError({'duplicate_identity_gate_failed':{'dup':dup,'orig':orig,'dup_doi':sorted(ddoi),'orig_doi':sorted(odoi),'dup_pmid':sorted(dpmid),'orig_pmid':sorted(opmid)}})
+              op50={qid(c.get('mainsnak',{})) for c in oe.get('claims',{}).get('P50',[])}
+              if PERSON not in op50:
+                  raise RuntimeError({'original_missing_person_P50':orig})
+              if de.get('sitelinks') or oe.get('sitelinks'):
+                  # Scholarly items here should have no sitelink conflict; abort rather than force one.
+                  common=set(de.get('sitelinks',{})) & set(oe.get('sitelinks',{}))
+                  if common:
+                      raise RuntimeError({'sitelink_conflict':{'dup':dup,'orig':orig,'sites':sorted(common)}})
+              preflight[dup]={'original':orig,'doi':sorted(ddoi),'pmid':sorted(dpmid)}
+
+          # Remove any reverse links on person that point to accidental duplicates.
+          person=entity(auth,PERSON)
+          removed=[]
+          dup_claims=[]
+          for c in person.get('claims',{}).get('P3919',[]):
+              target=qid(c.get('mainsnak',{}))
+              if target in DUPLICATES:
+                  dup_claims.append(c['id'])
+          if dup_claims:
+              post({'action':'wbremoveclaims','claim':'|'.join(dup_claims),'token':csrf,'summary':'Remove reverse links to accidental duplicate publication items before merge'})
+              removed=dup_claims
+
+          # Ensure P3919 -> each ORIGINAL, role=author. Add PubMed reference for articles;
+          # for presentation, copy references from its existing P50 if reverse statement lacks refs.
+          def ensure_reverse(work_qid, ref_url=None):
+              p=entity(auth,PERSON)
+              matches=[c for c in p.get('claims',{}).get('P3919',[]) if qid(c.get('mainsnak',{}))==work_qid]
+              if len(matches)>1:
+                  raise RuntimeError({'duplicate_P3919_on_person':work_qid})
+              created=False
+              if matches:
+                  claim=matches[0]
+              else:
+                  out=post({'action':'wbcreateclaim','entity':PERSON,'property':'P3919','snaktype':'value','value':item_value(work_qid),'token':csrf,'baserevid':p.get('lastrevid'),'summary':'Link Saeed Ghezelbash to verified authored work'})
+                  claim=out['claim']; created=True
+              cid=claim['id']
+              p=entity(auth,PERSON)
+              claim=next(c for c in p.get('claims',{}).get('P3919',[]) if c.get('id')==cid)
+              roles={qid(x) for x in claim.get('qualifiers',{}).get('P2868',[])}
+              if AUTHOR not in roles:
+                  post({'action':'wbsetqualifier','claim':cid,'property':'P2868','snaktype':'value','value':item_value(AUTHOR),'token':csrf,'summary':'Qualify contribution role as author'})
+              p=entity(auth,PERSON)
+              claim=next(c for c in p.get('claims',{}).get('P3919',[]) if c.get('id')==cid)
+              if not claim.get('references'):
+                  if ref_url:
+                      snaks={
+                        'P854':[{'snaktype':'value','property':'P854','datavalue':{'value':ref_url,'type':'string'},'datatype':'url'}]
+                      }
+                      post({'action':'wbsetreference','statement':cid,'snaks':json.dumps(snaks,separators=(',',':')),'snaks-order':json.dumps(['P854']),'token':csrf,'summary':'Add authorship source to reverse contribution statement'})
+                  else:
+                      w=entity(anon,work_qid)
+                      p50=[c for c in w.get('claims',{}).get('P50',[]) if qid(c.get('mainsnak',{}))==PERSON]
+                      if len(p50)!=1 or not p50[0].get('references'):
+                          raise RuntimeError({'cannot_source_presentation_reverse':work_qid})
+                      for ref in p50[0]['references']:
+                          snaks=ref.get('snaks',{})
+                          if not snaks: continue
+                          order=ref.get('snaks-order') or list(snaks)
+                          post({'action':'wbsetreference','statement':cid,'snaks':json.dumps(snaks,ensure_ascii=False,separators=(',',':')),'snaks-order':json.dumps(order,separators=(',',':')),'token':csrf,'summary':'Copy existing authorship source to reverse contribution statement'})
+              return {'work':work_qid,'created':created,'claim':cid}
+
+          reverse=[]
+          for work_qid,meta in ORIGINALS.items():
+              reverse.append(ensure_reverse(work_qid,meta['ref']))
+
+          # Merge each accidental duplicate into the pre-existing original. No item creation is possible in this workflow.
+          merges=[]
+          for dup,orig in DUPLICATES.items():
+              # Re-read to support idempotency if a retry happens after a successful merge.
+              de=get(anon,{'action':'wbgetentities','ids':dup,'props':'info|labels|descriptions|claims','redirects':'no'})['entities'][dup]
+              if de.get('redirect'):
+                  merges.append({'from':dup,'to':orig,'already_redirect':True})
+                  continue
+              result=post({
+                  'action':'wbmergeitems',
+                  'fromid':dup,
+                  'toid':orig,
+                  'ignoreconflicts':'description|statement',
+                  'token':csrf,
+                  'summary':'Merge accidental duplicate scholarly article into pre-existing Wikidata item'
+              })
+              merges.append({'from':dup,'to':orig,'result_keys':sorted(result.keys())})
+
+          # Anonymous live verification from API, avoiding WDQS lag.
+          final_person=entity(anon,PERSON)
+          p3919={}
+          for c in final_person.get('claims',{}).get('P3919',[]):
+              t=qid(c.get('mainsnak',{}))
+              if t:
+                  p3919.setdefault(t,[]).append(c)
+
+          checks={}
+          for work_qid,meta in ORIGINALS.items():
+              w=entity(anon,work_qid)
+              p50=[c for c in w.get('claims',{}).get('P50',[]) if qid(c.get('mainsnak',{}))==PERSON]
+              rev=p3919.get(work_qid,[])
+              roles=[]
+              if len(rev)==1:
+                  roles=[qid(x) for x in rev[0].get('qualifiers',{}).get('P2868',[])]
+              if len(p50)!=1 or len(rev)!=1 or AUTHOR not in roles or not rev[0].get('references'):
+                  raise RuntimeError({'final_original_link_check_failed':{'work':work_qid,'p50':len(p50),'p3919':len(rev),'roles':roles,'has_refs':bool(rev and rev[0].get('references'))}})
+              if meta['pmid']:
+                  pmids={str(scalar(c.get('mainsnak',{}))) for c in w.get('claims',{}).get('P698',[])}
+                  dois={str(scalar(c.get('mainsnak',{}))).lower() for c in w.get('claims',{}).get('P356',[])}
+                  if meta['pmid'] not in pmids or meta['doi'].lower() not in dois:
+                      raise RuntimeError({'original_identifier_changed':work_qid})
+              checks[work_qid]={'P50_to_person':True,'P3919_from_person':True,'author_role':True,'referenced':True}
+
+          for dup,orig in DUPLICATES.items():
+              d=get(anon,{'action':'wbgetentities','ids':dup,'props':'info','redirects':'yes'})
+              ent=d['entities'].get(orig) or d['entities'].get(dup)
+              # With redirects=yes the key may resolve to the target. Verify API reports redirect normalization.
+              redirs=d.get('redirects',[])
+              normalized={(x.get('from'),x.get('to')) for x in redirs}
+              if (dup,orig) not in normalized:
+                  # Fallback query page redirect status.
+                  q=get(anon,{'action':'query','titles':dup,'prop':'info','redirects':1})
+                  rset={(x.get('from'),x.get('to')) for x in q.get('query',{}).get('redirects',[])}
+                  if (dup,orig) not in rset:
+                      raise RuntimeError({'duplicate_not_redirected_after_merge':{'from':dup,'to':orig,'wbget_redirects':list(normalized),'query_redirects':list(rset)}})
+              if p3919.get(dup):
+                  raise RuntimeError({'person_still_links_to_duplicate':dup})
+
+          print(json.dumps({
+              'ok':True,
+              'authenticated_as':ui.get('name'),
+              'preflight':preflight,
+              'removed_duplicate_reverse_claims':removed,
+              'reverse_originals':reverse,
+              'merges':merges,
+              'final_checks':checks,
+              'person_lastrevid':final_person.get('lastrevid')
+          },ensure_ascii=False,indent=2,default=str))
