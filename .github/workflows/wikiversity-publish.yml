@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'wikiversity/resources/botulinum-toxin-in-aesthetic-medicine.wiki'
+      - 'scripts/wikiversity_publish.py'
+      - '.github/workflows/wikiversity-publish.yml'
   workflow_dispatch:
 
 permissions:
@@ -22,8 +24,8 @@ jobs:
       WIKIVERSITY_API_URL: https://en.wikiversity.org/w/api.php
       WIKIVERSITY_PAGE_TITLE: Botulinum toxin in aesthetic medicine
       WIKIVERSITY_PAGE_FILE: wikiversity/resources/botulinum-toxin-in-aesthetic-medicine.wiki
-      WIKIVERSITY_CREATE_ONLY: 'true'
-      WIKIVERSITY_EDIT_SUMMARY: 'Create educational resource on botulinum toxin in aesthetic medicine; scholarly references, contributor identity, and source provenance'
+      WIKIVERSITY_CREATE_ONLY: 'false'
+      WIKIVERSITY_EDIT_SUMMARY: 'Upgrade educational resource: 2026 evidence review, case-based learning, bilingual contributor identity, assessment rubric, and verified provenance'
       WIKIVERSITY_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
       WIKIVERSITY_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
@@ -41,5 +43,5 @@ jobs:
           set -euo pipefail
           test -n "$WIKIVERSITY_USERNAME"
           test -n "$WIKIVERSITY_BOT_PASSWORD"
-      - name: Publish resource to English Wikiversity
+      - name: Publish and verify resource on English Wikiversity
         run: python scripts/wikiversity_publish.py
