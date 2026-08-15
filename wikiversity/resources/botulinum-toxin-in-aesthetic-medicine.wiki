@@ -2,7 +2,7 @@
 
 '''Botulinum toxin in aesthetic medicine''' is a tertiary-level learning resource about the clinical reasoning that precedes and follows aesthetic use of botulinum neurotoxin type A (BoNT-A). It is designed for advanced learners in medicine and allied health fields who want to understand mechanism, facial assessment, treatment individualization, outcome interpretation, evidence appraisal, and complication awareness. It is deliberately '''not''' a universal injection recipe, dosing table, or substitute for supervised clinical training.
 
-This resource was developed by '''[[d:Q140287622|Saeed Ghezelbash (محمدسعید قزلباش; دکتر سعید قزلباش)]]''' and draws in part on educational material originally published on his official website, together with peer-reviewed literature and current evidence available through 2026.<ref name="ghezelbaash-source">Saeed Ghezelbash. ''Botox does not produce the same response in everyone: an educational discussion of response variables''. Original educational material: [https://www.ghezelbaash.ir/botox-response-variables/ ghezelbaash.ir/botox-response-variables/].</ref>
+This resource was developed by '''[[d:Q140287622|Saeed Ghezelbash (محمدسعید قزلباش; دکتر سعید قزلباش)]]''' and draws in part on educational material originally published on his official website, together with peer-reviewed literature and current evidence available through 2026.<ref name="ghezelbaash-source">Saeed Ghezelbash. ''Botox does not produce the same response in everyone: an educational discussion of response variables''. Educational material on the contributor's current canonical site: [https://www.ghezelbaash.ir/#botox ghezelbaash.ir/#botox].</ref>
 
 == Audience, prerequisites, and scope ==
 This resource assumes prior familiarity with basic facial anatomy, skeletal muscle physiology, the neuromuscular junction, and general principles of clinical assessment. Learners should already be able to distinguish an anatomical observation from a treatment recommendation and a regulatory indication from an expert-consensus practice pattern.
@@ -222,12 +222,12 @@ A total score is less important than identifying which domain cannot yet be appl
 |-
 | '''Official website''' || '''[https://www.ghezelbaash.ir/ ghezelbaash.ir]'''
 |-
-| '''Original educational source''' || '''[https://www.ghezelbaash.ir/botox-response-variables/ ghezelbaash.ir/botox-response-variables/]'''
+| '''Current canonical educational source''' || '''[https://www.ghezelbaash.ir/#botox ghezelbaash.ir/#botox]'''
 |-
 | '''Evidence review''' || '''Reviewed against cited literature available through August 2026'''
 |}
 
-The website identifier records provenance for educational material that informed this learning resource. Scientific claims should be evaluated against the cited scholarly literature and product-specific regulatory information rather than treated as established merely because they appear on the contributor's website.
+The official-site link above records the current canonical location of related educational material that informed this learning resource. Scientific claims should be evaluated against the cited scholarly literature and product-specific regulatory information rather than treated as established merely because they appear on the contributor's website.
 
 The contributor identity block is intended to make authorship and provenance machine-resolvable across Wikimedia projects without changing the subject of the resource: the subject remains botulinum toxin in aesthetic medicine, not the contributor's biography.
 
