@@ -1,4 +1,4 @@
-name: Post-v1.2.2 Cloudflare contract convergence
+name: Close verified v1.2.2 convergence ledger
 
 on:
   push:
@@ -13,8 +13,13 @@ concurrency:
   group: doctor-ghezelbaash-external-mutation
   cancel-in-progress: false
 
+env:
+  CANDIDATE_C: 41b779fae27f1eab4a9cb63fee17d2e6fec0075c
+  HF_RELEASE_SHA: 21f657a7e004fd84ced4853b0180755a0ce5a4f7
+  CONTROL_BRANCH: release-control/v1.2.2
+
 jobs:
-  converge:
+  close:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -23,47 +28,71 @@ jobs:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          python-version: '3.12'
-      - name: Patch canonical Cloudflare Pages contract only
+          node-version: 24.18.0
+      - name: Prove final repository and external convergence
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          edge = Path('scripts/configure-cloudflare-edge.py')
-          s = edge.read_text()
-          old_summary = '''        "previewDeploymentSetting": source_config.get(\n            "preview_deployment_setting"\n        ),\n        "buildCommand": build.get("build_command"),'''
-          new_summary = '''        "previewDeploymentSetting": source_config.get(\n            "preview_deployment_setting"\n        ),\n        "previewBranchIncludes": source_config.get("preview_branch_includes") or [],\n        "previewBranchExcludes": source_config.get("preview_branch_excludes") or [],\n        "buildCommand": build.get("build_command"),'''
-          if s.count(old_summary) != 1:
-              raise SystemExit(f'Expected one Pages summary insertion point, found {s.count(old_summary)}')
-          s = s.replace(old_summary, new_summary, 1)
-          old_expected = '''        "productionBranch": "main",\n        "sourceType": "github",\n        "repository": "medicaldoctor91/doctor-ghezelbaash",\n        "deploymentsEnabled": True,\n        "productionDeploymentsEnabled": True,\n        "previewDeploymentSetting": "none",'''
-          new_expected = '''        "productionBranch": "production/deploy",\n        "sourceType": "github",\n        "repository": "medicaldoctor91/doctor-ghezelbaash",\n        "deploymentsEnabled": True,\n        "productionDeploymentsEnabled": True,\n        "previewDeploymentSetting": "custom",\n        "previewBranchIncludes": ["staging/deploy"],\n        "previewBranchExcludes": [],'''
-          if s.count(old_expected) != 1:
-              raise SystemExit(f'Expected one stale Pages contract, found {s.count(old_expected)}')
-          s = s.replace(old_expected, new_expected, 1)
-          edge.write_text(s)
-          PY
-          python -m py_compile scripts/configure-cloudflare-edge.py
-          grep -Fq '"productionBranch": "production/deploy"' scripts/configure-cloudflare-edge.py
-          grep -Fq '"previewDeploymentSetting": "custom"' scripts/configure-cloudflare-edge.py
-          grep -Fq '"previewBranchIncludes": ["staging/deploy"]' scripts/configure-cloudflare-edge.py
-          grep -Fq '"previewBranchExcludes": []' scripts/configure-cloudflare-edge.py
-      - name: Validate release truth and commit ordinary source file
-        shell: bash
-        run: |
-          set -euo pipefail
+          MAIN_SHA=$(git rev-parse HEAD)
+          git fetch origin production/deploy "$CONTROL_BRANCH" --tags
+          git merge-base --is-ancestor "$CANDIDATE_C" "$MAIN_SHA"
+          test "$(git rev-parse origin/production/deploy)" = "$CANDIDATE_C"
+          test "$(git rev-list -n1 v1.2.2)" = "$CANDIDATE_C"
           node - <<'NODE'
           const r=require('./src/data/release.json');
           if(r.release!=='1.2.2'||r.dateModified!=='2026-08-15') throw Error('main release truth drift');
+          if(r.dataset?.name!=='Dr. Saeed Ghezelbash Public Knowledge Graph') throw Error('Dataset identity drift');
+          if(r.primaryEntity?.wikidata!=='Q140287622'||r.dataset?.wikidata!=='Q140304972') throw Error('Entity identity drift');
           if(r.dataset?.zenodo?.versionDoi!=='10.5281/zenodo.21930954'||String(r.dataset?.zenodo?.recordId)!=='21930954'||r.dataset?.zenodo?.conceptDoi!=='10.5281/zenodo.18765168') throw Error('DOI topology drift');
-          console.log('MAIN_V122_RELEASE_TRUTH_PASS');
           NODE
-          git config user.name ghezelbaash-release-bot
-          git config user.email actions@users.noreply.github.com
-          git add scripts/configure-cloudflare-edge.py
-          git diff --cached --check
-          git commit -m 'Align canonical Cloudflare contract with dedicated deploy branches'
-          git push origin HEAD:main
+          gh api repos/$GITHUB_REPOSITORY/releases/tags/v1.2.2 >/tmp/gh-release.json
+          node - <<'NODE'
+          const r=require('/tmp/gh-release.json');
+          if(r.draft||r.prerelease||r.tag_name!=='v1.2.2'||r.target_commitish!==process.env.CANDIDATE_C) throw Error('GitHub Release drift');
+          if(!String(r.body||'').includes('10.5281/zenodo.21930954')||!String(r.body||'').includes('Q140287622')||!String(r.body||'').includes('Q140304972')) throw Error('GitHub Release metadata drift');
+          NODE
+          curl --fail --silent --show-error https://zenodo.org/api/records/21930954 >/tmp/zenodo.json
+          node - <<'NODE'
+          const z=require('/tmp/zenodo.json');const doi=z.doi||z.pids?.doi?.identifier;
+          if(String(z.id)!=='21930954'||doi!=='10.5281/zenodo.21930954'||String(z.metadata?.version||'').replace(/^v/,'')!=='1.2.2') throw Error('Zenodo public drift');
+          NODE
+          HF_TAG_OBJ=$(git ls-remote https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data refs/tags/v1.2.2 | awk '{print $1}')
+          HF_TAG_PEELED=$(git ls-remote https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data 'refs/tags/v1.2.2^{}' | awk '{print $1}')
+          test "${HF_TAG_PEELED:-$HF_TAG_OBJ}" = "$HF_RELEASE_SHA"
+          curl --fail --silent --show-error https://www.ghezelbaash.ir/llms.txt >/tmp/llms.txt
+          grep -Fq '1.2.2' /tmp/llms.txt
+          grep -Fq '10.5281/zenodo.21930954' /tmp/llms.txt
+          curl --fail --silent --show-error https://www.ghezelbaash.ir/answers.txt >/tmp/answers.txt
+          grep -Fq '1.2.2' /tmp/answers.txt
+          curl --fail --silent --show-error https://www.ghezelbaash.ir/datapackage.json >/tmp/datapackage.json
+          node - <<'NODE'
+          const d=require('/tmp/datapackage.json');if(String(d.version||d.release||'')!=='1.2.2') throw Error('Data Package public version drift');
+          NODE
+          curl --fail --silent --show-error https://www.ghezelbaash.ir/artifact-manifest.json >/tmp/manifest.json
+          node - <<'NODE'
+          const m=require('/tmp/manifest.json');const v=String(m.baseRelease||m.release||m.version||'');if(v!=='1.2.2') throw Error(`Artifact manifest public version drift: ${v}`);
+          NODE
+          echo "FINAL_EXTERNAL_CONVERGENCE_PASS main=$MAIN_SHA candidate=$CANDIDATE_C hf=$HF_RELEASE_SHA"
+      - name: Advance durable release ledger to COMPLETE
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAIN_SHA=$(git rev-parse HEAD)
+          rm -rf /tmp/v122-control
+          git worktree add --detach /tmp/v122-control "origin/$CONTROL_BRANCH"
+          LEDGER=/tmp/v122-control/.release/control/v1.2.2.json
+          test -f "$LEDGER"
+          node - <<'NODE'
+          const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/v122-control/.release/control/v1.2.2.json'));
+          if(x.highestStage!=='VERIFIED'||x.candidateEpoch!==process.env.CANDIDATE_C) throw Error('Ledger is not at verified immutable Candidate C');
+          NODE
+          node scripts/update-release-control.mjs "$LEDGER" SOURCE_PUBLISHED sourceCommit="$CANDIDATE_C" mainCommit="$MAIN_SHA"
+          node scripts/update-release-control.mjs "$LEDGER" COMPLETE sourceCommit="$CANDIDATE_C" mainCommit="$MAIN_SHA" hfCommit="$HF_RELEASE_SHA" externalConvergence=PASS
+          git -C /tmp/v122-control add .release/control/v1.2.2.json
+          git -C /tmp/v122-control commit -m 'Complete v1.2.2 converged release ledger'
+          git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          echo "V122_LEDGER_COMPLETE main=$MAIN_SHA candidate=$CANDIDATE_C"
