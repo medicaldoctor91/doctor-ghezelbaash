@@ -17,7 +17,6 @@ const shaB64=b=>createHash('sha256').update(b).digest('base64');
 async function walk(d,p=''){let out=[];for(const e of (await readdir(d,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){const a=path.join(d,e.name),r=p?`${p}/${e.name}`:e.name;if(e.isDirectory())out.push(...await walk(a,r));else if(e.isFile())out.push({abs:a,rel:r});}return out;}
 
 const fileMeta=async rel=>{const b=await readFile(path.join(dist,rel));return{rel,bytes:b.length,sha256:shaHex(b)};};
-const ttlString=s=>`"${String(s).replaceAll('\\','\\\\').replaceAll('"','\\"').replaceAll('\n','\\n')}"`;
 
 const html=await readFile(path.join(dist,'index.html'),'utf8'),notFound=await readFile(path.join(dist,'404.html'),'utf8');
 const activeCss=(html.match(/\/assets\/site\.[0-9a-f]{12}\.css/)||[])[0]?.slice(1);
@@ -28,10 +27,8 @@ for(const name of await readdir(distAssetDir))if(/^site\.[0-9a-f]{12}\.css$/.tes
 const graph=JSON.parse(await readFile(path.join(dist,'graph.jsonld'),'utf8'));
 const types=n=>Array.isArray(n['@type'])?n['@type']:[n['@type']].filter(Boolean);
 const byId=new Map(graph['@graph'].filter(n=>n['@id']).map(n=>[n['@id'],n]));
-const person=byId.get(release.primaryEntity.id),identityMe=(Array.isArray(person?.sameAs)?person.sameAs:[person?.sameAs].filter(Boolean)).map(x=>({href:typeof x==='string'?x:x?.['@id']})).filter(x=>x.href);
 const dataset=byId.get(`${release.canonicalUrl}graph.jsonld#dataset`);
 const datasetName=typeof dataset?.name==='string'?dataset.name:'Dr. Saeed Ghezelbash Public Knowledge Graph';
-const datasetDescription=typeof dataset?.description==='string'?dataset.description:'Physician-owned first-party entity, clinic, medical-topic, answer and provenance dataset for Saeed Ghezelbash.';
 
 // Bind the mutable current-serving matrix before any integrity inventory is computed.
 const currentMatrixPath=path.join(dist,'current-release-matrix.json');
