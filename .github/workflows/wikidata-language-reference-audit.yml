@@ -1,0 +1,47 @@
+name: Wikidata language reference audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wikidata-language-reference-audit.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Read exact P1412 references
+        shell: python
+        run: |
+          import json, requests
+          WD='https://www.wikidata.org/w/api.php'; PERSON='Q140287622'
+          s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91LanguageReferenceAudit/1.0 (https://www.ghezelbaash.ir/)'
+          r=s.get(WD,params={'action':'wbgetentities','ids':PERSON,'props':'claims|info','format':'json','formatversion':2},timeout=90); r.raise_for_status(); d=r.json()
+          e=d['entities'][PERSON]
+          def qid(c):
+              v=c.get('mainsnak',{}).get('datavalue',{}).get('value')
+              return v.get('id') if isinstance(v,dict) else None
+          def simplify_ref(ref):
+              out={}
+              for p,snaks in ref.get('snaks',{}).items():
+                  vals=[]
+                  for sn in snaks:
+                      v=sn.get('datavalue',{}).get('value')
+                      if isinstance(v,dict):
+                          if 'id' in v: v=v['id']
+                          elif 'time' in v: v=v['time']
+                      vals.append(v)
+                  out[p]=vals
+              return out
+          out=[]
+          for c in e.get('claims',{}).get('P1412',[]):
+              out.append({'language_qid':qid(c),'claim':c.get('id'),'references':[simplify_ref(x) for x in c.get('references',[])]})
+          print(json.dumps({'lastrevid':e.get('lastrevid'),'P1412':out},ensure_ascii=False,indent=2,default=str))
