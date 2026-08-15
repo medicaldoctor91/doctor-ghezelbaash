@@ -1,0 +1,158 @@
+name: Wikidata publication final repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wikidata-publication-final-repair.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Restore pre-existing article items and canonical person links
+        shell: python
+        run: |
+          import json, os, time, requests
+          WD='https://www.wikidata.org/w/api.php'
+          PERSON='Q140287622'; AUTHOR='Q482980'
+          SNAP={'Q36942316':2528326179,'Q140298431':2528326174}
+          WORKS={
+            'Q36942316':'https://pubmed.ncbi.nlm.nih.gov/27280013/',
+            'Q140298431':'https://pubmed.ncbi.nlm.nih.gov/34574943/',
+            'Q140306302':None,
+          }
+          REDIRS={'Q141099144':'Q36942316','Q141099146':'Q140298431'}
+          UA='Medicaldoctor91PublicationFinalRepair/1.0 (https://www.ghezelbaash.ir/)'
+          a=requests.Session(); a.headers['User-Agent']=UA
+          s=requests.Session(); s.headers['User-Agent']=UA
+
+          def get(sess,p):
+            r=sess.get(WD,params={**p,'format':'json','formatversion':2},timeout=90); r.raise_for_status(); d=r.json()
+            if 'error' in d: raise RuntimeError(d['error'])
+            return d
+          def post(p):
+            waits=[10,20,30,45,60,90]
+            for w in waits:
+              r=a.post(WD,data={**p,'format':'json','formatversion':2,'maxlag':5},timeout=120); r.raise_for_status(); d=r.json()
+              if 'error' not in d: return d
+              if d['error'].get('code') in {'actionthrottled','maxlag','ratelimited','failed-save'}:
+                time.sleep(w); continue
+              raise RuntimeError(d['error'])
+            raise RuntimeError('write retry budget exhausted')
+          def ent(sess,q): return get(sess,{'action':'wbgetentities','ids':q,'props':'claims|labels|descriptions|aliases|info'})['entities'][q]
+          def qid(sn):
+            v=sn.get('datavalue',{}).get('value'); return v.get('id') if isinstance(v,dict) else None
+          def item(q): return json.dumps({'entity-type':'item','numeric-id':int(q[1:])},separators=(',',':'))
+          def old_entity(rev):
+            d=get(s,{'action':'query','revids':str(rev),'prop':'revisions','rvprop':'content','rvslots':'main'})
+            slot=d['query']['pages'][0]['revisions'][0]['slots']['main']; text=slot.get('content') or slot.get('*')
+            return json.loads(text)
+
+          # Exact historical snapshots existed before the accidental workflow.
+          old={q:old_entity(r) for q,r in SNAP.items()}
+          for q,e in old.items():
+            if e.get('id')!=q: raise RuntimeError({'bad_snapshot':q})
+            authors={qid(c['mainsnak']) for c in e.get('claims',{}).get('P50',[])}
+            if PERSON not in authors: raise RuntimeError({'snapshot_missing_author':q})
+
+          # Verify Wikibase entity redirects created by the merge.
+          resolved={}
+          for source,target in REDIRS.items():
+            d=get(s,{'action':'wbgetentities','ids':source,'props':'info','redirects':'yes'})
+            ids={v.get('id') for v in d.get('entities',{}).values()}
+            if target not in ids: raise RuntimeError({'redirect_not_resolved':{'source':source,'expected':target,'entity_ids':sorted(x for x in ids if x)}})
+            resolved[source]=target
+
+          # Login after every read-only safety gate passed.
+          lt=get(a,{'action':'query','meta':'tokens','type':'login'})['query']['tokens']['logintoken']
+          login=post({'action':'login','lgname':os.environ['WIKIMEDIA_USERNAME'],'lgpassword':os.environ['WIKIMEDIA_BOT_PASSWORD'],'lgtoken':lt})
+          if login.get('login',{}).get('result')!='Success': raise RuntimeError(login)
+          csrf=get(a,{'action':'query','meta':'tokens','type':'csrf'})['query']['tokens']['csrftoken']
+
+          restored={}
+          for q,eold in old.items():
+            cur=ent(a,q)
+            oldclaims={c['id']:c for arr in eold.get('claims',{}).values() for c in arr}
+            curclaims={c['id']:c for arr in cur.get('claims',{}).values() for c in arr}
+            extras=[cid for cid in curclaims if cid not in oldclaims]
+            for i in range(0,len(extras),40):
+              post({'action':'wbremoveclaims','claim':'|'.join(extras[i:i+40]),'token':csrf,'summary':'Remove statements introduced by accidental duplicate-item merge'})
+
+            # Remove only aliases that were not present in the captured original revision.
+            cur=ent(a,q)
+            oa={lang:{x['value'] for x in vals} for lang,vals in eold.get('aliases',{}).items()}
+            ca={lang:{x['value'] for x in vals} for lang,vals in cur.get('aliases',{}).items()}
+            alias_removed={}
+            for lang,vals in ca.items():
+              extra=sorted(vals-oa.get(lang,set()))
+              if extra:
+                post({'action':'wbsetaliases','id':q,'language':lang,'remove':'|'.join(extra),'token':csrf,'summary':'Remove alias introduced by accidental duplicate-item merge'})
+                alias_removed[lang]=extra
+            restored[q]={'removed_claim_ids':extras,'removed_aliases':alias_removed}
+
+          # Remove obsolete reverse edges, then ensure exactly one canonical reverse edge per authored work.
+          p=ent(a,PERSON)
+          obsolete=[c['id'] for c in p.get('claims',{}).get('P3919',[]) if qid(c['mainsnak']) in REDIRS]
+          if obsolete:
+            post({'action':'wbremoveclaims','claim':'|'.join(obsolete),'token':csrf,'summary':'Remove reverse links to obsolete duplicate publication items'})
+
+          def ensure_reverse(work,refurl):
+            p=ent(a,PERSON); ms=[c for c in p.get('claims',{}).get('P3919',[]) if qid(c['mainsnak'])==work]
+            if len(ms)>1: raise RuntimeError({'duplicate_reverse':work})
+            if not ms:
+              c=post({'action':'wbcreateclaim','entity':PERSON,'property':'P3919','snaktype':'value','value':item(work),'token':csrf,'baserevid':p.get('lastrevid'),'summary':'Link Saeed Ghezelbash to verified authored work'})['claim']; cid=c['id']
+            else: cid=ms[0]['id']
+            p=ent(a,PERSON); c=next(x for x in p.get('claims',{}).get('P3919',[]) if x['id']==cid)
+            roles={qid(x) for x in c.get('qualifiers',{}).get('P2868',[])}
+            if AUTHOR not in roles:
+              post({'action':'wbsetqualifier','claim':cid,'property':'P2868','snaktype':'value','value':item(AUTHOR),'token':csrf,'summary':'Qualify contribution role as author'})
+            p=ent(a,PERSON); c=next(x for x in p.get('claims',{}).get('P3919',[]) if x['id']==cid)
+            if not c.get('references'):
+              if refurl:
+                sn={'P854':[{'snaktype':'value','property':'P854','datavalue':{'value':refurl,'type':'string'},'datatype':'url'}]}
+                post({'action':'wbsetreference','statement':cid,'snaks':json.dumps(sn,separators=(',',':')),'snaks-order':json.dumps(['P854']),'token':csrf,'summary':'Add authorship source'})
+              else:
+                w=ent(s,work); ac=[x for x in w.get('claims',{}).get('P50',[]) if qid(x['mainsnak'])==PERSON]
+                if len(ac)!=1 or not ac[0].get('references'): raise RuntimeError({'presentation_source_missing':work})
+                for ref in ac[0]['references']:
+                  sn=ref.get('snaks',{}); order=ref.get('snaks-order') or list(sn)
+                  if sn: post({'action':'wbsetreference','statement':cid,'snaks':json.dumps(sn,ensure_ascii=False,separators=(',',':')),'snaks-order':json.dumps(order,separators=(',',':')),'token':csrf,'summary':'Copy existing authorship source'})
+            return cid
+
+          reverse={w:ensure_reverse(w,r) for w,r in WORKS.items()}
+
+          # Final independent read-back.
+          final={}
+          for q,eold in old.items():
+            cur=ent(s,q)
+            oldids={c['id'] for arr in eold.get('claims',{}).values() for c in arr}
+            curids={c['id'] for arr in cur.get('claims',{}).values() for c in arr}
+            if oldids!=curids: raise RuntimeError({'claim_set_not_restored':{'qid':q,'extra':sorted(curids-oldids),'missing':sorted(oldids-curids)}})
+            if len([c for c in cur.get('claims',{}).get('P50',[]) if qid(c['mainsnak'])==PERSON])!=1: raise RuntimeError({'P50_count_wrong':q})
+            final[q]={'claims_match_pre_accident_revision':True,'P50_person_count':1}
+
+          fp=ent(s,PERSON); by={}
+          for c in fp.get('claims',{}).get('P3919',[]):
+            t=qid(c['mainsnak']); by.setdefault(t,[]).append(c)
+          for x in REDIRS:
+            if by.get(x): raise RuntimeError({'obsolete_reverse_remains':x})
+          for w in WORKS:
+            ms=by.get(w,[])
+            if len(ms)!=1: raise RuntimeError({'reverse_count_wrong':{'work':w,'count':len(ms)}})
+            roles={qid(x) for x in ms[0].get('qualifiers',{}).get('P2868',[])}
+            if AUTHOR not in roles or not ms[0].get('references'): raise RuntimeError({'reverse_incomplete':w})
+            if len([c for c in ent(s,w).get('claims',{}).get('P50',[]) if qid(c['mainsnak'])==PERSON])!=1: raise RuntimeError({'work_author_count_wrong':w})
+
+          print(json.dumps({'ok':True,'redirects':resolved,'restored':restored,'canonical_reverse':reverse,'final':final,'person_P3919_targets':sorted(x for x in by if x)},ensure_ascii=False,indent=2))
