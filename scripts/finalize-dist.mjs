@@ -12,22 +12,11 @@ const visibleContract=JSON.parse(await readFile(path.join(data,'visible-contract
 const stableMediaInventory=JSON.parse(await readFile(path.join(data,'stable-media-aliases.json'),'utf8'));
 const generatedAt=resolveDeterministicBuildInstant({releaseDate:release.dateModified}).iso;
 const liveRevision=process.env.CF_PAGES_COMMIT_SHA||process.env.SOURCE_COMMIT||process.env.GITHUB_SHA||'local-unbound';
-const createdAt=(release.dataset.zenodo.releaseHistory||[]).map(x=>x.publicationDate).sort()[0]||release.dateModified;
 const shaHex=b=>createHash('sha256').update(b).digest('hex');
 const shaB64=b=>createHash('sha256').update(b).digest('base64');
 async function walk(d,p=''){let out=[];for(const e of (await readdir(d,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){const a=path.join(d,e.name),r=p?`${p}/${e.name}`:e.name;if(e.isDirectory())out.push(...await walk(a,r));else if(e.isFile())out.push({abs:a,rel:r});}return out;}
 
-const contentTypes={
- 'graph.jsonld':'application/ld+json','graph.ttl':'text/turtle','entity-facts.csv':'text/csv','answers.txt':'text/plain','knowledge.xml':'application/xml','llms.txt':'text/plain','index.md':'text/markdown','llms-full.txt':'text/plain','void.ttl':'text/turtle','dcat.ttl':'text/turtle','linkset.json':'application/linkset+json','provenance.jsonld':'application/ld+json','evidence-snapshot.json':'application/json','shapes.ttl':'text/turtle','query-matrix.jsonl':'application/jsonl'
-};
-const resourceTitles={
- 'graph.jsonld':'Canonical JSON-LD entity knowledge graph','graph.ttl':'RDF Turtle serialization isomorphic with JSON-LD','entity-facts.csv':'Flat fact projection of canonical graph','answers.txt':'Canonical direct-answer corpus','knowledge.xml':'Hierarchical semantic knowledge projection','llms.txt':'Machine discovery and retrieval guide','index.md':'Full canonical content projection','llms-full.txt':'Passage-oriented full content projection','void.ttl':'VoID RDF dataset description','dcat.ttl':'W3C DCAT 3 catalog and distribution metadata','linkset.json':'RFC 9264 Web Link Set','provenance.jsonld':'Claim and passage provenance graph','evidence-snapshot.json':'Release-time evidence snapshot','shapes.ttl':'SHACL entity constitution','query-matrix.jsonl':'Query Matrix 2.0 multilingual intent and service retrieval projection'
-};
-// Query Matrix is release-semantic and belongs in the canonical descriptor inventory.
-// Live observations/current-serving matrix stay discoverable but outside the frozen descriptor hash set.
-const coreResources=['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','provenance.jsonld','evidence-snapshot.json','shapes.ttl','query-matrix.jsonl'];
-const descriptorResources=[...coreResources,'void.ttl','dcat.ttl','linkset.json'];
-const fileMeta=async rel=>{const b=await readFile(path.join(dist,rel));return{rel,bytes:b.length,sha256:shaHex(b),mediaType:contentTypes[rel]||'application/octet-stream',title:resourceTitles[rel]||rel};};
+const fileMeta=async rel=>{const b=await readFile(path.join(dist,rel));return{rel,bytes:b.length,sha256:shaHex(b)};};
 const ttlString=s=>`"${String(s).replaceAll('\\','\\\\').replaceAll('"','\\"').replaceAll('\n','\\n')}"`;
 
 const html=await readFile(path.join(dist,'index.html'),'utf8'),notFound=await readFile(path.join(dist,'404.html'),'utf8');
@@ -50,51 +39,11 @@ const currentMatrix=JSON.parse(await readFile(currentMatrixPath,'utf8'));
 Object.assign(currentMatrix,{liveRevision,sourceCommit:liveRevision,generatedAt});
 await writeFile(currentMatrixPath,JSON.stringify(currentMatrix,null,2)+'\n');
 
-// RFC 9264 Link Set is generated once from canonical release/current-serving truth.
-const linkset={linkset:[{anchor:release.canonicalUrl,canonical:[{href:release.canonicalUrl}],author:[{href:release.primaryEntity.id}],about:[{href:release.primaryEntity.id},{href:release.clinic.id},{href:`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`}],describedby:[
- {href:`${release.canonicalUrl}graph.jsonld`,type:'application/ld+json'},
- {href:`${release.canonicalUrl}graph.ttl`,type:'text/turtle'},
- {href:`${release.canonicalUrl}entity-facts.csv`,type:'text/csv'},
- {href:`${release.canonicalUrl}knowledge.xml`,type:'application/xml'},
- {href:`${release.canonicalUrl}query-matrix.jsonl`,type:'application/jsonl'},
- {href:`${release.canonicalUrl}live-observations.jsonld`,type:'application/ld+json'},
- {href:`${release.canonicalUrl}current-release-matrix.json`,type:'application/json'},
- {href:`${release.canonicalUrl}datapackage.json`,type:'application/json'},
- {href:`${release.canonicalUrl}void.ttl`,type:'text/turtle'},
- {href:`${release.canonicalUrl}dcat.ttl`,type:'text/turtle'},
- {href:`${release.canonicalUrl}croissant.json`,type:'application/ld+json'},
- {href:`${release.canonicalUrl}provenance.jsonld`,type:'application/ld+json'},
- {href:`${release.canonicalUrl}evidence-snapshot.json`,type:'application/json'},
- {href:`${release.canonicalUrl}shapes.ttl`,type:'text/turtle'},
- {href:`${release.canonicalUrl}artifact-manifest.json`,type:'application/json'}],license:[{href:'https://creativecommons.org/licenses/by/4.0/'}],alternate:[
- {href:`${release.canonicalUrl}answers.txt`,type:'text/plain'},
- {href:`${release.canonicalUrl}llms.txt`,type:'text/plain'},
- {href:`${release.canonicalUrl}index.md`,type:'text/markdown'},
- {href:`${release.canonicalUrl}llms-full.txt`,type:'text/plain'}],me:identityMe}]};
-await writeFile(path.join(dist,'linkset.json'),`${JSON.stringify(linkset,null,2)}\n`);
-
-const voidTtl=`@prefix void: <http://rdfs.org/ns/void#> .\n@prefix dct: <http://purl.org/dc/terms/> .\n@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n@prefix schema: <https://schema.org/> .\n<${release.canonicalUrl}graph.jsonld#dataset> a void:Dataset ;\n  dct:title ${ttlString(datasetName)}@en ;\n  dct:publisher <${release.primaryEntity.id}> ;\n  dct:modified ${ttlString(release.dateModified)} ;\n  dct:license <https://creativecommons.org/licenses/by/4.0/> ;\n  foaf:homepage <${release.canonicalUrl}> ;\n  foaf:primaryTopic <${release.primaryEntity.id}> ;\n  void:uriSpace ${ttlString(release.canonicalUrl)} ;\n  void:triples ${inv.externalRdfTripleCount} ;\n  void:dataDump <${release.canonicalUrl}graph.jsonld>, <${release.canonicalUrl}graph.ttl>, <${release.canonicalUrl}entity-facts.csv>, <${release.canonicalUrl}query-matrix.jsonl> ;\n  void:vocabulary <https://schema.org/>, <http://purl.org/dc/terms/>, <http://www.w3.org/ns/prov#> .\n<${release.primaryEntity.id}> a foaf:Person ; foaf:name "Saeed Ghezelbash"@en .\n`;
-await writeFile(path.join(dist,'void.ttl'),voidTtl);
-
-// DCAT, Data Package and Croissant are generated once from final leaf bytes.
-const dcatMeta=await Promise.all(coreResources.map(fileMeta));
-const distributionIris=dcatMeta.map(m=>`<${release.canonicalUrl}${m.rel}#distribution>`).join(', ');
-let dcat=`@prefix dcat: <http://www.w3.org/ns/dcat#> .\n@prefix dct: <http://purl.org/dc/terms/> .\n@prefix spdx: <http://spdx.org/rdf/terms#> .\n@prefix schema: <https://schema.org/> .\n@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .\n\n<${release.canonicalUrl}#data-catalog> a dcat:Catalog ; dct:title "${datasetName} — Data Catalog"@en ; dct:publisher <${release.primaryEntity.id}> ; dct:modified "${release.dateModified}"^^xsd:date ; dcat:dataset <${release.canonicalUrl}graph.jsonld#dataset> .\n<${release.canonicalUrl}graph.jsonld#dataset> a dcat:Dataset ; dct:title ${ttlString(datasetName)}@en ; dct:description ${ttlString(datasetDescription)}@en ; dct:creator <${release.primaryEntity.id}> ; dct:publisher <${release.primaryEntity.id}> ; dct:modified "${release.dateModified}"^^xsd:date ; dct:license <https://creativecommons.org/licenses/by/4.0/> ; dcat:landingPage <${release.canonicalUrl}> ; schema:version "${release.release}" ; dcat:distribution ${distributionIris} .\n\n`;
-for(const m of dcatMeta)dcat+=`<${release.canonicalUrl}${m.rel}#distribution> a dcat:Distribution ; dct:title ${ttlString(m.title)}@en ; dct:license <https://creativecommons.org/licenses/by/4.0/> ; dcat:accessURL <${release.canonicalUrl}${m.rel}> ; dcat:downloadURL <${release.canonicalUrl}${m.rel}> ; dcat:mediaType ${ttlString(m.mediaType)} ; dcat:byteSize "${m.bytes}"^^xsd:decimal ; spdx:checksum [ a spdx:Checksum ; spdx:algorithm spdx:checksumAlgorithm_sha256 ; spdx:checksumValue "${m.sha256}" ] .\n\n`;
-await writeFile(path.join(dist,'dcat.ttl'),dcat);
-
-const descriptorMeta=await Promise.all(descriptorResources.map(fileMeta));
-const allFiles=await walk(dist),vttMeta=[];
-for(const f of allFiles.filter(f=>f.rel.endsWith('.vtt'))){const b=await readFile(f.abs);const kind=f.rel.includes('.captions.')?'caption':'chapter';vttMeta.push({rel:f.rel,bytes:b.length,sha256:shaHex(b),mediaType:'text/vtt',title:kind==='caption'?'Verified Persian WebVTT caption track transcribed from visible burned-in subtitles.':'WebVTT chapter track for a self-hosted physician video.'});}
-const resources=[...descriptorMeta,...vttMeta];
-const slug=s=>s.replace(/\.[^.]+$/,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase();
-const dataPackage={profile:'data-package',name:'dr-saeed-ghezelbash-public-knowledge-graph',title:`${datasetName} — Data Package`,description:'Physician-owned first-party knowledge graph, direct-answer, evidence, provenance and retrieval resources for Dr. Saeed Ghezelbash and the supporting clinic.',homepage:release.canonicalUrl,id:`${release.canonicalUrl}datapackage.json`,version:release.release,created:createdAt,lastUpdated:release.dateModified,licenses:[{name:'CC-BY-4.0',path:'https://creativecommons.org/licenses/by/4.0/',title:'Creative Commons Attribution 4.0'}],contributors:[{title:'Saeed Ghezelbash',path:release.primaryEntity.id,role:'author, creator, publisher, owner'}],resources:resources.map(m=>({name:slug(m.rel),path:m.rel,title:m.title,format:m.rel.endsWith('.vtt')?'vtt':undefined,mediatype:m.mediaType,bytes:m.bytes,hash:`sha256:${m.sha256}`,description:m.rel.endsWith('.vtt')?m.title:undefined})).map(o=>Object.fromEntries(Object.entries(o).filter(([,v])=>v!==undefined)))};
-await writeFile(path.join(dist,'datapackage.json'),`${JSON.stringify(dataPackage,null,2)}\n`);
-const croissant={
- '@context':{'@language':'en','@base':release.canonicalUrl,'@vocab':'https://schema.org/','sc':'https://schema.org/','cr':'http://mlcommons.org/croissant/','dct':'http://purl.org/dc/terms/','conformsTo':'dct:conformsTo'},
- '@id':`${release.canonicalUrl}graph.jsonld#dataset`,'@type':'sc:Dataset',conformsTo:'http://mlcommons.org/croissant/1.1',name:datasetName,description:'Physician-owned first-party knowledge graph Dataset for Dr. Saeed Ghezelbash, the supporting clinic, services, answers, provenance and machine retrieval.',url:release.canonicalUrl,license:'https://creativecommons.org/licenses/by/4.0/',version:release.release,datePublished:release.dateModified,dateCreated:createdAt,dateModified:release.dateModified,creator:{'@id':release.primaryEntity.id,'@type':'sc:Person',name:'Saeed Ghezelbash'},publisher:{'@id':release.primaryEntity.id,'@type':'sc:Person',name:'Saeed Ghezelbash'},keywords:['Saeed Ghezelbash',...release.primaryEntity.officialAliases.slice(0,2),'physician knowledge graph','aesthetic medicine','Kermanshah','entity data','linked data','query matrix','multilingual retrieval'],inLanguage:['fa','en','ar','ckb'],isLiveDataset:false,distribution:resources.map(m=>({'@type':'cr:FileObject','@id':`${release.canonicalUrl}${m.rel}#croissant-file`,name:path.basename(m.rel),contentUrl:`${release.canonicalUrl}${m.rel}`,contentSize:String(m.bytes),encodingFormat:m.mediaType,sha256:m.sha256,description:m.rel.endsWith('.vtt')?m.title:undefined})).map(o=>Object.fromEntries(Object.entries(o).filter(([,v])=>v!==undefined)))
-};
-await writeFile(path.join(dist,'croissant.json'),`${JSON.stringify(croissant,null,2)}\n`);
+// Canonical linked-data descriptors are generated before Astro build by generate-descriptors.mjs.
+// Finalization treats them as immutable build inputs and validates their embedded hashes.
+const dataPackage=JSON.parse(await readFile(path.join(dist,'datapackage.json'),'utf8'));
+const croissant=JSON.parse(await readFile(path.join(dist,'croissant.json'),'utf8'));
+const descriptorResourceCount=(dataPackage.resources||[]).length;
 
 // CSP is derived only after executable/inline content is final.
 const styleBlocks=[...html.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi)].map(m=>m[1]);
@@ -171,4 +120,4 @@ await writeFile(path.join(dist,'live-serving-attestation.json'),JSON.stringify(a
 for(const r of dataPackage.resources||[]){const rel=String(r.path||'').replace(/^\//,'');if(!rel)continue;const m=await fileMeta(rel);if(r.bytes!==m.bytes||r.hash!==`sha256:${m.sha256}`)throw new Error(`Data Package post-finalization hash drift ${rel}`);}
 for(const r of croissant.distribution||[]){const u=String(r.contentUrl||'');if(!u.startsWith(release.canonicalUrl))continue;const rel=u.slice(release.canonicalUrl.length).split('#')[0];if(!rel)continue;const m=await fileMeta(rel);if(String(r.contentSize)!==String(m.bytes)||r.sha256!==m.sha256)throw new Error(`Croissant post-finalization hash drift ${rel}`);}
 
-console.log(JSON.stringify({finalized:true,release:inv.release,liveRevision,htmlBytes:manifest.invariants.htmlBytes,graphNodes:manifest.invariants.externalGraphNodeCount,queryRows,clips:manifest.video.clipCount,chunks:manifest.invariants.renderChunkCount,files:Object.keys(files).length+2,descriptorResources:resources.length,manifestSha256:attestation.artifactManifestSha256,headersSha256:attestation.headersSha256,liveObservationSha256:attestation.liveObservationSha256,descriptorIntegrity:'PASS',nonCircular:true},null,2));
+console.log(JSON.stringify({finalized:true,release:inv.release,liveRevision,htmlBytes:manifest.invariants.htmlBytes,graphNodes:manifest.invariants.externalGraphNodeCount,queryRows,clips:manifest.video.clipCount,chunks:manifest.invariants.renderChunkCount,files:Object.keys(files).length+2,descriptorResources:descriptorResourceCount,manifestSha256:attestation.artifactManifestSha256,headersSha256:attestation.headersSha256,liveObservationSha256:attestation.liveObservationSha256,descriptorIntegrity:'PASS',nonCircular:true},null,2));
