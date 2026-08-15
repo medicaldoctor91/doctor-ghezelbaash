@@ -21,6 +21,8 @@ env:
   CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
   CF_PRODUCTION_BRANCH: production/deploy
   CF_PREVIEW_BRANCH: staging/deploy
+  ZONE_NAME: ghezelbaash.ir
+  CANONICAL_HOST: www.ghezelbaash.ir
   HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
 
 jobs:
