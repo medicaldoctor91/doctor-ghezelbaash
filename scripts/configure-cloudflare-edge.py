@@ -709,18 +709,22 @@ def read_pages_contract(
         "previewDeploymentSetting": source_config.get(
             "preview_deployment_setting"
         ),
+        "previewBranchIncludes": source_config.get("preview_branch_includes") or [],
+        "previewBranchExcludes": source_config.get("preview_branch_excludes") or [],
         "buildCommand": build.get("build_command"),
         "destinationDir": build.get("destination_dir"),
         "rootDir": build.get("root_dir"),
     }
     expected = {
         "name": project_name,
-        "productionBranch": "main",
+        "productionBranch": "production/deploy",
         "sourceType": "github",
         "repository": "medicaldoctor91/doctor-ghezelbaash",
         "deploymentsEnabled": True,
         "productionDeploymentsEnabled": True,
-        "previewDeploymentSetting": "none",
+        "previewDeploymentSetting": "custom",
+        "previewBranchIncludes": ["staging/deploy"],
+        "previewBranchExcludes": [],
         "buildCommand": "npm ci --ignore-scripts && npm run build",
         "destinationDir": "dist",
     }
