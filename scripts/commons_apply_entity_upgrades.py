@@ -69,7 +69,7 @@ def text_of(p: dict[str, Any]) -> str:
 
 def edit(title: str, text: str, summary: str, token: str):
     return post(COMMONS, action='edit', title=title, text=text, summary=summary, token=token,
-                assert='user', bot=1, maxlag=5)
+                bot=1, maxlag=5, **{'assert': 'user'})
 
 
 def ensure_page(title: str, desired: str, summary: str, token: str, validator=None):
@@ -124,9 +124,9 @@ def ensure_string_claim(qid: str, prop: str, value: str, token: str, summary: st
         return 'already-ok'
     if vals:
         raise RuntimeError(f'{qid} {prop} already has different value(s): {vals}')
-    post(WIKIDATA, action='wbcreateclaim', entity=qid, property=prop, snaktype='value',
-         value=json.dumps(value, ensure_ascii=False), token=token, assert='user', bot=1, summary=summary)
-    return 'created'
+    return post(WIKIDATA, action='wbcreateclaim', entity=qid, property=prop, snaktype='value',
+                value=json.dumps(value, ensure_ascii=False), token=token, bot=1, summary=summary,
+                **{'assert': 'user'}).get('claim', {}).get('id', 'created')
 
 
 def ensure_sitelink(qid: str, site: str, title: str, token: str, summary: str):
@@ -137,7 +137,7 @@ def ensure_sitelink(qid: str, site: str, title: str, token: str, summary: str):
     if current:
         raise RuntimeError(f'{qid} already has {site} sitelink to {current.get("title")}')
     post(WIKIDATA, action='wbsetsitelink', id=qid, linksite=site, linktitle=title,
-         token=token, assert='user', bot=1, summary=summary)
+         token=token, bot=1, summary=summary, **{'assert': 'user'})
     return 'created'
 
 
@@ -158,7 +158,6 @@ def main():
 
     results: dict[str, Any] = {'authenticated_commons_as': commons_user.get('name'), 'authenticated_wikidata_as': wikidata_user.get('name')}
 
-    # 1) Strong Persian alias routes into the canonical person category.
     cat_redirects = [
         'Category:سعید قزلباش',
         'Category:دکتر سعید قزلباش',
@@ -172,7 +171,6 @@ def main():
             title, desired, 'Create Persian name redirect to canonical Saeed Ghezelbash category', ctoken,
             validator=lambda t: '{{Category redirect|Saeed Ghezelbash' in t)
 
-    # 2) Canonical Creator page, plus native-name redirects.
     creator_text = '{{Creator\n | Wikidata = Q140287622\n | Option = {{{1|}}}\n}}\n'
     results['creator_page'] = ensure_page(
         CREATOR, creator_text, 'Create Wikidata-backed Creator page for Saeed Ghezelbash', ctoken,
@@ -184,7 +182,6 @@ def main():
             title, desired, 'Redirect Persian creator name to Creator:Saeed Ghezelbash', ctoken,
             validator=lambda t: '[[Creator:Saeed Ghezelbash]]' in t and '#REDIRECT' in t.upper())
 
-    # 3) Dedicated clinic Commons entity, linked back to the person while keeping entities distinct.
     clinic_text = """{{Wikidata Infobox|qid=Q140288589|defaultsort=no}}
 {{fa|'''کلینیک زیبایی دکتر سعید قزلباش''' در کرمانشاه، انتیتی محلی و بالینی مرتبط با '''[[:Category:Saeed Ghezelbash|دکتر سعید قزلباش / سعید قزلباش]]''' است. Wikidata: [[d:Q140288589|Q140288589]]؛ Google Local Knowledge Graph ID: <code>/g/11r3rzdtb3</code>. پزشک مرتبط: [[d:Q140287622|Q140287622]]؛ Google Knowledge Graph ID: <code>/g/11nqdfk76c</code>.}}
 {{en|'''Dr. Saeed Ghezelbash Aesthetic Clinic''' in Kermanshah is the clinical/local entity associated with '''[[:Category:Saeed Ghezelbash|Saeed Ghezelbash]]'''. Wikidata: [[d:Q140288589|Q140288589]]; Google Local Knowledge Graph ID: <code>/g/11r3rzdtb3</code>. Related physician: [[d:Q140287622|Q140287622]]; Google Knowledge Graph ID: <code>/g/11nqdfk76c</code>.}}
@@ -203,7 +200,6 @@ def main():
         'Create Persian redirect to clinic category', ctoken,
         validator=lambda t: '{{Category redirect|Dr. Saeed Ghezelbash Aesthetic Clinic' in t)
 
-    # 4) Upgrade canonical person category with the most specific valid local category and direct Commons clinic link.
     p = page(PERSON_CAT)
     person_text = text_of(p)
     person_text = append_category(person_text, 'Men of Kermanshah')
@@ -216,7 +212,6 @@ def main():
     edit(PERSON_CAT, person_text, 'Strengthen local taxonomy and person-clinic Commons linkage', ctoken)
     results['person_category_updated'] = True
 
-    # 5) Make author identity resolvable through Creator namespace and improve precise media taxonomy.
     file_rules = {
         'File:Saeed-Ghezelbaash-physician-portrait.jpg': ['Physicians with stethoscopes'],
         'File:Saeed-Ghezelbaash-in-clinical-office.jpg': ['Physicians with stethoscopes', "Doctors' offices in Iran", 'Dr. Saeed Ghezelbash Aesthetic Clinic'],
@@ -232,7 +227,6 @@ def main():
         edit(title, ft, 'Use Wikidata-backed creator identity and improve precise categorization', ctoken)
         results['files'][title] = {'categories_added': cats, 'creator_template': True}
 
-    # 6) Bidirectional Wikidata bindings for the new Commons surfaces.
     results['wikidata_person_P1472'] = ensure_string_claim(
         PERSON_QID, 'P1472', 'Saeed Ghezelbash', wtoken, 'Add Commons Creator page')
     results['wikidata_clinic_P373'] = ensure_string_claim(
