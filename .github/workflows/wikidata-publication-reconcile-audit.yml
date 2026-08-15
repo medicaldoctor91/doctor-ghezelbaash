@@ -1,0 +1,48 @@
+name: Wikidata publication reconcile audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wikidata-publication-reconcile-audit.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Resolve known publications against Wikidata
+        shell: python
+        run: |
+          import json, requests
+          WD='https://www.wikidata.org/w/api.php'; QS='https://query.wikidata.org/sparql'
+          UA='Medicaldoctor91PublicationReconcileAudit/1.0 (https://www.ghezelbaash.ir/)'
+          s=requests.Session(); s.headers['User-Agent']=UA
+          known=[
+            {'pmid':'27280013','doi':'10.4103/2008-7802.182734','title':'Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder'},
+            {'pmid':'34574943','doi':'10.3390/healthcare9091169','title':'Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events'},
+          ]
+          def get(url,params):
+              r=s.get(url,params=params,timeout=90); r.raise_for_status(); return r.json()
+          out=[]
+          for k in known:
+              q=f'''SELECT ?work WHERE {{ {{ ?work wdt:P698 {json.dumps(k['pmid'])} }} UNION {{ ?work wdt:P356 {json.dumps(k['doi'].upper())} }} }}'''
+              rows=get(QS,{'query':q,'format':'json'}).get('results',{}).get('bindings',[])
+              qids=sorted({r['work']['value'].rsplit('/',1)[-1] for r in rows})
+              rec={**k,'wikidata_qids':qids,'items':[]}
+              for qid in qids:
+                  e=get(WD,{'action':'wbgetentities','ids':qid,'props':'claims|labels|info','languages':'en','format':'json','formatversion':2})['entities'][qid]
+                  p50=[]; p2093=[]
+                  for c in e.get('claims',{}).get('P50',[]):
+                      v=c.get('mainsnak',{}).get('datavalue',{}).get('value',{})
+                      if isinstance(v,dict): p50.append({'qid':v.get('id'),'claim':c.get('id'),'qualifiers':c.get('qualifiers',{})})
+                  for c in e.get('claims',{}).get('P2093',[]):
+                      v=c.get('mainsnak',{}).get('datavalue',{}).get('value')
+                      if isinstance(v,str) and 'ghezelbash' in v.lower(): p2093.append({'name':v,'claim':c.get('id'),'qualifiers':c.get('qualifiers',{}),'references':c.get('references',[])})
+                  rec['items'].append({'qid':qid,'label':e.get('labels',{}).get('en',{}).get('value'),'P50':p50,'P2093_ghezelbash':p2093})
+              out.append(rec)
+          print(json.dumps(out,ensure_ascii=False,indent=2))
