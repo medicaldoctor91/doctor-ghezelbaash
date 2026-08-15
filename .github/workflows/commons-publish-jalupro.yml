@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - scripts/commons_publish_jalupro.py
+      - scripts/commons_publish_jalupro_v2.py
       - .github/workflows/commons-publish-jalupro.yml
   workflow_dispatch:
 
@@ -38,4 +38,4 @@ jobs:
           test -n "$COMMONS_USERNAME"
           test -n "$COMMONS_BOT_PASSWORD"
       - name: Publish and verify Commons media entity
-        run: python scripts/commons_publish_jalupro.py
+        run: python scripts/commons_publish_jalupro_v2.py
