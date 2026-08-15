@@ -23,7 +23,7 @@ jobs:
         run: |
           import json, requests
           WD='https://www.wikidata.org/w/api.php'
-          UA='Medicaldoctor91IncidentDeltaAudit/1.0 (https://www.ghezelbaash.ir/)'
+          UA='Medicaldoctor91IncidentDeltaAudit/1.1 (https://www.ghezelbaash.ir/)'
           S={'Q36942316':2528326179,'Q140298431':2528326174}
           s=requests.Session(); s.headers['User-Agent']=UA
           def get(p):
@@ -34,6 +34,16 @@ jobs:
             d=get({'action':'query','revids':str(rev),'prop':'revisions','rvprop':'content','rvslots':'main'})
             slot=d['query']['pages'][0]['revisions'][0]['slots']['main']; return json.loads(slot.get('content') or slot.get('*'))
           def cur(q): return get({'action':'wbgetentities','ids':q,'props':'claims|labels|descriptions|aliases|info'})['entities'][q]
+          def alias_pairs(v):
+            if isinstance(v,dict):
+              return {(lang,x.get('value')) for lang,vals in v.items() for x in vals if isinstance(x,dict) and x.get('value')}
+            if isinstance(v,list):
+              return {(x.get('language'),x.get('value')) for x in v if isinstance(x,dict) and x.get('value')}
+            return set()
+          def term_map(v):
+            if isinstance(v,dict): return {k:x.get('value') for k,x in v.items() if isinstance(x,dict)}
+            if isinstance(v,list): return {x.get('language'):x.get('value') for x in v if isinstance(x,dict) and x.get('language')}
+            return {}
           out={}
           for q,rev in S.items():
             o=old(rev); c=cur(q)
@@ -45,15 +55,15 @@ jobs:
             for cid in set(om)&set(cm):
               if json.dumps(om[cid],sort_keys=True,ensure_ascii=False)!=json.dumps(cm[cid],sort_keys=True,ensure_ascii=False):
                 changed.append({'id':cid,'property':om[cid]['mainsnak']['property']})
-            oa={(lang,x['value']) for lang,vals in o.get('aliases',{}).items() for x in vals}
-            ca={(lang,x['value']) for lang,vals in c.get('aliases',{}).items() for x in vals}
+            oa=alias_pairs(o.get('aliases',{})); ca=alias_pairs(c.get('aliases',{}))
             out[q]={
               'historical_revision':rev,
               'old_claim_count':len(om),'current_claim_count':len(cm),
               'extra_claims':extra,'missing_old_claims':missing,'changed_old_claims':changed,
+              'old_aliases_raw':o.get('aliases',{}),
               'extra_aliases':sorted([list(x) for x in ca-oa]),
               'missing_aliases':sorted([list(x) for x in oa-ca]),
-              'labels_equal':o.get('labels',{})==c.get('labels',{}),
-              'descriptions_equal':o.get('descriptions',{})==c.get('descriptions',{})
+              'old_labels':term_map(o.get('labels',{})),'current_labels':term_map(c.get('labels',{})),
+              'old_descriptions':term_map(o.get('descriptions',{})),'current_descriptions':term_map(c.get('descriptions',{}))
             }
           print(json.dumps(out,ensure_ascii=False,indent=2))
