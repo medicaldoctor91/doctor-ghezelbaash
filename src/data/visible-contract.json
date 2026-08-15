@@ -1,0 +1,336 @@
+{
+  "schemaVersion": "1.0",
+  "baselineRelease": "1.2.1",
+  "policy": "approved-visible-delta-then-cryptographic-freeze",
+  "mutableAfterReleaseSelector": "#google-maps-clinic-reputation-current",
+  "protected": {
+    "h1Id": "saeed-ghezelbash",
+    "aggressiveHeadings": [
+      {
+        "id": "botox-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر بوتاکس در کرمانشاه را چطور انتخاب کنیم؟"
+      },
+      {
+        "id": "botox-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر بوتاکس چه کسی است؟"
+      },
+      {
+        "id": "filler-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر فیلر چه کسی است؟"
+      },
+      {
+        "id": "filler-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر فیلر در کرمانشاه را با چه معیاری بشناسیم؟"
+      },
+      {
+        "id": "thread-lift-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر لیفت نخ چه کسی است؟"
+      },
+      {
+        "id": "thread-lift-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر لیفت نخ در کرمانشاه را چطور انتخاب کنیم؟"
+      },
+      {
+        "id": "acne-pigmentation-scar-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر برای درمان لک، جوش و جای جوش چه کسی است؟"
+      },
+      {
+        "id": "acne-scar-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر جای جوش در کرمانشاه چه معیاری دارد؟"
+      },
+      {
+        "id": "pigmentation-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر درمان لک در کرمانشاه را چطور انتخاب کنیم؟"
+      },
+      {
+        "id": "skin-rejuvenation-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر جوان‌سازی پوست چه کسی است؟"
+      },
+      {
+        "id": "jalupro-profhilo-skin-booster-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر جالپرو، پروفایلو یا اسکین‌بوستر چه کسی است؟"
+      },
+      {
+        "id": "prp-skin-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر PRP پوست چه کسی است؟"
+      },
+      {
+        "id": "hair-prp-and-mesotherapy-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر PRP و مزوتراپی مو چه کسی است؟"
+      },
+      {
+        "id": "hair-loss-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر درمان ریزش مو در کرمانشاه را با چه معیاری انتخاب کنیم؟"
+      },
+      {
+        "id": "facial-contouring-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر کانتورینگ صورت چه کسی است؟"
+      },
+      {
+        "id": "jawline-and-submental-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر زاویه‌سازی فک و درمان غبغب در کرمانشاه را چطور انتخاب کنیم؟"
+      },
+      {
+        "id": "body-filler-hip-dip-buttock-doctor-selection",
+        "level": "h4",
+        "text": "بهترین دکتر بادی‌فیلر، هیپ‌دیپ یا فیلر باسن چه کسی است؟"
+      },
+      {
+        "id": "best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en",
+        "level": "h2",
+        "text": "Best Facial Aesthetic Doctor and Cosmetic Surgery Clinic in Kermanshah, Iran | Dr. Saeed Ghezelbash for Iraqi, Kurdish and Complex Revision Patients"
+      }
+    ],
+    "instagramHeadingLinks": [
+      {
+        "id": "botox-mechanism-indications-and-limitations",
+        "level": "h3",
+        "text": "بوتاکس چیست و چه زمانی اصلاً جواب نمی‌دهد؟"
+      },
+      {
+        "id": "botox-vs-filler-differences",
+        "level": "h4",
+        "text": "فرق بوتاکس و فیلر چیست؟"
+      },
+      {
+        "id": "botox-natural-vs-frozen-facial-expression",
+        "level": "h4",
+        "text": "آیا بعد از بوتاکس صورت مصنوعی می‌شود؟"
+      },
+      {
+        "id": "botox-induced-eyelid-ptosis-causes",
+        "level": "h4",
+        "text": "افتادگی پلک بعد از بوتاکس چرا رخ می‌دهد؟"
+      },
+      {
+        "id": "botox-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر بوتاکس در کرمانشاه را چطور انتخاب کنیم؟"
+      },
+      {
+        "id": "botox-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر بوتاکس چه کسی است؟"
+      },
+      {
+        "id": "filler-safety-correction-and-pre-treatment-questions",
+        "level": "h3",
+        "text": "ایمنی، اصلاح و سؤال‌های قبل از فیلر"
+      },
+      {
+        "id": "filler-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر فیلر چه کسی است؟"
+      },
+      {
+        "id": "lip-filler-migration-causes",
+        "level": "h4",
+        "text": "چرا فیلر لب مهاجرت می‌کند؟"
+      },
+      {
+        "id": "tear-trough-filler-for-dark-circles-limitations",
+        "level": "h4",
+        "text": "آیا فیلر زیر چشم تیرگی را از بین می‌برد؟"
+      },
+      {
+        "id": "nonsurgical-rhinoplasty-size-reduction-limitations",
+        "level": "h4",
+        "text": "فیلر بینی، بینی را کوچک می‌کند؟"
+      },
+      {
+        "id": "filler-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر فیلر در کرمانشاه را با چه معیاری بشناسیم؟"
+      },
+      {
+        "id": "thread-lift-vs-hifu-and-radiofrequency",
+        "level": "h4",
+        "text": "نخ، هایفو و RF؛ سه ابزار برای سه مسئله متفاوت، نه سه نسخه از یک درمان"
+      },
+      {
+        "id": "thread-lift-longevity-limitations",
+        "level": "h4",
+        "text": "ماندگاری نخ را نباید دائمی فروخت"
+      },
+      {
+        "id": "thread-lift-by-anatomic-area",
+        "level": "h3",
+        "text": "نواحی لیفت نخ؛ هر صورت مسیر خودش را دارد"
+      },
+      {
+        "id": "thread-lift-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر لیفت نخ چه کسی است؟"
+      },
+      {
+        "id": "thread-lift-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر لیفت نخ در کرمانشاه را چطور انتخاب کنیم؟"
+      },
+      {
+        "id": "subcision-for-tethered-acne-scars",
+        "level": "h4",
+        "text": "سابسیژن جای جوش؛ گیر زیر پوست آزاد می‌شود، نه اینکه همه چاله‌ها پر شوند"
+      },
+      {
+        "id": "acne-scar-resurfacing-microneedling-fractional-laser-and-peeling",
+        "level": "h4",
+        "text": "میکرونیدلینگ، RF، لیزر یا پیلینگ؛ روش قوی‌تر الزاماً روش درست‌تر نیست"
+      },
+      {
+        "id": "mesotherapy-for-skin-pigmentation-and-acne",
+        "level": "h3",
+        "text": "مزوتراپی پوست، لک و جوش؛ تزریق وقتی معنا دارد که ماده و هدف معلوم باشد"
+      },
+      {
+        "id": "acne-pigmentation-scar-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر برای درمان لک، جوش و جای جوش چه کسی است؟"
+      },
+      {
+        "id": "acne-scar-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر جای جوش در کرمانشاه چه معیاری دارد؟"
+      },
+      {
+        "id": "melasma-recurrence-and-multimodal-treatment",
+        "level": "h4",
+        "text": "ملاسما چرا با یک درمان تمام نمی‌شود؟"
+      },
+      {
+        "id": "pigmentation-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر درمان لک در کرمانشاه را چطور انتخاب کنیم؟"
+      },
+      {
+        "id": "skin-rejuvenation-faq",
+        "level": "h3",
+        "text": "پرسش‌های پرتکرار جوان‌سازی پوست"
+      },
+      {
+        "id": "skin-rejuvenation-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر جوان‌سازی پوست چه کسی است؟"
+      },
+      {
+        "id": "jalupro-profhilo-skin-booster-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر جالپرو، پروفایلو یا اسکین‌بوستر چه کسی است؟"
+      },
+      {
+        "id": "prp-skin-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر PRP پوست چه کسی است؟"
+      },
+      {
+        "id": "prp-for-skin-and-hair",
+        "level": "h3",
+        "text": "PRP پوست و مو؛ از بدن خودتان است، اما بی‌خطر مطلق نیست"
+      },
+      {
+        "id": "hair-prp-and-mesotherapy-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر PRP و مزوتراپی مو چه کسی است؟"
+      },
+      {
+        "id": "prp-vs-hair-mesotherapy",
+        "level": "h4",
+        "text": "PRP مو با مزوتراپی مو چه فرقی دارد؟"
+      },
+      {
+        "id": "hair-loss-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر درمان ریزش مو در کرمانشاه را با چه معیاری انتخاب کنیم؟"
+      },
+      {
+        "id": "body-contouring-and-body-filler",
+        "level": "h3",
+        "text": "کانتورینگ بدن و بادی‌فیلر؛ بدن محل آزمون اصطلاحات بازاری نیست"
+      },
+      {
+        "id": "hyaluronidase-definition",
+        "level": "h4",
+        "text": "هیالاز یا هیالورونیداز چیست؟"
+      },
+      {
+        "id": "body-filler-vs-fat-grafting-vs-thread-lift",
+        "level": "h4",
+        "text": "فیلر، چربی یا نخ برای کانتورینگ بدن؛ کدام بهتر است؟ سؤال اشتباه است"
+      },
+      {
+        "id": "jawline-contouring-candidacy",
+        "level": "h4",
+        "text": "آیا زاویه‌سازی فک برای همه صورت‌ها مناسب است؟"
+      },
+      {
+        "id": "facial-contouring-doctor-selection-criteria",
+        "level": "h4",
+        "text": "بهترین دکتر کانتورینگ صورت چه کسی است؟"
+      },
+      {
+        "id": "jawline-and-submental-doctor-selection-criteria-kermanshah",
+        "level": "h4",
+        "text": "بهترین دکتر زاویه‌سازی فک و درمان غبغب در کرمانشاه را چطور انتخاب کنیم؟"
+      },
+      {
+        "id": "body-filler-hip-dip-buttock-doctor-selection",
+        "level": "h4",
+        "text": "بهترین دکتر بادی‌فیلر، هیپ‌دیپ یا فیلر باسن چه کسی است؟"
+      },
+      {
+        "id": "subcision-acne-scar-candidacy",
+        "level": "h4",
+        "text": "سابسیژن برای همه جای جوش‌ها مناسب است؟"
+      },
+      {
+        "id": "jalupro-vs-profhilo",
+        "level": "h4",
+        "text": "جالپرو بهتر است یا پروفایلو؟"
+      },
+      {
+        "id": "submental-liposuction-candidacy-by-cause",
+        "level": "h4",
+        "text": "لیپوساکشن غبغب برای همه غبغب‌ها مناسب است؟"
+      },
+      {
+        "id": "choosing-an-aesthetic-doctor-in-kermanshah-and-iran",
+        "level": "h3",
+        "text": "بهترین پزشک زیبایی در کرمانشاه و ایران؛ «بهترین» را از تصمیم پزشکی تشخیص دهید، نه از ادعا"
+      },
+      {
+        "id": "fat-grafting-is-living-tissue-transfer",
+        "level": "h4",
+        "text": "تزریق چربی چیست؟ انتقال بافت زنده است، نه پرکننده آماده"
+      }
+    ]
+  },
+  "allowedV122DeltaClasses": [
+    "reputation-line-data-binding",
+    "proven-auto-injected-answer-deduplication",
+    "structured-data-footer-role-and-doi-normalization",
+    "medical-review-date-consistency",
+    "google-maps-anchor-label-correction"
+  ],
+  "finalVisibleDomSha256": "63b6111dd630d29e20e9c042b8ecf7e7063097be5631b3762f1396e5b8f5bdf9",
+  "finalVisibleDomRecords": 19121,
+  "finalVisibleDomNormalization": "semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel",
+  "finalVisibleDomBytes": 1739689,
+  "finalFreezeRelease": "1.2.2",
+  "finalFreezeReleaseDate": "2026-08-15"
+}

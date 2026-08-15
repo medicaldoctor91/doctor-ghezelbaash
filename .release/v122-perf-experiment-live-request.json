@@ -1,8 +1,0 @@
-{
-  "targetVersion": "1.2.2",
-  "baseCandidateSha": "2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb",
-  "experimentSha": "5d8b1e926c49bcd4f638df6441db0715951f3641",
-  "requestedAt": "2026-08-15",
-  "scope": "responsive-avif-paired-mobile-and-six-viewport-live-proof",
-  "nonce": "responsive-avif-live-006"
-}

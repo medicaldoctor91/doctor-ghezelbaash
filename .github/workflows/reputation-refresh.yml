@@ -8,17 +8,18 @@ permissions:
 concurrency:
   group: doctor-ghezelbaash-external-mutation
   cancel-in-progress: false
+env:
+  PLACE_ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas
+  HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+  CONTROL_BRANCH: release-control/v1.2.2
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CF_PROJECT: doctor-ghezelbaash
+  CF_PRODUCTION_BRANCH: production/deploy
+  CF_PREVIEW_BRANCH: staging/deploy
 jobs:
   refresh:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
-    env:
-      PLACE_ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas
-      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
-      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
-      CF_PROJECT: doctor-ghezelbaash
-      CF_PRODUCTION_BRANCH: production/deploy
-      CF_PREVIEW_BRANCH: staging/deploy
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -38,11 +39,11 @@ jobs:
         run: |
           set -euo pipefail
           test "$(node -p "require('./src/data/release.json').release")" = '1.2.2'
-          git fetch origin release-control/v1.2.2
-          git show origin/release-control/v1.2.2:.release/control/v1.2.2.json > /tmp/release-control.json
+          git fetch origin "$CONTROL_BRANCH"
+          git show "origin/$CONTROL_BRANCH:.release/control/v1.2.2.json" > /tmp/release-control.json
           test "$(node -p "require('/tmp/release-control.json').stage")" = 'COMPLETE'
           git rev-parse -q --verify refs/tags/v1.2.2 >/dev/null
-      - name: Read Google Places and update only on tuple change
+      - name: Read Google Places and compose only on tuple change
         id: places
         env:
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
@@ -51,12 +52,44 @@ jobs:
           set -euo pipefail
           test -n "${GOOGLE_PLACES_API_KEY:-}"; echo "::add-mask::$GOOGLE_PLACES_API_KEY"
           curl --fail --silent --show-error -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' "https://places.googleapis.com/v1/places/$PLACE_ID" > /tmp/place.json
+          export GOOGLE_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          node scripts/process-google-reputation.mjs /tmp/place.json
+      - name: Persist lastSuccessfullyCheckedAt only in release control telemetry
+        env:
+          CHECKED_AT: ${{ steps.places.outputs.checked_at }}
+          CHECKED_RATING: ${{ steps.places.outputs.rating }}
+          CHECKED_REVIEW_COUNT: ${{ steps.places.outputs.review_count }}
+          TUPLE_CHANGED: ${{ steps.places.outputs.changed }}
+          CHECKED_PLACE_ID: ${{ steps.places.outputs.place_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "$CONTROL_BRANCH"
+          rm -rf /tmp/reputation-control
+          git worktree add --detach /tmp/reputation-control "origin/$CONTROL_BRANCH"
+          mkdir -p /tmp/reputation-control/.release/control
           node - <<'NODE'
-          const fs=require('fs'),place=JSON.parse(fs.readFileSync('/tmp/place.json')),src=JSON.parse(fs.readFileSync('src/data/volatile-facts.json'));
-          if(place.id!==process.env.PLACE_ID)throw Error('Google Place identity drift');if(place.movedPlace||place.movedPlaceId)throw Error('Google Place moved/merged: reconciliation required');if(place.businessStatus&&place.businessStatus!=='OPERATIONAL')throw Error(`Google businessStatus changed: ${place.businessStatus}`);if(!Number.isFinite(place.rating)||place.rating<1||place.rating>5||!Number.isInteger(place.userRatingCount)||place.userRatingCount<0)throw Error('Malformed Google reputation fields');
-          const changed=Number(src.rating)!==Number(place.rating)||Number(src.reviewCount)!==Number(place.userRatingCount);fs.appendFileSync(process.env.GITHUB_OUTPUT,`changed=${changed}\n`);if(!changed){console.log('GOOGLE_REPUTATION_UNCHANGED',place.rating,place.userRatingCount);process.exit(0)}
-          const now=new Date().toISOString();src.rating=Number(place.rating);src.reviewCount=Number(place.userRatingCount);src.valueObservedAt=now;src.source='Google Places API (New)';src.placeId=place.id;src.release=JSON.parse(fs.readFileSync('src/data/release.json')).release;src.facts=(src.facts||[]).map(x=>x.property==='ratingValue'?{...x,value:src.rating,observedAt:now,source:src.source}:x.property==='reviewCount'?{...x,value:src.reviewCount,observedAt:now,source:src.source}:x);fs.writeFileSync('src/data/volatile-facts.json',JSON.stringify(src,null,2)+'\n');console.log('GOOGLE_REPUTATION_CHANGED',src.rating,src.reviewCount,src.valueObservedAt);
+          const fs=require('fs'),path='/tmp/reputation-control/.release/control/reputation-telemetry.json';
+          const telemetry={schemaVersion:'1.0',baseRelease:'1.2.2',placeId:process.env.CHECKED_PLACE_ID,lastSuccessfullyCheckedAt:process.env.CHECKED_AT,checkedTuple:{rating:Number(process.env.CHECKED_RATING),reviewCount:Number(process.env.CHECKED_REVIEW_COUNT)},tupleChanged:process.env.TUPLE_CHANGED==='true',scope:'control-plane-only',publicFreshness:false};
+          fs.writeFileSync(path,JSON.stringify(telemetry,null,2)+'\n');console.log(JSON.stringify({reputationTelemetry:'PASS',...telemetry}));
           NODE
+          git -C /tmp/reputation-control config user.name ghezelbaash-reputation-telemetry
+          git -C /tmp/reputation-control config user.email actions@users.noreply.github.com
+          git -C /tmp/reputation-control add .release/control/reputation-telemetry.json
+          if git -C /tmp/reputation-control diff --cached --quiet; then
+            echo 'REPUTATION_TELEMETRY_NO_CHANGE'
+          else
+            git -C /tmp/reputation-control commit -m 'Record successful Google reputation poll telemetry'
+            git -C /tmp/reputation-control push origin "HEAD:$CONTROL_BRANCH"
+          fi
+          git worktree remove --force /tmp/reputation-control
+      - name: Prove no-op poll made no public source mutation
+        if: steps.places.outputs.changed != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain -- src/data/volatile-facts.json src/content-source src/data/semantic/knowledge-graph.jsonld)"
+          echo 'GOOGLE_REPUTATION_NO_PUBLIC_MUTATION_PASS'
       - name: Build and prove only the approved mutable visible slot changed
         if: steps.places.outputs.changed == 'true'
         shell: bash
@@ -75,7 +108,7 @@ jobs:
           LIVE_SHA="$(git rev-parse HEAD)"; echo "LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
           git push origin HEAD:main
           git push origin HEAD:production/deploy
-      - name: Prove website deployment before touching HF
+      - name: Prove website deployment and cooling freshness before touching HF
         if: steps.places.outputs.changed == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -87,11 +120,16 @@ jobs:
           node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
           node scripts/ensure-cloudflare-pages-git-deployment.mjs
           python scripts/configure-cloudflare-edge.py --purge-cache-only
-          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$LIVE_SHA"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$LIVE_SHA" SOURCE_COMMIT="$LIVE_SHA"
           npm run build
           node scripts/verify-cloudflare-pages-deployment.mjs
           npm run verify:production
           node scripts/validate-visible-freeze.mjs dist/index.html
+          node scripts/verify-current-serving.mjs
+          node scripts/verify-public-discovery-freshness.mjs
+          sleep 120
+          node scripts/verify-public-discovery-freshness.mjs
+          echo 'REPUTATION_DELAYED_DISCOVERY_FRESHNESS_PASS'
       - name: Synchronize only Hugging Face live observations
         if: steps.places.outputs.changed == 'true'
         env:

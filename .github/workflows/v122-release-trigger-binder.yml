@@ -1,4 +1,4 @@
-name: Bind v1.2.2 release trigger to candidate
+name: Audit v1.2.2 release trigger binding
 
 on:
   push:
@@ -6,35 +6,35 @@ on:
     paths: [.release/release-request-v1.2.2.json]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: v122-release-trigger-binding
+  group: v122-release-trigger-audit
   cancel-in-progress: false
 
 jobs:
-  bind:
+  audit:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: release/v1.2.2-candidate
+          ref: main
           fetch-depth: 0
-          persist-credentials: true
-      - name: Bind exact triggering main commit without changing candidate content
+          persist-credentials: false
+      - name: Prove release request cannot mutate Candidate C
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name ghezelbaash-release-trigger-binder
-          git config user.email actions@users.noreply.github.com
-          git fetch origin main release/v1.2.2-candidate
-          git reset --hard origin/release/v1.2.2-candidate
-          git show "$GITHUB_SHA:.release/release-request-v1.2.2.json" > .release/release-request-v1.2.2.json
-          git add .release/release-request-v1.2.2.json
-          git diff --cached --quiet || git commit -m "Synchronize v1.2.2 release request $GITHUB_SHA"
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" HEAD; then
-            git merge -s ours --no-edit "$GITHUB_SHA" -m "Bind v1.2.2 trigger $GITHUB_SHA to candidate"
-          fi
-          test "$(git show "$GITHUB_SHA:.release/release-request-v1.2.2.json")" = "$(cat .release/release-request-v1.2.2.json)"
-          git push origin HEAD:release/v1.2.2-candidate
-          echo "V122_TRIGGER_BOUND trigger=$GITHUB_SHA candidate=$(git rev-parse HEAD)"
+          git fetch origin release/v1.2.2-candidate
+          git show "$GITHUB_SHA:.release/release-request-v1.2.2.json" >/tmp/release-request.json
+          node - <<'NODE'
+          const r=require('/tmp/release-request.json');
+          if(r.targetVersion!=='1.2.2'||r.candidateBranch!=='release/v1.2.2-candidate')throw Error('Release request identity drift');
+          if(r.candidateSha!=null&&!/^[0-9a-f]{40}$/.test(r.candidateSha))throw Error('Invalid candidateSha in release request');
+          console.log(JSON.stringify({releaseTriggerAudit:'PASS',targetVersion:r.targetVersion,candidateBranch:r.candidateBranch,candidateSha:r.candidateSha||null,mutation:'NONE'}));
+          NODE
+          C=$(git rev-parse origin/release/v1.2.2-candidate)
+          REQUESTED=$(node -p "require('/tmp/release-request.json').candidateSha || ''")
+          if [ -n "$REQUESTED" ]; then test "$C" = "$REQUESTED"; fi
+          test -z "$(git status --porcelain)"
+          echo "V122_TRIGGER_READ_ONLY_PASS candidate=$C"

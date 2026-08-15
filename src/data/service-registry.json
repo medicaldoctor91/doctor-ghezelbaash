@@ -1,0 +1,2412 @@
+{
+  "schemaVersion": "1.0",
+  "canonicalSource": "v1.2.1-baseline-availableService-union",
+  "primaryEntityRef": "release.primaryEntity.id",
+  "clinicEntityRef": "release.clinic.id",
+  "services": [
+    {
+      "id": "https://www.ghezelbaash.ir/#aesthetic-medical-consultation",
+      "types": [
+        "Service",
+        "MedicalProcedure"
+      ],
+      "name": "aesthetic-medical-consultation",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مشاوره زیبایی در کرمانشاه",
+        "ارزیابی پزشک زیبایی",
+        "Aesthetic consultation in Kermanshah"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion",
+      "types": [
+        "Service",
+        "DiagnosticProcedure"
+      ],
+      "name": "aesthetic-revision-and-second-opinion",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "اصلاح نتایج زیبایی",
+        "نظر دوم زیبایی",
+        "اصلاح فیلر و اورفیل",
+        "اصلاح فیلر مهاجرت‌کرده",
+        "اصلاح نتیجه بوتاکس",
+        "اصلاح نتیجه لیفت نخ",
+        "Revision زیبایی در کرمانشاه",
+        "Second opinion زیبایی در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#free-online-aesthetic-initial-consultation",
+      "types": [
+        "Service",
+        "MedicalProcedure"
+      ],
+      "name": "free-online-aesthetic-initial-consultation",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": false,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": []
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-acne-mesotherapy",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-acne-mesotherapy",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مزوتراپی جوش در کرمانشاه",
+        "مزوتراپی آکنه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-acne-scar-evaluation",
+      "types": [
+        "DiagnosticProcedure",
+        "Service"
+      ],
+      "name": "procedure-acne-scar-evaluation",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "ارزیابی جای جوش و اسکار آکنه در کرمانشاه",
+        "ارزیابی جای جوش و اسکار آکنه توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-acne-scar-filler",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-acne-scar-filler",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر جای جوش",
+        "فیلر اسکار آکنه در کرمانشاه",
+        "فیلر اسکار آکنه توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-active-acne",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-active-acne",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "جوش فعال در کرمانشاه",
+        "جوش فعال توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-androgenetic-alopecia",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-androgenetic-alopecia",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "آلوپسی آندروژنتیک و ریزش موی الگودار در کرمانشاه",
+        "آلوپسی آندروژنتیک و ریزش موی الگودار توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-autologous-fat-grafting",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "تزریق چربی صورت و بدن",
+        "پیوند چربی اتولوگ"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-blepharoplasty",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-blepharoplasty",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بلفاروپلاستی در کرمانشاه",
+        "جراحی پلک"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-body-aesthetic-surgery",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "جراحی زیبایی بدن",
+        "جراحی‌های کانتورینگ بدن"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-body-contouring-assessment",
+      "types": [
+        "DiagnosticProcedure",
+        "Service"
+      ],
+      "name": "procedure-body-contouring-assessment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "کانتورینگ بدن",
+        "لاغری موضعی",
+        "ارزیابی کانتورینگ بدن و چربی موضعی در کرمانشاه",
+        "ارزیابی کانتورینگ بدن و چربی موضعی توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-body-dermal-filler",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-body-dermal-filler",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر بادی در کرمانشاه",
+        "فیلر بدن",
+        "فیلر باسن در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-body-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-body-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "نخ لیفت بدن",
+        "لیفت نخ بدن در کرمانشاه",
+        "لیفت نخ بدن توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-brow-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-brow-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت محدود ابرو با بوتاکس در کرمانشاه",
+        "لیفت محدود ابرو با بوتاکس توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-bunny-lines",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-bunny-lines",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس بانی‌لاین بینی در کرمانشاه",
+        "بوتاکس بانی‌لاین بینی توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-chin-dao",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-chin-dao",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس چانه و عضلات پایین صورت در کرمانشاه",
+        "بوتاکس چانه و عضلات پایین صورت توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-crows-feet",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-crows-feet",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس دور چشم و پنجه‌کلاغی در کرمانشاه",
+        "بوتاکس دور چشم و پنجه‌کلاغی توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-forehead",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-forehead",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس پیشانی در کرمانشاه",
+        "بوتاکس پیشانی توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-glabella",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-glabella",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس خط اخم در کرمانشاه",
+        "بوتاکس خط اخم توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-gummy-smile",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-gummy-smile",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس لبخند لثه‌ای در کرمانشاه",
+        "بوتاکس لبخند لثه‌ای توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-hyperhidrosis",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-hyperhidrosis",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس تعریق موضعی در کرمانشاه",
+        "بوتاکس تعریق موضعی توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-lip-flip",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-lip-flip",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیپ فلیپ با بوتاکس در کرمانشاه",
+        "لیپ فلیپ با بوتاکس توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-masseter",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-masseter",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس عضله ماستر در کرمانشاه",
+        "بوتاکس عضله ماستر توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botox-platysma-neck",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botox-platysma-neck",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس پلاتیسما و باندهای گردن در کرمانشاه",
+        "بوتاکس پلاتیسما و باندهای گردن توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-aesthetic-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس در کرمانشاه",
+        "تزریق بوتاکس در کرمانشاه",
+        "بوتاکس دکتر سعید قزلباش",
+        "تزریق بوتاکس"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-axillary-hyperhidrosis",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-axillary-hyperhidrosis",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس زیر بغل",
+        "بوتاکس تعریق زیر بغل در کرمانشاه",
+        "بوتاکس تعریق زیر بغل توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-chronic-migraine",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-chronic-migraine",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس میگرن مزمن"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-nefertiti-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-nefertiti-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس گردن",
+        "بوتاکس پلاتیسما",
+        "نفرتیتی لیفت با بوتاکس در کرمانشاه",
+        "نفرتیتی لیفت با بوتاکس توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-palmar-hyperhidrosis",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-palmar-hyperhidrosis",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس کف دست",
+        "بوتاکس تعریق کف دست در کرمانشاه",
+        "بوتاکس تعریق کف دست توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-perioral-lines",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-perioral-lines",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس خطوط بارکدی لب",
+        "بوتاکس خطوط بارکدی و اطراف دهان در کرمانشاه",
+        "بوتاکس خطوط بارکدی و اطراف دهان توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-plantar-hyperhidrosis",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-plantar-hyperhidrosis",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس کف پا",
+        "بوتاکس تعریق کف پا در کرمانشاه",
+        "بوتاکس تعریق کف پا توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-result-correction",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-result-correction",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": []
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-trapezius",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-botulinum-toxin-trapezius",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوتاکس تراپکس و شانه",
+        "ترپ تاکس",
+        "بوتاکس تراپزیوس و ترپ‌تاکس در کرمانشاه",
+        "بوتاکس تراپزیوس و ترپ‌تاکس توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-buccal-fat-removal",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-buccal-fat-removal",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بوکال فت",
+        "برداشت چربی بوکال"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-central-lip-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-central-lip-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "سانترال لب",
+        "لیپ لیفت مرکزی"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-cheek-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-cheek-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت نخ گونه",
+        "لیفت گونه با نخ در کرمانشاه",
+        "لیفت گونه با نخ توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-chemical-peel",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-chemical-peel",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "پیلینگ شیمیایی در کرمانشاه",
+        "لایه‌برداری شیمیایی پوست"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-cog-barbed-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-cog-barbed-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "نخ کاگ",
+        "نخ خاردار",
+        "لیفت با نخ کاگ و خاردار در کرمانشاه",
+        "لیفت با نخ کاگ و خاردار توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-collagen-stimulating-thread-treatment",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-collagen-stimulating-thread-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "نخ جوانسازی",
+        "نخ کلاژن‌ساز",
+        "نخ جوان‌ساز و کلاژن‌ساز در کرمانشاه",
+        "نخ جوان‌ساز و کلاژن‌ساز توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-comedonal-inflammatory-acne-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-comedonal-inflammatory-acne-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "درمان جوش فعال در کرمانشاه",
+        "درمان آکنه کومدونال",
+        "درمان آکنه التهابی"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-energy-based-skin-treatment",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-energy-based-skin-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیزر و دستگاه‌های جوانسازی پوست در کرمانشاه",
+        "درمان‌های انرژی‌محور پوست"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-enlarged-pores-texture-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-enlarged-pores-texture-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "درمان منافذ باز",
+        "درمان منافذ باز و بافت ناهموار پوست در کرمانشاه",
+        "درمان منافذ باز و بافت ناهموار پوست توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-exosome-hair-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-exosome-hair-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": []
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-exosome-skin-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-exosome-skin-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": []
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-facelift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-facelift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیس لیفت",
+        "جراحی لیفت صورت"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-facial-and-lip-dermal-filler",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "تزریق فیلر در کرمانشاه",
+        "فیلر صورت و لب در کرمانشاه",
+        "فیلر دکتر سعید قزلباش",
+        "فیلر پوستی"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-facial-fat-grafting",
+      "types": [
+        "SurgicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-facial-fat-grafting",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "تزریق چربی صورت",
+        "تزریق و پیوند چربی صورت در کرمانشاه",
+        "تزریق و پیوند چربی صورت توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-cheek",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-cheek",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر گونه و میدفیس در کرمانشاه",
+        "فیلر گونه و میدفیس توسط دکتر سعید قزلباش",
+        "کانتورینگ گونه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-chin",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-chin",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر چانه در کرمانشاه",
+        "فیلر چانه توسط دکتر سعید قزلباش",
+        "کانتورینگ چانه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-hand",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-hand",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر و جوانسازی دست در کرمانشاه",
+        "فیلر و جوانسازی دست توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-jawline",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-jawline",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر خط فک و زاویه فک در کرمانشاه",
+        "فیلر خط فک و زاویه فک توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-lips",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-lips",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر لب در کرمانشاه",
+        "فیلر لب توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-nasolabial",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-nasolabial",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر خط خنده در کرمانشاه",
+        "فیلر خط خنده توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-nose",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-nose",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر بینی و رینوپلاستی غیرجراحی در کرمانشاه",
+        "فیلر بینی و رینوپلاستی غیرجراحی توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-temple",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-temple",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر شقیقه در کرمانشاه",
+        "فیلر شقیقه توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-filler-under-eye",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-filler-under-eye",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر زیر چشم در کرمانشاه",
+        "فیلر زیر چشم توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-forehead-glabellar-filler",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-forehead-glabellar-filler",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر پیشانی",
+        "فیلر گلابلا",
+        "فیلر پیشانی و گلابلا در کرمانشاه",
+        "فیلر پیشانی و گلابلا توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-fractional-radiofrequency-skin-treatment",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-fractional-radiofrequency-skin-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "RF فرکشنال",
+        "رادیوفرکوئنسی فرکشنال",
+        "آر اف فرکشنال پوست و اسکار در کرمانشاه",
+        "آر اف فرکشنال پوست و اسکار توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-full-face-filler-contouring",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-full-face-filler-contouring",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "کانتورینگ فول‌فیس",
+        "هارمونی صورت",
+        "کانتورینگ نیم‌رخ",
+        "کانتورینگ و هارمونی فول‌فیس با فیلر در کرمانشاه",
+        "کانتورینگ و هارمونی فول‌فیس با فیلر توسط دکتر سعید قزلباش",
+        "کانتورینگ صورت"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-gluteal-body-filler",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-gluteal-body-filler",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر باسن",
+        "بادی‌فیلر",
+        "فیلر بادی",
+        "فیلر هیپ‌دیپ",
+        "فیلر بادی و فرم‌دهی باسن در کرمانشاه",
+        "فیلر بادی و فرم‌دهی باسن توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-hair-loss-evaluation-and-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "درمان ریزش مو در کرمانشاه",
+        "ارزیابی ریزش مو توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-hair-mesotherapy",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-hair-mesotherapy",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مزوتراپی مو در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-hair-transplant-candidacy-assessment",
+      "types": [
+        "DiagnosticProcedure",
+        "Service"
+      ],
+      "name": "procedure-hair-transplant-candidacy-assessment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مشاوره کاشت مو",
+        "ارزیابی کاشت مو",
+        "ارزیابی کاندید کاشت مو در کرمانشاه",
+        "ارزیابی کاندید کاشت مو توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-hand-fat-grafting",
+      "types": [
+        "SurgicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-hand-fat-grafting",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "تزریق چربی دست",
+        "تزریق و پیوند چربی دست در کرمانشاه",
+        "تزریق و پیوند چربی دست توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-hyaluronic-acid-dermal-filler",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-hyaluronic-acid-dermal-filler",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر HA",
+        "Hyaluronic acid filler"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-hyaluronidase-and-filler-revision",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-hyaluronidase-and-filler-revision",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "هیالاز و اصلاح فیلر در کرمانشاه",
+        "حل کردن فیلر",
+        "اصلاح فیلر مهاجرت‌کرده",
+        "حل کردن فیلر با هیالورونیداز"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-injectable-biostimulator",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-injectable-biostimulator",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "بیواستیمولاتور تزریقی در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-injectable-hydrogel",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-injectable-hydrogel",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": []
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-injectable-skin-booster",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-injectable-skin-booster",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "اسکین‌بوستر در کرمانشاه",
+        "مزوژل در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-jalupro-injectable-skin-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "جالپرو در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-jowl-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-jowl-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت نخ Jowl",
+        "لیفت افتادگی لبه فک با نخ در کرمانشاه",
+        "لیفت افتادگی لبه فک با نخ توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-laser-skin-rejuvenation",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-laser-skin-rejuvenation",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "جوانسازی با لیزر",
+        "لیزر پوست",
+        "جوانسازی و درمان پوست با لیزر در کرمانشاه",
+        "جوانسازی و درمان پوست با لیزر توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-lip-filler-asymmetry-correction",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-lip-filler-asymmetry-correction",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "اصلاح فرم لب با فیلر",
+        "اصلاح عدم تقارن لب با فیلر در کرمانشاه",
+        "اصلاح عدم تقارن لب با فیلر توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-liquid-thread-treatment-assessment",
+      "types": [
+        "DiagnosticProcedure",
+        "Service"
+      ],
+      "name": "procedure-liquid-thread-treatment-assessment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "ارزیابی نخ مایع در کرمانشاه",
+        "مشاوره نخ مایع",
+        "Liquid thread assessment"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-marionette-line-filler",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-marionette-line-filler",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "فیلر خط ماریونت",
+        "فیلر خط غم",
+        "فیلر خطوط ماریونت و خط غم در کرمانشاه",
+        "فیلر خطوط ماریونت و خط غم توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-melasma-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-melasma-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "درمان لک و ملاسما",
+        "ارزیابی و درمان ملاسما در کرمانشاه",
+        "ارزیابی و درمان ملاسما توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-mesobotox",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-mesobotox",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مزوبوتاکس در کرمانشاه",
+        "مزوبوتاکس توسط دکتر سعید قزلباش",
+        "اسکین بوتاکس"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-mesogel",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-mesogel",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مزوژل در کرمانشاه",
+        "مزوژل توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-mesogel-under-eye",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-mesogel-under-eye",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": []
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-mesotherapy-pigmentation",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-mesotherapy-pigmentation",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": []
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-mesotherapy-submental",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-mesotherapy-submental",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مزوتراپی غبغب",
+        "مزوتراپی غبغب در کاندید منتخب در کرمانشاه",
+        "مزوتراپی غبغب در کاندید منتخب توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-mesotherapy-under-eye",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-mesotherapy-under-eye",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مزو زیر چشم",
+        "مزوتراپی زیر چشم در کرمانشاه",
+        "مزوتراپی زیر چشم توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-microneedling",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-microneedling",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "میکرونیدلینگ در کرمانشاه",
+        "مزونیدلینگ"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-neck-dermal-filler",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-neck-dermal-filler",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "تزریق فیلر گردن",
+        "فیلر گردن در کرمانشاه",
+        "فیلر گردن توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-neck-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-neck-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت گردن",
+        "جراحی لیفت گردن"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-neck-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-neck-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "نخ گردن",
+        "لیفت گردن با نخ در کرمانشاه",
+        "لیفت گردن با نخ توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-nose-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-nose-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت نخ بینی",
+        "لیفت بینی با نخ در کرمانشاه",
+        "لیفت بینی با نخ توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-perioral-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-perioral-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت نخ لب",
+        "لیفت نخ گوشه لب",
+        "لیفت نخ اطراف دهان و گوشه لب در کرمانشاه",
+        "لیفت نخ اطراف دهان و گوشه لب توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-pigmentation",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-pigmentation",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لک و اختلالات رنگدانه‌ای پوست در کرمانشاه",
+        "لک و اختلالات رنگدانه‌ای پوست توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-hair-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-platelet-rich-plasma-hair-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "PRP مو در کرمانشاه",
+        "پی آر پی مو"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-skin-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-platelet-rich-plasma-skin-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "PRP پوست در کرمانشاه",
+        "پی آر پی پوست"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-post-inflammatory-hyperpigmentation-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-post-inflammatory-hyperpigmentation-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "درمان PIH",
+        "درمان لک بعد جوش",
+        "درمان لک بعد جوش و PIH در کرمانشاه",
+        "درمان لک بعد جوش و PIH توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-profhilo-injectable-skin-treatment",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-profhilo-injectable-skin-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "پروفایلو در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-prostrolane-injectable-treatment",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-prostrolane-injectable-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "Prostrolane"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-prp-acne-scar",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-prp-acne-scar",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "PRP جای جوش",
+        "PRP به‌عنوان درمان کمکی اسکار آکنه در کرمانشاه",
+        "PRP به‌عنوان درمان کمکی اسکار آکنه توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-prp-facial-skin",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-prp-facial-skin",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "پی آر پی صورت",
+        "PRP صورت در کرمانشاه",
+        "PRP صورت توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-prp-under-eye",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-prp-under-eye",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "پی آر پی زیر چشم",
+        "PRP زیر چشم در کرمانشاه",
+        "PRP زیر چشم توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-punch-excision-acne-scar",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-punch-excision-acne-scar",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "پانچ اسکار",
+        "پانچ جای جوش",
+        "پانچ اسکار و پانچ جای جوش در کرمانشاه",
+        "پانچ اسکار و پانچ جای جوش توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-rhinoplasty",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-rhinoplasty",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "رینوپلاستی",
+        "جراحی زیبایی بینی"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-sculptra-injectable-biostimulator",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-sculptra-injectable-biostimulator",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "اسکالپترا در کرمانشاه",
+        "تزریق اسکالپترا",
+        "Sculptra treatment in Kermanshah"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-silhouette-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-silhouette-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "نخ Silhouette",
+        "لیفت با نخ Silhouette در کرمانشاه",
+        "لیفت با نخ Silhouette توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-skin-cleansing",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-skin-cleansing",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "پاکسازی عمیق پوست"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-skin-mesotherapy",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-skin-mesotherapy",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "مزوتراپی پوست در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-subcision",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-subcision",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "سابسیژن جای جوش در کرمانشاه",
+        "سابسیژن اسکار آکنه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-subcision-rolling-scar",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-subcision-rolling-scar",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "سابسیژن اسکارهای چسبنده و rolling در کرمانشاه",
+        "سابسیژن اسکارهای چسبنده و rolling توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-submental-fat-evaluation",
+      "types": [
+        "DiagnosticProcedure",
+        "Service"
+      ],
+      "name": "procedure-submental-fat-evaluation",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "ارزیابی غبغب",
+        "ارزیابی چربی و فرم غبغب در کرمانشاه",
+        "ارزیابی چربی و فرم غبغب توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-submental-injectable-lipolysis",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-submental-injectable-lipolysis",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "آنزیم لیپولیز غبغب",
+        "تزریق چربی‌سوز غبغب",
+        "لیپولیز غبغب در کرمانشاه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-submental-liposuction",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-submental-liposuction",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "ساکشن غبغب در کرمانشاه",
+        "لیپوساکشن غبغب در کرمانشاه",
+        "برداشت چربی موضعی زیر چانه"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-sun-induced-pigmentation-treatment",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-sun-induced-pigmentation-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "درمان لک آفتاب",
+        "درمان لک ناشی از آفتاب در کرمانشاه",
+        "درمان لک ناشی از آفتاب توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-sunekos-injectable-treatment",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-sunekos-injectable-treatment",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "Sunekos"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-tca-cross",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-tca-cross",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "TCA CROSS برای اسکارهای منتخب در کرمانشاه",
+        "TCA CROSS برای اسکارهای منتخب توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-telogen-effluvium",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-telogen-effluvium",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "تلوژن افلوویوم و ریزش موی منتشر در کرمانشاه",
+        "تلوژن افلوویوم و ریزش موی منتشر توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-brow",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-brow",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت نخ ابرو در کرمانشاه",
+        "لیفت نخ ابرو توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-face",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-face",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت نخ صورت در کرمانشاه",
+        "لیفت نخ صورت توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-jawline",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-jawline",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت خط فک با نخ در کرمانشاه",
+        "لیفت خط فک با نخ توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-lift",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-lift",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت نخ در کرمانشاه",
+        "لیفت صورت با نخ",
+        "نخ لیفت دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-lift-result-correction",
+      "types": [
+        "MedicalTherapy",
+        "Service"
+      ],
+      "name": "procedure-thread-lift-result-correction",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": []
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-midface",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-midface",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت میدفیس با نخ در کرمانشاه",
+        "لیفت میدفیس با نخ توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-pcl",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-pcl",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "نخ PCL در کرمانشاه",
+        "نخ PCL توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-pdo",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-pdo",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "نخ PDO در کرمانشاه",
+        "نخ PDO توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-plla",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-plla",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "نخ PLLA در کرمانشاه",
+        "نخ PLLA توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-submental",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-submental",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت نخ غبغب در کرمانشاه",
+        "لیفت نخ غبغب توسط دکتر سعید قزلباش"
+      ]
+    },
+    {
+      "id": "https://www.ghezelbaash.ir/#procedure-thread-temple",
+      "types": [
+        "MedicalProcedure",
+        "Service"
+      ],
+      "name": "procedure-thread-temple",
+      "publishable": true,
+      "offeredByPerson": true,
+      "offeredByClinic": true,
+      "providerIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      ],
+      "availableAtOrFromIds": [],
+      "aliases": [
+        "لیفت تمپورال با نخ در کرمانشاه",
+        "لیفت تمپورال با نخ توسط دکتر سعید قزلباش"
+      ]
+    }
+  ]
+}

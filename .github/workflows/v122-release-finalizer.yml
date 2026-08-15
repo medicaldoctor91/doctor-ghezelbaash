@@ -99,3 +99,19 @@ jobs:
           git -C /tmp/v122-final-control commit -m 'Complete v1.2.2 external convergence after final re-verification'
           git -C /tmp/v122-final-control push origin HEAD:$CONTROL_BRANCH
           echo "V122_RELEASE_COMPLETE_PASS source=$SOURCE_COMMIT"
+      - name: Notify IndexNow after successful production convergence
+        continue-on-error: true
+        run: node scripts/submit-indexnow.mjs
+      - name: Normalize physician-first GitHub repository metadata when capability permits
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.REPO_ADMIN_TOKEN || secrets.GH_PAT || github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY" \
+            -f description='Physician-owned source for the Dr. Saeed Ghezelbaash Public Knowledge Graph (Q140304972), connecting Saeed Ghezelbash (Q140287622), his Kermanshah clinic (Q140288589), DOI-preserved releases, and AI/retrieval distributions.' \
+            -f homepage='https://www.ghezelbaash.ir/'
+          printf '%s\n' '{"names":["saeed-ghezelbash","doctor-ghezelbaash","physician","aesthetic-medicine","kermanshah","iran","botox","filler","migraine-botox","revision","second-opinion","knowledge-graph","linked-data","json-ld","schema-org","rag","retrieval","wikidata","zenodo","huggingface"]}' >/tmp/topics.json
+          gh api --method PUT "repos/$GITHUB_REPOSITORY/topics" --input /tmp/topics.json
+          echo 'GITHUB_REPOSITORY_METADATA_NORMALIZED'

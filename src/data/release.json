@@ -1,6 +1,6 @@
 {
-  "release": "1.2.1",
-  "dateModified": "2026-08-13",
+  "release": "1.2.2",
+  "dateModified": "2026-08-15",
   "canonicalUrl": "https://www.ghezelbaash.ir/",
   "primaryEntity": {
     "id": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
@@ -123,24 +123,41 @@
     "zenodo": {
       "role": "preservation",
       "conceptDoi": "10.5281/zenodo.18765168",
-      "versionDoi": "10.5281/zenodo.21910785",
-      "recordId": "21910785",
-      "state": "published",
-      "previousVersion": {
-        "release": "1.2.0",
-        "recordId": "21905312",
-        "versionDoi": "10.5281/zenodo.21905312"
-      },
-      "historicalVersion": {
-        "release": "1.0.0",
-        "recordId": "18765169",
-        "versionDoi": "10.5281/zenodo.18765169"
-      },
-      "publishedApi": "https://zenodo.org/api/records/21910785"
+      "versionDoi": "10.5281/zenodo.21930954",
+      "recordId": "21930954",
+      "releaseHistory": [
+        {
+          "release": "1.0.0",
+          "recordId": "18765169",
+          "versionDoi": "10.5281/zenodo.18765169",
+          "publicationDate": "2026-02-25"
+        },
+        {
+          "release": "1.2.0",
+          "recordId": "21905312",
+          "versionDoi": "10.5281/zenodo.21905312",
+          "publicationDate": "2026-08-12"
+        },
+        {
+          "release": "1.2.1",
+          "recordId": "21910785",
+          "versionDoi": "10.5281/zenodo.21910785",
+          "publicationDate": "2026-08-13"
+        },
+        {
+          "release": "1.2.2",
+          "recordId": "21930954",
+          "versionDoi": "10.5281/zenodo.21930954",
+          "publicationDate": "2026-08-15"
+        }
+      ]
     },
     "huggingFace": {
       "role": "ai-distribution",
-      "dataset": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
-    }
-  }
+      "dataset": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "distributionMode": "ai-retrieval"
+    },
+    "liveObservations": "https://www.ghezelbaash.ir/live-observations.jsonld"
+  },
+  "medicalReviewedAt": "2026-08-13"
 }

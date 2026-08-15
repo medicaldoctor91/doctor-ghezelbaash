@@ -92,9 +92,13 @@ def main() -> int:
     args = parser.parse_args()
 
     values = {name: os.environ.get(name, "").strip() for name in REQUIRED_ENV}
-    configured = [name for name, value in values.items() if value]
-    if args.if_configured and not configured:
-        print("CLOUDFLARE_PREFLIGHT_SKIPPED environment_not_configured")
+    # `--if-configured` is a credential-aware optional live gate. Build environments may
+    # legitimately know a public account/project identifier without receiving a privileged
+    # API token; that partial public context must not be treated as an attempted live mutation.
+    # Once a token is supplied, however, all companion identity fields are mandatory and the
+    # check remains fail-closed.
+    if args.if_configured and not values["CLOUDFLARE_API_TOKEN"]:
+        print("CLOUDFLARE_PREFLIGHT_SKIPPED api_token_not_configured")
         return 0
     missing = [name for name, value in values.items() if not value]
     if missing:

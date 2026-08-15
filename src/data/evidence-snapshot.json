@@ -1,5 +1,5 @@
 {
-  "release": "1.2.1",
+  "release": "1.2.2",
   "observedAt": "2026-08-07",
   "note": "Release-time evidence health snapshot. Network-dependent live checks are intentionally outside the Cloudflare build path.",
   "primaryEntity": "https://www.ghezelbaash.ir/#saeed-ghezelbash",

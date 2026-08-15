@@ -6,6 +6,8 @@ release/
 package/
 .DS_Store
 *.log
+__pycache__/
+*.py[cod]
 
 # Deterministic build outputs — regenerated from canonical source.
 src/content/home.md
@@ -17,3 +19,9 @@ src/data/semantic/rdf-lock.json
 public/doctor.vcf
 public/clinic.vcf
 public/assets/site.*.css
+
+.release/runtime/
+public/live-observations.jsonld
+public/query-matrix.jsonl
+public/current-release-matrix.json
+.release/huggingface/

@@ -162,11 +162,11 @@ CLAIM_EVIDENCE_IDS: ${claimEvidenceIds.join(' | ')}
 ENTITY_EVIDENCE_IDS: ${entityEvidenceIds.join(' | ')}
 PROVENANCE_CLASS: first-party physician-reviewed canonical guidance
 REVIEWED_BY: ${release.reviewedBy}
-REVIEWED_AT: ${release.dateModified}
+REVIEWED_AT: ${release.medicalReviewedAt}
 VERSION: ${release.release}
 `);
 await writeFile(path.join(projections,'answers.txt'),`# Direct-answer corpus — Dr. Saeed Ghezelbash
-# Release ${release.release}; reviewed ${release.dateModified}; provenance-rich canonical answer records
+# Release ${release.release}; medically reviewed ${release.medicalReviewedAt}; provenance-rich canonical answer records
 
 ${answers.join('\n---\n\n')}`);
 
@@ -200,7 +200,7 @@ while((m=re.exec(body))){
   blocks.push({index:m.index,tag,id,text,retrievalAlias});
 }
 blocks.sort((a,b)=>a.index-b.index);
-let md=`# دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه\n\n> Canonical human source: ${release.canonicalUrl}\n> Primary entity: ${release.primaryEntity.id} | Google KG ${release.primaryEntity.googleKnowledgeGraphId} | Wikidata ${release.primaryEntity.wikidata}\n> Release: ${release.release} | Reviewed: ${release.dateModified}\n\n`;
+let md=`# دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه\n\n> Canonical human source: ${release.canonicalUrl}\n> Primary entity: ${release.primaryEntity.id} | Google KG ${release.primaryEntity.googleKnowledgeGraphId} | Wikidata ${release.primaryEntity.wikidata}\n> Release: ${release.release} | Reviewed: ${release.medicalReviewedAt}\n\n`;
 for(const b of blocks){
   if(/^h[1-6]$/.test(b.tag)){
     const level=Number(b.tag[1]); md+=`${'#'.repeat(level)} ${b.text}\n${b.id?`<!-- anchor: ${release.canonicalUrl}#${b.id} -->\n`:''}${b.retrievalAlias?`<!-- retrieval-alias: ${b.retrievalAlias} -->\n`:''}\n`;
@@ -248,7 +248,7 @@ for(const s of sections){
 }
 let full=`# ENTITY\nNAME: Saeed Ghezelbash\nPERSIAN_NAME: سعید قزلباش\nENTITY_ID: ${release.primaryEntity.id}\nGOOGLE_KG: ${release.primaryEntity.googleKnowledgeGraphId}\nWIKIDATA: ${release.primaryEntity.wikidata}\nOWNED_CLINIC: ${release.clinic.id}\nCLINIC_KG: ${release.clinic.googleLocalKgmid}\nPLACE_ID: ${release.clinic.placeId}\nCID: ${release.clinic.cid}\nPOSTAL_CODE: ${release.clinic.postalCode}\nHOURS: ${release.clinic.hours}\nPRICE_RANGE: ${release.clinic.priceRange}\nCANONICAL: ${release.canonicalUrl}\nRELEASE: ${release.release}\nREVIEWED: ${release.dateModified}\nIDENTITY_FINGERPRINT_SHA256: ${identityFingerprintSha256}\nPASSAGE_COUNT: ${emitted.length}\n\n`;
 for(const psg of emitted){
-  full+=`[PASSAGE]\nPASSAGE_ID: ${psg.hash}\nLEVEL: H${psg.level}\nTITLE: ${psg.title}\nANCHOR: ${psg.anchor}\nGRAPH_NODE_ID: ${psg.graphNodeId}\nPART: ${psg.part}/${psg.partsTotal}\nLANGUAGE: ${psg.lang}\nENTITY_IDS: ${psg.entityIds.join(' | ')}\nSOURCE_HASH_SHA256: ${createHash('sha256').update(psg.text).digest('hex')}\nEVIDENCE_IDS: ${psg.evidenceIds.join(' | ')}\nCLAIM_EVIDENCE_IDS: ${psg.claimEvidenceIds.join(' | ')}\nENTITY_EVIDENCE_IDS: ${psg.entityEvidenceIds.join(' | ')}\nTIER_A_EVIDENCE_IDS: ${psg.tierAEvidenceIds.join(' | ')}\nPROVENANCE_CLASS: first-party physician-reviewed canonical content\nPROVENANCE: ${release.canonicalUrl} visible canonical HTML\nREVIEWED_BY: ${release.reviewedBy}\nREVIEWED_AT: ${release.dateModified}\n${psg.retrievalAlias?`RETRIEVAL_ALIASES: ${psg.retrievalAlias}\n`:''}TEXT:\n${psg.text}\n[/PASSAGE]\n\n`;
+  full+=`[PASSAGE]\nPASSAGE_ID: ${psg.hash}\nLEVEL: H${psg.level}\nTITLE: ${psg.title}\nANCHOR: ${psg.anchor}\nGRAPH_NODE_ID: ${psg.graphNodeId}\nPART: ${psg.part}/${psg.partsTotal}\nLANGUAGE: ${psg.lang}\nENTITY_IDS: ${psg.entityIds.join(' | ')}\nSOURCE_HASH_SHA256: ${createHash('sha256').update(psg.text).digest('hex')}\nEVIDENCE_IDS: ${psg.evidenceIds.join(' | ')}\nCLAIM_EVIDENCE_IDS: ${psg.claimEvidenceIds.join(' | ')}\nENTITY_EVIDENCE_IDS: ${psg.entityEvidenceIds.join(' | ')}\nTIER_A_EVIDENCE_IDS: ${psg.tierAEvidenceIds.join(' | ')}\nPROVENANCE_CLASS: first-party physician-reviewed canonical content\nPROVENANCE: ${release.canonicalUrl} visible canonical HTML\nREVIEWED_BY: ${release.reviewedBy}\nREVIEWED_AT: ${release.medicalReviewedAt}\n${psg.retrievalAlias?`RETRIEVAL_ALIASES: ${psg.retrievalAlias}\n`:''}TEXT:\n${psg.text}\n[/PASSAGE]\n\n`;
 }
 await writeFile(path.join(projections,'llms-full.txt'),full);
 

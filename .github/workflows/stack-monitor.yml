@@ -2,19 +2,29 @@ name: Public stack integrity monitor
 
 on:
   schedule:
-    - cron: '17 3 * * 1'
+    - cron: '47 */6 * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+env:
+  CONTROL_BRANCH: release-control/v1.2.2
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  ZONE_NAME: ghezelbaash.ir
+
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: main
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
@@ -24,14 +34,43 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - run: npm ci --ignore-scripts
-      - name: Verify current serving truth
+      - name: Require completed v1.2.2 before mutable drift recovery
+        id: gate
+        shell: bash
         run: |
           set -euo pipefail
+          git fetch origin "$CONTROL_BRANCH"
+          STAGE=$(git show "origin/$CONTROL_BRANCH:.release/control/v1.2.2.json" | jq -r .stage)
+          if [ "$STAGE" = COMPLETE ]; then echo 'active=true' >> "$GITHUB_OUTPUT"; else echo 'active=false' >> "$GITHUB_OUTPUT"; fi
+          echo "STACK_MONITOR_STAGE=$STAGE"
+      - if: steps.gate.outputs.active == 'true'
+        run: npm ci --ignore-scripts
+      - name: Build exact current source
+        if: steps.gate.outputs.active == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
-          npm run verify:production
+      - name: Verify current discovery, purge stale edge once, then reverify
+        if: steps.gate.outputs.active == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if node scripts/verify-public-discovery-freshness.mjs && node scripts/verify-current-serving.mjs; then
+            echo 'CURRENT_DISCOVERY_MONITOR_PASS'
+            exit 0
+          fi
+          echo '::warning::Current discovery drift detected; purging Cloudflare edge and re-verifying exact source bytes.'
+          node scripts/purge-cloudflare-current.mjs
+          sleep 30
+          node scripts/verify-public-discovery-freshness.mjs
           node scripts/verify-current-serving.mjs
+          echo 'CURRENT_DISCOVERY_SELF_HEAL_PASS'
       - name: Verify frozen release snapshot truth
+        if: steps.gate.outputs.active == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -40,5 +79,6 @@ jobs:
           git clean -fdx
           git checkout --detach "$TAG"
           npm ci --ignore-scripts
+          C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
           node scripts/verify-release-snapshot.mjs

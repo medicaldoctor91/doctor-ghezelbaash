@@ -1,9 +1,0 @@
-{
-  "targetVersion": "1.2.2",
-  "expectedCandidate": "2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb",
-  "releaseDate": "2026-08-15",
-  "preserveVersionDoi": "10.5281/zenodo.21930954",
-  "preserveRecordId": "21930954",
-  "scope": "locked-145-final-source-convergence",
-  "nonce": "v122-final-source-006"
-}

@@ -1,8 +1,0 @@
-{
-  "targetVersion": "1.2.2",
-  "baseCandidateSha": "2f79e4eb179c8415c28a2ace1a52c2c523b1c1cb",
-  "experimentBranch": "tmp/v122-responsive-media-experiment",
-  "requestedAt": "2026-08-15",
-  "scope": "calibrated-720-800-responsive-physician-media",
-  "nonce": "responsive-media-001"
-}

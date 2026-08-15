@@ -2,7 +2,7 @@
 
 Pure-static Astro source for the single-page production site at `https://www.ghezelbaash.ir/`.
 
-This repository is the version-controlled **source and generation authority**. The canonical first-party Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`; Zenodo is its immutable preservation distribution and Hugging Face is its secondary AI/ML distribution. These related layers are not identity-equivalent.
+This repository is the version-controlled **source and generation authority**. The canonical first-party Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`; Zenodo is its immutable preservation distribution and Hugging Face is its AI/retrieval distribution. These related layers are not identity-equivalent.
 
 ## Canonical source
 
@@ -46,9 +46,9 @@ Runtime target: Node 24.18.0 / npm 11.x. Deployment target: Cloudflare Pages sta
 
 ## Release and external distribution contract
 
-- Current source release: `1.2.1`
+- Current source release: `1.2.2`
 - Zenodo Concept DOI: `10.5281/zenodo.18765168`
-- Current Zenodo Version DOI: `10.5281/zenodo.21910785`
+- Current Zenodo Version DOI: `10.5281/zenodo.21930954`
 - Hugging Face: `doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data`
 - Wikidata: physician `Q140287622`, clinic `Q140288589`, Dataset `Q140304972`
 

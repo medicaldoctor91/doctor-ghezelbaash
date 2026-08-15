@@ -1,6 +1,6 @@
 {
-  "release": "1.2.1",
-  "date": "2026-08-13",
+  "release": "1.2.2",
+  "date": "2026-08-15",
   "reviewedBy": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
   "postalCode": "6714657412",
   "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
@@ -11,10 +11,7 @@
     "محمد‌سعید قزلباش"
   ],
   "redirectsSha256": "847e8e3244c5308ecc30294385fbd332ce7a3c51eb998b65c9455ea17707e060",
-  "externalRdfTripleCount": 8575,
-  "renderChunkCount": 134,
-  "clipCount": 16,
-  "chapterTrackCount": 4,
+  "externalRdfTripleCount": 8655,
   "maxHtmlBytes": 1950000,
   "runtime": {
     "node": "24.18.0",
@@ -53,10 +50,6 @@
     "Mohamadsaeed Ghezelbash"
   ],
   "maxHeadGraphBytes": 35000,
-  "targetHtmlBytes": 1947000,
-  "fullGraphNodeCount": 793,
-  "inlineEligibleClipCount": 13,
-  "captionTrackTarget": 2,
   "priceRange": "$$$$",
   "maxSupportGraphBytes": 135000,
   "maxRagPassageChars": 4200,
@@ -64,33 +57,38 @@
   "evidenceSnapshotMaxAgeDays": 45,
   "headAlternateNameMax": 17,
   "identityFingerprintSha256": "8da41af46c66295c58d20e771d9608e941da01144b0ac108ee90f01dbec92161",
-  "inlineSemanticClipCount": 16,
-  "exactBestDoctorHeadingCount": 17,
-  "instagramHeadingLinkCount": 17,
-  "supportNodeTarget": 132,
-  "headSameAsCount": 19,
-  "headAlternateNameCount": 17,
-  "directAnswerCapsuleCount": 0,
   "minClaimEvidencePassages": 45,
-  "minVisibleEvidenceCapsules": 0,
-  "machineResourceCount": 17,
-  "googleSitemapMachineUrlCount": 0,
-  "googleSearchLandingCount": 1,
-  "directAnswerExecutiveCount": 43,
-  "directAnswerFullCount": 0,
-  "integratedFullAnswerCount": 10,
-  "canonicalAnswerTextVisibleCount": 125,
   "googlebotFetchBudgetBytes": 2000000,
   "googlebotReservedResponseHeaderBytes": 20000,
   "googlebotSafetyMarginBytes": 30000,
   "maxRootCustomHeaderBytes": 8000,
   "maxCoreGraphEndByte": 35000,
   "maxSupportGraphEndByte": 1940000,
-  "directAnswerHeadingLevel": 0,
-  "contentSectionCount": 15,
   "maxCriticalCssBytes": 10000,
   "minExternalCssBytes": 45000,
-  "googleInlineSemanticClipCount": 13,
-  "googleInlineSupportNodeTarget": 129,
-  "googleInlineKurdishClipCount": 0
+  "contractClasses": {
+    "architectural": {
+      "singleCanonicalPage": true,
+      "maxHtmlBytesField": "maxHtmlBytes",
+      "googlebotFetchBudgetBytesField": "googlebotFetchBudgetBytes",
+      "maxOrphanGraphNodesField": "maxOrphanGraphNodes",
+      "maxHeadGraphBytesField": "maxHeadGraphBytes",
+      "maxSupportGraphBytesField": "maxSupportGraphBytes"
+    },
+    "strategic": {
+      "aggressiveHeadingSet": "src/data/visible-contract.json#protected.aggressiveHeadings",
+      "instagramHeadingAssociationSet": "src/data/visible-contract.json#protected.instagramHeadingLinks",
+      "serviceSet": "src/data/service-registry.json#services[publishable=true]",
+      "physicianFirstIdentity": true
+    },
+    "releaseDerivedMeasurements": {
+      "rdfTripleCountField": "externalRdfTripleCount",
+      "renderChunkSet": "src/data/render-calibration.json",
+      "graphNodeCount": "measured-at-build",
+      "serviceCount": "derived-from-service-registry",
+      "answerCount": "derived-from-answer-registry",
+      "supportNodeCount": "derived-from-projection",
+      "htmlBytes": "measured-at-build"
+    }
+  }
 }

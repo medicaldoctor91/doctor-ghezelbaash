@@ -1,8 +1,0 @@
-{
-  "targetVersion": "1.2.2",
-  "requestedAt": "2026-08-15",
-  "scope": "final-candidate-configure-reproducibility-capability-proof",
-  "phase": "configure",
-  "candidateSha": "4d876ce562539c77f178aeb547913bdf5b91272a",
-  "nonce": "v122-hardening-final-c-001"
-}
