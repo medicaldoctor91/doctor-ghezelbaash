@@ -1,0 +1,41 @@
+name: Publish Jalupro Profhilo video to Commons
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/commons_publish_jalupro.py
+      - .github/workflows/commons-publish-jalupro.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: commons-publish-jalupro
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      COMMONS_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      COMMONS_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install publisher dependency
+        run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$COMMONS_USERNAME"
+          test -n "$COMMONS_BOT_PASSWORD"
+      - name: Publish and verify Commons media entity
+        run: python scripts/commons_publish_jalupro.py
