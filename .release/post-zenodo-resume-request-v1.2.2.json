@@ -1,0 +1,9 @@
+{
+  "release": "1.2.2",
+  "mode": "resume-post-zenodo",
+  "candidate": "41b779fae27f1eab4a9cb63fee17d2e6fec0075c",
+  "versionDoi": "10.5281/zenodo.21930954",
+  "recordId": "21930954",
+  "requestedAt": "2026-08-15T13:22:00Z",
+  "reason": "Resume forward-only convergence from the immutable Zenodo-published checkpoint; do not mutate Candidate C or DOI."
+}
