@@ -21,6 +21,8 @@ const byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n]));
 const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id);
 if(!person||!clinic)throw new Error('Core entity missing');
 
+// Retrieval projections own only retrieval/live outputs. Canonical answer/passages remain
+// exclusively owned by generate-projections.mjs; no post-generation override is allowed here.
 const publishableServices=serviceRegistry.services.filter(x=>x.publishable);
 const offered=new Set([...arr(person.availableService).map(id),...arr(clinic.availableService).map(id)].filter(Boolean));
 const registered=new Set(publishableServices.map(x=>x.id));
@@ -227,20 +229,15 @@ if(uncoveredServices.length)throw new Error(`Query Matrix publishable service co
 await write('src/data/projections/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
 await write('public/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
 
-const reviewedAt=release.medicalReviewedAt||release.dateModified;
-const answersPath=path.join(root,'src/data/projections/answers.txt');
-let answers=await readFile(answersPath,'utf8');
-answers=answers.replace(/^# Release ([^;]+); reviewed [^;]+; provenance-rich canonical answer records/m,`# Release $1; medically reviewed ${reviewedAt}; provenance-rich canonical answer records`).replace(/^REVIEWED_AT: .*$/gm,`REVIEWED_AT: ${reviewedAt}`);
-await write('src/data/projections/answers.txt',answers);
-const llmsFullPath=path.join(root,'src/data/projections/llms-full.txt');
-let llmsFull=await readFile(llmsFullPath,'utf8');
-llmsFull=llmsFull.replace(/^REVIEWED_AT: .*$/gm,`REVIEWED_AT: ${reviewedAt}`);
-await write('src/data/projections/llms-full.txt',llmsFull);
+// llms.txt discovery is retained until its canonical template is migrated in the same
+// no-regression series. Unlike the retired overlay, this stage does not rewrite answers
+// or llms-full content owned by the canonical projection generator.
 const llmsPath=path.join(root,'src/data/projections/llms.txt');
 let llms=await readFile(llmsPath,'utf8');
-if(!llms.includes('/query-matrix.jsonl'))llms+=`\n## Retrieval overlays\n- Query Matrix 2.0: ${release.canonicalUrl}query-matrix.jsonl\n- Current clinic reputation observation: ${release.canonicalUrl}live-observations.jsonld\n`;
+if(!llms.includes('/query-matrix.jsonl'))llms+=`\n## Retrieval resources\n- Query Matrix 2.0: ${release.canonicalUrl}query-matrix.jsonl\n- Current clinic reputation observation: ${release.canonicalUrl}live-observations.jsonld\n`;
 await write('src/data/projections/llms.txt',llms);
 
+const reviewedAt=release.medicalReviewedAt||release.dateModified;
 const matrix={
   release:release.release,
   conceptDoi:release.dataset.zenodo.conceptDoi,
@@ -262,7 +259,7 @@ await write('src/data/projections/current-release-matrix.json',JSON.stringify(ma
 await write('public/current-release-matrix.json',JSON.stringify(matrix,null,2)+'\n');
 
 console.log(JSON.stringify({
-  v122Overlays:true,
+  retrievalProjections:true,
   queryRows:dedup.length,
   intentAliasRows:matrix.intentAliasRows,
   serviceAliasRows:matrix.serviceAliasRows,
