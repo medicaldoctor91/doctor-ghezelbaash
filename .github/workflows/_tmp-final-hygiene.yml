@@ -1,0 +1,51 @@
+name: Temporary final source hygiene
+
+on:
+  push:
+    branches: [release/v1.2.2-candidate]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-source-convergence
+  cancel-in-progress: false
+
+jobs:
+  clean:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+      - name: Remove dead descriptor-era finalizer code
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/finalize-dist.mjs')
+          s=p.read_text()
+          exact=[
+            "const ttlString=s=>`\"${String(s).replaceAll('\\\\','\\\\\\\\').replaceAll('\"','\\\\\"').replaceAll('\\n','\\\\n')}\"`;\n",
+            "const person=byId.get(release.primaryEntity.id),identityMe=(Array.isArray(person?.sameAs)?person.sameAs:[person?.sameAs].filter(Boolean)).map(x=>({href:typeof x==='string'?x:x?.['@id']})).filter(x=>x.href);\n",
+            "const datasetDescription=typeof dataset?.description==='string'?dataset.description:'Physician-owned first-party entity, clinic, medical-topic, answer and provenance dataset for Saeed Ghezelbash.';\n",
+          ]
+          for old in exact:
+            if old not in s: raise SystemExit('expected dead-code marker missing: '+old[:70])
+            s=s.replace(old,'',1)
+          for token in ['ttlString','identityMe','datasetDescription','const person=byId.get(release.primaryEntity.id)']:
+            if token in s: raise SystemExit('dead descriptor-era finalizer token remains: '+token)
+          p.write_text(s)
+          PY
+          node --check scripts/finalize-dist.mjs
+          if git diff --quiet -- scripts/finalize-dist.mjs; then
+            echo 'Finalizer already hygienic.'
+            exit 0
+          fi
+          git config user.name 'Dr. Saeed Ghezelbash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git add scripts/finalize-dist.mjs
+          git commit -m 'Remove dead descriptor-era finalizer code'
+          git push origin HEAD:release/v1.2.2-candidate
