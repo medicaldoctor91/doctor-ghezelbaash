@@ -2,48 +2,18 @@ name: Verify canonical Cloudflare Git production
 
 on:
   push:
-    branches: [production/deploy, release/v1.2.2-candidate]
+    branches: [production/deploy]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: doctor-ghezelbaash-external-mutation
-  cancel-in-progress: false
+  group: doctor-ghezelbaash-cloudflare-production-verifier
+  cancel-in-progress: true
 
 jobs:
-  migrate-pages-contract:
-    if: github.ref == 'refs/heads/release/v1.2.2-candidate'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    env:
-      CF_PROJECT: doctor-ghezelbaash
-      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
-      CF_PRODUCTION_BRANCH: production/deploy
-      CF_PREVIEW_BRANCH: staging/deploy
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
-        with:
-          node-version: 24.18.0
-          cache: npm
-      - run: npm ci --ignore-scripts
-      - name: Converge Cloudflare Pages branch contract without deploying candidate
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "$CLOUDFLARE_API_TOKEN"
-          echo "::add-mask::$CLOUDFLARE_API_TOKEN"
-          node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure
-          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
-
   verify:
-    if: github.ref == 'refs/heads/production/deploy'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
