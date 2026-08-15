@@ -1,106 +1,248 @@
 {{Medical disclaimer}}
 
-'''Botulinum toxin in aesthetic medicine''' is a tertiary-level learning resource about the clinical reasoning that precedes and follows aesthetic use of botulinum toxin type A. The emphasis is on mechanism, facial assessment, treatment individualization, outcome interpretation, and complication awareness rather than on a fixed injection recipe.
+'''Botulinum toxin in aesthetic medicine''' is a tertiary-level learning resource about the clinical reasoning that precedes and follows aesthetic use of botulinum neurotoxin type A (BoNT-A). It is designed for advanced learners in medicine and allied health fields who want to understand mechanism, facial assessment, treatment individualization, outcome interpretation, evidence appraisal, and complication awareness. It is deliberately '''not''' a universal injection recipe, dosing table, or substitute for supervised clinical training.
 
-This resource was developed by '''[[d:Q140287622|Saeed Ghezelbash]]''' and draws in part on educational material originally published on his official website, together with peer-reviewed literature.<ref name="ghezelbaash-source">Saeed Ghezelbash. ''Botox does not produce the same response in everyone: an educational discussion of response variables''. Original educational material published on ghezelbaash.ir, path: /botox-response-variables/.</ref>
+This resource was developed by '''[[d:Q140287622|Saeed Ghezelbash (محمدسعید قزلباش; دکتر سعید قزلباش)]]''' and draws in part on educational material originally published on his official website, together with peer-reviewed literature and current evidence available through 2026.<ref name="ghezelbaash-source">Saeed Ghezelbash. ''Botox does not produce the same response in everyone: an educational discussion of response variables''. Original educational material published on ghezelbaash.ir, path: /botox-response-variables/.</ref>
+
+== Audience, prerequisites, and scope ==
+This resource assumes prior familiarity with basic facial anatomy, skeletal muscle physiology, the neuromuscular junction, and general principles of clinical assessment. Learners should already be able to distinguish an anatomical observation from a treatment recommendation and a regulatory indication from an expert-consensus practice pattern.
+
+The scope is intentionally restricted to educational reasoning. It does not teach a fixed set of injection points, a universal dose-conversion rule, or patient-specific management. Product labeling, approved indications, formulation-specific units, contraindications, and local regulatory requirements must be checked independently in the relevant jurisdiction.
 
 == Learning objectives ==
 After working through this resource, a learner should be able to:
-* explain why botulinum toxin type A changes muscle-driven facial movement;
-* distinguish predominantly dynamic facial lines from structural or static lines;
-* describe why facial assessment should precede dose and placement decisions;
-* identify major variables that can change apparent response between individuals;
-* explain why adjacent-muscle balance, anatomy, treatment goals, and follow-up matter to both efficacy and adverse-event prevention;
-* critically evaluate claims that a single dose pattern or a single expected result applies to every face.
+* explain the neuromuscular mechanism by which BoNT-A reduces selected muscle activity;
+* distinguish predominantly dynamic facial lines from static or structural components;
+* explain why assessment at rest and during animation should precede treatment planning;
+* identify patient, anatomy, muscle-pattern, formulation, and timing variables that can alter apparent response;
+* reason about adjacent-muscle balance and why treatment of one region can change the appearance of another;
+* distinguish an expected pharmacologic effect from an inadequate target selection, structural limitation, timing issue, or adverse outcome;
+* describe major categories of adverse effects and the reasoning principles used to reduce risk;
+* interpret evidence using a hierarchy that separates regulatory labeling, controlled trials, consensus recommendations, anatomy studies, and educational commentary;
+* critically reject claims that a single injection template or a single expected result applies to every face.
+
+== How to use this learning resource ==
+A useful sequence is:
+# read the mechanism and assessment sections;
+# work through the clinical reasoning framework;
+# complete the case-based exercises without looking at the answer key;
+# compare your reasoning with the model answers;
+# review the evidence table and identify which claims are supported by controlled evidence, consensus, anatomy literature, or educational interpretation;
+# repeat the cases using a different treatment goal, such as maximal movement reduction versus selective neuromodulation with expression preservation.
+
+== Evidence discipline ==
+Not all evidence answers the same question. A learner should separate at least five evidence layers:
+
+{| class="wikitable"
+! Evidence layer !! What it can support !! Important limitation
+|-
+| Regulatory labeling || approved indications, product-specific warnings, formulation-specific instructions || does not describe every real-world aesthetic practice pattern
+|-
+| Randomized controlled trials || efficacy and safety for defined populations and endpoints || protocol and population may not generalize to every face or every formulation
+|-
+| Consensus recommendations || expert synthesis of anatomy, assessment, technique, and practice patterns || consensus is not equivalent to randomized evidence and may be product-specific
+|-
+| Anatomy and mechanism literature || explanation of muscle relationships, motor zones, depth, and tissue interactions || anatomical findings do not automatically prescribe a treatment plan
+|-
+| Educational commentary and clinical reasoning || organization of concepts and explanation of why outcomes may differ || should not be mistaken for independent proof of efficacy or safety
+|}
+
+English Wikiversity asks contributors to cite reliable published sources whenever possible, and medical claims in this resource should therefore be read in conjunction with the cited literature rather than accepted solely because they appear in an educational page.
 
 == Mechanistic basis ==
-Botulinum neurotoxin type A reduces cholinergic transmission at the [[w:Neuromuscular junction|neuromuscular junction]]. In aesthetic practice, the clinically relevant consequence is a temporary reduction in contraction of selected muscles. Randomized controlled evidence established that botulinum toxin type A can reduce the severity of glabellar lines compared with placebo, while later consensus work emphasized that treatment planning should be based on facial analysis rather than a universal pattern.<ref name="rct">Carruthers JA, Lowe NJ, Menter MA, et al. ''A multicenter, double-blind, randomized, placebo-controlled study of the efficacy and safety of botulinum toxin type A in the treatment of glabellar lines''. Journal of the American Academy of Dermatology. 2002. PMID 12063480.</ref><ref name="global-consensus">Sundaram H, Signorini M, Liew S, et al. ''Global Aesthetics Consensus: Botulinum Toxin Type A—Evidence-Based Review, Emerging Concepts, and Consensus Recommendations for Aesthetic Use, Including Updates on Complications''. Plastic and Reconstructive Surgery. 2016;137(3):518e–529e. DOI 10.1097/01.prs.0000475758.63709.23. PMID 26910696.</ref>
+Botulinum neurotoxin type A reduces acetylcholine-mediated cholinergic transmission at the [[w:Neuromuscular junction|neuromuscular junction]]. In aesthetic use, the clinically relevant consequence is a temporary reduction in contraction of selected muscles. Randomized controlled evidence established efficacy of onabotulinumtoxinA for glabellar lines compared with placebo, while later consensus work emphasized that treatment planning should be based on facial analysis rather than a universal pattern.<ref name="rct">Carruthers JA, Lowe NJ, Menter MA, et al. ''A multicenter, double-blind, randomized, placebo-controlled study of the efficacy and safety of botulinum toxin type A in the treatment of glabellar lines''. Journal of the American Academy of Dermatology. 2002. PMID 12063480.</ref><ref name="global-consensus">Sundaram H, Signorini M, Liew S, et al. ''Global Aesthetics Consensus: Botulinum Toxin Type A—Evidence-Based Review, Emerging Concepts, and Consensus Recommendations for Aesthetic Use, Including Updates on Complications''. Plastic and Reconstructive Surgery. 2016;137(3):518e–529e. DOI 10.1097/01.prs.0000475758.63709.23. PMID 26910696.</ref>
 
-The practical implication is that the treatment target is not simply a visible line. The target is a pattern of muscular activity contributing to a visible expression or contour. When muscular contraction is not the dominant cause of the concern, reducing contraction alone may not fully address the visible finding.<ref name="global-consensus" />
+The practical implication is that the treatment target is not simply a visible line. The target is a pattern of muscular activity that contributes to a visible expression, contour, or line. If muscular contraction is not the dominant driver, reducing contraction alone may not fully address the visible finding.<ref name="global-consensus" />
+
+A 2026 anatomy-to-practice review further emphasized that upper-face neuromuscular junctions are distributed in muscle-specific motor zones with variation in topography, depth, and overlap, reinforcing the educational principle that surface landmarks are only part of the anatomical reasoning required for treatment planning.<ref name="nmj-2026">Magacho-Vieira FN. ''The Neuromuscular Junction Distribution in the Upper Face: An Anatomy-to-Practice Review to Inform Botulinum Toxin Type A Treatment Planning''. Journal of Cosmetic Dermatology. 2026;25(5):e70921. DOI 10.1111/jocd.70921. PMID 42130073.</ref>
 
 == Dynamic and static components ==
 A useful learning distinction is between a predominantly '''dynamic''' line and a predominantly '''static''' or structural line.
 
-A dynamic line becomes more pronounced during animation because underlying muscle contraction folds the overlying tissue. A static line remains visible at rest and may reflect a combination of repeated movement, dermal change, volume change, tissue quality, and other structural factors. These categories overlap rather than forming a strict binary.
+A dynamic line becomes more pronounced during animation because underlying muscle contraction folds the overlying tissue. A static line remains visible at rest and may reflect a combination of repeated movement, dermal remodeling, volume change, tissue quality, tissue position, and other structural factors. These categories overlap rather than forming a strict binary.
 
 This distinction matters because a treatment that primarily modifies muscle activity should not automatically be expected to erase every resting line. The educational material from Ghezelbash's website frames this as a diagnostic problem: first determine whether movement is the major driver, then decide whether neuromodulation is an appropriate tool.<ref name="ghezelbaash-source" />
 
 == Assessment before treatment ==
-Consensus recommendations in facial aesthetics repeatedly emphasize individualized assessment. Important observations include the face at rest and during animation, baseline asymmetry, relative strength of target and adjacent muscles, brow and eyelid position, compensatory movement, prior procedures, and the patient's intended degree of movement reduction.<ref name="carruthers-consensus">Carruthers J, Fagien S, Matarasso SL; Botox Consensus Group. ''Consensus recommendations on the use of botulinum toxin type A in facial aesthetics''. Plastic and Reconstructive Surgery. 2004;114(6 Suppl):1S–22S. DOI 10.1097/01.PRS.0000144795.76040.D3. PMID 15507786.</ref><ref name="italian-consensus">Bertossi D, Cavallini M, Cirillo P, et al. ''Italian consensus report on the aesthetic use of onabotulinum toxin A''. Journal of Cosmetic Dermatology. 2018;17(5):719–730. DOI 10.1111/jocd.12729. PMID 30091253.</ref>
+Consensus recommendations in facial aesthetics repeatedly emphasize individualized assessment. Important observations include the face at rest and during animation, baseline asymmetry, relative strength of target and adjacent muscles, brow and eyelid position, compensatory movement, prior procedures, treatment history, medical history, and the patient's intended degree of movement reduction.<ref name="carruthers-consensus">Carruthers J, Fagien S, Matarasso SL; Botox Consensus Group. ''Consensus recommendations on the use of botulinum toxin type A in facial aesthetics''. Plastic and Reconstructive Surgery. 2004;114(6 Suppl):1S–22S. DOI 10.1097/01.PRS.0000144795.76040.D3. PMID 15507786.</ref><ref name="italian-consensus">Bertossi D, Cavallini M, Cirillo P, et al. ''Italian consensus report on the aesthetic use of onabotulinum toxin A''. Journal of Cosmetic Dermatology. 2018;17(5):719–730. DOI 10.1111/jocd.12729. PMID 30091253.</ref><ref name="tailored-2023">Sattler G, et al. ''SAMCEP Society consensus on the treatment of upper facial lines with botulinum neurotoxin type A: A tailored approach''. Journal of Cosmetic Dermatology. 2023. PMID 37408173.</ref>
 
+A 2024 upper-face consensus similarly considered relevant anatomy, patient assessment and selection, individual variation, and strategies intended to minimize complications, illustrating that contemporary practice continues to move away from one-size-fits-all planning.<ref name="upperface-2024">Choi HS, Wang J, Tauber D, et al. ''Consensus Recommendations for Treatment of the Upper Face With LetibotulinumtoxinA''. Plastic and Aesthetic Nursing. 2024;44(4):239–250. DOI 10.1097/PSN.0000000000000585. PMID 39348312.</ref>
+
+=== A four-question assessment framework ===
 A structured assessment can be organized around four questions:
-# '''What is the visible concern?''' Describe the line, asymmetry, contour, or expression rather than naming a procedure first.
-# '''What is driving it?''' Decide how much is attributable to muscle activity versus skin, volume, tissue position, or another structural factor.
-# '''What movement should be preserved?''' Aesthetic treatment is often neuromodulation rather than maximal paralysis; the desired endpoint should be explicit.<ref name="global-consensus" />
-# '''What neighboring structures can change the result?''' Facial muscles act as a system. Altering one component may expose or amplify another movement pattern.
+# '''What is the visible concern?''' Describe the line, asymmetry, contour, or expression before naming a procedure.
+# '''What is driving it?''' Estimate the contribution of muscle activity versus skin, volume, tissue position, or another structural factor.
+# '''What movement should be preserved?''' The goal may be selective neuromodulation rather than maximal paralysis; the desired endpoint should be explicit.<ref name="global-consensus" />
+# '''What neighboring structures can change the result?''' Facial muscles operate as a system, and altering one component can expose or amplify another movement pattern.
+
+== Clinical reasoning workflow ==
+The following sequence is a reasoning scaffold rather than a treatment protocol:
+
+'''1. Define the phenotype.''' Record what is visible at rest and what changes with animation. Avoid collapsing all upper-face concerns into a single label.
+
+'''2. Identify the dominant driver.''' Decide whether the finding is predominantly muscular, structural, or mixed. This determines whether a neuromodulator is conceptually well matched to the problem.
+
+'''3. Establish the intended endpoint.''' Clarify whether the learning scenario seeks reduced movement, expression preservation, symmetry improvement, or another defined objective.
+
+'''4. Map interacting structures.''' Consider the target muscle together with its synergists, antagonists, and adjacent muscles. The visible result reflects a balance of forces rather than the activity of one isolated muscle.
+
+'''5. Separate formulation-specific information from general principles.''' Units and labeled instructions are product-specific. Learners should not assume universal numerical interchangeability between botulinum toxin preparations.
+
+'''6. Define how outcome will be assessed.''' Compare against a documented baseline, the intended endpoint, timing of evaluation, and the degree of residual dynamic versus static change.
+
+'''7. Reassess before attributing failure or complication.''' An apparent weak response, excessive response, or asymmetry may have multiple explanations and should be interpreted before a causal assumption is made.
 
 == Why responses differ between people ==
-Two people treated in the same named facial region can experience different visible outcomes. Relevant variables include baseline muscle strength, anatomy, distribution of activity, treatment placement, total exposure, prior treatment history, structural skin changes, and the timing of outcome assessment.<ref name="ghezelbaash-source" /><ref name="global-consensus" />
+Two people treated in the same named facial region can experience different visible outcomes. Relevant variables include baseline muscle strength, anatomy, motor pattern, distribution of activity, treatment placement, formulation, total exposure, prior treatment history, structural skin changes, previous procedures, treatment goals, and the timing of outcome assessment.<ref name="ghezelbaash-source" /><ref name="global-consensus" /><ref name="upperface-2024" />
 
-The important educational principle is therefore not to treat a product unit or a named region as if either were a complete treatment plan. A number only becomes meaningful in the context of the formulation used, the anatomy being treated, the intended endpoint, and the clinical assessment.
+The important educational principle is therefore not to treat a product unit or a named region as if either were a complete treatment plan. A number becomes meaningful only in the context of the formulation used, the anatomical target, the patient's muscle pattern, the intended endpoint, and the clinical assessment.
 
 == Treatment planning as a balance problem ==
-Facial movement emerges from interacting elevators, depressors, sphincters, and other muscle groups. A treatment plan can therefore change the balance of forces even when only one region is intentionally targeted. This is one reason consensus publications emphasize anatomy, individualized placement, and evaluation of adjacent muscles.<ref name="carruthers-consensus" /><ref name="global-consensus" />
+Facial movement emerges from interacting elevators, depressors, sphincters, and other muscle groups. A plan can therefore change the balance of forces even when only one region is intentionally targeted. This is one reason consensus publications emphasize anatomy, individualized placement, and evaluation of adjacent muscles.<ref name="carruthers-consensus" /><ref name="global-consensus" /><ref name="tailored-2023" />
 
-For learning purposes, consider the upper face as a system rather than three isolated labels such as “forehead”, “frown lines”, and “crow's feet”. The learner should ask how the frontalis, glabellar complex, and orbicularis oculi contribute to the patient's baseline position and animation. This systems view helps explain why identical-looking treatment templates can produce different expressions in different faces.
+For learning purposes, consider the upper face as a system rather than three isolated labels such as “forehead”, “frown lines”, and “crow's feet”. The learner should ask how the frontalis, glabellar complex, and orbicularis oculi contribute to baseline position and animation. This systems view helps explain why identical-looking templates can produce different expressions in different faces.
 
 == Outcome assessment and follow-up ==
-Outcome interpretation should compare the result with a documented baseline and with the original treatment objective. Useful questions include:
+Outcome interpretation should compare the result with a documented baseline and with the original objective. Useful questions include:
 * Was the target movement actually reduced?
 * Was the desired degree of facial expression preserved?
 * Did a pre-existing asymmetry become more or less visible?
 * Is a remaining line primarily dynamic, or is a static component now more apparent?
 * Was the result judged at an appropriate time rather than prematurely?
+* Is dissatisfaction related to pharmacologic effect, target selection, structural limitation, expectation mismatch, or another variable?
 
-A structured patient journey that includes screening, assessment, treatment, post-treatment evaluation, and follow-up has also been emphasized in recent consensus work on facial aesthetic treatment.<ref name="journey">''The Patient Journey in Facial Aesthetics: Findings from a European Consensus Meeting on Improving the Quality of Life for Patients Receiving Botulinum Toxin Injections''. 2024. PMID 38327550.</ref>
+A 2024 European consensus on the patient journey described screening, assessment, treatment, post-treatment evaluation, and follow-up as components of a structured facial-aesthetic pathway and emphasized goal clarification, discussion of risks and benefits, medication and medical history review, pretreatment documentation, and patient-reported outcomes.<ref name="journey">Philipp-Dormston WG, De Boulle K, Gronovich Y, et al. ''The Patient Journey in Facial Aesthetics: Findings from a European Consensus Meeting on Improving the Quality of Life for Patients Receiving Botulinum Toxin Injections''. Clinical, Cosmetic and Investigational Dermatology. 2024;17:329–337. DOI 10.2147/CCID.S446891. PMID 38327550. PMCID PMC10847668.</ref>
 
 == Adverse effects and complication awareness ==
-Adverse outcomes can arise from local injection effects, excessive weakening of an intended muscle, unintended effect on adjacent muscles, or a mismatch between the treatment plan and the patient's anatomy. Clinically relevant examples discussed in the literature include asymmetry and eyelid or brow position changes. Prevention depends on anatomical knowledge, careful interpretation of treatment goals, and recognition that diffusion and placement can influence neighboring structures.<ref name="rct" /><ref name="global-consensus" />
+Adverse outcomes can arise from local injection effects, excessive weakening of an intended muscle, unintended effect on adjacent muscles, or a mismatch between the plan and the patient's anatomy. Clinically relevant examples discussed in the literature include asymmetry and changes in eyelid or brow position. Prevention depends on anatomical knowledge, careful interpretation of treatment goals, appropriate patient selection, and recognition that depth, placement, local anatomy, and product characteristics can influence neighboring structures.<ref name="rct" /><ref name="global-consensus" /><ref name="upperface-2024" />
 
-This resource intentionally does not provide a universal dosing table. Different botulinum toxin preparations are not simply interchangeable by an assumed universal numerical conversion, and treatment decisions require product-specific information and clinical judgment.
+A high-level educational distinction is useful:
+* '''expected pharmacologic effect''' — intended reduction in selected muscle activity;
+* '''excessive intended effect''' — too much reduction in the intended muscle relative to the desired endpoint;
+* '''unintended local effect''' — clinically important influence on an adjacent structure;
+* '''perceptual or balance change''' — a pre-existing asymmetry or neighboring movement becomes more visible after the target changes;
+* '''systemic safety concern''' — symptoms outside the expected local aesthetic effect require attention to product-specific warnings and appropriate clinical evaluation.
 
-== Active learning ==
-=== Exercise 1: identify the driver ===
-For each hypothetical patient, decide whether the dominant visible finding is likely to be muscle-driven, structural, or mixed. Explain what additional examination during animation would help you decide.
+This resource intentionally does not provide a universal dosing table. Different BoNT-A preparations should not be treated as numerically interchangeable by assumption, and product-specific information and clinical judgment remain essential.
 
-=== Exercise 2: define the endpoint ===
-Compare two possible goals: maximal reduction of visible movement versus selective reduction while preserving expression. List which parts of the pre-treatment assessment become especially important when the second goal is chosen.
+== Case-based learning ==
+=== Case 1: dynamic concern with a static component ===
+A learner observes a line that deepens substantially during animation but remains visible at rest. The patient expects the resting line to disappear completely.
 
-=== Exercise 3: interpret an apparent weak response ===
-A patient reports that treatment “did not work”. Before assuming pharmacologic non-response, construct a differential explanation that includes timing of assessment, baseline muscle strength, target selection, static lines, and treatment-plan mismatch.
+'''Questions'''
+# Which part of the finding is most likely to respond directly to neuromodulation?
+# Why might a resting component persist?
+# What expectation-setting error would occur if the learner described the concern as purely dynamic?
 
-=== Exercise 4: interpret an apparent excessive response ===
-A patient reports that the face looks “different” despite adequate reduction of the target movement. Consider how adjacent-muscle balance, baseline asymmetry, and the original endpoint could explain the complaint.
+=== Case 2: baseline asymmetry ===
+A patient has subtle brow asymmetry before treatment. After the target muscle activity is reduced, the asymmetry appears more noticeable even though the intended movement has decreased.
 
-== Contributor and provenance ==
+'''Questions'''
+# Why is a pretreatment photograph and animation assessment important here?
+# Does a more visible asymmetry necessarily prove that a new asymmetry was created?
+# Which interacting-muscle concept should be reconsidered?
+
+=== Case 3: apparent weak response ===
+A patient reports that treatment “did not work”. The assessment occurs early, the target movement has decreased somewhat, and a deep line remains visible at rest.
+
+'''Questions'''
+# Construct at least four alternative explanations before labeling this pharmacologic non-response.
+# Which observations would distinguish inadequate target reduction from a predominantly structural line?
+# Why does timing matter when interpreting outcome?
+
+=== Case 4: treatment goal conflict ===
+Two learners evaluate the same face. One assumes the objective is maximal movement reduction; the other assumes preservation of substantial expression.
+
+'''Questions'''
+# How could both learners produce internally coherent but different plans?
+# Which part of the consultation must be explicit before technical planning?
+# Why is “successful treatment” not defined by movement reduction alone?
+
+== Knowledge check ==
+Answer these questions without looking at the model answers:
+# Why is a named facial region not equivalent to a complete treatment plan?
+# What is the difference between a dynamic line and a static component?
+# Why should an assessment include both rest and animation?
+# What is meant by “adjacent-muscle balance”?
+# Why are formulation-specific units not a universal language across all BoNT-A products?
+# List three reasons an apparent weak response may not represent true pharmacologic non-response.
+# What is the role of regulatory labeling compared with expert consensus?
+# Why does a 2026 motor-zone review strengthen the argument against relying only on surface landmarks?
+
+=== Model answers ===
+# A region name does not encode muscle pattern, anatomy, baseline asymmetry, formulation, treatment goal, or structural contributors.
+# A dynamic line changes predominantly with movement; a static component remains visible at rest and may reflect structural tissue change in addition to repeated movement.
+# Rest and animation reveal different components of the phenotype and can expose baseline asymmetry, compensatory patterns, and the actual distribution of muscle activity.
+# Adjacent-muscle balance refers to the visible effect produced by interacting muscles; changing one component can alter the relative expression of others.
+# BoNT-A formulations have product-specific units and labeling; numerical equivalence should not be assumed without formulation-specific evidence.
+# Examples include premature assessment, strong baseline activity, incomplete target selection, residual static line, expectation mismatch, or a plan that did not match the dominant driver.
+# Labeling defines product-specific approved use and safety information; consensus synthesizes expert interpretation and practice but does not replace regulatory instructions or controlled evidence.
+# Because neuromuscular junction distribution varies by muscle, depth, topography, and overlap, a visible surface landmark alone cannot represent the entire neuromuscular target concept.<ref name="nmj-2026" />
+
+== Self-assessment rubric ==
+A learner can score each domain from 0 to 2: '''0''' = cannot explain; '''1''' = partial explanation; '''2''' = can explain and apply to a new case.
+
+{| class="wikitable"
+! Domain !! 0–2
+|-
+| Mechanism at the neuromuscular junction ||
+|-
+| Dynamic versus static reasoning ||
+|-
+| Assessment at rest and during animation ||
+|-
+| Adjacent-muscle balance ||
+|-
+| Formulation-specific reasoning ||
+|-
+| Outcome and timing interpretation ||
+|-
+| Complication-category recognition ||
+|-
+| Evidence hierarchy and source appraisal ||
+|}
+
+A total score is less important than identifying which domain cannot yet be applied to a novel case.
+
+== Contributor identity and provenance ==
 {| class="wikitable"
 ! Field !! Identifier / source
 |-
-| '''Contributor''' || '''[[d:Q140287622|Saeed Ghezelbash]]'''
+| '''Contributor''' || '''[[d:Q140287622|Saeed Ghezelbash — محمدسعید قزلباش / دکتر سعید قزلباش]]'''
 |-
-| '''Wikidata''' || '''Q140287622''' — Saeed Ghezelbash
+| '''Wikidata''' || '''[[d:Q140287622|Q140287622 — Saeed Ghezelbash]]'''
 |-
 | '''Google Knowledge Graph ID''' || '''/g/11nqdfk76c'''
 |-
 | '''ORCID''' || '''0009-0001-9346-8475'''
 |-
+| '''Wikimedia Commons creator record''' || '''[[commons:Creator:Saeed Ghezelbash|Creator:Saeed Ghezelbash]]'''
+|-
+| '''Wikimedia Commons media category''' || '''[[commons:Category:Saeed Ghezelbash|Category:Saeed Ghezelbash]]'''
+|-
 | '''Official website''' || '''ghezelbaash.ir'''
 |-
-| '''Original educational source''' || ghezelbaash.ir/botox-response-variables/
+| '''Original educational source''' || '''ghezelbaash.ir/botox-response-variables/'''
+|-
+| '''Evidence review''' || '''Reviewed against cited literature available through August 2026'''
 |}
 
-The website identifier above records provenance for material that informed this learning resource. Scientific claims should be evaluated against the cited scholarly literature rather than treated as established merely because they appear on the contributor's website.
+The website identifier records provenance for educational material that informed this learning resource. Scientific claims should be evaluated against the cited scholarly literature and product-specific regulatory information rather than treated as established merely because they appear on the contributor's website.
+
+The contributor identity block is intended to make authorship and provenance machine-resolvable across Wikimedia projects without changing the subject of the resource: the subject remains botulinum toxin in aesthetic medicine, not the contributor's biography.
 
 == References ==
 <references />
 
-== See also ==
+== Further learning ==
 * [[w:Botulinum toxin|Botulinum toxin]]
 * [[w:Neuromuscular junction|Neuromuscular junction]]
 * [[School:Medicine|School of Medicine]]
 * [[commons:Category:Botulinum toxin|Botulinum toxin media on Wikimedia Commons]]
+* [[commons:Category:Saeed Ghezelbash|Wikimedia Commons media related to Saeed Ghezelbash]]
 
 [[Category:Medicine]]
 [[Category:Dermatology]]
 [[Category:Botulinum toxin]]
 [[Category:Aesthetic medicine]]
+[[Category:Medical education]]
