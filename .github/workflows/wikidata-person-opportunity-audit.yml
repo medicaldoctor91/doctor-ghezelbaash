@@ -27,7 +27,8 @@ jobs:
 
           WD='https://www.wikidata.org/w/api.php'
           CM='https://commons.wikimedia.org/w/api.php'
-          UA='Medicaldoctor91WikidataOpportunityAudit/1.0 (https://www.ghezelbaash.ir/)'
+          QS='https://query.wikidata.org/sparql'
+          UA='Medicaldoctor91WikidataOpportunityAudit/1.1 (https://www.ghezelbaash.ir/)'
           s=requests.Session(); s.headers['User-Agent']=UA
 
           def get(url, params):
@@ -72,13 +73,11 @@ jobs:
 
           candidate_props=['P10','P101','P106','P18','P1472','P373','P856','P496','P2671','P1830','P937','P69','P512','P108','P1412','P27','P19','P569','P21','P463','P166','P800']
 
-          # Search Wikidata for possible learning-resource item and candidate topic items.
           searches={}
-          for term in ['Botulinum toxin in aesthetic medicine','botulinum toxin','dermal filler','aesthetic medicine','Jalupro','Profhilo']:
+          for term in ['Botulinum toxin in aesthetic medicine','botulinum toxin injection','botulinum toxin therapy','botulinum toxin','dermal filler','aesthetic medicine','Jalupro','Profhilo']:
               d=get(WD, {'action':'wbsearchentities','search':term,'language':'en','uselang':'en','type':'item','limit':10})
               searches[term]=[{'id':x.get('id'),'label':x.get('label'),'description':x.get('description')} for x in d.get('search',[])]
 
-          # Search for any dedicated Wikiversity-related properties.
           prop_search={}
           for term in ['Wikiversity','learning resource','educational resource']:
               d=get(WD, {'action':'wbsearchentities','search':term,'language':'en','uselang':'en','type':'property','limit':20})
@@ -97,21 +96,22 @@ jobs:
                   vals.append(v)
               sdc[p]=vals
 
+          # Incoming authorship and unresolved author-name strings.
+          linked_query='''SELECT ?work ?workLabel WHERE { ?work wdt:P50 wd:Q140287622 . SERVICE wikibase:label { bd:serviceParam wikibase:language "en,fa". } } LIMIT 100'''
+          unresolved_query='''SELECT ?work ?name ?workLabel WHERE { ?work wdt:P2093 ?name . FILTER(CONTAINS(LCASE(STR(?name)), "ghezelbash")) SERVICE wikibase:label { bd:serviceParam wikibase:language "en,fa". } } LIMIT 100'''
+          incoming={}
+          for key,q in [('p50_linked',linked_query),('p2093_ghezelbash',unresolved_query)]:
+              r=s.get(QS,params={'query':q,'format':'json'},timeout=90); r.raise_for_status(); d=r.json()
+              incoming[key]=[{k:v.get('value') for k,v in row.items()} for row in d.get('results',{}).get('bindings',[])]
+
           out=OrderedDict([
-              ('qid','Q140287622'),
-              ('lastrevid',item.get('lastrevid')),
-              ('modified',item.get('modified')),
-              ('label_en',item.get('labels',{}).get('en',{}).get('value')),
-              ('label_fa',item.get('labels',{}).get('fa',{}).get('value')),
-              ('description_en',item.get('descriptions',{}).get('en',{}).get('value')),
-              ('description_fa',item.get('descriptions',{}).get('fa',{}).get('value')),
-              ('aliases_en',[x['value'] for x in item.get('aliases',{}).get('en',[])]),
-              ('aliases_fa',[x['value'] for x in item.get('aliases',{}).get('fa',[])]),
+              ('qid','Q140287622'),('lastrevid',item.get('lastrevid')),('modified',item.get('modified')),
+              ('label_en',item.get('labels',{}).get('en',{}).get('value')),('label_fa',item.get('labels',{}).get('fa',{}).get('value')),
+              ('description_en',item.get('descriptions',{}).get('en',{}).get('value')),('description_fa',item.get('descriptions',{}).get('fa',{}).get('value')),
+              ('aliases_en',[x['value'] for x in item.get('aliases',{}).get('en',[])]),('aliases_fa',[x['value'] for x in item.get('aliases',{}).get('fa',[])]),
               ('sitelinks',{k:v.get('title') for k,v in item.get('sitelinks',{}).items()}),
-              ('candidate_property_presence',{p:(p in claims) for p in candidate_props}),
-              ('all_claims',rows),
-              ('searches',searches),
-              ('wikiversity_property_search',prop_search),
+              ('candidate_property_presence',{p:(p in claims) for p in candidate_props}),('all_claims',rows),
+              ('searches',searches),('wikiversity_property_search',prop_search),('incoming_authorship',incoming),
               ('commons_video',{'title':file_title,'pageid':fileq.get('pageid'),'mediainfo':mid,'sdc':sdc}),
           ])
           print(json.dumps(out,ensure_ascii=False,indent=2,default=str))
