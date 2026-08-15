@@ -4,8 +4,8 @@
   "candidate": "41b779fae27f1eab4a9cb63fee17d2e6fec0075c",
   "versionDoi": "10.5281/zenodo.21930954",
   "recordId": "21930954",
-  "requestedAt": "2026-08-15T20:32:30Z",
-  "attempt": 4,
-  "recovery": "native-git-tagged-baseline-pulse",
-  "reason": "Cloudflare Git integration acknowledged a verified v1.2.1 baseline push from annotated tag v1.2.1, then production/deploy was restored to immutable Candidate C. Resume from ZENODO_PUBLISHED and reconcile the actual production deployment inventory without mutating Candidate C or DOI."
+  "requestedAt": "2026-08-15T20:36:00Z",
+  "attempt": 5,
+  "recovery": "exact-c-production-edge-convergence",
+  "reason": "Exact Candidate C production deployment 275b9690-f08b-4c4c-bb5f-07926b4175b9 is already successful. Resume with canonical Cloudflare zone/host bound, purge the dedicated zone, verify ordinary/cache-busted production bytes, then continue HF, Git tag, GitHub Release and convergence."
 }
