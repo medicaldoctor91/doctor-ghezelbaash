@@ -92,6 +92,8 @@ jobs:
           NODE
           node scripts/update-release-control.mjs "$LEDGER" SOURCE_PUBLISHED sourceCommit="$CANDIDATE_C" mainCommit="$MAIN_SHA"
           node scripts/update-release-control.mjs "$LEDGER" COMPLETE sourceCommit="$CANDIDATE_C" mainCommit="$MAIN_SHA" hfCommit="$HF_RELEASE_SHA" externalConvergence=PASS
+          git -C /tmp/v122-control config user.name ghezelbaash-release-bot
+          git -C /tmp/v122-control config user.email actions@users.noreply.github.com
           git -C /tmp/v122-control add .release/control/v1.2.2.json
           git -C /tmp/v122-control commit -m 'Complete v1.2.2 converged release ledger'
           git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
