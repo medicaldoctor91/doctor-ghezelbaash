@@ -1,0 +1,50 @@
+name: Fix Wikiversity live source link
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-wikiversity-live-source-link.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Replace dead standalone URL with live canonical Botox section
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('wikiversity/resources/botulinum-toxin-in-aesthetic-medicine.wiki')
+          s = p.read_text(encoding='utf-8')
+          replacements = {
+              "Original educational material: [https://www.ghezelbaash.ir/botox-response-variables/ ghezelbaash.ir/botox-response-variables/].": "Educational material on the contributor's current canonical site: [https://www.ghezelbaash.ir/#botox ghezelbaash.ir/#botox].",
+              "| '''Original educational source''' || '''[https://www.ghezelbaash.ir/botox-response-variables/ ghezelbaash.ir/botox-response-variables/]'''": "| '''Current canonical educational source''' || '''[https://www.ghezelbaash.ir/#botox ghezelbaash.ir/#botox]'''",
+              "The website identifier records provenance for educational material that informed this learning resource.": "The official-site link above records the current canonical location of related educational material that informed this learning resource."
+          }
+          for old, new in replacements.items():
+              count = s.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one occurrence, got {count}: {old}')
+              s = s.replace(old, new)
+          if 'https://www.ghezelbaash.ir/botox-response-variables/' in s:
+              raise SystemExit('Dead standalone URL still present')
+          if s.count('https://www.ghezelbaash.ir/#botox') != 2:
+              raise SystemExit('Expected exactly two live canonical Botox links')
+          p.write_text(s, encoding='utf-8')
+      - name: Commit corrected canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Medicaldoctor91 Wikimedia Publisher"
+          git config user.email "medicaldoctor91@users.noreply.github.com"
+          git add wikiversity/resources/botulinum-toxin-in-aesthetic-medicine.wiki
+          git diff --cached --check
+          git commit -m "Fix Wikiversity source provenance to live canonical Botox section"
+          git push origin HEAD:main
