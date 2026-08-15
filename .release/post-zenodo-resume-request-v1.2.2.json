@@ -4,8 +4,8 @@
   "candidate": "41b779fae27f1eab4a9cb63fee17d2e6fec0075c",
   "versionDoi": "10.5281/zenodo.21930954",
   "recordId": "21930954",
-  "requestedAt": "2026-08-15T20:36:00Z",
-  "attempt": 5,
-  "recovery": "exact-c-production-edge-convergence",
-  "reason": "Exact Candidate C production deployment 275b9690-f08b-4c4c-bb5f-07926b4175b9 is already successful. Resume with canonical Cloudflare zone/host bound, purge the dedicated zone, verify ordinary/cache-busted production bytes, then continue HF, Git tag, GitHub Release and convergence."
+  "requestedAt": "2026-08-15T20:51:30Z",
+  "attempt": 6,
+  "recovery": "production-contract-proven-continue-external-convergence",
+  "reason": "Exact Candidate C Cloudflare production deployment, dedicated-zone purge, ordinary/cache-busted byte equality, redirects, subdomains and the exact real-404 CSP/header contract are all independently proven. Advance the official forward-only ledger to PRODUCTION_PUBLISHED and continue Hugging Face, Git tag, GitHub Release, cooling verification and non-destructive main convergence."
 }
