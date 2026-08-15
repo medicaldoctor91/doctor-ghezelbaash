@@ -2,18 +2,97 @@ name: Verify canonical Cloudflare Git production
 
 on:
   push:
-    branches: [production/deploy]
+    branches: [production/deploy, release/v1.2.2-candidate]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: doctor-ghezelbaash-cloudflare-production-verifier
-  cancel-in-progress: true
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
 
 jobs:
+  converge-candidate-sources:
+    if: github.ref == 'refs/heads/release/v1.2.2-candidate'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+      - name: Remove final parallel-writer leftovers and stale Cloudflare fixture
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          fixture_path = Path('scripts/test-cloudflare-subdomain-migration.py')
+          fixture = fixture_path.read_text()
+          old_branch = '                    "production_branch": "main",'
+          new_branch = '                    "production_branch": "production/deploy",'
+          if old_branch in fixture:
+              if fixture.count(old_branch) != 1:
+                  raise SystemExit('unexpected count for stale production_branch fixture')
+              fixture = fixture.replace(old_branch, new_branch)
+          old_preview = '                            "preview_deployment_setting": "none",'
+          new_preview = '''                            "preview_deployment_setting": "custom",
+                            "preview_branch_includes": ["staging/deploy"],
+                            "preview_branch_excludes": [],'''
+          if old_preview in fixture:
+              if fixture.count(old_preview) != 1:
+                  raise SystemExit('unexpected count for stale preview fixture')
+              fixture = fixture.replace(old_preview, new_preview)
+          if '"production_branch": "main"' in fixture or '"preview_deployment_setting": "none"' in fixture:
+              raise SystemExit('stale Cloudflare Pages contract remains in fixture')
+          fixture_path.write_text(fixture)
+
+          template_path = Path('src/data/templates/llms.template.txt')
+          template = template_path.read_text()
+          if '/query-matrix.jsonl' not in template:
+              marker = '- [Artifact integrity manifest](https://www.ghezelbaash.ir/artifact-manifest.json):'
+              at = template.find(marker)
+              if at < 0:
+                  raise SystemExit('llms canonical integrity marker missing')
+              insertion = (
+                  '- [Query Matrix 2.0](https://www.ghezelbaash.ir/query-matrix.jsonl): Multilingual intent/service retrieval projection spanning Persian, English, Arabic and Central Kurdish with local, national and unspecified scopes, canonical answer IDs and stable evidence references.\n'
+                  '- [Current clinic reputation observation](https://www.ghezelbaash.ir/live-observations.jsonld): Mutable Google Places observation for the supporting clinic, separated from the immutable release snapshot.\n'
+              )
+              template = template[:at] + insertion + template[at:]
+          template_path.write_text(template)
+
+          generator_path = Path('scripts/generate-retrieval-projections.mjs')
+          generator = generator_path.read_text()
+          start_marker = '// llms.txt discovery is retained until its canonical template is migrated in the same\n'
+          end_marker = "await write('src/data/projections/llms.txt',llms);\n"
+          if start_marker in generator:
+              start = generator.index(start_marker)
+              end = generator.index(end_marker, start) + len(end_marker)
+              generator = generator[:start] + generator[end:]
+          forbidden = [
+              "const llmsPath=path.join(root,'src/data/projections/llms.txt')",
+              "await write('src/data/projections/llms.txt',llms)",
+              'generate-v122-overlays.mjs',
+          ]
+          for token in forbidden:
+              if token in generator:
+                  raise SystemExit(f'parallel retrieval writer leftover: {token}')
+          generator_path.write_text(generator)
+          PY
+
+          if git diff --quiet -- scripts/test-cloudflare-subdomain-migration.py src/data/templates/llms.template.txt scripts/generate-retrieval-projections.mjs; then
+            echo 'Canonical source ownership already converged.'
+            exit 0
+          fi
+          git config user.name 'Dr. Saeed Ghezelbash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git add scripts/test-cloudflare-subdomain-migration.py src/data/templates/llms.template.txt scripts/generate-retrieval-projections.mjs
+          git commit -m 'Converge canonical retrieval discovery and Cloudflare fixtures'
+          git push origin HEAD:release/v1.2.2-candidate
+
   verify:
+    if: github.ref == 'refs/heads/production/deploy'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     env:
