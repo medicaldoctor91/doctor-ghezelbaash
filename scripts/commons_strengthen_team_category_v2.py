@@ -7,6 +7,7 @@ from typing import Any
 import commons_strengthen_team_category as publisher
 
 _QID = re.compile(r"^Q[1-9][0-9]*$")
+_original_mediainfo = publisher.mediainfo
 
 
 def extract_qids(value: Any) -> set[str]:
@@ -25,11 +26,18 @@ def extract_qids(value: Any) -> set[str]:
             out.add(direct)
         numeric = value.get("numeric-id")
         entity_type = value.get("entity-type")
-        if isinstance(numeric, int) and (entity_type in {None, "item"}):
+        if isinstance(numeric, int) and entity_type in {None, "item"}:
             out.add(f"Q{numeric}")
         for nested in value.values():
             out |= extract_qids(nested)
     return out
+
+
+def normalize_mediainfo(session):
+    entity = _original_mediainfo(session)
+    if "claims" not in entity and isinstance(entity.get("statements"), dict):
+        entity["claims"] = entity["statements"]
+    return entity
 
 
 def robust_qid_from_snak(snak: dict[str, Any]) -> str | None:
@@ -38,12 +46,16 @@ def robust_qid_from_snak(snak: dict[str, Any]) -> str | None:
 
 
 def robust_entity_qids(entity: dict[str, Any], prop: str) -> set[str]:
+    statements = entity.get("claims")
+    if not isinstance(statements, dict):
+        statements = entity.get("statements", {})
     out: set[str] = set()
-    for claim in entity.get("claims", {}).get(prop, []):
+    for claim in statements.get(prop, []):
         out |= extract_qids(claim.get("mainsnak", {}).get("datavalue", {}).get("value"))
     return out
 
 
+publisher.mediainfo = normalize_mediainfo
 publisher.qid_from_snak = robust_qid_from_snak
 publisher.entity_qids = robust_entity_qids
 
