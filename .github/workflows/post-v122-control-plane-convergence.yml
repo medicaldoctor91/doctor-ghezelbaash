@@ -1,4 +1,4 @@
-name: Post-v1.2.2 canonical control-plane convergence
+name: Post-v1.2.2 Cloudflare contract convergence
 
 on:
   push:
@@ -16,36 +16,22 @@ concurrency:
 jobs:
   converge:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: main
           fetch-depth: 0
           persist-credentials: true
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
-        with:
-          node-version: 24.18.0
-          cache: npm
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Patch only canonical post-release control-plane drift
+      - name: Patch canonical Cloudflare Pages contract only
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-
-          workflow = Path('.github/workflows/ceiling-release.yml')
-          s = workflow.read_text()
-          old = "  RELEASE_DATE: '2026-08-14'"
-          new = "  RELEASE_DATE: '2026-08-15'"
-          if s.count(old) != 1:
-              raise SystemExit(f'Expected exactly one stale RELEASE_DATE, found {s.count(old)}')
-          s = s.replace(old, new, 1)
-          workflow.write_text(s)
-
           edge = Path('scripts/configure-cloudflare-edge.py')
           s = edge.read_text()
           old_summary = '''        "previewDeploymentSetting": source_config.get(\n            "preview_deployment_setting"\n        ),\n        "buildCommand": build.get("build_command"),'''
@@ -53,7 +39,6 @@ jobs:
           if s.count(old_summary) != 1:
               raise SystemExit(f'Expected one Pages summary insertion point, found {s.count(old_summary)}')
           s = s.replace(old_summary, new_summary, 1)
-
           old_expected = '''        "productionBranch": "main",\n        "sourceType": "github",\n        "repository": "medicaldoctor91/doctor-ghezelbaash",\n        "deploymentsEnabled": True,\n        "productionDeploymentsEnabled": True,\n        "previewDeploymentSetting": "none",'''
           new_expected = '''        "productionBranch": "production/deploy",\n        "sourceType": "github",\n        "repository": "medicaldoctor91/doctor-ghezelbaash",\n        "deploymentsEnabled": True,\n        "productionDeploymentsEnabled": True,\n        "previewDeploymentSetting": "custom",\n        "previewBranchIncludes": ["staging/deploy"],\n        "previewBranchExcludes": [],'''
           if s.count(old_expected) != 1:
@@ -62,38 +47,23 @@ jobs:
           edge.write_text(s)
           PY
           python -m py_compile scripts/configure-cloudflare-edge.py
-          grep -Fq "RELEASE_DATE: '2026-08-15'" .github/workflows/ceiling-release.yml
-          ! grep -Fq "RELEASE_DATE: '2026-08-14'" .github/workflows/ceiling-release.yml
           grep -Fq '"productionBranch": "production/deploy"' scripts/configure-cloudflare-edge.py
           grep -Fq '"previewDeploymentSetting": "custom"' scripts/configure-cloudflare-edge.py
           grep -Fq '"previewBranchIncludes": ["staging/deploy"]' scripts/configure-cloudflare-edge.py
           grep -Fq '"previewBranchExcludes": []' scripts/configure-cloudflare-edge.py
-      - name: Validate merged v1.2.2 source without changing external state
+      - name: Validate release truth and commit ordinary source file
         shell: bash
         run: |
           set -euo pipefail
-          npm ci --ignore-scripts
           node - <<'NODE'
           const r=require('./src/data/release.json');
           if(r.release!=='1.2.2'||r.dateModified!=='2026-08-15') throw Error('main release truth drift');
-          if(r.dataset?.name!=='Dr. Saeed Ghezelbash Public Knowledge Graph') throw Error('Dataset identity drift');
           if(r.dataset?.zenodo?.versionDoi!=='10.5281/zenodo.21930954'||String(r.dataset?.zenodo?.recordId)!=='21930954'||r.dataset?.zenodo?.conceptDoi!=='10.5281/zenodo.18765168') throw Error('DOI topology drift');
           console.log('MAIN_V122_RELEASE_TRUTH_PASS');
           NODE
-          python -m py_compile scripts/wikiversity_publish.py
-          test -f wikiversity/resources/botulinum-toxin-in-aesthetic-medicine.wiki
-          test ! -f .github/workflows/v122-atomic-patch-materializer.yml
-          test ! -f .github/workflows/release-post-zenodo-convergence.yml
-          test ! -f .github/workflows/v122-github-release-body-repair.yml
-          test ! -f .release/post-zenodo-resume-request-v1.2.2.json
-      - name: Commit canonical fixes and self-remove this one-shot worker
-        shell: bash
-        run: |
-          set -euo pipefail
           git config user.name ghezelbaash-release-bot
           git config user.email actions@users.noreply.github.com
-          git rm .github/workflows/post-v122-control-plane-convergence.yml
-          git add .github/workflows/ceiling-release.yml scripts/configure-cloudflare-edge.py
+          git add scripts/configure-cloudflare-edge.py
           git diff --cached --check
-          git commit -m 'Finalize v1.2.2 canonical control-plane after convergence'
+          git commit -m 'Align canonical Cloudflare contract with dedicated deploy branches'
           git push origin HEAD:main
