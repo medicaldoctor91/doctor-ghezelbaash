@@ -1,0 +1,308 @@
+name: Resumable v1.2.2 post-Zenodo convergence
+
+on:
+  push:
+    branches: [main]
+    paths: [.release/post-zenodo-resume-request-v1.2.2.json]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+env:
+  TARGET_VERSION: '1.2.2'
+  CANDIDATE_BRANCH: release/v1.2.2-candidate
+  CONTROL_BRANCH: release-control/v1.2.2
+  CF_PROJECT: doctor-ghezelbaash
+  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+  CF_PRODUCTION_BRANCH: production/deploy
+  CF_PREVIEW_BRANCH: staging/deploy
+  HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+
+jobs:
+  converge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - name: Checkout immutable v1.2.2 Candidate branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: release/v1.2.2-candidate
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - run: npm ci --ignore-scripts
+
+      - name: Load forward-only checkpoint and activate post-Zenodo mutation firewall
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git fetch origin "$CONTROL_BRANCH" "$CANDIDATE_BRANCH" production/deploy staging/deploy main
+          rm -rf /tmp/v122-control
+          git worktree add --detach /tmp/v122-control "origin/$CONTROL_BRANCH"
+          LEDGER=/tmp/v122-control/.release/control/v1.2.2.json
+          test -f "$LEDGER"
+          SOURCE_COMMIT=$(LEDGER="$LEDGER" node - <<'NODE'
+          const fs=require('fs');
+          const ledger=JSON.parse(fs.readFileSync(process.env.LEDGER));
+          const release=require('./src/data/release.json');
+          const p=ledger.proofs?.ZENODO_PUBLISHED;
+          if(!p) throw Error('ZENODO_PUBLISHED proof missing: refusing post-publication mutation');
+          if(!/^[0-9a-f]{40}$/.test(String(p.sourceCommit||''))) throw Error('Invalid immutable Candidate C in ledger');
+          if(ledger.highestStage!=='ZENODO_PUBLISHED' && !['PRODUCTION_PUBLISHED','HF_PUBLISHED','GITHUB_RELEASE_PUBLISHED','SOURCE_PUBLISHED','VERIFIED','COMPLETE'].includes(ledger.highestStage)) throw Error(`Unexpected forward checkpoint ${ledger.highestStage}`);
+          if(release.release!=='1.2.2'||release.dateModified!=='2026-08-15') throw Error('Immutable release identity/date drift');
+          if(String(release.dataset?.zenodo?.recordId)!=='21930954'||release.dataset?.zenodo?.versionDoi!=='10.5281/zenodo.21930954'||release.dataset?.zenodo?.conceptDoi!=='10.5281/zenodo.18765168') throw Error('Immutable DOI topology drift');
+          if(String(ledger.recordId)!=='21930954'||ledger.versionDoi!=='10.5281/zenodo.21930954'||ledger.conceptDoi!=='10.5281/zenodo.18765168') throw Error('Ledger DOI topology drift');
+          process.stdout.write(p.sourceCommit);
+          NODE
+          )
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/$CANDIDATE_BRANCH)" = "$SOURCE_COMMIT"
+          test "$(git rev-parse origin/production/deploy)" = "$SOURCE_COMMIT"
+          echo "LEDGER=$LEDGER" >> "$GITHUB_ENV"
+          echo "SOURCE_COMMIT=$SOURCE_COMMIT" >> "$GITHUB_ENV"
+          echo "CANDIDATE_SHA=$SOURCE_COMMIT" >> "$GITHUB_ENV"
+          echo "POST_ZENODO_MUTATION_FIREWALL_PASS candidate=$SOURCE_COMMIT doi=10.5281/zenodo.21930954"
+
+      - name: Reproduce exact Candidate C runtime bytes and proof inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$SOURCE_COMMIT")"
+          export CF_PAGES_COMMIT_SHA="$SOURCE_COMMIT"
+          export SOURCE_COMMIT="$SOURCE_COMMIT"
+          export ASTRO_TELEMETRY_DISABLED=1
+          npm run release
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          mkdir -p .release/runtime
+          python - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('dist')
+          out={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(root.rglob('*')) if p.is_file()}
+          if not out or 'index.html' not in out or 'artifact-manifest.json' not in out:
+              raise SystemExit('Exact-C DIST inventory incomplete')
+          pathlib.Path('.release/runtime/dist-sha256.json').write_text(json.dumps(out,sort_keys=True,separators=(',',':'))+'\n')
+          PY
+          SOURCE_COMMIT="$SOURCE_COMMIT" node scripts/write-release-attestation.mjs
+          test "$(node -p "require('./.release/runtime/release-attestation.json').sourceCommit")" = "$SOURCE_COMMIT"
+          echo "EXACT_C_RUNTIME_REPRODUCED files=$(node -p "Object.keys(require('./.release/runtime/dist-sha256.json')).length")"
+
+      - name: Re-verify immutable published Zenodo snapshot without mutation
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ZENODO_TOKEN"
+          echo "::add-mask::$ZENODO_TOKEN"
+          SOURCE_COMMIT="$SOURCE_COMMIT" python scripts/zenodo_release.py stage --version "$TARGET_VERSION"
+          node - <<'NODE'
+          const s=require('./.release/runtime/zenodo-stage.json');
+          if(s.release!=='1.2.2'||String(s.recordId)!=='21930954'||s.versionDoi!=='10.5281/zenodo.21930954'||s.conceptDoi!=='10.5281/zenodo.18765168'||s.sourceCommit!==process.env.SOURCE_COMMIT||s.alreadyPublished!==true) throw Error('Published Zenodo exact-C readback failed');
+          console.log('ZENODO_IMMUTABLE_PUBLIC_READBACK_PASS',s.recordId,s.versionDoi,s.files);
+          NODE
+
+      - name: Reconcile exact Candidate C native Cloudflare production and serving bytes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_COMMIT: ${{ env.SOURCE_COMMIT }}
+          CF_EXPECTED_ENVIRONMENT: production
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CLOUDFLARE_API_TOKEN"
+          echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$SOURCE_COMMIT")"
+          test "$(git ls-remote origin refs/heads/production/deploy | awk '{print $1}')" = "$SOURCE_COMMIT"
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+          python scripts/configure-cloudflare-edge.py --purge-cache-only
+          if ! VERIFY_BASE_URL='https://www.ghezelbaash.ir/' node scripts/verify-cloudflare-pages-deployment.mjs; then
+            echo 'PRODUCTION_EDGE_STALE_AFTER_EXACT_DEPLOYMENT_PROOF retrying exact deployment without changing ref or Candidate'
+            node - <<'NODE'
+          const token=process.env.CLOUDFLARE_API_TOKEN,account=process.env.CLOUDFLARE_ACCOUNT_ID,project=process.env.CF_PROJECT,commit=process.env.SOURCE_COMMIT;
+          const root=`https://api.cloudflare.com/client/v4/accounts/${account}/pages/projects/${project}`;
+          const req=async(path,{method='GET',body}={})=>{const r=await fetch(root+path,{method,headers:{authorization:`Bearer ${token}`,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(45000)});const p=await r.json();if(!r.ok||p.success!==true)throw Error(`Cloudflare ${method} ${path} failed ${r.status}: ${JSON.stringify(p.errors||[])}`);return p.result};
+          const status=d=>d?.latest_stage?.status??d?.stages?.at(-1)?.status??'unknown';
+          const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+          const list=await req('/deployments?per_page=50');
+          const candidates=list.filter(d=>d?.environment==='production'&&d?.deployment_trigger?.metadata?.commit_hash===commit).sort((a,b)=>String(b.created_on).localeCompare(String(a.created_on)));
+          if(!candidates.length) throw Error(`No production deployment exists for immutable Candidate ${commit}`);
+          const prior=candidates[0];
+          console.log('CF_EXACT_DEPLOYMENT_RECONCILE_RETRY',prior.id,status(prior),commit);
+          let d=await req(`/deployments/${encodeURIComponent(prior.id)}/retry`,{method:'POST',body:{}});
+          for(let attempt=1;attempt<=120;attempt++){
+            d=await req(`/deployments/${encodeURIComponent(d.id)}`);
+            const st=status(d); console.log(`CF_RETRY_STATUS id=${d.id} attempt=${attempt} status=${st}`);
+            if(st==='success') break;
+            if(st==='failure'||st==='canceled') throw Error(`Exact-C Cloudflare retry ${d.id} ${st}`);
+            if(attempt===120) throw Error('Exact-C Cloudflare retry timeout');
+            await sleep(10000);
+          }
+          if(d.environment!=='production'||d.deployment_trigger?.metadata?.commit_hash!==commit||status(d)!=='success') throw Error('Exact-C retry identity drift');
+          console.log('CF_EXACT_DEPLOYMENT_RETRY_PASS',d.id,commit,d.url);
+          NODE
+            python scripts/configure-cloudflare-edge.py --purge-cache-only
+            VERIFY_BASE_URL='https://www.ghezelbaash.ir/' node scripts/verify-cloudflare-pages-deployment.mjs
+          fi
+          npm run verify:production
+          node scripts/update-release-control.mjs "$LEDGER" PRODUCTION_PUBLISHED sourceCommit="$SOURCE_COMMIT"
+          git -C /tmp/v122-control add .release/control/v1.2.2.json
+          git -C /tmp/v122-control commit -m 'Prove exact-C v1.2.2 production convergence' || true
+          git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          echo "PRODUCTION_EXACT_C_CONVERGENCE_PASS $SOURCE_COMMIT"
+
+      - name: Prepare and publish Hugging Face Core, Query Matrix and immutable v1.2.2 tag
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$HF_TOKEN"
+          echo "::add-mask::$HF_TOKEN"
+          rm -rf .release/huggingface
+          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface
+          node scripts/prepare-huggingface-distribution.mjs dist .release/huggingface
+          test "$(wc -l < .release/huggingface/enrichment/instruction_examples_fa_market_positioning.jsonl)" -ge 40
+          grep -q 'config_name: query_matrix' .release/huggingface/README.md
+          grep -q 'config_name: live_observations' .release/huggingface/README.md
+          git -C .release/huggingface config user.name ghezelbaash-release-bot
+          git -C .release/huggingface config user.email actions@users.noreply.github.com
+          git -C .release/huggingface add -A
+          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m 'Publish Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2'
+          HF_SHA=$(git -C .release/huggingface rev-parse HEAD)
+          git -C .release/huggingface push origin HEAD:main
+          HF_TAG_OBJ=$(git -C .release/huggingface ls-remote origin refs/tags/v1.2.2 | awk '{print $1}')
+          if [ -z "$HF_TAG_OBJ" ]; then
+            git -C .release/huggingface tag -a v1.2.2 -m 'Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2' "$HF_SHA"
+            git -C .release/huggingface push origin refs/tags/v1.2.2
+          else
+            HF_TAG_PEELED=$(git -C .release/huggingface ls-remote origin 'refs/tags/v1.2.2^{}' | awk '{print $1}')
+            test "${HF_TAG_PEELED:-$HF_TAG_OBJ}" = "$HF_SHA"
+          fi
+          test "$(git -C .release/huggingface ls-remote origin refs/heads/main | awk '{print $1}')" = "$HF_SHA"
+          echo "HF_RELEASE_SHA=$HF_SHA" >> "$GITHUB_ENV"
+          node scripts/verify-current-serving.mjs
+          node scripts/update-release-control.mjs "$LEDGER" HF_PUBLISHED sourceCommit="$SOURCE_COMMIT" hfCommit="$HF_SHA"
+          git -C /tmp/v122-control add .release/control/v1.2.2.json
+          git -C /tmp/v122-control commit -m 'Publish exact v1.2.2 Hugging Face distribution' || true
+          git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          echo "HF_V122_CORE_TAG_LIVE_PASS $HF_SHA"
+
+      - name: Publish immutable Git tag v1.2.2 exactly at Candidate C
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --tags origin
+          if git rev-parse -q --verify refs/tags/v1.2.2 >/dev/null; then
+            test "$(git rev-list -n1 v1.2.2)" = "$SOURCE_COMMIT"
+          else
+            git tag -a v1.2.2 "$SOURCE_COMMIT" -m 'Dr. Saeed Ghezelbash entity stack v1.2.2 — exact DOI-bound release'
+            git push origin refs/tags/v1.2.2
+          fi
+          test "$(git ls-remote origin refs/tags/v1.2.2^{} | awk '{print $1}')" = "$SOURCE_COMMIT"
+          echo "GIT_TAG_V122_EXACT_C_PASS $SOURCE_COMMIT"
+
+      - name: Publish or verify GitHub Release against exact Candidate C
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          REC=$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")
+          DOI=$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > /tmp/releases.json
+          RID=$(jq -r '[.[] | select(.tag_name=="v1.2.2")][0].id // empty' /tmp/releases.json)
+          if [ -z "$RID" ]; then
+            jq -n --arg target "$SOURCE_COMMIT" '{tag_name:"v1.2.2",target_commitish:$target,name:"Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2",body:"Exact DOI-bound Candidate C release.",draft:true,prerelease:false,generate_release_notes:false}' >/tmp/release-create.json
+            gh api --method POST "repos/$GITHUB_REPOSITORY/releases" --input /tmp/release-create.json >/tmp/release-before.json
+            RID=$(jq -r '.id' /tmp/release-before.json)
+          else
+            gh api "repos/$GITHUB_REPOSITORY/releases/$RID" >/tmp/release-before.json
+          fi
+          test "$(jq -r '.tag_name' /tmp/release-before.json)" = v1.2.2
+          test "$(git rev-list -n1 v1.2.2)" = "$SOURCE_COMMIT"
+          cat > /tmp/release-notes.md <<EOF
+          # Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2
+
+          - Exact Candidate C: `$SOURCE_COMMIT`
+          - Canonical Dataset IRI: `https://www.ghezelbaash.ir/graph.jsonld#dataset`
+          - Canonical site: `https://www.ghezelbaash.ir/`
+          - Person: `Q140287622`
+          - Clinic: `Q140288589`
+          - Dataset: `Q140304972`
+          - Zenodo Concept DOI: `10.5281/zenodo.18765168`
+          - Zenodo Version DOI: `$DOI`
+          - Zenodo record: `$REC`
+          - Hugging Face release commit/tag: `$HF_RELEASE_SHA / v1.2.2`
+          - Release attestation asset: `release-attestation-v1.2.2.json`
+          - SHA-256 inventory asset: `dist-sha256-v1.2.2.json`
+          EOF
+          cp .release/runtime/release-attestation.json /tmp/release-attestation-v1.2.2.json
+          cp .release/runtime/dist-sha256.json /tmp/dist-sha256-v1.2.2.json
+          gh release upload v1.2.2 /tmp/release-attestation-v1.2.2.json /tmp/dist-sha256-v1.2.2.json --clobber
+          if [ "$(jq -r '.draft' /tmp/release-before.json)" = true ]; then
+            jq -n --rawfile body /tmp/release-notes.md '{name:"Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2",body:$body,draft:false,prerelease:false,make_latest:"true"}' >/tmp/release-publish.json
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RID" --input /tmp/release-publish.json >/tmp/release-after.json
+          else
+            cp /tmp/release-before.json /tmp/release-after.json
+          fi
+          test "$(jq -r '.draft' /tmp/release-after.json)" = false
+          test "$(jq -r '.tag_name' /tmp/release-after.json)" = v1.2.2
+          node scripts/update-release-control.mjs "$LEDGER" GITHUB_RELEASE_PUBLISHED sourceCommit="$SOURCE_COMMIT" hfCommit="$HF_RELEASE_SHA" githubReleaseId="$RID"
+          git -C /tmp/v122-control add .release/control/v1.2.2.json
+          git -C /tmp/v122-control commit -m 'Publish GitHub v1.2.2 Release against exact Candidate C' || true
+          git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          echo "GITHUB_RELEASE_V122_PUBLIC_PASS id=$RID"
+
+      - name: T+0 T+2 T+5 serving and immutable snapshot verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$SOURCE_COMMIT")"
+          node scripts/verify-current-serving.mjs
+          sleep 120
+          node scripts/verify-current-serving.mjs
+          sleep 180
+          node scripts/verify-current-serving.mjs
+          node scripts/verify-release-snapshot.mjs
+          node scripts/update-release-control.mjs "$LEDGER" VERIFIED sourceCommit="$SOURCE_COMMIT" hfCommit="$HF_RELEASE_SHA"
+          git -C /tmp/v122-control add .release/control/v1.2.2.json
+          git -C /tmp/v122-control commit -m 'Verify v1.2.2 serving and frozen snapshot convergence' || true
+          git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          echo 'EXTERNAL_V122_CONVERGENCE_VERIFIED'
+
+      - name: Integrate Candidate C into current main without discarding post-C work
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main "$CANDIDATE_BRANCH"
+          git checkout -B v122-main-convergence origin/main
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git merge --no-ff --no-edit "$SOURCE_COMMIT"
+          git diff --check
+          git push origin HEAD:main
+          MERGED_MAIN=$(git rev-parse HEAD)
+          git merge-base --is-ancestor "$SOURCE_COMMIT" "$MERGED_MAIN"
+          node scripts/update-release-control.mjs "$LEDGER" SOURCE_PUBLISHED sourceCommit="$SOURCE_COMMIT" mainCommit="$MERGED_MAIN"
+          git -C /tmp/v122-control add .release/control/v1.2.2.json
+          git -C /tmp/v122-control commit -m 'Converge main with immutable v1.2.2 Candidate C' || true
+          git -C /tmp/v122-control push origin HEAD:$CONTROL_BRANCH
+          echo "MAIN_NON_DESTRUCTIVE_CONVERGENCE_PASS $MERGED_MAIN"
