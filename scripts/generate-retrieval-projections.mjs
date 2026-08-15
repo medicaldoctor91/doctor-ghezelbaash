@@ -229,13 +229,6 @@ if(uncoveredServices.length)throw new Error(`Query Matrix publishable service co
 await write('src/data/projections/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
 await write('public/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
 
-// llms.txt discovery is retained until its canonical template is migrated in the same
-// no-regression series. Unlike the retired overlay, this stage does not rewrite answers
-// or llms-full content owned by the canonical projection generator.
-const llmsPath=path.join(root,'src/data/projections/llms.txt');
-let llms=await readFile(llmsPath,'utf8');
-if(!llms.includes('/query-matrix.jsonl'))llms+=`\n## Retrieval resources\n- Query Matrix 2.0: ${release.canonicalUrl}query-matrix.jsonl\n- Current clinic reputation observation: ${release.canonicalUrl}live-observations.jsonld\n`;
-await write('src/data/projections/llms.txt',llms);
 
 const reviewedAt=release.medicalReviewedAt||release.dateModified;
 const matrix={

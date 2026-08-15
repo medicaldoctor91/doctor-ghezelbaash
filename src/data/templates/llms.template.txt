@@ -210,6 +210,8 @@ PRP تشخیص نیست و مزوتراپی هم نسخه آماده ریزش م
 - [VoID dataset description](https://www.ghezelbaash.ir/void.ttl): RDF dataset metadata, publisher, primary topic, vocabularies, data dumps and triple count.
 - [W3C DCAT 3 catalog](https://www.ghezelbaash.ir/dcat.ttl): Dataset catalog and distribution metadata for standards-based dataset discovery.
 - [MLCommons Croissant 1.1 metadata](https://www.ghezelbaash.ir/croissant.json): Agent-ready dataset metadata with file sizes, media types and SHA-256 checksums.
+- [Query Matrix 2.0](https://www.ghezelbaash.ir/query-matrix.jsonl): Multilingual intent/service retrieval projection spanning Persian, English, Arabic and Central Kurdish with local, national and unspecified scopes, canonical answer IDs and stable evidence references.
+- [Current clinic reputation observation](https://www.ghezelbaash.ir/live-observations.jsonld): Mutable Google Places observation for the supporting clinic, separated from the immutable release snapshot.
 - [Artifact integrity manifest](https://www.ghezelbaash.ir/artifact-manifest.json): Deployable-file inventory with SHA-256 integrity metadata and production invariants.
 
 The physician is the primary entity, author, creator, publisher and owner. The clinic and structured-data project are supporting assets owned by the physician; neither is the primary entity of this website.
