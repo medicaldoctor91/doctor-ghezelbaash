@@ -1,0 +1,178 @@
+name: Create Wikidata publication items and link author
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wikidata-create-publication-items.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  create:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Create scholarly article items and bidirectional author links
+        shell: python
+        run: |
+          import datetime as dt
+          import json, os, requests, xml.etree.ElementTree as ET
+
+          WD='https://www.wikidata.org/w/api.php'
+          QS='https://query.wikidata.org/sparql'
+          EFETCH='https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'
+          PERSON='Q140287622'
+          SCHOLARLY='Q13442814'
+          ENGLISH='Q1860'
+          AUTHOR_ROLE='Q482980'
+          JOURNALS={'27280013':'Q15817466','34574943':'Q27726790'}
+          PMIDS=['27280013','34574943']
+          UA='Medicaldoctor91PublicationBuilder/1.0 (https://www.ghezelbaash.ir/)'
+          today=dt.datetime.now(dt.timezone.utc).date()
+
+          anon=requests.Session(); anon.headers['User-Agent']=UA
+          def get_json(session,url,params):
+              r=session.get(url,params=params,timeout=90); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+          def post_json(session,data):
+              r=session.post(WD,data={**data,'format':'json','formatversion':2,'maxlag':5},timeout=90); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+          def entity(session,qid):
+              return get_json(session,WD,{'action':'wbgetentities','ids':qid,'props':'claims|labels|descriptions|info','languages':'en','format':'json','formatversion':2})['entities'][qid]
+          def qid_of(snak):
+              v=snak.get('datavalue',{}).get('value')
+              return v.get('id') if isinstance(v,dict) else None
+          def item_value(qid): return json.dumps({'entity-type':'item','numeric-id':int(qid[1:])},separators=(',',':'))
+          def mono_value(text): return json.dumps({'text':text,'language':'en'},ensure_ascii=False,separators=(',',':'))
+          def time_value(date):
+              return json.dumps({'time':f'+{date.isoformat()}T00:00:00Z','timezone':0,'before':0,'after':0,'precision':11,'calendarmodel':'http://www.wikidata.org/entity/Q1985727'},separators=(',',':'))
+          def retrieved_snak():
+              return {'snaktype':'value','property':'P813','datavalue':{'value':{'time':f'+{today.isoformat()}T00:00:00Z','timezone':0,'before':0,'after':0,'precision':11,'calendarmodel':'http://www.wikidata.org/entity/Q1985727'},'type':'time'},'datatype':'time'}
+          def ref_snaks(url):
+              return {'P854':[{'snaktype':'value','property':'P854','datavalue':{'value':url,'type':'string'},'datatype':'url'}],'P813':[retrieved_snak()]}
+          def add_reference(session,csrf,claim_id,url):
+              post_json(session,{'action':'wbsetreference','statement':claim_id,'snaks':json.dumps(ref_snaks(url),separators=(',',':')),'snaks-order':json.dumps(['P854','P813']),'token':csrf,'summary':'Add PubMed verification reference'})
+          def add_ordinal(session,csrf,claim_id,n):
+              post_json(session,{'action':'wbsetqualifier','claim':claim_id,'property':'P1545','snaktype':'value','value':json.dumps(str(n)),'token':csrf,'summary':'Add author order'})
+
+          def pubmed_record(pmid):
+              r=anon.get(EFETCH,params={'db':'pubmed','id':pmid,'retmode':'xml'},timeout=90); r.raise_for_status()
+              root=ET.fromstring(r.content)
+              art=root.find('.//PubmedArticle')
+              title=''.join(art.find('.//ArticleTitle').itertext()).strip()
+              authors=[]
+              for a in art.findall('.//Article/AuthorList/Author'):
+                  collective=a.findtext('CollectiveName')
+                  if collective:
+                      authors.append(collective.strip()); continue
+                  fore=(a.findtext('ForeName') or '').strip(); last=(a.findtext('LastName') or '').strip()
+                  name=(' '.join(x for x in [fore,last] if x)).strip()
+                  if name: authors.append(name)
+              ids={}
+              for x in art.findall('.//PubmedData/ArticleIdList/ArticleId'):
+                  ids[(x.attrib.get('IdType') or '').lower()]=(x.text or '').strip()
+              volume=(art.findtext('.//Article/Journal/JournalIssue/Volume') or '').strip()
+              issue=(art.findtext('.//Article/Journal/JournalIssue/Issue') or '').strip()
+              pages=(art.findtext('.//Article/Pagination/MedlinePgn') or '').strip()
+              ad=art.find('.//Article/ArticleDate')
+              if ad is not None:
+                  y=int(ad.findtext('Year')); m=int(ad.findtext('Month')); d=int(ad.findtext('Day'))
+              else:
+                  pd=art.find('.//Article/Journal/JournalIssue/PubDate')
+                  y=int(pd.findtext('Year'))
+                  months={'Jan':1,'Feb':2,'Mar':3,'Apr':4,'May':5,'Jun':6,'Jul':7,'Aug':8,'Sep':9,'Oct':10,'Nov':11,'Dec':12}
+                  m=months.get((pd.findtext('Month') or '')[:3],1); d=int(pd.findtext('Day') or '1')
+              return {'pmid':pmid,'title':title,'authors':authors,'doi':ids.get('doi','').upper(),'pmcid':ids.get('pmc',''),'volume':volume,'issue':issue,'pages':pages,'date':dt.date(y,m,d)}
+
+          records=[pubmed_record(p) for p in PMIDS]
+          for rec in records:
+              if 'Mohammad Saeed Ghezelbash' not in rec['authors']:
+                  raise RuntimeError({'pmid':rec['pmid'],'error':'target author not present','authors':rec['authors']})
+              if not rec['doi']: raise RuntimeError({'pmid':rec['pmid'],'error':'missing DOI'})
+              q=f'''SELECT ?work WHERE {{ {{ ?work wdt:P698 {json.dumps(rec['pmid'])} }} UNION {{ ?work wdt:P356 {json.dumps(rec['doi'])} }} }}'''
+              rows=get_json(anon,QS,{'query':q,'format':'json'}).get('results',{}).get('bindings',[])
+              if rows: raise RuntimeError({'pmid':rec['pmid'],'error':'existing item found','qids':[x['work']['value'] for x in rows]})
+              sr=get_json(anon,WD,{'action':'wbsearchentities','search':rec['title'],'language':'en','uselang':'en','type':'item','limit':20,'format':'json','formatversion':2})
+              exact=[x['id'] for x in sr.get('search',[]) if (x.get('label') or '').strip().casefold()==rec['title'].casefold()]
+              if exact: raise RuntimeError({'pmid':rec['pmid'],'error':'exact-title candidate exists','qids':exact})
+
+          s=requests.Session(); s.headers['User-Agent']=UA
+          lt=get_json(s,WD,{'action':'query','meta':'tokens','type':'login','format':'json','formatversion':2})['query']['tokens']['logintoken']
+          login=post_json(s,{'action':'login','lgname':os.environ['WIKIMEDIA_USERNAME'],'lgpassword':os.environ['WIKIMEDIA_BOT_PASSWORD'],'lgtoken':lt})
+          if login.get('login',{}).get('result')!='Success': raise RuntimeError(login)
+          csrf=get_json(s,WD,{'action':'query','meta':'tokens','type':'csrf','format':'json','formatversion':2})['query']['tokens']['csrftoken']
+
+          def create_item(rec):
+              desc=f"{rec['date'].year} scholarly article"
+              data={'labels':{'en':{'language':'en','value':rec['title']}},'descriptions':{'en':{'language':'en','value':desc}}}
+              made=post_json(s,{'action':'wbeditentity','new':'item','data':json.dumps(data,ensure_ascii=False,separators=(',',':')),'token':csrf,'summary':'Create PubMed-indexed scholarly article item'})
+              qid=made['entity']['id']
+              pubmed_url=f"https://pubmed.ncbi.nlm.nih.gov/{rec['pmid']}/"
+
+              def claim(prop,value,summary,ref=False):
+                  e=entity(s,qid)
+                  out=post_json(s,{'action':'wbcreateclaim','entity':qid,'property':prop,'snaktype':'value','value':value,'token':csrf,'baserevid':e.get('lastrevid'),'summary':summary})
+                  cid=out['claim']['id']
+                  if ref: add_reference(s,csrf,cid,pubmed_url)
+                  return cid
+
+              claim('P31',item_value(SCHOLARLY),'Set instance of scholarly article')
+              claim('P1433',item_value(JOURNALS[rec['pmid']]),'Set journal from PubMed metadata')
+              claim('P1476',mono_value(rec['title']),'Set article title')
+              claim('P407',item_value(ENGLISH),'Set language of work')
+              claim('P577',time_value(rec['date']),'Set publication date from PubMed',True)
+              claim('P478',json.dumps(rec['volume']),'Set journal volume')
+              if rec['issue']: claim('P433',json.dumps(rec['issue']),'Set journal issue')
+              if rec['pages']: claim('P304',json.dumps(rec['pages']),'Set page or article number')
+              claim('P356',json.dumps(rec['doi']),'Set DOI',True)
+              claim('P698',json.dumps(rec['pmid']),'Set PubMed ID',True)
+              if rec['pmcid']:
+                  claim('P932',json.dumps(rec['pmcid']),'Set PMCID',True)
+                  claim('P953',json.dumps(f"https://pmc.ncbi.nlm.nih.gov/articles/{rec['pmcid']}/"),'Set full-text URL')
+
+              for i,name in enumerate(rec['authors'],1):
+                  if name=='Mohammad Saeed Ghezelbash':
+                      cid=claim('P50',item_value(PERSON),'Resolve author to Saeed Ghezelbash Wikidata item',True)
+                  else:
+                      cid=claim('P2093',json.dumps(name,ensure_ascii=False),'Add author name from PubMed',True)
+                  add_ordinal(s,csrf,cid,i)
+              return qid
+
+          created=[]
+          for rec in records:
+              qid=create_item(rec)
+              created.append((rec,qid))
+
+              p=entity(s,PERSON)
+              existing=[c for c in p.get('claims',{}).get('P3919',[]) if qid_of(c.get('mainsnak',{}))==qid]
+              if existing: raise RuntimeError({'qid':qid,'error':'unexpected pre-existing P3919'})
+              out=post_json(s,{'action':'wbcreateclaim','entity':PERSON,'property':'P3919','snaktype':'value','value':item_value(qid),'token':csrf,'baserevid':p.get('lastrevid'),'summary':'Link Saeed Ghezelbash to authored scholarly article'})
+              cid=out['claim']['id']
+              post_json(s,{'action':'wbsetqualifier','claim':cid,'property':'P2868','snaktype':'value','value':item_value(AUTHOR_ROLE),'token':csrf,'summary':'Qualify contribution role as author'})
+              add_reference(s,csrf,cid,f"https://pubmed.ncbi.nlm.nih.gov/{rec['pmid']}/")
+
+          final_person=entity(anon,PERSON)
+          verification=[]
+          for rec,qid in created:
+              w=entity(anon,qid)
+              p50=[c for c in w.get('claims',{}).get('P50',[]) if qid_of(c.get('mainsnak',{}))==PERSON]
+              if len(p50)!=1: raise RuntimeError({'qid':qid,'P50_count':len(p50)})
+              doi=[c.get('mainsnak',{}).get('datavalue',{}).get('value') for c in w.get('claims',{}).get('P356',[])]
+              pmid=[c.get('mainsnak',{}).get('datavalue',{}).get('value') for c in w.get('claims',{}).get('P698',[])]
+              if rec['doi'] not in doi or rec['pmid'] not in pmid: raise RuntimeError({'qid':qid,'identifier_mismatch':True})
+              rev=[c for c in final_person.get('claims',{}).get('P3919',[]) if qid_of(c.get('mainsnak',{}))==qid]
+              if len(rev)!=1: raise RuntimeError({'qid':qid,'P3919_count':len(rev)})
+              roles=[qid_of(x) for x in rev[0].get('qualifiers',{}).get('P2868',[])]
+              if AUTHOR_ROLE not in roles or not rev[0].get('references'): raise RuntimeError({'qid':qid,'reverse_link_incomplete':True})
+              verification.append({'qid':qid,'pmid':rec['pmid'],'doi':rec['doi'],'title':rec['title'],'author_ordinal':rec['authors'].index('Mohammad Saeed Ghezelbash')+1,'ok':True})
+
+          print(json.dumps({'created_and_verified':verification,'person_lastrevid':final_person.get('lastrevid')},ensure_ascii=False,indent=2))
