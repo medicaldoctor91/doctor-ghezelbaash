@@ -25,7 +25,7 @@ jobs:
       WIKIVERSITY_PAGE_TITLE: Botulinum toxin in aesthetic medicine
       WIKIVERSITY_PAGE_FILE: wikiversity/resources/botulinum-toxin-in-aesthetic-medicine.wiki
       WIKIVERSITY_CREATE_ONLY: 'false'
-      WIKIVERSITY_EDIT_SUMMARY: 'Upgrade educational resource: 2026 evidence review, case-based learning, bilingual contributor identity, assessment rubric, and verified provenance'
+      WIKIVERSITY_EDIT_SUMMARY: 'Strengthen verified provenance with clickable official-site and original educational-source links'
       WIKIVERSITY_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
       WIKIVERSITY_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
