@@ -8,7 +8,6 @@ import commons_verify_entity_upgrades as v
 def main():
     result = {}
 
-    # Canonical binding truth first: Wikidata sitelinks/claims, independent of Commons parser-cache pageprops.
     person = v.wd_entity(v.PERSON)
     clinic = v.wd_entity(v.CLINIC)
     v.require(person.get('sitelinks', {}).get('commonswiki', {}).get('title') == v.PERSON_CAT,
@@ -88,7 +87,10 @@ def main():
         actual = v.cats_of(p)
         for cat in expected[key]:
             v.require(cat in actual, f'Missing {cat} on {title}')
-        mid, mi = v.mediainfo(title)
+        pageid = p.get('pageid')
+        v.require(isinstance(pageid, int), f'No file pageid for {title}')
+        mid = f'M{pageid}'
+        mi = v.get(v.COMMONS, action='wbgetentities', ids=mid, props='labels|claims')['entities'][mid]
         creator_qids = v.sdc_qids(mi, 'P170')
         depicts_qids = v.sdc_qids(mi, 'P180')
         v.require(v.PERSON in creator_qids, f'SDC creator lost person QID on {title}')
