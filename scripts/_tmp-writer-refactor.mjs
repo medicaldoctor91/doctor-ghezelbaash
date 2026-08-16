@@ -17,7 +17,7 @@ const replaceRange=(source,start,end,replacement,label)=>{
 
 let gen=await read('scripts/generate-projections.mjs');
 const importNeedle="import { assembleCanonicalContent } from './lib/assemble-content.mjs';";
-const importReplacement=importNeedle+"\nimport { expandKnowledgeXml } from './lib/knowledge-xml.mjs';\nimport { normalizeGoogleSupportGraphRaw } from './lib/google-support-graph.mjs';";
+const importReplacement=importNeedle+"\nimport { expandKnowledgeXml } from './lib/knowledge-xml.mjs';\nimport { normalizeGoogleSupportGraphRaw } from './lib/google-support-graph.mjs';\nimport { hashIdentityFingerprint } from './lib/release-identity.mjs';";
 gen=replaceOnce(gen,importNeedle,importReplacement,'projection helper import');
 
 const supportStart="const supportRaw=`";
