@@ -29,13 +29,17 @@ jobs:
           set -euo pipefail
           test -n "$WIKI_USERNAME"
           test -n "$WIKI_BOT_PASSWORD"
-      - name: Patch Python reserved keyword in one-shot script
+      - name: Patch one-shot parser for current JATS structure
         shell: python
         run: |
           from pathlib import Path
           p=Path('scripts/wikisource_publish_2021_temp.py')
           s=p.read_text(encoding='utf-8')
           s=s.replace(",assert='user'", ",**{'assert':'user'}")
+          start=s.index('    contribs=[]\n')
+          end=s.index("    if not any('Ghezelbash' in x for x in contribs):", start)
+          new='''    contribs=[]\n    for c in root.iter():\n        if local(c.tag) != 'contrib':\n            continue\n        surname=next((x for x in c.iter() if local(x.tag)=='surname'),None)\n        given=next((x for x in c.iter() if local(x.tag)=='given-names'),None)\n        sn=norm(' '.join(surname.itertext())) if surname is not None else ''\n        gn=norm(' '.join(given.itertext())) if given is not None else ''\n        name=norm((gn+' '+sn).strip())\n        if name and name not in contribs:\n            contribs.append(name)\n'''
+          s=s[:start]+new+s[end:]
           p.write_text(s,encoding='utf-8')
       - name: Publish work, author page, redirect, and verified Wikidata sitelinks
         run: python scripts/wikisource_publish_2021_temp.py
