@@ -41,7 +41,7 @@
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@types/node": "24.13.3",
-    "astro": "7.1.6",
+    "astro": "7.2.1",
     "exiftool-vendored": "37.1.0",
     "jsonld": "9.0.0",
     "parse5": "7.3.0",
