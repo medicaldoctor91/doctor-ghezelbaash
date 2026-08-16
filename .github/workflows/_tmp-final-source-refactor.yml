@@ -58,11 +58,15 @@ jobs:
           node --check scripts/_tmp-final-refactor.mjs
           node --check scripts/_tmp-assembler-target.mjs
           node --check scripts/_tmp-hero-validator-target.mjs
+          node --check scripts/_tmp-verify-approved-derived.mjs
       - name: Freeze current DIST baseline
         run: |
           set -euo pipefail
           npm run build
           cp dist/index.html /tmp/baseline-index.html
+          rm -rf /tmp/baseline-derived
+          mkdir -p /tmp/baseline-derived
+          cp dist/index.md dist/llms-full.txt dist/provenance.jsonld /tmp/baseline-derived/
           node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/baseline-dist.json
       - name: Slice A - canonical page and production defect corrections
         run: |
@@ -86,8 +90,9 @@ jobs:
           node scripts/_tmp-final-refactor.mjs visible
           npm run build
           node scripts/_tmp-final-refactor.mjs verify-index /tmp/baseline-index.html dist/index.html
+          node scripts/_tmp-verify-approved-derived.mjs /tmp/baseline-derived dist
           node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/content-dist.json
-          node scripts/_tmp-final-refactor.mjs compare /tmp/baseline-dist.json /tmp/content-dist.json index.html _headers artifact-manifest.json live-serving-attestation.json
+          node scripts/_tmp-final-refactor.mjs compare /tmp/baseline-dist.json /tmp/content-dist.json index.html index.md llms-full.txt provenance.jsonld croissant.json datapackage.json dcat.ttl _headers artifact-manifest.json live-serving-attestation.json
           git add -A
           git commit -m 'Canonicalize the single-page source and correct live release semantics'
       - name: Slice B - converge all artifact writers
@@ -124,7 +129,7 @@ jobs:
       - name: Remove one-shot refactor machinery and push only proven commits
         run: |
           set -euo pipefail
-          git rm scripts/_tmp-final-refactor.mjs scripts/_tmp-assembler-target.mjs scripts/_tmp-hero-validator-target.mjs .github/workflows/_tmp-final-source-refactor.yml
+          git rm scripts/_tmp-final-refactor.mjs scripts/_tmp-assembler-target.mjs scripts/_tmp-hero-validator-target.mjs scripts/_tmp-verify-approved-derived.mjs .github/workflows/_tmp-final-source-refactor.yml
           git commit -m '[refactor-complete] Remove one-shot final refactor machinery'
           git status --short
           git push origin HEAD:cleanup/final-2026-source-architecture
