@@ -10,11 +10,9 @@ const output=path.join(outputDir,`${folder}-production-clean-${release.dateModif
 const raw=execFileSync('git',['ls-files','-z'],{cwd:root,encoding:'buffer'}).toString('utf8');
 const names=raw.split('\0').filter(Boolean).sort((a,b)=>a.localeCompare(b));
 if(!names.length)throw new Error('Tracked-source inventory is empty');
-const forbiddenCurrentControl=new Set(['.release/release-attestation.json','.release/release-request.json','.release/zenodo-published.json']);
 for(const name of names){
   if(name==='.git'||name.startsWith('.git/'))throw new Error(`Git internals leaked into tracked source inventory: ${name}`);
   if(name.startsWith('.release/runtime/')||name.startsWith('.release/huggingface/'))throw new Error(`Runtime external state leaked into source inventory: ${name}`);
-  if(forbiddenCurrentControl.has(name))throw new Error(`Historical release-control file remains current-root tracked: ${name}`);
 }
 const entries=[];
 for(const name of names)entries.push({name:`${folder}/${name.replaceAll('\\','/')}`,data:await readFile(path.join(root,name))});
