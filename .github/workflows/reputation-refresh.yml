@@ -76,8 +76,12 @@ jobs:
           git add src/data/volatile-facts.json
           git commit -m "Refresh live Google reputation observation"
           LIVE_SHA="$(git rev-parse HEAD)"; echo "LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
-          git push origin HEAD:main
-          git push origin HEAD:production/deploy
+          git push --atomic origin HEAD:main HEAD:staging/deploy HEAD:production/deploy
+          for ref in main staging/deploy production/deploy; do
+            REMOTE_SHA="$(git ls-remote origin "refs/heads/$ref" | awk '{print $1}')"
+            test "$REMOTE_SHA" = "$LIVE_SHA" || { echo "::error::Remote ref drift: $ref=$REMOTE_SHA expected=$LIVE_SHA"; exit 1; }
+          done
+          echo 'GOOGLE_REPUTATION_BRANCH_CONVERGENCE_PASS'
       - name: Prove website deployment and cooling freshness before touching HF
         if: steps.places.outputs.changed == 'true'
         env:
