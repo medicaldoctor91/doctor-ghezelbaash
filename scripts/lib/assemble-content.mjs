@@ -1,37 +1,46 @@
 import path from 'node:path';
-import { readFile, readdir } from 'node:fs/promises';
+import {readFile,readdir} from 'node:fs/promises';
 
-const retiredProjection='001a-direct-answer-capsules.html';
-const asArray=value=>Array.isArray(value)?value:[value].filter(Boolean);
-const hasType=(node,type)=>asArray(node?.['@type']).includes(type);
-const escapeHtml=value=>String(value).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-const escapeRegExp=value=>String(value).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-const normalizeVisible=value=>String(value).replace(/<script\b[\s\S]*?<\/script>/gi,' ').replace(/<style\b[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
-const headingFor=(content,fragment)=>{const p=new RegExp(`<h([2-6])\\b(?=[^>]*\\bid=["']${escapeRegExp(fragment)}["'])[^>]*>[\\s\\S]*?<\\/h\\1>`,'gi'),m=[...content.matchAll(p)];if(m.length!==1)throw new Error(`Expected one native heading; found ${m.length} at #${fragment}`);return m[0]};
-const stop=new Set(['the','a','an','and','or','of','in','on','for','to','is','are','as','with','by','at','this','that','he','his','در','و','یا','از','به','برای','با','این','آن','است','هست','که','را','یک']);
-const tokens=value=>normalizeVisible(value).toLocaleLowerCase('fa').replace(/[\p{P}\p{S}]+/gu,' ').split(/\s+/).map(x=>x.trim()).filter(x=>x&&x.length>1&&!stop.has(x));
-const equivalent=(a,b)=>{const A=normalizeVisible(a),B=normalizeVisible(b);if(!A||!B)return false;if(A===B||A.includes(B)||B.includes(A))return true;const as=new Set(tokens(A)),bs=new Set(tokens(B));if(Math.min(as.size,bs.size)<6)return false;const common=[...as].filter(x=>bs.has(x)).length,jaccard=common/new Set([...as,...bs]).size,containment=common/Math.min(as.size,bs.size),ratio=Math.min(A.length,B.length)/Math.max(A.length,B.length);return containment>=0.92&&jaccard>=0.78&&ratio>=0.62};
-const nativeTextAfterHeading=(baseline,fragment,maxParagraphs=3)=>{const h=headingFor(baseline,fragment),start=h.index+h[0].length,tail=baseline.slice(start),next=tail.search(/<h[2-6]\b/i),section=next>=0?tail.slice(0,next):tail;return [...section.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/gi)].slice(0,maxParagraphs).map(m=>m[1])};
-const hasLocalNativeEquivalent=(baseline,fragment,answerText,maxParagraphs=3)=>nativeTextAfterHeading(baseline,fragment,maxParagraphs).some(p=>equivalent(answerText,p));
 const persianNumber=(value,digits=0)=>new Intl.NumberFormat('fa-IR',{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}).format(Number(value));
 const persianGregorianDate=value=>new Intl.DateTimeFormat('fa-IR-u-ca-gregory',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value));
-const bindLiveReputation=async(root,content)=>{
+const englishDate=value=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(String(value)+'T00:00:00Z'));
+
+const bindReleaseTokens=(content,release)=>{
+  const values={
+    '{{CURRENT_RELEASE}}':release.release,
+    '{{CURRENT_VERSION_DOI}}':release.dataset.zenodo.versionDoi,
+    '{{CURRENT_VERSION_DOI_URLENCODED}}':encodeURIComponent(release.dataset.zenodo.versionDoi),
+    '{{CURRENT_RELEASE_DATE_EN}}':englishDate(release.dateModified),
+    '{{MEDICAL_REVIEW_DATE_EN}}':englishDate(release.medicalReviewedAt)
+  };
+  for(const [token,value] of Object.entries(values))content=content.replaceAll(token,String(value));
+  if(/{{[A-Z0-9_]+}}/.test(content))throw new Error('Unresolved canonical page token');
+  return content;
+};
+
+const bindLiveReputation=async(root,content,release)=>{
   const volatile=JSON.parse(await readFile(path.join(root,'src/data/volatile-facts.json'),'utf8'));
-  const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
   const rating=Number(volatile.rating),reviewCount=Number(volatile.reviewCount),observedAt=volatile.valueObservedAt;
   if(!(rating>=1&&rating<=5)||!Number.isInteger(reviewCount)||reviewCount<0||volatile.placeId!==release.clinic.placeId||Number.isNaN(Date.parse(observedAt)))throw new Error('Invalid live reputation source for visible binding');
-  const replacement=`<div class="hero-caption-reputation" id="google-maps-clinic-reputation-current"><strong>${persianNumber(rating,1)} از ۵ در <span translate="no">Google Maps</span></strong> · بر اساس ${persianNumber(reviewCount)} نظر · آخرین دریافت از Google: ${persianGregorianDate(observedAt)} — <a href="https://www.google.com/maps?cid=${release.clinic.cid}" rel="external noopener">مشاهده نظرها</a></div>`;
+  const replacement='<div class="hero-caption-reputation" id="google-maps-clinic-reputation-current"><strong>'+persianNumber(rating,1)+' از ۵ در <span translate="no">Google Maps</span></strong> · بر اساس '+persianNumber(reviewCount)+' نظر · آخرین تغییر ثبت‌شده در Google: '+persianGregorianDate(observedAt)+' — <a href="https://www.google.com/maps?cid='+release.clinic.cid+'" rel="external noopener">مشاهده نظرها</a></div>';
   const pattern=/<div\b(?=[^>]*\bid=["']google-maps-clinic-reputation-current["'])[^>]*>[\s\S]*?<\/div>/i;
-  const matches=content.match(new RegExp(pattern.source,'gi'))||[];if(matches.length!==1)throw new Error(`Expected one visible reputation slot; found ${matches.length}`);
+  const matches=content.match(new RegExp(pattern.source,'gi'))||[];
+  if(matches.length!==1)throw new Error('Expected one visible reputation slot; found '+matches.length);
   return content.replace(pattern,replacement);
 };
-const machineResourceDefinitionPattern=/<dt><strong>Machine discovery guide<\/strong><\/dt>(<dd><a href="\/llms\.txt"[\s\S]*?<\/dd>)(<dd><a href="\/artifact-manifest\.json"[\s\S]*?<\/dd>)<dt><strong>Deterministic build provenance<\/strong><\/dt>(<dd><a href="\/knowledge\.xml"[\s\S]*?<\/dd>)<dt><strong>Hierarchical semantic projection<\/strong><\/dt>(<dd><a href="\/entity-facts\.csv"[\s\S]*?<\/dd>)<dt><strong>Flat entity-fact distribution<\/strong><\/dt>(<dd><a href="\/answers\.txt"[\s\S]*?<\/dd>)<dt><strong>Direct-answer retrieval corpus<\/strong><\/dt>/;
-const canonicalizeMachineResourceDefinitions=content=>{const matches=content.match(new RegExp(machineResourceDefinitionPattern.source,'g'))||[];if(matches.length!==1)throw new Error(`Expected one legacy machine-resource definition mapping; found ${matches.length}`);return content.replace(machineResourceDefinitionPattern,(_m,llmsDd,manifestDd,knowledgeDd,factsDd,answersDd)=>`<dt><strong>Machine discovery guide</strong></dt>${llmsDd}<dt><strong>Artifact integrity manifest</strong></dt>${manifestDd}<dt><strong>Hierarchical semantic projection</strong></dt>${knowledgeDd}<dt><strong>Flat entity-fact distribution</strong></dt>${factsDd}<dt><strong>Direct-answer retrieval corpus</strong></dt>${answersDd}`)};
-export async function canonicalSourceNames(root=process.cwd()){const sourceDir=path.join(root,'src/content-source');return (await readdir(sourceDir)).filter(name=>/\.(?:md|html)$/.test(name)&&name!==retiredProjection).sort()}
-export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
-  const sourceDir=path.join(root,'src/content-source'),canonicalGraph=graph??JSON.parse(await readFile(path.join(root,'src/data/semantic/knowledge-graph.jsonld'),'utf8')),names=await canonicalSourceNames(root);let content=(await Promise.all(names.map(name=>readFile(path.join(sourceDir,name),'utf8')))).join('');content=canonicalizeMachineResourceDefinitions(content);content=await bindLiveReputation(root,content);const nativeBaseline=content,byId=new Map(canonicalGraph['@graph'].filter(n=>n['@id']).map(n=>[n['@id'],n]));let inserted=0,deduplicatedExecutive=0;
-  for(const question of canonicalGraph['@graph'].filter(n=>hasType(n,'Question'))){const answer=byId.get(question.acceptedAnswer?.['@id']);if(!answer?.description)continue;if(typeof answer.description!=='string')throw new Error(`Answer.description must be a string: ${answer['@id']}`);const url=new URL(question.url||question['@id']),fragment=decodeURIComponent(url.hash.slice(1));if(!fragment)throw new Error(`Executive answer has no visible fragment: ${answer['@id']}`);if(hasLocalNativeEquivalent(nativeBaseline,fragment,answer.description,2)){deduplicatedExecutive++;continue}const match=headingFor(content,fragment),summary=`<p>${escapeHtml(answer.description)}</p>`,at=match.index+match[0].length;content=content.slice(0,at)+summary+content.slice(at);inserted++}
-  let fullInserted=0,deduplicatedFull=0;for(const question of canonicalGraph['@graph'].filter(n=>hasType(n,'Question'))){const answer=byId.get(question.acceptedAnswer?.['@id']);if(typeof answer?.text!=='string'||!normalizeVisible(answer.text))continue;const url=new URL(question.url||question['@id']),fragment=decodeURIComponent(url.hash.slice(1));if(normalizeVisible(nativeBaseline).includes(normalizeVisible(answer.text))||hasLocalNativeEquivalent(nativeBaseline,fragment,answer.text,3)){deduplicatedFull++;continue}const match=headingFor(content,fragment),paragraph=`<p>${escapeHtml(answer.text)}</p>`,at=match.index+match[0].length;content=content.slice(0,at)+paragraph+content.slice(at);fullInserted++}
-  return {content,names,inserted,fullInserted,deduplicatedExecutive,deduplicatedFull};
+
+export async function canonicalSourceNames(root=process.cwd()){
+  const sourceDir=path.join(root,'src/content-source');
+  const names=(await readdir(sourceDir)).filter(name=>/\.(?:md|html)$/i.test(name)).sort();
+  if(names.length!==1||names[0]!=='page.md')throw new Error('Canonical page source contract drift: '+names.join(', '));
+  return names;
 }
-export const retiredDirectAnswerProjection=retiredProjection;
+
+export async function assembleCanonicalContent({root=process.cwd()}={}){
+  const names=await canonicalSourceNames(root);
+  const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
+  let content=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
+  content=bindReleaseTokens(content,release);
+  content=await bindLiveReputation(root,content,release);
+  return {content,names,inserted:0,fullInserted:0,deduplicatedExecutive:0,deduplicatedFull:0};
+}

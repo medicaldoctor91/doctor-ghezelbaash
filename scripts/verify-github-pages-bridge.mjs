@@ -67,7 +67,7 @@ async function verifyLive(attempt){
     assert.ok(text.includes(`${canonical}entity-facts.csv`));
   });
   tasks.push(async()=>{
-    const {response,text}=await request('__legacy_missing_bridge_proof__',attempt);
+    const {response,text}=await request('__missing_bridge_probe__',attempt);
     assert.equal(response.status,404,`Custom 404 status drift: ${response.status}`);
     verifyHumanHtml(text,canonical);
   });

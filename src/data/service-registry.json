@@ -1,6 +1,5 @@
 {
   "schemaVersion": "1.0",
-  "canonicalSource": "v1.2.1-baseline-availableService-union",
   "primaryEntityRef": "release.primaryEntity.id",
   "clinicEntityRef": "release.clinic.id",
   "services": [
