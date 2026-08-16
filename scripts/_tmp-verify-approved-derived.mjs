@@ -13,7 +13,8 @@ if(!previous)throw new Error('Previous release metadata unavailable for approved
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const norm=value=>String(value).replace(/\s+/gu,' ').trim();
 const list=value=>String(value||'').split(' | ').map(x=>x.trim()).filter(Boolean);
-const sameSet=(a,b)=>JSON.stringify([...new Set(a)].sort())===JSON.stringify([...new Set(b)].sort());
+const unique=value=>[...new Set(value)].sort();
+const sameSet=(a,b)=>JSON.stringify(unique(a))===JSON.stringify(unique(b));
 
 function approvedText(oldText){
   let text=oldText.replaceAll('آخرین دریافت از Google:','آخرین تغییر ثبت‌شده در Google:');
@@ -50,7 +51,6 @@ function parsePassages(raw){
   return rows;
 }
 const partNo=row=>Number(String(row.fields.PART).split('/')[0]);
-const partTotal=row=>Number(String(row.fields.PART).split('/')[1]);
 const sectionKey=row=>[row.fields.LEVEL,row.fields.TITLE,row.fields.ANCHOR,row.fields.GRAPH_NODE_ID,row.fields.LANGUAGE,row.fields.RETRIEVAL_ALIASES||''].join('\u001f');
 const group=rows=>{const map=new Map();for(const row of rows){const key=sectionKey(row);if(!map.has(key))map.set(key,[]);map.get(key).push(row)}for(const rows of map.values())rows.sort((a,b)=>partNo(a)-partNo(b));return map};
 const oldRows=parsePassages(await read(beforeDir,'llms-full.txt')),newRows=parsePassages(await read(afterDir,'llms-full.txt'));
@@ -58,15 +58,15 @@ if(oldRows.length!==newRows.length)throw new Error(`Passage count changed ${oldR
 const oldGroups=group(oldRows),newGroups=group(newRows);
 if(oldGroups.size!==newGroups.size)throw new Error(`Section count changed ${oldGroups.size} -> ${newGroups.size}`);
 const aggregateFields=['ENTITY_IDS','EVIDENCE_IDS','CLAIM_EVIDENCE_IDS','ENTITY_EVIDENCE_IDS','TIER_A_EVIDENCE_IDS'];
-const changedSections=[];
+const changedSections=[],aggregateDrifts=[];
 for(const [key,oldGroup] of oldGroups){
   const nextGroup=newGroups.get(key);if(!nextGroup)throw new Error(`Passage section disappeared: ${key}`);
   if(oldGroup.length!==nextGroup.length)throw new Error(`Passage partition count changed for ${key}: ${oldGroup.length} -> ${nextGroup.length}`);
   const oldText=oldGroup.map(row=>row.text).join(' '),nextText=nextGroup.map(row=>row.text).join(' '),expected=approvedText(oldText);
   if(norm(expected)!==norm(nextText))throw new Error(`Passage section text changed outside approved corrections: ${key}`);
   for(const field of aggregateFields){
-    const oldUnion=oldGroup.flatMap(row=>list(row.fields[field])),nextUnion=nextGroup.flatMap(row=>list(row.fields[field]));
-    if(!sameSet(oldUnion,nextUnion))throw new Error(`Passage section ${field} union drift: ${key}`);
+    const oldUnion=unique(oldGroup.flatMap(row=>list(row.fields[field]))),nextUnion=unique(nextGroup.flatMap(row=>list(row.fields[field])));
+    if(!sameSet(oldUnion,nextUnion))aggregateDrifts.push({key,field,oldOnly:oldUnion.filter(x=>!nextUnion.includes(x)),newOnly:nextUnion.filter(x=>!oldUnion.includes(x))});
   }
   for(let i=0;i<nextGroup.length;i++){
     const row=nextGroup[i],expectedPart=`${i+1}/${nextGroup.length}`;
@@ -76,6 +76,7 @@ for(const [key,oldGroup] of oldGroups){
   }
   if(norm(oldText)!==norm(nextText))changedSections.push(key);
 }
+if(aggregateDrifts.length)throw new Error(`Passage aggregate evidence/entity drift:\n${JSON.stringify(aggregateDrifts,null,2)}`);
 if(!changedSections.length)throw new Error('No passage section reflected the approved corrections');
 
 const oldProv=JSON.parse(await read(beforeDir,'provenance.jsonld')),newProv=JSON.parse(await read(afterDir,'provenance.jsonld'));
