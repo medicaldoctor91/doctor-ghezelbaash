@@ -12,23 +12,23 @@
       "source": "Google Places API (New)",
       "sourceId": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
       "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
-      "observedAt": "2026-08-07T00:00:00Z"
+      "observedAt": "2026-08-16T18:51:38Z"
     },
     {
       "id": "google-maps-review-count",
       "entity": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
       "property": "reviewCount",
-      "value": 164,
+      "value": 165,
       "source": "Google Places API (New)",
       "sourceId": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
       "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
-      "observedAt": "2026-08-07T00:00:00Z"
+      "observedAt": "2026-08-16T18:51:38Z"
     }
   ],
   "entity": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
   "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
   "rating": 5,
-  "reviewCount": 164,
-  "valueObservedAt": "2026-08-07T00:00:00Z",
+  "reviewCount": 165,
+  "valueObservedAt": "2026-08-16T18:51:38Z",
   "source": "Google Places API (New)"
 }
