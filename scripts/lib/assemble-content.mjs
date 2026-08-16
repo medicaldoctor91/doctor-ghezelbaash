@@ -42,5 +42,5 @@ export async function assembleCanonicalContent({root=process.cwd()}={}){
   let content=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
   content=bindReleaseTokens(content,release);
   content=await bindLiveReputation(root,content,release);
-  return {content,names,inserted:0,fullInserted:0,deduplicatedExecutive:0,deduplicatedFull:0};
+  return {content,names};
 }
