@@ -1,9 +1,9 @@
 const nodeTypes=node=>Array.isArray(node?.['@type'])?node['@type']:[node?.['@type']].filter(Boolean);
 const isoDurationSeconds=value=>{const m=String(value??'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/);if(!m)return null;return (Number(m[1]||0)*3600)+(Number(m[2]||0)*60)+Number(m[3]||0);};
 
-export function normalizeGoogleSupportGraphDoc(input){
-  const doc=structuredClone(input);
-  const nodes=Array.isArray(doc?.['@graph'])?doc['@graph']:[];
+export function normalizeGoogleSupportGraphRaw(raw){
+  const doc=JSON.parse(raw);
+  const nodes=Array.isArray(doc['@graph'])?doc['@graph']:[];
   const byId=new Map(nodes.filter(node=>typeof node?.['@id']==='string').map(node=>[node['@id'],node]));
   const ineligibleVideoIds=new Set();
   for(const node of nodes){
@@ -16,7 +16,9 @@ export function normalizeGoogleSupportGraphDoc(input){
       const parentId=node?.isPartOf?.['@id'];
       if(parentId&&ineligibleVideoIds.has(parentId)){node.__dropFromGoogleSupport=true;continue;}
       if(node.endOffset==null&&parentId){
-        const parent=byId.get(parentId),end=isoDurationSeconds(parent?.duration),start=Number(node.startOffset);
+        const parent=byId.get(parentId);
+        const end=isoDurationSeconds(parent?.duration);
+        const start=Number(node.startOffset);
         if(end!==null&&Number.isFinite(start)&&end>start)node.endOffset=end;
       }
     }
@@ -34,6 +36,6 @@ export function normalizeGoogleSupportGraphDoc(input){
       if(valid.length)node.hasPart=Array.isArray(node.hasPart)?valid:valid[0];else delete node.hasPart;
     }
   }
-  doc['@graph']=nodes.filter(node=>!node.__dropFromGoogleSupport).map(node=>{delete node.__dropFromGoogleSupport;return node;});
-  return doc;
+  doc['@graph']=nodes.filter(node=>!node.__dropFromGoogleSupport).map(node=>{if(Object.hasOwn(node,'__dropFromGoogleSupport'))delete node.__dropFromGoogleSupport;return node;});
+  return `${JSON.stringify(doc)}\n`;
 }
