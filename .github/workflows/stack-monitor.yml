@@ -13,7 +13,6 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CONTROL_BRANCH: release-control/v1.2.2
   CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
   ZONE_NAME: ghezelbaash.ir
 
@@ -34,14 +33,19 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Require completed v1.2.2 before mutable drift recovery
+      - name: Resolve current release control state
         id: gate
         shell: bash
         run: |
           set -euo pipefail
+          RELEASE="$(node -p "require('./src/data/release.json').release")"
+          CONTROL_BRANCH="release-control/v$RELEASE"
+          CONTROL_FILE=".release/control/v$RELEASE.json"
           git fetch origin "$CONTROL_BRANCH"
-          STAGE=$(git show "origin/$CONTROL_BRANCH:.release/control/v1.2.2.json" | jq -r .stage)
+          STAGE="$(git show "origin/$CONTROL_BRANCH:$CONTROL_FILE" | jq -r .stage)"
+          echo "release=$RELEASE" >> "$GITHUB_OUTPUT"
           if [ "$STAGE" = COMPLETE ]; then echo 'active=true' >> "$GITHUB_OUTPUT"; else echo 'active=false' >> "$GITHUB_OUTPUT"; fi
+          echo "STACK_MONITOR_RELEASE=$RELEASE"
           echo "STACK_MONITOR_STAGE=$STAGE"
       - if: steps.gate.outputs.active == 'true'
         run: npm ci --ignore-scripts
@@ -64,7 +68,7 @@ jobs:
             exit 0
           fi
           echo '::warning::Current discovery drift detected; purging Cloudflare edge and re-verifying exact source bytes.'
-          node scripts/purge-cloudflare-current.mjs
+          python scripts/configure-cloudflare-edge.py --purge-cache-only
           sleep 30
           node scripts/verify-public-discovery-freshness.mjs
           node scripts/verify-current-serving.mjs
@@ -74,7 +78,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TAG="v$(node -p "require('./src/data/release.json').release")"
+          TAG="v${{ steps.gate.outputs.release }}"
           git reset --hard HEAD
           git clean -fdx
           git checkout --detach "$TAG"
