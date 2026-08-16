@@ -33,31 +33,24 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Resolve current release control state
-        id: gate
+      - name: Resolve finalized current release identity
+        id: release
         shell: bash
         run: |
           set -euo pipefail
           RELEASE="$(node -p "require('./src/data/release.json').release")"
-          CONTROL_BRANCH="release-control/v$RELEASE"
-          CONTROL_FILE=".release/control/v$RELEASE.json"
-          git fetch origin "$CONTROL_BRANCH"
-          STAGE="$(git show "origin/$CONTROL_BRANCH:$CONTROL_FILE" | jq -r .stage)"
+          git fetch --tags --force origin
+          git rev-parse -q --verify "refs/tags/v$RELEASE" >/dev/null
           echo "release=$RELEASE" >> "$GITHUB_OUTPUT"
-          if [ "$STAGE" = COMPLETE ]; then echo 'active=true' >> "$GITHUB_OUTPUT"; else echo 'active=false' >> "$GITHUB_OUTPUT"; fi
           echo "STACK_MONITOR_RELEASE=$RELEASE"
-          echo "STACK_MONITOR_STAGE=$STAGE"
-      - if: steps.gate.outputs.active == 'true'
-        run: npm ci --ignore-scripts
+      - run: npm ci --ignore-scripts
       - name: Build exact current source
-        if: steps.gate.outputs.active == 'true'
         shell: bash
         run: |
           set -euo pipefail
           C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
       - name: Verify current discovery, purge stale edge once, then reverify
-        if: steps.gate.outputs.active == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
@@ -74,11 +67,10 @@ jobs:
           node scripts/verify-current-serving.mjs
           echo 'CURRENT_DISCOVERY_SELF_HEAL_PASS'
       - name: Verify frozen release snapshot truth
-        if: steps.gate.outputs.active == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          TAG="v${{ steps.gate.outputs.release }}"
+          TAG="v${{ steps.release.outputs.release }}"
           git reset --hard HEAD
           git clean -fdx
           git checkout --detach "$TAG"
