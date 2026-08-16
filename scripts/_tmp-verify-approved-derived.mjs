@@ -72,7 +72,7 @@ const oldGroups=group(oldRows),newGroups=group(newRows);
 if(oldGroups.size!==newGroups.size)throw new Error(`Section count changed ${oldGroups.size} -> ${newGroups.size}`);
 const aggregateFields=['ENTITY_IDS','EVIDENCE_IDS','CLAIM_EVIDENCE_IDS','ENTITY_EVIDENCE_IDS','TIER_A_EVIDENCE_IDS'];
 const changedSections=[];
-let recoveredCurrentEvidenceCount=0;
+const recoveredCurrentEvidenceByField={EVIDENCE_IDS:0,CLAIM_EVIDENCE_IDS:0};
 for(const [key,oldGroup] of oldGroups){
   const nextGroup=newGroups.get(key);if(!nextGroup)throw new Error(`Passage section disappeared: ${key}`);
   if(oldGroup.length!==nextGroup.length)throw new Error(`Passage partition count changed for ${key}: ${oldGroup.length} -> ${nextGroup.length}`);
@@ -82,9 +82,9 @@ for(const [key,oldGroup] of oldGroups){
     const oldUnion=unique(oldGroup.flatMap(row=>list(row.fields[field]))),nextUnion=unique(nextGroup.flatMap(row=>list(row.fields[field])));
     if(!sameSet(oldUnion,nextUnion)){
       const oldOnly=oldUnion.filter(value=>!nextUnion.includes(value)),newOnly=nextUnion.filter(value=>!oldUnion.includes(value));
-      const recovered=field==='EVIDENCE_IDS'&&oldOnly.length===0&&newOnly.length===1&&newOnly[0]===currentEvidenceId;
-      if(!recovered)throw new Error(`Passage section ${field} union drift: ${key}\nold=${JSON.stringify(oldUnion)}\nnew=${JSON.stringify(nextUnion)}`);
-      recoveredCurrentEvidenceCount++;
+      const recoverable=Object.hasOwn(recoveredCurrentEvidenceByField,field)&&oldOnly.length===0&&newOnly.length===1&&newOnly[0]===currentEvidenceId;
+      if(!recoverable)throw new Error(`Passage section ${field} union drift: ${key}\nold=${JSON.stringify(oldUnion)}\nnew=${JSON.stringify(nextUnion)}`);
+      recoveredCurrentEvidenceByField[field]++;
     }
   }
   for(let i=0;i<nextGroup.length;i++){
@@ -95,7 +95,7 @@ for(const [key,oldGroup] of oldGroups){
   }
   if(norm(oldText)!==norm(nextText))changedSections.push(key);
 }
-if(recoveredCurrentEvidenceCount!==1)throw new Error(`Expected exactly one recovered current Zenodo evidence section; found ${recoveredCurrentEvidenceCount}`);
+for(const field of Object.keys(recoveredCurrentEvidenceByField))if(recoveredCurrentEvidenceByField[field]!==1)throw new Error(`Expected exactly one recovered current Zenodo ${field} section; found ${recoveredCurrentEvidenceByField[field]}`);
 if(!changedSections.length)throw new Error('No passage section reflected the approved corrections');
 
 const oldProv=JSON.parse(await read(beforeDir,'provenance.jsonld')),newProv=JSON.parse(await read(afterDir,'provenance.jsonld'));
@@ -123,4 +123,4 @@ for(const row of newRows){
   if(JSON.stringify(expected)!==JSON.stringify(node))throw new Error(`Passage provenance is not an exact projection of llms-full metadata: ${id}`);
 }
 
-console.log(JSON.stringify({approvedDerivedClosure:'PASS',indexMarkdownExact:true,currentZenodoEvidenceExact:true,recoveredCurrentZenodoEvidenceSections:recoveredCurrentEvidenceCount,knowledgeXmlEvidenceExact:true,passageCount:newRows.length,sectionCount:newGroups.size,rechunkedOrChangedSections:changedSections.length,stableProvenanceNodes:newStable.length,descriptorChangesAreHashClosure:['dcat.ttl','datapackage.json','croissant.json']},null,2));
+console.log(JSON.stringify({approvedDerivedClosure:'PASS',indexMarkdownExact:true,currentZenodoEvidenceExact:true,recoveredCurrentZenodoEvidenceByField,knowledgeXmlEvidenceExact:true,passageCount:newRows.length,sectionCount:newGroups.size,rechunkedOrChangedSections:changedSections.length,stableProvenanceNodes:newStable.length,descriptorChangesAreHashClosure:['dcat.ttl','datapackage.json','croissant.json']},null,2));
