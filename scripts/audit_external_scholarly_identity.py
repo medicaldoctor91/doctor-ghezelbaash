@@ -1,101 +1,79 @@
 #!/usr/bin/env python3
-import json, re, requests, sys
+import json, re, requests
 from urllib.parse import quote
 
-UA='GhezelbaashExternalScholarlyIdentityAudit/1.0 (https://github.com/medicaldoctor91/doctor-ghezelbaash)'
+UA='GhezelbaashExternalScholarlyIdentityAudit/2.0 (https://github.com/medicaldoctor91/doctor-ghezelbaash)'
 s=requests.Session(); s.headers.update({'User-Agent':UA})
-
-OWN_WORKS={
- 'omega3':'10.4103/2008-7802.182734',
- 'mdd':'10.3390/healthcare9091169',
-}
+OWN={'omega3':'10.4103/2008-7802.182734','mdd':'10.3390/healthcare9091169'}
 QIDS=['Q36942316','Q140298431','Q93179398','Q141104222','Q141104223','Q117439006','Q141104236','Q141104242','Q141104244','Q141104245','Q141104262']
-CREATED=['Q141104222','Q141104223','Q141104236','Q141104242','Q141104244','Q141104245','Q141104262']
+NEW=['Q141104222','Q141104223','Q141104236','Q141104242','Q141104244','Q141104245','Q141104262']
+CHECK=['P31','P1476','P577','P1433','P407','P356','P698','P932','P2860','P921','P50','P2093']
 
+def wd_entities():
+    r=s.get('https://www.wikidata.org/w/api.php',params={'action':'wbgetentities','ids':'|'.join(QIDS),'props':'labels|claims','languages':'en','format':'json','formatversion':2},timeout=60); r.raise_for_status(); return r.json()['entities']
 
-def get_json(url, **kwargs):
-    r=s.get(url,timeout=40,**kwargs)
-    return {'status':r.status_code,'json':(r.json() if 'json' in r.headers.get('content-type','').lower() else None),'text':r.text[:1000]}
+def sval(st):
+    try:
+        v=st['mainsnak']['datavalue']['value']
+        if isinstance(v,str): return v
+        if isinstance(v,dict): return v.get('id') or v.get('text') or v.get('time')
+    except Exception: pass
+    return None
 
+def openalex(doi):
+    r=s.get(f'https://api.openalex.org/works/https://doi.org/{doi}',timeout=45)
+    if not r.ok: return {'status':r.status_code}
+    j=r.json(); matches=[]
+    for a in j.get('authorships',[]):
+        au=a.get('author',{}); name=au.get('display_name') or ''
+        if 'ghezel' in name.lower():
+            matches.append({'author_id':au.get('id'),'name':name,'orcid':au.get('orcid'),'institutions':[i.get('display_name') for i in a.get('institutions',[])]})
+    return {'status':r.status_code,'work_id':j.get('id'),'cited_by_count':j.get('cited_by_count'),'ghezelbash_authors':matches}
 
-def wd_entity(qids):
-    r=s.get('https://www.wikidata.org/w/api.php',params={'action':'wbgetentities','ids':'|'.join(qids),'props':'labels|descriptions|claims','languages':'en','format':'json','formatversion':2},timeout=60)
-    r.raise_for_status(); return r.json()['entities']
+def semantic(doi):
+    fields='title,year,citationCount,authors,externalIds,url'
+    r=s.get(f'https://api.semanticscholar.org/graph/v1/paper/DOI:{quote(doi,safe="")}',params={'fields':fields},timeout=45)
+    if not r.ok: return {'status':r.status_code}
+    j=r.json(); matches=[]
+    for a in j.get('authors') or []:
+        name=a.get('name') or ''
+        if 'ghezel' in name.lower(): matches.append({'authorId':a.get('authorId'),'name':name})
+    return {'status':r.status_code,'paperId':j.get('paperId'),'citationCount':j.get('citationCount'),'ghezelbash_authors':matches,'externalIds':j.get('externalIds')}
 
+def europe(doi):
+    r=s.get('https://www.ebi.ac.uk/europepmc/webservices/rest/search',params={'query':f'DOI:"{doi}"','format':'json','resultType':'core','pageSize':2},timeout=45); r.raise_for_status()
+    rows=r.json().get('resultList',{}).get('result',[])
+    return [{'pmid':x.get('pmid'),'pmcid':x.get('pmcid'),'journal':x.get('journalTitle'),'year':x.get('pubYear'),'citedByCount':x.get('citedByCount')} for x in rows]
 
-def wd_summary(ent):
-    props=ent.get('claims',{})
-    def vals(p):
-        out=[]
-        for st in props.get(p,[]):
-            try:
-                v=st['mainsnak']['datavalue']['value']
-                if isinstance(v,dict):
-                    out.append(v.get('id') or v.get('text') or v.get('time') or v)
-                else: out.append(v)
-            except Exception: pass
-        return out
-    return {
-      'label':ent.get('labels',{}).get('en',{}).get('value'),
-      'description':ent.get('descriptions',{}).get('en',{}).get('value'),
-      'properties':sorted(props.keys()),
-      'P31':vals('P31'),'P1476':vals('P1476'),'P577':vals('P577'),'P1433':vals('P1433'),
-      'P407':vals('P407'),'P356':vals('P356'),'P698':vals('P698'),'P932':vals('P932'),
-      'P2860':vals('P2860'),'P921':vals('P921'),'P50':vals('P50'),'P2093':vals('P2093')[:8]
-    }
-
-
-def europepmc(doi):
-    r=s.get('https://www.ebi.ac.uk/europepmc/webservices/rest/search',params={'query':f'DOI:"{doi}"','format':'json','resultType':'core','pageSize':5},timeout=50)
-    r.raise_for_status(); j=r.json(); rows=j.get('resultList',{}).get('result',[])
-    return [{k:x.get(k) for k in ('id','pmid','pmcid','doi','title','journalTitle','pubYear','authorString','citedByCount')} for x in rows]
-
-
-def openalex_by_doi(doi):
-    urls=[f'https://api.openalex.org/works/https://doi.org/{doi}',f'https://api.openalex.org/works/doi:{doi}']
-    last=None
-    for u in urls:
-        r=s.get(u,timeout=40)
-        last={'status':r.status_code,'text':r.text[:500]}
-        if r.ok:
-            j=r.json()
-            authors=[]
-            for a in j.get('authorships',[]):
-                au=a.get('author',{})
-                authors.append({'id':au.get('id'),'display_name':au.get('display_name'),'orcid':au.get('orcid'),'institutions':[i.get('display_name') for i in a.get('institutions',[])]})
-            return {'status':r.status_code,'work_id':j.get('id'),'doi':j.get('doi'),'title':j.get('title'),'cited_by_count':j.get('cited_by_count'),'authors':authors}
-    return last
-
-
-def semanticscholar_by_doi(doi):
-    fields='title,year,citationCount,authors,authors.name,authors.url,authors.authorId,externalIds,url'
-    u=f'https://api.semanticscholar.org/graph/v1/paper/DOI:{quote(doi,safe="")}'
-    r=s.get(u,params={'fields':fields},timeout=40)
-    if not r.ok: return {'status':r.status_code,'text':r.text[:500]}
-    j=r.json(); return {'status':r.status_code,'paperId':j.get('paperId'),'title':j.get('title'),'year':j.get('year'),'citationCount':j.get('citationCount'),'externalIds':j.get('externalIds'),'url':j.get('url'),'authors':j.get('authors')}
-
-
-def orcid_public(orcid):
-    outs={}
+def orcid_summary():
     headers={'Accept':'application/vnd.orcid+json'}
-    for endpoint in ('record','person','works'):
-        u=f'https://pub.orcid.org/v3.0/{orcid}/{endpoint}'
-        r=s.get(u,headers=headers,timeout=40)
-        outs[endpoint]={'status':r.status_code,'content_type':r.headers.get('content-type'),'text':r.text[:2000]}
-        if r.ok:
-            try: outs[endpoint]['json']=r.json()
-            except Exception: pass
-    return outs
-
+    works=s.get('https://pub.orcid.org/v3.0/0009-0001-9346-8475/works',headers=headers,timeout=45)
+    person=s.get('https://pub.orcid.org/v3.0/0009-0001-9346-8475/person',headers=headers,timeout=45)
+    out={'works_status':works.status_code,'person_status':person.status_code,'doi_values':[],'work_group_count':None,'external_identifiers':[]}
+    if works.ok:
+        j=works.json(); out['work_group_count']=len(j.get('group') or [])
+        for g in j.get('group') or []:
+            for w in g.get('work-summary') or []:
+                for eid in (w.get('external-ids') or {}).get('external-id') or []:
+                    if (eid.get('external-id-type') or '').lower()=='doi': out['doi_values'].append((eid.get('external-id-value') or '').lower())
+    if person.ok:
+        j=person.json(); ex=(j.get('external-identifiers') or {}).get('external-identifier') or []
+        out['external_identifiers']=[{'type':x.get('external-id-type'),'value':x.get('external-id-value'),'url':(x.get('external-id-url') or {}).get('value')} for x in ex]
+    out['doi_values']=sorted(set(out['doi_values']))
+    return out
 
 def main():
-    report={'wikidata':{},'works':{},'orcid':None}
-    ents=wd_entity(QIDS)
-    for q in QIDS:
-        if q in ents: report['wikidata'][q]=wd_summary(ents[q])
-    for name,doi in OWN_WORKS.items():
-        report['works'][name]={'doi':doi,'europepmc':europepmc(doi),'openalex':openalex_by_doi(doi),'semantic_scholar':semanticscholar_by_doi(doi)}
-    report['orcid']=orcid_public('0009-0001-9346-8475')
-    print(json.dumps(report,ensure_ascii=False,indent=2))
-
+    ents=wd_entities(); report={'wikidata_targets':{},'new_item_gaps':{},'works':{},'orcid':orcid_summary()}
+    for q in ['Q36942316','Q140298431']:
+        e=ents[q]; props=e.get('claims',{})
+        report['wikidata_targets'][q]={
+            'P50':[sval(x) for x in props.get('P50',[])],
+            'P921':[sval(x) for x in props.get('P921',[])],
+            'incoming_P2860_count':sum(1 for e2 in ents.values() for st in e2.get('claims',{}).get('P2860',[]) if sval(st)==q)
+        }
+    for q in NEW:
+        e=ents[q]; props=e.get('claims',{}); missing=[p for p in CHECK if p not in props]
+        report['new_item_gaps'][q]={'label':e.get('labels',{}).get('en',{}).get('value'),'doi':[sval(x) for x in props.get('P356',[])],'missing':missing,'present':sorted(props.keys())}
+    for name,doi in OWN.items(): report['works'][name]={'doi':doi,'openalex':openalex(doi),'semantic_scholar':semantic(doi),'europepmc':europe(doi)}
+    print(json.dumps(report,ensure_ascii=False,separators=(',',':')))
 if __name__=='__main__': main()
