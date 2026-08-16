@@ -6,7 +6,7 @@
   "packageManager": "npm@11.5.2",
   "scripts": {
     "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
-    "prepare:generated": "npm run media:sync && node scripts/migrate-release-reputation-snapshot.mjs && npm run rdf:deps && npm run rdf:generate && npm run generate",
+    "prepare:generated": "npm run validate:media-references && npm run rdf:deps && npm run rdf:generate && npm run generate",
     "dev": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "check": "npm run validate:release-contract && npm run prepare:generated && npm run validate:query-matrix && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
     "generate": "node scripts/generate-projections.mjs && node scripts/generate-retrieval-projections.mjs && node scripts/generate-descriptors.mjs",
@@ -17,7 +17,7 @@
     "preflight:cloudflare": "python scripts/preflight-cloudflare-edge.py --if-configured",
     "validate:source": "node scripts/validate-source.mjs && node scripts/validate-critical-hero-geometry.mjs && node scripts/test-reputation-observation.mjs && node scripts/validate-subdomain-redirects.mjs && node scripts/build-github-pages-bridge.mjs --self-test && node scripts/verify-github-pages-bridge.mjs --self-test",
     "media:enrich": "node scripts/enrich-image-metadata.mjs",
-    "media:sync": "node scripts/sync-media-references.mjs",
+    "validate:media-references": "node scripts/validate-media-references.mjs",
     "validate:media": "node scripts/validate-media.mjs",
     "validate:evidence": "node scripts/validate-evidence.mjs",
     "validate:shacl": "PYTHONPATH=.python-deps python scripts/validate-shacl.py",
