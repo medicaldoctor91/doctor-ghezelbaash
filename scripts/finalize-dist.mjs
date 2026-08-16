@@ -92,15 +92,7 @@ headers=headers.replace('{{DIGEST:artifact-manifest.json}}',shaB64(await readFil
 if(/{{[^}]+}}/.test(headers))throw new Error('Unresolved _headers placeholder');
 if(/\btrack-src\b/i.test(headers))throw new Error('Invalid CSP directive track-src');
 
-const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-const routeBlock=(route,media,cache,digest=true)=>`\n/${route}\n  Content-Type: ${media}\n  X-Robots-Tag: index, follow, max-snippet:-1\n  X-Robots-Tag: googlebot: noindex, follow\n  Cache-Control: ${cache}\n  Cloudflare-CDN-Cache-Control: ${cache}\n  Link: <${release.canonicalUrl}${route}>; rel="canonical", <${release.dataset.id}>; rel="describedby", <${release.clinic.id}>; rel="about"\n${digest?'  Repr-Digest: sha-256=:__DIGEST__:\n':''}  Access-Control-Allow-Origin: *\n  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal\n  Cross-Origin-Resource-Policy: cross-origin\n`;
-const ensureBlock=(route,media,cache,digest=true)=>{if(!new RegExp(`(?:^|\\n)/${esc(route)}\\n`).test(headers))headers+=routeBlock(route,media,cache,digest);};
-ensureBlock('query-matrix.jsonl','application/jsonl; charset=utf-8','public, max-age=3600, must-revalidate');
-ensureBlock('live-observations.jsonld','application/ld+json; charset=utf-8','public, max-age=0, must-revalidate');
-ensureBlock('current-release-matrix.json','application/json; charset=utf-8','public, max-age=0, must-revalidate');
-ensureBlock('live-serving-attestation.json','application/json; charset=utf-8','public, max-age=0, must-revalidate',false);
-
-const mutateRoute=(route,fn)=>{const lines=headers.split('\n'),i=lines.findIndex(x=>x===`/${route}`);if(i<0)return;for(let j=i+1;j<lines.length&&/^  /.test(lines[j]);j++)lines[j]=fn(lines[j]);headers=lines.join('\n');};
+const mutateRoute=(route,fn)=>{const lines=headers.split('\n'),i=lines.findIndex(x=>x===`/${route}`);if(i<0)throw new Error(`Missing canonical header block /${route}`);for(let j=i+1;j<lines.length&&/^  /.test(lines[j]);j++)lines[j]=fn(lines[j]);headers=lines.join('\n');};
 for(const route of ['artifact-manifest.json','live-observations.jsonld','current-release-matrix.json','live-serving-attestation.json'])mutateRoute(route,line=>/^  Cache-Control:/.test(line)?'  Cache-Control: public, max-age=0, must-revalidate':/^  Cloudflare-CDN-Cache-Control:/.test(line)?'  Cloudflare-CDN-Cache-Control: public, max-age=0, must-revalidate':line);
 for(const route of ['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','query-matrix.jsonl'])mutateRoute(route,line=>/^  Cloudflare-CDN-Cache-Control:/.test(line)?'  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400':line);
 

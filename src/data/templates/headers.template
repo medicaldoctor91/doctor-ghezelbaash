@@ -348,3 +348,50 @@ https://:version.:project.pages.dev/*
 /mstile-150x150.png
   Cache-Control: public, max-age=604800, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+
+/query-matrix.jsonl
+  Content-Type: application/jsonl; charset=utf-8
+  X-Robots-Tag: index, follow, max-snippet:-1
+  X-Robots-Tag: googlebot: noindex, follow
+  Cache-Control: public, max-age=3600, must-revalidate
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate
+  Link: <https://www.ghezelbaash.ir/query-matrix.jsonl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="describedby", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
+  Repr-Digest: sha-256=:__DIGEST__:
+  Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Cross-Origin-Resource-Policy: cross-origin
+
+/live-observations.jsonld
+  Content-Type: application/ld+json; charset=utf-8
+  X-Robots-Tag: index, follow, max-snippet:-1
+  X-Robots-Tag: googlebot: noindex, follow
+  Cache-Control: public, max-age=0, must-revalidate
+  Cloudflare-CDN-Cache-Control: public, max-age=0, must-revalidate
+  Link: <https://www.ghezelbaash.ir/live-observations.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="describedby", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
+  Repr-Digest: sha-256=:__DIGEST__:
+  Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Cross-Origin-Resource-Policy: cross-origin
+
+/current-release-matrix.json
+  Content-Type: application/json; charset=utf-8
+  X-Robots-Tag: index, follow, max-snippet:-1
+  X-Robots-Tag: googlebot: noindex, follow
+  Cache-Control: public, max-age=0, must-revalidate
+  Cloudflare-CDN-Cache-Control: public, max-age=0, must-revalidate
+  Link: <https://www.ghezelbaash.ir/current-release-matrix.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="describedby", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
+  Repr-Digest: sha-256=:__DIGEST__:
+  Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Cross-Origin-Resource-Policy: cross-origin
+
+/live-serving-attestation.json
+  Content-Type: application/json; charset=utf-8
+  X-Robots-Tag: index, follow, max-snippet:-1
+  X-Robots-Tag: googlebot: noindex, follow
+  Cache-Control: public, max-age=0, must-revalidate
+  Cloudflare-CDN-Cache-Control: public, max-age=0, must-revalidate
+  Link: <https://www.ghezelbaash.ir/live-serving-attestation.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="describedby", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
+  Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Cross-Origin-Resource-Policy: cross-origin
