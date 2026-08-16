@@ -1,0 +1,96 @@
+name: Temporary gated final source refactor
+
+on:
+  push:
+    branches:
+      - cleanup/final-2026-source-architecture
+
+permissions:
+  contents: write
+
+concurrency:
+  group: final-source-refactor
+  cancel-in-progress: false
+
+jobs:
+  refactor:
+    if: ${{ !contains(github.event.head_commit.message, '[refactor-complete]') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: cleanup/final-2026-source-architecture
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24.18.0'
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Configure commit identity
+        run: |
+          git config user.name ghezelbaash-source-architect
+          git config user.email actions@users.noreply.github.com
+      - name: Install exact dependencies
+        run: npm ci --ignore-scripts
+      - name: Freeze current DIST baseline
+        run: |
+          set -euo pipefail
+          npm run build
+          cp dist/index.html /tmp/baseline-index.html
+          node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/baseline-dist.json
+      - name: Slice A - canonical page and production defect corrections
+        run: |
+          set -euo pipefail
+          node scripts/_tmp-final-refactor.mjs content
+          npm run prepare:generated
+          ASTRO_TELEMETRY_DISABLED=1 npx astro build
+          node scripts/compute-visible-contract.mjs dist/index.html --summary > /tmp/visible-contract.json
+          node scripts/_tmp-final-refactor.mjs visible
+          npm run build
+          node scripts/_tmp-final-refactor.mjs verify-index /tmp/baseline-index.html dist/index.html
+          node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/content-dist.json
+          node scripts/_tmp-final-refactor.mjs compare /tmp/baseline-dist.json /tmp/content-dist.json index.html _headers artifact-manifest.json live-serving-attestation.json
+          git add -A
+          git commit -m 'Canonicalize the single-page source and correct live release semantics'
+      - name: Slice B - converge all artifact writers
+        run: |
+          set -euo pipefail
+          node scripts/_tmp-final-refactor.mjs writers
+          npm run build
+          node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/writers-dist.json
+          node scripts/_tmp-final-refactor.mjs compare /tmp/content-dist.json /tmp/writers-dist.json
+          git add -A
+          git commit -m 'Converge machine projections and serving headers to single writers'
+      - name: Slice C - normalize truth and release tooling
+        run: |
+          set -euo pipefail
+          node scripts/_tmp-final-refactor.mjs truth
+          npm run build
+          node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/truth-dist.json
+          node scripts/_tmp-final-refactor.mjs compare /tmp/writers-dist.json /tmp/truth-dist.json
+          git add -A
+          git commit -m 'Normalize canonical truth ownership and positive release contracts'
+      - name: Strength and architecture regression gate
+        run: |
+          set -euo pipefail
+          npm run release:prepare
+          npm run build
+          node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/final-dist.json
+          node scripts/_tmp-final-refactor.mjs compare /tmp/truth-dist.json /tmp/final-dist.json
+          test "$(find src/content-source -maxdepth 1 -type f \( -name '*.md' -o -name '*.html' \) | wc -l)" -eq 1
+          test -f src/content-source/page.md
+          ! grep -R -n -E 'retiredDirectAnswerProjection|canonicalizeMachineResourceDefinitions|legacy machine-resource definition|v1\.2\.1-baseline-availableService-union|forbiddenRegressions' scripts src .release/policy .github/workflows --exclude='_tmp-final-source-refactor.yml'
+          ! grep -R -n 'ensureBlock(' scripts/finalize-dist.mjs
+          ! grep -R -n 'normalizeGoogleSupportGraph' src/layouts
+          ! grep -R -n 'canonical_factual_authority' scripts/prepare-huggingface-distribution.mjs .release/policy/hf-authority-contract.json
+      - name: Remove one-shot refactor machinery and push only proven commits
+        run: |
+          set -euo pipefail
+          git rm scripts/_tmp-final-refactor.mjs .github/workflows/_tmp-final-source-refactor.yml
+          git commit -m '[refactor-complete] Remove one-shot final refactor machinery'
+          git status --short
+          git push origin HEAD:cleanup/final-2026-source-architecture
