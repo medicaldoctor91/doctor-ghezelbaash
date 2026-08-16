@@ -66,7 +66,7 @@ jobs:
           cp dist/index.html /tmp/baseline-index.html
           rm -rf /tmp/baseline-derived
           mkdir -p /tmp/baseline-derived
-          cp dist/index.md dist/llms-full.txt dist/provenance.jsonld /tmp/baseline-derived/
+          cp dist/index.md dist/llms-full.txt dist/provenance.jsonld dist/evidence-snapshot.json dist/knowledge.xml /tmp/baseline-derived/
           node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/baseline-dist.json
       - name: Slice A - canonical page and production defect corrections
         run: |
@@ -75,6 +75,7 @@ jobs:
           cp scripts/_tmp-hero-validator-target.mjs scripts/validate-critical-hero-geometry.mjs
           python - <<'PY'
           from pathlib import Path
+          import json
           p=Path('scripts/validate-source.mjs')
           text=p.read_text()
           old="'src/content-source/000-frontmatter.md'"
@@ -83,6 +84,16 @@ jobs:
           text=text.replace(old,"'src/content-source/page.md'")
           text=text.replace('Generated home.md drift from canonical modular source','Generated home.md drift from canonical page source')
           p.write_text(text)
+
+          release=json.loads(Path('src/data/release.json').read_text())
+          evidence_id=release['canonicalUrl']+'#evidence-zenodo-current-release'
+          current_url='https://doi.org/'+release['dataset']['zenodo']['versionDoi']
+          for file,key in [('src/data/evidence-registry.json','evidence'),('src/data/evidence-snapshot.json','entries')]:
+              path=Path(file); data=json.loads(path.read_text()); rows=[row for row in data.get(key,[]) if row.get('id')==evidence_id]
+              if len(rows)!=1:
+                  raise SystemExit(f'{file}: expected one current Zenodo evidence row, found {len(rows)}')
+              rows[0]['url']=current_url
+              path.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
           PY
           npm run prepare:generated
           ASTRO_TELEMETRY_DISABLED=1 npx astro build
@@ -92,7 +103,7 @@ jobs:
           node scripts/_tmp-final-refactor.mjs verify-index /tmp/baseline-index.html dist/index.html
           node scripts/_tmp-verify-approved-derived.mjs /tmp/baseline-derived dist
           node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/content-dist.json
-          node scripts/_tmp-final-refactor.mjs compare /tmp/baseline-dist.json /tmp/content-dist.json index.html index.md llms-full.txt provenance.jsonld croissant.json datapackage.json dcat.ttl _headers artifact-manifest.json live-serving-attestation.json
+          node scripts/_tmp-final-refactor.mjs compare /tmp/baseline-dist.json /tmp/content-dist.json index.html index.md llms-full.txt provenance.jsonld evidence-snapshot.json knowledge.xml croissant.json datapackage.json dcat.ttl _headers artifact-manifest.json live-serving-attestation.json
           git add -A
           git commit -m 'Canonicalize the single-page source and correct live release semantics'
       - name: Slice B - converge all artifact writers
