@@ -1,5 +1,5 @@
 name: Set Wikidata native name to common Persian name
-# retry on a fresh runner because the previous Azure IP was globally blocked by Wikimedia
+# fresh runner retry; fail fast on Wikimedia global IP blocks
 
 on:
   push:
@@ -12,8 +12,8 @@ permissions:
 
 jobs:
   update:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    runs-on: ubuntu-22.04
+    timeout-minutes: 8
     env:
       WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
       WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
@@ -28,7 +28,7 @@ jobs:
           import json, os, requests, time
           WD='https://www.wikidata.org/w/api.php'; PERSON='Q140287622'; DOCTOR='Q4618975'
           OLD='محمدسعید قزلباش'; NEW='سعید قزلباش'
-          UA='Medicaldoctor91NativeNameCommon/1.0 (https://www.ghezelbaash.ir/)'
+          UA='Medicaldoctor91NativeNameCommon/1.1 (https://www.ghezelbaash.ir/)'
           anon=requests.Session(); anon.headers['User-Agent']=UA
           auth=requests.Session(); auth.headers['User-Agent']=UA
           def get(sess,p):
@@ -36,28 +36,26 @@ jobs:
               if 'error' in d: raise RuntimeError(d['error'])
               return d
           def post(p):
-              waits=[10,20,30,45,60,90]; last=None
-              for w in waits:
+              for w in [5,10,20]:
                   r=auth.post(WD,data={**p,'format':'json','formatversion':2,'maxlag':5},timeout=120); r.raise_for_status(); d=r.json()
                   if 'error' not in d: return d
-                  last=d['error']
-                  if last.get('code') in {'maxlag','ratelimited','actionthrottled','failed-save'}:
+                  err=d['error']; blob=json.dumps(err,ensure_ascii=False).lower()
+                  if 'globalblocking-blockedtext-range' in blob or 'open proxy/webhost' in blob:
+                      raise RuntimeError({'global_ip_block':err})
+                  if err.get('code') in {'maxlag','ratelimited','actionthrottled'}:
                       time.sleep(w); continue
-                  raise RuntimeError(last)
-              raise RuntimeError({'write_retry_exhausted':last})
+                  raise RuntimeError(err)
+              raise RuntimeError('retry exhausted')
           def ent(sess): return get(sess,{'action':'wbgetentities','ids':PERSON,'props':'claims|info'})['entities'][PERSON]
           def item_qid(c):
               v=c.get('mainsnak',{}).get('datavalue',{}).get('value')
               return v.get('id') if isinstance(v,dict) else None
           before=ent(anon)
-          native=before.get('claims',{}).get('P1559',[])
-          prefix=before.get('claims',{}).get('P511',[])
+          native=before.get('claims',{}).get('P1559',[]); prefix=before.get('claims',{}).get('P511',[])
           if len(native)!=1: raise RuntimeError({'unexpected_P1559_count':len(native)})
           v=native[0].get('mainsnak',{}).get('datavalue',{}).get('value')
-          if not isinstance(v,dict) or v.get('language')!='fa' or v.get('text') not in {OLD,NEW}:
-              raise RuntimeError({'unexpected_P1559_value':v})
-          if len(prefix)!=1 or item_qid(prefix[0])!=DOCTOR:
-              raise RuntimeError({'unexpected_P511':[item_qid(c) for c in prefix]})
+          if not isinstance(v,dict) or v.get('language')!='fa' or v.get('text') not in {OLD,NEW}: raise RuntimeError({'unexpected_P1559_value':v})
+          if len(prefix)!=1 or item_qid(prefix[0])!=DOCTOR: raise RuntimeError({'unexpected_P511':[item_qid(c) for c in prefix]})
           native_refs_before=len(native[0].get('references',[])); prefix_id=prefix[0].get('id'); prefix_refs=len(prefix[0].get('references',[]))
           if native_refs_before<1 or prefix_refs<1: raise RuntimeError('Expected sourced P1559 and P511')
           lt=get(auth,{'action':'query','meta':'tokens','type':'login'})['query']['tokens']['logintoken']
@@ -68,12 +66,10 @@ jobs:
           if v.get('text')==OLD:
               post({'action':'wbsetclaimvalue','claim':native[0]['id'],'snaktype':'value','value':json.dumps({'text':NEW,'language':'fa'},ensure_ascii=False,separators=(',',':')),'token':csrf,'summary':'Use common Persian name as native name'})
               changed=True
-          after=ent(anon)
-          n2=after.get('claims',{}).get('P1559',[]); p2=after.get('claims',{}).get('P511',[])
+          after=ent(anon); n2=after.get('claims',{}).get('P1559',[]); p2=after.get('claims',{}).get('P511',[])
           if len(n2)!=1: raise RuntimeError({'final_P1559_count':len(n2)})
           nv=n2[0].get('mainsnak',{}).get('datavalue',{}).get('value')
           if nv != {'text':NEW,'language':'fa'}: raise RuntimeError({'final_P1559':nv})
           if len(n2[0].get('references',[])) != native_refs_before: raise RuntimeError('P1559 references changed')
-          if len(p2)!=1 or p2[0].get('id')!=prefix_id or item_qid(p2[0])!=DOCTOR or len(p2[0].get('references',[]))!=prefix_refs:
-              raise RuntimeError('P511 changed unexpectedly')
+          if len(p2)!=1 or p2[0].get('id')!=prefix_id or item_qid(p2[0])!=DOCTOR or len(p2[0].get('references',[]))!=prefix_refs: raise RuntimeError('P511 changed unexpectedly')
           print(json.dumps({'ok':True,'changed_P1559':changed,'P1559':nv,'P1559_references':len(n2[0].get('references',[])),'P511':DOCTOR,'P511_unchanged':True,'P511_references':len(p2[0].get('references',[])),'lastrevid':after.get('lastrevid')},ensure_ascii=False,indent=2))
