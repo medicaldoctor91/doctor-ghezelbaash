@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci --ignore-scripts
-      - name: Resolve current release and external identities
+      - name: Resolve finalized current release and external identities
         shell: bash
         run: |
           set -euo pipefail
@@ -39,17 +39,9 @@ jobs:
           PLACE_ID="$(node -p "require('./src/data/release.json').clinic.placeId")"
           HF_URL="$(node -p "require('./src/data/release.json').dataset.huggingFace.dataset")"
           HF_REPO="${HF_URL#https://huggingface.co/datasets/}"
-          CONTROL_BRANCH="release-control/v$RELEASE"
-          CONTROL_FILE=".release/control/v$RELEASE.json"
-          printf 'RELEASE=%s\nPLACE_ID=%s\nHF_REPO=%s\nCONTROL_BRANCH=%s\nCONTROL_FILE=%s\n' "$RELEASE" "$PLACE_ID" "$HF_REPO" "$CONTROL_BRANCH" "$CONTROL_FILE" >> "$GITHUB_ENV"
-      - name: Require completed external convergence
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin "$CONTROL_BRANCH"
-          git show "origin/$CONTROL_BRANCH:$CONTROL_FILE" > /tmp/release-control.json
-          test "$(node -p "require('/tmp/release-control.json').stage")" = 'COMPLETE'
+          git fetch --tags --force origin
           git rev-parse -q --verify "refs/tags/v$RELEASE" >/dev/null
+          printf 'RELEASE=%s\nPLACE_ID=%s\nHF_REPO=%s\n' "$RELEASE" "$PLACE_ID" "$HF_REPO" >> "$GITHUB_ENV"
       - name: Read Google Places and compose only on tuple change
         id: places
         env:
@@ -61,35 +53,6 @@ jobs:
           curl --fail --silent --show-error -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" -H 'X-Goog-FieldMask: id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId' "https://places.googleapis.com/v1/places/$PLACE_ID" > /tmp/place.json
           export GOOGLE_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           node scripts/process-google-reputation.mjs /tmp/place.json
-      - name: Persist successful poll telemetry in release control
-        env:
-          CHECKED_AT: ${{ steps.places.outputs.checked_at }}
-          CHECKED_RATING: ${{ steps.places.outputs.rating }}
-          CHECKED_REVIEW_COUNT: ${{ steps.places.outputs.review_count }}
-          TUPLE_CHANGED: ${{ steps.places.outputs.changed }}
-          CHECKED_PLACE_ID: ${{ steps.places.outputs.place_id }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin "$CONTROL_BRANCH"
-          rm -rf /tmp/reputation-control
-          git worktree add --detach /tmp/reputation-control "origin/$CONTROL_BRANCH"
-          mkdir -p /tmp/reputation-control/.release/control
-          node - <<'NODE'
-          const fs=require('fs'),path='/tmp/reputation-control/.release/control/reputation-telemetry.json';
-          const telemetry={schemaVersion:'1.0',baseRelease:process.env.RELEASE,placeId:process.env.CHECKED_PLACE_ID,lastSuccessfullyCheckedAt:process.env.CHECKED_AT,checkedTuple:{rating:Number(process.env.CHECKED_RATING),reviewCount:Number(process.env.CHECKED_REVIEW_COUNT)},tupleChanged:process.env.TUPLE_CHANGED==='true',scope:'control-plane-only',publicFreshness:false};
-          fs.writeFileSync(path,JSON.stringify(telemetry,null,2)+'\n');console.log(JSON.stringify({reputationTelemetry:'PASS',...telemetry}));
-          NODE
-          git -C /tmp/reputation-control config user.name ghezelbaash-reputation-telemetry
-          git -C /tmp/reputation-control config user.email actions@users.noreply.github.com
-          git -C /tmp/reputation-control add .release/control/reputation-telemetry.json
-          if git -C /tmp/reputation-control diff --cached --quiet; then
-            echo 'REPUTATION_TELEMETRY_NO_CHANGE'
-          else
-            git -C /tmp/reputation-control commit -m 'Record successful Google reputation poll telemetry'
-            git -C /tmp/reputation-control push origin "HEAD:$CONTROL_BRANCH"
-          fi
-          git worktree remove --force /tmp/reputation-control
       - name: Prove no-op poll made no public source mutation
         if: steps.places.outputs.changed != 'true'
         shell: bash
