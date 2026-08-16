@@ -6,8 +6,7 @@ const writeJson=(file,value)=>writeFile(file,`${JSON.stringify(value,null,2)}\n`
 const must=(cond,msg)=>{if(!cond)throw new Error(msg)};
 const release=await readJson('src/data/release.json');
 const z=release.dataset?.zenodo;
-must(z&&Array.isArray(z.releaseHistory),'release.json must be migrated to releaseHistory[] before promotion');
-for(const forbidden of ['state','draftApi','publishedApi','previousVersion','historicalVersion'])must(!Object.hasOwn(z,forbidden),`Operational/legacy Zenodo field present before promotion: ${forbidden}`);
+must(z&&Array.isArray(z.releaseHistory),'Zenodo release truth requires releaseHistory[]');
 const old={release:release.release,date:release.dateModified,recordId:String(z.recordId),versionDoi:z.versionDoi};
 const next={release:args.version,date:args.date,recordId:String(args['zenodo-record']||''),versionDoi:args['zenodo-doi']};
 must(/^\d+\.\d+\.\d+$/.test(next.release||''),'Invalid --version');
@@ -27,7 +26,6 @@ z.versionDoi=next.versionDoi;z.recordId=next.recordId;
 release.release=next.release;release.dateModified=next.date;
 await writeJson('src/data/release.json',release);
 for(const file of ['package.json','package-lock.json']){const value=await readJson(file);value.version=next.release;if(value.packages?.[''])value.packages[''].version=next.release;await writeJson(file,value)}
-const inv=await readJson('src/data/release-invariants.json');inv.release=next.release;inv.date=next.date;await writeJson('src/data/release-invariants.json',inv);
 for(const file of ['src/data/volatile-facts.json','src/data/evidence-snapshot.json','src/data/evidence-registry.json']){const value=await readJson(file);if(Object.hasOwn(value,'release'))value.release=next.release;await writeJson(file,value)}
 
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');

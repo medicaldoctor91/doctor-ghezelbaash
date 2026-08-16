@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed Zenodo v1.2.2 preservation lifecycle: reserve -> stage -> publish -> verify-public."""
+"""Fail-closed Zenodo preservation lifecycle: reserve -> stage -> publish -> verify-public."""
 from __future__ import annotations
 import argparse, hashlib, json, os, time
 from pathlib import Path

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline transaction and idempotence test for subdomain redirect migration."""
+"""Offline transaction and idempotence test for the Cloudflare edge contract."""
 
 from __future__ import annotations
 
@@ -20,12 +20,12 @@ edge = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(edge)
 
 
-def legacy_rule(rule_id: int, host: str, target: str) -> dict[str, Any]:
+def existing_rule(rule_id: int, host: str, target: str) -> dict[str, Any]:
     return {
         "id": str(rule_id),
-        "ref": f"dashboard_manual_{rule_id}",
+        "ref": f"existing_rule_{rule_id}",
         "expression": f'(http.host eq "{host}")',
-        "description": "Legacy dashboard redirect",
+        "description": "Pre-existing redirect",
         "action": "redirect",
         "action_parameters": {
             "from_value": {
@@ -41,14 +41,14 @@ def legacy_rule(rule_id: int, host: str, target: str) -> dict[str, Any]:
 class FakeCloudflareApi:
     def __init__(self) -> None:
         self.zone_rules = [
-            legacy_rule(1, "blog.ghezelbaash.ir", "https://www.ghezelbaash.ir/"),
-            legacy_rule(2, "doctor.ghezelbaash.ir", "https://www.google.com/maps/"),
-            legacy_rule(
+            existing_rule(1, "blog.ghezelbaash.ir", "https://www.ghezelbaash.ir/"),
+            existing_rule(2, "doctor.ghezelbaash.ir", "https://www.google.com/maps/"),
+            existing_rule(
                 3,
                 "github.ghezelbaash.ir",
                 "https://github.com/medicaldoctor91/doctor-ghezelbaash",
             ),
-            legacy_rule(
+            existing_rule(
                 4,
                 "ig.ghezelbaash.ir",
                 "https://www.instagram.com/doctor.ghezelbaash/",
@@ -159,9 +159,9 @@ class FakeCloudflareApi:
             rule_id = path.rsplit("/", 1)[1]
             current = next(row for row in self.zone_rules if row["id"] == rule_id)
             event = (
-                "zone:legacy-blog-deleted"
+                "zone:conflicting-blog-deleted"
                 if "blog.ghezelbaash.ir" in current["expression"]
-                else "zone:legacy-single-deleted"
+                else "zone:conflicting-single-deleted"
             )
             self.mutate(event)
             self.zone_rules = [row for row in self.zone_rules if row["id"] != rule_id]
@@ -477,21 +477,21 @@ if not all(dns_contract["requiredHostCoverage"].values()):
     raise AssertionError("Required DNS host coverage was not read back")
 
 # The production entrypoint must establish and verify all exact Bulk Redirects
-# before removing the higher-priority legacy blog Single Redirect.
+# before removing the higher-priority competing blog Single Redirect.
 bulk_first = edge.reconcile_bulk_redirects(api, "test-account", contract)
 if bulk_first["itemCount"] != 87:
     raise AssertionError("The complete 87-path historical inventory was not installed")
 single_first = edge.reconcile_subdomain_redirects(api, "test-zone", contract)
 if len(api.zone_rules) != 3 or single_first["managedRuleCount"] != 3:
-    raise AssertionError("Legacy four-rule migration did not converge to three catchalls")
+    raise AssertionError("Redirect reconciliation did not converge to three managed catchalls")
 if any("blog.ghezelbaash.ir" in row["expression"] for row in api.zone_rules):
     raise AssertionError("A Single Redirect still pre-empts historical blog URLs")
 if api.events.index("account:list-items-replaced") > api.events.index(
-    "zone:legacy-blog-deleted"
+    "zone:conflicting-blog-deleted"
 ) or api.events.index("account:bulk-rule-created") > api.events.index(
-    "zone:legacy-blog-deleted"
+    "zone:conflicting-blog-deleted"
 ):
-    raise AssertionError("Legacy blog catchall was removed before Bulk Redirect readiness")
+    raise AssertionError("Competing blog catchall was removed before Bulk Redirect readiness")
 
 first_mutations = api.mutations
 api.mutations = 0
