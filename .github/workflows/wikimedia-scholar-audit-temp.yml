@@ -22,103 +22,74 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
-      - name: Read-only audit of Wikidata, Wikipedia and authenticated rights
+      - name: Read-only final verification of Wikidata and Wikipedia state
         shell: python
         run: |
           import json, os, requests
-
-          WD='https://www.wikidata.org/w/api.php'
-          WP='https://en.wikipedia.org/w/api.php'
-          UA='Medicaldoctor91ScholarlyAudit/1.0 (https://www.ghezelbaash.ir/)'
-          QIDS=['Q36942316','Q140298431','Q117439006','Q141104212','Q141104222','Q141104223','Q141104224','Q141104236','Q141104242','Q141104244','Q141104245','Q141104262']
+          WD='https://www.wikidata.org/w/api.php'; WP='https://en.wikipedia.org/w/api.php'
+          UA='Medicaldoctor91ScholarlyAudit/1.1 (https://www.ghezelbaash.ir/)'
+          QIDS=['Q36942316','Q140298431','Q117439006','Q93179398','Q141104222','Q141104223','Q141104236','Q141104242','Q141104244','Q141104245','Q141104262','Q141104731','Q141104735','Q141104740']
           EXPECTED_DOIS={
-            'Q36942316':'10.4103/2008-7802.182734',
-            'Q140298431':'10.3390/healthcare9091169',
-            'Q117439006':'10.3390/ijerph19159759',
-            'Q141104212':'10.1016/j.jad.2019.04.039',
-            'Q141104222':'10.3390/md23020084',
-            'Q141104223':'10.3390/healthcare9121626',
-            'Q141104224':'10.3390/ijerph19159759',
-            'Q141104236':'10.3389/fnbeh.2023.1135909',
-            'Q141104242':'10.3389/fpsyg.2024.1452878',
-            'Q141104244':'10.3390/jcm14010170',
-            'Q141104245':'10.3389/fpsyt.2025.1516920',
-            'Q141104262':'10.1111/bjhp.70024',
+            'Q36942316':'10.4103/2008-7802.182734','Q140298431':'10.3390/healthcare9091169','Q117439006':'10.3390/ijerph19159759',
+            'Q93179398':'10.1016/j.jad.2019.04.039','Q141104222':'10.3390/md23020084','Q141104223':'10.3390/healthcare9121626',
+            'Q141104236':'10.3389/fnbeh.2023.1135909','Q141104242':'10.3389/fpsyg.2024.1452878','Q141104244':'10.3390/jcm14010170',
+            'Q141104245':'10.3389/fpsyt.2025.1516920','Q141104262':'10.1111/bjhp.70024','Q141104731':'10.26444/ms/187881',
+            'Q141104735':'10.5080/u27544','Q141104740':'10.31083/AP38786'
           }
-
+          TARGETS={'Q141104731':'Q36942316','Q141104735':'Q140298431','Q141104740':'Q140298431'}
           def req(sess,url,params,post=False):
-            p={**params,'format':'json','formatversion':2}
-            r=(sess.post(url,data=p,timeout=90) if post else sess.get(url,params=p,timeout=90))
-            r.raise_for_status(); d=r.json()
+            p={**params,'format':'json','formatversion':2}; r=(sess.post(url,data=p,timeout=90) if post else sess.get(url,params=p,timeout=90)); r.raise_for_status(); d=r.json()
             if 'error' in d: raise RuntimeError(d['error'])
             return d
-
           anon=requests.Session(); anon.headers['User-Agent']=UA
           entities=req(anon,WD,{'action':'wbgetentities','ids':'|'.join(QIDS),'props':'claims|labels|descriptions|info'})['entities']
-          def qidval(c):
-            v=c.get('mainsnak',{}).get('datavalue',{}).get('value')
-            return v.get('id') if isinstance(v,dict) else v
-          def vals(e,p): return [qidval(c) for c in e.get('claims',{}).get(p,[]) if qidval(c) is not None]
-          out={'entities':{},'doi_collisions':{},'wikipedia':{},'auth':{}}
+          def rawval(st): return st.get('mainsnak',{}).get('datavalue',{}).get('value')
+          def val(st):
+            v=rawval(st); return v.get('id') if isinstance(v,dict) and 'id' in v else v
+          def vals(e,p): return [val(c) for c in e.get('claims',{}).get(p,[]) if val(c) is not None]
+          def refs(st):
+            urls=[]
+            for r in st.get('references',[]):
+              for sn in r.get('snaks',{}).get('P854',[]):
+                v=sn.get('datavalue',{}).get('value')
+                if v: urls.append(v)
+            return urls
+          out={'entities':{},'doi_exact':{},'new_edges':{},'wikipedia':{},'auth':{}}
           for q in QIDS:
             e=entities.get(q,{})
-            out['entities'][q]={
-              'missing':bool(e.get('missing',False)),
-              'lastrevid':e.get('lastrevid'),
-              'label':e.get('labels',{}).get('en',{}).get('value'),
-              'P356':vals(e,'P356'),'P698':vals(e,'P698'),'P932':vals(e,'P932'),
-              'P50':vals(e,'P50'),'P921':vals(e,'P921'),'P2860':vals(e,'P2860')
-            }
-
-          # Exact DOI collision audit using Wikidata search followed by claim verification.
+            out['entities'][q]={'missing':bool(e.get('missing',False)),'lastrevid':e.get('lastrevid'),'label':e.get('labels',{}).get('en',{}).get('value'),'P31':vals(e,'P31'),'P356':vals(e,'P356'),'P698':vals(e,'P698'),'P932':vals(e,'P932'),'P50':vals(e,'P50'),'P921':vals(e,'P921'),'P2860':vals(e,'P2860'),'P577':vals(e,'P577')}
+          for q,target in TARGETS.items():
+            matches=[]
+            for st in entities[q].get('claims',{}).get('P2860',[]):
+              if val(st)==target: matches.append({'claim_id':st.get('id'),'references':refs(st)})
+            out['new_edges'][q]={'target':target,'matches':matches}
+          # Exact DOI search + claim verification; ignore redirect aliases by reporting canonical entity id returned.
           for doi in sorted(set(EXPECTED_DOIS.values())):
-            s=req(anon,WD,{'action':'wbsearchentities','search':doi,'language':'en','type':'item','limit':50})
-            ids=[r['id'] for r in s.get('search',[])]
+            sr=req(anon,WD,{'action':'query','list':'search','srsearch':f'haswbstatement:P356={doi.upper()}','srnamespace':0,'srlimit':50})['query']['search']
+            ids=[x['title'] for x in sr if x['title'].startswith('Q')]
             exact=[]
             if ids:
-              ee=req(anon,WD,{'action':'wbgetentities','ids':'|'.join(ids),'props':'claims|labels|info'})['entities']
-              for q,e in ee.items():
-                got=[str(x).lower() for x in vals(e,'P356')]
-                if doi.lower() in got: exact.append(q)
-            # Also include known expected QIDs even if search index is delayed.
+              ee=req(anon,WD,{'action':'wbgetentities','ids':'|'.join(ids),'props':'claims|info'})['entities']
+              for requested,e in ee.items():
+                if doi.lower() in [str(x).lower() for x in vals(e,'P356')]:
+                  canonical=e.get('id') or requested
+                  if canonical not in exact: exact.append(canonical)
+            # include expected known entity in case search index lags
             for q,known in EXPECTED_DOIS.items():
-              if known.lower()==doi.lower():
-                got=[str(x).lower() for x in out['entities'].get(q,{}).get('P356',[])]
-                if doi.lower() in got and q not in exact: exact.append(q)
-            out['doi_collisions'][doi]=sorted(exact)
-
-          # Main + talk page live state.
-          pages=[
-            ('Treatment of bipolar disorder','27280013','Ghezelbash'),
-            ('Talk:Treatment of bipolar disorder','Ghezelbash-COI-Omega3-20260816','27280013'),
-            ('Attachment and health','34574943','Ghezelbash'),
-            ('Talk:Attachment and health','Ghezelbash-COI-Attachment-20260816','34574943'),
-          ]
+              if known.lower()==doi.lower() and doi.lower() in [str(x).lower() for x in out['entities'].get(q,{}).get('P356',[])]:
+                if q not in exact: exact.append(q)
+            out['doi_exact'][doi]=exact
+          pages=[('Treatment of bipolar disorder','27280013','Ghezelbash'),('Talk:Treatment of bipolar disorder','Ghezelbash-COI-Omega3-20260816','27280013'),('Attachment and health','34574943','Ghezelbash'),('Talk:Attachment and health','Ghezelbash-COI-Attachment-20260816','34574943')]
           for title,a,b in pages:
-            q=req(anon,WP,{'action':'query','prop':'revisions|info','titles':title,'rvprop':'ids|timestamp|content','rvslots':'main','inprop':'protection'})['query']['pages'][0]
-            text=''
-            if q.get('missing') is None and q.get('revisions'):
-              slot=q['revisions'][0]['slots']['main']; text=slot.get('content') or slot.get('*') or ''
-            out['wikipedia'][title]={
-              'missing':q.get('missing') is not None,'lastrevid':q.get('lastrevid'),
-              'has_marker_a':a in text,'has_marker_b':b in text,'protection':q.get('protection',[])
-            }
-
-          # Authenticate read-only and report rights on both projects; no edit call is made.
-          def login_rights(api,label):
+            p=req(anon,WP,{'action':'query','prop':'revisions|info','titles':title,'rvprop':'ids|timestamp|content','rvslots':'main','inprop':'protection'})['query']['pages'][0]; text=''
+            if p.get('missing') is None and p.get('revisions'):
+              slot=p['revisions'][0]['slots']['main']; text=slot.get('content') or slot.get('*') or ''
+            out['wikipedia'][title]={'missing':p.get('missing') is not None,'lastrevid':p.get('lastrevid'),'has_a':a in text,'has_b':b in text,'protection':p.get('protection',[])}
+          def rights(api,label):
             s=requests.Session(); s.headers['User-Agent']=UA
-            lt=req(s,api,{'action':'query','meta':'tokens','type':'login'})['query']['tokens']['logintoken']
-            lg=req(s,api,{'action':'login','lgname':os.environ['WIKIMEDIA_USERNAME'],'lgpassword':os.environ['WIKIMEDIA_BOT_PASSWORD'],'lgtoken':lt},post=True)
-            if lg.get('login',{}).get('result')!='Success':
-              out['auth'][label]={'login':lg.get('login',{})}; return
-            ui=req(s,api,{'action':'query','meta':'userinfo','uiprop':'groups|rights|blockinfo'})['query']['userinfo']
-            rights=set(ui.get('rights',[]))
-            out['auth'][label]={
-              'name':ui.get('name'),'id':ui.get('id'),'groups':ui.get('groups',[]),
-              'can_edit':'edit' in rights,'can_createpage':'createpage' in rights,
-              'blockedby':ui.get('blockedby'),'blockreason':ui.get('blockreason')
-            }
-          login_rights(WD,'wikidata')
-          login_rights(WP,'enwiki')
-
+            lt=req(s,api,{'action':'query','meta':'tokens','type':'login'})['query']['tokens']['logintoken']; lg=req(s,api,{'action':'login','lgname':os.environ['WIKIMEDIA_USERNAME'],'lgpassword':os.environ['WIKIMEDIA_BOT_PASSWORD'],'lgtoken':lt},post=True)
+            if lg.get('login',{}).get('result')!='Success': out['auth'][label]={'login':lg.get('login')}; return
+            ui=req(s,api,{'action':'query','meta':'userinfo','uiprop':'groups|rights|blockinfo'})['query']['userinfo']; rr=set(ui.get('rights',[]))
+            out['auth'][label]={'name':ui.get('name'),'can_edit':'edit' in rr,'blockedby':ui.get('blockedby'),'blockreason':ui.get('blockreason')}
+          rights(WD,'wikidata'); rights(WP,'enwiki')
           print(json.dumps(out,ensure_ascii=False,indent=2,sort_keys=True))
