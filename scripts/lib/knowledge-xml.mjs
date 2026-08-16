@@ -1,4 +1,3 @@
-const asArray=value=>Array.isArray(value)?value:[value].filter(Boolean);
 const types=node=>Array.isArray(node?.['@type'])?node['@type']:[node?.['@type']].filter(Boolean);
 const refId=value=>value&&typeof value==='object'&&typeof value['@id']==='string'?value['@id']:'';
 const text=value=>{
@@ -11,57 +10,60 @@ const text=value=>{
   }
   return'';
 };
-const xml=value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-const xmlRich=value=>xml(value).replaceAll("'",'&apos;');
+const xml=value=>String(value??'')
+  .replaceAll('&','&amp;')
+  .replaceAll('<','&lt;')
+  .replaceAll('>','&gt;')
+  .replaceAll('"','&quot;')
+  .replaceAll("'",'&apos;');
 
-function intentClusters(intentGuideText){
+function canonicalIntentClusters(intentSource){
   const marker='## Canonical search-intent clusters';
-  const start=intentGuideText.indexOf(marker);
-  if(start<0)throw new Error('knowledge.xml intent-cluster source missing');
-  const rest=intentGuideText.slice(start+marker.length),next=rest.search(/\n##\s+/),section=next>=0?rest.slice(0,next):rest;
-  const intents=[...section.matchAll(/^- \[([^\]]+)\]\((https:\/\/www\.ghezelbaash\.ir\/#([^)]+))\)\s*$/gm)].map(match=>({label:match[1],url:match[2],anchor:match[3]}));
-  if(!intents.length)throw new Error('knowledge.xml contains no canonical intent clusters');
-  return `  <intentClusters count="${intents.length}">${intents.map(item=>`<intent id="${xmlRich(item.anchor)}" url="${xmlRich(item.url)}"><label>${xmlRich(item.label)}</label></intent>`).join('')}</intentClusters>`;
+  const start=intentSource.indexOf(marker);
+  if(start<0)throw new Error('knowledge.xml: canonical intent-cluster source missing');
+  const rest=intentSource.slice(start+marker.length),next=rest.search(/\n##\s+/),section=next>=0?rest.slice(0,next):rest;
+  const intents=[...section.matchAll(/^- \[([^\]]+)\]\((https:\/\/www\.ghezelbaash\.ir\/#([^)]+))\)\s*$/gm)]
+    .map(match=>({label:match[1],url:match[2],anchor:match[3]}));
+  if(!intents.length)throw new Error('knowledge.xml: no canonical intent clusters were parsed');
+  return `  <intentClusters count="${intents.length}">${intents.map(item=>`<intent id="${xml(item.anchor)}" url="${xml(item.url)}"><label>${xml(item.label)}</label></intent>`).join('')}</intentClusters>`;
 }
 
-function evidenceLayer(evidenceRegistry){
+function canonicalEvidence(evidenceRegistry){
   const tiers=evidenceRegistry.tiers||{};
-  for(const tier of ['A','B','C'])if(typeof tiers[tier]!=='string'||!tiers[tier])throw new Error(`knowledge.xml evidence tier ${tier} definition missing`);
+  for(const tier of ['A','B','C'])if(typeof tiers[tier]!=='string'||!tiers[tier])throw new Error(`knowledge.xml: evidence tier ${tier} definition missing`);
   const evidence=Array.isArray(evidenceRegistry.evidence)?evidenceRegistry.evidence:[];
-  if(!evidence.length)throw new Error('knowledge.xml evidence registry is empty');
-  const tierXml=['A','B','C'].map(tier=>`<tier id="${tier}">${xmlRich(tiers[tier])}</tier>`).join('');
+  if(!evidence.length)throw new Error('knowledge.xml: evidence registry is empty');
+  const tierXml=['A','B','C'].map(tier=>`<tier id="${tier}">${xml(tiers[tier])}</tier>`).join('');
   const itemXml=evidence.map(item=>{
-    const supports=asArray(item.supports).map(text).filter(Boolean);
-    return `<item id="${xmlRich(item.id)}" tier="${xmlRich(item.tier)}" url="${xmlRich(item.url)}" liveStatus="${xmlRich(item.liveStatus)}" verifiedAt="${xmlRich(item.verifiedAt)}">${supports.map(value=>`<supports>${xmlRich(value)}</supports>`).join('')}</item>`;
+    const supports=Array.isArray(item.supports)?item.supports.map(text).filter(Boolean):[];
+    return `<item id="${xml(item.id)}" tier="${xml(item.tier)}" url="${xml(item.url)}" liveStatus="${xml(item.liveStatus)}" verifiedAt="${xml(item.verifiedAt)}">${supports.map(value=>`<supports>${xml(value)}</supports>`).join('')}</item>`;
   }).join('');
   return `  <evidence count="${evidence.length}"><tiers>${tierXml}</tiers>${itemXml}</evidence>`;
 }
 
-function mediaInventory(graph){
+function canonicalMediaInventory(graph){
   const nodes=graph['@graph']||[],videos=nodes.filter(node=>types(node).includes('VideoObject')),images=nodes.filter(node=>types(node).includes('ImageObject'));
   const videoXml=videos.map(video=>{
-    const clips=asArray(video.hasPart).map(refId).filter(Boolean);
-    return `<video id="${xmlRich(video['@id'])}" contentUrl="${xmlRich(text(video.contentUrl||video.url))}" duration="${xmlRich(text(video.duration))}" language="${xmlRich(text(video.inLanguage))}"><name>${xmlRich(text(video.name))}</name>${clips.map(id=>`<clip ref="${xmlRich(id)}"/>`).join('')}</video>`;
+    const clips=(Array.isArray(video.hasPart)?video.hasPart:[video.hasPart]).map(refId).filter(Boolean);
+    return `<video id="${xml(video['@id'])}" contentUrl="${xml(text(video.contentUrl||video.url))}" duration="${xml(text(video.duration))}" language="${xml(text(video.inLanguage))}"><name>${xml(text(video.name))}</name>${clips.map(id=>`<clip ref="${xml(id)}"/>`).join('')}</video>`;
   }).join('');
-  const imageXml=images.map(image=>`<image id="${xmlRich(image['@id'])}" contentUrl="${xmlRich(text(image.contentUrl||image.url))}" encodingFormat="${xmlRich(text(image.encodingFormat))}"><name>${xmlRich(text(image.name))}</name></image>`).join('');
+  const imageXml=images.map(image=>`<image id="${xml(image['@id'])}" contentUrl="${xml(text(image.contentUrl||image.url))}" encodingFormat="${xml(text(image.encodingFormat))}"><name>${xml(text(image.name))}</name></image>`).join('');
   return `  <mediaInventory videoCount="${videos.length}" imageCount="${images.length}">${videoXml}${imageXml}</mediaInventory>`;
 }
 
-function answerResources(graph){
+function canonicalAnswerResources(graph){
   const questions=(graph['@graph']||[]).filter(node=>types(node).includes('Question'));
-  if(!questions.length)throw new Error('knowledge.xml canonical graph contains no Question nodes');
-  const units=questions.map(question=>`<unit questionRef="${xmlRich(question['@id'])}" answerRef="${xmlRich(refId(question.acceptedAnswer))}" source="${xmlRich(text(question.url||question['@id']))}"/>`).join('');
+  if(!questions.length)throw new Error('knowledge.xml: canonical graph contains no Question nodes');
+  const units=questions.map(question=>`<unit questionRef="${xml(question['@id'])}" answerRef="${xml(refId(question.acceptedAnswer))}" source="${xml(text(question.url||question['@id']))}"/>`).join('');
   return `  <answerResources count="${questions.length}" corpus="https://www.ghezelbaash.ir/answers.txt">${units}</answerResources>`;
 }
 
-export function buildKnowledgeXml({release,graph,evidenceRegistry,intentGuideText}){
-  const nodes=graph['@graph']||[],byId=new Map(nodes.filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
-  const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id);
-  if(!person||!clinic||!dataset)throw new Error('knowledge.xml canonical Person/Clinic/Dataset topology missing');
-  const distributions=nodes.filter(node=>types(node).includes('DataDownload'));
-  const questions=nodes.filter(node=>types(node).includes('Question'));
-  const aliases=[...release.primaryEntity.officialAliases,...(release.primaryEntity.reconciliationAliases||[])];
-  const base=`<?xml version="1.0" encoding="UTF-8"?>\n<knowledge release="${release.release}" modified="${release.dateModified}" canonical="${release.canonicalUrl}">\n  <primaryEntity id="${xml(person['@id'])}" googleKg="${xml(release.primaryEntity.googleKnowledgeGraphId)}" wikidata="${xml(release.primaryEntity.wikidata)}"><name>Saeed Ghezelbash</name>${aliases.map(value=>`<alias>${xml(value)}</alias>`).join('')}</primaryEntity>\n  <ownedClinic id="${xml(clinic['@id'])}" googleLocalKg="${xml(release.clinic.googleLocalKgmid)}" placeId="${xml(release.clinic.placeId)}" cid="${xml(release.clinic.cid)}" postalCode="${xml(release.clinic.postalCode)}"><hours>${xml(release.clinic.hours)}</hours><owner ref="${xml(release.primaryEntity.id)}"/></ownedClinic>\n  <dataset id="${xml(dataset['@id'])}" version="${release.release}" creator="${xml(release.primaryEntity.id)}" publisher="${xml(release.primaryEntity.id)}">${distributions.map(node=>`<distribution id="${xml(node['@id'])}" url="${xml(node.contentUrl||node.url)}" format="${xml(node.encodingFormat)}"/>`).join('')}</dataset>\n  <answers count="${questions.length}">${questions.map(question=>`<question id="${xml(question['@id'])}" url="${xml(question.url||question['@id'])}">${xml(text(question.name))}</question>`).join('')}</answers>\n</knowledge>\n`;
-  const additions=[intentClusters(intentGuideText),evidenceLayer(evidenceRegistry),mediaInventory(graph),answerResources(graph)];
-  return base.replace('</knowledge>',`${additions.join('\n')}\n</knowledge>`);
+export function expandKnowledgeXml({body,graph,evidenceRegistry,intentSource}){
+  if(!body.includes('</knowledge>'))throw new Error('knowledge.xml: generated projection lacks closing knowledge element');
+  const additions=[];
+  if(!/<intentClusters\b/.test(body))additions.push(canonicalIntentClusters(intentSource));
+  if(!/<evidence\b/.test(body))additions.push(canonicalEvidence(evidenceRegistry));
+  if(!/<mediaInventory\b/.test(body))additions.push(canonicalMediaInventory(graph));
+  if(!/<answerResources\b/.test(body))additions.push(canonicalAnswerResources(graph));
+  return additions.length?body.replace('</knowledge>',`${additions.join('\n')}\n</knowledge>`):body;
 }
