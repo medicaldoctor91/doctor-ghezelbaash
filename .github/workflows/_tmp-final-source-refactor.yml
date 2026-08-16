@@ -42,12 +42,19 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           p=Path('scripts/_tmp-final-refactor.mjs')
-          lines=p.read_text().splitlines()
+          text=p.read_text()
+          lines=text.splitlines()
           matches=[i for i,line in enumerate(lines) if line.startswith('  const assembler=`')]
           if len(matches)!=1:
               raise SystemExit(f'expected one embedded assembler target, found {len(matches)}')
           lines[matches[0]]="  const assembler=await read('scripts/_tmp-assembler-target.mjs');"
-          p.write_text('\n'.join(lines)+'\n')
+          text='\n'.join(lines)+'\n'
+          old="const result=JSON.parse(await read('/tmp/visible-contract.json'));"
+          new="const result=JSON.parse(await readFile('/tmp/visible-contract.json','utf8'));"
+          if text.count(old)!=1:
+              raise SystemExit(f'expected one visible-contract temp path target, found {text.count(old)}')
+          text=text.replace(old,new)
+          p.write_text(text)
           PY
           node --check scripts/_tmp-final-refactor.mjs
           node --check scripts/_tmp-assembler-target.mjs
