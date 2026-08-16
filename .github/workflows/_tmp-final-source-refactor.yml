@@ -59,6 +59,7 @@ jobs:
           node --check scripts/_tmp-assembler-target.mjs
           node --check scripts/_tmp-hero-validator-target.mjs
           node --check scripts/_tmp-verify-approved-derived.mjs
+          node --check scripts/_tmp-writer-refactor.mjs
       - name: Freeze current DIST baseline
         run: |
           set -euo pipefail
@@ -109,7 +110,7 @@ jobs:
       - name: Slice B - converge all artifact writers
         run: |
           set -euo pipefail
-          node scripts/_tmp-final-refactor.mjs writers
+          node scripts/_tmp-writer-refactor.mjs
           npm run build
           node scripts/_tmp-final-refactor.mjs snapshot dist /tmp/writers-dist.json
           node scripts/_tmp-final-refactor.mjs compare /tmp/content-dist.json /tmp/writers-dist.json
@@ -140,7 +141,7 @@ jobs:
       - name: Remove one-shot refactor machinery and push only proven commits
         run: |
           set -euo pipefail
-          git rm scripts/_tmp-final-refactor.mjs scripts/_tmp-assembler-target.mjs scripts/_tmp-hero-validator-target.mjs scripts/_tmp-verify-approved-derived.mjs .github/workflows/_tmp-final-source-refactor.yml
+          git rm scripts/_tmp-final-refactor.mjs scripts/_tmp-assembler-target.mjs scripts/_tmp-hero-validator-target.mjs scripts/_tmp-verify-approved-derived.mjs scripts/_tmp-writer-refactor.mjs .github/workflows/_tmp-final-source-refactor.yml
           git commit -m '[refactor-complete] Remove one-shot final refactor machinery'
           git status --short
           git push origin HEAD:cleanup/final-2026-source-architecture
