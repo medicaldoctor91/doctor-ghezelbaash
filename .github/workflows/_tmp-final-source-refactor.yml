@@ -36,6 +36,21 @@ jobs:
           git config user.email actions@users.noreply.github.com
       - name: Install exact dependencies
         run: npm ci --ignore-scripts
+      - name: Normalize one-shot refactor bootstrap
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/_tmp-final-refactor.mjs')
+          lines=p.read_text().splitlines()
+          matches=[i for i,line in enumerate(lines) if line.startswith('  const assembler=`')]
+          if len(matches)!=1:
+              raise SystemExit(f'expected one embedded assembler target, found {len(matches)}')
+          lines[matches[0]]="  const assembler=await read('scripts/_tmp-assembler-target.mjs');"
+          p.write_text('\n'.join(lines)+'\n')
+          PY
+          node --check scripts/_tmp-final-refactor.mjs
+          node --check scripts/_tmp-assembler-target.mjs
       - name: Freeze current DIST baseline
         run: |
           set -euo pipefail
@@ -90,7 +105,7 @@ jobs:
       - name: Remove one-shot refactor machinery and push only proven commits
         run: |
           set -euo pipefail
-          git rm scripts/_tmp-final-refactor.mjs .github/workflows/_tmp-final-source-refactor.yml
+          git rm scripts/_tmp-final-refactor.mjs scripts/_tmp-assembler-target.mjs .github/workflows/_tmp-final-source-refactor.yml
           git commit -m '[refactor-complete] Remove one-shot final refactor machinery'
           git status --short
           git push origin HEAD:cleanup/final-2026-source-architecture
