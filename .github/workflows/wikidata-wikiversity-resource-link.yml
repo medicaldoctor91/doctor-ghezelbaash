@@ -35,7 +35,7 @@ jobs:
           TITLE='Botulinum toxin in aesthetic medicine'
           PAGE_URL='https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine'
           TODAY='+2026-08-16T00:00:00Z'
-          UA='Medicaldoctor91WikiversityResourceLink/1.0 (https://www.ghezelbaash.ir/)'
+          UA='Medicaldoctor91WikiversityResourceLink/1.1 (https://www.ghezelbaash.ir/)'
 
           anon=requests.Session(); anon.headers['User-Agent']=UA
           auth=requests.Session(); auth.headers['User-Agent']=UA
@@ -100,17 +100,15 @@ jobs:
                   add_page_ref(claim['id'])
               return claim['id'], created
 
-          # 1) Verify the live Wikiversity page itself and its explicit person-QID authorship signal.
           wv=get(WV,anon,{'action':'query','prop':'revisions','titles':TITLE,'rvprop':'ids|content','rvslots':'main'})
           page=wv['query']['pages'][0]
           if page.get('missing') is not None or page.get('ns')!=0:
               raise RuntimeError({'wikiversity_page_gate_failed':page})
-          rev=page['revisions'][0]
-          slot=rev['slots']['main']; text=slot.get('content') or slot.get('*') or ''
+          wv_rev=page['revisions'][0]
+          slot=wv_rev['slots']['main']; text=slot.get('content') or slot.get('*') or ''
           if PERSON not in text or 'Saeed Ghezelbash' not in text:
               raise RuntimeError('Live Wikiversity page no longer explicitly links the author to Q140287622')
 
-          # 2) Resolve the existing aesthetic-medicine concept from the person's current P101 values.
           person_before=wb_entity(PERSON)
           p101_qids=[qid_of_claim(c) for c in person_before.get('claims',{}).get('P101',[]) if qid_of_claim(c)]
           if BONT_A not in p101_qids:
@@ -121,7 +119,6 @@ jobs:
               raise RuntimeError({'aesthetic_medicine_resolution_failed':aesthetic,'p101':p101_qids})
           AESTHETIC=aesthetic[0]
 
-          # 3) Duplicate gate: exact enwikiversity sitelink first, then exact-title Wikidata search.
           by_sitelink=get(WD,anon,{'action':'wbgetentities','sites':'enwikiversity','titles':TITLE,'props':'claims|labels|descriptions|sitelinks|info'})['entities']
           existing=[qid for qid,e in by_sitelink.items() if qid.startswith('Q') and not e.get('missing')]
           if len(existing)>1:
@@ -148,7 +145,6 @@ jobs:
                   raise RuntimeError({'ambiguous_existing_resource_items':safe})
               resource_qid=safe[0] if safe else None
 
-          # Authenticate only after every read-only gate above passes.
           lt=get(WD,auth,{'action':'query','meta':'tokens','type':'login'})['query']['tokens']['logintoken']
           login=post({'action':'login','lgname':os.environ['WIKIMEDIA_USERNAME'],'lgpassword':os.environ['WIKIMEDIA_BOT_PASSWORD'],'lgtoken':lt})
           if login.get('login',{}).get('result')!='Success':
@@ -174,24 +170,22 @@ jobs:
                   post({'action':'wbsetsitelink','id':resource_qid,'linksite':'enwikiversity','linktitle':TITLE,'token':csrf,'baserevid':current.get('lastrevid'),'summary':'Link the Wikidata resource item to its Wikiversity page'})
                   added_sitelink=True
 
-          # 4) Work-side structured graph.
           changes={}
           _,changes['P31_OER']=ensure_claim(resource_qid,'P31',OER,'Classify as an open educational resource')
           _,changes['P50_author']=ensure_claim(resource_qid,'P50',PERSON,'Link Saeed Ghezelbash as author of the Wikiversity resource')
           _,changes['P921_botulinum_toxin_A']=ensure_claim(resource_qid,'P921',BONT_A,'Add main subject: botulinum toxin type A')
           _,changes['P921_aesthetic_medicine']=ensure_claim(resource_qid,'P921',AESTHETIC,'Add main subject: aesthetic medicine')
 
-          # 5) Person-side reverse edge with explicit author role.
           person=wb_entity(PERSON,auth)
-          rev=[c for c in person.get('claims',{}).get('P3919',[]) if qid_of_claim(c)==resource_qid]
-          if len(rev)>1:
-              raise RuntimeError({'duplicate_person_P3919':len(rev)})
+          reverse_matches=[c for c in person.get('claims',{}).get('P3919',[]) if qid_of_claim(c)==resource_qid]
+          if len(reverse_matches)>1:
+              raise RuntimeError({'duplicate_person_P3919':len(reverse_matches)})
           reverse_created=False
-          if not rev:
+          if not reverse_matches:
               out=post({'action':'wbcreateclaim','entity':PERSON,'property':'P3919','snaktype':'value','value':item_value(resource_qid),'token':csrf,'baserevid':person.get('lastrevid'),'summary':'Link authored Wikiversity learning resource from the person item'})
               reverse=out['claim']; reverse_created=True
           else:
-              reverse=rev[0]
+              reverse=reverse_matches[0]
 
           role_values=[]
           for q in reverse.get('qualifiers',{}).get('P2868',[]):
@@ -201,7 +195,6 @@ jobs:
           if not has_page_ref(reverse):
               add_page_ref(reverse['id'])
 
-          # 6) Live final verification from Wikidata.
           resource=wb_entity(resource_qid)
           person_final=wb_entity(PERSON)
           if resource.get('sitelinks',{}).get('enwikiversity',{}).get('title')!=TITLE:
@@ -222,13 +215,13 @@ jobs:
           print(json.dumps({
               'ok':True,
               'resource_qid':resource_qid,
-              'created_item':created_item,
-              'added_enwikiversity_sitelink':added_sitelink,
-              'resource_claims_created':changes,
-              'person_P3919_created':reverse_created,
+              'created_item_this_run':created_item,
+              'added_enwikiversity_sitelink_this_run':added_sitelink,
+              'resource_claims_created_this_run':changes,
+              'person_P3919_created_this_run':reverse_created,
               'person_P3919_role_author':True,
               'aesthetic_medicine_qid':AESTHETIC,
-              'wikiversity_revision':rev.get('revid'),
+              'wikiversity_revision':wv_rev.get('revid'),
               'resource_lastrevid':resource.get('lastrevid'),
               'person_lastrevid':person_final.get('lastrevid')
           },ensure_ascii=False,indent=2))
