@@ -53,8 +53,7 @@ jobs:
           new="const result=JSON.parse(await readFile('/tmp/visible-contract.json','utf8'));"
           if text.count(old)!=1:
               raise SystemExit(f'expected one visible-contract temp path target, found {text.count(old)}')
-          text=text.replace(old,new)
-          p.write_text(text)
+          p.write_text(text.replace(old,new))
           PY
           node --check scripts/_tmp-final-refactor.mjs
           node --check scripts/_tmp-assembler-target.mjs
@@ -77,13 +76,6 @@ jobs:
               raise SystemExit(f'expected one old content-source requirement, found {text.count(old)}')
           text=text.replace(old,"'src/content-source/page.md'")
           text=text.replace('Generated home.md drift from canonical modular source','Generated home.md drift from canonical page source')
-          p.write_text(text)
-          p=Path('scripts/validate-critical-hero-geometry.mjs')
-          text=p.read_text()
-          old='آخرین دریافت از Google:'
-          if text.count(old)!=1:
-              raise SystemExit(f'expected one reputation wording guard, found {text.count(old)}')
-          text=text.replace(old,'آخرین تغییر ثبت‌شده در Google:')
           p.write_text(text)
           PY
           npm run prepare:generated
@@ -123,14 +115,14 @@ jobs:
           node scripts/_tmp-final-refactor.mjs compare /tmp/truth-dist.json /tmp/final-dist.json
           test "$(find src/content-source -maxdepth 1 -type f \( -name '*.md' -o -name '*.html' \) | wc -l)" -eq 1
           test -f src/content-source/page.md
-          ! grep -R -n -E 'retiredDirectAnswerProjection|canonicalizeMachineResourceDefinitions|legacy machine-resource definition|v1\.2\.1-baseline-availableService-union|forbiddenRegressions' scripts src .release/policy .github/workflows --exclude='_tmp-final-source-refactor.yml'
+          ! grep -R -n -E 'retiredDirectAnswerProjection|canonicalizeMachineResourceDefinitions|legacy machine-resource definition|v1\.2\.1-baseline-availableService-union|forbiddenRegressions' scripts src .release/policy .github/workflows --exclude='_tmp-final-source-refactor.yml' --exclude='_tmp-*'
           ! grep -R -n 'ensureBlock(' scripts/finalize-dist.mjs
           ! grep -R -n 'normalizeGoogleSupportGraph' src/layouts
           ! grep -R -n 'canonical_factual_authority' scripts/prepare-huggingface-distribution.mjs .release/policy/hf-authority-contract.json
       - name: Remove one-shot refactor machinery and push only proven commits
         run: |
           set -euo pipefail
-          git rm scripts/_tmp-final-refactor.mjs scripts/_tmp-assembler-target.mjs .github/workflows/_tmp-final-source-refactor.yml
+          git rm scripts/_tmp-final-refactor.mjs scripts/_tmp-assembler-target.mjs scripts/_tmp-hero-validator-target.mjs .github/workflows/_tmp-final-source-refactor.yml
           git commit -m '[refactor-complete] Remove one-shot final refactor machinery'
           git status --short
           git push origin HEAD:cleanup/final-2026-source-architecture
