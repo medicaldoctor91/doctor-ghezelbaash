@@ -10,7 +10,7 @@ This repository is the version-controlled **source and generation authority**. T
 
 ## Canonical source
 
-- Page content: `src/content-source/`
+- Page content: `src/content-source/page.md`
 - Knowledge graph: `src/data/semantic/knowledge-graph.jsonld`
 - Release/entity truth: `src/data/release.json`, `src/data/release-invariants.json`
 - Evidence/freshness inputs: `src/data/evidence-registry.json`, `src/data/evidence-snapshot.json`, `src/data/volatile-facts.json`
@@ -56,4 +56,4 @@ Runtime target: Node 24.18.0 / npm 11.x. Deployment target: Cloudflare Pages sta
 - Hugging Face: `doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data`
 - Wikidata: physician `Q140287622`, clinic `Q140288589`, Dataset `Q140304972`
 
-The atomic ceiling-release workflow reserves the next DOI, promotes all source contracts, builds once, publishes the same Core bytes to the live site, Zenodo and Hugging Face, preserves the governed aggressive Hugging Face enrichment layer, and runs three verification rounds before it publishes the source commit and version tag.
+The normal website build is deterministic and does not reserve DOI records or publish external distributions. Release-only promotion, packaging, Zenodo preservation and Hugging Face publication are explicit operations outside the routine build path; each consumes the same canonical release/entity truth and is followed by convergence verification before a release is considered complete.
