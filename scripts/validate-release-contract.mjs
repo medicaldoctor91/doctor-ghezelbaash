@@ -1,5 +1,7 @@
 import path from 'node:path';
-import {readFile,readdir} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
+import {assembleCanonicalContent} from './lib/assemble-content.mjs';
+import {assertIdentityFingerprintSource} from './lib/release-identity.mjs';
 
 const root=process.cwd();
 const fail=message=>{throw new Error(message)};
@@ -23,6 +25,7 @@ const lock=await readJson('package-lock.json');
 const codemeta=await readJson('codemeta.json');
 const R=release.release;
 const Z=release.dataset?.zenodo;
+assertIdentityFingerprintSource(release);
 
 if(!validSemver(R))fail(`Invalid release label: ${R}`);
 if(pkg.version!==R||lock.version!==R||lock.packages?.['']?.version!==R)fail('Package release identity drift');
@@ -31,7 +34,7 @@ if(release.reviewedBy!==release.primaryEntity?.id)fail('Medical reviewer must re
 
 const invariantKeys=[
   'contractClasses','evidenceSnapshotMaxAgeDays','externalRdfTripleCount','googlebotFetchBudgetBytes',
-  'googlebotReservedResponseHeaderBytes','googlebotSafetyMarginBytes','headAlternateNameMax','identityFingerprintSha256',
+  'googlebotReservedResponseHeaderBytes','googlebotSafetyMarginBytes','headAlternateNameMax',
   'maxCoreGraphEndByte','maxCriticalCssBytes','maxHeadGraphBytes','maxHtmlBytes','maxOrphanGraphNodes',
   'maxRagPassageChars','maxRootCustomHeaderBytes','maxSupportGraphBytes','maxSupportGraphEndByte',
   'minClaimEvidencePassages','minExternalCssBytes','redirectsSha256','runtime'
@@ -97,13 +100,11 @@ for(const row of answers.answers||[]){
 }
 
 const visible=await readJson('src/data/visible-contract.json');
-const sourceDir=path.join(root,'src/content-source');
-const sourceNames=(await readdir(sourceDir)).filter(name=>/\.(html|md)$/i.test(name)).sort();
-let content='';for(const name of sourceNames)content+=await readFile(path.join(sourceDir,name),'utf8');
+const {content}=await assembleCanonicalContent({root,graph});
 if(!content.includes(`id="${visible.protected.h1Id}"`))fail('Protected H1 is missing');
 for(const heading of visible.protected.aggressiveHeadings||[])if(heading.id&&!content.includes(`id="${heading.id}"`))fail(`Protected aggressive heading is missing: ${heading.id}`);
 for(const heading of visible.protected.instagramHeadingLinks||[])if(heading.id&&!content.includes(`id="${heading.id}"`))fail(`Protected Instagram heading association is missing: ${heading.id}`);
-if(!content.includes('google-maps-clinic-reputation-current')||!content.includes(`https://doi.org/${Z.versionDoi}`))fail('Visible current reputation/Version DOI surface is incomplete');
+if(!content.includes('google-maps-clinic-reputation-current')||!content.includes(`Version ${R}`)||!content.includes(`https://doi.org/${Z.versionDoi}`))fail('Visible current release/reputation surface is incomplete');
 
 const volatile=await readJson('src/data/volatile-facts.json');
 if(volatile.placeId!==release.clinic.placeId||!(Number(volatile.rating)>=1&&Number(volatile.rating)<=5)||!Number.isInteger(Number(volatile.reviewCount))||Number(volatile.reviewCount)<0)fail('Mutable reputation contract failure');

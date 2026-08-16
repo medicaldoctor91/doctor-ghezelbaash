@@ -13,7 +13,6 @@
   "maxOrphanGraphNodes": 0,
   "evidenceSnapshotMaxAgeDays": 45,
   "headAlternateNameMax": 17,
-  "identityFingerprintSha256": "8da41af46c66295c58d20e771d9608e941da01144b0ac108ee90f01dbec92161",
   "minClaimEvidencePassages": 45,
   "googlebotFetchBudgetBytes": 2000000,
   "googlebotReservedResponseHeaderBytes": 20000,

@@ -2,6 +2,9 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir, readdir, unlink } from 'node:fs/promises';
 import { assembleCanonicalContent } from './lib/assemble-content.mjs';
+import { expandKnowledgeXml } from './lib/knowledge-xml.mjs';
+import { normalizeGoogleSupportGraphRaw } from './lib/google-support-graph.mjs';
+import { hashIdentityFingerprint } from './lib/release-identity.mjs';
 
 const root=process.cwd();
 const data=path.join(root,'src/data');
@@ -36,7 +39,7 @@ const refsFromNode=n=>{
   walk(n); return [...new Set(found)];
 };
 const evidenceRefsForNode=n=>[...new Set(refsFromNode(n).map(id=>evidenceById.has(id)?id:evidenceByUrl.get(id)).filter(Boolean))];
-const identityFingerprintSha256=createHash('sha256').update(JSON.stringify(release.identityFingerprint)).digest('hex');
+const identityFingerprintSha256=hashIdentityFingerprint(release);
 
 // ---- Canonical content assembly: modular source -> one permanent Astro Markdown page.
 const assembledCanonical=await assembleCanonicalContent({root,graph});
@@ -113,12 +116,12 @@ for(const id of supportIds){
   const node=byId.get(id); if(!node) throw new Error(`Support selection missing ${id}`);
   supportNodes.push(supportProfile.mode==='full' ? structuredClone(node) : pruneInlineRefs(projectNode(node,profileFor(node)||{})));
 }
-const supportRaw=`${JSON.stringify({'@context':graph['@context'],'@graph':supportNodes})}
-`;
+const supportBaseRaw=`${JSON.stringify({'@context':graph['@context'],'@graph':supportNodes})}\n`;
+const supportRaw=normalizeGoogleSupportGraphRaw(supportBaseRaw);
 if(Buffer.byteLength(supportRaw)>supportProfile.maxBytes) throw new Error(`Support graph ${Buffer.byteLength(supportRaw)} exceeds ${supportProfile.maxBytes}`);
 await writeFile(path.join(semantic,'support-graph.json'),supportRaw);
 
-// ---- Flat graph projection.
+// ---- Flat graph projection.// ---- Flat graph projection.
 const valueText=v=>{if(v==null)return'';if(typeof v==='string'||typeof v==='number'||typeof v==='boolean')return String(v);if(Array.isArray(v))return v.map(valueText).filter(Boolean).join(' | ');if(v['@value']!=null)return String(v['@value']);if(v['@id'])return v['@id'];return JSON.stringify(v)};
 const nodeName=n=>valueText(n?.name).split(' | ')[0];
 const escCsv=v=>{const s=String(v??'');return /[",\n\r]/.test(s)?`"${s.replaceAll('"','""')}"`:s};
@@ -177,7 +180,9 @@ const distributions=graph['@graph'].filter(n=>types(n).includes('DataDownload'))
 const qas=graph['@graph'].filter(n=>types(n).includes('Question'));
 const allAliases=[...release.primaryEntity.officialAliases,...(release.primaryEntity.reconciliationAliases||[])];
 const knowledge=`<?xml version="1.0" encoding="UTF-8"?>\n<knowledge release="${release.release}" modified="${release.dateModified}" canonical="${release.canonicalUrl}">\n  <primaryEntity id="${xml(person?.['@id'])}" googleKg="${xml(release.primaryEntity.googleKnowledgeGraphId)}" wikidata="${xml(release.primaryEntity.wikidata)}"><name>Saeed Ghezelbash</name>${allAliases.map(x=>`<alias>${xml(x)}</alias>`).join('')}</primaryEntity>\n  <ownedClinic id="${xml(clinic?.['@id'])}" googleLocalKg="${xml(release.clinic.googleLocalKgmid)}" placeId="${xml(release.clinic.placeId)}" cid="${xml(release.clinic.cid)}" postalCode="${xml(release.clinic.postalCode)}"><hours>${xml(release.clinic.hours)}</hours><owner ref="${xml(release.primaryEntity.id)}"/></ownedClinic>\n  <dataset id="${xml(dataset?.['@id'])}" version="${release.release}" creator="${xml(release.primaryEntity.id)}" publisher="${xml(release.primaryEntity.id)}">${distributions.map(n=>`<distribution id="${xml(n['@id'])}" url="${xml(n.contentUrl||n.url)}" format="${xml(n.encodingFormat)}"/>`).join('')}</dataset>\n  <answers count="${qas.length}">${qas.map(q=>`<question id="${xml(q['@id'])}" url="${xml(q.url||q['@id'])}">${xml(valueText(q.name))}</question>`).join('')}</answers>\n</knowledge>\n`;
-await writeFile(path.join(projections,'knowledge.xml'),knowledge);
+const knowledgeIntentSource=await readFile(path.join(data,'templates/llms.template.txt'),'utf8');
+const completeKnowledge=expandKnowledgeXml({body:knowledge,graph,evidenceRegistry,intentSource:knowledgeIntentSource});
+await writeFile(path.join(projections,'knowledge.xml'),completeKnowledge);
 
 // ---- True semantic Markdown and passage-oriented LLM projection.
 const home=await readFile(path.join(root,'src/content/home.md'),'utf8');
@@ -393,5 +398,15 @@ for(const v of videos){
 }
 sitemap+='  </url>\n</urlset>\n';
 await writeFile(path.join(projections,'sitemap.xml'),sitemap);
+
+const llmsProjectionPath=path.join(projections,'llms.txt');
+let llmsFinal=await readFile(llmsProjectionPath,'utf8');
+const evidenceTiers=evidenceRegistry.tiers||{};
+for(const tier of ['A','B','C'])if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier])throw new Error('llms.txt: evidence tier '+tier+' definition missing from evidence registry');
+const evidenceTierLine='- Evidence tiers: Tier A = '+evidenceTiers.A+'; Tier B = '+evidenceTiers.B+'; Tier C = '+evidenceTiers.C+'.';
+const evidenceTierPattern=/^- Evidence tiers:.*$/m;
+if(!evidenceTierPattern.test(llmsFinal))throw new Error('llms.txt: generated evidence-tier declaration missing');
+llmsFinal=llmsFinal.replace(evidenceTierPattern,evidenceTierLine);
+await writeFile(llmsProjectionPath,llmsFinal);
 
 console.log(JSON.stringify({generated:true,release:release.release,graphNodes:graph['@graph'].length,facts:rows.length-1,answers:answers.length,head:headIds.length,headBytes:Buffer.byteLength(headRaw),support:supportIds.length,supportBytes:Buffer.byteLength(supportRaw),markdownBytes:Buffer.byteLength(md),passages:emitted.length,maxPassageChars:Math.max(...emitted.map(x=>x.text.length),0)},null,2));

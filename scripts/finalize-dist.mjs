@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {readFile,writeFile,readdir,unlink} from 'node:fs/promises';
 import {assertDocumentContract,inspectHtml} from './lib/html-contract.mjs';
 import {resolveDeterministicBuildInstant} from './lib/deterministic-build-time.mjs';
+import {deriveIdentityFingerprint,hashIdentityFingerprint} from './lib/release-identity.mjs';
 
 const root=process.cwd(),dist=path.resolve(root,process.argv[2]||'dist'),data=path.join(root,'src/data');
 const inv=JSON.parse(await readFile(path.join(data,'release-invariants.json'),'utf8'));
@@ -75,7 +76,7 @@ const manifest={
  dataset:{id:release.dataset.id,name:datasetName,wikidata:release.dataset.wikidata,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,zenodoRecordId:String(release.dataset.zenodo.recordId)},
  primaryEntity:{name:release.primaryEntity.name,fullNameAliases:release.primaryEntity.officialAliases,googleKnowledgeGraphId:release.primaryEntity.googleKnowledgeGraphId,wikidata:release.primaryEntity.wikidata},
  stableMediaIdentity:{...stableMediaInventory.subject,authorityMasterCount:(stableMediaInventory.aliases||[]).length,contract:'IPTC PersonInImageId + Dublin Core relation + embedded entity graph + HTTP Link'},
- identityFingerprint:{sha256:inv.identityFingerprintSha256,value:release.identityFingerprint},
+ identityFingerprint:{sha256:hashIdentityFingerprint(release),value:deriveIdentityFingerprint(release)},
  provenance:{passageRecords:provPassageCount,answerRecords:provAnswerCount,evidenceRecords:evidenceNodeCount,evidenceSnapshotObservedAt:evidenceSnapshot.observedAt},
  supportingClinic:{googleLocalKgmid:release.clinic.googleLocalKgmid,placeId:release.clinic.placeId,cid:release.clinic.cid,postalCode:release.clinic.postalCode,hours:release.clinic.hours,owner:release.primaryEntity.id},
  review:{date:release.medicalReviewedAt,reviewedBy:release.reviewedBy},
@@ -92,15 +93,7 @@ headers=headers.replace('{{DIGEST:artifact-manifest.json}}',shaB64(await readFil
 if(/{{[^}]+}}/.test(headers))throw new Error('Unresolved _headers placeholder');
 if(/\btrack-src\b/i.test(headers))throw new Error('Invalid CSP directive track-src');
 
-const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-const routeBlock=(route,media,cache,digest=true)=>`\n/${route}\n  Content-Type: ${media}\n  X-Robots-Tag: index, follow, max-snippet:-1\n  X-Robots-Tag: googlebot: noindex, follow\n  Cache-Control: ${cache}\n  Cloudflare-CDN-Cache-Control: ${cache}\n  Link: <${release.canonicalUrl}${route}>; rel="canonical", <${release.dataset.id}>; rel="describedby", <${release.clinic.id}>; rel="about"\n${digest?'  Repr-Digest: sha-256=:__DIGEST__:\n':''}  Access-Control-Allow-Origin: *\n  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal\n  Cross-Origin-Resource-Policy: cross-origin\n`;
-const ensureBlock=(route,media,cache,digest=true)=>{if(!new RegExp(`(?:^|\\n)/${esc(route)}\\n`).test(headers))headers+=routeBlock(route,media,cache,digest);};
-ensureBlock('query-matrix.jsonl','application/jsonl; charset=utf-8','public, max-age=3600, must-revalidate');
-ensureBlock('live-observations.jsonld','application/ld+json; charset=utf-8','public, max-age=0, must-revalidate');
-ensureBlock('current-release-matrix.json','application/json; charset=utf-8','public, max-age=0, must-revalidate');
-ensureBlock('live-serving-attestation.json','application/json; charset=utf-8','public, max-age=0, must-revalidate',false);
-
-const mutateRoute=(route,fn)=>{const lines=headers.split('\n'),i=lines.findIndex(x=>x===`/${route}`);if(i<0)return;for(let j=i+1;j<lines.length&&/^  /.test(lines[j]);j++)lines[j]=fn(lines[j]);headers=lines.join('\n');};
+const mutateRoute=(route,fn)=>{const lines=headers.split('\n'),i=lines.findIndex(x=>x===`/${route}`);if(i<0)throw new Error(`Missing canonical header block /${route}`);for(let j=i+1;j<lines.length&&/^  /.test(lines[j]);j++)lines[j]=fn(lines[j]);headers=lines.join('\n');};
 for(const route of ['artifact-manifest.json','live-observations.jsonld','current-release-matrix.json','live-serving-attestation.json'])mutateRoute(route,line=>/^  Cache-Control:/.test(line)?'  Cache-Control: public, max-age=0, must-revalidate':/^  Cloudflare-CDN-Cache-Control:/.test(line)?'  Cloudflare-CDN-Cache-Control: public, max-age=0, must-revalidate':line);
 for(const route of ['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','query-matrix.jsonl'])mutateRoute(route,line=>/^  Cloudflare-CDN-Cache-Control:/.test(line)?'  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400':line);
 

@@ -1,17 +1,14 @@
 import assert from 'node:assert/strict';
-import {mkdtemp, mkdir, readFile, readdir, rm, writeFile} from 'node:fs/promises';
+import {mkdtemp, mkdir, readFile, rm, writeFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 
 const root=process.cwd();
 export const canonical='https://www.ghezelbaash.ir/';
-const canonicalSourceDir=path.join(root,'src/content-source');
-const canonicalSourceFiles=(await readdir(canonicalSourceDir))
-  .filter(name=>/\.(?:html|md)$/.test(name))
-  .sort();
-assert.ok(canonicalSourceFiles.length>=100,'Canonical modular source inventory is incomplete');
-const sourceHtml=(await Promise.all(canonicalSourceFiles.map(name=>readFile(path.join(canonicalSourceDir,name),'utf8')))).join('\n');
+const {content:sourceHtml}=await assembleCanonicalContent({root});
+assert.ok(sourceHtml.length>0,'Canonical assembled page is empty');
 
 export const humanRoutes=[
   ['index.html',canonical,'وب‌سایت رسمی دکتر سعید قزلباش'],
