@@ -57,6 +57,7 @@ jobs:
           PY
           node --check scripts/_tmp-final-refactor.mjs
           node --check scripts/_tmp-assembler-target.mjs
+          node --check scripts/_tmp-hero-validator-target.mjs
       - name: Freeze current DIST baseline
         run: |
           set -euo pipefail
@@ -67,6 +68,7 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/_tmp-final-refactor.mjs content
+          cp scripts/_tmp-hero-validator-target.mjs scripts/validate-critical-hero-geometry.mjs
           python - <<'PY'
           from pathlib import Path
           p=Path('scripts/validate-source.mjs')
