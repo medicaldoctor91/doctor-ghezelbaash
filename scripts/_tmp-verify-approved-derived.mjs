@@ -123,4 +123,4 @@ for(const row of newRows){
   if(JSON.stringify(expected)!==JSON.stringify(node))throw new Error(`Passage provenance is not an exact projection of llms-full metadata: ${id}`);
 }
 
-console.log(JSON.stringify({approvedDerivedClosure:'PASS',indexMarkdownExact:true,currentZenodoEvidenceExact:true,recoveredCurrentZenodoEvidenceByField,knowledgeXmlEvidenceExact:true,passageCount:newRows.length,sectionCount:newGroups.size,rechunkedOrChangedSections:changedSections.length,stableProvenanceNodes:newStable.length,descriptorChangesAreHashClosure:['dcat.ttl','datapackage.json','croissant.json']},null,2));
+console.log(JSON.stringify({approvedDerivedClosure:'PASS',indexMarkdownExact:true,currentZenodoEvidenceExact:true,recoveredCurrentEvidenceByField,knowledgeXmlEvidenceExact:true,passageCount:newRows.length,sectionCount:newGroups.size,rechunkedOrChangedSections:changedSections.length,stableProvenanceNodes:newStable.length,descriptorChangesAreHashClosure:['dcat.ttl','datapackage.json','croissant.json']},null,2));
