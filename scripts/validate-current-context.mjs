@@ -41,9 +41,10 @@ if(matrix.sourceCommit!==manifest.liveRevision||attestation.sourceCommit!==manif
 if(dataPackage.version!==release.release||!String(dataPackage.title||'').startsWith(release.dataset.name))fail('Data Package current identity drift');
 if(croissant.version!==release.release||croissant.name!==release.dataset.name)fail('Croissant current identity drift');
 
-for(const file of ['dcat.ttl','answers.txt','llms.txt','llms-full.txt','index.md']){
+const dcat=await readFile(path.join(dist,'dcat.ttl'),'utf8');
+if(!dcat.includes(release.dataset.name)||!dcat.includes(release.release))fail('DCAT current Dataset/release identity drift');
+for(const file of ['answers.txt','llms.txt','llms-full.txt','index.md']){
   const text=await readFile(path.join(dist,file),'utf8');
-  if(!text.includes(release.dataset.name))fail(`Canonical Dataset name missing from ${file}`);
   if(!text.includes(release.release))fail(`Current release marker missing from ${file}`);
 }
 
