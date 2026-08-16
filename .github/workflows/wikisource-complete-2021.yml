@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'scripts/wikisource_complete_2021.py'
+      - 'scripts/wikisource_complete_2021_entry.py'
       - '.github/workflows/wikisource-complete-2021.yml'
   workflow_dispatch:
 
@@ -38,6 +39,8 @@ jobs:
           test -n "$WIKIMEDIA_USERNAME"
           test -n "$WIKIMEDIA_BOT_PASSWORD"
       - name: Compile before external writes
-        run: python -m py_compile scripts/wikisource_complete_2021.py
-      - name: Complete Wikisource work
-        run: python scripts/wikisource_complete_2021.py
+        run: |
+          python -m py_compile scripts/wikisource_complete_2021.py
+          python -m py_compile scripts/wikisource_complete_2021_entry.py
+      - name: Complete Wikisource work with retry/backoff
+        run: python scripts/wikisource_complete_2021_entry.py
