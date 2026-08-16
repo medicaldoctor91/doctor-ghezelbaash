@@ -2,7 +2,7 @@
 import json
 import requests
 
-UA = "GhezelbaashWikimediaFinalVerify/1.0 (https://www.ghezelbaash.ir/)"
+UA = "GhezelbaashWikimediaFinalVerify/1.1 (https://www.ghezelbaash.ir/)"
 WS = "https://en.wikisource.org/w/api.php"
 WD = "https://www.wikidata.org/w/api.php"
 COMMONS = "https://commons.wikimedia.org/w/api.php"
@@ -27,7 +27,7 @@ def api(url, **params):
 
 
 def page(title, proofread=False):
-    prop = "info|revisions|pageprops"
+    prop = "info|revisions"
     if proofread:
         prop += "|proofread"
     d = api(WS, action="query", titles=title, prop=prop, rvprop="ids|timestamp|content|contentmodel", rvslots="main")
@@ -40,35 +40,40 @@ def page(title, proofread=False):
         "pageid": p.get("pageid"),
         "revid": rev.get("revid"),
         "contentmodel": slot.get("contentmodel"),
-        "wikibase_item": p.get("pageprops", {}).get("wikibase_item"),
         "content": slot.get("content", ""),
         "proofread": p.get("proofread"),
     }
 
-pages = []
-for i in range(1, 14):
-    pages.append(page(f"Page:{FILE}/{i}", proofread=True))
-
+pages = [page(f"Page:{FILE}/{i}", proofread=True) for i in range(1, 14)]
 index = page(INDEX)
 main = page(MAIN)
 author = page(AUTHOR)
 
 entities = api(WD, action="wbgetentities", ids=f"{PERSON}|{WORK}", props="sitelinks|claims")["entities"]
+reverse = api(WD, action="wbgetentities", sites="enwikisource", titles=f"{AUTHOR}|{MAIN}", props="sitelinks")["entities"]
+reverse_ids = set(reverse.keys())
 
 def claim_values(qid, pid):
     vals = []
     for c in entities[qid].get("claims", {}).get(pid, []):
-        try: vals.append(c["mainsnak"]["datavalue"]["value"])
-        except Exception: pass
+        try:
+            vals.append(c["mainsnak"]["datavalue"]["value"])
+        except Exception:
+            pass
     return vals
 
 commons = api(COMMONS, action="query", titles=f"File:{FILE}", prop="info|imageinfo", iiprop="url|size|mime|extmetadata")["query"]["pages"][0]
 media_id = f"M{commons.get('pageid')}"
-media = api(COMMONS, action="wbgetentities", ids=media_id, props="claims")["entities"].get(media_id, {})
+claim_data = api(COMMONS, action="wbgetclaims", entity=media_id, property="P6243")
+media_claims = claim_data.get("claims", {}).get("P6243", [])
 media_links = []
-for c in media.get("claims", {}).get("P6243", []):
-    try: media_links.append(c["mainsnak"]["datavalue"]["value"]["id"])
-    except Exception: pass
+media_claim_ids = []
+for c in media_claims:
+    try:
+        media_links.append(c["mainsnak"]["datavalue"]["value"]["id"])
+        media_claim_ids.append(c.get("id"))
+    except Exception:
+        pass
 
 person_sl = entities[PERSON].get("sitelinks", {}).get("enwikisource")
 work_sl = entities[WORK].get("sitelinks", {}).get("enwikisource")
@@ -83,10 +88,10 @@ checks = {
     "index_progress_C": "|Progress=C" in index["content"],
     "person_sitelink_exact": bool(person_sl) and person_sl.get("title") == AUTHOR,
     "work_sitelink_exact": bool(work_sl) and work_sl.get("title") == MAIN,
-    "author_pageprops_resolved": author.get("wikibase_item") == PERSON,
-    "main_pageprops_resolved": main.get("wikibase_item") == WORK,
+    "reverse_sitelink_resolves_person": PERSON in reverse_ids,
+    "reverse_sitelink_resolves_work": WORK in reverse_ids,
     "commons_exists": "missing" not in commons,
-    "commons_media_links_work": WORK in media_links,
+    "commons_exactly_one_P6243_to_work": media_links == [WORK],
     "work_has_ccby4": any(isinstance(v, dict) and v.get("id") == "Q20007257" for v in claim_values(WORK, "P275")),
     "work_has_file": FILE in [str(v) for v in claim_values(WORK, "P996")],
     "work_has_index_url": any("en.wikisource.org/wiki/Index:Healthcare_2021_9_1169_-_Golshani_et_al.pdf" in str(v) for v in claim_values(WORK, "P1957")),
@@ -95,11 +100,12 @@ checks = {
 report = {
     "ok": all(checks.values()),
     "checks": checks,
-    "person": {"qid": PERSON, "enwikisource": person_sl, "page": author},
-    "work": {"qid": WORK, "enwikisource": work_sl, "P275": claim_values(WORK, "P275"), "P996": claim_values(WORK, "P996"), "P1957": claim_values(WORK, "P1957"), "page": main},
+    "person": {"qid": PERSON, "enwikisource": person_sl, "pageid": author["pageid"], "revid": author["revid"]},
+    "work": {"qid": WORK, "enwikisource": work_sl, "P275": claim_values(WORK, "P275"), "P996": claim_values(WORK, "P996"), "P1957": claim_values(WORK, "P1957"), "pageid": main["pageid"], "revid": main["revid"]},
     "index": {"title": INDEX, "pageid": index["pageid"], "revid": index["revid"], "contentmodel": index["contentmodel"], "transclusion_yes": checks["index_transclusion_yes"], "progress_C": checks["index_progress_C"]},
-    "proofread_pages": [{k: p.get(k) for k in ("title","pageid","revid","contentmodel","wikibase_item","proofread")} for p in pages],
-    "commons": {"pageid": commons.get("pageid"), "media_id": media_id, "P6243": media_links},
+    "proofread_pages": [{k: p.get(k) for k in ("title","pageid","revid","contentmodel","proofread")} for p in pages],
+    "commons": {"pageid": commons.get("pageid"), "media_id": media_id, "P6243_values": media_links, "P6243_claim_ids": media_claim_ids},
+    "reverse_resolved_qids": sorted(reverse_ids),
 }
 print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
 if not report["ok"]:
