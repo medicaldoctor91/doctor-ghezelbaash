@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'wikimedia/external-strengthening-2026-08-16.json'
-      - 'scripts/wikimedia_external_strengthening_v2.py'
+      - 'scripts/wikimedia_external_strengthening_v3.py'
       - '.github/workflows/wikimedia-external-strengthening.yml'
   workflow_dispatch:
 
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   strengthen:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       WIKIMEDIA_STRENGTHENING_CONFIG: wikimedia/external-strengthening-2026-08-16.json
       WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
@@ -40,4 +40,4 @@ jobs:
           test -n "$WIKIMEDIA_USERNAME"
           test -n "$WIKIMEDIA_BOT_PASSWORD"
       - name: Apply and verify Wikidata and Wikipedia external strengthening
-        run: python scripts/wikimedia_external_strengthening_v2.py
+        run: python scripts/wikimedia_external_strengthening_v3.py
