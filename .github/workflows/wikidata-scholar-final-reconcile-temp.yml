@@ -1,0 +1,173 @@
+name: Complete verified remaining Wikidata citation edges
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wikidata-scholar-final-reconcile-temp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Reconcile only primary-source-verified remaining citations
+        shell: python
+        run: |
+          import json, os, time, urllib.parse, requests
+          from datetime import date
+
+          API='https://www.wikidata.org/w/api.php'
+          WDQS='https://query-scholarly.wikidata.org/sparql'
+          CROSSREF='https://api.crossref.org/works/'
+          UA='Medicaldoctor91ScholarlyReconcile/1.0 (https://www.ghezelbaash.ir/)'
+          ENTRIES=[
+            {
+              'doi':'10.26444/ms/187881','target':'Q36942316',
+              'evidence':'https://www.environmed.pl/The-role-of-Omega-3-Polyunsaturated-Fatty-Acids-in-the-treatment-of-Bipolar-Disorder,187881,0,2.html',
+              'note':'publisher reference 33 cites the 2016 Omega-3 trial'
+            },
+            {
+              'doi':'10.5080/u27544','target':'Q140298431',
+              'evidence':'https://pmc.ncbi.nlm.nih.gov/articles/PMC11987535/',
+              'note':'PMC reference 31 cites the 2021 MDD/attachment paper'
+            },
+            {
+              'doi':'10.31083/AP38786','target':'Q140298431',
+              'evidence':'https://journal.hep.com.cn/AP/EN/10.31083/AP38786',
+              'note':'publisher reference 48 cites the 2021 MDD/attachment paper'
+            },
+          ]
+
+          s=requests.Session(); s.headers['User-Agent']=UA
+          def get(url=API,**p):
+            p.setdefault('format','json'); p.setdefault('formatversion',2)
+            r=s.get(url,params=p,timeout=90); r.raise_for_status(); d=r.json()
+            if isinstance(d,dict) and 'error' in d: raise RuntimeError(d['error'])
+            return d
+          def post(**p):
+            p.setdefault('format','json'); p.setdefault('formatversion',2)
+            for i in range(7):
+              r=s.post(API,data=p,timeout=90); r.raise_for_status(); d=r.json()
+              if 'error' not in d: return d
+              text=json.dumps(d['error'],ensure_ascii=False).lower()
+              if 'actionthrottled' in text or 'too many times' in text:
+                time.sleep(min(15+10*i,60)); continue
+              raise RuntimeError(d['error'])
+            raise RuntimeError('write throttled after retries')
+          def login():
+            lt=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+            j=post(action='login',lgname=os.environ['WIKIMEDIA_USERNAME'],lgpassword=os.environ['WIKIMEDIA_BOT_PASSWORD'],lgtoken=lt)
+            if j.get('login',{}).get('result')!='Success': raise RuntimeError(j)
+            ui=get(action='query',meta='userinfo',uiprop='groups|rights|blockinfo')['query']['userinfo']
+            if ui.get('blockedby'): raise RuntimeError({'blocked':ui.get('blockedby'),'reason':ui.get('blockreason')})
+            return get(action='query',meta='tokens',type='csrf')['query']['tokens']['csrftoken'],ui.get('name')
+          def entity(q): return get(action='wbgetentities',ids=q,props='claims|labels|info')['entities'][q]
+          def val(st):
+            v=st.get('mainsnak',{}).get('datavalue',{}).get('value')
+            return v.get('id') if isinstance(v,dict) else v
+          def doi_values(q): return [str(val(x)).lower() for x in entity(q).get('claims',{}).get('P356',[]) if val(x)]
+          def target_stmt(q,target):
+            for st in entity(q).get('claims',{}).get('P2860',[]):
+              if val(st)==target: return st
+            return None
+          def ref_urls(st):
+            out=[]
+            for ref in st.get('references',[]):
+              for sn in ref.get('snaks',{}).get('P854',[]):
+                v=sn.get('datavalue',{}).get('value')
+                if v: out.append(v)
+            return out
+          def exact_lookup(doi):
+            want=doi.lower(); found=[]
+            # Scholarly WDQS exact DOI lookup.
+            q='SELECT ?item WHERE { ?item wdt:P356 ?d . FILTER(LCASE(STR(?d)) = '+json.dumps(want)+') } LIMIT 20'
+            try:
+              rr=requests.get(WDQS,params={'query':q,'format':'json'},headers={'User-Agent':UA},timeout=90)
+              rr.raise_for_status()
+              for b in rr.json().get('results',{}).get('bindings',[]):
+                found.append(b['item']['value'].rsplit('/',1)[-1])
+            except Exception as e:
+              print('WDQS lookup warning',doi,repr(e))
+            # Cirrus exact statement lookup as an independent duplicate guard.
+            try:
+              sr=get(action='query',list='search',srsearch=f'haswbstatement:P356={doi.upper()}',srnamespace=0,srlimit=50)['query']['search']
+              found += [x['title'] for x in sr if x['title'].startswith('Q')]
+            except Exception as e:
+              print('Cirrus lookup warning',doi,repr(e))
+            exact=[]
+            for qid in dict.fromkeys(found):
+              try:
+                if want in doi_values(qid): exact.append(qid)
+              except Exception: pass
+            return exact
+          def crossref(doi):
+            r=requests.get(CROSSREF+urllib.parse.quote(doi,safe=''),headers={'User-Agent':UA},timeout=90); r.raise_for_status()
+            return r.json()['message']
+          def qid_sn(q):
+            return {'snaktype':'value','property':'P31','datavalue':{'value':{'entity-type':'item','id':q},'type':'wikibase-entityid'}}
+          def claim(property_,datatype,value):
+            if datatype=='item': dv={'value':{'entity-type':'item','id':value},'type':'wikibase-entityid'}
+            elif datatype=='string': dv={'value':value,'type':'string'}
+            elif datatype=='monolingualtext': dv={'value':value,'type':'monolingualtext'}
+            elif datatype=='time': dv={'value':value,'type':'time'}
+            else: raise ValueError(datatype)
+            return {'mainsnak':{'snaktype':'value','property':property_,'datavalue':dv},'type':'statement','rank':'normal'}
+          def create_item(doi):
+            m=crossref(doi); title=(m.get('title') or [doi])[0].strip(); claims=[]
+            claims.append(claim('P31','item','Q13442814'))
+            claims.append(claim('P356','string',doi.upper()))
+            claims.append(claim('P1476','monolingualtext',{'text':title,'language':'en'}))
+            parts=((m.get('published-print') or m.get('published-online') or m.get('published') or {}).get('date-parts') or [[]])[0]
+            if parts:
+              y=int(parts[0]); mo=int(parts[1]) if len(parts)>1 else 1; da=int(parts[2]) if len(parts)>2 else 1
+              precision=11 if len(parts)>2 else (10 if len(parts)>1 else 9)
+              claims.append(claim('P577','time',{'time':f'+{y:04d}-{mo:02d}-{da:02d}T00:00:00Z','timezone':0,'before':0,'after':0,'precision':precision,'calendarmodel':'http://www.wikidata.org/entity/Q1985727'}))
+            data={'labels':{'en':{'language':'en','value':title}},'descriptions':{'en':{'language':'en','value':'scholarly article'}},'claims':claims}
+            j=post(action='wbeditentity',new='item',data=json.dumps(data,separators=(',',':')),token=CSRF,summary=f'Create scholarly article item for DOI {doi}')
+            return j['entity']['id']
+          def create_edge(q,target):
+            j=post(action='wbcreateclaim',entity=q,property='P2860',snaktype='value',value=json.dumps({'entity-type':'item','id':target}),token=CSRF,summary='Add citation verified directly in publisher/full-text reference list')
+            return j['claim']
+          def add_reference(st,evidence):
+            if evidence in ref_urls(st): return False
+            today=date.today()
+            snaks={
+              'P854':[{'snaktype':'value','property':'P854','datavalue':{'value':evidence,'type':'string'}}],
+              'P813':[{'snaktype':'value','property':'P813','datavalue':{'value':{'time':f'+{today:%Y-%m-%d}T00:00:00Z','timezone':0,'before':0,'after':0,'precision':11,'calendarmodel':'http://www.wikidata.org/entity/Q1985727'},'type':'time'}}]
+            }
+            post(action='wbsetreference',statement=st['id'],snaks=json.dumps(snaks,separators=(',',':')),token=CSRF,summary='Add direct full-text/publisher evidence for citation')
+            return True
+
+          CSRF,who=login(); report=[]
+          for e in ENTRIES:
+            ids=exact_lookup(e['doi'])
+            if len(ids)>1:
+              raise RuntimeError(f"Exact DOI collision must be resolved before writing: {e['doi']} -> {ids}")
+            created=False
+            if ids: qid=ids[0]
+            else:
+              qid=create_item(e['doi']); created=True; time.sleep(4)
+              # Hard post-create DOI identity check.
+              if e['doi'].lower() not in doi_values(qid): raise RuntimeError(f'Post-create DOI identity failure {qid}')
+            st=target_stmt(qid,e['target'])
+            edge_created=False
+            if not st:
+              st=create_edge(qid,e['target']); edge_created=True; time.sleep(3)
+            # Refresh because wbcreateclaim response may not contain references structure.
+            st=target_stmt(qid,e['target'])
+            ref_added=add_reference(st,e['evidence'])
+            report.append({'doi':e['doi'],'qid':qid,'created_item':created,'target':e['target'],'edge_created':edge_created,'reference_added':ref_added,'evidence':e['evidence'],'note':e['note']})
+            time.sleep(4)
+          print(json.dumps({'ok':True,'authenticated_as':who,'report':report},ensure_ascii=False,indent=2))
