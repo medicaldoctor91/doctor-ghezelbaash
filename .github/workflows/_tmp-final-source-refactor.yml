@@ -68,6 +68,17 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/_tmp-final-refactor.mjs content
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/validate-source.mjs')
+          text=p.read_text()
+          old="'src/content-source/000-frontmatter.md'"
+          if text.count(old)!=1:
+              raise SystemExit(f'expected one old content-source requirement, found {text.count(old)}')
+          text=text.replace(old,"'src/content-source/page.md'")
+          text=text.replace('Generated home.md drift from canonical modular source','Generated home.md drift from canonical page source')
+          p.write_text(text)
+          PY
           npm run prepare:generated
           ASTRO_TELEMETRY_DISABLED=1 npx astro build
           node scripts/compute-visible-contract.mjs dist/index.html --summary > /tmp/visible-contract.json
