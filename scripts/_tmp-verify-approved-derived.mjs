@@ -10,6 +10,8 @@ const history=release.dataset.zenodo.releaseHistory||[];
 const currentIndex=history.findIndex(row=>row.release===release.release);
 const previous=currentIndex>0?history[currentIndex-1]:null;
 if(!previous)throw new Error('Previous release metadata unavailable for approved correction verification');
+const oldDoiUrl=`https://doi.org/${previous.versionDoi}`,newDoiUrl=`https://doi.org/${release.dataset.zenodo.versionDoi}`;
+const currentEvidenceId=`${release.canonicalUrl}#evidence-zenodo-current-release`;
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const norm=value=>String(value).replace(/\s+/gu,' ').trim();
 const list=value=>String(value||'').split(' | ').map(x=>x.trim()).filter(Boolean);
@@ -27,7 +29,7 @@ function approvedText(oldText){
     let segment=text.slice(start,end);
     segment=segment.replaceAll(`Version ${previous.release}`,`Version ${release.release}`)
       .replaceAll(`version ${previous.release}`,`version ${release.release}`)
-      .replaceAll(`https://doi.org/${previous.versionDoi}`,`https://doi.org/${release.dataset.zenodo.versionDoi}`)
+      .replaceAll(oldDoiUrl,newDoiUrl)
       .replaceAll(previous.versionDoi,release.dataset.zenodo.versionDoi)
       .replaceAll(encodeURIComponent(previous.versionDoi),encodeURIComponent(release.dataset.zenodo.versionDoi));
     text=text.slice(0,start)+segment+text.slice(end);
@@ -36,7 +38,18 @@ function approvedText(oldText){
 }
 
 const beforeIndex=await read(beforeDir,'index.md'),afterIndex=await read(afterDir,'index.md');
-if(approvedText(beforeIndex)!==afterIndex)throw new Error('index.md changed outside the two approved visible corrections');
+if(approvedText(beforeIndex)!==afterIndex)throw new Error('index.md changed outside approved visible corrections');
+
+const oldSnapshot=JSON.parse(await read(beforeDir,'evidence-snapshot.json')),newSnapshot=JSON.parse(await read(afterDir,'evidence-snapshot.json'));
+const expectedSnapshot=structuredClone(oldSnapshot),snapshotRows=(expectedSnapshot.entries||[]).filter(row=>row.id===currentEvidenceId);
+if(snapshotRows.length!==1)throw new Error(`Expected one current Zenodo evidence snapshot row, found ${snapshotRows.length}`);
+if(snapshotRows[0].url!==oldDoiUrl)throw new Error(`Baseline current Zenodo evidence snapshot URL drift: ${snapshotRows[0].url}`);
+snapshotRows[0].url=newDoiUrl;
+if(JSON.stringify(expectedSnapshot)!==JSON.stringify(newSnapshot))throw new Error('evidence-snapshot.json changed outside current Version DOI correction');
+
+const beforeKnowledge=await read(beforeDir,'knowledge.xml'),afterKnowledge=await read(afterDir,'knowledge.xml');
+if(!beforeKnowledge.includes(oldDoiUrl))throw new Error('Baseline knowledge.xml does not contain stale current-release evidence DOI');
+if(beforeKnowledge.replaceAll(oldDoiUrl,newDoiUrl)!==afterKnowledge)throw new Error('knowledge.xml changed outside current Zenodo evidence DOI correction');
 
 function parsePassages(raw){
   const rows=[];
@@ -58,7 +71,7 @@ if(oldRows.length!==newRows.length)throw new Error(`Passage count changed ${oldR
 const oldGroups=group(oldRows),newGroups=group(newRows);
 if(oldGroups.size!==newGroups.size)throw new Error(`Section count changed ${oldGroups.size} -> ${newGroups.size}`);
 const aggregateFields=['ENTITY_IDS','EVIDENCE_IDS','CLAIM_EVIDENCE_IDS','ENTITY_EVIDENCE_IDS','TIER_A_EVIDENCE_IDS'];
-const changedSections=[],aggregateDrifts=[];
+const changedSections=[];
 for(const [key,oldGroup] of oldGroups){
   const nextGroup=newGroups.get(key);if(!nextGroup)throw new Error(`Passage section disappeared: ${key}`);
   if(oldGroup.length!==nextGroup.length)throw new Error(`Passage partition count changed for ${key}: ${oldGroup.length} -> ${nextGroup.length}`);
@@ -66,7 +79,7 @@ for(const [key,oldGroup] of oldGroups){
   if(norm(expected)!==norm(nextText))throw new Error(`Passage section text changed outside approved corrections: ${key}`);
   for(const field of aggregateFields){
     const oldUnion=unique(oldGroup.flatMap(row=>list(row.fields[field]))),nextUnion=unique(nextGroup.flatMap(row=>list(row.fields[field])));
-    if(!sameSet(oldUnion,nextUnion))aggregateDrifts.push({key,field,oldOnly:oldUnion.filter(x=>!nextUnion.includes(x)),newOnly:nextUnion.filter(x=>!oldUnion.includes(x))});
+    if(!sameSet(oldUnion,nextUnion))throw new Error(`Passage section ${field} union drift: ${key}\nold=${JSON.stringify(oldUnion)}\nnew=${JSON.stringify(nextUnion)}`);
   }
   for(let i=0;i<nextGroup.length;i++){
     const row=nextGroup[i],expectedPart=`${i+1}/${nextGroup.length}`;
@@ -76,14 +89,17 @@ for(const [key,oldGroup] of oldGroups){
   }
   if(norm(oldText)!==norm(nextText))changedSections.push(key);
 }
-if(aggregateDrifts.length)throw new Error(`Passage aggregate evidence/entity drift:\n${JSON.stringify(aggregateDrifts,null,2)}`);
 if(!changedSections.length)throw new Error('No passage section reflected the approved corrections');
 
 const oldProv=JSON.parse(await read(beforeDir,'provenance.jsonld')),newProv=JSON.parse(await read(afterDir,'provenance.jsonld'));
 const oldNodes=oldProv['@graph']||[],newNodes=newProv['@graph']||[];
 const isPassage=node=>String(node?.['@id']||'').includes('provenance.jsonld#passage-');
 const oldStable=oldNodes.filter(node=>!isPassage(node)),newStable=newNodes.filter(node=>!isPassage(node));
-if(JSON.stringify(oldStable)!==JSON.stringify(newStable))throw new Error('Non-passage provenance changed during visible-only correction');
+const expectedStable=structuredClone(oldStable),evidenceNodes=expectedStable.filter(node=>node['@id']===currentEvidenceId);
+if(evidenceNodes.length!==1)throw new Error(`Expected one current Zenodo provenance evidence node, found ${evidenceNodes.length}`);
+if(evidenceNodes[0].url!==oldDoiUrl)throw new Error(`Baseline provenance current Zenodo evidence URL drift: ${evidenceNodes[0].url}`);
+evidenceNodes[0].url=newDoiUrl;
+if(JSON.stringify(expectedStable)!==JSON.stringify(newStable))throw new Error('Non-passage provenance changed outside current Zenodo evidence DOI correction');
 const newPassageNodes=new Map(newNodes.filter(isPassage).map(node=>[node['@id'],node]));
 if(newPassageNodes.size!==newRows.length)throw new Error('New passage/provenance cardinality drift');
 const refs=values=>list(values).map(id=>({'@id':id}));
@@ -91,21 +107,13 @@ for(const row of newRows){
   const id=`${release.canonicalUrl}provenance.jsonld#passage-${row.fields.PASSAGE_ID}`,node=newPassageNodes.get(id);
   if(!node)throw new Error(`Missing new passage provenance ${id}`);
   const expected={
-    '@id':id,
-    '@type':['CreativeWork','prov:Entity'],
-    name:`Passage provenance — ${row.fields.TITLE}`,
-    url:row.fields.ANCHOR,
-    inLanguage:row.fields.LANGUAGE,
-    about:refs(row.fields.ENTITY_IDS),
-    isPartOf:{'@id':`${release.canonicalUrl}provenance.jsonld#dataset`},
-    identifier:{'@type':'PropertyValue',propertyID:'SHA-256',value:row.fields.SOURCE_HASH_SHA256},
-    ...(row.fields.GRAPH_NODE_ID?{isBasedOn:{'@id':row.fields.GRAPH_NODE_ID}}:{}),
-    'prov:wasDerivedFrom':[{'@id':row.fields.ANCHOR}],
+    '@id':id,'@type':['CreativeWork','prov:Entity'],name:`Passage provenance — ${row.fields.TITLE}`,url:row.fields.ANCHOR,inLanguage:row.fields.LANGUAGE,
+    about:refs(row.fields.ENTITY_IDS),isPartOf:{'@id':`${release.canonicalUrl}provenance.jsonld#dataset`},identifier:{'@type':'PropertyValue',propertyID:'SHA-256',value:row.fields.SOURCE_HASH_SHA256},
+    ...(row.fields.GRAPH_NODE_ID?{isBasedOn:{'@id':row.fields.GRAPH_NODE_ID}}:{}),'prov:wasDerivedFrom':[{'@id':row.fields.ANCHOR}],
     ...(list(row.fields.CLAIM_EVIDENCE_IDS).length?{'prov:hadPrimarySource':refs(row.fields.CLAIM_EVIDENCE_IDS)}:{}),
-    additionalProperty:[{'@type':'PropertyValue',propertyID:'Entity evidence IDs',value:row.fields.ENTITY_EVIDENCE_IDS||''}],
-    dateModified:release.dateModified
+    additionalProperty:[{'@type':'PropertyValue',propertyID:'Entity evidence IDs',value:row.fields.ENTITY_EVIDENCE_IDS||''}],dateModified:release.dateModified
   };
   if(JSON.stringify(expected)!==JSON.stringify(node))throw new Error(`Passage provenance is not an exact projection of llms-full metadata: ${id}`);
 }
 
-console.log(JSON.stringify({approvedDerivedClosure:'PASS',indexMarkdownExact:true,passageCount:newRows.length,sectionCount:newGroups.size,rechunkedOrChangedSections:changedSections.length,stableProvenanceNodes:newStable.length,descriptorChangesAreHashClosure:['dcat.ttl','datapackage.json','croissant.json']},null,2));
+console.log(JSON.stringify({approvedDerivedClosure:'PASS',indexMarkdownExact:true,currentZenodoEvidenceExact:true,knowledgeXmlEvidenceExact:true,passageCount:newRows.length,sectionCount:newGroups.size,rechunkedOrChangedSections:changedSections.length,stableProvenanceNodes:newStable.length,descriptorChangesAreHashClosure:['dcat.ttl','datapackage.json','croissant.json']},null,2));
