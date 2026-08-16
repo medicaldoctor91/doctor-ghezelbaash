@@ -1,0 +1,25 @@
+name: One-shot v1.2.2 repository description convergence
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/v122-repo-description-once.yml]
+
+permissions: write-all
+
+jobs:
+  converge:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Patch and read back physician-first Dataset repository description
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_PAT || secrets.REPO_ADMIN_TOKEN || secrets.ADMIN_GITHUB_TOKEN || github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXPECTED='Source repository for Dr. Saeed Ghezelbash Public Knowledge Graph — physician-owned entity and AI/retrieval dataset for Dr. Saeed Ghezelbash, Kermanshah, Iran.'
+          gh api --method PATCH repos/medicaldoctor91/doctor-ghezelbaash -f description="$EXPECTED" -f homepage='https://www.ghezelbaash.ir/' >/tmp/repo.json
+          test "$(jq -r '.description' /tmp/repo.json)" = "$EXPECTED"
+          test "$(jq -r '.homepage' /tmp/repo.json)" = 'https://www.ghezelbaash.ir/'
+          echo 'GITHUB_REPOSITORY_METADATA_CONVERGENCE_PASS'
