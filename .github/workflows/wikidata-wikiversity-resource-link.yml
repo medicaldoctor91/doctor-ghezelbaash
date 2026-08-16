@@ -1,0 +1,234 @@
+name: Link Wikiversity resource into Wikidata person graph
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wikidata-wikiversity-resource-link.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  link-resource:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Create or reconcile Wikiversity resource item and bidirectional authorship
+        shell: python
+        run: |
+          import json, os, requests, time
+
+          WD='https://www.wikidata.org/w/api.php'
+          WV='https://en.wikiversity.org/w/api.php'
+          PERSON='Q140287622'
+          OER='Q116781'
+          AUTHOR_ROLE='Q482980'
+          BONT_A='Q4095199'
+          TITLE='Botulinum toxin in aesthetic medicine'
+          PAGE_URL='https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine'
+          TODAY='+2026-08-16T00:00:00Z'
+          UA='Medicaldoctor91WikiversityResourceLink/1.0 (https://www.ghezelbaash.ir/)'
+
+          anon=requests.Session(); anon.headers['User-Agent']=UA
+          auth=requests.Session(); auth.headers['User-Agent']=UA
+
+          def get(url, sess, params):
+              r=sess.get(url, params={**params,'format':'json','formatversion':2}, timeout=90)
+              r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+
+          def post(params):
+              for w in [5,10,20]:
+                  r=auth.post(WD, data={**params,'format':'json','formatversion':2,'maxlag':5}, timeout=120)
+                  r.raise_for_status(); d=r.json()
+                  if 'error' not in d: return d
+                  err=d['error']; blob=json.dumps(err,ensure_ascii=False).lower()
+                  if 'globalblocking-blockedtext-range' in blob or 'open proxy/webhost' in blob:
+                      raise RuntimeError({'global_ip_block':err})
+                  if err.get('code') in {'maxlag','ratelimited','actionthrottled'}:
+                      time.sleep(w); continue
+                  raise RuntimeError(err)
+              raise RuntimeError('retry exhausted')
+
+          def wb_entity(qid, sess=anon):
+              return get(WD,sess,{'action':'wbgetentities','ids':qid,'props':'claims|labels|descriptions|sitelinks|info'})['entities'][qid]
+
+          def qid_of_claim(c):
+              v=c.get('mainsnak',{}).get('datavalue',{}).get('value')
+              return v.get('id') if isinstance(v,dict) else None
+
+          def item_value(q):
+              return json.dumps({'entity-type':'item','numeric-id':int(q[1:])},separators=(',',':'))
+
+          def ref_snaks():
+              return {
+                  'P854':[{'snaktype':'value','property':'P854','datavalue':{'value':PAGE_URL,'type':'string'},'datatype':'url'}],
+                  'P813':[{'snaktype':'value','property':'P813','datavalue':{'value':{'time':TODAY,'timezone':0,'before':0,'after':0,'precision':11,'calendarmodel':'http://www.wikidata.org/entity/Q1985727'},'type':'time'},'datatype':'time'}]
+              }
+
+          def has_page_ref(claim):
+              for ref in claim.get('references',[]):
+                  for sn in ref.get('snaks',{}).get('P854',[]):
+                      if sn.get('datavalue',{}).get('value')==PAGE_URL:
+                          return True
+              return False
+
+          def add_page_ref(claim_id):
+              post({'action':'wbsetreference','statement':claim_id,'snaks':json.dumps(ref_snaks(),ensure_ascii=False,separators=(',',':')),'snaks-order':json.dumps(['P854','P813']),'token':csrf,'summary':'Reference the Wikiversity resource page'})
+
+          def ensure_claim(qid, prop, target, summary):
+              ent=wb_entity(qid,auth)
+              matches=[c for c in ent.get('claims',{}).get(prop,[]) if qid_of_claim(c)==target]
+              if len(matches)>1:
+                  raise RuntimeError({'duplicate_claims':{'entity':qid,'property':prop,'target':target,'count':len(matches)}})
+              created=False
+              if not matches:
+                  out=post({'action':'wbcreateclaim','entity':qid,'property':prop,'snaktype':'value','value':item_value(target),'token':csrf,'baserevid':ent.get('lastrevid'),'summary':summary})
+                  claim=out['claim']; created=True
+              else:
+                  claim=matches[0]
+              if not has_page_ref(claim):
+                  add_page_ref(claim['id'])
+              return claim['id'], created
+
+          # 1) Verify the live Wikiversity page itself and its explicit person-QID authorship signal.
+          wv=get(WV,anon,{'action':'query','prop':'revisions','titles':TITLE,'rvprop':'ids|content','rvslots':'main'})
+          page=wv['query']['pages'][0]
+          if page.get('missing') is not None or page.get('ns')!=0:
+              raise RuntimeError({'wikiversity_page_gate_failed':page})
+          rev=page['revisions'][0]
+          slot=rev['slots']['main']; text=slot.get('content') or slot.get('*') or ''
+          if PERSON not in text or 'Saeed Ghezelbash' not in text:
+              raise RuntimeError('Live Wikiversity page no longer explicitly links the author to Q140287622')
+
+          # 2) Resolve the existing aesthetic-medicine concept from the person's current P101 values.
+          person_before=wb_entity(PERSON)
+          p101_qids=[qid_of_claim(c) for c in person_before.get('claims',{}).get('P101',[]) if qid_of_claim(c)]
+          if BONT_A not in p101_qids:
+              raise RuntimeError('Expected current P101 botulinum toxin type A is missing from person item')
+          p101_entities=get(WD,anon,{'action':'wbgetentities','ids':'|'.join(p101_qids),'props':'labels'})['entities']
+          aesthetic=[q for q,e in p101_entities.items() if e.get('labels',{}).get('en',{}).get('value','').strip().lower()=='aesthetic medicine']
+          if len(aesthetic)!=1:
+              raise RuntimeError({'aesthetic_medicine_resolution_failed':aesthetic,'p101':p101_qids})
+          AESTHETIC=aesthetic[0]
+
+          # 3) Duplicate gate: exact enwikiversity sitelink first, then exact-title Wikidata search.
+          by_sitelink=get(WD,anon,{'action':'wbgetentities','sites':'enwikiversity','titles':TITLE,'props':'claims|labels|descriptions|sitelinks|info'})['entities']
+          existing=[qid for qid,e in by_sitelink.items() if qid.startswith('Q') and not e.get('missing')]
+          if len(existing)>1:
+              raise RuntimeError({'multiple_sitelink_owners':existing})
+          resource_qid=existing[0] if existing else None
+
+          if not resource_qid:
+              search=get(WD,anon,{'action':'wbsearchentities','search':TITLE,'language':'en','type':'item','limit':10})
+              exact=[]
+              for row in search.get('search',[]):
+                  if row.get('label','').strip().lower()==TITLE.lower():
+                      exact.append(row['id'])
+              safe=[]
+              for q in exact:
+                  e=wb_entity(q)
+                  p31=[qid_of_claim(c) for c in e.get('claims',{}).get('P31',[]) if qid_of_claim(c)]
+                  p50=[qid_of_claim(c) for c in e.get('claims',{}).get('P50',[]) if qid_of_claim(c)]
+                  sl=e.get('sitelinks',{}).get('enwikiversity',{}).get('title')
+                  if sl and sl!=TITLE:
+                      continue
+                  if OER in p31 or PERSON in p50:
+                      safe.append(q)
+              if len(safe)>1:
+                  raise RuntimeError({'ambiguous_existing_resource_items':safe})
+              resource_qid=safe[0] if safe else None
+
+          # Authenticate only after every read-only gate above passes.
+          lt=get(WD,auth,{'action':'query','meta':'tokens','type':'login'})['query']['tokens']['logintoken']
+          login=post({'action':'login','lgname':os.environ['WIKIMEDIA_USERNAME'],'lgpassword':os.environ['WIKIMEDIA_BOT_PASSWORD'],'lgtoken':lt})
+          if login.get('login',{}).get('result')!='Success':
+              raise RuntimeError(login)
+          csrf=get(WD,auth,{'action':'query','meta':'tokens','type':'csrf'})['query']['tokens']['csrftoken']
+
+          created_item=False
+          added_sitelink=False
+          if not resource_qid:
+              data={
+                  'labels':{'en':{'language':'en','value':TITLE}},
+                  'descriptions':{'en':{'language':'en','value':'Wikiversity learning resource about botulinum toxin in aesthetic medicine'}},
+                  'sitelinks':{'enwikiversity':{'site':'enwikiversity','title':TITLE}}
+              }
+              out=post({'action':'wbeditentity','new':'item','data':json.dumps(data,ensure_ascii=False,separators=(',',':')),'token':csrf,'summary':'Create Wikidata item for the Wikiversity learning resource'})
+              resource_qid=out['entity']['id']; created_item=True; added_sitelink=True
+          else:
+              current=wb_entity(resource_qid,auth)
+              sl=current.get('sitelinks',{}).get('enwikiversity',{}).get('title')
+              if sl not in {None,TITLE}:
+                  raise RuntimeError({'conflicting_existing_sitelink':sl,'resource':resource_qid})
+              if sl is None:
+                  post({'action':'wbsetsitelink','id':resource_qid,'linksite':'enwikiversity','linktitle':TITLE,'token':csrf,'baserevid':current.get('lastrevid'),'summary':'Link the Wikidata resource item to its Wikiversity page'})
+                  added_sitelink=True
+
+          # 4) Work-side structured graph.
+          changes={}
+          _,changes['P31_OER']=ensure_claim(resource_qid,'P31',OER,'Classify as an open educational resource')
+          _,changes['P50_author']=ensure_claim(resource_qid,'P50',PERSON,'Link Saeed Ghezelbash as author of the Wikiversity resource')
+          _,changes['P921_botulinum_toxin_A']=ensure_claim(resource_qid,'P921',BONT_A,'Add main subject: botulinum toxin type A')
+          _,changes['P921_aesthetic_medicine']=ensure_claim(resource_qid,'P921',AESTHETIC,'Add main subject: aesthetic medicine')
+
+          # 5) Person-side reverse edge with explicit author role.
+          person=wb_entity(PERSON,auth)
+          rev=[c for c in person.get('claims',{}).get('P3919',[]) if qid_of_claim(c)==resource_qid]
+          if len(rev)>1:
+              raise RuntimeError({'duplicate_person_P3919':len(rev)})
+          reverse_created=False
+          if not rev:
+              out=post({'action':'wbcreateclaim','entity':PERSON,'property':'P3919','snaktype':'value','value':item_value(resource_qid),'token':csrf,'baserevid':person.get('lastrevid'),'summary':'Link authored Wikiversity learning resource from the person item'})
+              reverse=out['claim']; reverse_created=True
+          else:
+              reverse=rev[0]
+
+          role_values=[]
+          for q in reverse.get('qualifiers',{}).get('P2868',[]):
+              v=q.get('datavalue',{}).get('value'); role_values.append(v.get('id') if isinstance(v,dict) else None)
+          if AUTHOR_ROLE not in role_values:
+              post({'action':'wbsetqualifier','claim':reverse['id'],'property':'P2868','snaktype':'value','value':item_value(AUTHOR_ROLE),'token':csrf,'summary':'Specify author role for Wikiversity resource contribution'})
+          if not has_page_ref(reverse):
+              add_page_ref(reverse['id'])
+
+          # 6) Live final verification from Wikidata.
+          resource=wb_entity(resource_qid)
+          person_final=wb_entity(PERSON)
+          if resource.get('sitelinks',{}).get('enwikiversity',{}).get('title')!=TITLE:
+              raise RuntimeError('Final Wikiversity sitelink verification failed')
+          def vals(ent,prop):
+              return [qid_of_claim(c) for c in ent.get('claims',{}).get(prop,[]) if qid_of_claim(c)]
+          if OER not in vals(resource,'P31') or PERSON not in vals(resource,'P50') or BONT_A not in vals(resource,'P921') or AESTHETIC not in vals(resource,'P921'):
+              raise RuntimeError({'final_resource_claim_verification_failed':{'P31':vals(resource,'P31'),'P50':vals(resource,'P50'),'P921':vals(resource,'P921')}})
+          final_rev=[c for c in person_final.get('claims',{}).get('P3919',[]) if qid_of_claim(c)==resource_qid]
+          if len(final_rev)!=1:
+              raise RuntimeError({'final_reverse_edge_count':len(final_rev)})
+          fq=[]
+          for q in final_rev[0].get('qualifiers',{}).get('P2868',[]):
+              v=q.get('datavalue',{}).get('value'); fq.append(v.get('id') if isinstance(v,dict) else None)
+          if AUTHOR_ROLE not in fq or not has_page_ref(final_rev[0]):
+              raise RuntimeError({'final_reverse_edge_metadata_failed':{'roles':fq,'has_ref':has_page_ref(final_rev[0])}})
+
+          print(json.dumps({
+              'ok':True,
+              'resource_qid':resource_qid,
+              'created_item':created_item,
+              'added_enwikiversity_sitelink':added_sitelink,
+              'resource_claims_created':changes,
+              'person_P3919_created':reverse_created,
+              'person_P3919_role_author':True,
+              'aesthetic_medicine_qid':AESTHETIC,
+              'wikiversity_revision':rev.get('revid'),
+              'resource_lastrevid':resource.get('lastrevid'),
+              'person_lastrevid':person_final.get('lastrevid')
+          },ensure_ascii=False,indent=2))
