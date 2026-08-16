@@ -17,15 +17,15 @@ const replaceRange=(source,start,end,replacement,label)=>{
 
 let gen=await read('scripts/generate-projections.mjs');
 const importNeedle="import { assembleCanonicalContent } from './lib/assemble-content.mjs';";
-const importReplacement=importNeedle+"\nimport { expandKnowledgeXml } from './lib/knowledge-xml.mjs';\nimport { normalizeGoogleSupportGraphDoc } from './lib/google-support-graph.mjs';";
+const importReplacement=importNeedle+"\nimport { expandKnowledgeXml } from './lib/knowledge-xml.mjs';\nimport { normalizeGoogleSupportGraphRaw } from './lib/google-support-graph.mjs';";
 gen=replaceOnce(gen,importNeedle,importReplacement,'projection helper import');
 
 const supportStart="const supportRaw=`";
 const supportEnd='// ---- Flat graph projection.';
 const supportReplacement=
-  "const supportDoc=normalizeGoogleSupportGraphDoc({'@context':graph['@context'],'@graph':supportNodes});\n"+
-  "const supportRaw=JSON.stringify(supportDoc)+'\\n';\n"+
-  "if(Buffer.byteLength(supportRaw)>supportProfile.maxBytes) throw new Error('Support graph '+Buffer.byteLength(supportRaw)+' exceeds '+supportProfile.maxBytes);\n"+
+  "const supportBaseRaw=`${JSON.stringify({'@context':graph['@context'],'@graph':supportNodes})}\\n`;\n"+
+  "const supportRaw=normalizeGoogleSupportGraphRaw(supportBaseRaw);\n"+
+  "if(Buffer.byteLength(supportRaw)>supportProfile.maxBytes) throw new Error(`Support graph ${Buffer.byteLength(supportRaw)} exceeds ${supportProfile.maxBytes}`);\n"+
   "await writeFile(path.join(semantic,'support-graph.json'),supportRaw);\n\n";
 gen=replaceRange(gen,supportStart,supportEnd,supportReplacement+supportEnd,'support graph writer');
 
@@ -51,9 +51,9 @@ await write('src/pages/knowledge.xml.ts',"import body from '../data/projections/
 await write('src/pages/llms.txt.ts',"import body from '../data/projections/llms.txt?raw';\nimport { staticResponse } from '../lib/static-endpoint';\nexport const prerender=true;\nexport function GET(){return staticResponse(body,'text/plain; charset=utf-8');}\n");
 
 let layout=await read('src/layouts/BaseLayout.astro');
-const layoutStart='type JsonNode=Record<string,any>;';
+const layoutStart="const nodeTypes=(node:JsonNode)=>";
 const layoutEnd='const googleSupportGraphRaw=isMain?normalizeGoogleSupportGraph(supportGraphRaw):supportGraphRaw;';
-layout=replaceRange(layout,layoutStart,layoutEnd,'const googleSupportGraphRaw=supportGraphRaw;','layout support normalization');
+layout=replaceRange(layout,layoutStart,layoutEnd,'const googleSupportGraphRaw=supportGraphRaw;\n','layout support normalization');
 layout=layout.replace(layoutEnd,'');
 await write('src/layouts/BaseLayout.astro',layout);
 
