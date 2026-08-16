@@ -13,6 +13,8 @@ env:
   CF_PROJECT: doctor-ghezelbaash
   CF_PRODUCTION_BRANCH: production/deploy
   CF_PREVIEW_BRANCH: staging/deploy
+  ZONE_NAME: ghezelbaash.ir
+  CANONICAL_HOST: www.ghezelbaash.ir
 jobs:
   refresh:
     runs-on: ubuntu-24.04
