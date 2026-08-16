@@ -26,7 +26,7 @@ z.versionDoi=next.versionDoi;z.recordId=next.recordId;
 release.release=next.release;release.dateModified=next.date;
 await writeJson('src/data/release.json',release);
 for(const file of ['package.json','package-lock.json']){const value=await readJson(file);value.version=next.release;if(value.packages?.[''])value.packages[''].version=next.release;await writeJson(file,value)}
-for(const file of ['src/data/volatile-facts.json','src/data/evidence-snapshot.json','src/data/evidence-registry.json']){const value=await readJson(file);if(Object.hasOwn(value,'release'))value.release=next.release;await writeJson(file,value)}
+for(const file of ['src/data/volatile-facts.json','src/data/evidence-snapshot.json']){const value=await readJson(file);value.release=next.release;await writeJson(file,value)}
 
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
 const nodes=graph['@graph'];must(Array.isArray(nodes),'Canonical graph lacks @graph');
@@ -54,20 +54,6 @@ await writeJson('src/data/semantic/knowledge-graph.jsonld',graph);
 
 const englishDate=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${next.date}T00:00:00Z`));
 const medicalEnglishDate=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${release.medicalReviewedAt}T00:00:00Z`));
-let head=await readFile('src/data/templates/main-head.html','utf8');head=head.replace(/<link href="https:\/\/doi\.org\/10\.5281\/zenodo\.\d+" rel="related" title="(?:Zenodo DOI|Zenodo preservation Version DOI [^"]+)"\/>/,`<link href="https://doi.org/${next.versionDoi}" rel="related" title="Zenodo preservation Version DOI ${next.release}"/>`);await writeFile('src/data/templates/main-head.html',head);
-let visible=await readFile('src/content-source/100-rc099.html','utf8');
-visible=visible.replace(/Current source graph version<\/strong><\/dt><dd>Version \d+\.\d+\.\d+/,`Current source graph version</strong></dt><dd>Version ${next.release}`)
-.replace(/DOI-backed Version \d+\.\d+\.\d+ snapshot<\/strong><\/dt><dd><a href="https:\/\/github\.com\/medicaldoctor91\/doctor-ghezelbaash">Version \d+\.\d+\.\d+<\/a> — published \d{1,2} [A-Za-z]+ \d{4}/,`DOI-backed Version ${next.release} snapshot</strong></dt><dd><a href="https://github.com/medicaldoctor91/doctor-ghezelbaash">Version ${next.release}</a> — published ${englishDate}`)
-.replace(/<dt><strong>Zenodo DOI<\/strong><\/dt><dd>Version DOI: <a href="https:\/\/doi\.org\/10\.5281\/zenodo\.\d+">10\.5281\/zenodo\.\d+<\/a> · Concept DOI: <a href="https:\/\/doi\.org\/10\.5281\/zenodo\.18765168">10\.5281\/zenodo\.18765168<\/a><\/dd>/,`<dt><strong>Zenodo DOI</strong></dt><dd>Version DOI: <a href="https://doi.org/${next.versionDoi}">${next.versionDoi}</a> · Concept DOI: <a href="https://doi.org/${z.conceptDoi}">${z.conceptDoi}</a></dd>`)
-.replace(/Version \d+\.\d+\.\d+, \d{1,2} [A-Za-z]+ \d{4}\. Zenodo\./,`Version ${next.release}, ${englishDate}. Zenodo.`)
-.replace(/https:\/\/doi\.org\/10\.5281\/zenodo\.\d+(?=<\/a>\.\s*<\/p><h3 id="historical-patient-origin-summary")/,`https://doi.org/${next.versionDoi}`)
-.replace(/10\.5281\/zenodo\.\d+(?=<\/a>\.\s*<\/p><h3 id="historical-patient-origin-summary")/,next.versionDoi)
-.replace(/reviewed on \d{1,2} [A-Za-z]+ \d{4}/,`reviewed on ${medicalEnglishDate}`)
-.replace(/published on \d{1,2} [A-Za-z]+ \d{4}/,`published on ${englishDate}`)
-.replace(/pid=10\.5281%2Fzenodo\.\d+/,`pid=${encodeURIComponent(next.versionDoi)}`);
-await writeFile('src/content-source/100-rc099.html',visible);
-let readme=await readFile('README.md','utf8');readme=readme.replace(/Current source release: `[^`]+`/,`Current source release: \`${next.release}\``).replace(/Current Zenodo Version DOI: `[^`]+`/,`Current Zenodo Version DOI: \`${next.versionDoi}\``);await writeFile('README.md',readme);
 let citation=await readFile('CITATION.cff','utf8');citation=citation.replace(/^version: .+$/m,`version: ${next.release}`).replace(/^date-released: .+$/m,`date-released: ${next.date}`).replace(/^doi: .+$/m,`doi: ${next.versionDoi}`);await writeFile('CITATION.cff',citation);
 const codemeta=await readJson('codemeta.json');codemeta.softwareVersion=next.release;codemeta.dateModified=next.date;if(codemeta.subjectOf){codemeta.subjectOf.version=next.release;codemeta.subjectOf.identifier=`https://doi.org/${next.versionDoi}`;codemeta.subjectOf.name='Dr. Saeed Ghezelbash Public Knowledge Graph'}await writeJson('codemeta.json',codemeta);
-for(const file of ['public/favicon.svg','public/safari-pinned-tab.svg','public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg']){let s=await readFile(file,'utf8');s=s.replaceAll(`X-ENTITY-VERSION:${old.release}`,`X-ENTITY-VERSION:${next.release}`).replaceAll(`Entity Contact Projection ${old.release}`,`Entity Contact Projection ${next.release}`).replaceAll(`<entity:Version>${old.release}</entity:Version>`,`<entity:Version>${next.release}>`).replaceAll(`REV:${old.date.replaceAll('-','')}T000000Z`,`REV:${next.date.replaceAll('-','')}T000000Z`);s=s.replaceAll(`<entity:Version>${next.release}>`,`<entity:Version>${next.release}</entity:Version>`);await writeFile(file,s)}
 console.log(JSON.stringify({promoted:true,from:old,to:next,conceptDoi:z.conceptDoi,history:z.releaseHistory},null,2));

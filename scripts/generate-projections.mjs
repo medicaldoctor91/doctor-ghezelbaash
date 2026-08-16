@@ -39,7 +39,7 @@ const refsFromNode=n=>{
   walk(n); return [...new Set(found)];
 };
 const evidenceRefsForNode=n=>[...new Set(refsFromNode(n).map(id=>evidenceById.has(id)?id:evidenceByUrl.get(id)).filter(Boolean))];
-const identityFingerprintSha256=createHash('sha256').update(JSON.stringify(release.identityFingerprint)).digest('hex');
+const identityFingerprintSha256=hashIdentityFingerprint(release);
 
 // ---- Canonical content assembly: modular source -> one permanent Astro Markdown page.
 const assembledCanonical=await assembleCanonicalContent({root,graph});

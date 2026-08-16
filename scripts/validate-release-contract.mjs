@@ -1,6 +1,7 @@
 import path from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
+import {assertIdentityFingerprintSource} from './lib/release-identity.mjs';
 
 const root=process.cwd();
 const fail=message=>{throw new Error(message)};
@@ -24,6 +25,7 @@ const lock=await readJson('package-lock.json');
 const codemeta=await readJson('codemeta.json');
 const R=release.release;
 const Z=release.dataset?.zenodo;
+assertIdentityFingerprintSource(release);
 
 if(!validSemver(R))fail(`Invalid release label: ${R}`);
 if(pkg.version!==R||lock.version!==R||lock.packages?.['']?.version!==R)fail('Package release identity drift');
@@ -32,7 +34,7 @@ if(release.reviewedBy!==release.primaryEntity?.id)fail('Medical reviewer must re
 
 const invariantKeys=[
   'contractClasses','evidenceSnapshotMaxAgeDays','externalRdfTripleCount','googlebotFetchBudgetBytes',
-  'googlebotReservedResponseHeaderBytes','googlebotSafetyMarginBytes','headAlternateNameMax','identityFingerprintSha256',
+  'googlebotReservedResponseHeaderBytes','googlebotSafetyMarginBytes','headAlternateNameMax',
   'maxCoreGraphEndByte','maxCriticalCssBytes','maxHeadGraphBytes','maxHtmlBytes','maxOrphanGraphNodes',
   'maxRagPassageChars','maxRootCustomHeaderBytes','maxSupportGraphBytes','maxSupportGraphEndByte',
   'minClaimEvidencePassages','minExternalCssBytes','redirectsSha256','runtime'

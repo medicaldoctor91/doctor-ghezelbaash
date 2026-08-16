@@ -1,3 +1,7 @@
+## Source architecture
+
+This repository builds one canonical static physician landing page plus synchronized machine-readable representations. `src/content-source/page.md`, `src/data/semantic/knowledge-graph.jsonld`, the focused registries/policies, media assets and `src/data/volatile-facts.json` are canonical inputs. Generators create deterministic projections; Astro renders the single human-facing page; finalization binds only post-build integrity data. Google Places reputation is the only routine mutable public lane. Release-only publication tooling is separate from the normal build path.
+
 # Dr. Saeed Ghezelbash — Canonical Production Source
 
 Pure-static Astro source for the single-page production site at `https://www.ghezelbaash.ir/`.

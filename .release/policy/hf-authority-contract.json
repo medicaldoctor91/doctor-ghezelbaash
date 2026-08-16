@@ -20,13 +20,8 @@
   ],
   "configs": [
     "entity_facts",
+    "query_matrix",
     "positioning_instructions",
     "live_observations"
-  ],
-  "forbiddenRegressions": [
-    "secondary AI/ML distribution",
-    "derived, synthetic retrieval material",
-    "not canonical factual evidence",
-    "canonical_factual_authority=false"
   ]
 }

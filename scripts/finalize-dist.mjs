@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {readFile,writeFile,readdir,unlink} from 'node:fs/promises';
 import {assertDocumentContract,inspectHtml} from './lib/html-contract.mjs';
 import {resolveDeterministicBuildInstant} from './lib/deterministic-build-time.mjs';
+import {deriveIdentityFingerprint,hashIdentityFingerprint} from './lib/release-identity.mjs';
 
 const root=process.cwd(),dist=path.resolve(root,process.argv[2]||'dist'),data=path.join(root,'src/data');
 const inv=JSON.parse(await readFile(path.join(data,'release-invariants.json'),'utf8'));
@@ -75,7 +76,7 @@ const manifest={
  dataset:{id:release.dataset.id,name:datasetName,wikidata:release.dataset.wikidata,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,zenodoRecordId:String(release.dataset.zenodo.recordId)},
  primaryEntity:{name:release.primaryEntity.name,fullNameAliases:release.primaryEntity.officialAliases,googleKnowledgeGraphId:release.primaryEntity.googleKnowledgeGraphId,wikidata:release.primaryEntity.wikidata},
  stableMediaIdentity:{...stableMediaInventory.subject,authorityMasterCount:(stableMediaInventory.aliases||[]).length,contract:'IPTC PersonInImageId + Dublin Core relation + embedded entity graph + HTTP Link'},
- identityFingerprint:{sha256:inv.identityFingerprintSha256,value:release.identityFingerprint},
+ identityFingerprint:{sha256:hashIdentityFingerprint(release),value:deriveIdentityFingerprint(release)},
  provenance:{passageRecords:provPassageCount,answerRecords:provAnswerCount,evidenceRecords:evidenceNodeCount,evidenceSnapshotObservedAt:evidenceSnapshot.observedAt},
  supportingClinic:{googleLocalKgmid:release.clinic.googleLocalKgmid,placeId:release.clinic.placeId,cid:release.clinic.cid,postalCode:release.clinic.postalCode,hours:release.clinic.hours,owner:release.primaryEntity.id},
  review:{date:release.medicalReviewedAt,reviewedBy:release.reviewedBy},
