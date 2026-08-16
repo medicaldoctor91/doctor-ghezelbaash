@@ -1,15 +1,4 @@
 {
-  "release": "1.2.2",
-  "date": "2026-08-15",
-  "reviewedBy": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
-  "postalCode": "6714657412",
-  "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
-  "googleKg": "/g/11nqdfk76c",
-  "clinicKg": "/g/11r3rzdtb3",
-  "aliases": [
-    "Mohammad Saeed Ghezelbash",
-    "محمد‌سعید قزلباش"
-  ],
   "redirectsSha256": "847e8e3244c5308ecc30294385fbd332ce7a3c51eb998b65c9455ea17707e060",
   "externalRdfTripleCount": 8655,
   "maxHtmlBytes": 1950000,
@@ -18,39 +7,7 @@
     "npm": "11.x",
     "astro": "7.1.6"
   },
-  "officialAliases": [
-    "Mohammad Saeed Ghezelbash",
-    "Dr. Mohammad Saeed Ghezelbash",
-    "Saeed Ghezelbash",
-    "Dr. Saeed Ghezelbash",
-    "محمد‌سعید قزلباش",
-    "دکتر محمد‌سعید قزلباش",
-    "محمدسعید قزلباش",
-    "دکتر محمدسعید قزلباش",
-    "محمد سعید قزلباش",
-    "دکتر محمد سعید قزلباش",
-    "سعید قزلباش",
-    "دکتر سعید قزلباش"
-  ],
-  "retrievalVariants": [
-    "Mohammad Saeed Ghezelbaash",
-    "Dr. Mohammad Saeed Ghezelbaash",
-    "Mohammadssaeed Ghezelbash",
-    "Mohammadssaeed Ghezelbaash",
-    "Mohammad Saeed Ghazlbash",
-    "Dr. Mohammad Saeed Ghazlbash",
-    "Doctor Ghezelbaash",
-    "Ghezelbash MS"
-  ],
-  "reconciliationAliases": [
-    "Saeed Ghezelbaash",
-    "Dr. Saeed Ghezelbaash",
-    "Dr Saeed Ghezelbash",
-    "MohammadSaeed Ghezelbash",
-    "Mohamadsaeed Ghezelbash"
-  ],
   "maxHeadGraphBytes": 35000,
-  "priceRange": "$$$$",
   "maxSupportGraphBytes": 135000,
   "maxRagPassageChars": 4200,
   "maxOrphanGraphNodes": 0,

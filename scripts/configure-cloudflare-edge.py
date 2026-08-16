@@ -39,14 +39,6 @@ BULK_REDIRECT_PHASE = "http_request_redirect"
 BULK_REDIRECT_RULESET_NAME = "Canonical historical URL redirects"
 BULK_REDIRECT_LIST_NAME = "ghezelbaash_blog_legacy_urls"
 BULK_REDIRECT_RULE_REF = "ghezelbaash_blog_legacy_bulk_v1"
-LEGACY_BLOG_SINGLE_REDIRECT_REFS = {
-    "ghezelbaash_blog_clinic_legacy_v1",
-    "ghezelbaash_blog_selection_legacy_v1",
-    "ghezelbaash_blog_thread_lift_legacy_v1",
-    "ghezelbaash_blog_botox_legacy_v1",
-    "ghezelbaash_blog_filler_legacy_v1",
-    "ghezelbaash_blog_unknown_legacy_v1",
-}
 ZONE_SETTINGS_PERMISSION_IDS = (
     "517b21aee92c4d89936c976ba6e4be55",  # Zone Settings Read
     "3030687196b94b638145a3953da2b699",  # Zone Settings Write
@@ -1293,22 +1285,21 @@ def reconcile_subdomain_redirects(
         # only after the caller has successfully reconciled the exact Bulk list.
         for current in list(rules):
             expression = str(current.get("expression") or "")
-            owns_legacy_ref = current.get("ref") in LEGACY_BLOG_SINGLE_REDIRECT_REFS
-            if blog_host not in expression and not owns_legacy_ref:
+            if blog_host not in expression:
                 continue
             expression_hosts = set(
                 re.findall(r'http\.host\s+eq\s+"([^"]+)"', expression)
             )
             if expression_hosts != {blog_host}:
                 raise CloudflareError(
-                    "Refusing to delete a legacy blog redirect with an ambiguous "
+                    "Refusing to delete a competing blog redirect with an ambiguous "
                     "host expression: " + expression
                 )
             api.expect(
                 "DELETE",
                 f"/zones/{zone}/rulesets/{ruleset_id}/rules/{current['id']}",
             )
-            print("LEGACY_BLOG_SINGLE_REDIRECT_REMOVED", current.get("ref") or current["id"])
+            print("BLOG_SINGLE_REDIRECT_CONFLICT_REMOVED", current.get("ref") or current["id"])
 
         for source, desired in zip(desired_rows, desired_rules):
             rules = read_rules()
@@ -1316,7 +1307,7 @@ def reconcile_subdomain_redirects(
             current = next(
                 (row for row in rules if row.get("ref") == desired["ref"]), None
             )
-            legacy = [
+            conflicting = [
                 row
                 for row in rules
                 if row.get("ref") not in desired_refs
@@ -1327,8 +1318,8 @@ def reconcile_subdomain_redirects(
                     if other != host
                 )
             ]
-            if len(legacy) > 1:
-                raise CloudflareError(f"Ambiguous legacy catchalls for {host}")
+            if len(conflicting) > 1:
+                raise CloudflareError(f"Ambiguous competing catchalls for {host}")
             if current is None:
                 if len(rules) + 1 > plan_limit:
                     raise CloudflareError("Single Redirect quota would be exceeded")
@@ -1349,16 +1340,16 @@ def reconcile_subdomain_redirects(
 
             # Cloudflare treats a rule ref as immutable. Preserve continuous
             # redirect service by creating the owned rule first, then remove
-            # the legacy rule. If creation fails, the legacy redirect remains.
-            if legacy:
+            # a competing rule. If creation fails, the existing redirect remains.
+            if conflicting:
                 api.expect(
                     "DELETE",
-                    f"/zones/{zone}/rulesets/{ruleset_id}/rules/{legacy[0]['id']}",
+                    f"/zones/{zone}/rulesets/{ruleset_id}/rules/{conflicting[0]['id']}",
                 )
                 print(
-                    "SUBDOMAIN_SINGLE_REDIRECT_LEGACY_REMOVED_AFTER_CREATE",
+                    "SUBDOMAIN_SINGLE_REDIRECT_CONFLICT_REMOVED_AFTER_CREATE",
                     host,
-                    legacy[0].get("ref") or legacy[0]["id"],
+                    conflicting[0].get("ref") or conflicting[0]["id"],
                 )
 
     readback = api.expect("GET", f"/zones/{zone}/rulesets/{ruleset_id}")

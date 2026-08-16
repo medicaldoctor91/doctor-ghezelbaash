@@ -1,8 +1,7 @@
 {
   "schemaVersion": "1.0",
-  "baselineRelease": "1.2.1",
-  "policy": "approved-visible-delta-then-cryptographic-freeze",
-  "mutableAfterReleaseSelector": "#google-maps-clinic-reputation-current",
+  "policy": "cryptographic-visible-dom-contract",
+  "mutableSelector": "#google-maps-clinic-reputation-current",
   "protected": {
     "h1Id": "saeed-ghezelbash",
     "aggressiveHeadings": [
@@ -320,17 +319,8 @@
       }
     ]
   },
-  "allowedV122DeltaClasses": [
-    "reputation-line-data-binding",
-    "proven-auto-injected-answer-deduplication",
-    "structured-data-footer-role-and-doi-normalization",
-    "medical-review-date-consistency",
-    "google-maps-anchor-label-correction"
-  ],
-  "finalVisibleDomSha256": "63b6111dd630d29e20e9c042b8ecf7e7063097be5631b3762f1396e5b8f5bdf9",
-  "finalVisibleDomRecords": 19121,
-  "finalVisibleDomNormalization": "semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel",
-  "finalVisibleDomBytes": 1739689,
-  "finalFreezeRelease": "1.2.2",
-  "finalFreezeReleaseDate": "2026-08-15"
+  "visibleDomSha256": "63b6111dd630d29e20e9c042b8ecf7e7063097be5631b3762f1396e5b8f5bdf9",
+  "visibleDomRecords": 19121,
+  "visibleDomNormalization": "semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel",
+  "visibleDomBytes": 1739689
 }
