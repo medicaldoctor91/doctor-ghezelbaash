@@ -29,5 +29,13 @@ jobs:
           set -euo pipefail
           test -n "$WIKI_USERNAME"
           test -n "$WIKI_BOT_PASSWORD"
+      - name: Patch Python reserved keyword in one-shot script
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('scripts/wikisource_publish_2021_temp.py')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace(",assert='user'", ",**{'assert':'user'}")
+          p.write_text(s,encoding='utf-8')
       - name: Publish work, author page, redirect, and verified Wikidata sitelinks
         run: python scripts/wikisource_publish_2021_temp.py
