@@ -17,12 +17,16 @@ const replaceRange=(source,start,end,replacement,label)=>{
 
 let gen=await read('scripts/generate-projections.mjs');
 const importNeedle="import { assembleCanonicalContent } from './lib/assemble-content.mjs';";
-const importReplacement=`${importNeedle}\nimport { expandKnowledgeXml } from './lib/knowledge-xml.mjs';\nimport { normalizeGoogleSupportGraphDoc } from './lib/google-support-graph.mjs';`;
+const importReplacement=importNeedle+"\nimport { expandKnowledgeXml } from './lib/knowledge-xml.mjs';\nimport { normalizeGoogleSupportGraphDoc } from './lib/google-support-graph.mjs';";
 gen=replaceOnce(gen,importNeedle,importReplacement,'projection helper import');
 
 const supportStart="const supportRaw=`";
 const supportEnd='// ---- Flat graph projection.';
-const supportReplacement=`const supportDoc=normalizeGoogleSupportGraphDoc({'@context':graph['@context'],'@graph':supportNodes});\nconst supportRaw=\`${'${JSON.stringify(supportDoc)}'}\\n\`;\nif(Buffer.byteLength(supportRaw)>supportProfile.maxBytes) throw new Error(\`Support graph ${'${Buffer.byteLength(supportRaw)}'} exceeds ${'${supportProfile.maxBytes}'}\`);\nawait writeFile(path.join(semantic,'support-graph.json'),supportRaw);\n\n`;
+const supportReplacement=
+  "const supportDoc=normalizeGoogleSupportGraphDoc({'@context':graph['@context'],'@graph':supportNodes});\n"+
+  "const supportRaw=JSON.stringify(supportDoc)+'\\n';\n"+
+  "if(Buffer.byteLength(supportRaw)>supportProfile.maxBytes) throw new Error('Support graph '+Buffer.byteLength(supportRaw)+' exceeds '+supportProfile.maxBytes);\n"+
+  "await writeFile(path.join(semantic,'support-graph.json'),supportRaw);\n\n";
 gen=replaceRange(gen,supportStart,supportEnd,supportReplacement+supportEnd,'support graph writer');
 
 const knowledgeWrite="await writeFile(path.join(projections,'knowledge.xml'),knowledge);";
@@ -30,12 +34,21 @@ const knowledgeReplacement="const knowledgeIntentSource=await readFile(path.join
 gen=replaceOnce(gen,knowledgeWrite,knowledgeReplacement,'knowledge XML final write');
 
 const sitemapWrite="await writeFile(path.join(projections,'sitemap.xml'),sitemap);";
-const llmsFinalization=`${sitemapWrite}\n\nconst llmsProjectionPath=path.join(projections,'llms.txt');\nlet llmsFinal=await readFile(llmsProjectionPath,'utf8');\nconst evidenceTiers=evidenceRegistry.tiers||{};\nfor(const tier of ['A','B','C'])if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier])throw new Error(\`llms.txt: evidence tier ${'${tier}'} definition missing from evidence registry\`);\nconst evidenceTierLine=\`- Evidence tiers: Tier A = ${'${evidenceTiers.A}'}; Tier B = ${'${evidenceTiers.B}'}; Tier C = ${'${evidenceTiers.C}'}.\`;\nconst evidenceTierPattern=/^- Evidence tiers:.*$/m;\nif(!evidenceTierPattern.test(llmsFinal))throw new Error('llms.txt: generated evidence-tier declaration missing');\nllmsFinal=llmsFinal.replace(evidenceTierPattern,evidenceTierLine);\nawait writeFile(llmsProjectionPath,llmsFinal);`;
+const llmsFinalization=sitemapWrite+"\n\n"+
+  "const llmsProjectionPath=path.join(projections,'llms.txt');\n"+
+  "let llmsFinal=await readFile(llmsProjectionPath,'utf8');\n"+
+  "const evidenceTiers=evidenceRegistry.tiers||{};\n"+
+  "for(const tier of ['A','B','C'])if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier])throw new Error('llms.txt: evidence tier '+tier+' definition missing from evidence registry');\n"+
+  "const evidenceTierLine='- Evidence tiers: Tier A = '+evidenceTiers.A+'; Tier B = '+evidenceTiers.B+'; Tier C = '+evidenceTiers.C+'.';\n"+
+  "const evidenceTierPattern=/^- Evidence tiers:.*$/m;\n"+
+  "if(!evidenceTierPattern.test(llmsFinal))throw new Error('llms.txt: generated evidence-tier declaration missing');\n"+
+  "llmsFinal=llmsFinal.replace(evidenceTierPattern,evidenceTierLine);\n"+
+  "await writeFile(llmsProjectionPath,llmsFinal);";
 gen=replaceOnce(gen,sitemapWrite,llmsFinalization,'llms projection finalization anchor');
 await write('scripts/generate-projections.mjs',gen);
 
-await write('src/pages/knowledge.xml.ts',`import body from '../data/projections/knowledge.xml?raw';\nimport { staticResponse } from '../lib/static-endpoint';\nexport const prerender=true;\nexport function GET(){return staticResponse(body,'application/xml; charset=utf-8');}\n`);
-await write('src/pages/llms.txt.ts',`import body from '../data/projections/llms.txt?raw';\nimport { staticResponse } from '../lib/static-endpoint';\nexport const prerender=true;\nexport function GET(){return staticResponse(body,'text/plain; charset=utf-8');}\n`);
+await write('src/pages/knowledge.xml.ts',"import body from '../data/projections/knowledge.xml?raw';\nimport { staticResponse } from '../lib/static-endpoint';\nexport const prerender=true;\nexport function GET(){return staticResponse(body,'application/xml; charset=utf-8');}\n");
+await write('src/pages/llms.txt.ts',"import body from '../data/projections/llms.txt?raw';\nimport { staticResponse } from '../lib/static-endpoint';\nexport const prerender=true;\nexport function GET(){return staticResponse(body,'text/plain; charset=utf-8');}\n");
 
 let layout=await read('src/layouts/BaseLayout.astro');
 const layoutStart='type JsonNode=Record<string,any>;';
@@ -60,7 +73,7 @@ await write('src/data/templates/headers.template',headers);
 let finalizer=await read('scripts/finalize-dist.mjs');
 const fallbackStart="const esc=s=>s.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&');";
 const mutateStart="const mutateRoute=(route,fn)=>";
-finalizer=replaceRange(finalizer,fallbackStart,mutateStart,'', 'header fallback');
+finalizer=replaceRange(finalizer,fallbackStart,mutateStart,'','header fallback');
 finalizer=replaceOnce(finalizer,"const mutateRoute=(route,fn)=>{const lines=headers.split('\\n'),i=lines.findIndex(x=>x===`/${route}`);if(i<0)return;","const mutateRoute=(route,fn)=>{const lines=headers.split('\\n'),i=lines.findIndex(x=>x===`/${route}`);if(i<0)throw new Error(`Missing canonical header block /${route}`);",'positive header mutation contract');
 await write('scripts/finalize-dist.mjs',finalizer);
 
