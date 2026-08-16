@@ -78,6 +78,13 @@ jobs:
           text=text.replace(old,"'src/content-source/page.md'")
           text=text.replace('Generated home.md drift from canonical modular source','Generated home.md drift from canonical page source')
           p.write_text(text)
+          p=Path('scripts/validate-critical-hero-geometry.mjs')
+          text=p.read_text()
+          old='آخرین دریافت از Google:'
+          if text.count(old)!=1:
+              raise SystemExit(f'expected one reputation wording guard, found {text.count(old)}')
+          text=text.replace(old,'آخرین تغییر ثبت‌شده در Google:')
+          p.write_text(text)
           PY
           npm run prepare:generated
           ASTRO_TELEMETRY_DISABLED=1 npx astro build
