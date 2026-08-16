@@ -1,4 +1,5 @@
 name: Set Wikidata native name to common Persian name
+# retry on a fresh runner because the previous Azure IP was globally blocked by Wikimedia
 
 on:
   push:
