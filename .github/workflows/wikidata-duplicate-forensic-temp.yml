@@ -1,0 +1,70 @@
+name: Forensic audit possible pre-existing scholarly duplicates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/wikidata-duplicate-forensic-temp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Search Wikidata by DOI PMID title and creation history
+        shell: python
+        run: |
+          import json, requests
+          API='https://www.wikidata.org/w/api.php'
+          UA='Medicaldoctor91DuplicateForensic/1.0 (https://www.ghezelbaash.ir/)'
+          works=[
+            {'new':'Q141104731','doi':'10.26444/MS/187881','pmid':None,'title':'The role of Omega-3 Polyunsaturated Fatty Acids in the treatment of Bipolar Disorder – a narrative review'},
+            {'new':'Q141104735','doi':'10.5080/U27544','pmid':'41070497','title':'Theory of Mind, Attachment and Metacognitive Functions in Depression'},
+            {'new':'Q141104740','doi':'10.31083/AP38786','pmid':'40110367','title':'Comparison of Insomnia, Depression, and Perceived Social Support among Individuals with Amphetamine Use Disorder (AUD) and Healthy Controls'},
+          ]
+          s=requests.Session(); s.headers['User-Agent']=UA
+          def get(**p):
+            p.setdefault('format','json'); p.setdefault('formatversion',2)
+            r=s.get(API,params=p,timeout=60); r.raise_for_status(); d=r.json()
+            if 'error' in d: raise RuntimeError(d['error'])
+            return d
+          def val(st):
+            v=st.get('mainsnak',{}).get('datavalue',{}).get('value')
+            return v.get('id') if isinstance(v,dict) and 'id' in v else v
+          def vals(e,p): return [val(x) for x in e.get('claims',{}).get(p,[]) if val(x) is not None]
+          def entity(q): return get(action='wbgetentities',ids=q,props='claims|labels|descriptions|info')['entities'][q]
+          out=[]
+          for w in works:
+            candidates=[]
+            # DOI statement search
+            for query in [f'haswbstatement:P356={w["doi"]}', f'"{w["title"]}"'] + ([f'haswbstatement:P698={w["pmid"]}'] if w['pmid'] else []):
+              sr=get(action='query',list='search',srsearch=query,srnamespace=0,srlimit=50)['query']['search']
+              candidates += [x['title'] for x in sr if x['title'].startswith('Q')]
+            # entity search by title
+            sr=get(action='wbsearchentities',search=w['title'],language='en',type='item',limit=50)
+            candidates += [x['id'] for x in sr.get('search',[])]
+            candidates=list(dict.fromkeys(candidates+[w['new']]))
+            details=[]
+            for q in candidates:
+              try:
+                e=entity(q)
+                label=e.get('labels',{}).get('en',{}).get('value')
+                titlevals=[]
+                for st in e.get('claims',{}).get('P1476',[]):
+                  v=st.get('mainsnak',{}).get('datavalue',{}).get('value')
+                  if isinstance(v,dict): titlevals.append(v.get('text'))
+                rev=get(action='query',prop='revisions',titles=q,rvprop='ids|timestamp|user|comment',rvlimit=1,rvdir='newer')['query']['pages'][0]
+                first=rev.get('revisions',[{}])[0]
+                details.append({'qid':q,'label':label,'P356':vals(e,'P356'),'P698':vals(e,'P698'),'P932':vals(e,'P932'),'P1476':titlevals,'P2860':vals(e,'P2860'),'first_revision':first})
+              except Exception as ex:
+                details.append({'qid':q,'error':repr(ex)})
+            out.append({'work':w,'candidates':details})
+          print(json.dumps(out,ensure_ascii=False,indent=2))
