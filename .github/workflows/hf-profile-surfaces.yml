@@ -1,0 +1,44 @@
+name: Hugging Face profile authority verifier
+
+on:
+  schedule:
+    - cron: '53 4 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Verify physician-first public HF topology without mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,time,urllib.request
+          def text(url):
+              req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','User-Agent':'ghezelbaash-hf-profile-verifier/1.0'})
+              with urllib.request.urlopen(req,timeout=45) as r:return r.read().decode('utf-8','replace')
+          dataset='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          meta=json.loads(text('https://huggingface.co/api/datasets/'+dataset+'?full=true&_='+str(time.time_ns())))
+          if meta.get('private') or meta.get('gated') not in (False,None,'false','auto'):
+              raise SystemExit('HF Dataset unexpectedly private/gated')
+          readme=text('https://huggingface.co/datasets/'+dataset+'/resolve/main/README.md?download=true&_='+str(time.time_ns()))
+          for token in ['Q140287622','Q140288589','Q140304972','Dr. Saeed Ghezelbash Public Knowledge Graph','AI/retrieval distribution']:
+              if token not in readme: raise SystemExit('Dataset authority topology missing '+token)
+          # Organization profile is supporting publication namespace; absence/mutation is never repaired here.
+          try:
+              org=text('https://huggingface.co/doctor-ghezelbaash/raw/main/README.md?_='+str(time.time_ns()))
+              for token in ['Q140287622','Q140288589']:
+                  if token not in org: raise SystemExit('HF organization card topology missing '+token)
+              org_ok=True
+          except Exception as e:
+              raise SystemExit('HF organization profile verification failed: '+str(e))
+          print(json.dumps({'HF_PROFILE_TOPOLOGY_PASS':True,'dataset':dataset,'organizationVerified':org_ok}))
+          PY

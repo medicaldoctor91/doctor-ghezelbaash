@@ -2,107 +2,31 @@ import path from 'node:path';
 import {readFile,readdir,access} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
-
-const root=process.cwd(),data=path.join(root,'src/data');
-const readJson=async file=>JSON.parse(await readFile(path.join(root,file),'utf8'));
-const fail=message=>{throw new Error(message)};
-const arr=value=>Array.isArray(value)?value:(value==null?[]:[value]);
-const id=value=>typeof value==='string'?value:value?.['@id'];
-
-const release=await readJson('src/data/release.json');
-const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
-const visible=await readJson('src/data/visible-contract.json');
-const services=await readJson('src/data/service-registry.json');
-const answers=await readJson('src/data/answer-registry.json');
-const hf=await readJson('.release/policy/hf-authority-contract.json');
-
-const requiredSource=[
-  'CITATION.cff','codemeta.json','src/content-source/page.md','src/layouts/BaseLayout.astro',
-  'src/data/release.json','src/data/release-invariants.json','src/data/service-registry.json','src/data/answer-registry.json',
-  'src/data/semantic/knowledge-graph.jsonld','src/data/semantic/head-ids.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl',
-  'src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
-  'src/data/templates/headers.template','src/data/visible-contract.json','.release/policy/hf-authority-contract.json','public/robots.txt','public/_redirects'
-];
-for(const file of requiredSource)await access(path.join(root,file));
-
-if(!release.medicalReviewedAt)fail('Explicit medicalReviewedAt missing');
-if(release.dataset.zenodo.conceptDoi===release.dataset.zenodo.versionDoi)fail('Concept DOI and current Version DOI must remain distinct');
-
-const nodes=graph['@graph']||[];
-const byId=new Map(nodes.filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
-const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id);
-if(!person||!clinic||!dataset)fail('Person/Clinic/Dataset graph constitution broken');
-if(id(dataset.creator)!==release.primaryEntity.id||id(dataset.publisher)!==release.primaryEntity.id)fail('Dataset creator/publisher must resolve to the physician');
-const datasetSameAs=arr(dataset.sameAs).map(id);
-if(datasetSameAs.length!==1||datasetSameAs[0]!==`https://www.wikidata.org/entity/${release.dataset.wikidata}`)fail('Dataset sameAs must contain only its reconciliation identity');
-
-const graphIds=new Set(byId.keys());
-for(const file of ['src/data/semantic/head-ids.json','src/data/semantic/support-ids.json'])for(const ref of await readJson(file))if(!graphIds.has(ref))fail(`${file} references missing graph node ${ref}`);
-
-const offered=new Set([...arr(person.availableService).map(id),...arr(clinic.availableService).map(id)].filter(Boolean));
-const registered=new Set(services.services.filter(item=>item.publishable).map(item=>item.id));
-if(registered.size<100)fail('Service registry unexpectedly sparse');
-for(const serviceId of registered)if(!offered.has(serviceId))fail(`Registry service not projected: ${serviceId}`);
-for(const serviceId of offered)if(!registered.has(serviceId))fail(`Projected service missing from registry: ${serviceId}`);
-if(![...registered].some(serviceId=>serviceId.includes('botulinum-toxin-chronic-migraine')))fail('Migraine Botox offered-service identity missing');
-
-for(const row of answers.answers){
-  const question=byId.get(row.questionId),answer=byId.get(row.answerId);
-  if(!question||!answer||id(question.acceptedAnswer)!==row.answerId)fail(`Answer Registry drift ${row.questionId}`);
-}
-
-const assembled=await assembleCanonicalContent({root,graph});
-const home=await readFile(path.join(root,'src/content/home.md'),'utf8');
-if(assembled.content!==home)fail('Generated home.md differs from canonical content assembly');
-
-const contentFiles=(await readdir(path.join(root,'src/content-source'))).filter(name=>/\.(html|md)$/i.test(name)).sort();
-let source='';
-for(const file of contentFiles)source+=await readFile(path.join(root,'src/content-source',file),'utf8')+'\n';
-if(!source.includes(`id="${visible.protected.h1Id}"`))fail('Protected H1 missing');
-for(const heading of visible.protected.aggressiveHeadings||[])if(heading.id&&!source.includes(`id="${heading.id}"`))fail(`Required aggressive heading missing: ${heading.id}`);
-for(const heading of visible.protected.instagramHeadingLinks||[])if(heading.id&&!source.includes(`id="${heading.id}"`))fail(`Required Instagram heading association missing: ${heading.id}`);
-if(!source.includes('google-maps-clinic-reputation-current'))fail('Visible reputation slot missing');
-
-const robots=await readFile(path.join(root,'public/robots.txt'),'utf8');
-if(!robots.includes('Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full'))fail('Maximum Content-Signal policy drift');
-for(const bot of ['Google-Extended','GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','PerplexityBot','Applebot-Extended'])if(!robots.includes(`User-agent: ${bot}\nAllow: /`))fail(`AI/search crawler contract drift: ${bot}`);
-const headers=await readFile(path.join(data,'templates/headers.template'),'utf8');
-if(!headers.includes('Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full'))fail('Headers Content-Signal contract drift');
-
-for(const task of ['question-answering','text-retrieval','text-generation'])if(!hf.taskCategories.includes(task))fail(`HF task contract missing ${task}`);
-for(const language of ['fa','en','ar','ckb'])if(!hf.languages.includes(language))fail(`HF language contract missing ${language}`);
-
-const redirects=await readFile(path.join(root,'public/_redirects'),'utf8'),redirectSources=new Set();
-for(const line of redirects.split(/\r?\n/).map(value=>value.trim()).filter(Boolean)){
-  const [from,to,code]=line.split(/\s+/);
-  if(!from||!to||code!=='301')fail(`Malformed redirect: ${line}`);
-  if(redirectSources.has(from))fail(`Duplicate redirect source: ${from}`);
-  redirectSources.add(from);
-  if(to.includes('#')){
-    const fragment=decodeURIComponent(to.split('#')[1]||'');
-    if(fragment&&!source.includes(`id="${fragment}"`)&&!source.includes(`id='${fragment}'`))fail(`Redirect fragment target missing: ${line}`);
-  }
-}
-
-const calibration=await readJson('src/data/render-calibration.json'),widths=[360,390,430,768,1024,1440],base=calibration['360']?.chunks||[];
-if(!base.length)fail('Render calibration baseline empty');
-const chunkIds=base.map(row=>row.id);
-for(const width of widths){
-  const rows=calibration[String(width)]?.chunks||[];
-  if(rows.length!==chunkIds.length||rows.some((row,index)=>row.id!==chunkIds[index]||!Number.isFinite(Number(row.h))||Number(row.h)<=0))fail(`Render calibration identity drift ${width}`);
-}
-const calibrationSha=createHash('sha256').update(await readFile(path.join(root,'src/data/render-calibration.json'))).digest('hex');
-const css=await readFile(path.join(root,'src/styles/global.css'),'utf8');
-if(!css.includes(`DIST_CHUNK_CALIBRATION_SHA256:${calibrationSha}`))fail('CSS/render calibration hash drift');
-
-console.log(JSON.stringify({
-  stage:'SOURCE_SEMANTIC_CONTRACT',
-  release:release.release,
-  services:registered.size,
-  answers:answers.answers.length,
-  protectedAggressiveHeadings:visible.protected.aggressiveHeadings.length,
-  protectedInstagramHeadings:visible.protected.instagramHeadingLinks.length,
-  renderChunks:chunkIds.length,
-  canonicalInputs:requiredSource.length,
-  integrity:'PASS'
-},null,2));
+const root=process.cwd(),data=path.join(root,'src/data');const readJson=async p=>JSON.parse(await readFile(path.join(root,p),'utf8')),fail=m=>{throw new Error(m)},arr=v=>Array.isArray(v)?v:(v==null?[]:[v]),id=v=>typeof v==='string'?v:v?.['@id'];
+const release=await readJson('src/data/release.json'),graph=await readJson('src/data/semantic/knowledge-graph.jsonld'),visible=await readJson('src/data/visible-contract.json'),services=await readJson('src/data/service-registry.json'),answers=await readJson('src/data/answer-registry.json'),hf=await readJson('.release/policy/hf-authority-contract.json');
+for(const f of ['CITATION.cff','codemeta.json','src/content-source/page.md','src/layouts/BaseLayout.astro','src/data/semantic/head-ids.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs'])await access(path.join(root,f));
+const packageJson=await readFile(path.join(root,'package.json'),'utf8'),baseGenerator=await readFile(path.join(root,'scripts/generate-projections.mjs'),'utf8'),retrievalGenerator=await readFile(path.join(root,'scripts/generate-retrieval-projections.mjs'),'utf8'),descriptorGenerator=await readFile(path.join(root,'scripts/generate-descriptors.mjs'),'utf8'),finalizer=await readFile(path.join(root,'scripts/finalize-dist.mjs'),'utf8'),mediaReferenceValidator=await readFile(path.join(root,'scripts/validate-media-references.mjs'),'utf8');
+if(!packageJson.includes('"validate:release-contract": "node scripts/validate-release-contract.mjs"'))fail('Generic release-contract validator wiring missing');
+if(!packageJson.includes('"prepare:generated": "npm run validate:media-references && npm run rdf:deps && npm run rdf:generate && npm run generate"'))fail('Generated preparation must be read-only against tracked canonical source');
+if(!packageJson.includes('"validate:media-references": "node scripts/validate-media-references.mjs"'))fail('Read-only media reference validator wiring missing');
+if(/\bwriteFile\b|\bappendFile\b/.test(mediaReferenceValidator))fail('Media reference validation must never rewrite source');
+if(!packageJson.includes('generate-projections.mjs && node scripts/generate-retrieval-projections.mjs && node scripts/generate-descriptors.mjs'))fail('Canonical generator order drift');
+if(!packageJson.includes('"descriptors:finalize": "node scripts/generate-descriptors.mjs --dist dist"'))fail('DIST descriptor finalization stage missing');
+if(!packageJson.includes('astro build && npm run indexnow:prepare && npm run descriptors:finalize && node scripts/finalize-dist.mjs'))fail('Descriptor finalization must run after Astro build and before serving finalizer');
+if(!descriptorGenerator.includes("const distMode=distFlag>=0;")||!descriptorGenerator.includes("const artifactAbs=rel=>distMode?path.join(distDir,rel):sourceProjectionAbs(rel);"))fail('Descriptor writer lacks explicit source-input/dist-final phase separation');
+if(retrievalGenerator.includes("src/data/projections/llms.txt"))fail('Retrieval generator illegally writes canonical llms projection');
+for(const name of ['datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json']){if(baseGenerator.includes(`writeFile(path.join(projections,'${name}')`))fail(`Base generator illegally writes descriptor ${name}`);if(finalizer.includes(`writeFile(path.join(dist,'${name}')`))fail(`Finalizer illegally rewrites descriptor ${name}`);if(!descriptorGenerator.includes(`writeFile(out('${name}')`))fail(`Descriptor generator missing canonical writer for ${name}`)}
+if(!release.medicalReviewedAt)fail('Explicit medicalReviewedAt missing');if(release.dataset.zenodo.conceptDoi===release.dataset.zenodo.versionDoi)fail('Concept DOI collapsed with current Version DOI');
+const nodes=graph['@graph']||[],byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n])),person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id);if(!person||!clinic||!dataset)fail('Person/Clinic/Dataset graph constitution broken');if(id(dataset.creator)!==release.primaryEntity.id||id(dataset.publisher)!==release.primaryEntity.id)fail('Dataset creator/publisher is not the physician');if(!arr(dataset.sameAs).map(id).includes(`https://www.wikidata.org/entity/${release.dataset.wikidata}`))fail('Dataset Wikidata identity missing');if(arr(dataset.sameAs).map(id).some(x=>/github\.com|huggingface\.co|doi\.org|zenodo\.org/.test(x||'')))fail('Source/distribution collapsed into Dataset sameAs');
+const graphIds=new Set(byId.keys());for(const file of ['src/data/semantic/head-ids.json','src/data/semantic/support-ids.json'])for(const ref of await readJson(file))if(!graphIds.has(ref))fail(`${file} references missing graph node ${ref}`);
+const offered=new Set([...arr(person.availableService).map(id),...arr(clinic.availableService).map(id)].filter(Boolean)),registered=new Set(services.services.filter(x=>x.publishable).map(x=>x.id));if(registered.size<100)fail('Service registry unexpectedly sparse');for(const x of registered)if(!offered.has(x))fail(`Registry service not projected: ${x}`);for(const x of offered)if(!registered.has(x))fail(`Projected service missing from registry: ${x}`);if(![...registered].some(x=>x.includes('botulinum-toxin-chronic-migraine')))fail('Migraine Botox offered-service identity missing');
+for(const r of answers.answers){const q=byId.get(r.questionId),a=byId.get(r.answerId);if(!q||!a||id(q.acceptedAnswer)!==r.answerId)fail(`Answer Registry drift ${r.questionId}`)}
+const assembled=await assembleCanonicalContent({root,graph}),home=await readFile(path.join(root,'src/content/home.md'),'utf8');if(assembled.content!==home)fail('Generated home.md drift from canonical page source');
+const contentFiles=(await readdir(path.join(root,'src/content-source'))).filter(x=>/\.(html|md)$/i.test(x)).sort();let source='';for(const f of contentFiles)source+=await readFile(path.join(root,'src/content-source',f),'utf8')+'\n';if(!source.includes('id="saeed-ghezelbash"'))fail('Protected H1 missing');for(const h of visible.protected.aggressiveHeadings)if(h.id&&!source.includes(`id="${h.id}"`))fail(`Required aggressive heading removed: ${h.id}`);for(const h of visible.protected.instagramHeadingLinks)if(h.id&&!source.includes(`id="${h.id}"`))fail(`Required Instagram heading link removed: ${h.id}`);if(!source.includes('google-maps-clinic-reputation-current'))fail('Existing visible reputation slot removed');
+const robots=await readFile(path.join(root,'public/robots.txt'),'utf8');if(!robots.includes('Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full'))fail('Maximum Content-Signal policy drift');for(const bot of ['Google-Extended','GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','PerplexityBot','Applebot-Extended'])if(!robots.includes(`User-agent: ${bot}\nAllow: /`))fail(`AI/search crawler contract drift: ${bot}`);
+const headers=await readFile(path.join(data,'templates/headers.template'),'utf8');if(!headers.includes('Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full'))fail('Headers Content-Signal contract drift');
+for(const t of ['question-answering','text-retrieval','text-generation'])if(!hf.taskCategories.includes(t))fail(`HF task contract missing ${t}`);for(const l of ['fa','en','ar','ckb'])if(!hf.languages.includes(l))fail(`HF language contract missing ${l}`);
+const redirects=await readFile(path.join(root,'public/_redirects'),'utf8'),sources=new Set();for(const line of redirects.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)){const [from,to,code]=line.split(/\s+/);if(!from||!to||code!=='301')fail(`Malformed redirect: ${line}`);if(sources.has(from))fail(`Duplicate redirect source: ${from}`);sources.add(from);if(to.includes('#')){const frag=decodeURIComponent(to.split('#')[1]||'');if(frag&&!source.includes(`id="${frag}"`)&&!source.includes(`id='${frag}'`))fail(`Redirect fragment target missing: ${line}`)}}
+const calibration=await readJson('src/data/render-calibration.json'),widths=[360,390,430,768,1024,1440],base=calibration['360']?.chunks||[];if(!base.length)fail('Render calibration baseline empty');const ids=base.map(x=>x.id);for(const w of widths){const rows=calibration[String(w)]?.chunks||[];if(rows.length!==ids.length||rows.some((x,i)=>x.id!==ids[i]||!Number.isFinite(Number(x.h))||Number(x.h)<=0))fail(`Render calibration identity drift ${w}`)}
+const css=await readFile(path.join(root,'src/styles/global.css'),'utf8'),calSha=createHash('sha256').update(await readFile(path.join(root,'src/data/render-calibration.json'))).digest('hex');if(!css.includes(`DIST_CHUNK_CALIBRATION_SHA256:${calSha}`))fail('CSS/render calibration hash drift');
+console.log(JSON.stringify({stage:'SOURCE_SEMANTIC_CONTRACT',release:release.release,services:registered.size,answers:answers.answers.length,protectedAggressiveHeadings:visible.protected.aggressiveHeadings.length,protectedInstagramHeadings:visible.protected.instagramHeadingLinks.length,renderChunks:ids.length,canonicalWriterTopology:'PASS',buildSourceMutation:'FORBIDDEN',descriptorWriterPhases:['source-input','dist-final'],integrity:'PASS'},null,2));

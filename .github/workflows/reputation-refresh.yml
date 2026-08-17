@@ -11,7 +11,8 @@ concurrency:
 env:
   CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
   CF_PROJECT: doctor-ghezelbaash
-  CF_PRODUCTION_BRANCH: main
+  CF_PRODUCTION_BRANCH: production/deploy
+  CF_PREVIEW_BRANCH: staging/deploy
   ZONE_NAME: ghezelbaash.ir
   CANONICAL_HOST: www.ghezelbaash.ir
 jobs:
@@ -77,10 +78,12 @@ jobs:
           git add src/data/volatile-facts.json
           git commit -m "Refresh live Google reputation observation"
           LIVE_SHA="$(git rev-parse HEAD)"; echo "LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
-          git push origin HEAD:main
-          REMOTE_SHA="$(git ls-remote origin 'refs/heads/main' | awk '{print $1}')"
-          test "$REMOTE_SHA" = "$LIVE_SHA" || { echo "::error::Remote main drift: $REMOTE_SHA expected=$LIVE_SHA"; exit 1; }
-          echo 'GOOGLE_REPUTATION_MAIN_CONVERGENCE_PASS'
+          git push --atomic origin HEAD:main HEAD:staging/deploy HEAD:production/deploy
+          for ref in main staging/deploy production/deploy; do
+            REMOTE_SHA="$(git ls-remote origin "refs/heads/$ref" | awk '{print $1}')"
+            test "$REMOTE_SHA" = "$LIVE_SHA" || { echo "::error::Remote ref drift: $ref=$REMOTE_SHA expected=$LIVE_SHA"; exit 1; }
+          done
+          echo 'GOOGLE_REPUTATION_BRANCH_CONVERGENCE_PASS'
       - name: Prove website deployment and cooling freshness before touching HF
         if: steps.places.outputs.changed == 'true'
         env:

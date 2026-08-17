@@ -1,0 +1,2 @@
+import {spawnSync} from 'node:child_process';
+const mode=process.argv[2]||'current';const script=mode==='snapshot'?'scripts/verify-release-snapshot.mjs':mode==='current'?'scripts/verify-current-serving.mjs':null;if(!script)throw new Error('Usage: node scripts/verify-converged-stack.mjs [snapshot|current]');const r=spawnSync(process.execPath,[script],{stdio:'inherit',env:process.env});if(r.error)throw r.error;process.exit(r.status??1);

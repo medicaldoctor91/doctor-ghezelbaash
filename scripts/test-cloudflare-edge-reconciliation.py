@@ -441,7 +441,7 @@ class FakeInventoryApi:
                 "success": True,
                 "result": {
                     "name": "doctor-ghezelbaash",
-                    "production_branch": "main",
+                    "production_branch": "production/deploy",
                     "domains": sorted(self.project_domains),
                     "source": {
                         "type": "github",
@@ -450,8 +450,8 @@ class FakeInventoryApi:
                             "repo_name": "doctor-ghezelbaash",
                             "deployments_enabled": True,
                             "production_deployments_enabled": True,
-                            "preview_deployment_setting": "none",
-                            "preview_branch_includes": [],
+                            "preview_deployment_setting": "custom",
+                            "preview_branch_includes": ["staging/deploy"],
                             "preview_branch_excludes": [],
                         },
                     },

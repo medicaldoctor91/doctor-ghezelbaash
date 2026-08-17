@@ -21,7 +21,8 @@ const byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n]));
 const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id);
 if(!person||!clinic)throw new Error('Core entity missing');
 
-// Retrieval projections write retrieval/live outputs; canonical answer and passage projections are written by generate-projections.mjs.
+// Retrieval projections own only retrieval/live outputs. Canonical answer/passages remain
+// exclusively owned by generate-projections.mjs; no post-generation override is allowed here.
 const publishableServices=serviceRegistry.services.filter(x=>x.publishable);
 const offered=new Set([...arr(person.availableService).map(id),...arr(clinic.availableService).map(id)].filter(Boolean));
 const registered=new Set(publishableServices.map(x=>x.id));
