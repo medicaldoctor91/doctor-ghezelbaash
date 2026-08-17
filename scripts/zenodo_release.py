@@ -40,25 +40,33 @@ def metadata(version,date,doi,concept):
         'of the physician-owned first-party Dataset whose canonical IRI is '
         '<a href="https://www.ghezelbaash.ir/graph.jsonld#dataset">https://www.ghezelbaash.ir/graph.jsonld#dataset</a>.</p>'
         '<p>The primary entity, creator and publisher is <strong>Dr. Saeed Ghezelbash</strong> '
-        '(Wikidata Q140287622; ORCID 0009-0001-9346-8475; Iran Medical Council 167430). '
+        '(Google Knowledge Graph /g/11nqdfk76c; Wikidata Q140287622; ORCID 0009-0001-9346-8475; Iran Medical Council 167430). '
         'The supporting clinic is Q140288589 and the continuing Dataset entity is Q140304972.</p>'
         '<p>GitHub is the version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is the AI/retrieval distribution. '
-        'These roles are linked without collapsing the physician, clinic, Dataset, source repository or distribution records into one identity.</p>'
+        'These roles are linked without collapsing the physician, clinic, Dataset, source repository or distribution records into one identity. '
+        'First-party machine interfaces include JSON-LD graph, full LLM/RAG corpus, Croissant, DCAT and provenance endpoints on ghezelbaash.ir.</p>'
       ),
       'access_right':'open','license':'cc-by-4.0','language':'mul','version':version,
-      'keywords':['Saeed Ghezelbash','Dr. Saeed Ghezelbash','Mohammad Saeed Ghezelbash','دکتر سعید قزلباش','محمد سعید قزلباش',
-        'physician entity','aesthetic physician','Kermanshah','Iran','medical knowledge graph','knowledge graph','knowledge base','entity resolution',
-        'JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data','question answering','text retrieval','AI retrieval','RAG','Croissant','DCAT'],
+      'keywords':['Saeed Ghezelbash','Dr. Saeed Ghezelbash','دکتر سعید قزلباش','دکتر قزلباش',
+        'physician entity','aesthetic physician','Kermanshah','Iran','Iran physician','Kermanshah physician','aesthetic medicine','botox','dermal filler',
+        'botox Kermanshah','filler Kermanshah','aesthetic doctor Kermanshah','aesthetic doctor Iran','medical knowledge graph','physician knowledge graph','healthcare knowledge graph',
+        'knowledge graph','knowledge base','healthcare entity resolution','entity resolution','JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data',
+        'question answering','text retrieval','AI retrieval','LLM retrieval','RAG','Persian medical search','local medical retrieval','national medical retrieval','Croissant','DCAT'],
       'subjects':[
         {'term':'Saeed Ghezelbash','identifier':'https://www.wikidata.org/entity/Q140287622','scheme':'url'},
         {'term':'Dr. Saeed Ghezelbash Public Knowledge Graph','identifier':'https://www.wikidata.org/entity/Q140304972','scheme':'url'},
         {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':'https://www.wikidata.org/entity/Q140288589','scheme':'url'}],
-      'notes':f'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. Concept DOI: {concept}. Exact Version DOI: {doi}. Current live observations: https://www.ghezelbaash.ir/live-observations.jsonld.',
+      'notes':f'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. Primary physician: Dr. Saeed Ghezelbash — Google Knowledge Graph /g/11nqdfk76c; Wikidata Q140287622; ORCID 0009-0001-9346-8475. Concept DOI: {concept}. Exact Version DOI: {doi}. AI/retrieval distribution: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data. Current live observations: https://www.ghezelbaash.ir/live-observations.jsonld.',
       'related_identifiers':[
         {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isDerivedFrom','resource_type':'dataset'},
         {'identifier':'https://www.ghezelbaash.ir/','relation':'isDescribedBy','resource_type':'other'},
         {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash','relation':'isDerivedFrom','resource_type':'software'},
         {'identifier':'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','relation':'isReferencedBy','resource_type':'dataset'},
+        {'identifier':f'https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/v{version}','relation':'isDerivedFrom','resource_type':'software'},
+        {'identifier':'https://www.ghezelbaash.ir/llms-full.txt','relation':'isDocumentedBy','resource_type':'other'},
+        {'identifier':'https://www.ghezelbaash.ir/croissant.json','relation':'hasMetadata','resource_type':'other'},
+        {'identifier':'https://www.ghezelbaash.ir/dcat.ttl','relation':'hasMetadata','resource_type':'other'},
+        {'identifier':'https://www.ghezelbaash.ir/provenance.jsonld','relation':'hasMetadata','resource_type':'other'},
         {'identifier':'https://www.wikidata.org/entity/Q140304972','relation':'isDescribedBy','resource_type':'dataset'},
         {'identifier':'https://www.wikidata.org/entity/Q140287622','relation':'references','resource_type':'other'},
         {'identifier':'https://www.wikidata.org/entity/Q140288589','relation':'references','resource_type':'other'}],
@@ -71,7 +79,6 @@ def sanitize_metadata(md):
     return md
 
 def reserve(args,token):
-    # Read-only proof of the immutable baseline. Never unlock/edit/publish the prior version here.
     public=call(token,'GET',f'{BASE}/records/{args.current_record}')
     if public.get('doi')!=args.current_doi: raise RuntimeError('Current public Zenodo DOI mismatch')
     if (public.get('metadata') or {}).get('version')!=args.current_version: raise RuntimeError('Current public Zenodo version mismatch')
@@ -91,7 +98,7 @@ def reserve(args,token):
     if not doi or recid!=record or not doi.startswith('10.5281/zenodo.'):
         raise RuntimeError('Zenodo DOI reservation mismatch')
     md=sanitize_metadata(draft.get('metadata')); md.update(metadata(args.version,args.date,doi,args.concept_doi))
-    updated=call(token,'PUT',draft_url,json.dumps({'metadata':md},ensure_ascii=False).encode())
+    call(token,'PUT',draft_url,json.dumps({'metadata':md},ensure_ascii=False).encode())
     verify=call(token,'GET',draft_url); vmd=verify.get('metadata') or {}; vpre=vmd.get('prereserve_doi') or {}
     if verify.get('submitted') is True or str(verify.get('id'))!=record or vpre.get('doi')!=doi or vmd.get('version')!=args.version or vmd.get('publication_date')!=args.date:
         raise RuntimeError('Reserved Zenodo draft readback drift')
@@ -101,8 +108,6 @@ def reserve(args,token):
     write_state(Path(args.output).name,state); print(json.dumps(state,separators=(',',':')))
 
 def exact_sources():
-    # Rebuild the immutable Release Snapshot inventory from the exact canonical DIST bytes.
-    # Hugging Face has a separate inventory and must never redefine Zenodo snapshot truth.
     dist_root=Path('dist')
     full_inventory={str(p.relative_to(dist_root)):sha256(p) for p in sorted(dist_root.rglob('*')) if p.is_file()}
     if not full_inventory or 'index.html' not in full_inventory or 'artifact-manifest.json' not in full_inventory:
@@ -157,7 +162,6 @@ def publish(args,token):
     release=load_release(); z=release['dataset']['zenodo']; record=str(z['recordId']); doi=z['versionDoi']; draft_url=f'{BASE}/deposit/depositions/{record}'; source_commit=os.environ.get('SOURCE_COMMIT','').strip()
     staged=json.loads((RUNTIME/'zenodo-stage.json').read_text())
     if staged.get('recordId')!=record or staged.get('versionDoi')!=doi or staged.get('release')!=release['release'] or staged.get('sourceCommit')!=source_commit: raise RuntimeError('Zenodo stage ledger mismatch or stale Candidate C binding')
-    # Re-download every staged file immediately before the irreversible publish action.
     remote=call(token,'GET',f'{draft_url}/files')
     if {x.get('filename') for x in remote}!=set(staged['sha256']): raise RuntimeError('Zenodo inventory drift after stage')
     for item in remote:
