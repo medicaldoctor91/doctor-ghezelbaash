@@ -1,0 +1,59 @@
+import {execFileSync} from 'node:child_process';
+import {readFile} from 'node:fs/promises';
+import path from 'node:path';
+
+const root=process.cwd();
+const tracked=execFileSync('git',['ls-files','-z'],{cwd:root,encoding:'buffer'}).toString('utf8').split('\0').filter(Boolean).sort();
+if(!tracked.length) throw new Error('Tracked-source inventory is empty');
+
+const forbiddenGeneratedPrefixes=['dist/','release/','node_modules/','.python-deps/','.release/runtime/','.release/huggingface/'];
+const forbiddenExactNames=new Set(['ceiling-release.'+'next.yml','notes.md','dev-'+'notes.md','internal-'+'notes.md']);
+const forbiddenNamePrefixes=['audit-','backup-','draft-','scratch-','temp-','tmp-'];
+const forbiddenSuffixes=['.bak','.old','.orig','.rej','.tmp','~'];
+const staleBranchRefs=[
+  'production'+'/deploy',
+  'staging'+'/deploy',
+  'audit/'+'account-settings-readonly-20260817',
+  'cta-'+'audit-20260817',
+  'cta-'+'location-20260817'
+];
+const textExtensions=new Set(['.astro','.cff','.css','.csv','.html','.ini','.js','.json','.jsonld','.md','.mjs','.py','.toml','.ts','.tsv','.ttl','.txt','.xml','.yaml','.yml']);
+const textExactNames=new Set(['.gitignore','.npmrc','.nvmrc','LICENSE']);
+const devMarker=new RegExp(['\\bTO','DO\\b|\\bFIX','ME\\b|\\bHA','CK\\b'].join(''),'g');
+
+for(const name of tracked){
+  const normalized=name.replaceAll('\\','/');
+  if(forbiddenGeneratedPrefixes.some(prefix=>normalized.startsWith(prefix))) throw new Error(`Generated/runtime material must not be tracked: ${normalized}`);
+  const base=path.posix.basename(normalized).toLowerCase();
+  if(forbiddenExactNames.has(base)) throw new Error(`Internal note/planning file must not be tracked: ${normalized}`);
+  if(forbiddenNamePrefixes.some(prefix=>base.startsWith(prefix))) throw new Error(`Temporary/audit file must not be tracked: ${normalized}`);
+  if(forbiddenSuffixes.some(suffix=>base.endsWith(suffix))) throw new Error(`Backup/editor residue must not be tracked: ${normalized}`);
+}
+
+const canonicalContent=tracked.filter(name=>name.startsWith('src/content-source/'));
+if(canonicalContent.length!==1||canonicalContent[0]!=='src/content-source/page.md') throw new Error(`Canonical content-source topology drift: ${canonicalContent.join(', ')}`);
+const styles=tracked.filter(name=>name.startsWith('src/styles/'));
+const allowedStyles=['src/styles/critical-mobile.css','src/styles/global.css'];
+if(styles.length!==allowedStyles.length||styles.some((name,index)=>name!==allowedStyles[index])) throw new Error(`Stylesheet topology drift: ${styles.join(', ')}`);
+
+for(const name of tracked){
+  const ext=path.posix.extname(name).toLowerCase();
+  if(!textExtensions.has(ext)&&!textExactNames.has(path.posix.basename(name))) continue;
+  const content=await readFile(path.join(root,name),'utf8');
+  for(const branchRef of staleBranchRefs){
+    if(content.includes(branchRef)) throw new Error(`Non-main branch dependency leaked into ${name}: ${branchRef}`);
+  }
+  if(devMarker.test(content)) throw new Error(`Development marker leaked into tracked source: ${name}`);
+  devMarker.lastIndex=0;
+}
+
+console.log(JSON.stringify({
+  repositoryHygiene:'PASS',
+  trackedFiles:tracked.length,
+  canonicalContent:'src/content-source/page.md',
+  styles:allowedStyles,
+  branchContract:'main-only',
+  generatedRuntimeTracked:false,
+  temporaryOrBackupFilesTracked:false,
+  developmentMarkers:false
+},null,2));
