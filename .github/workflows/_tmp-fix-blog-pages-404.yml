@@ -1,4 +1,4 @@
-name: Temporary strict blog fallback repair
+name: Temporary strict blog fallback source repair
 
 on:
   push:
@@ -23,7 +23,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Integrate the blog fallback into canonical source
+
+      - name: Integrate the fallback into canonical non-workflow source
         shell: bash
         run: |
           set -euo pipefail
@@ -124,7 +125,11 @@ jobs:
               '''class FakeInventoryApi:\n    def expect(\n''',
               '''class FakeInventoryApi:\n    def __init__(self) -> None:\n        self.pages_domains = {"www.ghezelbaash.ir": "active"}\n        self.project_domains = {\n            "doctor-ghezelbaash.pages.dev",\n            "www.ghezelbaash.ir",\n        }\n\n    def expect(\n'''
           )
-          replace_once(test_path,'        del body, ok\n        if method == "GET" and path == (\n            "/accounts/test-account/pages/projects/doctor-ghezelbaash"\n        ):\n','        del ok\n        if method == "GET" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":\n            return {\n                "success": True,\n                "result": [\n                    {"name": name, "status": status}\n                    for name, status in sorted(self.pages_domains.items())\n                ],\n            }\n        if method == "POST" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":\n            assert isinstance(body, dict) and body.get("name")\n            name = str(body["name"])\n            self.pages_domains[name] = "active"\n            self.project_domains.add(name)\n            return {"success": True, "result": {"name": name, "status": "active"}}\n        if method == "GET" and path == (\n            "/accounts/test-account/pages/projects/doctor-ghezelbaash"\n        ):\n')
+          replace_once(
+              test_path,
+              '''        del body, ok\n        if method == "GET" and path == (\n            "/accounts/test-account/pages/projects/doctor-ghezelbaash"\n        ):\n''',
+              '''        del ok\n        if method == "GET" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":\n            return {\n                "success": True,\n                "result": [\n                    {"name": name, "status": status}\n                    for name, status in sorted(self.pages_domains.items())\n                ],\n            }\n        if method == "POST" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":\n            assert isinstance(body, dict) and body.get("name")\n            name = str(body["name"])\n            self.pages_domains[name] = "active"\n            self.project_domains.add(name)\n            return {"success": True, "result": {"name": name, "status": "active"}}\n        if method == "GET" and path == (\n            "/accounts/test-account/pages/projects/doctor-ghezelbaash"\n        ):\n'''
+          )
           replace_once(
               test_path,
               '''                    "domains": [\n                        "doctor-ghezelbaash.pages.dev",\n                        "www.ghezelbaash.ir",\n                    ],\n''',
@@ -140,15 +145,9 @@ jobs:
               '''            "pagesAndDnsInventory": True,\n''',
               '''            "pagesAndDnsInventory": True,\n            "blogPagesFallbackBinding": True,\n'''
           )
-
-          workflow_path=root/'.github/workflows/cloudflare-subdomain-redirects.yml'
-          replace_once(
-              workflow_path,
-              '''      - name: Validate source redirect contract\n        run: node scripts/validate-subdomain-redirects.mjs\n''',
-              '''      - name: Build and validate redirect plus fallback contract\n        run: |\n          npm ci --ignore-scripts\n          npm run build\n'''
-          )
           PY
-      - name: Validate repaired source before publishing branch
+
+      - name: Validate repaired source
         shell: bash
         run: |
           set -euo pipefail
@@ -157,14 +156,19 @@ jobs:
           python scripts/test-cloudflare-edge-reconciliation.py
           npm run build
           git diff --check
-      - name: Publish clean branch without repair machinery
+
+      - name: Publish only canonical non-workflow changes
         shell: bash
         run: |
           set -euo pipefail
-          rm .github/workflows/_tmp-fix-blog-pages-404.yml
           git config user.name 'Dr. Saeed Ghezelbaash | دکتر سعید قزلباش'
           git config user.email 'medicaldoctor91@gmail.com'
-          git add -A
+          git add \
+            src/data/subdomain-redirects.json \
+            scripts/configure-cloudflare-edge.py \
+            scripts/validate-subdomain-redirects.mjs \
+            scripts/verify-subdomain-redirects.mjs \
+            scripts/test-cloudflare-edge-reconciliation.py
           git diff --cached --check
           git commit -m 'Serve unmatched historical blog URLs as real Pages 404s'
           git push origin HEAD:fix/blog-pages-404-contract-20260817
