@@ -1,0 +1,217 @@
+name: One-time Cloudflare clean slate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/cloudflare-clean-slate.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  clean-slate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    env:
+      CF_PROJECT: doctor-ghezelbaash
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      ZONE_NAME: ghezelbaash.ir
+      CANONICAL_HOST: www.ghezelbaash.ir
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Remove obsolete Pages deployments and reset Cloudflare-controlled caches
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import importlib.util
+          import json
+          import os
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          API='https://api.cloudflare.com/client/v4'
+          token=os.environ['CLOUDFLARE_API_TOKEN'].strip()
+          account=os.environ['CLOUDFLARE_ACCOUNT_ID'].strip()
+          project=os.environ['CF_PROJECT'].strip()
+          zone_name=os.environ['ZONE_NAME'].strip()
+          host=os.environ['CANONICAL_HOST'].strip()
+          attempt=int(os.environ.get('GITHUB_RUN_ATTEMPT','1'))
+          base=f'/accounts/{urllib.parse.quote(account)}/pages/projects/{urllib.parse.quote(project)}'
+
+          class ApiError(RuntimeError):
+              def __init__(self,status,payload,path):
+                  super().__init__(f'Cloudflare API HTTP {status} {path}: {json.dumps(payload,ensure_ascii=False)[:1600]}')
+                  self.status=status; self.payload=payload; self.path=path
+
+          def request(method,path,body=None,retries=12):
+              data=None if body is None else json.dumps(body,separators=(',',':')).encode()
+              headers={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'ghezelbaash-clean-slate/1.0'}
+              if body is not None: headers['Content-Type']='application/json'
+              for n in range(retries):
+                  req=urllib.request.Request(API+path,data=data,headers=headers,method=method)
+                  try:
+                      with urllib.request.urlopen(req,timeout=60) as r:
+                          raw=r.read().decode('utf-8','replace'); payload=json.loads(raw) if raw else {}
+                          if payload.get('success') is not True: raise ApiError(r.status,payload,path)
+                          return payload
+                  except urllib.error.HTTPError as e:
+                      raw=e.read().decode('utf-8','replace')
+                      try: payload=json.loads(raw) if raw else {}
+                      except Exception: payload={'raw':raw[:1200]}
+                      if e.code==429 or 500<=e.code<600:
+                          retry=e.headers.get('Retry-After')
+                          delay=float(retry) if retry and retry.isdigit() else min(30,2+n*2)
+                          print('CF_API_RETRY',method,path,'status=',e.code,'delay=',delay)
+                          time.sleep(delay); continue
+                      raise ApiError(e.code,payload,path)
+              raise RuntimeError(f'Cloudflare API retry budget exhausted: {method} {path}')
+
+          def status_of(d):
+              return (d.get('latest_stage') or {}).get('status') or ((d.get('stages') or [{}])[-1].get('status')) or 'unknown'
+
+          def current_keeper():
+              for n in range(1,241):
+                  p=request('GET',base).get('result') or {}
+                  d=p.get('latest_deployment') or {}
+                  did=d.get('id')
+                  if did:
+                      full=request('GET',f'{base}/deployments/{urllib.parse.quote(str(did))}').get('result') or d
+                      st=status_of(full)
+                      print('KEEPER_WAIT',n,'id=',did,'environment=',full.get('environment'),'status=',st)
+                      if full.get('environment')=='production' and st=='success':
+                          return full
+                  else:
+                      rows=request('GET',f'{base}/deployments?per_page=100').get('result') or []
+                      rows=[x for x in rows if x.get('environment')=='production' and status_of(x)=='success']
+                      rows.sort(key=lambda x:str(x.get('created_on') or ''),reverse=True)
+                      if rows: return rows[0]
+                  time.sleep(5)
+              raise RuntimeError('No converged active production deployment found')
+
+          keeper=current_keeper(); keeper_id=str(keeper['id'])
+          print('CLEAN_SLATE_KEEPER',json.dumps({'id':keeper_id,'url':keeper.get('url'),'created_on':keeper.get('created_on'),'commit':((keeper.get('deployment_trigger') or {}).get('metadata') or {}).get('commit_hash')},sort_keys=True))
+
+          deleted=0; stalled=0
+          for round_no in range(1,300):
+              page=request('GET',f'{base}/deployments?per_page=100')
+              rows=page.get('result') or []
+              others=[x for x in rows if str(x.get('id'))!=keeper_id]
+              total=(page.get('result_info') or {}).get('total_count')
+              print('DEPLOYMENT_DELETE_ROUND',round_no,'visible=',len(rows),'total=',total,'delete_candidates=',len(others))
+              if not others and (total in (None,0,1) or int(total)<=1): break
+              progress=0
+              for d in others:
+                  did=str(d.get('id') or '')
+                  if not did: continue
+                  try:
+                      request('DELETE',f'{base}/deployments/{urllib.parse.quote(did)}?force=true',retries=8)
+                      deleted+=1; progress+=1
+                      if deleted%50==0: print('DEPLOYMENTS_DELETED',deleted)
+                  except ApiError as e:
+                      text=json.dumps(e.payload,ensure_ascii=False).lower()
+                      if e.status in (400,409) and 'active production deployment' in text:
+                          print('ACTIVE_DEPLOYMENT_DELETE_SKIPPED',did)
+                      elif e.status==404:
+                          progress+=1
+                      else:
+                          raise
+                  time.sleep(0.42)
+              if progress==0:
+                  stalled+=1
+                  if stalled>=10: raise RuntimeError('Deployment deletion made no progress')
+                  keeper=current_keeper(); keeper_id=str(keeper['id']); time.sleep(5)
+              else:
+                  stalled=0
+          else:
+              raise RuntimeError('Deployment deletion round budget exhausted')
+
+          for n in range(1,61):
+              page=request('GET',f'{base}/deployments?per_page=100')
+              rows=page.get('result') or []; total=(page.get('result_info') or {}).get('total_count')
+              ids=[str(x.get('id')) for x in rows]
+              if len(rows)==1 and ids==[keeper_id] and (total is None or int(total)==1): break
+              print('DEPLOYMENT_DELETE_CONVERGENCE_WAIT',n,'visible=',len(rows),'total=',total)
+              time.sleep(3)
+          else:
+              raise RuntimeError('Cloudflare deployment history did not converge to exactly one deployment')
+
+          request('POST',f'{base}/purge_build_cache',{})
+          print('PAGES_BUILD_CACHE_PURGED')
+
+          # Reuse the repository's proven least-privilege child-token machinery.
+          spec=importlib.util.spec_from_file_location('edge','scripts/configure-cloudflare-edge.py')
+          edge=importlib.util.module_from_spec(spec); spec.loader.exec_module(edge)
+          parent=edge.CloudflareApi(token)
+          zone=edge.zone_id(parent,account,zone_name)
+          zone_api,revoke=edge.issue_ephemeral_zone_api(parent,account,zone)
+          reserve_report={'attempt':attempt,'checked':False,'supported':None,'original':None,'clearState':None,'restored':False}
+          try:
+              if attempt>=2:
+                  reserve_report['checked']=True
+                  status,payload=zone_api.raw('GET',f'/zones/{zone}/cache/cache_reserve')
+                  if status in (200,201) and payload.get('success') is True:
+                      reserve_report['supported']=True
+                      original=((payload.get('result') or {}).get('value'))
+                      reserve_report['original']=original
+                      if original=='on':
+                          zone_api.expect('PATCH',f'/zones/{zone}/cache/cache_reserve',{'value':'off'})
+                          print('CACHE_RESERVE_DISABLED_FOR_CLEAR')
+                      clear_status,clear_payload=zone_api.raw('GET',f'/zones/{zone}/cache/cache_reserve_clear')
+                      state=((clear_payload.get('result') or {}).get('state')) if clear_status in (200,201) and clear_payload.get('success') is True else None
+                      if state!='In-progress':
+                          start_status,start_payload=zone_api.raw('POST',f'/zones/{zone}/cache/cache_reserve_clear',{})
+                          if start_status in (200,201) and start_payload.get('success') is True:
+                              state=(start_payload.get('result') or {}).get('state')
+                              print('CACHE_RESERVE_CLEAR_STARTED',state)
+                          else:
+                              errs=start_payload.get('errors') or []
+                              codes={e.get('code') for e in errs if isinstance(e,dict)}
+                              if 1152 in codes:
+                                  zone_api.expect('PATCH',f'/zones/{zone}/cache/cache_reserve',{'value':'off'})
+                                  start_payload=zone_api.expect('POST',f'/zones/{zone}/cache/cache_reserve_clear',{})
+                                  state=(start_payload.get('result') or {}).get('state')
+                              else:
+                                  raise edge.CloudflareError(f'Cache Reserve clear failed HTTP {start_status}: {json.dumps(start_payload,ensure_ascii=False)[:1200]}',status=start_status,payload=start_payload)
+                      # Child token expires after 15m. Poll at most ~10m; the server-side clear continues if still in progress.
+                      for poll in range(1,61):
+                          st,p=zone_api.raw('GET',f'/zones/{zone}/cache/cache_reserve_clear')
+                          if st in (200,201) and p.get('success') is True:
+                              state=(p.get('result') or {}).get('state')
+                              print('CACHE_RESERVE_CLEAR_STATUS',poll,state)
+                              if state=='Completed': break
+                          time.sleep(10)
+                      reserve_report['clearState']=state
+                      if original=='on' and state=='Completed':
+                          zone_api.expect('PATCH',f'/zones/{zone}/cache/cache_reserve',{'value':'on'})
+                          reserve_report['restored']=True
+                          print('CACHE_RESERVE_RESTORED_ON')
+                  else:
+                      reserve_report['supported']=False
+                      print('CACHE_RESERVE_NOT_AVAILABLE_OR_NOT_ENABLED',status,json.dumps(payload.get('errors') or [],ensure_ascii=False)[:800])
+              edge.purge_canonical(zone_api,zone,host)
+          finally:
+              revoke()
+
+          # Final active deployment proof after all deletions/purges.
+          final_project=request('GET',base).get('result') or {}
+          final_dep=(final_project.get('latest_deployment') or {})
+          if str(final_dep.get('id') or '')!=keeper_id:
+              raise RuntimeError(f'Final Pages active deployment drift: expected {keeper_id}, got {final_dep.get("id")}')
+          report={'attempt':attempt,'keeperDeploymentId':keeper_id,'deletedDeployments':deleted,'remainingDeployments':1,'pagesBuildCachePurged':True,'zoneCachePurged':True,'cacheReserve':reserve_report}
+          print('CLOUDFLARE_CLEAN_SLATE_COMPLETE',json.dumps(report,sort_keys=True))
+          PY
