@@ -1,0 +1,67 @@
+name: Normalize remaining main-only fixtures
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/normalize-main-only-fixtures.yml
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - name: Normalize stale branch fixtures, validate, and self-remove
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          root = Path('.')
+          tracked = subprocess.check_output(['git','ls-files','-z']).decode().split('\0')
+          changed = []
+          for name in filter(None, tracked):
+              if name == '.github/workflows/normalize-main-only-fixtures.yml':
+                  continue
+              p = root / name
+              try:
+                  text = p.read_text(encoding='utf-8')
+              except (UnicodeDecodeError, IsADirectoryError):
+                  continue
+              new = text.replace('production' + '/deploy', 'main').replace('staging' + '/deploy', 'main')
+              if name == 'scripts/test-cloudflare-edge-reconciliation.py':
+                  new = new.replace('"preview_deployment_setting": "custom"', '"preview_deployment_setting": "none"')
+                  new = new.replace('"preview_branch_includes": ["main"]', '"preview_branch_includes": []')
+              if new != text:
+                  p.write_text(new, encoding='utf-8')
+                  changed.append(name)
+          print('NORMALIZED_FILES', *changed, sep='\n')
+          Path('.github/workflows/normalize-main-only-fixtures.yml').unlink()
+          PY
+          npm run validate:hygiene
+          python scripts/test-cloudflare-edge-reconciliation.py
+          git diff --check
+          if git grep -n -E 'production/deploy|staging/deploy' -- ':!*.lock'; then
+            echo '::error::stale deployment branch reference remains'
+            exit 1
+          fi
+          git config user.name ghezelbaash-source-cleanup
+          git config user.email actions@users.noreply.github.com
+          git add -A
+          git commit -m "Normalize all remaining main-only fixtures"
+          git push origin HEAD:main
