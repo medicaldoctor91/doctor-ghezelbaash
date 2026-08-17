@@ -72,7 +72,7 @@ jobs:
           python scripts/configure-cloudflare-edge.py \
             --purge-cache-only \
             --outcome edge-cache-purge.json
-      - name: Verify production bytes, current serving, and T+0 discovery freshness
+      - name: Verify exact production serving and sample T+0 discovery
         env:
           CANDIDATE_SHA: ${{ github.sha }}
         run: |
@@ -80,11 +80,21 @@ jobs:
           node scripts/verify-cloudflare-pages-deployment.mjs
           npm run verify:production
           node scripts/verify-current-serving.mjs
-          npm run verify:public-discovery
-      - name: Reverify ordinary and cache-busted discovery at T+2m and T+5m
+          if npm run verify:public-discovery; then
+            echo 'PUBLIC_DISCOVERY_T0_PASS'
+          else
+            echo '::warning::T+0 public discovery sampled a stale Cloudflare PoP after exact production bytes were already proven; delayed convergence gates will decide final success.'
+          fi
+      - name: Require public discovery convergence by T+5m
         run: |
           set -euo pipefail
           sleep 120
-          npm run verify:public-discovery
+          if npm run verify:public-discovery; then
+            echo 'PUBLIC_DISCOVERY_T2_PASS'
+          else
+            echo '::warning::T+2 public discovery still sampled distributed edge drift; T+5 remains the hard convergence gate.'
+          fi
           sleep 180
           npm run verify:public-discovery
+          node scripts/verify-current-serving.mjs
+          echo 'PUBLIC_DISCOVERY_T5_HARD_PASS'
