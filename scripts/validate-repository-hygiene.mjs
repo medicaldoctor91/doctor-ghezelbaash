@@ -8,6 +8,10 @@ if(!tracked.length) throw new Error('Tracked-source inventory is empty');
 
 const forbiddenGeneratedPrefixes=['dist/','release/','node_modules/','.python-deps/','.release/runtime/','.release/huggingface/'];
 const forbiddenExactNames=new Set(['ceiling-release.'+'next.yml','notes.md','dev-'+'notes.md','internal-'+'notes.md']);
+const forbiddenWorkflowPaths=new Set([
+  '.github/workflows/main-only-repository-cleanup.yml',
+  '.github/workflows/patch-main-only-edge-readback.yml'
+]);
 const forbiddenNamePrefixes=['audit-','backup-','draft-','scratch-','temp-','tmp-'];
 const forbiddenSuffixes=['.bak','.old','.orig','.rej','.tmp','~'];
 const staleBranchRefs=[
@@ -24,6 +28,7 @@ const devMarker=new RegExp(['\\bTO','DO\\b|\\bFIX','ME\\b|\\bHA','CK\\b'].join('
 for(const name of tracked){
   const normalized=name.replaceAll('\\','/');
   if(forbiddenGeneratedPrefixes.some(prefix=>normalized.startsWith(prefix))) throw new Error(`Generated/runtime material must not be tracked: ${normalized}`);
+  if(forbiddenWorkflowPaths.has(normalized)) throw new Error(`Completed one-shot workflow must not remain tracked: ${normalized}`);
   const base=path.posix.basename(normalized).toLowerCase();
   if(forbiddenExactNames.has(base)) throw new Error(`Internal note/planning file must not be tracked: ${normalized}`);
   if(forbiddenNamePrefixes.some(prefix=>base.startsWith(prefix))) throw new Error(`Temporary/audit file must not be tracked: ${normalized}`);
@@ -55,5 +60,6 @@ console.log(JSON.stringify({
   branchContract:'main-only',
   generatedRuntimeTracked:false,
   temporaryOrBackupFilesTracked:false,
+  oneShotWorkflowsTracked:false,
   developmentMarkers:false
 },null,2));
