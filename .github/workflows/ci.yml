@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -16,7 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          persist-credentials: true
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.19.0
@@ -24,9 +25,19 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
-      - name: Resolve candidate lockfile
+      - name: Resolve and commit canonical candidate lockfile
+        if: github.event_name == 'pull_request'
+        shell: bash
         run: |
+          set -euo pipefail
           npm install --ignore-scripts --package-lock-only
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add package-lock.json
+            git commit -m 'Canonicalize upgraded dependency lockfile'
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
           npm ci --ignore-scripts
       - name: Release preparation diagnostics
         shell: bash
@@ -54,22 +65,6 @@ jobs:
             done
             exit "$rc"
           fi
-      - name: Upload candidate lockfile
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: upgrade-core-lock-${{ github.sha }}
-          path: package-lock.json
-          if-no-files-found: error
-          retention-days: 7
-      - name: Upload candidate DIST
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: upgrade-core-dist-${{ github.sha }}
-          path: dist
-          if-no-files-found: error
-          retention-days: 7
       - name: Package canonical source backup
         if: github.ref == 'refs/heads/main'
         run: npm run package:source
