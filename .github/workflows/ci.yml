@@ -28,10 +28,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git show HEAD^1:package-lock.json > /tmp/baseline-lock.json || cp package-lock.json /tmp/baseline-lock.json
+          echo "BASELINE_LOCK_BYTES=$(wc -c < /tmp/baseline-lock.json)"
+          node -e "const l=require('/tmp/baseline-lock.json'); console.log('BASELINE_LOCK_PACKAGES='+Object.keys(l.packages||{}).length)"
           npm install --ignore-scripts --package-lock-only
           npm ci --ignore-scripts
           echo "CANDIDATE_LOCK_BYTES=$(wc -c < package-lock.json)"
-          echo "CANDIDATE_LOCK_PACKAGES=$(node -e \"const l=require('./package-lock.json'); console.log(Object.keys(l.packages||{}).length)\")"
+          node -e "const l=require('./package-lock.json'); console.log('CANDIDATE_LOCK_PACKAGES='+Object.keys(l.packages||{}).length)"
           echo "CANDIDATE_NODE_MODULES_BYTES=$(du -sb node_modules | cut -f1)"
           test ! -e node_modules/.bin/wrangler
       - name: Release preparation diagnostics
