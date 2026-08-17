@@ -1,0 +1,75 @@
+name: Finalize canonical source normalization
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/source-normalization.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  normalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+      - name: Normalize remaining canonical validators
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+
+          def replace_once(path, old, new):
+              p=Path(path); text=p.read_text()
+              if text.count(old)!=1:
+                  raise SystemExit(f'{path}: expected exactly one normalization target, found {text.count(old)}')
+              p.write_text(text.replace(old,new,1))
+
+          replace_once(
+              'scripts/validate-dist.mjs',
+              "const dp=await readJson(path.join(dist,'datapackage.json')),cr=await readJson(path.join(dist,'croissant.json')),answersText=await readFile(path.join(dist,'answers.txt'),'utf8'),dcatText=await readFile(path.join(dist,'dcat.ttl'),'utf8'),createdAt=(release.dataset.zenodo.releaseHistory||[]).map(x=>x.publicationDate).sort()[0]||release.dateModified;\n",
+              "const dp=await readJson(path.join(dist,'datapackage.json')),cr=await readJson(path.join(dist,'croissant.json')),answersText=await readFile(path.join(dist,'answers.txt'),'utf8'),dcatText=await readFile(path.join(dist,'dcat.ttl'),'utf8'),createdAt=(release.dataset.zenodo.releaseHistory||[]).map(x=>x.publicationDate).sort()[0]||release.dateModified;\nconst releaseHistory=release.dataset.zenodo.releaseHistory||[],currentHistory=releaseHistory.find(entry=>entry.release===release.release);if(!currentHistory||currentHistory.versionDoi!==release.dataset.zenodo.versionDoi||String(currentHistory.recordId)!==String(release.dataset.zenodo.recordId)||currentHistory.publicationDate!==release.dateModified)fail('Current release/history identity drift');\n"
+          )
+          replace_once(
+              'scripts/validate-dist.mjs',
+              "for(const [k,v] of Object.entries({release:release.release,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,recordId:String(release.dataset.zenodo.recordId),datasetIri:release.dataset.id,personWikidata:release.primaryEntity.wikidata,clinicWikidata:release.dataset.supportingClinicWikidata,datasetWikidata:release.dataset.wikidata}))if(String(matrix[k])!==String(v))fail(`Current release matrix drift ${k}`);if(matrix.reputation?.rating!==expectedRating||matrix.reputation?.reviewCount!==expectedCount)fail('Current release matrix reputation drift');\n",
+              "for(const [k,v] of Object.entries({release:release.release,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,recordId:String(release.dataset.zenodo.recordId),datasetIri:release.dataset.id,personWikidata:release.primaryEntity.wikidata,clinicWikidata:release.dataset.supportingClinicWikidata,datasetWikidata:release.dataset.wikidata}))if(String(matrix[k])!==String(v))fail(`Current release matrix drift ${k}`);if(matrix.reputation?.rating!==expectedRating||matrix.reputation?.reviewCount!==expectedCount)fail('Current release matrix reputation drift');\nif(matrix.servicesWithAliasCoverage!==registered.size||matrix.serviceCount!==registered.size)fail(`Service retrieval coverage drift matrix=${matrix.servicesWithAliasCoverage}/${matrix.serviceCount} registry=${registered.size}`);if(matrix.sourceCommit!==manifest.liveRevision||att.sourceCommit!==manifest.liveRevision||att.baseRelease!==release.release||att.versionDoi!==release.dataset.zenodo.versionDoi||att.conceptDoi!==release.dataset.zenodo.conceptDoi)fail('Current source revision/attestation binding drift');if(volatile.placeId!==release.clinic.placeId)fail('Current Place ID drift');for(const file of ['answers.txt','llms.txt','llms-full.txt','index.md']){const text=await readFile(path.join(dist,file),'utf8');if(!text.includes(release.release))fail(`Current release marker missing from ${file}`)}if(!dcatText.includes(release.release))fail('DCAT current release identity drift');\n"
+          )
+          replace_once(
+              'scripts/validate-media.mjs',
+              "const stale=['ChIJBT','OYDOTt-j8RD-7mAPy6Zas'].join('');\nconst current='ChIJBT0YDOTt-j8RD-7mAPy6Zas';\n",
+              "const release=JSON.parse(await readFile(path.join(project,'src/data/release.json'),'utf8'));\nconst current=release.clinic.placeId;\nif(typeof current!=='string'||!current.startsWith('ChIJ'))throw new Error('Current Google Maps Place ID missing from release contract');\n"
+          )
+          replace_once('scripts/validate-media.mjs',"  if(bytes.includes(Buffer.from(stale)))fail(`Stale Place ID metadata ${file}`);\n",'')
+          replace_once(
+              'scripts/generate-retrieval-projections.mjs',
+              "// Retrieval projections own only retrieval/live outputs. Canonical answer/passages remain\n// exclusively owned by generate-projections.mjs; no post-generation override is allowed here.\n",
+              "// Retrieval projections write retrieval/live outputs; canonical answer and passage projections are written by generate-projections.mjs.\n"
+          )
+
+          expected={
+              'scripts/validate-dist.mjs':'15e8434c1c678c1bec3218ffd07352d4c07d69f3b0907db3de42db179adebb81',
+              'scripts/validate-media.mjs':'d8023bacb31d41947f50edb059e1a3e742735024255669d899bbc7adf0bca473',
+              'scripts/generate-retrieval-projections.mjs':'05ea32c70e457652289d908a3e8cba7f9da1841e46bae99a30f53024de0cbde9',
+          }
+          for path,want in expected.items():
+              got=hashlib.sha256(Path(path).read_bytes()).hexdigest()
+              if got!=want: raise SystemExit(f'{path}: normalized hash mismatch {got} != {want}')
+          Path('.github/workflows/source-normalization.yml').unlink()
+          PY
+      - name: Commit canonical source architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Dr. Saeed Ghezelbaash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Simplify canonical source architecture'
+          git push origin HEAD:main

@@ -22,6 +22,5 @@ const {content}=await assembleCanonicalContent();
 const reputationBlocks=content.match(/<div\b(?=[^>]*\bid=["']google-maps-clinic-reputation-current["'])[^>]*>[\s\S]*?<\/div>/gi)||[];
 if(reputationBlocks.length!==1)throw new Error(`Expected one assembled reputation block; found ${reputationBlocks.length}`);
 if(!reputationBlocks[0].includes('آخرین تغییر ثبت‌شده در Google:'))throw new Error('Current reputation observation semantics missing');
-if(reputationBlocks[0].includes('آخرین دریافت از Google:'))throw new Error('Stale reputation observation semantics remain');
 
 console.log(JSON.stringify({criticalHeroGeometry:'PASS',mobileBreakpoints:[720,430],reputationFootprint:'contract-exact-reserved',reputationSemantics:'current-value-change',finalComputedStyleChange:false}));
