@@ -1,10 +1,32 @@
 name: Geographic discovery and mobile UI audit
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/geo-ui-audit.yml'
 permissions:
-  contents: write
+  contents: read
 jobs:
-  audit:
+  inspect:
     runs-on: ubuntu-24.04
     steps:
-      - run: echo placeholder
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Inspect exact geographic source and UI CSS
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/content-source/page.md').read_text(encoding='utf-8')
+          needles=['شهرهایی که سابقه مراجعه از آن‌ها ثبت شده است','کرمانشاه و غرب ایران:','سایر شهرهای ایران:','عراق و اقلیم کردستان:','این نام‌ها مبدأ مراجعه‌کنندگان‌اند']
+          for n in needles:
+              print('NEEDLE',repr(n),'COUNT',p.count(n))
+              i=p.find(n)
+              if i>=0:
+                  print('CONTEXT',repr(p[max(0,i-220):i+900]))
+          css=Path('src/styles/global.css').read_text(encoding='utf-8')
+          for n in ['.hero-actions{display:flex','.quick-actions__bar{display:grid','.quick-actions__item--consultation{']:
+              print('CSS_NEEDLE',repr(n),'COUNT',css.count(n))
+          PY
