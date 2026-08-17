@@ -1,0 +1,103 @@
+name: One-shot Zenodo metadata sync and HF crosslink verify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/zenodo-hf-metadata-sync-one-shot.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Sync current Zenodo record metadata without creating a new version
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"
+          echo "::add-mask::$ZENODO_TOKEN"
+          python - <<'PY'
+          import json, os, time
+          from scripts.zenodo_release import call, metadata, sanitize_metadata, BASE
+
+          release=json.load(open('src/data/release.json',encoding='utf-8'))
+          z=release['dataset']['zenodo']
+          record=str(z['recordId'])
+          doi=z['versionDoi']
+          version=release['release']
+          token=os.environ['ZENODO_TOKEN']
+          dep_url=f'{BASE}/deposit/depositions/{record}'
+
+          dep=call(token,'GET',dep_url)
+          if dep.get('submitted') is True:
+              call(token,'POST',f'{dep_url}/actions/edit',ok=(201,202))
+          draft=call(token,'GET',dep_url)
+          if draft.get('submitted') is True:
+              raise RuntimeError('Zenodo edit mode did not open')
+
+          md=sanitize_metadata(draft.get('metadata') or {})
+          desired=metadata(version, release['dateModified'], doi, z['conceptDoi'])
+          for key in ('title','creators','description','access_right','license','language','version','keywords','subjects','notes','related_identifiers'):
+              md[key]=desired[key]
+          call(token,'PUT',dep_url,json.dumps({'metadata':md},ensure_ascii=False).encode())
+
+          rb=call(token,'GET',dep_url)
+          rmd=rb.get('metadata') or {}
+          creators=rmd.get('creators') or []
+          if creators != [{'name':'Ghezelbash, Saeed','orcid':'0009-0001-9346-8475'}]:
+              raise RuntimeError(f'Zenodo creator/ORCID drift: {creators!r}')
+          rels={(x.get('identifier'),x.get('relation')) for x in (rmd.get('related_identifiers') or [])}
+          required={
+            ('https://www.ghezelbaash.ir/graph.jsonld#dataset','isDerivedFrom'),
+            ('https://www.ghezelbaash.ir/','isDescribedBy'),
+            ('https://github.com/medicaldoctor91/doctor-ghezelbaash','isDerivedFrom'),
+            ('https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','isReferencedBy'),
+            ('https://www.wikidata.org/entity/Q140304972','isDescribedBy'),
+            ('https://www.wikidata.org/entity/Q140287622','references'),
+            ('https://www.wikidata.org/entity/Q140288589','references'),
+          }
+          missing=required-rels
+          if missing: raise RuntimeError(f'Zenodo related-identifier drift: {sorted(missing)!r}')
+
+          call(token,'POST',f'{dep_url}/actions/publish')
+          public=None
+          for _ in range(30):
+              public=call(token,'GET',f'{BASE}/records/{record}')
+              pmd=public.get('metadata') or {}
+              pcs=pmd.get('creators') or []
+              prels={(x.get('identifier'),x.get('relation')) for x in (pmd.get('related_identifiers') or [])}
+              if public.get('doi')==doi and pcs==creators and required.issubset(prels): break
+              time.sleep(2)
+          else:
+              raise RuntimeError('Zenodo public metadata did not converge')
+          print(json.dumps({'ZENODO_METADATA_SYNC_PASS':True,'recordId':record,'doi':doi,'creator':'Saeed Ghezelbash','orcid':'0009-0001-9346-8475','requiredRelations':len(required)}))
+          PY
+      - name: Fresh-verify Hugging Face distribution crosslinks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,time,urllib.request
+          repo='doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data'
+          q=str(time.time_ns())
+          def get(url):
+              req=urllib.request.Request(url,headers={'Cache-Control':'no-cache','Pragma':'no-cache','User-Agent':'ghezelbaash-crosslink-verifier/1.0'})
+              with urllib.request.urlopen(req,timeout=45) as r:return r.read().decode('utf-8','replace')
+          readme=get(f'https://huggingface.co/datasets/{repo}/resolve/main/README.md?download=true&_={q}')
+          required=['Saeed Ghezelbash','0009-0001-9346-8475','Q140287622','Q140304972','10.5281/zenodo.18765168','10.5281/zenodo.21930954','https://github.com/medicaldoctor91/doctor-ghezelbaash']
+          missing=[x for x in required if x not in readme]
+          if missing: raise SystemExit('HF crosslink drift: '+json.dumps(missing))
+          meta=json.loads(get(f'https://huggingface.co/api/datasets/{repo}?full=true&_={q}'))
+          if meta.get('private') is True: raise SystemExit('HF dataset unexpectedly private')
+          print(json.dumps({'HF_CROSSLINK_VERIFY_PASS':True,'repo':repo,'tokens':len(required)}))
+          PY
