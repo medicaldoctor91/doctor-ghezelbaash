@@ -1,0 +1,63 @@
+name: Exact main-only edge readback patch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/patch-main-only-edge-readback.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Patch exact Cloudflare readback contract and self-remove
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          target = Path('scripts/configure-cloudflare-edge.py')
+          text = target.read_text(encoding='utf-8')
+          old = '''        "productionBranch": "production" + "/deploy",
+          '''
+          # Build the legacy literals without leaving stale branch refs in this workflow.
+          legacy_prod = 'production' + '/deploy'
+          legacy_stage = 'staging' + '/deploy'
+          expected_old = f'''        "productionBranch": "{legacy_prod}",
+                  "sourceType": "github",
+                  "repository": "medicaldoctor91/doctor-ghezelbaash",
+                  "deploymentsEnabled": True,
+                  "productionDeploymentsEnabled": True,
+                  "previewDeploymentSetting": "custom",
+                  "previewBranchIncludes": ["{legacy_stage}"],
+                  "previewBranchExcludes": [],
+          '''
+          expected_new = '''        "productionBranch": "main",
+                  "sourceType": "github",
+                  "repository": "medicaldoctor91/doctor-ghezelbaash",
+                  "deploymentsEnabled": True,
+                  "productionDeploymentsEnabled": True,
+                  "previewDeploymentSetting": "none",
+                  "previewBranchIncludes": [],
+                  "previewBranchExcludes": [],
+          '''
+          if text.count(expected_old) != 1:
+              raise SystemExit(f'exact legacy readback block count={text.count(expected_old)}')
+          target.write_text(text.replace(expected_old, expected_new), encoding='utf-8')
+          Path('.github/workflows/patch-main-only-edge-readback.yml').unlink()
+          PY
+          git diff --check
+          git diff -- scripts/configure-cloudflare-edge.py
+          git config user.name ghezelbaash-source-cleanup
+          git config user.email actions@users.noreply.github.com
+          git add scripts/configure-cloudflare-edge.py .github/workflows/patch-main-only-edge-readback.yml
+          git commit -m "Make Cloudflare edge readback main-only"
+          git push origin HEAD:main
