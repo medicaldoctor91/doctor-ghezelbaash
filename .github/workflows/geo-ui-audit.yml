@@ -118,6 +118,6 @@ jobs:
           PY
           git config user.name ghezelbaash-ui-bot
           git config user.email actions@users.noreply.github.com
-          git add src/content-source/page.md src/styles/global.css src/data/visible-contract.json .github/workflows/geo-ui-audit.yml
+          git add src/content-source/page.md src/styles/global.css src/data/visible-contract.json
           git commit -m 'Refine mobile actions and expand geographic discovery'
           git push origin HEAD:main
