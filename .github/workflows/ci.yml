@@ -26,27 +26,19 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
-      - name: Canonicalize modernization lockfile and workflow runtime pins
+      - name: Canonicalize modernization lockfile
         if: github.event_name == 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
           npm install --ignore-scripts --package-lock-only
-          python - <<'PY'
-          from pathlib import Path
-          for p in Path('.github/workflows').glob('*.yml'):
-              s=p.read_text()
-              s=s.replace('node-version: 24.18.0','node-version: 24.19.0')
-              s=s.replace("python-version: '3.12'","python-version: '3.14.6'")
-              p.write_text(s)
-          PY
           git config user.name 'dependency-modernization-bot'
           git config user.email 'dependency-modernization-bot@users.noreply.github.com'
-          git add package-lock.json .github/workflows
+          git add package-lock.json
           if git diff --cached --quiet; then
-            echo 'Canonical runtime files already synchronized'
+            echo 'Canonical lockfile already synchronized'
           else
-            git commit -m 'Synchronize production runtime pins and lockfile'
+            git commit -m 'Refresh dependency lockfile'
             git push origin HEAD:"$GITHUB_HEAD_REF"
           fi
           npm ci --ignore-scripts
