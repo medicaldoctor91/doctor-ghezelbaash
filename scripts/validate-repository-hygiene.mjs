@@ -10,7 +10,8 @@ const forbiddenGeneratedPrefixes=['dist/','release/','node_modules/','.python-de
 const forbiddenExactNames=new Set(['ceiling-release.'+'next.yml','notes.md','dev-'+'notes.md','internal-'+'notes.md']);
 const forbiddenWorkflowPaths=new Set([
   '.github/workflows/main-only-repository-cleanup.yml',
-  '.github/workflows/patch-main-only-edge-readback.yml'
+  '.github/workflows/patch-main-only-edge-readback.yml',
+  '.github/workflows/normalize-main-only-fixtures.yml'
 ]);
 const forbiddenNamePrefixes=['audit-','backup-','draft-','scratch-','temp-','tmp-'];
 const forbiddenSuffixes=['.bak','.old','.orig','.rej','.tmp','~'];
