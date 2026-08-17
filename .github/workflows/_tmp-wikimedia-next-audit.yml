@@ -1,4 +1,4 @@
-name: Temporary Wikimedia next audit
+name: Temporary Wikiversity provenance bridge
 on:
   push:
     branches: [main]
@@ -6,47 +6,54 @@ on:
 permissions:
   contents: read
 jobs:
-  audit:
+  publish:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 8
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
       - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
-      - name: Inspect existing Wikiversity QID and coauthor candidates
+      - name: Link existing Wikisource author record from provenance block
         shell: bash
         run: |
           python - <<'PY'
-          import json,requests
-          s=requests.Session(); s.headers.update({'User-Agent':'GhezelbaashCoauthorAudit/1.0 (https://www.ghezelbaash.ir/)'})
-          api='https://www.wikidata.org/w/api.php'
-          def getent(ids):
-            r=s.get(api,params={'action':'wbgetentities','ids':'|'.join(ids),'props':'claims|labels|aliases|sitelinks|descriptions','languages':'en','format':'json','formatversion':2},timeout=90); r.raise_for_status(); return r.json()['entities']
-          def val(c):
-            try:
-              x=c['mainsnak']['datavalue']['value']
-              if isinstance(x,dict) and 'id' in x: return x['id']
-              return x
-            except: return None
-          # Existing Wikiversity item
-          e=getent(['Q141099455'])['Q141099455']
-          qitem={'labels':{k:v['value'] for k,v in e.get('labels',{}).items()},'description':e.get('descriptions',{}).get('en',{}).get('value'),'sitelinks':{k:v['title'] for k,v in e.get('sitelinks',{}).items()},'claims':{p:[val(c) for c in cs] for p,cs in e.get('claims',{}).items()}}
-          names=['Sanobar Golshani','Seyed Sepehr Hashemian','Ali Firoozabadi','Kimia Firoozabadi','Kenneth M. Dürsteler','Maryam Khanegi','Ideh Ramazanghambari','Arman Fahmi','Damoun Haghshenas','Behrad Basanj','Amirali Sepehry']
-          searches={}
-          candidate_ids=set()
-          for name in names:
-            r=s.get(api,params={'action':'wbsearchentities','search':name,'language':'en','type':'item','limit':10,'format':'json','formatversion':2},timeout=60); r.raise_for_status()
-            rows=[]
-            for x in r.json().get('search',[]):
-              rows.append({'id':x.get('id'),'label':x.get('label'),'description':x.get('description'),'aliases':x.get('aliases',[])})
-              candidate_ids.add(x.get('id'))
-            searches[name]=rows
-          candidates={}
-          if candidate_ids:
-            ce=getent(sorted(candidate_ids))
-            interesting=['P31','P106','P108','P69','P496','P10283','P1960','P50','P3919','P1416','P27']
-            for q,x in ce.items():
-              candidates[q]={'label':x.get('labels',{}).get('en',{}).get('value'),'description':x.get('descriptions',{}).get('en',{}).get('value'),'aliases':[a['value'] for a in x.get('aliases',{}).get('en',[])], 'claims':{p:[val(c) for c in x.get('claims',{}).get(p,[])] for p in interesting if p in x.get('claims',{})}}
-          print(json.dumps({'wikiversity_item_Q141099455':qitem,'coauthor_searches':searches,'candidate_details':candidates},ensure_ascii=False,indent=2,sort_keys=True))
+          import os,requests,json
+          API='https://en.wikiversity.org/w/api.php'; TITLE='Botulinum toxin in aesthetic medicine'
+          NEEDLE='Wikisource author record'
+          ROW="|-\n| '''Wikisource author record''' || '''[[s:Author:Mohammad Saeed Ghezelbash|Author:Mohammad Saeed Ghezelbash]]'''\n"
+          s=requests.Session(); s.headers.update({'User-Agent':'GhezelbaashWikiversityBridge/1.0 (https://www.ghezelbaash.ir/)'})
+          def get(**p):
+            p.update(format='json',formatversion=2); r=s.get(API,params=p,timeout=60); r.raise_for_status(); d=r.json()
+            if 'error' in d: raise RuntimeError(d['error'])
+            return d
+          def post(p):
+            p=dict(p); p.update(format='json',formatversion=2); r=s.post(API,data=p,timeout=90); r.raise_for_status(); d=r.json()
+            if 'error' in d: raise RuntimeError(d['error'])
+            return d
+          lt=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+          lg=post({'action':'login','lgname':os.environ['WIKIMEDIA_USERNAME'],'lgpassword':os.environ['WIKIMEDIA_BOT_PASSWORD'],'lgtoken':lt})
+          if lg.get('login',{}).get('result')!='Success': raise RuntimeError(lg)
+          ui=get(action='query',meta='userinfo',uiprop='blockinfo')['query']['userinfo']
+          if ui.get('blockedby'): raise RuntimeError({'blocked':True,'blockedby':ui.get('blockedby'),'reason':ui.get('blockreason')})
+          pg=get(action='query',prop='revisions',rvprop='ids|timestamp|content',rvslots='main',titles=TITLE)['query']['pages'][0]
+          rev=pg['revisions'][0]; text=rev['slots']['main']['content']; oldid=rev['revid']
+          if NEEDLE in text or 's:Author:Mohammad Saeed Ghezelbash' in text:
+            print(json.dumps({'ok':True,'status':'already_present','revid':oldid,'authenticated_as':ui.get('name')})); raise SystemExit
+          anchor="| '''Wikimedia Commons creator record'''"
+          pos=text.find(anchor)
+          if pos<0: raise RuntimeError('provenance anchor not found')
+          # Insert new row immediately before Commons creator record row, preserving table syntax.
+          start=text.rfind('|-',0,pos)
+          if start<0: raise RuntimeError('table row boundary not found')
+          newtext=text[:start]+ROW+text[start:]
+          csrf=get(action='query',meta='tokens',type='csrf')['query']['tokens']['csrftoken']
+          ed=post({'action':'edit','title':TITLE,'text':newtext,'baserevid':oldid,'summary':'Link canonical Wikisource author record in contributor provenance','token':csrf,'bot':1})
+          vr=get(action='query',prop='revisions',rvprop='ids|content',rvslots='main',titles=TITLE)['query']['pages'][0]['revisions'][0]
+          ok='s:Author:Mohammad Saeed Ghezelbash' in vr['slots']['main']['content']
+          print(json.dumps({'ok':ok,'status':'created','oldid':oldid,'newrevid':vr['revid'],'authenticated_as':ui.get('name'),'edit':ed.get('edit',{})},ensure_ascii=False))
+          if not ok: raise SystemExit(1)
           PY
