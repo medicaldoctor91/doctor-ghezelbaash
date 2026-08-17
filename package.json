@@ -6,7 +6,7 @@
   "packageManager": "npm@11.17.0",
   "scripts": {
     "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
-    "prepare:generated": "npm run validate:media-references && npm run rdf:deps && npm run rdf:generate && npm run generate",
+    "prepare:generated": "npm run validate:media-references && npm run rdf:generate && npm run generate",
     "dev": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "check": "npm run validate:release-contract && npm run prepare:generated && npm run validate:query-matrix && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
     "generate": "node scripts/generate-projections.mjs && node scripts/generate-retrieval-projections.mjs && node scripts/generate-descriptors.mjs",
@@ -21,7 +21,7 @@
     "validate:media-references": "node scripts/validate-media-references.mjs",
     "validate:media": "node scripts/validate-media.mjs",
     "validate:evidence": "node scripts/validate-evidence.mjs",
-    "validate:shacl": "PYTHONPATH=.python-deps python scripts/validate-shacl.py",
+    "validate:shacl": "npm run rdf:deps && PYTHONPATH=.python-deps python scripts/validate-shacl.py",
     "validate:reproducibility": "node scripts/validate-reproducibility.mjs",
     "validate:query-matrix": "node scripts/validate-query-matrix.mjs",
     "render:calibration:apply": "node scripts/apply-render-calibration.mjs",
@@ -42,13 +42,12 @@
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@types/node": "24.13.3",
-    "astro": "7.1.6",
+    "astro": "7.2.2",
     "exiftool-vendored": "37.1.0",
     "jsonld": "9.0.0",
     "parse5": "8.0.1",
     "rdf-canonize": "5.0.0",
-    "typescript": "6.0.3",
-    "wrangler": "4.120.0"
+    "typescript": "6.0.3"
   },
   "engines": {
     "node": ">=24.19.0 <25",
