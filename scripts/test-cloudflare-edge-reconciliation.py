@@ -279,6 +279,7 @@ class FakeZoneTokenAuthority:
                 ("zone-read", "Zone Read"),
                 ("cache-purge", "Cache Purge"),
                 ("dns-read", "DNS Read"),
+                ("dns-write", "DNS Write"),
                 ("cache-write", "Cache Settings Write"),
                 ("cache-read", "Cache Settings Read"),
                 ("bot-write", "Bot Management Write"),
@@ -331,6 +332,7 @@ class FakeZoneTokenAuthority:
                 "zone-read",
                 "cache-purge",
                 "dns-read",
+                "dns-write",
                 "cache-write",
                 "cache-read",
                 "bot-write",
@@ -378,6 +380,36 @@ class FakeInventoryApi:
             "doctor-ghezelbaash.pages.dev",
             "www.ghezelbaash.ir",
         }
+        self.dns_records = [
+            {
+                "id": "apex",
+                "type": "CNAME",
+                "name": "ghezelbaash.ir",
+                "content": "doctor-ghezelbaash.pages.dev",
+                "proxied": True,
+                "ttl": 1,
+            },
+            {
+                "id": "www",
+                "type": "CNAME",
+                "name": "www.ghezelbaash.ir",
+                "content": "doctor-ghezelbaash.pages.dev",
+                "proxied": True,
+                "ttl": 1,
+            },
+            {
+                "id": "wildcard",
+                "type": "CNAME",
+                "name": "*.ghezelbaash.ir",
+                "content": "doctor-ghezelbaash.pages.dev",
+                "proxied": True,
+                "ttl": 1,
+            },
+        ]
+
+    def blog_dns_exact(self) -> bool:
+        rows = [row for row in self.dns_records if row.get("name") == "blog.ghezelbaash.ir"]
+        return len(rows) == 1 and edge.pages_dns_record_matches(rows[0])
 
     def expect(
         self,
@@ -387,7 +419,11 @@ class FakeInventoryApi:
         ok: tuple[int, ...] = (200,),
     ) -> dict[str, Any]:
         del ok
-        if method == "GET" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":
+        pages_domains_path = "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains"
+        if method == "GET" and path == pages_domains_path:
+            if "blog.ghezelbaash.ir" in self.pages_domains and self.blog_dns_exact():
+                self.pages_domains["blog.ghezelbaash.ir"] = "active"
+                self.project_domains.add("blog.ghezelbaash.ir")
             return {
                 "success": True,
                 "result": [
@@ -395,15 +431,12 @@ class FakeInventoryApi:
                     for name, status in sorted(self.pages_domains.items())
                 ],
             }
-        if method == "POST" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":
+        if method == "POST" and path == pages_domains_path:
             assert isinstance(body, dict) and body.get("name")
             name = str(body["name"])
-            self.pages_domains[name] = "active"
-            self.project_domains.add(name)
-            return {"success": True, "result": {"name": name, "status": "active"}}
-        if method == "GET" and path == (
-            "/accounts/test-account/pages/projects/doctor-ghezelbaash"
-        ):
+            self.pages_domains[name] = "pending"
+            return {"success": True, "result": {"name": name, "status": "pending"}}
+        if method == "GET" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash":
             return {
                 "success": True,
                 "result": {
@@ -418,8 +451,8 @@ class FakeInventoryApi:
                             "deployments_enabled": True,
                             "production_deployments_enabled": True,
                             "preview_deployment_setting": "custom",
-                  "preview_branch_includes": ["staging/deploy"],
-                  "preview_branch_excludes": [],
+                            "preview_branch_includes": ["staging/deploy"],
+                            "preview_branch_excludes": [],
                         },
                     },
                     "build_config": {
@@ -429,32 +462,30 @@ class FakeInventoryApi:
                     },
                 },
             }
+        exact_query = "/zones/test-zone/dns_records?name=blog.ghezelbaash.ir&per_page=100"
+        if method == "GET" and path == exact_query:
+            return {
+                "success": True,
+                "result": [
+                    dict(row) for row in self.dns_records
+                    if row.get("name") == "blog.ghezelbaash.ir"
+                ],
+            }
+        if method == "POST" and path == "/zones/test-zone/dns_records":
+            assert isinstance(body, dict)
+            row={"id":"blog-pages", **body}
+            self.dns_records.append(row)
+            return {"success": True, "result": dict(row)}
+        if method == "PATCH" and path == "/zones/test-zone/dns_records/blog-pages":
+            assert isinstance(body, dict)
+            for index,row in enumerate(self.dns_records):
+                if row.get("id") == "blog-pages":
+                    self.dns_records[index]={"id":"blog-pages", **body}
+                    return {"success": True, "result": dict(self.dns_records[index])}
+            raise AssertionError("missing blog-pages DNS record")
         if method == "GET" and path == "/zones/test-zone/dns_records?per_page=500":
-            records = [
-                {
-                    "type": "CNAME",
-                    "name": "ghezelbaash.ir",
-                    "content": "doctor-ghezelbaash.pages.dev",
-                    "proxied": True,
-                    "ttl": 1,
-                },
-                {
-                    "type": "CNAME",
-                    "name": "www.ghezelbaash.ir",
-                    "content": "doctor-ghezelbaash.pages.dev",
-                    "proxied": True,
-                    "ttl": 1,
-                },
-                {
-                    "type": "CNAME",
-                    "name": "*.ghezelbaash.ir",
-                    "content": "doctor-ghezelbaash.pages.dev",
-                    "proxied": True,
-                    "ttl": 1,
-                },
-            ]
-            return {"success": True, "result": records}
-        raise AssertionError((method, path))
+            return {"success": True, "result": [dict(row) for row in self.dns_records]}
+        raise AssertionError((method, path, body))
 
 
 contract = edge.load_subdomain_redirect_contract(ROOT)
@@ -483,9 +514,15 @@ if not zone_token_authority.revoked:
     raise AssertionError("Ephemeral control-plane child token was not revoked")
 
 inventory_api = FakeInventoryApi()
-pages_domains = edge.reconcile_pages_custom_domains(inventory_api, "test-account")
+edge.ensure_pages_custom_domains(inventory_api, "test-account")
+if inventory_api.pages_domains.get("blog.ghezelbaash.ir") != "pending":
+    raise AssertionError("Pages blog domain should remain pending before exact DNS")
+pages_dns = edge.reconcile_pages_dns_binding(inventory_api, "test-zone")
+if pages_dns.get("content") != "doctor-ghezelbaash.pages.dev":
+    raise AssertionError("Exact Pages blog CNAME was not installed")
+pages_domains = edge.wait_pages_custom_domains(inventory_api, "test-account")
 if pages_domains["statuses"].get("blog.ghezelbaash.ir") != "active":
-    raise AssertionError("Historical blog Pages custom domain was not activated")
+    raise AssertionError("Historical blog Pages custom domain was not activated after DNS")
 pages_contract = edge.read_pages_contract(
     inventory_api, "test-account", "www.ghezelbaash.ir"
 )

@@ -41,6 +41,7 @@ BULK_REDIRECT_LIST_NAME = "ghezelbaash_blog_legacy_urls"
 BULK_REDIRECT_RULE_REF = "ghezelbaash_blog_legacy_bulk_v1"
 BLOG_HOST = "blog.ghezelbaash.ir"
 PAGES_PROJECT_NAME = "doctor-ghezelbaash"
+PAGES_ORIGIN_HOST = f"{PAGES_PROJECT_NAME}.pages.dev"
 PAGES_REQUIRED_CUSTOM_DOMAINS = (
     "www.ghezelbaash.ir",
     BLOG_HOST,
@@ -60,6 +61,7 @@ SUBDOMAIN_SINGLE_REDIRECT_PERMISSION_ALIASES = (
 )
 ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES = (
     ("DNS Read",),
+    ("DNS Write", "DNS Edit"),
     ("Cache Rules Edit", "Cache Rules Write", "Cache Settings Write"),
     ("Bot Management Edit", "Bot Management Write"),
 )
@@ -662,6 +664,14 @@ def read_dns_contract(
         raise CloudflareError(
             "Required proxied DNS host coverage missing: " + ", ".join(missing)
         )
+    blog_exact = [
+        row
+        for row in records
+        if str(row.get("name") or "").rstrip(".").lower() == BLOG_HOST
+        and str(row.get("type") or "").upper() in {"A", "AAAA", "CNAME"}
+    ]
+    if len(blog_exact) != 1 or not pages_dns_record_matches(blog_exact[0]):
+        raise CloudflareError("Exact Pages CNAME binding for blog.ghezelbaash.ir is missing or drifted")
 
     relevant_names = set(required_hosts) | {wildcard}
     relevant = [
@@ -679,44 +689,136 @@ def read_dns_contract(
     summary = {
         "recordCount": len(records),
         "requiredHostCoverage": coverage,
+        "blogPagesBinding": {
+            "type": blog_exact[0].get("type"),
+            "name": blog_exact[0].get("name"),
+            "content": blog_exact[0].get("content"),
+            "proxied": blog_exact[0].get("proxied"),
+            "ttl": blog_exact[0].get("ttl"),
+        },
         "relevantRecords": relevant,
     }
     print("DNS_REQUIRED_HOSTS_EXACT", json.dumps(summary, sort_keys=True))
     return summary
 
 
-def reconcile_pages_custom_domains(
+def read_pages_custom_domains(
+    api: CloudflareApi, account: str
+) -> dict[str, dict[str, Any]]:
+    path = f"/accounts/{account}/pages/projects/{PAGES_PROJECT_NAME}/domains"
+    rows = api.expect("GET", path).get("result") or []
+    if not isinstance(rows, list):
+        raise CloudflareError("Cloudflare Pages custom-domain listing is not a list")
+    by_name: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        name = str((row or {}).get("name") or "")
+        if not name:
+            continue
+        if name in by_name:
+            raise CloudflareError(f"Duplicate Cloudflare Pages custom domain: {name}")
+        by_name[name] = row
+    return by_name
+
+
+def ensure_pages_custom_domains(api: CloudflareApi, account: str) -> None:
+    path = f"/accounts/{account}/pages/projects/{PAGES_PROJECT_NAME}/domains"
+    current = read_pages_custom_domains(api, account)
+    for name in PAGES_REQUIRED_CUSTOM_DOMAINS:
+        if name in current:
+            continue
+        api.expect("POST", path, {"name": name}, ok=(200, 201))
+        print("PAGES_CUSTOM_DOMAIN_CREATED", name)
+    after = read_pages_custom_domains(api, account)
+    missing = sorted(set(PAGES_REQUIRED_CUSTOM_DOMAINS) - set(after))
+    if missing:
+        raise CloudflareError(
+            "Pages custom-domain registration read-back missing: " + ", ".join(missing)
+        )
+
+
+def pages_dns_record_matches(row: dict[str, Any]) -> bool:
+    return (
+        str(row.get("type") or "").upper() == "CNAME"
+        and str(row.get("name") or "").rstrip(".").lower() == BLOG_HOST
+        and str(row.get("content") or "").rstrip(".").lower() == PAGES_ORIGIN_HOST
+        and row.get("proxied") is True
+        and int(row.get("ttl") or 0) == 1
+    )
+
+
+def reconcile_pages_dns_binding(api: CloudflareApi, zone: str) -> dict[str, Any]:
+    query = urllib.parse.urlencode({"name": BLOG_HOST, "per_page": 100})
+    collection = f"/zones/{zone}/dns_records"
+
+    def read_exact() -> list[dict[str, Any]]:
+        rows = api.expect("GET", f"{collection}?{query}").get("result") or []
+        if not isinstance(rows, list):
+            raise CloudflareError("Cloudflare DNS exact-name listing is not a list")
+        return [
+            row
+            for row in rows
+            if str(row.get("name") or "").rstrip(".").lower() == BLOG_HOST
+            and str(row.get("type") or "").upper() in {"A", "AAAA", "CNAME"}
+        ]
+
+    desired = {
+        "type": "CNAME",
+        "name": BLOG_HOST,
+        "content": PAGES_ORIGIN_HOST,
+        "proxied": True,
+        "ttl": 1,
+    }
+    rows = read_exact()
+    if len(rows) > 1 or any(str(row.get("type") or "").upper() != "CNAME" for row in rows):
+        raise CloudflareError(
+            "Refusing ambiguous exact DNS records for Pages blog binding: "
+            + json.dumps(
+                [
+                    {
+                        "id": row.get("id"),
+                        "type": row.get("type"),
+                        "name": row.get("name"),
+                        "content": row.get("content"),
+                    }
+                    for row in rows
+                ],
+                sort_keys=True,
+            )
+        )
+    if not rows:
+        api.expect("POST", collection, desired, ok=(200, 201))
+        print("PAGES_BLOG_DNS_CREATED", BLOG_HOST, PAGES_ORIGIN_HOST)
+    elif not pages_dns_record_matches(rows[0]):
+        record_id = str(rows[0].get("id") or "")
+        if not record_id:
+            raise CloudflareError("Existing blog CNAME has no DNS record ID")
+        api.expect("PATCH", f"{collection}/{record_id}", desired)
+        print("PAGES_BLOG_DNS_UPDATED", BLOG_HOST, PAGES_ORIGIN_HOST)
+
+    after = read_exact()
+    if len(after) != 1 or not pages_dns_record_matches(after[0]):
+        raise CloudflareError("Exact Pages blog DNS binding read-back drift")
+    summary = {
+        "id": after[0].get("id"),
+        "type": after[0].get("type"),
+        "name": after[0].get("name"),
+        "content": after[0].get("content"),
+        "proxied": after[0].get("proxied"),
+        "ttl": after[0].get("ttl"),
+    }
+    print("PAGES_BLOG_DNS_EXACT", json.dumps(summary, sort_keys=True))
+    return summary
+
+
+def wait_pages_custom_domains(
     api: CloudflareApi, account: str
 ) -> dict[str, Any]:
     project_base = f"/accounts/{account}/pages/projects/{PAGES_PROJECT_NAME}"
-    domains_base = f"{project_base}/domains"
     required = set(PAGES_REQUIRED_CUSTOM_DOMAINS)
-
-    def read_domains() -> dict[str, dict[str, Any]]:
-        rows = api.expect("GET", domains_base).get("result") or []
-        if not isinstance(rows, list):
-            raise CloudflareError("Cloudflare Pages custom-domain listing is not a list")
-        by_name: dict[str, dict[str, Any]] = {}
-        for row in rows:
-            name = str((row or {}).get("name") or "")
-            if not name:
-                continue
-            if name in by_name:
-                raise CloudflareError(f"Duplicate Cloudflare Pages custom domain: {name}")
-            by_name[name] = row
-        return by_name
-
-    before = read_domains()
-    for name in PAGES_REQUIRED_CUSTOM_DOMAINS:
-        if name in before:
-            continue
-        api.expect("POST", domains_base, {"name": name}, ok=(200, 201))
-        print("PAGES_CUSTOM_DOMAIN_CREATED", name)
-
     last_statuses: dict[str, str] = {}
     last_project_domains: list[str] = []
-    for attempt in range(1, 91):
-        by_name = read_domains()
+    for attempt in range(1, 181):
+        by_name = read_pages_custom_domains(api, account)
         last_statuses = {
             name: str((by_name.get(name) or {}).get("status") or "missing")
             for name in PAGES_REQUIRED_CUSTOM_DOMAINS
@@ -732,9 +834,7 @@ def reconcile_pages_custom_domains(
                 + json.dumps(failed, sort_keys=True)
             )
         project = api.expect("GET", project_base).get("result") or {}
-        last_project_domains = sorted(
-            str(value) for value in (project.get("domains") or [])
-        )
+        last_project_domains = sorted(str(value) for value in (project.get("domains") or []))
         if (
             required.issubset(by_name)
             and all(last_statuses[name] == "active" for name in required)
@@ -748,9 +848,8 @@ def reconcile_pages_custom_domains(
             }
             print("PAGES_CUSTOM_DOMAINS_EXACT", json.dumps(summary, sort_keys=True))
             return summary
-        if attempt < 90:
+        if attempt < 180:
             time.sleep(2)
-
     raise CloudflareError(
         "Timed out waiting for Cloudflare Pages custom domains: "
         + json.dumps(
@@ -758,6 +857,13 @@ def reconcile_pages_custom_domains(
             sort_keys=True,
         )
     )
+
+
+def reconcile_pages_custom_domains(
+    api: CloudflareApi, account: str
+) -> dict[str, Any]:
+    ensure_pages_custom_domains(api, account)
+    return wait_pages_custom_domains(api, account)
 
 
 def read_pages_contract(
@@ -1723,6 +1829,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
         "capabilities": {
             "pagesProject": False,
             "pagesCustomDomains": False,
+            "pagesDnsBinding": False,
             "dns": False,
             "zoneSettings": False,
             "cacheRule": False,
@@ -1736,12 +1843,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
         "scopeGaps": [],
     }
 
-    pages_domains_readback = reconcile_pages_custom_domains(parent_api, account)
-    outcome["capabilities"]["pagesCustomDomains"] = True
-    outcome["pagesCustomDomainsReadback"] = pages_domains_readback
-    pages_readback = read_pages_contract(parent_api, account, host)
-    outcome["capabilities"]["pagesProject"] = True
-    outcome["pagesProjectReadback"] = pages_readback
+    ensure_pages_custom_domains(parent_api, account)
 
     zone_api, revoke_ephemeral_zone_token = issue_ephemeral_zone_api(
         parent_api,
@@ -1752,6 +1854,16 @@ def apply(dist_dir: Path) -> dict[str, Any]:
 
     settings_readback = {}
     try:
+        pages_dns_readback = reconcile_pages_dns_binding(zone_api, zone)
+        outcome["capabilities"]["pagesDnsBinding"] = True
+        outcome["pagesDnsBindingReadback"] = pages_dns_readback
+        pages_domains_readback = wait_pages_custom_domains(parent_api, account)
+        outcome["capabilities"]["pagesCustomDomains"] = True
+        outcome["pagesCustomDomainsReadback"] = pages_domains_readback
+        pages_readback = read_pages_contract(parent_api, account, host)
+        outcome["capabilities"]["pagesProject"] = True
+        outcome["pagesProjectReadback"] = pages_readback
+
         for setting_id, desired in ZONE_SETTINGS.items():
             settings_readback[setting_id] = reconcile_zone_setting(
                 zone_api, zone, setting_id, desired
@@ -1933,43 +2045,55 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
     api = CloudflareApi(token)
     zone = zone_id(api, account, zone_name)
     print("ZONE_RESOLVED", zone_name, zone)
-    pages_domains_readback = reconcile_pages_custom_domains(api, account)
-    # Account-level Bulk Redirects execute after zone-level Single Redirects.
-    # This order is therefore a transactional safety requirement.
-    bulk_readback = reconcile_bulk_redirects(api, account, contract)
-    expected_bulk_count = len(expand_bulk_redirect_items(contract))
-    if bulk_readback.get("itemCount") != expected_bulk_count:
-        raise CloudflareError("Historical blog Bulk Redirect read-back count drift")
-    # The long-lived deployment credential intentionally lacks direct access
-    # to zone Single Redirects. Mint the two-capability child token only after
-    # the account-level Bulk rule has passed all read-back checks, then revoke
-    # it in the same transaction.
-    zone_redirect_api, revoke_zone_redirect_api = issue_ephemeral_single_redirect_api(
-        api, account, zone
+
+    ensure_pages_custom_domains(api, account)
+    zone_control_api, revoke_zone_control_api = issue_ephemeral_zone_api(
+        api, account, zone, include_control_plane=True
     )
     try:
-        readback = reconcile_subdomain_redirects(zone_redirect_api, zone, contract)
+        pages_dns_readback = reconcile_pages_dns_binding(zone_control_api, zone)
+        pages_domains_readback = wait_pages_custom_domains(api, account)
+
+        # Account-level Bulk Redirects execute after zone-level Single Redirects.
+        # The exact historical list must therefore be proven before any competing
+        # blog catchall is removed.
+        bulk_readback = reconcile_bulk_redirects(api, account, contract)
+        expected_bulk_count = len(expand_bulk_redirect_items(contract))
+        if bulk_readback.get("itemCount") != expected_bulk_count:
+            raise CloudflareError("Historical blog Bulk Redirect read-back count drift")
+
+        zone_redirect_api, revoke_zone_redirect_api = issue_ephemeral_single_redirect_api(
+            api, account, zone
+        )
+        try:
+            readback = reconcile_subdomain_redirects(zone_redirect_api, zone, contract)
+        finally:
+            revoke_zone_redirect_api()
+
+        not_found_readback = reconcile_phase_rule(
+            zone_control_api,
+            zone,
+            "http_response_headers_transform",
+            "Canonical response header transforms",
+            "Git-managed response corrections for canonical and fallback responses",
+            not_found_rule(f"www.{zone_name}", csp_404),
+        )
     finally:
-        revoke_zone_redirect_api()
-    not_found_readback = reconcile_phase_rule(
-        api,
-        zone,
-        "http_response_headers_transform",
-        "Canonical response header transforms",
-        "Git-managed response corrections for canonical and fallback responses",
-        not_found_rule(f"www.{zone_name}", csp_404),
-    )
+        revoke_zone_control_api()
+
     outcome = {
         "schemaVersion": 1,
         "mode": "subdomains-only",
         "zone": zone_name,
         "capabilities": {
             "pagesCustomDomains": True,
+            "pagesDnsBinding": True,
             "historicalBlogBulkRedirects": True,
             "subdomainRedirectRules": True,
             "notFoundTransformRule": not_found_readback.get("ref") == NOT_FOUND_RULE_REF,
         },
         "pagesCustomDomainsReadback": pages_domains_readback,
+        "pagesDnsBindingReadback": pages_dns_readback,
         "historicalBlogBulkRedirectsReadback": bulk_readback,
         "subdomainRedirectsReadback": readback,
         "notFoundTransformRuleReadback": {
@@ -1979,6 +2103,8 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
         },
         "scopeGaps": [],
     }
+    if not outcome["capabilities"]["notFoundTransformRule"]:
+        raise CloudflareError("Historical blog 404 transform rule read-back drift")
     print("SUBDOMAIN_EDGE_RECONCILIATION_COMPLETE", json.dumps(outcome, sort_keys=True))
     return outcome
 
