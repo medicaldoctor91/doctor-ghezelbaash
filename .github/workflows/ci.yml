@@ -63,6 +63,14 @@ jobs:
           path: package-lock.json
           if-no-files-found: error
           retention-days: 7
+      - name: Upload modernization DIST candidate
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: modernization-dist-${{ github.sha }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
       - name: Package canonical source backup
         if: github.ref == 'refs/heads/main'
         run: npm run package:source
