@@ -157,6 +157,7 @@ def cache_rule(host: str) -> dict[str, Any]:
         "action": "set_cache_settings",
         "action_parameters": {
             "cache": True,
+            "cache_key": {"cache_deception_armor": True},
             "edge_ttl": {"mode": "respect_origin"},
             "browser_ttl": {"mode": "respect_origin"},
             "serve_stale": {"disable_stale_while_updating": False},
@@ -292,6 +293,16 @@ def subdomain_redirect_rules(contract: dict[str, Any]) -> list[dict[str, Any]]:
 
 ZONE_SETTINGS: dict[str, Any] = {
     "always_use_https": "on",
+    "ssl": "strict",
+    "min_tls_version": "1.2",
+    "always_online": "on",
+    "cache_level": "aggressive",
+    "ech": "on",
+    "pq_keyex": "on",
+    "opportunistic_encryption": "on",
+    "fonts": "off",
+    "speed_brain": "off",
+    "minify": {"css": "off", "html": "off", "js": "off"},
     "http2": "on",
     "http3": "on",
     "brotli": "on",
@@ -317,17 +328,10 @@ ZONE_SETTINGS: dict[str, Any] = {
     },
 }
 
-# Cloudflare documents Crawler Hints as dashboard-managed and does not expose it
-# in the current public Zone Settings SDK. Probe the generic setting endpoint so
-# accounts where it is available still get it, but rely on the repository's
-# independently verified IndexNow workflow when the API reports it unknown.
-OPTIONAL_ZONE_SETTINGS: dict[str, Any] = {
-    "crawler_hints": "on",
-    # Auto Minify has been retired from some current Cloudflare accounts. The
-    # exact production Repr-Digest check independently proves no HTML mutation.
-    "minify": {"css": "off", "html": "off", "js": "off"},
-}
-
+# Crawler Hints is intentionally not represented as a Zone Settings API key:
+# Cloudflare's 2026 public API does not expose it through /zones/{zone}/settings.
+# The site keeps its independent, release-verified IndexNow pipeline as the
+# machine-controlled freshness source of truth.
 
 BOT_ACCESS_SETTINGS: dict[str, Any] = {
     "ai_bots_protection": "disabled",
@@ -1005,6 +1009,28 @@ def issue_ephemeral_single_redirect_api(
     atexit.register(revoke)
     print("EPHEMERAL_SINGLE_REDIRECT_TOKEN_ISSUED", token_id, "expires_on=", expires_on)
     return CloudflareApi(token_value), lambda: revoke(strict=True)
+
+
+def reconcile_smart_tiered_cache(api: CloudflareApi, zone: str) -> dict[str, Any]:
+    """Keep the Free-plan Smart Tiered Cache topology enabled and prove read-back."""
+    path = f"/zones/{zone}/cache/tiered_cache_smart_topology_enable"
+    before = api.expect("GET", path).get("result") or {}
+    if before.get("value") != "on":
+        if before.get("editable") is False:
+            raise CloudflareError(
+                f"Smart Tiered Cache is not editable and is {before.get('value')!r}"
+            )
+        api.expect("PATCH", path, {"value": "on"})
+        state = "UPDATED"
+    else:
+        state = "ALREADY_EXACT"
+    after = api.expect("GET", path).get("result") or {}
+    if after.get("value") != "on":
+        raise CloudflareError(
+            f"Smart Tiered Cache read-back drift: {after.get('value')!r}"
+        )
+    print("SMART_TIERED_CACHE_" + state, json.dumps(after, sort_keys=True))
+    return after
 
 
 def reconcile_zone_setting(
@@ -1691,6 +1717,22 @@ def self_test(dist_dir: Path) -> None:
     if "{{" in csp or "unsafe-inline" in csp or "unsafe-eval" in csp:
         raise CloudflareError("Final 404 CSP is unresolved or weakened")
     cache = cache_rule("www.ghezelbaash.ir")
+    if (cache.get("action_parameters") or {}).get("cache_key") != {
+        "cache_deception_armor": True
+    }:
+        raise CloudflareError("Canonical cache deception armor contract drift")
+    for setting_id, desired in {
+        "ssl": "strict",
+        "min_tls_version": "1.2",
+        "always_online": "on",
+        "cache_level": "aggressive",
+        "ech": "on",
+        "pq_keyex": "on",
+        "fonts": "off",
+        "speed_brain": "off",
+    }.items():
+        if ZONE_SETTINGS.get(setting_id) != desired:
+            raise CloudflareError(f"Zone contract drift for {setting_id}")
     hsts = hsts_rule("www.ghezelbaash.ir")
     missing = not_found_rule("www.ghezelbaash.ir", csp)
     subdomain_contract = load_subdomain_redirect_contract(Path.cwd().resolve())
@@ -1832,6 +1874,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             "pagesDnsBinding": False,
             "dns": False,
             "zoneSettings": False,
+            "smartTieredCache": False,
             "cacheRule": False,
             "hstsTransformRule": False,
             "notFoundTransformRule": False,
@@ -1871,17 +1914,13 @@ def apply(dist_dir: Path) -> dict[str, Any]:
         outcome["capabilities"]["zoneSettings"] = True
         outcome["zoneSettingsReadback"] = settings_readback
 
-        for setting_id, desired in OPTIONAL_ZONE_SETTINGS.items():
-            try:
-                settings_readback[setting_id] = reconcile_zone_setting(
-                    zone_api, zone, setting_id, desired
-                )
-            except CloudflareError as exc:
-                print(
-                    "OPTIONAL_ZONE_SETTING_API_UNAVAILABLE",
-                    setting_id,
-                    str(exc)[:1200],
-                )
+        smart_tiered_readback = reconcile_smart_tiered_cache(zone_api, zone)
+        outcome["capabilities"]["smartTieredCache"] = True
+        outcome["smartTieredCacheReadback"] = {
+            "id": smart_tiered_readback.get("id"),
+            "value": smart_tiered_readback.get("value"),
+            "editable": smart_tiered_readback.get("editable"),
+        }
 
         dns_readback = read_dns_contract(zone_api, zone, zone_name, host)
         outcome["capabilities"]["dns"] = True
@@ -1902,6 +1941,11 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             "ref": cache_readback.get("ref"),
             "expression": cache_readback.get("expression"),
             "enabled": cache_readback.get("enabled"),
+            "cacheDeceptionArmor": (
+                (cache_readback.get("action_parameters") or {})
+                .get("cache_key", {})
+                .get("cache_deception_armor")
+            ),
         }
 
         bots_readback = reconcile_bot_access(zone_api, zone)
