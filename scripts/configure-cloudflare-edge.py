@@ -39,6 +39,12 @@ BULK_REDIRECT_PHASE = "http_request_redirect"
 BULK_REDIRECT_RULESET_NAME = "Canonical historical URL redirects"
 BULK_REDIRECT_LIST_NAME = "ghezelbaash_blog_legacy_urls"
 BULK_REDIRECT_RULE_REF = "ghezelbaash_blog_legacy_bulk_v1"
+BLOG_HOST = "blog.ghezelbaash.ir"
+PAGES_PROJECT_NAME = "doctor-ghezelbaash"
+PAGES_REQUIRED_CUSTOM_DOMAINS = (
+    "www.ghezelbaash.ir",
+    BLOG_HOST,
+)
 ZONE_SETTINGS_PERMISSION_IDS = (
     "517b21aee92c4d89936c976ba6e4be55",  # Zone Settings Read
     "3030687196b94b638145a3953da2b699",  # Zone Settings Write
@@ -159,9 +165,14 @@ def cache_rule(host: str) -> dict[str, Any]:
 
 
 def not_found_rule(host: str, csp: str) -> dict[str, Any]:
+    protected_hosts = " ".join(
+        f'"{value}"' for value in (host, BLOG_HOST)
+    )
     return {
         "ref": NOT_FOUND_RULE_REF,
-        "expression": f'(http.host eq "{host}" and http.response.code eq 404)',
+        "expression": (
+            f"(http.host in {{{protected_hosts}}} and http.response.code eq 404)"
+        ),
         "description": (
             "Restore the generated real-404 indexing and CSP contract on "
             "Cloudflare Pages fallback responses"
@@ -233,10 +244,10 @@ def load_subdomain_redirect_contract(root: Path) -> dict[str, Any]:
     if (
         bulk.get("cloudflareProduct") != "Bulk Redirects"
         or bulk.get("planUrlLimit") != 10_000
-        or bulk.get("host") != "blog.ghezelbaash.ir"
+        or bulk.get("host") != BLOG_HOST
         or bulk.get("listName") != BULK_REDIRECT_LIST_NAME
         or bulk.get("ruleRef") != BULK_REDIRECT_RULE_REF
-        or bulk.get("unmatchedPathPolicy") != "do-not-redirect"
+        or bulk.get("unmatchedPathPolicy") != "return-404"
         or not isinstance(bulk.get("groups"), list)
         or not bulk.get("groups")
     ):
@@ -674,10 +685,85 @@ def read_dns_contract(
     return summary
 
 
+def reconcile_pages_custom_domains(
+    api: CloudflareApi, account: str
+) -> dict[str, Any]:
+    project_base = f"/accounts/{account}/pages/projects/{PAGES_PROJECT_NAME}"
+    domains_base = f"{project_base}/domains"
+    required = set(PAGES_REQUIRED_CUSTOM_DOMAINS)
+
+    def read_domains() -> dict[str, dict[str, Any]]:
+        rows = api.expect("GET", domains_base).get("result") or []
+        if not isinstance(rows, list):
+            raise CloudflareError("Cloudflare Pages custom-domain listing is not a list")
+        by_name: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            name = str((row or {}).get("name") or "")
+            if not name:
+                continue
+            if name in by_name:
+                raise CloudflareError(f"Duplicate Cloudflare Pages custom domain: {name}")
+            by_name[name] = row
+        return by_name
+
+    before = read_domains()
+    for name in PAGES_REQUIRED_CUSTOM_DOMAINS:
+        if name in before:
+            continue
+        api.expect("POST", domains_base, {"name": name}, ok=(200, 201))
+        print("PAGES_CUSTOM_DOMAIN_CREATED", name)
+
+    last_statuses: dict[str, str] = {}
+    last_project_domains: list[str] = []
+    for attempt in range(1, 91):
+        by_name = read_domains()
+        last_statuses = {
+            name: str((by_name.get(name) or {}).get("status") or "missing")
+            for name in PAGES_REQUIRED_CUSTOM_DOMAINS
+        }
+        failed = {
+            name: status
+            for name, status in last_statuses.items()
+            if status in {"error", "blocked", "deactivated"}
+        }
+        if failed:
+            raise CloudflareError(
+                "Cloudflare Pages custom-domain activation failed: "
+                + json.dumps(failed, sort_keys=True)
+            )
+        project = api.expect("GET", project_base).get("result") or {}
+        last_project_domains = sorted(
+            str(value) for value in (project.get("domains") or [])
+        )
+        if (
+            required.issubset(by_name)
+            and all(last_statuses[name] == "active" for name in required)
+            and required.issubset(last_project_domains)
+        ):
+            summary = {
+                "project": PAGES_PROJECT_NAME,
+                "requiredDomains": list(PAGES_REQUIRED_CUSTOM_DOMAINS),
+                "statuses": last_statuses,
+                "projectDomains": last_project_domains,
+            }
+            print("PAGES_CUSTOM_DOMAINS_EXACT", json.dumps(summary, sort_keys=True))
+            return summary
+        if attempt < 90:
+            time.sleep(2)
+
+    raise CloudflareError(
+        "Timed out waiting for Cloudflare Pages custom domains: "
+        + json.dumps(
+            {"statuses": last_statuses, "projectDomains": last_project_domains},
+            sort_keys=True,
+        )
+    )
+
+
 def read_pages_contract(
     api: CloudflareApi, account: str, canonical_host: str
 ) -> dict[str, Any]:
-    project_name = "doctor-ghezelbaash"
+    project_name = PAGES_PROJECT_NAME
     base = f"/accounts/{account}/pages/projects/{project_name}"
     project = api.expect("GET", base).get("result") or {}
     source = project.get("source") or {}
@@ -720,9 +806,13 @@ def read_pages_contract(
         "buildCommand": "npm ci --ignore-scripts && npm run build",
         "destinationDir": "dist",
     }
-    if canonical_host not in domains:
+    if canonical_host not in PAGES_REQUIRED_CUSTOM_DOMAINS:
+        raise CloudflareError(f"Unexpected canonical Pages hostname: {canonical_host}")
+    missing_domains = sorted(set(PAGES_REQUIRED_CUSTOM_DOMAINS) - set(domains))
+    if missing_domains:
         raise CloudflareError(
-            f"Canonical Pages domain missing from project: {canonical_host}"
+            "Required Pages custom domains missing from project: "
+            + ", ".join(missing_domains)
         )
     if not all(summary.get(key) == value for key, value in expected.items()):
         raise CloudflareError(
@@ -1507,6 +1597,8 @@ def self_test(dist_dir: Path) -> None:
         raise CloudflareError("Cache rule drift was not detected")
     if "http.response.code eq 404" not in missing["expression"]:
         raise CloudflareError("Real 404 response match is missing")
+    if BLOG_HOST not in missing["expression"]:
+        raise CloudflareError("Historical blog 404 host is not protected by the fallback headers")
     if (
         hsts["action_parameters"]["headers"]["strict-transport-security"]["value"]
         != HSTS_VALUE
@@ -1630,6 +1722,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
         "host": host,
         "capabilities": {
             "pagesProject": False,
+            "pagesCustomDomains": False,
             "dns": False,
             "zoneSettings": False,
             "cacheRule": False,
@@ -1643,6 +1736,9 @@ def apply(dist_dir: Path) -> dict[str, Any]:
         "scopeGaps": [],
     }
 
+    pages_domains_readback = reconcile_pages_custom_domains(parent_api, account)
+    outcome["capabilities"]["pagesCustomDomains"] = True
+    outcome["pagesCustomDomainsReadback"] = pages_domains_readback
     pages_readback = read_pages_contract(parent_api, account, host)
     outcome["capabilities"]["pagesProject"] = True
     outcome["pagesProjectReadback"] = pages_readback
@@ -1814,7 +1910,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     return outcome
 
 
-def apply_subdomains_only() -> dict[str, Any]:
+def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
     token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
     account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
     zone_name = os.environ.get("ZONE_NAME", "").strip()
@@ -1832,9 +1928,12 @@ def apply_subdomains_only() -> dict[str, Any]:
     contract = load_subdomain_redirect_contract(Path.cwd().resolve())
     if contract["zone"] != zone_name:
         raise CloudflareError("Runtime zone differs from subdomain redirect contract")
+    headers_text = (dist_dir / "_headers").read_text(encoding="utf-8")
+    csp_404 = extract_header(headers_text, "/404.html", "Content-Security-Policy")
     api = CloudflareApi(token)
     zone = zone_id(api, account, zone_name)
     print("ZONE_RESOLVED", zone_name, zone)
+    pages_domains_readback = reconcile_pages_custom_domains(api, account)
     # Account-level Bulk Redirects execute after zone-level Single Redirects.
     # This order is therefore a transactional safety requirement.
     bulk_readback = reconcile_bulk_redirects(api, account, contract)
@@ -1852,16 +1951,32 @@ def apply_subdomains_only() -> dict[str, Any]:
         readback = reconcile_subdomain_redirects(zone_redirect_api, zone, contract)
     finally:
         revoke_zone_redirect_api()
+    not_found_readback = reconcile_phase_rule(
+        api,
+        zone,
+        "http_response_headers_transform",
+        "Canonical response header transforms",
+        "Git-managed response corrections for canonical and fallback responses",
+        not_found_rule(f"www.{zone_name}", csp_404),
+    )
     outcome = {
         "schemaVersion": 1,
         "mode": "subdomains-only",
         "zone": zone_name,
         "capabilities": {
+            "pagesCustomDomains": True,
             "historicalBlogBulkRedirects": True,
             "subdomainRedirectRules": True,
+            "notFoundTransformRule": not_found_readback.get("ref") == NOT_FOUND_RULE_REF,
         },
+        "pagesCustomDomainsReadback": pages_domains_readback,
         "historicalBlogBulkRedirectsReadback": bulk_readback,
         "subdomainRedirectsReadback": readback,
+        "notFoundTransformRuleReadback": {
+            "ref": not_found_readback.get("ref"),
+            "expression": not_found_readback.get("expression"),
+            "enabled": not_found_readback.get("enabled"),
+        },
         "scopeGaps": [],
     }
     print("SUBDOMAIN_EDGE_RECONCILIATION_COMPLETE", json.dumps(outcome, sort_keys=True))
@@ -1920,7 +2035,7 @@ def main() -> int:
         if args.self_test:
             self_test(dist_dir)
         elif args.apply_subdomains_only:
-            outcome = apply_subdomains_only()
+            outcome = apply_subdomains_only(dist_dir)
             outcome_path = Path(args.outcome).resolve()
             outcome_path.write_text(
                 json.dumps(outcome, indent=2, sort_keys=True) + "\n",

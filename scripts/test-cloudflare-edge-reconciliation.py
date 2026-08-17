@@ -372,6 +372,13 @@ class FakeZoneTokenAuthority:
 
 
 class FakeInventoryApi:
+    def __init__(self) -> None:
+        self.pages_domains = {"www.ghezelbaash.ir": "active"}
+        self.project_domains = {
+            "doctor-ghezelbaash.pages.dev",
+            "www.ghezelbaash.ir",
+        }
+
     def expect(
         self,
         method: str,
@@ -379,7 +386,21 @@ class FakeInventoryApi:
         body: Any | None = None,
         ok: tuple[int, ...] = (200,),
     ) -> dict[str, Any]:
-        del body, ok
+        del ok
+        if method == "GET" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":
+            return {
+                "success": True,
+                "result": [
+                    {"name": name, "status": status}
+                    for name, status in sorted(self.pages_domains.items())
+                ],
+            }
+        if method == "POST" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":
+            assert isinstance(body, dict) and body.get("name")
+            name = str(body["name"])
+            self.pages_domains[name] = "active"
+            self.project_domains.add(name)
+            return {"success": True, "result": {"name": name, "status": "active"}}
         if method == "GET" and path == (
             "/accounts/test-account/pages/projects/doctor-ghezelbaash"
         ):
@@ -388,10 +409,7 @@ class FakeInventoryApi:
                 "result": {
                     "name": "doctor-ghezelbaash",
                     "production_branch": "production/deploy",
-                    "domains": [
-                        "doctor-ghezelbaash.pages.dev",
-                        "www.ghezelbaash.ir",
-                    ],
+                    "domains": sorted(self.project_domains),
                     "source": {
                         "type": "github",
                         "config": {
@@ -465,6 +483,9 @@ if not zone_token_authority.revoked:
     raise AssertionError("Ephemeral control-plane child token was not revoked")
 
 inventory_api = FakeInventoryApi()
+pages_domains = edge.reconcile_pages_custom_domains(inventory_api, "test-account")
+if pages_domains["statuses"].get("blog.ghezelbaash.ir") != "active":
+    raise AssertionError("Historical blog Pages custom domain was not activated")
 pages_contract = edge.read_pages_contract(
     inventory_api, "test-account", "www.ghezelbaash.ir"
 )
@@ -514,6 +535,7 @@ print(
             "ephemeralSingleRedirectToken": True,
             "ephemeralControlPlaneToken": True,
             "pagesAndDnsInventory": True,
+            "blogPagesFallbackBinding": True,
             "idempotent": True,
         },
         sort_keys=True,
