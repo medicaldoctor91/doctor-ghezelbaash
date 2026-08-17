@@ -6,8 +6,8 @@ PASSWORD=os.environ["WIKIMEDIA_BOT_PASSWORD"]
 API="https://en.wikipedia.org/w/api.php"
 ARTICLE="Treatment of bipolar disorder"
 TALK="Talk:Treatment of bipolar disorder"
-UA="GhezelbaashEnwikiPreflight/1.0 (https://www.ghezelbaash.ir/)"
-NEEDLES=["Ghezelbash","10.4103/2008-7802.182734","10.3390/md23020084","39997208","27280013","Shakeri"]
+UA="GhezelbaashEnwikiPreflight/1.1 (https://www.ghezelbaash.ir/)"
+NEEDLES=["Ghezelbash","10.4103/2008-7802.182734","10.3390/md23020084","10.1111/bdi.13115","39997208","27280013","34228881","Shakeri"]
 
 s=requests.Session(); s.headers.update({"User-Agent":UA})
 def get(**p):
