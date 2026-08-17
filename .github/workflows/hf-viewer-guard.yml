@@ -28,4 +28,4 @@ jobs:
         with:
           node-version: 24.18.0
       - name: Verify authority surfaces and Dataset Server configs
-        run: node scripts/verify-huggingface-authority.mjs
+        run: node scripts/verify-huggingface-authority.mjs --viewer
