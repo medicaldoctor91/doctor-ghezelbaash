@@ -19,12 +19,16 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 24.18.0
+          node-version: 26.6.0
           cache: npm
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - run: npm ci --ignore-scripts
+      - name: Bootstrap npm 12 and refresh lockfile for modernization test
+        run: |
+          npm install --global npm@12.0.2
+          npm install --ignore-scripts --package-lock-only
+          npm ci --ignore-scripts
       - name: Release preparation diagnostics
         shell: bash
         run: |
@@ -51,6 +55,14 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Upload modernization lockfile candidate
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: modernization-package-lock-${{ github.sha }}
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 7
       - name: Package canonical source backup
         if: github.ref == 'refs/heads/main'
         run: npm run package:source
