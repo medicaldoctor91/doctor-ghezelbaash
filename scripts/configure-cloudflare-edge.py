@@ -905,13 +905,13 @@ def read_pages_contract(
     }
     expected = {
         "name": project_name,
-        "productionBranch": "production/deploy",
+        "productionBranch": "main",
         "sourceType": "github",
         "repository": "medicaldoctor91/doctor-ghezelbaash",
         "deploymentsEnabled": True,
         "productionDeploymentsEnabled": True,
-        "previewDeploymentSetting": "custom",
-        "previewBranchIncludes": ["staging/deploy"],
+        "previewDeploymentSetting": "none",
+        "previewBranchIncludes": [],
         "previewBranchExcludes": [],
         "buildCommand": "npm ci --ignore-scripts && npm run build",
         "destinationDir": "dist",
