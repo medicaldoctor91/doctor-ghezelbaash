@@ -57,7 +57,7 @@ jobs:
           set -euo pipefail
           test -z "$(git status --porcelain -- src/data/volatile-facts.json src/content-source src/data/semantic/knowledge-graph.jsonld)"
           echo 'GOOGLE_REPUTATION_NO_PUBLIC_MUTATION_PASS'
-      - name: Build and prove only the approved mutable visible slot changed
+      - name: Build and publish only the approved mutable observation
         if: steps.places.outputs.changed == 'true'
         shell: bash
         run: |
@@ -72,12 +72,18 @@ jobs:
           git config user.email actions@users.noreply.github.com
           git add src/data/volatile-facts.json
           git commit -m "Refresh live Google reputation observation"
-          LIVE_SHA="$(git rev-parse HEAD)"; echo "LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
           git push origin HEAD:main
+      - name: Resolve authoritative main commit after observation processing
+        if: steps.places.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          LIVE_SHA="$(git rev-parse HEAD)"
           REMOTE_SHA="$(git ls-remote origin 'refs/heads/main' | awk '{print $1}')"
           test "$REMOTE_SHA" = "$LIVE_SHA" || { echo "::error::Remote main drift: $REMOTE_SHA expected=$LIVE_SHA"; exit 1; }
+          echo "LIVE_SHA=$LIVE_SHA" >> "$GITHUB_ENV"
           echo 'GOOGLE_REPUTATION_MAIN_CONVERGENCE_PASS'
-      - name: Prove website deployment and cooling freshness before touching HF
+      - name: Prove exact fresh Pages bytes before downstream synchronization
         if: steps.places.outputs.changed == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -91,27 +97,53 @@ jobs:
           python scripts/configure-cloudflare-edge.py --purge-cache-only
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$LIVE_SHA" SOURCE_COMMIT="$LIVE_SHA"
           npm run build
-          node scripts/verify-cloudflare-pages-deployment.mjs
-          npm run verify:production
+          node scripts/verify-cloudflare-pages-deployment.mjs --fresh-only
           node scripts/validate-visible-freeze.mjs dist/index.html
-          node scripts/verify-current-serving.mjs
-          node scripts/verify-public-discovery-freshness.mjs
-          sleep 120
-          node scripts/verify-public-discovery-freshness.mjs
-          echo 'REPUTATION_DELAYED_DISCOVERY_FRESHNESS_PASS'
-      - name: Synchronize only Hugging Face live observations
-        if: steps.places.outputs.changed == 'true'
+          echo 'REPUTATION_FRESH_ORIGIN_PASS'
+      - name: Reconcile Hugging Face live observation with authoritative main
+        if: steps.places.outcome == 'success'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          rm -rf .release/huggingface-live
           git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-live
           node scripts/sync-hf-live-observations.mjs .release/huggingface-live
           git -C .release/huggingface-live config user.name ghezelbaash-reputation-bot
           git -C .release/huggingface-live config user.email actions@users.noreply.github.com
           git -C .release/huggingface-live add live_observations.csv live-observation-attestation.json
-          git -C .release/huggingface-live diff --cached --quiet || git -C .release/huggingface-live commit -m "Refresh current Google reputation observation"
+          git -C .release/huggingface-live diff --cached --quiet || git -C .release/huggingface-live commit -m "Reconcile current Google reputation observation"
           git -C .release/huggingface-live push origin HEAD:main
+          for attempt in $(seq 1 12); do
+            if node scripts/verify-current-serving.mjs --hf-only; then
+              echo 'HF_CURRENT_OBSERVATION_CONVERGENCE_PASS'
+              exit 0
+            fi
+            sleep 5
+          done
+          echo '::error::Hugging Face current observation did not converge after reconciliation'
+          exit 1
+      - name: Prove ordinary edge convergence after authority synchronization
+        if: steps.places.outputs.changed == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_EXPECTED_COMMIT: ${{ env.LIVE_SHA }}
+          CF_EXPECTED_ENVIRONMENT: production
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! node scripts/verify-cloudflare-pages-deployment.mjs; then
+            echo '::warning::Fresh origin is exact but ordinary edge is stale; purging once more before final convergence proof.'
+            python scripts/configure-cloudflare-edge.py --purge-cache-only
+            sleep 90
+            node scripts/verify-cloudflare-pages-deployment.mjs
+          fi
+          npm run verify:production
+          node scripts/verify-current-serving.mjs --website-only
+          node scripts/verify-public-discovery-freshness.mjs
+          sleep 120
+          node scripts/verify-public-discovery-freshness.mjs
           node scripts/verify-current-serving.mjs
+          echo 'REPUTATION_CROSS_SURFACE_CONVERGENCE_PASS'
