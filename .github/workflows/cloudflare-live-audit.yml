@@ -1,0 +1,124 @@
+name: Temporary Cloudflare live audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cloudflare-live-audit.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
+      CF_PROJECT: doctor-ghezelbaash
+      ZONE_NAME: ghezelbaash.ir
+    steps:
+      - name: Read Cloudflare control plane
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, urllib.parse, urllib.request, urllib.error
+          API='https://api.cloudflare.com/client/v4'
+          token=os.environ['CLOUDFLARE_API_TOKEN']
+          account=os.environ['CLOUDFLARE_ACCOUNT_ID']
+          zone_name=os.environ['ZONE_NAME']
+          project=os.environ['CF_PROJECT']
+          def get(path):
+              req=urllib.request.Request(API+path,headers={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'ghezelbaash-readonly-audit/1.0'})
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as r:
+                      p=json.loads(r.read().decode())
+              except urllib.error.HTTPError as e:
+                  body=e.read().decode('utf-8','replace')[:1200]
+                  raise SystemExit(f'CF_GET_FAILED {path} HTTP={e.code} BODY={body}')
+              if p.get('success') is not True:
+                  raise SystemExit(f'CF_GET_FAILED {path} BODY={json.dumps(p,ensure_ascii=False)[:1200]}')
+              return p.get('result')
+          q=urllib.parse.urlencode({'name':zone_name,'account.id':account,'per_page':50})
+          zones=get('/zones?'+q)
+          exact=[z for z in zones if z.get('name')==zone_name]
+          if len(exact)!=1: raise SystemExit(f'ZONE_COUNT_DRIFT {len(exact)}')
+          z=exact[0]; zid=z['id']
+          zone_summary={k:z.get(k) for k in ['name','status','paused','type','development_mode','name_servers','original_name_servers']}
+          zone_summary['plan']=(z.get('plan') or {}).get('name')
+          print('CF_ZONE',json.dumps(zone_summary,ensure_ascii=False,sort_keys=True))
+          dns=get(f'/zones/{zid}/dns_records?per_page=500')
+          wanted={zone_name,'www.'+zone_name,'*.'+zone_name,'doctor.'+zone_name,'github.'+zone_name,'ig.'+zone_name,'blog.'+zone_name}
+          rows=[]
+          for r in dns:
+              if r.get('name') in wanted:
+                  rows.append({k:r.get(k) for k in ['type','name','content','proxied','ttl']})
+          rows.sort(key=lambda r:r['name'])
+          print('CF_DNS',json.dumps(rows,ensure_ascii=False,sort_keys=True))
+          pages=get(f'/accounts/{account}/pages/projects/{project}')
+          ps={k:pages.get(k) for k in ['name','subdomain','domains','production_branch','created_on']}
+          dc=pages.get('deployment_configs') or {}
+          ps['production_deployments_enabled']=dc.get('production',{}).get('enabled')
+          ps['preview_deployment_setting']=dc.get('preview',{}).get('branch_includes')
+          src=pages.get('source') or {}
+          ps['source_type']=src.get('type')
+          ps['repo_name']=(src.get('config') or {}).get('repo_name')
+          print('CF_PAGES_PROJECT',json.dumps(ps,ensure_ascii=False,sort_keys=True))
+          for phase,label in [('http_request_dynamic_redirect','CF_SINGLE_REDIRECTS'),('http_request_redirect','CF_BULK_REDIRECT_PHASE')]:
+              try:
+                  rs=get(f'/zones/{zid}/rulesets/phases/{phase}/entrypoint')
+              except SystemExit as e:
+                  print(label,json.dumps({'unavailable':str(e)},ensure_ascii=False)); continue
+              out={'id':rs.get('id'),'name':rs.get('name'),'phase':rs.get('phase'),'rules':[]}
+              for rule in rs.get('rules') or []:
+                  row={k:rule.get(k) for k in ['id','ref','enabled','action','expression','description']}
+                  ap=rule.get('action_parameters') or {}
+                  if rule.get('action')=='redirect':
+                      fv=ap.get('from_value') or {}
+                      row['status_code']=fv.get('status_code'); row['target']=((fv.get('target_url') or {}).get('value')); row['preserve_query_string']=fv.get('preserve_query_string')
+                  if rule.get('action')=='execute':
+                      row['id']=ap.get('id') or row.get('id')
+                  out['rules'].append(row)
+              print(label,json.dumps(out,ensure_ascii=False,sort_keys=True))
+          try:
+              lists=get(f'/accounts/{account}/rules/lists?per_page=100')
+              found=[]
+              for r in lists:
+                  if r.get('name')=='ghezelbaash_blog_legacy_urls':
+                      found.append({k:r.get(k) for k in ['id','name','kind','numitems','description']})
+              print('CF_REDIRECT_LIST',json.dumps(found,ensure_ascii=False,sort_keys=True))
+          except SystemExit as e:
+              print('CF_REDIRECT_LIST',json.dumps({'unavailable':str(e)},ensure_ascii=False))
+          settings=get(f'/zones/{zid}/settings')
+          keep={'always_use_https','http2','http3','brotli','ipv6','tls_1_3','0rtt','early_hints','development_mode','rocket_loader','email_obfuscation','automatic_https_rewrites','hotlink_protection','mirage','polish','security_header'}
+          ss={r.get('id'):r.get('value') for r in settings if r.get('id') in keep}
+          print('CF_ZONE_SETTINGS',json.dumps(ss,ensure_ascii=False,sort_keys=True))
+          PY
+      - name: Probe public host behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, urllib.request, urllib.error
+          urls=[
+            'https://ghezelbaash.ir/',
+            'https://www.ghezelbaash.ir/',
+            'https://doctor.ghezelbaash.ir/',
+            'https://github.ghezelbaash.ir/',
+            'https://ig.ghezelbaash.ir/',
+            'https://blog.ghezelbaash.ir/',
+            'https://blog.ghezelbaash.ir/2025/02/blog-post_14.html',
+            'https://blog.ghezelbaash.ir/__cloudflare_audit_unmatched__'
+          ]
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,req,fp,code,msg,headers,newurl): return None
+          op=urllib.request.build_opener(NoRedirect)
+          for url in urls:
+              req=urllib.request.Request(url,method='GET',headers={'User-Agent':'ghezelbaash-public-audit/1.0'})
+              try:
+                  with op.open(req,timeout=20) as r:
+                      code=r.status; h=r.headers
+              except urllib.error.HTTPError as e:
+                  code=e.code; h=e.headers
+              print('PUBLIC_HOST',json.dumps({'url':url,'status':code,'location':h.get('Location'),'server':h.get('Server'),'cf_cache_status':h.get('CF-Cache-Status')},ensure_ascii=False,sort_keys=True))
+          PY
