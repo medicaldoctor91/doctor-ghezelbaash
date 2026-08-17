@@ -1,0 +1,170 @@
+name: Temporary strict blog fallback repair
+
+on:
+  push:
+    branches: [fix/blog-pages-404-contract-20260817]
+    paths: ['.github/workflows/_tmp-fix-blog-pages-404.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Integrate the blog fallback into canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root=Path('.')
+
+          def replace_once(path, old, new):
+              text=path.read_text(encoding='utf-8')
+              count=text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected one match, found {count}: {old[:120]!r}')
+              path.write_text(text.replace(old,new),encoding='utf-8')
+
+          contract_path=root/'src/data/subdomain-redirects.json'
+          contract=json.loads(contract_path.read_text(encoding='utf-8'))
+          bulk=contract['bulkRedirects']
+          if bulk.get('host')!='blog.ghezelbaash.ir' or bulk.get('unmatchedPathPolicy')!='do-not-redirect':
+              raise SystemExit('Unexpected historical blog fallback contract')
+          bulk['unmatchedPathPolicy']='return-404'
+          contract_path.write_text(json.dumps(contract,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          edge_path=root/'scripts/configure-cloudflare-edge.py'
+          replace_once(
+              edge_path,
+              'BULK_REDIRECT_RULE_REF = "ghezelbaash_blog_legacy_bulk_v1"\nZONE_SETTINGS_PERMISSION_IDS = (',
+              'BULK_REDIRECT_RULE_REF = "ghezelbaash_blog_legacy_bulk_v1"\nBLOG_HOST = "blog.ghezelbaash.ir"\nPAGES_PROJECT_NAME = "doctor-ghezelbaash"\nPAGES_REQUIRED_CUSTOM_DOMAINS = (\n    "www.ghezelbaash.ir",\n    BLOG_HOST,\n)\nZONE_SETTINGS_PERMISSION_IDS = ('
+          )
+          replace_once(
+              edge_path,
+              '''def not_found_rule(host: str, csp: str) -> dict[str, Any]:\n    return {\n        "ref": NOT_FOUND_RULE_REF,\n        "expression": f'(http.host eq "{host}" and http.response.code eq 404)',\n''',
+              '''def not_found_rule(host: str, csp: str) -> dict[str, Any]:\n    protected_hosts = " ".join(\n        f'"{value}"' for value in (host, BLOG_HOST)\n    )\n    return {\n        "ref": NOT_FOUND_RULE_REF,\n        "expression": (\n            f"(http.host in {{{protected_hosts}}} and http.response.code eq 404)"\n        ),\n'''
+          )
+          replace_once(edge_path,'bulk.get("host") != "blog.ghezelbaash.ir"','bulk.get("host") != BLOG_HOST')
+          replace_once(edge_path,'bulk.get("unmatchedPathPolicy") != "do-not-redirect"','bulk.get("unmatchedPathPolicy") != "return-404"')
+
+          pages_function='''def reconcile_pages_custom_domains(\n    api: CloudflareApi, account: str\n) -> dict[str, Any]:\n    project_base = f"/accounts/{account}/pages/projects/{PAGES_PROJECT_NAME}"\n    domains_base = f"{project_base}/domains"\n    required = set(PAGES_REQUIRED_CUSTOM_DOMAINS)\n\n    def read_domains() -> dict[str, dict[str, Any]]:\n        rows = api.expect("GET", domains_base).get("result") or []\n        if not isinstance(rows, list):\n            raise CloudflareError("Cloudflare Pages custom-domain listing is not a list")\n        by_name: dict[str, dict[str, Any]] = {}\n        for row in rows:\n            name = str((row or {}).get("name") or "")\n            if not name:\n                continue\n            if name in by_name:\n                raise CloudflareError(f"Duplicate Cloudflare Pages custom domain: {name}")\n            by_name[name] = row\n        return by_name\n\n    before = read_domains()\n    for name in PAGES_REQUIRED_CUSTOM_DOMAINS:\n        if name in before:\n            continue\n        api.expect("POST", domains_base, {"name": name}, ok=(200, 201))\n        print("PAGES_CUSTOM_DOMAIN_CREATED", name)\n\n    last_statuses: dict[str, str] = {}\n    last_project_domains: list[str] = []\n    for attempt in range(1, 91):\n        by_name = read_domains()\n        last_statuses = {\n            name: str((by_name.get(name) or {}).get("status") or "missing")\n            for name in PAGES_REQUIRED_CUSTOM_DOMAINS\n        }\n        failed = {\n            name: status\n            for name, status in last_statuses.items()\n            if status in {"error", "blocked", "deactivated"}\n        }\n        if failed:\n            raise CloudflareError(\n                "Cloudflare Pages custom-domain activation failed: "\n                + json.dumps(failed, sort_keys=True)\n            )\n        project = api.expect("GET", project_base).get("result") or {}\n        last_project_domains = sorted(\n            str(value) for value in (project.get("domains") or [])\n        )\n        if (\n            required.issubset(by_name)\n            and all(last_statuses[name] == "active" for name in required)\n            and required.issubset(last_project_domains)\n        ):\n            summary = {\n                "project": PAGES_PROJECT_NAME,\n                "requiredDomains": list(PAGES_REQUIRED_CUSTOM_DOMAINS),\n                "statuses": last_statuses,\n                "projectDomains": last_project_domains,\n            }\n            print("PAGES_CUSTOM_DOMAINS_EXACT", json.dumps(summary, sort_keys=True))\n            return summary\n        if attempt < 90:\n            time.sleep(2)\n\n    raise CloudflareError(\n        "Timed out waiting for Cloudflare Pages custom domains: "\n        + json.dumps(\n            {"statuses": last_statuses, "projectDomains": last_project_domains},\n            sort_keys=True,\n        )\n    )\n\n\n'''
+          replace_once(edge_path,'def read_pages_contract(\n',pages_function+'def read_pages_contract(\n')
+          replace_once(edge_path,'    project_name = "doctor-ghezelbaash"\n','    project_name = PAGES_PROJECT_NAME\n')
+          replace_once(
+              edge_path,
+              '''    if canonical_host not in domains:\n        raise CloudflareError(\n            f"Canonical Pages domain missing from project: {canonical_host}"\n        )\n''',
+              '''    if canonical_host not in PAGES_REQUIRED_CUSTOM_DOMAINS:\n        raise CloudflareError(f"Unexpected canonical Pages hostname: {canonical_host}")\n    missing_domains = sorted(set(PAGES_REQUIRED_CUSTOM_DOMAINS) - set(domains))\n    if missing_domains:\n        raise CloudflareError(\n            "Required Pages custom domains missing from project: "\n            + ", ".join(missing_domains)\n        )\n'''
+          )
+          replace_once(
+              edge_path,
+              '''    if "http.response.code eq 404" not in missing["expression"]:\n        raise CloudflareError("Real 404 response match is missing")\n''',
+              '''    if "http.response.code eq 404" not in missing["expression"]:\n        raise CloudflareError("Real 404 response match is missing")\n    if BLOG_HOST not in missing["expression"]:\n        raise CloudflareError("Historical blog 404 host is not protected by the fallback headers")\n'''
+          )
+          replace_once(
+              edge_path,
+              '            "pagesProject": False,\n',
+              '            "pagesProject": False,\n            "pagesCustomDomains": False,\n'
+          )
+          replace_once(
+              edge_path,
+              '''    pages_readback = read_pages_contract(parent_api, account, host)\n    outcome["capabilities"]["pagesProject"] = True\n    outcome["pagesProjectReadback"] = pages_readback\n''',
+              '''    pages_domains_readback = reconcile_pages_custom_domains(parent_api, account)\n    outcome["capabilities"]["pagesCustomDomains"] = True\n    outcome["pagesCustomDomainsReadback"] = pages_domains_readback\n    pages_readback = read_pages_contract(parent_api, account, host)\n    outcome["capabilities"]["pagesProject"] = True\n    outcome["pagesProjectReadback"] = pages_readback\n'''
+          )
+          replace_once(edge_path,'def apply_subdomains_only() -> dict[str, Any]:\n','def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:\n')
+          replace_once(
+              edge_path,
+              '''    if contract["zone"] != zone_name:\n        raise CloudflareError("Runtime zone differs from subdomain redirect contract")\n    api = CloudflareApi(token)\n''',
+              '''    if contract["zone"] != zone_name:\n        raise CloudflareError("Runtime zone differs from subdomain redirect contract")\n    headers_text = (dist_dir / "_headers").read_text(encoding="utf-8")\n    csp_404 = extract_header(headers_text, "/404.html", "Content-Security-Policy")\n    api = CloudflareApi(token)\n'''
+          )
+          replace_once(
+              edge_path,
+              '''    zone = zone_id(api, account, zone_name)\n    print("ZONE_RESOLVED", zone_name, zone)\n    # Account-level Bulk Redirects execute after zone-level Single Redirects.\n''',
+              '''    zone = zone_id(api, account, zone_name)\n    print("ZONE_RESOLVED", zone_name, zone)\n    pages_domains_readback = reconcile_pages_custom_domains(api, account)\n    # Account-level Bulk Redirects execute after zone-level Single Redirects.\n'''
+          )
+          replace_once(
+              edge_path,
+              '''    try:\n        readback = reconcile_subdomain_redirects(zone_redirect_api, zone, contract)\n    finally:\n        revoke_zone_redirect_api()\n    outcome = {\n''',
+              '''    try:\n        readback = reconcile_subdomain_redirects(zone_redirect_api, zone, contract)\n    finally:\n        revoke_zone_redirect_api()\n    not_found_readback = reconcile_phase_rule(\n        api,\n        zone,\n        "http_response_headers_transform",\n        "Canonical response header transforms",\n        "Git-managed response corrections for canonical and fallback responses",\n        not_found_rule(f"www.{zone_name}", csp_404),\n    )\n    outcome = {\n'''
+          )
+          replace_once(
+              edge_path,
+              '''        "capabilities": {\n            "historicalBlogBulkRedirects": True,\n            "subdomainRedirectRules": True,\n        },\n        "historicalBlogBulkRedirectsReadback": bulk_readback,\n        "subdomainRedirectsReadback": readback,\n''',
+              '''        "capabilities": {\n            "pagesCustomDomains": True,\n            "historicalBlogBulkRedirects": True,\n            "subdomainRedirectRules": True,\n            "notFoundTransformRule": not_found_readback.get("ref") == NOT_FOUND_RULE_REF,\n        },\n        "pagesCustomDomainsReadback": pages_domains_readback,\n        "historicalBlogBulkRedirectsReadback": bulk_readback,\n        "subdomainRedirectsReadback": readback,\n        "notFoundTransformRuleReadback": {\n            "ref": not_found_readback.get("ref"),\n            "expression": not_found_readback.get("expression"),\n            "enabled": not_found_readback.get("enabled"),\n        },\n'''
+          )
+          replace_once(edge_path,'            outcome = apply_subdomains_only()\n','            outcome = apply_subdomains_only(dist_dir)\n')
+
+          validator_path=root/'scripts/validate-subdomain-redirects.mjs'
+          replace_once(validator_path,"bulk.unmatchedPathPolicy!=='do-not-redirect'","bulk.unmatchedPathPolicy!=='return-404'")
+
+          verify_path=root/'scripts/verify-subdomain-redirects.mjs'
+          replace_once(
+              verify_path,
+              '''  if(response.status>=300&&response.status<400){\n    fail(`${method} ${unknownSource}: unmatched blog path unexpectedly redirects to ${response.headers.get('location')}`);\n  }\n''',
+              '''  if(response.status!==404){\n    fail(`${method} ${unknownSource}: HTTP ${response.status}, expected 404`);\n  }\n  if(response.headers.get('location')){\n    fail(`${method} ${unknownSource}: 404 response unexpectedly carries Location=${response.headers.get('location')}`);\n  }\n  const robots=(response.headers.get('x-robots-tag')||'').toLowerCase();\n  if(!robots.includes('noindex')){\n    fail(`${method} ${unknownSource}: missing noindex X-Robots-Tag`);\n  }\n  const cacheControl=(response.headers.get('cache-control')||'').toLowerCase();\n  if(!cacheControl.includes('no-store')){\n    fail(`${method} ${unknownSource}: missing no-store fallback cache policy`);\n  }\n'''
+          )
+
+          test_path=root/'scripts/test-cloudflare-edge-reconciliation.py'
+          replace_once(
+              test_path,
+              '''class FakeInventoryApi:\n    def expect(\n''',
+              '''class FakeInventoryApi:\n    def __init__(self) -> None:\n        self.pages_domains = {"www.ghezelbaash.ir": "active"}\n        self.project_domains = {\n            "doctor-ghezelbaash.pages.dev",\n            "www.ghezelbaash.ir",\n        }\n\n    def expect(\n'''
+          )
+          replace_once(test_path,'        del body, ok\n        if method == "GET" and path == (\n            "/accounts/test-account/pages/projects/doctor-ghezelbaash"\n        ):\n','        del ok\n        if method == "GET" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":\n            return {\n                "success": True,\n                "result": [\n                    {"name": name, "status": status}\n                    for name, status in sorted(self.pages_domains.items())\n                ],\n            }\n        if method == "POST" and path == "/accounts/test-account/pages/projects/doctor-ghezelbaash/domains":\n            assert isinstance(body, dict) and body.get("name")\n            name = str(body["name"])\n            self.pages_domains[name] = "active"\n            self.project_domains.add(name)\n            return {"success": True, "result": {"name": name, "status": "active"}}\n        if method == "GET" and path == (\n            "/accounts/test-account/pages/projects/doctor-ghezelbaash"\n        ):\n')
+          replace_once(
+              test_path,
+              '''                    "domains": [\n                        "doctor-ghezelbaash.pages.dev",\n                        "www.ghezelbaash.ir",\n                    ],\n''',
+              '''                    "domains": sorted(self.project_domains),\n'''
+          )
+          replace_once(
+              test_path,
+              '''inventory_api = FakeInventoryApi()\npages_contract = edge.read_pages_contract(\n''',
+              '''inventory_api = FakeInventoryApi()\npages_domains = edge.reconcile_pages_custom_domains(inventory_api, "test-account")\nif pages_domains["statuses"].get("blog.ghezelbaash.ir") != "active":\n    raise AssertionError("Historical blog Pages custom domain was not activated")\npages_contract = edge.read_pages_contract(\n'''
+          )
+          replace_once(
+              test_path,
+              '''            "pagesAndDnsInventory": True,\n''',
+              '''            "pagesAndDnsInventory": True,\n            "blogPagesFallbackBinding": True,\n'''
+          )
+
+          workflow_path=root/'.github/workflows/cloudflare-subdomain-redirects.yml'
+          replace_once(
+              workflow_path,
+              '''      - name: Validate source redirect contract\n        run: node scripts/validate-subdomain-redirects.mjs\n''',
+              '''      - name: Build and validate redirect plus fallback contract\n        run: |\n          npm ci --ignore-scripts\n          npm run build\n'''
+          )
+          PY
+      - name: Validate repaired source before publishing branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          node scripts/validate-subdomain-redirects.mjs
+          python scripts/test-cloudflare-edge-reconciliation.py
+          npm run build
+          git diff --check
+      - name: Publish clean branch without repair machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/_tmp-fix-blog-pages-404.yml
+          git config user.name 'Dr. Saeed Ghezelbaash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'Serve unmatched historical blog URLs as real Pages 404s'
+          git push origin HEAD:fix/blog-pages-404-contract-20260817
