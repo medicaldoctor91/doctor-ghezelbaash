@@ -33,7 +33,6 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-
           page_path=Path('src/content-source/page.md')
           page=page_path.read_text(encoding='utf-8')
           old='''<details><summary><strong>شهرهایی که سابقه مراجعه از آن‌ها ثبت شده است</strong></summary><p><strong>کرمانشاه و غرب ایران:</strong> کرمانشاه، جوانرود، سرپل‌ذهاب، قصرشیرین، هرسین، اسلام‌آباد غرب، کرند غرب، همدان، ملایر، تویسرکان، سنندج، کامیاران، بانه، خرم‌آباد و ایلام.</p><p><strong>سایر شهرهای ایران:</strong> تهران، مشهد، اصفهان، شیراز، تبریز، کرج، اهواز، قم، رشت، ارومیه، یزد، کرمان، اراک، قزوین، ساری، بندرعباس، اردبیل، زنجان، بیرجند، بوشهر، سمنان، گرگان، شهرکرد، یاسوج، بجنورد و زاهدان.</p><p><strong>عراق و اقلیم کردستان:</strong> اربیل، سلیمانیه، بغداد، کلار، خانقین و شهرهای متعدد دیگر عراق.</p><p>این نام‌ها مبدأ مراجعه‌کنندگان‌اند؛ محل فعالیت حضوری دکتر سعید قزلباش و کلینیک او کرمانشاه است.</p></details>'''
@@ -47,22 +46,13 @@ jobs:
               if city not in page:
                   raise SystemExit(f'Expanded city missing: {city}')
           page_path.write_text(page,encoding='utf-8')
-
           css_path=Path('src/styles/global.css')
           css=css_path.read_text(encoding='utf-8')
-          start='/*GEO_UI_20260817_START*/'
-          end='/*GEO_UI_20260817_END*/'
+          start='/*GEO_UI_20260817_START*/'; end='/*GEO_UI_20260817_END*/'
           if start in css:
-              a=css.index(start); b=css.index(end,a)+len(end)
-              css=css[:a]+css[b:]
-          override='''/*GEO_UI_20260817_START*/
-.quick-actions__bar{background:linear-gradient(180deg,#fbfdfc,#f5f9f7);border-color:rgb(10 107 88/.12)}
-.quick-actions__item{background:rgb(255 255 255/.56)}
-.quick-actions__item--consultation{background:rgb(10 107 88/.085)}
-@media(max-width:720px){.entity-hero .hero-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:.58rem;width:100%}.entity-hero .hero-action,.entity-hero .hero-action--search{grid-column:1/-1;width:100%;min-height:3.12rem;padding:.72rem 1rem}}
-/*GEO_UI_20260817_END*/'''
-          css=css.rstrip()+override+'\n'
-          css_path.write_text(css,encoding='utf-8')
+              a=css.index(start); b=css.index(end,a)+len(end); css=css[:a]+css[b:]
+          override='/*GEO_UI_20260817_START*/.quick-actions__bar{background:linear-gradient(180deg,#fbfdfc,#f5f9f7);border-color:rgb(10 107 88/.12)}.quick-actions__item{background:rgb(255 255 255/.56)}.quick-actions__item--consultation{background:rgb(10 107 88/.085)}@media(max-width:720px){.entity-hero .hero-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:.58rem;width:100%}.entity-hero .hero-action,.entity-hero .hero-action--search{grid-column:1/-1;width:100%;min-height:3.12rem;padding:.72rem 1rem}}/*GEO_UI_20260817_END*/'
+          css_path.write_text(css.rstrip()+override+'\n',encoding='utf-8')
           PY
           node scripts/validate-critical-ctas.mjs
           python - <<'PY'
@@ -114,12 +104,7 @@ jobs:
           git rm .github/workflows/geo-ui-audit.yml
           python - <<'PY'
           import subprocess
-          expected={
-            'src/content-source/page.md',
-            'src/styles/global.css',
-            'src/data/visible-contract.json',
-            '.github/workflows/geo-ui-audit.yml'
-          }
+          expected={'src/content-source/page.md','src/styles/global.css','src/data/visible-contract.json','.github/workflows/geo-ui-audit.yml'}
           rows=subprocess.check_output(['git','status','--porcelain'],text=True).splitlines()
           changed=set()
           for row in rows:
@@ -127,11 +112,8 @@ jobs:
               if ' -> ' in path: path=path.split(' -> ',1)[1]
               changed.add(path)
           unexpected=changed-expected
-          required={'src/content-source/page.md','src/styles/global.css','src/data/visible-contract.json','.github/workflows/geo-ui-audit.yml'}
-          if unexpected:
-              raise SystemExit(f'Unexpected tracked mutation(s): {sorted(unexpected)}')
-          if not required.issubset(changed):
-              raise SystemExit(f'Missing intended mutation(s): {sorted(required-changed)}')
+          if unexpected: raise SystemExit(f'Unexpected tracked mutation(s): {sorted(unexpected)}')
+          if not expected.issubset(changed): raise SystemExit(f'Missing intended mutation(s): {sorted(expected-changed)}')
           print('INTENTIONAL_CHANGESET_ONLY_PASS',sorted(changed))
           PY
           git config user.name ghezelbaash-ui-bot
