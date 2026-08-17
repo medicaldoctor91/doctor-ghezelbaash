@@ -125,7 +125,7 @@ jobs:
           done
           echo '::error::Hugging Face current observation did not converge after reconciliation'
           exit 1
-      - name: Prove ordinary edge convergence after authority synchronization
+      - name: Prove edge and cross-surface convergence after authority synchronization
         if: steps.places.outputs.changed == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -135,15 +135,25 @@ jobs:
         run: |
           set -euo pipefail
           if ! node scripts/verify-cloudflare-pages-deployment.mjs; then
-            echo '::warning::Fresh origin is exact but ordinary edge is stale; purging once more before final convergence proof.'
+            echo '::warning::Fresh origin is exact but ordinary edge is stale; purging once more before delayed convergence checks.'
             python scripts/configure-cloudflare-edge.py --purge-cache-only
             sleep 90
             node scripts/verify-cloudflare-pages-deployment.mjs
           fi
           npm run verify:production
           node scripts/verify-current-serving.mjs --website-only
-          node scripts/verify-public-discovery-freshness.mjs
+          if node scripts/verify-public-discovery-freshness.mjs; then
+            echo 'REPUTATION_PUBLIC_DISCOVERY_T0_PASS'
+          else
+            echo '::warning::T+0 discovery sampled a stale Cloudflare PoP; exact website serving and HF authority are already proven, so delayed convergence remains authoritative.'
+          fi
           sleep 120
+          if node scripts/verify-public-discovery-freshness.mjs; then
+            echo 'REPUTATION_PUBLIC_DISCOVERY_T2_PASS'
+          else
+            echo '::warning::T+2 discovery still sampled distributed edge drift; final delayed gate remains mandatory.'
+          fi
+          sleep 180
           node scripts/verify-public-discovery-freshness.mjs
           node scripts/verify-current-serving.mjs
-          echo 'REPUTATION_CROSS_SURFACE_CONVERGENCE_PASS'
+          echo 'REPUTATION_CROSS_SURFACE_T5_HARD_PASS'
