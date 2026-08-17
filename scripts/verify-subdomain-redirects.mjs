@@ -96,8 +96,19 @@ for(const method of ['GET','HEAD']){
     headers
   });
   if(method==='GET')await response.arrayBuffer();
-  if(response.status>=300&&response.status<400){
-    fail(`${method} ${unknownSource}: unmatched blog path unexpectedly redirects to ${response.headers.get('location')}`);
+  if(response.status!==404){
+    fail(`${method} ${unknownSource}: HTTP ${response.status}, expected 404`);
+  }
+  if(response.headers.get('location')){
+    fail(`${method} ${unknownSource}: 404 response unexpectedly carries Location=${response.headers.get('location')}`);
+  }
+  const robots=(response.headers.get('x-robots-tag')||'').toLowerCase();
+  if(!robots.includes('noindex')){
+    fail(`${method} ${unknownSource}: missing noindex X-Robots-Tag`);
+  }
+  const cacheControl=(response.headers.get('cache-control')||'').toLowerCase();
+  if(!cacheControl.includes('no-store')){
+    fail(`${method} ${unknownSource}: missing no-store fallback cache policy`);
   }
 }
 

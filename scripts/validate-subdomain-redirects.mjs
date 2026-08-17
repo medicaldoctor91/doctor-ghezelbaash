@@ -62,7 +62,7 @@ if(!doctor?.target.includes('query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas'))fail('
 const bulk=contract.bulkRedirects;
 if(bulk?.cloudflareProduct!=='Bulk Redirects'||bulk.planUrlLimit!==10000)fail('Invalid Cloudflare Free Bulk Redirect contract');
 if(!/^[a-z0-9_]{1,50}$/.test(bulk.listName)||!/^[a-z0-9_]+$/.test(bulk.ruleRef))fail('Invalid Bulk Redirect list or rule name');
-if(bulk.host!=='blog.ghezelbaash.ir'||bulk.unmatchedPathPolicy!=='do-not-redirect')fail('Blog Bulk Redirect host/unmatched-path policy drift');
+if(bulk.host!=='blog.ghezelbaash.ir'||bulk.unmatchedPathPolicy!=='return-404')fail('Blog Bulk Redirect host/unmatched-path policy drift');
 if(!Array.isArray(bulk.groups)||!bulk.groups.length)fail('Bulk Redirect groups are empty');
 const bulkRefs=new Set(),sourcePaths=new Set(),targetFragments=new Set();
 for(const group of bulk.groups){

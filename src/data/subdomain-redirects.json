@@ -40,7 +40,7 @@
     "ruleRef": "ghezelbaash_blog_legacy_bulk_v1",
     "ruleDescription": "Exact historical blog URLs to the closest visible canonical passage",
     "host": "blog.ghezelbaash.ir",
-    "unmatchedPathPolicy": "do-not-redirect",
+    "unmatchedPathPolicy": "return-404",
     "evidence": {
       "verifiedAt": "2026-08-13",
       "sources": [
