@@ -1144,6 +1144,49 @@ def reconcile_phase_rule(
     return owned[0]
 
 
+def reconcile_canonical_cache_ruleset(
+    api: CloudflareApi, zone: str, host: str
+) -> dict[str, Any]:
+    """Make the cache-settings phase an exact single-rule source-owned contract."""
+    desired = cache_rule(host)
+    owned = reconcile_phase_rule(
+        api,
+        zone,
+        "http_request_cache_settings",
+        "Canonical DIST cache rules",
+        "Git-managed cache eligibility for the immutable static production DIST",
+        desired,
+    )
+    listing = api.expect("GET", f"/zones/{zone}/rulesets").get("result") or []
+    candidates = [
+        row for row in listing
+        if row.get("kind") == "zone"
+        and row.get("phase") == "http_request_cache_settings"
+    ]
+    if len(candidates) != 1:
+        raise CloudflareError(f"Canonical cache ruleset count drift: {len(candidates)}")
+    ruleset_id = str(candidates[0]["id"])
+    readback = api.expect("GET", f"/zones/{zone}/rulesets/{ruleset_id}")
+    rules = (readback.get("result") or {}).get("rules") or []
+    owned_id = str(owned.get("id") or "")
+    if not owned_id:
+        raise CloudflareError("Canonical cache rule has no Cloudflare rule ID")
+    extras = [row for row in rules if str(row.get("id") or "") != owned_id]
+    for row in extras:
+        api.expect("DELETE", f"/zones/{zone}/rulesets/{ruleset_id}/rules/{row['id']}")
+        print("UNMANAGED_CACHE_RULE_REMOVED", row.get("ref") or row.get("id"))
+    final = api.expect("GET", f"/zones/{zone}/rulesets/{ruleset_id}")
+    final_rules = (final.get("result") or {}).get("rules") or []
+    if (
+        len(final_rules) != 1
+        or final_rules[0].get("ref") != CACHE_RULE_REF
+        or not rule_matches(final_rules[0], desired)
+    ):
+        raise CloudflareError("Canonical cache ruleset is not exact after reconciliation")
+    print("CANONICAL_CACHE_RULESET_EXACT", CACHE_RULE_REF, "rule_count=", len(final_rules))
+    return final_rules[0]
+
+
 def expand_bulk_redirect_items(contract: dict[str, Any]) -> list[dict[str, Any]]:
     bulk = contract["bulkRedirects"]
     host = str(bulk["host"])
@@ -1818,7 +1861,6 @@ def self_test(dist_dir: Path) -> None:
                 "hstsRuleRef": HSTS_RULE_REF,
                 "notFoundRuleRef": NOT_FOUND_RULE_REF,
                 "zoneSettingCount": len(ZONE_SETTINGS),
-                "optionalZoneSettingCount": len(OPTIONAL_ZONE_SETTINGS),
                 "botAccessSettingCount": len(BOT_ACCESS_SETTINGS),
                 "subdomainRedirectRuleCount": len(subdomain_rules),
                 "subdomainRedirectRuleLimit": single_contract["planRuleLimit"],
@@ -1926,13 +1968,8 @@ def apply(dist_dir: Path) -> dict[str, Any]:
         outcome["capabilities"]["dns"] = True
         outcome["dnsReadback"] = dns_readback
 
-        cache_readback = reconcile_phase_rule(
-            zone_api,
-            zone,
-            "http_request_cache_settings",
-            "Canonical DIST cache rules",
-            "Git-managed cache eligibility for the immutable static production DIST",
-            cache_rule(host),
+        cache_readback = reconcile_canonical_cache_ruleset(
+            zone_api, zone, host
         )
         outcome["capabilities"]["cacheRule"] = (
             cache_readback.get("ref") == CACHE_RULE_REF
