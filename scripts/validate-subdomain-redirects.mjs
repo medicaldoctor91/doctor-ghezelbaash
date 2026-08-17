@@ -15,15 +15,16 @@ if(contract.schemaVersion!==2)fail(`Unsupported subdomain redirect schema ${cont
 if(contract.zone!=='ghezelbaash.ir'||contract.canonicalOrigin!=='https://www.ghezelbaash.ir')fail('Subdomain redirect zone/canonical origin drift');
 const canonical=new URL(contract.canonicalOrigin);
 const fragments=new Set([...content.matchAll(/\bid=["']([^"']+)["']/gi)].map(match=>match[1]));
-const validateTarget=(targetValue,ref)=>{
+const validateHttpsTarget=(targetValue,ref)=>{
   const target=new URL(targetValue);
   if(target.protocol!=='https:')fail(`Non-HTTPS redirect target ${ref}`);
-  if(target.origin===canonical.origin){
-    if(target.pathname!=='/'||!target.hash)fail(`Canonical redirect target must use a precise visible fragment: ${ref}`);
-    const fragment=decodeURIComponent(target.hash.slice(1));
-    if(!fragments.has(fragment))fail(`Redirect target fragment is absent from canonical HTML: ${fragment}`);
-    if(machineRoutes.has(target.pathname))fail(`Redirect must not terminate on a machine-only URL: ${ref}`);
-  }
+  return target;
+};
+const validateVisibleCanonicalTarget=(targetValue,ref)=>{
+  const target=validateHttpsTarget(targetValue,ref);
+  if(target.origin!==canonical.origin||target.pathname!=='/'||!target.hash)fail(`Canonical passage redirect must use a precise visible fragment: ${ref}`);
+  const fragment=decodeURIComponent(target.hash.slice(1));
+  if(!fragments.has(fragment))fail(`Redirect target fragment is absent from canonical HTML: ${fragment}`);
   return target;
 };
 
@@ -37,16 +38,24 @@ for(const rule of single.rules){
   if(!/^[a-z0-9-]+\.ghezelbaash\.ir$/.test(rule.host)||singleHosts.has(rule.host))fail(`Invalid or duplicate managed Single Redirect host ${rule.host}`);
   singleHosts.add(rule.host);
   if(rule.match!=='allPaths'||rule.statusCode!==301||rule.preserveQueryString!==false)fail(`Invalid Single Redirect behavior ${rule.ref}`);
-  validateTarget(rule.target,rule.ref);
+  validateHttpsTarget(rule.target,rule.ref);
 }
 const expectedSingleHosts=new Set(['doctor.ghezelbaash.ir','github.ghezelbaash.ir','ig.ghezelbaash.ir']);
 if(singleHosts.size!==expectedSingleHosts.size||[...expectedSingleHosts].some(host=>!singleHosts.has(host)))fail(`Managed Single Redirect host drift: ${[...singleHosts].join(', ')}`);
 if(singleHosts.has('blog.ghezelbaash.ir'))fail('Blog catchall must not pre-empt exact Bulk Redirects');
-const ig=single.rules.find(rule=>rule.host==='ig.ghezelbaash.ir');
-if(ig?.target!==`${contract.canonicalOrigin}/#verified-physician-identity-core`)fail('ig subdomain must consolidate into the visible first-party identity bridge');
-if([...machineRoutes].some(route=>ig.target.startsWith(`${contract.canonicalOrigin}${route}`)))fail('ig subdomain must not redirect to a Googlebot-noindex machine representation');
-const github=single.rules.find(rule=>rule.host==='github.ghezelbaash.ir');
-if(github?.target!=='https://github.com/medicaldoctor91/doctor-ghezelbaash')fail('github subdomain must preserve repository intent and independent source evidence');
+const machineEntrypoints=new Map([
+  ['github.ghezelbaash.ir',{ref:'ghezelbaash_github_entity_graph_v1',route:'/graph.jsonld'}],
+  ['ig.ghezelbaash.ir',{ref:'ghezelbaash_ig_ai_corpus_v1',route:'/llms-full.txt'}],
+]);
+for(const [host,expected] of machineEntrypoints){
+  const rule=single.rules.find(row=>row.host===host);
+  const expectedTarget=`${contract.canonicalOrigin}${expected.route}`;
+  if(rule?.ref!==expected.ref||rule?.target!==expectedTarget)fail(`${host} machine entrypoint drift`);
+  const target=new URL(rule.target);
+  if(target.origin!==canonical.origin||target.pathname!==expected.route||target.search||target.hash)fail(`${host} must terminate on its exact first-party machine endpoint`);
+  if(!machineRoutes.has(expected.route))fail(`${host} target is not an approved machine representation`);
+  await readFile(path.join(root,'src/pages',`${expected.route.slice(1)}.ts`),'utf8').catch(()=>fail(`Missing static endpoint source for ${expected.route}`));
+}
 const doctor=single.rules.find(rule=>rule.host==='doctor.ghezelbaash.ir');
 if(!doctor?.target.includes('query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas'))fail('doctor subdomain lost the canonical Google Maps Place ID');
 
@@ -61,7 +70,7 @@ for(const group of bulk.groups){
   bulkRefs.add(group.ref);
   if(!Array.isArray(group.paths)||!group.paths.length)fail(`Bulk Redirect group has no paths: ${group.ref}`);
   if(group.statusCode!==301||group.preserveQueryString!==false)fail(`Invalid Bulk Redirect behavior: ${group.ref}`);
-  const target=validateTarget(group.target,group.ref);
+  const target=validateVisibleCanonicalTarget(group.target,group.ref);
   targetFragments.add(target.hash.slice(1));
   for(const source of group.paths){
     if(typeof source!=='string'||!source.startsWith('/')||source.includes('?')||source.includes('#')||decodeURI(source)!==decodeURI(new URL(source,'https://blog.ghezelbaash.ir').pathname))fail(`Invalid exact Bulk Redirect source path ${source}`);
@@ -92,10 +101,10 @@ for(const group of bulk.groups){
   const target=new URL(group.target),relative=`/${target.hash}`;
   for(const source of group.paths.filter(pathValue=>articlePattern.test(pathValue))){
     const pages=pagesRedirects.get(source);
-    if(!pages||pages.target!==relative||pages.statusCode!==group.statusCode)fail(`Pages/blog legacy redirect parity drift: ${source}`);
+    if(!pages||pages.target!==relative||pages.statusCode!==group.statusCode)fail(`Pages/blog historical redirect parity drift: ${source}`);
   }
 }
-for(const source of [...pagesRedirects.keys()].filter(pathValue=>articlePattern.test(pathValue)))if(!sourcePaths.has(source))fail(`Legacy Blogspot path is missing from Bulk Redirect contract: ${source}`);
+for(const source of [...pagesRedirects.keys()].filter(pathValue=>articlePattern.test(pathValue)))if(!sourcePaths.has(source))fail(`Historical Blogspot path is missing from Bulk Redirect contract: ${source}`);
 if(pagesRedirects.has('/'))fail('Canonical Pages redirects must never redirect the root path');
 for(const excluded of expected404)if(pagesRedirects.has(excluded))fail(`Historical 404 leaked into Pages redirects: ${excluded}`);
 
@@ -110,5 +119,6 @@ console.log(JSON.stringify({
   historicalArticlePaths:articlePaths.length,
   historicalLabelPaths:labelPaths.length,
   canonicalFragments:targetFragments.size,
+  machineEntrypoints:Object.fromEntries([...machineEntrypoints].map(([host,{route}])=>[host,route])),
   unmatchedBlogPaths:bulk.unmatchedPathPolicy
 },null,2));

@@ -32,8 +32,8 @@ SUBDOMAIN_REDIRECT_PHASE = "http_request_dynamic_redirect"
 SUBDOMAIN_REDIRECT_RULESET_NAME = "Canonical subdomain redirects"
 SUBDOMAIN_REDIRECT_REFS = (
     "ghezelbaash_doctor_maps_v1",
-    "ghezelbaash_github_repository_v1",
-    "ghezelbaash_instagram_identity_bridge_v1",
+    "ghezelbaash_github_entity_graph_v1",
+    "ghezelbaash_ig_ai_corpus_v1",
 )
 BULK_REDIRECT_PHASE = "http_request_redirect"
 BULK_REDIRECT_RULESET_NAME = "Canonical historical URL redirects"
@@ -1259,7 +1259,7 @@ def reconcile_subdomain_redirects(
             f"/zones/{zone}/rulesets",
             {
                 "name": SUBDOMAIN_REDIRECT_RULESET_NAME,
-                "description": "Git-managed identity and external-intent subdomain redirects",
+                "description": "Git-managed machine entrypoints and external-intent subdomain redirects",
                 "kind": "zone",
                 "phase": SUBDOMAIN_REDIRECT_PHASE,
                 "rules": desired_rules,
@@ -1559,15 +1559,17 @@ def self_test(dist_dir: Path) -> None:
         for row in bulk_items
     ):
         raise CloudflareError("Historical blog target is not a visible canonical passage")
-    instagram = next(
-        row
+    machine_targets = {
+        "ghezelbaash_github_entity_graph_v1": "https://www.ghezelbaash.ir/graph.jsonld",
+        "ghezelbaash_ig_ai_corpus_v1": "https://www.ghezelbaash.ir/llms-full.txt",
+    }
+    actual_machine_targets = {
+        str(row["ref"]): str(row["target"])
         for row in single_contract["rules"]
-        if row["ref"] == "ghezelbaash_instagram_identity_bridge_v1"
-    )
-    if instagram["target"] != (
-        "https://www.ghezelbaash.ir/#verified-physician-identity-core"
-    ):
-        raise CloudflareError("Instagram identity consolidation target drift")
+        if row.get("ref") in machine_targets
+    }
+    if actual_machine_targets != machine_targets:
+        raise CloudflareError("First-party machine subdomain target drift")
     print(
         json.dumps(
             {

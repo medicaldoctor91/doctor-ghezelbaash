@@ -15,18 +15,18 @@
         "preserveQueryString": false
       },
       {
-        "ref": "ghezelbaash_github_repository_v1",
+        "ref": "ghezelbaash_github_entity_graph_v1",
         "host": "github.ghezelbaash.ir",
         "match": "allPaths",
-        "target": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+        "target": "https://www.ghezelbaash.ir/graph.jsonld",
         "statusCode": 301,
         "preserveQueryString": false
       },
       {
-        "ref": "ghezelbaash_instagram_identity_bridge_v1",
+        "ref": "ghezelbaash_ig_ai_corpus_v1",
         "host": "ig.ghezelbaash.ir",
         "match": "allPaths",
-        "target": "https://www.ghezelbaash.ir/#verified-physician-identity-core",
+        "target": "https://www.ghezelbaash.ir/llms-full.txt",
         "statusCode": 301,
         "preserveQueryString": false
       }
