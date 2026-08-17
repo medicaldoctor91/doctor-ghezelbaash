@@ -26,6 +26,6 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 24.18.0
+          node-version: 24.19.0
       - name: Verify authority surfaces and Dataset Server configs
         run: node scripts/verify-huggingface-authority.mjs --viewer
