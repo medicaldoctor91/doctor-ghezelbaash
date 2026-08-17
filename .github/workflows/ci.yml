@@ -51,12 +51,23 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Create upload-artifact v7 smoke payload
+        if: github.event_name == 'pull_request'
+        run: printf 'upload-artifact-v7-smoke\n' > /tmp/upload-artifact-v7-smoke.txt
+      - name: Upload v7 smoke payload
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: upload-artifact-v7-smoke-${{ github.sha }}
+          path: /tmp/upload-artifact-v7-smoke.txt
+          if-no-files-found: error
+          retention-days: 1
       - name: Package canonical source backup
         if: github.ref == 'refs/heads/main'
         run: npm run package:source
       - name: Upload canonical source backup
         if: github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: doctor-ghezelbaash-source-${{ github.sha }}
           path: release/doctor-ghezelbaash-max-power-source-v*.zip
