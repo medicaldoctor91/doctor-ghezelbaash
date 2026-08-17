@@ -15,6 +15,7 @@ concurrency:
 env:
   CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
   ZONE_NAME: ghezelbaash.ir
+  CANONICAL_HOST: www.ghezelbaash.ir
 
 jobs:
   verify:
