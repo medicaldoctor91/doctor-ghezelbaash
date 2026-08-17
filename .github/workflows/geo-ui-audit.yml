@@ -5,28 +5,137 @@ on:
     paths:
       - '.github/workflows/geo-ui-audit.yml'
 permissions:
-  contents: read
+  contents: write
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
 jobs:
-  inspect:
+  audit:
     runs-on: ubuntu-24.04
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          persist-credentials: false
-      - name: Inspect exact geographic source and UI CSS
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - name: Apply exact geographic content and mobile UI contract
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          p=Path('src/content-source/page.md').read_text(encoding='utf-8')
-          needles=['شهرهایی که سابقه مراجعه از آن‌ها ثبت شده است','کرمانشاه و غرب ایران:','سایر شهرهای ایران:','عراق و اقلیم کردستان:','این نام‌ها مبدأ مراجعه‌کنندگان‌اند']
-          for n in needles:
-              print('NEEDLE',repr(n),'COUNT',p.count(n))
-              i=p.find(n)
-              if i>=0:
-                  print('CONTEXT',repr(p[max(0,i-220):i+900]))
-          css=Path('src/styles/global.css').read_text(encoding='utf-8')
-          for n in ['.hero-actions{display:flex','.quick-actions__bar{display:grid','.quick-actions__item--consultation{']:
-              print('CSS_NEEDLE',repr(n),'COUNT',css.count(n))
+
+          page_path=Path('src/content-source/page.md')
+          page=page_path.read_text(encoding='utf-8')
+          old='''<details><summary><strong>شهرهایی که سابقه مراجعه از آن‌ها ثبت شده است</strong></summary><p><strong>کرمانشاه و غرب ایران:</strong> کرمانشاه، جوانرود، سرپل‌ذهاب، قصرشیرین، هرسین، اسلام‌آباد غرب، کرند غرب، همدان، ملایر، تویسرکان، سنندج، کامیاران، بانه، خرم‌آباد و ایلام.</p><p><strong>سایر شهرهای ایران:</strong> تهران، مشهد، اصفهان، شیراز، تبریز، کرج، اهواز، قم، رشت، ارومیه، یزد، کرمان، اراک، قزوین، ساری، بندرعباس، اردبیل، زنجان، بیرجند، بوشهر، سمنان، گرگان، شهرکرد، یاسوج، بجنورد و زاهدان.</p><p><strong>عراق و اقلیم کردستان:</strong> اربیل، سلیمانیه، بغداد، کلار، خانقین و شهرهای متعدد دیگر عراق.</p><p>این نام‌ها مبدأ مراجعه‌کنندگان‌اند؛ محل فعالیت حضوری دکتر سعید قزلباش و کلینیک او کرمانشاه است.</p></details>'''
+          new='''<details><summary><strong>راهنمای مراجعه به دکتر سعید قزلباش از شهرهای مختلف ایران و عراق</strong></summary><p><strong>کرمانشاه و استان کرمانشاه:</strong> کرمانشاه، اسلام‌آباد غرب، سرپل‌ذهاب، قصرشیرین، جوانرود، پاوه، روانسر، هرسین، کنگاور، صحنه، سنقر، گیلانغرب، کرند غرب، دالاهو، ثلاث باباجانی، نوسود و نودشه.</p><p><strong>غرب و شمال‌غرب ایران:</strong> سنندج، مریوان، سقز، بانه، کامیاران، قروه، بیجار، دهگلان، دیواندره، همدان، ملایر، نهاوند، تویسرکان، اسدآباد، ایلام، ایوان، مهران، دهلران، خرم‌آباد، بروجرد، دورود، کوهدشت، نورآباد، ارومیه، مهاباد، بوکان، سردشت، پیرانشهر، نقده، تبریز، مراغه، اردبیل و زنجان.</p><p><strong>سایر شهرهای ایران:</strong> تهران، کرج، قزوین، قم، اراک، اصفهان، کاشان، نجف‌آباد، شاهین‌شهر، شهرضا، مشهد، نیشابور، سبزوار، شیراز، اهواز، دزفول، آبادان، خرمشهر، شوشتر، یزد، کرمان، بندرعباس، بوشهر، رشت، بندر انزلی، لاهیجان، ساری، آمل، بابل، قائم‌شهر، گرگان، سمنان، شهرکرد، یاسوج، بیرجند، بجنورد و زاهدان.</p><p><strong>عراق و اقلیم کردستان:</strong> اربیل، سلیمانیه، بغداد، کرکوک، دهوک، حلبچه، کلار، خانقین، کفری، رانیه، چمچمال، زاخو، موصل، نجف، کربلا و بصره.</p></details>'''
+          if page.count(old)!=1:
+              raise SystemExit(f'Expected one exact geographic block, found {page.count(old)}')
+          page=page.replace(old,new,1)
+          if 'این نام‌ها مبدأ مراجعه‌کنندگان‌اند' in page:
+              raise SystemExit('Rejected sentence still present')
+          for city in ['پاوه','مریوان','مهاباد','دزفول','بندر انزلی','کرکوک','دهوک','موصل','بصره']:
+              if city not in page:
+                  raise SystemExit(f'Expanded city missing: {city}')
+          page_path.write_text(page,encoding='utf-8')
+
+          css_path=Path('src/styles/global.css')
+          css=css_path.read_text(encoding='utf-8')
+          start='/*GEO_UI_20260817_START*/'
+          end='/*GEO_UI_20260817_END*/'
+          if start in css:
+              a=css.index(start); b=css.index(end,a)+len(end)
+              css=css[:a]+css[b:]
+          override='''/*GEO_UI_20260817_START*/
+.quick-actions__bar{background:linear-gradient(180deg,#fbfdfc,#f5f9f7);border-color:rgb(10 107 88/.12)}
+.quick-actions__item{background:rgb(255 255 255/.56)}
+.quick-actions__item--consultation{background:rgb(10 107 88/.085)}
+@media(max-width:720px){.entity-hero .hero-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:.58rem;width:100%}.entity-hero .hero-action,.entity-hero .hero-action--search{grid-column:1/-1;width:100%;min-height:3.12rem;padding:.72rem 1rem}}
+/*GEO_UI_20260817_END*/'''
+          css=css.rstrip()+override+'\n'
+          css_path.write_text(css,encoding='utf-8')
           PY
+          node scripts/validate-critical-ctas.mjs
+          python - <<'PY'
+          from pathlib import Path
+          css=Path('src/styles/global.css').read_text(encoding='utf-8')
+          assert css.count('/*GEO_UI_20260817_START*/')==1
+          assert 'grid-template-columns:minmax(0,1fr)' in css
+          assert 'background:rgb(10 107 88/.085)' in css
+          quick=Path('src/data/templates/quick-actions.html').read_text(encoding='utf-8')
+          assert 'quick-actions__top' in quick and 'href="#main-content"' in quick
+          print('GEO_UI_SOURCE_CONTRACT_PASS')
+          PY
+      - name: Build, refresh intentional visible contract, and validate all outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run release:prepare
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$(git rev-parse HEAD)"
+          npm run build
+          node scripts/compute-visible-contract.mjs dist/index.html --summary > /tmp/visible-contract-summary.json
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const path='src/data/visible-contract.json';
+          const contract=JSON.parse(fs.readFileSync(path,'utf8'));
+          const summary=JSON.parse(fs.readFileSync('/tmp/visible-contract-summary.json','utf8'));
+          contract.visibleDomSha256=summary.sha256;
+          contract.visibleDomRecords=summary.records;
+          contract.visibleDomBytes=summary.bytes;
+          fs.writeFileSync(path,JSON.stringify(contract,null,2)+'\n');
+          console.log(JSON.stringify({visibleContractRefreshed:true,...summary}));
+          NODE
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          npm run release:prepare
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$(git rev-parse HEAD)"
+          npm run build
+          node scripts/validate-visible-freeze.mjs dist/index.html
+          node scripts/validate-critical-ctas.mjs
+          grep -Fq 'راهنمای مراجعه به دکتر سعید قزلباش از شهرهای مختلف ایران و عراق' dist/index.html
+          grep -Fq 'کرکوک' dist/index.html
+          grep -Fq 'بصره' dist/index.html
+          grep -Fq 'راهنمای مراجعه به دکتر سعید قزلباش از شهرهای مختلف ایران و عراق' dist/index.md
+          grep -Fq 'کرکوک' dist/llms-full.txt
+          ! grep -Fq 'این نام‌ها مبدأ مراجعه‌کنندگان‌اند' dist/index.html
+          echo 'GEO_DISCOVERY_VISIBLE_AND_MACHINE_OUTPUT_PASS'
+      - name: Commit only the audited intentional change and remove this temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/geo-ui-audit.yml
+          python - <<'PY'
+          import subprocess
+          expected={
+            'src/content-source/page.md',
+            'src/styles/global.css',
+            'src/data/visible-contract.json',
+            '.github/workflows/geo-ui-audit.yml'
+          }
+          rows=subprocess.check_output(['git','status','--porcelain'],text=True).splitlines()
+          changed=set()
+          for row in rows:
+              path=row[3:]
+              if ' -> ' in path: path=path.split(' -> ',1)[1]
+              changed.add(path)
+          unexpected=changed-expected
+          required={'src/content-source/page.md','src/styles/global.css','src/data/visible-contract.json','.github/workflows/geo-ui-audit.yml'}
+          if unexpected:
+              raise SystemExit(f'Unexpected tracked mutation(s): {sorted(unexpected)}')
+          if not required.issubset(changed):
+              raise SystemExit(f'Missing intended mutation(s): {sorted(required-changed)}')
+          print('INTENTIONAL_CHANGESET_ONLY_PASS',sorted(changed))
+          PY
+          git config user.name ghezelbaash-ui-bot
+          git config user.email actions@users.noreply.github.com
+          git add src/content-source/page.md src/styles/global.css src/data/visible-contract.json .github/workflows/geo-ui-audit.yml
+          git commit -m 'Refine mobile actions and expand geographic discovery'
+          git push origin HEAD:main
