@@ -51,15 +51,17 @@ jobs:
                   p.write_text(new, encoding='utf-8')
                   changed.append(name)
           print('NORMALIZED_FILES', *changed, sep='\n')
-          Path('.github/workflows/normalize-main-only-fixtures.yml').unlink()
           PY
           npm run validate:hygiene
           python scripts/test-cloudflare-edge-reconciliation.py
           git diff --check
-          if git grep -n -E 'production/deploy|staging/deploy' -- ':!*.lock'; then
+          legacy_prod="production""/deploy"
+          legacy_stage="staging""/deploy"
+          if git grep -n -E "$legacy_prod|$legacy_stage" -- ':!*.lock'; then
             echo '::error::stale deployment branch reference remains'
             exit 1
           fi
+          rm .github/workflows/normalize-main-only-fixtures.yml
           git config user.name ghezelbaash-source-cleanup
           git config user.email actions@users.noreply.github.com
           git add -A
