@@ -1,0 +1,71 @@
+name: Temporary authority identifier audit
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/_tmp-authority-id-audit.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Audit person authority IDs against scholarly APIs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests,json,re
+          s=requests.Session(); s.headers.update({'User-Agent':'GhezelbaashAuthorityAudit/1.0 (https://www.ghezelbaash.ir/)'})
+          api='https://www.wikidata.org/w/api.php'
+          r=s.get(api,params={'action':'wbgetentities','ids':'Q140287622','props':'claims|labels|aliases','format':'json','formatversion':2},timeout=60); r.raise_for_status(); e=r.json()['entities']['Q140287622']
+          def vals(pid):
+            out=[]
+            for c in e.get('claims',{}).get(pid,[]):
+              try:
+                v=c['mainsnak']['datavalue']['value']
+                if isinstance(v,dict) and 'id' in v: v=v['id']
+                out.append(v)
+              except: pass
+            return out
+          interesting=['P496','P1960','P10283','P4012','P1153','P2038','P3829','P1053','P434','P213','P244','P345','P2002','P2003','P2013','P2397','P6634','P7400','P7704','P973','P856']
+          current={p:vals(p) for p in interesting if vals(p)}
+          # Property labels
+          pr=s.get(api,params={'action':'wbgetentities','ids':'|'.join(interesting),'props':'labels','languages':'en','format':'json','formatversion':2},timeout=60); pr.raise_for_status()
+          plabels={p:x.get('labels',{}).get('en',{}).get('value') for p,x in pr.json()['entities'].items()}
+          external={}
+          # OpenAlex exact ORCID resolution
+          oa=s.get('https://api.openalex.org/authors',params={'filter':'orcid:0009-0001-9346-8475','per-page':10},timeout=60)
+          external['openalex_status']=oa.status_code
+          if oa.status_code==200:
+            external['openalex']=[{'id':x.get('id'),'display_name':x.get('display_name'),'orcid':x.get('orcid'),'works_count':x.get('works_count'),'cited_by_count':x.get('cited_by_count'),'ids':x.get('ids')} for x in oa.json().get('results',[])]
+          # Semantic Scholar: resolve both known papers and collect matching author candidates
+          s2=[]
+          for doi in ['10.3390/healthcare9091169','10.4103/2008-7802.182734']:
+            rr=s.get('https://api.semanticscholar.org/graph/v1/paper/DOI:'+doi,params={'fields':'title,authors,externalIds'},timeout=60)
+            row={'doi':doi,'status':rr.status_code}
+            if rr.status_code==200:
+              d=rr.json(); row['title']=d.get('title'); row['authors']=d.get('authors'); row['externalIds']=d.get('externalIds')
+            else: row['text']=rr.text[:500]
+            s2.append(row)
+          external['semantic_scholar_papers']=s2
+          # Crossref ORCID-bearing author metadata for both papers, if present
+          cr=[]
+          for doi in ['10.3390/healthcare9091169','10.4103/2008-7802.182734']:
+            rr=s.get('https://api.crossref.org/works/'+doi,timeout=60); row={'doi':doi,'status':rr.status_code}
+            if rr.status_code==200:
+              au=rr.json()['message'].get('author',[]); row['authors']=[{k:a.get(k) for k in ['given','family','ORCID','authenticated-orcid','sequence']} for a in au]
+            cr.append(row)
+          external['crossref']=cr
+          # NCBI exact author query counts for the stable name variants
+          ncbi={}
+          for term in ['Ghezelbash MS[Author]','Mohammad Saeed Ghezelbash[Author]','Saeed Ghezelbash[Author]']:
+            rr=s.get('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi',params={'db':'pubmed','term':term,'retmode':'json','retmax':20},timeout=60)
+            if rr.status_code==200:
+              z=rr.json()['esearchresult']; ncbi[term]={'count':z.get('count'),'idlist':z.get('idlist')}
+          external['pubmed_name_queries']=ncbi
+          print(json.dumps({'person_labels':{k:v['value'] for k,v in e.get('labels',{}).items()},'current_identifiers':current,'property_labels':plabels,'external_resolution':external},ensure_ascii=False,indent=2,sort_keys=True))
+          PY
