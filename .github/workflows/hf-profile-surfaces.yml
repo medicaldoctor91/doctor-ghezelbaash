@@ -20,4 +20,4 @@ jobs:
         with:
           node-version: 24.18.0
       - name: Verify physician-first Hugging Face authority topology without mutation
-        run: node scripts/verify-huggingface-authority.mjs
+        run: node scripts/verify-huggingface-authority.mjs --profile
