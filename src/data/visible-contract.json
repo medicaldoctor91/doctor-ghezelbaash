@@ -319,8 +319,8 @@
       }
     ]
   },
-  "visibleDomSha256": "894e6f0f205b8d123646b7bbab79400a87b84bad935c55727407ce3df67d2e54",
-  "visibleDomRecords": 19121,
+  "visibleDomSha256": "d51aad576f77b5e600e871c2054d2476f1846e45edea1cd80a4675b1bd2809db",
+  "visibleDomRecords": 19124,
   "visibleDomNormalization": "semantic-body-tree-v1; scripts/styles/head excluded; class/style/data attrs excluded; reputation subtree replaced with sentinel",
-  "visibleDomBytes": 1739679
+  "visibleDomBytes": 1740376
 }
