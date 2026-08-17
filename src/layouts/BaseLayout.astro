@@ -1,8 +1,8 @@
 ---
-import { createHash } from 'node:crypto';
 import globalCss from '../styles/global.css?raw';
 import criticalMobileCss from '../styles/critical-mobile.css?raw';
 import { headGraphRaw, supportGraphRaw } from '../lib/knowledge-graph';
+import { deriveCssDelivery } from '../lib/css-delivery.mjs';
 import DocumentHead from '../components/DocumentHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
@@ -12,7 +12,7 @@ interface Props { frontmatter:Frontmatter; url?:string; isMain?:boolean; }
 type JsonNode=Record<string,any>;
 const {frontmatter,url,isMain=false}=Astro.props;const base=Astro.site??Astro.url;const canonicalURL=new URL(url??Astro.url.pathname,base);
 const lang=frontmatter.lang??'fa-IR';const dir=frontmatter.dir??'rtl';const robots=frontmatter.robots??'index, follow';const noindex=/(?:^|,)\s*noindex\b/i.test(robots);
-const cssSplitMarker='/*DIST_CRITICAL_CSS_END*/';const cssSplitAt=globalCss.indexOf(cssSplitMarker);if(cssSplitAt<0)throw new Error('Critical CSS split marker missing');const cssExternalAt=cssSplitAt+cssSplitMarker.length;const criticalCss=globalCss.slice(0,cssExternalAt)+criticalMobileCss;const externalCss=globalCss.slice(cssExternalAt);const externalCssHash=createHash('sha256').update(externalCss).digest('hex').slice(0,12);const externalCssHref=`/assets/site.${externalCssHash}.css`;
+const {criticalCss,assetHref:externalCssHref}=deriveCssDelivery(globalCss,{criticalMobileCss});
 const googleSupportGraphRaw=supportGraphRaw;
 
 ---

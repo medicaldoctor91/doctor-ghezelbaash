@@ -24,6 +24,10 @@ from typing import Any
 
 
 API_BASE = "https://api.cloudflare.com/client/v4"
+
+PLATFORM_CONTRACT_PATH = Path(__file__).resolve().parents[1] / ".release" / "policy" / "platform-contract.json"
+PLATFORM_CONTRACT = json.loads(PLATFORM_CONTRACT_PATH.read_text(encoding="utf-8"))
+PLATFORM_CF = PLATFORM_CONTRACT["cloudflare"]
 CACHE_RULE_REF = "ghezelbaash_canonical_dist_cache_v1"
 HSTS_RULE_REF = "ghezelbaash_canonical_hsts_v1"
 NOT_FOUND_RULE_REF = "ghezelbaash_real_404_headers_v1"
@@ -40,12 +44,9 @@ BULK_REDIRECT_RULESET_NAME = "Canonical historical URL redirects"
 BULK_REDIRECT_LIST_NAME = "ghezelbaash_blog_legacy_urls"
 BULK_REDIRECT_RULE_REF = "ghezelbaash_blog_legacy_bulk_v1"
 BLOG_HOST = "blog.ghezelbaash.ir"
-PAGES_PROJECT_NAME = "doctor-ghezelbaash"
+PAGES_PROJECT_NAME = PLATFORM_CF["pagesProject"]
 PAGES_ORIGIN_HOST = f"{PAGES_PROJECT_NAME}.pages.dev"
-PAGES_REQUIRED_CUSTOM_DOMAINS = (
-    "www.ghezelbaash.ir",
-    BLOG_HOST,
-)
+PAGES_REQUIRED_CUSTOM_DOMAINS = tuple(PLATFORM_CF["requiredCustomDomains"])
 ZONE_SETTINGS_PERMISSION_IDS = (
     "517b21aee92c4d89936c976ba6e4be55",  # Zone Settings Read
     "3030687196b94b638145a3953da2b699",  # Zone Settings Write
@@ -905,16 +906,16 @@ def read_pages_contract(
     }
     expected = {
         "name": project_name,
-        "productionBranch": "main",
+        "productionBranch": PLATFORM_CF["productionBranch"],
         "sourceType": "github",
-        "repository": "medicaldoctor91/doctor-ghezelbaash",
+        "repository": PLATFORM_CONTRACT["repository"],
         "deploymentsEnabled": True,
         "productionDeploymentsEnabled": True,
-        "previewDeploymentSetting": "none",
-        "previewBranchIncludes": [],
-        "previewBranchExcludes": [],
-        "buildCommand": "npm ci --ignore-scripts && npm run build",
-        "destinationDir": "dist",
+        "previewDeploymentSetting": PLATFORM_CF["preview"]["deploymentSetting"],
+        "previewBranchIncludes": PLATFORM_CF["preview"]["branchIncludes"],
+        "previewBranchExcludes": PLATFORM_CF["preview"]["branchExcludes"],
+        "buildCommand": PLATFORM_CF["build"]["command"],
+        "destinationDir": PLATFORM_CF["build"]["destinationDir"],
     }
     if canonical_host not in PAGES_REQUIRED_CUSTOM_DOMAINS:
         raise CloudflareError(f"Unexpected canonical Pages hostname: {canonical_host}")

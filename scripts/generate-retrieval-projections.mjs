@@ -144,7 +144,9 @@ for(const lang of policy.languages){
           query:`${base}${scopeSuffix[lang][scope]}`.trim(),
           intent_family:intent,
           ...commonRow(lang,scope,answer,answerEvidence.get(answer.answerId)||baselineEvidence),
-          answer_strategy:'resolve_to_canonical_answer_atom'
+          answer_strategy:'resolve_to_canonical_answer_atom',
+          service_ids:[],
+          service_families:[]
         });
       }
     }
@@ -191,11 +193,11 @@ for(const service of publishableServices){
         row_kind:'service_alias',
         query:variant.query,
         intent_family:'service',
-        service_family:service.id.split('#').pop(),
-        service_id:service.id,
         service_types:arr(service.types),
         ...commonRow(lang,variant.scope,answer,stable),
-        answer_strategy:'resolve_to_service_entity_and_canonical_answer_atom'
+        answer_strategy:'resolve_to_service_entity_and_canonical_answer_atom',
+        service_ids:[service.id],
+        service_families:[service.id.split('#').pop()]
       });
     }
   }
@@ -204,14 +206,10 @@ for(const service of publishableServices){
 const mergedRows=new Map();
 for(const row of rows){
   const key=`${row.language}|${row.query}`;
-  const serviceIds=[...new Set([...(arr(row.service_ids)),...(row.service_id?[row.service_id]:[])])];
-  const serviceFamilies=[...new Set([...(arr(row.service_families)),...(row.service_family?[row.service_family]:[])])];
-  const {service_id:_legacyServiceId,service_family:_legacyServiceFamily,...rowWithoutLegacyServiceKeys}=row;
-  const normalized={...rowWithoutLegacyServiceKeys,service_ids:serviceIds,service_families:serviceFamilies};
   const prior=mergedRows.get(key);
-  if(!prior){mergedRows.set(key,normalized);continue;}
-  const preferIntent=prior.row_kind==='intent_alias'?prior:normalized.row_kind==='intent_alias'?normalized:prior;
-  const other=preferIntent===prior?normalized:prior;
+  if(!prior){mergedRows.set(key,row);continue;}
+  const preferIntent=prior.row_kind==='intent_alias'?prior:row.row_kind==='intent_alias'?row:prior;
+  const other=preferIntent===prior?row:prior;
   mergedRows.set(key,{...preferIntent,
     service_ids:[...new Set([...arr(preferIntent.service_ids),...arr(other.service_ids)])],
     service_families:[...new Set([...arr(preferIntent.service_families),...arr(other.service_families)])],
@@ -249,7 +247,6 @@ const matrix={
   reputation:{rating:Number(rating),reviewCount:Number(reviewCount),observedAt}
 };
 await write('src/data/projections/current-release-matrix.json',JSON.stringify(matrix,null,2)+'\n');
-await write('public/current-release-matrix.json',JSON.stringify(matrix,null,2)+'\n');
 
 console.log(JSON.stringify({
   retrievalProjections:true,

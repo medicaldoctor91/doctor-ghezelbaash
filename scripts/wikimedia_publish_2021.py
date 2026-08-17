@@ -58,7 +58,9 @@ def api_get(s, url, **params):
     return data
 
 
-def api_post(s, url, **data):
+def api_post(s, url, assert_user=False, **data):
+    if assert_user:
+        data.setdefault("assert", "user")
     data.setdefault("format", "json")
     data.setdefault("formatversion", "2")
     r = s.post(url, data=data, timeout=90)
@@ -231,7 +233,7 @@ def create_index(s):
         summary="Create scan-backed Index for CC BY 4.0 peer-reviewed article; existing Wikidata item Q140298431",
         token=token,
         createonly="1",
-        assert="user",
+        assert_user=True,
         watchlist="watch",
         starttimestamp=server_time,
     )
@@ -279,7 +281,7 @@ def add_claim_if_absent(s, entity_id, pid, value, kind):
         value=target,
         summary=f"Link existing scholarly item to its openly licensed Wikimedia source ({pid})",
         token=token,
-        assert="user",
+        assert_user=True,
         bot="1",
     )
     if not result.get("claim"):
@@ -311,7 +313,7 @@ def add_media_info_link(s, pageid):
         value=target,
         summary="Link digital representation to existing scholarly article item Q140298431",
         token=token,
-        assert="user",
+        assert_user=True,
         bot="1",
     )
     if not result.get("claim"):

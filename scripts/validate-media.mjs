@@ -7,8 +7,9 @@ const project=process.cwd();
 const root=path.join(project,'public/media');
 const exiftool=path.join(project,'node_modules','.bin','exiftool');
 const exiftoolConfig=path.join(project,'scripts/exiftool-entity.config');
-const stale=['ChIJBT','OYDOTt-j8RD-7mAPy6Zas'].join('');
-const current='ChIJBT0YDOTt-j8RD-7mAPy6Zas';
+const release=JSON.parse(await readFile(path.join(project,'src/data/release.json'),'utf8'));
+const current=release.clinic.placeId,personWikidataIri=`https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`,clinicWikidataIri=`https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`;
+if(!/^ChIJ[\w-]+$/.test(current))fail('Release Google Place ID is invalid');
 const rasterPattern=/\.(?:avif|webp|jpe?g|png)$/i;
 const sha=buffer=>createHash('sha256').update(buffer).digest('hex');
 const fail=message=>{throw new Error(message)};
@@ -41,7 +42,8 @@ let currentHits=0,selfReferencedSvg=0;
 const logicalAssets=new Set();
 for(const file of all){
   const bytes=await readFile(file);
-  if(bytes.includes(Buffer.from(stale)))fail(`Stale Place ID metadata ${file}`);
+  const embeddedPlaceIds=[...new Set(bytes.toString('latin1').match(/ChIJ[A-Za-z0-9_-]{12,}/g)||[])];
+  for(const embedded of embeddedPlaceIds)if(embedded!==current)fail(`Foreign Google Place ID metadata ${embedded} in ${file}`);
   if(bytes.includes(Buffer.from(current)))currentHits++;
   const match=path.basename(file).match(/\.([0-9a-f]{12})\.[^.]+$/);
   if(!match)fail(`Unfingerprinted media ${file}`);
@@ -76,11 +78,11 @@ const rows=JSON.parse(metadata.stdout);
 if(rows.length!==49)fail(`Embedded metadata row count drift: ${rows.length}`);
 const scalar=(row,key)=>row[key]??Object.entries(row).find(([candidate])=>candidate.endsWith(`:${key}`))?.[1];
 const values=value=>Array.isArray(value)?value:value===undefined?[]:[value];
-const universalSubjects=['Saeed Ghezelbash','Dr. Saeed Ghezelbash','دکتر سعید قزلباش','Q140287622','Q140288589','IRIMC 167430','Google KG /g/11nqdfk76c',`Google Place ${current}`];
+const universalSubjects=['Saeed Ghezelbash','Dr. Saeed Ghezelbash','دکتر سعید قزلباش',release.primaryEntity.wikidata,release.dataset.supportingClinicWikidata,`IRIMC ${release.primaryEntity.irimc}`,`Google KG ${release.primaryEntity.googleKnowledgeGraphId}`,`Google Place ${current}`];
 const rights='© Saeed Ghezelbash. Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0).';
 const usage='CC BY 4.0; attribution required: Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic.';
 const authorityIdentityIris=[stableSubject.canonicalPersonIri,stableSubject.wikidataPersonIri,stableSubject.googleKnowledgeGraphUrl];
-if(authorityIdentityIris.some(value=>!value)||stableSubject.googleKnowledgeGraphId!=='/g/11nqdfk76c')fail('Authority-master subject contract is incomplete');
+if(authorityIdentityIris.some(value=>!value)||stableSubject.googleKnowledgeGraphId!==release.primaryEntity.googleKnowledgeGraphId||stableSubject.wikidataPersonIri!==personWikidataIri||stableSubject.canonicalPersonIri!==release.primaryEntity.id)fail('Authority-master subject contract is incomplete');
 const validatedAuthorityMasters=new Set();
 for(const row of rows){
   const file=row.SourceFile;
@@ -91,13 +93,13 @@ for(const row of rows){
   const exact={
     'XMP-dc:Creator':'Saeed Ghezelbash','XMP-dc:Rights':rights,'XMP-xmpRights:Marked':true,
     'XMP-xmpRights:UsageTerms':usage,'XMP-photoshop:Credit':'Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic',
-    'XMP-iptcCore:CreatorWorkURL':'https://www.ghezelbaash.ir/#saeed-ghezelbash',
+    'XMP-iptcCore:CreatorWorkURL':release.primaryEntity.id,
     'XMP-plus:ImageCreatorName':'Saeed Ghezelbash','XMP-plus:CopyrightOwnerName':'Saeed Ghezelbash',
     'XMP-plus:LicensorName':'Saeed Ghezelbash','XMP-plus:LicenseID':'https://creativecommons.org/licenses/by/4.0/',
     'XMP-plus:TermsAndConditionsText':usage,'XMP-entity:CanonicalPersonIRI':stableSubject.wikidataPersonIri,
     'XMP-entity:CanonicalPersonWebIRI':stableSubject.canonicalPersonIri,
-    'XMP-entity:GoogleKnowledgeGraphPersonID':stableSubject.googleKnowledgeGraphId,
-    'XMP-entity:CanonicalClinicIRI':'https://www.wikidata.org/entity/Q140288589','XMP-entity:GoogleMapsPlaceID':current,
+    'XMP-entity:GoogleKnowledgeGraphPersonID':release.primaryEntity.googleKnowledgeGraphId,
+    'XMP-entity:CanonicalClinicIRI':clinicWikidataIri,'XMP-entity:GoogleMapsPlaceID':current,
     'XMP-entity:MetadataProfileVersion':'3.1.0'
   };
   for(const [key,value] of Object.entries(exact))if(row[key]!==value)fail(`Embedded metadata ${key} drift: ${file}`);

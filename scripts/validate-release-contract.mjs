@@ -108,7 +108,9 @@ if(!content.includes('google-maps-clinic-reputation-current')||!content.includes
 
 const volatile=await readJson('src/data/volatile-facts.json');
 if(volatile.placeId!==release.clinic.placeId||!(Number(volatile.rating)>=1&&Number(volatile.rating)<=5)||!Number.isInteger(Number(volatile.reviewCount))||Number(volatile.reviewCount)<0)fail('Mutable reputation contract failure');
-const hfPolicy=await readJson('.release/policy/hf-authority-contract.json');
+const authorityPolicy=await readJson('.release/policy/authority-surface-contract.json');
+const hfPolicy=authorityPolicy.surfaces?.huggingFace;
+if(authorityPolicy.identitySource!=='src/data/release.json')fail('Authority policy identity source drift');
 for(const task of ['question-answering','text-retrieval','text-generation'])if(!hfPolicy.taskCategories?.includes(task))fail(`HF task contract missing: ${task}`);
 for(const language of ['fa','en','ar','ckb'])if(!hfPolicy.languages?.includes(language))fail(`HF language contract missing: ${language}`);
 

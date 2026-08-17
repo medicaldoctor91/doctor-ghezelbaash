@@ -7,9 +7,9 @@ const heroPreloadPattern=/<link\b(?=[^>]*\brel="preload")(?=[^>]*\bas="image")(?
 const viewportTag=mainHeadRaw.match(viewportPattern)?.[0]??'';
 const heroPreloadTag=mainHeadRaw.match(heroPreloadPattern)?.[0]??'';
 if(isMain&&(!viewportTag||!heroPreloadTag||mainHeadRaw.match(new RegExp(heroPreloadPattern.source,'gi'))?.length!==1))throw new Error('Main responsive Hero preload contract drift');
-const mainHeadWithoutCriticalHints=isMain?mainHeadRaw.replace(viewportTag,'').replace(heroPreloadTag,''):mainHeadRaw;
+if(isMain&&!mainHeadRaw.startsWith(`${viewportTag}${heroPreloadTag}`))throw new Error('Main Head template critical-hint order drift');
 ---
-{isMain ? <><Fragment set:html={viewportTag} /><Fragment set:html={heroPreloadTag} /><Fragment set:html={mainHeadWithoutCriticalHints} /></> : <>
+{isMain ? <Fragment set:html={mainHeadRaw} /> : <>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>{title}</title><meta name="description" content={description} /><meta name="robots" content={robots} />
 <meta name="author" content="دکتر سعید قزلباش" /><meta name="theme-color" content="#075244" />

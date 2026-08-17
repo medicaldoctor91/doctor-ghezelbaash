@@ -32,36 +32,38 @@ def sha256(p:Path): return hashlib.sha256(p.read_bytes()).hexdigest()
 def write_state(name,obj): (RUNTIME/name).write_text(json.dumps(obj,indent=2,ensure_ascii=False)+'\n')
 
 def metadata(version,date,doi,concept):
+    release=load_release(); person=release["primaryEntity"]; dataset=release["dataset"]; clinic=release["clinic"]
+    person_q=person["wikidata"]; clinic_q=dataset["supportingClinicWikidata"]; dataset_q=dataset["wikidata"]; orcid=person["orcid"]
     return {
-      'upload_type':'dataset','publication_date':date,'title':'Dr. Saeed Ghezelbash Public Knowledge Graph',
-      'creators':[{'name':'Ghezelbash, Saeed','orcid':'0009-0001-9346-8475'}],
+      'upload_type':'dataset','publication_date':date,'title':dataset['name'],
+      'creators':[{'name':'Ghezelbash, Saeed','orcid':orcid}],
       'description':(
-        f'<p><strong>Dr. Saeed Ghezelbash Public Knowledge Graph</strong> — immutable DOI-preserved Version <strong>{version}</strong> '
-        'of the physician-owned first-party Dataset whose canonical IRI is '
-        '<a href="https://www.ghezelbaash.ir/graph.jsonld#dataset">https://www.ghezelbaash.ir/graph.jsonld#dataset</a>.</p>'
-        '<p>The primary entity, creator and publisher is <strong>Dr. Saeed Ghezelbash</strong> '
-        '(Wikidata Q140287622; ORCID 0009-0001-9346-8475; Iran Medical Council 167430). '
-        'The supporting clinic is Q140288589 and the continuing Dataset entity is Q140304972.</p>'
+        f'<p><strong>{dataset["name"]}</strong> — immutable DOI-preserved Version <strong>{version}</strong> '
+        f'of the physician-owned first-party Dataset whose canonical IRI is <a href="{dataset["id"]}">{dataset["id"]}</a>.</p>'
+        f'<p>The primary entity, creator and publisher is <strong>Dr. {person["name"]}</strong> '
+        f'(Wikidata {person_q}; ORCID {orcid}; Iran Medical Council {person["irimc"]}). '
+        f'The supporting clinic is {clinic_q} and the continuing Dataset entity is {dataset_q}.</p>'
         '<p>GitHub is the version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is the AI/retrieval distribution. '
         'These roles are linked without collapsing the physician, clinic, Dataset, source repository or distribution records into one identity.</p>'
       ),
       'access_right':'open','license':'cc-by-4.0','language':'mul','version':version,
-      'keywords':['Saeed Ghezelbash','Dr. Saeed Ghezelbash','Mohammad Saeed Ghezelbash','دکتر سعید قزلباش','محمد سعید قزلباش',
+      'keywords':['Saeed Ghezelbash','Dr. Saeed Ghezelbash','دکتر سعید قزلباش',
+        f'Wikidata {person_q}',f'Google KG {person["googleKnowledgeGraphId"]}',f'ORCID {orcid}',f'Concept DOI {concept}',f'Version DOI {doi}',
         'physician entity','aesthetic physician','Kermanshah','Iran','medical knowledge graph','knowledge graph','knowledge base','entity resolution',
-        'JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data','question answering','text retrieval','AI retrieval','RAG','Croissant','DCAT'],
+        'JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data','question answering','text retrieval','AI retrieval','RAG','Croissant','DCAT','provenance'],
       'subjects':[
-        {'term':'Saeed Ghezelbash','identifier':'https://www.wikidata.org/entity/Q140287622','scheme':'url'},
-        {'term':'Dr. Saeed Ghezelbash Public Knowledge Graph','identifier':'https://www.wikidata.org/entity/Q140304972','scheme':'url'},
-        {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':'https://www.wikidata.org/entity/Q140288589','scheme':'url'}],
-      'notes':f'Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. Concept DOI: {concept}. Exact Version DOI: {doi}. Current live observations: https://www.ghezelbaash.ir/live-observations.jsonld.',
+        {'term':person['name'],'identifier':f'https://www.wikidata.org/entity/{person_q}','scheme':'url'},
+        {'term':dataset['name'],'identifier':f'https://www.wikidata.org/entity/{dataset_q}','scheme':'url'},
+        {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':f'https://www.wikidata.org/entity/{clinic_q}','scheme':'url'}],
+      'notes':f'Canonical Dataset IRI: {dataset["id"]}. Concept DOI: {concept}. Exact Version DOI: {doi}. Current live observations: {dataset["liveObservations"]}.',
       'related_identifiers':[
-        {'identifier':'https://www.ghezelbaash.ir/graph.jsonld#dataset','relation':'isDerivedFrom','resource_type':'dataset'},
-        {'identifier':'https://www.ghezelbaash.ir/','relation':'isDescribedBy','resource_type':'other'},
-        {'identifier':'https://github.com/medicaldoctor91/doctor-ghezelbaash','relation':'isDerivedFrom','resource_type':'software'},
-        {'identifier':'https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data','relation':'isReferencedBy','resource_type':'dataset'},
-        {'identifier':'https://www.wikidata.org/entity/Q140304972','relation':'isDescribedBy','resource_type':'dataset'},
-        {'identifier':'https://www.wikidata.org/entity/Q140287622','relation':'references','resource_type':'other'},
-        {'identifier':'https://www.wikidata.org/entity/Q140288589','relation':'references','resource_type':'other'}],
+        {'identifier':dataset['id'],'relation':'isDerivedFrom','resource_type':'dataset'},
+        {'identifier':release['canonicalUrl'],'relation':'isDescribedBy','resource_type':'other'},
+        {'identifier':dataset['github']['repository'],'relation':'isDerivedFrom','resource_type':'software'},
+        {'identifier':dataset['huggingFace']['dataset'],'relation':'isReferencedBy','resource_type':'dataset'},
+        {'identifier':f'https://www.wikidata.org/entity/{dataset_q}','relation':'isDescribedBy','resource_type':'dataset'},
+        {'identifier':f'https://www.wikidata.org/entity/{person_q}','relation':'references','resource_type':'other'},
+        {'identifier':f'https://www.wikidata.org/entity/{clinic_q}','relation':'references','resource_type':'other'}],
       'prereserve_doi':True
     }
 

@@ -62,15 +62,28 @@ def api_get(s, url, **params):
 
 
 def api_post(s, url, data):
-    data = dict(data)
-    data.setdefault("format", "json")
-    data.setdefault("formatversion", 2)
-    r = s.post(url, data=data, timeout=120)
-    r.raise_for_status()
-    payload = r.json()
-    if "error" in payload:
-        fail("MediaWiki POST error", payload["error"])
-    return payload
+    payload_data = dict(data)
+    payload_data.setdefault("format", "json")
+    payload_data.setdefault("formatversion", 2)
+    backoffs = [20, 35, 60, 90]
+    for attempt in range(len(backoffs) + 1):
+        response = s.post(url, data=payload_data, timeout=120)
+        response.raise_for_status()
+        payload = response.json()
+        error = payload.get("error")
+        if not error:
+            return payload
+        if error.get("code") != "ratelimited" or attempt >= len(backoffs):
+            fail("MediaWiki POST error", error)
+        delay = backoffs[attempt]
+        print(json.dumps({
+            "status": "rate_limited_backoff",
+            "attempt": attempt + 1,
+            "delay_seconds": delay,
+            "api": url,
+        }))
+        time.sleep(delay)
+    fail("MediaWiki POST retries exhausted")
 
 
 def login(url):
@@ -240,7 +253,7 @@ def create_proofread_pages(ws, texts):
         if state["contentmodel"] != "proofread-page":
             fail("Unexpected content model for Page namespace", {"title": title, "contentmodel": state["contentmodel"]})
         results.append({"page": i, **result, "chars": len(body)})
-        time.sleep(0.4)
+        time.sleep(8.5 if result.get("created") else 0.2)
     return results
 
 

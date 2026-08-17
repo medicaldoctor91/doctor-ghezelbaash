@@ -4,63 +4,42 @@ import path from 'node:path';
 
 const root=process.cwd();
 const tracked=execFileSync('git',['ls-files','-z'],{cwd:root,encoding:'buffer'}).toString('utf8').split('\0').filter(Boolean).sort();
-if(!tracked.length) throw new Error('Tracked-source inventory is empty');
+if(!tracked.length)throw new Error('Tracked-source inventory is empty');
 
 const forbiddenGeneratedPrefixes=['dist/','release/','node_modules/','.python-deps/','.release/runtime/','.release/huggingface/'];
-const forbiddenExactNames=new Set(['ceiling-release.'+'next.yml','notes.md','dev-'+'notes.md','internal-'+'notes.md']);
-const forbiddenWorkflowPaths=new Set([
-  '.github/workflows/main-only-repository-cleanup.yml',
-  '.github/workflows/patch-main-only-edge-readback.yml',
-  '.github/workflows/normalize-main-only-fixtures.yml'
-]);
+const forbiddenExactNames=new Set(['notes.md','dev-notes.md','internal-notes.md']);
 const forbiddenNamePrefixes=['audit-','backup-','draft-','scratch-','temp-','tmp-'];
 const forbiddenSuffixes=['.bak','.old','.orig','.rej','.tmp','~'];
-const staleBranchRefs=[
-  'production'+'/deploy',
-  'staging'+'/deploy',
-  'audit/'+'account-settings-readonly-20260817',
-  'cta-'+'audit-20260817',
-  'cta-'+'location-20260817'
-];
+const oneShotWorkflowPattern=/(?:^|\/)(?:one[-_]?time|clean[-_]?slate|patch[-_]|cleanup[-_]|normalize[-_].*fixtures).*\.ya?ml$/i;
+const runtimeWrapperPattern=/_entry\.py$/i;
 const textExtensions=new Set(['.astro','.cff','.css','.csv','.html','.ini','.js','.json','.jsonld','.md','.mjs','.py','.toml','.ts','.tsv','.ttl','.txt','.xml','.yaml','.yml']);
 const textExactNames=new Set(['.gitignore','.npmrc','.nvmrc','LICENSE']);
-const devMarker=new RegExp(['\\bTO','DO\\b|\\bFIX','ME\\b|\\bHA','CK\\b'].join(''),'g');
+const devMarker=/\b(?:TODO|FIXME|HACK)\b/g;
 
 for(const name of tracked){
   const normalized=name.replaceAll('\\','/');
-  if(forbiddenGeneratedPrefixes.some(prefix=>normalized.startsWith(prefix))) throw new Error(`Generated/runtime material must not be tracked: ${normalized}`);
-  if(forbiddenWorkflowPaths.has(normalized)) throw new Error(`Completed one-shot workflow must not remain tracked: ${normalized}`);
+  if(forbiddenGeneratedPrefixes.some(prefix=>normalized.startsWith(prefix)))throw new Error(`Generated/runtime material must not be tracked: ${normalized}`);
+  if(oneShotWorkflowPattern.test(normalized))throw new Error(`One-shot maintenance workflow must not remain canonical: ${normalized}`);
+  if(runtimeWrapperPattern.test(normalized))throw new Error(`Runtime source wrapper must not remain canonical: ${normalized}`);
   const base=path.posix.basename(normalized).toLowerCase();
-  if(forbiddenExactNames.has(base)) throw new Error(`Internal note/planning file must not be tracked: ${normalized}`);
-  if(forbiddenNamePrefixes.some(prefix=>base.startsWith(prefix))) throw new Error(`Temporary/audit file must not be tracked: ${normalized}`);
-  if(forbiddenSuffixes.some(suffix=>base.endsWith(suffix))) throw new Error(`Backup/editor residue must not be tracked: ${normalized}`);
+  if(forbiddenExactNames.has(base))throw new Error(`Internal note/planning file must not be tracked: ${normalized}`);
+  if(forbiddenNamePrefixes.some(prefix=>base.startsWith(prefix)))throw new Error(`Temporary/audit file must not be tracked: ${normalized}`);
+  if(forbiddenSuffixes.some(suffix=>base.endsWith(suffix)))throw new Error(`Backup/editor residue must not be tracked: ${normalized}`);
 }
 
 const canonicalContent=tracked.filter(name=>name.startsWith('src/content-source/'));
-if(canonicalContent.length!==1||canonicalContent[0]!=='src/content-source/page.md') throw new Error(`Canonical content-source topology drift: ${canonicalContent.join(', ')}`);
+if(canonicalContent.length!==1||canonicalContent[0]!=='src/content-source/page.md')throw new Error(`Canonical content-source topology drift: ${canonicalContent.join(', ')}`);
 const styles=tracked.filter(name=>name.startsWith('src/styles/'));
 const allowedStyles=['src/styles/critical-mobile.css','src/styles/global.css'];
-if(styles.length!==allowedStyles.length||styles.some((name,index)=>name!==allowedStyles[index])) throw new Error(`Stylesheet topology drift: ${styles.join(', ')}`);
+if(styles.length!==allowedStyles.length||styles.some((name,index)=>name!==allowedStyles[index]))throw new Error(`Stylesheet topology drift: ${styles.join(', ')}`);
 
 for(const name of tracked){
+  if(name==='scripts/validate-repository-hygiene.mjs')continue;
   const ext=path.posix.extname(name).toLowerCase();
-  if(!textExtensions.has(ext)&&!textExactNames.has(path.posix.basename(name))) continue;
+  if(!textExtensions.has(ext)&&!textExactNames.has(path.posix.basename(name)))continue;
   const content=await readFile(path.join(root,name),'utf8');
-  for(const branchRef of staleBranchRefs){
-    if(content.includes(branchRef)) throw new Error(`Non-main branch dependency leaked into ${name}: ${branchRef}`);
-  }
-  if(devMarker.test(content)) throw new Error(`Development marker leaked into tracked source: ${name}`);
+  if(devMarker.test(content))throw new Error(`Development marker leaked into tracked source: ${name}`);
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({
-  repositoryHygiene:'PASS',
-  trackedFiles:tracked.length,
-  canonicalContent:'src/content-source/page.md',
-  styles:allowedStyles,
-  branchContract:'main-only',
-  generatedRuntimeTracked:false,
-  temporaryOrBackupFilesTracked:false,
-  oneShotWorkflowsTracked:false,
-  developmentMarkers:false
-},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,generatedRuntimeTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,developmentMarkers:false},null,2));

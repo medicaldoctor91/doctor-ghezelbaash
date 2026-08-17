@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "1.0",
+  "identitySource": "src/data/release.json",
+  "surfaces": {
+    "website": {
+      "role": "canonical-first-party-dataset",
+      "canonicalRef": "release.canonicalUrl",
+      "datasetRef": "release.dataset.id",
+      "requiredMachineSurfaces": [
+        "graph.jsonld",
+        "graph.ttl",
+        "entity-facts.csv",
+        "answers.txt",
+        "knowledge.xml",
+        "llms.txt",
+        "index.md",
+        "llms-full.txt",
+        "datapackage.json",
+        "croissant.json",
+        "dcat.ttl",
+        "void.ttl",
+        "linkset.json",
+        "provenance.jsonld",
+        "evidence-snapshot.json",
+        "shapes.ttl",
+        "query-matrix.jsonl",
+        "current-release-matrix.json",
+        "live-observations.jsonld"
+      ]
+    },
+    "github": {
+      "role": "version-controlled-source",
+      "repositoryRef": "release.dataset.github.repository"
+    },
+    "zenodo": {
+      "role": "immutable-doi-preservation",
+      "conceptDoiRef": "release.dataset.zenodo.conceptDoi",
+      "versionDoiRef": "release.dataset.zenodo.versionDoi"
+    },
+    "huggingFace": {
+      "role": "ai-retrieval-distribution",
+      "datasetRef": "release.dataset.huggingFace.dataset",
+      "organization": "doctor-ghezelbaash",
+      "retrievalPriority": "maximum",
+      "positioningMode": "maximum_dominant_best_positioning",
+      "taskCategories": [
+        "question-answering",
+        "text-retrieval",
+        "text-generation"
+      ],
+      "languages": [
+        "fa",
+        "en",
+        "ar",
+        "ckb"
+      ],
+      "configs": [
+        "entity_facts",
+        "query_matrix",
+        "positioning_instructions",
+        "live_observations"
+      ]
+    }
+  }
+}

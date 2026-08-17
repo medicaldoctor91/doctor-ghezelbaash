@@ -12,10 +12,6 @@ concurrency:
   group: doctor-ghezelbaash-external-mutation
   cancel-in-progress: false
 
-env:
-  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
-  ZONE_NAME: ghezelbaash.ir
-  CANONICAL_HOST: www.ghezelbaash.ir
 
 jobs:
   verify:
@@ -31,6 +27,8 @@ jobs:
         with:
           node-version: 24.18.0
           cache: npm
+      - name: Load platform contract
+        run: node scripts/export-platform-contract.mjs >> "$GITHUB_ENV"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'

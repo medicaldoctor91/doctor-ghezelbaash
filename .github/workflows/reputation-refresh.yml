@@ -8,12 +8,6 @@ permissions:
 concurrency:
   group: doctor-ghezelbaash-external-mutation
   cancel-in-progress: false
-env:
-  CLOUDFLARE_ACCOUNT_ID: 884d1d90bd1fb6ecca14992c6c60d677
-  CF_PROJECT: doctor-ghezelbaash
-  CF_PRODUCTION_BRANCH: main
-  ZONE_NAME: ghezelbaash.ir
-  CANONICAL_HOST: www.ghezelbaash.ir
 jobs:
   refresh:
     runs-on: ubuntu-24.04
@@ -28,6 +22,8 @@ jobs:
         with:
           node-version: 24.18.0
           cache: npm
+      - name: Load platform contract
+        run: node scripts/export-platform-contract.mjs >> "$GITHUB_ENV"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
@@ -71,7 +67,7 @@ jobs:
           export CF_PAGES_COMMIT_SHA="$(git rev-parse HEAD)"
           npm run build
           node scripts/validate-visible-freeze.mjs dist/index.html
-          git diff --exit-code -- src/content-source src/data/semantic/knowledge-graph.jsonld src/data/service-registry.json src/data/answer-registry.json src/data/retrieval/query-matrix-policy.json src/data/visible-contract.json .release/policy/hf-authority-contract.json
+          git diff --exit-code -- src/content-source src/data/semantic/knowledge-graph.jsonld src/data/service-registry.json src/data/answer-registry.json src/data/retrieval/query-matrix-policy.json src/data/visible-contract.json .release/policy/authority-surface-contract.json
           git config user.name ghezelbaash-reputation-bot
           git config user.email actions@users.noreply.github.com
           git add src/data/volatile-facts.json

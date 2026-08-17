@@ -112,6 +112,9 @@ def main() -> int:
     account = values["CLOUDFLARE_ACCOUNT_ID"]
     zone_name = values["ZONE_NAME"]
     host = values["CANONICAL_HOST"]
+    if account != edge.PLATFORM_CF["accountId"] or zone_name != edge.PLATFORM_CONTRACT["zoneName"] or host != edge.PLATFORM_CONTRACT["canonicalHost"]:
+        print("CLOUDFLARE_PREFLIGHT_ERROR: Environment disagrees with platform contract", file=sys.stderr)
+        return 1
     if host != f"www.{zone_name}":
         print(
             f"CLOUDFLARE_PREFLIGHT_ERROR: Unexpected canonical host/zone pairing: {host}/{zone_name}",

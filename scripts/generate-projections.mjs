@@ -2,6 +2,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir, readdir, unlink } from 'node:fs/promises';
 import { assembleCanonicalContent } from './lib/assemble-content.mjs';
+import { deriveCssDelivery } from '../src/lib/css-delivery.mjs';
 import { expandKnowledgeXml } from './lib/knowledge-xml.mjs';
 import { normalizeGoogleSupportGraphRaw } from './lib/google-support-graph.mjs';
 import { hashIdentityFingerprint } from './lib/release-identity.mjs';
@@ -48,14 +49,11 @@ await writeFile(path.join(root,'src/content/home.md'),assembledCanonical.content
 
 // ---- CSS delivery: one canonical source -> critical inline slice + fingerprinted external remainder.
 const cssSource=await readFile(path.join(root,'src/styles/global.css'),'utf8');
-const cssSplitMarker='/*DIST_CRITICAL_CSS_END*/',cssSplitAt=cssSource.indexOf(cssSplitMarker);
-if(cssSplitAt<0) throw new Error('Critical CSS split marker missing');
-const externalCss=cssSource.slice(cssSplitAt+cssSplitMarker.length);
+const {externalCss,assetName:externalCssAssetName}=deriveCssDelivery(cssSource);
 if(!externalCss.includes('/*DIST_CHUNK_INTRINSIC_START*/')||!externalCss.includes('/*DIST_CHUNK_INTRINSIC_END*/')) throw new Error('External CSS lost render calibration');
-const externalCssHash=createHash('sha256').update(externalCss).digest('hex').slice(0,12);
 const cssAssetDir=path.join(root,'public/assets');await mkdir(cssAssetDir,{recursive:true});
-for(const name of await readdir(cssAssetDir)) if(/^site\.[0-9a-f]{12}\.css$/.test(name)&&name!==`site.${externalCssHash}.css`) await unlink(path.join(cssAssetDir,name));
-await writeFile(path.join(cssAssetDir,`site.${externalCssHash}.css`),externalCss);
+for(const name of await readdir(cssAssetDir)) if(/^site\.[0-9a-f]{12}\.css$/.test(name)&&name!==externalCssAssetName) await unlink(path.join(cssAssetDir,name));
+await writeFile(path.join(cssAssetDir,externalCssAssetName),externalCss);
 
 // ---- Early Head Graph: property-level projection, not full-node copying.
 const headIds=await readIds('head');
@@ -121,7 +119,7 @@ const supportRaw=normalizeGoogleSupportGraphRaw(supportBaseRaw);
 if(Buffer.byteLength(supportRaw)>supportProfile.maxBytes) throw new Error(`Support graph ${Buffer.byteLength(supportRaw)} exceeds ${supportProfile.maxBytes}`);
 await writeFile(path.join(semantic,'support-graph.json'),supportRaw);
 
-// ---- Flat graph projection.// ---- Flat graph projection.
+// ---- Flat graph projection.
 const valueText=v=>{if(v==null)return'';if(typeof v==='string'||typeof v==='number'||typeof v==='boolean')return String(v);if(Array.isArray(v))return v.map(valueText).filter(Boolean).join(' | ');if(v['@value']!=null)return String(v['@value']);if(v['@id'])return v['@id'];return JSON.stringify(v)};
 const nodeName=n=>valueText(n?.name).split(' | ')[0];
 const escCsv=v=>{const s=String(v??'');return /[",\n\r]/.test(s)?`"${s.replaceAll('"','""')}"`:s};

@@ -13,6 +13,13 @@ const textPattern=/\.(?:astro|css|html|js|json|jsonld|md|mjs|ts|txt|vcf|xml|yaml
 const hashPattern=/\.([0-9a-f]{12})\.[^.]+$/;
 const sha=buffer=>createHash('sha256').update(buffer).digest('hex');
 const escapeRegExp=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
+const personWikidataIri=`https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`;
+const clinicWikidataIri=`https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`;
+const canonicalPersonWebIri=release.primaryEntity.id,canonicalClinicWebIri=release.clinic.id;
+const personKgId=release.primaryEntity.googleKnowledgeGraphId,clinicKgId=release.clinic.googleLocalKgmid;
+const placeId=release.clinic.placeId,clinicCid=release.clinic.cid,irimc=release.primaryEntity.irimc,postalCode=release.clinic.postalCode;
+if(!/^ChIJ[\w-]+$/.test(placeId)||!personKgId?.startsWith('/g/')||!clinicKgId?.startsWith('/g/'))throw new Error('Release media identity contract is incomplete');
 
 await access(exiftool).catch(()=>{
   throw new Error(`ExifTool executable not found: ${exiftool}. Run npm install or set EXIFTOOL_PATH.`);
@@ -33,8 +40,8 @@ async function walk(directory,{skip=[]}={}){
 
 const commonSubjects=[
   'Saeed Ghezelbash','Dr. Saeed Ghezelbash','دکتر سعید قزلباش','Mohammad Saeed Ghezelbash',
-  'Iranian physician','aesthetic medicine','Kermanshah','Iran','Q140287622','Q140288589',
-  'IRIMC 167430','Google KG /g/11nqdfk76c','Google Place ChIJBT0YDOTt-j8RD-7mAPy6Zas'
+  'Iranian physician','aesthetic medicine','Kermanshah','Iran',release.primaryEntity.wikidata,release.dataset.supportingClinicWikidata,
+  `IRIMC ${irimc}`,`Google KG ${personKgId}`,`Google Place ${placeId}`
 ];
 
 const profiles=[
@@ -143,14 +150,14 @@ const metadataMatches=(row,profile,subjects)=>{
     'XMP-dc:Creator':'Saeed Ghezelbash','XMP-dc:Title':profile.title,'XMP-dc:Description':profile.description,
     'XMP-dc:Rights':rights,'XMP-xmpRights:Marked':true,'XMP-xmpRights:WebStatement':profile.acquire,
     'XMP-xmpRights:UsageTerms':usage,'XMP-photoshop:Credit':'Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic',
-    'XMP-iptcCore:CreatorWorkURL':'https://www.ghezelbaash.ir/#saeed-ghezelbash',
+    'XMP-iptcCore:CreatorWorkURL':canonicalPersonWebIri,
     'XMP-plus:ImageCreatorName':'Saeed Ghezelbash','XMP-plus:CopyrightOwnerName':'Saeed Ghezelbash',
     'XMP-plus:LicensorName':'Saeed Ghezelbash','XMP-plus:LicensorURL':profile.acquire,
     'XMP-plus:LicenseID':license,'XMP-plus:TermsAndConditionsURL':profile.acquire,
-    'XMP-plus:TermsAndConditionsText':usage,'XMP-entity:CanonicalPersonIRI':'https://www.wikidata.org/entity/Q140287622',
-    'XMP-entity:CanonicalClinicIRI':'https://www.wikidata.org/entity/Q140288589',
-    'XMP-entity:GoogleMapsPlaceID':'ChIJBT0YDOTt-j8RD-7mAPy6Zas','XMP-entity:ImageRole':profile.role,
-    'XMP-entity:ClinicGooglePlaceID':'ChIJBT0YDOTt-j8RD-7mAPy6Zas',
+    'XMP-plus:TermsAndConditionsText':usage,'XMP-entity:CanonicalPersonIRI':personWikidataIri,
+    'XMP-entity:CanonicalClinicIRI':clinicWikidataIri,
+    'XMP-entity:GoogleMapsPlaceID':placeId,'XMP-entity:ImageRole':profile.role,
+    'XMP-entity:ClinicGooglePlaceID':placeId,
     'XMP-entity:MetadataProfileVersion':'3.1.0'
   };
   if(Object.entries(exact).some(([key,expected])=>row[key]!==expected))return false;
@@ -186,26 +193,26 @@ try{
       '-XMP-xmp:MetadataDate=2026:08:07 00:00:00+03:30',`-XMP-photoshop:Headline=${profile.title}`,
       '-XMP-photoshop:Credit=Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic',
       '-XMP-photoshop:City=کرمانشاه','-XMP-photoshop:State=کرمانشاه','-XMP-photoshop:Country=ایران',
-      '-XMP-iptcCore:CreatorWorkURL=https://www.ghezelbaash.ir/#saeed-ghezelbash',
+      `-XMP-iptcCore:CreatorWorkURL=${canonicalPersonWebIri}`,
       '-XMP-iptcCore:Location=Dr. Saeed Ghezelbash Aesthetic Clinic','-XMP-iptcCore:CountryCode=IR',
       '-XMP-plus:ImageCreatorName=Saeed Ghezelbash','-XMP-plus:CopyrightOwnerName=Saeed Ghezelbash',
       '-XMP-plus:LicensorName=Saeed Ghezelbash',`-XMP-plus:LicensorURL=${profile.acquire}`,
       `-XMP-plus:LicenseID=${license}`,`-XMP-plus:TermsAndConditionsURL=${profile.acquire}`,
       `-XMP-plus:TermsAndConditionsText=${usage}`,
-      '-XMP-entity:CanonicalPersonIRI=https://www.wikidata.org/entity/Q140287622',
-      '-XMP-entity:CanonicalPersonWebIRI=https://www.ghezelbaash.ir/#saeed-ghezelbash',
-      '-XMP-entity:CanonicalClinicIRI=https://www.wikidata.org/entity/Q140288589',
-      '-XMP-entity:CanonicalClinicWebIRI=https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',
-      '-XMP-entity:GoogleKnowledgeGraphPersonID=/g/11nqdfk76c','-XMP-entity:GoogleKnowledgeGraphClinicID=/g/11r3rzdtb3',
-      '-XMP-entity:GoogleMapsPlaceID=ChIJBT0YDOTt-j8RD-7mAPy6Zas','-XMP-entity:GoogleMapsCID=12350483144643112463',
-      '-XMP-entity:ClinicGooglePlaceID=ChIJBT0YDOTt-j8RD-7mAPy6Zas','-XMP-entity:ClinicGoogleMapsCID=12350483144643112463',
-      '-XMP-entity:ClinicGoogleKnowledgeGraphID=/g/11r3rzdtb3','-XMP-entity:PersonGoogleKnowledgeGraphID=/g/11nqdfk76c',
-      '-XMP-entity:ClinicFounder=https://www.wikidata.org/entity/Q140287622',
-      '-XMP-entity:ClinicOwner=https://www.wikidata.org/entity/Q140287622',
-      '-XMP-entity:ClinicOperator=https://www.wikidata.org/entity/Q140287622',
-      '-XMP-entity:PersonWorkLocation=https://www.wikidata.org/entity/Q140288589',
+      `-XMP-entity:CanonicalPersonIRI=${personWikidataIri}`,
+      `-XMP-entity:CanonicalPersonWebIRI=${canonicalPersonWebIri}`,
+      `-XMP-entity:CanonicalClinicIRI=${clinicWikidataIri}`,
+      `-XMP-entity:CanonicalClinicWebIRI=${canonicalClinicWebIri}`,
+      `-XMP-entity:GoogleKnowledgeGraphPersonID=${personKgId}`,`-XMP-entity:GoogleKnowledgeGraphClinicID=${clinicKgId}`,
+      `-XMP-entity:GoogleMapsPlaceID=${placeId}`,`-XMP-entity:GoogleMapsCID=${clinicCid}`,
+      `-XMP-entity:ClinicGooglePlaceID=${placeId}`,`-XMP-entity:ClinicGoogleMapsCID=${clinicCid}`,
+      `-XMP-entity:ClinicGoogleKnowledgeGraphID=${clinicKgId}`,`-XMP-entity:PersonGoogleKnowledgeGraphID=${personKgId}`,
+      `-XMP-entity:ClinicFounder=${personWikidataIri}`,
+      `-XMP-entity:ClinicOwner=${personWikidataIri}`,
+      `-XMP-entity:ClinicOperator=${personWikidataIri}`,
+      `-XMP-entity:PersonWorkLocation=${clinicWikidataIri}`,
       '-XMP-entity:Latitude=34.3401243','-XMP-entity:Longitude=47.0851778',
-      '-XMP-entity:PostalCode=6714657412','-XMP-entity:StreetAddress=کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا',
+      `-XMP-entity:PostalCode=${postalCode}`,'-XMP-entity:StreetAddress=کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا',
       `-XMP-entity:ImageRole=${profile.role}`,'-XMP-entity:TruthAuthority=owner-confirmed first-party release',
       '-XMP-entity:MetadataProfileVersion=3.1.0',staged
     ];

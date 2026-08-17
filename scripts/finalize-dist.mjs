@@ -34,7 +34,7 @@ const datasetName=dataset.name;
 
 // Bind the mutable current-serving matrix before any integrity inventory is computed.
 const currentMatrixPath=path.join(dist,'current-release-matrix.json');
-const currentMatrix=JSON.parse(await readFile(currentMatrixPath,'utf8'));
+const currentMatrix=JSON.parse(await readFile(path.join(data,'projections/current-release-matrix.json'),'utf8'));
 Object.assign(currentMatrix,{liveRevision,sourceCommit:liveRevision,generatedAt});
 await writeFile(currentMatrixPath,JSON.stringify(currentMatrix,null,2)+'\n');
 
@@ -57,7 +57,7 @@ const mainCsp=`default-src 'none'; base-uri 'self'; script-src ${scriptHashes}; 
 const csp404=`default-src 'none'; base-uri 'self'; script-src ${scriptBlocks404.map(x=>`'sha256-${shaB64(Buffer.from(x.body))}'`).join(' ')}; style-src 'self' ${styles404.map(x=>`'sha256-${shaB64(Buffer.from(x))}'`).join(' ')}; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; upgrade-insecure-requests`;
 let headers=await readFile(path.join(data,'templates/headers.template'),'utf8');
 headers=headers.replace('{{MAIN_CSP}}',mainCsp).replace('{{404_CSP}}',csp404);
-const templateMachine=['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','provenance.jsonld','evidence-snapshot.json','shapes.ttl','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','artifact-manifest.json'];
+const templateMachine=['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','provenance.jsonld','evidence-snapshot.json','shapes.ttl','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','query-matrix.jsonl','live-observations.jsonld','current-release-matrix.json','artifact-manifest.json'];
 headers=headers.replace('{{DIGEST:index.html}}',shaB64(await readFile(path.join(dist,'index.html'))));
 for(const file of templateMachine.filter(file=>file!=='artifact-manifest.json'))headers=headers.replace(`{{DIGEST:${file}}}`,shaB64(await readFile(path.join(dist,file))));
 
@@ -93,13 +93,6 @@ headers=headers.replace('{{DIGEST:artifact-manifest.json}}',shaB64(await readFil
 if(/{{[^}]+}}/.test(headers))throw new Error('Unresolved _headers placeholder');
 if(/\btrack-src\b/i.test(headers))throw new Error('Invalid CSP directive track-src');
 
-const mutateRoute=(route,fn)=>{const lines=headers.split('\n'),i=lines.findIndex(x=>x===`/${route}`);if(i<0)throw new Error(`Missing canonical header block /${route}`);for(let j=i+1;j<lines.length&&/^  /.test(lines[j]);j++)lines[j]=fn(lines[j]);headers=lines.join('\n');};
-for(const route of ['artifact-manifest.json','live-observations.jsonld','current-release-matrix.json','live-serving-attestation.json'])mutateRoute(route,line=>/^  Cache-Control:/.test(line)?'  Cache-Control: public, max-age=0, must-revalidate':/^  Cloudflare-CDN-Cache-Control:/.test(line)?'  Cloudflare-CDN-Cache-Control: public, max-age=0, must-revalidate':line);
-for(const route of ['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','query-matrix.jsonl'])mutateRoute(route,line=>/^  Cloudflare-CDN-Cache-Control:/.test(line)?'  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400':line);
-
-const setDigest=(route,b64)=>{const lines=headers.split('\n'),i=lines.findIndex(x=>x===`/${route}`);if(i<0)throw new Error(`_headers route missing ${route}`);let found=false;for(let j=i+1;j<lines.length&&/^  /.test(lines[j]);j++){if(/^  Repr-Digest:/.test(lines[j])){lines[j]=`  Repr-Digest: sha-256=:${b64}:`;found=true;break;}}if(!found)lines.splice(i+1,0,`  Repr-Digest: sha-256=:${b64}:`);headers=lines.join('\n');};
-for(const route of ['query-matrix.jsonl','live-observations.jsonld','current-release-matrix.json'])setDigest(route,shaB64(await readFile(path.join(dist,route))));
-if(!headers.includes(`${release.canonicalUrl}live-observations.jsonld`)){const marker=/((?:^|\n)  Link: <https:\/\/www\.ghezelbaash\.ir\/entity-facts\.csv>[^\n]*\n)/;headers=headers.replace(marker,`$1  Link: <${release.canonicalUrl}query-matrix.jsonl>; rel="describedby"; type="application/jsonl", <${release.canonicalUrl}live-observations.jsonld>; rel="describedby"; type="application/ld+json", <${release.canonicalUrl}current-release-matrix.json>; rel="describedby"; type="application/json"\n`);}
 await writeFile(path.join(dist,'_headers'),headers);
 
 // Terminal current-serving attestation: nothing it hashes is mutated after this write.
