@@ -24,6 +24,28 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
+      - name: Compatibility-test Requests 2.34.2 without external writes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check --no-input requests==2.34.2 pypdf==6.16.1
+          python - <<'PY'
+          import requests, sys
+          assert requests.__version__ == '2.34.2'
+          print('REQUESTS_VERSION=' + requests.__version__)
+          print('PYTHON_VERSION=' + sys.version.split()[0])
+          PY
+          python -m py_compile \
+            scripts/commons_dedupe_p6243.py \
+            scripts/wikimedia_finalize_edges.py \
+            scripts/wikimedia_postverify.py \
+            scripts/wikimedia_preflight.py \
+            scripts/wikimedia_publish_2021.py \
+            scripts/wikisource_complete_2021.py \
+            scripts/wikisource_final_verify.py \
+            scripts/wikisource_prepare_transcription.py \
+            scripts/wikisource_template_probe.py \
+            scripts/wikiversity_publish.py
       - run: npm ci --ignore-scripts
       - name: Release preparation diagnostics
         shell: bash
