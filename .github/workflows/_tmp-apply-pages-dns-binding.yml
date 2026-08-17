@@ -1,0 +1,48 @@
+name: Temporary apply validated Pages DNS binding patch
+
+on:
+  push:
+    branches: [fix/blog-pages-dns-binding-final-20260817]
+    paths: ['.github/workflows/_tmp-apply-pages-dns-binding.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Apply already-validated source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Dr. Saeed Ghezelbaash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git fetch origin fix/blog-pages-dns-binding-20260817
+          git cherry-pick 5e43fa18c15e3d2470175b6a9d322723eef9147e
+      - name: Revalidate clean current-main integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          python -m py_compile scripts/configure-cloudflare-edge.py scripts/test-cloudflare-edge-reconciliation.py
+          node scripts/validate-subdomain-redirects.mjs
+          python scripts/test-cloudflare-edge-reconciliation.py
+          npm run build
+          git diff --check HEAD^ HEAD
+      - name: Publish integrated branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin HEAD:fix/blog-pages-dns-binding-final-20260817
