@@ -1,0 +1,222 @@
+name: Finalize machine entrypoint subdomains
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/_tmp-finalize-subdomain-machine-entrypoints.yml']
+permissions:
+  contents: write
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.18.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Apply final canonical subdomain contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root=Path('.')
+          contract_path=root/'src/data/subdomain-redirects.json'
+          contract=json.loads(contract_path.read_text(encoding='utf-8'))
+          rules={row['host']:row for row in contract['singleRedirects']['rules']}
+          rules['github.ghezelbaash.ir'].update({
+              'ref':'ghezelbaash_github_entity_graph_v1',
+              'target':'https://www.ghezelbaash.ir/graph.jsonld',
+          })
+          rules['ig.ghezelbaash.ir'].update({
+              'ref':'ghezelbaash_ig_ai_corpus_v1',
+              'target':'https://www.ghezelbaash.ir/llms-full.txt',
+          })
+          contract_path.write_text(json.dumps(contract,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          edge_path=root/'scripts/configure-cloudflare-edge.py'
+          edge=edge_path.read_text(encoding='utf-8')
+          replacements={
+              'ghezelbaash_github_repository_v1':'ghezelbaash_github_entity_graph_v1',
+              'ghezelbaash_instagram_identity_bridge_v1':'ghezelbaash_ig_ai_corpus_v1',
+          }
+          for old,new in replacements.items():
+              count=edge.count(old)
+              if count!=1:
+                  raise SystemExit(f'Expected exactly one {old} in edge reconciler, found {count}')
+              edge=edge.replace(old,new)
+          edge_path.write_text(edge,encoding='utf-8')
+          PY
+
+          cat > scripts/validate-subdomain-redirects.mjs <<'EOF'
+          import path from 'node:path';
+          import {readFile} from 'node:fs/promises';
+          import {assembleCanonicalContent} from './lib/assemble-content.mjs';
+
+          const root=process.cwd();
+          const fail=message=>{throw new Error(message)};
+          const contract=JSON.parse(await readFile(path.join(root,'src/data/subdomain-redirects.json'),'utf8'));
+          const graph=JSON.parse(await readFile(path.join(root,'src/data/semantic/knowledge-graph.jsonld'),'utf8'));
+          const {content}=await assembleCanonicalContent({root,graph});
+          const redirectsText=await readFile(path.join(root,'public/_redirects'),'utf8');
+          const machineRoutes=new Set(['/graph.jsonld','/graph.ttl','/entity-facts.csv','/answers.txt','/knowledge.xml','/llms.txt','/llms-full.txt','/index.md','/datapackage.json','/linkset.json','/void.ttl','/dcat.ttl','/croissant.json','/provenance.jsonld','/evidence-snapshot.json','/shapes.ttl','/artifact-manifest.json']);
+          const articlePattern=/^\/2025\/\d{2}\/blog-post(?:_?\d+)?\.html$/;
+
+          if(contract.schemaVersion!==2)fail(`Unsupported subdomain redirect schema ${contract.schemaVersion}`);
+          if(contract.zone!=='ghezelbaash.ir'||contract.canonicalOrigin!=='https://www.ghezelbaash.ir')fail('Subdomain redirect zone/canonical origin drift');
+          const canonical=new URL(contract.canonicalOrigin);
+          const fragments=new Set([...content.matchAll(/\bid=["']([^"']+)["']/gi)].map(match=>match[1]));
+          const validateHttpsTarget=(targetValue,ref)=>{
+            const target=new URL(targetValue);
+            if(target.protocol!=='https:')fail(`Non-HTTPS redirect target ${ref}`);
+            return target;
+          };
+          const validateVisibleCanonicalTarget=(targetValue,ref)=>{
+            const target=validateHttpsTarget(targetValue,ref);
+            if(target.origin!==canonical.origin||target.pathname!=='/'||!target.hash)fail(`Canonical passage redirect must use a precise visible fragment: ${ref}`);
+            const fragment=decodeURIComponent(target.hash.slice(1));
+            if(!fragments.has(fragment))fail(`Redirect target fragment is absent from canonical HTML: ${fragment}`);
+            return target;
+          };
+
+          const single=contract.singleRedirects;
+          if(single?.cloudflareProduct!=='Single Redirects')fail('Missing Single Redirects contract');
+          if(single.planRuleLimit!==10||!Array.isArray(single.rules)||!single.rules.length||single.rules.length>single.planRuleLimit)fail('Invalid Cloudflare Free Single Redirect contract');
+          const singleRefs=new Set(),singleHosts=new Set();
+          for(const rule of single.rules){
+            if(!/^[a-z0-9_]+$/.test(rule.ref)||singleRefs.has(rule.ref))fail(`Invalid or duplicate Single Redirect ref ${rule.ref}`);
+            singleRefs.add(rule.ref);
+            if(!/^[a-z0-9-]+\.ghezelbaash\.ir$/.test(rule.host)||singleHosts.has(rule.host))fail(`Invalid or duplicate managed Single Redirect host ${rule.host}`);
+            singleHosts.add(rule.host);
+            if(rule.match!=='allPaths'||rule.statusCode!==301||rule.preserveQueryString!==false)fail(`Invalid Single Redirect behavior ${rule.ref}`);
+            validateHttpsTarget(rule.target,rule.ref);
+          }
+          const expectedSingleHosts=new Set(['doctor.ghezelbaash.ir','github.ghezelbaash.ir','ig.ghezelbaash.ir']);
+          if(singleHosts.size!==expectedSingleHosts.size||[...expectedSingleHosts].some(host=>!singleHosts.has(host)))fail(`Managed Single Redirect host drift: ${[...singleHosts].join(', ')}`);
+          if(singleHosts.has('blog.ghezelbaash.ir'))fail('Blog catchall must not pre-empt exact Bulk Redirects');
+
+          const machineEntrypoints=new Map([
+            ['github.ghezelbaash.ir',{ref:'ghezelbaash_github_entity_graph_v1',route:'/graph.jsonld'}],
+            ['ig.ghezelbaash.ir',{ref:'ghezelbaash_ig_ai_corpus_v1',route:'/llms-full.txt'}],
+          ]);
+          for(const [host,expected] of machineEntrypoints){
+            const rule=single.rules.find(row=>row.host===host);
+            const expectedTarget=`${contract.canonicalOrigin}${expected.route}`;
+            if(rule?.ref!==expected.ref||rule?.target!==expectedTarget)fail(`${host} machine entrypoint drift`);
+            const target=new URL(rule.target);
+            if(target.origin!==canonical.origin||target.pathname!==expected.route||target.search||target.hash)fail(`${host} must terminate on its exact first-party machine endpoint`);
+            if(!machineRoutes.has(expected.route))fail(`${host} target is not an approved machine representation`);
+            const endpointSource=path.join(root,'src/pages',`${expected.route.slice(1)}.ts`);
+            await readFile(endpointSource,'utf8').catch(()=>fail(`Missing static endpoint source for ${expected.route}`));
+          }
+          const doctor=single.rules.find(rule=>rule.host==='doctor.ghezelbaash.ir');
+          if(doctor?.ref!=='ghezelbaash_doctor_maps_v1'||!doctor.target.includes('query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas'))fail('doctor subdomain lost the canonical Google Maps contract');
+
+          const bulk=contract.bulkRedirects;
+          if(bulk?.cloudflareProduct!=='Bulk Redirects'||bulk.planUrlLimit!==10000)fail('Invalid Cloudflare Free Bulk Redirect contract');
+          if(!/^[a-z0-9_]{1,50}$/.test(bulk.listName)||!/^[a-z0-9_]+$/.test(bulk.ruleRef))fail('Invalid Bulk Redirect list or rule name');
+          if(bulk.host!=='blog.ghezelbaash.ir'||bulk.unmatchedPathPolicy!=='do-not-redirect')fail('Blog Bulk Redirect host/unmatched-path policy drift');
+          if(!Array.isArray(bulk.groups)||!bulk.groups.length)fail('Bulk Redirect groups are empty');
+          const bulkRefs=new Set(),sourcePaths=new Set(),targetFragments=new Set();
+          for(const group of bulk.groups){
+            if(!/^[a-z0-9_]+$/.test(group.ref)||bulkRefs.has(group.ref))fail(`Invalid or duplicate Bulk Redirect group ref ${group.ref}`);
+            bulkRefs.add(group.ref);
+            if(!Array.isArray(group.paths)||!group.paths.length)fail(`Bulk Redirect group has no paths: ${group.ref}`);
+            if(group.statusCode!==301||group.preserveQueryString!==false)fail(`Invalid Bulk Redirect behavior: ${group.ref}`);
+            const target=validateVisibleCanonicalTarget(group.target,group.ref);
+            targetFragments.add(target.hash.slice(1));
+            for(const source of group.paths){
+              if(typeof source!=='string'||!source.startsWith('/')||source.includes('?')||source.includes('#')||decodeURI(source)!==decodeURI(new URL(source,'https://blog.ghezelbaash.ir').pathname))fail(`Invalid exact Bulk Redirect source path ${source}`);
+              if(sourcePaths.has(source))fail(`Duplicate Bulk Redirect source path ${source}`);
+              sourcePaths.add(source);
+            }
+          }
+          if(sourcePaths.size>bulk.planUrlLimit)fail(`Bulk Redirect URL quota exceeded: ${sourcePaths.size}`);
+          const articlePaths=[...sourcePaths].filter(pathValue=>articlePattern.test(pathValue));
+          const labelPaths=[...sourcePaths].filter(pathValue=>pathValue.startsWith('/search/label/'));
+          for(const [field,actual] of [['uniqueExecutableSourcePaths',sourcePaths.size],['historicalArticlePaths',articlePaths.length],['historicalLabelPaths',labelPaths.length]]){
+            if(bulk.evidence?.[field]!==actual)fail(`Archive evidence count drift for ${field}: ${actual}`);
+          }
+          if(bulk.evidence?.archivedHtmlUrls!==sourcePaths.size+1)fail('Archived HTML count must explain the one query-only /search duplicate');
+          if(bulk.evidence?.queryOnlyVariantsCollapsed!==1)fail('Historical query-only collapse evidence drift');
+          const expected404=['/2025/02/blog-post_57.html','/2025/02/blog-post_87.html','/2025/03/blog-post_06.html'];
+          if(JSON.stringify(bulk.evidence?.excludedArchived404Paths)!==JSON.stringify(expected404))fail('Historical 404 exclusion evidence drift');
+          for(const excluded of expected404)if(sourcePaths.has(excluded))fail(`Historical 404 must not be redirected: ${excluded}`);
+          for(const required of ['/','/2025/02/','/2025/03/','/2025/04/','/2025/05/','/2025/08/','/search'])if(!sourcePaths.has(required))fail(`Missing recovered archive path ${required}`);
+
+          const pagesRedirects=new Map();
+          for(const [index,raw] of redirectsText.split(/\r?\n/).entries()){
+            const line=raw.trim();if(!line||line.startsWith('#'))continue;
+            const parts=line.split(/\s+/);if(parts.length!==3)fail(`Invalid public/_redirects line ${index+1}`);
+            pagesRedirects.set(parts[0],{target:parts[1],statusCode:Number(parts[2])});
+          }
+          for(const group of bulk.groups){
+            const target=new URL(group.target),relative=`/${target.hash}`;
+            for(const source of group.paths.filter(pathValue=>articlePattern.test(pathValue))){
+              const pages=pagesRedirects.get(source);
+              if(!pages||pages.target!==relative||pages.statusCode!==group.statusCode)fail(`Pages/blog historical redirect parity drift: ${source}`);
+            }
+          }
+          for(const source of [...pagesRedirects.keys()].filter(pathValue=>articlePattern.test(pathValue)))if(!sourcePaths.has(source))fail(`Historical Blogspot path is missing from Bulk Redirect contract: ${source}`);
+          if(pagesRedirects.has('/'))fail('Canonical Pages redirects must never redirect the root path');
+          for(const excluded of expected404)if(pagesRedirects.has(excluded))fail(`Historical 404 leaked into Pages redirects: ${excluded}`);
+
+          console.log(JSON.stringify({
+            valid:true,
+            singleRedirectProduct:single.cloudflareProduct,
+            singleRedirectRuleCount:single.rules.length,
+            singleRedirectRuleLimit:single.planRuleLimit,
+            machineEntrypoints:Object.fromEntries([...machineEntrypoints].map(([host,{route}])=>[host,route])),
+            bulkRedirectProduct:bulk.cloudflareProduct,
+            bulkRedirectUrlCount:sourcePaths.size,
+            bulkRedirectUrlLimit:bulk.planUrlLimit,
+            historicalArticlePaths:articlePaths.length,
+            historicalLabelPaths:labelPaths.length,
+            canonicalFragments:targetFragments.size,
+            unmatchedBlogPaths:bulk.unmatchedPathPolicy
+          },null,2));
+          EOF
+
+          rm -f .github/workflows/_tmp-entity-bridge-audit.yml
+
+      - name: Validate the final source architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          node scripts/validate-subdomain-redirects.mjs
+          python scripts/configure-cloudflare-edge.py --self-test
+          python scripts/test-cloudflare-edge-reconciliation.py
+          npm run build
+
+      - name: Prove cleanup and commit only intentional source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/_tmp-finalize-subdomain-machine-entrypoints.yml
+          if git grep -n -E 'ghezelbaash_github_repository_v1|ghezelbaash_instagram_identity_bridge_v1' -- ':!package-lock.json'; then
+            echo 'Obsolete subdomain rule identifiers remain' >&2
+            exit 1
+          fi
+          leftovers="$(git ls-files | grep -E '(^|/)(_tmp|tmp|patches?|overrides?)(/|\.|$)' || true)"
+          if [ -n "$leftovers" ]; then
+            echo "Temporary/patch/override files remain:" >&2
+            printf '%s\n' "$leftovers" >&2
+            exit 1
+          fi
+          git status --short
+          git config user.name 'Dr. Saeed Ghezelbaash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git add src/data/subdomain-redirects.json scripts/configure-cloudflare-edge.py scripts/validate-subdomain-redirects.mjs
+          git add -u .github/workflows/_tmp-entity-bridge-audit.yml .github/workflows/_tmp-finalize-subdomain-machine-entrypoints.yml
+          git diff --cached --check
+          git commit -m 'Finalize first-party machine subdomain entrypoints'
+          git push origin HEAD:main
