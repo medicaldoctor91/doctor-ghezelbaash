@@ -1,7 +1,7 @@
 import {readFile} from 'node:fs/promises';
 const readJson=async p=>JSON.parse(await readFile(p,'utf8'));
 const contract=await readJson('.release/policy/platform-contract.json'),release=await readJson('src/data/release.json'),pkg=await readJson('package.json');
-const cf=contract.cloudflare,fail=m=>{throw new Error(m)};
+const cf=contract.cloudflare,runtime=contract.runtime,fail=m=>{throw new Error(m)};
 if(contract.schemaVersion!=='1.0')fail('Unsupported platform contract schema');
 if(contract.canonicalUrl!==release.canonicalUrl||contract.canonicalHost!==new URL(release.canonicalUrl).hostname)fail('Platform canonical URL drift');
 if(contract.repository!==release.dataset.github.repository.replace(/^https:\/\/github\.com\//,''))fail('Platform repository drift');
@@ -9,5 +9,7 @@ if(cf.productionBranch!=='main'||cf.expectedEnvironment!=='production'||cf.previ
 if(cf.build?.command!=='npm ci --ignore-scripts && npm run build'||cf.build?.destinationDir!=='dist'||cf.build?.rootDir!=='')fail('Platform build contract drift');
 if(cf.planTier!=='free')fail('Cloudflare plan contract drift');
 if(!Array.isArray(cf.requiredCustomDomains)||!cf.requiredCustomDomains.includes(contract.canonicalHost))fail('Required custom domains contract incomplete');
-if(pkg.engines?.node!=='>=24.18.0 <25'||pkg.engines?.npm!=='>=11 <12')fail('Runtime pin drift');
-console.log(JSON.stringify({platformContract:'PASS',repository:contract.repository,productionBranch:cf.productionBranch,pagesProject:cf.pagesProject,canonicalHost:contract.canonicalHost,planTier:cf.planTier},null,2));
+if(!runtime?.node||!runtime?.nodeEngine||!runtime?.npm||!runtime?.npmEngine)fail('Canonical runtime contract incomplete');
+const nvmrc=(await readFile('.nvmrc','utf8')).trim();
+if(nvmrc!==runtime.node||pkg.engines?.node!==runtime.nodeEngine||pkg.engines?.npm!==runtime.npmEngine||pkg.packageManager!==`npm@${runtime.npm}`)fail('Runtime pin drift');
+console.log(JSON.stringify({platformContract:'PASS',repository:contract.repository,productionBranch:cf.productionBranch,pagesProject:cf.pagesProject,canonicalHost:contract.canonicalHost,planTier:cf.planTier,runtime},null,2));
