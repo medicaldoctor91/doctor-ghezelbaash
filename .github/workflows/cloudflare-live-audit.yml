@@ -50,11 +50,11 @@ jobs:
               rs=single_api.expect('GET',f'/zones/{zid}/rulesets/phases/http_request_dynamic_redirect/entrypoint').get('result') or {}
               out=[]
               for rule in rs.get('rules') or []:
-                  ap=rule.get('action_parameters') or {}; fv=ap.get('from_value') or {}
-                  out.append({'ref':rule.get('ref'),'enabled':rule.get('enabled'),'expression':rule.get('expression'),'status_code':fv.get('status_code'),'target':((fv.get('target_url') or {}).get('value')),'preserve_query_string':fv.get('preserve_query_string')})
+                  ap=rule.get('action_parameters') or {}; fv=ap.get('from_value') or {}; tu=fv.get('target_url') or {}
+                  out.append({'ref':rule.get('ref'),'enabled':rule.get('enabled'),'expression':rule.get('expression'),'status_code':fv.get('status_code'),'target_value':tu.get('value'),'target_expression':tu.get('expression'),'preserve_query_string':fv.get('preserve_query_string')})
               print('CF_SINGLE_REDIRECTS',json.dumps(out,ensure_ascii=False,sort_keys=True))
               try:
-                  br=zone_api.expect('GET',f'/zones/{zid}/rulesets/phases/http_request_redirect/entrypoint').get('result') or {}
+                  br=zone_api.expect('GET',f'/accounts/{account}/rulesets/phases/http_request_redirect/entrypoint').get('result') or {}
                   bout=[]
                   for rule in br.get('rules') or []:
                       ap=rule.get('action_parameters') or {}
@@ -64,7 +64,12 @@ jobs:
                   print('CF_BULK_REDIRECT_PHASE',json.dumps({'unavailable':str(e)},ensure_ascii=False))
               try:
                   lists=zone_api.expect('GET',f'/accounts/{account}/rules/lists?per_page=100').get('result') or []
-                  found=[{k:r.get(k) for k in ['id','name','kind','numitems','description']} for r in lists if r.get('name')=='ghezelbaash_blog_legacy_urls']
+                  found=[]
+                  for r in lists:
+                      if r.get('name')!='ghezelbaash_blog_legacy_urls': continue
+                      lid=str(r.get('id'))
+                      items=zone_api.expect('GET',f'/accounts/{account}/rules/lists/{lid}/items?per_page=1000').get('result') or []
+                      found.append({'id':lid,'name':r.get('name'),'kind':r.get('kind'),'description':r.get('description'),'live_item_count':len(items)})
                   print('CF_REDIRECT_LIST',json.dumps(found,ensure_ascii=False,sort_keys=True))
               except Exception as e:
                   print('CF_REDIRECT_LIST',json.dumps({'unavailable':str(e)},ensure_ascii=False))
