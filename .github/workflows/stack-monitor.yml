@@ -12,7 +12,6 @@ concurrency:
   group: doctor-ghezelbaash-external-mutation
   cancel-in-progress: false
 
-
 jobs:
   verify:
     runs-on: ubuntu-24.04
@@ -38,9 +37,12 @@ jobs:
         run: |
           set -euo pipefail
           RELEASE="$(node -p "require('./src/data/release.json').release")"
+          HF_URL="$(node -p "require('./src/data/release.json').dataset.huggingFace.dataset")"
+          HF_REPO="${HF_URL#https://huggingface.co/datasets/}"
           git fetch --tags --force origin
           git rev-parse -q --verify "refs/tags/v$RELEASE" >/dev/null
           echo "release=$RELEASE" >> "$GITHUB_OUTPUT"
+          printf 'HF_REPO=%s\n' "$HF_REPO" >> "$GITHUB_ENV"
           echo "STACK_MONITOR_RELEASE=$RELEASE"
       - run: npm ci --ignore-scripts
       - name: Build exact current source
@@ -49,22 +51,57 @@ jobs:
           set -euo pipefail
           C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
-      - name: Verify current discovery, purge stale edge once, then reverify
+      - name: Verify first-party deployment and self-heal only edge drift
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          if node scripts/verify-public-discovery-freshness.mjs && node scripts/verify-current-serving.mjs; then
-            echo 'CURRENT_DISCOVERY_MONITOR_PASS'
+          if node scripts/verify-public-discovery-freshness.mjs && node scripts/verify-current-serving.mjs --website-only; then
+            echo 'FIRST_PARTY_CURRENT_SERVING_PASS'
             exit 0
           fi
-          echo '::warning::Current discovery drift detected; purging Cloudflare edge and re-verifying exact source bytes.'
+          echo '::warning::First-party edge drift detected; purging Cloudflare and re-verifying website bytes only.'
           python scripts/configure-cloudflare-edge.py --purge-cache-only
           sleep 30
           node scripts/verify-public-discovery-freshness.mjs
+          node scripts/verify-current-serving.mjs --website-only
+          echo 'FIRST_PARTY_EDGE_SELF_HEAL_PASS'
+      - name: Verify and reconcile Hugging Face current authority surface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if node scripts/verify-current-serving.mjs --hf-only; then
+            echo 'HF_CURRENT_AUTHORITY_PASS'
+            exit 0
+          fi
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          echo '::warning::Hugging Face current observation drift detected; reconciling only the mutable current observation artifacts.'
+          rm -rf .release/huggingface-monitor
+          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-monitor
+          node scripts/sync-hf-live-observations.mjs .release/huggingface-monitor
+          git -C .release/huggingface-monitor config user.name ghezelbaash-reputation-bot
+          git -C .release/huggingface-monitor config user.email actions@users.noreply.github.com
+          git -C .release/huggingface-monitor add live_observations.csv live-observation-attestation.json
+          git -C .release/huggingface-monitor diff --cached --quiet || git -C .release/huggingface-monitor commit -m "Reconcile current Google reputation observation"
+          git -C .release/huggingface-monitor push origin HEAD:main
+          for attempt in $(seq 1 12); do
+            if node scripts/verify-current-serving.mjs --hf-only; then
+              echo 'HF_CURRENT_AUTHORITY_SELF_HEAL_PASS'
+              exit 0
+            fi
+            sleep 5
+          done
+          echo '::error::Hugging Face current authority surface did not converge after reconciliation'
+          exit 1
+      - name: Verify complete current cross-surface truth
+        shell: bash
+        run: |
+          set -euo pipefail
           node scripts/verify-current-serving.mjs
-          echo 'CURRENT_DISCOVERY_SELF_HEAL_PASS'
+          echo 'CURRENT_CROSS_SURFACE_TRUTH_PASS'
       - name: Verify frozen release snapshot truth
         shell: bash
         run: |
