@@ -5,10 +5,10 @@
   "canonicalHost": "www.ghezelbaash.ir",
   "zoneName": "ghezelbaash.ir",
   "runtime": {
-    "node": "26.6.0",
-    "nodeEngine": ">=26.6.0 <27",
-    "npm": "12.0.2",
-    "npmEngine": ">=12 <13"
+    "node": "24.19.0",
+    "nodeEngine": ">=24.19.0 <25",
+    "npm": "11.17.0",
+    "npmEngine": ">=11.17 <12"
   },
   "cloudflare": {
     "accountId": "884d1d90bd1fb6ecca14992c6c60d677",
