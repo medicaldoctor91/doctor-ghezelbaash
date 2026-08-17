@@ -33,13 +33,17 @@ const styles=tracked.filter(name=>name.startsWith('src/styles/'));
 const allowedStyles=['src/styles/critical-mobile.css','src/styles/global.css'];
 if(styles.length!==allowedStyles.length||styles.some((name,index)=>name!==allowedStyles[index]))throw new Error(`Stylesheet topology drift: ${styles.join(', ')}`);
 
+const forbiddenControlByte=byte=>(byte<=0x08)||(byte>=0x0b&&byte<=0x0c)||(byte>=0x0e&&byte<=0x1f)||byte===0x7f;
 for(const name of tracked){
-  if(name==='scripts/validate-repository-hygiene.mjs')continue;
   const ext=path.posix.extname(name).toLowerCase();
   if(!textExtensions.has(ext)&&!textExactNames.has(path.posix.basename(name)))continue;
-  const content=await readFile(path.join(root,name),'utf8');
+  const raw=await readFile(path.join(root,name));
+  const controlOffset=raw.findIndex(forbiddenControlByte);
+  if(controlOffset!==-1)throw new Error(`Forbidden ASCII control byte 0x${raw[controlOffset].toString(16).padStart(2,'0')} in tracked text source: ${name} at byte ${controlOffset}`);
+  if(name==='scripts/validate-repository-hygiene.mjs')continue;
+  const content=raw.toString('utf8');
   if(devMarker.test(content))throw new Error(`Development marker leaked into tracked source: ${name}`);
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,generatedRuntimeTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,developmentMarkers:false},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,generatedRuntimeTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));

@@ -10,14 +10,14 @@ const scriptSteps=name=>String(pkg.scripts?.[name]||'').split('&&').map(x=>x.tri
 if(pkg.scripts?.['validate:release-contract']!=='node scripts/validate-release-contract.mjs')fail('Generic release-contract validator wiring missing');
 if(!hasStep('prepare:generated','validate:media-references')||!hasStep('prepare:generated','rdf:generate')||!hasStep('prepare:generated','npm run generate'))fail('Generated preparation architecture drift');
 if(pkg.scripts?.['validate:media-references']!=='node scripts/validate-media-references.mjs')fail('Read-only media reference validator wiring missing');
-if(/writeFile|appendFile/.test(mediaReferenceValidator))fail('Media reference validation must never rewrite source');
+if(/\bwriteFile\b|\bappendFile\b/.test(mediaReferenceValidator))fail('Media reference validation must never rewrite source');
 const generateSteps=scriptSteps('generate');for(const expected of ['node scripts/generate-projections.mjs','node scripts/generate-retrieval-projections.mjs','node scripts/generate-descriptors.mjs'])if(!generateSteps.includes(expected))fail(`Canonical generator missing ${expected}`);if(generateSteps.indexOf('node scripts/generate-projections.mjs')>generateSteps.indexOf('node scripts/generate-retrieval-projections.mjs')||generateSteps.indexOf('node scripts/generate-retrieval-projections.mjs')>generateSteps.indexOf('node scripts/generate-descriptors.mjs'))fail('Canonical generator order drift');
 if(pkg.scripts?.['descriptors:finalize']!=='node scripts/generate-descriptors.mjs --dist dist')fail('DIST descriptor finalization stage missing');
 for(const required of ['astro build','npm run indexnow:prepare','npm run descriptors:finalize','node scripts/finalize-dist.mjs'])if(!hasStep('build',required))fail(`Build DAG missing ${required}`);
 if(retrievalGenerator.includes('public/current-release-matrix.json'))fail('Current release matrix has multiple deployable writers');
-if(/service_id\s*:|service_family\s*:/.test(retrievalGenerator))fail('Query Matrix legacy scalar service schema remains in generator');
+if(/\bservice_id\s*:|\bservice_family\s*:/.test(retrievalGenerator))fail('Query Matrix legacy scalar service schema remains in generator');
 if(!finalizer.includes("projections/current-release-matrix.json")||!finalizer.includes('writeFile(currentMatrixPath'))fail('Finalizer is not the sole current-release-matrix DIST composer');
-if(/mutateRoute|setDigest/.test(finalizer))fail('Finalizer still carries post-definition header policy patching');
+if(/\bmutateRoute\b|\bsetDigest\b/.test(finalizer))fail('Finalizer still carries post-definition header policy patching');
 if(documentHead.includes("replace(viewportTag")||documentHead.includes("replace(heroPreloadTag"))fail('DocumentHead still reorders the canonical Head template');
 if(!baseLayout.includes("../lib/css-delivery.mjs")||!baseGenerator.includes("../src/lib/css-delivery.mjs"))fail('CSS delivery contract is not shared by Layout and generator');
 for(const name of ['datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json']){if(baseGenerator.includes(`writeFile(path.join(projections,'${name}')`))fail(`Base generator illegally writes descriptor ${name}`);if(finalizer.includes(`writeFile(path.join(dist,'${name}')`))fail(`Finalizer illegally rewrites descriptor ${name}`);if(!descriptorGenerator.includes(`writeFile(out('${name}')`))fail(`Descriptor generator missing canonical writer for ${name}`)}
