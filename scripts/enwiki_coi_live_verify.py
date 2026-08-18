@@ -44,3 +44,5 @@ def contributions():
 
 out={'checked_at_utc':datetime.now(timezone.utc).isoformat(),'talk':page(TALK,50),'article':page(ARTICLE,10),'user_contributions_ns1':contributions()}
 print(json.dumps(out,ensure_ascii=False,indent=2,sort_keys=True))
+
+# Trigger marker: 2026-08-19 live verification request.
