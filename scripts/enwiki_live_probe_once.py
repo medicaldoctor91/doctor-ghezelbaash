@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# one-shot live probe trigger: 2026-08-19
 import json
 from datetime import datetime, timezone
 import requests
