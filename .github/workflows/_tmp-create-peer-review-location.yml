@@ -43,27 +43,26 @@ jobs:
             lr=post(action='login',lgname=USER,lgpassword=PASS,lgtoken=lt)
             if lr.get('login',{}).get('result')!='Success': raise RuntimeError(lr)
             return s,get,post
-          # Preconditions: article must exist and still be connected to the expected Wikidata item.
           sv,gv,pv=login(VAPI)
           ap=gv(action='query',titles=ARTICLE,prop='info|pageprops')['query']['pages'][0]
           if ap.get('missing'): raise RuntimeError('Preprint missing')
           if (ap.get('pageprops') or {}).get('wikibase_item')!=QID: raise RuntimeError({'unexpected_qid':(ap.get('pageprops') or {}).get('wikibase_item')})
-          # Create only if absent; never overwrite an existing peer-review page.
           tp=gv(action='query',titles=TALK,prop='info|revisions',rvprop='ids|content',rvslots='main')['query']['pages'][0]
           created=False
           if tp.get('missing'):
             token=gv(action='query',meta='tokens',type='csrf')['query']['tokens']['csrftoken']
             er=pv(action='edit',title=TALK,text=PRELOAD,createonly=1,token=token,summary='Create peer review location for submitted WikiJournal preprint')
             created=(er.get('edit',{}).get('result')=='Success')
-          # Purge and obtain canonical review URL.
-          pv(action='purge',titles=TALK,forcelinkupdate=1)
+          try:
+            pv(action='purge',titles=TALK,forcelinkupdate=1)
+          except Exception:
+            pass
           time.sleep(2)
           tp=gv(action='query',titles=TALK,prop='info|revisions',inprop='url',rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)['query']['pages'][0]
           if tp.get('missing'): raise RuntimeError('Peer review talk page was not created')
           review_url=tp.get('fullurl')
           tcontent=((tp.get('revisions') or [{}])[0].get('slots',{}).get('main',{}).get('content',''))
           if not review_url: raise RuntimeError('No canonical review URL returned')
-          # Add P7347 only when absent; preserve any existing value.
           sw,gw,pw=login(WAPI)
           ent=gw(action='wbgetentities',ids=QID,props='claims')['entities'][QID]
           existing=[]
@@ -77,23 +76,10 @@ jobs:
             token=gw(action='query',meta='tokens',type='csrf')['query']['tokens']['csrftoken']
             cr=pw(action='wbcreateclaim',entity=QID,property='P7347',snaktype='value',value=json.dumps(review_url),token=token,summary='Add WikiJournal peer review URL for preprint')
             added=bool(cr.get('claim'))
-          # Final verification from both sites.
           time.sleep(2)
           ent2=gw(action='wbgetentities',ids=QID,props='claims|sitelinks')['entities'][QID]
           pvals=[c.get('mainsnak',{}).get('datavalue',{}).get('value') for c in ent2.get('claims',{}).get('P7347',[])]
-          out={
-            'ok': review_url in pvals,
-            'qid':QID,
-            'talk_title':TALK,
-            'talk_pageid':tp.get('pageid'),
-            'talk_created_now':created,
-            'talk_url':review_url,
-            'talk_latest_revision':(tp.get('revisions') or [{}])[0],
-            'talk_has_official_preload':PRELOAD in tcontent,
-            'P7347_values':pvals,
-            'P7347_added_now':added,
-            'preprint_sitelink':ent2.get('sitelinks',{}).get('enwikiversity')
-          }
+          out={'ok':review_url in pvals,'qid':QID,'talk_title':TALK,'talk_pageid':tp.get('pageid'),'talk_created_now':created,'talk_url':review_url,'talk_latest_revision':(tp.get('revisions') or [{}])[0],'talk_has_official_preload':PRELOAD in tcontent,'P7347_values':pvals,'P7347_added_now':added,'preprint_sitelink':ent2.get('sitelinks',{}).get('enwikiversity')}
           if not out['ok']: raise RuntimeError(out)
           os.makedirs('wikimedia',exist_ok=True)
           open('wikimedia/_tmp-peer-review-location-status.json','w',encoding='utf8').write(json.dumps(out,ensure_ascii=False,indent=2))
@@ -107,3 +93,4 @@ jobs:
           git add wikimedia/_tmp-peer-review-location-status.json
           git commit -m 'Record temporary WikiJournal peer-review location status'
           git push
+# retrigger 2026-08-19
