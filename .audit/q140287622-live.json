@@ -85,7 +85,7 @@
       }
     ]
   },
-  "audit_utc": "2026-08-19T14:55:16.578955+00:00",
+  "audit_utc": "2026-08-19T14:56:09.405217+00:00",
   "claims": {
     "P10": [
       {
@@ -2570,343 +2570,120 @@
       ],
       "timestamp": "2026-08-19T13:39:22Z",
       "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetqualifier-add:1| */ [[Property:P14457]]: Saeed Ghezelbash, #quickstatements; #temporary_batch_1787146752993",
+      "parentid": 2533203696,
+      "revid": 2533220904,
+      "tags": [
+        "OAuth CID: 1776"
+      ],
+      "timestamp": "2026-08-19T13:39:21Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1343]]: [[Q140304972]], #quickstatements; #temporary_batch_1787143859259",
+      "parentid": 2533203682,
+      "revid": 2533203696,
+      "tags": [
+        "OAuth CID: 1776"
+      ],
+      "timestamp": "2026-08-19T12:51:07Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P1343]]: [[Q140304972]], #quickstatements; #temporary_batch_1787143859259",
+      "parentid": 2532965725,
+      "revid": 2533203682,
+      "tags": [
+        "OAuth CID: 1776"
+      ],
+      "timestamp": "2026-08-19T12:51:05Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetclaim-update-references:1||1|2 */ [[Property:P1412]]: [[Q1860]]",
+      "parentid": 2532965635,
+      "revid": 2532965725,
+      "tags": [
+        "mobile edit",
+        "mobile web edit",
+        "advanced mobile edit",
+        "wikidata-ui"
+      ],
+      "timestamp": "2026-08-19T00:29:14Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetclaim-update-references:1||1|2 */ [[Property:P1412]]: [[Q9168]]",
+      "parentid": 2532965519,
+      "revid": 2532965635,
+      "tags": [
+        "mobile edit",
+        "mobile web edit",
+        "advanced mobile edit",
+        "wikidata-ui"
+      ],
+      "timestamp": "2026-08-19T00:28:58Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetclaim-update-references:1||1|2 */ [[Property:P27]]: [[Q794]]",
+      "parentid": 2532965351,
+      "revid": 2532965519,
+      "tags": [
+        "mobile edit",
+        "mobile web edit",
+        "advanced mobile edit",
+        "wikidata-ui"
+      ],
+      "timestamp": "2026-08-19T00:28:37Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetclaim-update-references:1||1|2 */ [[Property:P69]]: [[Q6393994]]",
+      "parentid": 2532964772,
+      "revid": 2532965351,
+      "tags": [
+        "mobile edit",
+        "mobile web edit",
+        "advanced mobile edit",
+        "wikidata-ui"
+      ],
+      "timestamp": "2026-08-19T00:28:04Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1344]]: [[Q140307274]], #quickstatements; #temporary_batch_1787099159063",
+      "parentid": 2532955872,
+      "revid": 2532964772,
+      "tags": [
+        "OAuth CID: 1776"
+      ],
+      "timestamp": "2026-08-19T00:26:04Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetreference-add:2| */ [[Property:P800]]: [[Q140298431]], #quickstatements; #temporary_batch_1787097313624",
+      "parentid": 2532955868,
+      "revid": 2532955872,
+      "tags": [
+        "OAuth CID: 1776"
+      ],
+      "timestamp": "2026-08-18T23:56:06Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P800]]: [[Q140298431]], #quickstatements; #temporary_batch_1787097313624",
+      "parentid": 2532955862,
+      "revid": 2532955868,
+      "tags": [
+        "OAuth CID: 1776"
+      ],
+      "timestamp": "2026-08-18T23:56:04Z",
+      "user": "Medicaldoctor91"
     }
   ],
-  "reference_url_status": {
-    "https://about.me/ghezelbaash": {
-      "final_url": "https://about.me/ghezelbaash",
-      "host": "about.me",
-      "status": 200
-    },
-    "https://apsa.org.ar/docs/wpanews072017.pdf": {
-      "final_url": "https://apsa.org.ar/docs/wpanews072017.pdf",
-      "host": "apsa.org.ar",
-      "status": 200
-    },
-    "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash": {
-      "final_url": "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash",
-      "host": "commons.wikimedia.org",
-      "status": 200
-    },
-    "https://commons.wikimedia.org/wiki/Creator:Saeed_Ghezelbash": {
-      "final_url": "https://commons.wikimedia.org/wiki/Creator:Saeed_Ghezelbash",
-      "host": "commons.wikimedia.org",
-      "status": 200
-    },
-    "https://commons.wikimedia.org/wiki/File:%D8%AF%DA%A9%D8%AA%D8%B1_%D8%B3%D8%B9%DB%8C%D8%AF_%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4_%D8%AF%D8%B1%D8%A8%D8%A7%D8%B1%D9%87_%D8%AC%D8%A7%D9%84%D9%BE%D8%B1%D9%88_%D9%88_%D9%BE%D8%B1%D9%88%D9%81%D8%A7%DB%8C%D9%84%D9%88.webm": {
-      "final_url": "https://commons.wikimedia.org/wiki/File:%D8%AF%DA%A9%D8%AA%D8%B1_%D8%B3%D8%B9%DB%8C%D8%AF_%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4_%D8%AF%D8%B1%D8%A8%D8%A7%D8%B1%D9%87_%D8%AC%D8%A7%D9%84%D9%BE%D8%B1%D9%88_%D9%88_%D9%BE%D8%B1%D9%88%D9%81%D8%A7%DB%8C%D9%84%D9%88.webm",
-      "host": "commons.wikimedia.org",
-      "status": 200
-    },
-    "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg": {
-      "final_url": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg",
-      "host": "commons.wikimedia.org",
-      "status": 200
-    },
-    "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ": {
-      "final_url": "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ",
-      "host": "doctoreto.com",
-      "status": 200
-    },
-    "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash": {
-      "final_url": "https://doktor.vip/doctor/dr-saeed-ghezelbash",
-      "host": "doktor.vip",
-      "status": 200
-    },
-    "https://edoc.unibas.ch/entities/publication/1879da13-2ebd-4040-8423-b656216b4256": {
-      "final_url": "https://edoc.unibas.ch/entities/publication/1879da13-2ebd-4040-8423-b656216b4256",
-      "host": "edoc.unibas.ch",
-      "status": 200
-    },
-    "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine": {
-      "final_url": "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine",
-      "host": "en.wikiversity.org",
-      "status": 200
-    },
-    "https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review": {
-      "final_url": "https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review",
-      "host": "en.wikiversity.org",
-      "status": 200
-    },
-    "https://github.com/medicaldoctor91": {
-      "final_url": "https://github.com/medicaldoctor91",
-      "host": "github.com",
-      "status": 200
-    },
-    "https://huggingface.co/Ghezelbaash": {
-      "final_url": "https://huggingface.co/Ghezelbaash",
-      "host": "huggingface.co",
-      "status": 200
-    },
-    "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/": {
-      "final_url": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
-      "host": "iranmedlabs.com",
-      "status": 200
-    },
-    "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash": {
-      "final_url": "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash",
-      "host": "mantradoc.com",
-      "status": 403
-    },
-    "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e": {
-      "final_url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
-      "host": "membersearch.irimc.org",
-      "status": 200
-    },
-    "https://openalex.org/A5064828898": {
-      "final_url": "https://openalex.org/A5064828898",
-      "host": "openalex.org",
-      "status": 403
-    },
-    "https://orcid.org/0009-0001-9346-8475": {
-      "final_url": "https://orcid.org/0009-0001-9346-8475",
-      "host": "orcid.org",
-      "status": 200
-    },
-    "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/": {
-      "final_url": "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
-      "host": "pezeshk24.com",
-      "status": 200
-    },
-    "https://pmc.ncbi.nlm.nih.gov/articles/PMC4882968/": {
-      "final_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4882968/",
-      "host": "pmc.ncbi.nlm.nih.gov",
-      "status": 200
-    },
-    "https://pmc.ncbi.nlm.nih.gov/articles/PMC8469763/": {
-      "final_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8469763/",
-      "host": "pmc.ncbi.nlm.nih.gov",
-      "status": 200
-    },
-    "https://pub.orcid.org/v3.0/0009-0001-9346-8475/education/38054873": {
-      "final_url": "https://pub.orcid.org/v3.0/0009-0001-9346-8475/education/38054873",
-      "host": "pub.orcid.org",
-      "status": 200
-    },
-    "https://pubmed.ncbi.nlm.nih.gov/27280013/": {
-      "final_url": "https://pubmed.ncbi.nlm.nih.gov/27280013/",
-      "host": "pubmed.ncbi.nlm.nih.gov",
-      "status": 203
-    },
-    "https://pubmed.ncbi.nlm.nih.gov/34574943/": {
-      "final_url": "https://pubmed.ncbi.nlm.nih.gov/34574943/",
-      "host": "pubmed.ncbi.nlm.nih.gov",
-      "status": 203
-    },
-    "https://salamatjo.ir/news/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9-%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C-%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%D8%9B-%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84/": {
-      "final_url": "https://salamatjo.ir/news/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9-%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C-%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%D8%9B-%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84/",
-      "host": "salamatjo.ir",
-      "status": 200
-    },
-    "https://scholar.google.com/citations?user=BcWBirUAAAAJ": {
-      "final_url": "https://scholar.google.com/citations?user=BcWBirUAAAAJ",
-      "host": "scholar.google.com",
-      "status": 200
-    },
-    "https://tajrobe.wiki/profile/dr-mohammad-saeed-ghazlbash": {
-      "final_url": "https://tajrobe.wiki/profile/dr-mohammad-saeed-ghazlbash",
-      "host": "tajrobe.wiki",
-      "status": 200
-    },
-    "https://www.facebook.com/ghezelbaash/": {
-      "final_url": "https://www.facebook.com/ghezelbaash/",
-      "host": "www.facebook.com",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/": {
-      "final_url": "https://www.ghezelbaash.ir/",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars": {
-      "final_url": "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy": {
-      "final_url": "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error": {
-      "final_url": "https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#aesthetic-treatment-selection": {
-      "final_url": "https://www.ghezelbaash.ir/#aesthetic-treatment-selection",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#botox": {
-      "final_url": "https://www.ghezelbaash.ir/#botox",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring": {
-      "final_url": "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up": {
-      "final_url": "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection": {
-      "final_url": "https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository": {
-      "final_url": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah": {
-      "final_url": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#filler": {
-      "final_url": "https://www.ghezelbaash.ir/#filler",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#hair-loss": {
-      "final_url": "https://www.ghezelbaash.ir/#hair-loss",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-safety": {
-      "final_url": "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-safety",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#saeed-ghezelbash": {
-      "final_url": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy": {
-      "final_url": "https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#skin-rejuvenation": {
-      "final_url": "https://www.ghezelbaash.ir/#skin-rejuvenation",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/#thread-lift": {
-      "final_url": "https://www.ghezelbaash.ir/#thread-lift",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.ghezelbaash.ir/contact/": {
-      "final_url": "https://www.ghezelbaash.ir/#saeed-ghezelbash-clinic-contact-and-location",
-      "host": "www.ghezelbaash.ir",
-      "status": 200
-    },
-    "https://www.google.com/maps?cid=12350483144643112463": {
-      "final_url": "https://www.google.com/maps?cid=12350483144643112463",
-      "host": "www.google.com",
-      "status": 200
-    },
-    "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash": {
-      "final_url": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash",
-      "host": "www.icliniq.com",
-      "status": 200
-    },
-    "https://www.impactio.com/publication/2491754873": {
-      "final_url": "https://www.impactio.com/publication/2491754873",
-      "host": "www.impactio.com",
-      "status": 200
-    },
-    "https://www.instagram.com/doctor.ghezelbaash/": {
-      "final_url": "https://www.instagram.com/accounts/login/?next=https%3A%2F%2Fwww.instagram.com%2Fdoctor.ghezelbaash%2F&is_from_rle",
-      "host": "www.instagram.com",
-      "status": 429
-    },
-    "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/": {
-      "final_url": "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
-      "host": "www.linkedin.com",
-      "status": 999
-    },
-    "https://www.magiran.com/author/mohammad-saeed-ghezelbash": {
-      "final_url": "https://www.magiran.com/author/mohammad-saeed-ghezelbash",
-      "host": "www.magiran.com",
-      "status": 403
-    },
-    "https://www.mdpi.com/2227-9032/9/9/1169": {
-      "final_url": "https://www.mdpi.com/2227-9032/9/9/1169",
-      "host": "www.mdpi.com",
-      "status": 403
-    },
-    "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash": {
-      "error": "HTTPSConnectionPool(host='www.mihanpezeshk.com', port=443): Max retries exceeded with url: /doctor/mohammad-saeed-ghzlbash (Caused by NameResolutionError(\"HTTPSConnection(host='www.mihanpezeshk.com', port=443): Failed to resolve 'www.mihanpezeshk.com' ([Errno -3] Temporary failure in name resolution)\"))"
-    },
-    "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/": {
-      "final_url": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
-      "host": "www.ncbi.nlm.nih.gov",
-      "status": 200
-    },
-    "https://www.openstreetmap.org/node/13530287096": {
-      "final_url": "https://www.openstreetmap.org/node/13530287096",
-      "host": "www.openstreetmap.org",
-      "status": 200
-    },
-    "https://www.paziresh24.com/dr/%D8%AF%DA%A9%D8%AA%D8%B1-%D9%85%D8%AD%D9%85%D8%AF%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4-1/": {
-      "final_url": "https://www.paziresh24.com/dr/%D8%AF%DA%A9%D8%AA%D8%B1-%D9%85%D8%AD%D9%85%D8%AF%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4-1/",
-      "host": "www.paziresh24.com",
-      "status": 200
-    },
-    "https://www.pezeshk-yab.com/14403": {
-      "final_url": "https://www.pezeshk-yab.com/14403",
-      "host": "www.pezeshk-yab.com",
-      "status": 200
-    },
-    "https://www.pinterest.com/qezelbaash/": {
-      "final_url": "https://www.pinterest.com/qezelbaash/",
-      "host": "www.pinterest.com",
-      "status": 200
-    },
-    "https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression": {
-      "final_url": "https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression",
-      "host": "www.researchgate.net",
-      "status": 403
-    },
-    "https://www.scribd.com/document/732906951/Abrir-WCP2017-Final-Programme-for-Web-Compressed": {
-      "final_url": "https://www.scribd.com/document/732906951/Abrir-WCP2017-Final-Programme-for-Web-Compressed",
-      "host": "www.scribd.com",
-      "status": 200
-    },
-    "https://www.semanticscholar.org/author/-/3786699": {
-      "final_url": "https://www.semanticscholar.org/author/-/3786699",
-      "host": "www.semanticscholar.org",
-      "status": 202
-    },
-    "https://www.threads.com/@doctor.ghezelbaash": {
-      "final_url": "https://www.threads.com/@doctor.ghezelbaash",
-      "host": "www.threads.com",
-      "status": 200
-    },
-    "https://www.tiktok.com/@ghezelbaash": {
-      "final_url": "https://www.tiktok.com/@ghezelbaash",
-      "host": "www.tiktok.com",
-      "status": 200
-    },
-    "https://www.youtube.com/@ghezelbaash": {
-      "final_url": "https://www.youtube.com/@ghezelbaash",
-      "host": "www.youtube.com",
-      "status": 200
-    },
-    "https://x.com/qezelbaash": {
-      "final_url": "https://x.com/qezelbaash",
-      "host": "x.com",
-      "status": 200
-    }
-  },
   "resolved_entity_labels": {
     "Q104892392": "Muhammad Sa'id",
     "Q133823": "migraine",
