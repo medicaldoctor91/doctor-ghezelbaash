@@ -1,0 +1,225 @@
+{
+  "checked_at_utc": "2026-08-19T13:31:55.364381+00:00",
+  "entities": {
+    "Q140287622": {
+      "P1343": [
+        {
+          "id": "Q140287622$9D997FF3-D130-4C91-9F96-487D540574C6",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q140304972"
+        }
+      ],
+      "P170": [],
+      "P31": [
+        {
+          "id": "Q140287622$4616fb39-4924-8852-9c00-269a404c0250",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q5"
+        }
+      ],
+      "P50": [],
+      "P800": [
+        {
+          "id": "Q140287622$00EC08CF-00B2-4C73-BFC5-1AF955185CEA",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q140306302"
+        },
+        {
+          "id": "Q140287622$05EFCAF2-8ED8-40AA-86A6-8B2154307D57",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q36942316"
+        },
+        {
+          "id": "Q140287622$CED42600-264B-4DCB-890C-2FF3FE492FAE",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q140298431"
+        }
+      ],
+      "P921": [],
+      "P973": [
+        {
+          "id": "Q140287622$6A9E960E-4441-43E6-94A5-F118214699D7",
+          "rank": "normal",
+          "refs": 1,
+          "value": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+        },
+        {
+          "id": "Q140287622$0902D0F6-5867-4066-B229-1A05B8E3B169",
+          "rank": "normal",
+          "refs": 1,
+          "value": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+        },
+        {
+          "id": "Q140287622$E22B360A-6781-4810-93A1-483C0EC5936F",
+          "rank": "normal",
+          "refs": 1,
+          "value": "https://www.magiran.com/author/mohammad-saeed-ghezelbash"
+        },
+        {
+          "id": "Q140287622$94C7820D-384D-4C24-9A97-4A05646B9EEB",
+          "rank": "normal",
+          "refs": 1,
+          "value": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+        },
+        {
+          "id": "Q140287622$95964328-FB76-44D5-BB96-F92AD74CE0C2",
+          "rank": "normal",
+          "refs": 1,
+          "value": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+        }
+      ],
+      "description": "Iranian aesthetic physician and medical researcher based in Kermanshah",
+      "label": "Saeed Ghezelbash",
+      "sitelinks": {
+        "commonswiki": "Category:Saeed Ghezelbash",
+        "enwikisource": "Author:Mohammad Saeed Ghezelbash"
+      }
+    },
+    "Q141099455": {
+      "P1343": [],
+      "P170": [],
+      "P31": [
+        {
+          "id": "Q141099455$E56C04BB-4911-4AF9-B50D-A1BF423821A3",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q116781"
+        }
+      ],
+      "P50": [
+        {
+          "id": "Q141099455$0F0B0FCD-31F8-44BD-BC0D-4F13F23D1D7A",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q140287622"
+        }
+      ],
+      "P800": [],
+      "P921": [
+        {
+          "id": "Q141099455$DACA2F70-92F8-4345-89E8-EFFCD68A0E2C",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q4095199"
+        },
+        {
+          "id": "Q141099455$7CAD5F87-62BD-4D60-BAB0-AC3F88A441C4",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q3332453"
+        }
+      ],
+      "P973": [],
+      "description": "Wikiversity learning resource about botulinum toxin in aesthetic medicine",
+      "label": "Botulinum toxin in aesthetic medicine",
+      "sitelinks": {
+        "enwikiversity": "Botulinum toxin in aesthetic medicine"
+      }
+    },
+    "Q208413": {
+      "P1343": [],
+      "P170": [],
+      "P31": [
+        {
+          "id": "Q208413$a2bc4904-4ddf-4ec3-18c3-38040aa4914d",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q67015883"
+        }
+      ],
+      "P50": [],
+      "P800": [],
+      "P921": [],
+      "P973": [],
+      "description": "group of eight neurotoxic proteins produced by Clostridium botulinum",
+      "label": "botulinum toxin group",
+      "sitelinks": {
+        "commonswiki": "Category:Botulinum neurotoxin",
+        "enwiki": "Botulinum toxin",
+        "fawiki": "سم بوتولینوم"
+      }
+    },
+    "Q47671772": {
+      "P1343": [],
+      "P170": [],
+      "P31": [
+        {
+          "id": "Q47671772$35F771E8-7C1A-4367-9876-5DFDE48622CB",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q13442814"
+        }
+      ],
+      "P50": [
+        {
+          "id": "Q47671772$FE3D1799-CD70-4568-8094-8CBF33C56F6F",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q114092343"
+        }
+      ],
+      "P800": [],
+      "P921": [
+        {
+          "id": "Q47671772$B7BEBAD8-5861-4AA7-AB12-4BF3B7094BC4",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q8047"
+        },
+        {
+          "id": "Q47671772$89112771-8E41-4592-B9A8-43E823FD168E",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q64923821"
+        },
+        {
+          "id": "Q47671772$BD30D129-5D4A-47AD-86D9-62785E9BF6E4",
+          "rank": "normal",
+          "refs": 1,
+          "value": "Q50430099"
+        }
+      ],
+      "P973": [],
+      "description": "scientific article",
+      "label": "Botulinum Toxin in Aesthetic Medicine: Myths and Realities",
+      "sitelinks": {}
+    }
+  },
+  "enwiki_page": {
+    "comment": "/* External links */ added link to Wikiversity",
+    "mentions_person_name": false,
+    "mentions_person_qid": false,
+    "pageid": 40172,
+    "qid": "Q208413",
+    "revid": 1369764261,
+    "timestamp": "2026-08-17T00:55:54Z",
+    "user": "Dr vulpes"
+  },
+  "search_results": [
+    {
+      "description": "Wikiversity learning resource about botulinum toxin in aesthetic medicine",
+      "id": "Q141099455",
+      "label": "Botulinum toxin in aesthetic medicine"
+    },
+    {
+      "description": "scientific article",
+      "id": "Q47671772",
+      "label": "Botulinum Toxin in Aesthetic Medicine: Myths and Realities"
+    }
+  ],
+  "wikiversity_page": {
+    "comment": "Correct provenance to the live canonical Botox section on the official website and remove the dead standalone source URL",
+    "mentions_person_name": true,
+    "mentions_person_qid": true,
+    "pageid": 331166,
+    "qid": "Q141099455",
+    "revid": 2822519,
+    "timestamp": "2026-08-17T08:12:50Z",
+    "user": "Medicaldoctor91"
+  }
+}
