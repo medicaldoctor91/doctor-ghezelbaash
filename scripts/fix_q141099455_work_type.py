@@ -2,13 +2,13 @@
 import requests,json,os,time
 WD='https://www.wikidata.org/w/api.php'; ITEM='Q141099455'; WORK='Q386724'; PERSON='Q140287622'
 USER=os.environ['WIKIMEDIA_USERNAME']; PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
-s=requests.Session(); s.headers.update({'User-Agent':'Q140287622-ConstraintFix/1.0 (https://www.ghezelbaash.ir/)'})
+s=requests.Session(); s.headers.update({'User-Agent':'Q140287622-ConstraintFix/1.1 (https://www.ghezelbaash.ir/)'})
 def get(**p):
- p.update(format='json',formatversion=2,maxage=0,smaxage=0); r=s.get(WD,params=p,timeout=60); r.raise_for_status(); d=r.json();
+ p.update(format='json',formatversion=2,maxage=0,smaxage=0); r=s.get(WD,params=p,timeout=60); r.raise_for_status(); d=r.json()
  if 'error' in d: raise RuntimeError(d['error'])
  return d
 def post(**p):
- p.update(format='json',formatversion=2); r=s.post(WD,data=p,timeout=90); r.raise_for_status(); d=r.json();
+ p.update(format='json',formatversion=2); r=s.post(WD,data=p,timeout=90); r.raise_for_status(); d=r.json()
  if 'error' in d: raise RuntimeError(d['error'])
  return d
 def login():
@@ -27,7 +27,8 @@ def p31_values():
 before=p31_values(); created=False
 if WORK not in before:
  login(); target=json.dumps({'entity-type':'item','id':WORK},separators=(',',':'))
- d=post(action='wbcreateclaim',entity=ITEM,property='P31',snaktype='value',value=target,summary='Classify this existing Wikiversity educational resource as a work; fixes the P3919 value-type constraint on its contributor item',token=csrf(),assert='user')
+ params={'action':'wbcreateclaim','entity':ITEM,'property':'P31','snaktype':'value','value':target,'summary':'Classify this existing Wikiversity educational resource as a work; fixes the P3919 value-type constraint on its contributor item','token':csrf(),'assert':'user'}
+ d=post(**params)
  if not d.get('claim'): raise RuntimeError(d)
  created=True; time.sleep(2)
 after=p31_values()
