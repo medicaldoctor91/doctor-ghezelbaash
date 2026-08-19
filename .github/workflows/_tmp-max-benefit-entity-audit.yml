@@ -1,0 +1,86 @@
+name: Temporary maximum-benefit entity audit
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/_tmp-max-benefit-entity-audit.yml']
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Fetch live entity graph and registry reconciliation
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests,json,os
+          H={'User-Agent':'GhezelbaashMaxBenefitAudit/1.0 (https://www.ghezelbaash.ir/)'}
+          s=requests.Session(); s.headers.update(H)
+          out={}
+          def safe(url,headers=None,timeout=45):
+            try:
+              r=s.get(url,headers=headers or {},timeout=timeout)
+              return {'status':r.status_code,'json':(r.json() if 'json' in r.headers.get('content-type','').lower() else None),'text':(None if 'json' in r.headers.get('content-type','').lower() else r.text[:12000])}
+            except Exception as e:
+              return {'error':repr(e)}
+          # Wikidata live JSON
+          for q in ['Q140287622','Q141099455','Q140304972','Q140288589']:
+            d=safe(f'https://www.wikidata.org/wiki/Special:EntityData/{q}.json')
+            ent=(d.get('json') or {}).get('entities',{}).get(q,{})
+            compact={'lastrevid':ent.get('lastrevid'),'modified':ent.get('modified'),'labels':{k:v.get('value') for k,v in ent.get('labels',{}).items() if k in ['en','fa']},'descriptions':{k:v.get('value') for k,v in ent.get('descriptions',{}).items() if k in ['en','fa']},'sitelinks':{k:v.get('title') for k,v in ent.get('sitelinks',{}).items()},'claims':{}}
+            for p,claims in ent.get('claims',{}).items():
+              vals=[]
+              for c in claims:
+                sn=c.get('mainsnak',{}); dv=sn.get('datavalue',{}).get('value')
+                if isinstance(dv,dict):
+                  if 'id' in dv: v=dv['id']
+                  elif 'text' in dv: v=dv['text']
+                  elif 'time' in dv: v=dv['time']
+                  elif 'amount' in dv: v=dv['amount']
+                  else: v=dv
+                else: v=dv
+                vals.append({'value':v,'rank':c.get('rank'),'refs':len(c.get('references',[]))})
+              compact['claims'][p]=vals
+            out[q]=compact
+          # Wikipedia current article source and talk page latest revisions
+          API='https://en.wikipedia.org/w/api.php'
+          params={'action':'query','format':'json','formatversion':2,'titles':'Botulinum toxin','prop':'revisions','rvprop':'ids|timestamp|user|comment|content','rvslots':'main','rvlimit':1}
+          d=s.get(API,params=params,timeout=45).json(); p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]; src=r.get('slots',{}).get('main',{}).get('content','')
+          out['enwiki_article']={'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'has_v_yes':'v=yes' in src,'has_explicit':'v=Botulinum toxin in aesthetic medicine' in src,'sister_snippets':[line for line in src.splitlines() if 'sister project links' in line.lower()]}
+          params={'action':'query','format':'json','formatversion':2,'titles':'Talk:Botulinum toxin','prop':'revisions','rvprop':'ids|timestamp|user|comment|content','rvslots':'main','rvlimit':8}
+          d=s.get(API,params=params,timeout=45).json(); p=d['query']['pages'][0]; revs=p.get('revisions',[]); latesttext=(revs[0].get('slots',{}).get('main',{}).get('content','') if revs else '')
+          out['enwiki_talk']={'latest':[{'revid':x.get('revid'),'timestamp':x.get('timestamp'),'user':x.get('user'),'comment':x.get('comment')} for x in revs],'contains_followup':'Follow-up: Wikiversity link target' in latesttext,'contains_explicit':'v=Botulinum toxin in aesthetic medicine' in latesttext}
+          # Wikiversity exact resource and search for WikiJournal submission/title
+          VAPI='https://en.wikiversity.org/w/api.php'
+          d=s.get(VAPI,params={'action':'query','format':'json','formatversion':2,'titles':'Botulinum toxin in aesthetic medicine','prop':'info|pageprops|revisions','rvprop':'ids|timestamp|user|comment','rvlimit':1},timeout=45).json(); p=d['query']['pages'][0]
+          out['wikiversity_resource']={'pageid':p.get('pageid'),'title':p.get('title'),'touched':p.get('touched'),'pageprops':p.get('pageprops'),'latest':(p.get('revisions') or [{}])[0]}
+          sr=s.get(VAPI,params={'action':'query','format':'json','formatversion':2,'list':'search','srsearch':'"Individualized clinical assessment" OR "Saeed Ghezelbash"','srlimit':20},timeout=45).json()
+          out['wikiversity_search']=sr.get('query',{}).get('search',[])
+          # OpenAlex
+          out['openalex']=safe('https://api.openalex.org/authors/A5064828898')
+          # Semantic Scholar
+          out['semantic_scholar']=safe('https://api.semanticscholar.org/graph/v1/author/3786699?fields=name,aliases,url,externalIds,paperCount,citationCount,hIndex,papers.title,papers.year,papers.externalIds')
+          # Crossref works
+          for doi in ['10.4103/2008-7802.182734','10.3390/healthcare9091169']:
+            out['crossref_'+doi]=safe('https://api.crossref.org/works/'+doi)
+          # ORCID public record
+          out['orcid']=safe('https://pub.orcid.org/v3.0/0009-0001-9346-8475/record',headers={'Accept':'application/json'})
+          # Zenodo canonical KG release
+          out['zenodo']=safe('https://zenodo.org/api/records/21930954')
+          os.makedirs('wikimedia',exist_ok=True)
+          open('wikimedia/_tmp-max-benefit-entity-audit.json','w',encoding='utf8').write(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps({'ok':True,'keys':list(out)},ensure_ascii=False))
+          PY
+      - name: Commit live audit
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wikimedia/_tmp-max-benefit-entity-audit.json
+          git commit -m 'Record temporary maximum-benefit entity audit'
+          git push
