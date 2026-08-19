@@ -1,0 +1,38 @@
+name: Temporary trigger Wikiversity facial assessment creation
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/_tmp-trigger-wikiversity-facial-assessment.yml']
+permissions:
+  contents: write
+jobs:
+  trigger:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Execute guarded creation script from source workflow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import textwrap
+          src=Path('.github/workflows/_tmp-create-wikiversity-facial-assessment.yml').read_text(encoding='utf-8')
+          start="python - <<'PY'\n"
+          if start not in src:
+              raise SystemExit('embedded Python start marker not found')
+          code=src.split(start,1)[1].split("\n          PY",1)[0]
+          exec(compile(textwrap.dedent(code),'<wikiversity-create>','exec'),{})
+          PY
+      - name: Commit verification status
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wikimedia/_tmp-wikiversity-facial-assessment-status.json
+          git commit -m 'Record temporary Wikiversity facial assessment creation status'
+          git push
