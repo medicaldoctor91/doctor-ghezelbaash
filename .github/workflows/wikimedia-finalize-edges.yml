@@ -1,5 +1,6 @@
 name: Finalize existing Wikimedia edges
 
+# retrigger facial-assessment linkage
 on:
   push:
     branches: [main]
