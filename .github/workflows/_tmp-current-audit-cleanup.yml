@@ -1,0 +1,31 @@
+name: Temporary cleanup current Wikidata audits
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/_tmp-current-audit-cleanup.yml']
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove temporary audit files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f \
+            .github/workflows/_tmp-wikidata-edge-audit.yml \
+            .github/workflows/_tmp-wikidata-edge-summary.yml \
+            .github/workflows/_tmp-enwiki-rendered-link-audit.yml \
+            .github/workflows/_tmp-sister-link-syntax-test.yml \
+            .github/workflows/_tmp-current-audit-cleanup.yml \
+            wikimedia/_tmp-wikidata-edge-audit.json \
+            wikimedia/_tmp-wikidata-edge-summary.json \
+            wikimedia/_tmp-enwiki-rendered-link-audit.json \
+            wikimedia/_tmp-sister-link-syntax-test.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Remove temporary current Wikidata audit files'
+          git push
