@@ -1,0 +1,93 @@
+{
+  "checked_at_utc": "2026-08-19T13:02:14.329346+00:00",
+  "enwiki": {
+    "bipolar_request": {
+      "article_contains_ghezelbash": false,
+      "article_contains_meta_doi": false,
+      "article_contains_review_doi": false,
+      "article_contains_trial_doi": false,
+      "article_latest_revid": 1364896215,
+      "article_latest_timestamp": "2026-07-19T03:41:38Z",
+      "request_revid": 1369763326,
+      "talk_revisions_after_request": []
+    },
+    "botulinum_request": {
+      "article_contains_ghezelbash": false,
+      "article_contains_target_title": false,
+      "article_contains_wikiversity": false,
+      "article_latest_revid": 1369764261,
+      "article_latest_timestamp": "2026-08-17T00:55:54Z",
+      "request_revid": 1369605448,
+      "talk_revisions_after_request": [
+        {
+          "comment": "/* Wikiversity sister-project link request */ Reply",
+          "revid": 1369764392,
+          "timestamp": "2026-08-17T00:57:09Z",
+          "user": "Dr vulpes"
+        },
+        {
+          "comment": "/* Wikiversity sister-project link request */ done",
+          "revid": 1369764103,
+          "timestamp": "2026-08-17T00:54:43Z",
+          "user": "Dr vulpes"
+        }
+      ]
+    },
+    "contributions": [
+      {
+        "comment": "COI disclosed: request independent review of Omega-3 subsection using recent secondary sources",
+        "revid": 1369763326,
+        "sizediff": 4741,
+        "timestamp": "2026-08-17T00:49:36Z",
+        "title": "Talk:Treatment of bipolar disorder"
+      },
+      {
+        "comment": "COI edit request: consider relevant Wikiversity sister-project link",
+        "revid": 1369605448,
+        "sizediff": 671,
+        "timestamp": "2026-08-16T00:55:21Z",
+        "title": "Talk:Botulinum toxin"
+      }
+    ]
+  },
+  "fawiki": {
+    "contributions": [],
+    "logs_mohammad": [],
+    "logs_saeed": [],
+    "person_mohammad": {
+      "latest_revid": null,
+      "missing": true,
+      "pageid": null,
+      "wikibase_item": null
+    },
+    "person_saeed": {
+      "latest_revid": null,
+      "missing": true,
+      "pageid": null,
+      "wikibase_item": null
+    },
+    "search_all_mohammad": {
+      "titles": [],
+      "totalhits": 0
+    },
+    "search_all_saeed": {
+      "titles": [],
+      "totalhits": 0
+    },
+    "search_main_latin": {
+      "titles": [
+        "فهرست کارگردانان ایرانی",
+        "سه‌قلوهای بلویل"
+      ],
+      "totalhits": 2
+    },
+    "search_main_mohammad": {
+      "titles": [],
+      "totalhits": 0
+    },
+    "search_main_saeed": {
+      "titles": [],
+      "totalhits": 0
+    }
+  }
+}
