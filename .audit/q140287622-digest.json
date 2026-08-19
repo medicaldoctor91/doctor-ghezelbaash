@@ -1,0 +1,5008 @@
+{
+  "aliases": {
+    "ar": [
+      "سعيد قزلباش"
+    ],
+    "ckb": [
+      "سەعید قزلباش"
+    ],
+    "en": [
+      "Mohammad Saeed Ghezelbash",
+      "Dr. Saeed Ghezelbash",
+      "Ghezelbash MS",
+      "Doctor Ghezelbaash",
+      "Dr. Saeed Ghezelbaash",
+      "MohammadSaeed Ghezelbash",
+      "Mohamadsaeed Ghezelbash",
+      "Saeed Ghezelbaash",
+      "Dr Saeed Ghezelbash"
+    ],
+    "fa": [
+      "محمد‌سعید قزلباش",
+      "دکتر سعید قزلباش",
+      "دکتر محمدسعید قزلباش",
+      "دکتر محمد سعید قزلباش",
+      "دکتر قزلباش",
+      "محمدسعید قزلباش",
+      "محمد سعید قزلباش",
+      "دکتر محمد‌سعید قزلباش"
+    ]
+  },
+  "audit_utc": "2026-08-19T14:58:09.239674+00:00",
+  "constraint_check": {
+    "ok": true,
+    "raw": {
+      "success": 1,
+      "wbcheckconstraints": {
+        "Q140287622": {
+          "claims": {
+            "P10": [
+              {
+                "id": "Q140287622$AF4E3FCE-5C27-4D74-9A60-081F81B20F57",
+                "mainsnak": {
+                  "hash": "2d3534e1456c0eab663fbb9123a5e61b756bd9c1",
+                  "results": []
+                }
+              }
+            ],
+            "P101": [
+              {
+                "id": "Q140287622$F4F73F03-9718-46A7-8AF3-F29FAABBC610",
+                "mainsnak": {
+                  "hash": "06e5adc8087fe74777110847bea55273c9d620bb",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$581C7157-2DD1-474F-8BFA-29A858CA54C7",
+                "mainsnak": {
+                  "hash": "0c92767f0ea1e4c3eee10213ccc32f097256fab4",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$1CD92B0B-D07E-456B-9944-C4171BFEB820",
+                "mainsnak": {
+                  "hash": "15d8185cfcd6e8c55d8501e3936d63bad903c367",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$B869A596-C364-4389-B7DB-F27A78316033",
+                "mainsnak": {
+                  "hash": "1cc4be87249c4808d5eaa31cdb2e05a3d1e81f19",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$5615CC57-DAE3-48B2-BD8F-2E50CE92D05A",
+                "mainsnak": {
+                  "hash": "238994c633f56cbf5ba78aabf088a218c827708e",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$8E3E1734-70D5-4E09-BDF1-CD897B2C0A5E",
+                "mainsnak": {
+                  "hash": "27f1ea6c155489d3fc6dc27843286b8370be453a",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$E794D2C1-9302-4A31-B83A-3BE40B3B57B1",
+                "mainsnak": {
+                  "hash": "2979a055c6af2e6183ce5345a081e29093b549f5",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$A4BA6210-B037-4F2D-9F43-7B8CAF410CD3",
+                "mainsnak": {
+                  "hash": "35428dd33dfa524aabe5076f0cfc48f173e72477",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$0AECE96E-3B6A-490E-87C1-1C3DF2CDA943",
+                "mainsnak": {
+                  "hash": "40f2aec865a3f467e0d9ac7ffec11762e94315d5",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$5EFCAB7D-554D-4F40-AF16-9903E91561B6",
+                "mainsnak": {
+                  "hash": "454c708ec19df9265aaf58b4f046f37abd02b295",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$5BBE40AC-E581-4082-A883-25478FFD29BD",
+                "mainsnak": {
+                  "hash": "62fa2d4730e5530a2954358a487192c881653245",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$8A51FDF1-7AF0-42CB-9AED-86F279FAEB3A",
+                "mainsnak": {
+                  "hash": "69cbcedd6a12de2b0b6b53a0664e4a21b2a7d64f",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$3B6F7E1A-6D98-478B-A05C-7BC9A4B7B9EB",
+                "mainsnak": {
+                  "hash": "6afa61e4f205ce7b4266894f39ea5687d57481d8",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$5D488E96-2D31-41C5-963B-EAA9410FE1F9",
+                "mainsnak": {
+                  "hash": "6e8bc2273d288610aeacf541d9f409466d306dc2",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$22E4184A-F67F-477C-B2B7-A40780DA2E3D",
+                "mainsnak": {
+                  "hash": "706f552108c9eb44bc5816756b2482e112522494",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$76F0AF23-A730-4677-9E5E-8E112295B083",
+                "mainsnak": {
+                  "hash": "7ee82f28f309b18c2797185a8c46428559a70fba",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$03FDB487-9DF0-40F4-8652-7CB80F60BB59",
+                "mainsnak": {
+                  "hash": "8179aff8477be57fe9d8fb3f77c98d9d27e3fa12",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$C7046A86-FF92-4439-BB63-7FDEECA46677",
+                "mainsnak": {
+                  "hash": "8a8e2391239148c4c8b476423f9d5a2846ae1396",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$3AE55007-04E3-41C0-89A4-67C10CE574BF",
+                "mainsnak": {
+                  "hash": "8c288fefe3a36b1dfc3752722e95603e9b02dcdb",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$DB6FE9ED-0ABB-4E48-B5D8-991C576DCC9E",
+                "mainsnak": {
+                  "hash": "8ea74d74634a22b88c0f9ce2d1030e16549d2e00",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$8BF51D54-9C18-403B-9DE3-E159BFEF5C1D",
+                "mainsnak": {
+                  "hash": "9b23cfcfdedaefb224ee306c203d967d9d3e4bd0",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$08E2F3C6-0021-44E0-BAEC-869D4F073493",
+                "mainsnak": {
+                  "hash": "ca2ccbe8452c3640079a551751042b54742ba8d2",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$2856768D-9825-49CF-8820-D17EE0D20271",
+                "mainsnak": {
+                  "hash": "cc08f0f701120150b34775c00d2469300417143e",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$C6AF7F35-A3E5-4E7F-9339-D7617CB1AFBB",
+                "mainsnak": {
+                  "hash": "d7d708b2457307ed5905908f1e618911e9da7b2e",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$BEF608DB-2625-4349-9EEC-DFA190563A6E",
+                "mainsnak": {
+                  "hash": "ea171c98d28aeba8bd0991ef8b10b704e9a1acd4",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$15B48453-190C-45F1-B735-9F8BA7767D50",
+                "mainsnak": {
+                  "hash": "f14e5d930cc6a4853265631a66616e23e1b59b5b",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$6BC0E107-D46D-47A5-9DD1-8BD974804077",
+                "mainsnak": {
+                  "hash": "f243c861a18ce7f3ec11043377a7fd9bc47b38c0",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$E393C67B-0B37-4EA3-A037-70B4A097EAC6",
+                "mainsnak": {
+                  "hash": "f7dfca6982ab4296ab016603e24462f63ee11c3e",
+                  "results": []
+                }
+              }
+            ],
+            "P10283": [
+              {
+                "id": "Q140287622$a64126cd-49a2-6f25-8d00-9e3062e5f526",
+                "mainsnak": {
+                  "hash": "9641a0a11fb9371552c9a20395c9da66bea28571",
+                  "results": []
+                }
+              }
+            ],
+            "P106": [
+              {
+                "id": "Q140287622$60bde225-4971-dcaf-a4ba-d4242c2b3ea8",
+                "mainsnak": {
+                  "hash": "03a518576fb43fe3755ff81a7c3ee900ff114875",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$c720a368-4c76-6cc8-4df4-4a334846c002",
+                "mainsnak": {
+                  "hash": "6f3176aa7019356d10e93c9a8a22ad52df896d5b",
+                  "results": []
+                }
+              }
+            ],
+            "P10611": [
+              {
+                "id": "Q140287622$0cf18cae-4da5-886f-dd49-0efe6b72069d",
+                "mainsnak": {
+                  "hash": "3d4ff415aeabebcdc033071a1450c2948138df03",
+                  "results": []
+                }
+              }
+            ],
+            "P11079": [
+              {
+                "id": "Q140287622$78EC26BD-0923-48DD-AA75-BA029DD85842",
+                "mainsnak": {
+                  "hash": "fc0bf7d868c4e90e83c1360c61bd41d5c750d06e",
+                  "results": []
+                }
+              }
+            ],
+            "P11245": [
+              {
+                "id": "Q140287622$46AE2B87-DDDC-4D9F-BB28-52F272AC09E0",
+                "mainsnak": {
+                  "hash": "0f0fe31d4df957e8c8fbc67a8c116575f5e10347",
+                  "results": [
+                    {
+                      "claim": "Q140287622$46AE2B87-DDDC-4D9F-BB28-52F272AC09E0",
+                      "constraint": {
+                        "discussLink": "//www.wikidata.org/wiki/Property_talk:P11245",
+                        "id": "P11245$9c2d0251-4d2c-a23d-2c13-d8d634bb740f",
+                        "link": "//www.wikidata.org/wiki/Property:P11245#P11245$9c2d0251-4d2c-a23d-2c13-d8d634bb740f",
+                        "type": "Q21510856",
+                        "typeLabel": "required qualifier constraint"
+                      },
+                      "constraint-clarification": "YouTube handle can be changed (this can be removed if a bot is doing the job)",
+                      "message-html": "This <span class=\"wbqc-role wbqc-role-constraint-property\"><a title=\"Property:P11245\" href=\"/wiki/Property:P11245\">YouTube handle</a></span> statement is missing a qualifier <span class=\"wbqc-role wbqc-role-qualifier-predicate\"><a title=\"Property:P2397\" href=\"/wiki/Property:P2397\">YouTube channel ID</a></span>.",
+                      "property": "P11245",
+                      "status": "suggestion"
+                    }
+                  ]
+                }
+              }
+            ],
+            "P11892": [
+              {
+                "id": "Q140287622$13E9209B-DBA0-44B5-AC68-22F68B76DAF0",
+                "mainsnak": {
+                  "hash": "7d5ab704e6b313e03cda3efe11af7b567322e94d",
+                  "results": []
+                }
+              }
+            ],
+            "P12201": [
+              {
+                "id": "Q140287622$b1486c46-49c2-978c-b6a4-80fd550e3d51",
+                "mainsnak": {
+                  "hash": "07e62b75f1a4e16dd1b263b34dba2119d49194ec",
+                  "results": []
+                }
+              }
+            ],
+            "P1343": [
+              {
+                "id": "Q140287622$9D997FF3-D130-4C91-9F96-487D540574C6",
+                "mainsnak": {
+                  "hash": "eed865fff5d2812fcb2707a1995ea9040a13ebd9",
+                  "results": []
+                }
+              }
+            ],
+            "P1344": [
+              {
+                "id": "Q140287622$D31A3456-0CC0-495F-A024-91FB6303821B",
+                "mainsnak": {
+                  "hash": "4ba3c09b6118257863da352c5ce6b9fb62efc9df",
+                  "results": []
+                }
+              }
+            ],
+            "P1412": [
+              {
+                "id": "Q140287622$44532BCB-06A7-4B7B-89AF-DA60E128FF8A",
+                "mainsnak": {
+                  "hash": "7056615ebf0fbde82a3ca3bb9b2c481669a46eb1",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$96B1A816-4C79-4DD6-BED7-2D67A413D229",
+                "mainsnak": {
+                  "hash": "ee497838462db27bdd8bc4ee6547878817034fd9",
+                  "results": []
+                }
+              }
+            ],
+            "P1416": [
+              {
+                "id": "Q140287622$82deb4be-4fd2-6db0-7959-23ce4deda85b",
+                "mainsnak": {
+                  "hash": "6c3036a98714fd0bbcf8078ebf2d27f2b2e67287",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$6f07c517-4bb2-4c4e-197a-0dda845682a5",
+                "mainsnak": {
+                  "hash": "6c3036a98714fd0bbcf8078ebf2d27f2b2e67287",
+                  "results": []
+                }
+              }
+            ],
+            "P1472": [
+              {
+                "id": "Q140287622$37A10008-79D1-42FF-9A27-262BF5182DF5",
+                "mainsnak": {
+                  "hash": "5765577610d0a93e273112ee9db082670488f282",
+                  "results": []
+                }
+              }
+            ],
+            "P1559": [
+              {
+                "id": "Q140287622$B0D3F371-13DD-4FEB-9A2A-40ACCEBD17D8",
+                "mainsnak": {
+                  "hash": "736aab2dbfb6710d9d794a27645284d9c511c7b0",
+                  "results": []
+                }
+              }
+            ],
+            "P18": [
+              {
+                "id": "Q140287622$3ae02fb4-4fc3-6c14-5fc9-71b4aa130890",
+                "mainsnak": {
+                  "hash": "743d0ce28904d4c1cfe26e801c59467882b15be3",
+                  "results": []
+                }
+              }
+            ],
+            "P1830": [
+              {
+                "id": "Q140287622$9BF012E3-7291-42D0-B987-820ED6B76768",
+                "mainsnak": {
+                  "hash": "28412c84cc5722ea1a35752a327e773ee8f8054f",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$9ef78c55-4d39-f7c5-643d-8b26575e6f32",
+                "mainsnak": {
+                  "hash": "f89f5028683670344f2e19fe9f0a5aaeef5b1888",
+                  "results": []
+                }
+              }
+            ],
+            "P1960": [
+              {
+                "id": "Q140287622$d8fdc365-46e8-2ec6-84a1-6eb3011ddf3d",
+                "mainsnak": {
+                  "hash": "6659c6cd7e9ecb1a79330a74af34fddd751996f6",
+                  "results": []
+                }
+              }
+            ],
+            "P2002": [
+              {
+                "id": "Q140287622$C0DD1107-6B72-4832-8B33-B6A916B64609",
+                "mainsnak": {
+                  "hash": "e28c486e23e4718668da05ba92fc80f8464f374a",
+                  "results": []
+                }
+              }
+            ],
+            "P2003": [
+              {
+                "id": "Q140287622$9CA80771-EBB2-44B4-A737-DCC409A80E4C",
+                "mainsnak": {
+                  "hash": "0fbc8f9fa8def027f743f65146949e0763933b57",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$b7d72a0d-4f04-18d0-b75d-fe2442afb2da",
+                "mainsnak": {
+                  "hash": "eec49bb3b6c70b8b8037aae539eda4b19b7c1f7d",
+                  "results": []
+                }
+              }
+            ],
+            "P2013": [
+              {
+                "id": "Q140287622$DE8A0D41-14A4-4F9F-A5A1-EB114448E64D",
+                "mainsnak": {
+                  "hash": "f17cbdd666b69108eca672f35bf13861fe94b45c",
+                  "results": []
+                }
+              }
+            ],
+            "P2037": [
+              {
+                "id": "Q140287622$868d1a71-44f1-8d8e-3800-0c22589dfb00",
+                "mainsnak": {
+                  "hash": "3db680fc6722cdaa37dc42d87cc2f5412c2b8616",
+                  "results": []
+                }
+              }
+            ],
+            "P21": [
+              {
+                "id": "Q140287622$F2C3147E-18E0-4EE5-AC47-96B2CC33459B",
+                "mainsnak": {
+                  "hash": "85ad4b1c7348f7a5aac521135040d74e91fb5939",
+                  "results": []
+                }
+              }
+            ],
+            "P2671": [
+              {
+                "id": "Q140287622$1B358C30-1D4B-448A-A9C9-37B0D7DC00A6",
+                "mainsnak": {
+                  "hash": "5c214b29012f951b2b0b16a1a8612a226d6c74db",
+                  "results": []
+                }
+              }
+            ],
+            "P27": [
+              {
+                "id": "Q140287622$D06571AC-7DC7-4D76-8917-F9EA1F34A937",
+                "mainsnak": {
+                  "hash": "1c70723c68394b5c5c757d3a5f29def57ca92236",
+                  "results": []
+                }
+              }
+            ],
+            "P31": [
+              {
+                "id": "Q140287622$4616fb39-4924-8852-9c00-269a404c0250",
+                "mainsnak": {
+                  "hash": "ad7d38a03cdd40cdc373de0dc4e7b7fcbccb31d9",
+                  "results": []
+                }
+              }
+            ],
+            "P373": [
+              {
+                "id": "Q140287622$C75363FC-BDCD-401B-AEE5-4CBA34E136BE",
+                "mainsnak": {
+                  "hash": "da48f4b8fc49f6c6dacdac0ed3e3c50ef2f6ac10",
+                  "results": []
+                }
+              }
+            ],
+            "P3836": [
+              {
+                "id": "Q140287622$B987EDCB-E08A-42CA-A6C7-4BF0DD4E1B8A",
+                "mainsnak": {
+                  "hash": "019e0ed967f8937de21a4e858f23d2ed9d2f44ef",
+                  "results": []
+                }
+              }
+            ],
+            "P39": [
+              {
+                "id": "Q140287622$9C6A1D07-6BF2-43E6-A9C7-DFC1CD96C5FE",
+                "mainsnak": {
+                  "hash": "180e470c4c6077a0829a3903ec5d16eba3e8eab7",
+                  "results": []
+                }
+              }
+            ],
+            "P3919": [
+              {
+                "id": "Q140287622$F50E143E-E72C-4F7D-B23A-F5FE897E70DB",
+                "mainsnak": {
+                  "hash": "a4ccdf3a716ce37ff93bcc55779359787e503700",
+                  "results": [
+                    {
+                      "cached": {
+                        "maximumAgeInSeconds": 3468
+                      },
+                      "claim": "Q140287622$F50E143E-E72C-4F7D-B23A-F5FE897E70DB",
+                      "constraint": {
+                        "discussLink": "//www.wikidata.org/wiki/Property_talk:P3919",
+                        "id": "P3919$81FAE5E5-B858-467F-AE11-64FACC1972C9",
+                        "link": "//www.wikidata.org/wiki/Property:P3919#P3919$81FAE5E5-B858-467F-AE11-64FACC1972C9",
+                        "type": "Q21510865",
+                        "typeLabel": "value-type constraint"
+                      },
+                      "message-html": "Values of <span class=\"wbqc-role wbqc-role-constraint-property\"><a title=\"Property:P3919\" href=\"/wiki/Property:P3919\">contributed to creative work</a></span> statements should be instances of <span class=\"wbqc-role wbqc-role-object\"><a title=\"Q386724\" href=\"/wiki/Q386724\">work</a></span> or <span class=\"wbqc-role wbqc-role-object\"><a title=\"Q12772819\" href=\"/wiki/Q12772819\">discovery</a></span> (or of a subclass of them), but <span class=\"wbqc-role wbqc-role-subject\"><a title=\"Q141099455\" href=\"/wiki/Q141099455\">Botulinum toxin in aesthetic medicine</a></span> currently isn&#039;t.",
+                      "property": "P3919",
+                      "status": "warning"
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "Q140287622$AAD2A06A-C3EB-422D-8C77-C73171B59D3D",
+                "mainsnak": {
+                  "hash": "398b7a5021b8a160392d22fe7cd32071ff94b2c4",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$ED83D9C3-5C71-41BA-892E-AA5DD29C3369",
+                "mainsnak": {
+                  "hash": "45e26bf9fe99f8a651726ab446907f87ff875dae",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$62257FC3-CD09-48B2-9A98-FFAB0889BC4E",
+                "mainsnak": {
+                  "hash": "793bf018d18eb35fc96705eb6fc95bff4cef2bd3",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$C92B10F2-64F2-42B7-B4F2-A93FE5F74DCE",
+                "mainsnak": {
+                  "hash": "e12fa103463768d41505aa810e7c17e6301b1baf",
+                  "results": []
+                }
+              }
+            ],
+            "P4012": [
+              {
+                "id": "Q140287622$5BFDFE99-4A3A-4384-9335-89A0410EFFD6",
+                "mainsnak": {
+                  "hash": "b083e6cd7971ce12416879180bf4e4aa6e278c3f",
+                  "results": []
+                }
+              }
+            ],
+            "P463": [
+              {
+                "id": "Q140287622$b3c68298-4ed5-000b-897a-2674641656fe",
+                "mainsnak": {
+                  "hash": "107f2729cd109c47a3c7746bfaedeb5bb4ac6f24",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$3E709853-9F26-47C2-84F6-14A4511B958F",
+                "mainsnak": {
+                  "hash": "111d3c925575541816eda7db51ef107d5a22c793",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$7891137A-9D1E-431A-9E29-01BEA68A70C4",
+                "mainsnak": {
+                  "hash": "93002df3dd9ab6ff1bda112457af703fe719f6b1",
+                  "results": []
+                }
+              }
+            ],
+            "P496": [
+              {
+                "id": "Q140287622$2f904409-4032-86b6-e467-ce580ee8a11e",
+                "mainsnak": {
+                  "hash": "aa84428ccd830edda9f3e39b9f914418cc6fc900",
+                  "results": []
+                }
+              }
+            ],
+            "P511": [
+              {
+                "id": "Q140287622$9c54cbe3-4849-55a8-1e7e-4065df802f1d",
+                "mainsnak": {
+                  "hash": "2f76078a2f3c0a8654e4f54d0d3ff7caa974ebb4",
+                  "results": []
+                }
+              }
+            ],
+            "P512": [
+              {
+                "id": "Q140287622$7c5a981b-4175-f68c-4e14-54bf3fb50850",
+                "mainsnak": {
+                  "hash": "c874b0352a0ea934314ac55f83b154362bc3810e",
+                  "results": []
+                }
+              }
+            ],
+            "P553": [
+              {
+                "id": "Q140287622$DCEE25EE-2E1A-42E3-A1EE-5F8221C558E3",
+                "mainsnak": {
+                  "hash": "0c4843e6df8b85187dead82a1486d5cba3c91c8c",
+                  "results": []
+                }
+              }
+            ],
+            "P569": [
+              {
+                "id": "Q140287622$01EA0EAE-A694-4AB4-A077-A9C2EE924E2B",
+                "mainsnak": {
+                  "hash": "190359258a7813e22618517e6041f295b6b135a4",
+                  "results": []
+                }
+              }
+            ],
+            "P6634": [
+              {
+                "id": "Q140287622$5bb55f60-4932-3cc2-4644-d5825d7500ec",
+                "mainsnak": {
+                  "hash": "745dcd24035417dbd50366312ef20fecb9d18144",
+                  "results": []
+                }
+              }
+            ],
+            "P69": [
+              {
+                "id": "Q140287622$24428897-4f17-82cc-18e6-f3c61643e92b",
+                "mainsnak": {
+                  "hash": "ea1cd92fbe5dc20ff971aad4551d29f1eee8a6e7",
+                  "results": []
+                }
+              }
+            ],
+            "P7085": [
+              {
+                "id": "Q140287622$E198184F-E7FF-40A9-B452-174665EC78C1",
+                "mainsnak": {
+                  "hash": "a12705700efda0b3b4767c0db0ec1aa4d819b2fc",
+                  "results": []
+                }
+              }
+            ],
+            "P734": [
+              {
+                "id": "Q140287622$CA4E3935-FF3D-45C8-92A6-3F32096D8B07",
+                "mainsnak": {
+                  "hash": "db4054592e58c5e8527b3c97558a3435184c5789",
+                  "results": []
+                }
+              }
+            ],
+            "P735": [
+              {
+                "id": "Q140287622$103C90E0-2311-4D98-9703-644A526697E9",
+                "mainsnak": {
+                  "hash": "28e8deeb7170646857a2b3ae1a16a14a56f24316",
+                  "results": []
+                }
+              }
+            ],
+            "P800": [
+              {
+                "id": "Q140287622$CED42600-264B-4DCB-890C-2FF3FE492FAE",
+                "mainsnak": {
+                  "hash": "4f2a8d5c12079545cb842d3dcd2efd45f4912374",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$05EFCAF2-8ED8-40AA-86A6-8B2154307D57",
+                "mainsnak": {
+                  "hash": "b99bd723ece9bb9042d88f6610775f3658bf67a4",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$00EC08CF-00B2-4C73-BFC5-1AF955185CEA",
+                "mainsnak": {
+                  "hash": "ed109e0a2888440cffd3188b79445faceae866f2",
+                  "results": []
+                }
+              }
+            ],
+            "P856": [
+              {
+                "id": "Q140287622$b46cd23b-4153-eb8d-6b9c-cfb15c33d083",
+                "mainsnak": {
+                  "hash": "9dff6e807e249ab9ac51b9114e0e5208eb94f733",
+                  "results": []
+                }
+              }
+            ],
+            "P937": [
+              {
+                "id": "Q140287622$186a3b4c-4c53-1da5-77c3-1333877ae981",
+                "mainsnak": {
+                  "hash": "b8762991c58966ae6b6c56b3d6860404832a5a22",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$0a907b38-4287-06be-699a-7e47b0f7ac69",
+                "mainsnak": {
+                  "hash": "c63377c19622faed06c33a4bcf6133a8c6eab624",
+                  "results": []
+                }
+              }
+            ],
+            "P968": [
+              {
+                "id": "Q140287622$F6B22D25-A2BC-4889-8444-3D3C7C39D8EE",
+                "mainsnak": {
+                  "hash": "bf9da44e44be54b5c3f04eb050d0e87e9a257994",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$7722CF38-0CCD-4030-AD4F-5A6FBCEA9078",
+                "mainsnak": {
+                  "hash": "f0f6863963333660a6ed27de417d23f7377c346a",
+                  "results": []
+                }
+              }
+            ],
+            "P973": [
+              {
+                "id": "Q140287622$6A9E960E-4441-43E6-94A5-F118214699D7",
+                "mainsnak": {
+                  "hash": "04fb1798cbe94dbb3a7b25bac448a668194607a2",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$E22B360A-6781-4810-93A1-483C0EC5936F",
+                "mainsnak": {
+                  "hash": "1bfdd4b813aa1bb9d8921abea0c0219437ab6937",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$95964328-FB76-44D5-BB96-F92AD74CE0C2",
+                "mainsnak": {
+                  "hash": "56166d41d061085e30ce7d215e38815caa0403d9",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$0902D0F6-5867-4066-B229-1A05B8E3B169",
+                "mainsnak": {
+                  "hash": "78c5b313b083a0052109bab9f20b95df939e854e",
+                  "results": []
+                }
+              },
+              {
+                "id": "Q140287622$94C7820D-384D-4C24-9A97-4A05646B9EEB",
+                "mainsnak": {
+                  "hash": "d53eea9728f6beffd31de8438da8d253b7c9c04b",
+                  "results": []
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "request": {
+      "action": "wbcheckconstraints",
+      "id": "Q140287622"
+    },
+    "top_keys": [
+      "wbcheckconstraints",
+      "success"
+    ]
+  },
+  "descriptions": {
+    "as": "কেৰমানশাহ-ভিত্তিক ইৰানী চিকিৎসক আৰু চিকিৎসা গৱেষক",
+    "bn": "কেরমানশাহর ইরানি চিকিৎসক",
+    "en": "Iranian aesthetic physician and medical researcher based in Kermanshah",
+    "fa": "پزشک زیبایی و پژوهشگر پزشکی ایرانی در کرمانشاه"
+  },
+  "exact_duplicates": [],
+  "labels": {
+    "ar": "الدكتور سعيد قزلباش",
+    "ckb": "دکتۆر سەعید قزلباش",
+    "en": "Saeed Ghezelbash",
+    "fa": "سعید قزلباش"
+  },
+  "lastrevid": 2533228865,
+  "modified": "2026-08-19T13:58:59Z",
+  "multi_url_reference_groups": [
+    {
+      "claim_id": "Q140287622$5615CC57-DAE3-48B2-BD8F-2E50CE92D05A",
+      "property": "P101",
+      "urls": [
+        "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash",
+        "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+        "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
+        "https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection",
+        "https://www.ghezelbaash.ir/#aesthetic-treatment-selection",
+        "https://www.ghezelbaash.ir/#thread-lift",
+        "https://www.ghezelbaash.ir/#skin-rejuvenation",
+        "https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$08E2F3C6-0021-44E0-BAEC-869D4F073493",
+      "property": "P101",
+      "urls": [
+        "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash",
+        "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$1CD92B0B-D07E-456B-9944-C4171BFEB820",
+      "property": "P101",
+      "urls": [
+        "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash",
+        "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$C6AF7F35-A3E5-4E7F-9339-D7617CB1AFBB",
+      "property": "P101",
+      "urls": [
+        "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+        "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-safety"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$5D488E96-2D31-41C5-963B-EAA9410FE1F9",
+      "property": "P101",
+      "urls": [
+        "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+        "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$3AE55007-04E3-41C0-89A4-67C10CE574BF",
+      "property": "P101",
+      "urls": [
+        "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+        "https://www.ghezelbaash.ir/#skin-rejuvenation",
+        "https://www.ghezelbaash.ir/#hair-loss",
+        "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$BEF608DB-2625-4349-9EEC-DFA190563A6E",
+      "property": "P101",
+      "urls": [
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+        "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+        "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$2856768D-9825-49CF-8820-D17EE0D20271",
+      "property": "P101",
+      "urls": [
+        "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+        "https://www.ghezelbaash.ir/#aesthetic-treatment-selection"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$F4F73F03-9718-46A7-8AF3-F29FAABBC610",
+      "property": "P101",
+      "urls": [
+        "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
+        "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash",
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+        "https://www.ghezelbaash.ir/#hair-loss"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$E393C67B-0B37-4EA3-A037-70B4A097EAC6",
+      "property": "P101",
+      "urls": [
+        "https://www.ghezelbaash.ir/#hair-loss",
+        "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$5BBE40AC-E581-4082-A883-25478FFD29BD",
+      "property": "P101",
+      "urls": [
+        "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+        "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$03FDB487-9DF0-40F4-8652-7CB80F60BB59",
+      "property": "P101",
+      "urls": [
+        "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars",
+        "https://www.ghezelbaash.ir/#skin-rejuvenation"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$A4BA6210-B037-4F2D-9F43-7B8CAF410CD3",
+      "property": "P101",
+      "urls": [
+        "https://www.ghezelbaash.ir/#skin-rejuvenation",
+        "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$8BF51D54-9C18-403B-9DE3-E159BFEF5C1D",
+      "property": "P101",
+      "urls": [
+        "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash",
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+        "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$0AECE96E-3B6A-490E-87C1-1C3DF2CDA943",
+      "property": "P101",
+      "urls": [
+        "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+        "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$B869A596-C364-4389-B7DB-F27A78316033",
+      "property": "P101",
+      "urls": [
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+        "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+        "https://www.ghezelbaash.ir/#thread-lift"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$6BC0E107-D46D-47A5-9DD1-8BD974804077",
+      "property": "P101",
+      "urls": [
+        "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash",
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+        "https://www.ghezelbaash.ir/#skin-rejuvenation",
+        "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$5EFCAB7D-554D-4F40-AF16-9903E91561B6",
+      "property": "P101",
+      "urls": [
+        "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+        "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash",
+        "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+        "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$22E4184A-F67F-477C-B2B7-A40780DA2E3D",
+      "property": "P101",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+        "https://pubmed.ncbi.nlm.nih.gov/34574943/"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$15B48453-190C-45F1-B735-9F8BA7767D50",
+      "property": "P101",
+      "urls": [
+        "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+        "https://pubmed.ncbi.nlm.nih.gov/34574943/"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$D31A3456-0CC0-495F-A024-91FB6303821B",
+      "property": "P1344",
+      "urls": [
+        "https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression",
+        "https://apsa.org.ar/docs/wpanews072017.pdf"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$9ef78c55-4d39-f7c5-643d-8b26575e6f32",
+      "property": "P1830",
+      "urls": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+        "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$b7d72a0d-4f04-18d0-b75d-fe2442afb2da",
+      "property": "P2003",
+      "urls": [
+        "https://www.ghezelbaash.ir/",
+        "https://www.instagram.com/doctor.ghezelbaash/"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$9C6A1D07-6BF2-43E6-A9C7-DFC1CD96C5FE",
+      "property": "P39",
+      "urls": [
+        "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy",
+        "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$9C6A1D07-6BF2-43E6-A9C7-DFC1CD96C5FE",
+      "property": "P39",
+      "urls": [
+        "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy",
+        "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$00EC08CF-00B2-4C73-BFC5-1AF955185CEA",
+      "property": "P800",
+      "urls": [
+        "https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression",
+        "https://www.scribd.com/document/732906951/Abrir-WCP2017-Final-Programme-for-Web-Compressed"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$05EFCAF2-8ED8-40AA-86A6-8B2154307D57",
+      "property": "P800",
+      "urls": [
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC4882968/",
+        "https://www.impactio.com/publication/2491754873"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$CED42600-264B-4DCB-890C-2FF3FE492FAE",
+      "property": "P800",
+      "urls": [
+        "https://www.mdpi.com/2227-9032/9/9/1169",
+        "https://edoc.unibas.ch/entities/publication/1879da13-2ebd-4040-8423-b656216b4256"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$186a3b4c-4c53-1da5-77c3-1333877ae981",
+      "property": "P937",
+      "urls": [
+        "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "https://www.google.com/maps?cid=12350483144643112463"
+      ]
+    },
+    {
+      "claim_id": "Q140287622$0a907b38-4287-06be-699a-7e47b0f7ac69",
+      "property": "P937",
+      "urls": [
+        "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "https://www.google.com/maps?cid=12350483144643112463"
+      ]
+    }
+  ],
+  "no_reference_statements": [
+    {
+      "claim_id": "Q140287622$9CA80771-EBB2-44B4-A737-DCC409A80E4C",
+      "property": "P2003",
+      "property_label": "Instagram username",
+      "value": "ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$3E709853-9F26-47C2-84F6-14A4511B958F",
+      "property": "P463",
+      "property_label": "member of",
+      "value": "Q4742869",
+      "value_label": "American Academy of Anti-Aging Medicine"
+    },
+    {
+      "claim_id": "Q140287622$7891137A-9D1E-431A-9E29-01BEA68A70C4",
+      "property": "P463",
+      "property_label": "member of",
+      "value": "Q15995193",
+      "value_label": "International Association for Physicians in Aesthetic Medicine"
+    }
+  ],
+  "property_count": 47,
+  "recent_revisions": [
+    {
+      "comment": "/* wbsetreference-add:2| */ [[Property:P3919]]: [[Q141129555]], Reference live WikiJournal preprint",
+      "parentid": 2533228859,
+      "revid": 2533228865,
+      "timestamp": "2026-08-19T13:58:59Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetqualifier-add:1| */ [[Property:P2868]]: [[Q482980]], Qualify contribution role as author",
+      "parentid": 2533228855,
+      "revid": 2533228859,
+      "timestamp": "2026-08-19T13:58:58Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P3919]]: [[Q141129555]], Link Saeed Ghezelbash to WikiJournal preprint as contributed work",
+      "parentid": 2533225018,
+      "revid": 2533228855,
+      "timestamp": "2026-08-19T13:58:58Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetreference-add:2| */ [[Property:P2671]]: /g/11nqdfk76c, #quickstatements; #temporary_batch_1787147297912",
+      "parentid": 2533225006,
+      "revid": 2533225018,
+      "timestamp": "2026-08-19T13:48:45Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetqualifier-add:1| */ [[Property:P14457]]: سعید قزلباش, #quickstatements; #temporary_batch_1787147297912",
+      "parentid": 2533224994,
+      "revid": 2533225006,
+      "timestamp": "2026-08-19T13:48:43Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetqualifier-add:1| */ [[Property:P14457]]: Saeed Ghezelbash, #quickstatements; #temporary_batch_1787147297912",
+      "parentid": 2533224974,
+      "revid": 2533224994,
+      "timestamp": "2026-08-19T13:48:42Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P2671]]: /g/11nqdfk76c, #quickstatements; #temporary_batch_1787147297912",
+      "parentid": 2533224959,
+      "revid": 2533224974,
+      "timestamp": "2026-08-19T13:48:40Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P2671]]: /g/11nqdfk76c, #quickstatements; #temporary_batch_1787147297912",
+      "parentid": 2533220927,
+      "revid": 2533224959,
+      "timestamp": "2026-08-19T13:48:39Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetreference-add:2| */ [[Property:P2671]]: /g/11nqdfk76c, #quickstatements; #temporary_batch_1787146752993",
+      "parentid": 2533220915,
+      "revid": 2533220927,
+      "timestamp": "2026-08-19T13:39:23Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetqualifier-add:1| */ [[Property:P14457]]: سعید قزلباش, #quickstatements; #temporary_batch_1787146752993",
+      "parentid": 2533220904,
+      "revid": 2533220915,
+      "timestamp": "2026-08-19T13:39:22Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetqualifier-add:1| */ [[Property:P14457]]: Saeed Ghezelbash, #quickstatements; #temporary_batch_1787146752993",
+      "parentid": 2533203696,
+      "revid": 2533220904,
+      "timestamp": "2026-08-19T13:39:21Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1343]]: [[Q140304972]], #quickstatements; #temporary_batch_1787143859259",
+      "parentid": 2533203682,
+      "revid": 2533203696,
+      "timestamp": "2026-08-19T12:51:07Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P1343]]: [[Q140304972]], #quickstatements; #temporary_batch_1787143859259",
+      "parentid": 2532965725,
+      "revid": 2533203682,
+      "timestamp": "2026-08-19T12:51:05Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetclaim-update-references:1||1|2 */ [[Property:P1412]]: [[Q1860]]",
+      "parentid": 2532965635,
+      "revid": 2532965725,
+      "timestamp": "2026-08-19T00:29:14Z",
+      "user": "Medicaldoctor91"
+    },
+    {
+      "comment": "/* wbsetclaim-update-references:1||1|2 */ [[Property:P1412]]: [[Q9168]]",
+      "parentid": 2532965519,
+      "revid": 2532965635,
+      "timestamp": "2026-08-19T00:28:58Z",
+      "user": "Medicaldoctor91"
+    }
+  ],
+  "sitelinks": {
+    "commonswiki": "Category:Saeed Ghezelbash",
+    "enwikisource": "Author:Mohammad Saeed Ghezelbash"
+  },
+  "statement_count": 93,
+  "statements": [
+    {
+      "claim_id": "Q140287622$AF4E3FCE-5C27-4D74-9A60-081F81B20F57",
+      "property": "P10",
+      "property_label": "video",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "commons.wikimedia.org"
+          ],
+          "retrieved": [
+            "+2026-08-15T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://commons.wikimedia.org/wiki/File:%D8%AF%DA%A9%D8%AA%D8%B1_%D8%B3%D8%B9%DB%8C%D8%AF_%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4_%D8%AF%D8%B1%D8%A8%D8%A7%D8%B1%D9%87_%D8%AC%D8%A7%D9%84%D9%BE%D8%B1%D9%88_%D9%88_%D9%BE%D8%B1%D9%88%D9%81%D8%A7%DB%8C%D9%84%D9%88.webm"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-15T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/"
+          ]
+        }
+      ],
+      "value": "دکتر سعید قزلباش درباره جالپرو و پروفایلو.webm",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$5615CC57-DAE3-48B2-BD8F-2E50CE92D05A",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-01T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://www.ghezelbaash.ir/"
+          ]
+        },
+        {
+          "hosts": [
+            "iranmedlabs.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          ]
+        },
+        {
+          "hosts": [
+            "mantradoc.com",
+            "www.mihanpezeshk.com",
+            "iranmedlabs.com",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash",
+            "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
+            "https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection",
+            "https://www.ghezelbaash.ir/#aesthetic-treatment-selection",
+            "https://www.ghezelbaash.ir/#thread-lift",
+            "https://www.ghezelbaash.ir/#skin-rejuvenation",
+            "https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error"
+          ]
+        }
+      ],
+      "value": "Q3332453",
+      "value_label": "aesthetic medicine"
+    },
+    {
+      "claim_id": "Q140287622$8A51FDF1-7AF0-42CB-9AED-86F279FAEB3A",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "iranmedlabs.com"
+          ],
+          "retrieved": [
+            "+2026-08-15T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-15T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/"
+          ]
+        }
+      ],
+      "value": "Q3745388",
+      "value_label": "dermal fillers"
+    },
+    {
+      "claim_id": "Q140287622$08E2F3C6-0021-44E0-BAEC-869D4F073493",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "iranmedlabs.com"
+          ],
+          "retrieved": [
+            "+2026-08-15T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-15T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/"
+          ]
+        },
+        {
+          "hosts": [
+            "iranmedlabs.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          ]
+        },
+        {
+          "hosts": [
+            "doktor.vip"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#botox"
+          ]
+        },
+        {
+          "hosts": [
+            "mantradoc.com",
+            "www.mihanpezeshk.com",
+            "pezeshk24.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash",
+            "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/"
+          ]
+        }
+      ],
+      "value": "Q4095199",
+      "value_label": "botulinum toxin type A"
+    },
+    {
+      "claim_id": "Q140287622$1CD92B0B-D07E-456B-9944-C4171BFEB820",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "iranmedlabs.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          ]
+        },
+        {
+          "hosts": [
+            "doktor.vip"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#filler"
+          ]
+        },
+        {
+          "hosts": [
+            "mantradoc.com",
+            "www.mihanpezeshk.com",
+            "pezeshk24.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash",
+            "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/"
+          ]
+        }
+      ],
+      "value": "Q17081562",
+      "value_label": "injectable filler"
+    },
+    {
+      "claim_id": "Q140287622$C6AF7F35-A3E5-4E7F-9339-D7617CB1AFBB",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "mantradoc.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://mantradoc.com/list/general-physician/138671/saeed-ghezelbash"
+          ]
+        },
+        {
+          "hosts": [
+            "doktor.vip"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-safety"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#filler"
+          ]
+        },
+        {
+          "hosts": [
+            "www.mihanpezeshk.com",
+            "pezeshk24.com",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+            "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-safety"
+          ]
+        }
+      ],
+      "value": "Q7049059",
+      "value_label": "Non-surgical rhinoplasty"
+    },
+    {
+      "claim_id": "Q140287622$5D488E96-2D31-41C5-963B-EAA9410FE1F9",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "iranmedlabs.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          ]
+        },
+        {
+          "hosts": [
+            "doktor.vip"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#skin-rejuvenation"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#hair-loss"
+          ]
+        },
+        {
+          "hosts": [
+            "www.mihanpezeshk.com",
+            "pezeshk24.com",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+            "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+          ]
+        }
+      ],
+      "value": "Q537918",
+      "value_label": "mesotherapy"
+    },
+    {
+      "claim_id": "Q140287622$3AE55007-04E3-41C0-89A4-67C10CE574BF",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "iranmedlabs.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          ]
+        },
+        {
+          "hosts": [
+            "doktor.vip"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#skin-rejuvenation"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#hair-loss"
+          ]
+        },
+        {
+          "hosts": [
+            "www.mihanpezeshk.com",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+            "https://www.ghezelbaash.ir/#skin-rejuvenation",
+            "https://www.ghezelbaash.ir/#hair-loss",
+            "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+          ]
+        }
+      ],
+      "value": "Q613879",
+      "value_label": "platelet-rich plasma"
+    },
+    {
+      "claim_id": "Q140287622$BEF608DB-2625-4349-9EEC-DFA190563A6E",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pezeshk24.com",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+            "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+            "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy"
+          ]
+        }
+      ],
+      "value": "Q3675172",
+      "value_label": "cosmetic surgery"
+    },
+    {
+      "claim_id": "Q140287622$2856768D-9825-49CF-8820-D17EE0D20271",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+            "https://www.ghezelbaash.ir/#aesthetic-treatment-selection"
+          ]
+        }
+      ],
+      "value": "Q4936963",
+      "value_label": "body shaping"
+    },
+    {
+      "claim_id": "Q140287622$DB6FE9ED-0ABB-4E48-B5D8-991C576DCC9E",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#hair-loss"
+          ]
+        }
+      ],
+      "value": "Q2276095",
+      "value_label": "androgenic alopecia"
+    },
+    {
+      "claim_id": "Q140287622$F4F73F03-9718-46A7-8AF3-F29FAABBC610",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "iranmedlabs.com",
+            "doktor.vip",
+            "pezeshk24.com",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash",
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+            "https://www.ghezelbaash.ir/#hair-loss"
+          ]
+        }
+      ],
+      "value": "Q2697787",
+      "value_label": "alopecia"
+    },
+    {
+      "claim_id": "Q140287622$E393C67B-0B37-4EA3-A037-70B4A097EAC6",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#hair-loss",
+            "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy"
+          ]
+        }
+      ],
+      "value": "Q685286",
+      "value_label": "hair transplantation"
+    },
+    {
+      "claim_id": "Q140287622$5BBE40AC-E581-4082-A883-25478FFD29BD",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+            "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy"
+          ]
+        }
+      ],
+      "value": "Q2559992",
+      "value_label": "blepharoplasty"
+    },
+    {
+      "claim_id": "Q140287622$03FDB487-9DF0-40F4-8652-7CB80F60BB59",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars",
+            "https://www.ghezelbaash.ir/#skin-rejuvenation"
+          ]
+        }
+      ],
+      "value": "Q3267987",
+      "value_label": "chemical peel"
+    },
+    {
+      "claim_id": "Q140287622$A4BA6210-B037-4F2D-9F43-7B8CAF410CD3",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#skin-rejuvenation",
+            "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+          ]
+        },
+        {
+          "hosts": [
+            "salamatjo.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://salamatjo.ir/news/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9-%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C-%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%D8%9B-%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84/"
+          ]
+        }
+      ],
+      "value": "Q16949888",
+      "value_label": "micro-needling"
+    },
+    {
+      "claim_id": "Q140287622$3B6F7E1A-6D98-478B-A05C-7BC9A4B7B9EB",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+          ]
+        }
+      ],
+      "value": "Q305190",
+      "value_label": "melasma"
+    },
+    {
+      "claim_id": "Q140287622$8BF51D54-9C18-403B-9DE3-E159BFEF5C1D",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "doktor.vip",
+            "pezeshk24.com",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash",
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+            "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+          ]
+        }
+      ],
+      "value": "Q1641068",
+      "value_label": "hyperpigmentation"
+    },
+    {
+      "claim_id": "Q140287622$76F0AF23-A730-4677-9E5E-8E112295B083",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#hair-loss"
+          ]
+        }
+      ],
+      "value": "Q26967",
+      "value_label": "telogen effluvium"
+    },
+    {
+      "claim_id": "Q140287622$0AECE96E-3B6A-490E-87C1-1C3DF2CDA943",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+            "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy"
+          ]
+        }
+      ],
+      "value": "Q840929",
+      "value_label": "rhinoplasty"
+    },
+    {
+      "claim_id": "Q140287622$581C7157-2DD1-474F-8BFA-29A858CA54C7",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring"
+          ]
+        }
+      ],
+      "value": "Q825490",
+      "value_label": "liposuction"
+    },
+    {
+      "claim_id": "Q140287622$B869A596-C364-4389-B7DB-F27A78316033",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pezeshk24.com",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+            "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+            "https://www.ghezelbaash.ir/#thread-lift"
+          ]
+        }
+      ],
+      "value": "Q1423937",
+      "value_label": "facelift"
+    },
+    {
+      "claim_id": "Q140287622$6BC0E107-D46D-47A5-9DD1-8BD974804077",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "doktor.vip",
+            "pezeshk24.com",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash",
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+            "https://www.ghezelbaash.ir/#skin-rejuvenation",
+            "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+          ]
+        }
+      ],
+      "value": "Q851186",
+      "value_label": "laser medicine"
+    },
+    {
+      "claim_id": "Q140287622$C7046A86-FF92-4439-BB63-7FDEECA46677",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#botox"
+          ]
+        },
+        {
+          "hosts": [
+            "www.pezeshk-yab.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.pezeshk-yab.com/14403"
+          ]
+        }
+      ],
+      "value": "Q935781",
+      "value_label": "hyperhidrosis"
+    },
+    {
+      "claim_id": "Q140287622$E794D2C1-9302-4A31-B83A-3BE40B3B57B1",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#botox"
+          ]
+        },
+        {
+          "hosts": [
+            "salamatjo.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://salamatjo.ir/news/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9-%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C-%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%D8%9B-%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84/"
+          ]
+        }
+      ],
+      "value": "Q133823",
+      "value_label": "migraine"
+    },
+    {
+      "claim_id": "Q140287622$8E3E1734-70D5-4E09-BDF1-CD897B2C0A5E",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#skin-rejuvenation"
+          ]
+        }
+      ],
+      "value": "Q7439446",
+      "value_label": "Sculptra"
+    },
+    {
+      "claim_id": "Q140287622$5EFCAB7D-554D-4F40-AF16-9903E91561B6",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.mihanpezeshk.com",
+            "doktor.vip",
+            "pezeshk24.com",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.mihanpezeshk.com/doctor/mohammad-saeed-ghzlbash",
+            "https://doktor.vip/doctor/dr-mohammad-saeed-ghazlbash",
+            "https://pezeshk24.com/doctors/saeid-ghezelbash-kermanshah/",
+            "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+          ]
+        }
+      ],
+      "value": "Q79928",
+      "value_label": "acne"
+    },
+    {
+      "claim_id": "Q140287622$22E4184A-F67F-477C-B2B7-A40780DA2E3D",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pubmed.ncbi.nlm.nih.gov",
+            "pubmed.ncbi.nlm.nih.gov"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+            "https://pubmed.ncbi.nlm.nih.gov/34574943/"
+          ]
+        }
+      ],
+      "value": "Q5133849",
+      "value_label": "clinical research"
+    },
+    {
+      "claim_id": "Q140287622$15B48453-190C-45F1-B735-9F8BA7767D50",
+      "property": "P101",
+      "property_label": "field of work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pubmed.ncbi.nlm.nih.gov",
+            "pubmed.ncbi.nlm.nih.gov"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pubmed.ncbi.nlm.nih.gov/27280013/",
+            "https://pubmed.ncbi.nlm.nih.gov/34574943/"
+          ]
+        }
+      ],
+      "value": "Q2752427",
+      "value_label": "medical research"
+    },
+    {
+      "claim_id": "Q140287622$a64126cd-49a2-6f25-8d00-9e3062e5f526",
+      "property": "P10283",
+      "property_label": "OpenAlex ID",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "openalex.org"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://openalex.org/A5064828898"
+          ]
+        }
+      ],
+      "value": "A5064828898",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$c720a368-4c76-6cc8-4df4-4a334846c002",
+      "property": "P106",
+      "property_label": "occupation",
+      "qualifiers": {},
+      "rank": "preferred",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-07-31T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "محمد‌سعید قزلباش"
+          ],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "Q39631",
+      "value_label": "physician"
+    },
+    {
+      "claim_id": "Q140287622$60bde225-4971-dcaf-a4ba-d4242c2b3ea8",
+      "property": "P106",
+      "property_label": "occupation",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-07-24T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        },
+        {
+          "hosts": [
+            "www.mdpi.com"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://www.mdpi.com/2227-9032/9/9/1169"
+          ]
+        }
+      ],
+      "value": "Q15401884",
+      "value_label": "medical researcher"
+    },
+    {
+      "claim_id": "Q140287622$0cf18cae-4da5-886f-dd49-0efe6b72069d",
+      "property": "P10611",
+      "property_label": "has certification",
+      "qualifiers": {
+        "P1001": [
+          "Q794"
+        ],
+        "P1027": [
+          "Q5944740"
+        ],
+        "P582": [
+          "+2029-02-20T00:00:00Z"
+        ],
+        "P9994": [
+          "167430"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-07-27T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر محمدسعید قزلباش"
+          ],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "Q1566725",
+      "value_label": "medical license"
+    },
+    {
+      "claim_id": "Q140287622$78EC26BD-0923-48DD-AA75-BA029DD85842",
+      "property": "P11079",
+      "property_label": "Linktree ID",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P248",
+            "P813"
+          ],
+          "stated_in": [
+            {
+              "id": "Q96177589",
+              "label": "Q96177589"
+            }
+          ],
+          "subject_named_as": [],
+          "urls": []
+        }
+      ],
+      "value": "Doctor.ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$46AE2B87-DDDC-4D9F-BB28-52F272AC09E0",
+      "property": "P11245",
+      "property_label": "YouTube handle",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.youtube.com"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.youtube.com/@ghezelbaash"
+          ]
+        }
+      ],
+      "value": "ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$13E9209B-DBA0-44B5-AC68-22F68B76DAF0",
+      "property": "P11892",
+      "property_label": "Threads username",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.threads.com"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.threads.com/@doctor.ghezelbaash"
+          ]
+        }
+      ],
+      "value": "doctor.ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$b1486c46-49c2-978c-b6a4-80fd550e3d51",
+      "property": "P12201",
+      "property_label": "Hugging Face user or organization ID",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "huggingface.co"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://huggingface.co/Ghezelbaash"
+          ]
+        }
+      ],
+      "value": "ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$9D997FF3-D130-4C91-9F96-487D540574C6",
+      "property": "P1343",
+      "property_label": "described by source",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository"
+          ]
+        }
+      ],
+      "value": "Q140304972",
+      "value_label": "Dr. Saeed Ghezelbash Public Knowledge Graph"
+    },
+    {
+      "claim_id": "Q140287622$D31A3456-0CC0-495F-A024-91FB6303821B",
+      "property": "P1344",
+      "property_label": "participant in",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.researchgate.net",
+            "apsa.org.ar"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression",
+            "https://apsa.org.ar/docs/wpanews072017.pdf"
+          ]
+        },
+        {
+          "hosts": [
+            "www.scribd.com"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.scribd.com/document/732906951/Abrir-WCP2017-Final-Programme-for-Web-Compressed"
+          ]
+        }
+      ],
+      "value": "Q140307274",
+      "value_label": "WPA XVII World Congress of Psychiatry"
+    },
+    {
+      "claim_id": "Q140287622$96B1A816-4C79-4DD6-BED7-2D67A413D229",
+      "property": "P1412",
+      "property_label": "languages spoken, written or signed",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.icliniq.com"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+          ]
+        }
+      ],
+      "value": "Q9168",
+      "value_label": "Persian"
+    },
+    {
+      "claim_id": "Q140287622$44532BCB-06A7-4B7B-89AF-DA60E128FF8A",
+      "property": "P1412",
+      "property_label": "languages spoken, written or signed",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.icliniq.com"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+          ]
+        }
+      ],
+      "value": "Q1860",
+      "value_label": "English"
+    },
+    {
+      "claim_id": "Q140287622$82deb4be-4fd2-6db0-7959-23ce4deda85b",
+      "property": "P1416",
+      "property_label": "affiliation",
+      "qualifiers": {
+        "P585": [
+          "+2016-00-00T00:00:00Z"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pmc.ncbi.nlm.nih.gov"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://pmc.ncbi.nlm.nih.gov/articles/PMC4882968/"
+          ]
+        },
+        {
+          "hosts": [],
+          "retrieved": [
+            "+2026-07-25T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P248",
+            "P813"
+          ],
+          "stated_in": [
+            {
+              "id": "Q36942316",
+              "label": "Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder"
+            }
+          ],
+          "subject_named_as": [],
+          "urls": []
+        }
+      ],
+      "value": "Q6393994",
+      "value_label": "Kermanshah University of Medical Sciences"
+    },
+    {
+      "claim_id": "Q140287622$6f07c517-4bb2-4c4e-197a-0dda845682a5",
+      "property": "P1416",
+      "property_label": "affiliation",
+      "qualifiers": {
+        "P585": [
+          "+2021-00-00T00:00:00Z"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.mdpi.com"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://www.mdpi.com/2227-9032/9/9/1169"
+          ]
+        },
+        {
+          "hosts": [],
+          "retrieved": [
+            "+2026-07-25T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P248",
+            "P813"
+          ],
+          "stated_in": [
+            {
+              "id": "Q140298431",
+              "label": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events"
+            }
+          ],
+          "subject_named_as": [],
+          "urls": []
+        }
+      ],
+      "value": "Q6393994",
+      "value_label": "Kermanshah University of Medical Sciences"
+    },
+    {
+      "claim_id": "Q140287622$37A10008-79D1-42FF-9A27-262BF5182DF5",
+      "property": "P1472",
+      "property_label": "Commons Creator page",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "commons.wikimedia.org"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://commons.wikimedia.org/wiki/Creator:Saeed_Ghezelbash"
+          ]
+        }
+      ],
+      "value": "Saeed Ghezelbash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$B0D3F371-13DD-4FEB-9A2A-40ACCEBD17D8",
+      "property": "P1559",
+      "property_label": "name in native language",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-08-01T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "سعید قزلباش",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$3ae02fb4-4fc3-6c14-5fc9-71b4aa130890",
+      "property": "P18",
+      "property_label": "image",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "commons.wikimedia.org"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg"
+          ]
+        }
+      ],
+      "value": "Saeed-Ghezelbaash-physician-portrait.jpg",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$9ef78c55-4d39-f7c5-643d-8b26575e6f32",
+      "property": "P1830",
+      "property_label": "owner of",
+      "qualifiers": {
+        "P1810": [
+          "دکتر سعید قزلباش"
+        ],
+        "P1932": [
+          "کلینیک زیبایی دکتر سعید قزلباش"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.openstreetmap.org"
+          ],
+          "retrieved": [
+            "+2026-07-30T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.openstreetmap.org/node/13530287096"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          ]
+        },
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-07-27T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P5997",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر سعید قزلباش"
+          ],
+          "urls": [
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          ]
+        }
+      ],
+      "value": "Q140288589",
+      "value_label": "Dr. Saeed Ghezelbash Aesthetic Clinic"
+    },
+    {
+      "claim_id": "Q140287622$9BF012E3-7291-42D0-B987-820ED6B76768",
+      "property": "P1830",
+      "property_label": "owner of",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-07T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository"
+          ]
+        }
+      ],
+      "value": "Q140304972",
+      "value_label": "Dr. Saeed Ghezelbash Public Knowledge Graph"
+    },
+    {
+      "claim_id": "Q140287622$d8fdc365-46e8-2ec6-84a1-6eb3011ddf3d",
+      "property": "P1960",
+      "property_label": "Google Scholar author ID",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "scholar.google.com"
+          ],
+          "retrieved": [
+            "+2026-07-30T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
+          ]
+        }
+      ],
+      "value": "BcWBirUAAAAJ",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$C0DD1107-6B72-4832-8B33-B6A916B64609",
+      "property": "P2002",
+      "property_label": "X (Twitter) username",
+      "qualifiers": {
+        "P580": [
+          "+2014-01-01T00:00:00Z"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "x.com"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://x.com/qezelbaash"
+          ]
+        }
+      ],
+      "value": "qezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$9CA80771-EBB2-44B4-A737-DCC409A80E4C",
+      "property": "P2003",
+      "property_label": "Instagram username",
+      "qualifiers": {},
+      "rank": "deprecated",
+      "references": [],
+      "value": "ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$b7d72a0d-4f04-18d0-b75d-fe2442afb2da",
+      "property": "P2003",
+      "property_label": "Instagram username",
+      "qualifiers": {},
+      "rank": "preferred",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.instagram.com"
+          ],
+          "retrieved": [
+            "+2026-08-07T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "@Doctor.Ghezelbaash"
+          ],
+          "urls": [
+            "https://www.ghezelbaash.ir/",
+            "https://www.instagram.com/doctor.ghezelbaash/"
+          ]
+        }
+      ],
+      "value": "doctor.ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$DE8A0D41-14A4-4F9F-A5A1-EB114448E64D",
+      "property": "P2013",
+      "property_label": "Facebook username",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.facebook.com"
+          ],
+          "retrieved": [
+            "+2026-07-27T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://www.facebook.com/ghezelbaash/"
+          ]
+        }
+      ],
+      "value": "ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$868d1a71-44f1-8d8e-3800-0c22589dfb00",
+      "property": "P2037",
+      "property_label": "GitHub account",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "github.com"
+          ],
+          "retrieved": [
+            "+2026-06-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://github.com/medicaldoctor91"
+          ]
+        }
+      ],
+      "value": "medicaldoctor91",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$F2C3147E-18E0-4EE5-AC47-96B2CC33459B",
+      "property": "P21",
+      "property_label": "sex or gender",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        }
+      ],
+      "value": "Q6581097",
+      "value_label": "male"
+    },
+    {
+      "claim_id": "Q140287622$1B358C30-1D4B-448A-A9C9-37B0D7DC00A6",
+      "property": "P2671",
+      "property_label": "Google Knowledge Graph ID",
+      "qualifiers": {
+        "P14457": [
+          "Saeed Ghezelbash",
+          "سعید قزلباش"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P248",
+            "P2671",
+            "P813"
+          ],
+          "stated_in": [
+            {
+              "id": "Q648625",
+              "label": "Q648625"
+            }
+          ],
+          "subject_named_as": [],
+          "urls": []
+        }
+      ],
+      "value": "/g/11nqdfk76c",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$D06571AC-7DC7-4D76-8917-F9EA1F34A937",
+      "property": "P27",
+      "property_label": "country of citizenship",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        }
+      ],
+      "value": "Q794",
+      "value_label": "Iran"
+    },
+    {
+      "claim_id": "Q140287622$4616fb39-4924-8852-9c00-269a404c0250",
+      "property": "P31",
+      "property_label": "instance of",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-08-07T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر محمدسعید قزلباش"
+          ],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "Q5",
+      "value_label": "human"
+    },
+    {
+      "claim_id": "Q140287622$C75363FC-BDCD-401B-AEE5-4CBA34E136BE",
+      "property": "P373",
+      "property_label": "Commons category",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "commons.wikimedia.org"
+          ],
+          "retrieved": [
+            "+2026-08-01T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash"
+          ]
+        }
+      ],
+      "value": "Saeed Ghezelbash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$B987EDCB-E08A-42CA-A6C7-4BF0DD4E1B8A",
+      "property": "P3836",
+      "property_label": "Pinterest username",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.pinterest.com"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.pinterest.com/qezelbaash/"
+          ]
+        }
+      ],
+      "value": "qezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$9C6A1D07-6BF2-43E6-A9C7-DFC1CD96C5FE",
+      "property": "P39",
+      "property_label": "position held",
+      "qualifiers": {
+        "P1810": [
+          "دکتر سعید قزلباش"
+        ],
+        "P2389": [
+          "Q140288589"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+            "https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy",
+            "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir",
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Dr. Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+            "https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy",
+            "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر سعید قزلباش"
+          ],
+          "urls": [
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          ]
+        }
+      ],
+      "value": "Q256688",
+      "value_label": "medical director"
+    },
+    {
+      "claim_id": "Q140287622$C92B10F2-64F2-42B7-B4F2-A93FE5F74DCE",
+      "property": "P3919",
+      "property_label": "contributed to creative work",
+      "qualifiers": {
+        "P2868": [
+          "Q482980"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.researchgate.net"
+          ],
+          "retrieved": [
+            "+2026-06-21T00:00:00Z",
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression"
+          ]
+        },
+        {
+          "hosts": [
+            "www.scribd.com"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.scribd.com/document/732906951/Abrir-WCP2017-Final-Programme-for-Web-Compressed"
+          ]
+        }
+      ],
+      "value": "Q140306302",
+      "value_label": "Attachment style in dissociative depression"
+    },
+    {
+      "claim_id": "Q140287622$62257FC3-CD09-48B2-9A98-FFAB0889BC4E",
+      "property": "P3919",
+      "property_label": "contributed to creative work",
+      "qualifiers": {
+        "P2868": [
+          "Q482980"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pubmed.ncbi.nlm.nih.gov"
+          ],
+          "retrieved": [],
+          "snak_properties": [
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pubmed.ncbi.nlm.nih.gov/27280013/"
+          ]
+        }
+      ],
+      "value": "Q36942316",
+      "value_label": "Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder"
+    },
+    {
+      "claim_id": "Q140287622$AAD2A06A-C3EB-422D-8C77-C73171B59D3D",
+      "property": "P3919",
+      "property_label": "contributed to creative work",
+      "qualifiers": {
+        "P2868": [
+          "Q482980"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pubmed.ncbi.nlm.nih.gov"
+          ],
+          "retrieved": [],
+          "snak_properties": [
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pubmed.ncbi.nlm.nih.gov/34574943/"
+          ]
+        }
+      ],
+      "value": "Q140298431",
+      "value_label": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events"
+    },
+    {
+      "claim_id": "Q140287622$F50E143E-E72C-4F7D-B23A-F5FE897E70DB",
+      "property": "P3919",
+      "property_label": "contributed to creative work",
+      "qualifiers": {
+        "P2868": [
+          "Q482980"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "en.wikiversity.org"
+          ],
+          "retrieved": [
+            "+2026-08-16T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine"
+          ]
+        }
+      ],
+      "value": "Q141099455",
+      "value_label": "Botulinum toxin in aesthetic medicine"
+    },
+    {
+      "claim_id": "Q140287622$ED83D9C3-5C71-41BA-892E-AA5DD29C3369",
+      "property": "P3919",
+      "property_label": "contributed to creative work",
+      "qualifiers": {
+        "P2868": [
+          "Q482980"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "en.wikiversity.org"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review"
+          ]
+        }
+      ],
+      "value": "Q141129555",
+      "value_label": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review"
+    },
+    {
+      "claim_id": "Q140287622$5BFDFE99-4A3A-4384-9335-89A0410EFFD6",
+      "property": "P4012",
+      "property_label": "Semantic Scholar author ID",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.semanticscholar.org"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://www.semanticscholar.org/author/-/3786699"
+          ]
+        }
+      ],
+      "value": "3786699",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$b3c68298-4ed5-000b-897a-2674641656fe",
+      "property": "P463",
+      "property_label": "member of",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر محمد‌سعید قزلباش"
+          ],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "Q5944740",
+      "value_label": "Iranian Medical Council"
+    },
+    {
+      "claim_id": "Q140287622$3E709853-9F26-47C2-84F6-14A4511B958F",
+      "property": "P463",
+      "property_label": "member of",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [],
+      "value": "Q4742869",
+      "value_label": "American Academy of Anti-Aging Medicine"
+    },
+    {
+      "claim_id": "Q140287622$7891137A-9D1E-431A-9E29-01BEA68A70C4",
+      "property": "P463",
+      "property_label": "member of",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [],
+      "value": "Q15995193",
+      "value_label": "International Association for Physicians in Aesthetic Medicine"
+    },
+    {
+      "claim_id": "Q140287622$2f904409-4032-86b6-e467-ce580ee8a11e",
+      "property": "P496",
+      "property_label": "ORCID iD",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-06-21T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        }
+      ],
+      "value": "0009-0001-9346-8475",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$9c54cbe3-4849-55a8-1e7e-4065df802f1d",
+      "property": "P511",
+      "property_label": "honorific prefix",
+      "qualifiers": {
+        "P5102": [
+          "Q29509043"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "Q4618975",
+      "value_label": "Doctor"
+    },
+    {
+      "claim_id": "Q140287622$7c5a981b-4175-f68c-4e14-54bf3fb50850",
+      "property": "P512",
+      "property_label": "academic degree",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-06-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        },
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        },
+        {
+          "hosts": [
+            "pub.orcid.org"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pub.orcid.org/v3.0/0009-0001-9346-8475/education/38054873"
+          ]
+        },
+        {
+          "hosts": [
+            "pmc.ncbi.nlm.nih.gov"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P248",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [
+            {
+              "id": "Q140298431",
+              "label": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events"
+            }
+          ],
+          "subject_named_as": [],
+          "urls": [
+            "https://pmc.ncbi.nlm.nih.gov/articles/PMC8469763/"
+          ]
+        }
+      ],
+      "value": "Q913404",
+      "value_label": "Doctor of Medicine"
+    },
+    {
+      "claim_id": "Q140287622$DCEE25EE-2E1A-42E3-A1EE-5F8221C558E3",
+      "property": "P553",
+      "property_label": "website account on",
+      "qualifiers": {
+        "P2699": [
+          "https://about.me/ghezelbaash"
+        ],
+        "P554": [
+          "ghezelbaash"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "about.me"
+          ],
+          "retrieved": [
+            "+2026-08-07T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://about.me/ghezelbaash"
+          ]
+        }
+      ],
+      "value": "Q3595053",
+      "value_label": "about.me"
+    },
+    {
+      "claim_id": "Q140287622$01EA0EAE-A694-4AB4-A077-A9C2EE924E2B",
+      "property": "P569",
+      "property_label": "date of birth",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-08-01T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        }
+      ],
+      "value": "+1991-05-29T00:00:00Z",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$5bb55f60-4932-3cc2-4644-d5825d7500ec",
+      "property": "P6634",
+      "property_label": "LinkedIn personal profile ID",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.linkedin.com"
+          ],
+          "retrieved": [
+            "+2026-06-23T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/"
+          ]
+        },
+        {
+          "hosts": [
+            "www.linkedin.com"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.linkedin.com/in/saeed-ghezelbash-93310a96/"
+          ]
+        }
+      ],
+      "value": "saeed-ghezelbash-93310a96",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$24428897-4f17-82cc-18e6-f3c61643e92b",
+      "property": "P69",
+      "property_label": "educated at",
+      "qualifiers": {
+        "P580": [
+          "+2009-09-00T00:00:00Z"
+        ],
+        "P582": [
+          "+2018-00-00T00:00:00Z"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.icliniq.com"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+          ]
+        },
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        },
+        {
+          "hosts": [
+            "pub.orcid.org"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pub.orcid.org/v3.0/0009-0001-9346-8475/education/38054873"
+          ]
+        }
+      ],
+      "value": "Q6393994",
+      "value_label": "Kermanshah University of Medical Sciences"
+    },
+    {
+      "claim_id": "Q140287622$E198184F-E7FF-40A9-B452-174665EC78C1",
+      "property": "P7085",
+      "property_label": "TikTok username",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.tiktok.com"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.tiktok.com/@ghezelbaash"
+          ]
+        }
+      ],
+      "value": "ghezelbaash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$CA4E3935-FF3D-45C8-92A6-3F32096D8B07",
+      "property": "P734",
+      "property_label": "family name",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-08-07T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر محمدسعید قزلباش"
+          ],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "Q140775989",
+      "value_label": "Ghezelbash"
+    },
+    {
+      "claim_id": "Q140287622$103C90E0-2311-4D98-9703-644A526697E9",
+      "property": "P735",
+      "property_label": "given name",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-08-01T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "Q104892392",
+      "value_label": "Muhammad Sa'id"
+    },
+    {
+      "claim_id": "Q140287622$00EC08CF-00B2-4C73-BFC5-1AF955185CEA",
+      "property": "P800",
+      "property_label": "notable work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.researchgate.net",
+            "www.scribd.com"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression",
+            "https://www.scribd.com/document/732906951/Abrir-WCP2017-Final-Programme-for-Web-Compressed"
+          ]
+        }
+      ],
+      "value": "Q140306302",
+      "value_label": "Attachment style in dissociative depression"
+    },
+    {
+      "claim_id": "Q140287622$05EFCAF2-8ED8-40AA-86A6-8B2154307D57",
+      "property": "P800",
+      "property_label": "notable work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pmc.ncbi.nlm.nih.gov",
+            "www.impactio.com"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://pmc.ncbi.nlm.nih.gov/articles/PMC4882968/",
+            "https://www.impactio.com/publication/2491754873"
+          ]
+        }
+      ],
+      "value": "Q36942316",
+      "value_label": "Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder"
+    },
+    {
+      "claim_id": "Q140287622$CED42600-264B-4DCB-890C-2FF3FE492FAE",
+      "property": "P800",
+      "property_label": "notable work",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.mdpi.com",
+            "edoc.unibas.ch"
+          ],
+          "retrieved": [
+            "+2026-08-19T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.mdpi.com/2227-9032/9/9/1169",
+            "https://edoc.unibas.ch/entities/publication/1879da13-2ebd-4040-8423-b656216b4256"
+          ]
+        }
+      ],
+      "value": "Q140298431",
+      "value_label": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events"
+    },
+    {
+      "claim_id": "Q140287622$b46cd23b-4153-eb8d-6b9c-cfb15c33d083",
+      "property": "P856",
+      "property_label": "official website",
+      "qualifiers": {
+        "P1810": [
+          "دکتر سعید قزلباش"
+        ],
+        "P407": [
+          "Q9168",
+          "Q1860"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-11T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/"
+          ]
+        }
+      ],
+      "value": "https://www.ghezelbaash.ir/",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$186a3b4c-4c53-1da5-77c3-1333877ae981",
+      "property": "P937",
+      "property_label": "work location",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-06-24T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.google.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+            "https://www.google.com/maps?cid=12350483144643112463"
+          ]
+        }
+      ],
+      "value": "Q180078",
+      "value_label": "Kermanshah"
+    },
+    {
+      "claim_id": "Q140287622$0a907b38-4287-06be-699a-7e47b0f7ac69",
+      "property": "P937",
+      "property_label": "work location",
+      "qualifiers": {
+        "P1932": [
+          "کلینیک زیبایی دکتر سعید قزلباش"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "doctoreto.com"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر سعید قزلباش"
+          ],
+          "urls": [
+            "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ"
+          ]
+        },
+        {
+          "hosts": [
+            "tajrobe.wiki"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر سعید قزلباش"
+          ],
+          "urls": [
+            "https://tajrobe.wiki/profile/dr-mohammad-saeed-ghazlbash"
+          ]
+        },
+        {
+          "hosts": [
+            "www.paziresh24.com"
+          ],
+          "retrieved": [
+            "+2026-07-22T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر سعید قزلباش"
+          ],
+          "urls": [
+            "https://www.paziresh24.com/dr/%D8%AF%DA%A9%D8%AA%D8%B1-%D9%85%D8%AD%D9%85%D8%AF%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4-1/"
+          ]
+        },
+        {
+          "hosts": [
+            "www.icliniq.com"
+          ],
+          "retrieved": [
+            "+2026-07-26T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+          ]
+        },
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-07-27T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "Mohammad Saeed Ghezelbash"
+          ],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir",
+            "www.google.com"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+            "https://www.google.com/maps?cid=12350483144643112463"
+          ]
+        },
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-18T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P1810",
+            "P5997",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [
+            "دکتر سعید قزلباش"
+          ],
+          "urls": [
+            "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          ]
+        }
+      ],
+      "value": "Q140288589",
+      "value_label": "Dr. Saeed Ghezelbash Aesthetic Clinic"
+    },
+    {
+      "claim_id": "Q140287622$7722CF38-0CCD-4030-AD4F-5A6FBCEA9078",
+      "property": "P968",
+      "property_label": "email address",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "pmc.ncbi.nlm.nih.gov"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P248",
+            "P813",
+            "P854"
+          ],
+          "stated_in": [
+            {
+              "id": "Q140298431",
+              "label": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events"
+            }
+          ],
+          "subject_named_as": [],
+          "urls": [
+            "https://pmc.ncbi.nlm.nih.gov/articles/PMC8469763/"
+          ]
+        }
+      ],
+      "value": "mailto:medicaldoctor91@gmail.com",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$F6B22D25-A2BC-4889-8444-3D3C7C39D8EE",
+      "property": "P968",
+      "property_label": "email address",
+      "qualifiers": {},
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ghezelbaash.ir"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ghezelbaash.ir/contact/"
+          ]
+        },
+        {
+          "hosts": [
+            "orcid.org"
+          ],
+          "retrieved": [
+            "+2026-08-17T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://orcid.org/0009-0001-9346-8475"
+          ]
+        }
+      ],
+      "value": "mailto:doctor@ghezelbaash.ir",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$6A9E960E-4441-43E6-94A5-F118214699D7",
+      "property": "P973",
+      "property_label": "described at URL",
+      "qualifiers": {
+        "P1810": [
+          "دکتر سعید قزلباش"
+        ],
+        "P407": [
+          "Q9168"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "iranmedlabs.com"
+          ],
+          "retrieved": [
+            "+2026-08-01T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          ]
+        }
+      ],
+      "value": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$0902D0F6-5867-4066-B229-1A05B8E3B169",
+      "property": "P973",
+      "property_label": "described at URL",
+      "qualifiers": {
+        "P1810": [
+          "Saeed Ghezelbash"
+        ],
+        "P407": [
+          "Q1860"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.ncbi.nlm.nih.gov"
+          ],
+          "retrieved": [
+            "+2026-08-01T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+          ]
+        }
+      ],
+      "value": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$E22B360A-6781-4810-93A1-483C0EC5936F",
+      "property": "P973",
+      "property_label": "described at URL",
+      "qualifiers": {
+        "P1810": [
+          "Mohammad Saeed Ghezelbash"
+        ],
+        "P407": [
+          "Q9168"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.magiran.com"
+          ],
+          "retrieved": [
+            "+2026-08-01T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.magiran.com/author/mohammad-saeed-ghezelbash"
+          ]
+        }
+      ],
+      "value": "https://www.magiran.com/author/mohammad-saeed-ghezelbash",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$94C7820D-384D-4C24-9A97-4A05646B9EEB",
+      "property": "P973",
+      "property_label": "described at URL",
+      "qualifiers": {
+        "P1810": [
+          "دکتر محمدسعید قزلباش"
+        ],
+        "P407": [
+          "Q9168"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "membersearch.irimc.org"
+          ],
+          "retrieved": [
+            "+2026-08-07T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          ]
+        }
+      ],
+      "value": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+      "value_label": null
+    },
+    {
+      "claim_id": "Q140287622$95964328-FB76-44D5-BB96-F92AD74CE0C2",
+      "property": "P973",
+      "property_label": "described at URL",
+      "qualifiers": {
+        "P1810": [
+          "Dr. Saeed Ghezelbash"
+        ],
+        "P407": [
+          "Q1860"
+        ]
+      },
+      "rank": "normal",
+      "references": [
+        {
+          "hosts": [
+            "www.icliniq.com"
+          ],
+          "retrieved": [
+            "+2026-08-07T00:00:00Z"
+          ],
+          "snak_properties": [
+            "P813",
+            "P854"
+          ],
+          "stated_in": [],
+          "subject_named_as": [],
+          "urls": [
+            "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+          ]
+        }
+      ],
+      "value": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash",
+      "value_label": null
+    }
+  ]
+}
