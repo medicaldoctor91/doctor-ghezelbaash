@@ -1,0 +1,105 @@
+name: Temporary compact live Wikipedia audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/_tmp-wikipedia-compact-audit.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Query Wikipedia APIs read-only
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests, json, datetime, os
+          UA='GhezelbaashWikipediaCompactAudit/1.0 (https://www.ghezelbaash.ir/)'
+          USER='Medicaldoctor91'
+          def api(base, **params):
+              p={'format':'json','formatversion':2,**params}
+              r=requests.get(base,params=p,headers={'User-Agent':UA},timeout=60); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+          def contribs(base):
+              return api(base,action='query',list='usercontribs',ucuser=USER,uclimit=100,ucprop='ids|title|timestamp|comment|flags|sizediff').get('query',{}).get('usercontribs',[])
+          def latest(base,title,n=20):
+              p=api(base,action='query',titles=title,prop='info|revisions|pageprops',rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=n).get('query',{}).get('pages',[{}])[0]
+              revs=p.get('revisions',[]); text=(revs[0].get('slots',{}).get('main',{}).get('content','') if revs else '')
+              return p,revs,text
+          def search(base,q,ns=None):
+              x={'action':'query','list':'search','srsearch':q,'srlimit':50,'srprop':'timestamp|wordcount'}
+              if ns is not None: x['srnamespace']=ns
+              d=api(base,**x)
+              return {'totalhits':d.get('query',{}).get('searchinfo',{}).get('totalhits',0),'titles':[z.get('title') for z in d.get('query',{}).get('search',[])]}
+          def logs(base,title):
+              return api(base,action='query',list='logevents',letitle=title,lelimit=50,leprop='ids|title|type|user|timestamp|comment|details').get('query',{}).get('logevents',[])
+          en='https://en.wikipedia.org/w/api.php'; fa='https://fa.wikipedia.org/w/api.php'
+          enuc=contribs(en); fauc=contribs(fa)
+          tp,tr,tt=latest(en,'Talk:Treatment of bipolar disorder',100)
+          ap,ar,at=latest(en,'Treatment of bipolar disorder',20)
+          bp,br,bt=latest(en,'Talk:Botulinum toxin',50)
+          bap,bar,bat=latest(en,'Botulinum toxin',20)
+          def after(revs,revid):
+              return [{'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment')} for r in revs if (r.get('revid') or 0)>revid]
+          out={
+            'checked_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'enwiki':{
+              'contributions':[{'title':x.get('title'),'revid':x.get('revid'),'timestamp':x.get('timestamp'),'comment':x.get('comment'),'sizediff':x.get('sizediff')} for x in enuc],
+              'botulinum_request':{
+                'request_revid':1369605448,
+                'talk_revisions_after_request':after(br,1369605448),
+                'article_latest_revid':bar[0].get('revid') if bar else None,
+                'article_latest_timestamp':bar[0].get('timestamp') if bar else None,
+                'article_contains_wikiversity':'wikiversity' in bat.lower(),
+                'article_contains_target_title':'botulinum toxin in aesthetic medicine' in bat.lower(),
+                'article_contains_ghezelbash':'ghezelbash' in bat.lower() or 'ghezelbaash' in bat.lower(),
+              },
+              'bipolar_request':{
+                'request_revid':1369763326,
+                'talk_revisions_after_request':after(tr,1369763326),
+                'article_latest_revid':ar[0].get('revid') if ar else None,
+                'article_latest_timestamp':ar[0].get('timestamp') if ar else None,
+                'article_contains_meta_doi':'10.1111/bdi.13115' in at.lower(),
+                'article_contains_review_doi':'10.3390/md23020084' in at.lower(),
+                'article_contains_trial_doi':'10.4103/2008-7802.182734' in at.lower(),
+                'article_contains_ghezelbash':'ghezelbash' in at.lower() or 'ghezelbaash' in at.lower(),
+              }
+            },
+            'fawiki':{
+              'contributions':[{'title':x.get('title'),'revid':x.get('revid'),'timestamp':x.get('timestamp'),'comment':x.get('comment'),'sizediff':x.get('sizediff')} for x in fauc],
+              'search_main_saeed':search(fa,'"سعید قزلباش"',0),
+              'search_all_saeed':search(fa,'"سعید قزلباش"',None),
+              'search_main_mohammad':search(fa,'"محمد سعید قزلباش"',0),
+              'search_all_mohammad':search(fa,'"محمد سعید قزلباش"',None),
+              'search_main_latin':search(fa,'Ghezelbash',0),
+              'logs_saeed':logs(fa,'سعید قزلباش'),
+              'logs_mohammad':logs(fa,'محمد سعید قزلباش'),
+            }
+          }
+          for title,key in [('سعید قزلباش','person_saeed'),('محمد سعید قزلباش','person_mohammad')]:
+              p,r,t=latest(fa,title,10)
+              out['fawiki'][key]={'missing':'missing' in p,'pageid':p.get('pageid'),'wikibase_item':p.get('pageprops',{}).get('wikibase_item'),'latest_revid':r[0].get('revid') if r else None}
+          os.makedirs('wikimedia',exist_ok=True)
+          with open('wikimedia/_tmp-wikipedia-compact-audit.json','w',encoding='utf-8') as f: json.dump(out,f,ensure_ascii=False,indent=2,sort_keys=True)
+          print(json.dumps(out,ensure_ascii=False))
+          PY
+      - name: Commit compact snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wikimedia/_tmp-wikipedia-compact-audit.json
+          git commit -m 'Record temporary compact Wikipedia audit snapshot'
+          git push
