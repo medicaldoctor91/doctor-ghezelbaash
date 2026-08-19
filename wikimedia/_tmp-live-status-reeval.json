@@ -1,0 +1,493 @@
+{
+  "Q140287622": {
+    "modified": "2026-08-19T17:32:23Z",
+    "lastrevid": 2533323368,
+    "sitelinks": {
+      "commonswiki": "Category:Saeed Ghezelbash",
+      "enwikisource": "Author:Mohammad Saeed Ghezelbash"
+    },
+    "claims": {
+      "P3919": [
+        {
+          "value": "Q140306302",
+          "rank": "normal",
+          "refs": 2,
+          "quals": {
+            "P2868": [
+              "Q482980"
+            ]
+          }
+        },
+        {
+          "value": "Q36942316",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {
+            "P2868": [
+              "Q482980"
+            ]
+          }
+        },
+        {
+          "value": "Q140298431",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {
+            "P2868": [
+              "Q482980"
+            ]
+          }
+        },
+        {
+          "value": "Q141099455",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {
+            "P2868": [
+              "Q482980"
+            ]
+          }
+        },
+        {
+          "value": "Q141129555",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {
+            "P2868": [
+              "Q482980"
+            ]
+          }
+        }
+      ],
+      "P800": [
+        {
+          "value": "Q140306302",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        },
+        {
+          "value": "Q36942316",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        },
+        {
+          "value": "Q140298431",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        }
+      ],
+      "P31": [
+        {
+          "value": "Q5",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        }
+      ],
+      "P2671": [
+        {
+          "value": "/g/11nqdfk76c",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {
+            "P14457": [
+              null,
+              null
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Q141099455": {
+    "modified": "2026-08-19T17:28:34Z",
+    "lastrevid": 2533321627,
+    "sitelinks": {
+      "enwikiversity": "Botulinum toxin in aesthetic medicine"
+    },
+    "claims": {
+      "P50": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        }
+      ],
+      "P31": [
+        {
+          "value": "Q116781",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        },
+        {
+          "value": "Q386724",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        }
+      ]
+    }
+  },
+  "Q141129555": {
+    "modified": "2026-08-19T14:07:28Z",
+    "lastrevid": 2533231921,
+    "sitelinks": {
+      "enwikiversity": "WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review"
+    },
+    "claims": {
+      "P50": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {
+            "P1545": [
+              "1"
+            ]
+          }
+        }
+      ],
+      "P7347": [
+        {
+          "value": "https://en.wikiversity.org/wiki/Talk:WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review",
+          "rank": "normal",
+          "refs": 0,
+          "quals": {}
+        }
+      ],
+      "P1433": [
+        {
+          "value": "Q100164397",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        }
+      ],
+      "P793": [
+        {
+          "value": "Q76903164",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {
+            "P585": [
+              null
+            ],
+            "P276": [
+              "Q100164397"
+            ]
+          }
+        }
+      ],
+      "P31": [
+        {
+          "value": "Q580922",
+          "rank": "normal",
+          "refs": 1,
+          "quals": {}
+        }
+      ]
+    }
+  },
+  "enwiki_botulinum": {
+    "revid": 1369764261,
+    "timestamp": "2026-08-17T00:55:54Z",
+    "user": "Dr vulpes",
+    "comment": "/* External links */ added link to Wikiversity",
+    "has_v_yes": true,
+    "has_explicit": false,
+    "snippet": [
+      "{{sister project links||d=Q114242090|c=Category:Botulinum neurotoxin|n=no|b=no|v=yes|voy=no|m=no|mw=no|s=no|wikt=no|species=no}}"
+    ]
+  },
+  "enwiki_botulinum_talk": [
+    {
+      "revid": 1370165015,
+      "timestamp": "2026-08-19T13:40:00Z",
+      "user": "Medicaldoctor91",
+      "comment": "COI follow-up: correct Wikiversity sister-link target to the reviewed resource"
+    },
+    {
+      "revid": 1369764392,
+      "timestamp": "2026-08-17T00:57:09Z",
+      "user": "Dr vulpes",
+      "comment": "/* Wikiversity sister-project link request */ Reply"
+    },
+    {
+      "revid": 1369764103,
+      "timestamp": "2026-08-17T00:54:43Z",
+      "user": "Dr vulpes",
+      "comment": "/* Wikiversity sister-project link request */ done"
+    },
+    {
+      "revid": 1369605448,
+      "timestamp": "2026-08-16T00:55:21Z",
+      "user": "Medicaldoctor91",
+      "comment": "COI edit request: consider relevant Wikiversity sister-project link"
+    },
+    {
+      "revid": 1362661056,
+      "timestamp": "2026-07-05T13:13:37Z",
+      "user": "WeirdNAnnoyed",
+      "comment": "/* LLM template */ new section"
+    },
+    {
+      "revid": 1357019335,
+      "timestamp": "2026-05-31T08:24:51Z",
+      "user": "Cewbot",
+      "comment": "[[User:Cewbot/log/20200122/configuration|Maintain {{WPBS}} and vital articles]]: 4 WikiProject templates. The article is listed in the level 5 page.: [[Wikipedia:Vital articles/Level 5/Biology and health sciences/Health#Toxic injury|Toxic injury]]."
+    },
+    {
+      "revid": 1310604597,
+      "timestamp": "2025-09-10T15:36:22Z",
+      "user": "Rich Farmbrough",
+      "comment": "IP was right, but typo'ed."
+    },
+    {
+      "revid": 1310603312,
+      "timestamp": "2025-09-10T15:27:09Z",
+      "user": "Criticize",
+      "comment": "Reverted edits by [[Special:Contributions/92.18.76.185|92.18.76.185]] ([[User talk:92.18.76.185|talk]]) ([[WP:HG|HG]]) (3.4.13)"
+    },
+    {
+      "revid": 1310603290,
+      "timestamp": "2025-09-10T15:27:01Z",
+      "user": "92.18.76.185",
+      "comment": "Fixing lint errors [[Special:LintErrors/empty-heading]]. Fill empty heading."
+    },
+    {
+      "revid": 1284799230,
+      "timestamp": "2025-04-09T20:04:03Z",
+      "user": "Frietjes",
+      "comment": "Undid revision [[Special:Diff/1284729875|1284729875]] by [[Special:Contributions/102.244.157.213|102.244.157.213]] ([[User talk:102.244.157.213|talk]])"
+    },
+    {
+      "revid": 1284729875,
+      "timestamp": "2025-04-09T10:48:49Z",
+      "user": "102.244.157.213",
+      "comment": "/* Nonsensical statement in intro */"
+    },
+    {
+      "revid": 1239077667,
+      "timestamp": "2024-08-07T07:03:40Z",
+      "user": "TiffyWiki",
+      "comment": "/* Poison or medication? */"
+    }
+  ],
+  "enwiki_bipolar_talk": [
+    {
+      "revid": 1369763326,
+      "timestamp": "2026-08-17T00:49:36Z",
+      "user": "Medicaldoctor91",
+      "comment": "COI disclosed: request independent review of Omega-3 subsection using recent secondary sources"
+    },
+    {
+      "revid": 1205751834,
+      "timestamp": "2024-02-10T10:10:04Z",
+      "user": "Cewbot",
+      "comment": "[[User:Cewbot/log/20200122/configuration|Maintain {{WPBS}} and vital articles]]: 2 WikiProject templates. Create {{WPBS}}. Keep majority rating \"C\" in {{WPBS}}. Remove 2 same ratings as {{WPBS}} in {{WikiProject Psychology}}, {{WPMED}}."
+    },
+    {
+      "revid": 1114272995,
+      "timestamp": "2022-10-05T17:32:46Z",
+      "user": "Breighlee.t",
+      "comment": "Update [[Wikipedia:Wiki_Ed/Idaho_State_University/LLIB_1115_-_Intro_to_Information_Research_(Fall_2022)|LLIB 1115 - Intro to Information Research]] assignment details"
+    },
+    {
+      "revid": 1062428863,
+      "timestamp": "2021-12-28T11:25:20Z",
+      "user": "MalnadachBot",
+      "comment": "Fixed [[WP:LINT|Lint errors]] in signatures. ([[User:MalnadachBot/Task 2|Task 2]])"
+    },
+    {
+      "revid": 884325506,
+      "timestamp": "2019-02-20T22:49:53Z",
+      "user": "GreenC bot",
+      "comment": "Add {{[[Template:reflist-talk|reflist-talk]]}} to [[Talk%3ATreatment%20of%20bipolar%20disorder#Cost%2Deffectiveness|#Cost-effectiveness]] (via [[User:GreenC bot/Job 8|reftalk]] bot)"
+    },
+    {
+      "revid": 711024746,
+      "timestamp": "2016-03-20T15:01:40Z",
+      "user": "Where next Columbus?",
+      "comment": "/* new section */ Removal of large unsourced section regarding 'natural' lithium salts"
+    },
+    {
+      "revid": 632961696,
+      "timestamp": "2014-11-08T15:09:59Z",
+      "user": "Scuriusx86",
+      "comment": "/* Atypical antipsychotics */"
+    },
+    {
+      "revid": 632961425,
+      "timestamp": "2014-11-08T15:07:23Z",
+      "user": "Scuriusx86",
+      "comment": "/* In response to marijuana treatment */"
+    },
+    {
+      "revid": 632961173,
+      "timestamp": "2014-11-08T15:04:28Z",
+      "user": "Scuriusx86",
+      "comment": "/* Is this appropriate content for WP? */"
+    },
+    {
+      "revid": 628616836,
+      "timestamp": "2014-10-07T09:19:50Z",
+      "user": "ChrisSampson87",
+      "comment": "/* Cost-effectiveness */ new section"
+    },
+    {
+      "revid": 619963889,
+      "timestamp": "2014-08-05T14:30:50Z",
+      "user": "MrBill3",
+      "comment": "/* Atypical antipsychotics */ fmt"
+    },
+    {
+      "revid": 619963795,
+      "timestamp": "2014-08-05T14:30:06Z",
+      "user": "MrBill3",
+      "comment": "/* Is this appropriate content for WP? */ new section"
+    }
+  ],
+  "enwiki_bipolar_article": {
+    "revid": 1364896215,
+    "timestamp": "2026-07-19T03:41:38Z",
+    "user": "Bender the Bot",
+    "comment": "/* Lithium salts */ HTTP to HTTPS for [[Wayback Machine]], replaced: http://web.archive.org/ → https://web.archive.org/",
+    "mentions_ghezelbash": false,
+    "mentions_doi": false
+  },
+  "preprint": {
+    "pageid": 331257,
+    "missing": false,
+    "touched": "2026-08-19T14:07:28Z",
+    "pageprops": {
+      "defaultsort": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+      "toc": "",
+      "wikibase_item": "Q141129555"
+    },
+    "revisions": [
+      {
+        "revid": 2822840,
+        "timestamp": "2026-08-18T22:54:46Z",
+        "user": "Medicaldoctor91",
+        "comment": "Create or update author-controlled focused-review preprint for WikiJournal of Medicine; exact repository read-back verification enabled"
+      }
+    ]
+  },
+  "preprint_talk": {
+    "pageid": 331293,
+    "missing": false,
+    "touched": "2026-08-19T14:07:28Z",
+    "pageprops": {
+      "defaultsort": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+      "toc": ""
+    },
+    "revisions": [
+      {
+        "revid": 2823138,
+        "timestamp": "2026-08-19T14:07:24Z",
+        "user": "Medicaldoctor91",
+        "comment": "Create peer review location for submitted WikiJournal preprint"
+      }
+    ]
+  },
+  "resource": {
+    "pageid": 331166,
+    "missing": false,
+    "touched": "2026-08-17T08:12:50Z",
+    "pageprops": {
+      "wikibase_item": "Q141099455"
+    },
+    "revisions": [
+      {
+        "revid": 2822519,
+        "timestamp": "2026-08-17T08:12:50Z",
+        "user": "Medicaldoctor91",
+        "comment": "Correct provenance to the live canonical Botox section on the official website and remove the dead standalone source URL"
+      },
+      {
+        "revid": 2822490,
+        "timestamp": "2026-08-17T02:02:23Z",
+        "user": "Medicaldoctor91",
+        "comment": "Link canonical Wikisource author record in contributor provenance"
+      },
+      {
+        "revid": 2822262,
+        "timestamp": "2026-08-15T13:00:05Z",
+        "user": "Atcovi",
+        "comment": "/* Contributor identity and provenance */ delete links to personal website"
+      },
+      {
+        "revid": 2822260,
+        "timestamp": "2026-08-15T12:48:11Z",
+        "user": "Medicaldoctor91",
+        "comment": "Correct provenance to the live canonical Botox section on the official website and remove the dead standalone source URL"
+      },
+      {
+        "revid": 2822259,
+        "timestamp": "2026-08-15T12:43:09Z",
+        "user": "Medicaldoctor91",
+        "comment": "Strengthen verified provenance with clickable official-site and original educational-source links"
+      },
+      {
+        "revid": 2822181,
+        "timestamp": "2026-08-15T01:41:15Z",
+        "user": "Medicaldoctor91",
+        "comment": "Upgrade educational resource: 2026 evidence review, case-based learning, bilingual contributor identity, assessment rubric, and verified provenance"
+      },
+      {
+        "revid": 2822151,
+        "timestamp": "2026-08-14T23:52:56Z",
+        "user": "Medicaldoctor91",
+        "comment": "Create educational resource on botulinum toxin in aesthetic medicine; scholarly references, contributor identity, and source provenance"
+      }
+    ]
+  },
+  "openalex": {
+    "orcid": null,
+    "display_name": "Mohammad Saeed Ghezelbash",
+    "works_count": 2,
+    "cited_by_count": 31,
+    "h_index": 2,
+    "updated_date": "2026-08-14T12:16:50"
+  },
+  "semantic_scholar": {
+    "status": 200,
+    "data": {
+      "authorId": "3786699",
+      "externalIds": {
+        "ORCID": "0009-0001-9346-8475"
+      },
+      "name": "سعید قزلباش",
+      "paperCount": 2,
+      "citationCount": 30,
+      "hIndex": 2
+    }
+  },
+  "crossref_10.4103/2008-7802.182734": {
+    "indexed": "2026-08-14T13:42:21Z",
+    "deposited": "2026-08-14T13:23:15Z",
+    "ghezelbash": [
+      {
+        "given": "MohammadSaeed",
+        "family": "Ghezelbash",
+        "ORCID": null
+      }
+    ]
+  },
+  "crossref_10.3390/healthcare9091169": {
+    "indexed": "2026-08-18T04:48:45Z",
+    "deposited": "2025-10-11T06:57:25Z",
+    "ghezelbash": [
+      {
+        "given": "Mohammad Saeed",
+        "family": "Ghezelbash",
+        "ORCID": null
+      }
+    ]
+  }
+}
