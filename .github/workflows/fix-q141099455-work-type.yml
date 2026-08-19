@@ -9,16 +9,24 @@ permissions:
   contents: write
 jobs:
   fix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     env:
-      WIKIMEDIA_USERNAME: ${{ secrets.WIKIMEDIA_USERNAME }}
-      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIMEDIA_BOT_PASSWORD }}
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install requests
+      - name: Validate credentials and script
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$WIKIMEDIA_USERNAME"
+          test -n "$WIKIMEDIA_BOT_PASSWORD"
+          python -m py_compile scripts/fix_q141099455_work_type.py
       - name: Apply duplicate-safe work classification and verify constraints
         shell: bash
         run: |
