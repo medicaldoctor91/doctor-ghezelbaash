@@ -1,0 +1,65 @@
+{
+  "talk_done": {
+    "title": "Talk:Botulinum toxin",
+    "revid": 1369764103,
+    "parentid": 1369605448,
+    "timestamp": "2026-08-17T00:54:43Z",
+    "user": "Dr vulpes",
+    "comment": "/* Wikiversity sister-project link request */ done"
+  },
+  "article_edit": {
+    "title": "Botulinum toxin",
+    "revid": 1369764261,
+    "parentid": 1369611487,
+    "timestamp": "2026-08-17T00:55:54Z",
+    "user": "Dr vulpes",
+    "comment": "/* External links */ added link to Wikiversity"
+  },
+  "talk_reply": {
+    "title": "Talk:Botulinum toxin",
+    "revid": 1369764392,
+    "parentid": 1369764103,
+    "timestamp": "2026-08-17T00:57:09Z",
+    "user": "Dr vulpes",
+    "comment": "/* Wikiversity sister-project link request */ Reply"
+  },
+  "article_diff": {
+    "fromrevid": 1369611487,
+    "torevid": 1369764261,
+    "fromtitle": "Botulinum toxin",
+    "totitle": "Botulinum toxin",
+    "fromuser": "JCW-CleanerBot",
+    "touser": "Dr vulpes",
+    "fromcomment": "/* top */ mark free doi",
+    "tocomment": "/* External links */ added link to Wikiversity",
+    "fromtimestamp": "2026-08-16T01:39:27Z",
+    "totimestamp": "2026-08-17T00:55:54Z",
+    "body": "<tr>\n  <td colspan=\"2\" class=\"diff-lineno\">Line 272:</td>\n  <td colspan=\"2\" class=\"diff-lineno\">Line 272:</td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><br /></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><br /></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><div>== External links ==</div></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><div>== External links ==</div></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\" data-marker=\"−\"></td>\n  <td class=\"diff-deletedline diff-side-deleted\"><div>{{sister project links||d=Q114242090|c=Category:Botulinum neurotoxin|n=no|b=no|v=<del class=\"diffchange diffchange-inline\">no</del>|voy=no|m=no|mw=no|s=no|wikt=no|species=no}}</div></td>\n  <td class=\"diff-marker\" data-marker=\"+\"></td>\n  <td class=\"diff-addedline diff-side-added\"><div>{{sister project links||d=Q114242090|c=Category:Botulinum neurotoxin|n=no|b=no|v=<ins class=\"diffchange diffchange-inline\">yes</ins>|voy=no|m=no|mw=no|s=no|wikt=no|species=no}}</div></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><div>* {{PDBe-KB2|P0DPI1|Botulinum neurotoxin type A}}</div></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><div>* {{PDBe-KB2|P0DPI1|Botulinum neurotoxin type A}}</div></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><div>* {{PDBe-KB2|P10844|Botulinum neurotoxin type B}}</div></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><div>* {{PDBe-KB2|P10844|Botulinum neurotoxin type B}}</div></td>\n</tr>\n"
+  },
+  "talk_done_diff": {
+    "fromrevid": 1369605448,
+    "torevid": 1369764103,
+    "fromtitle": "Talk:Botulinum toxin",
+    "totitle": "Talk:Botulinum toxin",
+    "fromuser": "Medicaldoctor91",
+    "touser": "Dr vulpes",
+    "fromcomment": "COI edit request: consider relevant Wikiversity sister-project link",
+    "tocomment": "/* Wikiversity sister-project link request */ done",
+    "fromtimestamp": "2026-08-16T00:55:21Z",
+    "totimestamp": "2026-08-17T00:54:43Z",
+    "body": "<tr>\n  <td colspan=\"2\" class=\"diff-lineno\">Line 366:</td>\n  <td colspan=\"2\" class=\"diff-lineno\">Line 366:</td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><div>== Wikiversity sister-project link request ==</div></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><div>== Wikiversity sister-project link request ==</div></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><br /></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><br /></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\" data-marker=\"−\"></td>\n  <td class=\"diff-deletedline diff-side-deleted\"><div>{{edit COI}}</div></td>\n  <td class=\"diff-marker\" data-marker=\"+\"></td>\n  <td class=\"diff-addedline diff-side-added\"><div>{{edit COI<ins class=\"diffchange diffchange-inline\">|A||answered=yes</ins>}}</div></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><div>'''Disclosure:''' I am Saeed Ghezelbash (User:Medicaldoctor91), the author of the Wikiversity learning resource below.</div></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><div>'''Disclosure:''' I am Saeed Ghezelbash (User:Medicaldoctor91), the author of the Wikiversity learning resource below.</div></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><br /></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><br /></td>\n</tr>\n"
+  },
+  "talk_reply_diff": {
+    "fromrevid": 1369764103,
+    "torevid": 1369764392,
+    "fromtitle": "Talk:Botulinum toxin",
+    "totitle": "Talk:Botulinum toxin",
+    "fromuser": "Dr vulpes",
+    "touser": "Dr vulpes",
+    "fromcomment": "/* Wikiversity sister-project link request */ done",
+    "tocomment": "/* Wikiversity sister-project link request */ Reply",
+    "fromtimestamp": "2026-08-17T00:54:43Z",
+    "totimestamp": "2026-08-17T00:57:09Z",
+    "body": "<tr>\n  <td colspan=\"2\" class=\"diff-lineno\">Line 370:</td>\n  <td colspan=\"2\" class=\"diff-lineno\">Line 370:</td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><br /></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><br /></td>\n</tr>\n<tr>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-deleted\"><div>Please consider adding a Wikimedia sister-project link in the article's External links section to [[Wikiversity:Botulinum toxin in aesthetic medicine|Botulinum toxin in aesthetic medicine]] at Wikiversity. The resource is directly relevant to the article's cosmetic-use coverage. I am requesting independent review rather than editing the article directly because of this connection. [[User:Medicaldoctor91|Medicaldoctor91]] ([[User talk:Medicaldoctor91|talk]]) 00:55, 16 August 2026 (UTC)</div></td>\n  <td class=\"diff-marker\"></td>\n  <td class=\"diff-context diff-side-added\"><div>Please consider adding a Wikimedia sister-project link in the article's External links section to [[Wikiversity:Botulinum toxin in aesthetic medicine|Botulinum toxin in aesthetic medicine]] at Wikiversity. The resource is directly relevant to the article's cosmetic-use coverage. I am requesting independent review rather than editing the article directly because of this connection. [[User:Medicaldoctor91|Medicaldoctor91]] ([[User talk:Medicaldoctor91|talk]]) 00:55, 16 August 2026 (UTC)</div></td>\n</tr>\n<tr>\n  <td colspan=\"2\" class=\"diff-empty diff-side-deleted\"></td>\n  <td class=\"diff-marker\" data-marker=\"+\"></td>\n  <td class=\"diff-addedline diff-side-added\"><br /></td>\n</tr>\n<tr>\n  <td colspan=\"2\" class=\"diff-empty diff-side-deleted\"></td>\n  <td class=\"diff-marker\" data-marker=\"+\"></td>\n  <td class=\"diff-addedline diff-side-added\"><div>:@[[User:Medicaldoctor91|Medicaldoctor91]] {{done}} '''[[User:Dr_vulpes|&lt;span style=\"background:#4B0082; color:white;\"&gt;Dr vulpes&lt;/span&gt;]]''' [[User talk:Dr_vulpes|(Talk)]] 00:57, 17 August 2026 (UTC)</div></td>\n</tr>\n"
+  }
+}
