@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "qid": "Q141129555",
+  "talk_title": "Talk:WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+  "talk_pageid": 331293,
+  "talk_created_now": true,
+  "talk_url": "https://en.wikiversity.org/wiki/Talk:WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review",
+  "talk_latest_revision": {
+    "revid": 2823138,
+    "parentid": 0,
+    "user": "Medicaldoctor91",
+    "timestamp": "2026-08-19T14:07:24Z",
+    "slots": {
+      "main": {
+        "contentmodel": "wikitext",
+        "contentformat": "text/x-wiki",
+        "content": "{{#section-h:{{ARTICLEPAGENAMEE}}}}"
+      }
+    },
+    "comment": "Create peer review location for submitted WikiJournal preprint"
+  },
+  "talk_has_official_preload": true,
+  "P7347_values": [
+    "https://en.wikiversity.org/wiki/Talk:WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review"
+  ],
+  "P7347_added_now": true,
+  "preprint_sitelink": {
+    "site": "enwikiversity",
+    "title": "WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+    "badges": []
+  }
+}
