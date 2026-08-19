@@ -20,13 +20,17 @@ jobs:
           python-version: '3.12'
       - run: pip install requests
       - name: Apply duplicate-safe work classification and verify constraints
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p .audit
           python scripts/fix_q141099455_work_type.py | tee .audit/q141099455-work-type-fix.json
+          test -s .audit/q141099455-work-type-fix.json
+          python -m json.tool .audit/q141099455-work-type-fix.json >/dev/null
       - name: Persist verification result
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add .audit/q141099455-work-type-fix.json
-          git commit -m 'Record Q141099455 work-type fix verification' || exit 0
+          git commit -m 'Record verified Q141099455 work-type result' || exit 0
           git push
