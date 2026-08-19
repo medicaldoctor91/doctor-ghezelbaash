@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: ubuntu-24.04
+    runs-on: macos-15
     timeout-minutes: 10
     env:
       WIKIVERSITY_API_URL: https://en.wikiversity.org/w/api.php
