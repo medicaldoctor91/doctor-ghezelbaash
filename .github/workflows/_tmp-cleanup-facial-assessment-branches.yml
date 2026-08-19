@@ -1,0 +1,40 @@
+name: Temporary cleanup facial assessment branches
+
+on:
+  workflow_run:
+    workflows: ['Read-only source and release validation']
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      contains(github.event.workflow_run.head_commit.message, 'Trigger temporary facial assessment branch cleanup')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Delete temporary branches and self-remove workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for branch in \
+            tmp-run-wikiversity-facial-assessment \
+            tmp-run-wikiversity-facial-assessment-2 \
+            tmp-run-wikiversity-facial-assessment-3 \
+            tmp-run-wikiversity-facial-assessment-4 \
+            tmp-run-wikiversity-facial-assessment-5; do
+            git push origin --delete "$branch" || true
+          done
+          git rm .github/workflows/_tmp-cleanup-facial-assessment-branches.yml
+          git commit -m 'Remove temporary facial assessment branch cleanup workflow'
+          git push origin HEAD:main
