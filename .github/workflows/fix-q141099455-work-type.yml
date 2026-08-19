@@ -1,0 +1,32 @@
+name: Fix Q141099455 work type
+on:
+  push:
+    paths:
+      - 'scripts/fix_q141099455_work_type.py'
+      - '.github/workflows/fix-q141099455-work-type.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIMEDIA_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIMEDIA_BOT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: Apply duplicate-safe work classification and verify constraints
+        run: |
+          mkdir -p .audit
+          python scripts/fix_q141099455_work_type.py | tee .audit/q141099455-work-type-fix.json
+      - name: Persist verification result
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .audit/q141099455-work-type-fix.json
+          git commit -m 'Record Q141099455 work-type fix verification' || exit 0
+          git push
