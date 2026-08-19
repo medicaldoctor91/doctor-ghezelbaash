@@ -1,0 +1,35 @@
+{
+  "wikiversity_pageprops": {
+    "defaultsort": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+    "toc": "",
+    "wikibase_item": "Q141129555"
+  },
+  "wikiversity_qid": "Q141129555",
+  "item_lastrevid": null,
+  "item_modified": null,
+  "sitelink": {
+    "site": "enwikiversity",
+    "title": "WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+    "badges": []
+  },
+  "claim_counts": {
+    "P31": 1,
+    "P1476": 1,
+    "P50": 1,
+    "P1433": 1,
+    "P407": 1,
+    "P275": 1,
+    "P921": 2,
+    "P793": 1
+  },
+  "person_back_edge": [
+    {
+      "guid": "Q140287622$ED83D9C3-5C71-41BA-892E-AA5DD29C3369",
+      "rank": "normal",
+      "role": [
+        "Q482980"
+      ],
+      "references": 1
+    }
+  ]
+}
