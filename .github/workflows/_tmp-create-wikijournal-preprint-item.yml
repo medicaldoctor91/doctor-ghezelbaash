@@ -1,0 +1,141 @@
+name: Temporary WikiJournal preprint Wikidata creation
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/_tmp-create-wikijournal-preprint-item.yml']
+permissions:
+  contents: write
+jobs:
+  create:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Create or reconcile preprint item and author edge
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os,requests,json,re,sys,time
+          USER=os.environ['WIKIMEDIA_USERNAME']; PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
+          VAPI='https://en.wikiversity.org/w/api.php'; WAPI='https://www.wikidata.org/w/api.php'
+          PAGE='WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review'
+          TITLE='Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review'
+          URL='https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review'
+          PERSON='Q140287622'; PREPRINT='Q580922'; VENUE='Q100164397'; ENGLISH='Q1860'; BOTX='Q4095199'; AESTH='Q3332453'; AUTHOR_ROLE='Q482980'; SUBMISSION='Q76903164'; CCBY4='Q20007257'
+          TODAY='+2026-08-19T00:00:00Z'; SUBMIT_DATE='+2026-08-18T00:00:00Z'
+          UA='GhezelbaashWikiJournalWikidata/1.0 (https://www.ghezelbaash.ir/)'
+          s=requests.Session(); s.headers.update({'User-Agent':UA})
+          def get(api,**p):
+            p.update(format='json',formatversion=2)
+            r=s.get(api,params=p,timeout=60); r.raise_for_status(); d=r.json()
+            if 'error' in d: raise RuntimeError(d['error'])
+            return d
+          def post(api,**p):
+            p.update(format='json',formatversion=2)
+            r=s.post(api,data=p,timeout=90); r.raise_for_status(); d=r.json()
+            if 'error' in d: raise RuntimeError(d['error'])
+            return d
+          # Live preconditions from the public preprint.
+          p=get(VAPI,action='query',titles=PAGE,prop='info|pageprops|revisions',rvprop='ids|timestamp|content',rvslots='main')['query']['pages'][0]
+          if p.get('missing') or p.get('ns')!=0: raise RuntimeError('Expected live mainspace preprint is missing')
+          rev=(p.get('revisions') or [{}])[0]; src=rev.get('slots',{}).get('main',{}).get('content','')
+          required=['|journal        = WikiJournal of Medicine','|orcid1         = 0009-0001-9346-8475','|license        = {{CC-BY work}}','Saeed Ghezelbash conceived the review']
+          missing=[x for x in required if x not in src]
+          if missing: raise RuntimeError({'precondition_missing':missing})
+          current_q=(p.get('pageprops') or {}).get('wikibase_item')
+          # Verify exact CC-BY template version; add P275 only when live template identifies CC BY 4.0.
+          tp=get(VAPI,action='query',titles='Template:CC-BY work',prop='revisions',rvprop='content',rvslots='main')['query']['pages'][0]
+          tsrc=((tp.get('revisions') or [{}])[0].get('slots',{}).get('main',{}).get('content',''))
+          ccby4=('licenses/by/4.0' in tsrc.lower() or 'cc-by-4.0' in tsrc.lower())
+          # Login to Wikidata using the same Wikimedia account/bot-password credentials.
+          lt=get(WAPI,action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+          login=post(WAPI,action='login',lgname=USER,lgpassword=PASS,lgtoken=lt)
+          if login.get('login',{}).get('result')!='Success': raise RuntimeError(login)
+          token=get(WAPI,action='query',meta='tokens',type='csrf')['query']['tokens']['csrftoken']
+          def qnum(q): return int(q[1:])
+          def sn_item(prop,q): return {'snaktype':'value','property':prop,'datatype':'wikibase-item','datavalue':{'value':{'entity-type':'item','numeric-id':qnum(q),'id':q},'type':'wikibase-entityid'}}
+          def sn_string(prop,v,datatype='string'): return {'snaktype':'value','property':prop,'datatype':datatype,'datavalue':{'value':v,'type':'string'}}
+          def sn_mono(prop,text,lang='en'): return {'snaktype':'value','property':prop,'datatype':'monolingualtext','datavalue':{'value':{'text':text,'language':lang},'type':'monolingualtext'}}
+          def sn_time(prop,t): return {'snaktype':'value','property':prop,'datatype':'time','datavalue':{'value':{'time':t,'timezone':0,'before':0,'after':0,'precision':11,'calendarmodel':'http://www.wikidata.org/entity/Q1985727'},'type':'time'}}
+          def ref(): return {'snaks':{'P854':[sn_string('P854',URL,'url')],'P813':[sn_time('P813',TODAY)]},'snaks-order':['P854','P813']}
+          def stmt(snak,quals=None,source=True):
+            z={'mainsnak':snak,'type':'statement','rank':'normal'}
+            if quals:
+              z['qualifiers']=quals; z['qualifiers-order']=list(quals)
+            if source: z['references']=[ref()]
+            return z
+          # Duplicate-safe: use current sitelink if an item appeared; otherwise inspect exact-title search candidates.
+          qid=current_q
+          if not qid:
+            sr=get(WAPI,action='wbsearchentities',search=TITLE,language='en',type='item',limit=20).get('search',[])
+            for cand in sr:
+              if cand.get('label')!=TITLE: continue
+              cq=cand.get('id'); ce=get(WAPI,action='wbgetentities',ids=cq,props='claims|sitelinks|labels')['entities'].get(cq,{})
+              vals=lambda prop:[x.get('mainsnak',{}).get('datavalue',{}).get('value',{}).get('id') for x in ce.get('claims',{}).get(prop,[]) if isinstance(x.get('mainsnak',{}).get('datavalue',{}).get('value'),dict)]
+              if PREPRINT in vals('P31') or VENUE in vals('P1433') or (ce.get('sitelinks',{}).get('enwikiversity',{}).get('title')==PAGE):
+                qid=cq; break
+          if not qid:
+            claims={
+              'P31':[stmt(sn_item('P31',PREPRINT))],
+              'P1476':[stmt(sn_mono('P1476',TITLE))],
+              'P50':[stmt(sn_item('P50',PERSON),{'P1545':[sn_string('P1545','1')]})],
+              'P1433':[stmt(sn_item('P1433',VENUE))],
+              'P407':[stmt(sn_item('P407',ENGLISH))],
+              'P921':[stmt(sn_item('P921',BOTX)),stmt(sn_item('P921',AESTH))],
+              'P793':[stmt(sn_item('P793',SUBMISSION),{'P585':[sn_time('P585',SUBMIT_DATE)],'P276':[sn_item('P276',VENUE)]})]
+            }
+            if ccby4: claims['P275']=[stmt(sn_item('P275',CCBY4))]
+            data={'labels':{'en':{'language':'en','value':TITLE}},'descriptions':{'en':{'language':'en','value':'2026 WikiJournal Preprints focused review on individualized assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment'}},'sitelinks':{'enwikiversity':{'site':'enwikiversity','title':PAGE}},'claims':claims}
+            cr=post(WAPI,action='wbeditentity',new='item',data=json.dumps(data,ensure_ascii=False),token=token,summary='Create Wikidata item for live WikiJournal Preprints focused review with author and submission metadata')
+            qid=cr['entity']['id']
+          else:
+            # Ensure the existing/reconciled item owns the exact Wikiversity sitelink.
+            ce=get(WAPI,action='wbgetentities',ids=qid,props='sitelinks')['entities'][qid]
+            if ce.get('sitelinks',{}).get('enwikiversity',{}).get('title')!=PAGE:
+              post(WAPI,action='wbsetsitelink',id=qid,linksite='enwikiversity',linktitle=PAGE,token=token,summary='Link WikiJournal preprint to its Wikidata item')
+          # Ensure the person has P3919 -> preprint with role author; avoid duplicate.
+          pe=get(WAPI,action='wbgetentities',ids=PERSON,props='claims')['entities'][PERSON]
+          found=None
+          for c in pe.get('claims',{}).get('P3919',[]):
+            v=c.get('mainsnak',{}).get('datavalue',{}).get('value',{}).get('id')
+            if v==qid: found=c; break
+          if not found:
+            cl=post(WAPI,action='wbcreateclaim',entity=PERSON,property='P3919',snaktype='value',value=json.dumps({'entity-type':'item','numeric-id':qnum(qid),'id':qid}),token=token,summary='Link Saeed Ghezelbash to WikiJournal preprint as contributed work')['claim']
+            guid=cl['id']
+            post(WAPI,action='wbsetqualifier',claim=guid,property='P2868',snaktype='value',value=json.dumps({'entity-type':'item','numeric-id':qnum(AUTHOR_ROLE),'id':AUTHOR_ROLE}),token=token,summary='Qualify contribution role as author')
+            post(WAPI,action='wbsetreference',statement=guid,snaks=json.dumps({'P854':[sn_string('P854',URL,'url')],'P813':[sn_time('P813',TODAY)]}),token=token,summary='Reference live WikiJournal preprint')
+          # Verify live postconditions.
+          time.sleep(2)
+          ve=get(WAPI,action='wbgetentities',ids=qid,props='labels|descriptions|claims|sitelinks')['entities'][qid]
+          def vals(prop):
+            a=[]
+            for c in ve.get('claims',{}).get(prop,[]):
+              v=c.get('mainsnak',{}).get('datavalue',{}).get('value')
+              if isinstance(v,dict): v=v.get('id') or v.get('text') or v.get('time') or v
+              a.append(v)
+            return a
+          vp=get(VAPI,action='query',titles=PAGE,prop='pageprops')['query']['pages'][0]
+          pe2=get(WAPI,action='wbgetentities',ids=PERSON,props='claims')['entities'][PERSON]
+          back=[]
+          for c in pe2.get('claims',{}).get('P3919',[]):
+            if c.get('mainsnak',{}).get('datavalue',{}).get('value',{}).get('id')==qid:
+              back.append({'rank':c.get('rank'),'roles':[sn.get('datavalue',{}).get('value',{}).get('id') for sn in c.get('qualifiers',{}).get('P2868',[])],'refs':len(c.get('references',[]))})
+          out={'ok':True,'qid':qid,'ccby4_verified':ccby4,'preprint_pageid':p.get('pageid'),'preprint_revid':rev.get('revid'),'wikiversity_page_qid':(vp.get('pageprops') or {}).get('wikibase_item'),'sitelink':ve.get('sitelinks',{}).get('enwikiversity'),'claims':{x:vals(x) for x in ['P31','P1476','P50','P1433','P407','P275','P921','P793']},'person_P3919_back_edge':back}
+          os.makedirs('wikimedia',exist_ok=True)
+          open('wikimedia/_tmp-create-wikijournal-preprint-item-status.json','w',encoding='utf8').write(json.dumps(out,ensure_ascii=False,indent=2))
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit status
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wikimedia/_tmp-create-wikijournal-preprint-item-status.json
+          git commit -m 'Record temporary WikiJournal preprint Wikidata creation status'
+          git push
