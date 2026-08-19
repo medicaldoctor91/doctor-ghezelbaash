@@ -1,5 +1,6 @@
 name: Temporary post-CI Wikidata facial assessment linkage
 
+# registered before this trigger commit
 on:
   workflow_run:
     workflows: ['Read-only source and release validation']
