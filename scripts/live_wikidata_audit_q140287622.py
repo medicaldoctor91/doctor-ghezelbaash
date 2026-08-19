@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-import json, requests, datetime, re, sys
-from urllib.parse import urlparse
+import json, requests, datetime, re
 
 WD = 'https://www.wikidata.org/w/api.php'
 QID = 'Q140287622'
-UA = 'Q140287622-LiveAudit/1.0 (https://www.ghezelbaash.ir/)'
+UA = 'Q140287622-LiveAudit/1.1 (https://www.ghezelbaash.ir/)'
 s = requests.Session(); s.headers.update({'User-Agent': UA, 'Cache-Control':'no-cache'})
 
 def get(**p):
@@ -25,9 +24,8 @@ def snak_value(snak):
     return v
 
 ent = get(action='wbgetentities', ids=QID, props='info|labels|descriptions|aliases|claims|sitelinks')['entities'][QID]
-rev = get(action='query', prop='revisions', titles=QID, rvprop='ids|timestamp|user|comment|tags', rvlimit=10)['query']['pages'][0]
+rev = get(action='query', prop='revisions', titles=QID, rvprop='ids|timestamp|user|comment|tags', rvlimit=20)['query']['pages'][0]
 
-# Resolve labels for all entity IDs encountered.
 qids=set()
 for plist in ent.get('claims',{}).values():
     for c in plist:
@@ -63,28 +61,13 @@ claims={}
 for p,plist in sorted(ent.get('claims',{}).items()):
     claims[p]=[]
     for c in plist:
-        item={
+        claims[p].append({
             'id':c.get('id'),'rank':c.get('rank'),'value':snak_value(c.get('mainsnak')),
             'datatype':c.get('mainsnak',{}).get('datatype'),'references':refs_compact(c.get('references',[])),
             'qualifiers':{qp:[snak_value(x) for x in qs] for qp,qs in c.get('qualifiers',{}).items()}
-        }
-        claims[p].append(item)
+        })
 
-# Constraint API: first use current API help to discover accepted parameters, then check entity.
-constraint={'ok':False}
-try:
-    helpd=get(action='help', modules='wbcheckconstraints')
-    params=[x.get('name') for x in helpd.get('help',{}).get('modules',[{}])[0].get('parameters',[])]
-    constraint['params']=params
-    tried=[]
-    for candidate in ({'action':'wbcheckconstraints','id':QID},{'action':'wbcheckconstraints','entityid':QID}):
-        try:
-            d=get(**candidate); constraint.update({'ok':True,'request':candidate,'result':d}); break
-        except Exception as e: tried.append({'request':candidate,'error':str(e)})
-    constraint['tried']=tried
-except Exception as e: constraint['error']=str(e)
-
-# Exact duplicate detection: same property + normalized value + qualifiers.
+# Exact duplicates on value+qualifiers.
 duplicates=[]
 for p,plist in claims.items():
     seen={}
@@ -93,20 +76,19 @@ for p,plist in claims.items():
         if key in seen: duplicates.append({'property':p,'first':seen[key],'duplicate':x['id'],'value':x['value'],'qualifiers':x['qualifiers']})
         else: seen[key]=x['id']
 
-# Reference URL reachability (non-authoritative technical check only).
-urls=[]
-for p,plist in claims.items():
-    for x in plist:
-        for ref in x['references']:
-            for u in ref.get('P854',[]):
-                if isinstance(u,str): urls.append(u)
-url_status={}
-for u in sorted(set(urls)):
-    try:
-        r=s.get(u,timeout=25,allow_redirects=True,stream=True,headers={'User-Agent':UA})
-        url_status[u]={'status':r.status_code,'final_url':r.url,'host':urlparse(r.url).netloc}
-        r.close()
-    except Exception as e: url_status[u]={'error':str(e)}
+# Constraint report from Wikidata's own quality-constraints API.
+constraint={'ok':False}
+try:
+    helpd=get(action='help', modules='wbcheckconstraints')
+    module=helpd.get('help',{}).get('modules',[{}])[0]
+    constraint['params']=[x.get('name') for x in module.get('parameters',[])]
+    tried=[]
+    for candidate in ({'action':'wbcheckconstraints','id':QID},{'action':'wbcheckconstraints','entityid':QID}):
+        try:
+            d=get(**candidate); constraint.update({'ok':True,'request':candidate,'result':d}); break
+        except Exception as e: tried.append({'request':candidate,'error':str(e)})
+    constraint['tried']=tried
+except Exception as e: constraint['error']=str(e)
 
 out={
  'audit_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
@@ -114,6 +96,6 @@ out={
  'recent_revisions':rev.get('revisions',[]),
  'labels':ent.get('labels',{}),'descriptions':ent.get('descriptions',{}),'aliases':ent.get('aliases',{}),
  'sitelinks':ent.get('sitelinks',{}),'claims':claims,'resolved_entity_labels':labels,
- 'exact_duplicates':duplicates,'constraint_check':constraint,'reference_url_status':url_status
+ 'exact_duplicates':duplicates,'constraint_check':constraint
 }
 print(json.dumps(out,ensure_ascii=False,indent=2,sort_keys=True))
