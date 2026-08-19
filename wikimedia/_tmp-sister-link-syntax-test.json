@@ -1,0 +1,102 @@
+{
+  "yes": {
+    "iwlinks": [
+      {
+        "prefix": "wikt",
+        "url": "https://en.wiktionary.org/wiki/Special:Search/Botulinum_toxin",
+        "title": "wikt:Special:Search/Botulinum toxin"
+      },
+      {
+        "prefix": "c",
+        "url": "https://commons.wikimedia.org/wiki/Category:Botulinum_neurotoxin",
+        "title": "c:Category:Botulinum neurotoxin"
+      },
+      {
+        "prefix": "q",
+        "url": "https://en.wikiquote.org/wiki/Botulinum_toxin",
+        "title": "q:Botulinum toxin"
+      },
+      {
+        "prefix": "s",
+        "url": "https://en.wikisource.org/wiki/Special:Search/Botulinum_toxin",
+        "title": "s:Special:Search/Botulinum toxin"
+      },
+      {
+        "prefix": "b",
+        "url": "https://en.wikibooks.org/wiki/Special:Search/Botulinum_toxin",
+        "title": "b:Special:Search/Botulinum toxin"
+      },
+      {
+        "prefix": "v",
+        "url": "https://en.wikiversity.org/wiki/Special:Search/Botulinum_toxin",
+        "title": "v:Special:Search/Botulinum toxin"
+      }
+    ]
+  },
+  "explicit": {
+    "iwlinks": [
+      {
+        "prefix": "wikt",
+        "url": "https://en.wiktionary.org/wiki/Special:Search/Botulinum_toxin",
+        "title": "wikt:Special:Search/Botulinum toxin"
+      },
+      {
+        "prefix": "c",
+        "url": "https://commons.wikimedia.org/wiki/Category:Botulinum_neurotoxin",
+        "title": "c:Category:Botulinum neurotoxin"
+      },
+      {
+        "prefix": "q",
+        "url": "https://en.wikiquote.org/wiki/Botulinum_toxin",
+        "title": "q:Botulinum toxin"
+      },
+      {
+        "prefix": "s",
+        "url": "https://en.wikisource.org/wiki/Special:Search/Botulinum_toxin",
+        "title": "s:Special:Search/Botulinum toxin"
+      },
+      {
+        "prefix": "b",
+        "url": "https://en.wikibooks.org/wiki/Special:Search/Botulinum_toxin",
+        "title": "b:Special:Search/Botulinum toxin"
+      },
+      {
+        "prefix": "v",
+        "url": "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine",
+        "title": "v:Botulinum toxin in aesthetic medicine"
+      }
+    ]
+  },
+  "full_explicit": {
+    "iwlinks": [
+      {
+        "prefix": "c",
+        "url": "https://commons.wikimedia.org/wiki/Category:Botulinum_neurotoxin",
+        "title": "c:Category:Botulinum neurotoxin"
+      },
+      {
+        "prefix": "q",
+        "url": "https://en.wikiquote.org/wiki/Botulinum_toxin",
+        "title": "q:Botulinum toxin"
+      },
+      {
+        "prefix": "v",
+        "url": "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine",
+        "title": "v:Botulinum toxin in aesthetic medicine"
+      },
+      {
+        "prefix": "d",
+        "url": "https://www.wikidata.org/wiki/Q114242090",
+        "title": "d:Q114242090"
+      }
+    ]
+  },
+  "doc_lines": [
+    " |voy=yes |species=yes |species_author=John |iw=en |d=yes |m=yes |mw=yes |f=yes",
+    " |voy= |species= |species_author= |iw= |d= |m= |mw= |f=",
+    " |voy=yes |species=yes |species_author=John |iw=en |d=yes |m=yes |mw=yes |f=yes",
+    "\t\t\t\"label\": \"Wikiversity link\",",
+    "\t\t\t\"description\": \"Wikiversity link to show. Acceptable values are a page name, \\\"yes\\\", and \\\"no\\\".\",",
+    ":[[File:Wikiversity logo 2017.svg|27x27px|link=|alt=]] [[:File:Wikiversity logo 2017.svg|Wikiversity logo]] <code>v</code><br/>"
+  ]
+}
