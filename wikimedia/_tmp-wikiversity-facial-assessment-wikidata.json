@@ -1,0 +1,6 @@
+  File "/Users/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/scripts/_tmp_create_wikiversity_facial_assessment_wikidata.py", line 183
+    assert="user",
+    ^^^^^^
+SyntaxError: invalid syntax
+
+EXIT_CODE=1
