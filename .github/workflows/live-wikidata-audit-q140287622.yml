@@ -5,6 +5,7 @@ on:
       - 'scripts/live_wikidata_audit_q140287622.py'
       - 'scripts/live_wikidata_digest_q140287622.py'
       - 'scripts/live_wikidata_findings_q140287622.py'
+      - 'scripts/verify_youtube_identity_q140287622.py'
       - '.github/workflows/live-wikidata-audit-q140287622.yml'
   workflow_dispatch:
 permissions:
@@ -24,18 +25,16 @@ jobs:
           python scripts/live_wikidata_audit_q140287622.py > .audit/q140287622-live.json
           python scripts/live_wikidata_digest_q140287622.py > .audit/q140287622-digest.json
           python scripts/live_wikidata_findings_q140287622.py > .audit/q140287622-findings.json
+          python scripts/verify_youtube_identity_q140287622.py > .audit/q140287622-youtube.json
       - uses: actions/upload-artifact@v4
         with:
           name: q140287622-live-audit
-          path: |
-            .audit/q140287622-live.json
-            .audit/q140287622-digest.json
-            .audit/q140287622-findings.json
+          path: .audit/
           if-no-files-found: error
       - name: Persist audit snapshots for inspection
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .audit/q140287622-live.json .audit/q140287622-digest.json .audit/q140287622-findings.json
+          git add .audit/q140287622-live.json .audit/q140287622-digest.json .audit/q140287622-findings.json .audit/q140287622-youtube.json
           git commit -m 'Persist live Q140287622 audit snapshots' || exit 0
           git push
