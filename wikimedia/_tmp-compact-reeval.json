@@ -1,0 +1,60 @@
+{
+  "fawiki": [
+    {
+      "title": "سعید قزلباش",
+      "missing": true,
+      "pageid": null,
+      "search": []
+    },
+    {
+      "title": "محمد سعید قزلباش",
+      "missing": true,
+      "pageid": null,
+      "search": []
+    },
+    {
+      "title": "محمد‌سعید قزلباش",
+      "missing": true,
+      "pageid": null,
+      "search": []
+    }
+  ],
+  "openalex": {
+    "orcid": null,
+    "display_name": "Mohammad Saeed Ghezelbash",
+    "works_count": 2,
+    "cited_by_count": 31,
+    "h_index": 2,
+    "updated_date": "2026-08-14T12:16:50"
+  },
+  "semantic_scholar": {
+    "authorId": "3786699",
+    "externalIds": {
+      "ORCID": "0009-0001-9346-8475"
+    },
+    "name": "سعید قزلباش",
+    "paperCount": 2,
+    "citationCount": 30,
+    "hIndex": 2
+  },
+  "crossref_10.4103/2008-7802.182734": {
+    "deposited": "2026-08-14T13:23:15Z",
+    "authors": [
+      {
+        "given": "MohammadSaeed",
+        "family": "Ghezelbash",
+        "ORCID": null
+      }
+    ]
+  },
+  "crossref_10.3390/healthcare9091169": {
+    "deposited": "2025-10-11T06:57:25Z",
+    "authors": [
+      {
+        "given": "Mohammad Saeed",
+        "family": "Ghezelbash",
+        "ORCID": null
+      }
+    ]
+  }
+}
