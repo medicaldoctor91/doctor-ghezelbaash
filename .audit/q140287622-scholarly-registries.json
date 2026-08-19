@@ -1,0 +1,150 @@
+{
+  "audit_utc": "2026-08-19T15:21:34.870324+00:00",
+  "current_wikidata_ids": {
+    "GoogleScholar_P1960": [
+      "BcWBirUAAAAJ"
+    ],
+    "ORCID_P496": [
+      "0009-0001-9346-8475"
+    ],
+    "OpenAlex_P10283": [
+      "A5064828898"
+    ],
+    "Publons_P3829": [],
+    "ResearchGate_P2038": [],
+    "Scopus_P1153": [],
+    "SemanticScholar_P4012": [
+      "3786699"
+    ],
+    "WoSResearcherID_P1053": []
+  },
+  "registries": {
+    "crossref_orcid_filter": {
+      "ok": true,
+      "total_results": 0,
+      "works": []
+    },
+    "openalex": {
+      "cited_by_count": 31,
+      "display_name": "Mohammad Saeed Ghezelbash",
+      "id": "A5064828898",
+      "ids": {
+        "openalex": "https://openalex.org/A5064828898",
+        "orcid": null
+      },
+      "last_known_institutions": [
+        {
+          "country_code": "IR",
+          "display_name": "Kermanshah University of Medical Sciences",
+          "id": "https://openalex.org/I39642139"
+        }
+      ],
+      "ok": true,
+      "orcid": null,
+      "works_count": 2
+    },
+    "orcid": {
+      "aliases": [
+        "MohamadSaeed Ghezelbash",
+        "سعید قزلباش",
+        "Mohammad Saeed Ghezelbash",
+        "Ghezelbash MS",
+        "محمد‌سعید قزلباش",
+        "دکتر سعید قزلباش"
+      ],
+      "credit_name": "سعید قزلباش",
+      "external_identifiers": [],
+      "family_name": "قزلباش",
+      "given_names": "سعید",
+      "id": "0009-0001-9346-8475",
+      "ok": true,
+      "researcher_urls": [
+        {
+          "name": "دکتر سعید قزلباش",
+          "url": "https://www.wikidata.org/wiki/Q140287622"
+        },
+        {
+          "name": null,
+          "url": "https://www.mdpi.com/2227-9032/9/9/1169"
+        },
+        {
+          "name": "دکتر قزلباش به شماره نظام پزشکی ۱۶۷۴۳۰",
+          "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+        },
+        {
+          "name": "کلینیک زیبایی دکتر سعید قزلباش",
+          "url": "https://www.wikidata.org/wiki/Q140288589"
+        },
+        {
+          "name": "Wikidata — Knowledge Graph Repository (Q140304972)",
+          "url": "https://www.wikidata.org/wiki/Q140304972"
+        },
+        {
+          "name": "Doctor Ghezelbash Knowledge Graph",
+          "url": "https://doi.org/10.5281/zenodo.18765169"
+        },
+        {
+          "name": null,
+          "url": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+        },
+        {
+          "name": "Hugging Face Dataset — Dr. Saeed Ghezelbash Entity Data",
+          "url": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+        },
+        {
+          "name": "دکتر سعید قزلباش",
+          "url": "https://www.ghezelbaash.ir/"
+        },
+        {
+          "name": "Dr. Saeed Ghezelbash Aesthetic Clinic",
+          "url": "https://doctor.ghezelbaash.ir/"
+        },
+        {
+          "name": "دکتر سعید قزلباش",
+          "url": "https://www.instagram.com/doctor.ghezelbaash/"
+        },
+        {
+          "name": "دکتر سعید قزلباش",
+          "url": "https://www.linkedin.com/in/saeed-ghezelbash-93310a96"
+        },
+        {
+          "name": null,
+          "url": "https://about.me/ghezelbaash"
+        },
+        {
+          "name": "Google Knowledge Graph — Saeed Ghezelbash (/g/11nqdfk76c)",
+          "url": "https://www.google.com/search?kgmid=/g/11nqdfk76c"
+        },
+        {
+          "name": "کلینیک زیبایی دکتر سعید قزلباش",
+          "url": "https://www.google.com/search?kgmid=/g/11r3rzdtb3"
+        },
+        {
+          "name": "دکتر سعید قزلباش",
+          "url": "https://drdr.ir/dr/92014/%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4/"
+        },
+        {
+          "name": "دکتر سعید قزلباش",
+          "url": "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ"
+        },
+        {
+          "name": "Dr Mohammadsaeed Ghezelbash",
+          "url": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+        },
+        {
+          "name": "Dr. Saeed Ghezelbash Aesthetic Clinic",
+          "url": "https://www.google.com/maps?cid=12350483144643112463"
+        },
+        {
+          "name": "Google Scholar",
+          "url": "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
+        }
+      ]
+    },
+    "semantic_scholar": {
+      "error": "HTTPError('400 Client Error: Bad Request for url: https://api.semanticscholar.org/graph/v1/author/3786699?fields=name%2Caliases%2Curl%2CpaperCount%2CcitationCount%2ChIndex%2Cpapers.title%2Cpapers.year%2Cpapers.externalIds')",
+      "ok": false
+    }
+  },
+  "wikidata_lastrevid": 2533228865
+}

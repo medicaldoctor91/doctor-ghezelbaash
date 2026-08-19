@@ -28,7 +28,7 @@
       "دکتر محمد‌سعید قزلباش"
     ]
   },
-  "audit_utc": "2026-08-19T15:15:59.103189+00:00",
+  "audit_utc": "2026-08-19T15:21:32.068082+00:00",
   "constraint_check": {
     "ok": true,
     "raw": {
@@ -544,7 +544,7 @@
                   "results": [
                     {
                       "cached": {
-                        "maximumAgeInSeconds": 3516
+                        "maximumAgeInSeconds": 3849
                       },
                       "claim": "Q140287622$F50E143E-E72C-4F7D-B23A-F5FE897E70DB",
                       "constraint": {
