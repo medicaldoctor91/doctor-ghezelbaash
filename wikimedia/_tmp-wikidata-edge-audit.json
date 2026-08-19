@@ -1,0 +1,1798 @@
+{
+  "checked_at_utc": "2026-08-19T13:31:03.749836+00:00",
+  "entities": {
+    "Q114242090": {
+      "claims": {
+        "P11143": [
+          {
+            "id": "Q114242090$8413F8FB-4268-43DD-8A61-8200D09F3246",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "DaxibotulinumtoxinA"
+          }
+        ],
+        "P31": [
+          {
+            "id": "Q114242090$794c205a-4e90-461e-30ec-311a42dd9621",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "Q12140"
+          }
+        ]
+      },
+      "description_en": "medication",
+      "id": "Q114242090",
+      "label_en": "daxibotulinumtoxinA",
+      "lastrevid": null,
+      "modified": null,
+      "sitelinks": {
+        "arwiki": "داكسيبوتولينوم توكسين A",
+        "azbwiki": "داکسیبوتولینوموکسینا",
+        "cawiki": "DaxibotulinumtoxinA",
+        "enwiki": "DaxibotulinumtoxinA",
+        "eswiki": "DaxibotulinumtoxinA",
+        "frwiki": "DaxibotulinumtoxinA",
+        "gpewiki": "DaxibotulinumtoxinA",
+        "jawiki": "ダキシボツリヌス毒素A",
+        "orwiki": "ଡାକ୍ସିବୋଟୁଲିନମଟକ୍ସିନଏ",
+        "ptwiki": "DaxibotulinumtoxinA",
+        "ruwiki": "Даксиботулинумтоксин А",
+        "swwiki": "DaxibotulinumtoxinA",
+        "tewiki": "డాక్సీ బొటులినమ్ టాక్సిన్ ఎ",
+        "trwiki": "DaxibotulinumtoxinA"
+      }
+    },
+    "Q140287622": {
+      "claims": {
+        "P10": [
+          {
+            "id": "Q140287622$AF4E3FCE-5C27-4D74-9A60-081F81B20F57",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "دکتر سعید قزلباش درباره جالپرو و پروفایلو.webm"
+          }
+        ],
+        "P101": [
+          {
+            "id": "Q140287622$5615CC57-DAE3-48B2-BD8F-2E50CE92D05A",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 3,
+            "value": "Q3332453"
+          },
+          {
+            "id": "Q140287622$8A51FDF1-7AF0-42CB-9AED-86F279FAEB3A",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q3745388"
+          },
+          {
+            "id": "Q140287622$08E2F3C6-0021-44E0-BAEC-869D4F073493",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 6,
+            "value": "Q4095199"
+          },
+          {
+            "id": "Q140287622$1CD92B0B-D07E-456B-9944-C4171BFEB820",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 4,
+            "value": "Q17081562"
+          },
+          {
+            "id": "Q140287622$C6AF7F35-A3E5-4E7F-9339-D7617CB1AFBB",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 5,
+            "value": "Q7049059"
+          },
+          {
+            "id": "Q140287622$5D488E96-2D31-41C5-963B-EAA9410FE1F9",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 5,
+            "value": "Q537918"
+          },
+          {
+            "id": "Q140287622$3AE55007-04E3-41C0-89A4-67C10CE574BF",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 5,
+            "value": "Q613879"
+          },
+          {
+            "id": "Q140287622$BEF608DB-2625-4349-9EEC-DFA190563A6E",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q3675172"
+          },
+          {
+            "id": "Q140287622$2856768D-9825-49CF-8820-D17EE0D20271",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q4936963"
+          },
+          {
+            "id": "Q140287622$DB6FE9ED-0ABB-4E48-B5D8-991C576DCC9E",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q2276095"
+          },
+          {
+            "id": "Q140287622$F4F73F03-9718-46A7-8AF3-F29FAABBC610",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q2697787"
+          },
+          {
+            "id": "Q140287622$E393C67B-0B37-4EA3-A037-70B4A097EAC6",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q685286"
+          },
+          {
+            "id": "Q140287622$5BBE40AC-E581-4082-A883-25478FFD29BD",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q2559992"
+          },
+          {
+            "id": "Q140287622$03FDB487-9DF0-40F4-8652-7CB80F60BB59",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q3267987"
+          },
+          {
+            "id": "Q140287622$A4BA6210-B037-4F2D-9F43-7B8CAF410CD3",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q16949888"
+          },
+          {
+            "id": "Q140287622$3B6F7E1A-6D98-478B-A05C-7BC9A4B7B9EB",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q305190"
+          },
+          {
+            "id": "Q140287622$8BF51D54-9C18-403B-9DE3-E159BFEF5C1D",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q1641068"
+          },
+          {
+            "id": "Q140287622$76F0AF23-A730-4677-9E5E-8E112295B083",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q26967"
+          },
+          {
+            "id": "Q140287622$0AECE96E-3B6A-490E-87C1-1C3DF2CDA943",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q840929"
+          },
+          {
+            "id": "Q140287622$581C7157-2DD1-474F-8BFA-29A858CA54C7",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q825490"
+          },
+          {
+            "id": "Q140287622$B869A596-C364-4389-B7DB-F27A78316033",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q1423937"
+          },
+          {
+            "id": "Q140287622$6BC0E107-D46D-47A5-9DD1-8BD974804077",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q851186"
+          },
+          {
+            "id": "Q140287622$C7046A86-FF92-4439-BB63-7FDEECA46677",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q935781"
+          },
+          {
+            "id": "Q140287622$E794D2C1-9302-4A31-B83A-3BE40B3B57B1",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q133823"
+          },
+          {
+            "id": "Q140287622$8E3E1734-70D5-4E09-BDF1-CD897B2C0A5E",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q7439446"
+          },
+          {
+            "id": "Q140287622$5EFCAB7D-554D-4F40-AF16-9903E91561B6",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q79928"
+          },
+          {
+            "id": "Q140287622$22E4184A-F67F-477C-B2B7-A40780DA2E3D",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q5133849"
+          },
+          {
+            "id": "Q140287622$15B48453-190C-45F1-B735-9F8BA7767D50",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q2752427"
+          }
+        ],
+        "P10283": [
+          {
+            "id": "Q140287622$a64126cd-49a2-6f25-8d00-9e3062e5f526",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "A5064828898"
+          }
+        ],
+        "P106": [
+          {
+            "id": "Q140287622$c720a368-4c76-6cc8-4df4-4a334846c002",
+            "qualifiers": [],
+            "rank": "preferred",
+            "references": 1,
+            "value": "Q39631"
+          },
+          {
+            "id": "Q140287622$60bde225-4971-dcaf-a4ba-d4242c2b3ea8",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q15401884"
+          }
+        ],
+        "P10611": [
+          {
+            "id": "Q140287622$0cf18cae-4da5-886f-dd49-0efe6b72069d",
+            "qualifiers": [
+              "P1001",
+              "P1027",
+              "P9994",
+              "P582"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q1566725"
+          }
+        ],
+        "P11079": [
+          {
+            "id": "Q140287622$78EC26BD-0923-48DD-AA75-BA029DD85842",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Doctor.ghezelbaash"
+          }
+        ],
+        "P11245": [
+          {
+            "id": "Q140287622$46AE2B87-DDDC-4D9F-BB28-52F272AC09E0",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "ghezelbaash"
+          }
+        ],
+        "P11892": [
+          {
+            "id": "Q140287622$13E9209B-DBA0-44B5-AC68-22F68B76DAF0",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "doctor.ghezelbaash"
+          }
+        ],
+        "P12201": [
+          {
+            "id": "Q140287622$b1486c46-49c2-978c-b6a4-80fd550e3d51",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "ghezelbaash"
+          }
+        ],
+        "P1343": [
+          {
+            "id": "Q140287622$9D997FF3-D130-4C91-9F96-487D540574C6",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q140304972"
+          }
+        ],
+        "P1344": [
+          {
+            "id": "Q140287622$D31A3456-0CC0-495F-A024-91FB6303821B",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q140307274"
+          }
+        ],
+        "P1412": [
+          {
+            "id": "Q140287622$96B1A816-4C79-4DD6-BED7-2D67A413D229",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q9168"
+          },
+          {
+            "id": "Q140287622$44532BCB-06A7-4B7B-89AF-DA60E128FF8A",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q1860"
+          }
+        ],
+        "P1416": [
+          {
+            "id": "Q140287622$82deb4be-4fd2-6db0-7959-23ce4deda85b",
+            "qualifiers": [
+              "P585"
+            ],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q6393994"
+          },
+          {
+            "id": "Q140287622$6f07c517-4bb2-4c4e-197a-0dda845682a5",
+            "qualifiers": [
+              "P585"
+            ],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q6393994"
+          }
+        ],
+        "P1472": [
+          {
+            "id": "Q140287622$37A10008-79D1-42FF-9A27-262BF5182DF5",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Saeed Ghezelbash"
+          }
+        ],
+        "P1559": [
+          {
+            "id": "Q140287622$B0D3F371-13DD-4FEB-9A2A-40ACCEBD17D8",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": {
+              "language": "fa",
+              "text": "سعید قزلباش"
+            }
+          }
+        ],
+        "P18": [
+          {
+            "id": "Q140287622$3ae02fb4-4fc3-6c14-5fc9-71b4aa130890",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Saeed-Ghezelbaash-physician-portrait.jpg"
+          }
+        ],
+        "P1830": [
+          {
+            "id": "Q140287622$9ef78c55-4d39-f7c5-643d-8b26575e6f32",
+            "qualifiers": [
+              "P1932",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 5,
+            "value": "Q140288589"
+          },
+          {
+            "id": "Q140287622$9BF012E3-7291-42D0-B987-820ED6B76768",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q140304972"
+          }
+        ],
+        "P1960": [
+          {
+            "id": "Q140287622$d8fdc365-46e8-2ec6-84a1-6eb3011ddf3d",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "BcWBirUAAAAJ"
+          }
+        ],
+        "P2002": [
+          {
+            "id": "Q140287622$C0DD1107-6B72-4832-8B33-B6A916B64609",
+            "qualifiers": [
+              "P580"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "qezelbaash"
+          }
+        ],
+        "P2003": [
+          {
+            "id": "Q140287622$9CA80771-EBB2-44B4-A737-DCC409A80E4C",
+            "qualifiers": [],
+            "rank": "deprecated",
+            "references": 0,
+            "value": "ghezelbaash"
+          },
+          {
+            "id": "Q140287622$b7d72a0d-4f04-18d0-b75d-fe2442afb2da",
+            "qualifiers": [],
+            "rank": "preferred",
+            "references": 1,
+            "value": "doctor.ghezelbaash"
+          }
+        ],
+        "P2013": [
+          {
+            "id": "Q140287622$DE8A0D41-14A4-4F9F-A5A1-EB114448E64D",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "ghezelbaash"
+          }
+        ],
+        "P2037": [
+          {
+            "id": "Q140287622$868d1a71-44f1-8d8e-3800-0c22589dfb00",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "medicaldoctor91"
+          }
+        ],
+        "P21": [
+          {
+            "id": "Q140287622$F2C3147E-18E0-4EE5-AC47-96B2CC33459B",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q6581097"
+          }
+        ],
+        "P2671": [
+          {
+            "id": "Q140287622$c04de2bc-4328-c76a-4fbc-4aa9eb1def22",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "/g/11nqdfk76c"
+          }
+        ],
+        "P27": [
+          {
+            "id": "Q140287622$D06571AC-7DC7-4D76-8917-F9EA1F34A937",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q794"
+          }
+        ],
+        "P31": [
+          {
+            "id": "Q140287622$4616fb39-4924-8852-9c00-269a404c0250",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q5"
+          }
+        ],
+        "P373": [
+          {
+            "id": "Q140287622$C75363FC-BDCD-401B-AEE5-4CBA34E136BE",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Saeed Ghezelbash"
+          }
+        ],
+        "P3836": [
+          {
+            "id": "Q140287622$B987EDCB-E08A-42CA-A6C7-4BF0DD4E1B8A",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "qezelbaash"
+          }
+        ],
+        "P39": [
+          {
+            "id": "Q140287622$9C6A1D07-6BF2-43E6-A9C7-DFC1CD96C5FE",
+            "qualifiers": [
+              "P2389",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 3,
+            "value": "Q256688"
+          }
+        ],
+        "P3919": [
+          {
+            "id": "Q140287622$C92B10F2-64F2-42B7-B4F2-A93FE5F74DCE",
+            "qualifiers": [
+              "P2868"
+            ],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q140306302"
+          },
+          {
+            "id": "Q140287622$62257FC3-CD09-48B2-9A98-FFAB0889BC4E",
+            "qualifiers": [
+              "P2868"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q36942316"
+          },
+          {
+            "id": "Q140287622$AAD2A06A-C3EB-422D-8C77-C73171B59D3D",
+            "qualifiers": [
+              "P2868"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q140298431"
+          },
+          {
+            "id": "Q140287622$F50E143E-E72C-4F7D-B23A-F5FE897E70DB",
+            "qualifiers": [
+              "P2868"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q141099455"
+          }
+        ],
+        "P4012": [
+          {
+            "id": "Q140287622$5BFDFE99-4A3A-4384-9335-89A0410EFFD6",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "3786699"
+          }
+        ],
+        "P463": [
+          {
+            "id": "Q140287622$b3c68298-4ed5-000b-897a-2674641656fe",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q5944740"
+          },
+          {
+            "id": "Q140287622$3E709853-9F26-47C2-84F6-14A4511B958F",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "Q4742869"
+          },
+          {
+            "id": "Q140287622$7891137A-9D1E-431A-9E29-01BEA68A70C4",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "Q15995193"
+          }
+        ],
+        "P496": [
+          {
+            "id": "Q140287622$2f904409-4032-86b6-e467-ce580ee8a11e",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "0009-0001-9346-8475"
+          }
+        ],
+        "P511": [
+          {
+            "id": "Q140287622$9c54cbe3-4849-55a8-1e7e-4065df802f1d",
+            "qualifiers": [
+              "P5102"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q4618975"
+          }
+        ],
+        "P512": [
+          {
+            "id": "Q140287622$7c5a981b-4175-f68c-4e14-54bf3fb50850",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 4,
+            "value": "Q913404"
+          }
+        ],
+        "P553": [
+          {
+            "id": "Q140287622$DCEE25EE-2E1A-42E3-A1EE-5F8221C558E3",
+            "qualifiers": [
+              "P554",
+              "P2699"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q3595053"
+          }
+        ],
+        "P569": [
+          {
+            "id": "Q140287622$01EA0EAE-A694-4AB4-A077-A9C2EE924E2B",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": {
+              "after": 0,
+              "before": 0,
+              "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+              "precision": 11,
+              "time": "+1991-05-29T00:00:00Z",
+              "timezone": 0
+            }
+          }
+        ],
+        "P6634": [
+          {
+            "id": "Q140287622$5bb55f60-4932-3cc2-4644-d5825d7500ec",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "saeed-ghezelbash-93310a96"
+          }
+        ],
+        "P69": [
+          {
+            "id": "Q140287622$24428897-4f17-82cc-18e6-f3c61643e92b",
+            "qualifiers": [
+              "P582",
+              "P580"
+            ],
+            "rank": "normal",
+            "references": 3,
+            "value": "Q6393994"
+          }
+        ],
+        "P7085": [
+          {
+            "id": "Q140287622$E198184F-E7FF-40A9-B452-174665EC78C1",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "ghezelbaash"
+          }
+        ],
+        "P734": [
+          {
+            "id": "Q140287622$CA4E3935-FF3D-45C8-92A6-3F32096D8B07",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q140775989"
+          }
+        ],
+        "P735": [
+          {
+            "id": "Q140287622$103C90E0-2311-4D98-9703-644A526697E9",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q104892392"
+          }
+        ],
+        "P800": [
+          {
+            "id": "Q140287622$00EC08CF-00B2-4C73-BFC5-1AF955185CEA",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q140306302"
+          },
+          {
+            "id": "Q140287622$05EFCAF2-8ED8-40AA-86A6-8B2154307D57",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q36942316"
+          },
+          {
+            "id": "Q140287622$CED42600-264B-4DCB-890C-2FF3FE492FAE",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q140298431"
+          }
+        ],
+        "P856": [
+          {
+            "id": "Q140287622$b46cd23b-4153-eb8d-6b9c-cfb15c33d083",
+            "qualifiers": [
+              "P407",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "https://www.ghezelbaash.ir/"
+          }
+        ],
+        "P937": [
+          {
+            "id": "Q140287622$186a3b4c-4c53-1da5-77c3-1333877ae981",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "Q180078"
+          },
+          {
+            "id": "Q140287622$0a907b38-4287-06be-699a-7e47b0f7ac69",
+            "qualifiers": [
+              "P1932"
+            ],
+            "rank": "normal",
+            "references": 7,
+            "value": "Q140288589"
+          }
+        ],
+        "P968": [
+          {
+            "id": "Q140287622$7722CF38-0CCD-4030-AD4F-5A6FBCEA9078",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "mailto:medicaldoctor91@gmail.com"
+          },
+          {
+            "id": "Q140287622$F6B22D25-A2BC-4889-8444-3D3C7C39D8EE",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 2,
+            "value": "mailto:doctor@ghezelbaash.ir"
+          }
+        ],
+        "P973": [
+          {
+            "id": "Q140287622$6A9E960E-4441-43E6-94A5-F118214699D7",
+            "qualifiers": [
+              "P407",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/"
+          },
+          {
+            "id": "Q140287622$0902D0F6-5867-4066-B229-1A05B8E3B169",
+            "qualifiers": [
+              "P407",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+          },
+          {
+            "id": "Q140287622$E22B360A-6781-4810-93A1-483C0EC5936F",
+            "qualifiers": [
+              "P407",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "https://www.magiran.com/author/mohammad-saeed-ghezelbash"
+          },
+          {
+            "id": "Q140287622$94C7820D-384D-4C24-9A97-4A05646B9EEB",
+            "qualifiers": [
+              "P407",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+          },
+          {
+            "id": "Q140287622$95964328-FB76-44D5-BB96-F92AD74CE0C2",
+            "qualifiers": [
+              "P407",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+          }
+        ]
+      },
+      "description_en": "Iranian aesthetic physician and medical researcher based in Kermanshah",
+      "id": "Q140287622",
+      "label_en": "Saeed Ghezelbash",
+      "lastrevid": null,
+      "modified": null,
+      "sitelinks": {
+        "commonswiki": "Category:Saeed Ghezelbash",
+        "enwikisource": "Author:Mohammad Saeed Ghezelbash"
+      }
+    },
+    "Q141099455": {
+      "claims": {
+        "P275": [
+          {
+            "id": "Q141099455$8B48739F-9A73-4146-B4EB-A314E5F4B778",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q18199165"
+          },
+          {
+            "id": "Q141099455$09CA0380-56A7-4CE0-B459-3814323274EF",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q22169"
+          }
+        ],
+        "P31": [
+          {
+            "id": "Q141099455$E56C04BB-4911-4AF9-B50D-A1BF423821A3",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q116781"
+          }
+        ],
+        "P407": [
+          {
+            "id": "Q141099455$2600A899-FCC1-4224-9B69-D1BD37BDD72A",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q1860"
+          }
+        ],
+        "P50": [
+          {
+            "id": "Q141099455$0F0B0FCD-31F8-44BD-BC0D-4F13F23D1D7A",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q140287622"
+          }
+        ],
+        "P577": [
+          {
+            "id": "Q141099455$7C0C994E-26D2-4E0C-9CFA-78105C712981",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": {
+              "after": 0,
+              "before": 0,
+              "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+              "precision": 11,
+              "time": "+2026-08-14T00:00:00Z",
+              "timezone": 0
+            }
+          }
+        ],
+        "P921": [
+          {
+            "id": "Q141099455$DACA2F70-92F8-4345-89E8-EFFCD68A0E2C",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q4095199"
+          },
+          {
+            "id": "Q141099455$7CAD5F87-62BD-4D60-BAB0-AC3F88A441C4",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q3332453"
+          }
+        ]
+      },
+      "description_en": "Wikiversity learning resource about botulinum toxin in aesthetic medicine",
+      "id": "Q141099455",
+      "label_en": "Botulinum toxin in aesthetic medicine",
+      "lastrevid": null,
+      "modified": null,
+      "sitelinks": {
+        "enwikiversity": "Botulinum toxin in aesthetic medicine"
+      }
+    },
+    "Q208413": {
+      "claims": {
+        "P10283": [
+          {
+            "id": "Q208413$6613718C-3EDD-47D3-8352-F0FF05AF2916",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "C2777478456"
+          },
+          {
+            "id": "Q208413$4D228D65-7871-46B8-839F-3BA005873EBD",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "C2994342964"
+          }
+        ],
+        "P1036": [
+          {
+            "id": "Q208413$E9DAD008-4274-4DD2-9D52-0149A2FD1C03",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "615.9529364"
+          }
+        ],
+        "P11143": [
+          {
+            "id": "Q208413$BC0FE658-16E5-4734-B21C-71AC1BBEA0DC",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "Botulinum toxin"
+          }
+        ],
+        "P12385": [
+          {
+            "id": "Q208413$d410c896-8211-4b31-b931-cc7d5a5af38a",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "toxina-botulinica"
+          }
+        ],
+        "P1245": [
+          {
+            "id": "Q208413$60F0946E-361A-42D6-805A-7F186825F3AE",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "876672"
+          }
+        ],
+        "P1296": [
+          {
+            "id": "Q208413$0665737B-6972-4BF1-A50B-D57C8CE337CB",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "0223302"
+          }
+        ],
+        "P13591": [
+          {
+            "id": "Q208413$0FF97A08-F64A-439D-ADFB-BE8045A75581",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "concept/53e2f6c0-7dc1-43a5-a214-eab98313f917"
+          }
+        ],
+        "P1368": [
+          {
+            "id": "Q208413$fbfc84c6-4180-5ce7-1f49-af36eb7de2a6",
+            "qualifiers": [
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "000333303"
+          }
+        ],
+        "P13819": [
+          {
+            "id": "Q208413$D190BB14-EC6D-4E44-A955-AC00EF88AB66",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "00000465"
+          }
+        ],
+        "P1417": [
+          {
+            "id": "Q208413$401DDCBA-BE52-4761-A7C7-3EF0746C40DC",
+            "qualifiers": [
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "science/Botox"
+          },
+          {
+            "id": "Q208413$951D62EC-A367-409E-BE39-0A13F859A5F4",
+            "qualifiers": [
+              "P1810",
+              "P2093"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "science/botulinum-toxin"
+          }
+        ],
+        "P1617": [
+          {
+            "id": "Q208413$F1DE10C1-FDD5-4136-8C5E-F41D51459C9C",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "de9f99e4-8c79-4c66-aad6-35b82c587449"
+          }
+        ],
+        "P2004": [
+          {
+            "id": "Q208413$F1D6DF1E-F620-4839-8003-9B29001B836C",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "15202"
+          }
+        ],
+        "P227": [
+          {
+            "id": "Q208413$2288F455-EC4F-4547-B3DA-82AE72A8BC4D",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "4273044-2"
+          }
+        ],
+        "P232": [
+          {
+            "id": "Q208413$559D854F-35CE-465A-82CB-7BA35072019B",
+            "qualifiers": [
+              "P2241",
+              "P8327"
+            ],
+            "rank": "deprecated",
+            "references": 1,
+            "value": "297-253-4"
+          }
+        ],
+        "P2347": [
+          {
+            "id": "Q208413$7321A6BD-9BF3-480C-855E-2D030F825E0E",
+            "qualifiers": [
+              "P14457",
+              "P14458"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "22595"
+          }
+        ],
+        "P244": [
+          {
+            "id": "Q208413$284D955B-5DE5-42DC-BBC1-CC016CABEC3C",
+            "qualifiers": [
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "sh85016075"
+          }
+        ],
+        "P2566": [
+          {
+            "id": "Q208413$81F5BC54-AC5B-45D5-AEDE-7A1F2EA8F4A8",
+            "qualifiers": [
+              "P2241",
+              "P8327"
+            ],
+            "rank": "deprecated",
+            "references": 1,
+            "value": "100.088.372"
+          }
+        ],
+        "P267": [
+          {
+            "id": "Q208413$65C14504-524D-469A-B4E9-4AE0F4DAF465",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "M03AX01"
+          }
+        ],
+        "P2671": [
+          {
+            "id": "Q208413$B82C8B45-A975-47BB-8A41-9193A4C2701C",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "/g/120zt_4k"
+          }
+        ],
+        "P268": [
+          {
+            "id": "Q208413$43f1a207-9f19-4cbb-8229-2d682a79c00d",
+            "qualifiers": [
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "124173941"
+          }
+        ],
+        "P279": [
+          {
+            "id": "Q208413$4babea17-47f2-e254-c11c-5edf9a76260f",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q425402"
+          },
+          {
+            "id": "Q208413$893d96a7-488d-5997-9a84-1f788d1f7804",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "Q67646996"
+          },
+          {
+            "id": "Q208413$EA61F3E1-ED75-41F8-BB28-99481E7832DE",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q6822865"
+          },
+          {
+            "id": "Q208413$dacd1774-447d-c5cf-f22b-8a67da9d44fa",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "Q66764936"
+          }
+        ],
+        "P2868": [
+          {
+            "id": "Q208413$4A0DABB0-6F47-46CC-B284-AEA2344C2DA1",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q50430099"
+          },
+          {
+            "id": "Q208413$1E5DEA00-3A90-45DD-90D9-24A8E3CF642B",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q407752"
+          },
+          {
+            "id": "Q208413$80DEA578-6A72-4FED-ADC6-192036058676",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q50430470"
+          }
+        ],
+        "P2892": [
+          {
+            "id": "Q208413$26052BCF-C270-4336-9A90-257FB65A0CAC",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "C0006055"
+          }
+        ],
+        "P2924": [
+          {
+            "id": "Q208413$CF1C24B5-D053-4D24-9D0A-28BA7F0B5969",
+            "qualifiers": [
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "1880469"
+          }
+        ],
+        "P31": [
+          {
+            "id": "Q208413$a2bc4904-4ddf-4ec3-18c3-38040aa4914d",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q67015883"
+          }
+        ],
+        "P3221": [
+          {
+            "id": "Q208413$31D4AD14-5824-426D-A0B0-D1AFF8A2CADD",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "subject/botox-drug"
+          }
+        ],
+        "P3417": [
+          {
+            "id": "Q208413$89DCCD71-529A-4956-B5EA-FB8CD71A7E74",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Botulinum-Toxin"
+          }
+        ],
+        "P3493": [
+          {
+            "id": "Q208413$C6C87512-602A-4CE0-9B99-59B8B9CE8AAD",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q879952"
+          }
+        ],
+        "P373": [
+          {
+            "id": "Q208413$AEBC8DA8-E9B5-43A8-94FE-833A21E867A8",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "Botulinum neurotoxin"
+          }
+        ],
+        "P3827": [
+          {
+            "id": "Q208413$4416D5CC-84DA-4D68-8A37-DBCAC7B48727",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "botulinum-toxins"
+          }
+        ],
+        "P4527": [
+          {
+            "id": "Q208413$0B79B4BE-84B1-44FC-87D6-DAE4CD8B3903",
+            "qualifiers": [
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "8750"
+          }
+        ],
+        "P486": [
+          {
+            "id": "Q208413$DAD8E866-9CF7-4F8A-9D9D-DDBCB6B17FEB",
+            "qualifiers": [
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "D001905"
+          }
+        ],
+        "P508": [
+          {
+            "id": "Q208413$4CC60024-ED5A-4389-911A-838849AF93BA",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "52248"
+          }
+        ],
+        "P5082": [
+          {
+            "id": "Q208413$8c97e988-2ace-47a4-9f7a-6dec3b164c97",
+            "qualifiers": [
+              "P4390",
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "pølseforgiftning"
+          }
+        ],
+        "P591": [
+          {
+            "id": "Q208413$967df322-4483-5b52-20ae-7c1ba0cd4cf6",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "3.4.24.69"
+          }
+        ],
+        "P6363": [
+          {
+            "id": "Q208413$BF6841AB-5164-46F5-92B1-FED5D963DA53",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "http://data.medicalrecords.com/medicalrecords/healthwise/botulinum_toxin_botox"
+          }
+        ],
+        "P6366": [
+          {
+            "id": "Q208413$7EB69FB3-084B-49E3-834B-65298DC1CBC9",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "2777478456"
+          }
+        ],
+        "P646": [
+          {
+            "id": "Q208413$E8F0797D-1488-43B0-B1E2-64154B3C1031",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "/m/0b09g"
+          }
+        ],
+        "P672": [
+          {
+            "id": "Q208413$1d9ad750-4aba-913d-9284-de61647e1828",
+            "qualifiers": [
+              "P4900"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "D08.811.277.656.300.480.153"
+          },
+          {
+            "id": "Q208413$3162db2a-4693-3af0-1b0e-55c4ed81713b",
+            "qualifiers": [
+              "P4900"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "D08.811.277.656.675.374.153"
+          },
+          {
+            "id": "Q208413$c2dc24d5-41a8-6b1c-6c05-b2376cc6ad4b",
+            "qualifiers": [
+              "P4900"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "D12.776.097.156"
+          },
+          {
+            "id": "Q208413$aa017912-4002-ecdd-a8ad-a2f4f99829f0",
+            "qualifiers": [
+              "P4900"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "D23.946.123.179"
+          }
+        ],
+        "P673": [
+          {
+            "id": "Q208413$E73E8D20-B76C-43AA-932E-6F402CCB90F4",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "325451"
+          }
+        ],
+        "P680": [
+          {
+            "id": "Q208413$a8cbb8e7-4f9d-f1ae-7c85-4b2a3a3545bf",
+            "qualifiers": [
+              "P4390"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "Q14865288"
+          }
+        ],
+        "P6802": [
+          {
+            "id": "Q208413$24EDF36C-F52B-4380-A0EE-DB0A6EA15331",
+            "qualifiers": [
+              "P180"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "Ampoule with Botulinum Neurotoxine (highly toxic for humans), used for \"beauty injections\" into the skin, with centimeter scale to indicate size.jpg"
+          }
+        ],
+        "P691": [
+          {
+            "id": "Q208413$DC61E2A1-CD63-46B4-9731-1EC98985CCF6",
+            "qualifiers": [
+              "P1810"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "ph548950"
+          }
+        ],
+        "P8189": [
+          {
+            "id": "Q208413$FF067107-2417-40B1-AC81-ADDF1C6F9CF6",
+            "qualifiers": [
+              "P14457"
+            ],
+            "rank": "normal",
+            "references": 1,
+            "value": "987007283985305171"
+          }
+        ],
+        "P8224": [
+          {
+            "id": "Q208413$96ea68a7-48ed-caef-dc16-0b7792fb3db1",
+            "qualifiers": [
+              "P180",
+              "P2241",
+              "P8327"
+            ],
+            "rank": "deprecated",
+            "references": 0,
+            "value": "Botulinumtoxin surface 3BTA.png"
+          },
+          {
+            "id": "Q208413$FC0E099D-857A-4543-8465-6A29BA67D326",
+            "qualifiers": [
+              "P180",
+              "P2241",
+              "P8327"
+            ],
+            "rank": "deprecated",
+            "references": 0,
+            "value": "Botulinum toxin 3BTA.png"
+          }
+        ],
+        "P8408": [
+          {
+            "id": "Q208413$9A8EE1FA-0C2C-42A5-8BB9-5FB79416C25F",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "BotulinumToxin"
+          }
+        ],
+        "P8669": [
+          {
+            "id": "Q208413$4f46cd0a-43ad-9dcf-057f-d90e98df10af",
+            "qualifiers": [
+              "P1810",
+              "P407",
+              "P577",
+              "P5017",
+              "P813"
+            ],
+            "rank": "normal",
+            "references": 0,
+            "value": "botulotoxin"
+          }
+        ],
+        "P8814": [
+          {
+            "id": "Q208413$A3AF7363-ED8D-4CA3-8D94-0026EB4CAB97",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 0,
+            "value": "14611868-n"
+          },
+          {
+            "id": "Q208413$14C16AF7-7808-46EF-99E8-3C8078D20173",
+            "qualifiers": [],
+            "rank": "normal",
+            "references": 1,
+            "value": "15059690-n"
+          }
+        ]
+      },
+      "description_en": "group of eight neurotoxic proteins produced by Clostridium botulinum",
+      "id": "Q208413",
+      "label_en": "botulinum toxin group",
+      "lastrevid": null,
+      "modified": null,
+      "sitelinks": {
+        "afwiki": "Botox",
+        "arwiki": "ذيفان السجقية",
+        "azbwiki": "سم بوتولینوم",
+        "azwiki": "Botulizm toksini",
+        "bgwiki": "Ботулинов токсин",
+        "bnwiki": "বটুলিনাম টক্সিন",
+        "cawiki": "Toxina botulínica",
+        "ckbwiki": "بۆتۆکس",
+        "commonswiki": "Category:Botulinum neurotoxin",
+        "cswiki": "Botulotoxin",
+        "cswikiquote": "Botox",
+        "dawiki": "Botulinumtoksin",
+        "dewiki": "Botulinumtoxin",
+        "elwiki": "Αλλαντική τοξίνη",
+        "enwiki": "Botulinum toxin",
+        "enwikiquote": "Botulinum toxin",
+        "eowiki": "Botulino",
+        "eswiki": "Toxina botulínica",
+        "etwiki": "Botuliin",
+        "etwikiquote": "Botox",
+        "euwiki": "Toxina botuliniko",
+        "fawiki": "سم بوتولینوم",
+        "fiwiki": "Botuliini",
+        "frwiki": "Toxine botulique",
+        "gawiki": "Tocsain bhotalanaim",
+        "glwiki": "Toxina botúlica",
+        "hewiki": "רעלן הבוטולינום",
+        "hiwiki": "बोटुलिनम टॉक्सिन",
+        "huwiki": "Botulinumtoxin",
+        "hywiki": "Բոտուլոտոքսին",
+        "idwiki": "Racun botulinum",
+        "iswiki": "Bótúlíneitur",
+        "itwiki": "Tossina botulinica",
+        "itwikiquote": "Tossina botulinica",
+        "jawiki": "ボツリヌストキシン",
+        "knwiki": "ಬೊಟುಲಿನಮ್ ಟಾಕ್ಸಿನ್",
+        "kowiki": "보툴리눔 독소",
+        "mkwiki": "Ботулински токсин",
+        "mswiki": "Toksin Botulinum",
+        "nlwiki": "Botulinetoxine",
+        "nnwiki": "Botulinumtoksin",
+        "nowiki": "Botulismetoksin",
+        "plwiki": "Jad kiełbasiany",
+        "plwikiquote": "Jad kiełbasiany",
+        "ptwiki": "Toxina botulínica",
+        "rowiki": "Toxina botulinică",
+        "ruwiki": "Ботулотоксин",
+        "shwiki": "Botulinski toksin",
+        "simplewiki": "Botulinum toxin",
+        "skwiki": "Botulotoxín",
+        "slwiki": "Botulin",
+        "sqwiki": "Botoksi",
+        "srwiki": "Ботулински токсин",
+        "svwiki": "Botulinumtoxin",
+        "tawiki": "போடுலினம் மருந்துப் பொருள்",
+        "thwiki": "ชีวพิษโบทูลินัม",
+        "trwiki": "Botulinum toksini",
+        "ukwiki": "Ботулотоксин",
+        "uzwiki": "Botulinum toksini",
+        "viwiki": "Botulinum",
+        "zhwiki": "肉毒桿菌毒素"
+      }
+    }
+  },
+  "enwiki": {
+    "latest_comment": "/* External links */ added link to Wikiversity",
+    "latest_revid": 1369764261,
+    "latest_timestamp": "2026-08-17T00:55:54Z",
+    "latest_user": "Dr vulpes",
+    "missing": false,
+    "pageid": 40172,
+    "revisions": [
+      {
+        "comment": "/* External links */ added link to Wikiversity",
+        "revid": 1369764261,
+        "timestamp": "2026-08-17T00:55:54Z",
+        "user": "Dr vulpes"
+      },
+      {
+        "comment": "/* top */ mark free doi",
+        "revid": 1369611487,
+        "timestamp": "2026-08-16T01:39:27Z",
+        "user": "JCW-CleanerBot"
+      },
+      {
+        "comment": "[[CAT:DUPCIT]]",
+        "revid": 1368642430,
+        "timestamp": "2026-08-10T06:51:16Z",
+        "user": "AdaCiccone"
+      },
+      {
+        "comment": "/* References */ combined duplicated citations",
+        "revid": 1366389340,
+        "timestamp": "2026-07-27T19:09:54Z",
+        "user": "3f45188"
+      },
+      {
+        "comment": "Tagged [[WP:DUPREF|duplicate citations]] using [[User:Polygnotus/DuplicateReferences|DuplicateReferences]]",
+        "revid": 1365858399,
+        "timestamp": "2026-07-24T21:16:45Z",
+        "user": "Bridget"
+      },
+      {
+        "comment": "/* Cosmetics */ Expanding article",
+        "revid": 1365418260,
+        "timestamp": "2026-07-22T08:00:32Z",
+        "user": "Rathfelder"
+      },
+      {
+        "comment": "/* External links */ Added sister links",
+        "revid": 1364612740,
+        "timestamp": "2026-07-17T14:57:45Z",
+        "user": "DaSupremo"
+      },
+      {
+        "comment": "Added wiki links",
+        "revid": 1364609524,
+        "timestamp": "2026-07-17T14:35:22Z",
+        "user": "DaSupremo"
+      },
+      {
+        "comment": "Reverting possible vandalism by [[Special:Contribs/~2026-40169-12|~2026-40169-12]] to version by Boghog. [[WP:CBFP|Report False Positive?]] Thanks, [[WP:CBNG|ClueBot NG]]. (4542481) (Bot)",
+        "revid": 1364573129,
+        "timestamp": "2026-07-17T08:04:54Z",
+        "user": "ClueBot NG"
+      },
+      {
+        "comment": "/* Cosmetics */",
+        "revid": 1364573117,
+        "timestamp": "2026-07-17T08:04:42Z",
+        "user": "~2026-40169-12"
+      },
+      {
+        "comment": "Normalized citation templates",
+        "revid": 1363520021,
+        "timestamp": "2026-07-10T18:33:22Z",
+        "user": "Boghog"
+      },
+      {
+        "comment": "Manually reverted likely LLM-generated edit by Sttsakasd. The info provided was redundant anyway, being given more clearly further up. The reference used was a vague reference to the WHO article on Botulism and had almost nothing to do with \"underscoring the dual nature\" of the toxin.",
+        "revid": 1363309582,
+        "timestamp": "2026-07-09T11:27:21Z",
+        "user": "Lunarexxy"
+      },
+      {
+        "comment": "Alter: pages, pmc. Added doi-access. Removed URL that duplicated identifier. Removed access-date with no URL. Removed parameters. Formatted [[WP:ENDASH|dashes]]. | [[:en:WP:UCB|Use this tool]]. [[:en:WP:DBUG|Report bugs]]. | #UCB_Gadget",
+        "revid": 1362754484,
+        "timestamp": "2026-07-06T00:37:58Z",
+        "user": "GoingBatty"
+      },
+      {
+        "comment": "Rescuing orphaned refs (\"Available Neurotoxins\" from rev 1362042820; \"Bowlin11\" from rev 1362042820)",
+        "revid": 1362662793,
+        "timestamp": "2026-07-05T13:30:07Z",
+        "user": "AnomieBOT"
+      },
+      {
+        "comment": "Fixed references",
+        "revid": 1362660498,
+        "timestamp": "2026-07-05T13:08:23Z",
+        "user": "WeirdNAnnoyed"
+      },
+      {
+        "comment": "Deleted references to removed Letybo reference",
+        "revid": 1362659368,
+        "timestamp": "2026-07-05T12:57:38Z",
+        "user": "WeirdNAnnoyed"
+      },
+      {
+        "comment": "Overly-detailed template added to History; completely deleted Society and Culture section since its content is either off-topic, covered elsewhere in the article, or badly sourced.",
+        "revid": 1362659184,
+        "timestamp": "2026-07-05T12:55:52Z",
+        "user": "WeirdNAnnoyed"
+      },
+      {
+        "comment": "",
+        "revid": 1362042820,
+        "timestamp": "2026-07-01T16:32:56Z",
+        "user": "Mfernflower"
+      },
+      {
+        "comment": "added LLM-generated text template (text in question is last paragraph of the introduction",
+        "revid": 1361987135,
+        "timestamp": "2026-07-01T07:12:16Z",
+        "user": "ReverseProzac"
+      },
+      {
+        "comment": "/* */",
+        "revid": 1359262942,
+        "timestamp": "2026-06-14T05:32:41Z",
+        "user": "Gravelove"
+      }
+    ],
+    "title": "Botulinum toxin",
+    "wikibase_item": "Q208413"
+  },
+  "enwiki_signals": {
+    "contains_ghezelbash": false,
+    "contains_q114242090": true,
+    "contains_sister_v_yes": true
+  },
+  "wikiversity": {
+    "latest_comment": "Correct provenance to the live canonical Botox section on the official website and remove the dead standalone source URL",
+    "latest_revid": 2822519,
+    "latest_timestamp": "2026-08-17T08:12:50Z",
+    "latest_user": "Medicaldoctor91",
+    "links": [
+      "Wikiversity:Medical disclaimer",
+      "School:Medicine"
+    ],
+    "missing": false,
+    "pageid": 331166,
+    "revisions": [
+      {
+        "comment": "Correct provenance to the live canonical Botox section on the official website and remove the dead standalone source URL",
+        "revid": 2822519,
+        "timestamp": "2026-08-17T08:12:50Z",
+        "user": "Medicaldoctor91"
+      },
+      {
+        "comment": "Link canonical Wikisource author record in contributor provenance",
+        "revid": 2822490,
+        "timestamp": "2026-08-17T02:02:23Z",
+        "user": "Medicaldoctor91"
+      },
+      {
+        "comment": "/* Contributor identity and provenance */ delete links to personal website",
+        "revid": 2822262,
+        "timestamp": "2026-08-15T13:00:05Z",
+        "user": "Atcovi"
+      },
+      {
+        "comment": "Correct provenance to the live canonical Botox section on the official website and remove the dead standalone source URL",
+        "revid": 2822260,
+        "timestamp": "2026-08-15T12:48:11Z",
+        "user": "Medicaldoctor91"
+      },
+      {
+        "comment": "Strengthen verified provenance with clickable official-site and original educational-source links",
+        "revid": 2822259,
+        "timestamp": "2026-08-15T12:43:09Z",
+        "user": "Medicaldoctor91"
+      },
+      {
+        "comment": "Upgrade educational resource: 2026 evidence review, case-based learning, bilingual contributor identity, assessment rubric, and verified provenance",
+        "revid": 2822181,
+        "timestamp": "2026-08-15T01:41:15Z",
+        "user": "Medicaldoctor91"
+      },
+      {
+        "comment": "Create educational resource on botulinum toxin in aesthetic medicine; scholarly references, contributor identity, and source provenance",
+        "revid": 2822151,
+        "timestamp": "2026-08-14T23:52:56Z",
+        "user": "Medicaldoctor91"
+      }
+    ],
+    "title": "Botulinum toxin in aesthetic medicine",
+    "wikibase_item": "Q141099455"
+  },
+  "wikiversity_content_signals": {
+    "has_author_template": true,
+    "has_wikidata_template": true,
+    "mentions_person_qid": true,
+    "mentions_saeed": true,
+    "opening_1200": "{{Medical disclaimer}}\n\n'''Botulinum toxin in aesthetic medicine''' is a tertiary-level learning resource about the clinical reasoning that precedes and follows aesthetic use of botulinum neurotoxin type A (BoNT-A). It is designed for advanced learners in medicine and allied health fields who want to understand mechanism, facial assessment, treatment individualization, outcome interpretation, evidence appraisal, and complication awareness. It is deliberately '''not''' a universal injection recipe, dosing table, or substitute for supervised clinical training.\n\nThis resource was developed by '''[[d:Q140287622|Saeed Ghezelbash (محمدسعید قزلباش; دکتر سعید قزلباش)]]''' and draws in part on educational material originally published on his official website, together with peer-reviewed literature and current evidence available through 2026.<ref name=\"ghezelbaash-source\">Saeed Ghezelbash. ''Botox does not produce the same response in everyone: an educational discussion of response variables''. Educational material on the contributor's current canonical site: [https://www.ghezelbaash.ir/#botox ghezelbaash.ir/#botox].</ref>\n\n== Audience, prerequisites, and scope ==\nThis resource assumes prior"
+  }
+}
