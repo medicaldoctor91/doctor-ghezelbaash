@@ -1,5 +1,6 @@
 name: Temporary cleanup facial assessment branches
 
+# trigger registered cleanup
 on:
   workflow_run:
     workflows: ['Read-only source and release validation']
