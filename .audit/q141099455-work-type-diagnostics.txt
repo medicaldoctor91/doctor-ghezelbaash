@@ -1,0 +1,6 @@
+username_present=yes
+password_present=yes
+compile_exit=1
+run_exit=97
+output_bytes=0
+stderr_bytes=40
