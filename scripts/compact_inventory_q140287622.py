@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import requests,json,re,datetime
 WD='https://www.wikidata.org/w/api.php'; Q='Q140287622'
-s=requests.Session();s.headers.update({'User-Agent':'Q140287622-CompactInventory/1.1 (https://www.ghezelbaash.ir/)','Cache-Control':'no-cache'})
+s=requests.Session();s.headers.update({'User-Agent':'Q140287622-CompactInventory/1.2 (https://www.ghezelbaash.ir/)','Cache-Control':'no-cache'})
 def get(**p):
  p.update(format='json',formatversion=2,maxage=0,smaxage=0);r=s.get(WD,params=p,timeout=60);r.raise_for_status();d=r.json()
  if 'error'in d:raise RuntimeError(d['error'])
@@ -13,7 +13,7 @@ def val(sn):
   for k in ('id','text','time','amount'):
    if k in v:return v[k]
  return v
-e=get(action='wbgetentities',ids=Q,props='info|claims|sitelinks')['entities'][Q]
+e=get(action='wbgetentities',ids=Q,props='info|labels|descriptions|aliases|claims|sitelinks')['entities'][Q]
 ids=set(e.get('claims',{}))
 for cs in e.get('claims',{}).values():
  for c in cs:
@@ -26,6 +26,9 @@ for i in range(0,len(sl),50):
   labs=x.get('labels',{});labels[k]=(labs.get('en')or labs.get('fa')or next(iter(labs.values()),{})).get('value',k)
 print(f"AUDIT_UTC\t{datetime.datetime.now(datetime.timezone.utc).isoformat()}")
 print(f"LASTREVID\t{e.get('lastrevid')}\tMODIFIED\t{e.get('modified')}")
+print('IDENTITY_LABELS\t'+json.dumps({k:v.get('value') for k,v in e.get('labels',{}).items()},ensure_ascii=False,sort_keys=True))
+print('IDENTITY_DESCRIPTIONS\t'+json.dumps({k:v.get('value') for k,v in e.get('descriptions',{}).items()},ensure_ascii=False,sort_keys=True))
+print('IDENTITY_ALIASES\t'+json.dumps({k:[z.get('value') for z in vs] for k,vs in e.get('aliases',{}).items()},ensure_ascii=False,sort_keys=True))
 print('SITELINKS\t'+json.dumps({k:v.get('title')for k,v in e.get('sitelinks',{}).items()},ensure_ascii=False,sort_keys=True))
 print(f"COUNTS\tproperties={len(e.get('claims',{}))}\tstatements={sum(len(cs) for cs in e.get('claims',{}).values())}")
 for p,cs in sorted(e.get('claims',{}).items(), key=lambda kv: labels.get(kv[0],kv[0]).lower()):
