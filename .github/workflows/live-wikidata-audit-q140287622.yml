@@ -7,6 +7,7 @@ on:
       - 'scripts/live_wikidata_findings_q140287622.py'
       - 'scripts/live_wikidata_property_inventory_q140287622.py'
       - 'scripts/compact_inventory_q140287622.py'
+      - 'scripts/diff_canonical_mesh_vs_wikidata.py'
       - 'scripts/verify_youtube_identity_q140287622.py'
       - 'scripts/audit_scholarly_registry_ids_q140287622.py'
       - 'scripts/audit_work_edges_q140287622.py'
@@ -35,6 +36,7 @@ jobs:
           python scripts/live_wikidata_property_inventory_q140287622.py > .audit/q140287622-property-inventory.json
           python scripts/compact_inventory_q140287622.py > .audit/q140287622-compact-inventory.txt
           grep '^PROPERTY' .audit/q140287622-compact-inventory.txt | cut -f2-4 > .audit/q140287622-property-list.txt
+          python scripts/diff_canonical_mesh_vs_wikidata.py > .audit/q140287622-canonical-mesh-diff.json
           python scripts/audit_work_edges_q140287622.py > .audit/q140287622-work-edges.json
       - name: Reconcile scholarly registries
         shell: bash
