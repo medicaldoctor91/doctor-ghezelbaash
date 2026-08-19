@@ -1,2 +1,2 @@
 run: create and verify Facial assessment before aesthetic botulinum toxin treatment
-fresh-run: no-path-filter
+fresh-run: pull-request-target-sync
