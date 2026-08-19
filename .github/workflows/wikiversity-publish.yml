@@ -4,32 +4,34 @@ on:
   push:
     branches: [main]
     paths:
-      - 'wikiversity/resources/facial-assessment-before-aesthetic-botulinum-toxin-treatment.wiki'
+      - 'wikiversity/resources/botulinum-toxin-in-aesthetic-medicine.wiki'
       - 'scripts/wikiversity_publish.py'
       - '.github/workflows/wikiversity-publish.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: wikiversity-facial-assessment-resource
+  group: wikiversity-botulinum-toxin-resource
   cancel-in-progress: false
 
 jobs:
   publish:
-    runs-on: macos-15
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       WIKIVERSITY_API_URL: https://en.wikiversity.org/w/api.php
-      WIKIVERSITY_PAGE_TITLE: Facial assessment before aesthetic botulinum toxin treatment
-      WIKIVERSITY_PAGE_FILE: wikiversity/resources/facial-assessment-before-aesthetic-botulinum-toxin-treatment.wiki
-      WIKIVERSITY_CREATE_ONLY: 'true'
-      WIKIVERSITY_EDIT_SUMMARY: 'Create evidence-based learning resource on structured facial assessment before aesthetic botulinum toxin treatment'
+      WIKIVERSITY_PAGE_TITLE: Botulinum toxin in aesthetic medicine
+      WIKIVERSITY_PAGE_FILE: wikiversity/resources/botulinum-toxin-in-aesthetic-medicine.wiki
+      WIKIVERSITY_CREATE_ONLY: 'false'
+      WIKIVERSITY_EDIT_SUMMARY: 'Correct provenance to the live canonical Botox section on the official website and remove the dead standalone source URL'
       WIKIVERSITY_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
       WIKIVERSITY_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
@@ -41,18 +43,5 @@ jobs:
           set -euo pipefail
           test -n "$WIKIVERSITY_USERNAME"
           test -n "$WIKIVERSITY_BOT_PASSWORD"
-      - name: Publish, verify, and persist exact read-back result
-        shell: bash
-        run: |
-          mkdir -p wikimedia
-          set +e
-          python scripts/wikiversity_publish.py > wikimedia/_tmp-wikiversity-facial-assessment-publish.json 2>&1
-          code=$?
-          echo >> wikimedia/_tmp-wikiversity-facial-assessment-publish.json
-          echo "EXIT_CODE=$code" >> wikimedia/_tmp-wikiversity-facial-assessment-publish.json
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add wikimedia/_tmp-wikiversity-facial-assessment-publish.json
-          git commit -m 'Record temporary Wikiversity facial assessment publish result' || true
-          git push
-          exit $code
+      - name: Publish and verify resource on English Wikiversity
+        run: python scripts/wikiversity_publish.py
