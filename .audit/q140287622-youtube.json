@@ -1,5 +1,5 @@
 {
-  "audit_utc": "2026-08-19T15:40:15.601820+00:00",
+  "audit_utc": "2026-08-19T15:43:27.509417+00:00",
   "handles": {
     "Doctor.ghezelbaash": {
       "canonical": null,
@@ -17,7 +17,7 @@
         "UCAiLkR6O3k9aDU9CYSeXPWQ"
       ],
       "final_url": "https://www.youtube.com/@ghezelbaash",
-      "html_length": 771250,
+      "html_length": 770404,
       "requested": "https://www.youtube.com/@ghezelbaash",
       "status": 200,
       "title": "Saeed Ghezelbash",
