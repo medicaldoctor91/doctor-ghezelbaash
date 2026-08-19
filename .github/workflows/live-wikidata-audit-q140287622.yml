@@ -5,6 +5,7 @@ on:
       - 'scripts/live_wikidata_audit_q140287622.py'
       - 'scripts/live_wikidata_digest_q140287622.py'
       - 'scripts/live_wikidata_findings_q140287622.py'
+      - 'scripts/live_wikidata_property_inventory_q140287622.py'
       - 'scripts/verify_youtube_identity_q140287622.py'
       - '.github/workflows/live-wikidata-audit-q140287622.yml'
   workflow_dispatch:
@@ -13,6 +14,7 @@ permissions:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,21 +22,31 @@ jobs:
           python-version: '3.12'
       - run: pip install requests
       - name: Fetch live Wikidata entity and semantic findings
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p .audit
           python scripts/live_wikidata_audit_q140287622.py > .audit/q140287622-live.json
           python scripts/live_wikidata_digest_q140287622.py > .audit/q140287622-digest.json
           python scripts/live_wikidata_findings_q140287622.py > .audit/q140287622-findings.json
-          python scripts/verify_youtube_identity_q140287622.py > .audit/q140287622-youtube.json
+          python scripts/live_wikidata_property_inventory_q140287622.py > .audit/q140287622-property-inventory.json
+      - name: Verify YouTube identity without blocking Wikidata audit
+        shell: bash
+        run: |
+          set +e
+          timeout 45s python scripts/verify_youtube_identity_q140287622.py > .audit/q140287622-youtube.json 2> .audit/q140287622-youtube-stderr.txt
+          echo $? > .audit/q140287622-youtube-exit.txt
+          exit 0
       - uses: actions/upload-artifact@v4
         with:
           name: q140287622-live-audit
           path: .audit/
           if-no-files-found: error
       - name: Persist audit snapshots for inspection
+        if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .audit/q140287622-live.json .audit/q140287622-digest.json .audit/q140287622-findings.json .audit/q140287622-youtube.json
-          git commit -m 'Persist live Q140287622 audit snapshots' || exit 0
+          git add .audit/q140287622-live.json .audit/q140287622-digest.json .audit/q140287622-findings.json .audit/q140287622-property-inventory.json .audit/q140287622-youtube.json .audit/q140287622-youtube-stderr.txt .audit/q140287622-youtube-exit.txt
+          git commit -m 'Persist hardened live Q140287622 audit snapshots' || exit 0
           git push
