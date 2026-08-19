@@ -6,7 +6,7 @@ on:
       - '.github/workflows/live-wikidata-audit-q140287622.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   audit:
     runs-on: ubuntu-latest
@@ -17,9 +17,18 @@ jobs:
           python-version: '3.12'
       - run: pip install requests
       - name: Fetch live Wikidata entity and constraints
-        run: python scripts/live_wikidata_audit_q140287622.py | tee /tmp/q140287622-live-audit.json
+        run: |
+          mkdir -p .audit
+          python scripts/live_wikidata_audit_q140287622.py | tee .audit/q140287622-live.json
       - uses: actions/upload-artifact@v4
         with:
           name: q140287622-live-audit
-          path: /tmp/q140287622-live-audit.json
+          path: .audit/q140287622-live.json
           if-no-files-found: error
+      - name: Persist audit snapshot for inspection
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .audit/q140287622-live.json
+          git commit -m 'Persist live Q140287622 audit snapshot' || exit 0
+          git push
