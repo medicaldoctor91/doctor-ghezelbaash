@@ -1,5 +1,5 @@
 {
-  "audit_utc": "2026-08-19T15:38:15.837887+00:00",
+  "audit_utc": "2026-08-19T15:40:13.613120+00:00",
   "current_wikidata_ids": {
     "GoogleScholar_P1960": [
       "BcWBirUAAAAJ"
@@ -56,7 +56,7 @@
       "works": []
     },
     "mdpi_sciprofiles": {
-      "html_length": 400,
+      "html_length": 398,
       "http_status": 403,
       "links_near_author": [],
       "name_found": false,
