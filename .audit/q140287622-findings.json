@@ -2048,7 +2048,7 @@
       "value_label": null
     }
   ],
-  "audit_utc": "2026-08-19T15:02:10.453195+00:00",
+  "audit_utc": "2026-08-19T15:16:00.588958+00:00",
   "constraint_violations": [
     {
       "claim_id": "Q140287622$F50E143E-E72C-4F7D-B23A-F5FE897E70DB",
@@ -2071,6 +2071,20 @@
   ],
   "exact_duplicates": [],
   "lastrevid": 2533228865,
+  "linked_work": {
+    "P31": [
+      {
+        "claim_id": "Q141099455$E56C04BB-4911-4AF9-B50D-A1BF423821A3",
+        "value": "Q116781"
+      }
+    ],
+    "id": "Q141099455",
+    "lastrevid": 2532174567,
+    "modified": "2026-08-17T02:19:31Z",
+    "sitelinks": {
+      "enwikiversity": "Botulinum toxin in aesthetic medicine"
+    }
+  },
   "modified": "2026-08-19T13:58:59Z",
   "multi_url_reference_groups": [
     {
