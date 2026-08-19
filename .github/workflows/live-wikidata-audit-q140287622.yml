@@ -34,6 +34,7 @@ jobs:
           python scripts/live_wikidata_findings_q140287622.py > .audit/q140287622-findings.json
           python scripts/live_wikidata_property_inventory_q140287622.py > .audit/q140287622-property-inventory.json
           python scripts/compact_inventory_q140287622.py > .audit/q140287622-compact-inventory.txt
+          grep '^PROPERTY' .audit/q140287622-compact-inventory.txt | cut -f2-4 > .audit/q140287622-property-list.txt
           python scripts/audit_work_edges_q140287622.py > .audit/q140287622-work-edges.json
       - name: Reconcile scholarly registries
         shell: bash
