@@ -2,7 +2,6 @@ name: Temporary PR runner Wikiversity facial assessment creation
 on:
   pull_request:
     branches: [main]
-    paths: ['.github/_tmp-run-wikiversity-facial-assessment.txt']
 permissions:
   contents: read
 jobs:
