@@ -1,0 +1,43 @@
+name: Temporary compact live re-evaluation
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/_tmp-compact-reeval.yml']
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Compact audit
+        run: |
+          python - <<'PY'
+          import requests,json,os
+          H={'User-Agent':'GhezelbaashCompactReeval/1.0 (https://www.ghezelbaash.ir/)'}; s=requests.Session(); s.headers.update(H)
+          out={}
+          # fa Wikipedia exact/search/logs
+          A='https://fa.wikipedia.org/w/api.php'
+          for t in ['سعید قزلباش','محمد سعید قزلباش','محمد‌سعید قزلباش']:
+            p=s.get(A,params={'action':'query','format':'json','formatversion':2,'titles':t,'prop':'info|pageprops'},timeout=45).json()['query']['pages'][0]
+            sr=s.get(A,params={'action':'query','format':'json','formatversion':2,'list':'search','srsearch':'intitle:"'+t+'"','srlimit':10},timeout=45).json()['query']['search']
+            out.setdefault('fawiki',[]).append({'title':t,'missing':p.get('missing',False),'pageid':p.get('pageid'),'search':[x.get('title') for x in sr]})
+          # registries
+          oa=s.get('https://api.openalex.org/authors/A5064828898',timeout=45).json(); out['openalex']={'orcid':oa.get('orcid'),'display_name':oa.get('display_name'),'works_count':oa.get('works_count'),'cited_by_count':oa.get('cited_by_count'),'h_index':oa.get('summary_stats',{}).get('h_index'),'updated_date':oa.get('updated_date')}
+          r=s.get('https://api.semanticscholar.org/graph/v1/author/3786699',params={'fields':'name,externalIds,paperCount,citationCount,hIndex'},timeout=45); out['semantic_scholar']=r.json() if r.status_code==200 else {'status':r.status_code}
+          for doi in ['10.4103/2008-7802.182734','10.3390/healthcare9091169']:
+            m=s.get('https://api.crossref.org/works/'+doi,timeout=45).json()['message']
+            out['crossref_'+doi]={'deposited':m.get('deposited',{}).get('date-time'),'authors':[{'given':a.get('given'),'family':a.get('family'),'ORCID':a.get('ORCID')} for a in m.get('author',[]) if (a.get('family') or '').lower()=='ghezelbash']}
+          os.makedirs('wikimedia',exist_ok=True); open('wikimedia/_tmp-compact-reeval.json','w',encoding='utf8').write(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit audit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wikimedia/_tmp-compact-reeval.json
+          git commit -m 'Record compact live re-evaluation'
+          git push
