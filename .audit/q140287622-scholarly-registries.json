@@ -1,5 +1,5 @@
 {
-  "audit_utc": "2026-08-19T15:21:34.870324+00:00",
+  "audit_utc": "2026-08-19T15:29:16.916836+00:00",
   "current_wikidata_ids": {
     "GoogleScholar_P1960": [
       "BcWBirUAAAAJ"
@@ -12,6 +12,7 @@
     ],
     "Publons_P3829": [],
     "ResearchGate_P2038": [],
+    "SciProfiles_P8159": [],
     "Scopus_P1153": [],
     "SemanticScholar_P4012": [
       "3786699"
@@ -19,10 +20,48 @@
     "WoSResearcherID_P1053": []
   },
   "registries": {
+    "crossref_doi_10.3390_healthcare9091169": {
+      "authors_matching_ghezelbash": [
+        {
+          "ORCID": null,
+          "affiliation": [
+            {
+              "name": "Kermanshah University of Medical Sciences, Kermanshah 6719851115, Iran"
+            }
+          ],
+          "family": "Ghezelbash",
+          "given": "Mohammad Saeed"
+        }
+      ],
+      "ok": true,
+      "publisher": "MDPI AG",
+      "title": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events"
+    },
+    "crossref_doi_10.4103_2008-7802.182734": {
+      "authors_matching_ghezelbash": [
+        {
+          "ORCID": null,
+          "affiliation": [],
+          "family": "Ghezelbash",
+          "given": "MohammadSaeed"
+        }
+      ],
+      "ok": true,
+      "publisher": "Ovid Technologies (Wolters Kluwer Health)",
+      "title": "Effects of omega-3 supplement in the treatment of patients with bipolar I disorder"
+    },
     "crossref_orcid_filter": {
       "ok": true,
       "total_results": 0,
       "works": []
+    },
+    "mdpi_sciprofiles": {
+      "html_length": 400,
+      "http_status": 403,
+      "links_near_author": [],
+      "name_found": false,
+      "numeric_ids": [],
+      "ok": false
     },
     "openalex": {
       "cited_by_count": 31,
@@ -139,10 +178,76 @@
           "name": "Google Scholar",
           "url": "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
         }
+      ],
+      "works": [
+        {
+          "external_ids": [
+            {
+              "relationship": "self",
+              "type": "doi",
+              "value": "10.5281/ZENODO.18765169"
+            }
+          ],
+          "put_code": 221807766,
+          "title": "Doctor Ghezelbaash — Public Brand Knowledge Base & Knowledge Graph (JSON/JSON-LD) — v1.0.0"
+        },
+        {
+          "external_ids": [
+            {
+              "relationship": "self",
+              "type": "pmid",
+              "value": "34574943"
+            },
+            {
+              "relationship": "self",
+              "type": "pmc",
+              "value": "PMC8469763"
+            },
+            {
+              "relationship": "self",
+              "type": "doi",
+              "value": "10.3390/healthcare9091169"
+            }
+          ],
+          "put_code": 218320219,
+          "title": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events."
+        },
+        {
+          "external_ids": [
+            {
+              "relationship": "self",
+              "type": "pmid",
+              "value": "27280013"
+            },
+            {
+              "relationship": "self",
+              "type": "pmc",
+              "value": "PMC4882968"
+            },
+            {
+              "relationship": "self",
+              "type": "doi",
+              "value": "10.4103/2008-7802.182734"
+            }
+          ],
+          "put_code": 218320209,
+          "title": "Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder."
+        },
+        {
+          "external_ids": [
+            {
+              "relationship": "self",
+              "type": "doi",
+              "value": "10.5281/zenodo.21930954"
+            }
+          ],
+          "put_code": 224012501,
+          "title": "Dr. Saeed Ghezelbash Public Knowledge Graph"
+        }
       ]
     },
     "semantic_scholar": {
-      "error": "HTTPError('400 Client Error: Bad Request for url: https://api.semanticscholar.org/graph/v1/author/3786699?fields=name%2Caliases%2Curl%2CpaperCount%2CcitationCount%2ChIndex%2Cpapers.title%2Cpapers.year%2Cpapers.externalIds')",
+      "error": "HTTPError('400 Client Error: Bad Request for url: https://api.semanticscholar.org/graph/v1/author/3786699?fields=name%2Caliases%2Curl%2CpaperCount%2CcitationCount%2ChIndex')",
       "ok": false
     }
   },
