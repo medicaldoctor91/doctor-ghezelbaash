@@ -1,0 +1,45 @@
+name: Temporary detailed Wikipedia outcome audit
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/_tmp-wikipedia-detail-audit.yml']
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python -m pip install --disable-pip-version-check --no-input requests==2.32.5
+      - name: Read exact revisions and diffs
+        shell: bash
+        run: |
+          python - <<'PY'
+          import requests,json,os
+          API='https://en.wikipedia.org/w/api.php'; H={'User-Agent':'GhezelbaashWikipediaDetailAudit/1.0 (https://www.ghezelbaash.ir/)'}
+          def q(**p):
+            p.update(format='json',formatversion=2)
+            r=requests.get(API,params=p,headers=H,timeout=60); r.raise_for_status(); return r.json()
+          def rev(revid):
+            d=q(action='query',revids=revid,prop='revisions',rvprop='ids|timestamp|user|comment|content',rvslots='main')
+            p=d['query']['pages'][0]; r=p['revisions'][0]
+            return {'title':p.get('title'),'revid':r.get('revid'),'parentid':r.get('parentid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'content':r.get('slots',{}).get('main',{}).get('content','')}
+          def comp(a,b):
+            d=q(action='compare',fromrev=a,torev=b,prop='ids|title|diff|user|comment|timestamp')
+            c=d.get('compare',{})
+            return {k:c.get(k) for k in ['fromrevid','torevid','fromtitle','totitle','fromuser','touser','fromcomment','tocomment','fromtimestamp','totimestamp','body']}
+          r4103=rev(1369764103); r4261=rev(1369764261); r4392=rev(1369764392)
+          out={'talk_done':{k:r4103[k] for k in r4103 if k!='content'},'article_edit':{k:r4261[k] for k in r4261 if k!='content'},'talk_reply':{k:r4392[k] for k in r4392 if k!='content'},'article_diff':comp(r4261['parentid'],1369764261),'talk_done_diff':comp(r4103['parentid'],1369764103),'talk_reply_diff':comp(r4392['parentid'],1369764392)}
+          os.makedirs('wikimedia',exist_ok=True)
+          with open('wikimedia/_tmp-wikipedia-detail-audit.json','w',encoding='utf8') as f: json.dump(out,f,ensure_ascii=False,indent=2)
+          print(json.dumps(out,ensure_ascii=False))
+          PY
+      - name: Commit snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add wikimedia/_tmp-wikipedia-detail-audit.json
+          git commit -m 'Record temporary detailed Wikipedia audit snapshot'
+          git push
