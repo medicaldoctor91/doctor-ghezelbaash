@@ -1,0 +1,66 @@
+{
+  "contains_followup": true,
+  "contains_explicit_target": true,
+  "latest": [
+    {
+      "revid": 1370165015,
+      "timestamp": "2026-08-19T13:40:00Z",
+      "user": "Medicaldoctor91",
+      "comment": "COI follow-up: correct Wikiversity sister-link target to the reviewed resource"
+    },
+    {
+      "revid": 1369764392,
+      "timestamp": "2026-08-17T00:57:09Z",
+      "user": "Dr vulpes",
+      "comment": "/* Wikiversity sister-project link request */ Reply"
+    },
+    {
+      "revid": 1369764103,
+      "timestamp": "2026-08-17T00:54:43Z",
+      "user": "Dr vulpes",
+      "comment": "/* Wikiversity sister-project link request */ done"
+    },
+    {
+      "revid": 1369605448,
+      "timestamp": "2026-08-16T00:55:21Z",
+      "user": "Medicaldoctor91",
+      "comment": "COI edit request: consider relevant Wikiversity sister-project link"
+    },
+    {
+      "revid": 1362661056,
+      "timestamp": "2026-07-05T13:13:37Z",
+      "user": "WeirdNAnnoyed",
+      "comment": "/* LLM template */ new section"
+    },
+    {
+      "revid": 1357019335,
+      "timestamp": "2026-05-31T08:24:51Z",
+      "user": "Cewbot",
+      "comment": "[[User:Cewbot/log/20200122/configuration|Maintain {{WPBS}} and vital articles]]: 4 WikiProject templates. The article is listed in the level 5 page.: [[Wikipedia:Vital articles/Level 5/Biology and health sciences/Health#Toxic injury|Toxic injury]]."
+    },
+    {
+      "revid": 1310604597,
+      "timestamp": "2025-09-10T15:36:22Z",
+      "user": "Rich Farmbrough",
+      "comment": "IP was right, but typo'ed."
+    },
+    {
+      "revid": 1310603312,
+      "timestamp": "2025-09-10T15:27:09Z",
+      "user": "Criticize",
+      "comment": "Reverted edits by [[Special:Contributions/92.18.76.185|92.18.76.185]] ([[User talk:92.18.76.185|talk]]) ([[WP:HG|HG]]) (3.4.13)"
+    },
+    {
+      "revid": 1310603290,
+      "timestamp": "2025-09-10T15:27:01Z",
+      "user": "92.18.76.185",
+      "comment": "Fixing lint errors [[Special:LintErrors/empty-heading]]. Fill empty heading."
+    },
+    {
+      "revid": 1284799230,
+      "timestamp": "2025-04-09T20:04:03Z",
+      "user": "Frietjes",
+      "comment": "Undid revision [[Special:Diff/1284729875|1284729875]] by [[Special:Contributions/102.244.157.213|102.244.157.213]] ([[User talk:102.244.157.213|talk]])"
+    }
+  ]
+}
