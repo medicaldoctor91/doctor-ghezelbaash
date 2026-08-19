@@ -1,0 +1,5674 @@
+{
+  "Q140287622": {
+    "lastrevid": 2533220927,
+    "modified": "2026-08-19T13:39:23Z",
+    "labels": {
+      "fa": "سعید قزلباش",
+      "en": "Saeed Ghezelbash"
+    },
+    "descriptions": {
+      "fa": "پزشک زیبایی و پژوهشگر پزشکی ایرانی در کرمانشاه",
+      "en": "Iranian aesthetic physician and medical researcher based in Kermanshah"
+    },
+    "sitelinks": {
+      "commonswiki": "Category:Saeed Ghezelbash",
+      "enwikisource": "Author:Mohammad Saeed Ghezelbash"
+    },
+    "claims": {
+      "P31": [
+        {
+          "value": "Q5",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P106": [
+        {
+          "value": "Q39631",
+          "rank": "preferred",
+          "refs": 1
+        },
+        {
+          "value": "Q15401884",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P512": [
+        {
+          "value": "Q913404",
+          "rank": "normal",
+          "refs": 4
+        }
+      ],
+      "P937": [
+        {
+          "value": "Q180078",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q140288589",
+          "rank": "normal",
+          "refs": 7
+        }
+      ],
+      "P2037": [
+        {
+          "value": "medicaldoctor91",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P496": [
+        {
+          "value": "0009-0001-9346-8475",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P6634": [
+        {
+          "value": "saeed-ghezelbash-93310a96",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P10611": [
+        {
+          "value": "Q1566725",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P2671": [
+        {
+          "value": "/g/11nqdfk76c",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P856": [
+        {
+          "value": "https://www.ghezelbaash.ir/",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P511": [
+        {
+          "value": "Q4618975",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1830": [
+        {
+          "value": "Q140288589",
+          "rank": "normal",
+          "refs": 5
+        },
+        {
+          "value": "Q140304972",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1416": [
+        {
+          "value": "Q6393994",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q6393994",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P463": [
+        {
+          "value": "Q5944740",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q4742869",
+          "rank": "normal",
+          "refs": 0
+        },
+        {
+          "value": "Q15995193",
+          "rank": "normal",
+          "refs": 0
+        }
+      ],
+      "P69": [
+        {
+          "value": "Q6393994",
+          "rank": "normal",
+          "refs": 3
+        }
+      ],
+      "P12201": [
+        {
+          "value": "ghezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P10283": [
+        {
+          "value": "A5064828898",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P27": [
+        {
+          "value": "Q794",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1412": [
+        {
+          "value": "Q9168",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q1860",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P4012": [
+        {
+          "value": "3786699",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P11079": [
+        {
+          "value": "Doctor.ghezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P2013": [
+        {
+          "value": "ghezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P2002": [
+        {
+          "value": "qezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P7085": [
+        {
+          "value": "ghezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P3836": [
+        {
+          "value": "qezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P11892": [
+        {
+          "value": "doctor.ghezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P11245": [
+        {
+          "value": "ghezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P2003": [
+        {
+          "value": "ghezelbaash",
+          "rank": "deprecated",
+          "refs": 0
+        },
+        {
+          "value": "doctor.ghezelbaash",
+          "rank": "preferred",
+          "refs": 1
+        }
+      ],
+      "P18": [
+        {
+          "value": "Saeed-Ghezelbaash-physician-portrait.jpg",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1960": [
+        {
+          "value": "BcWBirUAAAAJ",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P373": [
+        {
+          "value": "Saeed Ghezelbash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P569": [
+        {
+          "value": "+1991-05-29T00:00:00Z",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P21": [
+        {
+          "value": "Q6581097",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P734": [
+        {
+          "value": "Q140775989",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1559": [
+        {
+          "value": "سعید قزلباش",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P735": [
+        {
+          "value": "Q104892392",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P101": [
+        {
+          "value": "Q3332453",
+          "rank": "normal",
+          "refs": 3
+        },
+        {
+          "value": "Q3745388",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q4095199",
+          "rank": "normal",
+          "refs": 6
+        },
+        {
+          "value": "Q17081562",
+          "rank": "normal",
+          "refs": 4
+        },
+        {
+          "value": "Q7049059",
+          "rank": "normal",
+          "refs": 5
+        },
+        {
+          "value": "Q537918",
+          "rank": "normal",
+          "refs": 5
+        },
+        {
+          "value": "Q613879",
+          "rank": "normal",
+          "refs": 5
+        },
+        {
+          "value": "Q3675172",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q4936963",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q2276095",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q2697787",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q685286",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q2559992",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q3267987",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q16949888",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q305190",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q1641068",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q26967",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q840929",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q825490",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q1423937",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q851186",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q935781",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q133823",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q7439446",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q79928",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q5133849",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q2752427",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P973": [
+        {
+          "value": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "https://www.magiran.com/author/mohammad-saeed-ghezelbash",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P553": [
+        {
+          "value": "Q3595053",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1472": [
+        {
+          "value": "Saeed Ghezelbash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P10": [
+        {
+          "value": "دکتر سعید قزلباش درباره جالپرو و پروفایلو.webm",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P3919": [
+        {
+          "value": "Q140306302",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q36942316",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q140298431",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q141099455",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P968": [
+        {
+          "value": "mailto:medicaldoctor91@gmail.com",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "mailto:doctor@ghezelbaash.ir",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P39": [
+        {
+          "value": "Q256688",
+          "rank": "normal",
+          "refs": 3
+        }
+      ],
+      "P1344": [
+        {
+          "value": "Q140307274",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P800": [
+        {
+          "value": "Q140306302",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q36942316",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q140298431",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1343": [
+        {
+          "value": "Q140304972",
+          "rank": "normal",
+          "refs": 1
+        }
+      ]
+    }
+  },
+  "Q141099455": {
+    "lastrevid": 2532174567,
+    "modified": "2026-08-17T02:19:31Z",
+    "labels": {
+      "en": "Botulinum toxin in aesthetic medicine"
+    },
+    "descriptions": {
+      "en": "Wikiversity learning resource about botulinum toxin in aesthetic medicine"
+    },
+    "sitelinks": {
+      "enwikiversity": "Botulinum toxin in aesthetic medicine"
+    },
+    "claims": {
+      "P31": [
+        {
+          "value": "Q116781",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P50": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P921": [
+        {
+          "value": "Q4095199",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q3332453",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P407": [
+        {
+          "value": "Q1860",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P577": [
+        {
+          "value": "+2026-08-14T00:00:00Z",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P275": [
+        {
+          "value": "Q18199165",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q22169",
+          "rank": "normal",
+          "refs": 1
+        }
+      ]
+    }
+  },
+  "Q140304972": {
+    "lastrevid": 2533203666,
+    "modified": "2026-08-19T12:51:03Z",
+    "labels": {
+      "fa": "گراف دانش عمومی دکتر سعید قزلباش",
+      "en": "Dr. Saeed Ghezelbash Public Knowledge Graph"
+    },
+    "descriptions": {
+      "fa": "گراف دانش و مجموعه‌دادهٔ ساخت‌یافته دربارهٔ سعید قزلباش و فعالیت پزشکی او",
+      "en": "public knowledge graph and structured dataset about Saeed Ghezelbash and his medical practice"
+    },
+    "sitelinks": {},
+    "claims": {
+      "P31": [
+        {
+          "value": "Q1172284",
+          "rank": "preferred",
+          "refs": 2
+        },
+        {
+          "value": "Q593744",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q33002955",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P577": [
+        {
+          "value": "+2026-02-25T00:00:00Z",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1324": [
+        {
+          "value": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P178": [
+        {
+          "value": "Q140287622",
+          "rank": "preferred",
+          "refs": 1
+        }
+      ],
+      "P275": [
+        {
+          "value": "Q20007257",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P921": [
+        {
+          "value": "Q140288589",
+          "rank": "normal",
+          "refs": 2
+        },
+        {
+          "value": "Q140287622",
+          "rank": "preferred",
+          "refs": 2
+        },
+        {
+          "value": "Q3332453",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P973": [
+        {
+          "value": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P170": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P6216": [
+        {
+          "value": "Q73566113",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P126": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P127": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P138": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P6138": [
+        {
+          "value": "swh:1:dir:9d838f098e137cd9c2119dc233a85a1ee1826f8c",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P407": [
+        {
+          "value": "Q9168",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q1860",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P123": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P356": [
+        {
+          "value": "10.5281/ZENODO.18765168",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P348": [
+        {
+          "value": "1.2.0",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "1.0.0",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "1.2.1",
+          "rank": "preferred",
+          "refs": 1
+        },
+        {
+          "value": "1.2.2",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P856": [
+        {
+          "value": "https://www.ghezelbaash.ir/",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P2888": [
+        {
+          "value": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P4901": [
+        {
+          "value": "21930954",
+          "rank": "normal",
+          "refs": 1
+        }
+      ]
+    }
+  },
+  "Q140288589": {
+    "lastrevid": 2533203721,
+    "modified": "2026-08-19T12:51:09Z",
+    "labels": {
+      "fa": "کلینیک زیبایی دکتر سعید قزلباش",
+      "en": "Dr. Saeed Ghezelbash Aesthetic Clinic"
+    },
+    "descriptions": {
+      "fa": "کلینیک زیبایی در کرمانشاه، ایران",
+      "en": "aesthetic clinic in Kermanshah, Iran"
+    },
+    "sitelinks": {
+      "commonswiki": "Category:Dr. Saeed Ghezelbash Aesthetic Clinic"
+    },
+    "claims": {
+      "P31": [
+        {
+          "value": "Q1774898",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q4287745",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P856": [
+        {
+          "value": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P3749": [
+        {
+          "value": "12350483144643112463",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P11693": [
+        {
+          "value": "13530287096",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P131": [
+        {
+          "value": "Q140562207",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P17": [
+        {
+          "value": "Q794",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P625": [
+        {
+          "value": {
+            "latitude": 34.340124305555555,
+            "longitude": 47.08517780555555,
+            "altitude": null,
+            "precision": 2.777777777777778e-08,
+            "globe": "http://www.wikidata.org/entity/Q2"
+          },
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P12201": [
+        {
+          "value": "doctor-ghezelbaash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P973": [
+        {
+          "value": "https://github.ghezelbaash.ir/",
+          "rank": "normal",
+          "refs": 4
+        },
+        {
+          "value": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P6375": [
+        {
+          "value": "کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P1329": [
+        {
+          "value": "+98-930-820-9494",
+          "rank": "normal",
+          "refs": 3
+        }
+      ],
+      "P2671": [
+        {
+          "value": "/g/11r3rzdtb3",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P13096": [
+        {
+          "value": "63459342435",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1968": [
+        {
+          "value": "6987eef061c23b4962a08398",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P138": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 4
+        }
+      ],
+      "P112": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 4
+        }
+      ],
+      "P281": [
+        {
+          "value": "6714657412",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P3025": [
+        {
+          "value": "Q101766385",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P18": [
+        {
+          "value": "Saeed-Ghezelbaash-in-clinical-office.jpg",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P373": [
+        {
+          "value": "Dr. Saeed Ghezelbash Aesthetic Clinic",
+          "rank": "normal",
+          "refs": 0
+        }
+      ],
+      "P2388": [
+        {
+          "value": "Q256688",
+          "rank": "normal",
+          "refs": 2
+        }
+      ],
+      "P101": [
+        {
+          "value": "Q3332453",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q3745388",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q17081562",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q4095199",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q7049059",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q537918",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q613879",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q16949888",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q3675172",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q4936963",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q2276095",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q2697787",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q26967",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q79928",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q1641068",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q305190",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q3267987",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q851186",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q935781",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q133823",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q7439446",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q2559992",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q840929",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q825490",
+          "rank": "normal",
+          "refs": 1
+        },
+        {
+          "value": "Q1423937",
+          "rank": "normal",
+          "refs": 1
+        }
+      ],
+      "P1037": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 4
+        }
+      ],
+      "P127": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 3
+        }
+      ],
+      "P137": [
+        {
+          "value": "Q140287622",
+          "rank": "normal",
+          "refs": 3
+        }
+      ],
+      "P1343": [
+        {
+          "value": "Q140304972",
+          "rank": "normal",
+          "refs": 1
+        }
+      ]
+    }
+  },
+  "enwiki_article": {
+    "revid": 1369764261,
+    "timestamp": "2026-08-17T00:55:54Z",
+    "user": "Dr vulpes",
+    "comment": "/* External links */ added link to Wikiversity",
+    "has_v_yes": true,
+    "has_explicit": false,
+    "sister_snippets": [
+      "{{sister project links||d=Q114242090|c=Category:Botulinum neurotoxin|n=no|b=no|v=yes|voy=no|m=no|mw=no|s=no|wikt=no|species=no}}"
+    ]
+  },
+  "enwiki_talk": {
+    "latest": [
+      {
+        "revid": 1370165015,
+        "timestamp": "2026-08-19T13:40:00Z",
+        "user": "Medicaldoctor91",
+        "comment": "COI follow-up: correct Wikiversity sister-link target to the reviewed resource"
+      },
+      {
+        "revid": 1369764392,
+        "timestamp": "2026-08-17T00:57:09Z",
+        "user": "Dr vulpes",
+        "comment": "/* Wikiversity sister-project link request */ Reply"
+      },
+      {
+        "revid": 1369764103,
+        "timestamp": "2026-08-17T00:54:43Z",
+        "user": "Dr vulpes",
+        "comment": "/* Wikiversity sister-project link request */ done"
+      },
+      {
+        "revid": 1369605448,
+        "timestamp": "2026-08-16T00:55:21Z",
+        "user": "Medicaldoctor91",
+        "comment": "COI edit request: consider relevant Wikiversity sister-project link"
+      },
+      {
+        "revid": 1362661056,
+        "timestamp": "2026-07-05T13:13:37Z",
+        "user": "WeirdNAnnoyed",
+        "comment": "/* LLM template */ new section"
+      },
+      {
+        "revid": 1357019335,
+        "timestamp": "2026-05-31T08:24:51Z",
+        "user": "Cewbot",
+        "comment": "[[User:Cewbot/log/20200122/configuration|Maintain {{WPBS}} and vital articles]]: 4 WikiProject templates. The article is listed in the level 5 page.: [[Wikipedia:Vital articles/Level 5/Biology and health sciences/Health#Toxic injury|Toxic injury]]."
+      },
+      {
+        "revid": 1310604597,
+        "timestamp": "2025-09-10T15:36:22Z",
+        "user": "Rich Farmbrough",
+        "comment": "IP was right, but typo'ed."
+      },
+      {
+        "revid": 1310603312,
+        "timestamp": "2025-09-10T15:27:09Z",
+        "user": "Criticize",
+        "comment": "Reverted edits by [[Special:Contributions/92.18.76.185|92.18.76.185]] ([[User talk:92.18.76.185|talk]]) ([[WP:HG|HG]]) (3.4.13)"
+      }
+    ],
+    "contains_followup": true,
+    "contains_explicit": true
+  },
+  "wikiversity_resource": {
+    "pageid": 331166,
+    "title": "Botulinum toxin in aesthetic medicine",
+    "touched": "2026-08-17T08:12:50Z",
+    "pageprops": {
+      "wikibase_item": "Q141099455"
+    },
+    "latest": {
+      "revid": 2822519,
+      "parentid": 2822490,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-17T08:12:50Z",
+      "comment": "Correct provenance to the live canonical Botox section on the official website and remove the dead standalone source URL"
+    }
+  },
+  "wikiversity_search": [
+    {
+      "ns": 0,
+      "title": "WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+      "pageid": 331257,
+      "size": 21362,
+      "wordcount": 2793,
+      "snippet": "declaration form Create peer review location Author: <span class=\"searchmatch\">Saeed</span> <span class=\"searchmatch\">Ghezelbash</span>   See author information ▼ Dr. <span class=\"searchmatch\">Saeed</span> <span class=\"searchmatch\">Ghezelbash</span> Aesthetic Clinic, Kermanshah, Iran Botulinum",
+      "timestamp": "2026-08-18T22:54:46Z"
+    },
+    {
+      "ns": 0,
+      "title": "Botulinum toxin in aesthetic medicine",
+      "pageid": 331166,
+      "size": 23411,
+      "wordcount": 2621,
+      "snippet": "substitute for supervised clinical training. This resource was developed by <span class=\"searchmatch\">Saeed</span> <span class=\"searchmatch\">Ghezelbash</span> (محمدسعید قزلباش; دکتر سعید قزلباش) and draws in part on educational",
+      "timestamp": "2026-08-17T08:12:50Z"
+    }
+  ],
+  "openalex": {
+    "status": 200,
+    "json": {
+      "id": "https://openalex.org/A5064828898",
+      "orcid": null,
+      "display_name": "Mohammad Saeed Ghezelbash",
+      "raw_author_names": [
+        "Mohammad Saeed Ghezelbash",
+        "MohammadSaeed Ghezelbash"
+      ],
+      "full_name": "Mohammad Saeed Ghezelbash",
+      "works_count": 2,
+      "cited_by_count": 31,
+      "summary_stats": {
+        "2yr_mean_citedness": 0.0,
+        "h_index": 2,
+        "i10_index": 2
+      },
+      "ids": {
+        "openalex": "https://openalex.org/A5064828898",
+        "orcid": null
+      },
+      "affiliations": [
+        {
+          "institution": {
+            "id": "https://openalex.org/I39642139",
+            "ror": "https://ror.org/05vspf741",
+            "display_name": "Kermanshah University of Medical Sciences",
+            "country_code": "IR",
+            "type": "education",
+            "lineage": [
+              "https://openalex.org/I39642139"
+            ]
+          },
+          "years": [
+            2021,
+            2016
+          ]
+        }
+      ],
+      "last_known_institutions": [
+        {
+          "id": "https://openalex.org/I39642139",
+          "ror": "https://ror.org/05vspf741",
+          "display_name": "Kermanshah University of Medical Sciences",
+          "country_code": "IR",
+          "type": "education",
+          "lineage": [
+            "https://openalex.org/I39642139"
+          ]
+        }
+      ],
+      "topics": [
+        {
+          "id": "https://openalex.org/T10854",
+          "display_name": "Bipolar Disorder and Treatment",
+          "count": 1,
+          "subfield": {
+            "id": "https://openalex.org/subfields/2738",
+            "display_name": "Psychiatry and Mental health"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/27",
+            "display_name": "Medicine"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/4",
+            "display_name": "Health Sciences"
+          }
+        },
+        {
+          "id": "https://openalex.org/T11071",
+          "display_name": "Treatment of Major Depression",
+          "count": 1,
+          "subfield": {
+            "id": "https://openalex.org/subfields/2736",
+            "display_name": "Pharmacology"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/27",
+            "display_name": "Medicine"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/4",
+            "display_name": "Health Sciences"
+          }
+        },
+        {
+          "id": "https://openalex.org/T11093",
+          "display_name": "Personality Disorders and Psychopathology",
+          "count": 1,
+          "subfield": {
+            "id": "https://openalex.org/subfields/3203",
+            "display_name": "Clinical Psychology"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/32",
+            "display_name": "Psychology"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/2",
+            "display_name": "Social Sciences"
+          }
+        },
+        {
+          "id": "https://openalex.org/T11334",
+          "display_name": "Psychosomatic Disorders and Their Treatments",
+          "count": 1,
+          "subfield": {
+            "id": "https://openalex.org/subfields/2738",
+            "display_name": "Psychiatry and Mental health"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/27",
+            "display_name": "Medicine"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/4",
+            "display_name": "Health Sciences"
+          }
+        },
+        {
+          "id": "https://openalex.org/T12915",
+          "display_name": "Biochemical Acid Research Studies",
+          "count": 1,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1303",
+            "display_name": "Biochemistry"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/13",
+            "display_name": "Biochemistry, Genetics and Molecular Biology"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/1",
+            "display_name": "Life Sciences"
+          }
+        }
+      ],
+      "topic_share": [
+        {
+          "id": "https://openalex.org/T12915",
+          "display_name": "Biochemical Acid Research Studies",
+          "value": 1.29e-05,
+          "subfield": {
+            "id": "https://openalex.org/subfields/1303",
+            "display_name": "Biochemistry"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/13",
+            "display_name": "Biochemistry, Genetics and Molecular Biology"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/1",
+            "display_name": "Life Sciences"
+          }
+        },
+        {
+          "id": "https://openalex.org/T11093",
+          "display_name": "Personality Disorders and Psychopathology",
+          "value": 8.6e-06,
+          "subfield": {
+            "id": "https://openalex.org/subfields/3203",
+            "display_name": "Clinical Psychology"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/32",
+            "display_name": "Psychology"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/2",
+            "display_name": "Social Sciences"
+          }
+        },
+        {
+          "id": "https://openalex.org/T10854",
+          "display_name": "Bipolar Disorder and Treatment",
+          "value": 8.2e-06,
+          "subfield": {
+            "id": "https://openalex.org/subfields/2738",
+            "display_name": "Psychiatry and Mental health"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/27",
+            "display_name": "Medicine"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/4",
+            "display_name": "Health Sciences"
+          }
+        },
+        {
+          "id": "https://openalex.org/T11071",
+          "display_name": "Treatment of Major Depression",
+          "value": 7.6e-06,
+          "subfield": {
+            "id": "https://openalex.org/subfields/2736",
+            "display_name": "Pharmacology"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/27",
+            "display_name": "Medicine"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/4",
+            "display_name": "Health Sciences"
+          }
+        },
+        {
+          "id": "https://openalex.org/T11334",
+          "display_name": "Psychosomatic Disorders and Their Treatments",
+          "value": 5.6e-06,
+          "subfield": {
+            "id": "https://openalex.org/subfields/2738",
+            "display_name": "Psychiatry and Mental health"
+          },
+          "field": {
+            "id": "https://openalex.org/fields/27",
+            "display_name": "Medicine"
+          },
+          "domain": {
+            "id": "https://openalex.org/domains/4",
+            "display_name": "Health Sciences"
+          }
+        }
+      ],
+      "x_concepts": [
+        {
+          "id": "71924100",
+          "wikidata": "https://www.wikidata.org/wiki/Q11190",
+          "display_name": "Medicine",
+          "score": 0.8247177600860596
+        },
+        {
+          "id": "119477188",
+          "wikidata": "https://www.wikidata.org/wiki/Q909609",
+          "display_name": "Attachment theory",
+          "score": 0.6951167583465576
+        },
+        {
+          "id": "102931765",
+          "wikidata": "https://www.wikidata.org/wiki/Q189673",
+          "display_name": "Dissociation (chemistry)",
+          "score": 0.45986413955688477
+        },
+        {
+          "id": "118552586",
+          "wikidata": "https://www.wikidata.org/wiki/Q7867",
+          "display_name": "Psychiatry",
+          "score": 0.3990418314933777
+        },
+        {
+          "id": "121332964",
+          "wikidata": "https://www.wikidata.org/wiki/Q413",
+          "display_name": "Physics",
+          "score": 0.0
+        }
+      ],
+      "counts_by_year": [
+        {
+          "year": 2016,
+          "works_count": 1,
+          "oa_works_count": 1,
+          "cited_by_count": 19
+        },
+        {
+          "year": 2021,
+          "works_count": 1,
+          "oa_works_count": 1,
+          "cited_by_count": 12
+        }
+      ],
+      "display_name_alternatives": [
+        "Mohammad Saeed Ghezelbash",
+        "MohammadSaeed Ghezelbash"
+      ],
+      "block_key": "m ghezelbash",
+      "works_api_url": "https://api.openalex.org/works?filter=author.id:A5064828898",
+      "updated_date": "2026-08-14T12:16:50",
+      "created_date": "2016-06-24T00:00:00"
+    },
+    "text": null
+  },
+  "semantic_scholar": {
+    "status": 400,
+    "json": {
+      "error": "Unrecognized or unsupported fields: [aliases]"
+    },
+    "text": null
+  },
+  "crossref_10.4103/2008-7802.182734": {
+    "status": 200,
+    "json": {
+      "status": "ok",
+      "message-type": "work",
+      "message-version": "1.0.0",
+      "message": {
+        "indexed": {
+          "date-parts": [
+            [
+              2026,
+              8,
+              14
+            ]
+          ],
+          "date-time": "2026-08-14T13:42:21Z",
+          "timestamp": 1786714941350,
+          "version": "3.56.0"
+        },
+        "reference-count": 32,
+        "publisher": "Ovid Technologies (Wolters Kluwer Health)",
+        "issue": "1",
+        "content-domain": {
+          "domain": [],
+          "crossmark-restriction": false
+        },
+        "short-container-title": [
+          "Int J Prev Med"
+        ],
+        "published-print": {
+          "date-parts": [
+            [
+              2016
+            ]
+          ]
+        },
+        "DOI": "10.4103/2008-7802.182734",
+        "type": "journal-article",
+        "created": {
+          "date-parts": [
+            [
+              2016,
+              5,
+              19
+            ]
+          ],
+          "date-time": "2016-05-19T16:07:42Z",
+          "timestamp": 1463674062000
+        },
+        "page": "77",
+        "source": "Crossref",
+        "is-referenced-by-count": 14,
+        "title": [
+          "Effects of omega-3 supplement in the treatment of patients with bipolar I disorder"
+        ],
+        "prefix": "10.4103",
+        "volume": "7",
+        "author": [
+          {
+            "given": "Mostafa",
+            "family": "Alikhani",
+            "sequence": "first",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Jalal",
+            "family": "Shakeri",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Maryam",
+            "family": "Khanegi",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Sanobar",
+            "family": "Golshani",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Vahid",
+            "family": "Farnia",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Faeze",
+            "family": "Tatari",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Roghih",
+            "family": "Nooripour",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "MohammadSaeed",
+            "family": "Ghezelbash",
+            "sequence": "additional",
+            "affiliation": [],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          }
+        ],
+        "member": "276",
+        "reference": [
+          {
+            "key": "key-10.4103/2008-7802.182734-1",
+            "first-page": "15",
+            "volume-title": "Practical clues to early recognition of bipolar disorder: A primary care approach",
+            "author": "Swann",
+            "year": "2005",
+            "journal-title": "Prim Care Companion J Clin Psychiatry"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-2",
+            "unstructured": "Sadock B, Sadock V. Comprehensive Text Book of Psychiatry. Philadelphia: Lippincott Williams and Wilkins; 2005."
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-3",
+            "first-page": "1241",
+            "volume-title": "The global burden of disease, 1990-2020",
+            "author": "Lopez",
+            "year": "1998",
+            "journal-title": "Nat Med"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-4",
+            "first-page": "65",
+            "volume-title": "Screening for bipolar disorder in primary care",
+            "author": "Bull",
+            "year": "2010",
+            "journal-title": "J Nurse Pract"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-5",
+            "first-page": "507",
+            "volume-title": "Family burden of schizophrenia and bipolar disorder: Perceptions of relatives and professionals",
+            "author": "Mueser",
+            "year": "1996",
+            "journal-title": "Psychiatr Serv"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-6",
+            "first-page": "213",
+            "volume-title": "An economic evaluation of manic-depressive illness-1991",
+            "author": "Wyatt",
+            "year": "1995",
+            "journal-title": "Soc Psychiatry Psychiatr Epidemiol"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-7",
+            "first-page": "360",
+            "volume-title": "Predictive factors of delay in contact with a psychiatrist in depressive disorders: A sample of Iranian patients",
+            "author": "Hosseini",
+            "year": "2014",
+            "journal-title": "Int J Prev Med",
+            "ISSN": "https://id.crossref.org/issn/2008-7802",
+            "issn-type": "print"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-8",
+            "first-page": "53",
+            "volume-title": "Screening for bipolar disorder in the community",
+            "author": "Hirschfeld",
+            "year": "2003",
+            "journal-title": "J Clin Psychiatry"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-9",
+            "first-page": "203",
+            "volume-title": "Patient based utilities for bipolar disorder related health state",
+            "author": "Revicki",
+            "year": "2005",
+            "journal-title": "J Affect Disord"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-10",
+            "unstructured": "Murray CJL. Rethinking DALYs. In: Murray CJL, Lopez AD, Eds. The global burden of disease. Cambridge, Harvard School of Public Health on behalf of the World Health Organization and the World Bank; 1996."
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-11",
+            "first-page": "98",
+            "volume-title": "Care satisfaction, hope, and life functioning among adults with bipolar disorder: Data from the first 1000 participants in the Systematic Treatment Enhancement Program",
+            "author": "Morris",
+            "year": "2005",
+            "journal-title": "Compr Psychiatry"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-12",
+            "first-page": "S5",
+            "volume-title": "Re-evaluating the prevalence of and diagnostic composition within the broad clinical spectrum of bipolar disorders",
+            "author": "Akiskal",
+            "year": "2000",
+            "journal-title": "J Affect Disord"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-13",
+            "first-page": "277",
+            "volume-title": "Dietary linoleic acid influences desaturation and acylation of deuterium-labeled linoleic and linolenic acids in young adult males",
+            "author": "Emken",
+            "year": "1994",
+            "journal-title": "Biochim Biophys Acta"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-14",
+            "first-page": "407",
+            "volume-title": "Omega 3 fatty acids in bipolar disorder: A preliminary double-blind, placebo-controlled trial",
+            "author": "Stoll",
+            "year": "1999",
+            "journal-title": "Arch Gen Psychiatry"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-15",
+            "first-page": "267",
+            "volume-title": "Omega-3 fatty acids in major depressive disorder.A preliminary double-blind, placebo-controlled trial",
+            "author": "Su",
+            "year": "2003",
+            "journal-title": "Eur Neuropsychopharmacol"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-16",
+            "first-page": "223",
+            "volume-title": "Evaluation of docosahexaenoic acid deficiency as a preventable risk factor for recurrent affective disorders: Current status, future directions, and dietary recommendations",
+            "author": "McNamara",
+            "year": "2009",
+            "journal-title": "Prostaglandins Leukot Essent Fatty Acids"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-17",
+            "first-page": "156",
+            "volume-title": "Long-chain omega-3 fatty acid deficiency in mood disorders: Rationale for treatment and prevention",
+            "author": "McNamara",
+            "year": "2011",
+            "journal-title": "Curr Drug Discov Technol"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-18",
+            "first-page": "1029",
+            "volume-title": "Therapeutic use of omega-3 fatty acids in bipolar disorder",
+            "author": "Balanzá-Martínez",
+            "year": "2011",
+            "journal-title": "Expert Rev Neurother"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-19",
+            "first-page": "316",
+            "volume-title": "The effect of omega-3 and fluvoxamine on the depressive phase in bipolar disorder type 1",
+            "author": "Safa",
+            "year": "2010",
+            "journal-title": "Iran J Psychiatry Clin Psychol"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-20",
+            "first-page": "429",
+            "volume-title": "A rating scale for mania: Reliability, validity and sensitivity",
+            "author": "Young",
+            "year": "1978",
+            "journal-title": "Br J Psychiatry"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-21",
+            "first-page": "150",
+            "volume-title": "Standardization, validity and reliability of young mania rating scale in Iran",
+            "author": "Barakatain",
+            "year": "2007",
+            "journal-title": "J Psychol"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-22",
+            "doi-asserted-by": "crossref",
+            "unstructured": "Youdim KA, Martin A, Joseph JA. Essential fatty acids and the brain: Possible health implications. Int J Dev Neurosci 2000;18:383-99.",
+            "DOI": "10.1016/S0736-5748(00)00013-7"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-23",
+            "first-page": "49",
+            "volume-title": "Lipids, depression and suicide",
+            "author": "Colin",
+            "year": "2003",
+            "journal-title": "Encephale"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-24",
+            "first-page": "983",
+            "volume-title": "Preventative strategies for early-onset bipolar disorder: Towards a clinical staging model",
+            "author": "McNamara",
+            "year": "2010",
+            "journal-title": "CNS Drugs"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-25",
+            "first-page": "1031",
+            "volume-title": "Long-chain omega-3 polyunsaturated fatty acids in the blood of children and adolescents with juvenile bipolar disorder",
+            "author": "Clayton",
+            "year": "2008",
+            "journal-title": "Lipids"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-26",
+            "first-page": "2222",
+            "volume-title": "Cross-national comparisons of seafood consumption and rates of bipolar disorders",
+            "author": "Noaghiul",
+            "year": "2003",
+            "journal-title": "Am J Psychiatry"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-27",
+            "first-page": "Suppl 1;S157",
+            "volume-title": "Arachidonic acid to eicosapentaenoic acid ratio in blood correlates positively with clinical symptoms of depression.Lipids",
+            "author": "Adams",
+            "year": "1996",
+            "journal-title": ""
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-28",
+            "first-page": "243",
+            "volume-title": "Two double-blind placebo-controlled pilot studies of eicosapentaenoic acid in the treatment of schizophrenia",
+            "author": "Peet",
+            "year": "2001",
+            "journal-title": "Schizophr Res"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-29",
+            "first-page": "149",
+            "volume-title": "Omega-3 polyunsaturated fatty acid levels in the diet and in red blood cell membranes of depressed patients",
+            "author": "Edwards",
+            "year": "1998",
+            "journal-title": "J Affect Disord"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-30",
+            "first-page": "35",
+            "volume-title": "Fatty acid composition in major depression: Decreased omega 3 fractions in cholesteryl esters and increased C20: 4 omega 6/C20: 5 omega 3 ratio in cholesteryl esters and phospholipids",
+            "author": "Maes",
+            "year": "1996",
+            "journal-title": "J Affect Disord"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-31",
+            "first-page": "2185",
+            "volume-title": "The fats of life: The role of omega-3 fatty acids in the prevention of coronary heart disease",
+            "author": "Harper",
+            "year": "2001",
+            "journal-title": "Arch Intern Med"
+          },
+          {
+            "key": "key-10.4103/2008-7802.182734-32",
+            "first-page": "310",
+            "volume-title": ", et al.An overview of recent findings of the Stanley Foundation Bipolar Network (Part I)",
+            "author": "Post",
+            "year": "2003",
+            "journal-title": "Bipolar Disord"
+          }
+        ],
+        "container-title": [
+          "International Journal of Preventive Medicine"
+        ],
+        "original-title": [],
+        "language": "en",
+        "deposited": {
+          "date-parts": [
+            [
+              2026,
+              8,
+              14
+            ]
+          ],
+          "date-time": "2026-08-14T13:23:15Z",
+          "timestamp": 1786713795000
+        },
+        "score": 1,
+        "resource": {
+          "primary": {
+            "URL": "https://www.ovid.com/10.4103/2008-7802.182734"
+          }
+        },
+        "subtitle": [],
+        "short-title": [],
+        "issued": {
+          "date-parts": [
+            [
+              2016
+            ]
+          ]
+        },
+        "references-count": 32,
+        "journal-issue": {
+          "issue": "1",
+          "published-print": {
+            "date-parts": [
+              [
+                2016
+              ]
+            ]
+          }
+        },
+        "alternative-id": [
+          "182734"
+        ],
+        "URL": "https://doi.org/10.4103/2008-7802.182734",
+        "relation": {},
+        "ISSN": [
+          "2008-7802"
+        ],
+        "issn-type": [
+          {
+            "value": "2008-7802",
+            "type": "print"
+          }
+        ],
+        "subject": [],
+        "published": {
+          "date-parts": [
+            [
+              2016
+            ]
+          ]
+        }
+      }
+    },
+    "text": null
+  },
+  "crossref_10.3390/healthcare9091169": {
+    "status": 200,
+    "json": {
+      "status": "ok",
+      "message-type": "work",
+      "message-version": "1.0.0",
+      "message": {
+        "indexed": {
+          "date-parts": [
+            [
+              2026,
+              8,
+              18
+            ]
+          ],
+          "date-time": "2026-08-18T04:48:45Z",
+          "timestamp": 1787028525277,
+          "version": "3.56.0"
+        },
+        "reference-count": 50,
+        "publisher": "MDPI AG",
+        "issue": "9",
+        "license": [
+          {
+            "start": {
+              "date-parts": [
+                [
+                  2021,
+                  9,
+                  6
+                ]
+              ],
+              "date-time": "2021-09-06T00:00:00Z",
+              "timestamp": 1630886400000
+            },
+            "content-version": "vor",
+            "delay-in-days": 0,
+            "URL": "https://creativecommons.org/licenses/by/4.0/"
+          }
+        ],
+        "content-domain": {
+          "domain": [],
+          "crossmark-restriction": false
+        },
+        "short-container-title": [
+          "Healthcare"
+        ],
+        "abstract": "<jats:p>Objective: Individuals with major depressive disorder (MDD) report more issues in social interaction compared to the general population. Moreover, dimensions of dissociation are considered dysfunctional strategies to cope with adverse life events. In this regard, current symptoms of MDD could be associated with traumatic events that occurred in childhood and in adult life. Given this background, the aim of the present study was to explore the associations between attachment styles as a proxy of quality of social interaction, dimensions of dissociation, and childhood and adult traumatic life events among individuals with MDD. Method: A total of 300 individuals with MDD (mean age: 31.31 years; 58.7% female) took part in this study. They completed a series of questionnaires on sociodemographic information, attachment styles, dimensions of dissociation, and childhood and adult traumatic life events. Results: Prevalence rates for attachment styles were as follows: anxious/ambivalent attachment style—71.7%; avoidant/dependent attachment style—13%; secure/close attachment style—15.3%. Compared to the general population, the participants reported higher prevalence rates of insecure attachment styles. Current symptoms of dissociation were associated with adult but not childhood traumatic life events. An anxious attachment style was associated with higher scores of dissociation. Conclusion: Psychotherapeutic treatment of individuals with MDD should consider the individuals’ challenging attachment styles and their risk of dissociation. While it is important to consider both adult and childhood traumatic events, in this research, more recent trauma occurring in adulthood was associated with current symptoms of dissociation.</jats:p>",
+        "DOI": "10.3390/healthcare9091169",
+        "type": "journal-article",
+        "created": {
+          "date-parts": [
+            [
+              2021,
+              9,
+              6
+            ]
+          ],
+          "date-time": "2021-09-06T21:47:38Z",
+          "timestamp": 1630964858000
+        },
+        "page": "1169",
+        "update-policy": "https://doi.org/10.3390/mdpi_crossmark_policy",
+        "source": "Crossref",
+        "is-referenced-by-count": 9,
+        "title": [
+          "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events"
+        ],
+        "prefix": "10.3390",
+        "volume": "9",
+        "author": [
+          {
+            "given": "Sanobar",
+            "family": "Golshani",
+            "sequence": "first",
+            "affiliation": [
+              {
+                "name": "Kermanshah University of Medical Sciences, Kermanshah 6719851115, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Ali",
+            "family": "Najafpour",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Student Research Committee, Faculty of Medicine, Kermanshah University of Medical Sciences, Kermanshah 6714869914, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "ORCID": "https://orcid.org/0000-0002-8334-6642",
+            "authenticated-orcid": false,
+            "given": "Seyed Sepehr",
+            "family": "Hashemian",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Department of Psychology, Allameh Tabataba’i University, Tehran 1489684511, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Nasser",
+            "family": "Goudarzi",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Department of Psychiatry, AJA University of Medical Sciences, Tehran 1411718541, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Ali",
+            "family": "Firoozabadi",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Research Center for Psychiatry and Behavioral Sciences, Department of Psychiatry, Hafez Hospital, Shiraz University of Medical Sciences, Shiraz 7134814336, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Mohammad Saeed",
+            "family": "Ghezelbash",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Kermanshah University of Medical Sciences, Kermanshah 6719851115, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Sara",
+            "family": "Hookari",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Substance Abuse Prevention Research Center, Kermanshah University of Medical Sciences, Kermanshah 6714869914, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "given": "Kimia",
+            "family": "Firoozabadi",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Faculty of Medical Sciences, UCL Medical School, University College London, London WC1E 6BT, UK"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "ORCID": "https://orcid.org/0000-0003-1552-5822",
+            "authenticated-orcid": false,
+            "given": "Kenneth M.",
+            "family": "Dürsteler",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Division of Substance Use Disorders, Psychiatric Clinics, University of Basel, 4002 Basel, Switzerland"
+              },
+              {
+                "name": "Center for Addictive Disorders, Department of Psychiatry, Psychotherapy and Psychosomatics, Psychiatric Hospital, University of Zurich, 8001 Zurich, Switzerland"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "ORCID": "https://orcid.org/0000-0003-4704-4986",
+            "authenticated-orcid": false,
+            "given": "Annette Beatrix",
+            "family": "Brühl",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Center for Affective-, Stress- and Sleep Disorders (ZASS), Psychiatric Clinics (UPK), University of Basel, 4002 Basel, Switzerland"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "ORCID": "https://orcid.org/0000-0001-6848-3027",
+            "authenticated-orcid": false,
+            "given": "Mostafa",
+            "family": "Alikhani",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Kermanshah University of Medical Sciences, Kermanshah 6719851115, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "ORCID": "https://orcid.org/0000-0002-1301-5522",
+            "authenticated-orcid": false,
+            "given": "Dena",
+            "family": "Sadeghi-Bahmani",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Substance Abuse Prevention Research Center, Kermanshah University of Medical Sciences, Kermanshah 6714869914, Iran"
+              },
+              {
+                "name": "Center for Affective-, Stress- and Sleep Disorders (ZASS), Psychiatric Clinics (UPK), University of Basel, 4002 Basel, Switzerland"
+              },
+              {
+                "name": "Faculty of Psychology, Stanford University, Stanford, CA 94305, USA"
+              },
+              {
+                "name": "Sleep Disturbances Research Center, Kermanshah University of Medical Sciences, Kermanshah 6719851115, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          },
+          {
+            "ORCID": "https://orcid.org/0000-0003-2175-2765",
+            "authenticated-orcid": false,
+            "given": "Serge",
+            "family": "Brand",
+            "sequence": "additional",
+            "affiliation": [
+              {
+                "name": "Substance Abuse Prevention Research Center, Kermanshah University of Medical Sciences, Kermanshah 6714869914, Iran"
+              },
+              {
+                "name": "Center for Affective-, Stress- and Sleep Disorders (ZASS), Psychiatric Clinics (UPK), University of Basel, 4002 Basel, Switzerland"
+              },
+              {
+                "name": "Sleep Disturbances Research Center, Kermanshah University of Medical Sciences, Kermanshah 6719851115, Iran"
+              },
+              {
+                "name": "Department of Sport, Exercise, and Health, Division of Sport Science and Psychosocial Health, University of Basel, 4052 Basel, Switzerland"
+              },
+              {
+                "name": "Department of Psychiatry, School of Medicine, Tehran University of Medical Sciences, Tehran 1417466191, Iran"
+              }
+            ],
+            "role": [
+              {
+                "vocabulary": "crossref",
+                "role": "author"
+              }
+            ]
+          }
+        ],
+        "member": "1968",
+        "published-online": {
+          "date-parts": [
+            [
+              2021,
+              9,
+              6
+            ]
+          ]
+        },
+        "reference": [
+          {
+            "key": "ref_1",
+            "doi-asserted-by": "crossref",
+            "first-page": "1983",
+            "DOI": "10.1182/bloodadvances.2017006940",
+            "article-title": "Depression, quality of life, and medical resource utilization in sickle cell disease",
+            "volume": "1",
+            "author": "Adam",
+            "year": "2017",
+            "journal-title": "Blood Adv."
+          },
+          {
+            "key": "ref_2",
+            "doi-asserted-by": "crossref",
+            "first-page": "2411",
+            "DOI": "10.2147/NDT.S141448",
+            "article-title": "Medical comorbidities in patients with serious mental illness: A retrospective study of mental health patients attending an outpatient clinic in Qatar",
+            "volume": "13",
+            "author": "Zolezzi",
+            "year": "2017",
+            "journal-title": "Neuropsychiatr. Dis. Treat."
+          },
+          {
+            "key": "ref_3",
+            "doi-asserted-by": "crossref",
+            "unstructured": "American Psychiatric Association (2013). Diagnostic and Statistical Manual of Mental Disorders: DSM 5, American Psychiatric Association. [5th ed.].",
+            "DOI": "10.1176/appi.books.9780890425596"
+          },
+          {
+            "key": "ref_4",
+            "unstructured": "Christopher, J.L., and Lopez, M.A.D. (1996). The Global Burden of Disease: A Comprehensive Assessment of Mortality and Disability from Diseases, Injuries, and Risk Factors in 1990 and Projected to 2020, World Health Organization."
+          },
+          {
+            "key": "ref_5",
+            "first-page": "81",
+            "article-title": "Epidemiology of major depressive disorder in iran: A systematic review and meta-analysis",
+            "volume": "1",
+            "author": "Sadeghirad",
+            "year": "2010",
+            "journal-title": "Int. J. Prev. Med."
+          },
+          {
+            "key": "ref_6",
+            "doi-asserted-by": "crossref",
+            "first-page": "291",
+            "DOI": "10.1037/0033-295X.115.2.291",
+            "article-title": "The ABCs of depression: Integrating affective, biological, and cognitive models to explain the emergence of the gender difference in depression",
+            "volume": "115",
+            "author": "Hyde",
+            "year": "2008",
+            "journal-title": "Psychol. Rev."
+          },
+          {
+            "key": "ref_7",
+            "doi-asserted-by": "crossref",
+            "first-page": "119",
+            "DOI": "10.1146/annurev-publhealth-031912-114409",
+            "article-title": "The epidemiology of depression across cultures",
+            "volume": "34",
+            "author": "Kessler",
+            "year": "2013",
+            "journal-title": "Annu. Rev. Public Health"
+          },
+          {
+            "key": "ref_8",
+            "doi-asserted-by": "crossref",
+            "first-page": "219",
+            "DOI": "10.1503/jpn.150205",
+            "article-title": "Why is depression more prevalent in women?",
+            "volume": "40",
+            "author": "Albert",
+            "year": "2015",
+            "journal-title": "J. Psychiatry Neurosci."
+          },
+          {
+            "key": "ref_9",
+            "doi-asserted-by": "crossref",
+            "first-page": "19",
+            "DOI": "10.1016/j.smrv.2009.04.002",
+            "article-title": "The hyperarousal model of insomnia: A review of the concept and its evidence",
+            "volume": "14",
+            "author": "Riemann",
+            "year": "2010",
+            "journal-title": "Sleep Med. Rev."
+          },
+          {
+            "key": "ref_10",
+            "doi-asserted-by": "crossref",
+            "first-page": "81",
+            "DOI": "10.1146/annurev.psych.093008.100321",
+            "article-title": "Stress hormone regulation: Biological role and translation into therapy",
+            "volume": "61",
+            "author": "Holsboer",
+            "year": "2010",
+            "journal-title": "Annu. Rev. Psychol."
+          },
+          {
+            "key": "ref_11",
+            "doi-asserted-by": "crossref",
+            "first-page": "45",
+            "DOI": "10.3389/fpsyt.2018.00045",
+            "article-title": "Springtime Peaks and Christmas Troughs: A National Longitudinal Population-Based Study into Suicide Incidence Time Trends in the Netherlands",
+            "volume": "9",
+            "author": "Hofstra",
+            "year": "2018",
+            "journal-title": "Front. Psychiatry"
+          },
+          {
+            "key": "ref_12",
+            "doi-asserted-by": "crossref",
+            "first-page": "615",
+            "DOI": "10.3389/fpsyg.2018.00615",
+            "article-title": "A Pathway to Psychological Difficulty: Perceived Chronic Social Adversity and Its Symptomatic Reactions",
+            "volume": "9",
+            "author": "Ding",
+            "year": "2018",
+            "journal-title": "Front. Psychol."
+          },
+          {
+            "key": "ref_13",
+            "doi-asserted-by": "crossref",
+            "first-page": "60",
+            "DOI": "10.3389/fpsyt.2019.00060",
+            "article-title": "Decreased Response to Positive Facial Affect in a Depressed Cohort in the Dorsal Striatum during a Working Memory Task-A Preliminary fMRI Study",
+            "volume": "10",
+            "author": "Goodin",
+            "year": "2019",
+            "journal-title": "Front. Psychiatry"
+          },
+          {
+            "key": "ref_14",
+            "doi-asserted-by": "crossref",
+            "first-page": "756",
+            "DOI": "10.3389/fpsyg.2018.00756",
+            "article-title": "Emotion Regulation in Current and Remitted Depression: A Systematic Review and Meta-Analysis",
+            "volume": "9",
+            "author": "Visted",
+            "year": "2018",
+            "journal-title": "Front. Psychol."
+          },
+          {
+            "key": "ref_15",
+            "unstructured": "Bowlby, J. (1973). Attachment and Loss: Separation, Anxiety and Anger, Hogarth Press."
+          },
+          {
+            "key": "ref_16",
+            "doi-asserted-by": "crossref",
+            "unstructured": "Read, D.L., Clark, G.I., Rock, A.J., and Coventry, W.L. (2018). Adult attachment and social anxiety: The mediating role of emotion regulation strategies. PLoS ONE, 13.",
+            "DOI": "10.1371/journal.pone.0207514"
+          },
+          {
+            "key": "ref_17",
+            "doi-asserted-by": "crossref",
+            "unstructured": "Ainsworth, M.D.S., Blehar, M.C., Walters, E., and Wall, S. (1978). Patterns of Attachment: A Psychosocial Study of the Strange Situation, Erlbaum.",
+            "DOI": "10.1037/t28248-000"
+          },
+          {
+            "key": "ref_18",
+            "doi-asserted-by": "crossref",
+            "first-page": "11",
+            "DOI": "10.1016/j.wpsyc.2012.01.003",
+            "article-title": "An attachment perspective on psychopathology",
+            "volume": "11",
+            "author": "Mikulincer",
+            "year": "2012",
+            "journal-title": "World Psychiatry"
+          },
+          {
+            "key": "ref_19",
+            "doi-asserted-by": "crossref",
+            "first-page": "143",
+            "DOI": "10.2174/1745017901915010143",
+            "article-title": "Attachment in Patients with Bipolar and Unipolar Depression: A Comparison with Clinical and Non-clinical Controls",
+            "volume": "15",
+            "author": "Picardi",
+            "year": "2019",
+            "journal-title": "Clin. Pract. Epidemiol. Ment. Health"
+          },
+          {
+            "key": "ref_20",
+            "doi-asserted-by": "crossref",
+            "first-page": "110",
+            "DOI": "10.1016/j.jad.2017.01.021",
+            "article-title": "Attachment, dysfunctional attitudes, self-esteem, and association to depressive symptoms in patients with mood disorders",
+            "volume": "212",
+            "author": "Fuhr",
+            "year": "2017",
+            "journal-title": "J. Affect. Disord."
+          },
+          {
+            "key": "ref_21",
+            "doi-asserted-by": "crossref",
+            "first-page": "706",
+            "DOI": "10.1016/j.jad.2020.08.082",
+            "article-title": "Mediational mechanisms involved in the relation between attachment insecurity and depression: A meta-analysis",
+            "volume": "277",
+            "author": "Takkouche",
+            "year": "2020",
+            "journal-title": "J. Affect. Disord."
+          },
+          {
+            "key": "ref_22",
+            "doi-asserted-by": "crossref",
+            "first-page": "274",
+            "DOI": "10.1016/j.jad.2018.04.091",
+            "article-title": "Adult attachment representations and depressive symptoms: A meta-analysis",
+            "volume": "236",
+            "author": "Dagan",
+            "year": "2018",
+            "journal-title": "J. Affect. Disord."
+          },
+          {
+            "key": "ref_23",
+            "doi-asserted-by": "crossref",
+            "first-page": "644",
+            "DOI": "10.1037/0022-3514.58.4.644",
+            "article-title": "Adult attachment, working models, and relationship quality in dating couples",
+            "volume": "58",
+            "author": "Collins",
+            "year": "1990",
+            "journal-title": "J. Personal. Soc. Psychol."
+          },
+          {
+            "key": "ref_24",
+            "unstructured": "Berk, L.E. (2014). Development through the Lifespan, Pearson."
+          },
+          {
+            "key": "ref_25",
+            "doi-asserted-by": "crossref",
+            "first-page": "47",
+            "DOI": "10.1016/j.jad.2015.09.006",
+            "article-title": "Associations between depression and specific childhood experiences of abuse and neglect: A meta-analysis",
+            "volume": "190",
+            "author": "Infurna",
+            "year": "2016",
+            "journal-title": "J. Affect. Disord."
+          },
+          {
+            "key": "ref_26",
+            "doi-asserted-by": "crossref",
+            "first-page": "107",
+            "DOI": "10.1016/j.chiabu.2018.01.003",
+            "article-title": "Gender differences in the effects of childhood maltreatment on adult depression and anxiety: A systematic review and meta-analysis",
+            "volume": "79",
+            "author": "Gallo",
+            "year": "2018",
+            "journal-title": "Child Abuse Negl."
+          },
+          {
+            "key": "ref_27",
+            "doi-asserted-by": "crossref",
+            "first-page": "104082",
+            "DOI": "10.1016/j.chiabu.2019.104082",
+            "article-title": "The association between five forms of child maltreatment and depressive and anxiety disorders: A systematic review and meta-analysis",
+            "volume": "96",
+            "author": "Gardner",
+            "year": "2019",
+            "journal-title": "Child Abuse Negl."
+          },
+          {
+            "key": "ref_28",
+            "doi-asserted-by": "crossref",
+            "first-page": "26",
+            "DOI": "10.1186/s12991-014-0026-y",
+            "article-title": "Childhood trauma and adult interpersonal relationship problems in patients with depression and anxiety disorders",
+            "volume": "13",
+            "author": "Huh",
+            "year": "2014",
+            "journal-title": "Ann. Gen. Psychiatry"
+          },
+          {
+            "key": "ref_29",
+            "first-page": "650804",
+            "article-title": "Childhood Trauma and Its Relation to Chronic Depression in Adulthood",
+            "volume": "2015",
+            "author": "Negele",
+            "year": "2015",
+            "journal-title": "Depress. Res. Treat."
+          },
+          {
+            "key": "ref_30",
+            "doi-asserted-by": "crossref",
+            "first-page": "460",
+            "DOI": "10.1016/j.jpsychires.2020.08.023",
+            "article-title": "Dissociation in relation to other mental health conditions: An exploration using network analysis",
+            "volume": "136",
+            "author": "Evans",
+            "year": "2021",
+            "journal-title": "J. Psychiatr. Res."
+          },
+          {
+            "key": "ref_31",
+            "doi-asserted-by": "crossref",
+            "first-page": "509",
+            "DOI": "10.1111/acps.12969",
+            "article-title": "The relationship between childhood adversities and dissociation in severe mental illness: A meta-analytic review",
+            "volume": "138",
+            "author": "Rafiq",
+            "year": "2018",
+            "journal-title": "Acta Psychiatr. Scand."
+          },
+          {
+            "key": "ref_32",
+            "doi-asserted-by": "crossref",
+            "first-page": "2467",
+            "DOI": "10.1017/S0033291718000740",
+            "article-title": "Dissociation in victims of childhood abuse or neglect: A meta-analytic review",
+            "volume": "48",
+            "author": "Vonderlin",
+            "year": "2018",
+            "journal-title": "Psychol. Med."
+          },
+          {
+            "key": "ref_33",
+            "doi-asserted-by": "crossref",
+            "unstructured": "World Medical Association (2013). World Medical Association Declaration of Helsinki: Ethical principles for medical research involving human subjects. JAMA, 310, 2191–2194.",
+            "DOI": "10.1001/jama.2013.281053"
+          },
+          {
+            "key": "ref_34",
+            "doi-asserted-by": "crossref",
+            "unstructured": "First, M.B. (2015). Structured Clinical Interview for the DSM (SCID). The Encyclopedia of Clinical Psychology, John Wiley & Sons.",
+            "DOI": "10.1002/9781118625392.wbecp351"
+          },
+          {
+            "key": "ref_35",
+            "doi-asserted-by": "crossref",
+            "first-page": "561",
+            "DOI": "10.1001/archpsyc.1961.01710120031004",
+            "article-title": "An inventory for measuring depression",
+            "volume": "4",
+            "author": "Beck",
+            "year": "1961",
+            "journal-title": "Arch. Gen. Psychiatry"
+          },
+          {
+            "key": "ref_36",
+            "doi-asserted-by": "crossref",
+            "first-page": "185",
+            "DOI": "10.1002/da.20070",
+            "article-title": "Psychometric properties of a Persian-language version of the Beck Depression Inventory--Second edition: BDI-II-PERSIAN",
+            "volume": "21",
+            "author": "Ghassemzadeh",
+            "year": "2005",
+            "journal-title": "Depress. Anxiety"
+          },
+          {
+            "key": "ref_37",
+            "first-page": "506",
+            "article-title": "Psychometric characteristics of the persian (farsi) version of attachment style questionnaire",
+            "volume": "39",
+            "author": "Firoozabadi",
+            "year": "2014",
+            "journal-title": "Iran. J. Med. Sci."
+          },
+          {
+            "key": "ref_38",
+            "doi-asserted-by": "crossref",
+            "first-page": "727",
+            "DOI": "10.1097/00005053-198612000-00004",
+            "article-title": "Development, reliability, and validity of a dissociation scale",
+            "volume": "174",
+            "author": "Bernstein",
+            "year": "1986",
+            "journal-title": "J. Nerv. Ment. Dis."
+          },
+          {
+            "key": "ref_39",
+            "doi-asserted-by": "crossref",
+            "first-page": "293",
+            "DOI": "10.1080/15299732.2019.1678209",
+            "article-title": "Validity and reliability of a Persian version of the Dissociative Experiences Scale II (DES-II) on Iranian patients diagnosed with schizophrenia and mood disorders",
+            "volume": "21",
+            "author": "Ghaffarinejad",
+            "year": "2019",
+            "journal-title": "J. Trauma Dissociation"
+          },
+          {
+            "key": "ref_40",
+            "doi-asserted-by": "crossref",
+            "first-page": "211",
+            "DOI": "10.18869/acadpub.jpcp.5.3.211",
+            "article-title": "Relationship Between Traumatic Experiences and Somatic Symptoms Severity in Students",
+            "volume": "5",
+            "author": "Sadeghi",
+            "year": "2017",
+            "journal-title": "Pract. Clin. Psychol."
+          },
+          {
+            "key": "ref_41",
+            "doi-asserted-by": "crossref",
+            "first-page": "200",
+            "DOI": "10.1002/cpp.332",
+            "article-title": "The psychometric characteristics of the traumatic experiences checklist (TEC): First findings among psychiatric outpatients",
+            "volume": "9",
+            "author": "Nijenhuis",
+            "year": "2002",
+            "journal-title": "Clin. Psychol. Psychother."
+          },
+          {
+            "key": "ref_42",
+            "doi-asserted-by": "crossref",
+            "first-page": "1",
+            "DOI": "10.1080/00031305.2019.1583913",
+            "article-title": "Moving to a World Beyond “p < 0.05”",
+            "volume": "73",
+            "author": "Wasserstein",
+            "year": "2019",
+            "journal-title": "Am. Stat."
+          },
+          {
+            "key": "ref_43",
+            "doi-asserted-by": "crossref",
+            "first-page": "9",
+            "DOI": "10.1016/j.jshs.2012.02.002",
+            "article-title": "Sadly, the earth is still round (p < 0.05)",
+            "volume": "1",
+            "author": "Zhu",
+            "year": "2012",
+            "journal-title": "J. Sport Health Sci."
+          },
+          {
+            "key": "ref_44",
+            "doi-asserted-by": "crossref",
+            "first-page": "155",
+            "DOI": "10.1037/0033-2909.112.1.155",
+            "article-title": "A power primer",
+            "volume": "112",
+            "author": "Cohen",
+            "year": "1992",
+            "journal-title": "Psychol. Bull."
+          },
+          {
+            "key": "ref_45",
+            "unstructured": "Cohen, J. (1988). Statistical Power Analysis for the Behavioral Sciences, Lawrence Erlbaum Associates. [2nd ed.]."
+          },
+          {
+            "key": "ref_46",
+            "doi-asserted-by": "crossref",
+            "first-page": "997",
+            "DOI": "10.1037/0003-066X.49.12.997",
+            "article-title": "The earth is round (p < 0.05)",
+            "volume": "49",
+            "author": "Cohen",
+            "year": "1994",
+            "journal-title": "Am. Psychol."
+          },
+          {
+            "key": "ref_47",
+            "doi-asserted-by": "crossref",
+            "first-page": "19",
+            "DOI": "10.1037/1082-989X.7.1.19",
+            "article-title": "On the practice of dichotomization of quantitative variables",
+            "volume": "7",
+            "author": "MacCallum",
+            "year": "2002",
+            "journal-title": "Psychol. Methods"
+          },
+          {
+            "key": "ref_48",
+            "unstructured": "Main, M., and Solomon, J. (1986). Discovery of an insecure-disorganized/disoriented attachment pattern. Affective Development in Infancy, Ablex Publishing."
+          },
+          {
+            "key": "ref_49",
+            "unstructured": "Thompson, R. (2008). Early attachment and later development. Handbook of Attachment: Theory, Research, and Clinical Applications, Rough Guides."
+          },
+          {
+            "key": "ref_50",
+            "doi-asserted-by": "crossref",
+            "first-page": "79",
+            "DOI": "10.1016/j.ijheh.2006.08.003",
+            "article-title": "Interactional behaviour as a marker for screening patients with environment-related complaints",
+            "volume": "210",
+            "author": "Brand",
+            "year": "2007",
+            "journal-title": "Int. J. Hyg. Environ. Health"
+          }
+        ],
+        "container-title": [
+          "Healthcare"
+        ],
+        "original-title": [],
+        "language": "en",
+        "link": [
+          {
+            "URL": "https://www.mdpi.com/2227-9032/9/9/1169/pdf",
+            "content-type": "unspecified",
+            "content-version": "vor",
+            "intended-application": "similarity-checking"
+          }
+        ],
+        "deposited": {
+          "date-parts": [
+            [
+              2025,
+              10,
+              11
+            ]
+          ],
+          "date-time": "2025-10-11T06:57:25Z",
+          "timestamp": 1760165845000
+        },
+        "score": 1,
+        "resource": {
+          "primary": {
+            "URL": "https://www.mdpi.com/2227-9032/9/9/1169"
+          }
+        },
+        "subtitle": [],
+        "short-title": [],
+        "issued": {
+          "date-parts": [
+            [
+              2021,
+              9,
+              6
+            ]
+          ]
+        },
+        "references-count": 50,
+        "journal-issue": {
+          "issue": "9",
+          "published-online": {
+            "date-parts": [
+              [
+                2021,
+                9
+              ]
+            ]
+          }
+        },
+        "alternative-id": [
+          "healthcare9091169"
+        ],
+        "URL": "https://doi.org/10.3390/healthcare9091169",
+        "relation": {},
+        "ISSN": [
+          "2227-9032"
+        ],
+        "issn-type": [
+          {
+            "value": "2227-9032",
+            "type": "electronic"
+          }
+        ],
+        "subject": [],
+        "published": {
+          "date-parts": [
+            [
+              2021,
+              9,
+              6
+            ]
+          ]
+        }
+      }
+    },
+    "text": null
+  },
+  "orcid": {
+    "status": 200,
+    "json": {
+      "orcid-identifier": {
+        "uri": "https://orcid.org/0009-0001-9346-8475",
+        "path": "0009-0001-9346-8475",
+        "host": "orcid.org"
+      },
+      "preferences": {
+        "locale": "en"
+      },
+      "history": {
+        "creation-method": "DIRECT",
+        "completion-date": null,
+        "submission-date": {
+          "value": 1782023273733
+        },
+        "last-modified-date": {
+          "value": 1786938941789
+        },
+        "claimed": true,
+        "source": null,
+        "deactivation-date": null,
+        "verified-email": true,
+        "verified-primary-email": true
+      },
+      "person": {
+        "last-modified-date": {
+          "value": 1786747426244
+        },
+        "name": {
+          "created-date": {
+            "value": 1782023273892
+          },
+          "last-modified-date": {
+            "value": 1786747424945
+          },
+          "given-names": {
+            "value": "سعید"
+          },
+          "family-name": {
+            "value": "قزلباش"
+          },
+          "credit-name": {
+            "value": "سعید قزلباش"
+          },
+          "source": null,
+          "visibility": "public",
+          "path": "0009-0001-9346-8475"
+        },
+        "other-names": {
+          "last-modified-date": {
+            "value": 1786747426244
+          },
+          "other-name": [
+            {
+              "created-date": {
+                "value": 1786747426241
+              },
+              "last-modified-date": {
+                "value": 1786747426241
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "MohamadSaeed Ghezelbash",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/other-names/2267523",
+              "put-code": 2267523,
+              "display-index": 6
+            },
+            {
+              "created-date": {
+                "value": 1785086291970
+              },
+              "last-modified-date": {
+                "value": 1786747426244
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "سعید قزلباش",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/other-names/2257020",
+              "put-code": 2257020,
+              "display-index": 5
+            },
+            {
+              "created-date": {
+                "value": 1782024893528
+              },
+              "last-modified-date": {
+                "value": 1786747426244
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "Mohammad Saeed Ghezelbash",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/other-names/2236165",
+              "put-code": 2236165,
+              "display-index": 4
+            },
+            {
+              "created-date": {
+                "value": 1782024913745
+              },
+              "last-modified-date": {
+                "value": 1786747426244
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "Ghezelbash MS",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/other-names/2236166",
+              "put-code": 2236166,
+              "display-index": 3
+            },
+            {
+              "created-date": {
+                "value": 1785086291967
+              },
+              "last-modified-date": {
+                "value": 1786747426244
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "محمد‌سعید قزلباش",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/other-names/2257018",
+              "put-code": 2257018,
+              "display-index": 2
+            },
+            {
+              "created-date": {
+                "value": 1785086291969
+              },
+              "last-modified-date": {
+                "value": 1786747426244
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "دکتر سعید قزلباش",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/other-names/2257019",
+              "put-code": 2257019,
+              "display-index": 1
+            }
+          ],
+          "path": "/0009-0001-9346-8475/other-names"
+        },
+        "biography": {
+          "created-date": {
+            "value": 1782027009133
+          },
+          "last-modified-date": {
+            "value": 1786755726489
+          },
+          "content": "دکتر سعید قزلباش (Saeed Ghezelbash; born 29 May 1991) is an Iranian physician and medical researcher based in Kermanshah, Iran, working in aesthetic medicine. His legal and officially registered name, and the name used in peer-reviewed research publications, is Mohammad Saeed Ghezelbash (محمدسعید قزلباش); his canonical public and professional identity is Dr. Saeed Ghezelbash / دکتر سعید قزلباش. He earned his Doctor of Medicine (MD) degree from Kermanshah University of Medical Sciences in 2018 and is registered with the Medical Council of the Islamic Republic of Iran under medical registration number 167430.\n\nHe is the founder, owner, director/manager, operator, and practicing physician of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah. His clinical practice is centered on diagnosis-led, anatomy-based aesthetic medicine, with treatment selection based on assessment, differential diagnosis, anatomy, indication, risk, outcome expectations, complication prevention and management, and follow-up rather than procedure-first treatment. His scope includes facial aesthetics; botulinum toxin for aesthetic indications and selected therapeutic indications including chronic migraine; dermal fillers; lip augmentation; facial contouring; thread lifting; skin rejuvenation; platelet-rich plasma (PRP); mesotherapy; acne-scar treatment; subcision for selected tethered or rolling atrophic scars; correction or dissolution of hyaluronic-acid filler with hyaluronidase when clinically indicated; management of complications or unsatisfactory outcomes after aesthetic procedures; and physician-led aesthetic second opinions.\n\nHis peer-reviewed research includes “Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder,” published in the International Journal of Preventive Medicine in 2016 (DOI 10.4103/2008-7802.182734; PMID 27280013), and “Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events,” published in Healthcare in 2021 (DOI 10.3390/healthcare9091169; PMID 34574943). The 2021 publication reports findings that formed part of his Doctor of Medicine thesis. His documented contributions included conceptualization, methodology, validation, investigation, resources, data curation, and writing—review and editing, demonstrating direct participation across study design, execution, data stewardship, and manuscript development.\n\nHe also co-authored “Attachment Style in Dissociative Depression,” presented at the 17th World Congress of Psychiatry of the World Psychiatric Association (WPA) in Berlin in 2017. These outputs establish a traceable scholarly identity spanning psychiatry, mood disorders, attachment, dissociation, trauma, and clinical research. His research outputs appear under Mohammad Saeed Ghezelbash and are reconciled to Saeed Ghezelbash. His scholarly identity is authority-linked through ORCID 0009-0001-9346-8475, Google Scholar BcWBirUAAAAJ, OpenAlex A5064828898, and Semantic Scholar 3786699.\n\nBeyond clinical practice and academic publishing, Dr. Saeed Ghezelbash is the creator, owner, developer, maintainer, and publisher of the Doctor Ghezelbash structured data repository and Dr. Saeed Ghezelbash Public Knowledge Graph, represented by Wikidata Q140304972. This machine-readable resource connects his physician identity, credentials, education, research record, professional activities, clinic entity, services, media provenance, and evidence. Its canonical graph is distributed in JSON-LD with deterministic RDF 1.1 Turtle, version-controlled source on GitHub, DOI-backed preservation on Zenodo, and an AI-facing retrieval/distribution layer on Hugging Face. Its stable Zenodo concept DOI is 10.5281/zenodo.18765168; version-specific DOIs preserve individual releases.\n\nFor cross-platform entity reconciliation, the physician is identified by Wikidata Q140287622 and Google Knowledge Graph ID /g/11nqdfk76c; Dr. Saeed Ghezelbash Aesthetic Clinic by Wikidata Q140288589, Google Knowledge Graph ID /g/11r3rzdtb3, Google Place ID ChIJBT0YDOTt-j8RD-7mAPy6Zas, and Google Maps CID 12350483144643112463. The project models Saeed Ghezelbash as creator and primary physician entity and the clinic as its linked clinical entity and supporting subject, forming a persistent physician–clinic–research-data identity chain across ORCID, Wikidata, Google, GitHub, Zenodo, and Hugging Face.\n\nHis work spans physician-led aesthetic medicine, peer-reviewed medical research, and structured open knowledge infrastructure for entity identification, provenance, retrieval, and reconciliation. Across these domains, the canonical public professional identity remains Dr. Saeed Ghezelbash / دکتر سعید قزلباش, with Mohammad Saeed Ghezelbash / محمدسعید قزلباش retained specifically as the legal, officially registered, and research-publication name.",
+          "visibility": "public",
+          "path": "/0009-0001-9346-8475/biography"
+        },
+        "researcher-urls": {
+          "last-modified-date": {
+            "value": 1785368952319
+          },
+          "researcher-url": [
+            {
+              "created-date": {
+                "value": 1782023630264
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "دکتر سعید قزلباش",
+              "url": {
+                "value": "https://www.wikidata.org/wiki/Q140287622"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342289",
+              "put-code": 6342289,
+              "display-index": 20
+            },
+            {
+              "created-date": {
+                "value": 1782023630257
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": null,
+              "url": {
+                "value": "https://www.mdpi.com/2227-9032/9/9/1169"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342286",
+              "put-code": 6342286,
+              "display-index": 19
+            },
+            {
+              "created-date": {
+                "value": 1782023630254
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "دکتر قزلباش به شماره نظام پزشکی ۱۶۷۴۳۰",
+              "url": {
+                "value": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342285",
+              "put-code": 6342285,
+              "display-index": 18
+            },
+            {
+              "created-date": {
+                "value": 1782023630261
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "کلینیک زیبایی دکتر سعید قزلباش",
+              "url": {
+                "value": "https://www.wikidata.org/wiki/Q140288589"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342288",
+              "put-code": 6342288,
+              "display-index": 17
+            },
+            {
+              "created-date": {
+                "value": 1782023630259
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "Wikidata — Knowledge Graph Repository (Q140304972)",
+              "url": {
+                "value": "https://www.wikidata.org/wiki/Q140304972"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342287",
+              "put-code": 6342287,
+              "display-index": 16
+            },
+            {
+              "created-date": {
+                "value": 1782023770233
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "Doctor Ghezelbash Knowledge Graph",
+              "url": {
+                "value": "https://doi.org/10.5281/zenodo.18765169"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342299",
+              "put-code": 6342299,
+              "display-index": 15
+            },
+            {
+              "created-date": {
+                "value": 1782023770231
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": null,
+              "url": {
+                "value": "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342298",
+              "put-code": 6342298,
+              "display-index": 14
+            },
+            {
+              "created-date": {
+                "value": 1782023770229
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "Hugging Face Dataset — Dr. Saeed Ghezelbash Entity Data",
+              "url": {
+                "value": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342297",
+              "put-code": 6342297,
+              "display-index": 13
+            },
+            {
+              "created-date": {
+                "value": 1782023770228
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "دکتر سعید قزلباش",
+              "url": {
+                "value": "https://www.ghezelbaash.ir/"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342296",
+              "put-code": 6342296,
+              "display-index": 12
+            },
+            {
+              "created-date": {
+                "value": 1782023770224
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "Dr. Saeed Ghezelbash Aesthetic Clinic",
+              "url": {
+                "value": "https://doctor.ghezelbaash.ir/"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342294",
+              "put-code": 6342294,
+              "display-index": 11
+            },
+            {
+              "created-date": {
+                "value": 1782023770222
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "دکتر سعید قزلباش",
+              "url": {
+                "value": "https://www.instagram.com/doctor.ghezelbaash/"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342293",
+              "put-code": 6342293,
+              "display-index": 10
+            },
+            {
+              "created-date": {
+                "value": 1782023770220
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "دکتر سعید قزلباش",
+              "url": {
+                "value": "https://www.linkedin.com/in/saeed-ghezelbash-93310a96"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342292",
+              "put-code": 6342292,
+              "display-index": 9
+            },
+            {
+              "created-date": {
+                "value": 1782029236319
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": null,
+              "url": {
+                "value": "https://about.me/ghezelbaash"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6342358",
+              "put-code": 6342358,
+              "display-index": 8
+            },
+            {
+              "created-date": {
+                "value": 1785027214233
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "Google Knowledge Graph — Saeed Ghezelbash (/g/11nqdfk76c)",
+              "url": {
+                "value": "https://www.google.com/search?kgmid=/g/11nqdfk76c"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6425385",
+              "put-code": 6425385,
+              "display-index": 7
+            },
+            {
+              "created-date": {
+                "value": 1785027214231
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "کلینیک زیبایی دکتر سعید قزلباش",
+              "url": {
+                "value": "https://www.google.com/search?kgmid=/g/11r3rzdtb3"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6425384",
+              "put-code": 6425384,
+              "display-index": 6
+            },
+            {
+              "created-date": {
+                "value": 1785027991327
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "دکتر سعید قزلباش",
+              "url": {
+                "value": "https://drdr.ir/dr/92014/%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4/"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6425395",
+              "put-code": 6425395,
+              "display-index": 5
+            },
+            {
+              "created-date": {
+                "value": 1785027991324
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "دکتر سعید قزلباش",
+              "url": {
+                "value": "https://doctoreto.com/doctor/dr-mohammad-saeed-ghazlbash/GPezBJ"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6425394",
+              "put-code": 6425394,
+              "display-index": 4
+            },
+            {
+              "created-date": {
+                "value": 1785028137830
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "Dr Mohammadsaeed Ghezelbash",
+              "url": {
+                "value": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6425397",
+              "put-code": 6425397,
+              "display-index": 3
+            },
+            {
+              "created-date": {
+                "value": 1785028470943
+              },
+              "last-modified-date": {
+                "value": 1785368952319
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "Dr. Saeed Ghezelbash Aesthetic Clinic",
+              "url": {
+                "value": "https://www.google.com/maps?cid=12350483144643112463"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6425399",
+              "put-code": 6425399,
+              "display-index": 2
+            },
+            {
+              "created-date": {
+                "value": 1785368952278
+              },
+              "last-modified-date": {
+                "value": 1785368952278
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "url-name": "Google Scholar",
+              "url": {
+                "value": "https://scholar.google.com/citations?user=BcWBirUAAAAJ"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/researcher-urls/6434386",
+              "put-code": 6434386,
+              "display-index": 1
+            }
+          ],
+          "path": "/0009-0001-9346-8475/researcher-urls"
+        },
+        "emails": {
+          "last-modified-date": {
+            "value": 1782023411105
+          },
+          "email": [
+            {
+              "created-date": {
+                "value": 1782023273882
+              },
+              "last-modified-date": {
+                "value": 1782023411095
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "email": "medicaldoctor91@gmail.com",
+              "path": null,
+              "visibility": "public",
+              "verified": true,
+              "primary": true,
+              "put-code": null
+            },
+            {
+              "created-date": {
+                "value": 1782023273884
+              },
+              "last-modified-date": {
+                "value": 1782023411105
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "email": "doctor@ghezelbaash.ir",
+              "path": null,
+              "visibility": "public",
+              "verified": true,
+              "primary": false,
+              "put-code": null
+            }
+          ],
+          "path": "/0009-0001-9346-8475/email"
+        },
+        "addresses": {
+          "last-modified-date": {
+            "value": 1782023786850
+          },
+          "address": [
+            {
+              "created-date": {
+                "value": 1782023786850
+              },
+              "last-modified-date": {
+                "value": 1782023786850
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "country": {
+                "value": "IR"
+              },
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/address/4254631",
+              "put-code": 4254631,
+              "display-index": 1
+            }
+          ],
+          "path": "/0009-0001-9346-8475/address"
+        },
+        "keywords": {
+          "last-modified-date": {
+            "value": 1785092542121
+          },
+          "keyword": [
+            {
+              "created-date": {
+                "value": 1785027784435
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین دکتر بوتاکس",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669251",
+              "put-code": 5669251,
+              "display-index": 28
+            },
+            {
+              "created-date": {
+                "value": 1785027784433
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین دکتر کرمانشاه",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669250",
+              "put-code": 5669250,
+              "display-index": 27
+            },
+            {
+              "created-date": {
+                "value": 1785027784430
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین دکتر کامتورینگ",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669249",
+              "put-code": 5669249,
+              "display-index": 26
+            },
+            {
+              "created-date": {
+                "value": 1785027784428
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین پزشک زیبایی",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669248",
+              "put-code": 5669248,
+              "display-index": 25
+            },
+            {
+              "created-date": {
+                "value": 1785027784426
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین پزشک بوتاکس",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669247",
+              "put-code": 5669247,
+              "display-index": 24
+            },
+            {
+              "created-date": {
+                "value": 1785027784423
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "تزریق فیلر لب",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669246",
+              "put-code": 5669246,
+              "display-index": 23
+            },
+            {
+              "created-date": {
+                "value": 1785027905719
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "درمان لک صورت",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669257",
+              "put-code": 5669257,
+              "display-index": 22
+            },
+            {
+              "created-date": {
+                "value": 1785027905716
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "جوانسازی پوست",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669256",
+              "put-code": 5669256,
+              "display-index": 21
+            },
+            {
+              "created-date": {
+                "value": 1785027905713
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "زیبایی پوست",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669255",
+              "put-code": 5669255,
+              "display-index": 20
+            },
+            {
+              "created-date": {
+                "value": 1785027905709
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین دکتر مزوتراپی کرمانشاه",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669254",
+              "put-code": 5669254,
+              "display-index": 19
+            },
+            {
+              "created-date": {
+                "value": 1785027905706
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "فیلر لب روسی",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669253",
+              "put-code": 5669253,
+              "display-index": 18
+            },
+            {
+              "created-date": {
+                "value": 1785028369222
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "Diagnosis-led aesthetic medicine",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669265",
+              "put-code": 5669265,
+              "display-index": 17
+            },
+            {
+              "created-date": {
+                "value": 1785027905703
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین دکتر PRP",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669252",
+              "put-code": 5669252,
+              "display-index": 16
+            },
+            {
+              "created-date": {
+                "value": 1785028369217
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین متخصص پوست و مو",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669264",
+              "put-code": 5669264,
+              "display-index": 15
+            },
+            {
+              "created-date": {
+                "value": 1785028369215
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "Facial aesthetics",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669263",
+              "put-code": 5669263,
+              "display-index": 14
+            },
+            {
+              "created-date": {
+                "value": 1785028369212
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین متخصص زیبایی",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669262",
+              "put-code": 5669262,
+              "display-index": 13
+            },
+            {
+              "created-date": {
+                "value": 1785028369210
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "پزشک زیبایی کرمانشاه",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5669261",
+              "put-code": 5669261,
+              "display-index": 12
+            },
+            {
+              "created-date": {
+                "value": 1785092448311
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "Hyaluronidase",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671543",
+              "put-code": 5671543,
+              "display-index": 11
+            },
+            {
+              "created-date": {
+                "value": 1785092448308
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "Mesotherapy",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671542",
+              "put-code": 5671542,
+              "display-index": 10
+            },
+            {
+              "created-date": {
+                "value": 1785092448305
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "Filler correction",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671541",
+              "put-code": 5671541,
+              "display-index": 9
+            },
+            {
+              "created-date": {
+                "value": 1785092448302
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "کانتورینگ صورت",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671540",
+              "put-code": 5671540,
+              "display-index": 8
+            },
+            {
+              "created-date": {
+                "value": 1785092509284
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "درمان مشکلات پوستی",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671549",
+              "put-code": 5671549,
+              "display-index": 7
+            },
+            {
+              "created-date": {
+                "value": 1785092509281
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "اصلاح فیلر",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671548",
+              "put-code": 5671548,
+              "display-index": 6
+            },
+            {
+              "created-date": {
+                "value": 1785092509278
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "سابسیژن",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671547",
+              "put-code": 5671547,
+              "display-index": 5
+            },
+            {
+              "created-date": {
+                "value": 1785092509274
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "عوارض فیلر",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671546",
+              "put-code": 5671546,
+              "display-index": 4
+            },
+            {
+              "created-date": {
+                "value": 1785092509271
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بوتاکس چشم گربه ای",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671545",
+              "put-code": 5671545,
+              "display-index": 3
+            },
+            {
+              "created-date": {
+                "value": 1785092509267
+              },
+              "last-modified-date": {
+                "value": 1785092542121
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "درمان لک صورت",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671544",
+              "put-code": 5671544,
+              "display-index": 2
+            },
+            {
+              "created-date": {
+                "value": 1785092542036
+              },
+              "last-modified-date": {
+                "value": 1785092542036
+              },
+              "source": {
+                "source-orcid": {
+                  "uri": "https://orcid.org/0009-0001-9346-8475",
+                  "path": "0009-0001-9346-8475",
+                  "host": "orcid.org"
+                },
+                "source-client-id": null,
+                "source-name": {
+                  "value": "سعید قزلباش"
+                },
+                "assertion-origin-orcid": null,
+                "assertion-origin-client-id": null,
+                "assertion-origin-name": null
+              },
+              "content": "بهترین دکتر کانتورینگ صورت کرمانشاه",
+              "visibility": "public",
+              "path": "/0009-0001-9346-8475/keywords/5671550",
+              "put-code": 5671550,
+              "display-index": 1
+            }
+          ],
+          "path": "/0009-0001-9346-8475/keywords"
+        },
+        "external-identifiers": {
+          "last-modified-date": null,
+          "external-identifier": [],
+          "path": "/0009-0001-9346-8475/external-identifiers"
+        },
+        "path": "/0009-0001-9346-8475/person"
+      },
+      "activities-summary": {
+        "last-modified-date": {
+          "value": 1786938941898
+        },
+        "distinctions": {
+          "last-modified-date": null,
+          "affiliation-group": [],
+          "path": "/0009-0001-9346-8475/distinctions"
+        },
+        "educations": {
+          "last-modified-date": {
+            "value": 1785092615878
+          },
+          "affiliation-group": [
+            {
+              "last-modified-date": {
+                "value": 1785092615878
+              },
+              "external-ids": {
+                "external-id": []
+              },
+              "summaries": [
+                {
+                  "education-summary": {
+                    "created-date": {
+                      "value": 1785086501667
+                    },
+                    "last-modified-date": {
+                      "value": 1785092615878
+                    },
+                    "source": {
+                      "source-orcid": {
+                        "uri": "https://orcid.org/0009-0001-9346-8475",
+                        "path": "0009-0001-9346-8475",
+                        "host": "orcid.org"
+                      },
+                      "source-client-id": null,
+                      "source-name": {
+                        "value": "سعید قزلباش"
+                      },
+                      "assertion-origin-orcid": null,
+                      "assertion-origin-client-id": null,
+                      "assertion-origin-name": null
+                    },
+                    "put-code": 38054873,
+                    "department-name": "School of Medicine",
+                    "role-title": "Doctor of Medicine (MD)",
+                    "start-date": {
+                      "year": {
+                        "value": "2009"
+                      },
+                      "month": {
+                        "value": "09"
+                      },
+                      "day": null
+                    },
+                    "end-date": {
+                      "year": {
+                        "value": "2018"
+                      },
+                      "month": {
+                        "value": "03"
+                      },
+                      "day": null
+                    },
+                    "organization": {
+                      "name": "Kermanshah University of Medical Sciences",
+                      "address": {
+                        "city": "Kermanshah",
+                        "region": "Kermanshah Province",
+                        "country": "IR"
+                      },
+                      "disambiguated-organization": {
+                        "disambiguated-organization-identifier": "https://ror.org/05vspf741",
+                        "disambiguation-source": "ROR"
+                      }
+                    },
+                    "url": {
+                      "value": "https://www.icliniq.com/doctor/dr-mohamadsaeed-ghezelbash"
+                    },
+                    "external-ids": null,
+                    "display-index": "0",
+                    "visibility": "public",
+                    "path": "/0009-0001-9346-8475/education/38054873"
+                  }
+                }
+              ]
+            }
+          ],
+          "path": "/0009-0001-9346-8475/educations"
+        },
+        "employments": {
+          "last-modified-date": null,
+          "affiliation-group": [],
+          "path": "/0009-0001-9346-8475/employments"
+        },
+        "fundings": {
+          "last-modified-date": null,
+          "group": [],
+          "path": "/0009-0001-9346-8475/fundings"
+        },
+        "invited-positions": {
+          "last-modified-date": null,
+          "affiliation-group": [],
+          "path": "/0009-0001-9346-8475/invited-positions"
+        },
+        "memberships": {
+          "last-modified-date": null,
+          "affiliation-group": [],
+          "path": "/0009-0001-9346-8475/memberships"
+        },
+        "peer-reviews": {
+          "last-modified-date": null,
+          "group": [],
+          "path": "/0009-0001-9346-8475/peer-reviews"
+        },
+        "qualifications": {
+          "last-modified-date": null,
+          "affiliation-group": [],
+          "path": "/0009-0001-9346-8475/qualifications"
+        },
+        "research-resources": {
+          "last-modified-date": null,
+          "group": [],
+          "path": "/0009-0001-9346-8475/research-resources"
+        },
+        "services": {
+          "last-modified-date": null,
+          "affiliation-group": [],
+          "path": "/0009-0001-9346-8475/services"
+        },
+        "works": {
+          "last-modified-date": {
+            "value": 1786938941898
+          },
+          "group": [
+            {
+              "last-modified-date": {
+                "value": 1785027478108
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "10.5281/ZENODO.18765169",
+                    "external-id-normalized": {
+                      "value": "10.5281/zenodo.18765169",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://doi.org/10.5281/ZENODO.18765169"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "work-summary": [
+                {
+                  "put-code": 221807766,
+                  "created-date": {
+                    "value": 1785027478108
+                  },
+                  "last-modified-date": {
+                    "value": 1785027478108
+                  },
+                  "source": {
+                    "source-orcid": {
+                      "uri": "https://orcid.org/0009-0001-9346-8475",
+                      "path": "0009-0001-9346-8475",
+                      "host": "orcid.org"
+                    },
+                    "source-client-id": null,
+                    "source-name": {
+                      "value": "سعید قزلباش"
+                    },
+                    "assertion-origin-orcid": null,
+                    "assertion-origin-client-id": null,
+                    "assertion-origin-name": null
+                  },
+                  "title": {
+                    "title": {
+                      "value": "Doctor Ghezelbaash — Public Brand Knowledge Base & Knowledge Graph (JSON/JSON-LD) — v1.0.0"
+                    },
+                    "subtitle": null,
+                    "translated-title": null
+                  },
+                  "external-ids": {
+                    "external-id": [
+                      {
+                        "external-id-type": "doi",
+                        "external-id-value": "10.5281/ZENODO.18765169",
+                        "external-id-normalized": {
+                          "value": "10.5281/zenodo.18765169",
+                          "transient": true
+                        },
+                        "external-id-normalized-error": null,
+                        "external-id-url": {
+                          "value": "https://doi.org/10.5281/ZENODO.18765169"
+                        },
+                        "external-id-relationship": "self"
+                      }
+                    ]
+                  },
+                  "url": {
+                    "value": "https://zenodo.org/doi/10.5281/zenodo.18765169"
+                  },
+                  "type": "software",
+                  "publication-date": {
+                    "year": {
+                      "value": "2026"
+                    },
+                    "month": {
+                      "value": "02"
+                    },
+                    "day": {
+                      "value": "25"
+                    }
+                  },
+                  "journal-title": null,
+                  "visibility": "public",
+                  "path": "/0009-0001-9346-8475/work/221807766",
+                  "display-index": "0"
+                }
+              ]
+            },
+            {
+              "last-modified-date": {
+                "value": 1782025273658
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "pmc",
+                    "external-id-value": "PMC8469763",
+                    "external-id-normalized": {
+                      "value": "8469763",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://europepmc.org/article/pmc/PMC8469763"
+                    },
+                    "external-id-relationship": "self"
+                  },
+                  {
+                    "external-id-type": "pmid",
+                    "external-id-value": "34574943",
+                    "external-id-normalized": {
+                      "value": "34574943",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://pubmed.ncbi.nlm.nih.gov/34574943"
+                    },
+                    "external-id-relationship": "self"
+                  },
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "10.3390/healthcare9091169",
+                    "external-id-normalized": {
+                      "value": "10.3390/healthcare9091169",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://doi.org/10.3390/healthcare9091169"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "work-summary": [
+                {
+                  "put-code": 218320219,
+                  "created-date": {
+                    "value": 1782025164244
+                  },
+                  "last-modified-date": {
+                    "value": 1782025273658
+                  },
+                  "source": {
+                    "source-orcid": {
+                      "uri": "https://orcid.org/0009-0001-9346-8475",
+                      "path": "0009-0001-9346-8475",
+                      "host": "orcid.org"
+                    },
+                    "source-client-id": null,
+                    "source-name": {
+                      "value": "سعید قزلباش"
+                    },
+                    "assertion-origin-orcid": null,
+                    "assertion-origin-client-id": null,
+                    "assertion-origin-name": null
+                  },
+                  "title": {
+                    "title": {
+                      "value": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events."
+                    },
+                    "subtitle": null,
+                    "translated-title": null
+                  },
+                  "external-ids": {
+                    "external-id": [
+                      {
+                        "external-id-type": "pmid",
+                        "external-id-value": "34574943",
+                        "external-id-normalized": {
+                          "value": "34574943",
+                          "transient": true
+                        },
+                        "external-id-normalized-error": null,
+                        "external-id-url": {
+                          "value": "https://pubmed.ncbi.nlm.nih.gov/34574943"
+                        },
+                        "external-id-relationship": "self"
+                      },
+                      {
+                        "external-id-type": "pmc",
+                        "external-id-value": "PMC8469763",
+                        "external-id-normalized": {
+                          "value": "8469763",
+                          "transient": true
+                        },
+                        "external-id-normalized-error": null,
+                        "external-id-url": {
+                          "value": "https://europepmc.org/article/pmc/PMC8469763"
+                        },
+                        "external-id-relationship": "self"
+                      },
+                      {
+                        "external-id-type": "doi",
+                        "external-id-value": "10.3390/healthcare9091169",
+                        "external-id-normalized": {
+                          "value": "10.3390/healthcare9091169",
+                          "transient": true
+                        },
+                        "external-id-normalized-error": null,
+                        "external-id-url": {
+                          "value": "https://doi.org/10.3390/healthcare9091169"
+                        },
+                        "external-id-relationship": "self"
+                      }
+                    ]
+                  },
+                  "url": {
+                    "value": "https://europepmc.org/articles/PMC8469763"
+                  },
+                  "type": "journal-article",
+                  "publication-date": {
+                    "year": {
+                      "value": "2021"
+                    },
+                    "month": {
+                      "value": "09"
+                    },
+                    "day": {
+                      "value": "06"
+                    }
+                  },
+                  "journal-title": {
+                    "value": "Healthcare (Basel, Switzerland)"
+                  },
+                  "visibility": "public",
+                  "path": "/0009-0001-9346-8475/work/218320219",
+                  "display-index": "0"
+                }
+              ]
+            },
+            {
+              "last-modified-date": {
+                "value": 1782025273658
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "10.4103/2008-7802.182734",
+                    "external-id-normalized": {
+                      "value": "10.4103/2008-7802.182734",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://doi.org/10.4103/2008-7802.182734"
+                    },
+                    "external-id-relationship": "self"
+                  },
+                  {
+                    "external-id-type": "pmid",
+                    "external-id-value": "27280013",
+                    "external-id-normalized": {
+                      "value": "27280013",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://pubmed.ncbi.nlm.nih.gov/27280013"
+                    },
+                    "external-id-relationship": "self"
+                  },
+                  {
+                    "external-id-type": "pmc",
+                    "external-id-value": "PMC4882968",
+                    "external-id-normalized": {
+                      "value": "4882968",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": {
+                      "value": "https://europepmc.org/article/pmc/PMC4882968"
+                    },
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "work-summary": [
+                {
+                  "put-code": 218320209,
+                  "created-date": {
+                    "value": 1782025126737
+                  },
+                  "last-modified-date": {
+                    "value": 1782025273658
+                  },
+                  "source": {
+                    "source-orcid": {
+                      "uri": "https://orcid.org/0009-0001-9346-8475",
+                      "path": "0009-0001-9346-8475",
+                      "host": "orcid.org"
+                    },
+                    "source-client-id": null,
+                    "source-name": {
+                      "value": "سعید قزلباش"
+                    },
+                    "assertion-origin-orcid": null,
+                    "assertion-origin-client-id": null,
+                    "assertion-origin-name": null
+                  },
+                  "title": {
+                    "title": {
+                      "value": "Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder."
+                    },
+                    "subtitle": null,
+                    "translated-title": null
+                  },
+                  "external-ids": {
+                    "external-id": [
+                      {
+                        "external-id-type": "pmid",
+                        "external-id-value": "27280013",
+                        "external-id-normalized": {
+                          "value": "27280013",
+                          "transient": true
+                        },
+                        "external-id-normalized-error": null,
+                        "external-id-url": {
+                          "value": "https://pubmed.ncbi.nlm.nih.gov/27280013"
+                        },
+                        "external-id-relationship": "self"
+                      },
+                      {
+                        "external-id-type": "pmc",
+                        "external-id-value": "PMC4882968",
+                        "external-id-normalized": {
+                          "value": "4882968",
+                          "transient": true
+                        },
+                        "external-id-normalized-error": null,
+                        "external-id-url": {
+                          "value": "https://europepmc.org/article/pmc/PMC4882968"
+                        },
+                        "external-id-relationship": "self"
+                      },
+                      {
+                        "external-id-type": "doi",
+                        "external-id-value": "10.4103/2008-7802.182734",
+                        "external-id-normalized": {
+                          "value": "10.4103/2008-7802.182734",
+                          "transient": true
+                        },
+                        "external-id-normalized-error": null,
+                        "external-id-url": {
+                          "value": "https://doi.org/10.4103/2008-7802.182734"
+                        },
+                        "external-id-relationship": "self"
+                      }
+                    ]
+                  },
+                  "url": {
+                    "value": "https://europepmc.org/articles/PMC4882968"
+                  },
+                  "type": "journal-article",
+                  "publication-date": {
+                    "year": {
+                      "value": "2016"
+                    },
+                    "month": {
+                      "value": "05"
+                    },
+                    "day": {
+                      "value": "19"
+                    }
+                  },
+                  "journal-title": {
+                    "value": "International journal of preventive medicine"
+                  },
+                  "visibility": "public",
+                  "path": "/0009-0001-9346-8475/work/218320209",
+                  "display-index": "0"
+                }
+              ]
+            },
+            {
+              "last-modified-date": {
+                "value": 1786938941898
+              },
+              "external-ids": {
+                "external-id": [
+                  {
+                    "external-id-type": "doi",
+                    "external-id-value": "10.5281/zenodo.21930954",
+                    "external-id-normalized": {
+                      "value": "10.5281/zenodo.21930954",
+                      "transient": true
+                    },
+                    "external-id-normalized-error": null,
+                    "external-id-url": null,
+                    "external-id-relationship": "self"
+                  }
+                ]
+              },
+              "work-summary": [
+                {
+                  "put-code": 224012501,
+                  "created-date": {
+                    "value": 1786938941898
+                  },
+                  "last-modified-date": {
+                    "value": 1786938941898
+                  },
+                  "source": {
+                    "source-orcid": null,
+                    "source-client-id": {
+                      "uri": "https://orcid.org/client/APP-IN0O56SBVVTB7NN4",
+                      "path": "APP-IN0O56SBVVTB7NN4",
+                      "host": "orcid.org"
+                    },
+                    "source-name": {
+                      "value": "OpenAIRE"
+                    },
+                    "assertion-origin-orcid": {
+                      "uri": "https://orcid.org/0009-0001-9346-8475",
+                      "path": "0009-0001-9346-8475",
+                      "host": "orcid.org"
+                    },
+                    "assertion-origin-client-id": null,
+                    "assertion-origin-name": {
+                      "value": "سعید قزلباش"
+                    }
+                  },
+                  "title": {
+                    "title": {
+                      "value": "Dr. Saeed Ghezelbash Public Knowledge Graph"
+                    },
+                    "subtitle": null,
+                    "translated-title": null
+                  },
+                  "external-ids": {
+                    "external-id": [
+                      {
+                        "external-id-type": "doi",
+                        "external-id-value": "10.5281/zenodo.21930954",
+                        "external-id-normalized": {
+                          "value": "10.5281/zenodo.21930954",
+                          "transient": true
+                        },
+                        "external-id-normalized-error": null,
+                        "external-id-url": null,
+                        "external-id-relationship": "self"
+                      }
+                    ]
+                  },
+                  "url": null,
+                  "type": "data-set",
+                  "publication-date": null,
+                  "journal-title": null,
+                  "visibility": "public",
+                  "path": "/0009-0001-9346-8475/work/224012501",
+                  "display-index": "1"
+                }
+              ]
+            }
+          ],
+          "path": "/0009-0001-9346-8475/works"
+        },
+        "path": "/0009-0001-9346-8475/activities"
+      },
+      "path": "/0009-0001-9346-8475"
+    },
+    "text": null
+  },
+  "zenodo": {
+    "status": 200,
+    "json": {
+      "created": "2026-08-15T00:25:35.341042+00:00",
+      "modified": "2026-08-17T04:39:46.047974+00:00",
+      "id": 21930954,
+      "conceptrecid": "18765168",
+      "doi": "10.5281/zenodo.21930954",
+      "conceptdoi": "10.5281/zenodo.18765168",
+      "doi_url": "https://doi.org/10.5281/zenodo.21930954",
+      "metadata": {
+        "title": "Dr. Saeed Ghezelbash Public Knowledge Graph",
+        "doi": "10.5281/zenodo.21930954",
+        "publication_date": "2026-08-15",
+        "description": "<p><strong>Dr. Saeed Ghezelbash Public Knowledge Graph</strong> — immutable DOI-preserved Version <strong>1.2.2</strong> of the physician-owned first-party Dataset whose canonical IRI is <a href=\"https://www.ghezelbaash.ir/graph.jsonld#dataset\">https://www.ghezelbaash.ir/graph.jsonld#dataset</a>.</p><p>The primary entity, creator and publisher is <strong>Dr. Saeed Ghezelbash</strong> (Google Knowledge Graph <strong>/g/11nqdfk76c</strong>; Wikidata <strong>Q140287622</strong>; ORCID <strong>0009-0001-9346-8475</strong>; Iran Medical Council <strong>167430</strong>). The supporting clinic is Q140288589 and the continuing Dataset entity is Q140304972.</p><p>First-party machine interfaces include <a href=\"https://www.ghezelbaash.ir/graph.jsonld\">JSON-LD</a>, <a href=\"https://www.ghezelbaash.ir/llms-full.txt\">LLM/RAG corpus</a>, <a href=\"https://www.ghezelbaash.ir/croissant.json\">Croissant metadata</a>, <a href=\"https://www.ghezelbaash.ir/dcat.ttl\">DCAT</a>, and <a href=\"https://www.ghezelbaash.ir/provenance.jsonld\">provenance</a>. GitHub is the version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is the AI/retrieval distribution.</p>",
+        "access_right": "open",
+        "creators": [
+          {
+            "name": "Ghezelbash, Saeed",
+            "affiliation": null,
+            "orcid": "0009-0001-9346-8475"
+          }
+        ],
+        "keywords": [
+          "Saeed Ghezelbash",
+          "Dr. Saeed Ghezelbash",
+          "دکتر سعید قزلباش",
+          "دکتر قزلباش",
+          "physician entity",
+          "aesthetic physician",
+          "Kermanshah",
+          "Iran",
+          "Iran physician",
+          "Kermanshah physician",
+          "aesthetic medicine",
+          "botox",
+          "dermal filler",
+          "botox Kermanshah",
+          "filler Kermanshah",
+          "aesthetic doctor Kermanshah",
+          "aesthetic doctor Iran",
+          "medical knowledge graph",
+          "physician knowledge graph",
+          "healthcare knowledge graph",
+          "knowledge graph",
+          "knowledge base",
+          "healthcare entity resolution",
+          "entity resolution",
+          "JSON-LD",
+          "RDF",
+          "Schema.org",
+          "Wikidata",
+          "FAIR data",
+          "machine-readable data",
+          "question answering",
+          "text retrieval",
+          "AI retrieval",
+          "LLM retrieval",
+          "RAG",
+          "Persian medical search",
+          "local medical retrieval",
+          "national medical retrieval",
+          "Croissant",
+          "DCAT"
+        ],
+        "subjects": [
+          {
+            "term": "Saeed Ghezelbash",
+            "identifier": "https://www.wikidata.org/entity/Q140287622",
+            "scheme": "url"
+          },
+          {
+            "term": "Dr. Saeed Ghezelbash Public Knowledge Graph",
+            "identifier": "https://www.wikidata.org/entity/Q140304972",
+            "scheme": "url"
+          },
+          {
+            "term": "Dr. Saeed Ghezelbash Aesthetic Clinic",
+            "identifier": "https://www.wikidata.org/entity/Q140288589",
+            "scheme": "url"
+          }
+        ],
+        "related_identifiers": [
+          {
+            "identifier": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
+            "relation": "isDerivedFrom",
+            "resource_type": "dataset",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://www.ghezelbaash.ir/",
+            "relation": "isDescribedBy",
+            "resource_type": "other",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
+            "relation": "isDerivedFrom",
+            "resource_type": "software",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+            "relation": "isReferencedBy",
+            "resource_type": "dataset",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://www.wikidata.org/entity/Q140304972",
+            "relation": "isDescribedBy",
+            "resource_type": "dataset",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://www.wikidata.org/entity/Q140287622",
+            "relation": "references",
+            "resource_type": "other",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://www.wikidata.org/entity/Q140288589",
+            "relation": "references",
+            "resource_type": "other",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://github.com/medicaldoctor91/doctor-ghezelbaash/tree/v1.2.2",
+            "relation": "isDerivedFrom",
+            "resource_type": "software",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://www.ghezelbaash.ir/llms-full.txt",
+            "relation": "isDocumentedBy",
+            "resource_type": "other",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://www.ghezelbaash.ir/croissant.json",
+            "relation": "hasMetadata",
+            "resource_type": "other",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://www.ghezelbaash.ir/dcat.ttl",
+            "relation": "hasMetadata",
+            "resource_type": "other",
+            "scheme": "url"
+          },
+          {
+            "identifier": "https://www.ghezelbaash.ir/provenance.jsonld",
+            "relation": "hasMetadata",
+            "resource_type": "other",
+            "scheme": "url"
+          }
+        ],
+        "version": "1.2.2",
+        "language": "mul",
+        "resource_type": {
+          "title": "Dataset",
+          "type": "dataset"
+        },
+        "license": {
+          "id": "cc-by-4.0"
+        },
+        "relations": {
+          "version": [
+            {
+              "index": 5,
+              "is_last": true,
+              "parent": {
+                "pid_type": "recid",
+                "pid_value": "18765168"
+              }
+            }
+          ]
+        },
+        "notes": "Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset. Primary physician: Dr. Saeed Ghezelbash — Google Knowledge Graph /g/11nqdfk76c; Wikidata Q140287622; ORCID 0009-0001-9346-8475. Concept DOI: 10.5281/zenodo.18765168. Exact Version DOI: 10.5281/zenodo.21930954. AI/retrieval distribution: https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data. Current live observations: https://www.ghezelbaash.ir/live-observations.jsonld."
+      },
+      "title": "Dr. Saeed Ghezelbash Public Knowledge Graph",
+      "links": {
+        "self": "https://zenodo.org/api/records/21930954",
+        "self_html": "https://zenodo.org/records/21930954",
+        "preview_html": "https://zenodo.org/records/21930954?preview=1",
+        "doi": "https://doi.org/10.5281/zenodo.21930954",
+        "self_doi": "https://doi.org/10.5281/zenodo.21930954",
+        "self_doi_html": "https://zenodo.org/doi/10.5281/zenodo.21930954",
+        "reserve_doi": "https://zenodo.org/api/records/21930954/draft/pids/doi",
+        "parent": "https://zenodo.org/api/records/18765168",
+        "parent_html": "https://zenodo.org/records/18765168",
+        "parent_doi": "https://doi.org/10.5281/zenodo.18765168",
+        "parent_doi_html": "https://zenodo.org/doi/10.5281/zenodo.18765168",
+        "self_iiif_manifest": "https://zenodo.org/api/iiif/record:21930954/manifest",
+        "self_iiif_sequence": "https://zenodo.org/api/iiif/record:21930954/sequence/default",
+        "files": "https://zenodo.org/api/records/21930954/files",
+        "media_files": "https://zenodo.org/api/records/21930954/media-files",
+        "archive": "https://zenodo.org/api/records/21930954/files-archive",
+        "archive_media": "https://zenodo.org/api/records/21930954/media-files-archive",
+        "latest": "https://zenodo.org/api/records/21930954/versions/latest",
+        "latest_html": "https://zenodo.org/records/21930954/latest",
+        "versions": "https://zenodo.org/api/records/21930954/versions",
+        "draft": "https://zenodo.org/api/records/21930954/draft",
+        "access_links": "https://zenodo.org/api/records/21930954/access/links",
+        "access_grants": "https://zenodo.org/api/records/21930954/access/grants",
+        "access_users": "https://zenodo.org/api/records/21930954/access/users",
+        "access_request": "https://zenodo.org/api/records/21930954/access/request",
+        "access": "https://zenodo.org/api/records/21930954/access",
+        "communities": "https://zenodo.org/api/records/21930954/communities",
+        "communities-suggestions": "https://zenodo.org/api/records/21930954/communities-suggestions",
+        "request_deletion": "https://zenodo.org/api/records/21930954/request-deletion",
+        "file_modification": "https://zenodo.org/api/records/21930954/file-modification",
+        "quota_increase": "https://zenodo.org/api/records/21930954/quota-increase",
+        "requests": "https://zenodo.org/api/records/21930954/requests"
+      },
+      "updated": "2026-08-17T04:39:46.047974+00:00",
+      "recid": "21930954",
+      "revision": 4,
+      "files": [
+        {
+          "id": "f2ceff3f-d79e-4868-98d9-bddc93d7cb6f",
+          "key": "linkset.json",
+          "size": 4740,
+          "checksum": "md5:ec851778d6047549c2ccb9b4c3193f6a",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/linkset.json/content"
+          }
+        },
+        {
+          "id": "fef8b591-2d5f-4752-b8e5-c004e243c275",
+          "key": "graph.ttl",
+          "size": 1378531,
+          "checksum": "md5:91090a8825d5d4d09ec83868c3ae0c38",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/graph.ttl/content"
+          }
+        },
+        {
+          "id": "7b39f61d-013b-44e6-a4b9-4181938db85b",
+          "key": "query-matrix.jsonl",
+          "size": 4222866,
+          "checksum": "md5:d15c53b3fd20805d7c64bee9002c151e",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/query-matrix.jsonl/content"
+          }
+        },
+        {
+          "id": "509e7767-9c9c-4a04-a16a-622bcbb7ac91",
+          "key": "evidence-snapshot.json",
+          "size": 15071,
+          "checksum": "md5:c430ee30a6ce1f9066c4a9390ea75368",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/evidence-snapshot.json/content"
+          }
+        },
+        {
+          "id": "e5ba97fe-9e6a-4669-af07-e81259216f39",
+          "key": "release-attestation.json",
+          "size": 2242,
+          "checksum": "md5:eec81c311d9c4f6ceabb2477f7205de6",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/release-attestation.json/content"
+          }
+        },
+        {
+          "id": "a275882f-89d0-4fe4-9ba3-2217db1a969b",
+          "key": "void.ttl",
+          "size": 991,
+          "checksum": "md5:47ee89e3a80cb010edcf8a764f2e2f5c",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/void.ttl/content"
+          }
+        },
+        {
+          "id": "b73d13cd-6711-4e61-b72e-da25f29ebfd7",
+          "key": "llms-full.txt",
+          "size": 3295019,
+          "checksum": "md5:278d1fef452555fc8bad87a4da2e05fe",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/llms-full.txt/content"
+          }
+        },
+        {
+          "id": "2020f3e0-7d44-48f9-86a0-a13c2fc93dd9",
+          "key": "answers.txt",
+          "size": 214398,
+          "checksum": "md5:991245c38a526b5fea333fc7adb56200",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/answers.txt/content"
+          }
+        },
+        {
+          "id": "1d0d2f4f-ea5e-4ed1-9761-7afc15714fd4",
+          "key": "knowledge.xml",
+          "size": 98253,
+          "checksum": "md5:80d127c3f9af2bfdf16e59c7952b93f4",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/knowledge.xml/content"
+          }
+        },
+        {
+          "id": "767ce2ef-666f-4a81-9adf-25e36b1d4069",
+          "key": "datapackage.json",
+          "size": 8084,
+          "checksum": "md5:ddb95aec0574722292e430e460ffadf0",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/datapackage.json/content"
+          }
+        },
+        {
+          "id": "f6f7c269-d91e-4c8f-87da-9fc1315e4c0b",
+          "key": "dist-sha256.json",
+          "size": 14274,
+          "checksum": "md5:635b75de64844b166bda4734a112d40e",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/dist-sha256.json/content"
+          }
+        },
+        {
+          "id": "e7dd18c4-a1a4-4c70-a96b-befe4b870f83",
+          "key": "entity-facts.csv",
+          "size": 2891111,
+          "checksum": "md5:cbc31faec209d85a7ca6e509b1c3f419",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/entity-facts.csv/content"
+          }
+        },
+        {
+          "id": "37ccbcab-d998-4442-8ac1-5e01197b020a",
+          "key": "current-release-matrix.json",
+          "size": 750,
+          "checksum": "md5:b52ff5cd138f9abef4e0726f0caf4f75",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/current-release-matrix.json/content"
+          }
+        },
+        {
+          "id": "d8b6e725-43f4-4217-bb47-519fce5e1fe4",
+          "key": "dcat.ttl",
+          "size": 8069,
+          "checksum": "md5:c45f30357c7a2636578e20d7ced17bd0",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/dcat.ttl/content"
+          }
+        },
+        {
+          "id": "21150309-139d-4a16-855d-ca4178165a6e",
+          "key": "shapes.ttl",
+          "size": 3280,
+          "checksum": "md5:9d1f0baaad4c51005dd48bba253af196",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/shapes.ttl/content"
+          }
+        },
+        {
+          "id": "684b0266-fb18-4e9e-8364-9735de2df3fc",
+          "key": "artifact-manifest.json",
+          "size": 26967,
+          "checksum": "md5:dca405e1024bf9225904439997abbadf",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/artifact-manifest.json/content"
+          }
+        },
+        {
+          "id": "b3b38075-21d3-4448-a892-629feaabfa3a",
+          "key": "llms.txt",
+          "size": 29929,
+          "checksum": "md5:383d483fcf22ae5bcba5a0facfa89ae5",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/llms.txt/content"
+          }
+        },
+        {
+          "id": "4e165ba1-c754-456b-b9d0-90de287ba604",
+          "key": "index.html",
+          "size": 1874191,
+          "checksum": "md5:544363278d61492566a6784346109dbe",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/index.html/content"
+          }
+        },
+        {
+          "id": "83e019f8-4d9d-4bc8-86d7-c76709637dad",
+          "key": "index.md",
+          "size": 1704000,
+          "checksum": "md5:03232b525452406104d84a01f4aa877e",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/index.md/content"
+          }
+        },
+        {
+          "id": "615224c2-ca75-4aa7-86e6-d3cfbcc2d052",
+          "key": "provenance.jsonld",
+          "size": 1315130,
+          "checksum": "md5:b447e5d0d514d3ae6772f29f7194b507",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/provenance.jsonld/content"
+          }
+        },
+        {
+          "id": "61c70a2f-8fd3-492b-a749-3bb01c301f42",
+          "key": "graph.jsonld",
+          "size": 832083,
+          "checksum": "md5:79914c54794c52b4e20bb8bcfadb59df",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/graph.jsonld/content"
+          }
+        },
+        {
+          "id": "bd935f4c-349b-47eb-9132-320dc1372e66",
+          "key": "croissant.json",
+          "size": 10572,
+          "checksum": "md5:cdc36728649eee48e7f04fc27b116cd4",
+          "links": {
+            "self": "https://zenodo.org/api/records/21930954/files/croissant.json/content"
+          }
+        }
+      ],
+      "swh": {},
+      "owners": [
+        {
+          "id": "1556392"
+        }
+      ],
+      "status": "published",
+      "stats": {
+        "downloads": 904,
+        "unique_downloads": 700,
+        "views": 1081,
+        "unique_views": 966,
+        "version_downloads": 493,
+        "version_unique_downloads": 361,
+        "version_unique_views": 11,
+        "version_views": 11
+      },
+      "state": "done",
+      "submitted": true
+    },
+    "text": null
+  }
+}
