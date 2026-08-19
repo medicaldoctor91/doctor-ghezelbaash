@@ -21,11 +21,11 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import textwrap
           src=Path('.github/workflows/_tmp-create-wikiversity-facial-assessment.yml').read_text(encoding='utf-8')
           start="python - <<'PY'\n"
           if start not in src:
               raise SystemExit('embedded Python start marker not found')
-          code=src.split(start,1)[1].split("\n          PY",1)[0]
-          exec(compile(textwrap.dedent(code),'<wikiversity-create>','exec'),{})
+          raw=src.split(start,1)[1].split("\n          PY",1)[0]
+          code='\n'.join(line[10:] if line.startswith('          ') else line for line in raw.splitlines())
+          exec(compile(code,'<wikiversity-create>','exec'),{})
           PY
