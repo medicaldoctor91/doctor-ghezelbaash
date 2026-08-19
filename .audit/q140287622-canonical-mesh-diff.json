@@ -1,0 +1,136 @@
+{
+  "audit_utc": "2026-08-19T15:53:40.882488+00:00",
+  "canonical_source": "src/data/release.json",
+  "comparisons": [
+    {
+      "canonical": "A5064828898",
+      "exact_or_semantic_match": true,
+      "property": "P10283",
+      "wikidata_values": [
+        "A5064828898"
+      ]
+    },
+    {
+      "canonical": "Doctor.ghezelbaash",
+      "exact_or_semantic_match": true,
+      "property": "P11079",
+      "wikidata_values": [
+        "Doctor.ghezelbaash"
+      ]
+    },
+    {
+      "canonical": "ghezelbaash",
+      "exact_or_semantic_match": true,
+      "property": "P11245",
+      "wikidata_values": [
+        "ghezelbaash"
+      ]
+    },
+    {
+      "canonical": "doctor.ghezelbaash",
+      "exact_or_semantic_match": true,
+      "property": "P11892",
+      "wikidata_values": [
+        "doctor.ghezelbaash"
+      ]
+    },
+    {
+      "canonical": "ghezelbaash",
+      "exact_or_semantic_match": true,
+      "property": "P12201",
+      "wikidata_values": [
+        "ghezelbaash"
+      ]
+    },
+    {
+      "canonical": "BcWBirUAAAAJ",
+      "exact_or_semantic_match": true,
+      "property": "P1960",
+      "wikidata_values": [
+        "BcWBirUAAAAJ"
+      ]
+    },
+    {
+      "canonical": "qezelbaash",
+      "exact_or_semantic_match": true,
+      "property": "P2002",
+      "wikidata_values": [
+        "qezelbaash"
+      ]
+    },
+    {
+      "canonical": "doctor.ghezelbaash",
+      "exact_or_semantic_match": true,
+      "property": "P2003",
+      "wikidata_values": [
+        "ghezelbaash",
+        "doctor.ghezelbaash"
+      ]
+    },
+    {
+      "canonical": "ghezelbaash",
+      "exact_or_semantic_match": true,
+      "property": "P2013",
+      "wikidata_values": [
+        "ghezelbaash"
+      ]
+    },
+    {
+      "canonical": "medicaldoctor91",
+      "exact_or_semantic_match": true,
+      "property": "P2037",
+      "wikidata_values": [
+        "medicaldoctor91"
+      ]
+    },
+    {
+      "canonical": "medicaldoctor91",
+      "exact_or_semantic_match": false,
+      "property": "P3836",
+      "wikidata_values": [
+        "qezelbaash"
+      ]
+    },
+    {
+      "canonical": "3786699",
+      "exact_or_semantic_match": true,
+      "property": "P4012",
+      "wikidata_values": [
+        "3786699"
+      ]
+    },
+    {
+      "canonical": "0009-0001-9346-8475",
+      "exact_or_semantic_match": true,
+      "property": "P496",
+      "wikidata_values": [
+        "0009-0001-9346-8475"
+      ]
+    },
+    {
+      "canonical": "saeed-ghezelbash-93310a96",
+      "exact_or_semantic_match": true,
+      "property": "P6634",
+      "wikidata_values": [
+        "saeed-ghezelbash-93310a96"
+      ]
+    },
+    {
+      "canonical": "ghezelbaash",
+      "exact_or_semantic_match": null,
+      "property": "about_me_slug",
+      "wikidata_values": null
+    }
+  ],
+  "lastrevid": 2533228865,
+  "mismatches": [
+    {
+      "canonical": "medicaldoctor91",
+      "exact_or_semantic_match": false,
+      "property": "P3836",
+      "wikidata_values": [
+        "qezelbaash"
+      ]
+    }
+  ]
+}
