@@ -12,12 +12,12 @@ REL={'P138','P112','P1037','P127','P137'}
 EXPECTED_PROPS={'P856','P973','P138','P112','P281','P1037','P127','P137'}
 s=requests.Session(); s.headers.update({'User-Agent':UA})
 def get(**p):
- p.update(format='json',formatversion=2,maxlag=5); r=s.get(WD,params=p,timeout=60); r.raise_for_status(); d=r.json();
- if 'error' in d: raise RuntimeError(d['error']); return d
+ p.update(format='json',formatversion=2,maxlag=5); r=s.get(WD,params=p,timeout=60); r.raise_for_status(); d=r.json()
+ if 'error' in d: raise RuntimeError(d['error'])
  return d
 def post(**p):
- p.update(format='json',formatversion=2,maxlag=5); r=s.post(WD,data=p,timeout=90); r.raise_for_status(); d=r.json();
- if 'error' in d: raise RuntimeError(d['error']); return d
+ p.update(format='json',formatversion=2,maxlag=5); r=s.post(WD,data=p,timeout=90); r.raise_for_status(); d=r.json()
+ if 'error' in d: raise RuntimeError(d['error'])
  return d
 lt=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
 lr=post(action='login',lgname=USER,lgpassword=PASS,lgtoken=lt)
@@ -26,7 +26,7 @@ csrf=get(action='query',meta='tokens',type='csrf')['query']['tokens']['csrftoken
 
 def entity(): return get(action='wbgetentities',ids=Q,props='claims')['entities'][Q]
 def sval(x):
- dv=x.get('datavalue');
+ dv=x.get('datavalue')
  if not dv:return None
  v=dv['value']; return v.get('id') if isinstance(v,dict) and 'id' in v else v
 def clean_snak(x):
@@ -89,32 +89,31 @@ for p in EXPECTED_PROPS:
  if len(before['claims'].get(p,[]))!=1: raise RuntimeError({'expected_single_statement':p,'count':len(before['claims'].get(p,[]))})
  if p in REL and mainval(before['claims'][p][0])!=PERSON: raise RuntimeError({'unexpected_relation_object':p,'value':mainval(before['claims'][p][0])})
 changes=[]
-# Statement-level normalization.
 for p in sorted(EXPECTED_PROPS):
  c=entity()['claims'][p][0]
  a,b=desired_statement_names(p); replace_qualifiers(c,a,b,changes)
-# Reference-level normalization, re-fetching after qualifier edits.
 for p in sorted(EXPECTED_PROPS):
  c=entity()['claims'][p][0]
  for r in list(c.get('references',[])):
   urls=refurls(r); a,b=desired_ref_names(p,urls)
-  # Only alter known source families, or a reference that already carries named-as snaks.
   known=any(x in ' '.join(urls).lower() for x in ('ghezelbaash.ir','icliniq.com','openstreetmap.org','google.com/maps','orcid.org'))
   has=bool(r.get('snaks',{}).get('P1810') or r.get('snaks',{}).get('P1932'))
   if known or has: replace_reference(c['id'],r,a,b,changes)
-# Verify complete live result.
 time.sleep(2); after=entity(); checks={}
 for p in sorted(EXPECTED_PROPS):
  c=after['claims'][p][0]; sa,sb=desired_statement_names(p)
- if qvals(c,'P1810') != ([] if sa is None else [sa]): raise RuntimeError({'statement_P1810_verify':p,qvals(c,'P1810')})
- if qvals(c,'P1932') != ([] if sb is None else [sb]): raise RuntimeError({'statement_P1932_verify':p,qvals(c,'P1932')})
+ actual1810=qvals(c,'P1810'); expected1810=[] if sa is None else [sa]
+ actual1932=qvals(c,'P1932'); expected1932=[] if sb is None else [sb]
+ if actual1810 != expected1810: raise RuntimeError({'statement_P1810_verify':{'property':p,'actual':actual1810,'expected':expected1810}})
+ if actual1932 != expected1932: raise RuntimeError({'statement_P1932_verify':{'property':p,'actual':actual1932,'expected':expected1932}})
  refs=[]
  for r in c.get('references',[]):
   urls=refurls(r); a,b=desired_ref_names(p,urls); u=' '.join(urls).lower(); known=any(x in u for x in ('ghezelbaash.ir','icliniq.com','openstreetmap.org','google.com/maps','orcid.org'))
   if known:
    av=[sval(x) for x in r.get('snaks',{}).get('P1810',[])]; bv=[sval(x) for x in r.get('snaks',{}).get('P1932',[])]
-   if av != ([] if a is None else [a]): raise RuntimeError({'reference_P1810_verify':p,urls,av,a})
-   if bv != ([] if b is None else [b]): raise RuntimeError({'reference_P1932_verify':p,urls,bv,b})
+   ea=[] if a is None else [a]; eb=[] if b is None else [b]
+   if av != ea: raise RuntimeError({'reference_P1810_verify':{'property':p,'urls':urls,'actual':av,'expected':ea}})
+   if bv != eb: raise RuntimeError({'reference_P1932_verify':{'property':p,'urls':urls,'actual':bv,'expected':eb}})
    refs.append({'urls':urls,'P1810':av,'P1932':bv})
- checks[p]={'value':mainval(c),'P1810':qvals(c,'P1810'),'P1932':qvals(c,'P1932'),'references':refs}
+ checks[p]={'value':mainval(c),'P1810':actual1810,'P1932':actual1932,'references':refs}
 print(json.dumps({'ok':True,'qid':Q,'changes_count':len(changes),'changes':changes,'verified':checks},ensure_ascii=False,indent=2))
