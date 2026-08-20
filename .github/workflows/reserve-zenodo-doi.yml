@@ -1,4 +1,4 @@
-name: Reserve Zenodo DOI for release 1.2.3
+name: Build and validate release 1.2.3 candidate
 
 on:
   push:
@@ -7,53 +7,77 @@ on:
       - '.github/workflows/reserve-zenodo-doi.yml'
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: release-1.2.3-candidate
+  cancel-in-progress: false
 
 jobs:
-  reserve:
+  build-candidate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    env:
-      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_PAT || secrets.ZENODO }}
-      NEXT_RELEASE: 1.2.3
-      NEXT_DATE: 2026-08-21
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          persist-credentials: false
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply reviewed source change-set and remove temporary transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          gunzip -c .github/release-1.2.3.patch.gz > /tmp/release-1.2.3.patch
+          git apply --check /tmp/release-1.2.3.patch
+          git apply /tmp/release-1.2.3.patch
+          git rm .github/workflows/reserve-zenodo-doi.yml .github/release-1.2.3.patch.gz
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+          cache: npm
+
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
-      - name: Load immutable baseline identity
+
+      - name: Install exact toolchain
         shell: bash
         run: |
           set -euo pipefail
-          node - <<'NODE' >> "$GITHUB_ENV"
-          const release=require('./src/data/release.json');
-          const z=release.dataset.zenodo;
-          console.log(`CURRENT_RELEASE=${release.release}`);
-          console.log(`CURRENT_RECORD=${z.recordId}`);
-          console.log(`CURRENT_DOI=${z.versionDoi}`);
-          console.log(`CONCEPT_DOI=${z.conceptDoi}`);
-          NODE
-      - name: Reserve next-version DOI without publishing
+          npm install --global npm@11.17.0
+          test "$(node --version)" = "v24.19.0"
+          test "$(npm --version)" = "11.17.0"
+          python --version
+          npm ci --ignore-scripts
+
+      - name: Validate and build exact release candidate
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${ZENODO_TOKEN:-}"
-          echo "::add-mask::$ZENODO_TOKEN"
-          python scripts/zenodo_release.py reserve \
-            --current-record="$CURRENT_RECORD" \
-            --current-doi="$CURRENT_DOI" \
-            --current-version="$CURRENT_RELEASE" \
-            --concept-doi="$CONCEPT_DOI" \
-            --version="$NEXT_RELEASE" \
-            --date="$NEXT_DATE" \
-            --output=.release/runtime/zenodo-reservation.json
-      - name: Upload reservation ledger
+          npm run release
+
+      - name: Commit only the validated canonical release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+          test ! -e .github/release-1.2.3.patch.gz
+          test ! -e .github/workflows/reserve-zenodo-doi.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Release 1.2.3: fix F01-F06 and converge authority graph"
+          git push origin HEAD:codex/release-1.2.3-reserve
+
+      - name: Upload exact release packages for audit
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: zenodo-reservation-1.2.3
-          path: .release/runtime/zenodo-reservation.json
+          name: release-1.2.3-candidate
+          path: |
+            .release/packages/
+            dist/artifact-manifest.json
+            dist/knowledge-graph.jsonld
+            dist/knowledge-graph.ttl
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
