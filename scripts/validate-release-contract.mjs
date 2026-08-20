@@ -5,6 +5,8 @@ import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {assertIdentityFingerprintSource} from './lib/release-identity.mjs';
 import {currentReleaseMetadataMismatches,releaseHistoryNodeId,selectCurrentReleaseBoundNodes,nodeTypes} from './lib/release-graph.mjs';
 import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
+import {bindHeroPreloadSizes} from '../src/lib/hero-image-contract.mjs';
+import {bindReleaseTokens} from '../src/lib/release-tokens.mjs';
 
 const root=process.cwd();
 const fail=message=>{throw new Error(message)};
@@ -40,7 +42,7 @@ const invariantKeys=[
   'googlebotReservedResponseHeaderBytes','googlebotSafetyMarginBytes','headAlternateNameMax',
   'maxCoreGraphEndByte','maxCriticalCssBytes','maxHeadGraphBytes','maxHtmlBytes','maxOrphanGraphNodes',
   'maxRagPassageChars','maxRootCustomHeaderBytes','maxSupportGraphBytes','maxSupportGraphEndByte',
-  'minClaimEvidencePassages','minExternalCssBytes','redirectsSha256','runtime'
+  'minClaimEvidencePassages','minExternalCssBytes','redirectsSha256'
 ];
 exactKeys(invariants,invariantKeys,'release-invariants');
 if(!invariants.contractClasses?.architectural||!invariants.contractClasses?.strategic||!invariants.contractClasses?.releaseDerivedMeasurements)fail('Invariant class contract is incomplete');
@@ -67,6 +69,22 @@ if(!currentHistory||currentHistory.versionDoi!==Z.versionDoi||String(currentHist
 if(codemeta.softwareVersion!==R||codemeta.dateModified!==release.dateModified||codemeta.subjectOf?.version!==R||codemeta.subjectOf?.identifier!==`https://doi.org/${Z.versionDoi}`||codemeta.subjectOf?.name!==release.dataset.name)fail('CodeMeta release convergence failure');
 const citation=await readFile(path.join(root,'CITATION.cff'),'utf8');
 for(const token of [`version: ${R}`,`date-released: ${release.dateModified}`,`doi: ${Z.versionDoi}`])if(!citation.includes(token))fail(`CITATION release drift: ${token}`);
+
+const mainHeadTemplate=await readFile(path.join(root,'src/data/templates/main-head.html'),'utf8');
+if((mainHeadTemplate.match(/{{CURRENT_VERSION_DOI}}/g)||[]).length!==1||(mainHeadTemplate.match(/{{CURRENT_RELEASE}}/g)||[]).length!==1)fail('Main Head current-release token contract drift');
+const boundHead=bindReleaseTokens(bindHeroPreloadSizes(mainHeadTemplate),release);
+if(/{{[A-Z0-9_]+}}/.test(boundHead)||!boundHead.includes(`href="https://doi.org/${Z.versionDoi}"`)||!boundHead.includes(`title="Zenodo preservation Version DOI ${R}"`))fail('Main Head current-release convergence failure');
+
+const pageSource=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
+const factsBlock=pageSource.match(/<dl\s+id=["']doctor-ghezelbaash-structured-data-repository-facts["'][^>]*>[\s\S]*?<\/dl>/i)?.[0];
+if(!factsBlock)fail('Structured-data repository facts block missing');
+for(const token of ['{{CURRENT_RELEASE}}','{{CURRENT_RELEASE_DATE_EN}}','{{CURRENT_VERSION_DOI}}'])if(!factsBlock.includes(token))fail(`Current release facts are not templated from release.json: ${token}`);
+if((pageSource.match(/{{CURRENT_VERSION_DOI_URLENCODED}}/g)||[]).length!==1)fail('Current OpenAIRE DOI URL must be templated exactly once from release.json');
+const previousHistory=Z.releaseHistory.filter(entry=>entry.release!==R).at(-1);
+if(previousHistory){
+  const archivedSection=pageSource.match(/<p><strong>Archived DOI release citation:<\/strong>[\s\S]*?<\/p>/i)?.[0]||'';
+  if(!archivedSection.includes(`Version ${previousHistory.release}`)||!archivedSection.includes(previousHistory.versionDoi))fail('Archived DOI release citation history regressed');
+}
 
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
 const nodes=graph['@graph']||[];
@@ -117,7 +135,8 @@ const {content}=await assembleCanonicalContent({root,graph});
 if(!content.includes(`id="${visible.protected.h1Id}"`))fail('Protected H1 is missing');
 for(const heading of visible.protected.aggressiveHeadings||[])if(heading.id&&!content.includes(`id="${heading.id}"`))fail(`Protected aggressive heading is missing: ${heading.id}`);
 for(const heading of visible.protected.instagramHeadingLinks||[])if(heading.id&&!content.includes(`id="${heading.id}"`))fail(`Protected Instagram heading association is missing: ${heading.id}`);
-if(!content.includes('google-maps-clinic-reputation-current')||!content.includes(`Version ${R}`)||!content.includes(`https://doi.org/${Z.versionDoi}`))fail('Visible current release/reputation surface is incomplete');
+const currentOpenAireUrl=`https://explore.openaire.eu/search/result?pid=${encodeURIComponent(Z.versionDoi)}`;
+if(!content.includes('google-maps-clinic-reputation-current')||!content.includes(`Version ${R}`)||!content.includes(`https://doi.org/${Z.versionDoi}`)||!content.includes(currentOpenAireUrl))fail('Visible current release/reputation surface is incomplete');
 
 const volatile=await readJson('src/data/volatile-facts.json');
 if(volatile.placeId!==release.clinic.placeId||!(Number(volatile.rating)>=1&&Number(volatile.rating)<=5)||!Number.isInteger(Number(volatile.reviewCount))||Number(volatile.reviewCount)<0)fail('Mutable reputation contract failure');
@@ -127,4 +146,4 @@ if(authorityPolicy.identitySource!=='src/data/release.json')fail('Authority poli
 for(const task of ['question-answering','text-retrieval','text-generation'])if(!hfPolicy.taskCategories?.includes(task))fail(`HF task contract missing: ${task}`);
 for(const language of ['fa','en','ar','ckb'])if(!hfPolicy.languages?.includes(language))fail(`HF language contract missing: ${language}`);
 
-console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),releaseHistory:Z.releaseHistory.length,releaseBoundNodes:releaseBound.length,graphClosure,redirectsSha256,services:registered.size,answers:(answers.answers||[]).length,medicalReviewedAt:release.medicalReviewedAt,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),releaseHistory:Z.releaseHistory.length,releaseBoundNodes:releaseBound.length,graphClosure,redirectsSha256,services:registered.size,answers:(answers.answers||[]).length,medicalReviewedAt:release.medicalReviewedAt,headReleaseBinding:'PASS',visibleReleaseBinding:'PASS',openaireReleaseBinding:'PASS',integrity:'PASS'},null,2));
