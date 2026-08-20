@@ -1,23 +1,10 @@
 import path from 'node:path';
 import {readFile,readdir} from 'node:fs/promises';
 import {bindHeroPictureSizes} from '../../src/lib/hero-image-contract.mjs';
+import {bindReleaseTokens} from '../../src/lib/release-tokens.mjs';
 
 const persianNumber=(value,digits=0)=>new Intl.NumberFormat('fa-IR',{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}).format(Number(value));
 const persianGregorianDate=value=>new Intl.DateTimeFormat('fa-IR-u-ca-gregory',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value));
-const englishDate=value=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(String(value)+'T00:00:00Z'));
-
-const bindReleaseTokens=(content,release)=>{
-  const values={
-    '{{CURRENT_RELEASE}}':release.release,
-    '{{CURRENT_VERSION_DOI}}':release.dataset.zenodo.versionDoi,
-    '{{CURRENT_VERSION_DOI_URLENCODED}}':encodeURIComponent(release.dataset.zenodo.versionDoi),
-    '{{CURRENT_RELEASE_DATE_EN}}':englishDate(release.dateModified),
-    '{{MEDICAL_REVIEW_DATE_EN}}':englishDate(release.medicalReviewedAt)
-  };
-  for(const [token,value] of Object.entries(values))content=content.replaceAll(token,String(value));
-  if(/{{[A-Z0-9_]+}}/.test(content))throw new Error('Unresolved canonical page token');
-  return content;
-};
 
 const bindLiveReputation=async(root,content,release)=>{
   const volatile=JSON.parse(await readFile(path.join(root,'src/data/volatile-facts.json'),'utf8'));
