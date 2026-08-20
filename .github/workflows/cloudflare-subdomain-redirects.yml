@@ -50,6 +50,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/configure-cloudflare-edge.py --reconcile-subdomain-redirects
+          python scripts/configure-cloudflare-edge.py \
+            --apply-subdomains-only \
+            --outcome edge-subdomain-reconciliation.json
       - name: Verify public redirect behavior
         run: npm run verify:subdomains
