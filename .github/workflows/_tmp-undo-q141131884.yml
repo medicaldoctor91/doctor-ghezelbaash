@@ -1,5 +1,6 @@
 name: Temporary undo Q141131884 and request deletion
 
+# trigger after registration
 on:
   workflow_run:
     workflows: ['Read-only source and release validation']
