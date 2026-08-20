@@ -1,5 +1,5 @@
 {
-  "redirectsSha256": "847e8e3244c5308ecc30294385fbd332ce7a3c51eb998b65c9455ea17707e060",
+  "redirectsSha256": "69e5984b3f46a216890c8c6f550ea8afe924e8d511ba2ae3924364df54908e2e",
   "externalRdfTripleCount": 8655,
   "maxHtmlBytes": 1950000,
   "runtime": {
@@ -20,7 +20,7 @@
   "maxRootCustomHeaderBytes": 8000,
   "maxCoreGraphEndByte": 35000,
   "maxSupportGraphEndByte": 1940000,
-  "maxCriticalCssBytes": 10000,
+  "maxCriticalCssBytes": 12000,
   "minExternalCssBytes": 45000,
   "contractClasses": {
     "architectural": {

@@ -1,7 +1,10 @@
 import path from 'node:path';
 import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {assertIdentityFingerprintSource} from './lib/release-identity.mjs';
+import {currentReleaseMetadataMismatches,releaseHistoryNodeId,selectCurrentReleaseBoundNodes,nodeTypes} from './lib/release-graph.mjs';
+import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
 
 const root=process.cwd();
 const fail=message=>{throw new Error(message)};
@@ -41,6 +44,9 @@ const invariantKeys=[
 ];
 exactKeys(invariants,invariantKeys,'release-invariants');
 if(!invariants.contractClasses?.architectural||!invariants.contractClasses?.strategic||!invariants.contractClasses?.releaseDerivedMeasurements)fail('Invariant class contract is incomplete');
+const redirectsBytes=await readFile(path.join(root,'public/_redirects'));
+const redirectsSha256=createHash('sha256').update(redirectsBytes).digest('hex');
+if(redirectsSha256!==invariants.redirectsSha256)fail(`Redirect source hash drift: ${redirectsSha256}`);
 
 exactKeys(Z,['conceptDoi','recordId','releaseHistory','role','versionDoi'],'Zenodo release truth');
 if(Z.role!=='preservation'||!validDoi(Z.conceptDoi)||!validDoi(Z.versionDoi)||!validRecord(Z.recordId))fail('Zenodo release identity contract failure');
@@ -66,6 +72,9 @@ const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
 const nodes=graph['@graph']||[];
 if(!Array.isArray(nodes))fail('Canonical graph must contain @graph');
 const byId=new Map(nodes.filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
+const graphClosure=analyzeGraphClosure(graph,{baseUrl:release.canonicalUrl});
+if(graphClosure.duplicateIds.length)fail(`Duplicate graph IDs: ${graphClosure.duplicateIds.map(item=>item.id).join(', ')}`);
+if(graphClosure.danglingSameSiteCount>invariants.maxOrphanGraphNodes)fail(`Dangling same-site graph IDs: ${graphClosure.danglingSameSiteIds.join(', ')}`);
 const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id);
 if(!person||!clinic||!dataset)fail('Core Person/Clinic/Dataset topology is incomplete');
 if(dataset.name!==release.dataset.name||dataset.version!==R||dataset.dateModified!==release.dateModified)fail('Dataset identity/release projection drift');
@@ -74,6 +83,10 @@ const datasetAbout=new Set(arr(dataset.about).map(id));
 if(!datasetAbout.has(release.primaryEntity.id)||!datasetAbout.has(release.clinic.id))fail('Dataset about topology is incomplete');
 const datasetSameAs=arr(dataset.sameAs).map(id);
 if(datasetSameAs.length!==1||datasetSameAs[0]!==`https://www.wikidata.org/entity/${release.dataset.wikidata}`)fail('Dataset sameAs must contain only its reconciliation identity');
+const releaseBound=selectCurrentReleaseBoundNodes(nodes,release.dataset.id);
+if(!releaseBound.length)fail('No current release-bound graph nodes selected');
+const releaseBoundMismatches=currentReleaseMetadataMismatches(nodes,{datasetId:release.dataset.id,release:R,dateModified:release.dateModified});
+if(releaseBoundMismatches.length)fail(`Current release-bound graph metadata drift: ${releaseBoundMismatches.map(item=>item.id).join(', ')}`);
 
 const github=byId.get(`${release.canonicalUrl}#project-github-source`);
 const hf=byId.get(`${release.canonicalUrl}#project-huggingface-dataset`);
@@ -83,8 +96,8 @@ if(release.dataset.huggingFace?.role!=='ai-distribution'||release.dataset.huggin
 if(zenodo?.version!==R||zenodo?.sameAs!==`https://zenodo.org/records/${Z.recordId}`||!String(zenodo?.identifier||'').includes(Z.versionDoi)||!String(zenodo?.url||'').includes(Z.versionDoi))fail('Zenodo preservation projection drift');
 
 for(const entry of Z.releaseHistory){
-  const releaseNode=byId.get(`${release.canonicalUrl}graph.jsonld#release-${entry.release.replaceAll('.','-')}`);
-  if(!releaseNode||releaseNode.version!==entry.release||releaseNode.datePublished!==entry.publicationDate||!JSON.stringify(releaseNode).includes(entry.versionDoi))fail(`Release-history graph projection drift: ${entry.release}`);
+  const releaseNode=byId.get(releaseHistoryNodeId(release.canonicalUrl,entry.release));
+  if(!releaseNode||!nodeTypes(releaseNode).has('Dataset')||releaseNode.additionalType||releaseNode.version!==entry.release||releaseNode.datePublished!==entry.publicationDate||!JSON.stringify(releaseNode).includes(entry.versionDoi))fail(`Release-history graph projection drift: ${entry.release}`);
 }
 
 const services=await readJson('src/data/service-registry.json');
@@ -114,4 +127,4 @@ if(authorityPolicy.identitySource!=='src/data/release.json')fail('Authority poli
 for(const task of ['question-answering','text-retrieval','text-generation'])if(!hfPolicy.taskCategories?.includes(task))fail(`HF task contract missing: ${task}`);
 for(const language of ['fa','en','ar','ckb'])if(!hfPolicy.languages?.includes(language))fail(`HF language contract missing: ${language}`);
 
-console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),releaseHistory:Z.releaseHistory.length,services:registered.size,answers:(answers.answers||[]).length,medicalReviewedAt:release.medicalReviewedAt,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),releaseHistory:Z.releaseHistory.length,releaseBoundNodes:releaseBound.length,graphClosure,redirectsSha256,services:registered.size,answers:(answers.answers||[]).length,medicalReviewedAt:release.medicalReviewedAt,integrity:'PASS'},null,2));

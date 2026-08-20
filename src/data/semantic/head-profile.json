@@ -62,6 +62,10 @@
           "https://www.ghezelbaash.ir/#identifier-person-irimc",
           "https://www.ghezelbaash.ir/#identifier-person-orcid"
         ],
+        "memberOf": [
+          "https://www.ghezelbaash.ir/#organization-iran-medical-council",
+          "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        ],
         "potentialAction": [
           "https://www.ghezelbaash.ir/#action-contact-clinic",
           "https://www.ghezelbaash.ir/#action-online-initial-consultation",

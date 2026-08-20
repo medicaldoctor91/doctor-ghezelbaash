@@ -1,5 +1,6 @@
 import path from 'node:path';
 import {readFile,readdir} from 'node:fs/promises';
+import {bindHeroPictureSizes} from '../../src/lib/hero-image-contract.mjs';
 
 const persianNumber=(value,digits=0)=>new Intl.NumberFormat('fa-IR',{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}).format(Number(value));
 const persianGregorianDate=value=>new Intl.DateTimeFormat('fa-IR-u-ca-gregory',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value));
@@ -40,6 +41,7 @@ export async function assembleCanonicalContent({root=process.cwd()}={}){
   const names=await canonicalSourceNames(root);
   const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
   let content=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
+  content=bindHeroPictureSizes(content);
   content=bindReleaseTokens(content,release);
   content=await bindLiveReputation(root,content,release);
   return {content,names};
