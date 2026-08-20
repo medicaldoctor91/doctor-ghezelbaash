@@ -1,9 +1,11 @@
 ---
 import mainHeadRaw from '../data/templates/main-head.html?raw';
+import release from '../data/release.json';
 import { bindHeroPreloadSizes } from '../lib/hero-image-contract.mjs';
+import { bindReleaseTokens } from '../lib/release-tokens.mjs';
 interface Props { title: string; description: string; robots: string; canonicalURL: URL; isMain?: boolean; }
 const { title, description, robots, canonicalURL, isMain=false } = Astro.props;
-const mainHead=bindHeroPreloadSizes(mainHeadRaw);
+const mainHead=bindReleaseTokens(bindHeroPreloadSizes(mainHeadRaw),release);
 const viewportPattern=/^<meta\b(?=[^>]*\bname="viewport")[^>]*\/>/i;
 const heroPreloadPattern=/<link\b(?=[^>]*\brel="preload")(?=[^>]*\bas="image")(?=[^>]*\bfetchpriority="high")(?=[^>]*\bimagesrcset=)(?=[^>]*saeed-ghezelbash-portrait-delivery-640)[^>]*\/>/i;
 const viewportTag=mainHead.match(viewportPattern)?.[0]??'';
