@@ -1,4 +1,4 @@
-export const HERO_IMAGE_SIZES='(max-width: 720px) calc(100vw - 2.56rem - 2px), (max-width: calc(45.19828rem + 2.1978px)) calc(18rem - 2px), (max-width: 80rem) calc(41.86vw - .92rem - 2.92px), (max-width: 100rem) calc(35.88rem - 4.14vw - 2.92px), calc(31.74rem - 2.92px)';
+export const HERO_IMAGE_SIZES='(max-width: 720px) and (max-width: 79rem) calc(100vw - 2.56rem), (max-width: 720px) 76.44rem, (max-width: calc(45.19828rem + 2.1978px)) 18rem, (max-width: 80rem) calc(41.86vw - .92rem - .92px), (max-width: 100rem) calc(35.88rem - 4.14vw - .92px), calc(31.74rem - .92px)';
 export const HERO_FIGURE_TOTAL_BORDER_PX=2;
 export const HERO_IMAGE_SIZES_TOKEN='{{HERO_IMAGE_SIZES}}';
 
