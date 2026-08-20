@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "specific_position": "Q141131884",
+  "created_position": false,
+  "clinic_P2388": "Q140288589$502CF942-A43D-4C71-BF77-E0CEAACBB01F",
+  "position_P2389": "Q141131884$92585C8F-2535-40D7-BF57-871AD1673090",
+  "position_P1308": "Q141131884$3DBED5EA-072B-4445-8658-606283A077F5",
+  "person_P39": "Q140287622$93AE3270-E5A1-46AB-B261-4B92A219AA81",
+  "named_as": {
+    "clinic_subject_P1810": "Dr. Saeed Ghezelbash Aesthetic Clinic — کلینیک زیبایی دکتر سعید قزلباش",
+    "position_object_P1932": "Director / Manager / مدیر"
+  },
+  "google_kg_reference_properties": [
+    "P248",
+    "P2671",
+    "P813"
+  ],
+  "hugging_face": {
+    "value": "doctor-ghezelbaash",
+    "kept": true,
+    "note": "valid live handle; Wikidata P12201 format constraint currently rejects hyphenated handles"
+  },
+  "verified": {
+    "inverse_clinic_position": true,
+    "inverse_person_holder": true,
+    "subject_object_named_as_direction": true,
+    "google_kg_reference_rebuilt": true
+  }
+}
+
+EXIT_CODE=0
