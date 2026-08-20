@@ -1,7 +1,7 @@
 {
   "ok": true,
   "qid": "Q141131884",
-  "removed_P279_director": true,
+  "removed_P279_director": false,
   "P31": [
     "Q4164871"
   ],
