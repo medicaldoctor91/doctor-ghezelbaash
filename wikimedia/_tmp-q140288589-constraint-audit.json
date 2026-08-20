@@ -225,10 +225,13 @@
       ],
       "P2388": [
         {
-          "guid": "Q140288589$AB129998-D2A7-472D-83BF-56456BF1DD4D",
+          "guid": "Q140288589$502CF942-A43D-4C71-BF77-E0CEAACBB01F",
           "qualifiers": {
             "P1810": [
-              "کلینیک زیبایی دکتر سعید قزلباش"
+              "Dr. Saeed Ghezelbash Aesthetic Clinic — کلینیک زیبایی دکتر سعید قزلباش"
+            ],
+            "P1932": [
+              "Director / Manager / مدیر"
             ]
           },
           "rank": "normal",
@@ -240,27 +243,7 @@
                   "before": 0,
                   "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
                   "precision": 11,
-                  "time": "+2026-08-18T00:00:00Z",
-                  "timezone": 0
-                }
-              ],
-              "P854": [
-                "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
-                "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up",
-                "https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error"
-              ]
-            },
-            {
-              "P1810": [
-                "کلینیک زیبایی دکتر سعید قزلباش"
-              ],
-              "P813": [
-                {
-                  "after": 0,
-                  "before": 0,
-                  "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
-                  "precision": 11,
-                  "time": "+2026-08-18T00:00:00Z",
+                  "time": "+2026-08-20T00:00:00Z",
                   "timezone": 0
                 }
               ],
@@ -269,7 +252,7 @@
               ]
             }
           ],
-          "value": "Q256688"
+          "value": "Q141131884"
         }
       ],
       "P2671": [
@@ -279,18 +262,21 @@
           "rank": "normal",
           "references": [
             {
+              "P248": [
+                "Q648625"
+              ],
+              "P2671": [
+                "/g/11r3rzdtb3"
+              ],
               "P813": [
                 {
                   "after": 0,
                   "before": 0,
                   "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
                   "precision": 11,
-                  "time": "+2026-08-06T00:00:00Z",
+                  "time": "+2026-08-20T00:00:00Z",
                   "timezone": 0
                 }
-              ],
-              "P854": [
-                "https://www.google.com/search?kgmid=/g/11r3rzdtb3"
               ]
             }
           ],
