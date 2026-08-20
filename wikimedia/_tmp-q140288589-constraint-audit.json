@@ -1,0 +1,685 @@
+{
+  "constraint_results": {
+    "Q140288589$02251ac7-485e-8336-29db-2cd9114929b6": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$0C09B021-BB6A-46EB-A201-158D466A7BEE": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$0cab165e-47a4-18f1-d813-e594be883c58": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$17780463-998D-4145-819E-306BA2D302E5": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$191E9FAA-78E0-46F2-9963-C730FCAE8670": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$1e121f27-4c63-eb5a-17ca-45591313ecbb": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$222A52A9-AE5F-48C2-A016-A6CFBF7A03F3": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$26cbfe7c-4773-aa38-dd51-ffba5dede588": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$2c5a9a56-4fb1-02b1-d514-03a6580567c4": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$2fd74fdd-4efe-2413-d945-96afc2c0077c": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$35F820AF-C626-4928-9FA5-136C2A0998E1": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$3688C124-D104-4E29-8186-0AAF3D5649F6": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$3EE2F8D7-2360-44F1-A11B-C0F516855A09": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$41AF23FA-F489-4AF6-AD0E-6C53F1727483": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$463D8D8D-1E4B-478C-848A-253363E6EDE3": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$4ad92798-45e5-d300-6e24-0c76aa8656f5": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$4e326fbb-4de1-ab2a-6fb6-87fcc86fb953": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$510c7dfe-471a-21d7-7d27-72d1f29d630c": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$6a397c52-4869-0e92-68ac-d535792b3f6c": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$714a8557-441b-b42e-3d43-5f3366dc07c0": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$77162785-3A5F-4206-A6FF-4195617380D4": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$79620f79-42a3-62a1-2100-b99cddfda97a": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$7AF6932E-61C3-4CCA-93C2-D874C5714A66": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$7de10a43-4e1b-121d-0330-aab5dc6d8773": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$82201163-BA66-4635-9CFF-CF522F0B2C09": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$8D252D10-E42B-4505-8A0B-FCEC10A0746E": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$8D9A2C13-33B2-4DCC-81E5-D3A5E781F269": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$9647CB85-D58E-48CA-AD05-9F60967960C3": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$9956E05C-B188-40E9-9F9E-E50E9183CD17": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$A4612407-2008-429A-9408-CF4DA545FAAC": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$A515E0F4-0BC7-4822-9C81-9A8B5CCB7057": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$A84A89BB-BA42-418A-BE14-775D1B812CE1": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$AB129998-D2A7-472D-83BF-56456BF1DD4D": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$B362C062-4E38-4DC9-9714-0FC06C37BCB3": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$CBAB2616-2D45-4BCB-A396-DF24A938AB21": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$D304CAC9-A2F3-441F-BFC4-2A4D092F9A09": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$D3EE0C6B-A82F-4939-95B4-FC6C3C722AEF": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$D6D9341C-8E89-44CE-AD61-CCA6C5749A25": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$DB4F1F4D-F9C1-45CF-AE48-F7A3FB545A60": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$DE164074-D95A-4DA3-A95C-4FF19A4A7926": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$DEFDF5E3-1046-4606-B9CE-B4DB04E31171": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$E81AC15C-8E78-4A83-8A1E-FE348A0B038F": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$EA37E317-7F36-487C-8014-58E2663D30B9": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$EC3F36F6-5CA4-4D27-94BA-6B17CAD38300": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$EE96F1C1-3C47-4FA6-86FA-50BB8FB6B320": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$F4AF0A53-6DFE-49E5-BDEF-B5E89CD608DA": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$F89DDB38-9C7B-4617-AC54-42FB2FBFF8D7": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$FC0E2FC9-B0B6-4BF1-9D00-5FC27D409582": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$a7cadd60-4777-8c6a-4967-5bf13cbd8988": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$dd996b81-4cfa-373e-c4d9-47bada8b19e2": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$ef8e7cb6-4468-f2be-2763-f835cb30e0a0": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    },
+    "Q140288589$f390bd24-4f66-c140-6692-a76461fe9690": {
+      "audit_error": "RuntimeError({'code': 'no-data', 'info': 'No data to operate on.', 'messages': [{'name': 'wikibase-api-no-data', 'parameters': [], 'html': 'No data to operate on.'}], 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'})"
+    }
+  },
+  "entities": {
+    "Q140287622": {
+      "claims": {
+        "P12201": [
+          {
+            "guid": "Q140287622$b1486c46-49c2-978c-b6a4-80fd550e3d51",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [
+              {
+                "P1810": [
+                  "Saeed Ghezelbash"
+                ],
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-07-22T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://huggingface.co/Ghezelbaash"
+                ]
+              }
+            ],
+            "value": "ghezelbaash"
+          }
+        ],
+        "P2671": [
+          {
+            "guid": "Q140287622$1B358C30-1D4B-448A-A9C9-37B0D7DC00A6",
+            "qualifiers": {
+              "P14457": [
+                {
+                  "language": "en",
+                  "text": "Saeed Ghezelbash"
+                },
+                {
+                  "language": "fa",
+                  "text": "سعید قزلباش"
+                }
+              ]
+            },
+            "rank": "normal",
+            "references": [
+              {
+                "P248": [
+                  "Q648625"
+                ],
+                "P2671": [
+                  "/g/11nqdfk76c"
+                ],
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-08-19T00:00:00Z",
+                    "timezone": 0
+                  }
+                ]
+              }
+            ],
+            "value": "/g/11nqdfk76c"
+          }
+        ],
+        "P31": [
+          {
+            "guid": "Q140287622$4616fb39-4924-8852-9c00-269a404c0250",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [
+              {
+                "P1810": [
+                  "دکتر محمدسعید قزلباش"
+                ],
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-08-07T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e"
+                ]
+              }
+            ],
+            "value": "Q5"
+          }
+        ],
+        "P856": [
+          {
+            "guid": "Q140287622$b46cd23b-4153-eb8d-6b9c-cfb15c33d083",
+            "qualifiers": {
+              "P1810": [
+                "دکتر سعید قزلباش"
+              ],
+              "P407": [
+                "Q9168",
+                "Q1860"
+              ]
+            },
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-08-11T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.ghezelbaash.ir/"
+                ]
+              }
+            ],
+            "value": "https://www.ghezelbaash.ir/"
+          }
+        ]
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "Iranian aesthetic physician and medical researcher based in Kermanshah"
+        },
+        "fa": {
+          "language": "fa",
+          "value": "پزشک زیبایی و پژوهشگر پزشکی ایرانی در کرمانشاه"
+        }
+      },
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Saeed Ghezelbash"
+        },
+        "fa": {
+          "language": "fa",
+          "value": "سعید قزلباش"
+        }
+      }
+    },
+    "Q140288589": {
+      "claims": {
+        "P12201": [
+          {
+            "guid": "Q140288589$a7cadd60-4777-8c6a-4967-5bf13cbd8988",
+            "qualifiers": {
+              "P407": [
+                "Q9168",
+                "Q1860"
+              ]
+            },
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-06-19T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://huggingface.co/doctor-ghezelbaash"
+                ]
+              }
+            ],
+            "value": "doctor-ghezelbaash"
+          }
+        ],
+        "P13096": [
+          {
+            "guid": "Q140288589$ef8e7cb6-4468-f2be-2763-f835cb30e0a0",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-08-07T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://yandex.com/maps/org/63459342435"
+                ]
+              }
+            ],
+            "value": "63459342435"
+          }
+        ],
+        "P17": [
+          {
+            "guid": "Q140288589$2c5a9a56-4fb1-02b1-d514-03a6580567c4",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-06-19T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.ghezelbaash.ir/"
+                ]
+              }
+            ],
+            "value": "Q794"
+          }
+        ],
+        "P2388": [
+          {
+            "guid": "Q140288589$AB129998-D2A7-472D-83BF-56456BF1DD4D",
+            "qualifiers": {
+              "P1810": [
+                "کلینیک زیبایی دکتر سعید قزلباش"
+              ]
+            },
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-08-18T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+                  "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up",
+                  "https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error"
+                ]
+              },
+              {
+                "P1810": [
+                  "کلینیک زیبایی دکتر سعید قزلباش"
+                ],
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-08-18T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+                ]
+              }
+            ],
+            "value": "Q256688"
+          }
+        ],
+        "P2671": [
+          {
+            "guid": "Q140288589$0cab165e-47a4-18f1-d813-e594be883c58",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-08-06T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.google.com/search?kgmid=/g/11r3rzdtb3"
+                ]
+              }
+            ],
+            "value": "/g/11r3rzdtb3"
+          }
+        ],
+        "P31": [
+          {
+            "guid": "Q140288589$02251ac7-485e-8336-29db-2cd9114929b6",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-06-24T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://niniban.com/%D8%A8%D8%AE%D8%B4-%D8%B3%D9%84%D8%A7%D9%85%D8%AA-20/243871-%D8%AE%D8%AF%D9%85%D8%A7%D8%AA-%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C-%D8%AF%D8%B1-%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87-%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+                  "https://www.khabaronline.ir/amp/2068552/",
+                  "https://www.ghezelbaash.ir/"
+                ]
+              }
+            ],
+            "value": "Q1774898"
+          },
+          {
+            "guid": "Q140288589$1e121f27-4c63-eb5a-17ca-45591313ecbb",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-06-24T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.ghezelbaash.ir/",
+                  "https://www.khabaronline.ir/amp/2068552/",
+                  "https://niniban.com/%D8%A8%D8%AE%D8%B4-%D8%B3%D9%84%D8%A7%D9%85%D8%AA-20/243871-%D8%AE%D8%AF%D9%85%D8%A7%D8%AA-%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C-%D8%AF%D8%B1-%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87-%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+                  "https://gadgetnews.net/927682/beauty-services-kermanshah-dr-saeed-ghazelbash/"
+                ]
+              }
+            ],
+            "value": "Q4287745"
+          }
+        ],
+        "P625": [
+          {
+            "guid": "Q140288589$79620f79-42a3-62a1-2100-b99cddfda97a",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-06-19T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.openstreetmap.org/node/13530287096"
+                ]
+              }
+            ],
+            "value": {
+              "altitude": null,
+              "globe": "http://www.wikidata.org/entity/Q2",
+              "latitude": 34.340124305555555,
+              "longitude": 47.08517780555555,
+              "precision": 2.777777777777778e-08
+            }
+          }
+        ],
+        "P856": [
+          {
+            "guid": "Q140288589$2fd74fdd-4efe-2413-d945-96afc2c0077c",
+            "qualifiers": {
+              "P1810": [
+                "کلینیک زیبایی دکتر سعید قزلباش"
+              ],
+              "P407": [
+                "Q9168"
+              ]
+            },
+            "rank": "normal",
+            "references": [
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-07-22T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.ghezelbaash.ir/"
+                ]
+              },
+              {
+                "P813": [
+                  {
+                    "after": 0,
+                    "before": 0,
+                    "calendarmodel": "http://www.wikidata.org/entity/Q1985727",
+                    "precision": 11,
+                    "time": "+2026-07-30T00:00:00Z",
+                    "timezone": 0
+                  }
+                ],
+                "P854": [
+                  "https://www.openstreetmap.org/node/13530287096"
+                ]
+              }
+            ],
+            "value": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+          }
+        ]
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "aesthetic clinic in Kermanshah, Iran"
+        },
+        "fa": {
+          "language": "fa",
+          "value": "کلینیک زیبایی در کرمانشاه، ایران"
+        }
+      },
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "Dr. Saeed Ghezelbash Aesthetic Clinic"
+        },
+        "fa": {
+          "language": "fa",
+          "value": "کلینیک زیبایی دکتر سعید قزلباش"
+        }
+      }
+    },
+    "Q256688": {
+      "claims": {
+        "P2671": [
+          {
+            "guid": "Q256688$0D6C6AC6-964C-46AB-AE8B-D9880C725286",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [],
+            "value": "/g/123338yr"
+          },
+          {
+            "guid": "Q256688$F7059048-0687-4A4E-9D1A-FE765BEFF4CF",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [],
+            "value": "/g/122cz91v"
+          },
+          {
+            "guid": "Q256688$1925A104-385E-46A7-88D2-F70B42E9C7E0",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [],
+            "value": "/g/120tgs8p"
+          }
+        ],
+        "P31": [
+          {
+            "guid": "Q256688$ba79762a-4a5a-44bd-d08b-c91eb463c763",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [],
+            "value": "Q4164871"
+          },
+          {
+            "guid": "Q256688$9321FDCA-0DD8-408B-A093-FC2DA6091DEA",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [],
+            "value": "Q28640"
+          },
+          {
+            "guid": "Q256688$7E8204E5-FE86-40EE-B093-1D808B2EA605",
+            "qualifiers": {},
+            "rank": "normal",
+            "references": [],
+            "value": "Q828803"
+          }
+        ]
+      },
+      "descriptions": {
+        "en": {
+          "language": "en",
+          "value": "person in charge of medical practice in an organisation"
+        }
+      },
+      "labels": {
+        "en": {
+          "language": "en",
+          "value": "medical director"
+        }
+      }
+    }
+  }
+}
