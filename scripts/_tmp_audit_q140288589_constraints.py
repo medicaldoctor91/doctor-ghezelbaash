@@ -1,57 +1,38 @@
 #!/usr/bin/env python3
-import json
-import requests
-
+import json, re, requests
 WD='https://www.wikidata.org/w/api.php'
-UA='GhezelbaashWikidataConstraintAudit/1.0 (https://www.ghezelbaash.ir/)'
+UA='GhezelbaashWikidataConstraintAudit/1.1 (https://www.ghezelbaash.ir/)'
 IDS=['Q140288589','Q140287622','Q256688']
-PROPS=['P2388','P2389','P1810','P1932','P12201','P2671','P13096','P31','P17','P625','P856']
+FOCUS=['P2388','P2389','P12201','P2671','P13096','P31','P17','P625','P856']
 
 def get(**p):
     p.update(format='json',formatversion=2)
-    r=requests.get(WD,params=p,headers={'User-Agent':UA},timeout=60)
-    r.raise_for_status(); d=r.json()
+    r=requests.get(WD,params=p,headers={'User-Agent':UA},timeout=60); r.raise_for_status(); d=r.json()
     if 'error' in d: raise RuntimeError(d['error'])
     return d
 
-def val(snak):
-    dv=snak.get('datavalue')
-    if not dv: return {'snaktype':snak.get('snaktype')}
-    v=dv.get('value')
+def val(s):
+    d=s.get('datavalue')
+    if not d: return {'snaktype':s.get('snaktype')}
+    v=d.get('value')
     if isinstance(v,dict) and 'id' in v: return v['id']
     return v
 
-def simp_claim(c):
-    return {
-      'guid':c.get('id'),'rank':c.get('rank'),'value':val(c.get('mainsnak',{})),
+def claim(c):
+    return {'guid':c.get('id'),'value':val(c.get('mainsnak',{})),'rank':c.get('rank'),
       'qualifiers':{p:[val(x) for x in xs] for p,xs in c.get('qualifiers',{}).items()},
-      'references':[
-        {p:[val(x) for x in xs] for p,xs in ref.get('snaks',{}).items()}
-        for ref in c.get('references',[])
-      ]
-    }
+      'references':[{p:[val(x) for x in xs] for p,xs in r.get('snaks',{}).items()} for r in c.get('references',[])]}
 
-d=get(action='wbgetentities',ids='|'.join(IDS),props='labels|descriptions|claims',languages='en|fa')
-out={'entities':{}}
+d=get(action='wbgetentities',ids='|'.join(IDS),props='labels|claims',languages='en|fa')
+out={}
 for q in IDS:
     e=d['entities'][q]
-    out['entities'][q]={
-      'labels':e.get('labels',{}),'descriptions':e.get('descriptions',{}),
-      'claims':{p:[simp_claim(c) for c in e.get('claims',{}).get(p,[])] for p in PROPS if e.get('claims',{}).get(p)}
-    }
-
-# Constraint check on every clinic statement, preserving only non-compliance results.
-clinic=d['entities']['Q140288589']
-checks={}
-for prop, claims in clinic.get('claims',{}).items():
-    for c in claims:
-        guid=c.get('id')
-        try:
-            cc=get(action='wbcheckconstraints',claim=guid,status='violation|warning|suggestion|bad-parameters')
-            results=cc.get('wbcheckconstraints',{}).get(guid,[])
-            if results:
-                checks[guid]=results
-        except Exception as ex:
-            checks[guid]={'audit_error':repr(ex)}
-out['constraint_results']=checks
+    out[q]={'labels':e.get('labels',{}),'claims':{p:[claim(c) for c in e.get('claims',{}).get(p,[])] for p in FOCUS if e.get('claims',{}).get(p)}}
+# API help parameters for exact constraint-check invocation.
+try:
+    h=requests.get(WD,params={'action':'help','modules':'wbcheckconstraints','format':'json'},headers={'User-Agent':UA},timeout=60).json()
+    txt=json.dumps(h,ensure_ascii=False)
+    out['wbcheckconstraints_help_parameter_names']=sorted(set(re.findall(r'"([a-zA-Z][a-zA-Z0-9_-]{1,30})"\s*:',txt)))
+except Exception as ex:
+    out['help_error']=repr(ex)
 print(json.dumps(out,ensure_ascii=False,indent=2,sort_keys=True))
