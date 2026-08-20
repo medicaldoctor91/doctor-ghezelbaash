@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "authenticated_as": "Medicaldoctor91",
+  "has_delete_right": false,
+  "removed_incoming_links": [
+    {
+      "entity": "Q140288589",
+      "property": "P2388",
+      "guid": "Q140288589$502CF942-A43D-4C71-BF77-E0CEAACBB01F"
+    },
+    {
+      "entity": "Q140287622",
+      "property": "P39",
+      "guid": "Q140287622$93AE3270-E5A1-46AB-B261-4B92A219AA81"
+    }
+  ],
+  "direct_P1037_to_person_preserved": true,
+  "target_sitelinks": {},
+  "deleted_directly": false,
+  "delete_error": null,
+  "rfd_added": true,
+  "rfd_already_present": false
+}
+
+EXIT_CODE=0
