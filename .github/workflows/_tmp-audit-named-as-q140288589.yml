@@ -1,5 +1,6 @@
 name: Temporary live named-as audit Q140288589
 
+# registered; trigger live audit
 on:
   workflow_run:
     workflows: ['Read-only source and release validation']
