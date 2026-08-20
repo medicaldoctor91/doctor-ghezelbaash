@@ -2,7 +2,7 @@ name: Temporary immediate named-as audit Q140288589
 
 on:
   pull_request_target:
-    types: [opened, synchronize]
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
