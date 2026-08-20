@@ -2,14 +2,14 @@ name: Temporary immediate named-as repair Q140288589
 
 on:
   pull_request_target:
-    types: [synchronize, reopened]
+    types: [opened]
 
 permissions:
   contents: write
 
 jobs:
   repair:
-    if: github.event.pull_request.head.ref == 'tmp-audit-named-as-q140288589-now'
+    if: github.event.pull_request.head.ref == 'tmp-fix-named-as-q140288589-now'
     runs-on: macos-15
     timeout-minutes: 12
     env:
