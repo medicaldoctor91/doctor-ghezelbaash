@@ -81,17 +81,44 @@ const pictureHints=[...(picture.matchAll(/\bsizes=["']([^"']+)["']/g))].map(matc
 const imageHints=[...preloadHints,...pictureHints];
 assert(preloadHints.length===1&&pictureHints.length===3,'Hero must expose exactly four responsive image hints');
 assert(imageHints.every(value=>value===HERO_IMAGE_SIZES),'Hero responsive image hints diverged');
+const expectedHeroImageSizes='(max-width: 720px) and (max-width: 79rem) calc(100vw - 2.56rem), (max-width: 720px) 76.44rem, (max-width: calc(45.19828rem + 2.1978px)) 18rem, (max-width: 80rem) calc(41.86vw - .92rem - .92px), (max-width: 100rem) calc(35.88rem - 4.14vw - .92px), calc(31.74rem - .92px)';
+assert(HERO_IMAGE_SIZES===expectedHeroImageSizes,'Hero responsive image six-state contract drift');
 assert(!/\b(?:min|max|clamp)\(/i.test(HERO_IMAGE_SIZES),'Unsupported sizing function entered Hero sizes contract');
-assert(!/max-width:\s*720px\)\s+and/i.test(HERO_IMAGE_SIZES),'Hero sizes contains a redundant mobile branch');
-const cssHeroSlotAt=width=>{
-  if(width<=720)return width-16-(2*.78*16)-HERO_FIGURE_TOTAL_BORDER_PX;
-  const outer=Math.min(width-32,78*16),padding=Math.min(48,.03*width),gap=Math.min(48,.03*width);
-  const track=Math.max(18*16,.46*(outer-(2*padding)-2-gap));
-  return track-HERO_FIGURE_TOTAL_BORDER_PX;
+assert(HERO_IMAGE_SIZES.startsWith('(max-width: 720px) and (max-width: 79rem) '),'Mobile main-cap branch missing from Hero sizes contract');
+
+const cssHeroTrackAt=(width,remPx)=>{
+  if(width<=720){
+    const outer=Math.min(width-remPx,78*remPx);
+    return outer-(2*.78*remPx);
+  }
+  const outer=Math.min(width-(2*remPx),78*remPx);
+  const padding=Math.min(3*remPx,Math.max(remPx,.03*width));
+  const gap=Math.min(3*remPx,Math.max(1.3*remPx,.03*width));
+  const available=outer-(2*padding)-2-gap;
+  return Math.max(18*remPx,.46*available);
 };
-const sizesHeroSlotAt=width=>width<=720?width-(2.56*16)-2:width<=725.37028?(18*16)-2:width<=1280?(.4186*width)-(.92*16)-2.92:width<=1600?(35.88*16)-(.0414*width)-2.92:(31.74*16)-2.92;
-const geometryViewports=[390,430,720,721,725.37028,768,800,960,1279,1280,1440,1599,1600,1920];
-for(const width of geometryViewports)assert(Math.abs(cssHeroSlotAt(width)-sizesHeroSlotAt(width))<.001,`Hero sizes geometry drift at ${width}px`);
+const sizesHeroTrackAt=(width,remPx)=>{
+  if(width<=720&&width<=79*remPx)return width-(2.56*remPx);
+  if(width<=720)return 76.44*remPx;
+  const minimumTrackCrossover=(45.19828*remPx)+2.1978;
+  if(width<=minimumTrackCrossover)return 18*remPx;
+  if(width<=80*remPx)return (.4186*width)-(.92*remPx)-.92;
+  if(width<=100*remPx)return (35.88*remPx)-(.0414*width)-.92;
+  return (31.74*remPx)-.92;
+};
+const geometryRemCases=[8,16,20];
+let geometryChecks=0;
+for(const remPx of geometryRemCases){
+  const minimumTrackCrossover=(45.19828*remPx)+2.1978;
+  const candidateWidths=[390,430,719,720,721,79*remPx-1,79*remPx,79*remPx+1,minimumTrackCrossover-1,minimumTrackCrossover,minimumTrackCrossover+1,80*remPx-1,80*remPx,80*remPx+1,100*remPx-1,100*remPx,100*remPx+1,1279,1280,1440,1600,1920,2200];
+  for(const width of [...new Set(candidateWidths.filter(value=>value>=320))].sort((a,b)=>a-b)){
+    const cssTrack=cssHeroTrackAt(width,remPx),hintTrack=sizesHeroTrackAt(width,remPx),imageContent=cssTrack-HERO_FIGURE_TOTAL_BORDER_PX;
+    assert(Math.abs(cssTrack-hintTrack)<.02,`Hero sizes track geometry drift at ${width}px / ${remPx}px rem`);
+    assert(hintTrack+0.001>=imageContent,`Hero sizes under-reports image content at ${width}px / ${remPx}px rem`);
+    assert(Math.abs((hintTrack-imageContent)-HERO_FIGURE_TOTAL_BORDER_PX)<.02,`Hero sizes conservative border allowance drift at ${width}px / ${remPx}px rem`);
+    geometryChecks++;
+  }
+}
 
 const reputationBlocks=content.match(/<div\b(?=[^>]*\bid=["']google-maps-clinic-reputation-current["'])[^>]*>[\s\S]*?<\/div>/gi)||[];
 assert(reputationBlocks.length===1,'Expected one assembled reputation block');
@@ -101,4 +128,4 @@ assert(!reputationBlocks[0].includes('آخرین دریافت از Google:'),'St
 assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Critical CSS exceeds release budget');
 assert(Buffer.byteLength(delivery.externalCss)>=invariants.minExternalCssBytes,'Deferred CSS fell below release floor');
 
-console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),heroMobileColumns:1,heroImageHintCount:imageHints.length,quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
