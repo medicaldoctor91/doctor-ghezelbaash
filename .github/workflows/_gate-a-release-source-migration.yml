@@ -1,0 +1,62 @@
+name: One-shot Gate A OpenAIRE current-release migration
+
+on:
+  push:
+    branches: [fix/gate-a-release-integrity-2026-08-21]
+    paths:
+      - '.github/workflows/_gate-a-release-source-migration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate-and-self-delete:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+      - name: Bind only the current OpenAIRE DOI URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('node:fs');
+          const file='src/content-source/page.md';
+          const source=fs.readFileSync(file,'utf8');
+          const archivedPattern=/<p><strong>Archived DOI release citation:<\/strong>[\s\S]*?<\/p>/i;
+          const archivedBefore=source.match(archivedPattern)?.[0];
+          if(!archivedBefore||!archivedBefore.includes('Version 1.2.2')||!archivedBefore.includes('10.5281/zenodo.21930954'))throw new Error('Protected archived citation missing');
+          const oldUrl='https://explore.openaire.eu/search/result?pid=10.5281%2Fzenodo.21930954';
+          const matches=source.split(oldUrl).length-1;
+          if(matches!==1)throw new Error(`Expected exactly one stale current OpenAIRE URL; found ${matches}`);
+          const migrated=source.replace(oldUrl,'https://explore.openaire.eu/search/result?pid={{CURRENT_VERSION_DOI_URLENCODED}}');
+          if(!migrated.includes('{{CURRENT_RELEASE}}')||!migrated.includes('{{CURRENT_VERSION_DOI}}')||!migrated.includes('{{CURRENT_RELEASE_DATE_EN}}'))throw new Error('Existing current-release facts tokens regressed');
+          if(migrated.match(archivedPattern)?.[0]!==archivedBefore)throw new Error('Archived 1.2.2 citation changed');
+          fs.writeFileSync(file,migrated);
+          NODE
+      - name: Validate existing Gate A contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/validate-platform-contract.mjs
+          node scripts/validate-release-contract.mjs
+          node scripts/validate-deterministic-zip.mjs
+          node scripts/validate-source.mjs
+          git diff --check
+      - name: Commit migration and remove one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/_gate-a-release-source-migration.yml
+          git add src/content-source/page.md
+          git diff --cached --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Bind current OpenAIRE DOI to release authority"
+          git push origin HEAD:fix/gate-a-release-integrity-2026-08-21
