@@ -1,0 +1,46 @@
+name: Temporary cleanup read-only Wikimedia integrity audit
+
+on:
+  pull_request:
+    types: [opened]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.head_ref == 'tmp-cleanup-readonly-wikimedia-integrity'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Remove temporary audit files and branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f --ignore-unmatch \
+            scripts/_tmp_readonly_wikimedia_integrity_audit.py \
+            scripts/_tmp_summarize_wikimedia_integrity_audit.py \
+            .github/workflows/_tmp-readonly-wikimedia-integrity-audit.yml \
+            .github/workflows/_tmp-readonly-wikimedia-integrity-summary.yml \
+            wikimedia/_tmp-readonly-wikimedia-integrity-audit.json \
+            wikimedia/_tmp-readonly-wikimedia-integrity-summary.txt \
+            .github/workflows/_tmp-cleanup-readonly-wikimedia-integrity.yml
+          if ! git diff --cached --quiet; then
+            git commit -m 'Remove temporary read-only Wikimedia integrity audit files'
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
+          fi
+          for branch in \
+            tmp-readonly-wikimedia-integrity-audit \
+            tmp-readonly-wikimedia-integrity-summary \
+            tmp-cleanup-readonly-wikimedia-integrity; do
+            git push origin --delete "$branch" || true
+          done
