@@ -1,7 +1,9 @@
 Traceback (most recent call last):
-  File "/Users/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/scripts/_tmp_fix_named_as_q140288589_live.py", line 89, in <module>
-    if len(before['claims'].get(p,[]))!=1: raise RuntimeError({'expected_single_statement':p,'count':len(before['claims'].get(p,[]))})
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-RuntimeError: {'expected_single_statement': 'P973', 'count': 2}
+  File "/Users/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/scripts/_tmp_fix_named_as_q140288589_live.py", line 23, in <module>
+    lr=post(action='login',lgname=USER,lgpassword=PASS,lgtoken=lt)
+  File "/Users/runner/work/doctor-ghezelbaash/doctor-ghezelbaash/scripts/_tmp_fix_named_as_q140288589_live.py", line 20, in post
+    if 'error' in d: raise RuntimeError(d['error'])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: {'code': 'maxlag', 'info': 'Waiting for wdqs1011: 105.11666666667 seconds lagged.', 'host': 'wdqs1011', 'lag': 105.11666666666666, 'type': 'wikibase-queryservice', 'queryserviceLag': 6307, 'docref': 'See https://www.wikidata.org/w/api.php for API usage. Subscribe to the mediawiki-api-announce mailing list at &lt;https://lists.wikimedia.org/postorius/lists/mediawiki-api-announce.lists.wikimedia.org/&gt; for notice of API deprecations and breaking changes.'}
 
 EXIT_CODE=1
