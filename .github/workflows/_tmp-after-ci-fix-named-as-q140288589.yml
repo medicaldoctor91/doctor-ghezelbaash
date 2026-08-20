@@ -1,5 +1,6 @@
 name: Temporary post-CI named-as repair Q140288589
 
+# registered before this trigger commit
 on:
   workflow_run:
     workflows: ['Read-only source and release validation']
