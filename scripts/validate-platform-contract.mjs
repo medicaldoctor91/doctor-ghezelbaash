@@ -1,6 +1,6 @@
 import {readFile} from 'node:fs/promises';
 const readJson=async p=>JSON.parse(await readFile(p,'utf8'));
-const contract=await readJson('.release/policy/platform-contract.json'),release=await readJson('src/data/release.json'),pkg=await readJson('package.json');
+const contract=await readJson('.release/policy/platform-contract.json'),release=await readJson('src/data/release.json'),pkg=await readJson('package.json'),codemeta=await readJson('codemeta.json');
 const cf=contract.cloudflare,runtime=contract.runtime,fail=m=>{throw new Error(m)};
 if(contract.schemaVersion!=='1.0')fail('Unsupported platform contract schema');
 if(contract.canonicalUrl!==release.canonicalUrl||contract.canonicalHost!==new URL(release.canonicalUrl).hostname)fail('Platform canonical URL drift');
@@ -12,4 +12,5 @@ if(!Array.isArray(cf.requiredCustomDomains)||!cf.requiredCustomDomains.includes(
 if(!runtime?.node||!runtime?.nodeEngine||!runtime?.npm||!runtime?.npmEngine)fail('Canonical runtime contract incomplete');
 const nvmrc=(await readFile('.nvmrc','utf8')).trim();
 if(nvmrc!==runtime.node||pkg.engines?.node!==runtime.nodeEngine||pkg.engines?.npm!==runtime.npmEngine||pkg.packageManager!==`npm@${runtime.npm}`)fail('Runtime pin drift');
-console.log(JSON.stringify({platformContract:'PASS',repository:contract.repository,productionBranch:cf.productionBranch,pagesProject:cf.pagesProject,canonicalHost:contract.canonicalHost,planTier:cf.planTier,runtime},null,2));
+if(codemeta.runtimePlatform!==`Node.js ${runtime.node}`)fail('CodeMeta runtimePlatform drift');
+console.log(JSON.stringify({platformContract:'PASS',repository:contract.repository,productionBranch:cf.productionBranch,pagesProject:cf.pagesProject,canonicalHost:contract.canonicalHost,planTier:cf.planTier,runtime,codemetaRuntime:codemeta.runtimePlatform},null,2));
