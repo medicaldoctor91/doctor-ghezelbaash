@@ -12,7 +12,9 @@ This repository is the version-controlled **source and generation authority**. T
 
 - Page content: `src/content-source/page.md`
 - Knowledge graph: `src/data/semantic/knowledge-graph.jsonld`
-- Release/entity truth: `src/data/release.json`, `src/data/release-invariants.json`
+- Current release/entity truth, including current Version DOI and release history: `src/data/release.json`
+- Release validation thresholds and measured invariants: `src/data/release-invariants.json`
+- Runtime/deployment authority: `.release/policy/platform-contract.json`; `.nvmrc`, `package.json` engines and `packageManager`, and CodeMeta are validated mirrors of that contract.
 - Evidence/freshness inputs: `src/data/evidence-registry.json`, `src/data/evidence-snapshot.json`, `src/data/volatile-facts.json`
 - Media/assets: `public/media/` and other required `public/` assets
 - Head/support projection policy: `src/data/semantic/*-ids.json` and `*-profile.json`
@@ -46,13 +48,11 @@ npm run verify:production -- https://www.ghezelbaash.ir/
 
 `media:enrich` is idempotent and preserves pixel dimensions. The render-calibration command validates all 134 chunk identities across the six measured viewport widths before atomically updating the canonical JSON and its CSS interpolation rules. Production verification checks asynchronous CSS delivery, response-budget safety, native answer integration, crawler access, machine-resource headers and the real 404 contract.
 
-Runtime target: Node 24.18.0 / npm 11.x. Deployment target: Cloudflare Pages static output.
+Runtime versions are defined only by `.release/policy/platform-contract.json`; the release validators enforce convergence with `.nvmrc`, `package.json` and CodeMeta. Deployment target: Cloudflare Pages static output.
 
 ## Release and external distribution contract
 
-- Current source release: `1.2.2`
-- Zenodo Concept DOI: `10.5281/zenodo.18765168`
-- Current Zenodo Version DOI: `10.5281/zenodo.21930954`
+- Current source release, release date, Zenodo Concept DOI, current Version DOI, preservation record and immutable release history: `src/data/release.json`
 - Hugging Face: `doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data`
 - Wikidata: physician `Q140287622`, clinic `Q140288589`, Dataset `Q140304972`
 
