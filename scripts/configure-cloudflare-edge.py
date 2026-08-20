@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import atexit
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -30,7 +31,7 @@ PLATFORM_CONTRACT = json.loads(PLATFORM_CONTRACT_PATH.read_text(encoding="utf-8"
 PLATFORM_CF = PLATFORM_CONTRACT["cloudflare"]
 CACHE_RULE_REF = "ghezelbaash_canonical_dist_cache_v1"
 HSTS_RULE_REF = "ghezelbaash_canonical_hsts_v1"
-NOT_FOUND_RULE_REF = "ghezelbaash_real_404_headers_v1"
+NOT_FOUND_RULE_REF_PREFIX = "ghezelbaash_real_404_headers_"
 HSTS_VALUE = "max-age=63072000; includeSubDomains; preload"
 SUBDOMAIN_REDIRECT_PHASE = "http_request_dynamic_redirect"
 SUBDOMAIN_REDIRECT_RULESET_NAME = "Canonical subdomain redirects"
@@ -173,7 +174,7 @@ def not_found_rule(host: str, csp: str) -> dict[str, Any]:
         f'"{value}"' for value in (host, BLOG_HOST)
     )
     return {
-        "ref": NOT_FOUND_RULE_REF,
+        "ref": not_found_rule_ref(csp),
         "expression": (
             f"(http.host in {{{protected_hosts}}} and http.response.code eq 404)"
         ),
@@ -195,6 +196,10 @@ def not_found_rule(host: str, csp: str) -> dict[str, Any]:
         },
         "enabled": True,
     }
+
+
+def not_found_rule_ref(csp: str) -> str:
+    return NOT_FOUND_RULE_REF_PREFIX + hashlib.sha256(csp.encode("utf-8")).hexdigest()[:12]
 
 
 def hsts_rule(host: str) -> dict[str, Any]:
@@ -1145,6 +1150,46 @@ def reconcile_phase_rule(
     return owned[0]
 
 
+def prune_superseded_not_found_rules(
+    api: CloudflareApi, zone: str, keep_ref: str
+) -> None:
+    phase = "http_response_headers_transform"
+    listing = api.expect("GET", f"/zones/{zone}/rulesets").get("result") or []
+    candidates = [
+        row
+        for row in listing
+        if row.get("kind") == "zone" and row.get("phase") == phase
+    ]
+    if len(candidates) != 1:
+        raise CloudflareError(
+            f"Response-header ruleset count drift while pruning 404 rules: {len(candidates)}"
+        )
+    ruleset_id = str(candidates[0]["id"])
+    readback = api.expect("GET", f"/zones/{zone}/rulesets/{ruleset_id}")
+    rules = (readback.get("result") or {}).get("rules") or []
+    superseded = [
+        row
+        for row in rules
+        if str(row.get("ref") or "").startswith(NOT_FOUND_RULE_REF_PREFIX)
+        and row.get("ref") != keep_ref
+    ]
+    for row in superseded:
+        api.expect(
+            "DELETE",
+            f"/zones/{zone}/rulesets/{ruleset_id}/rules/{row['id']}",
+        )
+        print("SUPERSEDED_NOT_FOUND_RULE_REMOVED", row.get("ref"))
+    final = api.expect("GET", f"/zones/{zone}/rulesets/{ruleset_id}")
+    final_rules = (final.get("result") or {}).get("rules") or []
+    owned = [
+        row
+        for row in final_rules
+        if str(row.get("ref") or "").startswith(NOT_FOUND_RULE_REF_PREFIX)
+    ]
+    if len(owned) != 1 or owned[0].get("ref") != keep_ref:
+        raise CloudflareError("Canonical 404 transform rule did not converge to one authority")
+
+
 def reconcile_canonical_cache_ruleset(
     api: CloudflareApi, zone: str, host: str
 ) -> dict[str, Any]:
@@ -1860,7 +1905,7 @@ def self_test(dist_dir: Path) -> None:
                 "valid": True,
                 "cacheRuleRef": CACHE_RULE_REF,
                 "hstsRuleRef": HSTS_RULE_REF,
-                "notFoundRuleRef": NOT_FOUND_RULE_REF,
+                "notFoundRuleRef": not_found_rule_ref(csp),
                 "zoneSettingCount": len(ZONE_SETTINGS),
                 "botAccessSettingCount": len(BOT_ACCESS_SETTINGS),
                 "subdomainRedirectRuleCount": len(subdomain_rules),
@@ -2070,8 +2115,10 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             "Git-managed response corrections for canonical and fallback responses",
             not_found_rule(host, csp_404),
         )
+        expected_not_found_ref = not_found_rule_ref(csp_404)
+        prune_superseded_not_found_rules(api, zone, expected_not_found_ref)
         outcome["capabilities"]["notFoundTransformRule"] = (
-            not_found_readback.get("ref") == NOT_FOUND_RULE_REF
+            not_found_readback.get("ref") == expected_not_found_ref
         )
     except CloudflareError as exc:
         if not is_permission_error(exc):
@@ -2160,6 +2207,10 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
             "Git-managed response corrections for canonical and fallback responses",
             not_found_rule(f"www.{zone_name}", csp_404),
         )
+        expected_not_found_ref = not_found_rule_ref(csp_404)
+        prune_superseded_not_found_rules(
+            zone_control_api, zone, expected_not_found_ref
+        )
     finally:
         revoke_zone_control_api()
 
@@ -2172,7 +2223,7 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
             "pagesDnsBinding": True,
             "historicalBlogBulkRedirects": True,
             "subdomainRedirectRules": True,
-            "notFoundTransformRule": not_found_readback.get("ref") == NOT_FOUND_RULE_REF,
+            "notFoundTransformRule": not_found_readback.get("ref") == expected_not_found_ref,
         },
         "pagesCustomDomainsReadback": pages_domains_readback,
         "pagesDnsBindingReadback": pages_dns_readback,
