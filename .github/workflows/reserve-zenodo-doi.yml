@@ -1,0 +1,59 @@
+name: Reserve Zenodo DOI for release 1.2.3
+
+on:
+  push:
+    branches: [codex/release-1.2.3-reserve]
+    paths:
+      - '.github/workflows/reserve-zenodo-doi.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  reserve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_API_TOKEN }}
+      NEXT_RELEASE: 1.2.3
+      NEXT_DATE: 2026-08-21
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Load immutable baseline identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE' >> "$GITHUB_ENV"
+          const release=require('./src/data/release.json');
+          const z=release.dataset.zenodo;
+          console.log(`CURRENT_RELEASE=${release.release}`);
+          console.log(`CURRENT_RECORD=${z.recordId}`);
+          console.log(`CURRENT_DOI=${z.versionDoi}`);
+          console.log(`CONCEPT_DOI=${z.conceptDoi}`);
+          NODE
+      - name: Reserve next-version DOI without publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"
+          echo "::add-mask::$ZENODO_TOKEN"
+          python scripts/zenodo_release.py reserve \
+            --current-record="$CURRENT_RECORD" \
+            --current-doi="$CURRENT_DOI" \
+            --current-version="$CURRENT_RELEASE" \
+            --concept-doi="$CONCEPT_DOI" \
+            --version="$NEXT_RELEASE" \
+            --date="$NEXT_DATE" \
+            --output=.release/runtime/zenodo-reservation.json
+      - name: Upload reservation ledger
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: zenodo-reservation-1.2.3
+          path: .release/runtime/zenodo-reservation.json
+          if-no-files-found: error
+          retention-days: 1
