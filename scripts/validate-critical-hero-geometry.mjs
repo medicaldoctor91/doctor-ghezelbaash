@@ -1,23 +1,27 @@
 import {readFile} from 'node:fs/promises';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
-import {compactCssValue,isMaxWidthRule,mediaRuleAppliesAtWidth,parseCssRules,selectorRules} from './lib/css-rules.mjs';
+import {compactCssValue,isMaxWidthRule,mediaRuleAppliesAtWidth,normalizeCssValue,parseCssRules,selectorRules} from './lib/css-rules.mjs';
 import {HERO_FIGURE_TOTAL_BORDER_PX,HERO_IMAGE_SIZES,bindHeroPreloadSizes} from '../src/lib/hero-image-contract.mjs';
 
-const [globalCss,criticalMobileCss,invariants,mainHeadRaw]=await Promise.all([
+const [globalCss,invariants,mainHeadRaw]=await Promise.all([
   readFile('src/styles/global.css','utf8'),
-  readFile('src/styles/critical-mobile.css','utf8'),
   readFile('src/data/release-invariants.json','utf8').then(JSON.parse),
   readFile('src/data/templates/main-head.html','utf8')
 ]);
-const delivery=deriveCssDelivery(globalCss,{criticalMobileCss});
+const delivery=deriveCssDelivery(globalCss);
 const criticalRules=parseCssRules(delivery.criticalCss);
 const deferredRules=parseCssRules(delivery.externalCss);
-const normalized=value=>compactCssValue(value).replace(/0(?=\.\d)/g,'');
+const normalized=normalizeCssValue;
 const assert=(condition,message)=>{if(!condition)throw new Error(message)};
-const decl=(rules,selector,property,{mobile=false}={})=>{
-  const matches=selectorRules(rules,selector).filter(rule=>mobile?isMaxWidthRule(rule,720):true).filter(rule=>property in rule.declarations);
-  assert(matches.length>0,`Missing ${mobile?'mobile ':''}${selector} ${property}`);
+assert(normalized('0.8rem')===normalized('.8rem'),'CSS normalizer must canonicalize numeric leading zero');
+assert(normalized('rgb(0 0 0 / 0.12)')===normalized('rgb(0 0 0/.12)'),'CSS normalizer must canonicalize optional slash spacing');
+assert(normalized('calc(100% - 1rem)')!==normalized('calc(100%-1rem)'),'CSS normalizer must preserve calc operator whitespace semantics');
+assert(normalized('"0.5"')!==normalized('".5"'),'CSS normalizer must preserve quoted numeric text');
+assert(normalized('url(0.5.png)')!==normalized('url(.5.png)'),'CSS normalizer must preserve URL payloads');
+const decl=(rules,selector,property,{maxWidth=null}={})=>{
+  const matches=selectorRules(rules,selector).filter(rule=>maxWidth?isMaxWidthRule(rule,maxWidth):true).filter(rule=>property in rule.declarations);
+  assert(matches.length>0,`Missing ${maxWidth?`<=${maxWidth}px `:''}${selector} ${property}`);
   return matches.at(-1).declarations[property];
 };
 const expect=(rules,selector,property,value,options={})=>assert(normalized(decl(rules,selector,property,options))===normalized(value),`${selector} ${property} drift`);
@@ -25,17 +29,17 @@ const expect=(rules,selector,property,value,options={})=>assert(normalized(decl(
 assert((globalCss.match(/\/\*DIST_CRITICAL_CSS_END\*\//g)||[]).length===1,'Critical CSS split marker drift');
 assert(globalCss.includes('/*DIST_CRITICAL_HERO_GEOMETRY_START*/')&&globalCss.includes('/*DIST_CRITICAL_HERO_GEOMETRY_END*/'),'Critical Hero geometry block missing');
 
-expect(criticalRules,'.entity-hero .hero-actions','display','grid',{mobile:true});
-expect(criticalRules,'.entity-hero .hero-actions','grid-template-columns','minmax(0,1fr)',{mobile:true});
-expect(criticalRules,'.entity-hero .hero-actions','gap','.58rem',{mobile:true});
-expect(criticalRules,'.entity-hero .hero-actions','width','100%',{mobile:true});
-expect(criticalRules,'.entity-hero .hero-action','grid-column','1/-1',{mobile:true});
-expect(criticalRules,'.entity-hero .hero-action','width','100%',{mobile:true});
-expect(criticalRules,'.entity-hero .hero-action','min-height','3.12rem',{mobile:true});
-expect(criticalRules,'.entity-hero .hero-action','padding','.72rem 1rem',{mobile:true});
+expect(criticalRules,'.entity-hero .hero-actions','display','grid',{maxWidth:720});
+expect(criticalRules,'.entity-hero .hero-actions','grid-template-columns','minmax(0,1fr)',{maxWidth:720});
+expect(criticalRules,'.entity-hero .hero-actions','gap','.58rem',{maxWidth:720});
+expect(criticalRules,'.entity-hero .hero-actions','width','100%',{maxWidth:720});
+expect(criticalRules,'.entity-hero .hero-action','grid-column','1/-1',{maxWidth:720});
+expect(criticalRules,'.entity-hero .hero-action','width','100%',{maxWidth:720});
+expect(criticalRules,'.entity-hero .hero-action','min-height','3.12rem',{maxWidth:720});
+expect(criticalRules,'.entity-hero .hero-action','padding','.72rem 1rem',{maxWidth:720});
 
 const allRules=[...criticalRules,...deferredRules];
-const conflictingHeroColumns=allRules.filter(rule=>mediaRuleAppliesAtWidth(rule,720)&&rule.selector.includes('.hero-actions')&&normalized(rule.declarations['grid-template-columns']||'')==='1fr1fr');
+const conflictingHeroColumns=allRules.filter(rule=>mediaRuleAppliesAtWidth(rule,720)&&rule.selector.includes('.hero-actions')&&normalized(rule.declarations['grid-template-columns']||'')===normalized('1fr 1fr'));
 assert(conflictingHeroColumns.length===0,'A two-column mobile rule can still match Hero actions');
 assert(!delivery.externalCss.includes('.entity-hero .hero-actions{display:grid;grid-template-columns:minmax(0,1fr)'), 'Authoritative Hero action geometry remains deferred');
 assert(!delivery.externalCss.includes('.entity-hero .hero-action{grid-column:1/-1'), 'Authoritative Hero CTA geometry remains deferred');
@@ -43,18 +47,39 @@ const conditions=rule=>rule.conditions.map(compactCssValue).join('|');
 const duplicatedHeroDeclarations=[];
 for(const criticalRule of criticalRules.filter(rule=>rule.selector.includes('hero'))){
   for(const deferredRule of deferredRules.filter(rule=>compactCssValue(rule.selector)===compactCssValue(criticalRule.selector)&&conditions(rule)===conditions(criticalRule))){
-    for(const [property,value] of Object.entries(criticalRule.declarations))if(property in deferredRule.declarations&&compactCssValue(value)===compactCssValue(deferredRule.declarations[property]))duplicatedHeroDeclarations.push(`${criticalRule.selector}:${property}`);
+    for(const [property,value] of Object.entries(criticalRule.declarations))if(property in deferredRule.declarations&&normalized(value)===normalized(deferredRule.declarations[property]))duplicatedHeroDeclarations.push(`${criticalRule.selector}:${property}`);
   }
 }
 assert(duplicatedHeroDeclarations.length===0,`Hero geometry has multiple authorities: ${duplicatedHeroDeclarations.join(', ')}`);
+assert(selectorRules(criticalRules,'.hero-search-launch').filter(rule=>'grid-area' in rule.declarations).length===1,'Hero search grid-area has duplicate critical authority');
+const mobileCaptionReputation=selectorRules(criticalRules,'.hero-caption-reputation').filter(rule=>isMaxWidthRule(rule,430));
+assert(mobileCaptionReputation.length===1&&'font-size' in mobileCaptionReputation[0].declarations&&'min-block-size' in mobileCaptionReputation[0].declarations,'Hero caption reputation mobile geometry is split across authorities');
 
 for(const rules of [criticalRules,deferredRules]){
   for(const rule of selectorRules(rules,'main').filter(rule=>mediaRuleAppliesAtWidth(rule,720))){
     const padding=normalized(rule.declarations.padding||'');
     const inline=normalized(rule.declarations['padding-inline']||'');
-    if(padding)assert(/^1rem\.78remcalc\(/.test(padding),'Mobile main shorthand horizontal padding must be .78rem');
+    if(padding)assert(padding===normalized('1rem .78rem calc(7.2rem + env(safe-area-inset-bottom))'),'Mobile main shorthand horizontal padding must be .78rem');
     if(inline)assert(inline==='.78rem','Mobile main padding-inline must be .78rem');
   }
+}
+
+expect(criticalRules,'.skip-link','position','fixed');
+expect(criticalRules,'.skip-link:focus','top','1rem');
+expect(criticalRules,'html','scroll-behavior','auto',{maxWidth:720});
+expect(criticalRules,'h1','font-size','clamp(1.85rem,8.3vw,2.65rem)',{maxWidth:720});
+expect(criticalRules,'.hero-reputation','border-radius','.8rem',{maxWidth:720});
+assert(!selectorRules(deferredRules,'.skip-link').some(rule=>rule.conditions.length===0),'Deferred skip-link base authority remains');
+const criticalMobileRootFont=selectorRules(criticalRules,':root').filter(rule=>rule.conditions.some(condition=>compactCssValue(condition).includes('max-width:48rem')));
+assert(criticalMobileRootFont.length===1&&normalized(criticalMobileRootFont[0].declarations['font-family']||'').includes('system-ui'),'Critical mobile font-family authority missing');
+assert(!selectorRules(deferredRules,':root').some(rule=>rule.conditions.some(condition=>compactCssValue(condition).includes('max-width:48rem'))&&'font-family' in rule.declarations),'Deferred mobile font-family authority remains');
+
+expect(criticalRules,'.quick-actions__item','padding','.3rem .26rem',{maxWidth:480});
+expect(criticalRules,'.quick-actions__item','font-size','clamp(.7rem,2.9vw,.76rem)',{maxWidth:480});
+expect(criticalRules,'.quick-actions__item--consultation','gap','.34rem',{maxWidth:480});
+expect(criticalRules,'.quick-actions__consultation-copy small','font-size','.8em',{maxWidth:480});
+for(const [selector,properties] of [[ '.quick-actions',['left','right','width','transform'] ],[ '.quick-actions__bar',['grid-template-columns','min-height','padding'] ],[ '.quick-actions__item',['gap','min-height','padding','font-size'] ],[ '.quick-actions__item--consultation',['gap'] ],[ '.quick-actions__item svg',['width','height'] ],[ '.quick-actions__consultation-copy small',['font-size'] ]]){
+  for(const property of properties)assert(!selectorRules(deferredRules,selector).filter(rule=>isMaxWidthRule(rule,480)).some(rule=>property in rule.declarations),`Deferred <=480 quick-actions authority remains: ${selector} ${property}`);
 }
 
 expect(criticalRules,'.quick-actions__top','width','2.15rem');
@@ -128,4 +153,4 @@ assert(!reputationBlocks[0].includes('آخرین دریافت از Google:'),'St
 assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Critical CSS exceeds release budget');
 assert(Buffer.byteLength(delivery.externalCss)>=invariants.minExternalCssBytes,'Deferred CSS fell below release floor');
 
-console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));

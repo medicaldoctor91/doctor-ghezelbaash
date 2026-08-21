@@ -116,4 +116,36 @@ export function mediaRuleAppliesAtWidth(rule,widthPx,{rootFontPx=16}={}){
   return applies&&widthConstraintCount>0;
 }
 
+export function normalizeCssValue(value){
+  const source=String(value).trim();
+  if(/url\s*\(/i.test(source))return source;
+  let out='',quote='',escape=false,pendingSpace=false;
+  const shouldKeepSpace=next=>{
+    const prev=out.at(-1)||'';
+    return Boolean(prev)&&!['(', ',', '/'].includes(prev)&&![')', ',', '/'].includes(next);
+  };
+  for(let index=0;index<source.length;index++){
+    const char=source[index];
+    if(quote){
+      out+=char;
+      if(escape)escape=false;
+      else if(char==='\\')escape=true;
+      else if(char===quote)quote='';
+      continue;
+    }
+    if(char==='"'||char==="'"){
+      if(pendingSpace&&shouldKeepSpace(char))out+=' ';
+      pendingSpace=false;quote=char;out+=char;continue;
+    }
+    if(/\s/.test(char)){pendingSpace=true;continue}
+    if(pendingSpace&&shouldKeepSpace(char))out+=' ';
+    pendingSpace=false;
+    if(char==='0'&&source[index+1]==='.'&&/\d/.test(source[index+2]||'')){
+      const prev=out.at(-1)||'';
+      if(!/[a-zA-Z0-9_.%]/.test(prev))continue;
+    }
+    out+=char;
+  }
+  return out.trim();
+}
 export function compactCssValue(value){return compact(value)}
