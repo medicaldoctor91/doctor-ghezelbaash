@@ -1,15 +1,18 @@
 import {readFile} from 'node:fs/promises';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
+import {assembleCssSource} from '../src/lib/css-source.mjs';
 import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
 import {compactCssValue,isMaxWidthRule,mediaRuleAppliesAtWidth,normalizeCssValue,parseCssRules,selectorRules} from './lib/css-rules.mjs';
 import {HERO_FIGURE_TOTAL_BORDER_PX,HERO_IMAGE_SIZES,bindHeroPreloadSizes} from '../src/lib/hero-image-contract.mjs';
 
-const [globalCss,invariants,mainHeadRaw]=await Promise.all([
+const [globalCss,renderCalibrationRaw,invariants,mainHeadRaw]=await Promise.all([
   readFile('src/styles/global.css','utf8'),
+  readFile('src/data/render-calibration.json','utf8'),
   readFile('src/data/release-invariants.json','utf8').then(JSON.parse),
   readFile('src/data/templates/main-head.html','utf8')
 ]);
-const delivery=deriveCssDelivery(globalCss);
+const {cssSource,calibration}=assembleCssSource(globalCss,renderCalibrationRaw);
+const delivery=deriveCssDelivery(cssSource);
 const criticalRules=parseCssRules(delivery.criticalCss);
 const deferredRules=parseCssRules(delivery.externalCss);
 const normalized=normalizeCssValue;
@@ -153,4 +156,4 @@ assert(!reputationBlocks[0].includes('آخرین دریافت از Google:'),'St
 assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Critical CSS exceeds release budget');
 assert(Buffer.byteLength(delivery.externalCss)>=invariants.minExternalCssBytes,'Deferred CSS fell below release floor');
 
-console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));

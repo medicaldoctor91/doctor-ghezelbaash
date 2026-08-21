@@ -1,10 +1,12 @@
 import path from 'node:path';
 import {createHash} from 'node:crypto';
+import {assembleCssSource} from '../src/lib/css-source.mjs';
 import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
 import {readFile,access} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 const root=process.cwd();
-const cssSource=await readFile(path.join(root,'src/styles/global.css'),'utf8'),{externalCss,assetName:cssAssetName}=deriveCssDelivery(cssSource),cssAsset=`public/assets/${cssAssetName}`;
+const [authoredCss,renderCalibrationRaw]=await Promise.all([readFile(path.join(root,'src/styles/global.css'),'utf8'),readFile(path.join(root,'src/data/render-calibration.json'),'utf8')]);
+const {cssSource}=assembleCssSource(authoredCss,renderCalibrationRaw),{assetName:cssAssetName}=deriveCssDelivery(cssSource),cssAsset=`public/assets/${cssAssetName}`;
 const files=['src/content/home.md','src/data/semantic/head-graph.json','src/data/semantic/support-graph.json','src/data/projections/entity-facts.csv','src/data/projections/answers.txt','src/data/projections/knowledge.xml','src/data/projections/index.md','src/data/projections/llms-full.txt','src/data/projections/llms.txt','src/data/projections/provenance.jsonld','src/data/projections/evidence-snapshot.json','src/data/projections/datapackage.json','src/data/projections/linkset.json','src/data/projections/void.ttl','src/data/projections/dcat.ttl','src/data/projections/croissant.json','src/data/projections/sitemap.xml','src/data/projections/live-observations.jsonld','src/data/projections/query-matrix.jsonl','src/data/projections/current-release-matrix.json','public/live-observations.jsonld','public/query-matrix.jsonl','public/doctor.vcf','public/clinic.vcf',cssAsset];
 const sha=b=>createHash('sha256').update(b).digest('hex');for(const f of files)await access(path.join(root,f));async function snap(){const out={};for(const f of files)out[f]=sha(await readFile(path.join(root,f)));return out}
 const before=await snap();for(const script of ['scripts/generate-projections.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs']){const run=spawnSync(process.execPath,[script],{cwd:root,encoding:'utf8'});if(run.status!==0)throw new Error(`Projection regeneration failed in ${script}:\n${run.stderr||run.stdout}`)}const after=await snap(),drift=files.filter(f=>before[f]!==after[f]);if(drift.length)throw new Error(`Non-deterministic projection drift: ${drift.join(', ')}`);console.log(JSON.stringify({valid:true,files:files.length,deterministic:true,fullPipeline:true,projectionWriters:['generate-projections.mjs','generate-retrieval-projections.mjs','generate-descriptors.mjs'],aggregateSha256:sha(Buffer.from(files.map(f=>`${f}:${after[f]}`).join('\n')))},null,2));
