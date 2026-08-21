@@ -16,7 +16,7 @@
   "maxCoreGraphEndByte": 35000,
   "maxSupportGraphEndByte": 1940000,
   "maxCriticalCssBytes": 12000,
-  "minExternalCssBytes": 45000,
+  "minExternalCssBytes": 42000,
   "contractClasses": {
     "architectural": {
       "singleCanonicalPage": true,

@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {cp,mkdir,readFile,readdir,rm,writeFile,access} from 'node:fs/promises';
+import {cp,mkdir,readFile,writeFile,access} from 'node:fs/promises';
 const [dist='dist',hub='.release/huggingface']=process.argv.slice(2),release=JSON.parse(await readFile('src/data/release.json','utf8')),authority=JSON.parse(await readFile('.release/policy/authority-surface-contract.json','utf8')),policy=authority.surfaces.huggingFace,z=release.dataset.zenodo,sha=b=>createHash('sha256').update(b).digest('hex');
 const core=['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json','query-matrix.jsonl','current-release-matrix.json'];
 await mkdir(hub,{recursive:true});for(const file of core)await cp(path.join(dist,file),path.join(hub,file));

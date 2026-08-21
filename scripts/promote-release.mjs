@@ -55,8 +55,6 @@ for(const h of z.releaseHistory){const rid=releaseHistoryNodeId(release.canonica
 dataset.citation=z.releaseHistory.map(h=>({'@id':releaseHistoryNodeId(release.canonicalUrl,h.release)}));
 await writeJson('src/data/semantic/knowledge-graph.jsonld',graph);
 
-const englishDate=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${next.date}T00:00:00Z`));
-const medicalEnglishDate=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${release.medicalReviewedAt}T00:00:00Z`));
 let citation=await readFile('CITATION.cff','utf8');citation=citation.replace(/^version: .+$/m,`version: ${next.release}`).replace(/^date-released: .+$/m,`date-released: ${next.date}`).replace(/^doi: .+$/m,`doi: ${next.versionDoi}`);await writeFile('CITATION.cff',citation);
 const codemeta=await readJson('codemeta.json');codemeta.softwareVersion=next.release;codemeta.dateModified=next.date;if(codemeta.subjectOf){codemeta.subjectOf.version=next.release;codemeta.subjectOf.identifier=`https://doi.org/${next.versionDoi}`;codemeta.subjectOf.name='Dr. Saeed Ghezelbash Public Knowledge Graph'}await writeJson('codemeta.json',codemeta);
 console.log(JSON.stringify({promoted:true,from:old,to:next,conceptDoi:z.conceptDoi,history:z.releaseHistory},null,2));

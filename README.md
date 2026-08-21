@@ -18,8 +18,8 @@ This repository is the version-controlled **source and generation authority**. T
 - Evidence/freshness inputs: `src/data/evidence-registry.json`, `src/data/evidence-snapshot.json`, `src/data/volatile-facts.json`
 - Media/assets: `public/media/` and other required `public/` assets
 - Head/support projection policy: `src/data/semantic/*-ids.json` and `*-profile.json`
-- Render calibration used by production CSS validation: `src/data/render-calibration.json`
-- CSS delivery: `src/styles/global.css` is the single canonical stylesheet; build generation emits a fingerprinted noncritical `/assets/site.<hash>.css` while keeping a small critical slice inline.
+- Render-calibration data authority: `src/data/render-calibration.json`; its interpolation CSS is generated deterministically in memory at the authored slot in `src/styles/global.css` and is never materialized back into the stylesheet source.
+- CSS delivery: `src/styles/global.css` is the single canonical authored stylesheet; build-time CSS assembly combines it with render-calibration data, then emits a fingerprinted noncritical `/assets/site.<hash>.css` while keeping a small critical slice inline.
 - Embedded raster metadata contract: every canonical PNG/JPEG/WebP/AVIF carries validated XMP, IPTC Core and PLUS entity/licensing metadata; `src/data/media-dimensions.tsv` locks dimensions and `npm run validate:media` verifies metadata, fingerprints and decoding.
 
 Generated representations are intentionally not committed. `npm run build` bootstraps the pinned RDF dependency when needed, then regenerates content assembly, RDF, head/support graphs, machine-readable projections and vCards before producing and validating `dist/`.
@@ -46,7 +46,7 @@ npm run release:prepare
 npm run verify:production -- https://www.ghezelbaash.ir/
 ```
 
-`media:enrich` is idempotent and preserves pixel dimensions. The render-calibration command validates all 134 chunk identities across the six measured viewport widths before atomically updating the canonical JSON and its CSS interpolation rules. Production verification checks asynchronous CSS delivery, response-budget safety, native answer integration, crawler access, machine-resource headers and the real 404 contract.
+`media:enrich` is idempotent and preserves pixel dimensions. The render-calibration command validates all 134 chunk identities across the six measured viewport widths and atomically updates only the canonical JSON; production interpolation CSS is derived from that JSON in memory by the shared CSS assembly contract. Production verification checks asynchronous CSS delivery, response-budget safety, native answer integration, crawler access, machine-resource headers and the real 404 contract.
 
 Runtime versions are defined only by `.release/policy/platform-contract.json`; the release validators enforce convergence with `.nvmrc`, `package.json` and CodeMeta. Deployment target: Cloudflare Pages static output.
 
@@ -57,3 +57,5 @@ Runtime versions are defined only by `.release/policy/platform-contract.json`; t
 - Wikidata: physician `Q140287622`, clinic `Q140288589`, Dataset `Q140304972`
 
 The normal website build is deterministic and does not reserve DOI records or publish external distributions. Release-only promotion, packaging, Zenodo preservation and Hugging Face publication are explicit operations outside the routine build path; each consumes the same canonical release/entity truth and is followed by convergence verification before a release is considered complete.
+
+`npm run release` requires a clean source worktree, binds the generated release attestation to the exact 40-character `HEAD` commit, and emits the deterministic packages consumed by the Zenodo and Hugging Face distribution paths. A supplied `SOURCE_COMMIT` or `GITHUB_SHA` must equal `HEAD`; the release fails instead of creating an ambiguous attestation.

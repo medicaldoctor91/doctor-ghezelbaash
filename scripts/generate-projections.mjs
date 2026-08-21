@@ -2,6 +2,7 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdir, readdir, unlink } from 'node:fs/promises';
 import { assembleCanonicalContent } from './lib/assemble-content.mjs';
+import {assembleCssSource} from '../src/lib/css-source.mjs';
 import { deriveCssDelivery } from '../src/lib/css-delivery.mjs';
 import { expandKnowledgeXml } from './lib/knowledge-xml.mjs';
 import { normalizeGoogleSupportGraphRaw } from './lib/google-support-graph.mjs';
@@ -48,9 +49,10 @@ if(!assembledCanonical.names.length) throw new Error('Canonical modular content 
 await writeFile(path.join(root,'src/content/home.md'),assembledCanonical.content);
 
 // ---- CSS delivery: one canonical source -> critical inline slice + fingerprinted external remainder.
-const cssSource=await readFile(path.join(root,'src/styles/global.css'),'utf8');
+const [authoredCss,renderCalibrationRaw]=await Promise.all([readFile(path.join(root,'src/styles/global.css'),'utf8'),readFile(path.join(data,'render-calibration.json'),'utf8')]);
+const {cssSource,calibration}=assembleCssSource(authoredCss,renderCalibrationRaw);
 const {externalCss,assetName:externalCssAssetName}=deriveCssDelivery(cssSource);
-if(!externalCss.includes('/*DIST_CHUNK_INTRINSIC_START*/')||!externalCss.includes('/*DIST_CHUNK_INTRINSIC_END*/')) throw new Error('External CSS lost render calibration');
+if(!externalCss.includes('/*DIST_CHUNK_INTRINSIC_START*/')||!externalCss.includes('/*DIST_CHUNK_INTRINSIC_END*/')||!externalCss.includes(`/*DIST_CHUNK_CALIBRATION_SHA256:${calibration.sha256}*/`)) throw new Error('External CSS lost assembled render calibration');
 const cssAssetDir=path.join(root,'public/assets');await mkdir(cssAssetDir,{recursive:true});
 for(const name of await readdir(cssAssetDir)) if(/^site\.[0-9a-f]{12}\.css$/.test(name)&&name!==externalCssAssetName) await unlink(path.join(cssAssetDir,name));
 await writeFile(path.join(cssAssetDir,externalCssAssetName),externalCss);

@@ -1,15 +1,18 @@
 import {readFile} from 'node:fs/promises';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
+import {assembleCssSource} from '../src/lib/css-source.mjs';
 import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
 import {compactCssValue,isMaxWidthRule,mediaRuleAppliesAtWidth,normalizeCssValue,parseCssRules,selectorRules} from './lib/css-rules.mjs';
 import {HERO_FIGURE_TOTAL_BORDER_PX,HERO_IMAGE_SIZES,bindHeroPreloadSizes} from '../src/lib/hero-image-contract.mjs';
 
-const [globalCss,invariants,mainHeadRaw]=await Promise.all([
+const [globalCss,renderCalibrationRaw,invariants,mainHeadRaw]=await Promise.all([
   readFile('src/styles/global.css','utf8'),
+  readFile('src/data/render-calibration.json','utf8'),
   readFile('src/data/release-invariants.json','utf8').then(JSON.parse),
   readFile('src/data/templates/main-head.html','utf8')
 ]);
-const delivery=deriveCssDelivery(globalCss);
+const {cssSource,calibration}=assembleCssSource(globalCss,renderCalibrationRaw);
+const delivery=deriveCssDelivery(cssSource);
 const criticalRules=parseCssRules(delivery.criticalCss);
 const deferredRules=parseCssRules(delivery.externalCss);
 const normalized=normalizeCssValue;
@@ -28,6 +31,7 @@ const expect=(rules,selector,property,value,options={})=>assert(normalized(decl(
 
 assert((globalCss.match(/\/\*DIST_CRITICAL_CSS_END\*\//g)||[]).length===1,'Critical CSS split marker drift');
 assert(globalCss.includes('/*DIST_CRITICAL_HERO_GEOMETRY_START*/')&&globalCss.includes('/*DIST_CRITICAL_HERO_GEOMETRY_END*/'),'Critical Hero geometry block missing');
+assert(!/(?:Release 1\.0\.0|FINAL_2026_UI_CONVERGENCE|GEO_UI_20260817)/.test(globalCss),'Historical append-only CSS layer remains');
 
 expect(criticalRules,'.entity-hero .hero-actions','display','grid',{maxWidth:720});
 expect(criticalRules,'.entity-hero .hero-actions','grid-template-columns','minmax(0,1fr)',{maxWidth:720});
@@ -44,13 +48,13 @@ assert(conflictingHeroColumns.length===0,'A two-column mobile rule can still mat
 assert(!delivery.externalCss.includes('.entity-hero .hero-actions{display:grid;grid-template-columns:minmax(0,1fr)'), 'Authoritative Hero action geometry remains deferred');
 assert(!delivery.externalCss.includes('.entity-hero .hero-action{grid-column:1/-1'), 'Authoritative Hero CTA geometry remains deferred');
 const conditions=rule=>rule.conditions.map(compactCssValue).join('|');
-const duplicatedHeroDeclarations=[];
-for(const criticalRule of criticalRules.filter(rule=>rule.selector.includes('hero'))){
+const duplicatedDeliveryDeclarations=[];
+for(const criticalRule of criticalRules){
   for(const deferredRule of deferredRules.filter(rule=>compactCssValue(rule.selector)===compactCssValue(criticalRule.selector)&&conditions(rule)===conditions(criticalRule))){
-    for(const [property,value] of Object.entries(criticalRule.declarations))if(property in deferredRule.declarations&&normalized(value)===normalized(deferredRule.declarations[property]))duplicatedHeroDeclarations.push(`${criticalRule.selector}:${property}`);
+    for(const [property,value] of Object.entries(criticalRule.declarations))if(property in deferredRule.declarations&&normalized(value)===normalized(deferredRule.declarations[property]))duplicatedDeliveryDeclarations.push(`${criticalRule.selector}:${property}`);
   }
 }
-assert(duplicatedHeroDeclarations.length===0,`Hero geometry has multiple authorities: ${duplicatedHeroDeclarations.join(', ')}`);
+assert(duplicatedDeliveryDeclarations.length===0,`Critical/deferred declaration has multiple authorities: ${duplicatedDeliveryDeclarations.join(', ')}`);
 assert(selectorRules(criticalRules,'.hero-search-launch').filter(rule=>'grid-area' in rule.declarations).length===1,'Hero search grid-area has duplicate critical authority');
 const mobileCaptionReputation=selectorRules(criticalRules,'.hero-caption-reputation').filter(rule=>isMaxWidthRule(rule,430));
 assert(mobileCaptionReputation.length===1&&'font-size' in mobileCaptionReputation[0].declarations&&'min-block-size' in mobileCaptionReputation[0].declarations,'Hero caption reputation mobile geometry is split across authorities');
@@ -85,8 +89,15 @@ for(const [selector,properties] of [[ '.quick-actions',['left','right','width','
 expect(criticalRules,'.quick-actions__top','width','2.15rem');
 expect(criticalRules,'.quick-actions__top','height','2.15rem');
 expect(criticalRules,'.quick-actions__top::before','inset','-.35rem');
+expect(criticalRules,'.quick-actions__bar','border','1px solid rgb(10 107 88/.12)');
+expect(criticalRules,'.quick-actions__bar','background','linear-gradient(180deg,#fbfdfc,#f5f9f7)');
+expect(criticalRules,'.quick-actions__item','background','rgb(255 255 255/.56)');
+expect(criticalRules,'.quick-actions__item--consultation','background','rgb(10 107 88/.085)');
 for(const property of ['width','height'])assert(!selectorRules(deferredRules,'.quick-actions__top').some(rule=>property in rule.declarations),`Deferred quick top repeats ${property}`);
 assert(!selectorRules(deferredRules,'.quick-actions__top::before').some(rule=>'inset' in rule.declarations),'Deferred quick top pseudo repeats inset');
+assert(!selectorRules(deferredRules,'.quick-actions').some(rule=>rule.conditions.length===0),'Deferred quick-actions base authority remains');
+assert(!selectorRules(deferredRules,'.quick-actions__bar').some(rule=>rule.conditions.length===0),'Deferred quick-actions bar base authority remains');
+for(const [selector,property] of [['.quick-actions__item','background'],['.quick-actions__item--consultation','background'],['.quick-actions__item--search','background']])assert(!selectorRules(deferredRules,selector).some(rule=>rule.conditions.length===0&&property in rule.declarations),`Deferred Quick Actions paint authority remains: ${selector} ${property}`);
 
 assert(!allRules.some(rule=>(rule.selector==='html'||rule.selector===':root')&&'font-size' in rule.declarations),'Root font-size change requires Hero sizes re-audit');
 expect(criticalRules,'figure','border','1px solid var(--line)');
@@ -153,4 +164,4 @@ assert(!reputationBlocks[0].includes('آخرین دریافت از Google:'),'St
 assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Critical CSS exceeds release budget');
 assert(Buffer.byteLength(delivery.externalCss)>=invariants.minExternalCssBytes,'Deferred CSS fell below release floor');
 
-console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),crossBoundaryDuplicateDeclarations:0,historicalCascadeLayers:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));

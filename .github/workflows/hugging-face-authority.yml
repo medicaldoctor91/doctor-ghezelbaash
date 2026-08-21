@@ -1,4 +1,4 @@
-name: Hugging Face dataset viewer guard
+name: Hugging Face authority contract
 
 on:
   schedule:
@@ -11,13 +11,13 @@ on:
       - 'src/data/release.json'
       - 'scripts/prepare-huggingface-distribution.mjs'
       - 'scripts/verify-huggingface-authority.mjs'
-      - '.github/workflows/hf-viewer-guard.yml'
+      - '.github/workflows/hugging-face-authority.yml'
 
 permissions:
   contents: read
 
 jobs:
-  guard:
+  verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -27,5 +27,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.19.0
-      - name: Verify authority surfaces and Dataset Server configs
+      - name: Verify physician-first Hugging Face authority topology
+        run: node scripts/verify-huggingface-authority.mjs --profile
+      - name: Verify Dataset Server viewer contracts
         run: node scripts/verify-huggingface-authority.mjs --viewer

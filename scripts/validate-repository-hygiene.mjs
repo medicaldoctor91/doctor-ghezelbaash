@@ -7,11 +7,13 @@ const tracked=execFileSync('git',['ls-files','-z'],{cwd:root,encoding:'buffer'})
 if(!tracked.length)throw new Error('Tracked-source inventory is empty');
 
 const forbiddenGeneratedPrefixes=['dist/','release/','node_modules/','.python-deps/','.release/runtime/','.release/huggingface/'];
+const forbiddenExternalMaintenancePrefixes=['wikimedia/','wikiversity/','wikijournal/','wikisource/'];
 const forbiddenExactNames=new Set(['notes.md','dev-notes.md','internal-notes.md']);
 const forbiddenNamePrefixes=['audit-','backup-','draft-','scratch-','temp-','tmp-'];
 const forbiddenSuffixes=['.bak','.old','.orig','.rej','.tmp','~'];
-const oneShotWorkflowPattern=/(?:^|\/)(?:one[-_]?time|clean[-_]?slate|patch[-_]|cleanup[-_]|normalize[-_].*fixtures).*\.ya?ml$/i;
+const oneShotWorkflowPattern=/(?:^|\/)[._-]*(?:one[-_]?time|temporary|temp[-_]|tmp[-_]|audit[-_]|clean[-_]?slate|patch[-_]|cleanup[-_]|normalize[-_].*fixtures).*\.ya?ml$/i;
 const runtimeWrapperPattern=/_entry\.py$/i;
+const externalOperationScriptPattern=/^scripts\/(?:commons_|wiki(?:media|journal|source|versity)_)/i;
 const textExtensions=new Set(['.astro','.cff','.css','.csv','.html','.ini','.js','.json','.jsonld','.md','.mjs','.py','.toml','.ts','.tsv','.ttl','.txt','.xml','.yaml','.yml']);
 const textExactNames=new Set(['.gitignore','.npmrc','.nvmrc','LICENSE']);
 const devMarker=/\b(?:TODO|FIXME|HACK)\b/g;
@@ -19,11 +21,14 @@ const devMarker=/\b(?:TODO|FIXME|HACK)\b/g;
 for(const name of tracked){
   const normalized=name.replaceAll('\\','/');
   if(forbiddenGeneratedPrefixes.some(prefix=>normalized.startsWith(prefix)))throw new Error(`Generated/runtime material must not be tracked: ${normalized}`);
+  if(forbiddenExternalMaintenancePrefixes.some(prefix=>normalized.startsWith(prefix)))throw new Error(`External one-shot maintenance material must not remain canonical: ${normalized}`);
   if(oneShotWorkflowPattern.test(normalized))throw new Error(`One-shot maintenance workflow must not remain canonical: ${normalized}`);
   if(runtimeWrapperPattern.test(normalized))throw new Error(`Runtime source wrapper must not remain canonical: ${normalized}`);
+  if(externalOperationScriptPattern.test(normalized))throw new Error(`External one-shot operation script must not remain canonical: ${normalized}`);
   const base=path.posix.basename(normalized).toLowerCase();
+  const semanticBase=base.replace(/^[._-]+/,'');
   if(forbiddenExactNames.has(base))throw new Error(`Internal note/planning file must not be tracked: ${normalized}`);
-  if(forbiddenNamePrefixes.some(prefix=>base.startsWith(prefix)))throw new Error(`Temporary/audit file must not be tracked: ${normalized}`);
+  if(forbiddenNamePrefixes.some(prefix=>semanticBase.startsWith(prefix)))throw new Error(`Temporary/audit file must not be tracked: ${normalized}`);
   if(forbiddenSuffixes.some(suffix=>base.endsWith(suffix)))throw new Error(`Backup/editor residue must not be tracked: ${normalized}`);
 }
 
@@ -32,6 +37,16 @@ if(canonicalContent.length!==1||canonicalContent[0]!=='src/content-source/page.m
 const styles=tracked.filter(name=>name.startsWith('src/styles/'));
 const allowedStyles=['src/styles/global.css'];
 if(styles.length!==allowedStyles.length||styles.some((name,index)=>name!==allowedStyles[index]))throw new Error(`Stylesheet topology drift: ${styles.join(', ')}`);
+const workflows=tracked.filter(name=>name.startsWith('.github/workflows/'));
+const allowedWorkflows=[
+  '.github/workflows/ci.yml',
+  '.github/workflows/cloudflare-pages-deploy.yml',
+  '.github/workflows/github-pages-bridge.yml',
+  '.github/workflows/hugging-face-authority.yml',
+  '.github/workflows/reputation-refresh.yml',
+  '.github/workflows/stack-monitor.yml',
+];
+if(workflows.length!==allowedWorkflows.length||workflows.some((name,index)=>name!==allowedWorkflows[index]))throw new Error(`Workflow topology drift: ${workflows.join(', ')}`);
 
 const forbiddenControlByte=byte=>(byte<=0x08)||(byte>=0x0b&&byte<=0x0c)||(byte>=0x0e&&byte<=0x1f)||byte===0x7f;
 for(const name of tracked){
@@ -46,4 +61,4 @@ for(const name of tracked){
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,generatedRuntimeTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));
