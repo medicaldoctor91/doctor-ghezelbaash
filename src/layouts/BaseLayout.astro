@@ -1,6 +1,8 @@
 ---
 import globalCss from '../styles/global.css?raw';
+import renderCalibrationRaw from '../data/render-calibration.json?raw';
 import { headGraphRaw, supportGraphRaw } from '../lib/knowledge-graph';
+import { assembleCssSource } from '../lib/css-source.mjs';
 import { deriveCssDelivery } from '../lib/css-delivery.mjs';
 import DocumentHead from '../components/DocumentHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
@@ -11,7 +13,8 @@ interface Props { frontmatter:Frontmatter; url?:string; isMain?:boolean; }
 type JsonNode=Record<string,any>;
 const {frontmatter,url,isMain=false}=Astro.props;const base=Astro.site??Astro.url;const canonicalURL=new URL(url??Astro.url.pathname,base);
 const lang=frontmatter.lang??'fa-IR';const dir=frontmatter.dir??'rtl';const robots=frontmatter.robots??'index, follow';const noindex=/(?:^|,)\s*noindex\b/i.test(robots);
-const {criticalCss,assetHref:externalCssHref}=deriveCssDelivery(globalCss);
+const {cssSource}=assembleCssSource(globalCss,renderCalibrationRaw);
+const {criticalCss,assetHref:externalCssHref}=deriveCssDelivery(cssSource);
 const googleSupportGraphRaw=supportGraphRaw;
 
 ---
