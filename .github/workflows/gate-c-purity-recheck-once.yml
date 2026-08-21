@@ -1,0 +1,86 @@
+name: Gate C purity recheck once
+
+on:
+  push:
+    branches:
+      - audit/gate-c-purity-recheck-2026-08-21
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: audit/gate-c-purity-recheck-2026-08-21
+          fetch-depth: 1
+      - name: Prove legacy selector has no consumer outside CSS/validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          unexpected="$(git grep -n 'hero-reputation' -- . ':(exclude)src/styles/global.css' ':(exclude)scripts/validate-critical-hero-geometry.mjs' || true)"
+          if [ -n "$unexpected" ]; then
+            printf '%s\n' "$unexpected"
+            echo 'Unexpected hero-reputation consumer found; aborting.' >&2
+            exit 1
+          fi
+      - name: Remove dead selector authority and invert validator contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('node:fs');
+          const cssPath='src/styles/global.css';
+          const validatorPath='scripts/validate-critical-hero-geometry.mjs';
+          let css=fs.readFileSync(cssPath,'utf8');
+          const removeOnce=(source,needle,label)=>{
+            const count=source.split(needle).length-1;
+            if(count!==1)throw new Error(`${label}: expected exactly one occurrence, found ${count}`);
+            return source.replace(needle,'');
+          };
+          const deadRules=[
+            ['.hero-reputation{display:inline-flex;flex-wrap:wrap;gap:0.35rem;align-items:center;margin-block:0.35rem 1.25rem;padding:0.65rem 0.85rem;border:1px solid #cce3da;border-radius:999px;background:var(--accent-soft);color:#174438;font-size:0.94rem;}','legacy hero reputation base'],
+            ['.entity-hero .hero-reputation{grid-area:reputation;justify-self:start}','legacy hero reputation grid placement'],
+            ['.hero-reputation{border-radius:.8rem}','legacy hero reputation mobile radius'],
+            ['.entity-hero .hero-reputation{width:100%;margin-block:.1rem .25rem}','legacy hero reputation mobile geometry']
+          ];
+          for(const [needle,label] of deadRules)css=removeOnce(css,needle,label);
+          if(css.includes('.hero-reputation'))throw new Error('Legacy hero-reputation selector remains in global.css');
+          fs.writeFileSync(cssPath,css);
+
+          let validator=fs.readFileSync(validatorPath,'utf8');
+          validator=removeOnce(
+            validator,
+            "expect(criticalRules,'.hero-reputation','border-radius','.8rem',{maxWidth:720});",
+            'legacy validator positive requirement'
+          );
+          const allRulesNeedle="const allRules=[...criticalRules,...deferredRules];";
+          const allRulesReplacement=allRulesNeedle+"\nconst legacyHeroReputationSelectors=allRules.filter(rule=>['.hero-reputation','.entity-hero .hero-reputation'].includes(compactCssValue(rule.selector)));\nassert(legacyHeroReputationSelectors.length===0,'Dead legacy hero-reputation selector returned');";
+          validator=removeOnce(validator,allRulesNeedle,'allRules anchor').replace(allRulesNeedle,allRulesReplacement);
+          const contentNeedle='const {content}=await assembleCanonicalContent();';
+          const contentReplacement=contentNeedle+"\nassert(!/\\bhero-reputation\\b/.test(content),'Dead legacy hero-reputation class returned to assembled markup');";
+          const contentCount=validator.split(contentNeedle).length-1;
+          if(contentCount!==1)throw new Error(`content anchor: expected exactly one occurrence, found ${contentCount}`);
+          validator=validator.replace(contentNeedle,contentReplacement);
+          fs.writeFileSync(validatorPath,validator);
+          NODE
+      - name: Validate exact correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/validate-critical-hero-geometry.mjs
+          git diff --check
+          test -z "$(git grep -n 'hero-reputation' -- src/styles/global.css || true)"
+      - name: Commit clean source correction and remove one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/gate-c-purity-recheck-once.yml
+          git add src/styles/global.css scripts/validate-critical-hero-geometry.mjs
+          git diff --cached --check
+          git commit -m 'Gate C purity: remove dead hero reputation CSS'
+          git push origin HEAD:audit/gate-c-purity-recheck-2026-08-21
