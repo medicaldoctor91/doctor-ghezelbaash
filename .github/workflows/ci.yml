@@ -25,6 +25,45 @@ jobs:
         with:
           python-version: '3.14.6'
       - run: npm ci --ignore-scripts
+      - name: Apply audited Gate C dead-selector correction in workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          unexpected="$(git grep -n 'hero-reputation' -- . ':(exclude)src/styles/global.css' ':(exclude)scripts/validate-critical-hero-geometry.mjs' ':(exclude).github/workflows/gate-c-purity-recheck-once.yml' ':(exclude).github/workflows/ci.yml' || true)"
+          if [ -n "$unexpected" ]; then
+            printf '%s\n' "$unexpected"
+            echo 'Unexpected hero-reputation consumer found; aborting.' >&2
+            exit 1
+          fi
+          node <<'NODE'
+          const fs=require('node:fs');
+          const cssPath='src/styles/global.css';
+          const validatorPath='scripts/validate-critical-hero-geometry.mjs';
+          const replaceExactlyOnce=(source,needle,replacement,label)=>{
+            const count=source.split(needle).length-1;
+            if(count!==1)throw new Error(`${label}: expected exactly one occurrence, found ${count}`);
+            return source.replace(needle,replacement);
+          };
+          let css=fs.readFileSync(cssPath,'utf8');
+          for(const [needle,label] of [
+            ['.hero-reputation{display:inline-flex;flex-wrap:wrap;gap:0.35rem;align-items:center;margin-block:0.35rem 1.25rem;padding:0.65rem 0.85rem;border:1px solid #cce3da;border-radius:999px;background:var(--accent-soft);color:#174438;font-size:0.94rem;}','legacy hero reputation base'],
+            ['.entity-hero .hero-reputation{grid-area:reputation;justify-self:start}','legacy hero reputation grid placement'],
+            ['.hero-reputation{border-radius:.8rem}','legacy hero reputation mobile radius'],
+            ['.entity-hero .hero-reputation{width:100%;margin-block:.1rem .25rem}','legacy hero reputation mobile geometry']
+          ])css=replaceExactlyOnce(css,needle,'',label);
+          if(css.includes('.hero-reputation'))throw new Error('Legacy hero-reputation selector remains in global.css');
+          fs.writeFileSync(cssPath,css);
+
+          let validator=fs.readFileSync(validatorPath,'utf8');
+          validator=replaceExactlyOnce(validator,"expect(criticalRules,'.hero-reputation','border-radius','.8rem',{maxWidth:720});",'','legacy validator positive requirement');
+          const allRules="const allRules=[...criticalRules,...deferredRules];";
+          validator=replaceExactlyOnce(validator,allRules,allRules+"\nconst legacyHeroReputationSelectors=allRules.filter(rule=>['.hero-reputation','.entity-hero .hero-reputation'].includes(compactCssValue(rule.selector)));\nassert(legacyHeroReputationSelectors.length===0,'Dead legacy hero-reputation selector returned');",'allRules anchor');
+          const content="const {content}=await assembleCanonicalContent();";
+          validator=replaceExactlyOnce(validator,content,content+"\nassert(!/\\bhero-reputation\\b/.test(content),'Dead legacy hero-reputation class returned to assembled markup');",'assembled content anchor');
+          fs.writeFileSync(validatorPath,validator);
+          NODE
+          node scripts/validate-critical-hero-geometry.mjs
+          git diff --check
       - name: Release preparation diagnostics
         shell: bash
         run: |
@@ -51,6 +90,15 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Upload audited corrected source files
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: gate-c-purity-corrected-source
+          path: |
+            src/styles/global.css
+            scripts/validate-critical-hero-geometry.mjs
+          if-no-files-found: error
+          retention-days: 1
       - name: Package canonical source backup
         if: github.ref == 'refs/heads/main'
         run: npm run package:source
