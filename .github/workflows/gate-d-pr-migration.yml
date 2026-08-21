@@ -51,6 +51,8 @@ jobs:
       - name: Release preparation diagnostics
         run: npm run release:prepare
       - name: Build diagnostics
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
         run: npm run build
       - name: Commit validated Gate D source
         shell: bash
