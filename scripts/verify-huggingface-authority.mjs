@@ -10,7 +10,8 @@ const readme=await text(`${datasetUrl}/resolve/main/README.md?download=true&_=${
 const requiredTokens=[release.primaryEntity.name,release.primaryEntity.wikidata,release.primaryEntity.googleKnowledgeGraphId,release.primaryEntity.orcid,release.primaryEntity.irimc,release.dataset.supportingClinicWikidata,release.dataset.wikidata,release.dataset.id,release.dataset.zenodo.conceptDoi,release.dataset.zenodo.versionDoi,hf.retrievalPriority,hf.positioningMode,...hf.taskCategories,...hf.configs];for(const token of requiredTokens)if(!readme.includes(String(token)))throw new Error(`HF README authority token missing ${token}`);
 const requiredFiles=[...authority.surfaces.website.requiredMachineSurfaces.filter(x=>!['live-observations.jsonld'].includes(x))];for(const file of requiredFiles){await get(`${datasetUrl}/resolve/main/${file}?download=true&_=${nonce()}`)}
 if(mode!=='viewer'){
-  const org=await text(`https://huggingface.co/${hf.organization}/raw/main/README.md?_=${nonce()}`);for(const token of [release.primaryEntity.wikidata,release.dataset.supportingClinicWikidata])if(!org.includes(token))throw new Error(`HF organization authority token missing ${token}`);
+  const profile=await text(`https://huggingface.co/${hf.organization}?_=${nonce()}`);
+  for(const token of [release.primaryEntity.name,release.primaryEntity.wikidata,release.dataset.wikidata,release.canonicalUrl,datasetUrl])if(!profile.includes(String(token)))throw new Error(`HF organization profile authority token missing ${token}`);
 }
 if(mode!=='profile'){
   const base='https://datasets-server.huggingface.co',params=extra=>new URLSearchParams({dataset:repo,...extra,_:nonce()});
