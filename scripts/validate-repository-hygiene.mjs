@@ -30,7 +30,7 @@ for(const name of tracked){
 const canonicalContent=tracked.filter(name=>name.startsWith('src/content-source/'));
 if(canonicalContent.length!==1||canonicalContent[0]!=='src/content-source/page.md')throw new Error(`Canonical content-source topology drift: ${canonicalContent.join(', ')}`);
 const styles=tracked.filter(name=>name.startsWith('src/styles/'));
-const allowedStyles=['src/styles/critical-mobile.css','src/styles/global.css'];
+const allowedStyles=['src/styles/global.css'];
 if(styles.length!==allowedStyles.length||styles.some((name,index)=>name!==allowedStyles[index]))throw new Error(`Stylesheet topology drift: ${styles.join(', ')}`);
 
 const forbiddenControlByte=byte=>(byte<=0x08)||(byte>=0x0b&&byte<=0x0c)||(byte>=0x0e&&byte<=0x1f)||byte===0x7f;
