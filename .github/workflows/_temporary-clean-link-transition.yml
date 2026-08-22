@@ -30,46 +30,77 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
+      - name: Prepare status helper
+        env:
+          GH_STATUS_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          cat > /tmp/mark-status.sh <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          context="$1" state="$2" description="$3"
+          jq -n --arg state "$state" --arg context "$context" --arg description "$description" '{state:$state,context:$context,description:$description}' >/tmp/status.json
+          curl -fsS -X POST -H "Authorization: Bearer ${GH_STATUS_TOKEN}" -H 'Accept: application/vnd.github+json' -H 'Content-Type: application/json' --data-binary @/tmp/status.json "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" >/dev/null || true
+          SH
+          chmod +x /tmp/mark-status.sh
       - name: Remove only the canonical generic anchor transition
         shell: bash
         run: |
           set -euo pipefail
+          /tmp/mark-status.sh 'perf/link-transition/edit' pending 'Editing canonical global.css authority'
           python - <<'PY'
           from pathlib import Path
           p=Path('src/styles/global.css')
           s=p.read_text(encoding='utf-8')
           target='transition:color 140ms ease,text-decoration-color 140ms ease;'
-          if s.count(target)!=1:
-              raise SystemExit(f'Expected exactly one generic anchor transition, found {s.count(target)}')
+          count=s.count(target)
+          if count!=1:
+              raise SystemExit(f'Expected exactly one generic anchor transition, found {count}')
           p.write_text(s.replace(target,'',1),encoding='utf-8')
           PY
           git diff --check
-          git diff -- src/styles/global.css
+          ! grep -Fq 'transition:color 140ms ease,text-decoration-color 140ms ease;' src/styles/global.css
+          /tmp/mark-status.sh 'perf/link-transition/edit' success 'Canonical generic anchor transition removed exactly once'
       - name: Install dependencies
         run: npm ci --ignore-scripts
       - name: Run the complete production build and validators
         shell: bash
         run: |
           set -euo pipefail
+          /tmp/mark-status.sh 'perf/link-transition/build' pending 'Running complete production build and validators'
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export SOURCE_COMMIT="$GITHUB_SHA"
-          npm run build
+          if npm run build; then
+            /tmp/mark-status.sh 'perf/link-transition/build' success 'Complete production build passed'
+          else
+            /tmp/mark-status.sh 'perf/link-transition/build' failure 'Complete production build failed'
+            exit 1
+          fi
       - name: Prove no unintended tracked source changed
         shell: bash
         run: |
           set -euo pipefail
+          /tmp/mark-status.sh 'perf/link-transition/diff' pending 'Checking singular canonical source diff'
           mapfile -t changed < <(git diff --name-only)
           printf 'TRACKED_CHANGE %s\n' "${changed[@]}"
-          test "${#changed[@]}" -eq 1
-          test "${changed[0]}" = 'src/styles/global.css'
-          ! grep -Fq 'transition:color 140ms ease,text-decoration-color 140ms ease;' src/styles/global.css
+          if [ "${#changed[@]}" -ne 1 ] || [ "${changed[0]:-}" != 'src/styles/global.css' ]; then
+            /tmp/mark-status.sh 'perf/link-transition/diff' failure "Unexpected tracked diff count=${#changed[@]}"
+            exit 1
+          fi
           git diff --check
+          /tmp/mark-status.sh 'perf/link-transition/diff' success 'Only src/styles/global.css changed'
       - name: Commit the validated clean source edit
         shell: bash
         run: |
           set -euo pipefail
+          /tmp/mark-status.sh 'perf/link-transition/commit' pending 'Committing validated canonical CSS edit'
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src/styles/global.css
           git commit -m 'perf: remove generic paint-bound link transition'
-          git push origin HEAD:main
+          if git push origin HEAD:main; then
+            /tmp/mark-status.sh 'perf/link-transition/commit' success 'Validated canonical CSS edit pushed to main'
+          else
+            /tmp/mark-status.sh 'perf/link-transition/commit' failure 'Push to main failed because branch advanced'
+            exit 1
+          fi
