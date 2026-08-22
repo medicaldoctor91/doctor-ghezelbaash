@@ -1,8 +1,6 @@
-name: Read-only source and release validation
+name: Read-only main source and release validation
 
 on:
-  pull_request:
-    branches: [main]
   push:
     branches: [main]
 
@@ -52,10 +50,8 @@ jobs:
             exit "$rc"
           fi
       - name: Package canonical source backup
-        if: github.ref == 'refs/heads/main'
         run: npm run package:source
       - name: Upload canonical source backup
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: doctor-ghezelbaash-source-${{ github.sha }}
