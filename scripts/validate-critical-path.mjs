@@ -8,6 +8,7 @@ const root=process.cwd();
 const fail=message=>{throw new Error(message)};
 const assert=(condition,message)=>{if(!condition)fail(message)};
 const count=(source,pattern)=>(String(source).match(pattern)||[]).length;
+const heroPreloadPattern=/<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])(?=[^>]*\bfetchpriority=["']high["'])(?=[^>]*saeed-ghezelbash-portrait-delivery-640)[^>]*>/gi;
 
 const [mainHeadRaw,release,documentHead,baseLayout]=await Promise.all([
   readFile(path.join(root,'src/data/templates/main-head.html'),'utf8'),
@@ -20,7 +21,7 @@ const {criticalHead,discoveryHead,splitAt}=deriveMainHeadStages(boundHead);
 assert(splitAt>0&&splitAt<boundHead.length,'Canonical Head split position is invalid');
 assert(criticalHead+discoveryHead===boundHead,'Head staging must be byte-preserving');
 assert(count(criticalHead,/\brel=["']preload["']/gi)>=1,'Critical Head lost preload discovery');
-assert(count(criticalHead,/saeed-ghezelbash-portrait-delivery-640/gi)===1,'Critical Head must contain exactly one canonical Hero preload');
+assert(count(criticalHead,heroPreloadPattern)===1,'Critical Head must contain exactly one canonical Hero preload');
 assert(!/\brel=["']describedby["']/i.test(criticalHead),'Machine discovery links must remain outside the render-critical prefix');
 assert(/\brel=["']describedby["']/i.test(discoveryHead),'Discovery Head must retain machine-readable relations');
 assert(/stage="critical"/.test(baseLayout)&&/stage="discovery"/.test(baseLayout),'BaseLayout must emit both canonical Head stages');
@@ -34,16 +35,17 @@ if(distArg){
   const dist=path.resolve(root,distArg);
   await access(path.join(dist,'index.html'));
   const html=await readFile(path.join(dist,'index.html'),'utf8');
-  const heroPreload=html.match(/<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])(?=[^>]*\bfetchpriority=["']high["'])(?=[^>]*saeed-ghezelbash-portrait-delivery-640)[^>]*>/i)?.[0];
+  const heroPreloads=html.match(heroPreloadPattern)||[];
+  const heroPreload=heroPreloads[0];
   const criticalStyle=html.match(/<style(?:\s[^>]*)?>[\s\S]*?<\/style>/i)?.[0];
   const deferredPreload=html.match(/<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']style["'])(?=[^>]*\bfetchpriority=["']low["'])(?=[^>]*\bdata-deferred-stylesheet\b)[^>]*>/i)?.[0];
   const loader=html.match(/<script\b(?=[^>]*\bid=["']deferred-stylesheet-loader["'])[^>]*>[\s\S]*?<\/script>/i)?.[0];
   const core=html.match(/<script\b(?=[^>]*\bid=["']entity-core["'])(?=[^>]*application\/ld\+json)[^>]*>[\s\S]*?<\/script>/i)?.[0];
   const discovery=html.match(/<link\b(?=[^>]*\brel=["']describedby["'])[^>]*>/i)?.[0];
   for(const [value,label] of [[heroPreload,'Hero preload'],[criticalStyle,'critical CSS'],[deferredPreload,'low-priority deferred CSS preload'],[loader,'deferred stylesheet loader'],[core,'entity-core JSON-LD'],[discovery,'discovery Head relation']])assert(value,`DIST ${label} missing`);
+  assert(heroPreloads.length===1,'DIST duplicate Hero preload detected');
   const order=[heroPreload,criticalStyle,deferredPreload,loader,core,discovery].map(value=>html.indexOf(value));
   assert(order.every((value,index)=>index===0||order[index-1]<value),'DIST critical-path ordering drift');
-  assert(count(html,/saeed-ghezelbash-portrait-delivery-640[^>]*\brel=["']preload["']/gi)<=1,'DIST duplicate Hero preload detected');
   assert(count(html,/<title>/gi)===1&&count(html,/\brel=["']canonical["']/gi)===1,'DIST title/canonical duplication detected');
   assert(!/static\.cloudflareinsights\.com/i.test(html),'Cloudflare Insights unexpectedly entered static DIST');
 }
