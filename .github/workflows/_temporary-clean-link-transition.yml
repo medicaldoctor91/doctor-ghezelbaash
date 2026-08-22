@@ -51,6 +51,13 @@ jobs:
           if "$@"; then /tmp/mark-status.sh "$context" success "${context} passed"; else /tmp/mark-status.sh "$context" failure "${context} failed"; exit 1; fi
           SH
           chmod +x /tmp/run-stage.sh
+      - name: Prepare the exact final clean repository tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/_temporary-clean-link-transition.yml
+          rm -f .github/workflows/_temporary-disable-rum-configuration-rule.yml
+          /tmp/mark-status.sh 'perf/link-transition/temp-clean' success 'Temporary operational workflows removed from the validation tree'
       - name: Remove only the canonical generic anchor transition
         shell: bash
         run: |
@@ -90,28 +97,34 @@ jobs:
           /tmp/run-stage.sh 'perf/link-transition/query-dist' node scripts/validate-query-matrix.mjs dist/query-matrix.jsonl
           /tmp/run-stage.sh 'perf/link-transition/current-context' npm run validate:current-context
           /tmp/run-stage.sh 'perf/link-transition/cloudflare-preflight' npm run preflight:cloudflare
-      - name: Prove no unintended tracked source changed
+      - name: Prove the tracked diff is exactly the intended final state
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t changed < <(git diff --name-only)
+          mapfile -t changed < <(git diff --name-only | sort)
           printf 'TRACKED_CHANGE %s\n' "${changed[@]}"
-          if [ "${#changed[@]}" -ne 1 ] || [ "${changed[0]:-}" != 'src/styles/global.css' ]; then
+          expected=(
+            '.github/workflows/_temporary-clean-link-transition.yml'
+            '.github/workflows/_temporary-disable-rum-configuration-rule.yml'
+            'src/styles/global.css'
+          )
+          if [ "${#changed[@]}" -ne "${#expected[@]}" ]; then
             /tmp/mark-status.sh 'perf/link-transition/diff' failure "Unexpected tracked diff count=${#changed[@]}"
             exit 1
           fi
+          for i in "${!expected[@]}"; do test "${changed[$i]}" = "${expected[$i]}" || { /tmp/mark-status.sh 'perf/link-transition/diff' failure 'Unexpected tracked path'; exit 1; }; done
           git diff --check
-          /tmp/mark-status.sh 'perf/link-transition/diff' success 'Only src/styles/global.css changed'
-      - name: Commit the validated clean source edit
+          /tmp/mark-status.sh 'perf/link-transition/diff' success 'Final tree differs only by CSS cleanup and temporary-workflow removals'
+      - name: Commit the validated final clean tree
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add src/styles/global.css
+          git add -A src/styles/global.css .github/workflows/_temporary-clean-link-transition.yml .github/workflows/_temporary-disable-rum-configuration-rule.yml
           git commit -m 'perf: remove generic paint-bound link transition'
           if git push origin HEAD:main; then
-            /tmp/mark-status.sh 'perf/link-transition/commit' success 'Validated canonical CSS edit pushed to main'
+            /tmp/mark-status.sh 'perf/link-transition/commit' success 'Validated final clean tree pushed to main'
           else
             /tmp/mark-status.sh 'perf/link-transition/commit' failure 'Push to main failed because branch advanced'
             exit 1
