@@ -8,6 +8,7 @@ if(!tracked.length)throw new Error('Tracked-source inventory is empty');
 
 const forbiddenGeneratedPrefixes=['dist/','release/','node_modules/','.python-deps/','.release/runtime/','.release/huggingface/'];
 const forbiddenExternalMaintenancePrefixes=['wikimedia/','wikiversity/','wikijournal/','wikisource/'];
+const forbiddenPrControlPaths=new Set(['.github/CODEOWNERS','.github/dependabot.yml']);
 const forbiddenExactNames=new Set(['notes.md','dev-notes.md','internal-notes.md']);
 const forbiddenNamePrefixes=['audit-','backup-','draft-','scratch-','temp-','tmp-'];
 const forbiddenSuffixes=['.bak','.old','.orig','.rej','.tmp','~'];
@@ -22,6 +23,7 @@ for(const name of tracked){
   const normalized=name.replaceAll('\\','/');
   if(forbiddenGeneratedPrefixes.some(prefix=>normalized.startsWith(prefix)))throw new Error(`Generated/runtime material must not be tracked: ${normalized}`);
   if(forbiddenExternalMaintenancePrefixes.some(prefix=>normalized.startsWith(prefix)))throw new Error(`External one-shot maintenance material must not remain canonical: ${normalized}`);
+  if(forbiddenPrControlPaths.has(normalized))throw new Error(`PR-only control file must not remain canonical: ${normalized}`);
   if(oneShotWorkflowPattern.test(normalized))throw new Error(`One-shot maintenance workflow must not remain canonical: ${normalized}`);
   if(runtimeWrapperPattern.test(normalized))throw new Error(`Runtime source wrapper must not remain canonical: ${normalized}`);
   if(externalOperationScriptPattern.test(normalized))throw new Error(`External one-shot operation script must not remain canonical: ${normalized}`);
@@ -71,4 +73,4 @@ for(const name of tracked){
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,pullRequestWorkflowCoupling:false,nonMainWorkflowBranchTriggers:false,developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestWorkflowCoupling:false,nonMainWorkflowBranchTriggers:false,developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));
