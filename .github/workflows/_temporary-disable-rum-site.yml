@@ -1,0 +1,83 @@
+name: Temporary disable Cloudflare Web Analytics auto-install
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/_temporary-disable-rum-site.yml'
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  disable:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CF_ZONE_NAME: ghezelbaash.ir
+      CF_CANONICAL_HOST: www.ghezelbaash.ir
+      GH_STATUS_TOKEN: ${{ github.token }}
+    steps:
+      - name: Disable account RUM auto-install for the exact zone and verify live HTML
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cf='https://api.cloudflare.com/client/v4'
+          auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          status_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}"
+          mark(){ jq -n --arg state "$2" --arg context "$1" --arg description "$3" '{state:$state,context:$context,description:$description}' >/tmp/status.json; curl -fsS -X POST -H "Authorization: Bearer ${GH_STATUS_TOKEN}" -H 'Accept: application/vnd.github+json' -H 'Content-Type: application/json' --data-binary @/tmp/status.json "$status_url" >/dev/null || true; }
+          fail(){ mark "cloudflare/rum/$1" failure "$2"; exit 1; }
+
+          mark 'cloudflare/rum/zone' pending 'Resolving exact zone and account'
+          zhttp=$(curl -sS -o /tmp/zone.json -w '%{http_code}' -G -H "$auth" --data-urlencode "name=${CF_ZONE_NAME}" --data-urlencode 'status=active' "${cf}/zones")
+          if [ "$zhttp" != 200 ] || ! jq -e '.success==true and (.result|length)==1 and .result[0].account.id!=null' /tmp/zone.json >/dev/null 2>&1; then fail zone "zone/account resolution failed HTTP ${zhttp}"; fi
+          zone_id=$(jq -r '.result[0].id' /tmp/zone.json)
+          account_id=$(jq -r '.result[0].account.id' /tmp/zone.json)
+          mark 'cloudflare/rum/zone' success 'Exact zone and account resolved'
+
+          mark 'cloudflare/rum/list' pending 'Listing Web Analytics sites'
+          lhttp=$(curl -sS -o /tmp/sites.json -w '%{http_code}' -H "$auth" "${cf}/accounts/${account_id}/rum/site_info/list?per_page=100")
+          if [ "$lhttp" != 200 ] || ! jq -e '.success==true' /tmp/sites.json >/dev/null 2>&1; then
+            code=$(jq -r '.errors[0].code // "none"' /tmp/sites.json 2>/dev/null || echo none)
+            fail list "RUM site list failed HTTP ${lhttp} CF ${code}"
+          fi
+          matches=$(jq -r --arg zid "$zone_id" --arg root "$CF_ZONE_NAME" --arg host "$CF_CANONICAL_HOST" '.result[]? | select(.zone_tag==$zid or .ruleset.zone_tag==$zid or .host==$root or .host==$host or .ruleset.zone_name==$root) | .site_tag' /tmp/sites.json | sort -u)
+          count=$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l | tr -d ' ')
+          if [ "$count" -lt 1 ]; then fail list 'No Web Analytics site matched the exact zone'; fi
+          mark 'cloudflare/rum/list' success "Matched ${count} Web Analytics site(s) for the exact zone"
+
+          mark 'cloudflare/rum/update' pending 'Disabling automatic RUM injection'
+          while IFS= read -r site; do
+            [ -n "$site" ] || continue
+            uhttp=$(curl -sS -o /tmp/update.json -w '%{http_code}' -X PUT -H "$auth" -H 'Content-Type: application/json' --data-binary '{"auto_install":false}' "${cf}/accounts/${account_id}/rum/site_info/${site}")
+            if [ "$uhttp" != 200 ] || ! jq -e '.success==true and .result.auto_install==false' /tmp/update.json >/dev/null 2>&1; then
+              code=$(jq -r '.errors[0].code // "none"' /tmp/update.json 2>/dev/null || echo none)
+              fail update "RUM site update failed HTTP ${uhttp} CF ${code}"
+            fi
+          done <<< "$matches"
+          mark 'cloudflare/rum/update' success 'All exact-zone Web Analytics sites now have auto_install=false'
+
+          mark 'cloudflare/rum/readback' pending 'Reading Web Analytics state back'
+          rhttp=$(curl -sS -o /tmp/readback.json -w '%{http_code}' -H "$auth" "${cf}/accounts/${account_id}/rum/site_info/list?per_page=100")
+          if [ "$rhttp" != 200 ] || ! jq -e --arg zid "$zone_id" --arg root "$CF_ZONE_NAME" --arg host "$CF_CANONICAL_HOST" '[.result[]? | select(.zone_tag==$zid or .ruleset.zone_tag==$zid or .host==$root or .host==$host or .ruleset.zone_name==$root)] as $m | ($m|length)>=1 and all($m[]; .auto_install==false)' /tmp/readback.json >/dev/null 2>&1; then fail readback 'RUM auto-install did not read back as false'; fi
+          mark 'cloudflare/rum/readback' success 'RUM auto-install=false read back exactly'
+
+          mark 'cloudflare/rum/live' pending 'Waiting for beacon suppression on a Chromium-like request'
+          ua='Mozilla/5.0 (Linux; Android 11; Moto G Power) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Mobile Safari/537.36'
+          for attempt in $(seq 1 36); do
+            nonce="${GITHUB_RUN_ID}-${attempt}-${RANDOM}"
+            html=$(curl -fsS -A "$ua" -H 'Accept: text/html,application/xhtml+xml' -H 'Cache-Control: no-cache' "https://${CF_CANONICAL_HOST}/?cf_rum_verify=${nonce}" || true)
+            if [ -n "$html" ] && ! grep -q 'static.cloudflareinsights.com' <<<"$html"; then
+              mark 'cloudflare/rum/live' success "Cloudflare beacon absent on live Chromium-like HTML attempt ${attempt}"
+              exit 0
+            fi
+            sleep 5
+          done
+          fail live 'RUM auto-install is false but the Cloudflare beacon still appears on live HTML'
