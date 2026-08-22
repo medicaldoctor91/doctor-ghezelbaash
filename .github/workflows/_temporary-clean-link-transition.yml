@@ -62,7 +62,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          /tmp/mark-status.sh 'perf/link-transition/edit' pending 'Editing canonical global.css authority'
           python - <<'PY'
           from pathlib import Path
           p=Path('src/styles/global.css')
@@ -86,7 +85,16 @@ jobs:
           export SOURCE_COMMIT="$GITHUB_SHA"
           /tmp/run-stage.sh 'perf/link-transition/prepare' npm run prepare:generated
           /tmp/run-stage.sh 'perf/link-transition/query-source' npm run validate:query-matrix
-          /tmp/run-stage.sh 'perf/link-transition/source' npm run validate:source
+          /tmp/run-stage.sh 'perf/link-transition/hygiene' npm run validate:hygiene
+          /tmp/run-stage.sh 'perf/link-transition/platform' node scripts/validate-platform-contract.mjs
+          /tmp/run-stage.sh 'perf/link-transition/source-core' node scripts/validate-source.mjs
+          /tmp/run-stage.sh 'perf/link-transition/critical-path-source' node scripts/validate-critical-path.mjs
+          /tmp/run-stage.sh 'perf/link-transition/hero-geometry' node scripts/validate-critical-hero-geometry.mjs
+          /tmp/run-stage.sh 'perf/link-transition/ctas' node scripts/validate-critical-ctas.mjs
+          /tmp/run-stage.sh 'perf/link-transition/reputation' node scripts/test-reputation-observation.mjs
+          /tmp/run-stage.sh 'perf/link-transition/subdomains' node scripts/validate-subdomain-redirects.mjs
+          /tmp/run-stage.sh 'perf/link-transition/gh-pages-build' node scripts/build-github-pages-bridge.mjs --self-test
+          /tmp/run-stage.sh 'perf/link-transition/gh-pages-verify' node scripts/verify-github-pages-bridge.mjs --self-test
           /tmp/run-stage.sh 'perf/link-transition/astro-build' npx astro build
           /tmp/run-stage.sh 'perf/link-transition/indexnow' npm run indexnow:prepare
           /tmp/run-stage.sh 'perf/link-transition/descriptors' npm run descriptors:finalize
@@ -102,16 +110,12 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -t changed < <(git diff --name-only | sort)
-          printf 'TRACKED_CHANGE %s\n' "${changed[@]}"
           expected=(
             '.github/workflows/_temporary-clean-link-transition.yml'
             '.github/workflows/_temporary-disable-rum-configuration-rule.yml'
             'src/styles/global.css'
           )
-          if [ "${#changed[@]}" -ne "${#expected[@]}" ]; then
-            /tmp/mark-status.sh 'perf/link-transition/diff' failure "Unexpected tracked diff count=${#changed[@]}"
-            exit 1
-          fi
+          if [ "${#changed[@]}" -ne "${#expected[@]}" ]; then /tmp/mark-status.sh 'perf/link-transition/diff' failure "Unexpected tracked diff count=${#changed[@]}"; exit 1; fi
           for i in "${!expected[@]}"; do test "${changed[$i]}" = "${expected[$i]}" || { /tmp/mark-status.sh 'perf/link-transition/diff' failure 'Unexpected tracked path'; exit 1; }; done
           git diff --check
           /tmp/mark-status.sh 'perf/link-transition/diff' success 'Final tree differs only by CSS cleanup and temporary-workflow removals'
@@ -123,9 +127,4 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A src/styles/global.css .github/workflows/_temporary-clean-link-transition.yml .github/workflows/_temporary-disable-rum-configuration-rule.yml
           git commit -m 'perf: remove generic paint-bound link transition'
-          if git push origin HEAD:main; then
-            /tmp/mark-status.sh 'perf/link-transition/commit' success 'Validated final clean tree pushed to main'
-          else
-            /tmp/mark-status.sh 'perf/link-transition/commit' failure 'Push to main failed because branch advanced'
-            exit 1
-          fi
+          if git push origin HEAD:main; then /tmp/mark-status.sh 'perf/link-transition/commit' success 'Validated final clean tree pushed to main'; else /tmp/mark-status.sh 'perf/link-transition/commit' failure 'Push to main failed because branch advanced'; exit 1; fi
