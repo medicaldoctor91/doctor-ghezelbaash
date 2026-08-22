@@ -1,0 +1,67 @@
+name: Temporary approved favicon PR builder
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: approved-favicon-pr-builder-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event.pull_request.head.ref == 'favicon-approved-2026'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: favicon-approved-2026
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Install deterministic rasterizers
+        run: python -m pip install --disable-pip-version-check 'Pillow>=11,<13' 'CairoSVG>=2.7,<3'
+      - name: Execute reviewed generator embedded in PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import textwrap
+          p=Path('.github/workflows/_temporary-build-approved-favicon.yml')
+          s=p.read_text(encoding='utf-8')
+          start="          python - <<'PY'\n"
+          end="\n          PY\n"
+          if start not in s: raise SystemExit('embedded generator start not found')
+          body=s.split(start,1)[1].split(end,1)[0]
+          Path('/tmp/build-approved-favicon.py').write_text(textwrap.dedent(body),encoding='utf-8')
+          PY
+          python /tmp/build-approved-favicon.py
+      - name: Validate scope and commit generated family to PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/_temporary-build-approved-favicon.yml
+          git diff --check
+          changed="$(git status --short | awk '{print $2}' | sort)"
+          printf '%s\n' "$changed"
+          for p in $changed; do
+            case "$p" in
+              .github/workflows/_temporary-build-approved-favicon.yml|public/favicon.svg|public/favicon-16x16.png|public/favicon-32x32.png|public/favicon-48x48.png|public/favicon.ico|public/apple-touch-icon.png|public/safari-pinned-tab.svg) ;;
+              *) echo "Unexpected change: $p" >&2; exit 1;;
+            esac
+          done
+          grep -q 'BackgroundMode>transparent<' public/favicon.svg
+          ! grep -q '<rect' public/favicon.svg
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A .github/workflows/_temporary-build-approved-favicon.yml public/favicon.svg public/favicon-16x16.png public/favicon-32x32.png public/favicon-48x48.png public/favicon.ico public/apple-touch-icon.png public/safari-pinned-tab.svg
+          git commit -m 'feat: install approved transparent favicon family'
+          git push origin HEAD:favicon-approved-2026
