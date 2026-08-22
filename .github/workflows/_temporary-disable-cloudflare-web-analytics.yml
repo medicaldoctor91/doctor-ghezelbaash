@@ -1,0 +1,80 @@
+name: Temporary disable Cloudflare Web Analytics injection
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/_temporary-disable-cloudflare-web-analytics.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  disable:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CF_ACCOUNT_ID: '884d1d90bd1fb6ecca14992c6c60d677'
+      CF_PAGES_PROJECT: 'doctor-ghezelbaash'
+    steps:
+      - name: Disable Pages Web Analytics injection and verify
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          api='https://api.cloudflare.com/client/v4'
+          auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          project_url="${api}/accounts/${CF_ACCOUNT_ID}/pages/projects/${CF_PAGES_PROJECT}"
+
+          curl --fail-with-body -sS -H "$auth" "$project_url" > /tmp/project-before.json
+          jq -e '.success == true' /tmp/project-before.json >/dev/null
+          jq '{before:{webAnalyticsConfigured:(.result.build_config.web_analytics_tag != null or .result.build_config.web_analytics_token != null),buildCommand:.result.build_config.build_command,destinationDir:.result.build_config.destination_dir,rootDir:.result.build_config.root_dir}}' /tmp/project-before.json
+
+          jq -n --slurpfile p /tmp/project-before.json '{build_config:{build_caching:$p[0].result.build_config.build_caching,build_command:$p[0].result.build_config.build_command,destination_dir:$p[0].result.build_config.destination_dir,root_dir:$p[0].result.build_config.root_dir,web_analytics_tag:null,web_analytics_token:null}}' > /tmp/patch.json
+          curl --fail-with-body -sS -X PATCH -H "$auth" -H 'Content-Type: application/json' --data-binary @/tmp/patch.json "$project_url" > /tmp/project-patched.json
+          jq -e '.success == true' /tmp/project-patched.json >/dev/null
+
+          curl --fail-with-body -sS -H "$auth" "$project_url" > /tmp/project-after.json
+          jq -e '.success == true and .result.build_config.web_analytics_tag == null and .result.build_config.web_analytics_token == null' /tmp/project-after.json >/dev/null
+          jq '{after:{webAnalyticsConfigured:(.result.build_config.web_analytics_tag != null or .result.build_config.web_analytics_token != null),buildCommand:.result.build_config.build_command,destinationDir:.result.build_config.destination_dir,rootDir:.result.build_config.root_dir}}' /tmp/project-after.json
+
+      - name: Disable account-level automatic RUM injection when permitted
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          api='https://api.cloudflare.com/client/v4'
+          auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          list_url="${api}/accounts/${CF_ACCOUNT_ID}/rum/site_info/list"
+
+          status=$(curl -sS -o /tmp/rum-sites.json -w '%{http_code}' -H "$auth" "$list_url")
+          if [ "$status" != '200' ] || ! jq -e '.success == true' /tmp/rum-sites.json >/dev/null 2>&1; then
+            echo "RUM_ACCOUNT_API_UNAVAILABLE http_status=${status}; Pages integration was already disabled and verified."
+            exit 0
+          fi
+
+          jq -c '.result[]? | select((.zone_tag // "") != "" or (.rules // [] | any((.host // "") == "www.ghezelbaash.ir")))' /tmp/rum-sites.json > /tmp/matching-rum-sites.jsonl || true
+          if [ ! -s /tmp/matching-rum-sites.jsonl ]; then
+            echo 'NO_MATCHING_ACCOUNT_LEVEL_RUM_SITE'
+            exit 0
+          fi
+
+          while IFS= read -r site; do
+            site_id=$(jq -r '.site_tag // .id // empty' <<<"$site")
+            [ -n "$site_id" ] || continue
+            host=$(jq -r '.host // empty' <<<"$site")
+            zone_tag=$(jq -r '.zone_tag // empty' <<<"$site")
+            body=$(jq -n --arg host "$host" --arg zone "$zone_tag" '{auto_install:true,enabled:false} + (if $host != "" then {host:$host} else {} end) + (if $zone != "" then {zone_tag:$zone} else {} end)')
+            put_status=$(curl -sS -o /tmp/rum-update.json -w '%{http_code}' -X PUT -H "$auth" -H 'Content-Type: application/json' --data-binary "$body" "${api}/accounts/${CF_ACCOUNT_ID}/rum/site_info/${site_id}")
+            if [ "$put_status" = '200' ] && jq -e '.success == true' /tmp/rum-update.json >/dev/null; then
+              echo "RUM_SITE_DISABLED site_id=${site_id}"
+            else
+              echo "RUM_SITE_DISABLE_UNAVAILABLE site_id=${site_id} http_status=${put_status}"
+            fi
+          done < /tmp/matching-rum-sites.jsonl
