@@ -33,65 +33,44 @@ jobs:
           auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
           ref='ghezelbaash_disable_rum_v1'
           status_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}"
+          mark(){ jq -n --arg state "$2" --arg context "$1" --arg description "$3" '{state:$state,context:$context,description:$description}' >/tmp/status.json; curl -fsS -X POST -H "Authorization: Bearer ${GH_STATUS_TOKEN}" -H 'Accept: application/vnd.github+json' -H 'Content-Type: application/json' --data-binary @/tmp/status.json "$status_url" >/dev/null || true; }
+          fail(){ mark "cloudflare/disable-rum/$1" failure "$2"; exit 1; }
 
-          mark() {
-            local context="$1" state="$2" description="$3"
-            jq -n --arg state "$state" --arg context "$context" --arg description "$description" '{state:$state,context:$context,description:$description}' >/tmp/status.json
-            curl -fsS -X POST -H "Authorization: Bearer ${GH_STATUS_TOKEN}" -H 'Accept: application/vnd.github+json' -H 'Content-Type: application/json' --data-binary @/tmp/status.json "$status_url" >/dev/null || true
-          }
-          fail() { mark "cloudflare/disable-rum/$1" failure "$2"; exit 1; }
-
-          mark 'cloudflare/disable-rum/zone' pending 'Resolving exact active zone'
           zone_status=$(curl -sS -o /tmp/zones.json -w '%{http_code}' -G -H "$auth" --data-urlencode "name=${CF_ZONE_NAME}" --data-urlencode 'status=active' "${cf}/zones")
-          if [ "$zone_status" != '200' ] || ! jq -e '.success == true and (.result|length) == 1' /tmp/zones.json >/dev/null 2>&1; then fail zone "zone lookup failed HTTP ${zone_status}"; fi
+          if [ "$zone_status" != 200 ] || ! jq -e '.success == true and (.result|length)==1' /tmp/zones.json >/dev/null 2>&1; then fail "zone-http-${zone_status}" 'zone lookup failed'; fi
           zone_id=$(jq -r '.result[0].id' /tmp/zones.json)
-          mark 'cloudflare/disable-rum/zone' success 'Exact active zone resolved'
+          mark 'cloudflare/disable-rum/zone' success 'zone resolved'
 
-          mark 'cloudflare/disable-rum/ruleset-read' pending 'Reading zone rulesets'
           list_status=$(curl -sS -o /tmp/rulesets.json -w '%{http_code}' -H "$auth" "${cf}/zones/${zone_id}/rulesets")
-          if [ "$list_status" != '200' ] || ! jq -e '.success == true' /tmp/rulesets.json >/dev/null 2>&1; then fail ruleset-read "ruleset list failed HTTP ${list_status}"; fi
+          if [ "$list_status" != 200 ] || ! jq -e '.success == true' /tmp/rulesets.json >/dev/null 2>&1; then fail "rulesets-http-${list_status}" 'ruleset list failed'; fi
           ruleset_id=$(jq -r '.result[]? | select(.kind=="zone" and .phase=="http_config_settings") | .id' /tmp/rulesets.json | head -n1)
-          mark 'cloudflare/disable-rum/ruleset-read' success 'Zone rulesets readable'
+          mark 'cloudflare/disable-rum/ruleset-read' success "rulesets readable existing=$([ -n "$ruleset_id" ] && echo yes || echo no)"
 
           rule=$(jq -nc --arg ref "$ref" --arg host "$CF_CANONICAL_HOST" '{ref:$ref,description:"Disable Cloudflare Web Analytics/RUM on the canonical site to preserve the strict CSP",expression:("(http.host eq \""+$host+"\")"),action:"set_config",action_parameters:{disable_rum:true},enabled:true}')
-          mark 'cloudflare/disable-rum/mutation' pending 'Creating or updating disable_rum rule'
           if [ -z "$ruleset_id" ]; then
             body=$(jq -nc --argjson rule "$rule" '{name:"Canonical configuration rules",description:"Canonical request-level configuration for ghezelbaash.ir",kind:"zone",phase:"http_config_settings",rules:[$rule]}')
-            create_status=$(curl -sS -o /tmp/create.json -w '%{http_code}' -X POST -H "$auth" -H 'Content-Type: application/json' --data-binary "$body" "${cf}/zones/${zone_id}/rulesets")
-            if { [ "$create_status" != '200' ] && [ "$create_status" != '201' ]; } || ! jq -e '.success == true and .result.id != null' /tmp/create.json >/dev/null 2>&1; then
-              code=$(jq -r '.errors[0].code // "unknown"' /tmp/create.json 2>/dev/null || true)
-              fail mutation "config ruleset create failed HTTP ${create_status} CF ${code}"
-            fi
-            ruleset_id=$(jq -r '.result.id' /tmp/create.json)
+            s=$(curl -sS -o /tmp/m.json -w '%{http_code}' -X POST -H "$auth" -H 'Content-Type: application/json' --data-binary "$body" "${cf}/zones/${zone_id}/rulesets")
+            code=$(jq -r '.errors[0].code // "none"' /tmp/m.json 2>/dev/null || echo parse)
+            if { [ "$s" != 200 ] && [ "$s" != 201 ]; } || ! jq -e '.success == true and .result.id != null' /tmp/m.json >/dev/null 2>&1; then fail "create-http-${s}-cf-${code}" 'config ruleset create failed'; fi
+            ruleset_id=$(jq -r '.result.id' /tmp/m.json)
           else
-            get_status=$(curl -sS -o /tmp/ruleset.json -w '%{http_code}' -H "$auth" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}")
-            if [ "$get_status" != '200' ] || ! jq -e '.success == true' /tmp/ruleset.json >/dev/null 2>&1; then fail mutation "config ruleset read failed HTTP ${get_status}"; fi
-            rule_id=$(jq -r --arg ref "$ref" '.result.rules[]? | select(.ref==$ref) | .id' /tmp/ruleset.json | head -n1)
-            if [ -n "$rule_id" ]; then
-              mutation_status=$(curl -sS -o /tmp/mutation.json -w '%{http_code}' -X PATCH -H "$auth" -H 'Content-Type: application/json' --data-binary "$rule" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}/rules/${rule_id}")
-            else
-              mutation_status=$(curl -sS -o /tmp/mutation.json -w '%{http_code}' -X POST -H "$auth" -H 'Content-Type: application/json' --data-binary "$rule" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}/rules")
-            fi
-            if { [ "$mutation_status" != '200' ] && [ "$mutation_status" != '201' ]; } || ! jq -e '.success == true' /tmp/mutation.json >/dev/null 2>&1; then
-              code=$(jq -r '.errors[0].code // "unknown"' /tmp/mutation.json 2>/dev/null || true)
-              fail mutation "disable_rum mutation failed HTTP ${mutation_status} CF ${code}"
-            fi
+            s=$(curl -sS -o /tmp/r.json -w '%{http_code}' -H "$auth" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}")
+            if [ "$s" != 200 ] || ! jq -e '.success == true' /tmp/r.json >/dev/null 2>&1; then fail "read-http-${s}" 'config ruleset read failed'; fi
+            rule_id=$(jq -r --arg ref "$ref" '.result.rules[]? | select(.ref==$ref) | .id' /tmp/r.json | head -n1)
+            if [ -n "$rule_id" ]; then verb=PATCH; endpoint="${cf}/zones/${zone_id}/rulesets/${ruleset_id}/rules/${rule_id}"; else verb=POST; endpoint="${cf}/zones/${zone_id}/rulesets/${ruleset_id}/rules"; fi
+            s=$(curl -sS -o /tmp/m.json -w '%{http_code}' -X "$verb" -H "$auth" -H 'Content-Type: application/json' --data-binary "$rule" "$endpoint")
+            code=$(jq -r '.errors[0].code // "none"' /tmp/m.json 2>/dev/null || echo parse)
+            if { [ "$s" != 200 ] && [ "$s" != 201 ]; } || ! jq -e '.success == true' /tmp/m.json >/dev/null 2>&1; then fail "rule-${verb,,}-http-${s}-cf-${code}" 'disable_rum rule mutation failed'; fi
           fi
-          mark 'cloudflare/disable-rum/mutation' success 'disable_rum rule mutation accepted'
+          mark 'cloudflare/disable-rum/mutation' success 'disable_rum mutation accepted'
 
-          mark 'cloudflare/disable-rum/readback' pending 'Reading rule back exactly'
-          verify_status=$(curl -sS -o /tmp/verify.json -w '%{http_code}' -H "$auth" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}")
-          if [ "$verify_status" != '200' ] || ! jq -e --arg ref "$ref" '.success == true and ([.result.rules[]? | select(.ref==$ref and .enabled==true and .action=="set_config" and .action_parameters.disable_rum==true)] | length) == 1' /tmp/verify.json >/dev/null 2>&1; then fail readback 'disable_rum rule did not read back exactly'; fi
+          s=$(curl -sS -o /tmp/v.json -w '%{http_code}' -H "$auth" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}")
+          if [ "$s" != 200 ] || ! jq -e --arg ref "$ref" '.success==true and ([.result.rules[]? | select(.ref==$ref and .enabled==true and .action=="set_config" and .action_parameters.disable_rum==true)]|length)==1' /tmp/v.json >/dev/null 2>&1; then fail "readback-http-${s}" 'disable_rum readback failed'; fi
           mark 'cloudflare/disable-rum/readback' success 'disable_rum=true read back exactly'
 
-          mark 'cloudflare/disable-rum/live' pending 'Waiting for live beacon suppression'
           for attempt in $(seq 1 30); do
-            nonce="${GITHUB_RUN_ID}-${attempt}-${RANDOM}"
-            html=$(curl -fsS -H 'Cache-Control: no-cache' "https://${CF_CANONICAL_HOST}/?cf_rum_verify=${nonce}" || true)
-            if [ -n "$html" ] && ! grep -q 'static.cloudflareinsights.com' <<<"$html"; then
-              mark 'cloudflare/disable-rum/live' success "beacon absent on live HTML attempt ${attempt}"
-              exit 0
-            fi
+            html=$(curl -fsS -H 'Cache-Control: no-cache' "https://${CF_CANONICAL_HOST}/?cf_rum_verify=${GITHUB_RUN_ID}-${attempt}-${RANDOM}" || true)
+            if [ -n "$html" ] && ! grep -q 'static.cloudflareinsights.com' <<<"$html"; then mark 'cloudflare/disable-rum/live' success "beacon absent attempt ${attempt}"; exit 0; fi
             sleep 5
           done
-          fail live 'disable_rum exists but beacon still appears after propagation window'
+          fail live 'rule exists but live beacon persists'
