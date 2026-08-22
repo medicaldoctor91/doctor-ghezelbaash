@@ -1,0 +1,75 @@
+name: Temporary clean generic link transition
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/_temporary-clean-link-transition.yml'
+
+permissions:
+  contents: write
+  statuses: write
+
+concurrency:
+  group: doctor-ghezelbaash-source-mutation
+  cancel-in-progress: false
+
+jobs:
+  clean:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Remove only the canonical generic anchor transition
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/styles/global.css')
+          s=p.read_text(encoding='utf-8')
+          target='transition:color 140ms ease,text-decoration-color 140ms ease;'
+          if s.count(target)!=1:
+              raise SystemExit(f'Expected exactly one generic anchor transition, found {s.count(target)}')
+          p.write_text(s.replace(target,'',1),encoding='utf-8')
+          PY
+          git diff --check
+          git diff -- src/styles/global.css
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Run the complete production build and validators
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
+          export SOURCE_COMMIT="$GITHUB_SHA"
+          npm run build
+      - name: Prove no unintended tracked source changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t changed < <(git diff --name-only)
+          printf 'TRACKED_CHANGE %s\n' "${changed[@]}"
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = 'src/styles/global.css'
+          ! grep -Fq 'transition:color 140ms ease,text-decoration-color 140ms ease;' src/styles/global.css
+          git diff --check
+      - name: Commit the validated clean source edit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/styles/global.css
+          git commit -m 'perf: remove generic paint-bound link transition'
+          git push origin HEAD:main
