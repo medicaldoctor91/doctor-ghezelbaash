@@ -1,0 +1,108 @@
+name: Temporary enforce Cloudflare disable_rum rule
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/_temporary-disable-rum-configuration-rule.yml'
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  enforce:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      CF_ZONE_NAME: ghezelbaash.ir
+      CF_CANONICAL_HOST: www.ghezelbaash.ir
+    steps:
+      - name: Create or update the exact zone Configuration Rule and prove beacon suppression
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GH_STATUS_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          cf='https://api.cloudflare.com/client/v4'
+          auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          ref='ghezelbaash_disable_rum_v1'
+          status_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}"
+          outcome='failure'
+          description='Cloudflare disable_rum rule verification failed'
+
+          post_status() {
+            jq -n --arg state "$1" --arg context 'cloudflare/disable-rum-rule' --arg description "$2" '{state:$state,context:$context,description:$description}' >/tmp/status.json
+            curl -fsS -X POST -H "Authorization: Bearer ${GH_STATUS_TOKEN}" -H 'Accept: application/vnd.github+json' -H 'Content-Type: application/json' --data-binary @/tmp/status.json "$status_url" >/dev/null || true
+          }
+          finish() { post_status "$outcome" "$description"; }
+          trap finish EXIT
+          post_status pending 'Converging disable_rum=true for the canonical host'
+
+          rule=$(jq -nc --arg ref "$ref" --arg host "$CF_CANONICAL_HOST" '{ref:$ref,description:"Disable Cloudflare Web Analytics/RUM on the canonical site to preserve the strict CSP",expression:("(http.host eq \""+$host+"\")"),action:"set_config",action_parameters:{disable_rum:true},enabled:true}')
+
+          zone_status=$(curl -sS -o /tmp/zones.json -w '%{http_code}' -G -H "$auth" --data-urlencode "name=${CF_ZONE_NAME}" --data-urlencode 'status=active' "${cf}/zones")
+          if [ "$zone_status" != '200' ] || ! jq -e '.success == true and (.result|length) == 1' /tmp/zones.json >/dev/null 2>&1; then
+            description="zone lookup failed HTTP ${zone_status}"
+            exit 1
+          fi
+          zone_id=$(jq -r '.result[0].id' /tmp/zones.json)
+
+          list_status=$(curl -sS -o /tmp/rulesets.json -w '%{http_code}' -H "$auth" "${cf}/zones/${zone_id}/rulesets")
+          if [ "$list_status" != '200' ] || ! jq -e '.success == true' /tmp/rulesets.json >/dev/null 2>&1; then
+            description="ruleset list failed HTTP ${list_status}"
+            exit 1
+          fi
+          ruleset_id=$(jq -r '.result[]? | select(.kind=="zone" and .phase=="http_config_settings") | .id' /tmp/rulesets.json | head -n1)
+
+          if [ -z "$ruleset_id" ]; then
+            body=$(jq -nc --argjson rule "$rule" '{name:"Canonical configuration rules",description:"Canonical request-level configuration for ghezelbaash.ir",kind:"zone",phase:"http_config_settings",rules:[$rule]}')
+            create_status=$(curl -sS -o /tmp/create.json -w '%{http_code}' -X POST -H "$auth" -H 'Content-Type: application/json' --data-binary "$body" "${cf}/zones/${zone_id}/rulesets")
+            if { [ "$create_status" != '200' ] && [ "$create_status" != '201' ]; } || ! jq -e '.success == true and .result.id != null' /tmp/create.json >/dev/null 2>&1; then
+              description="config ruleset create failed HTTP ${create_status}"
+              exit 1
+            fi
+            ruleset_id=$(jq -r '.result.id' /tmp/create.json)
+          else
+            get_status=$(curl -sS -o /tmp/ruleset.json -w '%{http_code}' -H "$auth" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}")
+            if [ "$get_status" != '200' ] || ! jq -e '.success == true' /tmp/ruleset.json >/dev/null 2>&1; then
+              description="config ruleset read failed HTTP ${get_status}"
+              exit 1
+            fi
+            rule_id=$(jq -r --arg ref "$ref" '.result.rules[]? | select(.ref==$ref) | .id' /tmp/ruleset.json | head -n1)
+            if [ -n "$rule_id" ]; then
+              mutation_status=$(curl -sS -o /tmp/mutation.json -w '%{http_code}' -X PATCH -H "$auth" -H 'Content-Type: application/json' --data-binary "$rule" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}/rules/${rule_id}")
+            else
+              mutation_status=$(curl -sS -o /tmp/mutation.json -w '%{http_code}' -X POST -H "$auth" -H 'Content-Type: application/json' --data-binary "$rule" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}/rules")
+            fi
+            if { [ "$mutation_status" != '200' ] && [ "$mutation_status" != '201' ]; } || ! jq -e '.success == true' /tmp/mutation.json >/dev/null 2>&1; then
+              description="disable_rum rule mutation failed HTTP ${mutation_status}"
+              exit 1
+            fi
+          fi
+
+          verify_status=$(curl -sS -o /tmp/verify.json -w '%{http_code}' -H "$auth" "${cf}/zones/${zone_id}/rulesets/${ruleset_id}")
+          if [ "$verify_status" != '200' ] || ! jq -e --arg ref "$ref" --arg host "$CF_CANONICAL_HOST" '.success == true and ([.result.rules[]? | select(.ref==$ref and .enabled==true and .action=="set_config" and .action_parameters.disable_rum==true and .expression == ("(http.host eq \""+$host+"\")"))] | length) == 1' /tmp/verify.json >/dev/null 2>&1; then
+            description='disable_rum rule did not read back exactly'
+            exit 1
+          fi
+
+          for attempt in $(seq 1 30); do
+            nonce="${GITHUB_RUN_ID}-${attempt}-${RANDOM}"
+            html=$(curl -fsS -H 'Cache-Control: no-cache' "https://${CF_CANONICAL_HOST}/?cf_rum_verify=${nonce}" || true)
+            if [ -n "$html" ] && ! grep -q 'static.cloudflareinsights.com' <<<"$html"; then
+              outcome='success'
+              description="disable_rum active; beacon absent on live HTML (attempt ${attempt})"
+              echo "CLOUDFLARE_DISABLE_RUM_LIVE_PASS ruleset=${ruleset_id} attempt=${attempt}"
+              exit 0
+            fi
+            sleep 5
+          done
+
+          description='disable_rum rule exists but beacon still appears after propagation window'
+          exit 1
