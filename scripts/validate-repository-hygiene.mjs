@@ -48,6 +48,16 @@ const allowedWorkflows=[
 ];
 if(workflows.length!==allowedWorkflows.length||workflows.some((name,index)=>name!==allowedWorkflows[index]))throw new Error(`Workflow topology drift: ${workflows.join(', ')}`);
 
+for(const workflow of workflows){
+  const content=await readFile(path.join(root,workflow),'utf8');
+  if(/^\s*pull_request(?:_target)?\s*:/m.test(content))throw new Error(`Canonical workflows must not depend on pull-request events: ${workflow}`);
+  if(/\bgithub\.(?:head_ref|base_ref)\b|refs\/pull\//.test(content))throw new Error(`Canonical workflows must not depend on pull-request refs: ${workflow}`);
+  for(const match of content.matchAll(/^\s*branches:\s*\[([^\]]*)\]\s*$/gm)){
+    const branches=match[1].split(',').map(value=>value.trim().replace(/^['"]|['"]$/g,'')).filter(Boolean);
+    if(branches.some(branch=>branch!=='main'))throw new Error(`Canonical workflow branch trigger must be main-only: ${workflow} -> ${branches.join(', ')}`);
+  }
+}
+
 const forbiddenControlByte=byte=>(byte<=0x08)||(byte>=0x0b&&byte<=0x0c)||(byte>=0x0e&&byte<=0x1f)||byte===0x7f;
 for(const name of tracked){
   const ext=path.posix.extname(name).toLowerCase();
@@ -61,4 +71,4 @@ for(const name of tracked){
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,pullRequestWorkflowCoupling:false,nonMainWorkflowBranchTriggers:false,developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));
