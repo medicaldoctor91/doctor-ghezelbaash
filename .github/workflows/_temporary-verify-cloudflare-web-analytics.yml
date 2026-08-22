@@ -1,0 +1,163 @@
+name: Temporary verify Cloudflare Web Analytics disabled
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/_temporary-verify-cloudflare-web-analytics.yml'
+
+permissions:
+  contents: read
+  statuses: write
+
+concurrency:
+  group: temporary-cloudflare-web-analytics
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      CF_ACCOUNT_ID: '884d1d90bd1fb6ecca14992c6c60d677'
+      CF_PAGES_PROJECT: 'doctor-ghezelbaash'
+      CF_ZONE_NAME: 'ghezelbaash.ir'
+      CF_CANONICAL_HOST: 'www.ghezelbaash.ir'
+    steps:
+      - name: Disable and prove Cloudflare Web Analytics injection is absent
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GH_STATUS_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          api='https://api.cloudflare.com/client/v4'
+          auth="Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"
+          project_url="${api}/accounts/${CF_ACCOUNT_ID}/pages/projects/${CF_PAGES_PROJECT}"
+          status_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}"
+          outcome='failure'
+          description='Cloudflare Web Analytics verification failed'
+
+          post_status() {
+            local state="$1" desc="$2"
+            jq -n --arg state "$state" --arg context 'cloudflare/web-analytics-disabled' --arg description "$desc" '{state:$state,context:$context,description:$description}' > /tmp/status.json
+            curl -fsS -X POST -H "Authorization: Bearer ${GH_STATUS_TOKEN}" -H 'Accept: application/vnd.github+json' -H 'Content-Type: application/json' --data-binary @/tmp/status.json "$status_url" >/dev/null || true
+          }
+          finish() {
+            post_status "$outcome" "$description"
+          }
+          trap finish EXIT
+          post_status pending 'Disabling and verifying Cloudflare Web Analytics'
+
+          # Resolve the exact zone so account-level RUM matching cannot touch any other zone.
+          zone_status=$(curl -sS -o /tmp/zones.json -w '%{http_code}' -G -H "$auth" --data-urlencode "name=${CF_ZONE_NAME}" --data-urlencode 'status=active' "${api}/zones")
+          if [ "$zone_status" != '200' ] || ! jq -e '.success == true and (.result|length) == 1' /tmp/zones.json >/dev/null 2>&1; then
+            description="zone lookup failed (${zone_status})"
+            exit 1
+          fi
+          zone_id=$(jq -r '.result[0].id' /tmp/zones.json)
+
+          # Disable the Pages one-click Web Analytics integration without changing repository source.
+          if ! curl -fsS -H "$auth" "$project_url" > /tmp/project-before.json; then
+            description='Pages project read failed'
+            exit 1
+          fi
+          if ! jq -e '.success == true' /tmp/project-before.json >/dev/null; then
+            description='Pages project API returned failure'
+            exit 1
+          fi
+          before_configured=$(jq -r '(.result.build_config.web_analytics_tag != null or .result.build_config.web_analytics_token != null)' /tmp/project-before.json)
+          jq '{build_config:(.result.build_config + {web_analytics_tag:null,web_analytics_token:null})}' /tmp/project-before.json > /tmp/pages-patch.json
+          patch_status=$(curl -sS -o /tmp/project-patched.json -w '%{http_code}' -X PATCH -H "$auth" -H 'Content-Type: application/json' --data-binary @/tmp/pages-patch.json "$project_url")
+          if [ "$patch_status" != '200' ] || ! jq -e '.success == true' /tmp/project-patched.json >/dev/null 2>&1; then
+            description="Pages analytics disable failed (${patch_status})"
+            exit 1
+          fi
+          if ! curl -fsS -H "$auth" "$project_url" > /tmp/project-after.json || ! jq -e '.success == true and .result.build_config.web_analytics_tag == null and .result.build_config.web_analytics_token == null' /tmp/project-after.json >/dev/null; then
+            description='Pages analytics disable did not persist'
+            exit 1
+          fi
+
+          # Disable only an account-level RUM site tied to this exact zone/host, if this token has Account Settings scope.
+          rum_state='not-accessible'
+          rum_status=$(curl -sS -o /tmp/rum-sites.json -w '%{http_code}' -H "$auth" "${api}/accounts/${CF_ACCOUNT_ID}/rum/site_info/list")
+          if [ "$rum_status" = '200' ] && jq -e '.success == true' /tmp/rum-sites.json >/dev/null 2>&1; then
+            jq -c --arg zid "$zone_id" --arg host "$CF_CANONICAL_HOST" '.result[]? | select((.zone_tag // "") == $zid or (.host // "") == $host or ((.rules // []) | any((.host // "") == $host)))' /tmp/rum-sites.json > /tmp/exact-rum-sites.jsonl || true
+            if [ -s /tmp/exact-rum-sites.jsonl ]; then
+              rum_state='disabled'
+              while IFS= read -r site; do
+                site_id=$(jq -r '.site_tag // .id // empty' <<<"$site")
+                [ -n "$site_id" ] || continue
+                host=$(jq -r '.host // empty' <<<"$site")
+                zid=$(jq -r '.zone_tag // empty' <<<"$site")
+                lite=$(jq -r 'if has("lite") then (.lite|tostring) else "" end' <<<"$site")
+                body=$(jq -n --arg host "$host" --arg zid "$zid" --arg lite "$lite" '{auto_install:true,enabled:false} + (if $host != "" then {host:$host} else {} end) + (if $zid != "" then {zone_tag:$zid} else {} end) + (if $lite == "true" then {lite:true} elif $lite == "false" then {lite:false} else {} end)')
+                put_status=$(curl -sS -o /tmp/rum-update.json -w '%{http_code}' -X PUT -H "$auth" -H 'Content-Type: application/json' --data-binary "$body" "${api}/accounts/${CF_ACCOUNT_ID}/rum/site_info/${site_id}")
+                if [ "$put_status" != '200' ] || ! jq -e '.success == true' /tmp/rum-update.json >/dev/null 2>&1; then
+                  rum_state='update-unavailable'
+                fi
+              done < /tmp/exact-rum-sites.jsonl
+            else
+              rum_state='none'
+            fi
+          fi
+
+          # Wait for the native Git deployment of this exact commit. If it still contains a beacon,
+          # retry that same commit only after analytics has been disabled, then verify again.
+          deployment_id=''
+          for attempt in $(seq 1 90); do
+            if curl -fsS -H "$auth" "${project_url}/deployments?per_page=25" > /tmp/deployments.json; then
+              deployment_id=$(jq -r --arg sha "$GITHUB_SHA" '.result | map(select(.environment == "production" and .deployment_trigger.type == "github:push" and .deployment_trigger.metadata.commit_hash == $sha)) | sort_by(.created_on) | reverse | .[0].id // empty' /tmp/deployments.json)
+              [ -n "$deployment_id" ] && break
+            fi
+            sleep 4
+          done
+          if [ -z "$deployment_id" ]; then
+            description='exact Git deployment not found'
+            exit 1
+          fi
+
+          wait_deployment() {
+            local id="$1" st='unknown'
+            for attempt in $(seq 1 90); do
+              curl -fsS -H "$auth" "${project_url}/deployments/${id}" > /tmp/deployment.json || return 1
+              st=$(jq -r '.result.latest_stage.status // (.result.stages[-1].status // "unknown")' /tmp/deployment.json)
+              [ "$st" = 'success' ] && return 0
+              case "$st" in failure|canceled) return 1;; esac
+              sleep 4
+            done
+            return 1
+          }
+          if ! wait_deployment "$deployment_id"; then
+            description='exact Git deployment failed'
+            exit 1
+          fi
+
+          has_beacon() {
+            local nonce
+            nonce="${GITHUB_RUN_ID}-${RANDOM}-${RANDOM}"
+            curl -fsS -H 'Cache-Control: no-cache' "https://${CF_CANONICAL_HOST}/?cfwa_verify=${nonce}" | grep -q 'static.cloudflareinsights.com'
+          }
+
+          if has_beacon; then
+            retry_status=$(curl -sS -o /tmp/retry.json -w '%{http_code}' -X POST -H "$auth" -H 'Content-Type: application/json' --data '{}' "${project_url}/deployments/${deployment_id}/retry")
+            if [ "$retry_status" != '200' ] || ! jq -e '.success == true and .result.id != null' /tmp/retry.json >/dev/null 2>&1; then
+              description="beacon persisted and retry failed (${retry_status})"
+              exit 1
+            fi
+            retry_id=$(jq -r '.result.id' /tmp/retry.json)
+            if ! wait_deployment "$retry_id"; then
+              description='analytics-disabled retry deployment failed'
+              exit 1
+            fi
+            sleep 8
+          fi
+
+          if has_beacon; then
+            description="beacon still present; pages=disabled rum=${rum_state}"
+            exit 1
+          fi
+
+          outcome='success'
+          description="beacon absent; pages=disabled rum=${rum_state} before=${before_configured}"
+          exit 0
