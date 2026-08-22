@@ -34,14 +34,16 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          import textwrap
           p=Path('.github/workflows/_temporary-build-approved-favicon.yml')
           s=p.read_text(encoding='utf-8')
           start="          python - <<'PY'\n"
           end="\n          PY\n"
           if start not in s: raise SystemExit('embedded generator start not found')
           body=s.split(start,1)[1].split(end,1)[0]
-          Path('/tmp/build-approved-favicon.py').write_text(textwrap.dedent(body),encoding='utf-8')
+          lines=[]
+          for line in body.splitlines():
+              lines.append(line[10:] if line.startswith('          ') else line)
+          Path('/tmp/build-approved-favicon.py').write_text('\n'.join(lines)+'\n',encoding='utf-8')
           PY
           python /tmp/build-approved-favicon.py
       - name: Validate scope and commit generated family to PR branch
