@@ -1,0 +1,66 @@
+name: Temporary favicon Head contract applicator
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: favicon-head-contract-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.event.pull_request.head.ref == 'favicon-head-contract-2026'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: favicon-head-contract-2026
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+      - name: Apply reviewed favicon Head contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          script='scripts/_temporary-apply-favicon-head-contract.mjs'
+          if [ ! -f "$script" ]; then
+            echo 'favicon Head contract already applied; no-op'
+            exit 0
+          fi
+
+          node "$script"
+          rm -f "$script"
+          git diff --check
+
+          changed="$(git status --short | awk '{print $2}' | sort)"
+          printf '%s\n' "$changed"
+          for p in $changed; do
+            case "$p" in
+              public/safari-pinned-tab.svg|src/components/DocumentHead.astro|src/data/templates/headers.template|src/data/templates/main-head.html|scripts/_temporary-apply-favicon-head-contract.mjs) ;;
+              *) echo "Unexpected change: $p" >&2; exit 1;;
+            esac
+          done
+
+          grep -q 'href="/favicon.ico" rel="icon" sizes="16x16 32x32 48x48" type="image/vnd.microsoft.icon"' src/data/templates/main-head.html
+          grep -q 'href="/favicon.svg" rel="icon" sizes="any" type="image/svg+xml"' src/data/templates/main-head.html
+          ! grep -q 'rel="shortcut icon"' src/data/templates/main-head.html
+          ! grep -q 'rel="apple-touch-icon"' src/data/templates/main-head.html
+          grep -q 'viewBox="0 0 16 16"' public/safari-pinned-tab.svg
+          grep -q 'transform="scale(0.03125)"' public/safari-pinned-tab.svg
+          grep -q 'Cache-Control: public, max-age=86400, must-revalidate' src/data/templates/headers.template
+
+          node scripts/validate-critical-path.mjs
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A "$script" public/safari-pinned-tab.svg src/components/DocumentHead.astro src/data/templates/headers.template src/data/templates/main-head.html
+          git commit -m 'feat: canonicalize 2026 favicon Head contract'
+          git push origin HEAD:favicon-head-contract-2026
