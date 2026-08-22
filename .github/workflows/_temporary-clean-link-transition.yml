@@ -55,9 +55,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -f .github/workflows/_temporary-clean-link-transition.yml
-          rm -f .github/workflows/_temporary-disable-rum-configuration-rule.yml
-          /tmp/mark-status.sh 'perf/link-transition/temp-clean' success 'Temporary operational workflows removed from the validation tree'
+          git rm -f .github/workflows/_temporary-clean-link-transition.yml
+          git rm -f .github/workflows/_temporary-disable-rum-configuration-rule.yml
+          /tmp/mark-status.sh 'perf/link-transition/temp-clean' success 'Temporary operational workflows removed from the index and validation tree'
       - name: Remove only the canonical generic anchor transition
         shell: bash
         run: |
@@ -109,7 +109,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t changed < <(git diff --name-only | sort)
+          mapfile -t changed < <(git diff HEAD --name-only | sort)
           expected=(
             '.github/workflows/_temporary-clean-link-transition.yml'
             '.github/workflows/_temporary-disable-rum-configuration-rule.yml'
@@ -125,6 +125,6 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A src/styles/global.css .github/workflows/_temporary-clean-link-transition.yml .github/workflows/_temporary-disable-rum-configuration-rule.yml
+          git add src/styles/global.css
           git commit -m 'perf: remove generic paint-bound link transition'
           if git push origin HEAD:main; then /tmp/mark-status.sh 'perf/link-transition/commit' success 'Validated final clean tree pushed to main'; else /tmp/mark-status.sh 'perf/link-transition/commit' failure 'Push to main failed because branch advanced'; exit 1; fi
