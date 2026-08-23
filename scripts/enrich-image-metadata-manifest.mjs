@@ -10,6 +10,7 @@ const inventoryPath=path.join(root,'src/data/media-dimensions.tsv');
 const rasterPattern=/\.(?:avif|webp|jpe?g|png)$/i;
 const textPattern=/\.(?:astro|css|html|js|json|jsonld|md|mjs|ts|tsv|txt|vcf|webmanifest|xml|yaml|yml)$/i;
 const fingerprintPattern=/\.([0-9a-f]{12})(\.[^.]+)$/i;
+const snapshotSkip=new Set(['node_modules','.python-deps','dist','release','.astro','.git']);
 const sha256=buffer=>createHash('sha256').update(buffer).digest('hex');
 const projectRelative=file=>path.relative(root,file).replaceAll('\\','/');
 const compilerWritableConsumer=file=>{
@@ -17,11 +18,12 @@ const compilerWritableConsumer=file=>{
   return relative.startsWith('src/')||(relative.startsWith('public/')&&!relative.startsWith('public/media/'));
 };
 
-async function walk(directory){
+async function walk(directory,{bounded=false}={}){
   const output=[];
   for(const entry of (await readdir(directory,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name))){
+    if(bounded&&snapshotSkip.has(entry.name))continue;
     const absolute=path.join(directory,entry.name);
-    if(entry.isDirectory())output.push(...await walk(absolute));
+    if(entry.isDirectory())output.push(...await walk(absolute,{bounded}));
     else if(entry.isFile())output.push(absolute);
   }
   return output;
@@ -64,7 +66,7 @@ async function captureSnapshot(){
   const transactionRoot=await mkdtemp(path.join(tmpdir(),'ghezel-media-transaction-'));
   const mediaBackup=path.join(transactionRoot,'media');
   await cp(mediaRoot,mediaBackup,{recursive:true,preserveTimestamps:true});
-  const writableTextFiles=(await walk(root)).filter(file=>textPattern.test(file)&&compilerWritableConsumer(file)).sort();
+  const writableTextFiles=(await walk(root,{bounded:true})).filter(file=>textPattern.test(file)&&compilerWritableConsumer(file)).sort();
   const textSnapshot=await Promise.all(writableTextFiles.map(async file=>({file,bytes:await readFile(file)})));
   return {transactionRoot,mediaBackup,textSnapshot};
 }
@@ -103,4 +105,4 @@ try{
   await rm(snapshot.transactionRoot,{recursive:true,force:true}).catch(()=>{});
 }
 
-console.log(JSON.stringify({mediaEnrichmentBoundary:'MANIFEST_LOCKED',transaction:'MEDIA_ENRICHMENT_TRANSACTION',manifest:'src/data/media-dimensions.tsv',logicalRasterAssets:manifestSet.size,worker:'scripts/enrich-image-metadata.mjs',preflight:'PASS',postflight:'PASS',rollback:'BYTE_SNAPSHOT',committed},null,2));
+console.log(JSON.stringify({mediaEnrichmentBoundary:'MANIFEST_LOCKED',transaction:'MEDIA_ENRICHMENT_TRANSACTION',manifest:'src/data/media-dimensions.tsv',logicalRasterAssets:manifestSet.size,worker:'scripts/enrich-image-metadata.mjs',snapshotTraversal:'BOUNDED',preflight:'PASS',postflight:'PASS',rollback:'BYTE_SNAPSHOT',committed},null,2));
