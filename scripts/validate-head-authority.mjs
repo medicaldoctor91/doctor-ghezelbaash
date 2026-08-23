@@ -1,6 +1,5 @@
 import path from 'node:path';
 import {access,readFile} from 'node:fs/promises';
-import {bindReleaseTokens} from '../src/lib/release-tokens.mjs';
 import {HERO_IMAGE_SIZES,HERO_PRELOAD_HREF,HERO_PRELOAD_SRCSET} from '../src/lib/hero-image-contract.mjs';
 
 const root=process.cwd();
@@ -11,11 +10,10 @@ const readJson=relative=>read(relative).then(JSON.parse);
 const count=(source,pattern)=>(String(source).match(pattern)||[]).length;
 const pathExists=async relative=>{try{await access(path.join(root,relative));return true;}catch(error){if(error?.code==='ENOENT')return false;throw error;}};
 
-const [profile,release,canonicalSource,discoveryRaw,documentHead,baseLayout,indexSource]=await Promise.all([
+const [profile,release,canonicalSource,documentHead,baseLayout,indexSource]=await Promise.all([
   readJson('src/data/head-profile.json'),
   readJson('src/data/release.json'),
   read('src/content-source/page.md'),
-  read('src/data/templates/discovery-head.html'),
   read('src/components/DocumentHead.astro'),
   read('src/layouts/BaseLayout.astro'),
   read('src/pages/index.astro'),
@@ -49,16 +47,16 @@ assert(/^index\s*,\s*follow\b/i.test(canonicalRobots),'Canonical robots contract
 for(const forbidden of ['canonicalUrl','canonicalURL','openGraph','twitter','themeColor','author','applicationName','appleMobileWebAppTitle'])assert(!new RegExp(`^${forbidden}:`,'m').test(frontmatter),`Canonical frontmatter reintroduced non-content authority: ${forbidden}`);
 assert(count(normalizedSource,/^---\s*$/gm)>=2,'Canonical frontmatter delimiter contract drift');
 
-assert(count(discoveryRaw,/{{CURRENT_VERSION_DOI}}/g)===1,'Discovery Head must bind CURRENT_VERSION_DOI exactly once');
-assert(count(discoveryRaw,/{{CURRENT_RELEASE}}/g)===1,'Discovery Head must bind CURRENT_RELEASE exactly once');
-for(const forbidden of [/<title\b/i,/name=["']description["']/i,/name=["']robots["']/i,/rel=["']canonical["']/i,/property=["']og:/i,/name=["']twitter:/i])assert(!forbidden.test(discoveryRaw),'Discovery Head contains content-authority metadata');
-const discovery=bindReleaseTokens(discoveryRaw,release);
 const versionDoi=release.dataset?.zenodo?.versionDoi;
-assert(versionDoi&&discovery.includes(`href="https://doi.org/${versionDoi}"`),'Runtime discovery Head lost current Version DOI');
-assert(discovery.includes(`title="Zenodo preservation Version DOI ${release.release}"`),'Runtime discovery Head lost current release label');
-assert(/\brel=["']describedby["']/i.test(discovery)&&/\brel=["']me["']/i.test(discovery),'Runtime discovery relations incomplete');
+assert(versionDoi,'Current Version DOI missing');
+assert(documentHead.includes("const discoveryLinks:DiscoveryLink[]=")&&documentHead.includes("discoveryLinks.map(link=><link {...link} />)"),'Discovery Head is not rendered as structured Astro links');
+assert(documentHead.includes("release.primaryEntity.verifiedWebIdentityMesh.map")&&documentHead.includes("rel:'me'"),'Discovery identity mesh is not sourced from release.json');
+assert(documentHead.includes("release.dataset.zenodo.versionDoi")&&documentHead.includes("title:`Zenodo preservation Version DOI ${release.release}`"),'Discovery Head lost release-bound Zenodo metadata');
+assert(documentHead.includes("release.clinic.cid")&&documentHead.includes("release.dataset.supportingClinicWikidata")&&documentHead.includes("release.dataset.github.repository"),'Discovery Head lost release-bound entity relations');
+assert(documentHead.includes("rel:'describedby'")&&documentHead.includes("rel:'related'")&&documentHead.includes("rel:'about'"),'Discovery Head relation inventory incomplete');
+assert(!documentHead.includes('discovery-head.html?raw')&&!documentHead.includes('set:html={discoveryHead}')&&!documentHead.includes('bindReleaseTokens(discoveryHead'),'Raw discovery Head transport reintroduced');
 
-assert(documentHead.includes("head-profile.json")&&documentHead.includes("release.json")&&documentHead.includes("discovery-head.html?raw"),'DocumentHead is not bound to canonical Head inputs');
+assert(documentHead.includes("head-profile.json")&&documentHead.includes("release.json"),'DocumentHead is not bound to canonical Head inputs');
 assert(!documentHead.includes('page-metadata.json'),'DocumentHead reintroduced duplicate page metadata authority');
 assert(documentHead.includes('release.canonicalUrl'),'DocumentHead canonical URL authority drift');
 assert(documentHead.includes('HERO_PRELOAD_HREF')&&documentHead.includes('HERO_PRELOAD_SRCSET')&&documentHead.includes('HERO_IMAGE_SIZES'),'DocumentHead is not bound to canonical Hero preload inputs');
@@ -72,13 +70,15 @@ assert(HERO_PRELOAD_HREF.includes('saeed-ghezelbash-portrait-delivery-640'),'Her
 assert(HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF)&&HERO_PRELOAD_SRCSET.includes(' 960w')&&HERO_PRELOAD_SRCSET.includes(' 1600w'),'Hero preload srcset drift');
 assert(HERO_IMAGE_SIZES.length>0,'Hero responsive sizes contract missing');
 
-const [legacyMetadataExists,legacyTemplateExists,legacyRuntimeExists]=await Promise.all([
+const [legacyMetadataExists,legacyTemplateExists,legacyRuntimeExists,rawDiscoveryTemplateExists]=await Promise.all([
   pathExists('src/data/page-metadata.json'),
   pathExists('src/data/templates/main-head.html'),
   pathExists('src/lib/head-delivery.mjs'),
+  pathExists('src/data/templates/discovery-head.html'),
 ]);
 assert(!legacyMetadataExists,'Duplicate page-metadata.json still exists');
 assert(!legacyTemplateExists,'Legacy main-head template still exists');
 assert(!legacyRuntimeExists,'Legacy Head split runtime still exists');
+assert(!rawDiscoveryTemplateExists,'Raw discovery Head template still exists');
 
-console.log(JSON.stringify({stage:'HEAD_AUTHORITY',contentMetadataAuthority:'markdown-frontmatter',canonicalFrontmatter:'PASS',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',runtimeDiscoveryReleaseBinding:'PASS',structuredHeroPreload:'PASS',legacyAuthoritiesRemoved:true,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HEAD_AUTHORITY',contentMetadataAuthority:'markdown-frontmatter',canonicalFrontmatter:'PASS',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',discoveryIdentityAuthority:'release.json',headRendering:'ASTRO_NATIVE',structuredHeroPreload:'PASS',rawHeadTemplates:0,legacyAuthoritiesRemoved:true,integrity:'PASS'},null,2));
