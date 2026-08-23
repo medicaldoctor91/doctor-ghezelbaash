@@ -1,6 +1,5 @@
-name: One-time 2026 canonical brand-family migration
+name: One-time 2026 canonical icon-family migration
 
-# Trigger refresh after workflow became resident on main.
 on:
   push:
     branches: [main]
@@ -10,41 +9,213 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: canonical-icon-family-migration
+  cancel-in-progress: false
+
 jobs:
   migrate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-      - name: Migrate canonical brand ImageObject URL without reformatting
+
+      - name: Verify staged canonical assets
         shell: bash
         run: |
+          set -euo pipefail
+          test -f public/favicon.svg
+          test -f public/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png
+          test -f public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png
+          test -f public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png
           python - <<'PY'
           from pathlib import Path
+          import hashlib, struct
 
-          old = 'doctor-ghezelbaash-symbol-512.a910779b67ef.png'
-          new = 'doctor-ghezelbaash-symbol-512.1bc7c3af1350.png'
-          targets = [
-              Path('src/data/semantic/knowledge-graph.jsonld'),
-              Path('src/data/templates/llms.template.txt'),
-          ]
-          total = 0
-          for path in targets:
-              text = path.read_text(encoding='utf-8')
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{path}: expected exactly one legacy canonical-brand reference, found {count}')
-              path.write_text(text.replace(old, new), encoding='utf-8')
-              total += count
-          if total != 2:
-              raise SystemExit(f'expected exactly two canonical replacements, found {total}')
+          expected = {
+              'public/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png': ('328e1556f122', (192, 192)),
+              'public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png': ('1bc7c3af1350', (512, 512)),
+              'public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png': ('b6a6738954b9', (512, 512)),
+          }
+          for name, (prefix, dims) in expected.items():
+              data = Path(name).read_bytes()
+              digest = hashlib.sha256(data).hexdigest()
+              if not digest.startswith(prefix):
+                  raise SystemExit(f'{name}: sha256 {digest} does not match filename fingerprint {prefix}')
+              if data[:8] != b'\x89PNG\r\n\x1a\n':
+                  raise SystemExit(f'{name}: invalid PNG signature')
+              width, height = struct.unpack('>II', data[16:24])
+              if (width, height) != dims:
+                  raise SystemExit(f'{name}: expected {dims}, got {(width, height)}')
           PY
+
+      - name: Generate platform-specific icon derivatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v magick >/dev/null 2>&1; then
+            IM='magick'
+          elif command -v convert >/dev/null 2>&1; then
+            IM='convert'
+          else
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends imagemagick
+            IM='convert'
+          fi
+
+          transparent='public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png'
+          maskable='public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png'
+
+          $IM "$transparent" -resize 16x16 public/favicon-16x16.png
+          $IM "$transparent" -resize 32x32 public/favicon-32x32.png
+          $IM "$transparent" -resize 48x48 public/favicon-48x48.png
+          $IM public/favicon-16x16.png public/favicon-32x32.png public/favicon-48x48.png public/favicon.ico
+          $IM "$maskable" -resize 180x180 public/apple-touch-icon.png
+          $IM "$maskable" -resize 150x150 public/mstile-150x150.png
+
+      - name: Migrate every textual consumer without graph reserialization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          old_svg = 'doctor-ghezelbaash-symbol.3a9e7509912d.svg'
+          replacements = [
+              ('https://www.ghezelbaash.ir/media/brand/' + old_svg, 'https://www.ghezelbaash.ir/favicon.svg'),
+              ('public/media/brand/' + old_svg, 'public/favicon.svg'),
+              ('/media/brand/' + old_svg, '/favicon.svg'),
+              ('media/brand/' + old_svg, 'favicon.svg'),
+              ('doctor-ghezelbaash-symbol-192.48be0004e370.png', 'doctor-ghezelbaash-symbol-192.328e1556f122.png'),
+              ('doctor-ghezelbaash-symbol-512.a910779b67ef.png', 'doctor-ghezelbaash-symbol-512.1bc7c3af1350.png'),
+              ('doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png', 'doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png'),
+          ]
+
+          files = subprocess.check_output(['git', 'ls-files', '-z']).split(b'\0')
+          changed = []
+          for raw in files:
+              if not raw:
+                  continue
+              path = Path(raw.decode())
+              if not path.is_file():
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              original = text
+              for old, new in replacements:
+                  text = text.replace(old, new)
+              if text != original:
+                  path.write_text(text, encoding='utf-8', newline='')
+                  changed.append(str(path))
+
+          print('Text consumers migrated:')
+          print('\n'.join(changed) if changed else '(none)')
+          PY
+
+      - name: Canonicalize web manifest SVG source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json
+
+          path = Path('public/site.webmanifest')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          icons = data['icons']
+          icons[0] = {
+              'src': '/favicon.svg',
+              'sizes': 'any',
+              'type': 'image/svg+xml',
+              'purpose': 'any',
+          }
+          path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Remove superseded brand assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f \
+            public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg \
+            public/media/brand/doctor-ghezelbaash-symbol-192.48be0004e370.png \
+            public/media/brand/doctor-ghezelbaash-symbol-512.a910779b67ef.png \
+            public/media/brand/doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png
+
+      - name: Validate complete icon-family convergence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, struct
+
+          # JSON validity; importantly, parse the authoritative graph without rewriting it.
+          json.loads(Path('public/site.webmanifest').read_text(encoding='utf-8'))
+          json.loads(Path('src/data/semantic/knowledge-graph.jsonld').read_text(encoding='utf-8'))
+
+          manifest = json.loads(Path('public/site.webmanifest').read_text(encoding='utf-8'))
+          expected_icons = {
+              '/favicon.svg',
+              '/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png',
+              '/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png',
+              '/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png',
+          }
+          actual_icons = {item['src'] for item in manifest['icons']}
+          if actual_icons != expected_icons:
+              raise SystemExit(f'manifest icon set mismatch: {actual_icons}')
+
+          expected_dims = {
+              'public/favicon-16x16.png': (16, 16),
+              'public/favicon-32x32.png': (32, 32),
+              'public/favicon-48x48.png': (48, 48),
+              'public/apple-touch-icon.png': (180, 180),
+              'public/mstile-150x150.png': (150, 150),
+          }
+          for name, dims in expected_dims.items():
+              data = Path(name).read_bytes()
+              if data[:8] != b'\x89PNG\r\n\x1a\n':
+                  raise SystemExit(f'{name}: invalid PNG')
+              got = struct.unpack('>II', data[16:24])
+              if got != dims:
+                  raise SystemExit(f'{name}: expected {dims}, got {got}')
+
+          if Path('public/favicon.ico').read_bytes()[:4] != b'\x00\x00\x01\x00':
+              raise SystemExit('public/favicon.ico: invalid ICO header')
+
+          legacy_assets = [
+              'public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg',
+              'public/media/brand/doctor-ghezelbaash-symbol-192.48be0004e370.png',
+              'public/media/brand/doctor-ghezelbaash-symbol-512.a910779b67ef.png',
+              'public/media/brand/doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png',
+          ]
+          leftovers = [p for p in legacy_assets if Path(p).exists()]
+          if leftovers:
+              raise SystemExit(f'legacy assets still exist: {leftovers}')
+          PY
+
+          # The workflow contains the legacy tokens by design and will self-delete below;
+          # every production/source consumer must already be clean.
+          if git grep -n -I -E 'doctor-ghezelbaash-symbol\.3a9e7509912d\.svg|doctor-ghezelbaash-symbol-192\.48be0004e370\.png|doctor-ghezelbaash-symbol-512\.a910779b67ef\.png|doctor-ghezelbaash-symbol-maskable-512\.de33d0be02c9\.png' -- ':!.github/workflows/brand-family-migration.yml'; then
+            echo 'Legacy icon-family reference remains outside the one-time workflow.' >&2
+            exit 1
+          fi
+
           git diff --check
-          git diff --exit-code -- src/data/semantic/knowledge-graph.jsonld src/data/templates/llms.template.txt >/dev/null && exit 1 || true
+
+      - name: Commit canonical family and self-remove migration hook
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/brand-family-migration.yml
+          git add -A
+          git diff --cached --check
           git config user.name 'doctor-ghezelbaash migration bot'
           git config user.email 'actions@users.noreply.github.com'
-          git add src/data/semantic/knowledge-graph.jsonld src/data/templates/llms.template.txt
-          git commit -m 'refactor: migrate canonical brand image to 2026 family'
+          git commit -m 'refactor: converge all consumers on 2026 canonical icon family'
           git push origin HEAD:main
