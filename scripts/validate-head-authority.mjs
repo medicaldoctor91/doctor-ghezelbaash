@@ -11,8 +11,8 @@ const readJson=relative=>read(relative).then(JSON.parse);
 const count=(source,pattern)=>(String(source).match(pattern)||[]).length;
 const pathExists=async relative=>{try{await access(path.join(root,relative));return true;}catch(error){if(error?.code==='ENOENT')return false;throw error;}};
 
-const [metadata,release,discoveryRaw,documentHead,baseLayout,indexSource]=await Promise.all([
-  readJson('src/data/page-metadata.json'),
+const [profile,release,discoveryRaw,documentHead,baseLayout,indexSource]=await Promise.all([
+  readJson('src/data/head-profile.json'),
   readJson('src/data/release.json'),
   read('src/data/templates/discovery-head.html'),
   read('src/components/DocumentHead.astro'),
@@ -20,13 +20,11 @@ const [metadata,release,discoveryRaw,documentHead,baseLayout,indexSource]=await 
   read('src/pages/index.astro'),
 ]);
 
-const metadataKeys=['appleMobileWebAppTitle','applicationName','author','description','dir','lang','openGraph','robots','themeColor','title','twitter'];
-assert(JSON.stringify(Object.keys(metadata).sort())===JSON.stringify(metadataKeys),'Canonical page metadata schema drift');
-assert(!Object.hasOwn(metadata,'canonicalUrl'),'Presentation metadata must not duplicate release canonical URL authority');
+const profileKeys=['appleMobileWebAppTitle','applicationName','author','openGraph','themeColor','twitter'];
+assert(JSON.stringify(Object.keys(profile).sort())===JSON.stringify(profileKeys),'Static Head profile schema drift');
+for(const forbidden of ['title','description','robots','lang','dir','canonicalUrl'])assert(!Object.hasOwn(profile,forbidden),`Head profile must not duplicate canonical content/release metadata: ${forbidden}`);
 assert(/^https:\/\/www\.ghezelbaash\.ir\/$/.test(release.canonicalUrl),'Release canonical URL identity drift');
-assert(metadata.lang==='fa-IR'&&metadata.dir==='rtl','Page language/direction contract drift');
-assert(/^index, follow,/.test(metadata.robots),'Main robots contract must remain indexable');
-assert(metadata.title&&metadata.description&&metadata.openGraph?.image&&metadata.twitter?.card,'Required canonical page metadata missing');
+assert(profile.author&&profile.openGraph?.image&&profile.twitter?.card,'Required static Head profile missing');
 
 assert(count(discoveryRaw,/{{CURRENT_VERSION_DOI}}/g)===1,'Discovery Head must bind CURRENT_VERSION_DOI exactly once');
 assert(count(discoveryRaw,/{{CURRENT_RELEASE}}/g)===1,'Discovery Head must bind CURRENT_RELEASE exactly once');
@@ -37,24 +35,27 @@ assert(versionDoi&&discovery.includes(`href="https://doi.org/${versionDoi}"`),'R
 assert(discovery.includes(`title="Zenodo preservation Version DOI ${release.release}"`),'Runtime discovery Head lost current release label');
 assert(/\brel=["']describedby["']/i.test(discovery)&&/\brel=["']me["']/i.test(discovery),'Runtime discovery relations incomplete');
 
-assert(documentHead.includes("page-metadata.json")&&documentHead.includes("release.json")&&documentHead.includes("discovery-head.html?raw"),'DocumentHead is not bound to canonical Head inputs');
-assert(documentHead.includes('release.canonicalUrl')&&!documentHead.includes('pageMetadata.canonicalUrl'),'DocumentHead canonical URL authority drift');
+assert(documentHead.includes("head-profile.json")&&documentHead.includes("release.json")&&documentHead.includes("discovery-head.html?raw"),'DocumentHead is not bound to canonical Head inputs');
+assert(!documentHead.includes('page-metadata.json'),'DocumentHead reintroduced duplicate page metadata authority');
+assert(documentHead.includes('release.canonicalUrl'),'DocumentHead canonical URL authority drift');
 assert(documentHead.includes('HERO_PRELOAD_HREF')&&documentHead.includes('HERO_PRELOAD_SRCSET')&&documentHead.includes('HERO_IMAGE_SIZES'),'DocumentHead is not bound to canonical Hero preload inputs');
 assert(!documentHead.includes('main-head.html')&&!documentHead.includes('head-delivery'),'Runtime DocumentHead still depends on legacy Head transport');
-assert(baseLayout.includes("page-metadata.json")&&baseLayout.includes("release.json")&&baseLayout.includes('effectiveFrontmatter=isMain?pageMetadata:frontmatter'),'BaseLayout main metadata authority drift');
-assert(baseLayout.includes('new URL(release.canonicalUrl)')&&!baseLayout.includes('pageMetadata.canonicalUrl'),'BaseLayout canonical URL authority drift');
+assert(!baseLayout.includes('page-metadata.json')&&baseLayout.includes("release.json")&&!baseLayout.includes('effectiveFrontmatter'),'BaseLayout content metadata authority drift');
+assert(baseLayout.includes('new URL(release.canonicalUrl)'),'BaseLayout canonical URL authority drift');
 const generatedFrontmatterImport=/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/m;
-assert(indexSource.includes("page-metadata.json")&&!generatedFrontmatterImport.test(indexSource),'Index page reintroduced generated-frontmatter authority');
+assert(generatedFrontmatterImport.test(indexSource)&&!indexSource.includes('page-metadata.json'),'Index must consume canonical Markdown frontmatter');
 
 assert(HERO_PRELOAD_HREF.includes('saeed-ghezelbash-portrait-delivery-640'),'Hero preload href drift');
 assert(HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF)&&HERO_PRELOAD_SRCSET.includes(' 960w')&&HERO_PRELOAD_SRCSET.includes(' 1600w'),'Hero preload srcset drift');
 assert(HERO_IMAGE_SIZES.length>0,'Hero responsive sizes contract missing');
 
-const [legacyTemplateExists,legacyRuntimeExists]=await Promise.all([
+const [legacyMetadataExists,legacyTemplateExists,legacyRuntimeExists]=await Promise.all([
+  pathExists('src/data/page-metadata.json'),
   pathExists('src/data/templates/main-head.html'),
   pathExists('src/lib/head-delivery.mjs'),
 ]);
+assert(!legacyMetadataExists,'Duplicate page-metadata.json still exists');
 assert(!legacyTemplateExists,'Legacy main-head template still exists');
 assert(!legacyRuntimeExists,'Legacy Head split runtime still exists');
 
-console.log(JSON.stringify({stage:'HEAD_AUTHORITY',canonicalMetadata:'PASS',canonicalUrlAuthority:'release.json',runtimeDiscoveryReleaseBinding:'PASS',structuredHeroPreload:'PASS',legacyTemplateRemoved:true,legacyRuntimeRemoved:true,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HEAD_AUTHORITY',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',runtimeDiscoveryReleaseBinding:'PASS',structuredHeroPreload:'PASS',legacyAuthoritiesRemoved:true,integrity:'PASS'},null,2));
