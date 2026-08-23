@@ -20,7 +20,7 @@ const [metadata,release,discoveryRaw,documentHead,baseLayout,indexSource,legacyF
   read('src/data/templates/main-head.html'),
 ]);
 
-const metadataKeys=['applicationName','appleMobileWebAppTitle','author','canonicalUrl','description','dir','lang','openGraph','robots','themeColor','title','twitter'];
+const metadataKeys=['appleMobileWebAppTitle','applicationName','author','canonicalUrl','description','dir','lang','openGraph','robots','themeColor','title','twitter'];
 assert(JSON.stringify(Object.keys(metadata).sort())===JSON.stringify(metadataKeys),'Canonical page metadata schema drift');
 assert(metadata.canonicalUrl===release.canonicalUrl,'Page metadata canonical URL diverges from release identity');
 assert(metadata.lang==='fa-IR'&&metadata.dir==='rtl','Page language/direction contract drift');
