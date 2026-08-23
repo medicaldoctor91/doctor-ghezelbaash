@@ -9,7 +9,7 @@ const exists=async file=>{try{await access(path.join(root,file));return true}cat
 
 const required=[
   'src/data/head-profile.json','src/data/media-dimensions.tsv','src/lib/resources.mjs','src/lib/site-data.mjs',
-  'scripts/pipeline.mjs','scripts/generated-workspace.mjs','scripts/materialize-static-artifacts.mjs','scripts/test-contracts.mjs','scripts/platform-contract.mjs','scripts/github-pages-bridge.mjs','scripts/verify-live.mjs','scripts/reputation.mjs','scripts/huggingface.mjs','scripts/cloudflare-pages.mjs',
+  '.github/workflows/release-publish.yml','scripts/pipeline.mjs','scripts/generated-workspace.mjs','scripts/materialize-static-artifacts.mjs','scripts/test-contracts.mjs','scripts/platform-contract.mjs','scripts/github-pages-bridge.mjs','scripts/verify-live.mjs','scripts/reputation.mjs','scripts/huggingface.mjs','scripts/cloudflare-pages.mjs',
   'scripts/generate-rdf.mjs','scripts/generate-projections.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs',
   'scripts/enrich-image-metadata-manifest.mjs','scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
@@ -61,12 +61,24 @@ for(const forbidden of ["write('src/data/projections/","write('public/",'answers
 for(const servingField of ['liveRevision','sourceCommit','generatedAt'])assert(!new RegExp(`\\b${servingField}\\s*:`).test(retrievalGenerator),`Retrieval projection owns serving field: ${servingField}`);
 
 const pipeline=await read('scripts/pipeline.mjs');
+const [releasePublishWorkflow,reputationWorkflow,cloudflareWorkflow,stackMonitor,promotion]=await Promise.all([
+  read('.github/workflows/release-publish.yml'),
+  read('.github/workflows/reputation-refresh.yml'),
+  read('.github/workflows/cloudflare-pages-deploy.yml'),
+  read('.github/workflows/stack-monitor.yml'),
+  read('scripts/promote-release.mjs'),
+]);
 const expectedInterface=['build','check','ci','dev','indexnow:submit','media:enrich','preview','release','release:prepare','release:promote','release:zenodo','render:calibration:apply','verify:production','verify:public-discovery','verify:subdomains'].sort();
 assert(JSON.stringify(Object.keys(pkg.scripts||{}).sort())===JSON.stringify(expectedInterface),`Package lifecycle interface drift: ${Object.keys(pkg.scripts||{}).sort().join(', ')}`);
 for(const [name,value] of Object.entries({dev:'node scripts/pipeline.mjs dev',preview:'node scripts/pipeline.mjs preview',check:'node scripts/pipeline.mjs check',build:'node scripts/pipeline.mjs build',ci:'node scripts/pipeline.mjs ci','release:prepare':'node scripts/pipeline.mjs prepare',release:'node scripts/pipeline.mjs release'}))assert(pkg.scripts?.[name]===value,`Pipeline interface drift: ${name}`);
-for(const token of ['const prepareGenerated=','const validateSource=','const validateReleaseEvidence=','const buildDist=','const prepareRelease=',"case 'ci': prepareRelease(); buildDist(); packageSource(); break;","case 'release': prepareRelease(); buildDist(); completeRelease(); break;"])assert(pipeline.includes(token),`Lifecycle owner missing: ${token}`);
+for(const token of ['const prepareGenerated=','const validateSource=','const validateReleaseEvidence=','const buildDist=','const prepareRelease=',"case 'ci': prepareRelease(); buildDist(); break;","case 'release': prepareRelease(); buildDist(); completeRelease(); break;"])assert(pipeline.includes(token),`Lifecycle owner missing: ${token}`);
 assert(pkg.scripts?.['release:promote']==='node scripts/promote-release.mjs'&&pkg.scripts?.['release:zenodo']==='python scripts/zenodo_release.py','Release-only lifecycle is not discoverable');
 assert(pkg.scripts?.['media:enrich']==='node scripts/enrich-image-metadata-manifest.mjs','Media enrichment bypasses canonical manifest gate');
+for(const token of ['workflow_dispatch:','ZENODO_TOKEN','HF_TOKEN','release-candidate/v','zenodo_release.py reserve','zenodo_release.py stage','zenodo_release.py publish','zenodo_release.py verify-public','npm run release:promote','npm run release','scripts/huggingface.mjs prepare','refs/tags/v','--force-with-lease'])assert(releasePublishWorkflow.includes(token),`Release publication workflow contract missing: ${token}`);
+assert(!reputationWorkflow.includes('npm run release:prepare')&&reputationWorkflow.includes('npm run build'),'Reputation refresh must use the canonical build once without duplicate release preparation');
+assert(cloudflareWorkflow.includes('npm run indexnow:submit')&&cloudflareWorkflow.indexOf('npm run indexnow:submit')>cloudflareWorkflow.indexOf('PUBLIC_DISCOVERY_T5_HARD_PASS'),'IndexNow must run only after verified public convergence');
+assert(stackMonitor.includes('node scripts/huggingface.mjs verify --profile')&&stackMonitor.includes('node scripts/huggingface.mjs verify --viewer'),'Hugging Face public authority verification must live in the canonical stack monitor');
+for(const token of ['registryEvidence.verifiedAt=next.date','snapshotEvidence.verifiedAt=next.date','Release version rollback forbidden','Release date rollback forbidden','Zenodo release identity already belongs'])assert(promotion.includes(token),`Release promotion guard missing: ${token}`);
 for(const token of ['MANIFEST_LOCKED','MEDIA_ENRICHMENT_TRANSACTION','captureSnapshot','restoreSnapshot','BYTE_SNAPSHOT','--preflight-only','PREFLIGHT_ONLY','mutation:false'])assert(mediaGate.includes(token),`Media transaction contract missing: ${token}`);
 assert(!/\bunlink\b|\bcopyFile\b/.test(mediaGate),'Media transaction wrapper crossed worker boundary');
 
@@ -93,7 +105,7 @@ assert(!knowledgeGraph.includes('knowledge-graph.jsonld?raw')&&!knowledgeGraph.i
 assert(resourceRegistry.includes('STATIC_ARTIFACTS')&&resourceRegistry.includes('HEAD_RESOURCES')&&resourceRegistry.includes('FOOTER_RESOURCES'),'Machine-resource registry incomplete');
 assert(!resourceRegistry.includes("source:'src/data/projections/")&&!resourceRegistry.includes("source:'src/data/semantic/knowledge-graph.ttl'"),'Resource registry consumes legacy generated staging');
 assert(resourceRegistry.includes("source:'.generated/projections/")&&resourceRegistry.includes("source:'.generated/semantic/knowledge-graph.ttl'"),'Resource registry not generated-workspace bound');
-assert(materializer.includes("from '../src/lib/resources.mjs'")&&subdomainRedirectValidator.includes("from '../src/lib/resources.mjs'"),'Build tooling must consume the shared resource registry directly');
+assert(materializer.includes("from '../src/lib/resources.mjs'")&&subdomainRedirectValidator.includes("from '../src/lib/resources.mjs"),'Build tooling must consume the shared resource registry directly');
 assert(materializer.includes("const generatedPublic=path.join(root,'.generated/public')")&&materializer.includes('materializeGeneratedPublic'),'DIST materializer does not publish generated public artifacts');
 
 console.log(JSON.stringify({stage:'ARCHITECTURE_2026',astroRoutes:pageSurface.length,projectionCompilerOwners:5,retrievalWriterTargets:retrievalTargets.length,generatedWorkspace:'.generated',generatedWriteMode:'direct',sourceTreeMutation:false,promotionLayer:false,generatedConsumerAuthority:'single-workspace',currentServingMatrixAuthority:'finalizer-only',mediaEnrichmentBoundary:'manifest-locked-transactional',contentMetadataAuthority:'exact-markdown-frontmatter',contentOperationalAuthority:'release+graph-token-binding',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',resourceAuthority:'src/lib/resources.mjs',headDelivery:'astro-native-structured',rawHtmlTemplates:0,rawHeadTemplates:0,fullGraphInAstroRenderGraph:false,headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,integrity:'PASS'},null,2));
