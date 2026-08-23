@@ -1,28 +1,25 @@
 ---
 import discoveryHeadRaw from '../data/templates/discovery-head.html?raw';
-import pageMetadata from '../data/page-metadata.json';
+import headProfile from '../data/head-profile.json';
 import release from '../data/release.json';
 import {HERO_IMAGE_SIZES,HERO_PRELOAD_HREF,HERO_PRELOAD_SRCSET} from '../lib/hero-image-contract.mjs';
 import {bindReleaseTokens} from '../lib/release-tokens.mjs';
 type HeadStage='critical'|'discovery';
-interface Props { title:string; description:string; robots:string; canonicalURL:URL; isMain?:boolean; stage?:HeadStage; }
-const {title,description,robots,canonicalURL,isMain=false,stage='critical'}=Astro.props;
+interface Props { title:string; description:string; robots:string; canonicalURL:URL; lang?:string; isMain?:boolean; stage?:HeadStage; }
+const {title,description,robots,canonicalURL,lang='fa-IR',isMain=false,stage='critical'}=Astro.props;
 if(stage!=='critical'&&stage!=='discovery')throw new Error(`Unknown DocumentHead stage: ${stage}`);
-if(isMain){
-  const expected=[[title,pageMetadata.title,'title'],[description,pageMetadata.description,'description'],[robots,pageMetadata.robots,'robots'],[canonicalURL.toString(),release.canonicalUrl,'canonical URL']];
-  for(const [actual,wanted,label] of expected)if(actual!==wanted)throw new Error(`Canonical page metadata drift: ${label}`);
-}
+if(isMain&&canonicalURL.toString()!==release.canonicalUrl)throw new Error('Canonical page URL drift');
 const discoveryHead=isMain?bindReleaseTokens(discoveryHeadRaw,release):'';
-const og=pageMetadata.openGraph;
+const og=headProfile.openGraph;
 ---
 {isMain&&stage==='critical'&&<>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
 <link as="image" fetchpriority="high" href={HERO_PRELOAD_HREF} imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif" />
 <title>{title}</title><meta content={description} name="description" /><meta content={robots} name="robots" /><meta content={robots} name="googlebot" /><meta content={robots} name="bingbot" />
-<meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={pageMetadata.author} name="author" /><meta content={pageMetadata.applicationName} name="application-name" /><meta content={pageMetadata.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
-<meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={pageMetadata.themeColor} name="theme-color" /><meta content={pageMetadata.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />
+<meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={headProfile.author} name="author" /><meta content={headProfile.applicationName} name="application-name" /><meta content={headProfile.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
+<meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={headProfile.themeColor} name="theme-color" /><meta content={headProfile.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />
 <link as="font" crossorigin="anonymous" href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2" media="(min-width:48.01rem)" rel="preload" type="font/woff2" />
-<link href={canonicalURL.toString()} rel="canonical" /><link href={canonicalURL.toString()} hreflang={pageMetadata.lang} rel="alternate" />
+<link href={canonicalURL.toString()} rel="canonical" /><link href={canonicalURL.toString()} hreflang={lang} rel="alternate" />
 </>}
 {isMain&&stage==='discovery'&&<>
 <Fragment set:html={discoveryHead} />
@@ -30,7 +27,7 @@ const og=pageMetadata.openGraph;
 <meta content={og.locale} property="og:locale" />{og.alternateLocales.map(locale=><meta content={locale} property="og:locale:alternate" />)}
 <meta content={title} property="og:title" /><meta content={description} property="og:description" /><meta content={canonicalURL.toString()} property="og:url" /><meta content={og.siteName} property="og:site_name" />
 <meta content={og.image} property="og:image" /><meta content={og.image} property="og:image:secure_url" /><meta content={og.imageType} property="og:image:type" /><meta content={String(og.imageWidth)} property="og:image:width" /><meta content={String(og.imageHeight)} property="og:image:height" /><meta content={og.imageAlt} property="og:image:alt" />
-<meta content={pageMetadata.twitter.card} name="twitter:card" /><meta content={title} name="twitter:title" /><meta content={description} name="twitter:description" /><meta content={canonicalURL.toString()} name="twitter:url" /><meta content={og.image} name="twitter:image" /><meta content={og.imageAlt} name="twitter:image:alt" />
+<meta content={headProfile.twitter.card} name="twitter:card" /><meta content={title} name="twitter:title" /><meta content={description} name="twitter:description" /><meta content={canonicalURL.toString()} name="twitter:url" /><meta content={og.image} name="twitter:image" /><meta content={og.imageAlt} name="twitter:image:alt" />
 </>}
 {!isMain&&stage==='critical'&&<>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
