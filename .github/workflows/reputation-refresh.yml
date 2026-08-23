@@ -107,7 +107,7 @@ jobs:
           node scripts/cloudflare-pages.mjs ensure
           node scripts/cloudflare-pages.mjs verify --fresh-only
           node scripts/reputation.mjs visible dist/index.html
-      - name: Publish mutable current observation to Hugging Face only on tuple change
+      - name: Reconcile complete current Hugging Face distribution on tuple change
         if: steps.places.outputs.changed == 'true'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
@@ -117,11 +117,12 @@ jobs:
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
           rm -rf .release/huggingface-live
           git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-live
+          node scripts/huggingface.mjs prepare dist .release/huggingface-live
           node scripts/reputation.mjs sync-hf .release/huggingface-live
           git -C .release/huggingface-live config user.name ghezelbaash-reputation-bot
           git -C .release/huggingface-live config user.email actions@users.noreply.github.com
-          git -C .release/huggingface-live add live_observations.csv live-observation-attestation.json
-          git -C .release/huggingface-live diff --cached --quiet || git -C .release/huggingface-live commit -m "Update current Google reputation observation"
+          git -C .release/huggingface-live add -A
+          git -C .release/huggingface-live diff --cached --quiet || git -C .release/huggingface-live commit -m "Update current authority distribution after Google reputation observation"
           git -C .release/huggingface-live push origin HEAD:main
       - name: Verify Hugging Face convergence after mutation
         if: steps.places.outputs.changed == 'true'
