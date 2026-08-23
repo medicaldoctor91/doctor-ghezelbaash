@@ -1,0 +1,160 @@
+name: One-time icon publish-surface cleanup
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: icon-publish-surface-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: github.event.pull_request.head.ref == 'ops/icon-publish-surface-cleanup-20260823'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: npm
+
+      - name: Install project dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Enrich published platform PNGs in-place
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXIFTOOL=node_modules/.bin/exiftool
+          CFG=scripts/exiftool-entity.config
+          RIGHTS='© Saeed Ghezelbash. Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0).'
+          USAGE='CC BY 4.0; attribution required: Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic.'
+          SUBJECTS='official symbol|physician identity|clinic identity|Saeed Ghezelbash|Dr. Saeed Ghezelbash|دکتر سعید قزلباش|Mohammad Saeed Ghezelbash|Iranian physician|aesthetic medicine|Kermanshah|Iran|Q140287622|Q140288589|IRIMC 167430|Google KG /g/11nqdfk76c|Google Place ChIJBT0YDOTt-j8RD-7mAPy6Zas'
+          for spec in 'public/apple-touch-icon.png|Apple touch icon' 'public/mstile-150x150.png|Windows tile icon'; do
+            file=${spec%%|*}; role=${spec#*|}
+            "$EXIFTOOL" -config "$CFG" -overwrite_original -P -charset filename=UTF8 -sep '|' \
+              -XMP-dc:Creator='Saeed Ghezelbash' \
+              -XMP-dc:Title="Dr. Saeed Ghezelbash — $role" \
+              -XMP-dc:Description="Official $role derived from the canonical 2026 visual identity of Dr. Saeed Ghezelbash." \
+              -XMP-dc:Rights="$RIGHTS" -XMP-dc:Subject= -XMP-dc:Subject="$SUBJECTS" \
+              -XMP-xmpRights:Marked=True -XMP-xmpRights:WebStatement='https://www.ghezelbaash.ir/#media-license' \
+              -XMP-xmpRights:UsageTerms="$USAGE" -XMP-xmp:CreatorTool='Entity Media Pipeline 2026' \
+              -XMP-xmp:MetadataDate='2026:08:23 06:15:00+03:30' \
+              -XMP-photoshop:Headline="Dr. Saeed Ghezelbash — $role" \
+              -XMP-photoshop:Credit='Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic' \
+              -XMP-photoshop:City='کرمانشاه' -XMP-photoshop:State='کرمانشاه' -XMP-photoshop:Country='ایران' \
+              -XMP-iptcCore:CreatorWorkURL='https://www.ghezelbaash.ir/#saeed-ghezelbash' \
+              -XMP-iptcCore:Location='Dr. Saeed Ghezelbash Aesthetic Clinic' -XMP-iptcCore:CountryCode='IR' \
+              -XMP-plus:ImageCreatorName='Saeed Ghezelbash' -XMP-plus:CopyrightOwnerName='Saeed Ghezelbash' \
+              -XMP-plus:LicensorName='Saeed Ghezelbash' -XMP-plus:LicensorURL='https://www.ghezelbaash.ir/#media-license' \
+              -XMP-plus:LicenseID='https://creativecommons.org/licenses/by/4.0/' \
+              -XMP-plus:TermsAndConditionsURL='https://www.ghezelbaash.ir/#media-license' \
+              -XMP-plus:TermsAndConditionsText="$USAGE" \
+              -XMP-entity:CanonicalPersonIRI='https://www.wikidata.org/entity/Q140287622' \
+              -XMP-entity:CanonicalPersonWebIRI='https://www.ghezelbaash.ir/#saeed-ghezelbash' \
+              -XMP-entity:CanonicalClinicIRI='https://www.wikidata.org/entity/Q140288589' \
+              -XMP-entity:CanonicalClinicWebIRI='https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah' \
+              -XMP-entity:GoogleKnowledgeGraphPersonID='/g/11nqdfk76c' \
+              -XMP-entity:GoogleKnowledgeGraphClinicID='/g/11r3rzdtb3' \
+              -XMP-entity:GoogleMapsPlaceID='ChIJBT0YDOTt-j8RD-7mAPy6Zas' \
+              -XMP-entity:GoogleMapsCID='12350483144643112463' \
+              -XMP-entity:ClinicGooglePlaceID='ChIJBT0YDOTt-j8RD-7mAPy6Zas' \
+              -XMP-entity:ClinicGoogleMapsCID='12350483144643112463' \
+              -XMP-entity:ClinicGoogleKnowledgeGraphID='/g/11r3rzdtb3' \
+              -XMP-entity:PersonGoogleKnowledgeGraphID='/g/11nqdfk76c' \
+              -XMP-entity:ClinicFounder='https://www.wikidata.org/entity/Q140287622' \
+              -XMP-entity:ClinicOwner='https://www.wikidata.org/entity/Q140287622' \
+              -XMP-entity:ClinicOperator='https://www.wikidata.org/entity/Q140287622' \
+              -XMP-entity:PersonWorkLocation='https://www.wikidata.org/entity/Q140288589' \
+              -XMP-entity:Latitude='34.3401243' -XMP-entity:Longitude='47.0851778' \
+              -XMP-entity:PostalCode='6715845958' -XMP-entity:StreetAddress='کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا' \
+              -XMP-entity:ImageRole="$role" -XMP-entity:TruthAuthority='owner-confirmed first-party release' \
+              -XMP-entity:MetadataProfileVersion='3.1.0' "$file"
+          done
+
+      - name: Collapse published icon surface and migrate consumers
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRAND192=$(basename public/media/brand/doctor-ghezelbaash-symbol-192.*.png)
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          brand192=next(Path('public/media/brand').glob('doctor-ghezelbaash-symbol-192.*.png')).name
+          replacements={
+            'src/data/templates/main-head.html':[
+              ('<link href="/favicon.ico" rel="icon" sizes="16x16 32x32 48x48" type="image/vnd.microsoft.icon"/>',''),
+              ('<link color="#075244" href="/safari-pinned-tab.svg" rel="mask-icon"/>','<link color="#075244" href="/favicon.svg" rel="mask-icon"/>'),
+            ],
+            'src/components/DocumentHead.astro':[
+              ('<link rel="canonical" href={canonicalURL} /><link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" type="image/vnd.microsoft.icon" /><link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml" />','<link rel="canonical" href={canonicalURL} /><link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml" />'),
+            ],
+          }
+          for file,reps in replacements.items():
+            p=Path(file); text=p.read_text(encoding='utf-8'); before=text
+            for old,new in reps:
+              if old not in text: raise SystemExit(f'missing expected fragment in {file}: {old}')
+              text=text.replace(old,new)
+            if text==before: raise SystemExit(f'no change in {file}')
+            p.write_text(text,encoding='utf-8',newline='')
+          graph=Path('src/data/semantic/knowledge-graph.jsonld')
+          text=graph.read_text(encoding='utf-8')
+          old='https://www.ghezelbaash.ir/favicon-48x48.png'
+          new='https://www.ghezelbaash.ir/media/brand/'+brand192
+          if old not in text: raise SystemExit('favicon-48x48 graph reference not found')
+          graph.write_text(text.replace(old,new),encoding='utf-8',newline='')
+          PY
+          rm -f public/favicon.ico public/favicon-16x16.png public/favicon-32x32.png public/favicon-48x48.png public/safari-pinned-tab.svg
+          git rm -f .github/workflows/icon-publish-surface-cleanup.yml
+
+      - name: Verify embedded metadata and no dead published icon files
+        shell: bash
+        run: |
+          set -euo pipefail
+          EXIFTOOL=node_modules/.bin/exiftool
+          CFG=scripts/exiftool-entity.config
+          for file in public/apple-touch-icon.png public/mstile-150x150.png public/media/brand/doctor-ghezelbaash-symbol-192.*.png public/media/brand/doctor-ghezelbaash-symbol-512.*.png public/media/brand/doctor-ghezelbaash-symbol-maskable-512.*.png; do
+            "$EXIFTOOL" -config "$CFG" -j -G1 -s \
+              -XMP-dc:Creator -XMP-dc:Title -XMP-dc:Description -XMP-dc:Rights -XMP-dc:Subject \
+              -XMP-entity:CanonicalPersonIRI -XMP-entity:PersonGoogleKnowledgeGraphID \
+              -XMP-entity:ImageRole -XMP-entity:MetadataProfileVersion "$file" > /tmp/meta.json
+            node -e "const x=require('/tmp/meta.json')[0]; const vals=Object.values(x); if(!vals.includes('Saeed Ghezelbash')||!vals.includes('https://www.wikidata.org/entity/Q140287622')||!vals.includes('/g/11nqdfk76c')||!vals.includes('3.1.0')) process.exit(1)"
+          done
+          test -f public/favicon.svg
+          test ! -e public/favicon.ico
+          test ! -e public/favicon-16x16.png
+          test ! -e public/favicon-32x32.png
+          test ! -e public/favicon-48x48.png
+          test ! -e public/safari-pinned-tab.svg
+          if git grep -n -I -E 'favicon\.ico|favicon-16x16\.png|favicon-32x32\.png|favicon-48x48\.png|safari-pinned-tab\.svg'; then
+            echo 'removed icon consumer/reference remains' >&2; exit 1
+          fi
+          git diff --check
+
+      - name: Repository validators
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run validate:media-references
+          npm run validate:media
+          npm run validate:source
+
+      - name: Commit production-clean icon publish surface to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git diff --cached --check
+          git config user.name 'doctor-ghezelbaash migration bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git commit -m 'refactor: publish only metadata-complete icon assets'
+          git push origin HEAD:main
