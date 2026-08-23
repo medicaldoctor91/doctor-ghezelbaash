@@ -1,18 +1,17 @@
-name: Authenticated Wikimedia account history audit
+name: Authenticated Attachment COI submit
 
 on:
   push:
     branches: [wiki-api-access]
-    paths-ignore:
-      - wiki-account-audit.json
+    paths:
+      - .github/workflows/wiki-account-audit.yml
 
 permissions:
   contents: write
 
 jobs:
-  audit:
+  submit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
     env:
       WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
       WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
@@ -20,125 +19,65 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: wiki-api-access
-          fetch-depth: 0
           persist-credentials: true
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
       - run: python -m pip install --disable-pip-version-check requests
-      - name: Deep authenticated audit
+      - name: Submit once and verify
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${WIKIMEDIA_USERNAME:-}"; test -n "${WIKIMEDIA_BOT_PASSWORD:-}"
           echo "::add-mask::$WIKIMEDIA_BOT_PASSWORD"
           python - <<'PY' > wiki-account-audit.json
-          import os,json,requests,datetime,re,collections
-          USER=os.environ['WIKIMEDIA_USERNAME']; PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
-          UA='GhezelbaashDeepAccountAudit/2.0 (https://www.ghezelbaash.ir/)'
-          def client(host):
-              s=requests.Session(); s.headers.update({'User-Agent':UA}); api=f'https://{host}/w/api.php'
-              def get(**p):
-                  p.update(format='json',formatversion=2,maxage=0,smaxage=0)
-                  r=s.get(api,params=p,timeout=90); r.raise_for_status(); d=r.json()
-                  if 'error' in d: raise RuntimeError({'host':host,'error':d['error']})
-                  return d
-              def post(**p):
-                  p.update(format='json',formatversion=2)
-                  r=s.post(api,data=p,timeout=90); r.raise_for_status(); d=r.json()
-                  if 'error' in d: raise RuntimeError({'host':host,'error':d['error']})
-                  return d
-              tok=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
-              lg=post(action='login',lgname=USER,lgpassword=PASS,lgtoken=tok)
-              if lg.get('login',{}).get('result')!='Success': raise RuntimeError({'host':host,'login':lg})
-              ui=get(action='query',meta='userinfo',uiprop='groups|rights|editcount')['query']['userinfo']
-              return get,ui
-          wd,wdu=client('www.wikidata.org'); en,enu=client('en.wikipedia.org'); co,cou=client('commons.wikimedia.org')
-          def revisions(get,title,start=None,content=False,limit=500):
-              out=[]; cont={}
-              while True:
-                  prop='ids|timestamp|user|comment|flags'+('|content' if content else '')
-                  p=dict(action='query',prop='revisions',titles=title,rvprop=prop,rvlimit='max',rvdir='newer')
-                  if start:p['rvstart']=start
-                  if content:p['rvslots']='main'
-                  p.update(cont); d=get(**p); pg=d['query']['pages'][0]; out.extend(pg.get('revisions') or [])
-                  if 'continue' not in d or len(out)>=limit:break
-                  cont=d['continue']
-              return out[:limit]
-          def current_text(get,title):
-              d=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1); p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
-              return p,r,r.get('slots',{}).get('main',{}).get('content','')
-          def all_contribs(get,user):
-              out=[]; cont={}
-              while True:
-                  p=dict(action='query',list='usercontribs',ucuser=user,uclimit='max',ucdir='older',ucprop='ids|title|timestamp|comment|flags|size|sizediff|tags'); p.update(cont); d=get(**p); out.extend(d['query']['usercontribs'])
-                  if 'continue' not in d:break
-                  cont=d['continue']
-              return out
-          def ent(q):return wd(action='wbgetentities',ids=q,props='claims|sitelinks|labels|descriptions')['entities'][q]
-          def cv(e,p):
-              a=[]
-              for c in e.get('claims',{}).get(p,[]):
-                  v=c.get('mainsnak',{}).get('datavalue',{}).get('value');
-                  if isinstance(v,dict) and 'id' in v:v=v['id']
-                  a.append({'value':v,'rank':c.get('rank'),'references':len(c.get('references') or []),'qualifiers':list((c.get('qualifiers') or {}).keys())})
-              return a
-          clinic=ent('Q140288589'); person=ent('Q140287622')
-          cr=revisions(wd,'Q140288589','2026-08-14T00:00:00Z',False,500); pr=revisions(wd,'Q140287622','2026-08-14T00:00:00Z',False,500)
-          clinic_other=[r for r in cr if r.get('user')!=wdu['name']]
-          clinic_signal=[r for r in cr if r.get('user')!=wdu['name'] or any(x in (r.get('comment') or '') for x in ['P137','P1037','P112','P127','P31','sitelink','commonswiki','P2671','P3749'])]
-          person_signal=[r for r in pr if r.get('user')!=wdu['name'] or any(x in (r.get('comment') or '') for x in ['P1830','P937','P1416','Q140288589','sitelink','commonswiki','enwikisource'])]
-          rp,rr,rt=current_text(wd,'Wikidata:Requests for deletions')
-          m=re.search(r'(?ms)^==\s*\[\[Q140288589\]\]\s*==\s*(.*?)(?=^==[^=]|\Z)',rt); current_rfd=(m.group(1).strip() if m else None)
-          rmeta=revisions(wd,'Wikidata:Requests for deletions','2026-08-20T02:20:00Z',False,500)
-          rfd_touch=[r for r in rmeta if 'Q140288589' in (r.get('comment') or '')]
-          cat='Category:Dr. Saeed Ghezelbash Aesthetic Clinic'; catp=co(action='query',prop='info|categoryinfo|pageprops',titles=cat)['query']['pages'][0]; cath=revisions(co,cat,'2026-08-14T00:00:00Z',False,500)
-          enc=all_contribs(en,enu['name']); by=collections.defaultdict(list)
-          for c in enc:by[c['title']].append(c)
-          for v in by.values():v.sort(key=lambda x:x['timestamp'])
-          talk={}
-          for title in ['Talk:Botulinum toxin','Talk:Treatment of bipolar disorder','Talk:Attachment and health']:
-              mine=by.get(title,[]); later=[]
-              if mine:
-                  later=[r for r in revisions(en,title,mine[-1]['timestamp'],False,500) if r.get('timestamp','')>mine[-1]['timestamp']]
-              talk[title]={'my_edits':mine,'later_revisions':later}
-          def evidence(title,needles,start):
-              p,r,t=current_text(en,title); lo=t.lower(); hits={}
-              for n in needles:
-                  i=lo.find(n.lower()); hits[n]={'present':i>=0,'snippet':t[max(0,i-400):i+1000] if i>=0 else None}
-              hist=revisions(en,title,start,False,500)
-              return {'current':{'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment')},'markers':hits,'history_since_request':hist}
-          bipolar=evidence('Treatment of bipolar disorder',['10.1111/bdi.13115','10.3390/md23020084','10.4103/2008-7802.182734','27280013','34228881','39997208'],'2026-08-17T00:49:00Z')
-          botox=evidence('Botulinum toxin',['wikiversity','Botulinum toxin in aesthetic medicine','Facial assessment before aesthetic botulinum toxin treatment'],'2026-08-16T00:55:00Z')
-          attachment=evidence('Attachment and health',['34574943','Ghezelbash'],'2026-08-16T00:00:00Z')
-          np,nr,nt=current_text(wd,'Wikidata:Notability'); ne=[]
-          for q in ['at least one valid','Category items with a sitelink only to Wikimedia Commons','structural need']:
-              i=nt.lower().find(q.lower()); ne.append(nt[max(0,i-400):i+1500] if i>=0 else None)
-          bl=[]; cont={}
-          while True:
-              p=dict(action='query',list='backlinks',bltitle='Q140288589',bllimit='max'); p.update(cont); d=wd(**p); bl.extend(d['query']['backlinks'])
-              if 'continue' not in d:break
-              cont=d['continue']
-          out={
-            'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            'auth':{'wikidata':wdu['name'],'enwiki':enu['name'],'commons':cou['name']},
-            'clinic_current':{'sitelinks':{k:v.get('title') for k,v in clinic.get('sitelinks',{}).items()},'P31':cv(clinic,'P31'),'P112':cv(clinic,'P112'),'P1037':cv(clinic,'P1037'),'P127':cv(clinic,'P127'),'P137':cv(clinic,'P137'),'P2671':cv(clinic,'P2671'),'P3749':cv(clinic,'P3749'),'backlinks':bl},
-            'person_current':{'sitelinks':{k:v.get('title') for k,v in person.get('sitelinks',{}).items()},'P1830':cv(person,'P1830'),'P937':cv(person,'P937'),'P1416':cv(person,'P1416')},
-            'clinic_other_editors_since_aug14':clinic_other,'clinic_signal_history':clinic_signal,'person_signal_history':person_signal,
-            'rfd':{'current_revision':{'revid':rr.get('revid'),'timestamp':rr.get('timestamp'),'user':rr.get('user'),'comment':rr.get('comment')},'current_section':current_rfd,'revision_summaries_touching_Q140288589':rfd_touch},
-            'commons':{'pageid':catp.get('pageid'),'categoryinfo':catp.get('categoryinfo',{}),'pageprops':catp.get('pageprops',{}),'history_since_aug14':cath},
-            'enwiki':{'editcount':enu.get('editcount'),'all_account_contribs':enc,'talk_pages':talk,'botulinum_article':botox,'bipolar_article':bipolar,'attachment_article':attachment},
-            'notability':{'revision':{'revid':nr.get('revid'),'timestamp':nr.get('timestamp'),'user':nr.get('user')},'excerpts':ne}
-          }
-          print(json.dumps(out,ensure_ascii=False,indent=2))
+          import os,json,requests,datetime
+          s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91COISubmit/1.0'
+          api='https://en.wikipedia.org/w/api.php'
+          def get(**p):
+              p.update(format='json',formatversion=2,maxage=0,smaxage=0)
+              r=s.get(api,params=p,timeout=60); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+          def post(**p):
+              p.update(format='json',formatversion=2)
+              r=s.post(api,data=p,timeout=60); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+          tok=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+          lg=post(action='login',lgname=os.environ['WIKIMEDIA_USERNAME'],lgpassword=os.environ['WIKIMEDIA_BOT_PASSWORD'],lgtoken=tok)
+          if lg.get('login',{}).get('result')!='Success': raise RuntimeError(lg)
+          user=get(action='query',meta='userinfo')['query']['userinfo']['name']
+          title='Talk:Attachment and health'; heading='Update Mental health section with recent meta-analytic evidence'
+          def latest():
+              d=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)
+              p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
+              return r,r.get('slots',{}).get('main',{}).get('content','')
+          r0,t0=latest()
+          if heading in t0:
+              submit={'status':'already_present','revid':r0.get('revid'),'timestamp':r0.get('timestamp'),'user':r0.get('user')}
+          else:
+              body="""{{edit COI|summary=Update the Mental health section with recent meta-analytic evidence}}
+I am a co-author of the 2021 MDD study cited below, so I am requesting this change rather than editing the article directly.
+
+'''Specific change:''' In § Mental health, immediately after the paragraph ending “including depression, anxiety, eating, psychotic and personality disorders”, add:
+
+More recent meta-analytic evidence supports a robust association between adult attachment insecurity and mental-health outcomes. A 2022 meta-analysis of 224 studies (245 samples; N=79,722) found moderate associations between attachment anxiety and avoidance and poorer mental health, including depression and anxiety.<ref>{{cite journal |vauthors=Zhang X, Li J, Xie F, Chen X, Xu W, Hudson NW |title=The relationship between adult attachment and mental health: A meta-analysis |journal=Journal of Personality and Social Psychology |year=2022 |volume=123 |issue=5 |pages=1089–1137 |doi=10.1037/pspp0000437 |pmid=36201836}}</ref> Consistent with this broader literature, a 2021 cross-sectional study of 300 people with major depressive disorder reported high rates of insecure attachment and an association between anxious attachment and dissociative symptoms; because the study was cross-sectional, it does not establish causality.<ref>{{cite journal |vauthors=Golshani S, Najafpour A, Hashemian SS, Goudarzi N, Firoozabadi A, Ghezelbash MS, Hookari S, Firoozabadi K, Dürsteler KM, Brühl AB, Alikhani M, Sadeghi-Bahmani D, Brand S |title=Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events |journal=Healthcare |year=2021 |volume=9 |issue=9 |page=1169 |doi=10.3390/healthcare9091169 |pmid=34574943 |pmc=PMC8469763}}</ref>
+
+'''Reason:''' The existing section states the association using mostly older literature. The proposed addition anchors that statement in a large recent meta-analysis and gives one narrowly framed clinical example, with the study design limitation stated explicitly.
+
+~~~~"""
+              csrf=get(action='query',meta='tokens')['query']['tokens']['csrftoken']
+              e=post(action='edit',title=title,section='new',sectiontitle=heading,text=body,summary='COI disclosed: request independent review of Mental health section using recent meta-analytic evidence',token=csrf,assertuser=user)
+              submit={'status':e.get('edit',{}).get('result'),'newrevid':e.get('edit',{}).get('newrevid'),'oldrevid':e.get('edit',{}).get('oldrevid')}
+          r1,t1=latest()
+          contrib=get(action='query',list='usercontribs',ucuser=user,ucnamespace=1,uclimit=20,ucprop='ids|title|timestamp|comment')['query']['usercontribs']
+          print(json.dumps({'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'authenticated_as':user,'submission':submit,'verified_latest':{'revid':r1.get('revid'),'timestamp':r1.get('timestamp'),'user':r1.get('user'),'comment':r1.get('comment'),'heading_present':heading in t1},'recent_talk_contribs':contrib},ensure_ascii=False,indent=2))
           PY
-      - name: Commit audit result on isolated branch only
+      - name: Commit result
         shell: bash
         run: |
-          set -euo pipefail
           git config user.name ghezelbaash-wiki-audit-bot
           git config user.email actions@users.noreply.github.com
           git add wiki-account-audit.json
-          git commit -m "Store deep authenticated Wikimedia account audit"
+          git commit -m "Store Attachment COI submission verification"
           git push origin HEAD:wiki-api-access
-# refresh 2026-08-23T03:50+03:30
