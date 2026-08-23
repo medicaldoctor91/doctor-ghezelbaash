@@ -1,11 +1,39 @@
 {
-  "generated_at_utc": "2026-08-23T00:55:23.396408+00:00",
+  "generated_at_utc": "2026-08-23T00:57:18.635430+00:00",
   "auth": {
     "wikidata": "Medicaldoctor91",
     "enwiki": "Medicaldoctor91",
     "commons": "Medicaldoctor91"
   },
   "enwiki_editcount": 3,
+  "enwiki_rights": [
+    "createaccount",
+    "autocreateaccount",
+    "read",
+    "edit",
+    "createtalk",
+    "viewmyprivateinfo",
+    "editmyoptions",
+    "abusefilter-log-detail",
+    "urlshortener-create-url",
+    "abusefilter-view",
+    "abusefilter-log",
+    "echo-read-notifications",
+    "reupload-own",
+    "move-rootuserpages",
+    "createpage",
+    "minoredit",
+    "editmyusercss",
+    "editmyuserjson",
+    "editmyuserjs",
+    "sendemail",
+    "applychangetags",
+    "viewmywatchlist",
+    "editmywatchlist",
+    "logout",
+    "spamblacklistlog",
+    "mwoauthmanagemygrants"
+  ],
   "enwiki_contributions": [
     {
       "userid": 36989407,
