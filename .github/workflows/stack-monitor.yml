@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: '17 5 * * *'
   workflow_dispatch:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -78,14 +80,15 @@ jobs:
             exit 0
           fi
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          echo '::warning::Hugging Face current observation drift detected; reconciling only the mutable current observation artifacts.'
+          echo '::warning::Hugging Face current distribution drift detected; reconciling the complete mutable main distribution from exact current DIST.'
           rm -rf .release/huggingface-monitor
           git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-monitor
+          node scripts/huggingface.mjs prepare dist .release/huggingface-monitor
           node scripts/reputation.mjs sync-hf .release/huggingface-monitor
           git -C .release/huggingface-monitor config user.name ghezelbaash-reputation-bot
           git -C .release/huggingface-monitor config user.email actions@users.noreply.github.com
-          git -C .release/huggingface-monitor add live_observations.csv live-observation-attestation.json
-          git -C .release/huggingface-monitor diff --cached --quiet || git -C .release/huggingface-monitor commit -m "Reconcile current Google reputation observation"
+          git -C .release/huggingface-monitor add -A
+          git -C .release/huggingface-monitor diff --cached --quiet || git -C .release/huggingface-monitor commit -m "Reconcile complete current authority distribution"
           git -C .release/huggingface-monitor push origin HEAD:main
           for attempt in $(seq 1 12); do
             if node scripts/verify-live.mjs current --hf-only; then
