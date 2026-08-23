@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import jsonld from 'jsonld';
 import rdfCanonize from 'rdf-canonize';
-import {generatedWorkspace} from './lib/generated-workspace.mjs';
+import {generatedWorkspace} from './generated-workspace.mjs';
 
 const source='src/data/semantic/knowledge-graph.jsonld';
 const generated=generatedWorkspace();

@@ -9,8 +9,7 @@ on:
     paths:
       - '.release/policy/authority-surface-contract.json'
       - 'src/data/release.json'
-      - 'scripts/prepare-huggingface-distribution.mjs'
-      - 'scripts/verify-huggingface-authority.mjs'
+      - 'scripts/huggingface.mjs'
       - '.github/workflows/hugging-face-authority.yml'
 
 permissions:
@@ -29,6 +28,6 @@ jobs:
         with:
           node-version: 24.19.0
       - name: Verify physician-first Hugging Face authority topology
-        run: node scripts/verify-huggingface-authority.mjs --profile
+        run: node scripts/huggingface.mjs verify --profile
       - name: Verify Dataset Server viewer contracts
-        run: node scripts/verify-huggingface-authority.mjs --viewer
+        run: node scripts/huggingface.mjs verify --viewer

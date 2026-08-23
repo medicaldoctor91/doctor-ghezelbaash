@@ -18,7 +18,7 @@ const requiredFiles=[
   'src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
   '.release/policy/platform-contract.json','.release/policy/authority-surface-contract.json','scripts/lib/css-rules.mjs','scripts/lib/graph-integrity.mjs','scripts/lib/release-graph.mjs','scripts/lib/projection-context.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
-  'scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/validate-platform-contract.mjs','scripts/verify-huggingface-authority.mjs'
+  'scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/platform-contract.mjs','scripts/huggingface.mjs'
 ];
 for(const f of requiredFiles)await access(path.join(root,f));
 
@@ -31,7 +31,7 @@ const [pkg,baseGenerator,retrievalGenerator,descriptorGenerator,finalizer,mediaR
   readSource('scripts/finalize-dist.mjs'),
   readSource('scripts/validate-media-references.mjs'),
   readSource('scripts/apply-render-calibration.mjs'),
-  readSource('scripts/verify-huggingface-authority.mjs'),
+  readSource('scripts/huggingface.mjs'),
   readSource('src/components/DocumentHead.astro'),
   readSource('src/layouts/BaseLayout.astro'),
   readSource('scripts/lib/projections/page-assets.mjs'),
