@@ -1,9 +1,70 @@
 {
-  "generated_at_utc": "2026-08-23T00:50:54.165298+00:00",
+  "generated_at_utc": "2026-08-23T00:55:23.396408+00:00",
   "auth": {
     "wikidata": "Medicaldoctor91",
     "enwiki": "Medicaldoctor91",
     "commons": "Medicaldoctor91"
+  },
+  "enwiki_editcount": 3,
+  "enwiki_contributions": [
+    {
+      "userid": 36989407,
+      "user": "Medicaldoctor91",
+      "pageid": 2267832,
+      "revid": 1370165015,
+      "parentid": 1369764392,
+      "ns": 1,
+      "title": "Talk:Botulinum toxin",
+      "timestamp": "2026-08-19T13:40:00Z",
+      "comment": "COI follow-up: correct Wikiversity sister-link target to the reviewed resource"
+    },
+    {
+      "userid": 36989407,
+      "user": "Medicaldoctor91",
+      "pageid": 4850507,
+      "revid": 1369763326,
+      "parentid": 1205751834,
+      "ns": 1,
+      "title": "Talk:Treatment of bipolar disorder",
+      "timestamp": "2026-08-17T00:49:36Z",
+      "comment": "COI disclosed: request independent review of Omega-3 subsection using recent secondary sources"
+    },
+    {
+      "userid": 36989407,
+      "user": "Medicaldoctor91",
+      "pageid": 2267832,
+      "revid": 1369605448,
+      "parentid": 1362661056,
+      "ns": 1,
+      "title": "Talk:Botulinum toxin",
+      "timestamp": "2026-08-16T00:55:21Z",
+      "comment": "COI edit request: consider relevant Wikiversity sister-project link"
+    }
+  ],
+  "attachment_talk_current": {
+    "pageid": 52314987,
+    "revid": 1205471994,
+    "timestamp": "2024-02-09T18:58:53Z",
+    "user": "Cewbot",
+    "comment": "[[User:Cewbot/log/20200122/configuration|Maintain {{WPBS}} and vital articles]]: 3 WikiProject templates. Keep majority rating \"C\" in {{WPBS}}. Remove 3 same ratings as {{WPBS}} in {{WikiProject Articles for creation}}, {{WikiProject Medicine}}, {{WikiProject Psychology}}."
+  },
+  "attachment_talk_evidence": {
+    "Update Mental health section with recent meta-analytic evidence": {
+      "present": false,
+      "snippet": null
+    },
+    "34574943": {
+      "present": false,
+      "snippet": null
+    },
+    "Ghezelbash": {
+      "present": false,
+      "snippet": null
+    },
+    "Medicaldoctor91": {
+      "present": false,
+      "snippet": null
+    }
   },
   "clinic_current": {
     "sitelinks": {
@@ -761,13 +822,6 @@
       "section": "{{rfd links|1=Q140288589|2=Not notable.}}\n\nNot notable. [[User:William Graham|William Graham]] ([[User talk:William Graham|<span class=\"signature-talk\">{{int:Talkpagelinktext}}</span>]]) 02:22, 20 August 2026 (UTC)\n: {{on hold}} This item is linked from 3 others. --[[User:DeltaBot|DeltaBot]] ([[User talk:DeltaBot|<span class=\"signature-talk\">{{int:Talkpagelinktext}}</span>]]) 02:31, 20 August 2026 (UTC)"
     }
   ],
-  "notability_policy_revision": {
-    "revid": 459482,
-    "timestamp": "2012-11-15T12:17:26Z",
-    "user": "Theopolisme",
-    "comment": "draft — placeholder"
-  },
-  "notability_policy_snippets": [],
   "commons_category": {
     "pageid": 197493633,
     "missing": false,
