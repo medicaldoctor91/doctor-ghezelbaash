@@ -26,8 +26,8 @@ jobs:
       - name: Read exact live RfD section
         run: |
           python - <<'PY' > rfd-live.json
-          import os,requests,re,json,datetime
-          s=requests.Session(); s.headers['User-Agent']='GhezelbaashRfDLiveCheck/1.0'
+          import os,requests,json,datetime
+          s=requests.Session(); s.headers['User-Agent']='GhezelbaashRfDLiveCheck/1.1'
           api='https://www.wikidata.org/w/api.php'
           def get(**p):
             p.update(format='json',formatversion=2,maxage=0,smaxage=0)
@@ -40,9 +40,14 @@ jobs:
           d=get(action='query',prop='revisions',titles='Wikidata:Requests for deletions',rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)
           rev=d['query']['pages'][0]['revisions'][0]
           text=rev['slots']['main']['content']
-          pat=r'(?ms)^==\s*(?:\{\{Q\|)?Q140288589(?:\}\})?\s*==\s*(.*?)(?=^==[^=]|\Z)'
-          m=re.search(pat,text)
-          print(json.dumps({'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'login':lg.get('login',{}).get('result'),'revision':{k:rev.get(k) for k in ['revid','timestamp','user','comment']},'section':m.group(1).strip() if m else None},ensure_ascii=False,indent=2))
+          i=text.find('Q140288589')
+          context=text[max(0,i-1200):i+7000] if i>=0 else None
+          h=get(action='query',prop='revisions',titles='Wikidata:Requests for deletions',rvprop='ids|timestamp|user|comment',rvlimit='max',rvdir='newer',rvstart='2026-08-20T00:00:00Z')
+          touches=[]
+          for x in h['query']['pages'][0].get('revisions',[]):
+            if 'Q140288589' in (x.get('comment') or ''):
+              touches.append({k:x.get(k) for k in ['revid','timestamp','user','comment']})
+          print(json.dumps({'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'login':lg.get('login',{}).get('result'),'revision':{k:rev.get(k) for k in ['revid','timestamp','user','comment']},'context':context,'touches':touches},ensure_ascii=False,indent=2))
           PY
       - name: Commit result
         run: |
