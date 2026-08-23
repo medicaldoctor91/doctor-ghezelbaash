@@ -2,9 +2,10 @@ const semverPattern=/^\d+\.\d+\.\d+$/;
 const isoDatePattern=/^\d{4}-\d{2}-\d{2}$/;
 const doiPattern=/^10\.5281\/zenodo\.\d+$/;
 const canonicalUrlPattern=/^https:\/\/www\.ghezelbaash\.ir\/$/;
-const releaseTokenPattern=/{{(?:CURRENT_[A-Z0-9_]+|MEDICAL_REVIEW_DATE_EN)}}/g;
+const releaseTokenPattern=/{{(?:CURRENT_[A-Z0-9_]+|MEDICAL_REVIEW_DATE_(?:EN|ISO|FA))}}/g;
 
 const englishDate=value=>new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${value}T00:00:00Z`));
+const persianGregorianDate=value=>new Intl.DateTimeFormat('fa-IR-u-ca-gregory',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(`${value}T00:00:00Z`));
 
 export function releaseTokenValues(release){
   const versionDoi=release?.dataset?.zenodo?.versionDoi;
@@ -18,7 +19,9 @@ export function releaseTokenValues(release){
     '{{CURRENT_VERSION_DOI_URLENCODED}}':encodeURIComponent(versionDoi),
     '{{CURRENT_RELEASE_DATE_EN}}':englishDate(release.dateModified),
     '{{CURRENT_CANONICAL_URL}}':release.canonicalUrl,
-    '{{MEDICAL_REVIEW_DATE_EN}}':englishDate(release.medicalReviewedAt)
+    '{{MEDICAL_REVIEW_DATE_EN}}':englishDate(release.medicalReviewedAt),
+    '{{MEDICAL_REVIEW_DATE_ISO}}':release.medicalReviewedAt,
+    '{{MEDICAL_REVIEW_DATE_FA}}':persianGregorianDate(release.medicalReviewedAt)
   });
 }
 

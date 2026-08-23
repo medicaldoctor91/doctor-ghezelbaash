@@ -2,6 +2,7 @@ import path from 'node:path';
 import {readFile,readdir} from 'node:fs/promises';
 import {bindHeroPictureSizes} from '../../src/lib/hero-image-contract.mjs';
 import {bindReleaseTokens} from '../../src/lib/release-tokens.mjs';
+import {bindSiteTokens,deriveSiteData} from '../../src/lib/site-data.mjs';
 
 const LIVE_REPUTATION_SLOT='<div class="hero-caption-reputation" id="google-maps-clinic-reputation-current" data-live-reputation-slot></div>';
 const persianNumber=(value,digits=0)=>new Intl.NumberFormat('fa-IR',{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}).format(Number(value));
@@ -24,12 +25,15 @@ export async function canonicalSourceNames(root=process.cwd()){
   return names;
 }
 
-export async function assembleCanonicalContent({root=process.cwd()}={}){
+export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
   const names=await canonicalSourceNames(root);
   const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
+  const canonicalGraph=graph??JSON.parse(await readFile(path.join(root,'src/data/semantic/knowledge-graph.jsonld'),'utf8'));
+  const site=deriveSiteData(release,canonicalGraph);
   let content=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
   content=bindHeroPictureSizes(content);
   content=bindReleaseTokens(content,release);
+  content=bindSiteTokens(content,site);
   content=await bindLiveReputation(root,content,release);
   return {content,names};
 }
