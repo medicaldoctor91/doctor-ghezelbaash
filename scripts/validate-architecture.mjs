@@ -6,6 +6,7 @@ const fail=message=>{throw new Error(message)};
 const read=file=>readFile(path.join(root,file),'utf8');
 const required=[
   'src/data/head-profile.json','src/data/media-dimensions.tsv','src/lib/resources.mjs','src/lib/site-data.mjs',
+  'scripts/promote-generated-workspace.mjs','scripts/materialize-static-artifacts.mjs',
   'scripts/enrich-image-metadata-manifest.mjs','scripts/generate-retrieval-projections.mjs','scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
 ];
@@ -16,11 +17,11 @@ for(const removed of ['src/data/page-metadata.json','src/data/templates/main-hea
 const pageSurface=(await readdir(path.join(root,'src/pages'),{withFileTypes:true})).map(entry=>entry.name).sort();
 if(JSON.stringify(pageSurface)!==JSON.stringify(['404.astro','index.astro']))fail(`Astro route surface must remain exactly index.astro + 404.astro; found: ${pageSurface.join(', ')}`);
 
-const [pkg,orchestrator,retrievalGenerator,mediaGate,finalizer,headersCompiler,documentHead,baseLayout,indexPage,pageAssets,graphCompiler,siteFooter,floatingActionDock,knowledgeGraph,resourceRegistry,staticRegistry]=await Promise.all([
+const [pkg,orchestrator,retrievalGenerator,mediaGate,finalizer,headersCompiler,documentHead,baseLayout,indexPage,pageAssets,graphCompiler,siteFooter,floatingActionDock,knowledgeGraph,resourceRegistry,staticRegistry,promoter,materializer]=await Promise.all([
   read('package.json').then(JSON.parse),read('scripts/generate-projections.mjs'),read('scripts/generate-retrieval-projections.mjs'),read('scripts/enrich-image-metadata-manifest.mjs'),read('scripts/finalize-dist.mjs'),read('scripts/lib/headers-template.mjs'),
   read('src/components/DocumentHead.astro'),read('src/layouts/BaseLayout.astro'),read('src/pages/index.astro'),
   read('scripts/lib/projections/page-assets.mjs'),read('scripts/lib/projections/graph-projections.mjs'),
-  read('src/components/SiteFooter.astro'),read('src/components/FloatingActionDock.astro'),read('src/lib/knowledge-graph.ts'),read('src/lib/resources.mjs'),read('scripts/lib/static-artifacts.mjs'),
+  read('src/components/SiteFooter.astro'),read('src/components/FloatingActionDock.astro'),read('src/lib/knowledge-graph.ts'),read('src/lib/resources.mjs'),read('scripts/lib/static-artifacts.mjs'),read('scripts/promote-generated-workspace.mjs'),read('scripts/materialize-static-artifacts.mjs'),
 ]);
 if(/\b(?:readFile|writeFile|readdir|unlink)\b/.test(orchestrator))fail('Projection orchestrator regained artifact I/O');
 for(const owner of ['compilePageAssets','compileGraphProjections','compileSemanticCorpus','compileRetrievalCorpus','compileContactDiscovery'])if(!orchestrator.includes(owner))fail(`Projection owner missing from orchestrator: ${owner}`);
@@ -29,16 +30,14 @@ if(!pageAssets.includes("../../../src/lib/css-delivery.mjs"))fail('Page-assets c
 if(!graphCompiler.includes('headProfile.nodes?.[id]')||!graphCompiler.includes('normalizeGoogleSupportGraph'))fail('Graph compiler lost declarative Head/Support ownership');
 
 const retrievalWrites=[...retrievalGenerator.matchAll(/await\s+write\('([^']+)'/g)].map(match=>match[1]).sort();
-const allowedRetrievalWrites=[
-  'public/live-observations.jsonld','public/query-matrix.jsonl',
-  'src/data/projections/current-release-matrix.json','src/data/projections/live-observations.jsonld','src/data/projections/query-matrix.jsonl',
-].sort();
+const allowedRetrievalWrites=['public/live-observations.jsonld','public/query-matrix.jsonl','src/data/projections/current-release-matrix.json','src/data/projections/live-observations.jsonld','src/data/projections/query-matrix.jsonl'].sort();
 if(JSON.stringify(retrievalWrites)!==JSON.stringify(allowedRetrievalWrites))fail(`Retrieval writer surface drift: ${retrievalWrites.join(', ')}`);
 for(const forbidden of ['answers.txt','index.md','llms.txt','llms-full.txt','provenance.jsonld','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json'])if(retrievalGenerator.includes(forbidden))fail(`Retrieval generator crossed canonical ownership boundary: ${forbidden}`);
 for(const servingField of ['liveRevision','sourceCommit','generatedAt'])if(new RegExp(`\\b${servingField}\\s*:`).test(retrievalGenerator))fail(`Retrieval source projection illegally owns current-serving field: ${servingField}`);
 
 if(pkg.scripts?.['media:enrich']!=='node scripts/enrich-image-metadata-manifest.mjs')fail('Media enrichment bypasses canonical manifest gate');
 if(pkg.scripts?.['validate:media-manifest']!=='node scripts/enrich-image-metadata-manifest.mjs --preflight-only')fail('Read-only media manifest preflight wiring missing');
+if(pkg.scripts?.['promote:generated']!=='node scripts/promote-generated-workspace.mjs'||!String(pkg.scripts?.generate||'').endsWith('&& npm run promote:generated'))fail('Generated workspace promotion is not the terminal generation gate');
 const validateSourceSteps=String(pkg.scripts?.['validate:source']||'').split('&&').map(step=>step.trim()).filter(Boolean);
 const architectureIndex=validateSourceSteps.indexOf('npm run validate:architecture');
 const mediaPreflightIndex=validateSourceSteps.indexOf('npm run validate:media-manifest');
@@ -73,10 +72,15 @@ for(const [name,component] of [['SiteFooter',siteFooter],['FloatingActionDock',f
 }
 if(!siteFooter.includes('FOOTER_RESOURCES.map'))fail('Footer machine-resource navigation is not registry-driven');
 if(knowledgeGraph.includes('knowledge-graph.jsonld?raw')||knowledgeGraph.includes('canonicalGraphRaw'))fail('Astro render graph reintroduced the full canonical knowledge graph');
+if(!knowledgeGraph.includes("../../.generated/semantic/head-graph.json?raw")||!knowledgeGraph.includes("../../.generated/semantic/support-graph.json?raw"))fail('Astro graph projections must come exclusively from .generated');
 if(!knowledgeGraph.includes('export const headGraph=head.parsed'))fail('Parsed Head graph is not exposed for canonical UI projection');
 if(!resourceRegistry.includes('STATIC_ARTIFACTS')||!resourceRegistry.includes('HEAD_RESOURCES')||!resourceRegistry.includes('FOOTER_RESOURCES'))fail('Shared machine-resource registry is incomplete');
+if(resourceRegistry.includes("source:'src/data/projections/")||resourceRegistry.includes("source:'src/data/semantic/knowledge-graph.ttl'"))fail('Machine resource registry still consumes legacy generated staging');
+if(!resourceRegistry.includes("source:'.generated/projections/")||!resourceRegistry.includes("source:'.generated/semantic/knowledge-graph.ttl'"))fail('Machine resource registry is not generated-workspace bound');
 if(staticRegistry.trim()!=="export {STATIC_ARTIFACTS,staticArtifactForRoute} from '../../src/lib/resources.mjs';")fail('Build tooling must re-export, not duplicate, the shared resource inventory');
 if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
-if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
+if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/\.\.\/\.generated\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('../content/home.md')||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown exclusively from .generated');
+for(const token of ["const WORKSPACE='.generated'","const NEXT='.generated.next'","promotion:'ATOMIC'","legacyStagingResidue:0"])if(!promoter.includes(token))fail(`Generated workspace promoter contract missing: ${token}`);
+if(!materializer.includes("const generatedPublic=path.join(root,'.generated/public')")||!materializer.includes('materializeGeneratedPublic'))fail('DIST materializer must publish generated public artifacts from .generated');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',astroRoutes:pageSurface.length,projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,currentServingMatrixAuthority:'finalizer-only',mediaEnrichmentBoundary:'manifest-locked-transactional',mediaManifestPreflight:'read-only-ci-gate',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',contactAuthority:'release+head-graph',resourceAuthority:'src/lib/resources.mjs',discoveryIdentityAuthority:'release.json',headDelivery:'astro-native-structured',rawHtmlTemplates:0,rawHeadTemplates:0,fullGraphInAstroRenderGraph:false,headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',astroRoutes:pageSurface.length,projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,currentServingMatrixAuthority:'finalizer-only',mediaEnrichmentBoundary:'manifest-locked-transactional',mediaManifestPreflight:'read-only-ci-gate',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',contactAuthority:'release+head-graph',resourceAuthority:'src/lib/resources.mjs',generatedWorkspace:'.generated',generatedConsumerAuthority:'single-workspace',legacyGeneratedConsumerResidue:0,discoveryIdentityAuthority:'release.json',headDelivery:'astro-native-structured',rawHtmlTemplates:0,rawHeadTemplates:0,fullGraphInAstroRenderGraph:false,headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
