@@ -26,160 +26,117 @@ jobs:
         with:
           python-version: '3.14.6'
       - run: python -m pip install --disable-pip-version-check requests
-      - name: Audit authenticated account history
+      - name: Deep authenticated audit
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${WIKIMEDIA_USERNAME:-}"
-          test -n "${WIKIMEDIA_BOT_PASSWORD:-}"
+          test -n "${WIKIMEDIA_USERNAME:-}"; test -n "${WIKIMEDIA_BOT_PASSWORD:-}"
           echo "::add-mask::$WIKIMEDIA_BOT_PASSWORD"
           python - <<'PY' > wiki-account-audit.json
-          import os, json, requests, datetime, collections, re
-
-          USER=os.environ['WIKIMEDIA_USERNAME']
-          PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
-          UA='GhezelbaashAccountHistoryAudit/1.0 (https://www.ghezelbaash.ir/)'
-          SITES={
-            'wikidata':'www.wikidata.org',
-            'enwiki':'en.wikipedia.org',
-            'commons':'commons.wikimedia.org',
-            'enwikiversity':'en.wikiversity.org',
-            'enwikisource':'en.wikisource.org',
-          }
-
-          def make_client(host):
-              s=requests.Session(); s.headers.update({'User-Agent':UA})
-              api=f'https://{host}/w/api.php'
+          import os,json,requests,datetime,re,collections
+          USER=os.environ['WIKIMEDIA_USERNAME']; PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
+          UA='GhezelbaashDeepAccountAudit/2.0 (https://www.ghezelbaash.ir/)'
+          def client(host):
+              s=requests.Session(); s.headers.update({'User-Agent':UA}); api=f'https://{host}/w/api.php'
               def get(**p):
                   p.update(format='json',formatversion=2,maxage=0,smaxage=0)
                   r=s.get(api,params=p,timeout=90); r.raise_for_status(); d=r.json()
-                  if 'error' in d: raise RuntimeError({'host':host,'params':p,'error':d['error']})
+                  if 'error' in d: raise RuntimeError({'host':host,'error':d['error']})
                   return d
               def post(**p):
                   p.update(format='json',formatversion=2)
                   r=s.post(api,data=p,timeout=90); r.raise_for_status(); d=r.json()
-                  if 'error' in d: raise RuntimeError({'host':host,'params':{k:v for k,v in p.items() if k not in ('lgpassword','token')},'error':d['error']})
+                  if 'error' in d: raise RuntimeError({'host':host,'error':d['error']})
                   return d
-              lt=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
-              lg=post(action='login',lgname=USER,lgpassword=PASS,lgtoken=lt)
+              tok=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+              lg=post(action='login',lgname=USER,lgpassword=PASS,lgtoken=tok)
               if lg.get('login',{}).get('result')!='Success': raise RuntimeError({'host':host,'login':lg})
-              ui=get(action='query',meta='userinfo',uiprop='groups|rights|editcount|registration')['query']['userinfo']
-              return get, ui
-
-          def all_usercontribs(get, user):
+              ui=get(action='query',meta='userinfo',uiprop='groups|rights|editcount')['query']['userinfo']
+              return get,ui
+          wd,wdu=client('www.wikidata.org'); en,enu=client('en.wikipedia.org'); co,cou=client('commons.wikimedia.org')
+          def revisions(get,title,start=None,content=False,limit=500):
               out=[]; cont={}
               while True:
-                  p=dict(action='query',list='usercontribs',ucuser=user,uclimit='max',ucdir='older',ucprop='ids|title|timestamp|comment|flags|size|sizediff|tags')
-                  p.update(cont)
-                  d=get(**p)
-                  out.extend(d['query']['usercontribs'])
-                  if 'continue' not in d: break
+                  prop='ids|timestamp|user|comment|flags'+('|content' if content else '')
+                  p=dict(action='query',prop='revisions',titles=title,rvprop=prop,rvlimit='max',rvdir='newer')
+                  if start:p['rvstart']=start
+                  if content:p['rvslots']='main'
+                  p.update(cont); d=get(**p); pg=d['query']['pages'][0]; out.extend(pg.get('revisions') or [])
+                  if 'continue' not in d or len(out)>=limit:break
                   cont=d['continue']
-                  if len(out)>20000: break
-              return out
-
-          def page_revisions_after(get,title,after_ts):
+              return out[:limit]
+          def current_text(get,title):
+              d=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1); p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
+              return p,r,r.get('slots',{}).get('main',{}).get('content','')
+          def all_contribs(get,user):
               out=[]; cont={}
               while True:
-                  p=dict(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|flags',rvlimit='max',rvdir='newer',rvstart=after_ts)
-                  p.update(cont)
-                  d=get(**p); pg=d['query']['pages'][0]
-                  out.extend(pg.get('revisions') or [])
-                  if 'continue' not in d: break
+                  p=dict(action='query',list='usercontribs',ucuser=user,uclimit='max',ucdir='older',ucprop='ids|title|timestamp|comment|flags|size|sizediff|tags'); p.update(cont); d=get(**p); out.extend(d['query']['usercontribs'])
+                  if 'continue' not in d:break
                   cont=d['continue']
               return out
-
-          clients={}; raw={}; account={}
-          for key,host in SITES.items():
-              get,ui=make_client(host); clients[key]=get
-              contribs=all_usercontribs(get,ui['name'])
-              raw[key]=contribs
-              account[key]={
-                'host':host,'login_name':ui['name'],'registration':ui.get('registration'),'editcount':ui.get('editcount'),
-                'groups':ui.get('groups',[]),'contrib_count_returned':len(contribs),
-                'first_contribution':contribs[0] if contribs else None,
-                'latest_contribution':contribs[-1] if contribs else None,
-              }
-
-          en=raw['enwiki']
-          coi=[]
-          for c in en:
-              text=((c.get('comment') or '')+' '+c.get('title','')).lower()
-              if c.get('ns')==1 or any(k in text for k in ['coi','edit request','wikiversity','omega','attachment','botulinum']):
-                  coi.append(c)
-
-          # Group account history by title, preserving chronological order.
-          by_title=collections.defaultdict(list)
-          for c in en: by_title[c['title']].append(c)
-          for v in by_title.values(): v.sort(key=lambda x:x['timestamp'])
-
-          # For each English Wikipedia talk-page edit by this account, inspect revisions after the user's latest edit.
-          talk_status=[]
-          for title,cs in sorted(by_title.items()):
-              if not title.startswith('Talk:'): continue
-              mine=cs[-1]
-              revs=page_revisions_after(clients['enwiki'],title,mine['timestamp'])
-              # rvstart is inclusive; remove the user's own triggering revision and any same/older revision.
-              later=[r for r in revs if r.get('timestamp','')>mine['timestamp']]
-              others=[r for r in later if r.get('user')!=account['enwiki']['login_name']]
-              talk_status.append({
-                'title':title,
-                'my_edits':cs,
-                'latest_my_edit':mine,
-                'later_revision_count':len(later),
-                'later_other_editor_count':len(others),
-                'later_other_revisions':others[:50],
-                'has_later_other_response_or_edit':bool(others),
-              })
-
-          # Explicitly check pages discussed in prior work, even if the account never edited them.
-          explicit=[]
-          for title in ['Talk:Treatment of bipolar disorder','Talk:Botulinum toxin','Talk:Attachment and health']:
-              mine=by_title.get(title,[])
+          def ent(q):return wd(action='wbgetentities',ids=q,props='claims|sitelinks|labels|descriptions')['entities'][q]
+          def cv(e,p):
+              a=[]
+              for c in e.get('claims',{}).get(p,[]):
+                  v=c.get('mainsnak',{}).get('datavalue',{}).get('value');
+                  if isinstance(v,dict) and 'id' in v:v=v['id']
+                  a.append({'value':v,'rank':c.get('rank'),'references':len(c.get('references') or []),'qualifiers':list((c.get('qualifiers') or {}).keys())})
+              return a
+          clinic=ent('Q140288589'); person=ent('Q140287622')
+          cr=revisions(wd,'Q140288589','2026-08-14T00:00:00Z',False,500); pr=revisions(wd,'Q140287622','2026-08-14T00:00:00Z',False,500)
+          clinic_other=[r for r in cr if r.get('user')!=wdu['name']]
+          clinic_signal=[r for r in cr if r.get('user')!=wdu['name'] or any(x in (r.get('comment') or '') for x in ['P137','P1037','P112','P127','P31','sitelink','commonswiki','P2671','P3749'])]
+          person_signal=[r for r in pr if r.get('user')!=wdu['name'] or any(x in (r.get('comment') or '') for x in ['P1830','P937','P1416','Q140288589','sitelink','commonswiki','enwikisource'])]
+          # Current RfD section + edit summaries specifically touching that section.
+          rp,rr,rt=current_text(wd,'Wikidata:Requests for deletions')
+          m=re.search(r'(?ms)^==\s*\[\[Q140288589\]\]\s*==\s*(.*?)(?=^==[^=]|\Z)',rt); current_rfd=(m.group(1).strip() if m else None)
+          rmeta=revisions(wd,'Wikidata:Requests for deletions','2026-08-20T02:20:00Z',False,500)
+          rfd_touch=[r for r in rmeta if 'Q140288589' in (r.get('comment') or '')]
+          # Commons category state/history.
+          cat='Category:Dr. Saeed Ghezelbash Aesthetic Clinic'; catp=co(action='query',prop='info|categoryinfo|pageprops',titles=cat)['query']['pages'][0]; cath=revisions(co,cat,'2026-08-14T00:00:00Z',False,500)
+          # enwiki account history.
+          enc=all_contribs(en,enu['name']); by=collections.defaultdict(list)
+          for c in enc:by[c['title']].append(c)
+          for v in by.values():v.sort(key=lambda x:x['timestamp'])
+          talk={}
+          for title in ['Talk:Botulinum toxin','Talk:Treatment of bipolar disorder','Talk:Attachment and health']:
+              mine=by.get(title,[]); later=[]
               if mine:
-                  latest=mine[-1]
-                  later=page_revisions_after(clients['enwiki'],title,latest['timestamp'])
-                  later=[r for r in later if r.get('timestamp','')>latest['timestamp']]
-              else:
-                  latest=None; later=[]
-              explicit.append({'title':title,'account_edit_count':len(mine),'account_edits':mine,'latest_account_edit':latest,'later_revisions':later})
-
-          wd=raw['wikidata']
-          wd_targets=['Q140287622','Q140288589','Q140304972','Wikidata:Requests for deletions']
-          wd_relevant=[]
-          for c in wd:
-              t=c.get('title',''); cm=(c.get('comment') or '')
-              if any(x in t or x in cm for x in wd_targets) or any(x in cm for x in ['Q140287622','Q140288589','Q140304972']):
-                  wd_relevant.append(c)
-
-          # Compact chronologies for all activity on high-value titles.
-          chronologies={
-            'enwiki_talk_requests': sorted(coi,key=lambda x:x['timestamp']),
-            'wikidata_relevant': sorted(wd_relevant,key=lambda x:x['timestamp']),
-            'commons': sorted(raw['commons'],key=lambda x:x['timestamp']),
-            'enwikiversity': sorted(raw['enwikiversity'],key=lambda x:x['timestamp']),
-            'enwikisource': sorted(raw['enwikisource'],key=lambda x:x['timestamp']),
-          }
-
-          summary={
-            'enwiki_total_account_contribs':len(en),
-            'enwiki_talk_page_titles_edited':sorted([t for t in by_title if t.startswith('Talk:')]),
-            'treatment_bipolar_account_edits':len(by_title.get('Talk:Treatment of bipolar disorder',[])),
-            'botulinum_talk_account_edits':len(by_title.get('Talk:Botulinum toxin',[])),
-            'attachment_health_account_edits':len(by_title.get('Talk:Attachment and health',[])),
-            'wikidata_total_account_contribs':len(wd),
-            'wikidata_relevant_count':len(wd_relevant),
-          }
-
-          print(json.dumps({
+                  later=[r for r in revisions(en,title,mine[-1]['timestamp'],False,500) if r.get('timestamp','')>mine[-1]['timestamp']]
+              talk[title]={'my_edits':mine,'later_revisions':later}
+          # Exact article outcomes.
+          def evidence(title,needles,start):
+              p,r,t=current_text(en,title); lo=t.lower(); hits={}
+              for n in needles:
+                  i=lo.find(n.lower()); hits[n]={'present':i>=0,'snippet':t[max(0,i-400):i+1000] if i>=0 else None}
+              hist=revisions(en,title,start,False,500)
+              return {'current':{'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment')},'markers':hits,'history_since_request':hist}
+          bipolar=evidence('Treatment of bipolar disorder',['10.1111/bdi.13115','10.3390/md23020084','10.4103/2008-7802.182734','27280013','34228881','39997208'],'2026-08-17T00:49:00Z')
+          botox=evidence('Botulinum toxin',['wikiversity','Botulinum toxin in aesthetic medicine','Facial assessment before aesthetic botulinum toxin treatment'],'2026-08-16T00:55:00Z')
+          attachment=evidence('Attachment and health',['34574943','Ghezelbash'],'2026-08-16T00:00:00Z')
+          # Current policy relevant excerpts.
+          np,nr,nt=current_text(wd,'Wikidata:Notability'); ne=[]
+          for q in ['at least one valid','Category items with a sitelink only to Wikimedia Commons','structural need']:
+              i=nt.lower().find(q.lower()); ne.append(nt[max(0,i-400):i+1500] if i>=0 else None)
+          # Wikidata backlinks.
+          bl=[]; cont={}
+          while True:
+              p=dict(action='query',list='backlinks',bltitle='Q140288589',bllimit='max'); p.update(cont); d=wd(**p); bl.extend(d['query']['backlinks'])
+              if 'continue' not in d:break
+              cont=d['continue']
+          out={
             'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            'authenticated_account':USER,
-            'account':account,
-            'summary':summary,
-            'explicit_enwiki_checks':explicit,
-            'talk_page_status_from_account_history':talk_status,
-            'chronologies':chronologies,
-          },ensure_ascii=False,indent=2))
+            'auth':{'wikidata':wdu['name'],'enwiki':enu['name'],'commons':cou['name']},
+            'clinic_current':{'sitelinks':{k:v.get('title') for k,v in clinic.get('sitelinks',{}).items()},'P31':cv(clinic,'P31'),'P112':cv(clinic,'P112'),'P1037':cv(clinic,'P1037'),'P127':cv(clinic,'P127'),'P137':cv(clinic,'P137'),'P2671':cv(clinic,'P2671'),'P3749':cv(clinic,'P3749'),'backlinks':bl},
+            'person_current':{'sitelinks':{k:v.get('title') for k,v in person.get('sitelinks',{}).items()},'P1830':cv(person,'P1830'),'P937':cv(person,'P937'),'P1416':cv(person,'P1416')},
+            'clinic_other_editors_since_aug14':clinic_other,'clinic_signal_history':clinic_signal,'person_signal_history':person_signal,
+            'rfd':{'current_revision':{'revid':rr.get('revid'),'timestamp':rr.get('timestamp'),'user':rr.get('user'),'comment':rr.get('comment')},'current_section':current_rfd,'revision_summaries_touching_Q140288589':rfd_touch},
+            'commons':{'pageid':catp.get('pageid'),'categoryinfo':catp.get('categoryinfo',{}),'pageprops':catp.get('pageprops',{}),'history_since_aug14':cath},
+            'enwiki':{'editcount':enu.get('editcount'),'all_account_contribs':enc,'talk_pages':talk,'botulinum_article':botox,'bipolar_article':bipolar,'attachment_article':attachment},
+            'notability':{'revision':{'revid':nr.get('revid'),'timestamp':nr.get('timestamp'),'user':nr.get('user')},'excerpts':ne}
+          }
+          print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
       - name: Commit audit result on isolated branch only
         shell: bash
@@ -188,5 +145,5 @@ jobs:
           git config user.name ghezelbaash-wiki-audit-bot
           git config user.email actions@users.noreply.github.com
           git add wiki-account-audit.json
-          git commit -m "Store authenticated Wikimedia account history audit"
+          git commit -m "Store deep authenticated Wikimedia account audit"
           git push origin HEAD:wiki-api-access
