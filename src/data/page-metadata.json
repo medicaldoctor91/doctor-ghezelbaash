@@ -1,0 +1,26 @@
+{
+  "title": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+  "description": "وب‌سایت رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ راهنمای تشخیص‌محور بوتاکس، فیلر، لیفت نخ، جوان‌سازی پوست و مو، جراحی زیبایی، عوارض و اصلاح نتایج.",
+  "lang": "fa-IR",
+  "dir": "rtl",
+  "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+  "canonicalUrl": "https://www.ghezelbaash.ir/",
+  "author": "دکتر سعید قزلباش",
+  "applicationName": "دکتر سعید قزلباش",
+  "appleMobileWebAppTitle": "دکتر قزلباش",
+  "themeColor": "#075244",
+  "openGraph": {
+    "type": "profile",
+    "locale": "fa_IR",
+    "alternateLocales": ["en_US", "ar_IQ", "ckb_IQ"],
+    "siteName": "دکتر سعید قزلباش",
+    "image": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbash-social-1200x630.523bfd034a8d.jpg",
+    "imageType": "image/jpeg",
+    "imageWidth": 1200,
+    "imageHeight": 630,
+    "imageAlt": "دکتر سعید قزلباش، پزشک ایرانی در محیط بالینی کرمانشاه"
+  },
+  "twitter": {
+    "card": "summary_large_image"
+  }
+}
