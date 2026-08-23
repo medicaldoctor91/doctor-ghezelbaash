@@ -13,11 +13,12 @@ const replaceExactly=(source,pattern,replacement,label)=>{
 };
 const dryRun=args['dry-run']==='true'||args['dry-run']==='1';
 
-const [release,pkg,lock,volatile,evidenceSnapshot,graph,citationSource,codemeta]=await Promise.all([
+const [release,pkg,lock,volatile,evidenceRegistry,evidenceSnapshot,graph,citationSource,codemeta]=await Promise.all([
   readJson('src/data/release.json'),
   readJson('package.json'),
   readJson('package-lock.json'),
   readJson('src/data/volatile-facts.json'),
+  readJson('src/data/evidence-registry.json'),
   readJson('src/data/evidence-snapshot.json'),
   readJson('src/data/semantic/knowledge-graph.jsonld'),
   readFile('CITATION.cff','utf8'),
@@ -52,6 +53,13 @@ lock.version=next.release;
 if(lock.packages?.[''])lock.packages[''].version=next.release;
 volatile.release=next.release;
 evidenceSnapshot.release=next.release;
+const currentEvidenceId=`${release.canonicalUrl}#evidence-zenodo-current-release`;
+const currentEvidenceUrl=`https://doi.org/${next.versionDoi}`;
+const registryEvidence=(evidenceRegistry.evidence||[]).find(item=>item.id===currentEvidenceId);
+const snapshotEvidence=(evidenceSnapshot.entries||[]).find(item=>item.id===currentEvidenceId);
+must(registryEvidence&&snapshotEvidence,'Current Zenodo evidence pointer is missing');
+registryEvidence.url=currentEvidenceUrl;
+snapshotEvidence.url=currentEvidenceUrl;
 
 const nodes=graph['@graph'];
 must(Array.isArray(nodes),'Canonical graph lacks @graph');
@@ -131,6 +139,7 @@ const writes=[
   {file:'package.json',content:json(pkg)},
   {file:'package-lock.json',content:json(lock)},
   {file:'src/data/volatile-facts.json',content:json(volatile)},
+  {file:'src/data/evidence-registry.json',content:json(evidenceRegistry)},
   {file:'src/data/evidence-snapshot.json',content:json(evidenceSnapshot)},
   {file:'src/data/semantic/knowledge-graph.jsonld',content:json(graph)},
   {file:'CITATION.cff',content:citation},

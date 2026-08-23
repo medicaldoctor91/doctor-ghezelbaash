@@ -9,7 +9,7 @@ const exists=async file=>{try{await access(path.join(root,file));return true}cat
 
 const required=[
   'src/data/head-profile.json','src/data/media-dimensions.tsv','src/lib/resources.mjs','src/lib/site-data.mjs',
-  'scripts/generated-workspace.mjs','scripts/materialize-static-artifacts.mjs','scripts/test-contracts.mjs','scripts/platform-contract.mjs','scripts/github-pages-bridge.mjs','scripts/verify-live.mjs','scripts/reputation.mjs','scripts/huggingface.mjs','scripts/cloudflare-pages.mjs',
+  'scripts/pipeline.mjs','scripts/generated-workspace.mjs','scripts/materialize-static-artifacts.mjs','scripts/test-contracts.mjs','scripts/platform-contract.mjs','scripts/github-pages-bridge.mjs','scripts/verify-live.mjs','scripts/reputation.mjs','scripts/huggingface.mjs','scripts/cloudflare-pages.mjs',
   'scripts/generate-rdf.mjs','scripts/generate-projections.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs',
   'scripts/enrich-image-metadata-manifest.mjs','scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
@@ -60,16 +60,13 @@ for(const target of retrievalTargets)assert(retrievalGenerator.includes(target),
 for(const forbidden of ["write('src/data/projections/","write('public/",'answers.txt','index.md','llms.txt','llms-full.txt','provenance.jsonld','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json'])assert(!retrievalGenerator.includes(forbidden),`Retrieval generator crossed ownership boundary: ${forbidden}`);
 for(const servingField of ['liveRevision','sourceCommit','generatedAt'])assert(!new RegExp(`\\b${servingField}\\s*:`).test(retrievalGenerator),`Retrieval projection owns serving field: ${servingField}`);
 
-assert(pkg.scripts?.['clean:generated']==='node scripts/generated-workspace.mjs reset','Generated workspace reset script drift');
-assert(String(pkg.scripts?.['prepare:generated']||'').includes('npm run clean:generated && npm run rdf:generate && npm run generate'),'Generation must reset workspace before direct writers');
-assert(!pkg.scripts?.['promote:generated']&&!String(pkg.scripts?.generate||'').includes('promote'),'Obsolete generated promotion reintroduced');
-assert(String(pkg.scripts?.['validate:source']||'').includes('node scripts/test-contracts.mjs')&&String(pkg.scripts?.['validate:source']||'').includes('node scripts/platform-contract.mjs validate')&&String(pkg.scripts?.['validate:source']||'').includes('node scripts/github-pages-bridge.mjs self-test'),'Tooling ownership consolidation drift');
-
+const pipeline=await read('scripts/pipeline.mjs');
+const expectedInterface=['build','check','ci','dev','indexnow:submit','media:enrich','preview','release','release:prepare','release:promote','release:zenodo','render:calibration:apply','verify:production','verify:public-discovery','verify:subdomains'].sort();
+assert(JSON.stringify(Object.keys(pkg.scripts||{}).sort())===JSON.stringify(expectedInterface),`Package lifecycle interface drift: ${Object.keys(pkg.scripts||{}).sort().join(', ')}`);
+for(const [name,value] of Object.entries({dev:'node scripts/pipeline.mjs dev',preview:'node scripts/pipeline.mjs preview',check:'node scripts/pipeline.mjs check',build:'node scripts/pipeline.mjs build',ci:'node scripts/pipeline.mjs ci','release:prepare':'node scripts/pipeline.mjs prepare',release:'node scripts/pipeline.mjs release'}))assert(pkg.scripts?.[name]===value,`Pipeline interface drift: ${name}`);
+for(const token of ['const prepareGenerated=','const validateSource=','const validateReleaseEvidence=','const buildDist=','const prepareRelease=',"case 'ci': prepareRelease(); buildDist(); packageSource(); break;","case 'release': prepareRelease(); buildDist(); completeRelease(); break;"])assert(pipeline.includes(token),`Lifecycle owner missing: ${token}`);
+assert(pkg.scripts?.['release:promote']==='node scripts/promote-release.mjs'&&pkg.scripts?.['release:zenodo']==='python scripts/zenodo_release.py','Release-only lifecycle is not discoverable');
 assert(pkg.scripts?.['media:enrich']==='node scripts/enrich-image-metadata-manifest.mjs','Media enrichment bypasses canonical manifest gate');
-assert(pkg.scripts?.['validate:media-manifest']==='node scripts/enrich-image-metadata-manifest.mjs --preflight-only','Read-only media manifest preflight wiring missing');
-const validateSourceSteps=String(pkg.scripts?.['validate:source']||'').split('&&').map(step=>step.trim()).filter(Boolean);
-const architectureIndex=validateSourceSteps.indexOf('npm run validate:architecture');
-assert(architectureIndex>=0&&validateSourceSteps[architectureIndex+1]==='npm run validate:media-manifest','Media manifest preflight must immediately follow architecture validation');
 for(const token of ['MANIFEST_LOCKED','MEDIA_ENRICHMENT_TRANSACTION','captureSnapshot','restoreSnapshot','BYTE_SNAPSHOT','--preflight-only','PREFLIGHT_ONLY','mutation:false'])assert(mediaGate.includes(token),`Media transaction contract missing: ${token}`);
 assert(!/\bunlink\b|\bcopyFile\b/.test(mediaGate),'Media transaction wrapper crossed worker boundary');
 

@@ -83,6 +83,12 @@ if(previousHistory){
   const archivedSection=pageSource.match(/<p><strong>Archived DOI release citation:<\/strong>[\s\S]*?<\/p>/i)?.[0]||'';
   if(!archivedSection.includes(`Version ${previousHistory.release}`)||!archivedSection.includes(previousHistory.versionDoi))fail('Archived DOI release citation history regressed');
 }
+const [evidenceRegistry,evidenceSnapshot]=await Promise.all([readJson('src/data/evidence-registry.json'),readJson('src/data/evidence-snapshot.json')]);
+const currentEvidenceId=`${release.canonicalUrl}#evidence-zenodo-current-release`;
+const currentEvidenceUrl=`https://doi.org/${Z.versionDoi}`;
+const registryEvidence=(evidenceRegistry.evidence||[]).find(item=>item.id===currentEvidenceId);
+const snapshotEvidence=(evidenceSnapshot.entries||[]).find(item=>item.id===currentEvidenceId);
+if(!registryEvidence||!snapshotEvidence||registryEvidence.url!==currentEvidenceUrl||snapshotEvidence.url!==currentEvidenceUrl)fail('Current Zenodo evidence pointer drift');
 
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
 const nodes=graph['@graph']||[];

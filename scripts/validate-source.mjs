@@ -18,7 +18,7 @@ const requiredFiles=[
   'src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
   '.release/policy/platform-contract.json','.release/policy/authority-surface-contract.json','scripts/lib/css-rules.mjs','scripts/lib/graph-integrity.mjs','scripts/lib/release-graph.mjs','scripts/lib/projection-context.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
-  'scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/platform-contract.mjs','scripts/huggingface.mjs'
+  'scripts/pipeline.mjs','scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/platform-contract.mjs','scripts/huggingface.mjs'
 ];
 for(const f of requiredFiles)await access(path.join(root,f));
 
@@ -40,21 +40,17 @@ const [pkg,baseGenerator,retrievalGenerator,descriptorGenerator,finalizer,mediaR
   readSource('scripts/lib/projections/retrieval-corpus.mjs'),
   readSource('scripts/lib/projections/contact-discovery.mjs'),
 ]);
+const pipeline=await readSource('scripts/pipeline.mjs');
 const projectionCompilers=[pageAssetsCompiler,graphCompiler,semanticCompiler,retrievalCompiler,contactCompiler];
 const projectionCompilerSource=projectionCompilers.join('\n');
-const scriptSteps=name=>String(pkg.scripts?.[name]||'').split('&&').map(x=>x.trim()).filter(Boolean);
-const hasStep=(name,needle)=>scriptSteps(name).some(step=>step===needle||step.includes(needle));
-
-if(pkg.scripts?.['validate:release-contract']!=='node scripts/validate-release-contract.mjs')fail('Generic release-contract validator wiring missing');
-if(!hasStep('prepare:generated','validate:media-references')||!hasStep('prepare:generated','rdf:generate')||!hasStep('prepare:generated','npm run generate'))fail('Generated preparation architecture drift');
-if(pkg.scripts?.['validate:media-references']!=='node scripts/validate-media-references.mjs')fail('Read-only media reference validator wiring missing');
+const expectedPipelineScripts={build:'node scripts/pipeline.mjs build',check:'node scripts/pipeline.mjs check',ci:'node scripts/pipeline.mjs ci','release:prepare':'node scripts/pipeline.mjs prepare',release:'node scripts/pipeline.mjs release'};
+for(const [name,value] of Object.entries(expectedPipelineScripts))if(pkg.scripts?.[name]!==value)fail(`Lifecycle pipeline wiring missing: ${name}`);
+if(pkg.scripts?.['release:promote']!=='node scripts/promote-release.mjs'||pkg.scripts?.['release:zenodo']!=='python scripts/zenodo_release.py')fail('Release publication lifecycle is not discoverable');
 if(/\bwriteFile\b|\bappendFile\b/.test(mediaReferenceValidator))fail('Media reference validation must never rewrite source');
 if(calibrationWriter.includes('src/styles/global.css')||!calibrationWriter.includes('renderCalibrationCss')||!calibrationWriter.includes('rename(temporaryPath,canonicalPath)'))fail('Render calibration writer must update only canonical JSON through the shared renderer');
 if(hfVerifier.includes('/raw/main/README.md')||!hfVerifier.includes('HF organization profile authority token missing'))fail('Hugging Face profile verifier is not bound to the public organization profile surface');
-
-const generateSteps=scriptSteps('generate');
-for(const expected of ['node scripts/generate-projections.mjs','node scripts/generate-retrieval-projections.mjs','node scripts/generate-descriptors.mjs'])if(!generateSteps.includes(expected))fail(`Canonical generator missing ${expected}`);
-if(generateSteps.indexOf('node scripts/generate-projections.mjs')>generateSteps.indexOf('node scripts/generate-retrieval-projections.mjs')||generateSteps.indexOf('node scripts/generate-retrieval-projections.mjs')>generateSteps.indexOf('node scripts/generate-descriptors.mjs'))fail('Canonical generator order drift');
+for(const expected of ["js('generate canonical projections','scripts/generate-projections.mjs')","js('generate retrieval projections','scripts/generate-retrieval-projections.mjs')","js('generate descriptors','scripts/generate-descriptors.mjs')"])if(!pipeline.includes(expected))fail(`Canonical pipeline generator missing: ${expected}`);
+if(!(pipeline.indexOf("scripts/generate-projections.mjs")<pipeline.indexOf("scripts/generate-retrieval-projections.mjs")&&pipeline.indexOf("scripts/generate-retrieval-projections.mjs")<pipeline.indexOf("scripts/generate-descriptors.mjs")))fail('Canonical pipeline generator order drift');
 if(/\b(?:readFile|writeFile|readdir|unlink)\b/.test(baseGenerator))fail('Projection orchestrator contains artifact implementation I/O');
 for(const symbol of ['compilePageAssets','compileGraphProjections','compileSemanticCorpus','compileRetrievalCorpus','compileContactDiscovery'])if(!baseGenerator.includes(symbol))fail(`Projection orchestrator missing compiler owner: ${symbol}`);
 if(!baseGenerator.includes('loadProjectionContext'))fail('Projection orchestrator does not share canonical projection context');
