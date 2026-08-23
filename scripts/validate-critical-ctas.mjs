@@ -28,7 +28,9 @@ for(const contract of heroContract){
 if(!redirectsRaw.includes('doctor.ghezelbaash.ir')||!/(google\.com\/maps|maps\.google)/i.test(redirectsRaw))fail('doctor subdomain no longer maps to the clinic map redirect contract');
 if(!quick.includes('class="quick-actions__top"')||!quick.includes('href="#main-content"'))fail('Back-to-top control drift');
 for(const [binding,label] of [['href={site.telHref}','تماس'],['href={site.chatUrl}','چت با دکتر قزلباش'],['href={site.directionsUrl}','مسیریابی']])if(!quick.includes(binding))fail(`Floating CTA canonical binding drift: ${label}`);
-const floating=[...quick.matchAll(/<a\b[^>]*class=["'][^"']*(?:^|\s)quick-actions__item(?:\s|["'])[^>]*>[\s\S]*?<\/a>/g)].map(match=>match[0]);
+const floating=[...quick.matchAll(/<a\b([^>]*)>[\s\S]*?<\/a>/g)]
+  .filter(match=>((match[1].match(/\bclass=["']([^"']+)["']/i)||[])[1]||'').split(/\s+/).includes('quick-actions__item'))
+  .map(match=>match[0]);
 if(floating.length!==3)fail(`Floating CTA count drift: ${floating.length} != 3`);
 for(const copy of ['<span>تماس</span>','<strong>چت با دکتر قزلباش</strong>','<span>مسیریابی</span>'])if(!floating.some(anchor=>anchor.includes(copy)))fail(`Floating CTA copy drift: ${copy}`);
 for(const [binding,label] of [['href={site.telHref}','تماس'],['href={site.chatUrl}','چت با دکتر قزلباش'],['href={site.directionsUrl}','مسیریابی']])if(floating.filter(anchor=>anchor.includes(binding)).length!==1)fail(`Floating CTA unique binding drift: ${label}`);
