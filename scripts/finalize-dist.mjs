@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {createHash} from 'node:crypto';
-import {readFile,writeFile,readdir,unlink} from 'node:fs/promises';
+import {readFile,writeFile,readdir} from 'node:fs/promises';
 import {assertDocumentContract,inspectHtml} from './lib/html-contract.mjs';
 import {resolveDeterministicBuildInstant} from './lib/deterministic-build-time.mjs';
 import {deriveIdentityFingerprint,hashIdentityFingerprint} from './lib/release-identity.mjs';
@@ -26,7 +26,8 @@ const html=await readFile(path.join(dist,'index.html'),'utf8'),notFound=await re
 const activeCss=(html.match(/\/assets\/site\.[0-9a-f]{12}\.css/)||[])[0]?.slice(1);
 if(!activeCss)throw new Error('Active fingerprint stylesheet missing before DIST finalization');
 const distAssetDir=path.join(dist,'assets');
-for(const name of await readdir(distAssetDir))if(/^site\.[0-9a-f]{12}\.css$/.test(name)&&`assets/${name}`!==activeCss)await unlink(path.join(distAssetDir,name));
+const distCssAssets=(await readdir(distAssetDir)).filter(name=>/^site\.[0-9a-f]{12}\.css$/.test(name)).map(name=>`assets/${name}`).sort();
+if(distCssAssets.length!==1||distCssAssets[0]!==activeCss)throw new Error(`DIST fingerprint stylesheet contract drift: active=${activeCss}, present=${distCssAssets.join(', ')||'none'}`);
 
 const graph=JSON.parse(await readFile(path.join(dist,'graph.jsonld'),'utf8'));
 const graphIntegrity=analyzeGraphClosure(graph,{baseUrl:release.canonicalUrl});
