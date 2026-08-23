@@ -34,8 +34,10 @@ if(JSON.stringify(retrievalWrites)!==JSON.stringify(allowedRetrievalWrites))fail
 for(const forbidden of ['answers.txt','index.md','llms.txt','llms-full.txt','provenance.jsonld','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json'])if(retrievalGenerator.includes(forbidden))fail(`Retrieval generator crossed canonical ownership boundary: ${forbidden}`);
 
 if(pkg.scripts?.['media:enrich']!=='node scripts/enrich-image-metadata-manifest.mjs')fail('Media enrichment bypasses canonical manifest gate');
-for(const token of ['src/data/media-dimensions.tsv','PRE_ENRICHMENT','POST_ENRICHMENT','scripts/enrich-image-metadata.mjs','MANIFEST_LOCKED'])if(!mediaGate.includes(token))fail(`Media manifest gate contract missing: ${token}`);
-if(/\bunlink\b|\brm\b|\bwriteFile\b|\bcopyFile\b/.test(mediaGate))fail('Media manifest gate must remain validation/orchestration-only');
+for(const token of ['src/data/media-dimensions.tsv','PRE_ENRICHMENT','POST_ENRICHMENT','POST_ROLLBACK','scripts/enrich-image-metadata.mjs','MANIFEST_LOCKED','MEDIA_ENRICHMENT_TRANSACTION','captureSnapshot','restoreSnapshot','BYTE_SNAPSHOT'])if(!mediaGate.includes(token))fail(`Media transaction boundary contract missing: ${token}`);
+if(/\bunlink\b|\bcopyFile\b/.test(mediaGate))fail('Media transaction wrapper must not implement worker-style file replacement');
+if(/\bXMP-|exiftool|MetadataProfileVersion/.test(mediaGate))fail('Media transaction wrapper crossed metadata transformation ownership boundary');
+if(!mediaGate.includes('spawnSync(process.execPath')||!mediaGate.includes('rollbackErrors'))fail('Media transaction wrapper lost worker/rollback orchestration');
 if((mediaGate.match(/manifestSet\.size!==49/g)||[]).length!==1)fail('Media manifest cardinality lock missing');
 
 if(!finalizer.includes("./lib/headers-template.mjs")||!finalizer.includes('compileHeadersTemplate(headersTemplate,{mainCsp,csp404,digests:headerDigests})'))fail('Finalizer is not bound to strict one-pass headers compilation');
@@ -52,4 +54,4 @@ if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Dis
 if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
 if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,mediaEnrichmentBoundary:'manifest-locked',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,mediaEnrichmentBoundary:'manifest-locked-transactional',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
