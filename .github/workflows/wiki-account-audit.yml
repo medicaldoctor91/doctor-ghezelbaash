@@ -88,14 +88,11 @@ jobs:
           clinic_other=[r for r in cr if r.get('user')!=wdu['name']]
           clinic_signal=[r for r in cr if r.get('user')!=wdu['name'] or any(x in (r.get('comment') or '') for x in ['P137','P1037','P112','P127','P31','sitelink','commonswiki','P2671','P3749'])]
           person_signal=[r for r in pr if r.get('user')!=wdu['name'] or any(x in (r.get('comment') or '') for x in ['P1830','P937','P1416','Q140288589','sitelink','commonswiki','enwikisource'])]
-          # Current RfD section + edit summaries specifically touching that section.
           rp,rr,rt=current_text(wd,'Wikidata:Requests for deletions')
           m=re.search(r'(?ms)^==\s*\[\[Q140288589\]\]\s*==\s*(.*?)(?=^==[^=]|\Z)',rt); current_rfd=(m.group(1).strip() if m else None)
           rmeta=revisions(wd,'Wikidata:Requests for deletions','2026-08-20T02:20:00Z',False,500)
           rfd_touch=[r for r in rmeta if 'Q140288589' in (r.get('comment') or '')]
-          # Commons category state/history.
           cat='Category:Dr. Saeed Ghezelbash Aesthetic Clinic'; catp=co(action='query',prop='info|categoryinfo|pageprops',titles=cat)['query']['pages'][0]; cath=revisions(co,cat,'2026-08-14T00:00:00Z',False,500)
-          # enwiki account history.
           enc=all_contribs(en,enu['name']); by=collections.defaultdict(list)
           for c in enc:by[c['title']].append(c)
           for v in by.values():v.sort(key=lambda x:x['timestamp'])
@@ -105,7 +102,6 @@ jobs:
               if mine:
                   later=[r for r in revisions(en,title,mine[-1]['timestamp'],False,500) if r.get('timestamp','')>mine[-1]['timestamp']]
               talk[title]={'my_edits':mine,'later_revisions':later}
-          # Exact article outcomes.
           def evidence(title,needles,start):
               p,r,t=current_text(en,title); lo=t.lower(); hits={}
               for n in needles:
@@ -115,11 +111,9 @@ jobs:
           bipolar=evidence('Treatment of bipolar disorder',['10.1111/bdi.13115','10.3390/md23020084','10.4103/2008-7802.182734','27280013','34228881','39997208'],'2026-08-17T00:49:00Z')
           botox=evidence('Botulinum toxin',['wikiversity','Botulinum toxin in aesthetic medicine','Facial assessment before aesthetic botulinum toxin treatment'],'2026-08-16T00:55:00Z')
           attachment=evidence('Attachment and health',['34574943','Ghezelbash'],'2026-08-16T00:00:00Z')
-          # Current policy relevant excerpts.
           np,nr,nt=current_text(wd,'Wikidata:Notability'); ne=[]
           for q in ['at least one valid','Category items with a sitelink only to Wikimedia Commons','structural need']:
               i=nt.lower().find(q.lower()); ne.append(nt[max(0,i-400):i+1500] if i>=0 else None)
-          # Wikidata backlinks.
           bl=[]; cont={}
           while True:
               p=dict(action='query',list='backlinks',bltitle='Q140288589',bllimit='max'); p.update(cont); d=wd(**p); bl.extend(d['query']['backlinks'])
@@ -147,3 +141,4 @@ jobs:
           git add wiki-account-audit.json
           git commit -m "Store deep authenticated Wikimedia account audit"
           git push origin HEAD:wiki-api-access
+# refresh 2026-08-23T03:50+03:30
