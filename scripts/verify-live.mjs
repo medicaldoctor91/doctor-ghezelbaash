@@ -29,15 +29,21 @@ async function command_current(){
     if(live.about?.['@id']!==release.clinic.id||live.dateModified!==observedAt||liveRating!==rating||liveReviewCount!==reviewCount)throw new Error('Current website live observation drift');
   }
 
+  let hfCoreFiles=0;
   if(verifyHf){
-    const repo=huggingFaceDatasetRepo(release),base=`https://huggingface.co/datasets/${repo}/resolve/main/`,nonce=Date.now();
+    const repo=huggingFaceDatasetRepo(release),base=`https://huggingface.co/datasets/${repo}/resolve/main/`,nonce=Date.now(),core=currentFiles.filter(file=>!['live-observations.jsonld','live-serving-attestation.json'].includes(file));
+    for(const file of core){
+      const local=await readFile(`dist/${file}`),wanted=sha(local),remote=(await fetchOne(`${base}${file}?download=true&_=${nonce}-${encodeURIComponent(file)}`,true)).b,actual=sha(remote);
+      if(actual!==wanted)throw new Error(`HF main core byte drift ${file}: actual=${actual} expected=${wanted}`);
+    }
+    hfCoreFiles=core.length;
     const hfCsv=(await fetchOne(`${base}live_observations.csv?download=true&_=${nonce}`,true)).b;
     const hfAttestation=(await fetchOne(`${base}live-observation-attestation.json?download=true&_=${nonce}`,true)).b;
     if(!hfCsv.equals(Buffer.from(csv)))throw new Error(`HF main live observation byte drift: actual=${sha(hfCsv)} expected=${sha(Buffer.from(csv))}`);
     if(!hfAttestation.equals(Buffer.from(attestationJson)))throw new Error(`HF main live attestation byte drift: actual=${sha(hfAttestation)} expected=${sha(Buffer.from(attestationJson))}`);
   }
 
-  console.log(JSON.stringify({stage:'CURRENT_SERVING_TRUTH',release:release.release,currentReputation:{rating,reviewCount,valueObservedAt:observedAt},websiteExact:verifyWebsite?true:null,hfLiveObservationExact:verifyHf?true:null,files:results.length,integrity:'PASS',results},null,2));
+  console.log(JSON.stringify({stage:'CURRENT_SERVING_TRUTH',release:release.release,currentReputation:{rating,reviewCount,valueObservedAt:observedAt},websiteExact:verifyWebsite?true:null,hfCurrentCoreExact:verifyHf?true:null,hfLiveObservationExact:verifyHf?true:null,hfCoreFiles,files:results.length,integrity:'PASS',results},null,2));
 }
 
 async function command_discovery(){
