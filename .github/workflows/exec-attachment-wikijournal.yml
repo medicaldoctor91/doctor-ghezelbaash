@@ -1,0 +1,90 @@
+name: Execute Attachment and WikiJournal live audit
+
+on:
+  push:
+    branches: [wiki-api-access-exec]
+    paths:
+      - .github/workflows/exec-attachment-wikijournal.yml
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-api-access-exec
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: Submit Attachment and inspect WikiJournal
+        run: |
+          python - <<'PY' > exec-wiki-result.json
+          import os,json,requests,datetime,re
+          USER=os.environ['WIKIMEDIA_USERNAME']; PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
+          def mk(host,login=False):
+              s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91WikimediaExec/1.0'
+              api=f'https://{host}/w/api.php'
+              def get(**p):
+                  p.update(format='json',formatversion=2,maxage=0,smaxage=0)
+                  r=s.get(api,params=p,timeout=60); r.raise_for_status(); return r.json()
+              if login:
+                  lt=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+                  r=s.post(api,data={'action':'login','lgname':USER,'lgpassword':PASS,'lgtoken':lt,'format':'json','formatversion':2},timeout=60); r.raise_for_status(); lg=r.json()
+                  if lg.get('login',{}).get('result')!='Success': raise RuntimeError(lg)
+              return s,api,get
+          s,api,get=mk('en.wikipedia.org',True)
+          ui=get(action='query',meta='userinfo',uiprop='rights|editcount')['query']['userinfo']
+          title='Talk:Attachment and health'; heading='Update Mental health section with recent meta-analytic evidence'
+          q=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)['query']['pages'][0]
+          rev=(q.get('revisions') or [{}])[0]; current=rev.get('slots',{}).get('main',{}).get('content','')
+          if heading in current:
+              edit={'status':'already_present','revid':rev.get('revid')}
+          else:
+              csrf=get(action='query',meta='tokens')['query']['tokens']['csrftoken']
+              body="""{{edit COI|summary=Update the Mental health section with recent meta-analytic evidence}}
+I am a co-author of the 2021 MDD study cited below, so I am requesting this change rather than editing the article directly.
+
+'''Specific change:''' In § Mental health, immediately after the paragraph ending “including depression, anxiety, eating, psychotic and personality disorders”, add:
+
+More recent meta-analytic evidence supports a robust association between adult attachment insecurity and mental-health outcomes. A 2022 meta-analysis of 224 studies (245 samples; N=79,722) found moderate associations between attachment anxiety and avoidance and poorer mental health, including depression and anxiety.<ref>{{cite journal |vauthors=Zhang X, Li J, Xie F, Chen X, Xu W, Hudson NW |title=The relationship between adult attachment and mental health: A meta-analysis |journal=Journal of Personality and Social Psychology |year=2022 |volume=123 |issue=5 |pages=1089–1137 |doi=10.1037/pspp0000437 |pmid=36201836}}</ref> Consistent with this broader literature, a 2021 cross-sectional study of 300 people with major depressive disorder reported high rates of insecure attachment and an association between anxious attachment and dissociative symptoms; because the study was cross-sectional, it does not establish causality.<ref>{{cite journal |vauthors=Golshani S, Najafpour A, Hashemian SS, Goudarzi N, Firoozabadi A, Ghezelbash MS, Hookari S, Firoozabadi K, Dürsteler KM, Brühl AB, Alikhani M, Sadeghi-Bahmani D, Brand S |title=Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events |journal=Healthcare |year=2021 |volume=9 |issue=9 |page=1169 |doi=10.3390/healthcare9091169 |pmid=34574943 |pmc=PMC8469763}}</ref>
+
+'''Reason:''' The existing section states the association using mostly older literature. The proposed addition anchors that statement in a large recent meta-analysis and gives one narrowly framed clinical example, with the study design limitation stated explicitly.
+
+~~~~"""
+              params={'action':'edit','title':title,'section':'new','sectiontitle':heading,'text':body,'summary':'COI disclosed: request independent review of Mental health section using recent meta-analytic evidence','token':csrf,'assertuser':ui['name'],'format':'json','formatversion':2}
+              rr=s.post(api,data=params,timeout=60); raw=rr.json(); edit={'http_status':rr.status_code,'response':raw}
+          q2=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)['query']['pages'][0]
+          rev2=(q2.get('revisions') or [{}])[0]; content2=rev2.get('slots',{}).get('main',{}).get('content','')
+          contribs=get(action='query',list='usercontribs',ucuser=ui['name'],uclimit='max',ucprop='ids|title|timestamp|comment')['query']['usercontribs']
+
+          _,_,wget=mk('en.wikiversity.org',False)
+          pre='WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review'
+          pq=wget(action='query',prop='revisions|categories|info',titles=pre,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=50,cllimit='max')['query']['pages'][0]
+          prevs=pq.get('revisions') or []; pr=prevs[0] if prevs else {}; ptext=pr.get('slots',{}).get('main',{}).get('content',''); cats=[x.get('title') for x in pq.get('categories',[])]
+          tracking={}
+          for ct in ['Category:Articles currently submitted to WikiJournal of Medicine for peer review','Category:Article preprints not yet submitted to WikiJournal of Medicine for peer review','Category:Articles currently submitted to a WikiJournal for peer review']:
+              d=wget(action='query',list='categorymembers',cmtitle=ct,cmlimit='max',cmprop='ids|title|timestamp')
+              tracking[ct]=d['query']['categorymembers']
+          ucs=[]; cont={}
+          while True:
+              p={'action':'query','list':'usercontribs','ucuser':'Medicaldoctor91','uclimit':'max','ucprop':'ids|title|timestamp|comment'}; p.update(cont); d=wget(**p); ucs.extend(d['query']['usercontribs'])
+              if 'continue' not in d: break
+              cont=d['continue']
+          out={'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'attachment':{'userinfo':ui,'edit':edit,'verified_latest':{k:rev2.get(k) for k in ['revid','timestamp','user','comment']},'heading_present':heading in content2,'attachment_contribs':[x for x in contribs if x.get('title')==title],'editcount':len(contribs)},'wikijournal':{'source':'en.wikiversity.org/w/api.php','title':pre,'exists':not bool(pq.get('missing',False)),'pageid':pq.get('pageid'),'categories':cats,'latest':{k:pr.get(k) for k in ['revid','timestamp','user','comment']},'history':[{k:x.get(k) for k in ['revid','timestamp','user','comment']} for x in prevs],'markers':{t:bool(re.search(re.escape(t),ptext,re.I)) for t in ['peer review','reviewer','editor','submission','submitted','stage','authorship','handling editor','accepted','declined','revise']},'content_excerpt':ptext[:12000],'tracking_categories':tracking,'relevant_user_contribs':[x for x in ucs if ('WikiJournal' in x.get('title','') or 'botulinum' in x.get('title','').lower())]}}
+          print(json.dumps(out,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit result
+        run: |
+          git config user.name ghezelbaash-wiki-audit-bot
+          git config user.email actions@users.noreply.github.com
+          git add exec-wiki-result.json
+          git commit -m "Store Wikimedia execution result" || exit 0
+          git push origin HEAD:wiki-api-access-exec
