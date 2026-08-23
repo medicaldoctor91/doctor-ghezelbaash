@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.14.6'
       - run: python -m pip install --disable-pip-version-check requests
-      - name: Inspect request outcomes and live article text
+      - name: Submit Attachment COI request and inspect outcomes
         shell: bash
         run: |
           set -euo pipefail
@@ -35,7 +35,7 @@ jobs:
           python - <<'PY' > wiki-page-outcome-audit.json
           import os,json,re,requests,datetime
           U=os.environ['WIKIMEDIA_USERNAME']; P=os.environ['WIKIMEDIA_BOT_PASSWORD']
-          s=requests.Session(); s.headers['User-Agent']='GhezelbaashPageOutcomeAudit/1.0 (https://www.ghezelbaash.ir/)'
+          s=requests.Session(); s.headers['User-Agent']='GhezelbaashPageOutcomeAudit/2.0 (COI edit request; https://www.ghezelbaash.ir/)'
           API='https://en.wikipedia.org/w/api.php'
           def get(**p):
               p.update(format='json',formatversion=2,maxage=0,smaxage=0)
@@ -52,16 +52,36 @@ jobs:
           if lg.get('login',{}).get('result')!='Success': raise RuntimeError(lg)
           account=get(action='query',meta='userinfo')['query']['userinfo']['name']
 
-          def revision_by_id(revid):
-              d=get(action='query',prop='revisions',revids=str(revid),rvprop='ids|timestamp|user|comment|content',rvslots='main')
-              p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
-              return {'title':p.get('title'),'revid':r.get('revid'),'parentid':r.get('parentid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'content':r.get('slots',{}).get('main',{}).get('content','')}
-
           def current_page(title):
               d=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main')
               p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
               return {'title':p.get('title'),'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'content':r.get('slots',{}).get('main',{}).get('content','')}
 
+          # Submit the prepared COI request only if it is not already present.
+          target='Talk:Attachment and health'
+          heading='Update Mental health section with recent meta-analytic evidence'
+          before=current_page(target)
+          if heading in before['content']:
+              attachment_submission={'status':'already_present','revid':before['revid'],'timestamp':before['timestamp']}
+          else:
+              csrf=get(action='query',meta='tokens')['query']['tokens']['csrftoken']
+              body="""{{edit COI|summary=Update the Mental health section with recent meta-analytic evidence}}
+I am a co-author of the 2021 MDD study cited below, so I am requesting this change rather than editing the article directly.
+
+'''Specific change:''' In § Mental health, immediately after the paragraph ending “including depression, anxiety, eating, psychotic and personality disorders”, add:
+
+More recent meta-analytic evidence supports a robust association between adult attachment insecurity and mental-health outcomes. A 2022 meta-analysis of 224 studies (245 samples; N=79,722) found moderate associations between attachment anxiety and avoidance and poorer mental health, including depression and anxiety.<ref>{{cite journal |vauthors=Zhang X, Li J, Xie F, Chen X, Xu W, Hudson NW |title=The relationship between adult attachment and mental health: A meta-analysis |journal=Journal of Personality and Social Psychology |year=2022 |volume=123 |issue=5 |pages=1089–1137 |doi=10.1037/pspp0000437 |pmid=36201836}}</ref> Consistent with this broader literature, a 2021 cross-sectional study of 300 people with major depressive disorder reported high rates of insecure attachment and an association between anxious attachment and dissociative symptoms; because the study was cross-sectional, it does not establish causality.<ref>{{cite journal |vauthors=Golshani S, Najafpour A, Hashemian SS, Goudarzi N, Firoozabadi A, Ghezelbash MS, Hookari S, Firoozabadi K, Dürsteler KM, Brühl AB, Alikhani M, Sadeghi-Bahmani D, Brand S |title=Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events |journal=Healthcare |year=2021 |volume=9 |issue=9 |page=1169 |doi=10.3390/healthcare9091169 |pmid=34574943 |pmc=PMC8469763}}</ref>
+
+'''Reason:''' The existing section states the association using mostly older literature. The proposed addition anchors that statement in a large recent meta-analysis and gives one narrowly framed clinical example, with the study design limitation stated explicitly.
+
+~~~~"""
+              e=post(action='edit',title=target,section='new',sectiontitle=heading,text=body,summary='COI disclosed: request independent review of Mental health section using recent meta-analytic evidence',token=csrf,assertuser=account)
+              attachment_submission={'status':e.get('edit',{}).get('result'),'newrevid':e.get('edit',{}).get('newrevid'),'oldrevid':e.get('edit',{}).get('oldrevid')}
+
+          def revision_by_id(revid):
+              d=get(action='query',prop='revisions',revids=str(revid),rvprop='ids|timestamp|user|comment|content',rvslots='main')
+              p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
+              return {'title':p.get('title'),'revid':r.get('revid'),'parentid':r.get('parentid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'content':r.get('slots',{}).get('main',{}).get('content','')}
           def hist(title,start,end):
               out=[]; cont={}
               while True:
@@ -70,15 +90,6 @@ jobs:
                   if 'continue' not in d: break
                   cont=d['continue']
               return out
-
-          # Exact revisions around the two Botulinum requests and the done response.
-          exact={str(x):revision_by_id(x) for x in [1369605448,1369764392,1370165015,1370563463,1369763326]}
-          bot_talk=current_page('Talk:Botulinum toxin')
-          bipolar_talk=current_page('Talk:Treatment of bipolar disorder')
-          bot_article=current_page('Botulinum toxin')
-          bipolar_article=current_page('Treatment of bipolar disorder')
-          attachment_talk=current_page('Talk:Attachment and health')
-
           def snippets(text,terms,radius=900):
               out=[]
               for term in terms:
@@ -87,13 +98,15 @@ jobs:
                       if len(out)>=30: return out
               return out
 
+          exact={str(x):revision_by_id(x) for x in [1369605448,1369764392,1370165015,1370563463,1369763326]}
+          bot_talk=current_page('Talk:Botulinum toxin'); bipolar_talk=current_page('Talk:Treatment of bipolar disorder'); bot_article=current_page('Botulinum toxin'); bipolar_article=current_page('Treatment of bipolar disorder'); attachment_talk=current_page(target)
           bot_terms=['Wikiversity','Botulinum toxin in aesthetic medicine','Facial assessment before aesthetic botulinum toxin treatment','Medicaldoctor91','Spencer']
           omega_terms=['34228881','39997208','27280013','10.1111/bdi.13115','10.3390/md23020084','10.4103/2008-7802.182734','Medicaldoctor91','Ghezelbash']
-          att_terms=['Medicaldoctor91','Ghezelbash','34574943','attachment']
-
+          att_terms=['Medicaldoctor91','Ghezelbash','34574943',heading]
           out={
             'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
             'authenticated_as':account,
+            'attachment_submission':attachment_submission,
             'exact_revisions':{k:{**v,'content_snippets':snippets(v.pop('content'),bot_terms+omega_terms,500)} for k,v in exact.items()},
             'botulinum_talk_history_2026_08_15_to_22':hist('Talk:Botulinum toxin','2026-08-15T00:00:00Z','2026-08-22T23:59:59Z'),
             'bipolar_talk_history_2026_08_16_to_22':hist('Talk:Treatment of bipolar disorder','2026-08-16T00:00:00Z','2026-08-22T23:59:59Z'),
