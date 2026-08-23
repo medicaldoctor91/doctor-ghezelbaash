@@ -2,6 +2,7 @@
 import globalCss from '../styles/global.css?raw';
 import renderCalibrationRaw from '../data/render-calibration.json?raw';
 import pageMetadata from '../data/page-metadata.json';
+import release from '../data/release.json';
 import { headGraphRaw, supportGraphRaw } from '../lib/knowledge-graph';
 import { assembleCssSource } from '../lib/css-source.mjs';
 import { deriveCssDelivery } from '../lib/css-delivery.mjs';
@@ -14,7 +15,7 @@ interface Props { frontmatter:Frontmatter; url?:string; isMain?:boolean; }
 const {frontmatter,url,isMain=false}=Astro.props;
 const effectiveFrontmatter=isMain?pageMetadata:frontmatter;
 const base=Astro.site??Astro.url;
-const canonicalURL=isMain?new URL(pageMetadata.canonicalUrl):new URL(url??Astro.url.pathname,base);
+const canonicalURL=isMain?new URL(release.canonicalUrl):new URL(url??Astro.url.pathname,base);
 const lang=effectiveFrontmatter.lang??'fa-IR';
 const dir=effectiveFrontmatter.dir??'rtl';
 if(!['ltr','rtl','auto'].includes(dir))throw new Error(`Invalid document direction: ${dir}`);
