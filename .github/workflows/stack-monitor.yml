@@ -1,8 +1,8 @@
-name: Public stack integrity monitor
+name: Canonical stack drift monitor
 
 on:
   schedule:
-    - cron: '47 */6 * * *'
+    - cron: '17 5 * * *'
   workflow_dispatch:
 
 permissions:
@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  verify:
+  monitor:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -27,7 +27,7 @@ jobs:
           node-version: 24.19.0
           cache: npm
       - name: Load platform contract
-        run: node scripts/export-platform-contract.mjs >> "$GITHUB_ENV"
+        run: node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
@@ -57,15 +57,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if node scripts/verify-public-discovery-freshness.mjs && node scripts/verify-current-serving.mjs --website-only; then
+          if node scripts/verify-live.mjs discovery && node scripts/verify-live.mjs current --website-only; then
             echo 'FIRST_PARTY_CURRENT_SERVING_PASS'
             exit 0
           fi
           echo '::warning::First-party edge drift detected; purging Cloudflare and re-verifying website bytes only.'
           python scripts/configure-cloudflare-edge.py --purge-cache-only
           sleep 30
-          node scripts/verify-public-discovery-freshness.mjs
-          node scripts/verify-current-serving.mjs --website-only
+          node scripts/verify-live.mjs discovery
+          node scripts/verify-live.mjs current --website-only
           echo 'FIRST_PARTY_EDGE_SELF_HEAL_PASS'
       - name: Verify and reconcile Hugging Face current authority surface
         env:
@@ -73,7 +73,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if node scripts/verify-current-serving.mjs --hf-only; then
+          if node scripts/verify-live.mjs current --hf-only; then
             echo 'HF_CURRENT_AUTHORITY_PASS'
             exit 0
           fi
@@ -81,14 +81,14 @@ jobs:
           echo '::warning::Hugging Face current observation drift detected; reconciling only the mutable current observation artifacts.'
           rm -rf .release/huggingface-monitor
           git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-monitor
-          node scripts/sync-hf-live-observations.mjs .release/huggingface-monitor
+          node scripts/reputation.mjs sync-hf .release/huggingface-monitor
           git -C .release/huggingface-monitor config user.name ghezelbaash-reputation-bot
           git -C .release/huggingface-monitor config user.email actions@users.noreply.github.com
           git -C .release/huggingface-monitor add live_observations.csv live-observation-attestation.json
           git -C .release/huggingface-monitor diff --cached --quiet || git -C .release/huggingface-monitor commit -m "Reconcile current Google reputation observation"
           git -C .release/huggingface-monitor push origin HEAD:main
           for attempt in $(seq 1 12); do
-            if node scripts/verify-current-serving.mjs --hf-only; then
+            if node scripts/verify-live.mjs current --hf-only; then
               echo 'HF_CURRENT_AUTHORITY_SELF_HEAL_PASS'
               exit 0
             fi
@@ -100,7 +100,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/verify-current-serving.mjs
+          node scripts/verify-live.mjs current
           echo 'CURRENT_CROSS_SURFACE_TRUTH_PASS'
       - name: Verify frozen release snapshot truth
         shell: bash
@@ -113,4 +113,4 @@ jobs:
           npm ci --ignore-scripts
           C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
-          node scripts/verify-release-snapshot.mjs
+          node scripts/verify-live.mjs release

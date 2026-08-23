@@ -1,7 +1,7 @@
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {readFile,writeFile,readdir,mkdir} from 'node:fs/promises';
-import {generatedWorkspace} from './lib/generated-workspace.mjs';
+import {generatedWorkspace} from './generated-workspace.mjs';
 
 const root=process.cwd(),data=path.join(root,'src/data'),semantic=path.join(data,'semantic'),generated=generatedWorkspace(root),projections=generated.projections;
 const distFlag=process.argv.indexOf('--dist');
@@ -32,10 +32,6 @@ const fileMeta=async rel=>{const b=await readFile(artifactAbs(rel));return{rel,b
 const coreResources=['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','provenance.jsonld','evidence-snapshot.json','shapes.ttl','query-matrix.jsonl'];
 const out=rel=>path.join(outputDir,rel);
 
-// One canonical descriptor writer owns both phases:
-// 1) generated projection phase supplies static artifact inputs;
-// 2) --dist phase re-materializes the same descriptors from actual built endpoint bytes.
-// No other generator/finalizer may write these descriptor artifacts.
 const linkset={linkset:[{anchor:release.canonicalUrl,canonical:[{href:release.canonicalUrl}],author:[{href:release.primaryEntity.id}],about:[{href:release.primaryEntity.id},{href:release.clinic.id},{href:`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`}],describedby:[
   {href:`${release.canonicalUrl}graph.jsonld`,type:'application/ld+json'},
   {href:`${release.canonicalUrl}graph.ttl`,type:'text/turtle'},

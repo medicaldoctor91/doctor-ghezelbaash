@@ -1,6 +1,6 @@
 import path from 'node:path';
 import {copyFile,mkdir,readFile,readdir} from 'node:fs/promises';
-import {STATIC_ARTIFACTS} from './lib/static-artifacts.mjs';
+import {STATIC_ARTIFACTS} from '../src/lib/resources.mjs';
 
 const root=process.cwd();
 const dist=path.resolve(root,process.argv[2]||'dist');

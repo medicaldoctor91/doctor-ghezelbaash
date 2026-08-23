@@ -35,8 +35,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/export-platform-contract.mjs >> "$GITHUB_ENV"
-          node scripts/validate-platform-contract.mjs
+          node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
+          node scripts/platform-contract.mjs validate
       - name: Enforce canonical deployment ref
         shell: bash
         run: |
@@ -54,8 +54,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
-          node scripts/ensure-cloudflare-pages-git-deployment.mjs --configure
-          node scripts/ensure-cloudflare-pages-git-deployment.mjs --verify-config
+          node scripts/cloudflare-pages.mjs ensure --configure
+          node scripts/cloudflare-pages.mjs ensure --verify-config
       - name: Verify native Git deployment identity
         id: cloudflare
         env:
@@ -63,7 +63,7 @@ jobs:
           CF_EXPECTED_COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
-          node scripts/ensure-cloudflare-pages-git-deployment.mjs
+          node scripts/cloudflare-pages.mjs ensure
       - name: Converge the complete production edge contract
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -78,9 +78,9 @@ jobs:
           EDGE_RECONCILIATION_OUTCOME: edge-reconciliation.json
         run: |
           set -euo pipefail
-          node scripts/verify-cloudflare-pages-deployment.mjs
+          node scripts/cloudflare-pages.mjs verify
           npm run verify:production
-          node scripts/verify-current-serving.mjs
+          node scripts/verify-live.mjs current
           if npm run verify:public-discovery; then
             echo 'PUBLIC_DISCOVERY_T0_PASS'
           else
@@ -97,5 +97,5 @@ jobs:
           fi
           sleep 180
           npm run verify:public-discovery
-          node scripts/verify-current-serving.mjs
+          node scripts/verify-live.mjs current
           echo 'PUBLIC_DISCOVERY_T5_HARD_PASS'

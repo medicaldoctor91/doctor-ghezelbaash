@@ -2,7 +2,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {hashIdentityFingerprint} from './release-identity.mjs';
-import {generatedWorkspace} from './generated-workspace.mjs';
+import {generatedWorkspace} from '../generated-workspace.mjs';
 
 export const nodeTypes=node=>Array.isArray(node?.['@type'])?node['@type']:[node?.['@type']].filter(Boolean);
 export const refId=value=>value&&typeof value==='object'&&value['@id']?value['@id']:null;
