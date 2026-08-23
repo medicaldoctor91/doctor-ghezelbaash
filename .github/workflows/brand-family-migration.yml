@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   migrate:
-    if: github.event.pull_request.head.ref == 'ops/canonical-icon-migration-trigger-20260823'
+    if: github.event.pull_request.head.ref == 'ops/canonical-icon-migration-trigger-20260823b'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -48,8 +48,7 @@ jobs:
               if got != dims: raise SystemExit(f'{source}: expected {dims}, got {got}')
               digest=hashlib.sha256(data).hexdigest()
               target=p.with_name(f'{stem}.{digest[:12]}.png')
-              if target != p:
-                p.rename(target)
+              if target != p: p.rename(target)
               env.write(f'{key}={target.as_posix()}\n')
               env.write(f'{key}_FILE={target.name}\n')
               print(f'{key}: {digest} -> {target}')
@@ -59,15 +58,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if command -v magick >/dev/null 2>&1; then
-            IM='magick'
-          elif command -v convert >/dev/null 2>&1; then
-            IM='convert'
-          else
-            sudo apt-get update
-            sudo apt-get install -y --no-install-recommends imagemagick
-            IM='convert'
-          fi
+          if command -v magick >/dev/null 2>&1; then IM='magick'; elif command -v convert >/dev/null 2>&1; then IM='convert'; else sudo apt-get update && sudo apt-get install -y --no-install-recommends imagemagick && IM='convert'; fi
           $IM "$BRAND_512" -resize 16x16 public/favicon-16x16.png
           $IM "$BRAND_512" -resize 32x32 public/favicon-32x32.png
           $IM "$BRAND_512" -resize 48x48 public/favicon-48x48.png
@@ -86,14 +77,9 @@ jobs:
           n192=os.environ['BRAND_192_FILE']; n512=os.environ['BRAND_512_FILE']; nmask=os.environ['BRAND_MASKABLE_FILE']
           replacements=[
             ('https://www.ghezelbaash.ir/media/brand/'+old_svg,'https://www.ghezelbaash.ir/favicon.svg'),
-            ('public/media/brand/'+old_svg,'public/favicon.svg'),
-            ('/media/brand/'+old_svg,'/favicon.svg'),('media/brand/'+old_svg,'favicon.svg'),
-            ('doctor-ghezelbaash-symbol-192.48be0004e370.png',n192),
-            ('doctor-ghezelbaash-symbol-512.a910779b67ef.png',n512),
-            ('doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png',nmask),
-            ('doctor-ghezelbaash-symbol-192.328e1556f122.png',n192),
-            ('doctor-ghezelbaash-symbol-512.1bc7c3af1350.png',n512),
-            ('doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png',nmask),
+            ('public/media/brand/'+old_svg,'public/favicon.svg'),('/media/brand/'+old_svg,'/favicon.svg'),('media/brand/'+old_svg,'favicon.svg'),
+            ('doctor-ghezelbaash-symbol-192.48be0004e370.png',n192),('doctor-ghezelbaash-symbol-512.a910779b67ef.png',n512),('doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png',nmask),
+            ('doctor-ghezelbaash-symbol-192.328e1556f122.png',n192),('doctor-ghezelbaash-symbol-512.1bc7c3af1350.png',n512),('doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png',nmask),
           ]
           for raw in subprocess.check_output(['git','ls-files','-z']).split(b'\0'):
             if not raw: continue
@@ -122,14 +108,7 @@ jobs:
           ]
           p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
-          rm -f \
-            public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg \
-            public/media/brand/doctor-ghezelbaash-symbol-192.48be0004e370.png \
-            public/media/brand/doctor-ghezelbaash-symbol-512.a910779b67ef.png \
-            public/media/brand/doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png \
-            public/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png \
-            public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png \
-            public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png
+          rm -f public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg public/media/brand/doctor-ghezelbaash-symbol-192.48be0004e370.png public/media/brand/doctor-ghezelbaash-symbol-512.a910779b67ef.png public/media/brand/doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png public/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png
           git rm .github/workflows/brand-family-migration.yml
 
       - name: Structural and semantic convergence checks
@@ -138,12 +117,11 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          import hashlib, json, os, re, struct
+          import hashlib, json, os, struct
           json.loads(Path('src/data/semantic/knowledge-graph.jsonld').read_text(encoding='utf-8'))
           m=json.loads(Path('public/site.webmanifest').read_text(encoding='utf-8'))
           expected={'/favicon.svg','/media/brand/'+os.environ['BRAND_192_FILE'],'/media/brand/'+os.environ['BRAND_512_FILE'],'/media/brand/'+os.environ['BRAND_MASKABLE_FILE']}
-          actual={i['src'] for i in m['icons']}
-          if actual != expected: raise SystemExit(f'manifest mismatch: {actual}')
+          if {i['src'] for i in m['icons']} != expected: raise SystemExit('manifest icon set mismatch')
           for key in ('BRAND_192','BRAND_512','BRAND_MASKABLE'):
             p=Path(os.environ[key]); digest=hashlib.sha256(p.read_bytes()).hexdigest(); token=p.stem.rsplit('.',1)[-1]
             if digest[:12] != token: raise SystemExit(f'{p}: fingerprint mismatch')
@@ -152,9 +130,7 @@ jobs:
             if d[:8] != b'\x89PNG\r\n\x1a\n' or got != dims: raise SystemExit(f'{name}: invalid {got}')
           if Path('public/favicon.ico').read_bytes()[:4] != b'\x00\x00\x01\x00': raise SystemExit('invalid favicon.ico')
           PY
-          if git grep -n -I -E 'doctor-ghezelbaash-symbol\.3a9e7509912d\.svg|doctor-ghezelbaash-symbol-192\.48be0004e370\.png|doctor-ghezelbaash-symbol-512\.a910779b67ef\.png|doctor-ghezelbaash-symbol-maskable-512\.de33d0be02c9\.png|doctor-ghezelbaash-symbol-192\.328e1556f122\.png|doctor-ghezelbaash-symbol-512\.1bc7c3af1350\.png|doctor-ghezelbaash-symbol-maskable-512\.b6a6738954b9\.png'; then
-            echo 'legacy or provisional icon-family reference remains' >&2; exit 1
-          fi
+          if git grep -n -I -E 'doctor-ghezelbaash-symbol\.3a9e7509912d\.svg|doctor-ghezelbaash-symbol-192\.48be0004e370\.png|doctor-ghezelbaash-symbol-512\.a910779b67ef\.png|doctor-ghezelbaash-symbol-maskable-512\.de33d0be02c9\.png|doctor-ghezelbaash-symbol-192\.328e1556f122\.png|doctor-ghezelbaash-symbol-512\.1bc7c3af1350\.png|doctor-ghezelbaash-symbol-maskable-512\.b6a6738954b9\.png'; then echo 'legacy or provisional icon-family reference remains' >&2; exit 1; fi
           git diff --check
 
       - name: Repository validators
