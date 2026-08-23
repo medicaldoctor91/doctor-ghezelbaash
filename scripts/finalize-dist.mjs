@@ -41,10 +41,12 @@ const dataset=byId.get(`${release.canonicalUrl}graph.jsonld#dataset`);
 if(!dataset?.name)throw new Error('Canonical Dataset node/name missing before DIST finalization');
 const datasetName=dataset.name;
 
-// Bind the mutable current-serving matrix before any integrity inventory is computed.
+// Compose current-serving identity exactly once; source retrieval projections may never own these fields.
 const currentMatrixPath=path.join(dist,'current-release-matrix.json');
-const currentMatrix=JSON.parse(await readFile(path.join(data,'projections/current-release-matrix.json'),'utf8'));
-Object.assign(currentMatrix,{liveRevision,sourceCommit:liveRevision,generatedAt});
+const sourceCurrentMatrix=JSON.parse(await readFile(path.join(data,'projections/current-release-matrix.json'),'utf8'));
+const currentServingKeys=['liveRevision','sourceCommit','generatedAt'];
+for(const key of currentServingKeys)if(Object.hasOwn(sourceCurrentMatrix,key))throw new Error(`Source current-release matrix illegally owns current-serving field: ${key}`);
+const currentMatrix={...sourceCurrentMatrix,liveRevision,sourceCommit:liveRevision,generatedAt};
 await writeFile(currentMatrixPath,JSON.stringify(currentMatrix,null,2)+'\n');
 
 // Canonical linked-data descriptors are generated before Astro build by generate-descriptors.mjs.
