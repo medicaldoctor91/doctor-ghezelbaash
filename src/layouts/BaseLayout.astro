@@ -1,7 +1,6 @@
 ---
 import globalCss from '../styles/global.css?raw';
 import renderCalibrationRaw from '../data/render-calibration.json?raw';
-import pageMetadata from '../data/page-metadata.json';
 import release from '../data/release.json';
 import { headGraphRaw, supportGraphRaw } from '../lib/knowledge-graph';
 import { assembleCssSource } from '../lib/css-source.mjs';
@@ -13,16 +12,15 @@ import GuideNavigator from '../components/GuideNavigator.astro';
 interface Frontmatter { title:string; description:string; lang?:string; dir?:string; robots?:string; }
 interface Props { frontmatter:Frontmatter; url?:string; isMain?:boolean; }
 const {frontmatter,url,isMain=false}=Astro.props;
-const effectiveFrontmatter=isMain?pageMetadata:frontmatter;
 const base=Astro.site??Astro.url;
 const canonicalURL=isMain?new URL(release.canonicalUrl):new URL(url??Astro.url.pathname,base);
-const lang=effectiveFrontmatter.lang??'fa-IR';
-const dir=effectiveFrontmatter.dir??'rtl';
+const lang=frontmatter.lang??'fa-IR';
+const dir=frontmatter.dir??'rtl';
 if(!['ltr','rtl','auto'].includes(dir))throw new Error(`Invalid document direction: ${dir}`);
-const robots=effectiveFrontmatter.robots??'index, follow';
+const robots=frontmatter.robots??'index, follow';
 const noindex=/(?:^|,)\s*noindex\b/i.test(robots);
 const {cssSource}=assembleCssSource(globalCss,renderCalibrationRaw);
 const {criticalCss,assetHref:externalCssHref}=deriveCssDelivery(cssSource);
 const googleSupportGraphRaw=supportGraphRaw;
 ---
-<!doctype html><html lang={lang} dir={dir} prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#"><head><meta charset="utf-8" /><DocumentHead title={effectiveFrontmatter.title} description={effectiveFrontmatter.description} robots={robots} canonicalURL={canonicalURL} isMain={isMain} stage="critical" /><style is:inline set:html={criticalCss}></style><link as="style" data-deferred-stylesheet fetchpriority="low" href={externalCssHref} rel="preload" /><script is:inline id="deferred-stylesheet-loader">(()=>{const l=document.querySelector('link[data-deferred-stylesheet]');if(!l)return;const a=()=>{l.rel='stylesheet';l.removeAttribute('as')};l.addEventListener('load',a,{once:true})})();</script><noscript><link href={externalCssHref} rel="stylesheet" /></noscript>{isMain&&<script is:inline id="entity-core" type="application/ld+json" set:html={headGraphRaw}></script>}<DocumentHead title={effectiveFrontmatter.title} description={effectiveFrontmatter.description} robots={robots} canonicalURL={canonicalURL} isMain={isMain} stage="discovery" /></head><body><a class="skip-link" href="#main-content">پرش به محتوای اصلی</a><main id="main-content"><slot /></main>{isMain&&<script is:inline id="entity-support" type="application/ld+json" set:html={googleSupportGraphRaw}></script>}{!noindex&&<SiteFooter />}{!noindex&&<FloatingActionDock />}{isMain&&<GuideNavigator />}</body></html>
+<!doctype html><html lang={lang} dir={dir} prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#"><head><meta charset="utf-8" /><DocumentHead title={frontmatter.title} description={frontmatter.description} robots={robots} canonicalURL={canonicalURL} lang={lang} isMain={isMain} stage="critical" /><style is:inline set:html={criticalCss}></style><link as="style" data-deferred-stylesheet fetchpriority="low" href={externalCssHref} rel="preload" /><script is:inline id="deferred-stylesheet-loader">(()=>{const l=document.querySelector('link[data-deferred-stylesheet]');if(!l)return;const a=()=>{l.rel='stylesheet';l.removeAttribute('as')};l.addEventListener('load',a,{once:true})})();</script><noscript><link href={externalCssHref} rel="stylesheet" /></noscript>{isMain&&<script is:inline id="entity-core" type="application/ld+json" set:html={headGraphRaw}></script>}<DocumentHead title={frontmatter.title} description={frontmatter.description} robots={robots} canonicalURL={canonicalURL} lang={lang} isMain={isMain} stage="discovery" /></head><body><a class="skip-link" href="#main-content">پرش به محتوای اصلی</a><main id="main-content"><slot /></main>{isMain&&<script is:inline id="entity-support" type="application/ld+json" set:html={googleSupportGraphRaw}></script>}{!noindex&&<SiteFooter />}{!noindex&&<FloatingActionDock />}{isMain&&<GuideNavigator />}</body></html>
