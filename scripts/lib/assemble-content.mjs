@@ -7,6 +7,13 @@ const LIVE_REPUTATION_SLOT='<div class="hero-caption-reputation" id="google-maps
 const persianNumber=(value,digits=0)=>new Intl.NumberFormat('fa-IR',{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:true}).format(Number(value));
 const persianGregorianDate=value=>new Intl.DateTimeFormat('fa-IR-u-ca-gregory',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(value));
 
+const canonicalBodySource=value=>{
+  const source=String(value);
+  const normalized=source.charCodeAt(0)===0xfeff?source.slice(1):source;
+  if(normalized.startsWith('---\n')||normalized.startsWith('---\r\n'))throw new Error('Canonical page source must be body-only; src/data/page-metadata.json is the sole page metadata authority');
+  return normalized;
+};
+
 const bindLiveReputation=async(root,content,release)=>{
   const volatile=JSON.parse(await readFile(path.join(root,'src/data/volatile-facts.json'),'utf8'));
   const rating=Number(volatile.rating),reviewCount=Number(volatile.reviewCount),observedAt=volatile.valueObservedAt;
@@ -27,7 +34,7 @@ export async function canonicalSourceNames(root=process.cwd()){
 export async function assembleCanonicalContent({root=process.cwd()}={}){
   const names=await canonicalSourceNames(root);
   const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
-  let content=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
+  let content=canonicalBodySource(await readFile(path.join(root,'src/content-source/page.md'),'utf8'));
   content=bindHeroPictureSizes(content);
   content=bindReleaseTokens(content,release);
   content=await bindLiveReputation(root,content,release);
