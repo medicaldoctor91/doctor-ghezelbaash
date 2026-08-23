@@ -77,7 +77,7 @@ This evidence layer documents historical patient-origin geography inside the can
 
 ## Canonical image identity
 
-- [Official physician and clinic brand symbol](https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.a910779b67ef.png): Canonical 512×512 brand ImageObject with embedded XMP, EXIF and entity identifiers for the physician and clinic.
+- [Official physician and clinic brand symbol](https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.505de26d8f08.png): Canonical 512×512 brand ImageObject with embedded XMP, EXIF and entity identifiers for the physician and clinic.
 - [First-party canonical portrait](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.55e6a60c60bc.jpg): Byte-identical first-party master of the physician portrait.
 - [Wikimedia Commons portrait](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg): CC BY 4.0 canonical portrait linked as Wikidata P18 and depicting Wikidata Q140287622.
 - [Clinical-team image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg): Contextual Commons image depicting the physician; not a P18 image.
