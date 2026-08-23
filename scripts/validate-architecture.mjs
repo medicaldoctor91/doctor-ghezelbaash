@@ -5,12 +5,12 @@ const root=process.cwd();
 const fail=message=>{throw new Error(message)};
 const read=file=>readFile(path.join(root,file),'utf8');
 const required=[
-  'src/data/page-metadata.json','src/data/templates/discovery-head.html',
+  'src/data/head-profile.json','src/data/templates/discovery-head.html',
   'scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
 ];
 for(const file of required)await access(path.join(root,file));
-for(const removed of ['src/data/templates/main-head.html','src/lib/head-delivery.mjs']){
+for(const removed of ['src/data/page-metadata.json','src/data/templates/main-head.html','src/lib/head-delivery.mjs']){
   try{await access(path.join(root,removed));fail(`Legacy architecture residue exists: ${removed}`);}catch(error){if(error?.code!=='ENOENT')throw error;}
 }
 
@@ -29,8 +29,9 @@ if(!finalizer.includes("./lib/headers-template.mjs")||!finalizer.includes('compi
 if(/headers\s*=\s*headers\.(?:replace|replaceAll)|headersTemplate\.(?:replace|replaceAll)/.test(finalizer))fail('Manual deployment-header patch chain reintroduced');
 for(const guard of ['unknown token','expected exactly one','unresolved token','token inventory mismatch'])if(!headersCompiler.includes(guard))fail(`Headers compiler guard missing: ${guard}`);
 
-if(!documentHead.includes("../data/page-metadata.json")||documentHead.includes('main-head.html')||documentHead.includes('deriveMainHeadStages'))fail('Document Head authority is not canonical/structured');
-if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Discovery Head is not isolated from page metadata authority');
-if(!baseLayout.includes("../data/page-metadata.json")||!indexPage.includes("../data/page-metadata.json"))fail('Main page runtime metadata is not sourced from page-metadata.json');
+if(!documentHead.includes("../data/head-profile.json")||documentHead.includes('page-metadata.json')||documentHead.includes('main-head.html')||documentHead.includes('deriveMainHeadStages'))fail('Document Head authority is not canonical/structured');
+if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Discovery Head is not isolated from content metadata authority');
+if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
+if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,headAuthority:'page-metadata.json',headDelivery:'structured',headersCompilation:'strict-one-pass',legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',legacyHeadResidue:0,integrity:'PASS'},null,2));
