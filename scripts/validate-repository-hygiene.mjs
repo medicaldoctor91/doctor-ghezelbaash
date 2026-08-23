@@ -52,7 +52,15 @@ if(workflows.length!==allowedWorkflows.length||workflows.some((name,index)=>name
 
 for(const workflow of workflows){
   const content=await readFile(path.join(root,workflow),'utf8');
-  if(/^\s*pull_request(?:_target)?\s*:/m.test(content))throw new Error(`Canonical workflows must not depend on pull-request events: ${workflow}`);
+  if(/^\s*pull_request_target\s*:/m.test(content))throw new Error(`Canonical workflows must never use pull_request_target: ${workflow}`);
+  const hasPullRequest=/^\s*pull_request\s*:/m.test(content);
+  if(hasPullRequest){
+    if(workflow!=='.github/workflows/ci.yml')throw new Error(`Only the canonical read-only CI workflow may use pull_request: ${workflow}`);
+    if(!/^permissions:\s*\n\s+contents:\s*read\s*$/m.test(content))throw new Error('Pull-request CI must declare top-level contents: read permissions');
+    if(/^\s*(?:actions|checks|contents|deployments|id-token|issues|packages|pages|pull-requests|statuses):\s*write\s*$/m.test(content))throw new Error('Pull-request CI must not grant write permissions');
+    if(/\$\{\{\s*secrets\./.test(content))throw new Error('Pull-request CI must not consume repository secrets');
+    if(/^\s*environment\s*:/m.test(content))throw new Error('Pull-request CI must not bind a deployment environment');
+  }
   if(/\bgithub\.(?:head_ref|base_ref)\b|refs\/pull\//.test(content))throw new Error(`Canonical workflows must not depend on pull-request refs: ${workflow}`);
   for(const match of content.matchAll(/^\s*branches:\s*\[([^\]]*)\]\s*$/gm)){
     const branches=match[1].split(',').map(value=>value.trim().replace(/^['"]|['"]$/g,'')).filter(Boolean);
@@ -79,4 +87,4 @@ for(const name of tracked){
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestWorkflowCoupling:false,nonMainWorkflowBranchTriggers:false,developmentMarkers:false,forbiddenAsciiControlBytes:false,intentionalTrackedDeletionsHandled:true},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestTargetWorkflowCoupling:false,pullRequestValidationWorkflow:'.github/workflows/ci.yml',pullRequestValidationReadOnly:true,nonMainWorkflowBranchTriggers:false,developmentMarkers:false,forbiddenAsciiControlBytes:false,intentionalTrackedDeletionsHandled:true},null,2));
