@@ -9,15 +9,15 @@ const assert=(condition,message)=>{if(!condition)fail(message)};
 const read=relative=>readFile(path.join(root,relative),'utf8');
 const readJson=relative=>read(relative).then(JSON.parse);
 const count=(source,pattern)=>(String(source).match(pattern)||[]).length;
+const pathExists=async relative=>{try{await access(path.join(root,relative));return true;}catch(error){if(error?.code==='ENOENT')return false;throw error;}};
 
-const [metadata,release,discoveryRaw,documentHead,baseLayout,indexSource,legacyFixture]=await Promise.all([
+const [metadata,release,discoveryRaw,documentHead,baseLayout,indexSource]=await Promise.all([
   readJson('src/data/page-metadata.json'),
   readJson('src/data/release.json'),
   read('src/data/templates/discovery-head.html'),
   read('src/components/DocumentHead.astro'),
   read('src/layouts/BaseLayout.astro'),
   read('src/pages/index.astro'),
-  read('src/data/templates/main-head.html'),
 ]);
 
 const metadataKeys=['appleMobileWebAppTitle','applicationName','author','canonicalUrl','description','dir','lang','openGraph','robots','themeColor','title','twitter'];
@@ -47,11 +47,11 @@ assert(HERO_PRELOAD_HREF.includes('saeed-ghezelbash-portrait-delivery-640'),'Her
 assert(HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF)&&HERO_PRELOAD_SRCSET.includes(' 960w')&&HERO_PRELOAD_SRCSET.includes(' 1600w'),'Hero preload srcset drift');
 assert(HERO_IMAGE_SIZES.length>0,'Hero responsive sizes contract missing');
 
-assert(legacyFixture.startsWith('<!-- NON-RUNTIME VALIDATOR FIXTURE:'),'Legacy Head compatibility file must be explicitly non-runtime');
-assert(count(legacyFixture,/{{HERO_IMAGE_SIZES}}/g)===1&&count(legacyFixture,/{{CURRENT_VERSION_DOI}}/g)===1&&count(legacyFixture,/{{CURRENT_RELEASE}}/g)===1,'Legacy validator fixture scope drift');
-for(const forbidden of [/<title\b/i,/name=["']description["']/i,/name=["']robots["']/i,/rel=["']canonical["']/i,/property=["']og:/i,/name=["']twitter:/i])assert(!forbidden.test(legacyFixture),'Legacy validator fixture regained metadata authority');
-let legacyRuntimeExists=true;
-try{await access(path.join(root,'src/lib/head-delivery.mjs'));}catch(error){if(error?.code==='ENOENT')legacyRuntimeExists=false;else throw error;}
+const [legacyTemplateExists,legacyRuntimeExists]=await Promise.all([
+  pathExists('src/data/templates/main-head.html'),
+  pathExists('src/lib/head-delivery.mjs'),
+]);
+assert(!legacyTemplateExists,'Legacy main-head template still exists');
 assert(!legacyRuntimeExists,'Legacy Head split runtime still exists');
 
-console.log(JSON.stringify({stage:'HEAD_AUTHORITY',canonicalMetadata:'PASS',runtimeDiscoveryReleaseBinding:'PASS',structuredHeroPreload:'PASS',legacyRuntimeRemoved:true,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HEAD_AUTHORITY',canonicalMetadata:'PASS',runtimeDiscoveryReleaseBinding:'PASS',structuredHeroPreload:'PASS',legacyTemplateRemoved:true,legacyRuntimeRemoved:true,integrity:'PASS'},null,2));
