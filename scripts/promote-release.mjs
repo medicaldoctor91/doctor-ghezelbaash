@@ -34,6 +34,13 @@ must(/^\d{4}-\d{2}-\d{2}$/.test(next.date||''),'Invalid --date');
 must(/^\d+$/.test(next.recordId),'Invalid --zenodo-record');
 must(/^10\.5281\/zenodo\.\d+$/.test(next.versionDoi||''),'Invalid --zenodo-doi');
 must(next.versionDoi!==z.conceptDoi,'Concept DOI cannot be the Version DOI');
+const semverParts=value=>String(value).split('.').map(Number);
+const compareSemver=(a,b)=>{const aa=semverParts(a),bb=semverParts(b);for(let i=0;i<3;i++){if(aa[i]!==bb[i])return aa[i]-bb[i]}return 0};
+must(compareSemver(next.release,old.release)>=0,`Release version rollback forbidden: ${old.release} -> ${next.release}`);
+must(next.date>=old.date,`Release date rollback forbidden: ${old.date} -> ${next.date}`);
+for(const history of z.releaseHistory){
+  if(history.release!==next.release)must(String(history.recordId)!==next.recordId&&history.versionDoi!==next.versionDoi,`Zenodo release identity already belongs to ${history.release}`);
+}
 if(next.release===old.release){
   must(next.versionDoi===old.versionDoi&&next.recordId===old.recordId&&next.date===old.date,'Idempotent promotion request drifted from current release');
   console.log(JSON.stringify({promoted:false,idempotent:true,current:old},null,2));process.exit(0);
@@ -60,8 +67,8 @@ const snapshotEvidence=(evidenceSnapshot.entries||[]).find(item=>item.id===curre
 must(registryEvidence&&snapshotEvidence,'Current Zenodo evidence pointer is missing');
 registryEvidence.url=currentEvidenceUrl;
 snapshotEvidence.url=currentEvidenceUrl;
-registryEvidence.verifiedAt=next.dateModified;
-snapshotEvidence.verifiedAt=next.dateModified;
+registryEvidence.verifiedAt=next.date;
+snapshotEvidence.verifiedAt=next.date;
 
 const nodes=graph['@graph'];
 must(Array.isArray(nodes),'Canonical graph lacks @graph');
