@@ -1,7 +1,6 @@
-import {access,cp,mkdir,readdir,rename,rm,stat} from 'node:fs/promises';
+import {access,cp,mkdir,readdir,rename,rm} from 'node:fs/promises';
 import path from 'node:path';
 
-const ROOT=process.cwd();
 const WORKSPACE='.generated';
 const NEXT='.generated.next';
 const BACKUP='.generated.prev';
