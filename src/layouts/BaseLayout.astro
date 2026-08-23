@@ -9,7 +9,7 @@ import DocumentHead from '../components/DocumentHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
 import GuideNavigator from '../components/GuideNavigator.astro';
-interface Frontmatter { title:string; description:string; lang?:string; dir?:'ltr'|'rtl'|'auto'; robots?:string; }
+interface Frontmatter { title:string; description:string; lang?:string; dir?:string; robots?:string; }
 interface Props { frontmatter:Frontmatter; url?:string; isMain?:boolean; }
 const {frontmatter,url,isMain=false}=Astro.props;
 const effectiveFrontmatter=isMain?pageMetadata:frontmatter;
@@ -17,6 +17,7 @@ const base=Astro.site??Astro.url;
 const canonicalURL=isMain?new URL(pageMetadata.canonicalUrl):new URL(url??Astro.url.pathname,base);
 const lang=effectiveFrontmatter.lang??'fa-IR';
 const dir=effectiveFrontmatter.dir??'rtl';
+if(!['ltr','rtl','auto'].includes(dir))throw new Error(`Invalid document direction: ${dir}`);
 const robots=effectiveFrontmatter.robots??'index, follow';
 const noindex=/(?:^|,)\s*noindex\b/i.test(robots);
 const {cssSource}=assembleCssSource(globalCss,renderCalibrationRaw);
