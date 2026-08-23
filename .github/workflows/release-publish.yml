@@ -1,0 +1,196 @@
+name: Publish canonical immutable release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Semantic version to publish (X.Y.Z)
+        required: true
+        type: string
+      date:
+        description: Publication date (YYYY-MM-DD); empty means current UTC date
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Provision release validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+      - run: npm ci --ignore-scripts
+      - name: Resolve or create durable release candidate
+        shell: bash
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+          REQUESTED_DATE: ${{ inputs.date }}
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          VERSION="$REQUESTED_VERSION"
+          DATE="$REQUESTED_DATE"
+          test -n "$DATE" || DATE="$(date -u +%F)"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]
+          BASE_SHA="$(git rev-parse HEAD)"
+          CANDIDATE_BRANCH="release-candidate/v$VERSION"
+          if git ls-remote --exit-code --heads origin "refs/heads/$CANDIDATE_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "refs/heads/$CANDIDATE_BRANCH:refs/remotes/origin/$CANDIDATE_BRANCH"
+            git checkout --detach "refs/remotes/origin/$CANDIDATE_BRANCH"
+            test "$(node -p "require('./src/data/release.json').release")" = "$VERSION"
+            DATE="$(node -p "require('./src/data/release.json').dateModified")"
+            BASE_SHA="$(git rev-parse HEAD^)"
+            echo 'RELEASE_CANDIDATE_RESUME'
+          else
+            CURRENT_VERSION="$(node -p "require('./src/data/release.json').release")"
+            CURRENT_DATE="$(node -p "require('./src/data/release.json').dateModified")"
+            node -e "const [a,b]=process.argv.slice(1),pa=a.split('.').map(Number),pb=b.split('.').map(Number); const c=pb.findIndex((v,i)=>v!==pa[i]); if(c<0||pb[c]<pa[c]) process.exit(1)" "$CURRENT_VERSION" "$VERSION"
+            [[ "$DATE" > "$CURRENT_DATE" || "$DATE" == "$CURRENT_DATE" ]]
+            CURRENT_RECORD="$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")"
+            CURRENT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")"
+            CONCEPT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.conceptDoi")"
+            python scripts/zenodo_release.py reserve \
+              --current-record="$CURRENT_RECORD" \
+              --current-doi="$CURRENT_DOI" \
+              --current-version="$CURRENT_VERSION" \
+              --concept-doi="$CONCEPT_DOI" \
+              --version="$VERSION" \
+              --date="$DATE"
+            RECORD="$(node -p "require('./.release/runtime/zenodo-reservation.json').recordId")"
+            DOI="$(node -p "require('./.release/runtime/zenodo-reservation.json').versionDoi")"
+            npm run release:promote -- --version="$VERSION" --date="$DATE" --zenodo-record="$RECORD" --zenodo-doi="$DOI"
+            EXPECTED=$'CITATION.cff\ncodemeta.json\npackage-lock.json\npackage.json\nsrc/data/evidence-registry.json\nsrc/data/evidence-snapshot.json\nsrc/data/release.json\nsrc/data/semantic/knowledge-graph.jsonld\nsrc/data/volatile-facts.json'
+            ACTUAL="$(git diff --name-only | LC_ALL=C sort)"
+            test "$ACTUAL" = "$EXPECTED"
+            git config user.name ghezelbaash-release-bot
+            git config user.email actions@users.noreply.github.com
+            mapfile -t EXPECTED_FILES <<< "$EXPECTED"
+            git add -- "${EXPECTED_FILES[@]}"
+            git commit -m "release: promote v$VERSION"
+            git push origin "HEAD:refs/heads/$CANDIDATE_BRANCH"
+          fi
+          CANDIDATE_SHA="$(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD^)" = "$BASE_SHA"
+          printf 'VERSION=%s\nDATE=%s\nBASE_SHA=%s\nCANDIDATE_SHA=%s\nCANDIDATE_BRANCH=%s\n' "$VERSION" "$DATE" "$BASE_SHA" "$CANDIDATE_SHA" "$CANDIDATE_BRANCH" >> "$GITHUB_ENV"
+      - name: Build exact immutable release candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          export SOURCE_COMMIT="$CANDIDATE_SHA"
+          export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$CANDIDATE_SHA")"
+          npm run release
+          test "$(node -p "require('./src/data/release.json').release")" = "$VERSION"
+      - name: Stage and byte-verify Zenodo candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_COMMIT="$CANDIDATE_SHA"
+          python scripts/zenodo_release.py stage --version="$VERSION"
+      - name: Prepare Hugging Face release candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          HF_URL="$(node -p "require('./src/data/release.json').dataset.huggingFace.dataset")"
+          HF_REPO="${HF_URL#https://huggingface.co/datasets/}"
+          rm -rf .release/huggingface
+          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface
+          HF_BASE_SHA="$(git -C .release/huggingface rev-parse HEAD)"
+          node scripts/huggingface.mjs prepare dist .release/huggingface
+          git -C .release/huggingface config user.name ghezelbaash-release-bot
+          git -C .release/huggingface config user.email actions@users.noreply.github.com
+          git -C .release/huggingface add -A
+          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Release v$VERSION"
+          HF_CANDIDATE_SHA="$(git -C .release/huggingface rev-parse HEAD)"
+          if git -C .release/huggingface ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            git -C .release/huggingface fetch --depth=1 origin "refs/tags/v$VERSION:refs/tags/v$VERSION"
+            git -C .release/huggingface diff --quiet "refs/tags/v$VERSION" "$HF_CANDIDATE_SHA" -- || { echo '::error::Existing Hugging Face release tag differs from prepared candidate'; exit 1; }
+          fi
+          printf 'HF_REPO=%s\nHF_BASE_SHA=%s\nHF_CANDIDATE_SHA=%s\n' "$HF_REPO" "$HF_BASE_SHA" "$HF_CANDIDATE_SHA" >> "$GITHUB_ENV"
+      - name: Fail closed before irreversible publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_REMOTE_MAIN="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$SOURCE_REMOTE_MAIN" = "$BASE_SHA" || test "$SOURCE_REMOTE_MAIN" = "$CANDIDATE_SHA"
+          test "$(git ls-remote origin "refs/heads/$CANDIDATE_BRANCH" | cut -f1)" = "$CANDIDATE_SHA"
+          SOURCE_TAG_SHA="$(git ls-remote --tags origin "refs/tags/v$VERSION" | cut -f1)"
+          test -z "$SOURCE_TAG_SHA" || test "$SOURCE_TAG_SHA" = "$CANDIDATE_SHA"
+          HF_REMOTE_MAIN="$(git -C .release/huggingface ls-remote origin refs/heads/main | cut -f1)"
+          test "$HF_REMOTE_MAIN" = "$HF_BASE_SHA"
+      - name: Publish immutable Zenodo release
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_COMMIT="$CANDIDATE_SHA"
+          python scripts/zenodo_release.py publish
+      - name: Publish matching Hugging Face release and source tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C .release/huggingface push --force-with-lease="refs/heads/main:$HF_BASE_SHA" origin "HEAD:refs/heads/main"
+          if ! git -C .release/huggingface ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            git -C .release/huggingface tag "v$VERSION" "$HF_CANDIDATE_SHA"
+            git -C .release/huggingface push origin "refs/tags/v$VERSION"
+          fi
+          if ! git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            git tag "v$VERSION" "$CANDIDATE_SHA"
+            git push origin "refs/tags/v$VERSION"
+          fi
+      - name: Promote candidate to canonical main
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_REMOTE_MAIN="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ "$SOURCE_REMOTE_MAIN" = "$CANDIDATE_SHA" ]; then
+            echo 'SOURCE_MAIN_ALREADY_PROMOTED'
+          else
+            test "$SOURCE_REMOTE_MAIN" = "$BASE_SHA"
+            git push --force-with-lease="refs/heads/main:$BASE_SHA" origin "$CANDIDATE_SHA:refs/heads/main"
+          fi
+      - name: Verify published release convergence
+        shell: bash
+        run: |
+          set -euo pipefail
+          RECORD="$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")"
+          DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")"
+          CONCEPT="$(node -p "require('./src/data/release.json').dataset.zenodo.conceptDoi")"
+          python scripts/zenodo_release.py verify-public --record="$RECORD" --doi="$DOI" --concept-doi="$CONCEPT" --version="$VERSION"
+          for attempt in $(seq 1 12); do
+            if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer && node scripts/verify-live.mjs release; then
+              echo "IMMUTABLE_RELEASE_CONVERGENCE_PASS attempt=$attempt"
+              git push origin --delete "$CANDIDATE_BRANCH"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo '::error::Published release did not converge across Zenodo/Hugging Face/source tag'
+          exit 1
