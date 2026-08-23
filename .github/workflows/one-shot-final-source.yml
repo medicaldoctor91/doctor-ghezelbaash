@@ -1,0 +1,56 @@
+name: One-shot final source authority
+
+on:
+  push:
+    branches: [refactor/final-source-authority]
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - name: Apply final authority migration
+        run: node scripts/.one-shot-final-source.mjs
+      - name: Refresh Astro lockfile and dependencies
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          npm ci --ignore-scripts
+      - name: Prove rendered-content parity and source contracts
+        shell: bash
+        run: |
+          node --check src/lib/site-data.mjs
+          node --check src/lib/release-tokens.mjs
+          node --check scripts/lib/assemble-content.mjs
+          node -e "import('./scripts/lib/assemble-content.mjs').then(async({assembleCanonicalContent})=>{const {writeFile}=await import('node:fs/promises');const x=await assembleCanonicalContent();await writeFile('/tmp/canonical-after.md',x.content)})"
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+          before=Path('/tmp/canonical-before.md').read_text()
+          after=Path('/tmp/canonical-after.md').read_text()
+          body=lambda s: re.sub(r'^---\n[\s\S]*?\n---\n','',s,count=1)
+          if body(before)!=body(after):
+              raise SystemExit('Rendered canonical body changed during authority normalization')
+          print({'renderedBodyBytes':len(body(after).encode()),'bodyParity':'PASS'})
+          PY
+          node scripts/validate-architecture.mjs
+          node scripts/validate-release-contract.mjs
+          git diff --check
+      - name: Commit normalized source and remove migration scaffolding
+        shell: bash
+        run: |
+          rm -f scripts/.one-shot-final-source.mjs .github/workflows/one-shot-final-source.yml .final-source-trigger
+          git config user.name "Dr. Saeed Ghezelbaash | دکتر سعید قزلباش"
+          git config user.email "medicaldoctor91@gmail.com"
+          git add -A
+          git commit -m "refactor: eliminate page authority drift and update Astro"
+          git push origin HEAD:refactor/final-source-authority
