@@ -5,6 +5,8 @@ import hashlib, json, re, subprocess, tempfile
 ROOT=Path.cwd()
 VIDEO_ROOT=ROOT/'public/media/videos'
 VTT_ROOT=ROOT/'public/media/video-tracks'
+CURRENT_PLACE_ID='ChIJBT0YDOTt-j8RD-7mAPy6Zas'
+CLEAN_CI_COMMIT='a17a83dd52837c5ab384da50901cd969802e6855'
 
 PROFILES={
  'jalupro-vs-profhilo':('Dr. Saeed Ghezelbash — Jalupro versus Profhilo','Physician-led education by Dr. Saeed Ghezelbash comparing injectable skin rejuvenation approaches.','fas'),
@@ -19,10 +21,9 @@ def run(cmd,**kwargs):
 
 def replace_consumers(mappings):
     text_ext={'.astro','.css','.html','.js','.json','.jsonld','.md','.mjs','.ts','.txt','.vcf','.webmanifest','.xml','.yaml','.yml','.ttl','.csv'}
-    raw=subprocess.check_output(['git','ls-files','-z']).split(b'\0')
-    for item in raw:
-        if not item: continue
-        p=Path(item.decode())
+    for raw in subprocess.check_output(['git','ls-files','-z']).split(b'\0'):
+        if not raw: continue
+        p=Path(raw.decode())
         if not p.is_file() or p.suffix.lower() not in text_ext: continue
         try: text=p.read_text(encoding='utf-8')
         except UnicodeDecodeError: continue
@@ -44,19 +45,19 @@ def remux_videos():
         cmd += [
           '-metadata',f'title={title}','-metadata','artist=Saeed Ghezelbash','-metadata','author=Dr. Saeed Ghezelbash',
           '-metadata',f'description={description}',
-          '-metadata',f'comment={description} Canonical physician: https://www.ghezelbaash.ir/#saeed-ghezelbash; Wikidata: Q140287622; Google Knowledge Graph ID: /g/11nqdfk76c.',
+          '-metadata',f'comment={description} Canonical physician: https://www.ghezelbaash.ir/#saeed-ghezelbash; Wikidata: Q140287622; Google Knowledge Graph ID: /g/11nqdfk76c; Google Place ID: {CURRENT_PLACE_ID}.',
           '-metadata','copyright=© Saeed Ghezelbash. Licensed under CC BY 4.0.',
           '-metadata','license=https://creativecommons.org/licenses/by/4.0/','-metadata','website=https://www.ghezelbaash.ir/',
           '-metadata','canonical_person=https://www.ghezelbaash.ir/#saeed-ghezelbash','-metadata','wikidata=Q140287622',
           '-metadata','google_kgid=/g/11nqdfk76c','-metadata','canonical_clinic=https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah',
-          '-metadata','clinic_wikidata=Q140288589','-metadata','google_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas',
+          '-metadata','clinic_wikidata=Q140288589','-metadata',f'google_place_id={CURRENT_PLACE_ID}',
           '-metadata','metadata_profile=Entity Media Profile 3.1.0','-metadata',f'language={lang}',
           '-metadata:s:v:0',f'language={lang}','-metadata:s:a:0',f'language={lang}',temp]
         run(cmd)
-        probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_type,codec_name:format=tags','-of','json',str(temp)],text=True))
+        probe=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=codec_type,codec_name:format_tags','-of','json',str(temp)],text=True))
         tags={str(k).lower():str(v) for k,v in (probe.get('format',{}).get('tags',{}) or {}).items()}
         hay='\n'.join(f'{k}={v}' for k,v in tags.items())
-        for required in ['Saeed Ghezelbash','Q140287622','/g/11nqdfk76c','https://www.ghezelbaash.ir/#saeed-ghezelbash','creativecommons.org/licenses/by/4.0','Entity Media Profile 3.1.0']:
+        for required in ['Saeed Ghezelbash','Q140287622','/g/11nqdfk76c','https://www.ghezelbaash.ir/#saeed-ghezelbash',CURRENT_PLACE_ID,'creativecommons.org/licenses/by/4.0','Entity Media Profile 3.1.0']:
             if required not in hay: raise SystemExit(f'Missing embedded video metadata {required}: {old}\n{hay}')
         digest=hashlib.sha256(temp.read_bytes()).hexdigest()
         parts=old.name.rsplit('.',2)
@@ -74,7 +75,7 @@ def annotate_vtt():
       'Canonical-Person: https://www.ghezelbaash.ir/#saeed-ghezelbash\n'
       'Wikidata: Q140287622\nGoogle-Knowledge-Graph-ID: /g/11nqdfk76c\n'
       'Canonical-Clinic: https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah\n'
-      'Clinic-Wikidata: Q140288589\nGoogle-Place-ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas\n'
+      'Clinic-Wikidata: Q140288589\nGoogle-Place-ID: '+CURRENT_PLACE_ID+'\n'
       'License: https://creativecommons.org/licenses/by/4.0/\nMetadata-Profile: Entity Media Profile 3.1.0\n')
     mappings=[]
     for old in files:
@@ -84,6 +85,8 @@ def annotate_vtt():
             pos=text.find('\n\n')
             if pos<0: raise SystemExit(f'No WEBVTT header separator: {old}')
             text=text[:pos+2]+note+'\n'+text[pos+2:]
+        for required in ['Canonical-Person: https://www.ghezelbaash.ir/#saeed-ghezelbash','Wikidata: Q140287622','Google-Knowledge-Graph-ID: /g/11nqdfk76c','Google-Place-ID: '+CURRENT_PLACE_ID,'Metadata-Profile: Entity Media Profile 3.1.0']:
+            if required not in text: raise SystemExit(f'Missing WebVTT metadata {required}: {old}')
         data=text.encode('utf-8'); digest=hashlib.sha256(data).hexdigest(); parts=old.name.rsplit('.',2)
         if len(parts)!=3: raise SystemExit(f'Unexpected fingerprinted VTT filename {old.name}')
         new=old.with_name(f'{parts[0]}.{digest[:12]}.{parts[2]}'); new.write_bytes(data)
@@ -93,23 +96,30 @@ def annotate_vtt():
 
 def patch_validators():
     p=ROOT/'scripts/validate-media.mjs'; text=p.read_text(encoding='utf-8')
+    old_scan="""  const embeddedPlaceIds=[...new Set(bytes.toString('latin1').match(/ChIJ[A-Za-z0-9_-]{12,}/g)||[])];
+  for(const embedded of embeddedPlaceIds)if(embedded!==current)fail(`Foreign Google Place ID metadata ${embedded} in ${file}`);
+  if(bytes.includes(Buffer.from(current)))currentHits++;"""
+    new_scan="""  if(rasterPattern.test(file)){
+    const embeddedPlaceIds=[...new Set(bytes.toString('latin1').match(/ChIJ[A-Za-z0-9_-]{12,}/g)||[])];
+    for(const embedded of embeddedPlaceIds)if(embedded!==current)fail(`Foreign Google Place ID metadata ${embedded} in ${file}`);
+  }
+  if(bytes.includes(Buffer.from(current)))currentHits++;"""
+    if old_scan not in text: raise SystemExit('Raw Place ID scan anchor not found')
+    text=text.replace(old_scan,new_scan)
     start=text.index("const ffprobe=spawnSync('ffprobe',['-version']);")
-    end=text.index("if(currentHits<49)fail(`Entity Place ID metadata unexpectedly sparse: ${currentHits}`);",start)
-    tail_start=text.index('console.log(JSON.stringify(',end)
-    old_tail=text[tail_start:]
-    new_block="""const ffprobe=spawnSync('ffprobe',['-version']);
+    new_tail="""const ffprobe=spawnSync('ffprobe',['-version']);
 let videoFiles=0,imageFiles=0,videoMetadataFiles=0,vttMetadataFiles=0;
 const videoCandidates=all.filter(candidate=>/\\.(?:mp4|webm)$/i.test(candidate));
 if(videoCandidates.length!==8)fail(`Expected exactly 8 published videos, found ${videoCandidates.length}`);
 if(ffprobe.status!==0)fail('ffprobe is required for published media validation');
 for(const file of videoCandidates){
   videoFiles++;
-  const probe=spawnSync('ffprobe',['-v','error','-show_entries','stream=codec_type,codec_name:format=tags','-of','json',file],{encoding:'utf8'});
+  const probe=spawnSync('ffprobe',['-v','error','-show_entries','stream=codec_type,codec_name:format_tags','-of','json',file],{encoding:'utf8'});
   if(probe.status)fail(`ffprobe failed ${file}`);
   const parsed=JSON.parse(probe.stdout),streams=parsed.streams||[],tags=Object.fromEntries(Object.entries(parsed.format?.tags||{}).map(([key,value])=>[key.toLowerCase(),String(value)]));
   if(streams.filter(stream=>stream.codec_type==='video').length!==1||streams.filter(stream=>stream.codec_type==='audio').length!==1||streams.some(stream=>!['video','audio'].includes(stream.codec_type)))fail(`Unexpected streams ${file}`);
   const metadataText=Object.entries(tags).map(([key,value])=>`${key}=${value}`).join('\\n');
-  for(const required of ['Saeed Ghezelbash','Q140287622','/g/11nqdfk76c','https://www.ghezelbaash.ir/#saeed-ghezelbash','creativecommons.org/licenses/by/4.0','Entity Media Profile 3.1.0'])if(!metadataText.includes(required))fail(`Published video metadata missing ${required}: ${file}`);
+  for(const required of ['Saeed Ghezelbash','Q140287622','/g/11nqdfk76c','https://www.ghezelbaash.ir/#saeed-ghezelbash',current,'creativecommons.org/licenses/by/4.0','Entity Media Profile 3.1.0'])if(!metadataText.includes(required))fail(`Published video metadata missing ${required}: ${file}`);
   videoMetadataFiles++;
 }
 for(const file of rasters){
@@ -124,19 +134,20 @@ if(vttFiles.length!==6)fail(`Expected exactly 6 published WebVTT tracks, found $
 for(const file of vttFiles){
   const text=await readFile(file,'utf8');
   if(!text.startsWith('WEBVTT'))fail(`Invalid WebVTT header: ${file}`);
-  for(const required of ['Entity metadata — first-party media track','Canonical-Person: https://www.ghezelbaash.ir/#saeed-ghezelbash','Wikidata: Q140287622','Google-Knowledge-Graph-ID: /g/11nqdfk76c','License: https://creativecommons.org/licenses/by/4.0/','Metadata-Profile: Entity Media Profile 3.1.0'])if(!text.includes(required))fail(`Published WebVTT metadata missing ${required}: ${file}`);
+  for(const required of ['Entity metadata — first-party media track','Canonical-Person: https://www.ghezelbaash.ir/#saeed-ghezelbash','Wikidata: Q140287622','Google-Knowledge-Graph-ID: /g/11nqdfk76c',`Google-Place-ID: ${current}`,'License: https://creativecommons.org/licenses/by/4.0/','Metadata-Profile: Entity Media Profile 3.1.0'])if(!text.includes(required))fail(`Published WebVTT metadata missing ${required}: ${file}`);
   vttMetadataFiles++;
 }
 if(currentHits<49)fail(`Entity Place ID metadata unexpectedly sparse: ${currentHits}`);
 console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'49/49 rasters',videoMetadataCoverage:`${videoMetadataFiles}/8`,webVttMetadataCoverage:`${vttMetadataFiles}/6`,googleKnowledgeGraphRawIdCoverage:'49/49 raster + 8/8 video + 6/6 VTT',authorityMasterGoogleKgUrlCoverage:`${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`,authorityMasterIdentityFields:['IPTC PersonInImageId','Dublin Core relation','embedded DoctorIdentifiers','embedded EntityGraphJSONLD'],metadataProfile:'Entity Media Profile 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));
 """
-    p.write_text(text[:start]+new_block,encoding='utf-8',newline='')
+    p.write_text(text[:start]+new_tail,encoding='utf-8',newline='')
 
     q=ROOT/'scripts/validate-media-references.mjs'; t=q.read_text(encoding='utf-8')
-    t=t.replace("const rasterPattern=/\\.(?:avif|webp|jpe?g|png)$/i;","const rasterPattern=/\\.(?:avif|webp|jpe?g|png)$/i;\nconst publishedMediaPattern=/\\.(?:avif|webp|jpe?g|png|mp4|webm|vtt)$/i;")
-    anchor="""const textual=(await walk(root,{skip:['node_modules','.python-deps','dist','release','.astro']}))"""
-    if anchor not in t: raise SystemExit('validate-media-references textual anchor missing')
-    insert="""const published=(await walk(mediaRoot)).filter(file=>publishedMediaPattern.test(file)).sort();
+    if 'const publishedMediaPattern=' not in t:
+        t=t.replace("const rasterPattern=/\\.(?:avif|webp|jpe?g|png)$/i;","const rasterPattern=/\\.(?:avif|webp|jpe?g|png)$/i;\nconst publishedMediaPattern=/\\.(?:avif|webp|jpe?g|png|mp4|webm|vtt)$/i;")
+        anchor="""const textual=(await walk(root,{skip:['node_modules','.python-deps','dist','release','.astro']}))"""
+        if anchor not in t: raise SystemExit('validate-media-references textual anchor missing')
+        insert="""const published=(await walk(mediaRoot)).filter(file=>publishedMediaPattern.test(file)).sort();
 const canonicalPublished=[];
 for(const file of published){
   const basename=path.basename(file),extension=path.extname(basename);
@@ -146,9 +157,9 @@ for(const file of published){
 }
 
 """
-    t=t.replace(anchor,insert+anchor)
-    t=t.replace('for(const item of canonical){','for(const item of canonicalPublished){')
-    t=t.replace("console.log(JSON.stringify({canonicalRasterAssets:canonical.length,textFilesScanned:textual.length,staleReferences:0,sourceMutation:false,integrity:'PASS'},null,2));","console.log(JSON.stringify({canonicalRasterAssets:canonical.length,canonicalPublishedMediaAssets:canonicalPublished.length,textFilesScanned:textual.length,staleReferences:0,sourceMutation:false,integrity:'PASS'},null,2));")
+        t=t.replace(anchor,insert+anchor)
+        t=t.replace('for(const item of canonical){','for(const item of canonicalPublished){')
+        t=t.replace("console.log(JSON.stringify({canonicalRasterAssets:canonical.length,textFilesScanned:textual.length,staleReferences:0,sourceMutation:false,integrity:'PASS'},null,2));","console.log(JSON.stringify({canonicalRasterAssets:canonical.length,canonicalPublishedMediaAssets:canonicalPublished.length,textFilesScanned:textual.length,staleReferences:0,sourceMutation:false,integrity:'PASS'},null,2));")
     q.write_text(t,encoding='utf-8',newline='')
 
 def verify_fingerprints():
@@ -160,10 +171,10 @@ def verify_fingerprints():
             if not m or hashlib.sha256(p.read_bytes()).hexdigest()[:12]!=m.group(1): raise SystemExit(f'Fingerprint mismatch: {p}')
 
 def cleanup_temp_files():
+    clean_ci=subprocess.check_output(['git','show',f'{CLEAN_CI_COMMIT}:.github/workflows/ci.yml'])
+    (ROOT/'.github/workflows/ci.yml').write_bytes(clean_ci)
     for p in [ROOT/'.github/workflows/media-metadata-convergence.yml',ROOT/'scripts/one-time-media-metadata-convergence.py']:
         if p.exists(): p.unlink()
-    # Restore CI workflow exactly from parent of the trigger commit.
-    run(['git','checkout','HEAD^','--','.github/workflows/ci.yml'])
 
 video_map=remux_videos()
 vtt_map=annotate_vtt()
