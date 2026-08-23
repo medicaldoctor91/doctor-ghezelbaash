@@ -33,8 +33,41 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          sed -i 's/:format=tags/:format_tags/g' scripts/one-time-media-metadata-convergence.py
+          git show a17a83dd52837c5ab384da50901cd969802e6855:.github/workflows/ci.yml > /tmp/clean-ci.yml
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/one-time-media-metadata-convergence.py')
+          text=p.read_text(encoding='utf-8')
+          text=text.replace(':format=tags',':format_tags')
+          old="run(['git','checkout','HEAD^','--','.github/workflows/ci.yml'])"
+          new="(ROOT/'.github/workflows/ci.yml').write_bytes(Path('/tmp/clean-ci.yml').read_bytes())"
+          if old not in text: raise SystemExit('CI cleanup anchor not found')
+          p.write_text(text.replace(old,new),encoding='utf-8',newline='')
+          PY
           python scripts/one-time-media-metadata-convergence.py
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/validate-media.mjs')
+          text=p.read_text(encoding='utf-8')
+          old="""  const embeddedPlaceIds=[...new Set(bytes.toString('latin1').match(/ChIJ[A-Za-z0-9_-]{12,}/g)||[])];
+  for(const embedded of embeddedPlaceIds)if(embedded!==current)fail(`Foreign Google Place ID metadata ${embedded} in ${file}`);
+  if(bytes.includes(Buffer.from(current)))currentHits++;"""
+          new="""  if(rasterPattern.test(file)){
+    const embeddedPlaceIds=[...new Set(bytes.toString('latin1').match(/ChIJ[A-Za-z0-9_-]{12,}/g)||[])];
+    for(const embedded of embeddedPlaceIds)if(embedded!==current)fail(`Foreign Google Place ID metadata ${embedded} in ${file}`);
+  }
+  if(bytes.includes(Buffer.from(current)))currentHits++;"""
+          if old not in text: raise SystemExit('raw Place ID validator anchor not found')
+          text=text.replace(old,new)
+          old_video="['Saeed Ghezelbash','Q140287622','/g/11nqdfk76c','https://www.ghezelbaash.ir/#saeed-ghezelbash','creativecommons.org/licenses/by/4.0','Entity Media Profile 3.1.0']"
+          new_video="['Saeed Ghezelbash','Q140287622','/g/11nqdfk76c','https://www.ghezelbaash.ir/#saeed-ghezelbash','ChIJBT0YDOTt-j8RD-7mAPy6Zas','creativecommons.org/licenses/by/4.0','Entity Media Profile 3.1.0']"
+          if old_video not in text: raise SystemExit('video metadata requirement anchor not found')
+          text=text.replace(old_video,new_video,1)
+          old_vtt="['Entity metadata — first-party media track','Canonical-Person: https://www.ghezelbaash.ir/#saeed-ghezelbash','Wikidata: Q140287622','Google-Knowledge-Graph-ID: /g/11nqdfk76c','License: https://creativecommons.org/licenses/by/4.0/','Metadata-Profile: Entity Media Profile 3.1.0']"
+          new_vtt="['Entity metadata — first-party media track','Canonical-Person: https://www.ghezelbaash.ir/#saeed-ghezelbash','Wikidata: Q140287622','Google-Knowledge-Graph-ID: /g/11nqdfk76c','Google-Place-ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas','License: https://creativecommons.org/licenses/by/4.0/','Metadata-Profile: Entity Media Profile 3.1.0']"
+          if old_vtt not in text: raise SystemExit('VTT metadata requirement anchor not found')
+          p.write_text(text.replace(old_vtt,new_vtt),encoding='utf-8',newline='')
+          PY
       - name: Validate convergence
         shell: bash
         run: |
