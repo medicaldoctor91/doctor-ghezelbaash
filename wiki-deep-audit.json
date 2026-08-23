@@ -1,0 +1,945 @@
+{
+  "generated_at_utc": "2026-08-23T00:18:01.912818+00:00",
+  "auth": {
+    "wikidata": "Medicaldoctor91",
+    "enwiki": "Medicaldoctor91",
+    "commons": "Medicaldoctor91"
+  },
+  "clinic_current": {
+    "sitelinks": {
+      "commonswiki": "Category:Dr. Saeed Ghezelbash Aesthetic Clinic"
+    },
+    "P31": [
+      {
+        "rank": "normal",
+        "value": "Q1774898",
+        "qualifiers": [],
+        "reference_count": 1
+      }
+    ],
+    "P112_founder": [
+      {
+        "rank": "normal",
+        "value": "Q140287622",
+        "qualifiers": [],
+        "reference_count": 4
+      }
+    ],
+    "P1037_manager": [
+      {
+        "rank": "normal",
+        "value": "Q140287622",
+        "qualifiers": [],
+        "reference_count": 4
+      }
+    ],
+    "P127_owned_by": [
+      {
+        "rank": "normal",
+        "value": "Q140287622",
+        "qualifiers": [],
+        "reference_count": 3
+      }
+    ],
+    "P137_operator": [],
+    "P2671_googlekg": [
+      {
+        "rank": "normal",
+        "value": "/g/11r3rzdtb3",
+        "qualifiers": [],
+        "reference_count": 1
+      }
+    ],
+    "P3749_maps_cid": [
+      {
+        "rank": "normal",
+        "value": "12350483144643112463",
+        "qualifiers": [],
+        "reference_count": 1
+      }
+    ],
+    "backlinks": [
+      {
+        "pageid": 133725574,
+        "ns": 0,
+        "title": "Q140287622"
+      },
+      {
+        "pageid": 454,
+        "ns": 4,
+        "title": "Wikidata:Requests for deletions"
+      },
+      {
+        "pageid": 18932656,
+        "ns": 4,
+        "title": "Wikidata:Database reports/Constraint violations/P1343"
+      },
+      {
+        "pageid": 31697954,
+        "ns": 4,
+        "title": "Wikidata:Database reports/Constraint violations/P3025"
+      },
+      {
+        "pageid": 117820031,
+        "ns": 4,
+        "title": "Wikidata:Database reports/Constraint violations/P12201"
+      },
+      {
+        "pageid": 134595852,
+        "ns": 4,
+        "title": "Wikidata:Requests for deletions/Archive/2026/08/22"
+      }
+    ]
+  },
+  "person_current": {
+    "sitelinks": {
+      "commonswiki": "Category:Saeed Ghezelbash",
+      "enwikisource": "Author:Mohammad Saeed Ghezelbash"
+    },
+    "P1830_owner_of": [
+      {
+        "rank": "normal",
+        "value": "Q140288589",
+        "qualifiers": [
+          "P1932",
+          "P1810"
+        ],
+        "reference_count": 5
+      }
+    ],
+    "P937_work_location": [
+      {
+        "rank": "normal",
+        "value": "Q180078",
+        "qualifiers": [],
+        "reference_count": 3
+      },
+      {
+        "rank": "normal",
+        "value": "Q140288589",
+        "qualifiers": [
+          "P1932"
+        ],
+        "reference_count": 7
+      }
+    ],
+    "P1416_affiliation": [
+      {
+        "rank": "normal",
+        "value": "Q6393994",
+        "qualifiers": [
+          "P585"
+        ],
+        "reference_count": 2
+      },
+      {
+        "rank": "normal",
+        "value": "Q6393994",
+        "qualifiers": [
+          "P585"
+        ],
+        "reference_count": 2
+      },
+      {
+        "rank": "normal",
+        "value": "Q140288589",
+        "qualifiers": [
+          "P2868"
+        ],
+        "reference_count": 1
+      }
+    ]
+  },
+  "clinic_history_since_aug14": [
+    {
+      "revid": 2531543074,
+      "parentid": 2531543065,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-15T01:24:38Z",
+      "comment": "/* wbsetsitelink-add:1|commonswiki */ Category:Dr. Saeed Ghezelbash Aesthetic Clinic, Link clinic item to Commons category"
+    },
+    {
+      "revid": 2532756631,
+      "parentid": 2531543074,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T13:42:31Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P127]]: [[Q140287622]], #quickstatements; #temporary_batch_1787060542629"
+    },
+    {
+      "revid": 2532756643,
+      "parentid": 2532756631,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T13:42:33Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P112]]: [[Q140287622]], #quickstatements; #temporary_batch_1787060542629"
+    },
+    {
+      "revid": 2532756653,
+      "parentid": 2532756643,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T13:42:35Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787060542629"
+    },
+    {
+      "revid": 2532756666,
+      "parentid": 2532756653,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T13:42:37Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P137]]: [[Q140287622]], #quickstatements; #temporary_batch_1787060542629"
+    },
+    {
+      "revid": 2532763442,
+      "parentid": 2532763430,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T14:04:16Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787061837724"
+    },
+    {
+      "revid": 2532765278,
+      "parentid": 2532763458,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T14:09:03Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787062116404"
+    },
+    {
+      "revid": 2532839014,
+      "parentid": 2532838990,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:34Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839020,
+      "parentid": 2532839014,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:36Z",
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839055,
+      "parentid": 2532839044,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:41Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839067,
+      "parentid": 2532839055,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:43Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839083,
+      "parentid": 2532839067,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:45Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839097,
+      "parentid": 2532839083,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:47Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1037]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839110,
+      "parentid": 2532839097,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:49Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P127]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839115,
+      "parentid": 2532839110,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:50Z",
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P127]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839141,
+      "parentid": 2532839136,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:55Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P127]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839151,
+      "parentid": 2532839141,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:56Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P127]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839163,
+      "parentid": 2532839151,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:18:58Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P127]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839171,
+      "parentid": 2532839163,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:19:00Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P137]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839180,
+      "parentid": 2532839171,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:19:01Z",
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P137]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839393,
+      "parentid": 2532839384,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:19:50Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P137]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839400,
+      "parentid": 2532839393,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:19:52Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P137]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839412,
+      "parentid": 2532839400,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:19:54Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P137]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532839505,
+      "parentid": 2532839492,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:20:07Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P112]]: [[Q140287622]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2533493553,
+      "parentid": 2533493545,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T00:58:57Z",
+      "comment": "/* wbremovereferences-remove:2||1 */ [[Property:P2671]]: /g/11r3rzdtb3, Replace Google search URL reference with structured Knowledge Graph provenance"
+    },
+    {
+      "revid": 2533493557,
+      "parentid": 2533493553,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T00:58:58Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P2671]]: /g/11r3rzdtb3, Use structured Google Knowledge Graph provenance"
+    },
+    {
+      "revid": 2533493558,
+      "parentid": 2533493557,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T00:58:59Z",
+      "comment": "/* wbremovereferences-remove:2||1 */ [[Property:P2671]]: /g/11r3rzdtb3, Replace Google search URL reference with structured Knowledge Graph provenance"
+    },
+    {
+      "revid": 2533493563,
+      "parentid": 2533493558,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T00:59:00Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P2671]]: /g/11r3rzdtb3, Use structured Google Knowledge Graph provenance"
+    },
+    {
+      "revid": 2533493593,
+      "parentid": 2533493563,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T00:59:11Z",
+      "comment": "/* wbremovereferences-remove:2||1 */ [[Property:P2671]]: /g/11r3rzdtb3, Replace Google search URL reference with structured Knowledge Graph provenance"
+    },
+    {
+      "revid": 2533493595,
+      "parentid": 2533493593,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T00:59:12Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P2671]]: /g/11r3rzdtb3, Use structured Google Knowledge Graph provenance"
+    },
+    {
+      "revid": 2533506285,
+      "parentid": 2533506279,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:34Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P856]]: https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah, Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506288,
+      "parentid": 2533506285,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:35Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P856]]: https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah, Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506296,
+      "parentid": 2533506295,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:40Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P112]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506298,
+      "parentid": 2533506296,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:41Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P112]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506300,
+      "parentid": 2533506298,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:42Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P112]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506303,
+      "parentid": 2533506300,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:43Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P112]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506305,
+      "parentid": 2533506303,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:45Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P1037]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506308,
+      "parentid": 2533506305,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:46Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P1037]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506311,
+      "parentid": 2533506308,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:47Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P1037]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506316,
+      "parentid": 2533506311,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:48Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P127]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506319,
+      "parentid": 2533506316,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:49Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P127]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506322,
+      "parentid": 2533506319,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:50Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P127]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506326,
+      "parentid": 2533506322,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:51Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P137]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506329,
+      "parentid": 2533506326,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:52Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P137]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2533506330,
+      "parentid": 2533506329,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-20T01:54:53Z",
+      "comment": "/* wbsetreference-set:2| */ [[Property:P137]]: [[Q140287622]], Correct source-specific subject/object named-as wording"
+    },
+    {
+      "revid": 2534568691,
+      "parentid": 2533506330,
+      "minor": false,
+      "user": "Madamebiblio",
+      "timestamp": "2026-08-22T03:15:25Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P1343]]: [[Q140304972]]"
+    },
+    {
+      "revid": 2534889517,
+      "parentid": 2534568691,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:40:35Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P31]]: [[Q4287745]]"
+    },
+    {
+      "revid": 2534889560,
+      "parentid": 2534889517,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:40:52Z",
+      "comment": "/* wbsetclaim-update:2||1|2 */ [[Property:P138]]: [[Q140287622]]"
+    },
+    {
+      "revid": 2534889609,
+      "parentid": 2534889560,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:41:02Z",
+      "comment": "/* wbsetclaim-update:2||1|2 */ [[Property:P112]]: [[Q140287622]]"
+    },
+    {
+      "revid": 2534890014,
+      "parentid": 2534889609,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:42:24Z",
+      "comment": "/* wbsetclaim-update:2||1 */ [[Property:P856]]: https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+    },
+    {
+      "revid": 2534890677,
+      "parentid": 2534890014,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:43:31Z",
+      "comment": "/* wbsetclaim-update:2||1 */ [[Property:P137]]: [[Q140287622]]"
+    },
+    {
+      "revid": 2534890852,
+      "parentid": 2534890677,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:43:49Z",
+      "comment": "/* wbsetclaim-update:2||1 */ [[Property:P127]]: [[Q140287622]]"
+    },
+    {
+      "revid": 2534891076,
+      "parentid": 2534890852,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:44:31Z",
+      "comment": "/* wbsetclaim-update:2||1 */ [[Property:P1037]]: [[Q140287622]]"
+    },
+    {
+      "revid": 2534891101,
+      "parentid": 2534891076,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:44:35Z",
+      "comment": "/* wbsetclaim-update:2||1|1 */ [[Property:P1037]]: [[Q140287622]]"
+    },
+    {
+      "revid": 2534891276,
+      "parentid": 2534891101,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:45:13Z",
+      "comment": "/* wbsetclaim-update:2||1|1 */ [[Property:P18]]: Saeed-Ghezelbaash-in-clinical-office.jpg"
+    },
+    {
+      "revid": 2534891801,
+      "parentid": 2534891276,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:46:38Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P6375]]: کرمانشاه، میدان ۱۷ شهریور، ساختمان ویستا"
+    },
+    {
+      "revid": 2534893441,
+      "parentid": 2534891801,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:51:19Z",
+      "comment": "/* wbsetclaim-create:2||1 */ [[Property:P625]]: 34°20'24.4\"N, 47°5'6.6\"E"
+    },
+    {
+      "revid": 2534893446,
+      "parentid": 2534893441,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:51:20Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P625]]: 34°20'24.4475\"N, 47°5'6.6401\"E"
+    },
+    {
+      "revid": 2534893481,
+      "parentid": 2534893446,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:51:33Z",
+      "comment": "/* wbsetclaim-update:2||1|1 */ [[Property:P131]]: [[Q140562207]]"
+    },
+    {
+      "revid": 2534893584,
+      "parentid": 2534893481,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T15:51:47Z",
+      "comment": "/* wbsetclaim-create:2||1 */ [[Property:P276]]: [[Q56359678]]"
+    },
+    {
+      "revid": 2534897656,
+      "parentid": 2534893584,
+      "minor": false,
+      "user": "Orijentolog",
+      "timestamp": "2026-08-22T16:00:52Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P137]]: [[Q140287622]]"
+    }
+  ],
+  "person_history_since_aug14": [
+    {
+      "revid": 2532136475,
+      "parentid": 2531810320,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-16T23:21:44Z",
+      "comment": "/* wbsetsitelink-add:1|enwikisource */ Author:Mohammad Saeed Ghezelbash, Link existing item to its English Wikisource page: Author:Mohammad Saeed Ghezelbash"
+    },
+    {
+      "revid": 2532756591,
+      "parentid": 2532745591,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T13:42:26Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1830]]: [[Q140288589]], #quickstatements; #temporary_batch_1787060542629"
+    },
+    {
+      "revid": 2532756604,
+      "parentid": 2532756591,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T13:42:28Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P937]]: [[Q140288589]], #quickstatements; #temporary_batch_1787060542629"
+    },
+    {
+      "revid": 2532756617,
+      "parentid": 2532756604,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T13:42:30Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P937]]: [[Q180078]], #quickstatements; #temporary_batch_1787060542629"
+    },
+    {
+      "revid": 2532763400,
+      "parentid": 2532763394,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T14:04:12Z",
+      "comment": "/* wbsetqualifier-add:1| */ [[Property:P2389]]: [[Q140288589]], #quickstatements; #temporary_batch_1787061837724"
+    },
+    {
+      "revid": 2532841952,
+      "parentid": 2532841942,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:27:27Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1830]]: [[Q140288589]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2532841972,
+      "parentid": 2532841968,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-18T18:27:29Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P937]]: [[Q140288589]], #quickstatements; #temporary_batch_1787076924717"
+    },
+    {
+      "revid": 2534568373,
+      "parentid": 2533913321,
+      "minor": false,
+      "user": "Madamebiblio",
+      "timestamp": "2026-08-22T03:14:39Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1830]]: [[Q140304972]]"
+    },
+    {
+      "revid": 2534568423,
+      "parentid": 2534568373,
+      "minor": false,
+      "user": "Madamebiblio",
+      "timestamp": "2026-08-22T03:14:45Z",
+      "comment": "/* wbremoveclaims-remove:1| */ [[Property:P1830]]: [[Q140304972]]"
+    },
+    {
+      "revid": 2535115867,
+      "parentid": 2534568423,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-22T23:37:59Z",
+      "comment": "/* wbcreateclaim-create:1| */ [[Property:P1416]]: [[Q140288589]], #quickstatements; #temporary_batch_1787441856298"
+    },
+    {
+      "revid": 2535115933,
+      "parentid": 2535115911,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-22T23:38:07Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P1416]]: [[Q140288589]], #quickstatements; #temporary_batch_1787441856298"
+    },
+    {
+      "revid": 2535116024,
+      "parentid": 2535115997,
+      "minor": false,
+      "user": "Medicaldoctor91",
+      "timestamp": "2026-08-22T23:38:15Z",
+      "comment": "/* wbsetreference-add:2| */ [[Property:P937]]: [[Q180078]], #quickstatements; #temporary_batch_1787441856298"
+    }
+  ],
+  "rfd_section_changes": [
+    {
+      "revid": 2533512838,
+      "timestamp": "2026-08-20T02:20:48Z",
+      "user": "DeltaBot",
+      "comment": "Bot: marking 0 requests as done (168 unactioned requests)",
+      "section": null
+    },
+    {
+      "revid": 2533513468,
+      "timestamp": "2026-08-20T02:22:33Z",
+      "user": "William Graham",
+      "comment": "/* Q140288589 */ requested deletion, created by [[User:Medicaldoctor91]] ([[:gitlab:wikibayer/WikiData-Gadget-RequestDeletion|RD]][[MediaWiki talk:Gadget-RequestDeletion.js|💬]])",
+      "section": "{{rfd links|1=Q140288589|2=Not notable.}}\n\nNot notable. [[User:William Graham|William Graham]] ([[User talk:William Graham|<span class=\"signature-talk\">{{int:Talkpagelinktext}}</span>]]) 02:22, 20 August 2026 (UTC)"
+    },
+    {
+      "revid": 2533515883,
+      "timestamp": "2026-08-20T02:31:55Z",
+      "user": "DeltaBot",
+      "comment": "Bot: marking 0 requests as done (170 unactioned requests)",
+      "section": "{{rfd links|1=Q140288589|2=Not notable.}}\n\nNot notable. [[User:William Graham|William Graham]] ([[User talk:William Graham|<span class=\"signature-talk\">{{int:Talkpagelinktext}}</span>]]) 02:22, 20 August 2026 (UTC)\n: {{on hold}} This item is linked from 3 others. --[[User:DeltaBot|DeltaBot]] ([[User talk:DeltaBot|<span class=\"signature-talk\">{{int:Talkpagelinktext}}</span>]]) 02:31, 20 August 2026 (UTC)"
+    }
+  ],
+  "notability_policy_revision": {
+    "revid": 459482,
+    "timestamp": "2012-11-15T12:17:26Z",
+    "user": "Theopolisme",
+    "comment": "draft — placeholder"
+  },
+  "notability_policy_snippets": [],
+  "commons_category": {
+    "pageid": 197493633,
+    "missing": false,
+    "categoryinfo": {
+      "size": 2,
+      "pages": 0,
+      "files": 2,
+      "subcats": 0,
+      "hidden": false
+    },
+    "pageprops": {
+      "kartographer_frames": "1",
+      "page_image_free": "Saeed-Ghezelbaash-in-clinical-office.jpg",
+      "wikibase_item": "Q140288589"
+    },
+    "history_since_aug14": [
+      {
+        "revid": 1261407374,
+        "parentid": 0,
+        "minor": false,
+        "user": "Medicaldoctor91",
+        "timestamp": "2026-08-15T01:24:30Z",
+        "comment": "Create Commons category for Dr. Saeed Ghezelbash Aesthetic Clinic"
+      },
+      {
+        "revid": 1261765111,
+        "parentid": 1261407374,
+        "minor": true,
+        "user": "Pi bot",
+        "timestamp": "2026-08-15T18:40:29Z",
+        "comment": "Tidy Wikidata Infobox call"
+      },
+      {
+        "revid": 1264063288,
+        "parentid": 1261765111,
+        "minor": false,
+        "user": "William Graham",
+        "timestamp": "2026-08-20T02:24:25Z",
+        "comment": "/* */ Wikidata statements go on Wikidata"
+      },
+      {
+        "revid": 1265539847,
+        "parentid": 1264063288,
+        "minor": false,
+        "user": "Orijentolog",
+        "timestamp": "2026-08-22T15:53:21Z",
+        "comment": ""
+      }
+    ]
+  },
+  "enwiki_outcomes": {
+    "bipolar_current": {
+      "pageid": 4761393,
+      "revid": 1364896215,
+      "timestamp": "2026-07-19T03:41:38Z",
+      "user": "Bender the Bot",
+      "comment": "/* Lithium salts */ HTTP to HTTPS for [[Wayback Machine]], replaced: http://web.archive.org/ → https://web.archive.org/"
+    },
+    "bipolar_evidence": {
+      "10.1111/bdi.13115": {
+        "present": false,
+        "snippet": null
+      },
+      "10.3390/md23020084": {
+        "present": false,
+        "snippet": null
+      },
+      "10.4103/2008-7802.182734": {
+        "present": false,
+        "snippet": null
+      },
+      "27280013": {
+        "present": false,
+        "snippet": null
+      },
+      "34228881": {
+        "present": false,
+        "snippet": null
+      },
+      "39997208": {
+        "present": false,
+        "snippet": null
+      }
+    },
+    "bipolar_revisions_since_request": [],
+    "botulinum_current": {
+      "pageid": 40172,
+      "revid": 1370563422,
+      "timestamp": "2026-08-21T21:21:06Z",
+      "user": "Spencer",
+      "comment": "/* External links */ relink Wikiversity link per COI request on talk by [[User:Medicaldoctor91]]"
+    },
+    "botulinum_evidence": {
+      "wikiversity": {
+        "present": false,
+        "snippet": null
+      },
+      "Botulinum toxin in aesthetic medicine": {
+        "present": true,
+        "snippet": "er CJ |title = Overview of DaxibotulinumtoxinA for Injection: A Novel Formulation of Botulinum Toxin Type A |journal = Drugs |volume = 81 |issue = 18 |pages = 2091–2101 |date = December 2021 |pmid = 34787840 |pmc = 8648634 |doi = 10.1007/s40265-021-01631-w |doi-access = free |title-link = doi }}\n\n== External links ==\n{{sister project links||d=Q114242090|c=Category:Botulinum neurotoxin|n=no|b=no|v=Botulinum toxin in aesthetic medicine|voy=no|m=no|mw=no|s=no|wikt=no|species=no}}\n* {{PDBe-KB2|P0DPI1|Botulinum neurotoxin type A}}\n* {{PDBe-KB2|P10844|Botulinum neurotoxin type B}}\n* {{PDBe-KB2|A0A0X1KH89|Bontoxilysin A}}\n* {{cite web |title=AbobotulinumtoxinA Injection |website=MedlinePlus |url=https://medlineplus.gov/druginfo/meds/a609035.html}}\n* {{cite web |title=IncobotulinumtoxinA Injection |website=MedlinePlus |url=https://medlineplus.gov/druginfo/meds/a611008.html}}\n* {{cite web |title=OnabotulinumtoxinA Injection |website=MedlinePlus |url=https://medlineplus.gov/druginfo/meds/a608013.html}}\n* {{cite web |title=PrabotulinumtoxinA-xvfs Injection |website=MedlinePlus |url=https://medlineplus.gov/druginfo/meds/a619021.html}}\n* {{cite web |title=RimabotulinumtoxinB Injection |website=MedlinePlus |url=https://medlineplus.gov/druginfo/meds/a608014.html}}\n\n{{Muscle relaxants}}\n{{Toxins}}\n{{Acetylcholine metabolism and transport modulators}}\n{{Cosmetics}}\n{{Metalloendopeptidases}}\n{{E"
+      },
+      "Facial assessment before aesthetic botulinum toxin treatment": {
+        "present": false,
+        "snippet": null
+      }
+    },
+    "botulinum_revisions_since_request": [
+      {
+        "revid": 1369611487,
+        "parentid": 1368642430,
+        "minor": true,
+        "user": "JCW-CleanerBot",
+        "timestamp": "2026-08-16T01:39:27Z",
+        "comment": "/* top */ mark free doi"
+      },
+      {
+        "revid": 1369764261,
+        "parentid": 1369611487,
+        "minor": false,
+        "user": "Dr vulpes",
+        "timestamp": "2026-08-17T00:55:54Z",
+        "comment": "/* External links */ added link to Wikiversity"
+      },
+      {
+        "revid": 1370369738,
+        "parentid": 1369764261,
+        "minor": true,
+        "user": "Hagaland",
+        "timestamp": "2026-08-20T19:01:44Z",
+        "comment": "/* Initial descriptions and discovery */ suriname added"
+      },
+      {
+        "revid": 1370405779,
+        "parentid": 1370369738,
+        "minor": true,
+        "user": "Rice2422",
+        "timestamp": "2026-08-20T23:38:46Z",
+        "comment": "Italicize Clostridium botulinum in short in accordance with MOS:SCINAME"
+      },
+      {
+        "revid": 1370406117,
+        "parentid": 1370405779,
+        "minor": false,
+        "user": "Rice2422",
+        "timestamp": "2026-08-20T23:42:23Z",
+        "comment": "Undid revision [[Special:Diff/1370405779|1370405779]] by [[Special:Contributions/Rice2422|Rice2422]] ([[User talk:Rice2422|talk]]) Turns out WP:SDFORMAT advises against italics"
+      },
+      {
+        "revid": 1370563422,
+        "parentid": 1370406117,
+        "minor": false,
+        "user": "Spencer",
+        "timestamp": "2026-08-21T21:21:06Z",
+        "comment": "/* External links */ relink Wikiversity link per COI request on talk by [[User:Medicaldoctor91]]"
+      }
+    ],
+    "attachment_current": {
+      "pageid": 50015690,
+      "revid": 1325408277,
+      "timestamp": "2025-12-02T22:56:27Z",
+      "user": "Justheretosay",
+      "comment": "/* growthexperiments-addlink-summary-summary:3|0|0 */"
+    },
+    "attachment_evidence": {
+      "34574943": {
+        "present": false,
+        "snippet": null
+      },
+      "Ghezelbash": {
+        "present": false,
+        "snippet": null
+      }
+    }
+  }
+}
