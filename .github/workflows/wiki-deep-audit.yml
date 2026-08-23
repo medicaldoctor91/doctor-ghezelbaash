@@ -1,0 +1,213 @@
+name: Deep authenticated Wikimedia history audit
+
+on:
+  push:
+    branches: [wiki-api-access]
+    paths:
+      - .github/workflows/wiki-deep-audit.yml
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: wiki-api-access
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - run: python -m pip install --disable-pip-version-check requests
+      - name: Run deep authenticated read-only audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${WIKIMEDIA_USERNAME:-}"
+          test -n "${WIKIMEDIA_BOT_PASSWORD:-}"
+          echo "::add-mask::$WIKIMEDIA_BOT_PASSWORD"
+          python - <<'PY' > wiki-deep-audit.json
+          import os, json, requests, datetime, re, hashlib
+
+          USER=os.environ['WIKIMEDIA_USERNAME']
+          PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
+          UA='GhezelbaashDeepHistoryAudit/1.0 (https://www.ghezelbaash.ir/)'
+
+          def client(host):
+              s=requests.Session(); s.headers.update({'User-Agent':UA})
+              api=f'https://{host}/w/api.php'
+              def get(**p):
+                  p.update(format='json',formatversion=2,maxage=0,smaxage=0)
+                  r=s.get(api,params=p,timeout=90); r.raise_for_status(); d=r.json()
+                  if 'error' in d: raise RuntimeError({'host':host,'error':d['error']})
+                  return d
+              def post(**p):
+                  p.update(format='json',formatversion=2)
+                  r=s.post(api,data=p,timeout=90); r.raise_for_status(); d=r.json()
+                  if 'error' in d: raise RuntimeError({'host':host,'error':d['error']})
+                  return d
+              tok=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+              lg=post(action='login',lgname=USER,lgpassword=PASS,lgtoken=tok)
+              if lg.get('login',{}).get('result')!='Success': raise RuntimeError({'host':host,'login':lg})
+              ui=get(action='query',meta='userinfo',uiprop='groups|rights|editcount')['query']['userinfo']
+              return get,ui
+
+          wd,wd_ui=client('www.wikidata.org')
+          en,en_ui=client('en.wikipedia.org')
+          co,co_ui=client('commons.wikimedia.org')
+
+          def revisions(get,title,start=None,end=None,content=False,limit=1000):
+              out=[]; cont={}
+              while True:
+                  prop='ids|timestamp|user|comment|flags'
+                  if content: prop += '|content'
+                  p=dict(action='query',prop='revisions',titles=title,rvprop=prop,rvlimit='max',rvdir='newer')
+                  if content: p['rvslots']='main'
+                  if start: p['rvstart']=start
+                  if end: p['rvend']=end
+                  p.update(cont)
+                  d=get(**p); page=d['query']['pages'][0]
+                  out.extend(page.get('revisions') or [])
+                  if 'continue' not in d or len(out)>=limit: break
+                  cont=d['continue']
+              return out[:limit]
+
+          def revtext(r):
+              return r.get('slots',{}).get('main',{}).get('content','')
+
+          def entity(q):
+              return wd(action='wbgetentities',ids=q,props='labels|descriptions|claims|sitelinks')['entities'][q]
+
+          def vals(e,p):
+              arr=[]
+              for c in e.get('claims',{}).get(p,[]):
+                  sn=c.get('mainsnak',{}); dv=sn.get('datavalue',{}).get('value')
+                  if isinstance(dv,dict) and 'id' in dv: dv=dv['id']
+                  arr.append({'rank':c.get('rank'),'value':dv,'qualifiers':list((c.get('qualifiers') or {}).keys()),'reference_count':len(c.get('references') or [])})
+              return arr
+
+          clinic=entity('Q140288589')
+          person=entity('Q140287622')
+
+          clinic_revs=revisions(wd,'Q140288589','2026-08-14T00:00:00Z',content=False,limit=1000)
+          person_revs=revisions(wd,'Q140287622','2026-08-14T00:00:00Z',content=False,limit=1000)
+
+          # Focus on high-signal clinic revisions and every edit by someone other than the account since Aug 15.
+          prop_terms=['P137','P1037','P112','P127','P31','sitelink','commonswiki','P2671','P3749','P856','P2003','P1830','P937','P1416']
+          clinic_signal=[]
+          for r in clinic_revs:
+              cm=r.get('comment') or ''
+              if r.get('user')!=wd_ui['name'] or any(t.lower() in cm.lower() for t in prop_terms):
+                  clinic_signal.append(r)
+
+          person_signal=[]
+          for r in person_revs:
+              cm=r.get('comment') or ''
+              if r.get('user')!=wd_ui['name'] or any(t.lower() in cm.lower() for t in ['P1830','P937','P1416','Q140288589','commonswiki','enwikisource']):
+                  person_signal.append(r)
+
+          # RfD section evolution: capture only revisions where the target section changes.
+          rfd_revs=revisions(wd,'Wikidata:Requests for deletions','2026-08-20T02:20:00Z',content=True,limit=500)
+          sec_re=re.compile(r'(?ms)^==\s*\[\[Q140288589\]\]\s*==\s*(.*?)(?=^==[^=]|\Z)')
+          rfd_changes=[]; last_hash=None
+          for r in rfd_revs:
+              text=revtext(r); m=sec_re.search(text)
+              section=(m.group(1).strip() if m else None)
+              h=hashlib.sha256((section or '').encode()).hexdigest()
+              if h!=last_hash:
+                  rfd_changes.append({'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'section':section})
+                  last_hash=h
+
+          # Current notability text around criterion 1 / Commons / criterion 3.
+          notrev=revisions(wd,'Wikidata:Notability',content=True,limit=1)[-1]
+          nottxt=revtext(notrev)
+          snippets=[]
+          for pat in ['at least one valid','Category items with a sitelink only to Wikimedia Commons','structural need']:
+              i=nottxt.lower().find(pat.lower())
+              if i>=0: snippets.append(nottxt[max(0,i-500):i+1800])
+
+          # Commons category history and current metadata.
+          cat='Category:Dr. Saeed Ghezelbash Aesthetic Clinic'
+          cat_revs=revisions(co,cat,'2026-08-14T00:00:00Z',content=False,limit=500)
+          cat_page=co(action='query',prop='info|categoryinfo|pageprops',titles=cat)['query']['pages'][0]
+
+          # English Wikipedia article outcome checks.
+          def page_current(title):
+              d=en(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)
+              p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
+              return {'pageid':p.get('pageid'),'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'text':revtext(r)}
+
+          bipolar=page_current('Treatment of bipolar disorder')
+          botox=page_current('Botulinum toxin')
+          attachment=page_current('Attachment and health')
+
+          def evidence(text, needles):
+              out={}
+              lo=text.lower()
+              for n in needles:
+                  i=lo.find(n.lower())
+                  out[n]={'present':i>=0,'snippet':text[max(0,i-500):i+1200] if i>=0 else None}
+              return out
+
+          bipolar_ev=evidence(bipolar['text'],['10.1111/bdi.13115','10.3390/md23020084','10.4103/2008-7802.182734','27280013','34228881','39997208'])
+          botox_ev=evidence(botox['text'],['wikiversity','Botulinum toxin in aesthetic medicine','Facial assessment before aesthetic botulinum toxin treatment'])
+          attachment_ev=evidence(attachment['text'],['34574943','Ghezelbash','attachment style'])
+
+          # Get relevant enwiki histories since first request.
+          botox_revs=revisions(en,'Botulinum toxin','2026-08-16T00:55:00Z',content=False,limit=500)
+          bipolar_revs=revisions(en,'Treatment of bipolar disorder','2026-08-17T00:49:00Z',content=False,limit=500)
+
+          # Backlinks on Wikidata to clinic item.
+          backlinks=[]; cont={}
+          while True:
+              p=dict(action='query',list='backlinks',bltitle='Q140288589',bllimit='max',blnamespace='0|4')
+              p.update(cont); d=wd(**p); backlinks.extend(d['query']['backlinks'])
+              if 'continue' not in d: break
+              cont=d['continue']
+
+          result={
+            'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'auth':{'wikidata':wd_ui['name'],'enwiki':en_ui['name'],'commons':co_ui['name']},
+            'clinic_current':{
+              'sitelinks':{k:v.get('title') for k,v in clinic.get('sitelinks',{}).items()},
+              'P31':vals(clinic,'P31'),'P112_founder':vals(clinic,'P112'),'P1037_manager':vals(clinic,'P1037'),
+              'P127_owned_by':vals(clinic,'P127'),'P137_operator':vals(clinic,'P137'),'P2671_googlekg':vals(clinic,'P2671'),
+              'P3749_maps_cid':vals(clinic,'P3749'),'backlinks':backlinks,
+            },
+            'person_current':{
+              'sitelinks':{k:v.get('title') for k,v in person.get('sitelinks',{}).items()},
+              'P1830_owner_of':vals(person,'P1830'),'P937_work_location':vals(person,'P937'),'P1416_affiliation':vals(person,'P1416'),
+            },
+            'clinic_history_since_aug14':clinic_signal,
+            'person_history_since_aug14':person_signal,
+            'rfd_section_changes':rfd_changes,
+            'notability_policy_revision':{k:notrev.get(k) for k in ['revid','timestamp','user','comment']},
+            'notability_policy_snippets':snippets,
+            'commons_category':{
+              'pageid':cat_page.get('pageid'),'missing':cat_page.get('missing',False),'categoryinfo':cat_page.get('categoryinfo',{}),
+              'pageprops':cat_page.get('pageprops',{}),'history_since_aug14':cat_revs,
+            },
+            'enwiki_outcomes':{
+              'bipolar_current':{k:v for k,v in bipolar.items() if k!='text'},'bipolar_evidence':bipolar_ev,'bipolar_revisions_since_request':bipolar_revs,
+              'botulinum_current':{k:v for k,v in botox.items() if k!='text'},'botulinum_evidence':botox_ev,'botulinum_revisions_since_request':botox_revs,
+              'attachment_current':{k:v for k,v in attachment.items() if k!='text'},'attachment_evidence':attachment_ev,
+            }
+          }
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit deep audit result on isolated branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name ghezelbaash-wiki-audit-bot
+          git config user.email actions@users.noreply.github.com
+          git add wiki-deep-audit.json
+          git commit -m "Store deep authenticated Wikimedia audit"
+          git push origin HEAD:wiki-api-access
