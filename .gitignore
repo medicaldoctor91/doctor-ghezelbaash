@@ -26,4 +26,4 @@ public/query-matrix.jsonl
 .release/huggingface/
 
 # one-time full media metadata trigger; never merged
-# synchronize trigger 4
+# synchronize trigger 5
