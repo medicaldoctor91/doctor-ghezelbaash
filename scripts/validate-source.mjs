@@ -55,11 +55,9 @@ if(/\b(?:readFile|writeFile|readdir|unlink)\b/.test(baseGenerator))fail('Project
 for(const symbol of ['compilePageAssets','compileGraphProjections','compileSemanticCorpus','compileRetrievalCorpus','compileContactDiscovery'])if(!baseGenerator.includes(symbol))fail(`Projection orchestrator missing compiler owner: ${symbol}`);
 if(!baseGenerator.includes('loadProjectionContext'))fail('Projection orchestrator does not share canonical projection context');
 
-if(pkg.scripts?.['descriptors:finalize']!=='node scripts/generate-descriptors.mjs --dist dist')fail('DIST descriptor finalization stage missing');
-if(pkg.scripts?.['release:attest']!=='node scripts/write-release-attestation.mjs'||!hasStep('release','npm run release:attest'))fail('Release attestation is not a mandatory release stage');
-const releaseSteps=scriptSteps('release');
-if(releaseSteps.indexOf('npm run release:attest')<releaseSteps.indexOf('npm run validate:current-context')||releaseSteps.indexOf('npm run release:attest')>releaseSteps.indexOf('node scripts/package-dist.mjs'))fail('Release attestation ordering drift');
-for(const required of ['astro build','npm run indexnow:prepare','npm run descriptors:finalize','node scripts/finalize-dist.mjs'])if(!hasStep('build',required))fail(`Build DAG missing ${required}`);
+for(const required of ["run('Astro static build',astro,['build'])","js('prepare IndexNow key','scripts/indexnow.mjs',['prepare'])","js('finalize descriptors','scripts/generate-descriptors.mjs',['--dist','dist'])","js('finalize DIST','scripts/finalize-dist.mjs')"])if(!pipeline.includes(required))fail(`Build pipeline missing ${required}`);
+for(const required of ["js('current serving context','scripts/validate-current-context.mjs',['dist'])","js('release attestation','scripts/write-release-attestation.mjs')","js('package DIST','scripts/package-dist.mjs')"])if(!pipeline.includes(required))fail(`Release pipeline missing ${required}`);
+if(!(pipeline.indexOf("scripts/validate-current-context.mjs")<pipeline.indexOf("scripts/write-release-attestation.mjs")&&pipeline.indexOf("scripts/write-release-attestation.mjs")<pipeline.indexOf("js('package DIST','scripts/package-dist.mjs')")))fail('Release attestation ordering drift');
 if(retrievalGenerator.includes('public/current-release-matrix.json'))fail('Current release matrix has multiple deployable writers');
 if(/\bservice_id\s*:|\bservice_family\s*:/.test(retrievalGenerator))fail('Query Matrix legacy scalar service schema remains in generator');
 if(!finalizer.includes("projections/current-release-matrix.json")||!finalizer.includes('writeFile(currentMatrixPath'))fail('Finalizer is not the sole current-release-matrix DIST composer');
