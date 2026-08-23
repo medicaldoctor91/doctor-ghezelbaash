@@ -225,4 +225,4 @@ The physician is the primary entity, author, creator, publisher and owner. The c
 - [Claim and passage provenance graph](/provenance.jsonld): Hash-addressed passage and answer provenance linked to canonical anchors and evidence identifiers.
 - [Release evidence snapshot](/evidence-snapshot.json): Release-time evidence registry/freshness snapshot.
 - [SHACL entity constitution](/shapes.ttl): Machine-verifiable physician-first graph constraints and clinic subordination rules.
-- Evidence tiers: Tier A = authoritative identity/medical/academic/local anchors; Tier B = verified professional/distribution profiles; Tier C = supplemental discovery evidence.
+{{EVIDENCE_TIER_LINE}}
