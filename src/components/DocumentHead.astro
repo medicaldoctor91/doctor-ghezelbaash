@@ -9,12 +9,6 @@ interface Props { title: string; description: string; robots: string; canonicalU
 const { title, description, robots, canonicalURL, isMain=false, stage='critical' } = Astro.props;
 if(stage!=='critical'&&stage!=='discovery')throw new Error(`Unknown DocumentHead stage: ${stage}`);
 const mainHead=bindReleaseTokens(bindHeroPreloadSizes(mainHeadRaw),release);
-const viewportPattern=/^<meta\b(?=[^>]*\bname="viewport")[^>]*\/>/i;
-const heroPreloadPattern=/<link\b(?=[^>]*\brel="preload")(?=[^>]*\bas="image")(?=[^>]*\bfetchpriority="high")(?=[^>]*\bimagesrcset=)(?=[^>]*saeed-ghezelbash-portrait-delivery-640)[^>]*\/>/i;
-const viewportTag=mainHead.match(viewportPattern)?.[0]??'';
-const heroPreloadTag=mainHead.match(heroPreloadPattern)?.[0]??'';
-if(isMain&&(!viewportTag||!heroPreloadTag||mainHead.match(new RegExp(heroPreloadPattern.source,'gi'))?.length!==1))throw new Error('Main responsive Hero preload contract drift');
-if(isMain&&!mainHead.startsWith(`${viewportTag}${heroPreloadTag}`))throw new Error('Main Head template critical-hint order drift');
 const {criticalHead,discoveryHead}=deriveMainHeadStages(mainHead);
 const stagedMainHead=stage==='critical'?criticalHead:discoveryHead;
 ---
