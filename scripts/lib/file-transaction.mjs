@@ -42,26 +42,38 @@ export async function commitTextFiles(entries,{transactionId=randomUUID(),before
         throw error;
       }
     }
-
-    for(const record of records){
-      await rm(record.backup,{force:true});
-      record.originalMoved=false;
-    }
-    return {committed:records.map(record=>record.file),transactionId};
   }catch(error){
     for(const record of [...records].reverse()){
+      let restored=!record.originalMoved;
       try{
         if(record.committed)await rm(record.file,{force:true});
-        if(record.originalMoved&&await exists(record.backup))await rename(record.backup,record.file);
+        if(record.originalMoved&&await exists(record.backup)){
+          await rename(record.backup,record.file);
+          record.originalMoved=false;
+          record.committed=false;
+          restored=true;
+        }
       }catch(rollbackError){
         error.rollbackErrors??=[];
-        error.rollbackErrors.push({file:record.file,message:rollbackError.message});
+        error.rollbackErrors.push({file:record.file,backup:record.backup,message:rollbackError.message});
       }
       await rm(record.staged,{force:true}).catch(()=>{});
-      await rm(record.backup,{force:true}).catch(()=>{});
+      if(restored)await rm(record.backup,{force:true}).catch(()=>{});
     }
     throw error;
   }finally{
     for(const record of records)await rm(record.staged,{force:true}).catch(()=>{});
   }
+
+  // Commit is complete before backup cleanup begins. Cleanup failure must never trigger rollback or delete committed files.
+  const cleanupResidue=[];
+  for(const record of records){
+    try{
+      await rm(record.backup,{force:true});
+      record.originalMoved=false;
+    }catch(error){
+      cleanupResidue.push({file:record.file,backup:record.backup,message:error.message});
+    }
+  }
+  return {committed:records.map(record=>record.file),transactionId,cleanupResidue};
 }
