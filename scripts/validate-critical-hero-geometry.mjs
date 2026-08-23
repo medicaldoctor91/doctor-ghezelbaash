@@ -3,13 +3,13 @@ import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {assembleCssSource} from '../src/lib/css-source.mjs';
 import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
 import {compactCssValue,isMaxWidthRule,mediaRuleAppliesAtWidth,normalizeCssValue,parseCssRules,selectorRules} from './lib/css-rules.mjs';
-import {HERO_FIGURE_TOTAL_BORDER_PX,HERO_IMAGE_SIZES,bindHeroPreloadSizes} from '../src/lib/hero-image-contract.mjs';
+import {HERO_FIGURE_TOTAL_BORDER_PX,HERO_IMAGE_SIZES} from '../src/lib/hero-image-contract.mjs';
 
-const [globalCss,renderCalibrationRaw,invariants,mainHeadRaw]=await Promise.all([
+const [globalCss,renderCalibrationRaw,invariants,documentHead]=await Promise.all([
   readFile('src/styles/global.css','utf8'),
   readFile('src/data/render-calibration.json','utf8'),
   readFile('src/data/release-invariants.json','utf8').then(JSON.parse),
-  readFile('src/data/templates/main-head.html','utf8')
+  readFile('src/components/DocumentHead.astro','utf8')
 ]);
 const {cssSource,calibration}=assembleCssSource(globalCss,renderCalibrationRaw);
 const delivery=deriveCssDelivery(cssSource);
@@ -108,10 +108,9 @@ assert((content.match(/class=["'][^"']*\bhero-actions\b[^"']*["']/g)||[]).length
 assert(/<button\b[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["']/i.test(content),'Search launcher left the Hero action contract');
 assert(!content.includes('hero-action--search'),'Dead Hero action search class reintroduced');
 
-const boundHead=bindHeroPreloadSizes(mainHeadRaw);
-assert((mainHeadRaw.match(/\{\{HERO_IMAGE_SIZES\}\}/g)||[]).length===1,'Hero preload must consume the shared sizes token exactly once');
+assert((documentHead.match(/imagesizes=\{HERO_IMAGE_SIZES\}/g)||[]).length===1,'Structured Hero preload must consume the shared sizes contract exactly once');
 assert((await readFile('src/content-source/page.md','utf8')).match(/\{\{HERO_IMAGE_SIZES\}\}/g)?.length===3,'Hero picture must consume the shared sizes token exactly three times');
-const preloadHints=[...(boundHead.matchAll(/\bimagesizes=["']([^"']+)["']/g))].map(match=>match[1]);
+const preloadHints=[HERO_IMAGE_SIZES];
 const picture=content.match(/<picture\b(?=[^>]*\bid=["']image-saeed-ghezelbash-portrait-master-webp["'])[^>]*>[\s\S]*?<\/picture>/i)?.[0]||'';
 const pictureHints=[...(picture.matchAll(/\bsizes=["']([^"']+)["']/g))].map(match=>match[1]);
 const imageHints=[...preloadHints,...pictureHints];
