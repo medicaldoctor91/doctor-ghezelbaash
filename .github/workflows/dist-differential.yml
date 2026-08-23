@@ -1,0 +1,66 @@
+name: Temporary DIST differential audit
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diff:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Provision media tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+      - name: Build base
+        working-directory: base
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+      - name: Build head
+        working-directory: head
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+      - name: Compare complete DIST trees
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+          const walk=(root,dir=root,out=[])=>{for(const e of fs.readdirSync(dir,{withFileTypes:true})){const p=path.join(dir,e.name);e.isDirectory()?walk(root,p,out):out.push(path.relative(root,p).replaceAll('\\','/'))}return out.sort()};
+          const sha=f=>crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex');
+          const base='base/dist',head='head/dist',a=walk(base),b=walk(head);
+          const aset=new Set(a),bset=new Set(b);
+          const missing=a.filter(x=>!bset.has(x)),added=b.filter(x=>!aset.has(x));
+          if(missing.length||added.length)throw new Error(`DIST inventory drift missing=${missing.join(',')} added=${added.join(',')}`);
+          const changed=a.filter(x=>sha(path.join(base,x))!==sha(path.join(head,x)));
+          const identical=a.length-changed.length;
+          const stat=file=>({bytes:fs.statSync(file).size,sha256:sha(file)});
+          const metrics=root=>{
+            const manifest=JSON.parse(fs.readFileSync(path.join(root,'artifact-manifest.json'),'utf8'));
+            const query=fs.readFileSync(path.join(root,'query-matrix.jsonl'),'utf8').trim().split(/\r?\n/).length;
+            const graph=JSON.parse(fs.readFileSync(path.join(root,'graph.jsonld'),'utf8'));
+            return {files:walk(root).length,html:stat(path.join(root,'index.html')),graphNodes:(graph['@graph']||[]).length,queryRows:query,passages:manifest.ragPassageCount??manifest.passages??null,services:manifest.serviceCount??null,answers:manifest.answerCount??null};
+          };
+          console.log(JSON.stringify({inventory:a.length,identical,changedCount:changed.length,changed,baseMetrics:metrics(base),headMetrics:metrics(head)},null,2));
+          NODE
