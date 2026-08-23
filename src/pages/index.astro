@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import pageMetadata from '../data/page-metadata.json';
-import { Content } from '../content/home.md';
+import { Content, frontmatter } from '../content/home.md';
+const pageFrontmatter=frontmatter as {title:string;description:string;lang?:string;dir?:string;robots?:string};
 ---
-<BaseLayout frontmatter={pageMetadata} url="/" isMain={true}><Content /></BaseLayout>
+<BaseLayout frontmatter={pageFrontmatter} url="/" isMain={true}><Content /></BaseLayout>
