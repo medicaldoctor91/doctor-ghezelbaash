@@ -62,7 +62,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm run release:prepare
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$(git rev-parse HEAD)"
           npm run build
