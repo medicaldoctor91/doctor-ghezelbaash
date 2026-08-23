@@ -50,10 +50,13 @@ for(const key of currentServingKeys)if(Object.hasOwn(sourceCurrentMatrix,key))th
 const currentMatrix={...sourceCurrentMatrix,liveRevision,sourceCommit:liveRevision,generatedAt};
 await writeFile(currentMatrixPath,JSON.stringify(currentMatrix,null,2)+'\n');
 
+// Canonical linked-data descriptors are generated before Astro build by generate-descriptors.mjs.
+// Finalization treats them as immutable build inputs and validates their embedded hashes.
 const dataPackage=JSON.parse(await readFile(path.join(dist,'datapackage.json'),'utf8'));
 const croissant=JSON.parse(await readFile(path.join(dist,'croissant.json'),'utf8'));
 const descriptorResourceCount=(dataPackage.resources||[]).length;
 
+// CSP is derived only after executable/inline content is final.
 const styleBlocks=[...html.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi)].map(m=>m[1]);
 const scriptBlocks=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].map(m=>({attrs:m[1],body:m[2]}));
 const ldScripts=scriptBlocks.filter(x=>/type=["']application\/ld\+json["']/i.test(x.attrs));
@@ -101,8 +104,13 @@ const headers=compileHeadersTemplate(headersTemplate,{mainCsp,csp404,digests:hea
 if(/\btrack-src\b/i.test(headers))throw new Error('Invalid CSP directive track-src');
 await writeFile(path.join(dist,'_headers'),headers);
 
+// Terminal current-serving attestation: nothing it hashes is mutated after this write.
 const headersBytes=await readFile(path.join(dist,'_headers')),manifestBytes=await readFile(manifestPath),visibleContractSha256=shaHex(Buffer.from(JSON.stringify(visibleContract)));
-const attestation={schemaVersion:'1.0',baseRelease:release.release,liveRevision,generatedAt,sourceCommit:liveRevision,artifactManifestSha256:shaHex(manifestBytes),headersSha256:shaHex(headersBytes),visibleContractSha256,indexHtmlSha256:shaHex(await readFile(path.join(dist,'index.html'))),currentReleaseMatrixSha256:shaHex(await readFile(currentMatrixPath)),liveObservationsSha256:shaHex(liveBytes)};
-await writeFile(path.join(dist,'live-serving-attestation.json'),`${JSON.stringify(attestation,null,2)}\n`);
+const attestation={schemaVersion:'1.0',baseRelease:release.release,liveRevision,generatedAt,sourceCommit:liveRevision,artifactManifestSha256:shaHex(manifestBytes),indexHtmlSha256:shaHex(Buffer.from(html)),liveObservationSha256:shaHex(liveBytes),currentReleaseMatrixSha256:shaHex(await readFile(currentMatrixPath)),headersSha256:shaHex(headersBytes),visibleContractSha256,visibleContractPolicy:visibleContract.policy,mutableVisibleSelector:visibleContract.mutableSelector,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,integrity:'CURRENT_SERVING'};
+await writeFile(path.join(dist,'live-serving-attestation.json'),JSON.stringify(attestation,null,2)+'\n');
 
-console.log(JSON.stringify({stage:'DIST_FINALIZATION',release:release.release,liveRevision,generatedAt,htmlBytes:Buffer.byteLength(html),activeCss,graphNodes:graph['@graph'].length,graphTriples:inv.externalRdfTripleCount,releaseBoundNodes:releaseBoundNodes.length,queryRows,ragPassages:llmPassages,descriptorResources:descriptorResourceCount,currentMatrixSource:'.generated/projections/current-release-matrix.json',sourceTreeMutation:false,finalizerWrites:4,finalizerDeletes:0,integrity:'PASS'},null,2));
+// Descriptor integrity must survive the complete finalization DAG.
+for(const r of dataPackage.resources||[]){const rel=String(r.path||'').replace(/^\//,'');if(!rel)continue;const m=await fileMeta(rel);if(r.bytes!==m.bytes||r.hash!==`sha256:${m.sha256}`)throw new Error(`Data Package post-finalization hash drift ${rel}`);}
+for(const r of croissant.distribution||[]){const u=String(r.contentUrl||'');if(!u.startsWith(release.canonicalUrl))continue;const rel=u.slice(release.canonicalUrl.length).split('#')[0];if(!rel)continue;const m=await fileMeta(rel);if(String(r.contentSize)!==String(m.bytes)||r.sha256!==m.sha256)throw new Error(`Croissant post-finalization hash drift ${rel}`);}
+
+console.log(JSON.stringify({finalized:true,release:release.release,liveRevision,htmlBytes:manifest.invariants.htmlBytes,graphNodes:manifest.invariants.externalGraphNodeCount,queryRows,clips:manifest.video.clipCount,chunks:manifest.invariants.renderChunkCount,files:Object.keys(files).length+2,descriptorResources:descriptorResourceCount,manifestSha256:attestation.artifactManifestSha256,headersSha256:attestation.headersSha256,liveObservationSha256:attestation.liveObservationSha256,currentMatrixSource:'.generated/projections/current-release-matrix.json',sourceTreeMutation:false,descriptorIntegrity:'PASS',graphClosure:'PASS',nonCircular:true},null,2));
