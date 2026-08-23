@@ -1,0 +1,124 @@
+name: Atomic source architecture migration
+
+on:
+  push:
+    branches: [refactor/2026-source-of-truth]
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: refactor/2026-source-of-truth
+          fetch-depth: 0
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Apply count-checked byte-preserving migration
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new, label):
+              p=Path(path)
+              s=p.read_text(encoding='utf-8')
+              count=s.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected exactly one match, found {count}')
+              p.write_text(s.replace(old,new,1),encoding='utf-8')
+
+          gen='scripts/generate-projections.mjs'
+          replace_once(
+              gen,
+              "import { normalizeGoogleSupportGraphRaw } from './lib/google-support-graph.mjs';",
+              "import { normalizeGoogleSupportGraph } from './lib/google-support-graph.mjs';",
+              'support graph import'
+          )
+          replace_once(
+              gen,
+              "const supportBaseRaw=`${JSON.stringify({'@context':graph['@context'],'@graph':supportNodes})}\\n`;\nconst supportRaw=normalizeGoogleSupportGraphRaw(supportBaseRaw);",
+              "const supportDoc=normalizeGoogleSupportGraph({'@context':graph['@context'],'@graph':supportNodes});\nconst supportRaw=`${JSON.stringify(supportDoc)}\\n`;",
+              'object-level support graph projection'
+          )
+
+          template='src/data/templates/llms.template.txt'
+          evidence_literal='- Evidence tiers: Tier A = authoritative identity/medical/academic/local anchors; Tier B = verified professional/distribution profiles; Tier C = supplemental discovery evidence.'
+          replace_once(template,evidence_literal,'{{EVIDENCE_TIER_LINE}}','llms evidence-tier template slot')
+
+          old_llms="""const llmsTemplate=await readFile(path.join(data,'templates/llms.template.txt'),'utf8');
+const llms=llmsTemplate
+  .replaceAll('{{RELEASE}}',release.release)
+  .replaceAll('{{REVIEW_DATE}}',release.dateModified)
+  .replaceAll('{{OFFICIAL_ALIASES}}',release.primaryEntity.officialAliases.join(' | '))
+  .replaceAll('{{RECONCILIATION_ALIASES}}',(release.primaryEntity.reconciliationAliases||[]).join(' | '))
+  .replaceAll('{{RETRIEVAL_VARIANTS}}',release.primaryEntity.retrievalVariants.join(' | '))
+  .replaceAll('{{ZENODO_CONCEPT_DOI}}',release.dataset.zenodo.conceptDoi)
+  .replaceAll('{{ZENODO_CONCEPT_DOI_URL}}',`https://doi.org/${release.dataset.zenodo.conceptDoi}`)
+  .replaceAll('{{ZENODO_VERSION_DOI}}',release.dataset.zenodo.versionDoi)
+  .replaceAll('{{ZENODO_VERSION_DOI_URL}}',`https://doi.org/${release.dataset.zenodo.versionDoi}`)
+  .replaceAll('{{ZENODO_RECORD_ID}}',String(release.dataset.zenodo.recordId))
+  .replaceAll('{{DATASET_WIKIDATA}}',release.dataset.wikidata)
+  .replaceAll('{{HUGGING_FACE_DATASET}}',release.dataset.huggingFace.dataset);
+if(/{{[^}]+}}/.test(llms)) throw new Error('Unresolved llms.txt template placeholder');
+await writeFile(path.join(projections,'llms.txt'),llms);"""
+          new_llms="""const llmsTemplate=await readFile(path.join(data,'templates/llms.template.txt'),'utf8');
+const evidenceTiers=evidenceRegistry.tiers||{};
+for(const tier of ['A','B','C'])if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier])throw new Error('llms.txt: evidence tier '+tier+' definition missing from evidence registry');
+const evidenceTierLine='- Evidence tiers: Tier A = '+evidenceTiers.A+'; Tier B = '+evidenceTiers.B+'; Tier C = '+evidenceTiers.C+'.';
+const llms=llmsTemplate
+  .replaceAll('{{RELEASE}}',release.release)
+  .replaceAll('{{REVIEW_DATE}}',release.dateModified)
+  .replaceAll('{{OFFICIAL_ALIASES}}',release.primaryEntity.officialAliases.join(' | '))
+  .replaceAll('{{RECONCILIATION_ALIASES}}',(release.primaryEntity.reconciliationAliases||[]).join(' | '))
+  .replaceAll('{{RETRIEVAL_VARIANTS}}',release.primaryEntity.retrievalVariants.join(' | '))
+  .replaceAll('{{ZENODO_CONCEPT_DOI}}',release.dataset.zenodo.conceptDoi)
+  .replaceAll('{{ZENODO_CONCEPT_DOI_URL}}',`https://doi.org/${release.dataset.zenodo.conceptDoi}`)
+  .replaceAll('{{ZENODO_VERSION_DOI}}',release.dataset.zenodo.versionDoi)
+  .replaceAll('{{ZENODO_VERSION_DOI_URL}}',`https://doi.org/${release.dataset.zenodo.versionDoi}`)
+  .replaceAll('{{ZENODO_RECORD_ID}}',String(release.dataset.zenodo.recordId))
+  .replaceAll('{{DATASET_WIKIDATA}}',release.dataset.wikidata)
+  .replaceAll('{{HUGGING_FACE_DATASET}}',release.dataset.huggingFace.dataset)
+  .replaceAll('{{EVIDENCE_TIER_LINE}}',evidenceTierLine);
+if(/{{[^}]+}}/.test(llms)) throw new Error('Unresolved llms.txt template placeholder');
+await writeFile(path.join(projections,'llms.txt'),llms);"""
+          replace_once(gen,old_llms,new_llms,'single-pass llms compiler')
+
+          old_tail="""const llmsProjectionPath=path.join(projections,'llms.txt');
+let llmsFinal=await readFile(llmsProjectionPath,'utf8');
+const evidenceTiers=evidenceRegistry.tiers||{};
+for(const tier of ['A','B','C'])if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier])throw new Error('llms.txt: evidence tier '+tier+' definition missing from evidence registry');
+const evidenceTierLine='- Evidence tiers: Tier A = '+evidenceTiers.A+'; Tier B = '+evidenceTiers.B+'; Tier C = '+evidenceTiers.C+'.';
+const evidenceTierPattern=/^- Evidence tiers:.*$/m;
+if(!evidenceTierPattern.test(llmsFinal))throw new Error('llms.txt: generated evidence-tier declaration missing');
+llmsFinal=llmsFinal.replace(evidenceTierPattern,evidenceTierLine);
+await writeFile(llmsProjectionPath,llmsFinal);
+
+"""
+          replace_once(gen,old_tail,'','remove second-pass llms rewrite')
+
+          support='scripts/lib/google-support-graph.mjs'
+          raw_wrapper="""
+export function normalizeGoogleSupportGraphRaw(raw){
+  return `${JSON.stringify(normalizeGoogleSupportGraph(JSON.parse(raw)))}\\n`;
+}
+"""
+          replace_once(support,raw_wrapper,'','remove legacy serialized support wrapper')
+          PY
+
+      - name: Remove migration workflow from canonical tree
+        run: git rm .github/workflows/source-architecture-migrate.yml
+      - name: Commit migrated architecture
+        shell: bash
+        run: |
+          git config user.name "Dr. Saeed Ghezelbaash | دکتر سعید قزلباش"
+          git config user.email "medicaldoctor91@gmail.com"
+          git add scripts/generate-projections.mjs scripts/lib/google-support-graph.mjs src/data/templates/llms.template.txt .github/workflows/source-architecture-migrate.yml
+          git diff --cached --check
+          git commit -m "refactor: eliminate serialized semantic post-processing"
+          git push origin HEAD:refactor/2026-source-of-truth
