@@ -6,6 +6,7 @@ import {resolveDeterministicBuildInstant} from './lib/deterministic-build-time.m
 import {deriveIdentityFingerprint,hashIdentityFingerprint} from './lib/release-identity.mjs';
 import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
 import {currentReleaseMetadataMismatches,selectCurrentReleaseBoundNodes} from './lib/release-graph.mjs';
+import {compileHeadersTemplate} from './lib/headers-template.mjs';
 
 const root=process.cwd(),dist=path.resolve(root,process.argv[2]||'dist'),data=path.join(root,'src/data');
 const inv=JSON.parse(await readFile(path.join(data,'release-invariants.json'),'utf8'));
@@ -62,11 +63,8 @@ if(ldScripts.length!==2||execScripts.length!==2||!execScripts.some(x=>/id=["']si
 const scriptHashes=scriptBlocks.map(x=>`'sha256-${shaB64(Buffer.from(x.body))}'`).join(' '),styleHashes=styleBlocks.map(x=>`'sha256-${shaB64(Buffer.from(x))}'`).join(' ');
 const mainCsp=`default-src 'none'; base-uri 'self'; script-src ${scriptHashes}; style-src 'self' ${styleHashes}; img-src 'self' data:; media-src 'self'; font-src 'self'; manifest-src 'self'; connect-src 'none'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests`;
 const csp404=`default-src 'none'; base-uri 'self'; script-src ${scriptBlocks404.map(x=>`'sha256-${shaB64(Buffer.from(x.body))}'`).join(' ')}; style-src 'self' ${styles404.map(x=>`'sha256-${shaB64(Buffer.from(x))}'`).join(' ')}; img-src 'self' data:; font-src 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'; upgrade-insecure-requests`;
-let headers=await readFile(path.join(data,'templates/headers.template'),'utf8');
-headers=headers.replace('{{MAIN_CSP}}',mainCsp).replace('{{404_CSP}}',csp404);
+const headersTemplate=await readFile(path.join(data,'templates/headers.template'),'utf8');
 const templateMachine=['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','provenance.jsonld','evidence-snapshot.json','shapes.ttl','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','query-matrix.jsonl','live-observations.jsonld','current-release-matrix.json','artifact-manifest.json'];
-headers=headers.replace('{{DIGEST:index.html}}',shaB64(await readFile(path.join(dist,'index.html'))));
-for(const file of templateMachine.filter(file=>file!=='artifact-manifest.json'))headers=headers.replace(`{{DIGEST:${file}}}`,shaB64(await readFile(path.join(dist,file))));
 
 const core=JSON.parse(ldScripts[0].body),support=JSON.parse(ldScripts[1].body);
 const htmlContract=assertDocumentContract(html),ids=htmlContract.ids,frags=htmlContract.fragments,idSet=new Set(ids),missing=[];inspectHtml(notFound);
@@ -96,10 +94,10 @@ const manifest={
 };
 const manifestPath=path.join(dist,'artifact-manifest.json');
 await writeFile(manifestPath,`${JSON.stringify(manifest,null,2)}\n`);
-headers=headers.replace('{{DIGEST:artifact-manifest.json}}',shaB64(await readFile(manifestPath)));
-if(/{{[^}]+}}/.test(headers))throw new Error('Unresolved _headers placeholder');
+const headerDigests={'index.html':shaB64(await readFile(path.join(dist,'index.html')))};
+for(const file of templateMachine)headerDigests[file]=shaB64(await readFile(path.join(dist,file)));
+const headers=compileHeadersTemplate(headersTemplate,{mainCsp,csp404,digests:headerDigests});
 if(/\btrack-src\b/i.test(headers))throw new Error('Invalid CSP directive track-src');
-
 await writeFile(path.join(dist,'_headers'),headers);
 
 // Terminal current-serving attestation: nothing it hashes is mutated after this write.
