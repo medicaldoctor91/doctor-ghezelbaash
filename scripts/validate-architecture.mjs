@@ -32,6 +32,7 @@ const allowedRetrievalWrites=[
 ].sort();
 if(JSON.stringify(retrievalWrites)!==JSON.stringify(allowedRetrievalWrites))fail(`Retrieval writer surface drift: ${retrievalWrites.join(', ')}`);
 for(const forbidden of ['answers.txt','index.md','llms.txt','llms-full.txt','provenance.jsonld','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json'])if(retrievalGenerator.includes(forbidden))fail(`Retrieval generator crossed canonical ownership boundary: ${forbidden}`);
+for(const servingField of ['liveRevision','sourceCommit','generatedAt'])if(new RegExp(`\\b${servingField}\\s*:`).test(retrievalGenerator))fail(`Retrieval source projection illegally owns current-serving field: ${servingField}`);
 
 if(pkg.scripts?.['media:enrich']!=='node scripts/enrich-image-metadata-manifest.mjs')fail('Media enrichment bypasses canonical manifest gate');
 if(pkg.scripts?.['validate:media-manifest']!=='node scripts/enrich-image-metadata-manifest.mjs --preflight-only')fail('Read-only media manifest preflight wiring missing');
@@ -53,6 +54,8 @@ if(!finalizer.includes("./lib/headers-template.mjs")||!finalizer.includes('compi
 if(/headers\s*=\s*headers\.(?:replace|replaceAll)|headersTemplate\.(?:replace|replaceAll)/.test(finalizer))fail('Manual deployment-header patch chain reintroduced');
 if(/\bunlink\b/.test(finalizer))fail('Finalizer must fail closed; post-build artifact deletion is forbidden');
 if(!finalizer.includes('DIST fingerprint stylesheet contract drift'))fail('Finalizer lost fail-closed fingerprint stylesheet assertion');
+if(finalizer.includes('Object.assign(currentMatrix'))fail('Finalizer must not silently overwrite current-serving authority');
+for(const token of ['sourceCurrentMatrix','currentServingKeys','illegally owns current-serving field','const currentMatrix={...sourceCurrentMatrix,liveRevision,sourceCommit:liveRevision,generatedAt}'])if(!finalizer.includes(token))fail(`Current-serving matrix composition contract missing: ${token}`);
 const finalizerWriteCount=(finalizer.match(/\bwriteFile\s*\(/g)||[]).length;
 if(finalizerWriteCount!==4)fail(`Finalizer mutation boundary drift: expected 4 writes, found ${finalizerWriteCount}`);
 for(const artifact of ['current-release-matrix.json','artifact-manifest.json','_headers','live-serving-attestation.json'])if(!finalizer.includes(artifact))fail(`Finalizer required post-build artifact missing: ${artifact}`);
@@ -63,4 +66,4 @@ if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Dis
 if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
 if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,mediaEnrichmentBoundary:'manifest-locked-transactional',mediaManifestPreflight:'read-only-ci-gate',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,currentServingMatrixAuthority:'finalizer-only',mediaEnrichmentBoundary:'manifest-locked-transactional',mediaManifestPreflight:'read-only-ci-gate',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
