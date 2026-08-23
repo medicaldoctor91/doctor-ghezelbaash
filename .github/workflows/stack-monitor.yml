@@ -102,6 +102,13 @@ jobs:
           set -euo pipefail
           node scripts/verify-live.mjs current
           echo 'CURRENT_CROSS_SURFACE_TRUTH_PASS'
+      - name: Verify Hugging Face public profile and Dataset Server contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/huggingface.mjs verify --profile
+          node scripts/huggingface.mjs verify --viewer
+          echo 'HF_PUBLIC_AUTHORITY_PASS'
       - name: Verify frozen release snapshot truth
         shell: bash
         run: |
