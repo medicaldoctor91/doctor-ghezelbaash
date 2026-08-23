@@ -57,7 +57,6 @@ jobs:
               p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
               return {'title':p.get('title'),'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'content':r.get('slots',{}).get('main',{}).get('content','')}
 
-          # Submit the prepared COI request only if it is not already present.
           target='Talk:Attachment and health'
           heading='Update Mental health section with recent meta-analytic evidence'
           before=current_page(target)
@@ -115,7 +114,7 @@ More recent meta-analytic evidence supports a robust association between adult a
               'botulinum_talk':{k:v for k,v in bot_talk.items() if k!='content'}|{'matches':snippets(bot_talk['content'],bot_terms,800)},
               'bipolar_article':{k:v for k,v in bipolar_article.items() if k!='content'}|{'matches':snippets(bipolar_article['content'],omega_terms,800)},
               'bipolar_talk':{k:v for k,v in bipolar_talk.items() if k!='content'}|{'matches':snippets(bipolar_talk['content'],omega_terms,800)},
-              'attachment_talk':{k:v for k,v in attachment_talk.items() if k!='content'}|{'matches':snippets(attachment_talk['content'],att_terms,800)},
+              'attachment_talk':{k:v for k,v in attachment_talk.items() if k!='content'}|{'matches':snippets(attachment_talk['content'],att_terms,800)}
             }
           }
           print(json.dumps(out,ensure_ascii=False,indent=2))
@@ -129,3 +128,4 @@ More recent meta-analytic evidence supports a robust association between adult a
           git add wiki-page-outcome-audit.json
           git commit -m "Store authenticated Wikipedia request outcome audit"
           git push origin HEAD:wiki-api-access
+# retrigger attachment submission 2026-08-23T04:18+03:30
