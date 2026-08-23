@@ -24,62 +24,12 @@ async function command_ensure(){
 }
 
 async function command_verify(){
-  const root=process.cwd();
-  const base=process.env.VERIFY_BASE_URL||'https://www.ghezelbaash.ir/';
-  const freshOnly=process.argv.includes('--fresh-only');
-  const stable=JSON.parse(await readFile(path.join(root,'src/data/stable-media-aliases.json'),'utf8'));
-
-  const ensureLocalDist=async()=>{
-    try{await access(path.join(root,'dist','answers.txt'));return}catch{}
-    const commit=process.env.CANDIDATE_SHA||process.env.CF_EXPECTED_COMMIT||process.env.SOURCE_COMMIT||process.env.CF_PAGES_COMMIT_SHA||'';
-    const epoch=process.env.SOURCE_DATE_EPOCH||'';
-    if(!/^[0-9a-f]{40}$/.test(commit)||!/^\d+$/.test(epoch))throw new Error('Local DIST missing and exact commit/SOURCE_DATE_EPOCH unavailable');
-    const buildEnv={...process.env,SOURCE_COMMIT:commit,CF_PAGES_COMMIT_SHA:commit,SOURCE_DATE_EPOCH:epoch,ASTRO_TELEMETRY_DISABLED:'1',CLOUDFLARE_API_TOKEN:'',ZENODO_TOKEN:'',ZENODO_ACCESS_TOKEN:'',ZENODO_API_TOKEN:'',HF_TOKEN:'',HUGGINGFACE_TOKEN:'',HUGGING_FACE_TOKEN:'',GOOGLE_PLACES_API_KEY:''};
-    execFileSync('npm',['run','build'],{cwd:root,stdio:'inherit',env:buildEnv});
-  };
+  const root=process.cwd(),base=process.env.VERIFY_BASE_URL||'https://www.ghezelbaash.ir/',freshOnly=process.argv.includes('--fresh-only'),stable=JSON.parse(await readFile(path.join(root,'src/data/stable-media-aliases.json'),'utf8'));
+  const ensureLocalDist=async()=>{try{await access(path.join(root,'dist','answers.txt'));return}catch{}const commit=process.env.CANDIDATE_SHA||process.env.CF_EXPECTED_COMMIT||process.env.SOURCE_COMMIT||process.env.CF_PAGES_COMMIT_SHA||'',epoch=process.env.SOURCE_DATE_EPOCH||'';if(!/^[0-9a-f]{40}$/.test(commit)||!/^\d+$/.test(epoch))throw new Error('Local DIST missing and exact commit/SOURCE_DATE_EPOCH unavailable');const buildEnv={...process.env,SOURCE_COMMIT:commit,CF_PAGES_COMMIT_SHA:commit,SOURCE_DATE_EPOCH:epoch,ASTRO_TELEMETRY_DISABLED:'1',CLOUDFLARE_API_TOKEN:'',ZENODO_TOKEN:'',ZENODO_ACCESS_TOKEN:'',ZENODO_API_TOKEN:'',HF_TOKEN:'',HUGGINGFACE_TOKEN:'',HUGGING_FACE_TOKEN:'',GOOGLE_PLACES_API_KEY:''};execFileSync('npm',['run','build'],{cwd:root,stdio:'inherit',env:buildEnv})};
   await ensureLocalDist();
-
-  const core=['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json','query-matrix.jsonl','current-release-matrix.json','live-observations.jsonld','live-serving-attestation.json','ns/entity-metadata/2026/index.html','ns/media-semantics/2026/index.html'];
-  const files=[...new Set([...core,...stable.aliases.map(row=>row.path)])].sort();
-  const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
-  const routeFor=rel=>rel==='index.html'?'':rel.endsWith('/index.html')?rel.slice(0,-10):rel;
-  const expected=new Map();
-  for(const rel of files)expected.set(rel,await readFile(path.join(root,'dist',rel)));
-
-  const fetchBytes=async url=>{
-    const response=await fetch(url,{headers:{'user-agent':'ghezelbaash-pages-byte-verifier/3.0',accept:'*/*'},redirect:'follow',signal:AbortSignal.timeout(45000)});
-    return {response,bytes:Buffer.from(await response.arrayBuffer())};
-  };
-
-  const verifyOne=async rel=>{
-    const wanted=expected.get(rel),wantedSha=sha(wanted),url=new URL(routeFor(rel),base);
-    for(let attempt=1;attempt<=24;attempt++){
-      if(freshOnly){
-        const bypass=new URL(url);bypass.searchParams.set('__pages_byte_verify',`${Date.now()}-${attempt}`);
-        const fresh=await fetchBytes(bypass),freshSha=sha(fresh.bytes);
-        if(fresh.response.status===200&&freshSha===wantedSha)return {rel,sha256:wantedSha,cacheBusted:fresh.response.status,cacheBustedExact:true};
-        if(attempt===24)throw new Error(`Pages fresh-byte drift ${rel}: fresh=${fresh.response.status}/${freshSha} expected=${wantedSha} base=${base}`);
-      }else{
-        const ordinary=await fetchBytes(url),bypass=new URL(url);bypass.searchParams.set('__pages_byte_verify',`${Date.now()}-${attempt}`);
-        const fresh=await fetchBytes(bypass),ordinarySha=sha(ordinary.bytes),freshSha=sha(fresh.bytes);
-        if(ordinary.response.status===200&&fresh.response.status===200&&ordinarySha===wantedSha&&freshSha===wantedSha)return {rel,sha256:wantedSha,ordinary:ordinary.response.status,cacheBusted:fresh.response.status,cacheControl:ordinary.response.headers.get('cache-control'),age:ordinary.response.headers.get('age'),etag:ordinary.response.headers.get('etag'),cfCacheStatus:ordinary.response.headers.get('cf-cache-status'),reprDigest:ordinary.response.headers.get('repr-digest')};
-        if(attempt===24)throw new Error(`Pages byte drift ${rel}: ordinary=${ordinary.response.status}/${ordinarySha} fresh=${fresh.response.status}/${freshSha} expected=${wantedSha} base=${base}`);
-      }
-      await new Promise(r=>setTimeout(r,3000));
-    }
-  };
-
-  const results=[];let cursor=0;
-  const worker=async()=>{while(cursor<files.length){const i=cursor++;results[i]=await verifyOne(files[i])}};
-  await Promise.all(Array.from({length:Math.min(8,files.length)},worker));
-  console.log(JSON.stringify({valid:true,mode:freshOnly?'fresh-origin':'full-edge',base,verifiedFiles:results.length,stableMediaAliases:stable.aliases.length,cacheBustedByteExact:true,ordinaryByteExact:freshOnly?null:true,credentialIsolatedLocalBuild:true,results},null,2));
+  const core=['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json','query-matrix.jsonl','current-release-matrix.json','live-observations.jsonld','live-serving-attestation.json','ns/entity-metadata/2026/index.html','ns/media-semantics/2026/index.html'],files=[...new Set([...core,...stable.aliases.map(row=>row.path)])].sort(),sha=bytes=>createHash('sha256').update(bytes).digest('hex'),routeFor=rel=>rel==='index.html'?'':rel.endsWith('/index.html')?rel.slice(0,-10):rel,expected=new Map();for(const rel of files)expected.set(rel,await readFile(path.join(root,'dist',rel)));
+  const fetchBytes=async url=>{const response=await fetch(url,{headers:{'user-agent':'ghezelbaash-pages-byte-verifier/3.0',accept:'*/*'},redirect:'follow',signal:AbortSignal.timeout(45000)});return{response,bytes:Buffer.from(await response.arrayBuffer())}};
+  const verifyOne=async rel=>{const wanted=expected.get(rel),wantedSha=sha(wanted),url=new URL(routeFor(rel),base);for(let attempt=1;attempt<=24;attempt++){if(freshOnly){const bypass=new URL(url);bypass.searchParams.set('__pages_byte_verify',`${Date.now()}-${attempt}`);const fresh=await fetchBytes(bypass),freshSha=sha(fresh.bytes);if(fresh.response.status===200&&freshSha===wantedSha)return{rel,sha256:wantedSha,cacheBusted:fresh.response.status,cacheBustedExact:true};if(attempt===24)throw new Error(`Pages fresh-byte drift ${rel}: fresh=${fresh.response.status}/${freshSha} expected=${wantedSha} base=${base}`)}else{const ordinary=await fetchBytes(url),bypass=new URL(url);bypass.searchParams.set('__pages_byte_verify',`${Date.now()}-${attempt}`);const fresh=await fetchBytes(bypass),ordinarySha=sha(ordinary.bytes),freshSha=sha(fresh.bytes);if(ordinary.response.status===200&&fresh.response.status===200&&ordinarySha===wantedSha&&freshSha===wantedSha)return{rel,sha256:wantedSha,ordinary:ordinary.response.status,cacheBusted:fresh.response.status,cacheControl:ordinary.response.headers.get('cache-control'),age:ordinary.response.headers.get('age'),etag:ordinary.response.headers.get('etag'),cfCacheStatus:ordinary.response.headers.get('cf-cache-status'),reprDigest:ordinary.response.headers.get('repr-digest')};if(attempt===24)throw new Error(`Pages byte drift ${rel}: ordinary=${ordinary.response.status}/${ordinarySha} fresh=${fresh.response.status}/${freshSha} expected=${wantedSha} base=${base}`)}await new Promise(r=>setTimeout(r,3000))}};
+  const results=[];let cursor=0;const worker=async()=>{while(cursor<files.length){const i=cursor++;results[i]=await verifyOne(files[i])}};await Promise.all(Array.from({length:Math.min(8,files.length)},worker));console.log(JSON.stringify({valid:true,mode:freshOnly?'fresh-origin':'full-edge',base,verifiedFiles:results.length,stableMediaAliases:stable.aliases.length,cacheBustedByteExact:true,ordinaryByteExact:freshOnly?null:true,credentialIsolatedLocalBuild:true,results},null,2));
 }
-
-const command=process.argv[2];
-if(!command)throw new Error('Usage: node scripts/cloudflare-pages.mjs <ensure|verify> [options]');
-process.argv.splice(2,1);
-switch(command){
-  case 'ensure': await command_ensure(); break;
-  case 'verify': await command_verify(); break;
-  default: throw new Error('Usage: node scripts/cloudflare-pages.mjs <ensure|verify> [options]');
-}
+const command=process.argv[2];if(!command)throw new Error('Usage: node scripts/cloudflare-pages.mjs <ensure|verify> [options]');process.argv.splice(2,1);switch(command){case 'ensure':await command_ensure();break;case 'verify':await command_verify();break;default:throw new Error('Usage: node scripts/cloudflare-pages.mjs <ensure|verify> [options]')}

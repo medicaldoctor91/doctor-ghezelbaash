@@ -18,7 +18,7 @@ const requiredFiles=[
   'src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
   '.release/policy/platform-contract.json','.release/policy/authority-surface-contract.json','scripts/lib/css-rules.mjs','scripts/lib/graph-integrity.mjs','scripts/lib/release-graph.mjs','scripts/lib/projection-context.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
-  'scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/validate-platform-contract.mjs','scripts/verify-huggingface-authority.mjs'
+  'scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/platform-contract.mjs','scripts/huggingface.mjs'
 ];
 for(const f of requiredFiles)await access(path.join(root,f));
 
@@ -31,7 +31,7 @@ const [pkg,baseGenerator,retrievalGenerator,descriptorGenerator,finalizer,mediaR
   readSource('scripts/finalize-dist.mjs'),
   readSource('scripts/validate-media-references.mjs'),
   readSource('scripts/apply-render-calibration.mjs'),
-  readSource('scripts/verify-huggingface-authority.mjs'),
+  readSource('scripts/huggingface.mjs'),
   readSource('src/components/DocumentHead.astro'),
   readSource('src/layouts/BaseLayout.astro'),
   readSource('scripts/lib/projections/page-assets.mjs'),
@@ -66,10 +66,10 @@ if(releaseSteps.indexOf('npm run release:attest')<releaseSteps.indexOf('npm run 
 for(const required of ['astro build','npm run indexnow:prepare','npm run descriptors:finalize','node scripts/finalize-dist.mjs'])if(!hasStep('build',required))fail(`Build DAG missing ${required}`);
 if(retrievalGenerator.includes('public/current-release-matrix.json'))fail('Current release matrix has multiple deployable writers');
 if(/\bservice_id\s*:|\bservice_family\s*:/.test(retrievalGenerator))fail('Query Matrix legacy scalar service schema remains in generator');
-if(!finalizer.includes("projections/current-release-matrix.json")||!finalizer.includes('writeFile(currentMatrixPath'))fail('Finalizer is not the sole current-release-matrix DIST composer');
+if(!finalizer.includes('projections/current-release-matrix.json')||!finalizer.includes('writeFile(currentMatrixPath'))fail('Finalizer is not the sole current-release-matrix DIST composer');
 if(/\bmutateRoute\b|\bsetDigest\b/.test(finalizer))fail('Finalizer still carries post-definition header policy patching');
-if(documentHead.includes("replace(viewportTag")||documentHead.includes("replace(heroPreloadTag"))fail('DocumentHead still reorders the canonical Head template');
-if(!baseLayout.includes("../lib/css-delivery.mjs")||!pageAssetsCompiler.includes("../../../src/lib/css-delivery.mjs"))fail('CSS delivery contract is not shared by Layout and page-assets compiler');
+if(documentHead.includes('replace(viewportTag')||documentHead.includes('replace(heroPreloadTag'))fail('DocumentHead still reorders the canonical Head template');
+if(!baseLayout.includes('../lib/css-delivery.mjs')||!pageAssetsCompiler.includes('../../../src/lib/css-delivery.mjs'))fail('CSS delivery contract is not shared by Layout and page-assets compiler');
 
 for(const name of ['datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json']){
   if(projectionCompilerSource.includes(`writeFile(path.join(projections,'${name}')`))fail(`Projection compiler illegally writes descriptor ${name}`);

@@ -7,7 +7,7 @@ import {deriveIdentityFingerprint,hashIdentityFingerprint} from './lib/release-i
 import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
 import {currentReleaseMetadataMismatches,selectCurrentReleaseBoundNodes} from './lib/release-graph.mjs';
 import {compileHeadersTemplate} from './lib/headers-template.mjs';
-import {generatedWorkspace} from './lib/generated-workspace.mjs';
+import {generatedWorkspace} from './generated-workspace.mjs';
 
 const root=process.cwd(),dist=path.resolve(root,process.argv[2]||'dist'),data=path.join(root,'src/data'),generated=generatedWorkspace(root);
 const inv=JSON.parse(await readFile(path.join(data,'release-invariants.json'),'utf8'));

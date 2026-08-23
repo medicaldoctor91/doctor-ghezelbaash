@@ -6,7 +6,7 @@
   "packageManager": "npm@11.17.0",
   "scripts": {
     "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
-    "clean:generated": "node scripts/clean-generated-workspace.mjs",
+    "clean:generated": "node scripts/generated-workspace.mjs reset",
     "prepare:generated": "npm run validate:media-references && npm run clean:generated && npm run rdf:generate && npm run generate",
     "dev": "npm run prepare:generated && ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "check": "npm run validate:release-contract && npm run prepare:generated && npm run validate:query-matrix && ASTRO_TELEMETRY_DISABLED=1 astro check --minimumFailingSeverity warning",
@@ -20,7 +20,7 @@
     "validate:hygiene": "node scripts/validate-repository-hygiene.mjs",
     "validate:architecture": "node scripts/validate-architecture.mjs",
     "validate:media-manifest": "node scripts/enrich-image-metadata-manifest.mjs --preflight-only",
-    "validate:source": "npm run validate:hygiene && npm run validate:architecture && npm run validate:media-manifest && node scripts/validate-platform-contract.mjs && node scripts/validate-source.mjs && node scripts/validate-critical-path.mjs && node scripts/validate-head-authority.mjs && node scripts/validate-critical-hero-geometry.mjs && node scripts/test-file-transaction.mjs && node scripts/test-release-promotion.mjs && node scripts/validate-critical-ctas.mjs && node scripts/test-reputation-observation.mjs && node scripts/validate-subdomain-redirects.mjs && node scripts/build-github-pages-bridge.mjs --self-test && node scripts/verify-github-pages-bridge.mjs --self-test",
+    "validate:source": "npm run validate:hygiene && npm run validate:architecture && npm run validate:media-manifest && node scripts/platform-contract.mjs validate && node scripts/validate-source.mjs && node scripts/validate-critical-path.mjs && node scripts/validate-head-authority.mjs && node scripts/validate-critical-hero-geometry.mjs && node scripts/test-contracts.mjs && node scripts/validate-critical-ctas.mjs && node scripts/validate-subdomain-redirects.mjs && node scripts/github-pages-bridge.mjs self-test",
     "media:enrich": "node scripts/enrich-image-metadata-manifest.mjs",
     "validate:media-references": "node scripts/validate-media-references.mjs",
     "validate:media": "node scripts/validate-media.mjs",
@@ -37,13 +37,13 @@
     "package:source": "node scripts/package-dist.mjs source",
     "package:complete": "node scripts/package-dist.mjs complete",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "verify:subdomains": "node scripts/verify-subdomain-redirects.mjs",
-    "verify:production": "node scripts/verify-redirects.mjs && npm run verify:subdomains && node scripts/verify-production.mjs",
+    "verify:subdomains": "node scripts/verify-production.mjs subdomains",
+    "verify:production": "node scripts/verify-production.mjs full",
     "validate:release-contract": "node scripts/validate-release-contract.mjs",
     "validate:rdf-reproducibility": "node scripts/validate-rdf-byte-repro.mjs",
     "indexnow:submit": "node scripts/indexnow.mjs submit",
     "validate:current-context": "node scripts/validate-current-context.mjs dist",
-    "verify:public-discovery": "node scripts/verify-public-discovery-freshness.mjs"
+    "verify:public-discovery": "node scripts/verify-live.mjs discovery"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
