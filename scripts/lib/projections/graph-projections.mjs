@@ -1,5 +1,5 @@
 import path from 'node:path';
-import {readFile,writeFile} from 'node:fs/promises';
+import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {normalizeGoogleSupportGraph} from '../google-support-graph.mjs';
 import {nodeTypes,refId} from '../projection-context.mjs';
 
@@ -31,13 +31,14 @@ const projectNode=(node,spec={})=>{
 };
 
 export async function compileGraphProjections(context){
-  const {semantic,graph,byId,readIds}=context;
+  const {semantic,generatedSemantic,graph,byId,readIds}=context;
   const [headIds,headProfile,supportIds,supportProfile]=await Promise.all([
     readIds('head'),
     readFile(path.join(semantic,'head-profile.json'),'utf8').then(JSON.parse),
     readIds('support'),
     readFile(path.join(semantic,'support-profile.json'),'utf8').then(JSON.parse),
   ]);
+  await mkdir(generatedSemantic,{recursive:true});
 
   const headNodes=[];
   for(const id of headIds){
@@ -48,7 +49,7 @@ export async function compileGraphProjections(context){
   const headDoc={'@context':graph['@context'],'@graph':headNodes};
   const headRaw=`${JSON.stringify(headDoc)}\n`;
   if(Buffer.byteLength(headRaw)>headProfile.maxBytes)throw new Error(`Head graph ${Buffer.byteLength(headRaw)} exceeds ${headProfile.maxBytes}`);
-  await writeFile(path.join(semantic,'head-graph.json'),headRaw);
+  await writeFile(path.join(generatedSemantic,'head-graph.json'),headRaw);
 
   const supportSelected=new Set([...supportIds,...headIds]);
   const graphIds=new Set(byId.keys());
@@ -75,7 +76,7 @@ export async function compileGraphProjections(context){
   const supportDoc=normalizeGoogleSupportGraph({'@context':graph['@context'],'@graph':supportNodes});
   const supportRaw=`${JSON.stringify(supportDoc)}\n`;
   if(Buffer.byteLength(supportRaw)>supportProfile.maxBytes)throw new Error(`Support graph ${Buffer.byteLength(supportRaw)} exceeds ${supportProfile.maxBytes}`);
-  await writeFile(path.join(semantic,'support-graph.json'),supportRaw);
+  await writeFile(path.join(generatedSemantic,'support-graph.json'),supportRaw);
 
   return {headIds,supportIds,headRaw,supportRaw};
 }
