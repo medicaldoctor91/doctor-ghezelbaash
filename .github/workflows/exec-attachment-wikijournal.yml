@@ -30,7 +30,7 @@ jobs:
           import os,json,requests,datetime,re
           USER=os.environ['WIKIMEDIA_USERNAME']; PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
           def mk(host,login=False):
-              s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91WikimediaExec/1.0'
+              s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91WikimediaExec/1.1'
               api=f'https://{host}/w/api.php'
               def get(**p):
                   p.update(format='json',formatversion=2,maxage=0,smaxage=0)
@@ -64,15 +64,13 @@ More recent meta-analytic evidence supports a robust association between adult a
           q2=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)['query']['pages'][0]
           rev2=(q2.get('revisions') or [{}])[0]; content2=rev2.get('slots',{}).get('main',{}).get('content','')
           contribs=get(action='query',list='usercontribs',ucuser=ui['name'],uclimit='max',ucprop='ids|title|timestamp|comment')['query']['usercontribs']
-
           _,_,wget=mk('en.wikiversity.org',False)
           pre='WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review'
           pq=wget(action='query',prop='revisions|categories|info',titles=pre,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=50,cllimit='max')['query']['pages'][0]
           prevs=pq.get('revisions') or []; pr=prevs[0] if prevs else {}; ptext=pr.get('slots',{}).get('main',{}).get('content',''); cats=[x.get('title') for x in pq.get('categories',[])]
           tracking={}
           for ct in ['Category:Articles currently submitted to WikiJournal of Medicine for peer review','Category:Article preprints not yet submitted to WikiJournal of Medicine for peer review','Category:Articles currently submitted to a WikiJournal for peer review']:
-              d=wget(action='query',list='categorymembers',cmtitle=ct,cmlimit='max',cmprop='ids|title|timestamp')
-              tracking[ct]=d['query']['categorymembers']
+              d=wget(action='query',list='categorymembers',cmtitle=ct,cmlimit='max',cmprop='ids|title|timestamp'); tracking[ct]=d['query']['categorymembers']
           ucs=[]; cont={}
           while True:
               p={'action':'query','list':'usercontribs','ucuser':'Medicaldoctor91','uclimit':'max','ucprop':'ids|title|timestamp|comment'}; p.update(cont); d=wget(**p); ucs.extend(d['query']['usercontribs'])
