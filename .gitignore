@@ -25,4 +25,4 @@ public/live-observations.jsonld
 public/query-matrix.jsonl
 .release/huggingface/
 
-# one-time svg-derived migration trigger; never merged
+# one-time cleanup-safe migration trigger; never merged
