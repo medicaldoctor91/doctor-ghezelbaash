@@ -5,7 +5,7 @@ import { assembleCanonicalContent } from './lib/assemble-content.mjs';
 import {assembleCssSource} from '../src/lib/css-source.mjs';
 import { deriveCssDelivery } from '../src/lib/css-delivery.mjs';
 import { expandKnowledgeXml } from './lib/knowledge-xml.mjs';
-import { normalizeGoogleSupportGraphRaw } from './lib/google-support-graph.mjs';
+import { normalizeGoogleSupportGraph } from './lib/google-support-graph.mjs';
 import { hashIdentityFingerprint } from './lib/release-identity.mjs';
 
 const root=process.cwd();
@@ -116,8 +116,8 @@ for(const id of supportIds){
   const node=byId.get(id); if(!node) throw new Error(`Support selection missing ${id}`);
   supportNodes.push(supportProfile.mode==='full' ? structuredClone(node) : pruneInlineRefs(projectNode(node,profileFor(node)||{})));
 }
-const supportBaseRaw=`${JSON.stringify({'@context':graph['@context'],'@graph':supportNodes})}\n`;
-const supportRaw=normalizeGoogleSupportGraphRaw(supportBaseRaw);
+const supportDoc=normalizeGoogleSupportGraph({'@context':graph['@context'],'@graph':supportNodes});
+const supportRaw=`${JSON.stringify(supportDoc)}\n`;
 if(Buffer.byteLength(supportRaw)>supportProfile.maxBytes) throw new Error(`Support graph ${Buffer.byteLength(supportRaw)} exceeds ${supportProfile.maxBytes}`);
 await writeFile(path.join(semantic,'support-graph.json'),supportRaw);
 
@@ -325,9 +325,11 @@ const provenanceDoc={'@context':graph['@context'],'@graph':provGraph};
 await writeFile(path.join(projections,'provenance.jsonld'),`${JSON.stringify(provenanceDoc)}\n`);
 await writeFile(path.join(projections,'evidence-snapshot.json'),`${JSON.stringify(evidenceSnapshot,null,2)}\n`);
 
-
 // ---- Compact llms.txt with explicit name tiers and retrieval/indexing policy.
 const llmsTemplate=await readFile(path.join(data,'templates/llms.template.txt'),'utf8');
+const evidenceTiers=evidenceRegistry.tiers||{};
+for(const tier of ['A','B','C'])if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier])throw new Error('llms.txt: evidence tier '+tier+' definition missing from evidence registry');
+const evidenceTierLine='- Evidence tiers: Tier A = '+evidenceTiers.A+'; Tier B = '+evidenceTiers.B+'; Tier C = '+evidenceTiers.C+'.';
 const llms=llmsTemplate
   .replaceAll('{{RELEASE}}',release.release)
   .replaceAll('{{REVIEW_DATE}}',release.dateModified)
@@ -340,10 +342,10 @@ const llms=llmsTemplate
   .replaceAll('{{ZENODO_VERSION_DOI_URL}}',`https://doi.org/${release.dataset.zenodo.versionDoi}`)
   .replaceAll('{{ZENODO_RECORD_ID}}',String(release.dataset.zenodo.recordId))
   .replaceAll('{{DATASET_WIKIDATA}}',release.dataset.wikidata)
-  .replaceAll('{{HUGGING_FACE_DATASET}}',release.dataset.huggingFace.dataset);
+  .replaceAll('{{HUGGING_FACE_DATASET}}',release.dataset.huggingFace.dataset)
+  .replaceAll('{{EVIDENCE_TIER_LINE}}',evidenceTierLine);
 if(/{{[^}]+}}/.test(llms)) throw new Error('Unresolved llms.txt template placeholder');
 await writeFile(path.join(projections,'llms.txt'),llms);
-
 
 // ---- Generated vCard 4.0 contact projections from canonical release truth.
 const vEsc=s=>String(s??'').replaceAll('\\','\\\\').replaceAll('\n','\\n').replaceAll(';','\\;').replaceAll(',','\\,');
@@ -398,15 +400,5 @@ for(const v of videos){
 }
 sitemap+='  </url>\n</urlset>\n';
 await writeFile(path.join(projections,'sitemap.xml'),sitemap);
-
-const llmsProjectionPath=path.join(projections,'llms.txt');
-let llmsFinal=await readFile(llmsProjectionPath,'utf8');
-const evidenceTiers=evidenceRegistry.tiers||{};
-for(const tier of ['A','B','C'])if(typeof evidenceTiers[tier]!=='string'||!evidenceTiers[tier])throw new Error('llms.txt: evidence tier '+tier+' definition missing from evidence registry');
-const evidenceTierLine='- Evidence tiers: Tier A = '+evidenceTiers.A+'; Tier B = '+evidenceTiers.B+'; Tier C = '+evidenceTiers.C+'.';
-const evidenceTierPattern=/^- Evidence tiers:.*$/m;
-if(!evidenceTierPattern.test(llmsFinal))throw new Error('llms.txt: generated evidence-tier declaration missing');
-llmsFinal=llmsFinal.replace(evidenceTierPattern,evidenceTierLine);
-await writeFile(llmsProjectionPath,llmsFinal);
 
 console.log(JSON.stringify({generated:true,release:release.release,graphNodes:graph['@graph'].length,facts:rows.length-1,answers:answers.length,head:headIds.length,headBytes:Buffer.byteLength(headRaw),support:supportIds.length,supportBytes:Buffer.byteLength(supportRaw),markdownBytes:Buffer.byteLength(md),passages:emitted.length,maxPassageChars:Math.max(...emitted.map(x=>x.text.length),0)},null,2));
