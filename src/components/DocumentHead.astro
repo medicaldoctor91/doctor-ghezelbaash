@@ -9,7 +9,7 @@ interface Props { title:string; description:string; robots:string; canonicalURL:
 const {title,description,robots,canonicalURL,isMain=false,stage='critical'}=Astro.props;
 if(stage!=='critical'&&stage!=='discovery')throw new Error(`Unknown DocumentHead stage: ${stage}`);
 if(isMain){
-  const expected=[[title,pageMetadata.title,'title'],[description,pageMetadata.description,'description'],[robots,pageMetadata.robots,'robots'],[canonicalURL.toString(),pageMetadata.canonicalUrl,'canonical URL']];
+  const expected=[[title,pageMetadata.title,'title'],[description,pageMetadata.description,'description'],[robots,pageMetadata.robots,'robots'],[canonicalURL.toString(),release.canonicalUrl,'canonical URL']];
   for(const [actual,wanted,label] of expected)if(actual!==wanted)throw new Error(`Canonical page metadata drift: ${label}`);
 }
 const discoveryHead=isMain?bindReleaseTokens(discoveryHeadRaw,release):'';
