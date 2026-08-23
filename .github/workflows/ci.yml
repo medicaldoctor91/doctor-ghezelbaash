@@ -1,7 +1,9 @@
-name: Read-only main source and release validation
+name: Source and release validation
 
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
 
 permissions:
