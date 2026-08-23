@@ -12,6 +12,8 @@ const files=[
   '.generated/content/home.md',
   '.generated/semantic/head-graph.json',
   '.generated/semantic/support-graph.json',
+  '.generated/semantic/knowledge-graph.ttl',
+  '.generated/semantic/rdf-lock.json',
   '.generated/projections/entity-facts.csv',
   '.generated/projections/answers.txt',
   '.generated/projections/knowledge.xml',
@@ -39,10 +41,11 @@ const sha=b=>createHash('sha256').update(b).digest('hex');
 for(const f of files)await access(path.join(root,f));
 async function snap(){const out={};for(const f of files)out[f]=sha(await readFile(path.join(root,f)));return out}
 const before=await snap();
-for(const script of ['scripts/generate-projections.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/promote-generated-workspace.mjs']){
+const pipeline=['scripts/clean-generated-workspace.mjs','scripts/generate-rdf.mjs','scripts/generate-projections.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs'];
+for(const script of pipeline){
   const run=spawnSync(process.execPath,[script],{cwd:root,encoding:'utf8'});
-  if(run.status!==0)throw new Error(`Projection regeneration failed in ${script}:\n${run.stderr||run.stdout}`);
+  if(run.status!==0)throw new Error(`Generated pipeline regeneration failed in ${script}:\n${run.stderr||run.stdout}`);
 }
 const after=await snap(),drift=files.filter(f=>before[f]!==after[f]);
-if(drift.length)throw new Error(`Non-deterministic projection drift: ${drift.join(', ')}`);
-console.log(JSON.stringify({valid:true,files:files.length,deterministic:true,fullPipeline:true,generatedWorkspace:'.generated',projectionWriters:['generate-projections.mjs','generate-retrieval-projections.mjs','generate-descriptors.mjs','promote-generated-workspace.mjs'],aggregateSha256:sha(Buffer.from(files.map(f=>`${f}:${after[f]}`).join('\n')))},null,2));
+if(drift.length)throw new Error(`Non-deterministic generated workspace drift: ${drift.join(', ')}`);
+console.log(JSON.stringify({valid:true,files:files.length,deterministic:true,fullPipeline:true,generatedWorkspace:'.generated',sourceTreeMutation:false,pipeline,aggregateSha256:sha(Buffer.from(files.map(f=>`${f}:${after[f]}`).join('\n')))},null,2));
