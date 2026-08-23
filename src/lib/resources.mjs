@@ -16,10 +16,10 @@ export const STATIC_ARTIFACTS=Object.freeze([
   {source:'src/data/projections/void.ttl',path:'void.ttl',mediaType:'text/turtle',headRel:'describedby',footerLabel:'VoID'},
   {source:'src/data/projections/dcat.ttl',path:'dcat.ttl',mediaType:'text/turtle',headRel:'describedby',footerLabel:'DCAT 3'},
   {source:'src/data/projections/croissant.json',path:'croissant.json',mediaType:'application/ld+json',headRel:'describedby',footerLabel:'Croissant 1.1'},
-].map(Object.freeze));
+]);
 
 const byRoute=new Map(STATIC_ARTIFACTS.map(resource=>[`/${resource.path}`,resource]));
 if(byRoute.size!==STATIC_ARTIFACTS.length)throw new Error('Duplicate static resource route');
 export const staticArtifactForRoute=route=>byRoute.get(String(route))??null;
-export const HEAD_RESOURCES=Object.freeze(STATIC_ARTIFACTS.filter(resource=>resource.headRel));
-export const FOOTER_RESOURCES=Object.freeze(STATIC_ARTIFACTS.filter(resource=>resource.footerLabel));
+export const HEAD_RESOURCES=Object.freeze(STATIC_ARTIFACTS.filter(resource=>'headRel' in resource));
+export const FOOTER_RESOURCES=Object.freeze(STATIC_ARTIFACTS.filter(resource=>'footerLabel' in resource));
