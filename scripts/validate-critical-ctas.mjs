@@ -1,12 +1,13 @@
 import {readFile} from 'node:fs/promises';
 import {deriveSiteData} from '../src/lib/site-data.mjs';
+import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 
-const source=await readFile('src/content-source/page.md','utf8');
 const quick=await readFile('src/components/FloatingActionDock.astro','utf8');
 const release=JSON.parse(await readFile('src/data/release.json','utf8'));
 const graph=JSON.parse(await readFile('src/data/semantic/knowledge-graph.jsonld','utf8'));
 const redirectsRaw=await readFile('src/data/subdomain-redirects.json','utf8');
 const site=deriveSiteData(release,graph);
+const {content:source}=await assembleCanonicalContent({graph});
 
 const fail=message=>{throw new Error(message)};
 const hero=[...source.matchAll(/<a\b[^>]*class=["'][^"']*\bhero-action\b[^"']*["'][^>]*>[\s\S]*?<\/a>/gi)].map(m=>m[0]);
@@ -45,5 +46,6 @@ console.log(JSON.stringify({
   backToTop:'PRESERVED',
   directionsPlaceId:release.clinic.placeId,
   contactAuthority:'release+canonical-graph',
+  validationSurface:'assembled-canonical-content',
   destinationsLocked:true
 },null,2));
