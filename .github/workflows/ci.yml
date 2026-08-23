@@ -30,34 +30,19 @@ jobs:
           sudo apt-get install --no-install-recommends -y ffmpeg
           ffprobe -version
       - run: npm ci --ignore-scripts
-      - name: Release preparation diagnostics
+      - name: Canonical CI lifecycle
         shell: bash
         run: |
           set +e
-          npm run release:prepare 2>&1 | tee /tmp/release-prepare.log
+          npm run ci 2>&1 | tee /tmp/ci.log
           rc=${PIPESTATUS[0]}
           if [ "$rc" -ne 0 ]; then
-            tail -n 100 /tmp/release-prepare.log | while IFS= read -r line; do
+            tail -n 160 /tmp/ci.log | while IFS= read -r line; do
               line=${line//'%'/'%25'}; line=${line//$'\r'/'%0D'}; line=${line//$'\n'/'%0A'}
-              echo "::error title=release-prepare::$line"
+              echo "::error title=canonical-ci::$line"
             done
             exit "$rc"
           fi
-      - name: Build diagnostics
-        shell: bash
-        run: |
-          set +e
-          npm run build 2>&1 | tee /tmp/build.log
-          rc=${PIPESTATUS[0]}
-          if [ "$rc" -ne 0 ]; then
-            tail -n 120 /tmp/build.log | while IFS= read -r line; do
-              line=${line//'%'/'%25'}; line=${line//$'\r'/'%0D'}; line=${line//$'\n'/'%0A'}
-              echo "::error title=build::$line"
-            done
-            exit "$rc"
-          fi
-      - name: Package canonical source backup
-        run: npm run package:source
       - name: Upload canonical source backup
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
