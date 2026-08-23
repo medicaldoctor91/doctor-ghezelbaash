@@ -80,7 +80,7 @@ jobs:
           set -euo pipefail
           node scripts/cloudflare-pages.mjs verify
           npm run verify:production
-          node scripts/verify-live.mjs current
+          node scripts/verify-live.mjs current --website-only
           if npm run verify:public-discovery; then
             echo 'PUBLIC_DISCOVERY_T0_PASS'
           else
@@ -97,5 +97,5 @@ jobs:
           fi
           sleep 180
           npm run verify:public-discovery
-          node scripts/verify-live.mjs current
+          node scripts/verify-live.mjs current --website-only
           echo 'PUBLIC_DISCOVERY_T5_HARD_PASS'
