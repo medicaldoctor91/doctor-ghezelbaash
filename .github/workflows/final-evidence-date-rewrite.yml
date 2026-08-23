@@ -1,0 +1,56 @@
+name: Temporary Zenodo evidence timestamp convergence
+
+on:
+  push:
+    branches: [refactor/final-lifecycle-authority]
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: refactor/final-lifecycle-authority
+          fetch-depth: 0
+      - name: Converge current Zenodo evidence timestamp
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const release=JSON.parse(fs.readFileSync('src/data/release.json','utf8'));
+          const evidenceId=`${release.canonicalUrl}#evidence-zenodo-current-release`;
+          for(const file of ['src/data/evidence-registry.json','src/data/evidence-snapshot.json']){
+            const data=JSON.parse(fs.readFileSync(file,'utf8'));
+            const rows=data.evidence||data.entries||[];
+            const row=rows.find(item=>item.id===evidenceId);
+            if(!row)throw new Error(`${file}: current Zenodo evidence missing`);
+            row.verifiedAt=release.dateModified;
+            fs.writeFileSync(file,JSON.stringify(data,null,2)+'\n');
+          }
+          let promote=fs.readFileSync('scripts/promote-release.mjs','utf8');
+          const old="registryEvidence.url=currentEvidenceUrl;\nsnapshotEvidence.url=currentEvidenceUrl;";
+          const next="registryEvidence.url=currentEvidenceUrl;\nsnapshotEvidence.url=currentEvidenceUrl;\nregistryEvidence.verifiedAt=next.dateModified;\nsnapshotEvidence.verifiedAt=next.dateModified;";
+          if(promote.includes(old))promote=promote.replace(old,next);
+          else if(!promote.includes('registryEvidence.verifiedAt=next.dateModified'))throw new Error('promotion timestamp binding missing');
+          fs.writeFileSync('scripts/promote-release.mjs',promote);
+
+          let validator=fs.readFileSync('scripts/validate-release-contract.mjs','utf8');
+          const check="if(!registryEvidence||!snapshotEvidence||registryEvidence.url!==currentEvidenceUrl||snapshotEvidence.url!==currentEvidenceUrl)fail('Current Zenodo evidence pointer drift');";
+          const replacement="if(!registryEvidence||!snapshotEvidence||registryEvidence.url!==currentEvidenceUrl||snapshotEvidence.url!==currentEvidenceUrl||registryEvidence.verifiedAt!==release.dateModified||snapshotEvidence.verifiedAt!==release.dateModified)fail('Current Zenodo evidence pointer drift');";
+          if(validator.includes(check))validator=validator.replace(check,replacement);
+          else if(!validator.includes('registryEvidence.verifiedAt!==release.dateModified'))throw new Error('release evidence timestamp assertion missing');
+          fs.writeFileSync('scripts/validate-release-contract.mjs',validator);
+          NODE
+      - name: Commit if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then exit 0; fi
+          git config user.name ghezelbaash-architecture-bot
+          git config user.email actions@users.noreply.github.com
+          git add src/data/evidence-registry.json src/data/evidence-snapshot.json scripts/promote-release.mjs scripts/validate-release-contract.mjs
+          git commit -m "fix: bind current Zenodo evidence timestamp to release"
+          git push origin HEAD:refactor/final-lifecycle-authority
