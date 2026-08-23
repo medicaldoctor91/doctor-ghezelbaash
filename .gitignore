@@ -25,4 +25,4 @@ public/live-observations.jsonld
 public/query-matrix.jsonl
 .release/huggingface/
 
-# one-time cleanup-safe migration trigger; never merged
+# final manifest-convergence migration trigger; never merged
