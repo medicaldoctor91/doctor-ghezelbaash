@@ -63,8 +63,9 @@ assert(documentHead.includes('HERO_PRELOAD_HREF')&&documentHead.includes('HERO_P
 assert(!documentHead.includes('main-head.html')&&!documentHead.includes('head-delivery'),'Runtime DocumentHead still depends on legacy Head transport');
 assert(!baseLayout.includes('page-metadata.json')&&baseLayout.includes("release.json")&&!baseLayout.includes('effectiveFrontmatter'),'BaseLayout content metadata authority drift');
 assert(baseLayout.includes('new URL(release.canonicalUrl)'),'BaseLayout canonical URL authority drift');
-const generatedFrontmatterImport=/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/m;
-assert(generatedFrontmatterImport.test(indexSource)&&!indexSource.includes('page-metadata.json'),'Index must consume canonical Markdown frontmatter');
+const generatedFrontmatterImport=/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/\.\.\/\.generated\/content\/home\.md['"]/m;
+assert(generatedFrontmatterImport.test(indexSource)&&!indexSource.includes('page-metadata.json'),'Index must consume canonical Markdown frontmatter from generated workspace');
+assert(!indexSource.includes('../content/home.md'),'Index reintroduced legacy generated content staging');
 
 assert(HERO_PRELOAD_HREF.includes('saeed-ghezelbash-portrait-delivery-640'),'Hero preload href drift');
 assert(HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF)&&HERO_PRELOAD_SRCSET.includes(' 960w')&&HERO_PRELOAD_SRCSET.includes(' 1600w'),'Hero preload srcset drift');
@@ -81,4 +82,4 @@ assert(!legacyTemplateExists,'Legacy main-head template still exists');
 assert(!legacyRuntimeExists,'Legacy Head split runtime still exists');
 assert(!rawDiscoveryTemplateExists,'Raw discovery Head template still exists');
 
-console.log(JSON.stringify({stage:'HEAD_AUTHORITY',contentMetadataAuthority:'markdown-frontmatter',canonicalFrontmatter:'PASS',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',discoveryIdentityAuthority:'release.json',headRendering:'ASTRO_NATIVE',structuredHeroPreload:'PASS',rawHeadTemplates:0,legacyAuthoritiesRemoved:true,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HEAD_AUTHORITY',contentMetadataAuthority:'markdown-frontmatter',generatedContentAuthority:'.generated/content/home.md',canonicalFrontmatter:'PASS',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',discoveryIdentityAuthority:'release.json',headRendering:'ASTRO_NATIVE',structuredHeroPreload:'PASS',rawHeadTemplates:0,legacyAuthoritiesRemoved:true,integrity:'PASS'},null,2));

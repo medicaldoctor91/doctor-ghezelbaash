@@ -1,9 +1,19 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import {spawnSync} from 'node:child_process';
-const ttl='src/data/semantic/knowledge-graph.ttl';
-const lock='src/data/semantic/rdf-lock.json';
-function run(){fs.rmSync(ttl,{force:true});fs.rmSync(lock,{force:true});const p=spawnSync(process.execPath,['scripts/generate-rdf.mjs'],{encoding:'utf8'});if(p.status!==0)throw new Error(p.stderr||p.stdout);const b=fs.readFileSync(ttl);return {b,h:crypto.createHash('sha256').update(b).digest('hex')}}
+
+const ttl='.generated/semantic/knowledge-graph.ttl';
+const lock='.generated/semantic/rdf-lock.json';
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const snapshot=()=>({ttl:fs.readFileSync(ttl),lock:fs.readFileSync(lock)});
+const run=()=>{
+  const p=spawnSync(process.execPath,['scripts/generate-rdf.mjs'],{encoding:'utf8'});
+  if(p.status!==0)throw new Error(p.stderr||p.stdout);
+  return snapshot();
+};
+
+const canonical=snapshot();
 const a=run(),b=run();
-if(!a.b.equals(b.b))throw new Error('same-tree RDF byte drift '+a.h+' '+b.h);
-console.log(JSON.stringify({rdfByteReproducibility:'PASS',sha256:a.h,bytes:a.b.length}));
+if(!a.ttl.equals(b.ttl)||!a.lock.equals(b.lock))throw new Error(`same-tree RDF byte drift ${sha(a.ttl)} ${sha(b.ttl)}`);
+if(!a.ttl.equals(canonical.ttl)||!a.lock.equals(canonical.lock))throw new Error('RDF regeneration diverges from generated workspace canonical bytes');
+console.log(JSON.stringify({rdfByteReproducibility:'PASS',workspace:'.generated/semantic',sha256:sha(a.ttl),bytes:a.ttl.length,lockReproducible:true,sourceTreeMutation:false}));

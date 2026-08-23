@@ -1,5 +1,5 @@
 import path from 'node:path';
-import {writeFile} from 'node:fs/promises';
+import {mkdir,writeFile} from 'node:fs/promises';
 import {nodeTypes,valueText} from '../projection-context.mjs';
 
 const vEsc=value=>String(value??'').replaceAll('\\','\\\\').replaceAll('\n','\\n').replaceAll(';','\\;').replaceAll(',','\\,');
@@ -22,13 +22,14 @@ const isoDurationSeconds=value=>{
 };
 
 export async function compileContactDiscovery(context){
-  const {root,projections,release,graph,byId}=context;
+  const {generatedPublic,projections,release,graph,byId}=context;
   const clinic=byId.get(release.clinic.id);
   const addressNode=byId.get(clinic?.address?.['@id']);
   const personPortrait=byId.get(`${release.canonicalUrl}#image-saeed-ghezelbash-portrait-master`);
   const clinicImages=(Array.isArray(clinic?.image)?clinic.image:[clinic?.image].filter(Boolean)).map(value=>value?.['@id']);
   const clinicPhoto=byId.get(clinicImages.find(id=>id&&id!==`${release.canonicalUrl}#image-doctor-ghezelbaash-clinic-logo`));
   const rev=`${release.dateModified.replaceAll('-','')}T000000Z`;
+  await mkdir(generatedPublic,{recursive:true});
 
   const doctorVcf=vCard([
     'BEGIN:VCARD','VERSION:4.0',`PRODID:-//ghezelbaash.ir//Entity Contact Projection ${release.release}//FA`,
@@ -50,8 +51,8 @@ export async function compileContactDiscovery(context){
     'X-WIKIDATA:Q140288589',`X-OWNER:${release.primaryEntity.id}`,`X-PRICE-RANGE:${release.clinic.priceRange}`,
     `X-HOURS:${release.clinic.hours}`,`X-ENTITY-VERSION:${release.release}`,`REV:${rev}`,'END:VCARD',
   ].filter(Boolean));
-  await writeFile(path.join(root,'public/doctor.vcf'),doctorVcf);
-  await writeFile(path.join(root,'public/clinic.vcf'),clinicVcf);
+  await writeFile(path.join(generatedPublic,'doctor.vcf'),doctorVcf);
+  await writeFile(path.join(generatedPublic,'clinic.vcf'),clinicVcf);
 
   const imageIds=[
     `${release.canonicalUrl}#image-saeed-ghezelbash-portrait`,

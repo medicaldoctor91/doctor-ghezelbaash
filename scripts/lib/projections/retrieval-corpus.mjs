@@ -47,10 +47,10 @@ const bindLlmsTemplate=(template,bindings)=>{
 };
 
 export async function compileRetrievalCorpus(context,{answerRecords}={}){
-  const {root,data,projections,release,invariants,graph,byId,graphByUrl,evidenceRegistry,evidenceSnapshot,evidenceByUrl,tierAEvidenceIds,evidenceRefsForNode,identityFingerprintSha256}=context;
+  const {data,projections,generatedContent,release,invariants,graph,byId,graphByUrl,evidenceRegistry,evidenceSnapshot,evidenceByUrl,tierAEvidenceIds,evidenceRefsForNode,identityFingerprintSha256}=context;
   if(!Array.isArray(answerRecords))throw new Error('Retrieval compiler requires answerRecords[] from semantic compiler');
 
-  const home=await readFile(path.join(root,'src/content/home.md'),'utf8');
+  const home=await readFile(path.join(generatedContent,'home.md'),'utf8');
   const body=home.replace(/^---[\s\S]*?---\s*/,'').replace(/<script\b[\s\S]*?<\/script>/gi,' ').replace(/<style\b[\s\S]*?<\/style>/gi,' ');
   const blocks=[];
   const blockPattern=/<(h[1-6]|p|li|figcaption|summary|dt|dd)\b([^>]*)>([\s\S]*?)<\/\1>/gi;

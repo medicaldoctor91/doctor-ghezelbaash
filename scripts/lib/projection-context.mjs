@@ -2,6 +2,7 @@ import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {hashIdentityFingerprint} from './release-identity.mjs';
+import {generatedWorkspace} from './generated-workspace.mjs';
 
 export const nodeTypes=node=>Array.isArray(node?.['@type'])?node['@type']:[node?.['@type']].filter(Boolean);
 export const refId=value=>value&&typeof value==='object'&&value['@id']?value['@id']:null;
@@ -23,7 +24,7 @@ export const sha256=value=>createHash('sha256').update(value).digest('hex');
 export async function loadProjectionContext({root=process.cwd()}={}){
   const data=path.join(root,'src/data');
   const semantic=path.join(data,'semantic');
-  const projections=path.join(data,'projections');
+  const generated=generatedWorkspace(root);
   const [release,invariants,evidenceRegistry,evidenceSnapshot,graph]=await Promise.all([
     readFile(path.join(data,'release.json'),'utf8').then(JSON.parse),
     readFile(path.join(data,'release-invariants.json'),'utf8').then(JSON.parse),
@@ -56,7 +57,13 @@ export async function loadProjectionContext({root=process.cwd()}={}){
   const nodeName=node=>valueText(node?.name).split(' | ')[0];
 
   return {
-    root,data,semantic,projections,release,invariants,evidenceRegistry,evidenceSnapshot,graph,byId,graphByUrl,
+    root,data,semantic,generated,
+    projections:generated.projections,
+    generatedSemantic:generated.semantic,
+    generatedPublic:generated.public,
+    generatedContent:generated.content,
+    generatedAssets:generated.assets,
+    release,invariants,evidenceRegistry,evidenceSnapshot,graph,byId,graphByUrl,
     evidenceById,evidenceByUrl,tierAEvidenceIds,evidenceRefsForNode,readIds,nodeName,
     identityFingerprintSha256:hashIdentityFingerprint(release),
   };

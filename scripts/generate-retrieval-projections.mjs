@@ -1,10 +1,12 @@
 import path from 'node:path';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
+import {generatedWorkspace} from './lib/generated-workspace.mjs';
 
 const root=process.cwd();
+const generated=generatedWorkspace(root);
 const readJson=async p=>JSON.parse(await readFile(path.join(root,p),'utf8'));
-const write=async(p,s)=>{const f=path.join(root,p);await mkdir(path.dirname(f),{recursive:true});await writeFile(f,s)};
+const write=async(f,s)=>{await mkdir(path.dirname(f),{recursive:true});await writeFile(f,s)};
 const arr=v=>Array.isArray(v)?v:(v==null?[]:[v]);
 const id=v=>typeof v==='string'?v:v?.['@id'];
 
@@ -54,8 +56,8 @@ const liveDoc={
   provider:{'@type':'Organization',name:'Google Places API'},
   about:{'@id':release.clinic.id}
 };
-await write('src/data/projections/live-observations.jsonld',JSON.stringify(liveDoc,null,2)+'\n');
-await write('public/live-observations.jsonld',JSON.stringify(liveDoc,null,2)+'\n');
+await write(path.join(generated.projections,'live-observations.jsonld'),JSON.stringify(liveDoc,null,2)+'\n');
+await write(path.join(generated.public,'live-observations.jsonld'),JSON.stringify(liveDoc,null,2)+'\n');
 
 const evidenceEntries=evidenceRegistry.evidence||[];
 const evidenceById=new Map(evidenceEntries.map(x=>[x.id,x]));
@@ -224,9 +226,9 @@ for(const row of dedup)for(const ref of row.stable_evidence_refs)if(!evidenceByI
 const uncoveredServices=publishableServices.map(s=>s.id).filter(s=>!dedup.some(r=>arr(r.service_ids).includes(s)));
 if(uncoveredServices.length)throw new Error(`Query Matrix publishable service coverage missing ${uncoveredServices.length} services: ${uncoveredServices.join(', ')}`);
 
-await write('src/data/projections/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
-await write('public/query-matrix.jsonl',dedup.map(r=>JSON.stringify(r)).join('\n')+'\n');
-
+const queryMatrix=dedup.map(r=>JSON.stringify(r)).join('\n')+'\n';
+await write(path.join(generated.projections,'query-matrix.jsonl'),queryMatrix);
+await write(path.join(generated.public,'query-matrix.jsonl'),queryMatrix);
 
 const reviewedAt=release.medicalReviewedAt||release.dateModified;
 const matrix={
@@ -246,7 +248,7 @@ const matrix={
   medicalReviewedAt:reviewedAt,
   reputation:{rating:Number(rating),reviewCount:Number(reviewCount),observedAt}
 };
-await write('src/data/projections/current-release-matrix.json',JSON.stringify(matrix,null,2)+'\n');
+await write(path.join(generated.projections,'current-release-matrix.json'),JSON.stringify(matrix,null,2)+'\n');
 
 console.log(JSON.stringify({
   retrievalProjections:true,
