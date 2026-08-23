@@ -5,12 +5,12 @@ const root=process.cwd();
 const fail=message=>{throw new Error(message)};
 const read=file=>readFile(path.join(root,file),'utf8');
 const required=[
-  'src/data/head-profile.json','src/data/media-dimensions.tsv','src/data/templates/discovery-head.html',
+  'src/data/head-profile.json','src/data/media-dimensions.tsv',
   'scripts/enrich-image-metadata-manifest.mjs','scripts/generate-retrieval-projections.mjs','scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
 ];
 for(const file of required)await access(path.join(root,file));
-for(const removed of ['src/data/page-metadata.json','src/data/templates/main-head.html','src/lib/head-delivery.mjs']){
+for(const removed of ['src/data/page-metadata.json','src/data/templates/main-head.html','src/data/templates/discovery-head.html','src/lib/head-delivery.mjs']){
   try{await access(path.join(root,removed));fail(`Legacy architecture residue exists: ${removed}`);}catch(error){if(error?.code!=='ENOENT')throw error;}
 }
 
@@ -62,8 +62,9 @@ for(const artifact of ['current-release-matrix.json','artifact-manifest.json','_
 for(const guard of ['unknown token','expected exactly one','unresolved token','token inventory mismatch'])if(!headersCompiler.includes(guard))fail(`Headers compiler guard missing: ${guard}`);
 
 if(!documentHead.includes("../data/head-profile.json")||documentHead.includes('page-metadata.json')||documentHead.includes('main-head.html')||documentHead.includes('deriveMainHeadStages'))fail('Document Head authority is not canonical/structured');
-if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Discovery Head is not isolated from content metadata authority');
+if(documentHead.includes('discovery-head.html?raw')||documentHead.includes('set:html={discoveryHead}')||!documentHead.includes('const discoveryLinks:DiscoveryLink[]')||!documentHead.includes('discoveryLinks.map(link=><link {...link} />)'))fail('Discovery Head must be rendered natively by Astro without raw-template transport');
+if(!documentHead.includes('release.primaryEntity.verifiedWebIdentityMesh.map')||!documentHead.includes('release.dataset.zenodo.versionDoi'))fail('Discovery Head lost release.json authority');
 if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
 if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,currentServingMatrixAuthority:'finalizer-only',mediaEnrichmentBoundary:'manifest-locked-transactional',mediaManifestPreflight:'read-only-ci-gate',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,currentServingMatrixAuthority:'finalizer-only',mediaEnrichmentBoundary:'manifest-locked-transactional',mediaManifestPreflight:'read-only-ci-gate',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',discoveryIdentityAuthority:'release.json',headDelivery:'astro-native-structured',rawHeadTemplates:0,headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
