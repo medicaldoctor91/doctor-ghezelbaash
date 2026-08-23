@@ -7,7 +7,7 @@ on:
       - .github/workflows/rfd-live-check.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   edit:
@@ -17,6 +17,10 @@ jobs:
       WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
       WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-api-access
+          persist-credentials: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -26,9 +30,9 @@ jobs:
         run: |
           set -euo pipefail
           echo "::add-mask::$WIKIMEDIA_BOT_PASSWORD"
-          python - <<'PY'
-          import os, re, requests
-          s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91FaWikipediaEdit/1.0'
+          python - <<'PY' > fa-hyaluronic-edit-result.json
+          import os, re, json, requests, datetime
+          s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91FaWikipediaEdit/1.1'
           api='https://fa.wikipedia.org/w/api.php'
           def get(**p):
               p.update(format='json',formatversion=2,maxage=0,smaxage=0)
@@ -42,10 +46,10 @@ jobs:
               return d
           lt=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
           lg=post(action='login',lgname=os.environ['WIKIMEDIA_USERNAME'],lgpassword=os.environ['WIKIMEDIA_BOT_PASSWORD'],lgtoken=lt)
-          assert lg.get('login',{}).get('result')=='Success', lg
+          if lg.get('login',{}).get('result')!='Success': raise RuntimeError(lg)
           ui=get(action='query',meta='userinfo',uiprop='rights|editcount')['query']['userinfo']
           title='هیالورونیک اسید'
-          q=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|content',rvslots='main',rvlimit=1)
+          q=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)
           rev=q['query']['pages'][0]['revisions'][0]; old=rev['slots']['main']['content']
           new_section='''== کاربرد هیالورونیک اسید در پزشکی زیبایی ==
 هیالورونیک اسید در پزشکی زیبایی به‌صورت موضعی و تزریقی استفاده می‌شود. پرکننده‌های پوستی مبتنی بر هیالورونیک اسید برای اصلاح برخی چین‌ها و خطوط صورت و افزایش حجم بافت نرم به‌کار می‌روند. یک مرور نظام‌مند از مطالعات با سطح شواهد بالا گزارش کرد که بیشتر عوارض پس از تزریق این پرکننده‌ها، واکنش‌های کوتاه‌مدت محل تزریق هستند؛ بااین‌حال عوارض شدیدتر نیز، هرچند نادر، گزارش شده‌اند.<ref>{{یادکرد ژورنال |نام خانوادگی=Kyriazidis |نام=Ioannis |عنوان=Adverse Events Associated with Hyaluronic Acid Filler Injection for Non-surgical Facial Aesthetics: A Systematic Review of High Level of Evidence Studies |ژورنال=Aesthetic Plastic Surgery |سال=2024 |جلد=48 |شماره=4 |صفحات=719–741 |doi=10.1007/s00266-023-03465-1 |pmid=37563436}}</ref>
@@ -54,16 +58,24 @@ jobs:
 '''
           pat=re.compile(r'(?ms)^==\s*کاربرد هیالورونیک اسید در زیبایی\s*==\s*.*?(?=^==[^=].*?==\s*$|\Z)')
           if pat.search(old):
-              new=pat.sub(new_section+'\n',old,count=1)
+              new=pat.sub(new_section+'\n',old,count=1); state='editing'
+              csrf=get(action='query',meta='tokens')['query']['tokens']['csrftoken']
+              edit=post(action='edit',title=title,text=new,summary='بازنویسی بخش کاربردهای زیبایی با منابع مروری پزشکی و افزودن توضیح دربارهٔ اسکین‌بوسترها',token=csrf,basetimestamp=rev['timestamp'],assertuser=ui['name']).get('edit',{})
           elif '== کاربرد هیالورونیک اسید در پزشکی زیبایی ==' in old and '39544509' in old:
-              print('already present'); raise SystemExit(0)
+              state='already_present'; edit={'result':'Nochange','oldrevid':rev['revid']}
           else:
               raise RuntimeError('Target section heading not found; no edit made')
-          csrf=get(action='query',meta='tokens')['query']['tokens']['csrftoken']
-          e=post(action='edit',title=title,text=new,summary='بازنویسی بخش کاربردهای زیبایی با منابع مروری پزشکی و افزودن توضیح دربارهٔ اسکین‌بوسترها',token=csrf,basetimestamp=rev['timestamp'],assertuser=ui['name'])
-          print(e)
           v=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)['query']['pages'][0]['revisions'][0]
           txt=v['slots']['main']['content']
-          assert v.get('user')==ui['name'] and '37563436' in txt and '39544509' in txt
-          print({'verified_revid':v.get('revid'),'user':v.get('user'),'timestamp':v.get('timestamp')})
+          contrib=get(action='query',list='usercontribs',ucuser=ui['name'],uclimit=10,ucprop='ids|title|timestamp|comment')['query']['usercontribs']
+          out={'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'login':lg['login']['result'],'authenticated_as':ui['name'],'state':state,'edit':edit,'verified_latest':{k:v.get(k) for k in ['revid','timestamp','user','comment']},'checks':{'new_heading':'== کاربرد هیالورونیک اسید در پزشکی زیبایی ==' in txt,'pmid_37563436':'37563436' in txt,'pmid_39544509':'39544509' in txt},'recent_contributions':contrib}
+          print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
+      - name: Store verification
+        shell: bash
+        run: |
+          git config user.name ghezelbaash-wiki-audit-bot
+          git config user.email actions@users.noreply.github.com
+          git add fa-hyaluronic-edit-result.json
+          git commit -m "Store Persian Wikipedia hyaluronic edit verification" || exit 0
+          git push origin HEAD:wiki-api-access
