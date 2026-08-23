@@ -5,8 +5,8 @@ const root=process.cwd();
 const fail=message=>{throw new Error(message)};
 const read=file=>readFile(path.join(root,file),'utf8');
 const required=[
-  'src/data/head-profile.json','src/data/templates/discovery-head.html',
-  'scripts/generate-retrieval-projections.mjs','scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
+  'src/data/head-profile.json','src/data/media-dimensions.tsv','src/data/templates/discovery-head.html',
+  'scripts/enrich-image-metadata-manifest.mjs','scripts/generate-retrieval-projections.mjs','scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
 ];
 for(const file of required)await access(path.join(root,file));
@@ -14,8 +14,8 @@ for(const removed of ['src/data/page-metadata.json','src/data/templates/main-hea
   try{await access(path.join(root,removed));fail(`Legacy architecture residue exists: ${removed}`);}catch(error){if(error?.code!=='ENOENT')throw error;}
 }
 
-const [orchestrator,retrievalGenerator,finalizer,headersCompiler,documentHead,baseLayout,indexPage,pageAssets,graphCompiler]=await Promise.all([
-  read('scripts/generate-projections.mjs'),read('scripts/generate-retrieval-projections.mjs'),read('scripts/finalize-dist.mjs'),read('scripts/lib/headers-template.mjs'),
+const [pkg,orchestrator,retrievalGenerator,mediaGate,finalizer,headersCompiler,documentHead,baseLayout,indexPage,pageAssets,graphCompiler]=await Promise.all([
+  read('package.json').then(JSON.parse),read('scripts/generate-projections.mjs'),read('scripts/generate-retrieval-projections.mjs'),read('scripts/enrich-image-metadata-manifest.mjs'),read('scripts/finalize-dist.mjs'),read('scripts/lib/headers-template.mjs'),
   read('src/components/DocumentHead.astro'),read('src/layouts/BaseLayout.astro'),read('src/pages/index.astro'),
   read('scripts/lib/projections/page-assets.mjs'),read('scripts/lib/projections/graph-projections.mjs'),
 ]);
@@ -33,6 +33,11 @@ const allowedRetrievalWrites=[
 if(JSON.stringify(retrievalWrites)!==JSON.stringify(allowedRetrievalWrites))fail(`Retrieval writer surface drift: ${retrievalWrites.join(', ')}`);
 for(const forbidden of ['answers.txt','index.md','llms.txt','llms-full.txt','provenance.jsonld','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json'])if(retrievalGenerator.includes(forbidden))fail(`Retrieval generator crossed canonical ownership boundary: ${forbidden}`);
 
+if(pkg.scripts?.['media:enrich']!=='node scripts/enrich-image-metadata-manifest.mjs')fail('Media enrichment bypasses canonical manifest gate');
+for(const token of ['src/data/media-dimensions.tsv','PRE_ENRICHMENT','POST_ENRICHMENT','scripts/enrich-image-metadata.mjs','MANIFEST_LOCKED'])if(!mediaGate.includes(token))fail(`Media manifest gate contract missing: ${token}`);
+if(/\bunlink\b|\brm\b|\bwriteFile\b|\bcopyFile\b/.test(mediaGate))fail('Media manifest gate must remain validation/orchestration-only');
+if((mediaGate.match(/manifestSet\.size!==49/g)||[]).length!==1)fail('Media manifest cardinality lock missing');
+
 if(!finalizer.includes("./lib/headers-template.mjs")||!finalizer.includes('compileHeadersTemplate(headersTemplate,{mainCsp,csp404,digests:headerDigests})'))fail('Finalizer is not bound to strict one-pass headers compilation');
 if(/headers\s*=\s*headers\.(?:replace|replaceAll)|headersTemplate\.(?:replace|replaceAll)/.test(finalizer))fail('Manual deployment-header patch chain reintroduced');
 if(/\bunlink\b/.test(finalizer))fail('Finalizer must fail closed; post-build artifact deletion is forbidden');
@@ -47,4 +52,4 @@ if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Dis
 if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
 if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,mediaEnrichmentBoundary:'manifest-locked',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
