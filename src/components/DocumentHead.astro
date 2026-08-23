@@ -1,21 +1,40 @@
 ---
-import mainHeadRaw from '../data/templates/main-head.html?raw';
+import discoveryHeadRaw from '../data/templates/discovery-head.html?raw';
+import pageMetadata from '../data/page-metadata.json';
 import release from '../data/release.json';
-import { deriveMainHeadStages } from '../lib/head-delivery.mjs';
-import { bindHeroPreloadSizes } from '../lib/hero-image-contract.mjs';
-import { bindReleaseTokens } from '../lib/release-tokens.mjs';
+import {HERO_IMAGE_SIZES,HERO_PRELOAD_HREF,HERO_PRELOAD_SRCSET} from '../lib/hero-image-contract.mjs';
+import {bindReleaseTokens} from '../lib/release-tokens.mjs';
 type HeadStage='critical'|'discovery';
-interface Props { title: string; description: string; robots: string; canonicalURL: URL; isMain?: boolean; stage?: HeadStage; }
-const { title, description, robots, canonicalURL, isMain=false, stage='critical' } = Astro.props;
+interface Props { title:string; description:string; robots:string; canonicalURL:URL; isMain?:boolean; stage?:HeadStage; }
+const {title,description,robots,canonicalURL,isMain=false,stage='critical'}=Astro.props;
 if(stage!=='critical'&&stage!=='discovery')throw new Error(`Unknown DocumentHead stage: ${stage}`);
-const mainHead=bindReleaseTokens(bindHeroPreloadSizes(mainHeadRaw),release);
-const {criticalHead,discoveryHead}=deriveMainHeadStages(mainHead);
-const stagedMainHead=stage==='critical'?criticalHead:discoveryHead;
+if(isMain){
+  const expected=[[title,pageMetadata.title,'title'],[description,pageMetadata.description,'description'],[robots,pageMetadata.robots,'robots'],[canonicalURL.toString(),pageMetadata.canonicalUrl,'canonical URL']];
+  for(const [actual,wanted,label] of expected)if(actual!==wanted)throw new Error(`Canonical page metadata drift: ${label}`);
+}
+const discoveryHead=isMain?bindReleaseTokens(discoveryHeadRaw,release):'';
+const og=pageMetadata.openGraph;
 ---
-{isMain&&<Fragment set:html={stagedMainHead} />}
+{isMain&&stage==='critical'&&<>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
+<link as="image" fetchpriority="high" href={HERO_PRELOAD_HREF} imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif" />
+<title>{title}</title><meta content={description} name="description" /><meta content={robots} name="robots" /><meta content={robots} name="googlebot" /><meta content={robots} name="bingbot" />
+<meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={pageMetadata.author} name="author" /><meta content={pageMetadata.applicationName} name="application-name" /><meta content={pageMetadata.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
+<meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={pageMetadata.themeColor} name="theme-color" /><meta content={pageMetadata.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />
+<link as="font" crossorigin="anonymous" href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2" media="(min-width:48.01rem)" rel="preload" type="font/woff2" />
+<link href={canonicalURL.toString()} rel="canonical" /><link href={canonicalURL.toString()} hreflang={pageMetadata.lang} rel="alternate" />
+</>}
+{isMain&&stage==='discovery'&&<>
+<Fragment set:html={discoveryHead} />
+<meta content={og.type} property="og:type" /><meta content="Saeed" property="profile:first_name" /><meta content="Ghezelbash" property="profile:last_name" /><meta content="doctor.ghezelbaash" property="profile:username" />
+<meta content={og.locale} property="og:locale" />{og.alternateLocales.map(locale=><meta content={locale} property="og:locale:alternate" />)}
+<meta content={title} property="og:title" /><meta content={description} property="og:description" /><meta content={canonicalURL.toString()} property="og:url" /><meta content={og.siteName} property="og:site_name" />
+<meta content={og.image} property="og:image" /><meta content={og.image} property="og:image:secure_url" /><meta content={og.imageType} property="og:image:type" /><meta content={String(og.imageWidth)} property="og:image:width" /><meta content={String(og.imageHeight)} property="og:image:height" /><meta content={og.imageAlt} property="og:image:alt" />
+<meta content={pageMetadata.twitter.card} name="twitter:card" /><meta content={title} name="twitter:title" /><meta content={description} name="twitter:description" /><meta content={canonicalURL.toString()} name="twitter:url" /><meta content={og.image} name="twitter:image" /><meta content={og.imageAlt} name="twitter:image:alt" />
+</>}
 {!isMain&&stage==='critical'&&<>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>{title}</title><meta name="description" content={description} /><meta name="robots" content={robots} />
 <meta name="author" content="دکتر سعید قزلباش" /><meta name="theme-color" content="#075244" />
-<link rel="canonical" href={canonicalURL} /><link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml" />
+<link rel="canonical" href={canonicalURL.toString()} /><link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml" />
 </>}
