@@ -48,7 +48,7 @@ jobs:
           Path('/tmp/favicon-white.svg').write_text(src.replace('fill="#000000"','fill="#ffffff"'),encoding='utf-8')
           PY
           rsvg-convert -w 410 -h 410 /tmp/favicon-white.svg -o /tmp/brand-mask-mark.png
-          convert -size 512x512 xc:'#075244' /tmp/brand-mask-mark.png -gravity center -composite /tmp/brand-maskable-512.png
+          convert -size 512x512 xc:'#075244' /tmp/brand-mask-mark.png -gravity center -composite -strip /tmp/brand-maskable-512.png
           rm -f public/media/brand/doctor-ghezelbaash-symbol-192.48be0004e370.png public/media/brand/doctor-ghezelbaash-symbol-512.a910779b67ef.png public/media/brand/doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png public/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png
           python - <<'PY'
           from pathlib import Path
@@ -102,16 +102,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          convert "$BRAND_512" -resize 16x16 public/favicon-16x16.png
-          convert "$BRAND_512" -resize 32x32 public/favicon-32x32.png
-          convert "$BRAND_512" -resize 48x48 public/favicon-48x48.png
+          convert "$BRAND_512" -resize 16x16 -strip public/favicon-16x16.png
+          convert "$BRAND_512" -resize 32x32 -strip public/favicon-32x32.png
+          convert "$BRAND_512" -resize 48x48 -strip public/favicon-48x48.png
           convert public/favicon-16x16.png public/favicon-32x32.png public/favicon-48x48.png public/favicon.ico
-          convert "$BRAND_MASKABLE" -resize 180x180 public/apple-touch-icon.png
-          convert "$BRAND_MASKABLE" -resize 150x150 public/mstile-150x150.png
+          convert "$BRAND_MASKABLE" -resize 180x180 -strip public/apple-touch-icon.png
+          convert "$BRAND_MASKABLE" -resize 150x150 -strip public/mstile-150x150.png
           python - <<'PY'
           from pathlib import Path
           import json, os
-          p=Path('public/site.webmanifest'); data=json.loads(p.read_text(encoding='utf-8'))
+          p=Path('public/site.webmanifest')
+          raw=p.read_text(encoding='utf-8')
+          raster_replacements={
+            'doctor-ghezelbaash-symbol-192.48be0004e370.png':os.environ['BRAND_192_FILE'],
+            'doctor-ghezelbaash-symbol-512.a910779b67ef.png':os.environ['BRAND_512_FILE'],
+            'doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png':os.environ['BRAND_MASKABLE_FILE'],
+            'doctor-ghezelbaash-symbol-192.328e1556f122.png':os.environ['BRAND_192_FILE'],
+            'doctor-ghezelbaash-symbol-512.1bc7c3af1350.png':os.environ['BRAND_512_FILE'],
+            'doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png':os.environ['BRAND_MASKABLE_FILE'],
+          }
+          for old,new in raster_replacements.items(): raw=raw.replace(old,new)
+          data=json.loads(raw)
           data['icons']=[{'src':'/favicon.svg','sizes':'any','type':'image/svg+xml','purpose':'any'},{'src':'/media/brand/'+os.environ['BRAND_192_FILE'],'sizes':'192x192','type':'image/png','purpose':'any'},{'src':'/media/brand/'+os.environ['BRAND_512_FILE'],'sizes':'512x512','type':'image/png','purpose':'any'},{'src':'/media/brand/'+os.environ['BRAND_MASKABLE_FILE'],'sizes':'512x512','type':'image/png','purpose':'maskable'}]
           p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
@@ -136,7 +147,7 @@ jobs:
             if d[:8]!=b'\x89PNG\r\n\x1a\n' or got!=dims: raise SystemExit(f'{name}: invalid {got}')
           if Path('public/favicon.ico').read_bytes()[:4]!=b'\x00\x00\x01\x00': raise SystemExit('invalid favicon.ico')
           PY
-          if git grep -n -I -E 'doctor-ghezelbaash-symbol\.3a9e7509912d\.svg|doctor-ghezelbaash-symbol-192\.48be0004e370\.png|doctor-ghezelbaash-symbol-512\.a910779b67ef\.png|doctor-ghezelbaash-symbol-maskable-512\.de33d0be02c9\.png|doctor-ghezelbaash-symbol-192\.328e1556f122\.png|doctor-ghezelbaash-symbol-512\.1bc7c3af1350\.png'; then echo 'legacy/provisional icon reference remains' >&2; exit 1; fi
+          if git grep -n -I -E 'doctor-ghezelbaash-symbol\.3a9e7509912d\.svg|doctor-ghezelbaash-symbol-192\.48be0004e370\.png|doctor-ghezelbaash-symbol-512\.a910779b67ef\.png|doctor-ghezelbaash-symbol-maskable-512\.de33d0be02c9\.png|doctor-ghezelbaash-symbol-192\.328e1556f122\.png|doctor-ghezelbaash-symbol-512\.1bc7c3af1350\.png|doctor-ghezelbaash-symbol-maskable-512\.b6a6738954b9\.png'; then echo 'legacy/provisional icon reference remains' >&2; exit 1; fi
           git diff --check
 
       - name: Repository validators
