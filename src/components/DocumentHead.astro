@@ -15,7 +15,10 @@ if(isMain&&canonicalURL.toString()!==release.canonicalUrl)throw new Error('Canon
 const og=headProfile.openGraph;
 const canonical=release.canonicalUrl;
 const versionDoi=release.dataset.zenodo.versionDoi;
-const machineLinks:DiscoveryLink[]=HEAD_RESOURCES.map(resource=>({href:`${canonical}${resource.path}`,rel:resource.headRel,type:resource.mediaType,title:resource.headTitle}));
+const machineLinks:DiscoveryLink[]=HEAD_RESOURCES.map(resource=>{
+  if(typeof resource.headRel!=='string'||!resource.headRel)throw new Error(`Machine resource missing Head relation: ${resource.path}`);
+  return {href:`${canonical}${resource.path}`,rel:resource.headRel,type:resource.mediaType,title:'headTitle' in resource&&typeof resource.headTitle==='string'?resource.headTitle:undefined};
+});
 const identityLinks:DiscoveryLink[]=release.primaryEntity.verifiedWebIdentityMesh.map(href=>({href,rel:'me'}));
 const discoveryLinks:DiscoveryLink[]=[
   ...machineLinks,
