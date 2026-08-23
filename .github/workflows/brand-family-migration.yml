@@ -27,90 +27,109 @@ jobs:
           node-version: 24.19.0
           cache: npm
 
-      - name: Verify staged canonical assets
+      - name: Canonicalize committed asset fingerprints
         shell: bash
         run: |
           set -euo pipefail
           test -f public/favicon.svg
           python - <<'PY'
           from pathlib import Path
-          import hashlib, struct
-          expected = {
-              'public/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png': ('328e1556f122', (192, 192)),
-              'public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png': ('1bc7c3af1350', (512, 512)),
-              'public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png': ('b6a6738954b9', (512, 512)),
-          }
-          for name, (prefix, dims) in expected.items():
-              data = Path(name).read_bytes()
-              digest = hashlib.sha256(data).hexdigest()
-              if not digest.startswith(prefix):
-                  raise SystemExit(f'{name}: SHA-256 {digest} != filename fingerprint {prefix}')
-              if data[:8] != b'\x89PNG\r\n\x1a\n':
-                  raise SystemExit(f'{name}: invalid PNG')
-              got = struct.unpack('>II', data[16:24])
-              if got != dims:
-                  raise SystemExit(f'{name}: expected {dims}, got {got}')
-          PY
-
-      - name: Generate every platform derivative from the canonical family
-        shell: bash
-        run: |
-          set -euo pipefail
-          if command -v magick >/dev/null 2>&1; then IM='magick'; else IM='convert'; fi
-          transparent='public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png'
-          maskable='public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png'
-          $IM "$transparent" -resize 16x16 public/favicon-16x16.png
-          $IM "$transparent" -resize 32x32 public/favicon-32x32.png
-          $IM "$transparent" -resize 48x48 public/favicon-48x48.png
-          $IM public/favicon-16x16.png public/favicon-32x32.png public/favicon-48x48.png public/favicon.ico
-          $IM "$maskable" -resize 180x180 public/apple-touch-icon.png
-          $IM "$maskable" -resize 150x150 public/mstile-150x150.png
-
-      - name: Byte-preserving migration of every textual consumer
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import subprocess
-          old_svg = 'doctor-ghezelbaash-symbol.3a9e7509912d.svg'
-          replacements = [
-              ('https://www.ghezelbaash.ir/media/brand/' + old_svg, 'https://www.ghezelbaash.ir/favicon.svg'),
-              ('public/media/brand/' + old_svg, 'public/favicon.svg'),
-              ('/media/brand/' + old_svg, '/favicon.svg'),
-              ('media/brand/' + old_svg, 'favicon.svg'),
-              ('doctor-ghezelbaash-symbol-192.48be0004e370.png', 'doctor-ghezelbaash-symbol-192.328e1556f122.png'),
-              ('doctor-ghezelbaash-symbol-512.a910779b67ef.png', 'doctor-ghezelbaash-symbol-512.1bc7c3af1350.png'),
-              ('doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png', 'doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png'),
+          import hashlib, os, struct
+          specs = [
+            ('BRAND_192','public/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png','doctor-ghezelbaash-symbol-192', (192,192)),
+            ('BRAND_512','public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png','doctor-ghezelbaash-symbol-512', (512,512)),
+            ('BRAND_MASKABLE','public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png','doctor-ghezelbaash-symbol-maskable-512', (512,512)),
           ]
-          for raw in subprocess.check_output(['git', 'ls-files', '-z']).split(b'\0'):
-              if not raw: continue
-              path = Path(raw.decode())
-              if not path.is_file(): continue
-              try: text = path.read_text(encoding='utf-8')
-              except UnicodeDecodeError: continue
-              original = text
-              for old, new in replacements: text = text.replace(old, new)
-              if text != original: path.write_text(text, encoding='utf-8', newline='')
+          with open(os.environ['GITHUB_ENV'],'a',encoding='utf-8') as env:
+            for key, source, stem, dims in specs:
+              p=Path(source); data=p.read_bytes()
+              if data[:8] != b'\x89PNG\r\n\x1a\n': raise SystemExit(f'{source}: invalid PNG')
+              got=struct.unpack('>II',data[16:24])
+              if got != dims: raise SystemExit(f'{source}: expected {dims}, got {got}')
+              digest=hashlib.sha256(data).hexdigest()
+              target=p.with_name(f'{stem}.{digest[:12]}.png')
+              if target != p:
+                p.rename(target)
+              env.write(f'{key}={target.as_posix()}\n')
+              env.write(f'{key}_FILE={target.name}\n')
+              print(f'{key}: {digest} -> {target}')
           PY
 
-      - name: Canonicalize manifest and retire superseded assets
+      - name: Generate platform derivatives from canonical assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v magick >/dev/null 2>&1; then
+            IM='magick'
+          elif command -v convert >/dev/null 2>&1; then
+            IM='convert'
+          else
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends imagemagick
+            IM='convert'
+          fi
+          $IM "$BRAND_512" -resize 16x16 public/favicon-16x16.png
+          $IM "$BRAND_512" -resize 32x32 public/favicon-32x32.png
+          $IM "$BRAND_512" -resize 48x48 public/favicon-48x48.png
+          $IM public/favicon-16x16.png public/favicon-32x32.png public/favicon-48x48.png public/favicon.ico
+          $IM "$BRAND_MASKABLE" -resize 180x180 public/apple-touch-icon.png
+          $IM "$BRAND_MASKABLE" -resize 150x150 public/mstile-150x150.png
+
+      - name: Byte-preserving migration of all textual consumers
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          import json
-          p = Path('public/site.webmanifest')
-          data = json.loads(p.read_text(encoding='utf-8'))
-          data['icons'][0] = {'src':'/favicon.svg','sizes':'any','type':'image/svg+xml','purpose':'any'}
-          p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          import os, subprocess
+          old_svg='doctor-ghezelbaash-symbol.3a9e7509912d.svg'
+          n192=os.environ['BRAND_192_FILE']; n512=os.environ['BRAND_512_FILE']; nmask=os.environ['BRAND_MASKABLE_FILE']
+          replacements=[
+            ('https://www.ghezelbaash.ir/media/brand/'+old_svg,'https://www.ghezelbaash.ir/favicon.svg'),
+            ('public/media/brand/'+old_svg,'public/favicon.svg'),
+            ('/media/brand/'+old_svg,'/favicon.svg'),('media/brand/'+old_svg,'favicon.svg'),
+            ('doctor-ghezelbaash-symbol-192.48be0004e370.png',n192),
+            ('doctor-ghezelbaash-symbol-512.a910779b67ef.png',n512),
+            ('doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png',nmask),
+            ('doctor-ghezelbaash-symbol-192.328e1556f122.png',n192),
+            ('doctor-ghezelbaash-symbol-512.1bc7c3af1350.png',n512),
+            ('doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png',nmask),
+          ]
+          for raw in subprocess.check_output(['git','ls-files','-z']).split(b'\0'):
+            if not raw: continue
+            p=Path(raw.decode())
+            if not p.is_file(): continue
+            try: text=p.read_text(encoding='utf-8')
+            except UnicodeDecodeError: continue
+            before=text
+            for old,new in replacements: text=text.replace(old,new)
+            if text != before: p.write_text(text,encoding='utf-8',newline='')
+          PY
+
+      - name: Canonicalize manifest and retire superseded family
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import json, os
+          p=Path('public/site.webmanifest'); data=json.loads(p.read_text(encoding='utf-8'))
+          data['icons']=[
+            {'src':'/favicon.svg','sizes':'any','type':'image/svg+xml','purpose':'any'},
+            {'src':'/media/brand/'+os.environ['BRAND_192_FILE'],'sizes':'192x192','type':'image/png','purpose':'any'},
+            {'src':'/media/brand/'+os.environ['BRAND_512_FILE'],'sizes':'512x512','type':'image/png','purpose':'any'},
+            {'src':'/media/brand/'+os.environ['BRAND_MASKABLE_FILE'],'sizes':'512x512','type':'image/png','purpose':'maskable'},
+          ]
+          p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
           rm -f \
             public/media/brand/doctor-ghezelbaash-symbol.3a9e7509912d.svg \
             public/media/brand/doctor-ghezelbaash-symbol-192.48be0004e370.png \
             public/media/brand/doctor-ghezelbaash-symbol-512.a910779b67ef.png \
-            public/media/brand/doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png
+            public/media/brand/doctor-ghezelbaash-symbol-maskable-512.de33d0be02c9.png \
+            public/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png \
+            public/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png \
+            public/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png
           git rm .github/workflows/brand-family-migration.yml
 
       - name: Structural and semantic convergence checks
@@ -119,28 +138,22 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          import json, struct
+          import hashlib, json, os, re, struct
           json.loads(Path('src/data/semantic/knowledge-graph.jsonld').read_text(encoding='utf-8'))
-          m = json.loads(Path('public/site.webmanifest').read_text(encoding='utf-8'))
-          expected = {
-            '/favicon.svg',
-            '/media/brand/doctor-ghezelbaash-symbol-192.328e1556f122.png',
-            '/media/brand/doctor-ghezelbaash-symbol-512.1bc7c3af1350.png',
-            '/media/brand/doctor-ghezelbaash-symbol-maskable-512.b6a6738954b9.png'
-          }
-          actual = {i['src'] for i in m['icons']}
+          m=json.loads(Path('public/site.webmanifest').read_text(encoding='utf-8'))
+          expected={'/favicon.svg','/media/brand/'+os.environ['BRAND_192_FILE'],'/media/brand/'+os.environ['BRAND_512_FILE'],'/media/brand/'+os.environ['BRAND_MASKABLE_FILE']}
+          actual={i['src'] for i in m['icons']}
           if actual != expected: raise SystemExit(f'manifest mismatch: {actual}')
-          for name, dims in {
-            'public/favicon-16x16.png':(16,16),'public/favicon-32x32.png':(32,32),
-            'public/favicon-48x48.png':(48,48),'public/apple-touch-icon.png':(180,180),
-            'public/mstile-150x150.png':(150,150)
-          }.items():
+          for key in ('BRAND_192','BRAND_512','BRAND_MASKABLE'):
+            p=Path(os.environ[key]); digest=hashlib.sha256(p.read_bytes()).hexdigest(); token=p.stem.rsplit('.',1)[-1]
+            if digest[:12] != token: raise SystemExit(f'{p}: fingerprint mismatch')
+          for name,dims in {'public/favicon-16x16.png':(16,16),'public/favicon-32x32.png':(32,32),'public/favicon-48x48.png':(48,48),'public/apple-touch-icon.png':(180,180),'public/mstile-150x150.png':(150,150)}.items():
             d=Path(name).read_bytes(); got=struct.unpack('>II',d[16:24])
-            if d[:8] != b'\x89PNG\r\n\x1a\n' or got != dims: raise SystemExit(f'{name}: {got}')
+            if d[:8] != b'\x89PNG\r\n\x1a\n' or got != dims: raise SystemExit(f'{name}: invalid {got}')
           if Path('public/favicon.ico').read_bytes()[:4] != b'\x00\x00\x01\x00': raise SystemExit('invalid favicon.ico')
           PY
-          if git grep -n -I -E 'doctor-ghezelbaash-symbol\.3a9e7509912d\.svg|doctor-ghezelbaash-symbol-192\.48be0004e370\.png|doctor-ghezelbaash-symbol-512\.a910779b67ef\.png|doctor-ghezelbaash-symbol-maskable-512\.de33d0be02c9\.png'; then
-            echo 'legacy icon reference remains' >&2; exit 1
+          if git grep -n -I -E 'doctor-ghezelbaash-symbol\.3a9e7509912d\.svg|doctor-ghezelbaash-symbol-192\.48be0004e370\.png|doctor-ghezelbaash-symbol-512\.a910779b67ef\.png|doctor-ghezelbaash-symbol-maskable-512\.de33d0be02c9\.png|doctor-ghezelbaash-symbol-192\.328e1556f122\.png|doctor-ghezelbaash-symbol-512\.1bc7c3af1350\.png|doctor-ghezelbaash-symbol-maskable-512\.b6a6738954b9\.png'; then
+            echo 'legacy or provisional icon-family reference remains' >&2; exit 1
           fi
           git diff --check
 
