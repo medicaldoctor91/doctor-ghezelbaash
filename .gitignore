@@ -9,21 +9,8 @@ package/
 __pycache__/
 *.py[cod]
 
-# Canonical generated workspace and transient generator staging.
+# Canonical untracked build workspace.
 .generated/
-.generated.next/
-.generated.prev/
-src/content/home.md
-src/data/projections/
-src/data/semantic/head-graph.json
-src/data/semantic/support-graph.json
-src/data/semantic/knowledge-graph.ttl
-src/data/semantic/rdf-lock.json
-public/doctor.vcf
-public/clinic.vcf
-public/assets/site.*.css
-public/live-observations.jsonld
-public/query-matrix.jsonl
 
 .release/runtime/
 .release/huggingface/
