@@ -34,7 +34,7 @@ jobs:
           python - <<'PY' > wiki-deep-audit.json
           import os, json, requests, datetime, re, hashlib
           USER=os.environ['WIKIMEDIA_USERNAME']; PASS=os.environ['WIKIMEDIA_BOT_PASSWORD']
-          UA='GhezelbaashDeepHistoryAudit/1.0 (https://www.ghezelbaash.ir/)'
+          UA='GhezelbaashDeepHistoryAudit/1.1 (https://www.ghezelbaash.ir/)'
           def client(host):
               s=requests.Session(); s.headers.update({'User-Agent':UA}); api=f'https://{host}/w/api.php'
               def get(**p):
@@ -85,11 +85,6 @@ jobs:
               m=sec_re.search(revtext(r)); section=(m.group(1).strip() if m else None); h=hashlib.sha256((section or '').encode()).hexdigest()
               if h!=last_hash:
                   rfd_changes.append({'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'section':section}); last_hash=h
-          notrev=revisions(wd,'Wikidata:Notability',content=True,limit=1)[-1]; nottxt=revtext(notrev)
-          snippets=[]
-          for pat in ['at least one valid','Category items with a sitelink only to Wikimedia Commons','structural need']:
-              i=nottxt.lower().find(pat.lower())
-              if i>=0: snippets.append(nottxt[max(0,i-500):i+1800])
           cat='Category:Dr. Saeed Ghezelbash Aesthetic Clinic'; cat_revs=revisions(co,cat,'2026-08-14T00:00:00Z',limit=500); cat_page=co(action='query',prop='info|categoryinfo|pageprops',titles=cat)['query']['pages'][0]
           def page_current(title):
               d=en(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1); p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
@@ -99,7 +94,9 @@ jobs:
               for n in needles:
                   i=lo.find(n.lower()); out[n]={'present':i>=0,'snippet':text[max(0,i-400):i+1000] if i>=0 else None}
               return out
-          bipolar=page_current('Treatment of bipolar disorder'); botox=page_current('Botulinum toxin'); attachment=page_current('Attachment and health')
+          bipolar=page_current('Treatment of bipolar disorder'); botox=page_current('Botulinum toxin'); attachment=page_current('Attachment and health'); attachment_talk=page_current('Talk:Attachment and health')
+          en_contribs=en(action='query',list='usercontribs',ucuser=en_ui['name'],uclimit='max',ucprop='ids|title|timestamp|comment')['query']['usercontribs']
+          attachment_talk_ev=evidence(attachment_talk['text'],['Update Mental health section with recent meta-analytic evidence','34574943','Ghezelbash','Medicaldoctor91'])
           bipolar_ev=evidence(bipolar['text'],['10.1111/bdi.13115','10.3390/md23020084','10.4103/2008-7802.182734','27280013','34228881','39997208'])
           botox_ev=evidence(botox['text'],['wikiversity','Botulinum toxin in aesthetic medicine','Facial assessment before aesthetic botulinum toxin treatment'])
           attachment_ev=evidence(attachment['text'],['34574943','Ghezelbash'])
@@ -109,7 +106,7 @@ jobs:
               p=dict(action='query',list='backlinks',bltitle='Q140288589',bllimit='max',blnamespace='0|4'); p.update(cont); d=wd(**p); backlinks.extend(d['query']['backlinks'])
               if 'continue' not in d: break
               cont=d['continue']
-          result={'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'auth':{'wikidata':wd_ui['name'],'enwiki':en_ui['name'],'commons':co_ui['name']},'clinic_current':{'sitelinks':{k:v.get('title') for k,v in clinic.get('sitelinks',{}).items()},'P31':vals(clinic,'P31'),'P112_founder':vals(clinic,'P112'),'P1037_manager':vals(clinic,'P1037'),'P127_owned_by':vals(clinic,'P127'),'P137_operator':vals(clinic,'P137'),'P2671_googlekg':vals(clinic,'P2671'),'P3749_maps_cid':vals(clinic,'P3749'),'backlinks':backlinks},'person_current':{'sitelinks':{k:v.get('title') for k,v in person.get('sitelinks',{}).items()},'P1830_owner_of':vals(person,'P1830'),'P937_work_location':vals(person,'P937'),'P1416_affiliation':vals(person,'P1416')},'clinic_history_since_aug14':clinic_signal,'person_history_since_aug14':person_signal,'rfd_section_changes':rfd_changes,'notability_policy_revision':{k:notrev.get(k) for k in ['revid','timestamp','user','comment']},'notability_policy_snippets':snippets,'commons_category':{'pageid':cat_page.get('pageid'),'missing':cat_page.get('missing',False),'categoryinfo':cat_page.get('categoryinfo',{}),'pageprops':cat_page.get('pageprops',{}),'history_since_aug14':cat_revs},'enwiki_outcomes':{'bipolar_current':{k:v for k,v in bipolar.items() if k!='text'},'bipolar_evidence':bipolar_ev,'bipolar_revisions_since_request':bipolar_revs,'botulinum_current':{k:v for k,v in botox.items() if k!='text'},'botulinum_evidence':botox_ev,'botulinum_revisions_since_request':botox_revs,'attachment_current':{k:v for k,v in attachment.items() if k!='text'},'attachment_evidence':attachment_ev}}
+          result={'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'auth':{'wikidata':wd_ui['name'],'enwiki':en_ui['name'],'commons':co_ui['name']},'enwiki_editcount':en_ui.get('editcount'),'enwiki_contributions':en_contribs,'attachment_talk_current':{k:v for k,v in attachment_talk.items() if k!='text'},'attachment_talk_evidence':attachment_talk_ev,'clinic_current':{'sitelinks':{k:v.get('title') for k,v in clinic.get('sitelinks',{}).items()},'P31':vals(clinic,'P31'),'P112_founder':vals(clinic,'P112'),'P1037_manager':vals(clinic,'P1037'),'P127_owned_by':vals(clinic,'P127'),'P137_operator':vals(clinic,'P137'),'P2671_googlekg':vals(clinic,'P2671'),'P3749_maps_cid':vals(clinic,'P3749'),'backlinks':backlinks},'person_current':{'sitelinks':{k:v.get('title') for k,v in person.get('sitelinks',{}).items()},'P1830_owner_of':vals(person,'P1830'),'P937_work_location':vals(person,'P937'),'P1416_affiliation':vals(person,'P1416')},'clinic_history_since_aug14':clinic_signal,'person_history_since_aug14':person_signal,'rfd_section_changes':rfd_changes,'commons_category':{'pageid':cat_page.get('pageid'),'missing':cat_page.get('missing',False),'categoryinfo':cat_page.get('categoryinfo',{}),'pageprops':cat_page.get('pageprops',{}),'history_since_aug14':cat_revs},'enwiki_outcomes':{'bipolar_current':{k:v for k,v in bipolar.items() if k!='text'},'bipolar_evidence':bipolar_ev,'bipolar_revisions_since_request':bipolar_revs,'botulinum_current':{k:v for k,v in botox.items() if k!='text'},'botulinum_evidence':botox_ev,'botulinum_revisions_since_request':botox_revs,'attachment_current':{k:v for k,v in attachment.items() if k!='text'},'attachment_evidence':attachment_ev}}
           print(json.dumps(result,ensure_ascii=False,indent=2))
           PY
       - name: Commit deep audit result on isolated branch only
