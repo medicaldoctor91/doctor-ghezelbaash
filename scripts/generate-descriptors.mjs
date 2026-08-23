@@ -1,8 +1,9 @@
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {readFile,writeFile,readdir,mkdir} from 'node:fs/promises';
+import {generatedWorkspace} from './lib/generated-workspace.mjs';
 
-const root=process.cwd(),data=path.join(root,'src/data'),semantic=path.join(data,'semantic'),projections=path.join(data,'projections');
+const root=process.cwd(),data=path.join(root,'src/data'),semantic=path.join(data,'semantic'),generated=generatedWorkspace(root),projections=generated.projections;
 const distFlag=process.argv.indexOf('--dist');
 const distMode=distFlag>=0;
 const distDir=distMode?path.resolve(root,process.argv[distFlag+1]||'dist'):null;
@@ -25,14 +26,14 @@ const shaHex=b=>createHash('sha256').update(b).digest('hex');
 const ttlString=s=>`"${String(s).replaceAll('\\','\\\\').replaceAll('"','\\"').replaceAll('\n','\\n')}"`;
 const contentTypes={'graph.jsonld':'application/ld+json','graph.ttl':'text/turtle','entity-facts.csv':'text/csv','answers.txt':'text/plain','knowledge.xml':'application/xml','llms.txt':'text/plain','index.md':'text/markdown','llms-full.txt':'text/plain','void.ttl':'text/turtle','dcat.ttl':'text/turtle','linkset.json':'application/linkset+json','provenance.jsonld':'application/ld+json','evidence-snapshot.json':'application/json','shapes.ttl':'text/turtle','query-matrix.jsonl':'application/jsonl'};
 const resourceTitles={'graph.jsonld':'Canonical JSON-LD entity knowledge graph','graph.ttl':'RDF Turtle serialization isomorphic with JSON-LD','entity-facts.csv':'Flat fact projection of canonical graph','answers.txt':'Canonical direct-answer corpus','knowledge.xml':'Hierarchical semantic knowledge projection','llms.txt':'Machine discovery and retrieval guide','index.md':'Full canonical content projection','llms-full.txt':'Passage-oriented full content projection','void.ttl':'VoID RDF dataset description','dcat.ttl':'W3C DCAT 3 catalog and distribution metadata','linkset.json':'RFC 9264 Web Link Set','provenance.jsonld':'Claim and passage provenance graph','evidence-snapshot.json':'Release-time evidence snapshot','shapes.ttl':'SHACL entity constitution','query-matrix.jsonl':'Query Matrix 2.0 multilingual intent and service retrieval projection'};
-const sourceProjectionAbs=rel=>rel==='graph.jsonld'?path.join(semantic,'knowledge-graph.jsonld'):rel==='graph.ttl'?path.join(semantic,'knowledge-graph.ttl'):rel==='shapes.ttl'?path.join(semantic,'shapes.ttl'):path.join(projections,rel);
+const sourceProjectionAbs=rel=>rel==='graph.jsonld'?path.join(semantic,'knowledge-graph.jsonld'):rel==='graph.ttl'?path.join(generated.semantic,'knowledge-graph.ttl'):rel==='shapes.ttl'?path.join(semantic,'shapes.ttl'):path.join(projections,rel);
 const artifactAbs=rel=>distMode?path.join(distDir,rel):sourceProjectionAbs(rel);
 const fileMeta=async rel=>{const b=await readFile(artifactAbs(rel));return{rel,bytes:b.length,sha256:shaHex(b),mediaType:contentTypes[rel]||'application/octet-stream',title:resourceTitles[rel]||rel};};
 const coreResources=['graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','provenance.jsonld','evidence-snapshot.json','shapes.ttl','query-matrix.jsonl'];
 const out=rel=>path.join(outputDir,rel);
 
 // One canonical descriptor writer owns both phases:
-// 1) source projection phase supplies Astro static endpoint inputs;
+// 1) generated projection phase supplies static artifact inputs;
 // 2) --dist phase re-materializes the same descriptors from actual built endpoint bytes.
 // No other generator/finalizer may write these descriptor artifacts.
 const linkset={linkset:[{anchor:release.canonicalUrl,canonical:[{href:release.canonicalUrl}],author:[{href:release.primaryEntity.id}],about:[{href:release.primaryEntity.id},{href:release.clinic.id},{href:`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`}],describedby:[
@@ -86,4 +87,4 @@ const dataPackage={profile:'data-package',name:'dr-saeed-ghezelbash-public-knowl
 await writeFile(out('datapackage.json'),JSON.stringify(dataPackage,null,2)+'\n');
 const croissant={'@context':{'@language':'en','@base':release.canonicalUrl,'@vocab':'https://schema.org/','sc':'https://schema.org/','cr':'http://mlcommons.org/croissant/','dct':'http://purl.org/dc/terms/','conformsTo':'dct:conformsTo'},'@id':`${release.canonicalUrl}graph.jsonld#dataset`,'@type':'sc:Dataset',conformsTo:'http://mlcommons.org/croissant/1.1',name:datasetName,description:'Physician-owned first-party knowledge graph Dataset for Dr. Saeed Ghezelbaash, the supporting clinic, services, answers, provenance and machine retrieval.',url:release.canonicalUrl,license:'https://creativecommons.org/licenses/by/4.0/',version:release.release,datePublished:release.dateModified,dateCreated:createdAt,dateModified:release.dateModified,creator:{'@id':release.primaryEntity.id,'@type':'sc:Person',name:'Saeed Ghezelbash'},publisher:{'@id':release.primaryEntity.id,'@type':'sc:Person',name:'Saeed Ghezelbash'},keywords:['Saeed Ghezelbash',...release.primaryEntity.officialAliases.slice(0,2),'physician knowledge graph','aesthetic medicine','Kermanshah','entity data','linked data','query matrix','multilingual retrieval'],inLanguage:['fa','en','ar','ckb'],isLiveDataset:false,distribution:resources.map(m=>({'@type':'cr:FileObject','@id':`${release.canonicalUrl}${m.rel}#croissant-file`,name:path.basename(m.rel),contentUrl:`${release.canonicalUrl}${m.rel}`,contentSize:String(m.bytes),encodingFormat:m.mediaType,sha256:m.sha256,description:m.rel.endsWith('.vtt')?m.title:undefined})).map(o=>Object.fromEntries(Object.entries(o).filter(([,v])=>v!==undefined)))};
 await writeFile(out('croissant.json'),JSON.stringify(croissant,null,2)+'\n');
-console.log(JSON.stringify({descriptorsGenerated:true,phase:distMode?'dist-final':'source-input',release:release.release,coreResources:coreResources.length,resources:resources.length,queryMatrixIncluded:true,datasetName,outputDir:path.relative(root,outputDir)||'.'},null,2));
+console.log(JSON.stringify({descriptorsGenerated:true,phase:distMode?'dist-final':'generated-input',release:release.release,coreResources:coreResources.length,resources:resources.length,queryMatrixIncluded:true,datasetName,outputDir:path.relative(root,outputDir)||'.'},null,2));
