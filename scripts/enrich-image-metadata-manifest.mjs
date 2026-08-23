@@ -1,15 +1,21 @@
 import {createHash} from 'node:crypto';
 import {spawnSync} from 'node:child_process';
+import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {readFile,readdir} from 'node:fs/promises';
+import {cp,mkdtemp,readFile,readdir,rm,writeFile} from 'node:fs/promises';
 
 const root=process.cwd();
 const mediaRoot=path.join(root,'public/media');
 const inventoryPath=path.join(root,'src/data/media-dimensions.tsv');
 const rasterPattern=/\.(?:avif|webp|jpe?g|png)$/i;
+const textPattern=/\.(?:astro|css|html|js|json|jsonld|md|mjs|ts|tsv|txt|vcf|webmanifest|xml|yaml|yml)$/i;
 const fingerprintPattern=/\.([0-9a-f]{12})(\.[^.]+)$/i;
 const sha256=buffer=>createHash('sha256').update(buffer).digest('hex');
 const projectRelative=file=>path.relative(root,file).replaceAll('\\','/');
+const compilerWritableConsumer=file=>{
+  const relative=projectRelative(file);
+  return relative.startsWith('src/')||(relative.startsWith('public/')&&!relative.startsWith('public/media/'));
+};
 
 async function walk(directory){
   const output=[];
@@ -54,14 +60,47 @@ async function inspectPhysicalInventory(stage){
   return logicalToPhysical;
 }
 
-await inspectPhysicalInventory('PRE_ENRICHMENT');
-const worker=spawnSync(process.execPath,[path.join(root,'scripts/enrich-image-metadata.mjs')],{
-  cwd:root,
-  env:process.env,
-  stdio:'inherit',
-});
-if(worker.error)throw worker.error;
-if(worker.status!==0)throw new Error(`Media metadata worker failed with exit code ${worker.status}`);
-await inspectPhysicalInventory('POST_ENRICHMENT');
+async function captureSnapshot(){
+  const transactionRoot=await mkdtemp(path.join(tmpdir(),'ghezel-media-transaction-'));
+  const mediaBackup=path.join(transactionRoot,'media');
+  await cp(mediaRoot,mediaBackup,{recursive:true,preserveTimestamps:true});
+  const writableTextFiles=(await walk(root)).filter(file=>textPattern.test(file)&&compilerWritableConsumer(file)).sort();
+  const textSnapshot=await Promise.all(writableTextFiles.map(async file=>({file,bytes:await readFile(file)})));
+  return {transactionRoot,mediaBackup,textSnapshot};
+}
 
-console.log(JSON.stringify({mediaEnrichmentBoundary:'MANIFEST_LOCKED',manifest:'src/data/media-dimensions.tsv',logicalRasterAssets:manifestSet.size,worker:'scripts/enrich-image-metadata.mjs',preflight:'PASS',postflight:'PASS'},null,2));
+async function restoreSnapshot(snapshot){
+  const rollbackErrors=[];
+  try{
+    await rm(mediaRoot,{recursive:true,force:true});
+    await cp(snapshot.mediaBackup,mediaRoot,{recursive:true,preserveTimestamps:true});
+  }catch(error){rollbackErrors.push({surface:'public/media',message:error.message});}
+  for(const entry of snapshot.textSnapshot){
+    try{await writeFile(entry.file,entry.bytes);}catch(error){rollbackErrors.push({surface:projectRelative(entry.file),message:error.message});}
+  }
+  return rollbackErrors;
+}
+
+await inspectPhysicalInventory('PRE_ENRICHMENT');
+const snapshot=await captureSnapshot();
+let committed=false;
+try{
+  const worker=spawnSync(process.execPath,[path.join(root,'scripts/enrich-image-metadata.mjs')],{
+    cwd:root,
+    env:process.env,
+    stdio:'inherit',
+  });
+  if(worker.error)throw worker.error;
+  if(worker.status!==0)throw new Error(`Media metadata worker failed with exit code ${worker.status}`);
+  await inspectPhysicalInventory('POST_ENRICHMENT');
+  committed=true;
+}catch(error){
+  const rollbackErrors=await restoreSnapshot(snapshot);
+  try{await inspectPhysicalInventory('POST_ROLLBACK');}catch(verificationError){rollbackErrors.push({surface:'rollback-verification',message:verificationError.message});}
+  if(rollbackErrors.length)error.rollbackErrors=rollbackErrors;
+  throw error;
+}finally{
+  await rm(snapshot.transactionRoot,{recursive:true,force:true}).catch(()=>{});
+}
+
+console.log(JSON.stringify({mediaEnrichmentBoundary:'MANIFEST_LOCKED',transaction:'MEDIA_ENRICHMENT_TRANSACTION',manifest:'src/data/media-dimensions.tsv',logicalRasterAssets:manifestSet.size,worker:'scripts/enrich-image-metadata.mjs',preflight:'PASS',postflight:'PASS',rollback:'BYTE_SNAPSHOT',committed},null,2));
