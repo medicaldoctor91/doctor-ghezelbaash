@@ -42,8 +42,10 @@ let currentHits=0,selfReferencedSvg=0;
 const logicalAssets=new Set();
 for(const file of all){
   const bytes=await readFile(file);
-  const embeddedPlaceIds=[...new Set(bytes.toString('latin1').match(/ChIJ[A-Za-z0-9_-]{12,}/g)||[])];
-  for(const embedded of embeddedPlaceIds)if(embedded!==current)fail(`Foreign Google Place ID metadata ${embedded} in ${file}`);
+  if(rasterPattern.test(file)){
+    const embeddedPlaceIds=[...new Set(bytes.toString('latin1').match(/ChIJ[A-Za-z0-9_-]{12,}/g)||[])];
+    for(const embedded of embeddedPlaceIds)if(embedded!==current)fail(`Foreign Google Place ID metadata ${embedded} in ${file}`);
+  }
   if(bytes.includes(Buffer.from(current)))currentHits++;
   const match=path.basename(file).match(/\.([0-9a-f]{12})\.[^.]+$/);
   if(!match)fail(`Unfingerprinted media ${file}`);
@@ -123,22 +125,34 @@ for(const row of rows){
 if(validatedAuthorityMasters.size!==authorityMasterTargets.size)fail(`Authority-master Google KG URL coverage drift: ${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`);
 
 const ffprobe=spawnSync('ffprobe',['-version']);
-let videoFiles=0,imageFiles=0;
-if(ffprobe.status===0){
-  for(const file of all.filter(candidate=>/\.(?:mp4|webm)$/i.test(candidate))){
-    videoFiles++;
-    const probe=spawnSync('ffprobe',['-v','error','-show_entries','stream=codec_type,codec_name:format_tags','-of','json',file],{encoding:'utf8'});
-    if(probe.status)fail(`ffprobe failed ${file}`);
-    const streams=JSON.parse(probe.stdout).streams||[];
-    if(streams.filter(stream=>stream.codec_type==='video').length!==1||streams.filter(stream=>stream.codec_type==='audio').length!==1||streams.some(stream=>!['video','audio'].includes(stream.codec_type)))fail(`Unexpected streams ${file}`);
-  }
-  for(const file of rasters){
-    imageFiles++;
-    const probe=spawnSync('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=codec_type,codec_name,width,height','-of','json',file],{encoding:'utf8'});
-    if(probe.status)fail(`Image decode/probe failed ${file}`);
-    const stream=(JSON.parse(probe.stdout).streams||[])[0];
-    if(!stream||stream.codec_type!=='video'||!stream.width||!stream.height)fail(`Invalid image stream ${file}`);
-  }
+let videoFiles=0,imageFiles=0,videoMetadataFiles=0,vttMetadataFiles=0;
+const videoCandidates=all.filter(candidate=>/\.(?:mp4|webm)$/i.test(candidate));
+if(videoCandidates.length!==8)fail(`Expected exactly 8 published videos, found ${videoCandidates.length}`);
+if(ffprobe.status!==0)fail('ffprobe is required for published media validation');
+for(const file of videoCandidates){
+  videoFiles++;
+  const probe=spawnSync('ffprobe',['-v','error','-show_entries','stream=codec_type,codec_name:format_tags','-of','json',file],{encoding:'utf8'});
+  if(probe.status)fail(`ffprobe failed ${file}`);
+  const parsed=JSON.parse(probe.stdout),streams=parsed.streams||[],tags=Object.fromEntries(Object.entries(parsed.format?.tags||{}).map(([key,value])=>[key.toLowerCase(),String(value)]));
+  if(streams.filter(stream=>stream.codec_type==='video').length!==1||streams.filter(stream=>stream.codec_type==='audio').length!==1||streams.some(stream=>!['video','audio'].includes(stream.codec_type)))fail(`Unexpected streams ${file}`);
+  const metadataText=Object.entries(tags).map(([key,value])=>`${key}=${value}`).join('\n');
+  for(const required of ['Saeed Ghezelbash','Q140287622','/g/11nqdfk76c','https://www.ghezelbaash.ir/#saeed-ghezelbash',current,'creativecommons.org/licenses/by/4.0','Entity Media Profile 3.1.0'])if(!metadataText.includes(required))fail(`Published video metadata missing ${required}: ${file}`);
+  videoMetadataFiles++;
+}
+for(const file of rasters){
+  imageFiles++;
+  const probe=spawnSync('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=codec_type,codec_name,width,height','-of','json',file],{encoding:'utf8'});
+  if(probe.status)fail(`Image decode/probe failed ${file}`);
+  const stream=(JSON.parse(probe.stdout).streams||[])[0];
+  if(!stream||stream.codec_type!=='video'||!stream.width||!stream.height)fail(`Invalid image stream ${file}`);
+}
+const vttFiles=all.filter(candidate=>/\.vtt$/i.test(candidate));
+if(vttFiles.length!==6)fail(`Expected exactly 6 published WebVTT tracks, found ${vttFiles.length}`);
+for(const file of vttFiles){
+  const text=await readFile(file,'utf8');
+  if(!text.startsWith('WEBVTT'))fail(`Invalid WebVTT header: ${file}`);
+  for(const required of ['Entity metadata — first-party media track','Canonical-Person: https://www.ghezelbaash.ir/#saeed-ghezelbash','Wikidata: Q140287622','Google-Knowledge-Graph-ID: /g/11nqdfk76c',`Google-Place-ID: ${current}`,'License: https://creativecommons.org/licenses/by/4.0/','Metadata-Profile: Entity Media Profile 3.1.0'])if(!text.includes(required))fail(`Published WebVTT metadata missing ${required}: ${file}`);
+  vttMetadataFiles++;
 }
 if(currentHits<49)fail(`Entity Place ID metadata unexpectedly sparse: ${currentHits}`);
-console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'49/49',googleKnowledgeGraphRawIdCoverage:'49/49',authorityMasterGoogleKgUrlCoverage:`${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`,authorityMasterIdentityFields:['IPTC PersonInImageId','Dublin Core relation','embedded DoctorIdentifiers','embedded EntityGraphJSONLD'],metadataProfile:'XMP/IPTC Core/PLUS 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));
+console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'49/49 rasters',videoMetadataCoverage:`${videoMetadataFiles}/8`,webVttMetadataCoverage:`${vttMetadataFiles}/6`,googleKnowledgeGraphRawIdCoverage:'49/49 raster + 8/8 video + 6/6 VTT',authorityMasterGoogleKgUrlCoverage:`${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`,authorityMasterIdentityFields:['IPTC PersonInImageId','Dublin Core relation','embedded DoctorIdentifiers','embedded EntityGraphJSONLD'],metadataProfile:'Entity Media Profile 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));
