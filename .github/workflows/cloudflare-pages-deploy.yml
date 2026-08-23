@@ -99,3 +99,9 @@ jobs:
           npm run verify:public-discovery
           node scripts/verify-live.mjs current
           echo 'PUBLIC_DISCOVERY_T5_HARD_PASS'
+      - name: Notify IndexNow after verified public convergence
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run indexnow:submit
+          echo 'INDEXNOW_SUBMIT_PASS'
