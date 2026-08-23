@@ -2,8 +2,8 @@ import path from 'node:path';
 import {readFile} from 'node:fs/promises';
 
 const root=process.cwd();
-const sourceTarget=path.resolve(root,'src/data/projections/query-matrix.jsonl');
-const target=path.resolve(root,process.argv[2]||'src/data/projections/query-matrix.jsonl');
+const sourceTarget=path.resolve(root,'.generated/projections/query-matrix.jsonl');
+const target=path.resolve(root,process.argv[2]||'.generated/projections/query-matrix.jsonl');
 const readJson=async p=>JSON.parse(await readFile(path.resolve(root,p),'utf8'));
 const fail=m=>{throw new Error(m)};
 const arr=v=>Array.isArray(v)?v:(v==null?[]:[v]);
@@ -20,13 +20,13 @@ if(!rows.length)fail('Query Matrix is empty');
 let mirrorEquality='NOT_APPLICABLE';
 if(target===sourceTarget){
   const [publicQuery,sourceLive,publicLive,currentMatrix]=await Promise.all([
-    readFile(path.join(root,'public/query-matrix.jsonl')),
-    readFile(path.join(root,'src/data/projections/live-observations.jsonld')),
-    readFile(path.join(root,'public/live-observations.jsonld')),
-    readJson('src/data/projections/current-release-matrix.json'),
+    readFile(path.join(root,'.generated/public/query-matrix.jsonl')),
+    readFile(path.join(root,'.generated/projections/live-observations.jsonld')),
+    readFile(path.join(root,'.generated/public/live-observations.jsonld')),
+    readJson('.generated/projections/current-release-matrix.json'),
   ]);
-  if(!Buffer.from(raw).equals(publicQuery))fail('Query Matrix public mirror diverges byte-for-byte from source projection');
-  if(!sourceLive.equals(publicLive))fail('Live observation public mirror diverges byte-for-byte from source projection');
+  if(!Buffer.from(raw).equals(publicQuery))fail('Query Matrix generated public mirror diverges byte-for-byte from canonical projection');
+  if(!sourceLive.equals(publicLive))fail('Live observation generated public mirror diverges byte-for-byte from canonical projection');
   for(const field of ['liveRevision','sourceCommit','generatedAt'])if(Object.hasOwn(currentMatrix,field))fail(`Source current-release matrix illegally owns current-serving field: ${field}`);
   mirrorEquality='PASS';
 }
@@ -77,27 +77,11 @@ if(policy.serviceAliasCoverage?.enabled){
     if(!expectedAliases.length)fail(`Publishable service has no retrieval label ${service.id}`);
     const serviceRows=rows.filter(r=>arr(r.service_ids).includes(service.id));
     if(!serviceRows.length)fail(`Publishable service coverage missing ${service.id}`);
-    for(const alias of expectedAliases){
-      if(!serviceRows.some(r=>r.query===alias))fail(`Exact service retrieval label missing ${service.id}: ${alias}`);
-    }
+    for(const alias of expectedAliases){if(!serviceRows.some(r=>r.query===alias))fail(`Exact service retrieval label missing ${service.id}: ${alias}`);}
   }
 }
 
 if(rows.some(r=>arr(r.stable_evidence_refs).includes(liveObservationId)))fail('Mutable live observation leaked into stable evidence lane');
 const coveredServices=new Set(rows.flatMap(r=>arr(r.service_ids)));
 if(policy.serviceAliasCoverage?.enabled&&coveredServices.size!==publishable.length)fail(`Publishable service set coverage drift ${coveredServices.size}/${publishable.length}`);
-console.log(JSON.stringify({
-  valid:true,
-  file:path.relative(root,target),
-  release:release.release,
-  rows:rows.length,
-  intentAliasRows,
-  serviceAliasRows,
-  servicesWithAliasCoverage:coveredServices.size,
-  expectedServicesWithAliases:publishable.length,
-  expectedPublishableServices:publishable.length,
-  rowsWithStableEvidence:rows.filter(r=>arr(r.stable_evidence_refs).length>0).length,
-  stableEvidenceRegistrySize:evidenceIds.size,
-  mirrorEquality,
-  integrity:'PASS'
-},null,2));
+console.log(JSON.stringify({valid:true,file:path.relative(root,target),release:release.release,rows:rows.length,intentAliasRows,serviceAliasRows,servicesWithAliasCoverage:coveredServices.size,expectedServicesWithAliases:publishable.length,expectedPublishableServices:publishable.length,rowsWithStableEvidence:rows.filter(r=>arr(r.stable_evidence_refs).length>0).length,stableEvidenceRegistrySize:evidenceIds.size,mirrorEquality,workspace:target===sourceTarget?'.generated':'external',integrity:'PASS'},null,2));
