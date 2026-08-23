@@ -1,8 +1,8 @@
 name: Atomic source architecture migration
 
 on:
-  push:
-    branches: [refactor/2026-source-of-truth]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
