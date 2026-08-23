@@ -11,9 +11,10 @@ const readJson=relative=>read(relative).then(JSON.parse);
 const count=(source,pattern)=>(String(source).match(pattern)||[]).length;
 const pathExists=async relative=>{try{await access(path.join(root,relative));return true;}catch(error){if(error?.code==='ENOENT')return false;throw error;}};
 
-const [profile,release,discoveryRaw,documentHead,baseLayout,indexSource]=await Promise.all([
+const [profile,release,canonicalSource,discoveryRaw,documentHead,baseLayout,indexSource]=await Promise.all([
   readJson('src/data/head-profile.json'),
   readJson('src/data/release.json'),
+  read('src/content-source/page.md'),
   read('src/data/templates/discovery-head.html'),
   read('src/components/DocumentHead.astro'),
   read('src/layouts/BaseLayout.astro'),
@@ -25,6 +26,28 @@ assert(JSON.stringify(Object.keys(profile).sort())===JSON.stringify(profileKeys)
 for(const forbidden of ['title','description','robots','lang','dir','canonicalUrl'])assert(!Object.hasOwn(profile,forbidden),`Head profile must not duplicate canonical content/release metadata: ${forbidden}`);
 assert(/^https:\/\/www\.ghezelbaash\.ir\/$/.test(release.canonicalUrl),'Release canonical URL identity drift');
 assert(profile.author&&profile.openGraph?.image&&profile.twitter?.card,'Required static Head profile missing');
+
+const normalizedSource=canonicalSource.charCodeAt(0)===0xfeff?canonicalSource.slice(1):canonicalSource;
+const frontmatterMatch=normalizedSource.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+assert(frontmatterMatch,'Canonical page source must begin with one Markdown frontmatter block');
+const frontmatter=frontmatterMatch[1];
+const scalar=key=>{
+  const matches=[...frontmatter.matchAll(new RegExp(`^${key}:\\s*(.+?)\\s*$`,'gm'))];
+  assert(matches.length===1,`Canonical frontmatter must define ${key} exactly once`);
+  const raw=matches[0][1].trim();
+  const quoted=raw.match(/^(['"])([\s\S]*)\1$/);
+  return (quoted?quoted[2]:raw).trim();
+};
+const canonicalTitle=scalar('title');
+const canonicalDescription=scalar('description');
+const canonicalLang=scalar('lang');
+const canonicalDir=scalar('dir');
+const canonicalRobots=scalar('robots');
+assert(canonicalTitle.length>=10&&canonicalDescription.length>=50,'Canonical title/description unexpectedly weak or empty');
+assert(canonicalLang==='fa-IR'&&canonicalDir==='rtl','Canonical page language/direction contract drift');
+assert(/^index\s*,\s*follow\b/i.test(canonicalRobots),'Canonical robots contract must remain indexable');
+for(const forbidden of ['canonicalUrl','canonicalURL','openGraph','twitter','themeColor','author','applicationName','appleMobileWebAppTitle'])assert(!new RegExp(`^${forbidden}:`,'m').test(frontmatter),`Canonical frontmatter reintroduced non-content authority: ${forbidden}`);
+assert(count(normalizedSource,/^---\s*$/gm)>=2,'Canonical frontmatter delimiter contract drift');
 
 assert(count(discoveryRaw,/{{CURRENT_VERSION_DOI}}/g)===1,'Discovery Head must bind CURRENT_VERSION_DOI exactly once');
 assert(count(discoveryRaw,/{{CURRENT_RELEASE}}/g)===1,'Discovery Head must bind CURRENT_RELEASE exactly once');
@@ -58,4 +81,4 @@ assert(!legacyMetadataExists,'Duplicate page-metadata.json still exists');
 assert(!legacyTemplateExists,'Legacy main-head template still exists');
 assert(!legacyRuntimeExists,'Legacy Head split runtime still exists');
 
-console.log(JSON.stringify({stage:'HEAD_AUTHORITY',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',runtimeDiscoveryReleaseBinding:'PASS',structuredHeroPreload:'PASS',legacyAuthoritiesRemoved:true,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HEAD_AUTHORITY',contentMetadataAuthority:'markdown-frontmatter',canonicalFrontmatter:'PASS',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',runtimeDiscoveryReleaseBinding:'PASS',structuredHeroPreload:'PASS',legacyAuthoritiesRemoved:true,integrity:'PASS'},null,2));
