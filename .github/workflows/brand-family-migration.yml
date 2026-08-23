@@ -1,0 +1,49 @@
+name: One-time 2026 canonical brand-family migration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/brand-family-migration.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Migrate canonical brand ImageObject URL without reformatting
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          old = 'doctor-ghezelbaash-symbol-512.a910779b67ef.png'
+          new = 'doctor-ghezelbaash-symbol-512.1bc7c3af1350.png'
+          targets = [
+              Path('src/data/semantic/knowledge-graph.jsonld'),
+              Path('src/data/templates/llms.template.txt'),
+          ]
+          total = 0
+          for path in targets:
+              text = path.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one legacy canonical-brand reference, found {count}')
+              path.write_text(text.replace(old, new), encoding='utf-8')
+              total += count
+          if total != 2:
+              raise SystemExit(f'expected exactly two canonical replacements, found {total}')
+          PY
+          git diff --check
+          git diff --exit-code -- src/data/semantic/knowledge-graph.jsonld src/data/templates/llms.template.txt >/dev/null && exit 1 || true
+          git config user.name 'doctor-ghezelbaash migration bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src/data/semantic/knowledge-graph.jsonld src/data/templates/llms.template.txt
+          git commit -m 'refactor: migrate canonical brand image to 2026 family'
+          git push origin HEAD:main
