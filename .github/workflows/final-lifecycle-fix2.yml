@@ -25,18 +25,16 @@ jobs:
           const fs=require('node:fs');
           const file='scripts/validate-source.mjs';
           let source=fs.readFileSync(file,'utf8');
-          const old=`if(pkg.scripts?.['descriptors:finalize']!=='node scripts/generate-descriptors.mjs --dist dist')fail('DIST descriptor finalization stage missing');
-          if(pkg.scripts?.['release:attest']!=='node scripts/write-release-attestation.mjs'||!hasStep('release','npm run release:attest'))fail('Release attestation is not a mandatory release stage');
-          const releaseSteps=scriptSteps('release');
-          if(releaseSteps.indexOf('npm run release:attest')<releaseSteps.indexOf('npm run validate:current-context')||releaseSteps.indexOf('npm run release:attest')>releaseSteps.indexOf('node scripts/package-dist.mjs'))fail('Release attestation ordering drift');
-          for(const required of ['astro build','npm run indexnow:prepare','npm run descriptors:finalize','node scripts/finalize-dist.mjs'])if(!hasStep('build',required))fail(\`Build DAG missing \${required}\`);
-          `;
+          const pattern=/if\(pkg\.scripts\?\.\['descriptors:finalize'\][\s\S]*?if\(retrievalGenerator\.includes\('public\/current-release-matrix\.json'\)\)/;
+          if(!pattern.test(source)){
+            if(source.includes("Build pipeline missing"))process.exit(0);
+            throw new Error('stale lifecycle assertion block not found');
+          }
           const replacement=`for(const required of [\"run('Astro static build',astro,['build'])\",\"js('prepare IndexNow key','scripts/indexnow.mjs',['prepare'])\",\"js('finalize descriptors','scripts/generate-descriptors.mjs',['--dist','dist'])\",\"js('finalize DIST','scripts/finalize-dist.mjs')\"])if(!pipeline.includes(required))fail(\`Build pipeline missing \${required}\`);
           for(const required of [\"js('current serving context','scripts/validate-current-context.mjs',['dist'])\",\"js('release attestation','scripts/write-release-attestation.mjs')\",\"js('package DIST','scripts/package-dist.mjs')\"])if(!pipeline.includes(required))fail(\`Release pipeline missing \${required}\`);
           if(!(pipeline.indexOf(\"scripts/validate-current-context.mjs\")<pipeline.indexOf(\"scripts/write-release-attestation.mjs\")&&pipeline.indexOf(\"scripts/write-release-attestation.mjs\")<pipeline.indexOf(\"js('package DIST','scripts/package-dist.mjs')\")))fail('Release attestation ordering drift');
-          `;
-          if(!source.includes(old))throw new Error('stale lifecycle assertion block not found');
-          source=source.replace(old,replacement);
+          if(retrievalGenerator.includes('public/current-release-matrix.json'))`;
+          source=source.replace(pattern,replacement);
           fs.writeFileSync(file,source);
           NODE
       - name: Commit if changed
