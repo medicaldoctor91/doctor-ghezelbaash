@@ -7,6 +7,7 @@ import {cp,mkdtemp,readFile,readdir,rm,writeFile} from 'node:fs/promises';
 const root=process.cwd();
 const mediaRoot=path.join(root,'public/media');
 const inventoryPath=path.join(root,'src/data/media-dimensions.tsv');
+const preflightOnly=process.argv.includes('--preflight-only');
 const rasterPattern=/\.(?:avif|webp|jpe?g|png)$/i;
 const textPattern=/\.(?:astro|css|html|js|json|jsonld|md|mjs|ts|tsv|txt|vcf|webmanifest|xml|yaml|yml)$/i;
 const fingerprintPattern=/\.([0-9a-f]{12})(\.[^.]+)$/i;
@@ -84,6 +85,11 @@ async function restoreSnapshot(snapshot){
 }
 
 await inspectPhysicalInventory('PRE_ENRICHMENT');
+if(preflightOnly){
+  console.log(JSON.stringify({mediaEnrichmentBoundary:'MANIFEST_LOCKED',mode:'PREFLIGHT_ONLY',manifest:'src/data/media-dimensions.tsv',logicalRasterAssets:manifestSet.size,mutation:false,preflight:'PASS'},null,2));
+  process.exit(0);
+}
+
 const snapshot=await captureSnapshot();
 let committed=false;
 try{
