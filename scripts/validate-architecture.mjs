@@ -34,11 +34,20 @@ if(JSON.stringify(retrievalWrites)!==JSON.stringify(allowedRetrievalWrites))fail
 for(const forbidden of ['answers.txt','index.md','llms.txt','llms-full.txt','provenance.jsonld','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json'])if(retrievalGenerator.includes(forbidden))fail(`Retrieval generator crossed canonical ownership boundary: ${forbidden}`);
 
 if(pkg.scripts?.['media:enrich']!=='node scripts/enrich-image-metadata-manifest.mjs')fail('Media enrichment bypasses canonical manifest gate');
-for(const token of ['src/data/media-dimensions.tsv','PRE_ENRICHMENT','POST_ENRICHMENT','POST_ROLLBACK','scripts/enrich-image-metadata.mjs','MANIFEST_LOCKED','MEDIA_ENRICHMENT_TRANSACTION','captureSnapshot','restoreSnapshot','BYTE_SNAPSHOT'])if(!mediaGate.includes(token))fail(`Media transaction boundary contract missing: ${token}`);
+if(pkg.scripts?.['validate:media-manifest']!=='node scripts/enrich-image-metadata-manifest.mjs --preflight-only')fail('Read-only media manifest preflight wiring missing');
+const validateSourceSteps=String(pkg.scripts?.['validate:source']||'').split('&&').map(step=>step.trim()).filter(Boolean);
+const architectureIndex=validateSourceSteps.indexOf('npm run validate:architecture');
+const mediaPreflightIndex=validateSourceSteps.indexOf('npm run validate:media-manifest');
+if(architectureIndex<0||mediaPreflightIndex!==architectureIndex+1)fail('Media manifest preflight must run immediately after architecture validation');
+for(const token of ['src/data/media-dimensions.tsv','PRE_ENRICHMENT','POST_ENRICHMENT','POST_ROLLBACK','scripts/enrich-image-metadata.mjs','MANIFEST_LOCKED','MEDIA_ENRICHMENT_TRANSACTION','captureSnapshot','restoreSnapshot','BYTE_SNAPSHOT','--preflight-only','PREFLIGHT_ONLY','mutation:false'])if(!mediaGate.includes(token))fail(`Media transaction boundary contract missing: ${token}`);
 if(/\bunlink\b|\bcopyFile\b/.test(mediaGate))fail('Media transaction wrapper must not implement worker-style file replacement');
 if(/\bXMP-|exiftool|MetadataProfileVersion/.test(mediaGate))fail('Media transaction wrapper crossed metadata transformation ownership boundary');
 if(!mediaGate.includes('spawnSync(process.execPath')||!mediaGate.includes('rollbackErrors'))fail('Media transaction wrapper lost worker/rollback orchestration');
 if((mediaGate.match(/manifestSet\.size!==49/g)||[]).length!==1)fail('Media manifest cardinality lock missing');
+const preflightBranchIndex=mediaGate.indexOf('if(preflightOnly)');
+const snapshotIndex=mediaGate.indexOf('const snapshot=await captureSnapshot()');
+const workerIndex=mediaGate.indexOf('const worker=spawnSync');
+if(preflightBranchIndex<0||snapshotIndex<0||workerIndex<0||!(preflightBranchIndex<snapshotIndex&&snapshotIndex<workerIndex))fail('Read-only media preflight no longer exits before mutation/snapshot worker path');
 
 if(!finalizer.includes("./lib/headers-template.mjs")||!finalizer.includes('compileHeadersTemplate(headersTemplate,{mainCsp,csp404,digests:headerDigests})'))fail('Finalizer is not bound to strict one-pass headers compilation');
 if(/headers\s*=\s*headers\.(?:replace|replaceAll)|headersTemplate\.(?:replace|replaceAll)/.test(finalizer))fail('Manual deployment-header patch chain reintroduced');
@@ -54,4 +63,4 @@ if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Dis
 if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
 if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,mediaEnrichmentBoundary:'manifest-locked-transactional',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,mediaEnrichmentBoundary:'manifest-locked-transactional',mediaManifestPreflight:'read-only-ci-gate',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
