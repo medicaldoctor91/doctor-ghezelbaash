@@ -34,11 +34,19 @@ jobs:
           sudo apt-get install --no-install-recommends -y ffmpeg
       - name: Build base
         working-directory: base
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.base.sha }}
+          SOURCE_COMMIT: ${{ github.event.pull_request.base.sha }}
+          CF_PAGES_COMMIT_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           npm ci --ignore-scripts
           npm run build
       - name: Build head
         working-directory: head
+        env:
+          GITHUB_SHA: ${{ github.event.pull_request.head.sha }}
+          SOURCE_COMMIT: ${{ github.event.pull_request.head.sha }}
+          CF_PAGES_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           npm ci --ignore-scripts
           npm run build
