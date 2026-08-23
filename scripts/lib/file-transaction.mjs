@@ -4,8 +4,9 @@ import {randomUUID} from 'node:crypto';
 
 const exists=async file=>{try{await access(file);return true;}catch(error){if(error?.code==='ENOENT')return false;throw error;}};
 
-export async function commitTextFiles(entries,{transactionId=randomUUID()}={}){
+export async function commitTextFiles(entries,{transactionId=randomUUID(),beforeCommit}={}){
   if(!Array.isArray(entries)||entries.length===0)throw new Error('File transaction requires at least one entry');
+  if(beforeCommit!=null&&typeof beforeCommit!=='function')throw new Error('beforeCommit must be a function when provided');
   const normalized=entries.map(entry=>({file:path.resolve(entry.file),content:String(entry.content)}));
   const seen=new Set();
   for(const entry of normalized){
@@ -28,7 +29,8 @@ export async function commitTextFiles(entries,{transactionId=randomUUID()}={}){
       await writeFile(record.staged,record.content,'utf8');
     }
 
-    for(const record of records){
+    for(const [index,record] of records.entries()){
+      if(beforeCommit)await beforeCommit({index,file:record.file,transactionId});
       await rename(record.file,record.backup);
       record.originalMoved=true;
       try{
