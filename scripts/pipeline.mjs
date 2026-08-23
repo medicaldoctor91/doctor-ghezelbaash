@@ -99,7 +99,7 @@ switch(command){
   case 'check': validateRelease(); prepareGenerated(); validateQuery(); astroCheck(); break;
   case 'prepare': prepareRelease(); break;
   case 'build': buildStandalone(); break;
-  case 'ci': prepareRelease(); buildDist(); packageSource(); break;
+  case 'ci': prepareRelease(); buildDist(); break;
   case 'release': prepareRelease(); buildDist(); completeRelease(); break;
   default: fail(`Unknown pipeline command: ${command||'(missing)'}. Expected dev, preview, check, prepare, build, ci, or release.`);
 }
