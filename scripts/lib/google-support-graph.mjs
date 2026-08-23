@@ -42,7 +42,3 @@ export function normalizeGoogleSupportGraph(doc){
   normalized['@graph']=output;
   return normalized;
 }
-
-export function normalizeGoogleSupportGraphRaw(raw){
-  return `${JSON.stringify(normalizeGoogleSupportGraph(JSON.parse(raw)))}\n`;
-}
