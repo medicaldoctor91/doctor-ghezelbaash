@@ -6,7 +6,7 @@ const fail=message=>{throw new Error(message)};
 const read=file=>readFile(path.join(root,file),'utf8');
 const required=[
   'src/data/head-profile.json','src/data/templates/discovery-head.html',
-  'scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
+  'scripts/generate-retrieval-projections.mjs','scripts/lib/projection-context.mjs','scripts/lib/headers-template.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
 ];
 for(const file of required)await access(path.join(root,file));
@@ -14,8 +14,8 @@ for(const removed of ['src/data/page-metadata.json','src/data/templates/main-hea
   try{await access(path.join(root,removed));fail(`Legacy architecture residue exists: ${removed}`);}catch(error){if(error?.code!=='ENOENT')throw error;}
 }
 
-const [orchestrator,finalizer,headersCompiler,documentHead,baseLayout,indexPage,pageAssets,graphCompiler]=await Promise.all([
-  read('scripts/generate-projections.mjs'),read('scripts/finalize-dist.mjs'),read('scripts/lib/headers-template.mjs'),
+const [orchestrator,retrievalGenerator,finalizer,headersCompiler,documentHead,baseLayout,indexPage,pageAssets,graphCompiler]=await Promise.all([
+  read('scripts/generate-projections.mjs'),read('scripts/generate-retrieval-projections.mjs'),read('scripts/finalize-dist.mjs'),read('scripts/lib/headers-template.mjs'),
   read('src/components/DocumentHead.astro'),read('src/layouts/BaseLayout.astro'),read('src/pages/index.astro'),
   read('scripts/lib/projections/page-assets.mjs'),read('scripts/lib/projections/graph-projections.mjs'),
 ]);
@@ -24,6 +24,14 @@ for(const owner of ['compilePageAssets','compileGraphProjections','compileSemant
 if(!orchestrator.includes('loadProjectionContext'))fail('Projection context is not centralized');
 if(!pageAssets.includes("../../../src/lib/css-delivery.mjs"))fail('Page-assets compiler lost shared CSS delivery contract');
 if(!graphCompiler.includes('headProfile.nodes?.[id]')||!graphCompiler.includes('normalizeGoogleSupportGraph'))fail('Graph compiler lost declarative Head/Support ownership');
+
+const retrievalWrites=[...retrievalGenerator.matchAll(/await\s+write\('([^']+)'/g)].map(match=>match[1]).sort();
+const allowedRetrievalWrites=[
+  'public/live-observations.jsonld','public/query-matrix.jsonl',
+  'src/data/projections/current-release-matrix.json','src/data/projections/live-observations.jsonld','src/data/projections/query-matrix.jsonl',
+].sort();
+if(JSON.stringify(retrievalWrites)!==JSON.stringify(allowedRetrievalWrites))fail(`Retrieval writer surface drift: ${retrievalWrites.join(', ')}`);
+for(const forbidden of ['answers.txt','index.md','llms.txt','llms-full.txt','provenance.jsonld','datapackage.json','croissant.json','dcat.ttl','void.ttl','linkset.json'])if(retrievalGenerator.includes(forbidden))fail(`Retrieval generator crossed canonical ownership boundary: ${forbidden}`);
 
 if(!finalizer.includes("./lib/headers-template.mjs")||!finalizer.includes('compileHeadersTemplate(headersTemplate,{mainCsp,csp404,digests:headerDigests})'))fail('Finalizer is not bound to strict one-pass headers compilation');
 if(/headers\s*=\s*headers\.(?:replace|replaceAll)|headersTemplate\.(?:replace|replaceAll)/.test(finalizer))fail('Manual deployment-header patch chain reintroduced');
@@ -39,4 +47,4 @@ if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Dis
 if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
 if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,retrievalWriterTargets:retrievalWrites.length,contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
