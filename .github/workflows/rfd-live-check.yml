@@ -1,4 +1,4 @@
-name: Live Wikidata RfD check
+name: Persian Wikipedia hyaluronic acid edit
 
 on:
   push:
@@ -7,52 +7,63 @@ on:
       - .github/workflows/rfd-live-check.yml
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  check:
+  edit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
       WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: wiki-api-access
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: pip install requests
-      - name: Read exact live RfD section
+      - name: Edit fa.wikipedia.org and verify
+        shell: bash
         run: |
-          python - <<'PY' > rfd-live.json
-          import os,requests,json,datetime
-          s=requests.Session(); s.headers['User-Agent']='GhezelbaashRfDLiveCheck/1.1'
-          api='https://www.wikidata.org/w/api.php'
+          set -euo pipefail
+          echo "::add-mask::$WIKIMEDIA_BOT_PASSWORD"
+          python - <<'PY'
+          import os, re, requests
+          s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91FaWikipediaEdit/1.0'
+          api='https://fa.wikipedia.org/w/api.php'
           def get(**p):
-            p.update(format='json',formatversion=2,maxage=0,smaxage=0)
-            r=s.get(api,params=p,timeout=60); r.raise_for_status(); return r.json()
+              p.update(format='json',formatversion=2,maxage=0,smaxage=0)
+              r=s.get(api,params=p,timeout=90); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
           def post(**p):
-            p.update(format='json',formatversion=2)
-            r=s.post(api,data=p,timeout=60); r.raise_for_status(); return r.json()
-          tok=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
-          lg=post(action='login',lgname=os.environ['WIKIMEDIA_USERNAME'],lgpassword=os.environ['WIKIMEDIA_BOT_PASSWORD'],lgtoken=tok)
-          d=get(action='query',prop='revisions',titles='Wikidata:Requests for deletions',rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)
-          rev=d['query']['pages'][0]['revisions'][0]
-          text=rev['slots']['main']['content']
-          i=text.find('Q140288589')
-          context=text[max(0,i-1200):i+7000] if i>=0 else None
-          h=get(action='query',prop='revisions',titles='Wikidata:Requests for deletions',rvprop='ids|timestamp|user|comment',rvlimit='max',rvdir='newer',rvstart='2026-08-20T00:00:00Z')
-          touches=[]
-          for x in h['query']['pages'][0].get('revisions',[]):
-            if 'Q140288589' in (x.get('comment') or ''):
-              touches.append({k:x.get(k) for k in ['revid','timestamp','user','comment']})
-          print(json.dumps({'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'login':lg.get('login',{}).get('result'),'revision':{k:rev.get(k) for k in ['revid','timestamp','user','comment']},'context':context,'touches':touches},ensure_ascii=False,indent=2))
+              p.update(format='json',formatversion=2)
+              r=s.post(api,data=p,timeout=90); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+          lt=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+          lg=post(action='login',lgname=os.environ['WIKIMEDIA_USERNAME'],lgpassword=os.environ['WIKIMEDIA_BOT_PASSWORD'],lgtoken=lt)
+          assert lg.get('login',{}).get('result')=='Success', lg
+          ui=get(action='query',meta='userinfo',uiprop='rights|editcount')['query']['userinfo']
+          title='هیالورونیک اسید'
+          q=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|content',rvslots='main',rvlimit=1)
+          rev=q['query']['pages'][0]['revisions'][0]; old=rev['slots']['main']['content']
+          new_section='''== کاربرد هیالورونیک اسید در پزشکی زیبایی ==
+هیالورونیک اسید در پزشکی زیبایی به‌صورت موضعی و تزریقی استفاده می‌شود. پرکننده‌های پوستی مبتنی بر هیالورونیک اسید برای اصلاح برخی چین‌ها و خطوط صورت و افزایش حجم بافت نرم به‌کار می‌روند. یک مرور نظام‌مند از مطالعات با سطح شواهد بالا گزارش کرد که بیشتر عوارض پس از تزریق این پرکننده‌ها، واکنش‌های کوتاه‌مدت محل تزریق هستند؛ بااین‌حال عوارض شدیدتر نیز، هرچند نادر، گزارش شده‌اند.<ref>{{یادکرد ژورنال |نام خانوادگی=Kyriazidis |نام=Ioannis |عنوان=Adverse Events Associated with Hyaluronic Acid Filler Injection for Non-surgical Facial Aesthetics: A Systematic Review of High Level of Evidence Studies |ژورنال=Aesthetic Plastic Surgery |سال=2024 |جلد=48 |شماره=4 |صفحات=719–741 |doi=10.1007/s00266-023-03465-1 |pmid=37563436}}</ref>
+
+نوع دیگری از کاربردهای تزریقی، فراورده‌هایی است که در منابع پزشکی با عنوان «اسکین‌بوستر» توصیف می‌شوند. این گروه با هدف بهبود ویژگی‌هایی مانند رطوبت، بافت و کیفیت پوست به‌کار می‌رود و ممکن است حاوی هیالورونیک اسید یا مواد دیگری باشد. این کاربرد از پرکننده‌های پوستی که عمدتاً برای حجم‌دهی ساختاری استفاده می‌شوند متمایز است. یک مرور سال ۲۰۲۴ انواع، سازوکارهای اثر، کاربردهای بالینی و شواهد اثربخشی و ایمنی اسکین‌بوسترهای تزریقی را بررسی کرده است و در عین حال به محدودیت داده‌های اختصاصی در این حوزه اشاره می‌کند.<ref>{{یادکرد ژورنال |نام خانوادگی=Rho |نام=Nark-Kyoung |عنوان=Injectable "Skin Boosters" in Aging Skin Rejuvenation: A Current Overview |ژورنال=Archives of Plastic Surgery |سال=2024 |جلد=51 |شماره=6 |صفحات=528–541 |doi=10.1055/a-2366-3436 |pmid=39544509 |pmc=PMC11560330}}</ref>
+'''
+          pat=re.compile(r'(?ms)^==\s*کاربرد هیالورونیک اسید در زیبایی\s*==\s*.*?(?=^==[^=].*?==\s*$|\Z)')
+          if pat.search(old):
+              new=pat.sub(new_section+'\n',old,count=1)
+          elif '== کاربرد هیالورونیک اسید در پزشکی زیبایی ==' in old and '39544509' in old:
+              print('already present'); raise SystemExit(0)
+          else:
+              raise RuntimeError('Target section heading not found; no edit made')
+          csrf=get(action='query',meta='tokens')['query']['tokens']['csrftoken']
+          e=post(action='edit',title=title,text=new,summary='بازنویسی بخش کاربردهای زیبایی با منابع مروری پزشکی و افزودن توضیح دربارهٔ اسکین‌بوسترها',token=csrf,basetimestamp=rev['timestamp'],assertuser=ui['name'])
+          print(e)
+          v=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)['query']['pages'][0]['revisions'][0]
+          txt=v['slots']['main']['content']
+          assert v.get('user')==ui['name'] and '37563436' in txt and '39544509' in txt
+          print({'verified_revid':v.get('revid'),'user':v.get('user'),'timestamp':v.get('timestamp')})
           PY
-      - name: Commit result
-        run: |
-          git config user.name ghezelbaash-wiki-audit-bot
-          git config user.email actions@users.noreply.github.com
-          git add rfd-live.json
-          git commit -m "Store live Wikidata RfD snapshot" || exit 0
-          git push origin HEAD:wiki-api-access
