@@ -5,7 +5,6 @@ import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {assertIdentityFingerprintSource} from './lib/release-identity.mjs';
 import {currentReleaseMetadataMismatches,releaseHistoryNodeId,selectCurrentReleaseBoundNodes,nodeTypes} from './lib/release-graph.mjs';
 import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
-import {bindReleaseTokens} from '../src/lib/release-tokens.mjs';
 
 const root=process.cwd();
 const fail=message=>{throw new Error(message)};
@@ -69,10 +68,10 @@ if(codemeta.softwareVersion!==R||codemeta.dateModified!==release.dateModified||c
 const citation=await readFile(path.join(root,'CITATION.cff'),'utf8');
 for(const token of [`version: ${R}`,`date-released: ${release.dateModified}`,`doi: ${Z.versionDoi}`])if(!citation.includes(token))fail(`CITATION release drift: ${token}`);
 
-const discoveryHeadTemplate=await readFile(path.join(root,'src/data/templates/discovery-head.html'),'utf8');
-if((discoveryHeadTemplate.match(/{{CURRENT_VERSION_DOI}}/g)||[]).length!==1||(discoveryHeadTemplate.match(/{{CURRENT_RELEASE}}/g)||[]).length!==1)fail('Discovery Head current-release token contract drift');
-const boundHead=bindReleaseTokens(discoveryHeadTemplate,release);
-if(/{{[A-Z0-9_]+}}/.test(boundHead)||!boundHead.includes(`href="https://doi.org/${Z.versionDoi}"`)||!boundHead.includes(`title="Zenodo preservation Version DOI ${R}"`))fail('Discovery Head current-release convergence failure');
+const documentHead=await readFile(path.join(root,'src/components/DocumentHead.astro'),'utf8');
+for(const token of ['release.dataset.zenodo.versionDoi','release.release','release.primaryEntity.verifiedWebIdentityMesh.map','release.clinic.cid','discoveryLinks.map(link=><link {...link} />)'])if(!documentHead.includes(token))fail(`Astro Head release binding drift: ${token}`);
+if(documentHead.includes('discovery-head.html?raw')||documentHead.includes('set:html={discoveryHead}')||documentHead.includes('bindReleaseTokens(discoveryHead'))fail('Raw Discovery Head transport reintroduced');
+if(!documentHead.includes("{href:`https://doi.org/${versionDoi}`,rel:'related',title:`Zenodo preservation Version DOI ${release.release}`}"))fail('Astro Head current-release DOI relation drift');
 
 const pageSource=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
 const factsBlock=pageSource.match(/<dl\s+id=["']doctor-ghezelbaash-structured-data-repository-facts["'][^>]*>[\s\S]*?<\/dl>/i)?.[0];
@@ -145,4 +144,4 @@ if(authorityPolicy.identitySource!=='src/data/release.json')fail('Authority poli
 for(const task of ['question-answering','text-retrieval','text-generation'])if(!hfPolicy.taskCategories?.includes(task))fail(`HF task contract missing: ${task}`);
 for(const language of ['fa','en','ar','ckb'])if(!hfPolicy.languages?.includes(language))fail(`HF language contract missing: ${language}`);
 
-console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),releaseHistory:Z.releaseHistory.length,releaseBoundNodes:releaseBound.length,graphClosure,redirectsSha256,services:registered.size,answers:(answers.answers||[]).length,medicalReviewedAt:release.medicalReviewedAt,headReleaseBinding:'PASS',visibleReleaseBinding:'PASS',openaireReleaseBinding:'PASS',integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),releaseHistory:Z.releaseHistory.length,releaseBoundNodes:releaseBound.length,graphClosure,redirectsSha256,services:registered.size,answers:(answers.answers||[]).length,medicalReviewedAt:release.medicalReviewedAt,headReleaseBinding:'ASTRO_NATIVE_PASS',visibleReleaseBinding:'PASS',openaireReleaseBinding:'PASS',integrity:'PASS'},null,2));
