@@ -1,16 +1,76 @@
 ---
-import discoveryHeadRaw from '../data/templates/discovery-head.html?raw';
 import headProfile from '../data/head-profile.json';
 import release from '../data/release.json';
 import {HERO_IMAGE_SIZES,HERO_PRELOAD_HREF,HERO_PRELOAD_SRCSET} from '../lib/hero-image-contract.mjs';
-import {bindReleaseTokens} from '../lib/release-tokens.mjs';
+
 type HeadStage='critical'|'discovery';
+type DiscoveryLink={href:string;rel:string;title?:string;type?:string;sizes?:string;color?:string};
 interface Props { title:string; description:string; robots:string; canonicalURL:URL; lang?:string; isMain?:boolean; stage?:HeadStage; }
+
 const {title,description,robots,canonicalURL,lang='fa-IR',isMain=false,stage='critical'}=Astro.props;
 if(stage!=='critical'&&stage!=='discovery')throw new Error(`Unknown DocumentHead stage: ${stage}`);
 if(isMain&&canonicalURL.toString()!==release.canonicalUrl)throw new Error('Canonical page URL drift');
-const discoveryHead=isMain?bindReleaseTokens(discoveryHeadRaw,release):'';
+
 const og=headProfile.openGraph;
+const canonical=release.canonicalUrl;
+const versionDoi=release.dataset.zenodo.versionDoi;
+const identityTitles:Record<string,string>={
+  [`https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`]:'Wikidata — Saeed Ghezelbash',
+  'https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash':'Wikimedia Commons — Saeed Ghezelbash',
+  'https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e':`Iran Medical Council — registration ${release.primaryEntity.irimc}`,
+  [`https://orcid.org/${release.primaryEntity.orcid}`]:`ORCID — ${release.primaryEntity.orcid}`,
+  'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/':'NCBI — public bibliography',
+  [`https://openalex.org/${release.primaryEntity.openAlex}`]:`OpenAlex — ${release.primaryEntity.openAlex}`,
+  [`https://www.semanticscholar.org/author/-/${release.primaryEntity.semanticScholar}`]:`Semantic Scholar — author ${release.primaryEntity.semanticScholar}`,
+  [`https://scholar.google.com/citations?user=${release.primaryEntity.googleScholar}`]:`Google Scholar — ${release.primaryEntity.googleScholar}`,
+  'https://github.com/medicaldoctor91':'GitHub — medicaldoctor91',
+  'https://huggingface.co/Ghezelbaash':'Hugging Face — Ghezelbaash',
+  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96':'LinkedIn — Saeed Ghezelbash',
+  'https://www.instagram.com/doctor.ghezelbaash/':'Instagram — doctor.ghezelbaash',
+  'https://www.facebook.com/ghezelbaash':'Verified identity — Saeed Ghezelbash',
+  'https://x.com/qezelbaash':'Verified identity — Saeed Ghezelbash',
+  'https://www.pinterest.com/medicaldoctor91/':'Verified identity — Saeed Ghezelbash',
+  'https://linktr.ee/Doctor.ghezelbaash':'Verified identity — Saeed Ghezelbash',
+  'https://www.threads.com/@doctor.ghezelbaash':'Verified identity — Saeed Ghezelbash',
+  'https://www.youtube.com/@ghezelbaash':'Verified identity — Saeed Ghezelbash'
+};
+const identityLinks:DiscoveryLink[]=release.primaryEntity.verifiedWebIdentityMesh.map(href=>({href,rel:'me',title:identityTitles[href]}));
+const discoveryLinks:DiscoveryLink[]=[
+  {href:`${canonical}graph.jsonld`,rel:'describedby',title:'Canonical full knowledge graph — JSON-LD',type:'application/ld+json'},
+  {href:`${canonical}graph.ttl`,rel:'describedby',title:'Canonical full knowledge graph — Turtle',type:'text/turtle'},
+  {href:`${canonical}llms.txt`,rel:'describedby',title:'Machine-readable entity guide',type:'text/plain'},
+  {href:`${canonical}index.md`,rel:'alternate',title:'Markdown projection',type:'text/markdown'},
+  {href:`${canonical}llms-full.txt`,rel:'alternate',title:'Full text projection',type:'text/plain'},
+  {href:`${canonical}doctor.vcf`,rel:'related',title:'Physician vCard',type:'text/vcard'},
+  {href:`${canonical}clinic.vcf`,rel:'related',title:'Clinic vCard',type:'text/vcard'},
+  {href:release.primaryEntity.id,rel:'author'},
+  {href:release.primaryEntity.id,rel:'about'},
+  {href:release.clinic.id,rel:'about'},
+  ...identityLinks,
+  {href:`https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`,rel:'about',title:'Wikidata — clinic'},
+  {href:`https://www.google.com/maps?cid=${release.clinic.cid}`,rel:'about',title:'Google Maps — clinic'},
+  {href:'https://www.openstreetmap.org/node/13530287096',rel:'about',title:'OpenStreetMap — clinic'},
+  {href:`https://www.wikidata.org/entity/${release.dataset.wikidata}`,rel:'related',title:'Wikidata — structured-data project'},
+  {href:release.dataset.github.repository,rel:'related',title:'GitHub — canonical repository'},
+  {href:`https://doi.org/${versionDoi}`,rel:'related',title:`Zenodo preservation Version DOI ${release.release}`},
+  {href:release.dataset.license,rel:'license'},
+  {href:'/favicon.svg',rel:'icon',sizes:'any',type:'image/svg+xml'},
+  {href:'/favicon.svg',rel:'mask-icon',color:headProfile.themeColor},
+  {href:'/site.webmanifest',rel:'manifest'},
+  {href:`${canonical}entity-facts.csv`,rel:'describedby',type:'text/csv'},
+  {href:`${canonical}answers.txt`,rel:'alternate',type:'text/plain'},
+  {href:`${canonical}knowledge.xml`,rel:'alternate',type:'application/xml'},
+  {href:release.dataset.huggingFace.dataset,rel:'related'},
+  {href:'/linkset.json',rel:'linkset',type:'application/linkset+json'},
+  {href:'/datapackage.json',rel:'describedby',type:'application/json'},
+  {href:'/void.ttl',rel:'describedby',type:'text/turtle'},
+  {href:'/dcat.ttl',rel:'describedby',type:'text/turtle'},
+  {href:'/croissant.json',rel:'describedby',type:'application/ld+json'},
+  {href:`${canonical}provenance.jsonld`,rel:'describedby',title:'Claim and passage provenance graph',type:'application/ld+json'},
+  {href:`${canonical}evidence-snapshot.json`,rel:'describedby',title:'Release evidence health snapshot',type:'application/json'},
+  {href:`${canonical}shapes.ttl`,rel:'describedby',title:'SHACL entity constitution',type:'text/turtle'},
+  {href:`${canonical}artifact-manifest.json`,rel:'describedby',title:'Integrity and provenance manifest',type:'application/json'}
+];
 ---
 {isMain&&stage==='critical'&&<>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
@@ -22,7 +82,7 @@ const og=headProfile.openGraph;
 <link href={canonicalURL.toString()} rel="canonical" /><link href={canonicalURL.toString()} hreflang={lang} rel="alternate" />
 </>}
 {isMain&&stage==='discovery'&&<>
-<Fragment set:html={discoveryHead} />
+{discoveryLinks.map(link=><link {...link} />)}
 <meta content={og.type} property="og:type" /><meta content="Saeed" property="profile:first_name" /><meta content="Ghezelbash" property="profile:last_name" /><meta content="doctor.ghezelbaash" property="profile:username" />
 <meta content={og.locale} property="og:locale" />{og.alternateLocales.map(locale=><meta content={locale} property="og:locale:alternate" />)}
 <meta content={title} property="og:title" /><meta content={description} property="og:description" /><meta content={canonicalURL.toString()} property="og:url" /><meta content={og.siteName} property="og:site_name" />
