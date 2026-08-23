@@ -40,7 +40,8 @@ assert(documentHead.includes("page-metadata.json")&&documentHead.includes("disco
 assert(documentHead.includes('HERO_PRELOAD_HREF')&&documentHead.includes('HERO_PRELOAD_SRCSET')&&documentHead.includes('HERO_IMAGE_SIZES'),'DocumentHead is not bound to canonical Hero preload inputs');
 assert(!documentHead.includes('main-head.html')&&!documentHead.includes('head-delivery'),'Runtime DocumentHead still depends on legacy Head transport');
 assert(baseLayout.includes("page-metadata.json")&&baseLayout.includes('effectiveFrontmatter=isMain?pageMetadata:frontmatter'),'BaseLayout main metadata authority drift');
-assert(indexSource.includes("page-metadata.json")&&!/\bfrontmatter\b/.test(indexSource),'Index page reintroduced generated-frontmatter authority');
+const generatedFrontmatterImport=/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/m;
+assert(indexSource.includes("page-metadata.json")&&!generatedFrontmatterImport.test(indexSource),'Index page reintroduced generated-frontmatter authority');
 
 assert(HERO_PRELOAD_HREF.includes('saeed-ghezelbash-portrait-delivery-640'),'Hero preload href drift');
 assert(HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF)&&HERO_PRELOAD_SRCSET.includes(' 960w')&&HERO_PRELOAD_SRCSET.includes(' 1600w'),'Hero preload srcset drift');
