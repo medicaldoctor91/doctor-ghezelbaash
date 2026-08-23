@@ -2,6 +2,7 @@
 import headProfile from '../data/head-profile.json';
 import release from '../data/release.json';
 import {HERO_IMAGE_SIZES,HERO_PRELOAD_HREF,HERO_PRELOAD_SRCSET} from '../lib/hero-image-contract.mjs';
+import {HEAD_RESOURCES} from '../lib/resources.mjs';
 
 type HeadStage='critical'|'discovery';
 type DiscoveryLink={href:string;rel:string;title?:string;type?:string;sizes?:string;color?:string};
@@ -14,33 +15,13 @@ if(isMain&&canonicalURL.toString()!==release.canonicalUrl)throw new Error('Canon
 const og=headProfile.openGraph;
 const canonical=release.canonicalUrl;
 const versionDoi=release.dataset.zenodo.versionDoi;
-const identityTitles:Record<string,string>={
-  [`https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`]:'Wikidata — Saeed Ghezelbash',
-  'https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash':'Wikimedia Commons — Saeed Ghezelbash',
-  'https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e':`Iran Medical Council — registration ${release.primaryEntity.irimc}`,
-  [`https://orcid.org/${release.primaryEntity.orcid}`]:`ORCID — ${release.primaryEntity.orcid}`,
-  'https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/':'NCBI — public bibliography',
-  [`https://openalex.org/${release.primaryEntity.openAlex}`]:`OpenAlex — ${release.primaryEntity.openAlex}`,
-  [`https://www.semanticscholar.org/author/-/${release.primaryEntity.semanticScholar}`]:`Semantic Scholar — author ${release.primaryEntity.semanticScholar}`,
-  [`https://scholar.google.com/citations?user=${release.primaryEntity.googleScholar}`]:`Google Scholar — ${release.primaryEntity.googleScholar}`,
-  'https://github.com/medicaldoctor91':'GitHub — medicaldoctor91',
-  'https://huggingface.co/Ghezelbaash':'Hugging Face — Ghezelbaash',
-  'https://www.linkedin.com/in/saeed-ghezelbash-93310a96':'LinkedIn — Saeed Ghezelbash',
-  'https://www.instagram.com/doctor.ghezelbaash/':'Instagram — doctor.ghezelbaash',
-  'https://www.facebook.com/ghezelbaash':'Verified identity — Saeed Ghezelbash',
-  'https://x.com/qezelbaash':'Verified identity — Saeed Ghezelbash',
-  'https://www.pinterest.com/medicaldoctor91/':'Verified identity — Saeed Ghezelbash',
-  'https://linktr.ee/Doctor.ghezelbaash':'Verified identity — Saeed Ghezelbash',
-  'https://www.threads.com/@doctor.ghezelbaash':'Verified identity — Saeed Ghezelbash',
-  'https://www.youtube.com/@ghezelbaash':'Verified identity — Saeed Ghezelbash'
-};
-const identityLinks:DiscoveryLink[]=release.primaryEntity.verifiedWebIdentityMesh.map(href=>({href,rel:'me',title:identityTitles[href]}));
+const machineLinks:DiscoveryLink[]=HEAD_RESOURCES.map(resource=>{
+  if(typeof resource.headRel!=='string'||!resource.headRel)throw new Error(`Machine resource missing Head relation: ${resource.path}`);
+  return {href:`${canonical}${resource.path}`,rel:resource.headRel,type:resource.mediaType,title:'headTitle' in resource&&typeof resource.headTitle==='string'?resource.headTitle:undefined};
+});
+const identityLinks:DiscoveryLink[]=release.primaryEntity.verifiedWebIdentityMesh.map(href=>({href,rel:'me'}));
 const discoveryLinks:DiscoveryLink[]=[
-  {href:`${canonical}graph.jsonld`,rel:'describedby',title:'Canonical full knowledge graph — JSON-LD',type:'application/ld+json'},
-  {href:`${canonical}graph.ttl`,rel:'describedby',title:'Canonical full knowledge graph — Turtle',type:'text/turtle'},
-  {href:`${canonical}llms.txt`,rel:'describedby',title:'Machine-readable entity guide',type:'text/plain'},
-  {href:`${canonical}index.md`,rel:'alternate',title:'Markdown projection',type:'text/markdown'},
-  {href:`${canonical}llms-full.txt`,rel:'alternate',title:'Full text projection',type:'text/plain'},
+  ...machineLinks,
   {href:`${canonical}doctor.vcf`,rel:'related',title:'Physician vCard',type:'text/vcard'},
   {href:`${canonical}clinic.vcf`,rel:'related',title:'Clinic vCard',type:'text/vcard'},
   {href:release.primaryEntity.id,rel:'author'},
@@ -57,18 +38,7 @@ const discoveryLinks:DiscoveryLink[]=[
   {href:'/favicon.svg',rel:'icon',sizes:'any',type:'image/svg+xml'},
   {href:'/favicon.svg',rel:'mask-icon',color:headProfile.themeColor},
   {href:'/site.webmanifest',rel:'manifest'},
-  {href:`${canonical}entity-facts.csv`,rel:'describedby',type:'text/csv'},
-  {href:`${canonical}answers.txt`,rel:'alternate',type:'text/plain'},
-  {href:`${canonical}knowledge.xml`,rel:'alternate',type:'application/xml'},
   {href:release.dataset.huggingFace.dataset,rel:'related'},
-  {href:'/linkset.json',rel:'linkset',type:'application/linkset+json'},
-  {href:'/datapackage.json',rel:'describedby',type:'application/json'},
-  {href:'/void.ttl',rel:'describedby',type:'text/turtle'},
-  {href:'/dcat.ttl',rel:'describedby',type:'text/turtle'},
-  {href:'/croissant.json',rel:'describedby',type:'application/ld+json'},
-  {href:`${canonical}provenance.jsonld`,rel:'describedby',title:'Claim and passage provenance graph',type:'application/ld+json'},
-  {href:`${canonical}evidence-snapshot.json`,rel:'describedby',title:'Release evidence health snapshot',type:'application/json'},
-  {href:`${canonical}shapes.ttl`,rel:'describedby',title:'SHACL entity constitution',type:'text/turtle'},
   {href:`${canonical}artifact-manifest.json`,rel:'describedby',title:'Integrity and provenance manifest',type:'application/json'}
 ];
 ---

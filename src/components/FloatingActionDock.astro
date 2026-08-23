@@ -1,4 +1,14 @@
 ---
-import raw from '../data/templates/quick-actions.html?raw';
+import release from '../data/release.json';
+import {headGraph} from '../lib/knowledge-graph';
+import {deriveSiteData} from '../lib/site-data.mjs';
+const site=deriveSiteData(release,headGraph);
 ---
-<Fragment set:html={raw} />
+<nav aria-label="دسترسی سریع به دکتر سعید قزلباش و کلینیک زیبایی" class="quick-actions">
+  <a aria-label="بازگشت به ابتدای صفحه" class="quick-actions__top" href="#main-content" title="بالای صفحه"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 19V5m0 0-6 6m6-6 6 6"></path></svg></a>
+  <div class="quick-actions__bar">
+    <a aria-label="تماس با کلینیک زیبایی دکتر سعید قزلباش" class="quick-actions__item quick-actions__item--phone" href={site.telHref} title="تماس با کلینیک زیبایی"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7A2 2 0 0 1 22 16.9Z"></path></svg><span>تماس</span></a>
+    <a aria-label="چت با دکتر سعید قزلباش" class="quick-actions__item quick-actions__item--consultation" href={site.chatUrl} rel="external" title="چت با دکتر قزلباش"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H8l-5 2 1.7-4.2A8 8 0 1 1 21 12Z"></path></svg><span class="quick-actions__consultation-copy"><strong>چت با دکتر قزلباش</strong></span></a>
+    <a aria-label="مسیریابی به کلینیک زیبایی دکتر سعید قزلباش در Google Maps" class="quick-actions__item quick-actions__item--address" href={site.directionsUrl} rel="external" title="مسیر کلینیک زیبایی"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Zm-8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path></svg><span>مسیریابی</span></a>
+  </div>
+</nav>
