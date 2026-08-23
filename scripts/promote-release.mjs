@@ -60,6 +60,8 @@ const snapshotEvidence=(evidenceSnapshot.entries||[]).find(item=>item.id===curre
 must(registryEvidence&&snapshotEvidence,'Current Zenodo evidence pointer is missing');
 registryEvidence.url=currentEvidenceUrl;
 snapshotEvidence.url=currentEvidenceUrl;
+registryEvidence.verifiedAt=next.dateModified;
+snapshotEvidence.verifiedAt=next.dateModified;
 
 const nodes=graph['@graph'];
 must(Array.isArray(nodes),'Canonical graph lacks @graph');

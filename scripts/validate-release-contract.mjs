@@ -88,7 +88,7 @@ const currentEvidenceId=`${release.canonicalUrl}#evidence-zenodo-current-release
 const currentEvidenceUrl=`https://doi.org/${Z.versionDoi}`;
 const registryEvidence=(evidenceRegistry.evidence||[]).find(item=>item.id===currentEvidenceId);
 const snapshotEvidence=(evidenceSnapshot.entries||[]).find(item=>item.id===currentEvidenceId);
-if(!registryEvidence||!snapshotEvidence||registryEvidence.url!==currentEvidenceUrl||snapshotEvidence.url!==currentEvidenceUrl)fail('Current Zenodo evidence pointer drift');
+if(!registryEvidence||!snapshotEvidence||registryEvidence.url!==currentEvidenceUrl||snapshotEvidence.url!==currentEvidenceUrl||registryEvidence.verifiedAt!==release.dateModified||snapshotEvidence.verifiedAt!==release.dateModified)fail('Current Zenodo evidence pointer drift');
 
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
 const nodes=graph['@graph']||[];
