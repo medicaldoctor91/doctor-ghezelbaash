@@ -1,0 +1,53 @@
+name: Live Wikidata RfD check
+
+on:
+  push:
+    branches: [wiki-api-access]
+    paths:
+      - .github/workflows/rfd-live-check.yml
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-api-access
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: Read exact live RfD section
+        run: |
+          python - <<'PY' > rfd-live.json
+          import os,requests,re,json,datetime
+          s=requests.Session(); s.headers['User-Agent']='GhezelbaashRfDLiveCheck/1.0'
+          api='https://www.wikidata.org/w/api.php'
+          def get(**p):
+            p.update(format='json',formatversion=2,maxage=0,smaxage=0)
+            r=s.get(api,params=p,timeout=60); r.raise_for_status(); return r.json()
+          def post(**p):
+            p.update(format='json',formatversion=2)
+            r=s.post(api,data=p,timeout=60); r.raise_for_status(); return r.json()
+          tok=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+          lg=post(action='login',lgname=os.environ['WIKIMEDIA_USERNAME'],lgpassword=os.environ['WIKIMEDIA_BOT_PASSWORD'],lgtoken=tok)
+          d=get(action='query',prop='revisions',titles='Wikidata:Requests for deletions',rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)
+          rev=d['query']['pages'][0]['revisions'][0]
+          text=rev['slots']['main']['content']
+          pat=r'(?ms)^==\s*(?:\{\{Q\|)?Q140288589(?:\}\})?\s*==\s*(.*?)(?=^==[^=]|\Z)'
+          m=re.search(pat,text)
+          print(json.dumps({'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'login':lg.get('login',{}).get('result'),'revision':{k:rev.get(k) for k in ['revid','timestamp','user','comment']},'section':m.group(1).strip() if m else None},ensure_ascii=False,indent=2))
+          PY
+      - name: Commit result
+        run: |
+          git config user.name ghezelbaash-wiki-audit-bot
+          git config user.email actions@users.noreply.github.com
+          git add rfd-live.json
+          git commit -m "Store live Wikidata RfD snapshot" || exit 0
+          git push origin HEAD:wiki-api-access
