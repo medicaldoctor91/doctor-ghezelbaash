@@ -22,7 +22,13 @@ jobs:
         with:
           node-version: 24.19.0
           cache: npm
-      - run: npm ci --ignore-scripts
+      - name: Install ffmpeg and project dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          npm ci --ignore-scripts
       - name: Converge all published entity media
         run: python scripts/one-time-media-metadata-convergence.py
       - name: Validate convergence
