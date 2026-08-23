@@ -25,7 +25,8 @@ assert(!documentHead.includes('page-metadata.json')&&documentHead.includes('rele
 assert(!documentHead.includes('main-head.html')&&!documentHead.includes('discovery-head.html?raw')&&!documentHead.includes('deriveMainHeadStages')&&!documentHead.includes('set:html={discoveryHead}'),'Legacy/raw Head delivery remains in runtime');
 assert(!baseLayout.includes('page-metadata.json')&&baseLayout.includes("release.json")&&baseLayout.includes('frontmatter.title')&&baseLayout.includes('frontmatter.description'),'BaseLayout canonical content metadata authority missing');
 assert(baseLayout.includes('new URL(release.canonicalUrl)'),'BaseLayout canonical URL authority drift');
-assert(/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexSource),'Index must consume canonical generated Markdown frontmatter');
+assert(/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/\.\.\/\.generated\/content\/home\.md['"]/.test(indexSource),'Index must consume canonical generated Markdown frontmatter');
+assert(!indexSource.includes('../content/home.md'),'Index reintroduced legacy generated content staging');
 assert(/stage="critical"/.test(baseLayout)&&/stage="discovery"/.test(baseLayout),'BaseLayout must emit both Head stages');
 for(const forbidden of ['title','description','robots','lang','dir','canonicalUrl'])assert(!Object.hasOwn(headProfile,forbidden),`Static Head profile duplicates content/release metadata: ${forbidden}`);
 assert(/^https:\/\/www\.ghezelbaash\.ir\/$/.test(release.canonicalUrl),'Canonical release URL identity drift');
@@ -56,4 +57,4 @@ if(distArg){
   assert(!/static\.cloudflareinsights\.com/i.test(html),'Cloudflare Insights unexpectedly entered static DIST');
 }
 
-console.log(JSON.stringify({stage:'CRITICAL_PATH',headAuthority:'astro-native-structured-three-lane',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',discoveryRendering:'astro-native',distValidated:Boolean(distArg),integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CRITICAL_PATH',headAuthority:'astro-native-structured-three-lane',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',generatedContentAuthority:'.generated/content/home.md',discoveryRendering:'astro-native',distValidated:Boolean(distArg),integrity:'PASS'},null,2));
