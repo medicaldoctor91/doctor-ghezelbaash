@@ -24,3 +24,5 @@ public/assets/site.*.css
 public/live-observations.jsonld
 public/query-matrix.jsonl
 .release/huggingface/
+
+# one-time migration trigger; never merged
