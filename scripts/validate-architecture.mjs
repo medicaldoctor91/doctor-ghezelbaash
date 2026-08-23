@@ -27,6 +27,11 @@ if(!graphCompiler.includes('headProfile.nodes?.[id]')||!graphCompiler.includes('
 
 if(!finalizer.includes("./lib/headers-template.mjs")||!finalizer.includes('compileHeadersTemplate(headersTemplate,{mainCsp,csp404,digests:headerDigests})'))fail('Finalizer is not bound to strict one-pass headers compilation');
 if(/headers\s*=\s*headers\.(?:replace|replaceAll)|headersTemplate\.(?:replace|replaceAll)/.test(finalizer))fail('Manual deployment-header patch chain reintroduced');
+if(/\bunlink\b/.test(finalizer))fail('Finalizer must fail closed; post-build artifact deletion is forbidden');
+if(!finalizer.includes('DIST fingerprint stylesheet contract drift'))fail('Finalizer lost fail-closed fingerprint stylesheet assertion');
+const finalizerWriteCount=(finalizer.match(/\bwriteFile\s*\(/g)||[]).length;
+if(finalizerWriteCount!==4)fail(`Finalizer mutation boundary drift: expected 4 writes, found ${finalizerWriteCount}`);
+for(const artifact of ['current-release-matrix.json','artifact-manifest.json','_headers','live-serving-attestation.json'])if(!finalizer.includes(artifact))fail(`Finalizer required post-build artifact missing: ${artifact}`);
 for(const guard of ['unknown token','expected exactly one','unresolved token','token inventory mismatch'])if(!headersCompiler.includes(guard))fail(`Headers compiler guard missing: ${guard}`);
 
 if(!documentHead.includes("../data/head-profile.json")||documentHead.includes('page-metadata.json')||documentHead.includes('main-head.html')||documentHead.includes('deriveMainHeadStages'))fail('Document Head authority is not canonical/structured');
@@ -34,4 +39,4 @@ if(!documentHead.includes("../data/templates/discovery-head.html?raw"))fail('Dis
 if(baseLayout.includes('page-metadata.json')||!baseLayout.includes('frontmatter.title')||!baseLayout.includes('frontmatter.description'))fail('Layout must consume canonical Markdown frontmatter');
 if(!/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexPage)||indexPage.includes('page-metadata.json'))fail('Index must consume generated canonical Markdown frontmatter');
 
-console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',legacyHeadResidue:0,integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'ARCHITECTURE_2026',projectionCompilerOwners:5,contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',headDelivery:'structured',headersCompilation:'strict-one-pass',finalizerMutationWrites:finalizerWriteCount,finalizerDeletes:0,legacyHeadResidue:0,integrity:'PASS'},null,2));
