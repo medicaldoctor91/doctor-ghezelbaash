@@ -1,0 +1,75 @@
+name: Submit Attachment COI request
+
+on:
+  push:
+    branches: [wiki-api-access]
+    paths:
+      - .github/workflows/submit-attachment-coi.yml
+
+permissions:
+  contents: write
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-api-access
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - name: Submit COI edit request with duplicate guard
+        run: |
+          python - <<'PY' > attachment-submit-result.json
+          import os, requests, json, datetime
+          s=requests.Session(); s.headers['User-Agent']='Medicaldoctor91COIRequest/1.0 (Wikipedia COI edit request)'
+          api='https://en.wikipedia.org/w/api.php'
+          def get(**p):
+              p.update(format='json',formatversion=2,maxage=0,smaxage=0)
+              r=s.get(api,params=p,timeout=60); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+          def post(**p):
+              p.update(format='json',formatversion=2)
+              r=s.post(api,data=p,timeout=60); r.raise_for_status(); d=r.json()
+              if 'error' in d: raise RuntimeError(d['error'])
+              return d
+          tok=get(action='query',meta='tokens',type='login')['query']['tokens']['logintoken']
+          lg=post(action='login',lgname=os.environ['WIKIMEDIA_USERNAME'],lgpassword=os.environ['WIKIMEDIA_BOT_PASSWORD'],lgtoken=tok)
+          if lg.get('login',{}).get('result')!='Success': raise RuntimeError(lg)
+          title='Talk:Attachment and health'
+          heading='Update Mental health section with recent meta-analytic evidence'
+          q=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)
+          page=q['query']['pages'][0]; rev=(page.get('revisions') or [{}])[0]
+          existing=rev.get('slots',{}).get('main',{}).get('content','')
+          if heading in existing:
+              result={'status':'already_present','title':title,'revid':rev.get('revid'),'timestamp':rev.get('timestamp')}
+          else:
+              csrf=get(action='query',meta='tokens')['query']['tokens']['csrftoken']
+              text="""{{edit COI|summary=Update the Mental health section with recent meta-analytic evidence}}
+I am a co-author of the 2021 MDD study cited below, so I am requesting this change rather than editing the article directly.
+
+'''Specific change:''' In § Mental health, immediately after the paragraph ending “including depression, anxiety, eating, psychotic and personality disorders”, add:
+
+More recent meta-analytic evidence supports a robust association between adult attachment insecurity and mental-health outcomes. A 2022 meta-analysis of 224 studies (245 samples; N=79,722) found moderate associations between attachment anxiety and avoidance and poorer mental health, including depression and anxiety.<ref>{{cite journal |vauthors=Zhang X, Li J, Xie F, Chen X, Xu W, Hudson NW |title=The relationship between adult attachment and mental health: A meta-analysis |journal=Journal of Personality and Social Psychology |year=2022 |volume=123 |issue=5 |pages=1089–1137 |doi=10.1037/pspp0000437 |pmid=36201836}}</ref> Consistent with this broader literature, a 2021 cross-sectional study of 300 people with major depressive disorder reported high rates of insecure attachment and an association between anxious attachment and dissociative symptoms; because the study was cross-sectional, it does not establish causality.<ref>{{cite journal |vauthors=Golshani S, Najafpour A, Hashemian SS, Goudarzi N, Firoozabadi A, Ghezelbash MS, Hookari S, Firoozabadi K, Dürsteler KM, Brühl AB, Alikhani M, Sadeghi-Bahmani D, Brand S |title=Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events |journal=Healthcare |year=2021 |volume=9 |issue=9 |page=1169 |doi=10.3390/healthcare9091169 |pmid=34574943 |pmc=PMC8469763}}</ref>
+
+'''Reason:''' The existing section states the association using mostly older literature. The proposed addition anchors that statement in a large recent meta-analysis and gives one narrowly framed clinical example, with the study design limitation stated explicitly.
+
+~~~~"""
+              e=post(action='edit',title=title,section='new',sectiontitle=heading,text=text,summary='COI disclosed: request independent review of Mental health section using recent meta-analytic evidence',token=csrf,assertuser=lg['login']['lgusername'])
+              result={'status':e.get('edit',{}).get('result'),'title':title,'newrevid':e.get('edit',{}).get('newrevid'),'oldrevid':e.get('edit',{}).get('oldrevid')}
+          result['generated_at_utc']=datetime.datetime.now(datetime.timezone.utc).isoformat(); result['login']=lg.get('login',{}).get('lgusername')
+          print(json.dumps(result,ensure_ascii=False,indent=2))
+          PY
+      - name: Commit non-secret result on isolated branch
+        run: |
+          git config user.name ghezelbaash-wiki-audit-bot
+          git config user.email actions@users.noreply.github.com
+          git add attachment-submit-result.json
+          git commit -m "Store Attachment COI submission result" || exit 0
+          git push origin HEAD:wiki-api-access
