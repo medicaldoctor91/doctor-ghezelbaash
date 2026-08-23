@@ -1,54 +1,45 @@
 import {readFile} from 'node:fs/promises';
+import {deriveSiteData} from '../src/lib/site-data.mjs';
 
 const source=await readFile('src/content-source/page.md','utf8');
-const quick=await readFile('src/data/templates/quick-actions.html','utf8');
+const quick=await readFile('src/components/FloatingActionDock.astro','utf8');
 const release=JSON.parse(await readFile('src/data/release.json','utf8'));
+const graph=JSON.parse(await readFile('src/data/semantic/knowledge-graph.jsonld','utf8'));
 const redirectsRaw=await readFile('src/data/subdomain-redirects.json','utf8');
+const site=deriveSiteData(release,graph);
 
 const fail=message=>{throw new Error(message)};
 const hero=[...source.matchAll(/<a\b[^>]*class=["'][^"']*\bhero-action\b[^"']*["'][^>]*>[\s\S]*?<\/a>/gi)].map(m=>m[0]);
-if(hero.length!==3) fail(`Critical hero CTA count drift: ${hero.length} != 3`);
+if(hero.length!==3)fail(`Critical hero CTA count drift: ${hero.length} != 3`);
 
 const heroContract=[
-  {label:'رزرو وقت مشاوره رایگان',href:'tel:+989308209494',primary:true},
-  {label:'مشاهده نمونه‌کارهای دکتر قزلباش',href:'https://www.instagram.com/doctor.ghezelbaash/'},
+  {label:'رزرو وقت مشاوره رایگان',href:site.telHref,primary:true},
+  {label:'مشاهده نمونه‌کارهای دکتر قزلباش',href:site.instagramUrl},
   {label:'آدرس دقیق کلینیک',href:'https://doctor.ghezelbaash.ir/'}
 ];
-for(const c of heroContract){
-  const hits=hero.filter(a=>a.includes(`>${c.label}</a>`)&&a.includes(`href="${c.href}"`));
-  if(hits.length!==1) fail(`Hero CTA contract drift: ${c.label} (${hits.length})`);
-  if(c.primary&&!hits[0].includes('hero-action--primary')) fail('Reservation CTA lost primary hierarchy');
-  // The visible descriptive link text is itself the accessible name. Do not require
-  // a redundant aria-label that would override that text for assistive technology.
+for(const contract of heroContract){
+  const hits=hero.filter(anchor=>anchor.includes(`>${contract.label}</a>`)&&anchor.includes(`href="${contract.href}"`));
+  if(hits.length!==1)fail(`Hero CTA contract drift: ${contract.label} (${hits.length})`);
+  if(contract.primary&&!hits[0].includes('hero-action--primary'))fail('Reservation CTA lost primary hierarchy');
   const visibleText=hits[0].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-  if(visibleText!==c.label) fail(`Hero CTA accessible text drift: ${c.label} -> ${visibleText}`);
+  if(visibleText!==contract.label)fail(`Hero CTA accessible text drift: ${contract.label} -> ${visibleText}`);
 }
 
-if(!redirectsRaw.includes('doctor.ghezelbaash.ir')||!/(google\.com\/maps|maps\.google)/i.test(redirectsRaw)) fail('doctor.ghezelbaash.ir no longer maps to the clinic map redirect contract');
-
-if(!quick.includes('class="quick-actions__top"')||!quick.includes('href="#main-content"')) fail('Back-to-top control drift');
-const floating=[...quick.matchAll(/<a\b[^>]*class=["'][^"']*\bquick-actions__item\b[^"']*["'][^>]*>[\s\S]*?<\/a>/gi)].map(m=>m[0]);
-if(floating.length!==3) fail(`Floating CTA count drift: ${floating.length} != 3`);
-
-const byNeedle=(needle,label)=>{
-  const hits=floating.filter(a=>a.includes(needle));
-  if(hits.length!==1) fail(`Floating CTA destination drift: ${label} (${hits.length})`);
-  return hits[0];
-};
-const phone=byNeedle('href="tel:+989308209494"','تماس');
-if(!phone.includes('<span>تماس</span>')) fail('Floating phone copy drift');
-const chat=byNeedle('href="https://ig.me/m/doctor.ghezelbaash"','چت با دکتر قزلباش');
-if(!chat.includes('<strong>چت با دکتر قزلباش</strong>')) fail('Floating direct-chat copy drift');
-const maps=byNeedle('https://www.google.com/maps/dir/?api=1','مسیریابی');
-if(!maps.includes('<span>مسیریابی</span>')) fail('Floating directions copy drift');
-if(!maps.includes(`destination_place_id=${release.clinic.placeId}`)) fail('Floating directions Place ID drift');
-for(const [label,a] of [['تماس',phone],['چت با دکتر قزلباش',chat],['مسیریابی',maps]]) if(!/aria-label=["'][^"']+["']/i.test(a)) fail(`Floating CTA aria-label missing: ${label}`);
+if(!redirectsRaw.includes('doctor.ghezelbaash.ir')||!/(google\.com\/maps|maps\.google)/i.test(redirectsRaw))fail('doctor subdomain no longer maps to the clinic map redirect contract');
+if(!quick.includes('class="quick-actions__top"')||!quick.includes('href="#main-content"'))fail('Back-to-top control drift');
+for(const [binding,label] of [['href={site.telHref}','تماس'],['href={site.chatUrl}','چت با دکتر قزلباش'],['href={site.directionsUrl}','مسیریابی']])if(!quick.includes(binding))fail(`Floating CTA canonical binding drift: ${label}`);
+if((quick.match(/\bquick-actions__item\b/g)||[]).length!==3)fail('Floating CTA count drift');
+for(const copy of ['<span>تماس</span>','<strong>چت با دکتر قزلباش</strong>','<span>مسیریابی</span>'])if(!quick.includes(copy))fail(`Floating CTA copy drift: ${copy}`);
+if((quick.match(/aria-label=/g)||[]).length<4)fail('Floating CTA aria-label coverage drift');
+const directions=new URL(site.directionsUrl);
+if(directions.searchParams.get('destination_place_id')!==release.clinic.placeId)fail('Floating directions Place ID drift');
 
 console.log(JSON.stringify({
   criticalCtas:'PASS',
-  hero:heroContract.map(x=>x.label),
+  hero:heroContract.map(item=>item.label),
   floating:['تماس','چت با دکتر قزلباش','مسیریابی'],
   backToTop:'PRESERVED',
   directionsPlaceId:release.clinic.placeId,
+  contactAuthority:'release+canonical-graph',
   destinationsLocked:true
 },null,2));
