@@ -1,5 +1,6 @@
 import path from 'node:path';
 import {copyFile,mkdir,readFile,readdir} from 'node:fs/promises';
+import {STATIC_ARTIFACTS} from './lib/static-artifacts.mjs';
 
 const root=process.cwd();
 const dist=path.resolve(root,process.argv[2]||'dist');
@@ -12,27 +13,6 @@ const resolveInside=(base,relative,label)=>{
   if(!relative||rel.startsWith('..')||path.isAbsolute(rel))throw new Error(`${label} escapes its root: ${relative}`);
   return target;
 };
-
-const artifacts=Object.freeze([
-  ['src/data/semantic/knowledge-graph.jsonld','graph.jsonld'],
-  ['src/data/semantic/knowledge-graph.ttl','graph.ttl'],
-  ['src/data/semantic/shapes.ttl','shapes.ttl'],
-  ['src/data/projections/entity-facts.csv','entity-facts.csv'],
-  ['src/data/projections/answers.txt','answers.txt'],
-  ['src/data/projections/knowledge.xml','knowledge.xml'],
-  ['src/data/projections/llms.txt','llms.txt'],
-  ['src/data/projections/index.md','index.md'],
-  ['src/data/projections/llms-full.txt','llms-full.txt'],
-  ['src/data/projections/provenance.jsonld','provenance.jsonld'],
-  ['src/data/projections/evidence-snapshot.json','evidence-snapshot.json'],
-  ['src/data/projections/sitemap.xml','sitemap.xml'],
-  ['src/data/projections/linkset.json','linkset.json'],
-  ['src/data/projections/datapackage.json','datapackage.json'],
-  ['src/data/projections/void.ttl','void.ttl'],
-  ['src/data/projections/dcat.ttl','dcat.ttl'],
-  ['src/data/projections/croissant.json','croissant.json'],
-]);
-
 const destinations=new Set();
 const copyExact=async(sourceRelative,destinationRelative)=>{
   if(destinations.has(destinationRelative))throw new Error(`Duplicate static artifact destination: ${destinationRelative}`);
@@ -43,7 +23,7 @@ const copyExact=async(sourceRelative,destinationRelative)=>{
   await copyFile(source,destination);
 };
 
-for(const [source,destination] of artifacts)await copyExact(source,destination);
+for(const artifact of STATIC_ARTIFACTS)await copyExact(artifact.source,artifact.path);
 
 const stableMedia=JSON.parse(await readFile(path.join(root,'src/data/stable-media-aliases.json'),'utf8'));
 if(!Array.isArray(stableMedia.aliases)||stableMedia.aliases.length!==6)throw new Error(`Stable media alias inventory drift: ${stableMedia.aliases?.length??'invalid'}`);
@@ -60,7 +40,7 @@ for(const alias of stableMedia.aliases){
 console.log(JSON.stringify({
   materialized:true,
   astroRoutes:pageSurface,
-  machineArtifacts:artifacts.length,
+  machineArtifacts:STATIC_ARTIFACTS.length,
   stableMediaAliases:stableMedia.aliases.length,
   destinations:destinations.size,
   routeWrappers:0,

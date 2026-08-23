@@ -1,6 +1,7 @@
 import path from 'node:path';
 import {readFile} from 'node:fs/promises';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
+import {STATIC_ARTIFACTS,staticArtifactForRoute} from './lib/static-artifacts.mjs';
 
 const root=process.cwd();
 const fail=message=>{throw new Error(message)};
@@ -8,7 +9,7 @@ const contract=JSON.parse(await readFile(path.join(root,'src/data/subdomain-redi
 const graph=JSON.parse(await readFile(path.join(root,'src/data/semantic/knowledge-graph.jsonld'),'utf8'));
 const {content}=await assembleCanonicalContent({root,graph});
 const redirectsText=await readFile(path.join(root,'public/_redirects'),'utf8');
-const machineRoutes=new Set(['/graph.jsonld','/graph.ttl','/entity-facts.csv','/answers.txt','/knowledge.xml','/llms.txt','/llms-full.txt','/index.md','/datapackage.json','/linkset.json','/void.ttl','/dcat.ttl','/croissant.json','/provenance.jsonld','/evidence-snapshot.json','/shapes.ttl','/artifact-manifest.json']);
+const machineRoutes=new Set([...STATIC_ARTIFACTS.map(({path:artifactPath})=>`/${artifactPath}`),'/artifact-manifest.json']);
 const articlePattern=/^\/2025\/\d{2}\/blog-post(?:_?\d+)?\.html$/;
 
 if(contract.schemaVersion!==2)fail(`Unsupported subdomain redirect schema ${contract.schemaVersion}`);
@@ -54,7 +55,9 @@ for(const [host,expected] of machineEntrypoints){
   const target=new URL(rule.target);
   if(target.origin!==canonical.origin||target.pathname!==expected.route||target.search||target.hash)fail(`${host} must terminate on its exact first-party machine endpoint`);
   if(!machineRoutes.has(expected.route))fail(`${host} target is not an approved machine representation`);
-  await readFile(path.join(root,'src/pages',`${expected.route.slice(1)}.ts`),'utf8').catch(()=>fail(`Missing static endpoint source for ${expected.route}`));
+  const artifact=staticArtifactForRoute(expected.route);
+  if(!artifact)fail(`Missing static artifact registry entry for ${expected.route}`);
+  await readFile(path.join(root,artifact.source),'utf8').catch(()=>fail(`Missing static artifact source for ${expected.route}: ${artifact.source}`));
 }
 const doctor=single.rules.find(rule=>rule.host==='doctor.ghezelbaash.ir');
 if(!doctor?.target.includes('query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas'))fail('doctor subdomain lost the canonical Google Maps Place ID');
@@ -120,5 +123,6 @@ console.log(JSON.stringify({
   historicalLabelPaths:labelPaths.length,
   canonicalFragments:targetFragments.size,
   machineEntrypoints:Object.fromEntries([...machineEntrypoints].map(([host,{route}])=>[host,route])),
+  machineArtifactRegistry:STATIC_ARTIFACTS.length,
   unmatchedBlogPaths:bulk.unmatchedPathPolicy
 },null,2));
