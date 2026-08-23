@@ -1,5 +1,5 @@
-import headGraphRawSource from '../data/semantic/head-graph.json?raw';
-import supportGraphRawSource from '../data/semantic/support-graph.json?raw';
+import headGraphRawSource from '../../.generated/semantic/head-graph.json?raw';
+import supportGraphRawSource from '../../.generated/semantic/support-graph.json?raw';
 
 type Graph={'@graph':unknown[];[key:string]:unknown};
 function parse(source:string,label:string){
