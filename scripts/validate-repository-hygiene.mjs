@@ -60,11 +60,17 @@ for(const workflow of workflows){
   }
 }
 
+const deletedInWorktree=new Set(execFileSync('git',['diff','--name-only','--diff-filter=D','-z'],{cwd:root,encoding:'buffer'}).toString('utf8').split('\0').filter(Boolean));
 const forbiddenControlByte=byte=>(byte<=0x08)||(byte>=0x0b&&byte<=0x0c)||(byte>=0x0e&&byte<=0x1f)||byte===0x7f;
 for(const name of tracked){
   const ext=path.posix.extname(name).toLowerCase();
   if(!textExtensions.has(ext)&&!textExactNames.has(path.posix.basename(name)))continue;
-  const raw=await readFile(path.join(root,name));
+  let raw;
+  try{raw=await readFile(path.join(root,name));}
+  catch(error){
+    if(error?.code==='ENOENT'&&deletedInWorktree.has(name))continue;
+    throw error;
+  }
   const controlOffset=raw.findIndex(forbiddenControlByte);
   if(controlOffset!==-1)throw new Error(`Forbidden ASCII control byte 0x${raw[controlOffset].toString(16).padStart(2,'0')} in tracked text source: ${name} at byte ${controlOffset}`);
   if(name==='scripts/validate-repository-hygiene.mjs')continue;
@@ -73,4 +79,4 @@ for(const name of tracked){
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestWorkflowCoupling:false,nonMainWorkflowBranchTriggers:false,developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestWorkflowCoupling:false,nonMainWorkflowBranchTriggers:false,developmentMarkers:false,forbiddenAsciiControlBytes:false,intentionalTrackedDeletionsHandled:true},null,2));
