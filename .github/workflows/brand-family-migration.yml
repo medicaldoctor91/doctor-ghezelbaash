@@ -1,5 +1,6 @@
 name: One-time 2026 canonical brand-family migration
 
+# Trigger refresh after workflow became resident on main.
 on:
   push:
     branches: [main]
