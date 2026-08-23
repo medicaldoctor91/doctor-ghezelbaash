@@ -2,6 +2,7 @@ import path from 'node:path';
 import {readFile} from 'node:fs/promises';
 
 const root=process.cwd();
+const sourceTarget=path.resolve(root,'src/data/projections/query-matrix.jsonl');
 const target=path.resolve(root,process.argv[2]||'src/data/projections/query-matrix.jsonl');
 const readJson=async p=>JSON.parse(await readFile(path.resolve(root,p),'utf8'));
 const fail=m=>{throw new Error(m)};
@@ -15,6 +16,20 @@ const evidenceRegistry=await readJson('src/data/evidence-registry.json');
 const raw=await readFile(target,'utf8');
 const rows=raw.trim().split(/\r?\n/).filter(Boolean).map((line,i)=>{try{return JSON.parse(line)}catch(e){fail(`Invalid Query Matrix JSONL line ${i+1}: ${e.message}`)}});
 if(!rows.length)fail('Query Matrix is empty');
+
+let mirrorEquality='NOT_APPLICABLE';
+if(target===sourceTarget){
+  const [publicQuery,sourceLive,publicLive,currentMatrix]=await Promise.all([
+    readFile(path.join(root,'public/query-matrix.jsonl')),
+    readFile(path.join(root,'src/data/projections/live-observations.jsonld')),
+    readFile(path.join(root,'public/live-observations.jsonld')),
+    readJson('src/data/projections/current-release-matrix.json'),
+  ]);
+  if(!Buffer.from(raw).equals(publicQuery))fail('Query Matrix public mirror diverges byte-for-byte from source projection');
+  if(!sourceLive.equals(publicLive))fail('Live observation public mirror diverges byte-for-byte from source projection');
+  for(const field of ['liveRevision','sourceCommit','generatedAt'])if(Object.hasOwn(currentMatrix,field))fail(`Source current-release matrix illegally owns current-serving field: ${field}`);
+  mirrorEquality='PASS';
+}
 
 const evidenceIds=new Set((evidenceRegistry.evidence||[]).map(x=>x.id));
 const answerIds=new Set((answerRegistry.answers||[]).map(x=>x.answerId));
@@ -83,5 +98,6 @@ console.log(JSON.stringify({
   expectedPublishableServices:publishable.length,
   rowsWithStableEvidence:rows.filter(r=>arr(r.stable_evidence_refs).length>0).length,
   stableEvidenceRegistrySize:evidenceIds.size,
+  mirrorEquality,
   integrity:'PASS'
 },null,2));

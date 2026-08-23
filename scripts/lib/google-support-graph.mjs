@@ -1,9 +1,10 @@
 const nodeTypes=node=>Array.isArray(node?.['@type'])?node['@type']:[node?.['@type']].filter(Boolean);
 const isoDurationSeconds=value=>{const m=String(value??'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/);if(!m)return null;return (Number(m[1]||0)*3600)+(Number(m[2]||0)*60)+Number(m[3]||0);};
 
-export function normalizeGoogleSupportGraphRaw(raw){
-  const doc=JSON.parse(raw);
-  const nodes=Array.isArray(doc['@graph'])?doc['@graph']:[];
+export function normalizeGoogleSupportGraph(doc){
+  if(!doc||typeof doc!=='object'||Array.isArray(doc))throw new Error('Google support graph must be an object');
+  const normalized=structuredClone(doc);
+  const nodes=Array.isArray(normalized['@graph'])?normalized['@graph']:[];
   const byId=new Map(nodes.filter(node=>typeof node?.['@id']==='string').map(node=>[node['@id'],node]));
   const ineligibleVideoIds=new Set();
   for(const node of nodes){
@@ -11,10 +12,11 @@ export function normalizeGoogleSupportGraphRaw(raw){
     const duration=isoDurationSeconds(node.duration);
     if(duration!==null&&duration<30){ineligibleVideoIds.add(node['@id']);delete node.hasPart;}
   }
+  const output=[];
   for(const node of nodes){
     if(nodeTypes(node).includes('Clip')){
       const parentId=node?.isPartOf?.['@id'];
-      if(parentId&&ineligibleVideoIds.has(parentId)){node.__dropFromGoogleSupport=true;continue;}
+      if(parentId&&ineligibleVideoIds.has(parentId))continue;
       if(node.endOffset==null&&parentId){
         const parent=byId.get(parentId);
         const end=isoDurationSeconds(parent?.duration);
@@ -35,7 +37,8 @@ export function normalizeGoogleSupportGraphRaw(raw){
       });
       if(valid.length)node.hasPart=Array.isArray(node.hasPart)?valid:valid[0];else delete node.hasPart;
     }
+    output.push(node);
   }
-  doc['@graph']=nodes.filter(node=>!node.__dropFromGoogleSupport).map(node=>{if(Object.hasOwn(node,'__dropFromGoogleSupport'))delete node.__dropFromGoogleSupport;return node;});
-  return `${JSON.stringify(doc)}\n`;
+  normalized['@graph']=output;
+  return normalized;
 }

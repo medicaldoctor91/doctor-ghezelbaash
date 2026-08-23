@@ -1,7 +1,9 @@
-name: Read-only main source and release validation
+name: Source and release validation
 
 on:
   push:
+    branches: [main]
+  pull_request:
     branches: [main]
 
 permissions:
@@ -22,6 +24,11 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
+      - name: Provision media validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          ffprobe -version
       - run: npm ci --ignore-scripts
       - name: Release preparation diagnostics
         shell: bash

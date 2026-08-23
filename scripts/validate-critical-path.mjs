@@ -1,7 +1,6 @@
 import path from 'node:path';
 import {access,readFile} from 'node:fs/promises';
-import {deriveMainHeadStages} from '../src/lib/head-delivery.mjs';
-import {bindHeroPreloadSizes} from '../src/lib/hero-image-contract.mjs';
+import {HERO_IMAGE_SIZES,HERO_PRELOAD_HREF,HERO_PRELOAD_SRCSET} from '../src/lib/hero-image-contract.mjs';
 import {bindReleaseTokens} from '../src/lib/release-tokens.mjs';
 
 const root=process.cwd();
@@ -10,25 +9,32 @@ const assert=(condition,message)=>{if(!condition)fail(message)};
 const count=(source,pattern)=>(String(source).match(pattern)||[]).length;
 const heroPreloadPattern=/<link\b(?=[^>]*\brel=["']preload["'])(?=[^>]*\bas=["']image["'])(?=[^>]*\bfetchpriority=["']high["'])(?=[^>]*saeed-ghezelbash-portrait-delivery-640)[^>]*>/gi;
 
-const [mainHeadRaw,release,documentHead,baseLayout]=await Promise.all([
-  readFile(path.join(root,'src/data/templates/main-head.html'),'utf8'),
+const [discoveryHeadRaw,release,headProfile,documentHead,baseLayout,indexSource]=await Promise.all([
+  readFile(path.join(root,'src/data/templates/discovery-head.html'),'utf8'),
   readFile(path.join(root,'src/data/release.json'),'utf8').then(JSON.parse),
+  readFile(path.join(root,'src/data/head-profile.json'),'utf8').then(JSON.parse),
   readFile(path.join(root,'src/components/DocumentHead.astro'),'utf8'),
   readFile(path.join(root,'src/layouts/BaseLayout.astro'),'utf8'),
+  readFile(path.join(root,'src/pages/index.astro'),'utf8'),
 ]);
-const boundHead=bindReleaseTokens(bindHeroPreloadSizes(mainHeadRaw),release);
-const {criticalHead,discoveryHead,splitAt}=deriveMainHeadStages(boundHead);
-assert(splitAt>0&&splitAt<boundHead.length,'Canonical Head split position is invalid');
-assert(criticalHead+discoveryHead===boundHead,'Head staging must be byte-preserving');
-assert(count(criticalHead,/\brel=["']preload["']/gi)>=1,'Critical Head lost preload discovery');
-assert(count(criticalHead,heroPreloadPattern)===1,'Critical Head must contain exactly one canonical Hero preload');
-assert(!/\brel=["']describedby["']/i.test(criticalHead),'Machine discovery links must remain outside the render-critical prefix');
+const discoveryHead=bindReleaseTokens(discoveryHeadRaw,release);
+assert(HERO_PRELOAD_HREF.includes('saeed-ghezelbash-portrait-delivery-640'),'Canonical Hero preload href drift');
+assert(HERO_PRELOAD_SRCSET.includes(HERO_PRELOAD_HREF)&&HERO_PRELOAD_SRCSET.includes(' 960w')&&HERO_PRELOAD_SRCSET.includes(' 1600w'),'Canonical Hero preload srcset drift');
+assert(HERO_IMAGE_SIZES.length>0,'Canonical Hero sizes contract missing');
 assert(/\brel=["']describedby["']/i.test(discoveryHead),'Discovery Head must retain machine-readable relations');
-assert(/stage="critical"/.test(baseLayout)&&/stage="discovery"/.test(baseLayout),'BaseLayout must emit both canonical Head stages');
-assert(documentHead.includes('deriveMainHeadStages')&&documentHead.includes("stage='critical'"),'DocumentHead staging contract missing');
+for(const forbidden of [/<title\b/i,/name=["']description["']/i,/name=["']robots["']/i,/rel=["']canonical["']/i,/property=["']og:/i,/name=["']twitter:/i])assert(!forbidden.test(discoveryHeadRaw),'Discovery template contains content-authority metadata');
+assert(documentHead.includes("head-profile.json")&&documentHead.includes("release.json")&&documentHead.includes('HERO_PRELOAD_HREF')&&documentHead.includes("stage==='critical'")&&documentHead.includes("stage==='discovery'"),'Structured DocumentHead contract missing');
+assert(!documentHead.includes('page-metadata.json')&&documentHead.includes('release.canonicalUrl'),'DocumentHead authority drift');
+assert(!documentHead.includes('main-head.html')&&!documentHead.includes('deriveMainHeadStages'),'Legacy raw Head delivery remains in runtime');
+assert(!baseLayout.includes('page-metadata.json')&&baseLayout.includes("release.json")&&baseLayout.includes('frontmatter.title')&&baseLayout.includes('frontmatter.description'),'BaseLayout canonical content metadata authority missing');
+assert(baseLayout.includes('new URL(release.canonicalUrl)'),'BaseLayout canonical URL authority drift');
+assert(/import\s*\{[^}]*\bfrontmatter\b[^}]*\}\s*from\s*['"]\.\.\/content\/home\.md['"]/.test(indexSource),'Index must consume canonical generated Markdown frontmatter');
+assert(/stage="critical"/.test(baseLayout)&&/stage="discovery"/.test(baseLayout),'BaseLayout must emit both Head stages');
+for(const forbidden of ['title','description','robots','lang','dir','canonicalUrl'])assert(!Object.hasOwn(headProfile,forbidden),`Static Head profile duplicates content/release metadata: ${forbidden}`);
+assert(/^https:\/\/www\.ghezelbaash\.ir\/$/.test(release.canonicalUrl),'Canonical release URL identity drift');
 const sourceOrder=['stage="critical"','<style is:inline','fetchpriority="low"','id="deferred-stylesheet-loader"','id="entity-core"','stage="discovery"'].map(token=>baseLayout.indexOf(token));
 assert(sourceOrder.every(index=>index>=0)&&sourceOrder.every((value,index)=>index===0||sourceOrder[index-1]<value),'BaseLayout critical-path source order drift');
-assert(!/static\.cloudflareinsights\.com/i.test(mainHeadRaw+documentHead+baseLayout),'Cloudflare Insights must not be authored into canonical source');
+assert(!/static\.cloudflareinsights\.com/i.test(discoveryHeadRaw+documentHead+baseLayout),'Cloudflare Insights must not be authored into canonical source');
 
 const distArg=process.argv[2];
 if(distArg){
@@ -46,8 +52,11 @@ if(distArg){
   assert(heroPreloads.length===1,'DIST duplicate Hero preload detected');
   const order=[heroPreload,criticalStyle,deferredPreload,loader,core,discovery].map(value=>html.indexOf(value));
   assert(order.every((value,index)=>index===0||order[index-1]<value),'DIST critical-path ordering drift');
-  assert(count(html,/<title>/gi)===1&&count(html,/\brel=["']canonical["']/gi)===1,'DIST title/canonical duplication detected');
+  assert(count(html,/<title>/gi)===1&&count(html,/\bname=["']description["']/gi)===1&&count(html,/\brel=["']canonical["']/gi)===1,'DIST primary metadata duplication detected');
+  assert(count(html,/\bproperty=["']og:title["']/gi)===1&&count(html,/\bname=["']twitter:title["']/gi)===1,'DIST social metadata duplication detected');
+  assert(html.includes(`href="${release.canonicalUrl}" rel="canonical"`)||html.includes(`rel="canonical" href="${release.canonicalUrl}"`),'DIST canonical URL diverges from release identity');
+  assert(html.includes(headProfile.openGraph.image)&&html.includes(headProfile.openGraph.imageAlt),'DIST social presentation profile drift');
   assert(!/static\.cloudflareinsights\.com/i.test(html),'Cloudflare Insights unexpectedly entered static DIST');
 }
 
-console.log(JSON.stringify({stage:'CRITICAL_PATH',headSplitByte:Buffer.byteLength(criticalHead),headDiscoveryBytes:Buffer.byteLength(discoveryHead),distValidated:Boolean(distArg),integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CRITICAL_PATH',headAuthority:'structured-three-lane',contentMetadataAuthority:'markdown-frontmatter',canonicalUrlAuthority:'release.json',presentationAuthority:'head-profile.json',discoveryBytes:Buffer.byteLength(discoveryHead),distValidated:Boolean(distArg),integrity:'PASS'},null,2));

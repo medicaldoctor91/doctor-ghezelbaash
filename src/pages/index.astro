@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { Content, frontmatter } from '../content/home.md';
-const pageFrontmatter=frontmatter as {title:string;description:string;lang?:string;dir?:'ltr'|'rtl'|'auto';robots?:string};
+const pageFrontmatter=frontmatter as {title:string;description:string;lang?:string;dir?:string;robots?:string};
 ---
 <BaseLayout frontmatter={pageFrontmatter} url="/" isMain={true}><Content /></BaseLayout>

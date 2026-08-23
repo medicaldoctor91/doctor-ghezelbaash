@@ -9,10 +9,15 @@ const mediaRoot=path.join(root,'public/media');
 const exiftool=process.env.EXIFTOOL_PATH||path.join(root,'node_modules','.bin','exiftool');
 const exiftoolConfig=path.join(root,'scripts/exiftool-entity.config');
 const imagePattern=/\.(?:avif|webp|jpe?g|png)$/i;
-const textPattern=/\.(?:astro|css|html|js|json|jsonld|md|mjs|ts|txt|vcf|xml|yaml|yml)$/i;
+const textPattern=/\.(?:astro|css|html|js|json|jsonld|md|mjs|ts|tsv|txt|vcf|webmanifest|xml|yaml|yml)$/i;
 const hashPattern=/\.([0-9a-f]{12})\.[^.]+$/;
 const sha=buffer=>createHash('sha256').update(buffer).digest('hex');
 const escapeRegExp=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const projectRelative=file=>path.relative(root,file).replaceAll('\\','/');
+const compilerWritableConsumer=file=>{
+  const relative=projectRelative(file);
+  return relative.startsWith('src/')||(relative.startsWith('public/')&&!relative.startsWith('public/media/'));
+};
 const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
 const personWikidataIri=`https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`;
 const clinicWikidataIri=`https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`;
@@ -242,10 +247,7 @@ try{
   for(const item of generated)await copyFile(item.staged,item.nextPath);
 
   const mappings=generated.filter(item=>item.oldBasename!==item.newBasename);
-  const textual=(await walk(root,{skip:['node_modules','dist','release','.astro']}))
-    .filter(file=>textPattern.test(file)&&!file.startsWith(mediaRoot+path.sep));
-  for(const file of textual){
-    const original=await readFile(file,'utf8');
+  const rewriteText=original=>{
     let next=original;
     for(const item of mappings)next=next.replaceAll(item.oldBasename,item.newBasename);
     for(const item of generated){
@@ -254,8 +256,21 @@ try{
       const stem=logicalBasename.slice(0,-extension.length);
       next=next.replace(new RegExp(`${escapeRegExp(stem)}\\.[0-9a-f]{12}${escapeRegExp(extension)}`,'g'),item.newBasename);
     }
-    if(next!==original){await writeFile(file,next);changedFiles++;}
+    return next;
+  };
+  const textual=(await walk(root,{skip:['node_modules','.python-deps','dist','release','.astro']}))
+    .filter(file=>textPattern.test(file)&&!file.startsWith(mediaRoot+path.sep));
+  const protectedMutation=[];
+  const writable=[];
+  for(const file of textual){
+    const original=await readFile(file,'utf8');
+    const next=rewriteText(original);
+    if(next===original)continue;
+    if(!compilerWritableConsumer(file)){protectedMutation.push(projectRelative(file));continue;}
+    writable.push({file,next});
   }
+  if(protectedMutation.length)throw new Error(`Media compiler refuses to patch protected source surfaces; update these dependencies intentionally:\n${protectedMutation.join('\n')}`);
+  for(const {file,next} of writable){await writeFile(file,next);changedFiles++;}
 
   for(let pass=0;pass<3;pass++){
     const current=(await walk(mediaRoot)).filter(file=>imagePattern.test(file));
@@ -270,7 +285,7 @@ try{
     const bytes=await readFile(file),fingerprint=path.basename(file).match(hashPattern)?.[1];
     if(!fingerprint||sha(bytes).slice(0,12)!==fingerprint)throw new Error(`Post-enrichment fingerprint mismatch: ${file}`);
   }
-  console.log(JSON.stringify({images:49,renamed:mappings.length,textFilesUpdated:changedFiles,metadataProfile:'XMP/IPTC Core/PLUS 3.1.0',dimensionsPreserved:true,stagedBeforeCommit:true},null,2));
+  console.log(JSON.stringify({images:49,renamed:mappings.length,textFilesUpdated:changedFiles,compilerWriteSurface:['src/**','public/** excluding public/media/**'],protectedSourceMutation:false,metadataProfile:'XMP/IPTC Core/PLUS 3.1.0',dimensionsPreserved:true,stagedBeforeCommit:true},null,2));
 }finally{
   await rm(stagingRoot,{recursive:true,force:true});
 }

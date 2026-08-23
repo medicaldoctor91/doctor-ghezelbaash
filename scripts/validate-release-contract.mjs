@@ -5,7 +5,6 @@ import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {assertIdentityFingerprintSource} from './lib/release-identity.mjs';
 import {currentReleaseMetadataMismatches,releaseHistoryNodeId,selectCurrentReleaseBoundNodes,nodeTypes} from './lib/release-graph.mjs';
 import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
-import {bindHeroPreloadSizes} from '../src/lib/hero-image-contract.mjs';
 import {bindReleaseTokens} from '../src/lib/release-tokens.mjs';
 
 const root=process.cwd();
@@ -70,10 +69,10 @@ if(codemeta.softwareVersion!==R||codemeta.dateModified!==release.dateModified||c
 const citation=await readFile(path.join(root,'CITATION.cff'),'utf8');
 for(const token of [`version: ${R}`,`date-released: ${release.dateModified}`,`doi: ${Z.versionDoi}`])if(!citation.includes(token))fail(`CITATION release drift: ${token}`);
 
-const mainHeadTemplate=await readFile(path.join(root,'src/data/templates/main-head.html'),'utf8');
-if((mainHeadTemplate.match(/{{CURRENT_VERSION_DOI}}/g)||[]).length!==1||(mainHeadTemplate.match(/{{CURRENT_RELEASE}}/g)||[]).length!==1)fail('Main Head current-release token contract drift');
-const boundHead=bindReleaseTokens(bindHeroPreloadSizes(mainHeadTemplate),release);
-if(/{{[A-Z0-9_]+}}/.test(boundHead)||!boundHead.includes(`href="https://doi.org/${Z.versionDoi}"`)||!boundHead.includes(`title="Zenodo preservation Version DOI ${R}"`))fail('Main Head current-release convergence failure');
+const discoveryHeadTemplate=await readFile(path.join(root,'src/data/templates/discovery-head.html'),'utf8');
+if((discoveryHeadTemplate.match(/{{CURRENT_VERSION_DOI}}/g)||[]).length!==1||(discoveryHeadTemplate.match(/{{CURRENT_RELEASE}}/g)||[]).length!==1)fail('Discovery Head current-release token contract drift');
+const boundHead=bindReleaseTokens(discoveryHeadTemplate,release);
+if(/{{[A-Z0-9_]+}}/.test(boundHead)||!boundHead.includes(`href="https://doi.org/${Z.versionDoi}"`)||!boundHead.includes(`title="Zenodo preservation Version DOI ${R}"`))fail('Discovery Head current-release convergence failure');
 
 const pageSource=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
 const factsBlock=pageSource.match(/<dl\s+id=["']doctor-ghezelbaash-structured-data-repository-facts["'][^>]*>[\s\S]*?<\/dl>/i)?.[0];
