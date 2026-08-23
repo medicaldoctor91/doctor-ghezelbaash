@@ -2,7 +2,7 @@ name: Live Attachment submit and WikiJournal audit
 
 on:
   push:
-    branches: [wiki-api-access]
+    branches: [wiki-api-access-exec]
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: wiki-api-access
+          ref: wiki-api-access-exec
           persist-credentials: true
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -67,8 +67,6 @@ More recent meta-analytic evidence supports a robust association between adult a
           verify=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=1)['query']['pages'][0]
           vr=(verify.get('revisions') or [{}])[0]; vtxt=vr.get('slots',{}).get('main',{}).get('content','')
           contribs=get(action='query',list='usercontribs',ucuser=account['name'],uclimit='max',ucprop='ids|title|timestamp|comment')['query']['usercontribs']
-
-          # Direct read-only WikiJournal/Wikiversity checks
           ws,wapi,wget=session('en.wikiversity.org',False)
           pre='WikiJournal Preprints/Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review'
           wp=wget(action='query',prop='revisions|categories|info',titles=pre,rvprop='ids|timestamp|user|comment|content',rvslots='main',rvlimit=50,cllimit='max')['query']['pages'][0]
@@ -76,7 +74,6 @@ More recent meta-analytic evidence supports a robust association between adult a
           cats=[x.get('title') for x in wp.get('categories',[])]
           terms=['peer review','reviewer','editor','submission','submitted','stage','authorship','handling editor','accepted','declined','revise','review coordinator']
           markers={t:bool(re.search(re.escape(t),wtext,re.I)) for t in terms}
-          # User's edits on Wikiversity and any project-side edits to preprint
           uc=[]; cont={}
           while True:
               q={'action':'query','list':'usercontribs','ucuser':'Medicaldoctor91','uclimit':'max','ucprop':'ids|title|timestamp|comment'}; q.update(cont); d=wget(**q); uc.extend(d['query']['usercontribs'])
@@ -100,4 +97,4 @@ More recent meta-analytic evidence supports a robust association between adult a
           git config user.email actions@users.noreply.github.com
           git add wiki-deep-audit.json
           git commit -m "Store live Attachment and WikiJournal verification" || exit 0
-          git push origin HEAD:wiki-api-access
+          git push origin HEAD:wiki-api-access-exec
