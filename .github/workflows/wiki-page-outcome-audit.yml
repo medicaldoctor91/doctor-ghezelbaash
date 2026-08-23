@@ -35,7 +35,7 @@ jobs:
           python - <<'PY' > wiki-page-outcome-audit.json
           import os,json,re,requests,datetime
           U=os.environ['WIKIMEDIA_USERNAME']; P=os.environ['WIKIMEDIA_BOT_PASSWORD']
-          s=requests.Session(); s.headers['User-Agent']='GhezelbaashPageOutcomeAudit/2.0 (COI edit request; https://www.ghezelbaash.ir/)'
+          s=requests.Session(); s.headers['User-Agent']='GhezelbaashPageOutcomeAudit/2.1 (COI edit request; https://www.ghezelbaash.ir/)'
           API='https://en.wikipedia.org/w/api.php'
           def get(**p):
               p.update(format='json',formatversion=2,maxage=0,smaxage=0)
@@ -51,12 +51,10 @@ jobs:
           lg=post(action='login',lgname=U,lgpassword=P,lgtoken=lt)
           if lg.get('login',{}).get('result')!='Success': raise RuntimeError(lg)
           account=get(action='query',meta='userinfo')['query']['userinfo']['name']
-
           def current_page(title):
               d=get(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment|content',rvslots='main')
               p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
               return {'title':p.get('title'),'revid':r.get('revid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'content':r.get('slots',{}).get('main',{}).get('content','')}
-
           target='Talk:Attachment and health'
           heading='Update Mental health section with recent meta-analytic evidence'
           before=current_page(target)
@@ -74,49 +72,17 @@ More recent meta-analytic evidence supports a robust association between adult a
 '''Reason:''' The existing section states the association using mostly older literature. The proposed addition anchors that statement in a large recent meta-analysis and gives one narrowly framed clinical example, with the study design limitation stated explicitly.
 
 ~~~~"""
-              e=post(action='edit',title=target,section='new',sectiontitle=heading,text=body,summary='COI disclosed: request independent review of Mental health section using recent meta-analytic evidence',token=csrf,assertuser=account)
-              attachment_submission={'status':e.get('edit',{}).get('result'),'newrevid':e.get('edit',{}).get('newrevid'),'oldrevid':e.get('edit',{}).get('oldrevid')}
-
-          def revision_by_id(revid):
-              d=get(action='query',prop='revisions',revids=str(revid),rvprop='ids|timestamp|user|comment|content',rvslots='main')
-              p=d['query']['pages'][0]; r=(p.get('revisions') or [{}])[0]
-              return {'title':p.get('title'),'revid':r.get('revid'),'parentid':r.get('parentid'),'timestamp':r.get('timestamp'),'user':r.get('user'),'comment':r.get('comment'),'content':r.get('slots',{}).get('main',{}).get('content','')}
-          def hist(title,start,end):
-              out=[]; cont={}
-              while True:
-                  p=dict(action='query',prop='revisions',titles=title,rvprop='ids|timestamp|user|comment',rvlimit='max',rvdir='newer',rvstart=start,rvend=end)
-                  p.update(cont); d=get(**p); pg=d['query']['pages'][0]; out.extend(pg.get('revisions') or [])
-                  if 'continue' not in d: break
-                  cont=d['continue']
-              return out
-          def snippets(text,terms,radius=900):
-              out=[]
-              for term in terms:
-                  for m in re.finditer(re.escape(term),text,re.I):
-                      out.append({'term':term,'snippet':text[max(0,m.start()-radius):m.start()+radius]})
-                      if len(out)>=30: return out
-              return out
-
-          exact={str(x):revision_by_id(x) for x in [1369605448,1369764392,1370165015,1370563463,1369763326]}
-          bot_talk=current_page('Talk:Botulinum toxin'); bipolar_talk=current_page('Talk:Treatment of bipolar disorder'); bot_article=current_page('Botulinum toxin'); bipolar_article=current_page('Treatment of bipolar disorder'); attachment_talk=current_page(target)
-          bot_terms=['Wikiversity','Botulinum toxin in aesthetic medicine','Facial assessment before aesthetic botulinum toxin treatment','Medicaldoctor91','Spencer']
-          omega_terms=['34228881','39997208','27280013','10.1111/bdi.13115','10.3390/md23020084','10.4103/2008-7802.182734','Medicaldoctor91','Ghezelbash']
-          att_terms=['Medicaldoctor91','Ghezelbash','34574943',heading]
-          out={
-            'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
-            'authenticated_as':account,
-            'attachment_submission':attachment_submission,
-            'exact_revisions':{k:{**v,'content_snippets':snippets(v.pop('content'),bot_terms+omega_terms,500)} for k,v in exact.items()},
-            'botulinum_talk_history_2026_08_15_to_22':hist('Talk:Botulinum toxin','2026-08-15T00:00:00Z','2026-08-22T23:59:59Z'),
-            'bipolar_talk_history_2026_08_16_to_22':hist('Talk:Treatment of bipolar disorder','2026-08-16T00:00:00Z','2026-08-22T23:59:59Z'),
-            'current':{
-              'botulinum_article':{k:v for k,v in bot_article.items() if k!='content'}|{'matches':snippets(bot_article['content'],bot_terms,800)},
-              'botulinum_talk':{k:v for k,v in bot_talk.items() if k!='content'}|{'matches':snippets(bot_talk['content'],bot_terms,800)},
-              'bipolar_article':{k:v for k,v in bipolar_article.items() if k!='content'}|{'matches':snippets(bipolar_article['content'],omega_terms,800)},
-              'bipolar_talk':{k:v for k,v in bipolar_talk.items() if k!='content'}|{'matches':snippets(bipolar_talk['content'],omega_terms,800)},
-              'attachment_talk':{k:v for k,v in attachment_talk.items() if k!='content'}|{'matches':snippets(attachment_talk['content'],att_terms,800)}
-            }
-          }
+              params=dict(action='edit',title=target,section='new',sectiontitle=heading,text=body,summary='COI disclosed: request independent review of Mental health section using recent meta-analytic evidence',token=csrf,assertuser=account,format='json',formatversion=2)
+              r=s.post(API,data=params,timeout=90)
+              try: e=r.json()
+              except Exception: e={'non_json':r.text[:2000]}
+              if 'error' in e:
+                  attachment_submission={'status':'error','http_status':r.status_code,'error':e['error']}
+              else:
+                  attachment_submission={'status':e.get('edit',{}).get('result'),'newrevid':e.get('edit',{}).get('newrevid'),'oldrevid':e.get('edit',{}).get('oldrevid')}
+          attachment_talk=current_page(target)
+          uc=get(action='query',list='usercontribs',ucuser=account,uclimit='max',ucprop='ids|title|timestamp|comment')['query']['usercontribs']
+          out={'generated_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'authenticated_as':account,'attachment_submission':attachment_submission,'attachment_talk':{k:v for k,v in attachment_talk.items() if k!='content'},'heading_present':heading in attachment_talk['content'],'attachment_contribs':[x for x in uc if x.get('title')==target],'editcount':len(uc)}
           print(json.dumps(out,ensure_ascii=False,indent=2))
           PY
       - name: Commit outcome audit to isolated branch only
@@ -126,6 +92,5 @@ More recent meta-analytic evidence supports a robust association between adult a
           git config user.name ghezelbaash-wiki-audit-bot
           git config user.email actions@users.noreply.github.com
           git add wiki-page-outcome-audit.json
-          git commit -m "Store authenticated Wikipedia request outcome audit"
+          git commit -m "Store authenticated Wikipedia request outcome audit" || exit 0
           git push origin HEAD:wiki-api-access
-# retrigger attachment submission 2026-08-23T04:18+03:30
