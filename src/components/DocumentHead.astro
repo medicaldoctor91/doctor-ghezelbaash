@@ -6,9 +6,9 @@ import {HEAD_RESOURCES} from '../lib/resources.mjs';
 
 type HeadStage='critical'|'discovery';
 type DiscoveryLink={href:string;rel:string;title?:string;type?:string;sizes?:string;color?:string};
-interface Props { title:string; description:string; robots:string; canonicalURL:URL; lang?:string; isMain?:boolean; stage?:HeadStage; }
+interface Props { title:string; description:string; robots:string; canonicalURL:URL; isMain?:boolean; stage?:HeadStage; }
 
-const {title,description,robots,canonicalURL,lang='fa-IR',isMain=false,stage='critical'}=Astro.props;
+const {title,description,robots,canonicalURL,isMain=false,stage='critical'}=Astro.props;
 if(stage!=='critical'&&stage!=='discovery')throw new Error(`Unknown DocumentHead stage: ${stage}`);
 if(isMain&&canonicalURL.toString()!==release.canonicalUrl)throw new Error('Canonical page URL drift');
 
@@ -48,7 +48,7 @@ const discoveryLinks:DiscoveryLink[]=[
 <meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={headProfile.author} name="author" /><meta content={headProfile.applicationName} name="application-name" /><meta content={headProfile.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
 <meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={headProfile.themeColor} name="theme-color" /><meta content={headProfile.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />
 <link as="font" crossorigin="anonymous" href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2" media="(min-width:48.01rem)" rel="preload" type="font/woff2" />
-<link href={canonicalURL.toString()} rel="canonical" /><link href={canonicalURL.toString()} hreflang={lang} rel="alternate" />
+<link href={canonicalURL.toString()} rel="canonical" />
 </>}
 {isMain&&stage==='discovery'&&<>
 {discoveryLinks.map(link=><link {...link} />)}
