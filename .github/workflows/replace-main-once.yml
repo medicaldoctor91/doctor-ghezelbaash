@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -11,13 +14,13 @@ permissions:
 
 jobs:
   replace:
-    if: github.event.head_commit.message == 'chore: stage exact source replacement'
+    if: github.event_name == 'pull_request' || github.event.head_commit.message == 'chore: stage exact source replacement'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout staged transport commit
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: Reconstruct and verify exact supplied source
         shell: bash
@@ -25,6 +28,7 @@ jobs:
           EXPECTED_DELTA_SHA256: 82757bf9c6f53669609761b919f192142aec600d0681c6cfd0743bd179454b12
           EXPECTED_TREE: 9d4b77ffe379cd149cd886f2f1f44f1832e76cdf
           EXPECTED_FILES: '199'
+          BASE_SHA: 94d66cf5b93f5841730c450a254569231b05d95f
         run: |
           set -euo pipefail
           DELTA_XZ="$RUNNER_TEMP/custom.delta.xz"
@@ -36,7 +40,6 @@ jobs:
           xz -dc "$DELTA_XZ" > "$DELTA"
 
           mkdir -p "$TARGET"
-          BASE_SHA="$(git rev-parse HEAD^)"
           git archive "$BASE_SHA" | tar -x -C "$TARGET"
           python3 .transport/apply_delta.py "$TARGET" "$DELTA"
           find "$TARGET" -type f -exec chmod 0644 {} +
