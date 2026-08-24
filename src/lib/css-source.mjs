@@ -1,4 +1,5 @@
 import {createHash} from 'node:crypto';
+import {applyHeroSearchPresentationCss} from './hero-search-presentation.mjs';
 import {applyMediaPresentationCss} from './media-presentation.mjs';
 
 export const CSS_SPLIT_MARKER='/*DIST_CRITICAL_CSS_END*/';
@@ -54,7 +55,8 @@ export function renderCalibrationCss(calibrationRaw){
 }
 
 export function assembleCssSource(authoredCss,calibrationRaw){
-  const source=applyMediaPresentationCss(String(authoredCss),{splitMarker:CSS_SPLIT_MARKER});
+  let source=applyMediaPresentationCss(String(authoredCss),{splitMarker:CSS_SPLIT_MARKER});
+  source=applyHeroSearchPresentationCss(source);
   if(count(source,RENDER_CALIBRATION_SLOT)!==1)fail('Authored CSS must contain exactly one render calibration slot');
   if(source.includes('DIST_CHUNK_CALIBRATION_SHA256:')||source.includes(RENDER_CALIBRATION_START)||source.includes(RENDER_CALIBRATION_END))fail('Materialized render calibration CSS must not be stored in authored CSS');
   const splitAt=source.indexOf(CSS_SPLIT_MARKER),slotAt=source.indexOf(RENDER_CALIBRATION_SLOT);
