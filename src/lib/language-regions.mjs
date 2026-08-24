@@ -15,11 +15,9 @@ export const headingStart=(source,marker)=>{
   throw new Error(`Language boundary H2 missing: ${marker}`);
 };
 
-const annotateSegment=(segment,{lang,dir})=>segment.replace(blockTagPattern,(tag,tagName,attrs)=>{
-  let next=attrs;
-  if(!hasAttribute(next,'lang'))next+=` lang="${lang}"`;
-  if(!hasAttribute(next,'dir'))next+=` dir="${dir}"`;
-  return `<${tagName}${next}>`;
+const annotateSegment=(segment,{lang})=>segment.replace(blockTagPattern,(tag,tagName,attrs)=>{
+  if(hasAttribute(attrs,'lang'))return tag;
+  return `<${tagName}${attrs} lang="${lang}">`;
 });
 
 export function bindLanguageRegions(content){
