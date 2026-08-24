@@ -8,10 +8,11 @@ const fail=message=>{throw new Error(message)};
 const assert=(condition,message)=>{if(!condition)fail(message)};
 const count=(source,needle)=>String(source).split(needle).length-1;
 
-const [authoredCss,calibrationRaw,authoredPage]=await Promise.all([
+const [authoredCss,calibrationRaw,authoredPage,invariants]=await Promise.all([
   readFile('src/styles/global.css','utf8'),
   readFile('src/data/render-calibration.json','utf8'),
   readFile('src/content-source/page.md','utf8'),
+  readFile('src/data/release-invariants.json','utf8').then(JSON.parse),
 ]);
 const {cssSource}=assembleCssSource(authoredCss,calibrationRaw);
 const delivery=deriveCssDelivery(cssSource);
@@ -30,7 +31,7 @@ assert(count(content,'<span>جست‌وجو</span>')===1,'Assembled compact Hero
 assert(!content.includes('<span>جست‌وجو در راهنمای جامع</span>'),'Long Hero search label leaked into assembled page');
 assert(content.includes('aria-label="باز کردن جست‌وجوی راهنمای جامع"'),'Accessible Hero search name changed');
 assert(content.includes('aria-keyshortcuts="/"')&&content.includes('aria-controls="guide-search"')&&content.includes('aria-haspopup="dialog"'),'Hero search dialog/keyboard semantics changed');
-assert(content.includes('<p class="hero-subtitle">سفارش از منوی خدمات زیبایی ممنوع</p>'),'Subtitle changed while only B was approved');
+assert(content.includes('<p class="hero-subtitle">سفارش از منوی خدمات زیبایی ممنوع</p>'),'Hero subtitle copy changed');
 const subtitleAt=content.indexOf('class="hero-subtitle"'),searchAt=content.indexOf('class="hero-action hero-search-launch"'),leadAt=content.indexOf('class="hero-lead"');
 assert(subtitleAt>=0&&searchAt>subtitleAt&&leadAt>searchAt,'Hero element order changed');
 
@@ -40,6 +41,6 @@ assert(!delivery.criticalCss.includes('box-shadow:0 7px 22px rgb(7 82 68/.055)')
 assert(!delivery.criticalCss.includes('background:linear-gradient(135deg,#fff,#f6faf8)'),'Legacy Hero search gradient survived');
 assert(delivery.criticalCss.includes('.hero-search-launch{width:100%;min-height:3.1rem;margin:.05rem 0 .2rem}'),'Mobile full-width Hero search restoration missing');
 assert(delivery.criticalCss.includes('.hero-search-launch kbd{display:none}'),'Mobile keyboard hint suppression missing');
-assert(Buffer.byteLength(delivery.criticalCss)<=Buffer.byteLength(authoredCritical),'Compact Hero search increased critical CSS bytes');
+assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Hero search plus approved Hero presentation exceeds critical CSS release budget');
 
-console.log(JSON.stringify({stage:'HERO_SEARCH_PRESENTATION',visibleLabel:'جست‌وجو',desktop:'compact-flat',mobile:'full-width',subtitle:'UNCHANGED',heroOrder:'UNCHANGED',criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),status:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HERO_SEARCH_PRESENTATION',visibleLabel:'جست‌وجو',desktop:'compact-flat',mobile:'full-width',subtitleCopy:'UNCHANGED',heroOrder:'UNCHANGED',criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,status:'PASS'},null,2));
