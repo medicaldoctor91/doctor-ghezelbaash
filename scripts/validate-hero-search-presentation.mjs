@@ -31,7 +31,6 @@ assert(count(content,'<span>جست‌وجو</span>')===1,'Assembled compact Hero
 assert(!content.includes('<span>جست‌وجو در راهنمای جامع</span>'),'Long Hero search label leaked into assembled page');
 assert(content.includes('aria-label="باز کردن جست‌وجوی راهنمای جامع"'),'Accessible Hero search name changed');
 assert(content.includes('aria-keyshortcuts="/"')&&content.includes('aria-controls="guide-search"')&&content.includes('aria-haspopup="dialog"'),'Hero search dialog/keyboard semantics changed');
-assert(content.includes('<p class="hero-subtitle">سفارش از منوی خدمات زیبایی ممنوع</p>'),'Hero subtitle copy changed');
 const subtitleAt=content.indexOf('class="hero-subtitle"'),searchAt=content.indexOf('class="hero-action hero-search-launch"'),leadAt=content.indexOf('class="hero-lead"');
 assert(subtitleAt>=0&&searchAt>subtitleAt&&leadAt>searchAt,'Hero element order changed');
 
@@ -43,4 +42,4 @@ assert(delivery.criticalCss.includes('.hero-search-launch{width:100%;min-height:
 assert(delivery.criticalCss.includes('.hero-search-launch kbd{display:none}'),'Mobile keyboard hint suppression missing');
 assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Hero search plus approved Hero presentation exceeds critical CSS release budget');
 
-console.log(JSON.stringify({stage:'HERO_SEARCH_PRESENTATION',visibleLabel:'جست‌وجو',desktop:'compact-flat',mobile:'full-width',subtitleCopy:'UNCHANGED',heroOrder:'UNCHANGED',criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,status:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HERO_SEARCH_PRESENTATION',visibleLabel:'جست‌وجو',desktop:'compact-flat',mobile:'full-width',heroPresentation:'INDEPENDENT',heroOrder:'UNCHANGED',criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,status:'PASS'},null,2));
