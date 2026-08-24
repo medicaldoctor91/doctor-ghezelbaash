@@ -1,0 +1,94 @@
+name: Replace main with supplied source once
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  replace:
+    if: github.event.head_commit.message == 'chore: stage exact source replacement'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout staged transport commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Reconstruct and verify exact supplied source
+        shell: bash
+        env:
+          EXPECTED_DELTA_SHA256: 82757bf9c6f53669609761b919f192142aec600d0681c6cfd0743bd179454b12
+          EXPECTED_TREE: 9d4b77ffe379cd149cd886f2f1f44f1832e76cdf
+          EXPECTED_FILES: '199'
+        run: |
+          set -euo pipefail
+          DELTA_XZ="$RUNNER_TEMP/custom.delta.xz"
+          DELTA="$RUNNER_TEMP/custom.delta"
+          TARGET="$RUNNER_TEMP/exact-target"
+
+          cat .transport/chunk-* | base64 -d > "$DELTA_XZ"
+          printf '%s  %s\n' "$EXPECTED_DELTA_SHA256" "$DELTA_XZ" | sha256sum -c -
+          xz -dc "$DELTA_XZ" > "$DELTA"
+
+          mkdir -p "$TARGET"
+          BASE_SHA="$(git rev-parse HEAD^)"
+          git archive "$BASE_SHA" | tar -x -C "$TARGET"
+          python3 .transport/apply_delta.py "$TARGET" "$DELTA"
+          find "$TARGET" -type f -exec chmod 0644 {} +
+
+          git -C "$TARGET" init -q
+          git -C "$TARGET" add -A
+          TREE="$(git -C "$TARGET" write-tree)"
+          FILES="$(git -C "$TARGET" ls-files | wc -l | tr -d ' ')"
+          test "$TREE" = "$EXPECTED_TREE"
+          test "$FILES" = "$EXPECTED_FILES"
+          rm -rf "$TARGET/.git"
+
+          git checkout --orphan __exact_supplied_source
+          git rm -rf .
+          git clean -fdx
+          cp -a "$TARGET"/. .
+          git add -A
+          FINAL_TREE="$(git write-tree)"
+          FINAL_FILES="$(git ls-files | wc -l | tr -d ' ')"
+          test "$FINAL_TREE" = "$EXPECTED_TREE"
+          test "$FINAL_FILES" = "$EXPECTED_FILES"
+
+          git config user.name 'Dr. Saeed Ghezelbaash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git commit -m 'Replace main with exact supplied source'
+          FINAL_SHA="$(git rev-parse HEAD)"
+          git push origin +HEAD:main
+          echo "FINAL_SHA=$FINAL_SHA" >> "$GITHUB_ENV"
+
+      - name: Close all open pull requests
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --jq '.[].number' | while read -r pr; do
+            [ -n "$pr" ] || continue
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/pulls/$pr" -f state=closed >/dev/null
+          done
+
+      - name: Delete every remote branch except main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-remote --heads origin | awk '{print $2}' | sed 's#refs/heads/##' | while read -r branch; do
+            [ "$branch" = 'main' ] && continue
+            git push origin --delete "$branch"
+          done
+
+      - name: Verify remote main
+        shell: bash
+        run: |
+          set -euo pipefail
+          REMOTE_SHA="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          test "$REMOTE_SHA" = "$FINAL_SHA"
