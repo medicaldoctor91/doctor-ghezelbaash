@@ -1,4 +1,5 @@
 import {readFile} from 'node:fs/promises';
+import {brotliCompressSync,constants as zlibConstants} from 'node:zlib';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {assembleCssSource} from '../src/lib/css-source.mjs';
 import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
@@ -43,6 +44,11 @@ expect(criticalRules,'.entity-hero .hero-action','min-height','3.12rem',{maxWidt
 expect(criticalRules,'.entity-hero .hero-action','padding','.72rem 1rem',{maxWidth:720});
 
 const allRules=[...criticalRules,...deferredRules];
+const cssPropertyCount=property=>allRules.reduce((count,rule)=>count+Number(property in rule.declarations),0);
+const backdropFilterCount=cssPropertyCount('backdrop-filter')+cssPropertyCount('-webkit-backdrop-filter');
+const imageFilterCount=cssPropertyCount('filter');
+assert(backdropFilterCount<=2,`GPU-heavy backdrop-filter budget exceeded: ${backdropFilterCount}`);
+assert(imageFilterCount<=1,`Authored image/color filter budget exceeded: ${imageFilterCount}`);
 const conflictingHeroColumns=allRules.filter(rule=>mediaRuleAppliesAtWidth(rule,720)&&rule.selector.includes('.hero-actions')&&normalized(rule.declarations['grid-template-columns']||'')===normalized('1fr 1fr'));
 assert(conflictingHeroColumns.length===0,'A two-column mobile rule can still match Hero actions');
 assert(!delivery.externalCss.includes('.entity-hero .hero-actions{display:grid;grid-template-columns:minmax(0,1fr)'), 'Authoritative Hero action geometry remains deferred');
@@ -105,9 +111,8 @@ assert(HERO_FIGURE_TOTAL_BORDER_PX===2,'Hero border contract drift');
 
 const {content}=await assembleCanonicalContent();
 assert((content.match(/class=["'][^"']*\bhero-actions\b[^"']*["']/g)||[]).length===1,'Unexpected Hero actions consumer count');
-assert(/<button\b[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["']/i.test(content),'Search launcher left the Hero action contract');
+assert(/<button\b(?=[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["'])(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(content),'Accessible search launcher left the Hero action contract');
 assert(!content.includes('hero-action--search'),'Dead Hero action search class reintroduced');
-
 assert((documentHead.match(/imagesizes=\{HERO_IMAGE_SIZES\}/g)||[]).length===1,'Structured Hero preload must consume the shared sizes contract exactly once');
 assert((await readFile('src/content-source/page.md','utf8')).match(/\{\{HERO_IMAGE_SIZES\}\}/g)?.length===3,'Hero picture must consume the shared sizes token exactly three times');
 const preloadHints=[HERO_IMAGE_SIZES];
@@ -162,5 +167,9 @@ assert(!reputationBlocks[0].includes('آخرین دریافت از Google:'),'St
 
 assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Critical CSS exceeds release budget');
 assert(Buffer.byteLength(delivery.externalCss)>=invariants.minExternalCssBytes,'Deferred CSS fell below release floor');
+const deferredBytes=Buffer.byteLength(delivery.externalCss);
+const deferredBrotliBytes=brotliCompressSync(Buffer.from(delivery.externalCss),{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:11}}).byteLength;
+assert(deferredBytes<=69000,`Deferred CSS exceeds the raw delivery budget: ${deferredBytes}`);
+assert(deferredBrotliBytes<=13900,`Deferred CSS exceeds the Brotli delivery budget: ${deferredBrotliBytes}`);
 
-console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),crossBoundaryDuplicateDeclarations:0,historicalCascadeLayers:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes,deferredBrotliBytes,deferredRawBudget:69000,deferredBrotliBudget:13900,backdropFilterCount,imageFilterCount,crossBoundaryDuplicateDeclarations:0,historicalCascadeLayers:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));

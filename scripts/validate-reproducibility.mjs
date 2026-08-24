@@ -17,4 +17,6 @@ const pipeline=[['scripts/generated-workspace.mjs','reset'],'scripts/generate-rd
 for(const step of pipeline){const [script,...args]=Array.isArray(step)?step:[step];const run=spawnSync(process.execPath,[script,...args],{cwd:root,encoding:'utf8'});if(run.status!==0)throw new Error(`Generated pipeline regeneration failed in ${script}:\n${run.stderr||run.stdout}`)}
 const after=await snap(),drift=files.filter(f=>before[f]!==after[f]);
 if(drift.length)throw new Error(`Non-deterministic generated workspace drift: ${drift.join(', ')}`);
+const [rdfLock,invariants]=await Promise.all([readFile(path.join(root,'.generated/semantic/rdf-lock.json'),'utf8').then(JSON.parse),readFile(path.join(root,'src/data/release-invariants.json'),'utf8').then(JSON.parse)]);
+if(rdfLock.triples!==invariants.externalRdfTripleCount)throw new Error(`RDF triple invariant drift: ${rdfLock.triples}/${invariants.externalRdfTripleCount}`);
 console.log(JSON.stringify({valid:true,files:files.length,deterministic:true,fullPipeline:true,generatedWorkspace:'.generated',sourceTreeMutation:false,pipeline,aggregateSha256:sha(Buffer.from(files.map(f=>`${f}:${after[f]}`).join('\n')))},null,2));

@@ -18,7 +18,7 @@ const requiredFiles=[
   'src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
   '.release/policy/platform-contract.json','.release/policy/authority-surface-contract.json','scripts/lib/css-rules.mjs','scripts/lib/graph-integrity.mjs','scripts/lib/release-graph.mjs','scripts/lib/projection-context.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
-  'scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/platform-contract.mjs','scripts/huggingface.mjs'
+  'scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/validate-semantic-html.mjs','scripts/platform-contract.mjs','scripts/huggingface.mjs'
 ];
 for(const f of requiredFiles)await access(path.join(root,f));
 
@@ -76,16 +76,24 @@ for(const name of ['datapackage.json','croissant.json','dcat.ttl','void.ttl','li
   if(finalizer.includes(`writeFile(path.join(dist,'${name}')`))fail(`Finalizer illegally rewrites descriptor ${name}`);
   if(!descriptorGenerator.includes(`writeFile(out('${name}')`))fail(`Descriptor generator missing canonical writer for ${name}`);
 }
+for(const token of ['const datasetLandingPage=`https://doi.org/${release.dataset.zenodo.versionDoi}`','foaf:homepage <${datasetLandingPage}>','dcat:landingPage <${datasetLandingPage}>','homepage:datasetLandingPage','url:datasetLandingPage'])if(!descriptorGenerator.includes(token))fail(`Dataset landing-page role drift in descriptor generator: ${token}`);
 
 if(authority.identitySource!=='src/data/release.json'||platform.canonicalUrl!==release.canonicalUrl||platform.repository!==release.dataset.github.repository.replace(/^https:\/\/github\.com\//,''))fail('Platform/authority policy source drift');
 if(!release.medicalReviewedAt)fail('Explicit medicalReviewedAt missing');
 if(release.dataset.zenodo.conceptDoi===release.dataset.zenodo.versionDoi)fail('Concept DOI collapsed with current Version DOI');
 
-const nodes=graph['@graph']||[],byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n])),person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id);
-if(!person||!clinic||!dataset)fail('Person/Clinic/Dataset graph constitution broken');
+const nodes=graph['@graph']||[],byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n])),person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id),page=byId.get(`${release.canonicalUrl}#webpage`);
+if(!person||!clinic||!dataset||!page)fail('Person/Clinic/Dataset/ProfilePage graph constitution broken');
 if(id(dataset.creator)!==release.primaryEntity.id||id(dataset.publisher)!==release.primaryEntity.id)fail('Dataset creator/publisher is not the physician');
-if(!arr(dataset.sameAs).map(id).includes(`https://www.wikidata.org/entity/${release.dataset.wikidata}`))fail('Dataset Wikidata identity missing');
+if(Object.hasOwn(release.dataset,'wikidata')||arr(dataset.sameAs).length)fail('Dataset external identity-equivalence contract must remain absent');
+if(!arr(page['@type']).includes('ProfilePage')||!arr(page['@type']).includes('MedicalWebPage')||id(page.mainEntity)!==release.primaryEntity.id||id(person.mainEntityOfPage)!==page['@id'])fail('Physician entity-home ProfilePage topology broken');
+for(const machineId of [`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`,`${release.canonicalUrl}#data-catalog`,release.dataset.id])if(arr(page.mentions).map(id).includes(machineId))fail(`Machine Dataset entity leaked into page mentions: ${machineId}`);
+for(const slug of ['alopecia','androgenetic-alopecia','acne-vulgaris','scar','hyperpigmentation','melasma'])if(!arr(byId.get(`${release.canonicalUrl}#biomedical-concept-${slug}`)?.['@type']).includes('MedicalCondition'))fail(`MedicalCondition semantics missing: ${slug}`);
 if(arr(dataset.sameAs).map(id).some(x=>/github\.com|huggingface\.co|doi\.org|zenodo\.org/.test(x||'')))fail('Source/distribution collapsed into Dataset sameAs');
+const catalog=byId.get(`${release.canonicalUrl}#data-catalog`),github=byId.get(`${release.canonicalUrl}#project-github-source`),graphDownload=byId.get(`${release.canonicalUrl}graph.jsonld#download`),distributionIds=new Set(arr(dataset.distribution).map(id)),sourceIds=new Set(arr(dataset.isBasedOn).map(id));
+if(catalog?.url!==`${release.canonicalUrl}dcat.ttl`||Object.hasOwn(dataset,'url')||graphDownload?.contentUrl!==`${release.canonicalUrl}graph.jsonld`||!distributionIds.has(graphDownload?.['@id']))fail('Catalog/Dataset/download semantic destination contract broken');
+if(github?.['@type']!=='SoftwareSourceCode'||github?.url!==release.dataset.github.repository||github?.codeRepository!==release.dataset.github.repository||Object.hasOwn(github,'contentUrl')||distributionIds.has(github?.['@id'])||!sourceIds.has(github?.['@id']))fail('GitHub source-code role contract broken');
+for(const externalId of [`${release.canonicalUrl}#project-huggingface-dataset`,`${release.canonicalUrl}#project-zenodo-release`])if(Object.hasOwn(byId.get(externalId)||{},'contentUrl'))fail(`External landing page misdeclared as contentUrl: ${externalId}`);
 
 const fullGraphOnlyMemberships=[
   ['https://www.ghezelbaash.ir/#organization-american-academy-of-anti-aging-medicine','https://www.wikidata.org/entity/Q4742869'],
@@ -109,7 +117,11 @@ if(![...registered].some(x=>x.includes('botulinum-toxin-chronic-migraine')))fail
 for(const r of answers.answers){const q=byId.get(r.questionId),a=byId.get(r.answerId);if(!q||!a||id(q.acceptedAnswer)!==r.answerId)fail(`Answer Registry drift ${r.questionId}`)}
 
 const assembled=await assembleCanonicalContent({root,graph});
-if(/{{[A-Z0-9_]+}}/.test(assembled.content)||!assembled.content.includes(`Version ${release.release}`)||!assembled.content.includes(`https://doi.org/${release.dataset.zenodo.versionDoi}`))fail('Canonical page assembly release binding drift');
+if(/{{[A-Z0-9_]+}}/.test(assembled.content))fail('Canonical page assembly contains unresolved release/content tokens');
+const authoredPage=await readSource('src/content-source/page.md');
+if(authoredPage.split(/\r?\n/).length<3000)fail('Canonical HTML source collapsed back into an unreadable single-line authority');
+if(/>\s*\r?\n\s*</.test(assembled.content))fail('Readable authored HTML layout leaked into delivery content bytes');
+if(!assembled.content.includes('id="saeed-ghezelbash-clinical-decision-framework"')||!assembled.content.includes('id="verified-physician-identity-core"'))fail('Physician-specific diagnostic/identity surface missing');
 const headIds=await readJson('src/data/semantic/head-ids.json'),personHeadProfile=headProfile.nodes?.[release.primaryEntity.id],allowedHeadMemberships=new Set(personHeadProfile?.refAllow?.memberOf||[]);
 if(headProfile.maxBytes!==releaseInvariants.maxHeadGraphBytes)fail('Head profile byte ceiling drift from release invariant');
 if(!Array.isArray(personHeadProfile?.include)||!personHeadProfile.include.includes('memberOf')||!Array.isArray(personHeadProfile?.refAllow?.memberOf))fail('Head Person membership projection policy incomplete');
@@ -131,6 +143,10 @@ for(const selector of speakableSelectors){
 const contentFiles=(await readdir(path.join(root,'src/content-source'))).filter(x=>/\.(html|md)$/i.test(x)).sort();
 let source='';for(const f of contentFiles)source+=await readFile(path.join(root,'src/content-source',f),'utf8')+'\n';
 if(!source.includes('id="saeed-ghezelbash"'))fail('Protected H1 missing');
+if(source.includes('Public Knowledge Graph')||source.includes('doctor-ghezelbaash-structured-data-repository'))fail('Machine Dataset landing content reintroduced');
+const identitySurfaceTokens=['id="verified-physician-identity-core"','Wikidata Q140287622','نظام پزشکی ۱۶۷۴۳۰','ORCID 0009-0001-9346-8475','Google KG <code>/g/11nqdfk76c</code>'];
+if(identitySurfaceTokens.some(token=>!source.includes(token)))fail('Verified physician identity surface contract drift');
+if(!/<button\b(?=[^>]*\bhero-search-launch\b)(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*aria-label="باز کردن جست‌وجوی راهنمای جامع")[^>]*>/i.test(source))fail('Accessible Hero search launcher contract drift');
 for(const h of visible.protected.aggressiveHeadings)if(h.id&&!source.includes(`id="${h.id}"`))fail(`Required aggressive heading removed: ${h.id}`);
 for(const h of visible.protected.instagramHeadingLinks)if(h.id&&!source.includes(`id="${h.id}"`))fail(`Required Instagram heading link removed: ${h.id}`);
 if(!source.includes('google-maps-clinic-reputation-current'))fail('Existing visible reputation slot removed');

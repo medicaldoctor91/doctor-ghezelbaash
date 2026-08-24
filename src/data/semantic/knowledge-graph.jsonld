@@ -1081,9 +1081,6 @@
       "dateModified": "2026-08-13",
       "hasPart": [
         {
-          "@id": "https://www.ghezelbaash.ir/#data-catalog"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf#document"
         },
         {
@@ -1097,7 +1094,10 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#webpage",
-      "@type": "MedicalWebPage",
+      "@type": [
+        "MedicalWebPage",
+        "ProfilePage"
+      ],
       "url": "https://www.ghezelbaash.ir/",
       "name": "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
       "description": "وب‌سایت رسمی دکتر سعید قزلباش، پزشک زیبایی در کرمانشاه؛ راهنمای تشخیص‌محور بوتاکس، فیلر، لیفت نخ، جوان‌سازی پوست و مو، جراحی زیبایی، عوارض و اصلاح نتایج.",
@@ -1232,19 +1232,10 @@
           "@id": "https://www.ghezelbaash.ir/#topic-orthognathic-boundary"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#google-maps-clinic-reputation-current"
         },
         {
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#data-catalog"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
         },
         {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf#document"
@@ -1352,6 +1343,9 @@
         }
       ],
       "hasPart": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway"
+        },
         {
           "@id": "https://www.ghezelbaash.ir/#question-botox-mechanism-indications-and-limitations"
         },
@@ -1770,9 +1764,6 @@
       "dateModified": "2026-08-13",
       "subjectOf": [
         {
-          "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
         }
       ],
@@ -1845,9 +1836,6 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository"
         }
       ],
       "schemaVersion": "https://schema.org/version/30.0/",
@@ -5975,25 +5963,6 @@
       "position": 1072
     },
     {
-      "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository",
-      "@type": "WebPageElement",
-      "name": "Doctor Ghezelbash Structured Data Repository",
-      "url": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository",
-      "isPartOf": {
-        "@id": "https://www.ghezelbaash.ir/#webpage"
-      },
-      "inLanguage": "en",
-      "about": [
-        {
-          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
-        }
-      ],
-      "position": 1103
-    },
-    {
       "@id": "https://www.ghezelbaash.ir/#body-filler",
       "@type": "WebPageElement",
       "name": "فیلر بدن؛ وقتی حجم بیشتر یعنی ریسک بزرگ‌تر",
@@ -7854,9 +7823,6 @@
       ],
       "subjectOf": [
         {
-          "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#evidence-openaire-project"
         },
         {
@@ -7878,7 +7844,7 @@
         "Dr. Ghezelbaash knowledge graph",
         "Dr. Saeed Ghezelbaash knowledge graph"
       ],
-      "url": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository",
+      "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
       "additionalType": [
         "https://www.wikidata.org/entity/Q7397",
         "https://www.wikidata.org/entity/Q1172284",
@@ -7890,9 +7856,6 @@
       "identifier": [
         {
           "@id": "https://www.ghezelbaash.ir/#identifier-project-doi"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#identifier-project-wikidata"
         },
         {
           "@id": "https://www.ghezelbaash.ir/#identifier-project-huggingface-organization"
@@ -7916,12 +7879,95 @@
       "schemaVersion": "https://schema.org/version/30.0/"
     },
     {
+      "@id": "https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway",
+      "@type": "HowTo",
+      "name": "مسیر چهارمرحله‌ای دکتر سعید قزلباش برای انتخاب درمان زیبایی",
+      "description": "در این مسیر، نام روش آخرین تصمیم است؛ ابتدا صورت در حرکت و استراحت دیده می‌شود، سپس عامل اصلی، سابقه و ریسک بررسی می‌شوند و در پایان درمان، ترتیب درمان یا عدم مداخله انتخاب می‌شود.",
+      "url": "https://www.ghezelbaash.ir/#saeed-ghezelbash-clinical-decision-framework",
+      "inLanguage": "fa-IR",
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "reviewedBy": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://www.ghezelbaash.ir/#webpage"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
+        }
+      ],
+      "step": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-1"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-2"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-3"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-4"
+        }
+      ]
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-1",
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "مشاهده صورت در استراحت و حرکت",
+      "text": "صورت در حالت استراحت، اخم، لبخند و حرف‌زدن دیده می‌شود تا نشانه ثابت از اثر حرکت جدا شود.",
+      "url": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-1",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-2",
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "تفکیک عامل اصلی ظاهر",
+      "text": "سهم عضله، حجم، پوست، چربی، استخوان و افتادگی از هم جدا می‌شود تا مسئله به نام یک خدمت تقلیل پیدا نکند.",
+      "url": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-2",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-3",
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "بررسی سابقه، ریسک و انتظار",
+      "text": "درمان‌های قبلی، بیماری، دارو، عدم تقارن، ریسک و انتظار فرد پیش از انتخاب ابزار کنار هم بررسی می‌شوند.",
+      "url": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-3",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-4",
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "انتخاب روش، ترتیب یا عدم مداخله",
+      "text": "پس از تشخیص، روش مناسب، ترتیب درمان، برنامه پیگیری یا تصمیم آگاهانه برای عدم مداخله تعیین می‌شود.",
+      "url": "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-4",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway"
+      }
+    },
+    {
       "@id": "https://www.ghezelbaash.ir/#data-catalog",
       "@type": "DataCatalog",
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Data Catalog",
       "alternateName": "فهرست داده‌های ساختاریافته دکتر سعید قزلباش",
       "description": "First-party machine-readable catalog for the Dr. Saeed Ghezelbash Public Knowledge Graph, preserving physician-first identity and explicit source, preservation, AI/retrieval and live-observation roles.",
-      "url": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository",
+      "url": "https://www.ghezelbaash.ir/dcat.ttl",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -7982,10 +8028,7 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-github-source",
-      "@type": [
-        "SoftwareSourceCode",
-        "DataDownload"
-      ],
+      "@type": "SoftwareSourceCode",
       "name": "Doctor Ghezelbaash structured data repository — GitHub source",
       "codeRepository": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
       "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
@@ -7994,7 +8037,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "isPartOf": {
-        "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
+        "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
       },
       "about": {
         "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
@@ -8005,7 +8048,6 @@
       "publisher": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "contentUrl": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
       "description": "Version-controlled GitHub source for Version 1.2.3 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
       "dateModified": "2026-08-21"
     },
@@ -8032,7 +8074,6 @@
         }
       ],
       "license": "https://creativecommons.org/licenses/by/4.0/",
-      "contentUrl": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#distribution-platform-hugging-face"
       },
@@ -8083,7 +8124,6 @@
       "publisher": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "contentUrl": "https://doi.org/10.5281/zenodo.22032822",
       "description": "Immutable DOI-preserved Version 1.2.3 distribution of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph Dataset.",
       "dateModified": "2026-08-21"
     },
@@ -8137,9 +8177,6 @@
           "@id": "https://www.ghezelbaash.ir/artifact-manifest.json#download"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#project-github-source"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#project-zenodo-release"
         },
         {
@@ -8165,8 +8202,12 @@
       "version": "1.2.3",
       "datePublished": "2026-07-25",
       "isBasedOn": [
-        "https://www.ghezelbaash.ir/#webpage",
-        "https://github.com/medicaldoctor91/doctor-ghezelbaash"
+        {
+          "@id": "https://www.ghezelbaash.ir/#webpage"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#project-github-source"
+        }
       ],
       "description": "Canonical first-party Dr. Saeed Ghezelbash Public Knowledge Graph Dataset for the physician and supporting clinic. GitHub is its version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is its AI/retrieval distribution layer; these access points are related resources, not identity-equivalent entities.",
       "mentions": [
@@ -8198,15 +8239,8 @@
         }
       ],
       "dateModified": "2026-08-21",
-      "url": "https://www.ghezelbaash.ir/",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld#dataset",
-        {
-          "@type": "PropertyValue",
-          "propertyID": "Wikidata",
-          "value": "Q140304972",
-          "url": "https://www.wikidata.org/wiki/Q140304972"
-        },
         {
           "@type": "PropertyValue",
           "propertyID": "Zenodo Concept DOI",
@@ -8255,9 +8289,6 @@
         {
           "@id": "https://www.ghezelbaash.ir/#distribution-platform-hugging-face"
         }
-      ],
-      "sameAs": [
-        "https://www.wikidata.org/entity/Q140304972"
       ],
       "variableMeasured": [
         "Physician and clinic entity relationships",
@@ -17789,7 +17820,10 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#biomedical-concept-alopecia",
-      "@type": "DefinedTerm",
+      "@type": [
+        "DefinedTerm",
+        "MedicalCondition"
+      ],
       "name": "Alopecia",
       "termCode": "alopecia",
       "inDefinedTermSet": {
@@ -17802,11 +17836,19 @@
         {
           "@id": "http://id.nlm.nih.gov/mesh/D000505"
         }
+      ],
+      "possibleTreatment": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment"
+        }
       ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#biomedical-concept-androgenetic-alopecia",
-      "@type": "DefinedTerm",
+      "@type": [
+        "DefinedTerm",
+        "MedicalCondition"
+      ],
       "name": "Androgenetic Alopecia",
       "termCode": "androgenetic-alopecia",
       "inDefinedTermSet": {
@@ -17822,6 +17864,11 @@
         },
         {
           "@id": "https://www.wikidata.org/wiki/Q2276095"
+        }
+      ],
+      "possibleTreatment": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-androgenetic-alopecia"
         }
       ]
     },
@@ -17873,7 +17920,10 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#biomedical-concept-acne-vulgaris",
-      "@type": "DefinedTerm",
+      "@type": [
+        "DefinedTerm",
+        "MedicalCondition"
+      ],
       "name": "Acne Vulgaris",
       "termCode": "acne-vulgaris",
       "inDefinedTermSet": {
@@ -17890,11 +17940,22 @@
         {
           "@id": "http://snomed.info/id/88616000"
         }
+      ],
+      "possibleTreatment": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-active-acne"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-comedonal-inflammatory-acne-treatment"
+        }
       ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#biomedical-concept-scar",
-      "@type": "DefinedTerm",
+      "@type": [
+        "DefinedTerm",
+        "MedicalCondition"
+      ],
       "name": "Cicatrix (Scar)",
       "termCode": "scar",
       "inDefinedTermSet": {
@@ -17907,11 +17968,19 @@
         {
           "@id": "http://id.nlm.nih.gov/mesh/D002921"
         }
+      ],
+      "possibleTreatment": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-prp-acne-scar"
+        }
       ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#biomedical-concept-hyperpigmentation",
-      "@type": "DefinedTerm",
+      "@type": [
+        "DefinedTerm",
+        "MedicalCondition"
+      ],
       "name": "Hyperpigmentation",
       "termCode": "hyperpigmentation",
       "inDefinedTermSet": {
@@ -17923,6 +17992,14 @@
       "sameAs": [
         {
           "@id": "http://id.nlm.nih.gov/mesh/D017495"
+        }
+      ],
+      "possibleTreatment": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-pigmentation"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-post-inflammatory-hyperpigmentation-treatment"
         }
       ]
     },
@@ -17945,7 +18022,10 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#biomedical-concept-melasma",
-      "@type": "DefinedTerm",
+      "@type": [
+        "DefinedTerm",
+        "MedicalCondition"
+      ],
       "name": "Melasma",
       "termCode": "melasma",
       "inDefinedTermSet": {
@@ -17961,6 +18041,11 @@
         },
         {
           "@id": "https://www.wikidata.org/wiki/Q305190"
+        }
+      ],
+      "possibleTreatment": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-melasma-treatment"
         }
       ]
     },
@@ -20775,13 +20860,6 @@
       "propertyID": "Wikidata item ID",
       "value": "Q140288589",
       "url": "https://www.wikidata.org/entity/Q140288589"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#identifier-project-wikidata",
-      "@type": "PropertyValue",
-      "propertyID": "Wikidata item ID",
-      "value": "Q140304972",
-      "url": "https://www.wikidata.org/entity/Q140304972"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-wikimedia-commons-category",

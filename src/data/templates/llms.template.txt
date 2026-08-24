@@ -23,7 +23,7 @@ Treat https://www.ghezelbaash.ir/ as the canonical human-readable source. The ph
 - Dataset name: Dr. Saeed Ghezelbash Public Knowledge Graph
 - Dataset entity: https://www.ghezelbaash.ir/graph.jsonld#dataset
 - Version: {{RELEASE}}
-- Landing section: https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-repository
+- Machine landing resource: https://www.ghezelbaash.ir/datapackage.json
 - Canonical JSON-LD distribution: https://www.ghezelbaash.ir/graph.jsonld
 - RDF-equivalent Turtle distribution: https://www.ghezelbaash.ir/graph.ttl
 - Creator: https://www.ghezelbaash.ir/#saeed-ghezelbash
@@ -190,8 +190,8 @@ PRP تشخیص نیست و مزوتراپی هم نسخه آماده ریزش م
 - [Clinic vCard 4.0](https://www.ghezelbaash.ir/clinic.vcf): Separate portable contact projection whose UID resolves to the canonical clinic IRI.
 - [Official Instagram](https://www.instagram.com/doctor.ghezelbaash/): Clinical and educational media published by Dr. Saeed Ghezelbash.
 - [Clinic Wikidata](https://www.wikidata.org/wiki/Q140288589): Public entity identifier for the clinic.
-- [Structured-data project Wikidata](https://www.wikidata.org/wiki/Q140304972): Public entity identifier for the structured-data project.
-- [Canonical project repository](https://github.com/medicaldoctor91/doctor-ghezelbaash): Git source for project entity Q140304972.
+- [Canonical Dataset IRI](https://www.ghezelbaash.ir/graph.jsonld#dataset): First-party identifier for the structured Dataset.
+- [Canonical project repository](https://github.com/medicaldoctor91/doctor-ghezelbaash): Version-controlled Git source for the structured-data project.
 - [Project DOI]({{ZENODO_VERSION_DOI_URL}}): Version {{RELEASE}} archival project record.
 - [Dataset lineage DOI]({{ZENODO_CONCEPT_DOI_URL}}): Zenodo Concept DOI for the continuing Dataset version lineage.
 - Zenodo record ID for Version {{RELEASE}}: `{{ZENODO_RECORD_ID}}`

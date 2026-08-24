@@ -33,7 +33,7 @@ def write_state(name,obj): (RUNTIME/name).write_text(json.dumps(obj,indent=2,ens
 
 def metadata(version,date,doi,concept):
     release=load_release(); person=release["primaryEntity"]; dataset=release["dataset"]; clinic=release["clinic"]
-    person_q=person["wikidata"]; clinic_q=dataset["supportingClinicWikidata"]; dataset_q=dataset["wikidata"]; orcid=person["orcid"]
+    person_q=person["wikidata"]; clinic_q=dataset["supportingClinicWikidata"]; orcid=person["orcid"]
     return {
       'upload_type':'dataset','publication_date':date,'title':dataset['name'],
       'creators':[{'name':'Ghezelbash, Saeed','orcid':orcid}],
@@ -42,7 +42,7 @@ def metadata(version,date,doi,concept):
         f'of the physician-owned first-party Dataset whose canonical IRI is <a href="{dataset["id"]}">{dataset["id"]}</a>.</p>'
         f'<p>The primary entity, creator and publisher is <strong>Dr. {person["name"]}</strong> '
         f'(Wikidata {person_q}; ORCID {orcid}; Iran Medical Council {person["irimc"]}). '
-        f'The supporting clinic is {clinic_q} and the continuing Dataset entity is {dataset_q}.</p>'
+        f'The supporting clinic is {clinic_q}; the continuing Dataset is identified by its canonical first-party IRI and DOI lineage.</p>'
         '<p>GitHub is the version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is the AI/retrieval distribution. '
         'These roles are linked without collapsing the physician, clinic, Dataset, source repository or distribution records into one identity.</p>'
       ),
@@ -53,7 +53,7 @@ def metadata(version,date,doi,concept):
         'JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data','question answering','text retrieval','AI retrieval','RAG','Croissant','DCAT','provenance'],
       'subjects':[
         {'term':person['name'],'identifier':f'https://www.wikidata.org/entity/{person_q}','scheme':'url'},
-        {'term':dataset['name'],'identifier':f'https://www.wikidata.org/entity/{dataset_q}','scheme':'url'},
+        {'term':dataset['name'],'identifier':dataset['id'],'scheme':'url'},
         {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':f'https://www.wikidata.org/entity/{clinic_q}','scheme':'url'}],
       'notes':f'Canonical Dataset IRI: {dataset["id"]}. Concept DOI: {concept}. Exact Version DOI: {doi}. Current live observations: {dataset["liveObservations"]}.',
       'related_identifiers':[
@@ -61,7 +61,6 @@ def metadata(version,date,doi,concept):
         {'identifier':release['canonicalUrl'],'relation':'isDescribedBy','resource_type':'other'},
         {'identifier':dataset['github']['repository'],'relation':'isDerivedFrom','resource_type':'software'},
         {'identifier':dataset['huggingFace']['dataset'],'relation':'isReferencedBy','resource_type':'dataset'},
-        {'identifier':f'https://www.wikidata.org/entity/{dataset_q}','relation':'isDescribedBy','resource_type':'dataset'},
         {'identifier':f'https://www.wikidata.org/entity/{person_q}','relation':'references','resource_type':'other'},
         {'identifier':f'https://www.wikidata.org/entity/{clinic_q}','relation':'references','resource_type':'other'}],
       'prereserve_doi':True

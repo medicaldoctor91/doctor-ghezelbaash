@@ -456,7 +456,7 @@ class FakeInventoryApi:
                         },
                     },
                     "build_config": {
-                        "build_command": "npm ci --ignore-scripts && npm run build",
+                        "build_command": "npm run build",
                         "destination_dir": "dist",
                         "root_dir": "",
                     },

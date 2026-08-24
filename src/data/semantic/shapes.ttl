@@ -36,6 +36,40 @@ ex:WebPageDominanceShape a sh:NodeShape ;
   sh:property [ sh:path schema:author ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ] .
 
+ex:CanonicalDatasetRoleShape a sh:NodeShape ;
+  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld#dataset> ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Dataset ] ;
+  sh:property [ sh:path schema:creator ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:distribution ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:project-github-source ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:url ; sh:maxCount 0 ] ;
+  sh:property [ sh:path schema:sameAs ; sh:maxCount 0 ] .
+
+ex:DataCatalogRoleShape a sh:NodeShape ;
+  sh:targetNode ex:data-catalog ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:DataCatalog ] ;
+  sh:property [ sh:path schema:url ; sh:hasValue <https://www.ghezelbaash.ir/dcat.ttl> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:dataset ; sh:hasValue <https://www.ghezelbaash.ir/graph.jsonld#dataset> ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:GitHubSourceRoleShape a sh:NodeShape ;
+  sh:targetNode ex:project-github-source ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:SoftwareSourceCode ] ;
+  sh:property [ sh:path schema:codeRepository ; sh:hasValue <https://github.com/medicaldoctor91/doctor-ghezelbaash> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:contentUrl ; sh:maxCount 0 ] ;
+  sh:not [ sh:property [ sh:path rdf:type ; sh:hasValue schema:DataDownload ] ] .
+
+ex:PhysicianDecisionHowToShape a sh:NodeShape ;
+  sh:targetNode ex:howto-clinical-aesthetic-decision-pathway ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:HowTo ] ;
+  sh:property [ sh:path schema:author ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:reviewedBy ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:step ; sh:minCount 4 ; sh:maxCount 4 ] .
+
+ex:MedicalConditionTreatmentShape a sh:NodeShape ;
+  sh:targetClass schema:MedicalCondition ;
+  sh:property [ sh:path schema:possibleTreatment ; sh:class schema:MedicalTherapy ; sh:minCount 1 ] .
+
 ex:FridayClosedShape a sh:NodeShape ;
   sh:targetNode ex:clinic-friday-closed ;
   sh:property [ sh:path schema:opens ; sh:hasValue "00:00" ] ;

@@ -9,6 +9,7 @@ const fail=message=>{throw new Error(message)};
 const readDistJson=async file=>JSON.parse(await readFile(path.join(dist,file),'utf8'));
 const Z=release.dataset.zenodo;
 const history=Z.releaseHistory||[];
+const datasetLandingPage=`https://doi.org/${Z.versionDoi}`;
 
 if(!history.length)fail('Release history is empty');
 const currentHistory=history.find(entry=>entry.release===release.release);
@@ -31,18 +32,17 @@ const expectedMatrix={
   datasetIri:release.dataset.id,
   personWikidata:release.primaryEntity.wikidata,
   clinicWikidata:release.dataset.supportingClinicWikidata,
-  datasetWikidata:release.dataset.wikidata,
 };
 for(const [key,value] of Object.entries(expectedMatrix))if(String(matrix[key])!==String(value))fail(`Current matrix ${key} drift`);
 if(matrix.servicesWithAliasCoverage!==publishableIds.size||matrix.serviceCount!==publishableIds.size)fail(`Service retrieval coverage drift matrix=${matrix.servicesWithAliasCoverage}/${matrix.serviceCount} registry=${publishableIds.size}`);
 
 if(manifest.release!==release.release||manifest.baseRelease!==release.release||manifest.dataset?.id!==release.dataset.id||manifest.dataset?.name!==release.dataset.name||manifest.dataset?.versionDoi!==Z.versionDoi||manifest.dataset?.conceptDoi!==Z.conceptDoi||String(manifest.dataset?.zenodoRecordId)!==String(Z.recordId))fail('Serving manifest release/Dataset/DOI drift');
 if(matrix.sourceCommit!==manifest.liveRevision||attestation.sourceCommit!==manifest.liveRevision||attestation.baseRelease!==release.release||attestation.versionDoi!==Z.versionDoi||attestation.conceptDoi!==Z.conceptDoi)fail('Current source revision/attestation binding drift');
-if(dataPackage.version!==release.release||!String(dataPackage.title||'').startsWith(release.dataset.name))fail('Data Package current identity drift');
-if(croissant.version!==release.release||croissant.name!==release.dataset.name)fail('Croissant current identity drift');
+if(dataPackage.version!==release.release||!String(dataPackage.title||'').startsWith(release.dataset.name)||dataPackage.homepage!==datasetLandingPage)fail('Data Package current identity/landing-page drift');
+if(croissant.version!==release.release||croissant.name!==release.dataset.name||croissant.url!==datasetLandingPage)fail('Croissant current identity/landing-page drift');
 
 const dcat=await readFile(path.join(dist,'dcat.ttl'),'utf8');
-if(!dcat.includes(release.dataset.name)||!dcat.includes(release.release))fail('DCAT current Dataset/release identity drift');
+if(!dcat.includes(release.dataset.name)||!dcat.includes(release.release)||!dcat.includes(`dcat:landingPage <${datasetLandingPage}>`))fail('DCAT current Dataset/release/landing-page identity drift');
 for(const file of ['answers.txt','llms.txt','llms-full.txt','index.md']){
   const text=await readFile(path.join(dist,file),'utf8');
   if(!text.includes(release.release))fail(`Current release marker missing from ${file}`);

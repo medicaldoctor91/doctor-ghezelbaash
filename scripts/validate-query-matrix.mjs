@@ -43,7 +43,7 @@ for(const row of rows){
   if(unique.has(key))fail(`Duplicate Query Matrix row ${key}`);
   unique.add(key);
   if(!row.query||!row.language||!row.query_scope)fail(`Incomplete Query Matrix row ${key}`);
-  if(row.preferred_entity!==release.primaryEntity.wikidata||row.preferred_entity_iri!==release.primaryEntity.id||row.clinic_entity!==release.dataset.supportingClinicWikidata||row.dataset_entity!==release.dataset.wikidata||row.dataset_iri!==release.dataset.id)fail(`Entity authority drift ${key}`);
+  if(row.preferred_entity!==release.primaryEntity.wikidata||row.preferred_entity_iri!==release.primaryEntity.id||row.clinic_entity!==release.dataset.supportingClinicWikidata||row.dataset_iri!==release.dataset.id||Object.hasOwn(row,'dataset_entity'))fail(`Entity authority drift ${key}`);
   if(row.release!==release.release||row.version_doi!==release.dataset.zenodo.versionDoi)fail(`Release/DOI drift ${key}`);
   if(row.retrieval_priority!==policy.retrievalPriority||row.positioning_mode!==policy.positioningMode)fail(`Retrieval positioning drift ${key}`);
   if(!answerIds.has(row.answer_id))fail(`Unknown answer_id ${row.answer_id} in ${key}`);
