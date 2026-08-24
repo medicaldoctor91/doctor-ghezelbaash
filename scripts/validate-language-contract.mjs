@@ -28,7 +28,8 @@ const openingH2For=marker=>{
 };
 for(const boundary of MULTILINGUAL_HEADING_BOUNDARIES){
   const tag=openingH2For(boundary.startsWith);
-  if(!new RegExp(`\\blang=["']${boundary.lang}["']`,'i').test(tag)||!new RegExp(`\\bdir=["']${boundary.dir}["']`,'i').test(tag))fail(`Annotated H2 contract missing for ${boundary.key}`);
+  if(!new RegExp(`\\blang=["']${boundary.lang}["']`,'i').test(tag))fail(`Annotated H2 language contract missing for ${boundary.key}`);
+  if(/\bdir\s*=/i.test(tag)&&!new RegExp(`\\bdir=["'](?:rtl|ltr|auto)["']`,'i').test(tag))fail(`Invalid authored direction on ${boundary.key} H2`);
 }
 const returnTag=openingH2For(MULTILINGUAL_RETURN_TO_PRIMARY.startsWith);
 if(/\blang=["'](?:ar-IQ|en|ckb)["']/i.test(returnTag))fail('Persian return H2 inherited a non-Persian explicit language');
@@ -49,4 +50,4 @@ if(!baseLayout.includes("import { CONTENT_LANGUAGES } from '../lib/language-cont
 if(/\bhreflang\s*=/.test(documentHead))fail('Single-URL document must not emit localized-alternate hreflang');
 if(!graphCompiler.includes("import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs'")||!graphCompiler.includes('projected.inLanguage=[...CONTENT_LANGUAGES]'))fail('Head JSON-LD multilingual projection wiring missing');
 
-console.log(JSON.stringify({stage:'LANGUAGE_CONTRACT',primary:PRIMARY_DOCUMENT_LANGUAGE,languages:CONTENT_LANGUAGES,regions:MULTILINGUAL_HEADING_BOUNDARIES.map(({key,lang,dir})=>({key,lang,dir})),returnTo:PRIMARY_DOCUMENT_LANGUAGE,binding:'CANONICAL_ASSEMBLY',hreflang:'ABSENT_SINGLE_URL',status:'PASS'},null,2));
+console.log(JSON.stringify({stage:'LANGUAGE_CONTRACT',primary:PRIMARY_DOCUMENT_LANGUAGE,languages:CONTENT_LANGUAGES,regions:MULTILINGUAL_HEADING_BOUNDARIES.map(({key,lang})=>({key,lang})),returnTo:PRIMARY_DOCUMENT_LANGUAGE,binding:'CANONICAL_ASSEMBLY',visualDirectionMutation:false,hreflang:'ABSENT_SINGLE_URL',status:'PASS'},null,2));
