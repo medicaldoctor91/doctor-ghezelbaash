@@ -3,7 +3,7 @@ const EDITORIAL_FIGURE_RULE='figure{content-visibility:visible;contain:none;marg
 const LEGACY_HERO_FIGURE_RULE='.entity-hero .hero-figure{grid-area:portrait;align-self:start;margin:0;padding:0;overflow:hidden;background:#eef5f2}';
 const PRESERVED_HERO_FIGURE_RULE='.entity-hero .hero-figure{grid-area:portrait;align-self:start;margin:0;padding:0;overflow:hidden;border-color:var(--line);border-radius:1rem;background:#eef5f2}';
 
-export const MEDIA_PRESENTATION_DEFERRED_CSS='figure:not(.hero-figure) figcaption{position:relative;line-height:1.7}figure:not(.hero-figure) figcaption::before{content:"";position:absolute;inset-inline:0;top:-.38rem;height:1px;background:rgb(10 107 88/.14)}';
+export const MEDIA_PRESENTATION_DEFERRED_CSS='figure:not(.hero-figure) figcaption{position:relative}figure:not(.hero-figure) figcaption::before{content:"";position:absolute;inset-inline:0;top:-.38rem;height:1px;background:rgb(10 107 88/.14)}';
 
 const count=(source,needle)=>String(source).split(needle).length-1;
 const replaceExactlyOnce=(source,from,to,label)=>{
