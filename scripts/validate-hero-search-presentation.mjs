@@ -21,25 +21,25 @@ const authoredSplitEnd=authoredCss.indexOf(CSS_SPLIT_MARKER)+CSS_SPLIT_MARKER.le
 const authoredCritical=authoredCss.slice(0,authoredSplitEnd).replace(/\r?\n/g,'');
 
 assert(HERO_SEARCH_PRESENTATION_CONTRACT.visibleLabel==='جست‌وجو','Hero search visible label contract drift');
-assert(HERO_SEARCH_PRESENTATION_CONTRACT.desktopCompact&&HERO_SEARCH_PRESENTATION_CONTRACT.mobileFullWidth,'Hero search responsive presentation contract drift');
-assert(HERO_SEARCH_PRESENTATION_CONTRACT.desktopShadow===false,'Hero search desktop shadow must remain absent');
+assert(HERO_SEARCH_PRESENTATION_CONTRACT.editorialCommand&&HERO_SEARCH_PRESENTATION_CONTRACT.desktopCompact&&HERO_SEARCH_PRESENTATION_CONTRACT.mobileCompact&&!HERO_SEARCH_PRESENTATION_CONTRACT.mobileFullWidth&&HERO_SEARCH_PRESENTATION_CONTRACT.centered,'Hero search editorial responsive contract drift');
+assert(HERO_SEARCH_PRESENTATION_CONTRACT.shadow===false,'Hero search shadow must remain absent');
 assert(HERO_SEARCH_PRESENTATION_CONTRACT.dialogBehaviorPreserved&&HERO_SEARCH_PRESENTATION_CONTRACT.keyboardHintDesktopOnly,'Hero search interaction contract drift');
-assert(HERO_SEARCH_PRESENTATION_CONTRACT.heroOrderChanged===false&&HERO_SEARCH_PRESENTATION_CONTRACT.heroImageGeometryChanged===false,'Hero search presentation must not alter Hero ordering/image geometry');
+assert(HERO_SEARCH_PRESENTATION_CONTRACT.heroOrderChanged===false&&HERO_SEARCH_PRESENTATION_CONTRACT.heroImageGeometryChanged===false,'Hero search presentation altered protected Hero structure/image geometry');
 
 assert(count(authoredPage,'<span>جست‌وجو در راهنمای جامع</span>')===1,'Canonical authored Hero search label drift');
-assert(count(content,'<span>جست‌وجو</span>')===1,'Assembled compact Hero search label missing');
+assert(count(content,'<span>جست‌وجو</span>')===1,'Assembled short Hero search label missing');
 assert(!content.includes('<span>جست‌وجو در راهنمای جامع</span>'),'Long Hero search label leaked into assembled page');
 assert(content.includes('aria-label="باز کردن جست‌وجوی راهنمای جامع"'),'Accessible Hero search name changed');
 assert(content.includes('aria-keyshortcuts="/"')&&content.includes('aria-controls="guide-search"')&&content.includes('aria-haspopup="dialog"'),'Hero search dialog/keyboard semantics changed');
 const subtitleAt=content.indexOf('class="hero-subtitle"'),searchAt=content.indexOf('class="hero-action hero-search-launch"'),leadAt=content.indexOf('class="hero-lead"');
 assert(subtitleAt>=0&&searchAt>subtitleAt&&leadAt>searchAt,'Hero element order changed');
 
-const compactRule='.hero-search-launch{grid-area:search;display:grid;grid-template-columns:1.1rem auto auto;gap:.58rem;align-items:center;justify-self:start;width:fit-content;min-height:2.85rem;margin:.15rem 0 .55rem;padding:.6rem .72rem;border:1px solid #cadfd7;border-radius:.72rem;background:#fff;color:var(--accent-strong);font:inherit;font-weight:760;line-height:1.35;text-align:start;cursor:pointer;-webkit-tap-highlight-color:transparent}';
-assert(delivery.criticalCss.includes(compactRule),'Compact desktop Hero search rule missing');
-assert(!delivery.criticalCss.includes('box-shadow:0 7px 22px rgb(7 82 68/.055)'),'Legacy Hero search shadow survived');
-assert(!delivery.criticalCss.includes('background:linear-gradient(135deg,#fff,#f6faf8)'),'Legacy Hero search gradient survived');
-assert(delivery.criticalCss.includes('.hero-search-launch{width:100%;min-height:3.1rem;margin:.05rem 0 .2rem}'),'Mobile full-width Hero search restoration missing');
+const editorialRule='.hero-search-launch{grid-area:search;display:inline-flex;gap:.45rem;align-items:center;justify-self:center;width:fit-content;min-height:2.75rem;margin:.05rem auto .55rem;padding:.35rem .1rem;border:0;border-bottom:1px solid #bfd8d0;border-radius:0;background:transparent;box-shadow:none;color:var(--accent-strong);font:inherit;font-weight:760;line-height:1.35;cursor:pointer}';
+assert(delivery.criticalCss.includes(editorialRule),'Editorial Hero search command rule missing');
+assert(delivery.criticalCss.includes('.entity-hero .hero-action.hero-search-launch{width:fit-content;min-height:2.85rem;margin:0 auto .45rem;padding:.35rem .1rem}'),'Compact mobile Hero search override missing');
+assert(!delivery.criticalCss.includes('grid-template-columns:1.15rem minmax(0,1fr);padding-inline:.75rem'),'Legacy narrow full-width search geometry survived');
+assert(!delivery.criticalCss.includes('box-shadow:0 7px 22px rgb(7 82 68/.055)')&&!delivery.criticalCss.includes('background:linear-gradient(135deg,#fff,#f6faf8)'),'Legacy Hero search chrome survived');
 assert(delivery.criticalCss.includes('.hero-search-launch kbd{display:none}'),'Mobile keyboard hint suppression missing');
-assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Hero search plus approved Hero presentation exceeds critical CSS release budget');
+assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Hero search plus art-directed Hero exceeds critical CSS release budget');
 
-console.log(JSON.stringify({stage:'HERO_SEARCH_PRESENTATION',visibleLabel:'جست‌وجو',desktop:'compact-flat',mobile:'full-width',heroPresentation:'INDEPENDENT',heroOrder:'UNCHANGED',criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,status:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HERO_SEARCH_PRESENTATION',visibleLabel:'جست‌وجو',desktop:'editorial-command',mobile:'compact-centered',fullWidth:false,heroPresentation:'COORDINATED',heroOrder:'UNCHANGED',criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,status:'PASS'},null,2));
