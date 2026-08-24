@@ -46,8 +46,12 @@ export async function compileGraphProjections(context){
   for(const id of headIds){
     const node=byId.get(id);
     if(!node)throw new Error(`Head selection missing ${id}`);
+    if(!multilingualResourceIds.has(id)){
+      headNodes.push(projectNode(node,headProfile.nodes?.[id]));
+      continue;
+    }
     const projected=projectNode(node,headProfile.nodes?.[id]);
-    if(multilingualResourceIds.has(id))projected.inLanguage=[...CONTENT_LANGUAGES];
+    projected.inLanguage=[...CONTENT_LANGUAGES];
     headNodes.push(projected);
   }
   const headDoc={'@context':graph['@context'],'@graph':headNodes};
