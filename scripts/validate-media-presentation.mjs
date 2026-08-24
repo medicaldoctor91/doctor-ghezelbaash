@@ -35,8 +35,7 @@ assert(!delivery.criticalCss.includes('img,video{display:block;max-width:100%;he
 assert(!delivery.criticalCss.includes('video{width:100%;background:#0e1412;}'),'Paint-only video background must not remain critical');
 assert(delivery.criticalCss.includes('img,video{display:block;max-width:100%;height:auto;}')&&delivery.criticalCss.includes('video{width:100%;}'),'Media layout safety rules left the critical path');
 assert(delivery.externalCss.startsWith(MEDIA_PRESENTATION_DEFERRED_CSS),'V3 paint rules are not first in deferred CSS');
-assert(Buffer.byteLength(delivery.criticalCss)<=Buffer.byteLength(authoredCritical),'V3 increased critical CSS bytes');
-assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'V3 critical CSS exceeds release budget');
+assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Approved Hero presentation exceeds critical CSS release budget');
 assert(calibration.sha256&&calibration.chunkCount>0,'Render calibration failed during V3 assembly');
 
 const hero=figureById(pageSource,'image-saeed-ghezelbash-portrait-master');
@@ -57,4 +56,4 @@ for(const id of ['video-subcision-technique','video-jalupro-vs-profhilo','video-
   assert(attr(video,'width')&&attr(video,'height')&&/\bcontrols\b/i.test(video)&&/\bplaysinline\b/i.test(video),`Video geometry/control contract drift: ${id}`);
 }
 
-console.log(JSON.stringify({stage:'MEDIA_PRESENTATION_V3',mode:'DUAL_VISUAL_RENDER',geometryChanged:false,ordinaryFigureCardPaint:false,criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),renderCalibrationSha256:calibration.sha256,heroGeometry:'PRESERVED',lazyImages:'PRESERVED',deferredVideoFetch:'PRESERVED',status:'PASS'},null,2));
+console.log(JSON.stringify({stage:'MEDIA_PRESENTATION_V3',mode:'DUAL_VISUAL_RENDER',geometryChanged:false,ordinaryFigureCardPaint:false,criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,renderCalibrationSha256:calibration.sha256,heroGeometry:'PRESERVED',lazyImages:'PRESERVED',deferredVideoFetch:'PRESERVED',status:'PASS'},null,2));
