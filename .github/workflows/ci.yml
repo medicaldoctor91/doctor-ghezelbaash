@@ -1,0 +1,67 @@
+name: Source and release validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Provision media validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          ffprobe -version
+      - run: npm ci --ignore-scripts
+      - name: Release preparation diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm run release:prepare 2>&1 | tee /tmp/release-prepare.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -ne 0 ]; then
+            tail -n 100 /tmp/release-prepare.log | while IFS= read -r line; do
+              line=${line//'%'/'%25'}; line=${line//$'\r'/'%0D'}; line=${line//$'\n'/'%0A'}
+              echo "::error title=release-prepare::$line"
+            done
+            exit "$rc"
+          fi
+      - name: Build diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm run build 2>&1 | tee /tmp/build.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -ne 0 ]; then
+            tail -n 120 /tmp/build.log | while IFS= read -r line; do
+              line=${line//'%'/'%25'}; line=${line//$'\r'/'%0D'}; line=${line//$'\n'/'%0A'}
+              echo "::error title=build::$line"
+            done
+            exit "$rc"
+          fi
+      - name: Package canonical source backup
+        run: npm run package:source
+      - name: Upload canonical source backup
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: doctor-ghezelbaash-source-${{ github.sha }}
+          path: release/doctor-ghezelbaash-max-power-source-v*.zip
+          if-no-files-found: error
+          retention-days: 7

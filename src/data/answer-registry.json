@@ -1,0 +1,1256 @@
+{
+  "schemaVersion": "1.0",
+  "canonicalTextSource": "src/data/semantic/knowledge-graph.jsonld",
+  "answers": [
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-mechanism-indications-and-limitations",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-mechanism-indications-and-limitations",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-mechanism-indications-and-limitations",
+      "visibleFragment": "#botox-mechanism-indications-and-limitations",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-nonresponse-nonmuscular-causes",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-nonresponse-nonmuscular-causes",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-nonresponse-nonmuscular-causes",
+      "visibleFragment": "#botox-nonresponse-nonmuscular-causes",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-lip-flip-vs-lip-filler",
+      "answerId": "https://www.ghezelbaash.ir/#answer-lip-flip-vs-lip-filler",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#lip-flip-vs-lip-filler",
+      "visibleFragment": "#lip-flip-vs-lip-filler",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-masseter-botox-contraindications",
+      "answerId": "https://www.ghezelbaash.ir/#answer-masseter-botox-contraindications",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#masseter-botox-contraindications",
+      "visibleFragment": "#masseter-botox-contraindications",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-nefertiti-lift-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-nefertiti-lift-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#nefertiti-lift-candidacy",
+      "visibleFragment": "#nefertiti-lift-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-palmar-botox-post-treatment-warning-signs",
+      "answerId": "https://www.ghezelbaash.ir/#answer-palmar-botox-post-treatment-warning-signs",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#palmar-botox-post-treatment-warning-signs",
+      "visibleFragment": "#palmar-botox-post-treatment-warning-signs",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-induced-eyelid-ptosis-causes",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-induced-eyelid-ptosis-causes",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-induced-eyelid-ptosis-causes",
+      "visibleFragment": "#botox-induced-eyelid-ptosis-causes",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-resistance-and-nonresponse",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-resistance-and-nonresponse",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-resistance-and-nonresponse",
+      "visibleFragment": "#botox-resistance-and-nonresponse",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-onset-of-action",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-onset-of-action",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-onset-of-action",
+      "visibleFragment": "#botox-onset-of-action",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-doctor-selection-criteria-kermanshah",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-doctor-selection-criteria-kermanshah",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-doctor-selection-criteria-kermanshah",
+      "visibleFragment": "#botox-doctor-selection-criteria-kermanshah",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-vs-filler-differences",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-vs-filler-differences",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-vs-filler-differences",
+      "visibleFragment": "#botox-vs-filler-differences",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-natural-vs-frozen-facial-expression",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-natural-vs-frozen-facial-expression",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-natural-vs-frozen-facial-expression",
+      "visibleFragment": "#botox-natural-vs-frozen-facial-expression",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-volume-shadow-and-proportion-assessment",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-volume-shadow-and-proportion-assessment",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-volume-shadow-and-proportion-assessment",
+      "visibleFragment": "#filler-volume-shadow-and-proportion-assessment",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-lip-filler-migration-causes",
+      "answerId": "https://www.ghezelbaash.ir/#answer-lip-filler-migration-causes",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#lip-filler-migration-causes",
+      "visibleFragment": "#lip-filler-migration-causes",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-tear-trough-filler-safety",
+      "answerId": "https://www.ghezelbaash.ir/#answer-tear-trough-filler-safety",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#tear-trough-filler-safety",
+      "visibleFragment": "#tear-trough-filler-safety",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-midface-assessment-before-tear-trough-filler",
+      "answerId": "https://www.ghezelbaash.ir/#answer-midface-assessment-before-tear-trough-filler",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#midface-assessment-before-tear-trough-filler",
+      "visibleFragment": "#midface-assessment-before-tear-trough-filler",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-jawline-filler-for-round-face-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-jawline-filler-for-round-face-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#jawline-filler-for-round-face-candidacy",
+      "visibleFragment": "#jawline-filler-for-round-face-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-nonsurgical-rhinoplasty-filler-safety",
+      "answerId": "https://www.ghezelbaash.ir/#answer-nonsurgical-rhinoplasty-filler-safety",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-safety",
+      "visibleFragment": "#nonsurgical-rhinoplasty-filler-safety",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-glabellar-filler-for-frown-lines-risk",
+      "answerId": "https://www.ghezelbaash.ir/#answer-glabellar-filler-for-frown-lines-risk",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#glabellar-filler-for-frown-lines-risk",
+      "visibleFragment": "#glabellar-filler-for-frown-lines-risk",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-vascular-occlusion",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-vascular-occlusion",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-vascular-occlusion",
+      "visibleFragment": "#filler-vascular-occlusion",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-hyaluronic-acid-filler-reversibility",
+      "answerId": "https://www.ghezelbaash.ir/#answer-hyaluronic-acid-filler-reversibility",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#hyaluronic-acid-filler-reversibility",
+      "visibleFragment": "#hyaluronic-acid-filler-reversibility",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-doctor-selection-criteria-kermanshah",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-doctor-selection-criteria-kermanshah",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-doctor-selection-criteria-kermanshah",
+      "visibleFragment": "#filler-doctor-selection-criteria-kermanshah",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-buttock-and-body-filler-safety",
+      "answerId": "https://www.ghezelbaash.ir/#answer-buttock-and-body-filler-safety",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#buttock-and-body-filler-safety",
+      "visibleFragment": "#buttock-and-body-filler-safety",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-body-filler-hip-dip-buttock-doctor-selection",
+      "answerId": "https://www.ghezelbaash.ir/#answer-body-filler-hip-dip-buttock-doctor-selection",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#body-filler-hip-dip-buttock-doctor-selection",
+      "visibleFragment": "#body-filler-hip-dip-buttock-doctor-selection",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-thread-lift-vs-surgical-facelift-decision",
+      "answerId": "https://www.ghezelbaash.ir/#answer-thread-lift-vs-surgical-facelift-decision",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#thread-lift-vs-surgical-facelift-decision",
+      "visibleFragment": "#thread-lift-vs-surgical-facelift-decision",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-thread-materials-pdo-plla-pcl-and-plga",
+      "answerId": "https://www.ghezelbaash.ir/#answer-thread-materials-pdo-plla-pcl-and-plga",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#thread-materials-pdo-plla-pcl-and-plga",
+      "visibleFragment": "#thread-materials-pdo-plla-pcl-and-plga",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-pdo-vs-plla-vs-pcl-threads",
+      "answerId": "https://www.ghezelbaash.ir/#answer-pdo-vs-plla-vs-pcl-threads",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#pdo-vs-plla-vs-pcl-threads",
+      "visibleFragment": "#pdo-vs-plla-vs-pcl-threads",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-jawline-thread-lift-definition-limitations",
+      "answerId": "https://www.ghezelbaash.ir/#answer-jawline-thread-lift-definition-limitations",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#jawline-thread-lift-definition-limitations",
+      "visibleFragment": "#jawline-thread-lift-definition-limitations",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-submental-thread-lift-vs-liposuction-vs-injectable-lipolysis",
+      "answerId": "https://www.ghezelbaash.ir/#answer-submental-thread-lift-vs-liposuction-vs-injectable-lipolysis",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#submental-thread-lift-vs-liposuction-vs-injectable-lipolysis",
+      "visibleFragment": "#submental-thread-lift-vs-liposuction-vs-injectable-lipolysis",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-nose-thread-lift-vs-rhinoplasty",
+      "answerId": "https://www.ghezelbaash.ir/#answer-nose-thread-lift-vs-rhinoplasty",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#nose-thread-lift-vs-rhinoplasty",
+      "visibleFragment": "#nose-thread-lift-vs-rhinoplasty",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-oral-commissure-thread-lift-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-oral-commissure-thread-lift-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#oral-commissure-thread-lift-candidacy",
+      "visibleFragment": "#oral-commissure-thread-lift-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-thread-lift-doctor-selection-criteria-kermanshah",
+      "answerId": "https://www.ghezelbaash.ir/#answer-thread-lift-doctor-selection-criteria-kermanshah",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#thread-lift-doctor-selection-criteria-kermanshah",
+      "visibleFragment": "#thread-lift-doctor-selection-criteria-kermanshah",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-pigmentation-active-acne-and-acne-scar-treatment-differences",
+      "answerId": "https://www.ghezelbaash.ir/#answer-pigmentation-active-acne-and-acne-scar-treatment-differences",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#pigmentation-active-acne-and-acne-scar-treatment-differences",
+      "visibleFragment": "#pigmentation-active-acne-and-acne-scar-treatment-differences",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-subcision-acne-scar-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-subcision-acne-scar-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#subcision-acne-scar-candidacy",
+      "visibleFragment": "#subcision-acne-scar-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-punch-excision-for-acne-scars",
+      "answerId": "https://www.ghezelbaash.ir/#answer-punch-excision-for-acne-scars",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#punch-excision-for-acne-scars",
+      "visibleFragment": "#punch-excision-for-acne-scars",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-melasma-recurrence-and-multimodal-treatment",
+      "answerId": "https://www.ghezelbaash.ir/#answer-melasma-recurrence-and-multimodal-treatment",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#melasma-recurrence-and-multimodal-treatment",
+      "visibleFragment": "#melasma-recurrence-and-multimodal-treatment",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-laser-treatment-for-pigmentation-limitations",
+      "answerId": "https://www.ghezelbaash.ir/#answer-laser-treatment-for-pigmentation-limitations",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#laser-treatment-for-pigmentation-limitations",
+      "visibleFragment": "#laser-treatment-for-pigmentation-limitations",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-acne-scar-complete-clearance-and-session-count",
+      "answerId": "https://www.ghezelbaash.ir/#answer-acne-scar-complete-clearance-and-session-count",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#acne-scar-complete-clearance-and-session-count",
+      "visibleFragment": "#acne-scar-complete-clearance-and-session-count",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-acne-scar-doctor-selection-criteria-kermanshah",
+      "answerId": "https://www.ghezelbaash.ir/#answer-acne-scar-doctor-selection-criteria-kermanshah",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#acne-scar-doctor-selection-criteria-kermanshah",
+      "visibleFragment": "#acne-scar-doctor-selection-criteria-kermanshah",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-mesobotox-vs-classic-botox",
+      "answerId": "https://www.ghezelbaash.ir/#answer-mesobotox-vs-classic-botox",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#mesobotox-vs-classic-botox",
+      "visibleFragment": "#mesobotox-vs-classic-botox",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-jalupro-vs-volumizing-filler",
+      "answerId": "https://www.ghezelbaash.ir/#answer-jalupro-vs-volumizing-filler",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#jalupro-vs-volumizing-filler",
+      "visibleFragment": "#jalupro-vs-volumizing-filler",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-profhilo-vs-volumizing-filler",
+      "answerId": "https://www.ghezelbaash.ir/#answer-profhilo-vs-volumizing-filler",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#profhilo-vs-volumizing-filler",
+      "visibleFragment": "#profhilo-vs-volumizing-filler",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-hair-loss-red-flags",
+      "answerId": "https://www.ghezelbaash.ir/#answer-hair-loss-red-flags",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#hair-loss-red-flags",
+      "visibleFragment": "#hair-loss-red-flags",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-prp-vs-mesotherapy-selection-question",
+      "answerId": "https://www.ghezelbaash.ir/#answer-prp-vs-mesotherapy-selection-question",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#prp-vs-mesotherapy-selection-question",
+      "visibleFragment": "#prp-vs-mesotherapy-selection-question",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-prp-and-mesotherapy-hair-loss-limitations",
+      "answerId": "https://www.ghezelbaash.ir/#answer-prp-and-mesotherapy-hair-loss-limitations",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#prp-and-mesotherapy-hair-loss-limitations",
+      "visibleFragment": "#prp-and-mesotherapy-hair-loss-limitations",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-prp-hair-session-count-and-result-timeline",
+      "answerId": "https://www.ghezelbaash.ir/#answer-prp-hair-session-count-and-result-timeline",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#prp-hair-session-count-and-result-timeline",
+      "visibleFragment": "#prp-hair-session-count-and-result-timeline",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-hair-loss-doctor-selection-criteria-kermanshah",
+      "answerId": "https://www.ghezelbaash.ir/#answer-hair-loss-doctor-selection-criteria-kermanshah",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#hair-loss-doctor-selection-criteria-kermanshah",
+      "visibleFragment": "#hair-loss-doctor-selection-criteria-kermanshah",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-facial-contouring-doctor-selection-criteria",
+      "answerId": "https://www.ghezelbaash.ir/#answer-facial-contouring-doctor-selection-criteria",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#facial-contouring-doctor-selection-criteria",
+      "visibleFragment": "#facial-contouring-doctor-selection-criteria",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-facial-contouring-beyond-filler",
+      "answerId": "https://www.ghezelbaash.ir/#answer-facial-contouring-beyond-filler",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#facial-contouring-beyond-filler",
+      "visibleFragment": "#facial-contouring-beyond-filler",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-fat-grafting-vs-filler-for-facial-contouring",
+      "answerId": "https://www.ghezelbaash.ir/#answer-fat-grafting-vs-filler-for-facial-contouring",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#fat-grafting-vs-filler-for-facial-contouring",
+      "visibleFragment": "#fat-grafting-vs-filler-for-facial-contouring",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-submental-liposuction-candidacy-by-cause",
+      "answerId": "https://www.ghezelbaash.ir/#answer-submental-liposuction-candidacy-by-cause",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#submental-liposuction-candidacy-by-cause",
+      "visibleFragment": "#submental-liposuction-candidacy-by-cause",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-jawline-and-submental-doctor-selection-criteria-kermanshah",
+      "answerId": "https://www.ghezelbaash.ir/#answer-jawline-and-submental-doctor-selection-criteria-kermanshah",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#jawline-and-submental-doctor-selection-criteria-kermanshah",
+      "visibleFragment": "#jawline-and-submental-doctor-selection-criteria-kermanshah",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-vs-surgery-detailed-boundary",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-vs-surgery-detailed-boundary",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-vs-surgery-detailed-boundary",
+      "visibleFragment": "#filler-vs-surgery-detailed-boundary",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-thread-lift-laxity-pattern-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-thread-lift-laxity-pattern-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#thread-lift-laxity-pattern-candidacy",
+      "visibleFragment": "#thread-lift-laxity-pattern-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-individualized-facial-treatment-planning",
+      "answerId": "https://www.ghezelbaash.ir/#answer-individualized-facial-treatment-planning",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#individualized-facial-treatment-planning",
+      "visibleFragment": "#individualized-facial-treatment-planning",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-identify-primary-aesthetic-cause",
+      "answerId": "https://www.ghezelbaash.ir/#answer-identify-primary-aesthetic-cause",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#identify-primary-aesthetic-cause",
+      "visibleFragment": "#identify-primary-aesthetic-cause",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-dynamic-facial-examination",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-dynamic-facial-examination",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-dynamic-facial-examination",
+      "visibleFragment": "#botox-dynamic-facial-examination",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-bruxism-botox-indications",
+      "answerId": "https://www.ghezelbaash.ir/#answer-bruxism-botox-indications",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#bruxism-botox-indications",
+      "visibleFragment": "#bruxism-botox-indications",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-dose-response",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-dose-response",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-dose-response",
+      "visibleFragment": "#botox-dose-response",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-under-eye-botox-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-under-eye-botox-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#under-eye-botox-candidacy",
+      "visibleFragment": "#under-eye-botox-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-for-nasal-shape-limitations",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-for-nasal-shape-limitations",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-for-nasal-shape-limitations",
+      "visibleFragment": "#botox-for-nasal-shape-limitations",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-therapeutic-botox-specialty-boundaries",
+      "answerId": "https://www.ghezelbaash.ir/#answer-therapeutic-botox-specialty-boundaries",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#therapeutic-botox-specialty-boundaries",
+      "visibleFragment": "#therapeutic-botox-specialty-boundaries",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-contraindications-and-noncandidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-contraindications-and-noncandidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-contraindications-and-noncandidacy",
+      "visibleFragment": "#filler-contraindications-and-noncandidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-remote-assessment-limitations",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-remote-assessment-limitations",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-remote-assessment-limitations",
+      "visibleFragment": "#filler-remote-assessment-limitations",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-lip-filler-for-thin-lips-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-lip-filler-for-thin-lips-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#lip-filler-for-thin-lips-candidacy",
+      "visibleFragment": "#lip-filler-for-thin-lips-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-chin-filler-effects-on-projection-and-proportion",
+      "answerId": "https://www.ghezelbaash.ir/#answer-chin-filler-effects-on-projection-and-proportion",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#chin-filler-effects-on-projection-and-proportion",
+      "visibleFragment": "#chin-filler-effects-on-projection-and-proportion",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-post-treatment-warning-signs",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-post-treatment-warning-signs",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-post-treatment-warning-signs",
+      "visibleFragment": "#filler-post-treatment-warning-signs",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-vision-loss-risk",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-vision-loss-risk",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-vision-loss-risk",
+      "visibleFragment": "#filler-vision-loss-risk",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-filler-aftercare-and-activity-restrictions",
+      "answerId": "https://www.ghezelbaash.ir/#answer-filler-aftercare-and-activity-restrictions",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#filler-aftercare-and-activity-restrictions",
+      "visibleFragment": "#filler-aftercare-and-activity-restrictions",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-low-cost-filler-safety-risk",
+      "answerId": "https://www.ghezelbaash.ir/#answer-low-cost-filler-safety-risk",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#low-cost-filler-safety-risk",
+      "visibleFragment": "#low-cost-filler-safety-risk",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-at-home-filler-injection-risk",
+      "answerId": "https://www.ghezelbaash.ir/#answer-at-home-filler-injection-risk",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#at-home-filler-injection-risk",
+      "visibleFragment": "#at-home-filler-injection-risk",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-needle-free-filler-device-risk",
+      "answerId": "https://www.ghezelbaash.ir/#answer-needle-free-filler-device-risk",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#needle-free-filler-device-risk",
+      "visibleFragment": "#needle-free-filler-device-risk",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-hip-dip-normal-anatomy-vs-filler",
+      "answerId": "https://www.ghezelbaash.ir/#answer-hip-dip-normal-anatomy-vs-filler",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#hip-dip-normal-anatomy-vs-filler",
+      "visibleFragment": "#hip-dip-normal-anatomy-vs-filler",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-calf-filler-for-asymmetry",
+      "answerId": "https://www.ghezelbaash.ir/#answer-calf-filler-for-asymmetry",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#calf-filler-for-asymmetry",
+      "visibleFragment": "#calf-filler-for-asymmetry",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-thread-count-vs-lifting-outcome",
+      "answerId": "https://www.ghezelbaash.ir/#answer-thread-count-vs-lifting-outcome",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#thread-count-vs-lifting-outcome",
+      "visibleFragment": "#thread-count-vs-lifting-outcome",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-exposed-thread-management",
+      "answerId": "https://www.ghezelbaash.ir/#answer-exposed-thread-management",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#exposed-thread-management",
+      "visibleFragment": "#exposed-thread-management",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-post-thread-lift-facial-asymmetry",
+      "answerId": "https://www.ghezelbaash.ir/#answer-post-thread-lift-facial-asymmetry",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#post-thread-lift-facial-asymmetry",
+      "visibleFragment": "#post-thread-lift-facial-asymmetry",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-thread-lift-in-nonmedical-settings-risk",
+      "answerId": "https://www.ghezelbaash.ir/#answer-thread-lift-in-nonmedical-settings-risk",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#thread-lift-in-nonmedical-settings-risk",
+      "visibleFragment": "#thread-lift-in-nonmedical-settings-risk",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-pigmentation-doctor-selection-criteria-kermanshah",
+      "answerId": "https://www.ghezelbaash.ir/#answer-pigmentation-doctor-selection-criteria-kermanshah",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#pigmentation-doctor-selection-criteria-kermanshah",
+      "visibleFragment": "#pigmentation-doctor-selection-criteria-kermanshah",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-skin-booster-treatment-category",
+      "answerId": "https://www.ghezelbaash.ir/#answer-skin-booster-treatment-category",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#skin-booster-treatment-category",
+      "visibleFragment": "#skin-booster-treatment-category",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-jalupro-vs-profhilo-selection",
+      "answerId": "https://www.ghezelbaash.ir/#answer-jalupro-vs-profhilo-selection",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#jalupro-vs-profhilo-selection",
+      "visibleFragment": "#jalupro-vs-profhilo-selection",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-jalupro-profhilo-and-skin-booster-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-jalupro-profhilo-and-skin-booster-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#jalupro-profhilo-and-skin-booster-candidacy",
+      "visibleFragment": "#jalupro-profhilo-and-skin-booster-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-skin-rejuvenation-doctor-selection-criteria",
+      "answerId": "https://www.ghezelbaash.ir/#answer-skin-rejuvenation-doctor-selection-criteria",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#skin-rejuvenation-doctor-selection-criteria",
+      "visibleFragment": "#skin-rejuvenation-doctor-selection-criteria",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-hair-prp-and-mesotherapy-doctor-selection-criteria",
+      "answerId": "https://www.ghezelbaash.ir/#answer-hair-prp-and-mesotherapy-doctor-selection-criteria",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#hair-prp-and-mesotherapy-doctor-selection-criteria",
+      "visibleFragment": "#hair-prp-and-mesotherapy-doctor-selection-criteria",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift",
+      "answerId": "https://www.ghezelbaash.ir/#answer-body-filler-vs-fat-grafting-vs-thread-lift",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#body-filler-vs-fat-grafting-vs-thread-lift",
+      "visibleFragment": "#body-filler-vs-fat-grafting-vs-thread-lift",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-choosing-an-aesthetic-doctor-in-kermanshah-and-iran",
+      "answerId": "https://www.ghezelbaash.ir/#answer-choosing-an-aesthetic-doctor-in-kermanshah-and-iran",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#choosing-an-aesthetic-doctor-in-kermanshah-and-iran",
+      "visibleFragment": "#choosing-an-aesthetic-doctor-in-kermanshah-and-iran",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-where-aesthetic-treatment-selection-begins",
+      "answerId": "https://www.ghezelbaash.ir/#answer-where-aesthetic-treatment-selection-begins",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#where-aesthetic-treatment-selection-begins",
+      "visibleFragment": "#where-aesthetic-treatment-selection-begins",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-active-acne-and-acne-scar-treatment-sequencing",
+      "answerId": "https://www.ghezelbaash.ir/#answer-active-acne-and-acne-scar-treatment-sequencing",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#active-acne-and-acne-scar-treatment-sequencing",
+      "visibleFragment": "#active-acne-and-acne-scar-treatment-sequencing",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-combination-treatment-vs-single-modality",
+      "answerId": "https://www.ghezelbaash.ir/#answer-combination-treatment-vs-single-modality",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#combination-treatment-vs-single-modality",
+      "visibleFragment": "#combination-treatment-vs-single-modality",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-vs-filler-treatment-selection",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-vs-filler-treatment-selection",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-vs-filler-treatment-selection",
+      "visibleFragment": "#botox-vs-filler-treatment-selection",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-botox-vs-thread-lift",
+      "answerId": "https://www.ghezelbaash.ir/#answer-botox-vs-thread-lift",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#botox-vs-thread-lift",
+      "visibleFragment": "#botox-vs-thread-lift",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-preventive-botox-value-and-candidacy",
+      "answerId": "https://www.ghezelbaash.ir/#answer-preventive-botox-value-and-candidacy",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#preventive-botox-value-and-candidacy",
+      "visibleFragment": "#preventive-botox-value-and-candidacy",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-baby-botox-safety",
+      "answerId": "https://www.ghezelbaash.ir/#answer-baby-botox-safety",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#baby-botox-safety",
+      "visibleFragment": "#baby-botox-safety",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-body-filler-and-hip-dip-treatment-complexity",
+      "answerId": "https://www.ghezelbaash.ir/#answer-body-filler-and-hip-dip-treatment-complexity",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#body-filler-and-hip-dip-treatment-complexity",
+      "visibleFragment": "#body-filler-and-hip-dip-treatment-complexity",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-revision-intake-information",
+      "answerId": "https://www.ghezelbaash.ir/#answer-revision-intake-information",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#revision-intake-information",
+      "visibleFragment": "#revision-intake-information",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-revision-decision-wait-correct-dissolve-refer",
+      "answerId": "https://www.ghezelbaash.ir/#answer-revision-decision-wait-correct-dissolve-refer",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#revision-decision-wait-correct-dissolve-refer",
+      "visibleFragment": "#revision-decision-wait-correct-dissolve-refer",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-clinic-before-visit-information",
+      "answerId": "https://www.ghezelbaash.ir/#answer-clinic-before-visit-information",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#clinic-before-visit-information",
+      "visibleFragment": "#clinic-before-visit-information",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-clinic-follow-up-after-returning-home",
+      "answerId": "https://www.ghezelbaash.ir/#answer-clinic-follow-up-after-returning-home",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#clinic-follow-up-after-returning-home",
+      "visibleFragment": "#clinic-follow-up-after-returning-home",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-why-aesthetic-treatment-fails-despite-correct-technique",
+      "answerId": "https://www.ghezelbaash.ir/#answer-why-aesthetic-treatment-fails-despite-correct-technique",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#why-aesthetic-treatment-fails-despite-correct-technique",
+      "visibleFragment": "#why-aesthetic-treatment-fails-despite-correct-technique",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-saeed-ghezelbash-layered-facial-analysis",
+      "answerId": "https://www.ghezelbaash.ir/#answer-saeed-ghezelbash-layered-facial-analysis",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#saeed-ghezelbash-layered-facial-analysis",
+      "visibleFragment": "#saeed-ghezelbash-layered-facial-analysis",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-saeed-ghezelbash-counterfactual-aesthetic-reasoning",
+      "answerId": "https://www.ghezelbaash.ir/#answer-saeed-ghezelbash-counterfactual-aesthetic-reasoning",
+      "language": "fa-IR",
+      "sourceUrl": "https://www.ghezelbaash.ir/#saeed-ghezelbash-counterfactual-aesthetic-reasoning",
+      "visibleFragment": "#saeed-ghezelbash-counterfactual-aesthetic-reasoning",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-ar-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-who-is-dr-saeed-ghezelbash-ar-iq",
+      "language": "ar-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#who-is-dr-saeed-ghezelbash-ar-iq",
+      "visibleFragment": "#who-is-dr-saeed-ghezelbash-ar-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq",
+      "language": "ar-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq",
+      "visibleFragment": "#which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ar-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-which-non-surgical-aesthetic-treatments-are-available-ar-iq",
+      "language": "ar-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#which-non-surgical-aesthetic-treatments-are-available-ar-iq",
+      "visibleFragment": "#which-non-surgical-aesthetic-treatments-are-available-ar-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ar-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-does-dr-ghezelbash-accept-filler-correction-cases-ar-iq",
+      "language": "ar-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#does-dr-ghezelbash-accept-filler-correction-cases-ar-iq",
+      "visibleFragment": "#does-dr-ghezelbash-accept-filler-correction-cases-ar-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-ar-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-can-iraqi-patients-send-photos-before-travel-ar-iq",
+      "language": "ar-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#can-iraqi-patients-send-photos-before-travel-ar-iq",
+      "visibleFragment": "#can-iraqi-patients-send-photos-before-travel-ar-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ar-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-central-lip-lift-versus-lip-filler-ar-iq",
+      "language": "ar-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#central-lip-lift-versus-lip-filler-ar-iq",
+      "visibleFragment": "#central-lip-lift-versus-lip-filler-ar-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-ar-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-is-buccal-fat-removal-suitable-for-every-full-face-ar-iq",
+      "language": "ar-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#is-buccal-fat-removal-suitable-for-every-full-face-ar-iq",
+      "visibleFragment": "#is-buccal-fat-removal-suitable-for-every-full-face-ar-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-ar-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-can-surgical-and-non-surgical-treatments-be-combined-ar-iq",
+      "language": "ar-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#can-surgical-and-non-surgical-treatments-be-combined-ar-iq",
+      "visibleFragment": "#can-surgical-and-non-surgical-treatments-be-combined-ar-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-en",
+      "answerId": "https://www.ghezelbaash.ir/#answer-who-is-dr-saeed-ghezelbash-en",
+      "language": "en",
+      "sourceUrl": "https://www.ghezelbaash.ir/#who-is-dr-saeed-ghezelbash-en",
+      "visibleFragment": "#who-is-dr-saeed-ghezelbash-en",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-en",
+      "answerId": "https://www.ghezelbaash.ir/#answer-which-facial-cosmetic-surgery-procedures-are-assessed-en",
+      "language": "en",
+      "sourceUrl": "https://www.ghezelbaash.ir/#which-facial-cosmetic-surgery-procedures-are-assessed-en",
+      "visibleFragment": "#which-facial-cosmetic-surgery-procedures-are-assessed-en",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-en",
+      "answerId": "https://www.ghezelbaash.ir/#answer-which-non-surgical-aesthetic-treatments-are-available-en",
+      "language": "en",
+      "sourceUrl": "https://www.ghezelbaash.ir/#which-non-surgical-aesthetic-treatments-are-available-en",
+      "visibleFragment": "#which-non-surgical-aesthetic-treatments-are-available-en",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-en",
+      "answerId": "https://www.ghezelbaash.ir/#answer-does-dr-ghezelbash-accept-filler-correction-cases-en",
+      "language": "en",
+      "sourceUrl": "https://www.ghezelbaash.ir/#does-dr-ghezelbash-accept-filler-correction-cases-en",
+      "visibleFragment": "#does-dr-ghezelbash-accept-filler-correction-cases-en",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-en",
+      "answerId": "https://www.ghezelbaash.ir/#answer-can-iraqi-patients-send-photos-before-travel-en",
+      "language": "en",
+      "sourceUrl": "https://www.ghezelbaash.ir/#can-iraqi-patients-send-photos-before-travel-en",
+      "visibleFragment": "#can-iraqi-patients-send-photos-before-travel-en",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-en",
+      "answerId": "https://www.ghezelbaash.ir/#answer-central-lip-lift-versus-lip-filler-en",
+      "language": "en",
+      "sourceUrl": "https://www.ghezelbaash.ir/#central-lip-lift-versus-lip-filler-en",
+      "visibleFragment": "#central-lip-lift-versus-lip-filler-en",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-en",
+      "answerId": "https://www.ghezelbaash.ir/#answer-is-buccal-fat-removal-suitable-for-every-full-face-en",
+      "language": "en",
+      "sourceUrl": "https://www.ghezelbaash.ir/#is-buccal-fat-removal-suitable-for-every-full-face-en",
+      "visibleFragment": "#is-buccal-fat-removal-suitable-for-every-full-face-en",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-en",
+      "answerId": "https://www.ghezelbaash.ir/#answer-can-surgical-and-non-surgical-treatments-be-combined-en",
+      "language": "en",
+      "sourceUrl": "https://www.ghezelbaash.ir/#can-surgical-and-non-surgical-treatments-be-combined-en",
+      "visibleFragment": "#can-surgical-and-non-surgical-treatments-be-combined-en",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-who-is-dr-saeed-ghezelbash-ckb-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-who-is-dr-saeed-ghezelbash-ckb-iq",
+      "language": "ckb-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#who-is-dr-saeed-ghezelbash-ckb-iq",
+      "visibleFragment": "#who-is-dr-saeed-ghezelbash-ckb-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq",
+      "language": "ckb-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq",
+      "visibleFragment": "#which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ckb-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-which-non-surgical-aesthetic-treatments-are-available-ckb-iq",
+      "language": "ckb-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#which-non-surgical-aesthetic-treatments-are-available-ckb-iq",
+      "visibleFragment": "#which-non-surgical-aesthetic-treatments-are-available-ckb-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq",
+      "language": "ckb-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq",
+      "visibleFragment": "#does-dr-ghezelbash-accept-filler-correction-cases-ckb-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-can-iraqi-patients-send-photos-before-travel-ckb-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-can-iraqi-patients-send-photos-before-travel-ckb-iq",
+      "language": "ckb-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#can-iraqi-patients-send-photos-before-travel-ckb-iq",
+      "visibleFragment": "#can-iraqi-patients-send-photos-before-travel-ckb-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ckb-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-central-lip-lift-versus-lip-filler-ckb-iq",
+      "language": "ckb-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#central-lip-lift-versus-lip-filler-ckb-iq",
+      "visibleFragment": "#central-lip-lift-versus-lip-filler-ckb-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq",
+      "language": "ckb-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq",
+      "visibleFragment": "#is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    },
+    {
+      "questionId": "https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-ckb-iq",
+      "answerId": "https://www.ghezelbaash.ir/#answer-can-surgical-and-non-surgical-treatments-be-combined-ckb-iq",
+      "language": "ckb-IQ",
+      "sourceUrl": "https://www.ghezelbaash.ir/#can-surgical-and-non-surgical-treatments-be-combined-ckb-iq",
+      "visibleFragment": "#can-surgical-and-non-surgical-treatments-be-combined-ckb-iq",
+      "renderMode": "canonical-native",
+      "executiveSummarySource": "acceptedAnswer.description",
+      "fullAnswerSource": "acceptedAnswer.text"
+    }
+  ]
+}

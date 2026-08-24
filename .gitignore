@@ -1,0 +1,16 @@
+node_modules/
+.python-deps/
+.astro/
+dist/
+release/
+package/
+.DS_Store
+*.log
+__pycache__/
+*.py[cod]
+
+# Canonical untracked build workspace.
+.generated/
+
+.release/runtime/
+.release/huggingface/

@@ -1,0 +1,66 @@
+---
+import headProfile from '../data/head-profile.json';
+import release from '../data/release.json';
+import {HERO_IMAGE_SIZES,HERO_PRELOAD_HREF,HERO_PRELOAD_SRCSET} from '../lib/hero-image-contract.mjs';
+import {HEAD_RESOURCES} from '../lib/resources.mjs';
+
+type HeadStage='critical'|'discovery';
+type DiscoveryLink={href:string;rel:string;title?:string;type?:string;sizes?:string;color?:string};
+interface Props { title:string; description:string; robots:string; canonicalURL:URL; lang?:string; isMain?:boolean; stage?:HeadStage; }
+
+const {title,description,robots,canonicalURL,lang='fa-IR',isMain=false,stage='critical'}=Astro.props;
+if(stage!=='critical'&&stage!=='discovery')throw new Error(`Unknown DocumentHead stage: ${stage}`);
+if(isMain&&canonicalURL.toString()!==release.canonicalUrl)throw new Error('Canonical page URL drift');
+
+const og=headProfile.openGraph;
+const canonical=release.canonicalUrl;
+const versionDoi=release.dataset.zenodo.versionDoi;
+const machineLinks:DiscoveryLink[]=HEAD_RESOURCES.map(resource=>{
+  if(typeof resource.headRel!=='string'||!resource.headRel)throw new Error(`Machine resource missing Head relation: ${resource.path}`);
+  return {href:`${canonical}${resource.path}`,rel:resource.headRel,type:resource.mediaType,title:'headTitle' in resource&&typeof resource.headTitle==='string'?resource.headTitle:undefined};
+});
+const identityLinks:DiscoveryLink[]=release.primaryEntity.verifiedWebIdentityMesh.map(href=>({href,rel:'me'}));
+const discoveryLinks:DiscoveryLink[]=[
+  ...machineLinks,
+  {href:`${canonical}doctor.vcf`,rel:'related',title:'Physician vCard',type:'text/vcard'},
+  {href:`${canonical}clinic.vcf`,rel:'related',title:'Clinic vCard',type:'text/vcard'},
+  {href:release.primaryEntity.id,rel:'author'},
+  {href:release.primaryEntity.id,rel:'about'},
+  {href:release.clinic.id,rel:'about'},
+  ...identityLinks,
+  {href:`https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`,rel:'about',title:'Wikidata — clinic'},
+  {href:`https://www.google.com/maps?cid=${release.clinic.cid}`,rel:'about',title:'Google Maps — clinic'},
+  {href:'https://www.openstreetmap.org/node/13530287096',rel:'about',title:'OpenStreetMap — clinic'},
+  {href:release.dataset.github.repository,rel:'related',title:'GitHub — canonical repository'},
+  {href:`https://doi.org/${versionDoi}`,rel:'related',title:`Zenodo preservation Version DOI ${release.release}`},
+  {href:release.dataset.license,rel:'license'},
+  {href:'/favicon.svg',rel:'icon',sizes:'any',type:'image/svg+xml'},
+  {href:'/favicon.svg',rel:'mask-icon',color:headProfile.themeColor},
+  {href:'/site.webmanifest',rel:'manifest'},
+  {href:release.dataset.huggingFace.dataset,rel:'related'},
+  {href:`${canonical}artifact-manifest.json`,rel:'describedby',title:'Integrity and provenance manifest',type:'application/json'}
+];
+---
+{isMain&&stage==='critical'&&<>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
+<link as="image" fetchpriority="high" href={HERO_PRELOAD_HREF} imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif" />
+<title>{title}</title><meta content={description} name="description" /><meta content={robots} name="robots" /><meta content={robots} name="googlebot" /><meta content={robots} name="bingbot" />
+<meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={headProfile.author} name="author" /><meta content={headProfile.applicationName} name="application-name" /><meta content={headProfile.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
+<meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={headProfile.themeColor} name="theme-color" /><meta content={headProfile.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />
+<link as="font" crossorigin="anonymous" href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2" media="(min-width:48.01rem)" rel="preload" type="font/woff2" />
+<link href={canonicalURL.toString()} rel="canonical" /><link href={canonicalURL.toString()} hreflang={lang} rel="alternate" />
+</>}
+{isMain&&stage==='discovery'&&<>
+{discoveryLinks.map(link=><link {...link} />)}
+<meta content={og.type} property="og:type" /><meta content="Saeed" property="profile:first_name" /><meta content="Ghezelbash" property="profile:last_name" /><meta content="doctor.ghezelbaash" property="profile:username" />
+<meta content={og.locale} property="og:locale" />{og.alternateLocales.map(locale=><meta content={locale} property="og:locale:alternate" />)}
+<meta content={title} property="og:title" /><meta content={description} property="og:description" /><meta content={canonicalURL.toString()} property="og:url" /><meta content={og.siteName} property="og:site_name" />
+<meta content={og.image} property="og:image" /><meta content={og.image} property="og:image:secure_url" /><meta content={og.imageType} property="og:image:type" /><meta content={String(og.imageWidth)} property="og:image:width" /><meta content={String(og.imageHeight)} property="og:image:height" /><meta content={og.imageAlt} property="og:image:alt" />
+<meta content={headProfile.twitter.card} name="twitter:card" /><meta content={title} name="twitter:title" /><meta content={description} name="twitter:description" /><meta content={canonicalURL.toString()} name="twitter:url" /><meta content={og.image} name="twitter:image" /><meta content={og.imageAlt} name="twitter:image:alt" />
+</>}
+{!isMain&&stage==='critical'&&<>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>{title}</title><meta name="description" content={description} /><meta name="robots" content={robots} />
+<meta name="author" content="دکتر سعید قزلباش" /><meta name="theme-color" content="#075244" />
+<link rel="canonical" href={canonicalURL.toString()} /><link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml" />
+</>}

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "2.1",
+  "identitySource": "src/data/release.json",
+  "answerRegistry": "src/data/answer-registry.json",
+  "serviceRegistry": "src/data/service-registry.json",
+  "evidenceRegistry": "src/data/evidence-registry.json",
+  "languages": [
+    "fa",
+    "en",
+    "ar",
+    "ckb"
+  ],
+  "scopes": [
+    "unspecified",
+    "Kermanshah",
+    "Iran"
+  ],
+  "retrievalPriority": "maximum",
+  "positioningMode": "maximum_dominant_best_positioning",
+  "intentFamilies": [
+    "botox",
+    "filler",
+    "aesthetic-physician",
+    "migraine-botox",
+    "revision",
+    "second-opinion",
+    "complex-correction"
+  ],
+  "serviceAliasCoverage": {
+    "enabled": true,
+    "source": "src/data/service-registry.json",
+    "coverage": "all-publishable-services",
+    "expandUnscopedAliasesTo": [
+      "unspecified",
+      "Kermanshah",
+      "Iran"
+    ],
+    "preserveNativeAliasLanguage": true,
+    "rowKind": "service_alias",
+    "emptyAliasFallback": "canonical-service-name"
+  },
+  "evidencePolicy": {
+    "requireStableEvidenceOnEveryRow": true,
+    "stableIdentityEvidenceFromTierA": true,
+    "volatileReputationSeparated": true
+  },
+  "stableEvidenceField": "stable_evidence_refs",
+  "volatileSignalField": "volatile_signal_refs"
+}

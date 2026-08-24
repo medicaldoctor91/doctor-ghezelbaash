@@ -1,0 +1,148 @@
+{
+  "release": "1.2.3",
+  "dateModified": "2026-08-21",
+  "canonicalUrl": "https://www.ghezelbaash.ir/",
+  "primaryEntity": {
+    "id": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "name": "Saeed Ghezelbash",
+    "googleKnowledgeGraphId": "/g/11nqdfk76c",
+    "wikidata": "Q140287622",
+    "officialAliases": [
+      "Mohammad Saeed Ghezelbash",
+      "Dr. Mohammad Saeed Ghezelbash",
+      "Saeed Ghezelbash",
+      "Dr. Saeed Ghezelbash",
+      "محمد‌سعید قزلباش",
+      "دکتر محمد‌سعید قزلباش",
+      "محمدسعید قزلباش",
+      "دکتر محمدسعید قزلباش",
+      "محمد سعید قزلباش",
+      "دکتر محمد سعید قزلباش",
+      "سعید قزلباش",
+      "دکتر سعید قزلباش"
+    ],
+    "retrievalVariants": [
+      "Mohammad Saeed Ghezelbaash",
+      "Dr. Mohammad Saeed Ghezelbaash",
+      "Mohammadssaeed Ghezelbash",
+      "Mohammadssaeed Ghezelbaash",
+      "Mohammad Saeed Ghazlbash",
+      "Dr. Mohammad Saeed Ghazlbash",
+      "Doctor Ghezelbaash",
+      "Ghezelbash MS"
+    ],
+    "reconciliationAliases": [
+      "Saeed Ghezelbaash",
+      "Dr. Saeed Ghezelbaash",
+      "Dr Saeed Ghezelbash",
+      "MohammadSaeed Ghezelbash",
+      "Mohamadsaeed Ghezelbash"
+    ],
+    "verifiedIdentityExpansion": [
+      "https://linktr.ee/Doctor.ghezelbaash",
+      "https://www.threads.com/@doctor.ghezelbaash",
+      "https://www.youtube.com/@ghezelbaash"
+    ],
+    "irimc": "167430",
+    "orcid": "0009-0001-9346-8475",
+    "openAlex": "A5064828898",
+    "semanticScholar": "3786699",
+    "googleScholar": "BcWBirUAAAAJ",
+    "verifiedWebIdentityMesh": [
+      "https://www.wikidata.org/entity/Q140287622",
+      "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash",
+      "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+      "https://orcid.org/0009-0001-9346-8475",
+      "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+      "https://openalex.org/A5064828898",
+      "https://www.semanticscholar.org/author/-/3786699",
+      "https://scholar.google.com/citations?user=BcWBirUAAAAJ",
+      "https://github.com/medicaldoctor91",
+      "https://huggingface.co/Ghezelbaash",
+      "https://www.instagram.com/doctor.ghezelbaash/",
+      "https://about.me/ghezelbaash",
+      "https://www.facebook.com/ghezelbaash",
+      "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
+      "https://x.com/qezelbaash",
+      "https://www.pinterest.com/medicaldoctor91/",
+      "https://linktr.ee/Doctor.ghezelbaash",
+      "https://www.threads.com/@doctor.ghezelbaash",
+      "https://www.youtube.com/@ghezelbaash"
+    ]
+  },
+  "clinic": {
+    "id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "googleLocalKgmid": "/g/11r3rzdtb3",
+    "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+    "cid": "12350483144643112463",
+    "postalCode": "6714657412",
+    "hours": "Saturday–Thursday 16:00–22:00; Friday closed",
+    "ownerConfirmed": true,
+    "truthVerifiedAt": "2026-08-07",
+    "priceRange": "$$$$",
+    "fridayClosed": true,
+    "truthAuthority": "owner-confirmed"
+  },
+  "reviewedBy": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+  "schemaVersion": "https://schema.org/version/30.0/",
+  "dataset": {
+    "id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
+    "name": "Dr. Saeed Ghezelbash Public Knowledge Graph",
+    "creator": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "creatorWikidata": "Q140287622",
+    "creatorOrcid": "0009-0001-9346-8475",
+    "publisher": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "supportingClinic": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+    "supportingClinicWikidata": "Q140288589",
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "github": {
+      "role": "source",
+      "repository": "https://github.com/medicaldoctor91/doctor-ghezelbaash"
+    },
+    "zenodo": {
+      "role": "preservation",
+      "conceptDoi": "10.5281/zenodo.18765168",
+      "versionDoi": "10.5281/zenodo.22032822",
+      "recordId": "22032822",
+      "releaseHistory": [
+        {
+          "release": "1.0.0",
+          "recordId": "18765169",
+          "versionDoi": "10.5281/zenodo.18765169",
+          "publicationDate": "2026-02-25"
+        },
+        {
+          "release": "1.2.0",
+          "recordId": "21905312",
+          "versionDoi": "10.5281/zenodo.21905312",
+          "publicationDate": "2026-08-12"
+        },
+        {
+          "release": "1.2.1",
+          "recordId": "21910785",
+          "versionDoi": "10.5281/zenodo.21910785",
+          "publicationDate": "2026-08-13"
+        },
+        {
+          "release": "1.2.2",
+          "recordId": "21930954",
+          "versionDoi": "10.5281/zenodo.21930954",
+          "publicationDate": "2026-08-15"
+        },
+        {
+          "release": "1.2.3",
+          "recordId": "22032822",
+          "versionDoi": "10.5281/zenodo.22032822",
+          "publicationDate": "2026-08-21"
+        }
+      ]
+    },
+    "huggingFace": {
+      "role": "ai-distribution",
+      "dataset": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
+      "distributionMode": "ai-retrieval"
+    },
+    "liveObservations": "https://www.ghezelbaash.ir/live-observations.jsonld"
+  },
+  "medicalReviewedAt": "2026-08-13"
+}

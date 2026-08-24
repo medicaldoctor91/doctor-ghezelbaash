@@ -1,0 +1,362 @@
+{
+  "maxBytes": 135000,
+  "typeProfiles": {
+    "MedicalProcedure": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "description",
+        "bodyLocation",
+        "procedureType",
+        "medicalSpecialty",
+        "howPerformed",
+        "preparation",
+        "followup",
+        "status",
+        "url",
+        "mainEntityOfPage",
+        "provider",
+        "performer",
+        "about",
+        "isPartOf"
+      ]
+    },
+    "MedicalTherapy": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "description",
+        "medicalSpecialty",
+        "url",
+        "about",
+        "provider",
+        "isPartOf"
+      ]
+    },
+    "DiagnosticProcedure": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "medicalSpecialty",
+        "url",
+        "about",
+        "provider",
+        "isPartOf"
+      ]
+    },
+    "MedicalCondition": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "termCode",
+        "identifier",
+        "sameAs",
+        "possibleTreatment"
+      ]
+    },
+    "HowTo": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "url",
+        "inLanguage",
+        "author",
+        "reviewedBy",
+        "mainEntityOfPage",
+        "about",
+        "step"
+      ]
+    },
+    "HowToStep": {
+      "include": [
+        "@id",
+        "@type",
+        "position",
+        "name",
+        "text",
+        "url",
+        "isPartOf"
+      ]
+    },
+    "Question": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "acceptedAnswer",
+        "about",
+        "url",
+        "inLanguage",
+        "mainEntityOfPage"
+      ]
+    },
+    "Answer": {
+      "include": [
+        "@id",
+        "@type",
+        "text",
+        "about",
+        "url",
+        "inLanguage",
+        "author",
+        "reviewedBy",
+        "mainEntityOfPage"
+      ]
+    },
+    "VideoObject": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "contentUrl",
+        "thumbnailUrl",
+        "uploadDate",
+        "duration",
+        "inLanguage",
+        "about",
+        "creator",
+        "publisher",
+        "copyrightHolder",
+        "mainEntityOfPage",
+        "url",
+        "sameAs",
+        "identifier",
+        "width",
+        "height",
+        "hasPart"
+      ]
+    },
+    "Clip": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "startOffset",
+        "endOffset",
+        "url",
+        "isPartOf"
+      ]
+    },
+    "ImageObject": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "caption",
+        "contentUrl",
+        "thumbnailUrl",
+        "encodingFormat",
+        "width",
+        "height",
+        "about",
+        "creator",
+        "copyrightHolder",
+        "representativeOfPage",
+        "mainEntityOfPage",
+        "license",
+        "acquireLicensePage",
+        "creditText",
+        "copyrightNotice",
+        "keywords",
+        "identifier"
+      ]
+    },
+    "WebPageElement": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "url",
+        "about",
+        "isPartOf",
+        "inLanguage"
+      ]
+    },
+    "DataDownload": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "contentUrl",
+        "encodingFormat",
+        "isPartOf",
+        "version",
+        "dateModified"
+      ]
+    },
+    "Dataset": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "url",
+        "creator",
+        "publisher",
+        "license",
+        "version",
+        "dateModified",
+        "distribution",
+        "about",
+        "isAccessibleForFree"
+      ]
+    },
+    "DataCatalog": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "url",
+        "creator",
+        "publisher",
+        "license",
+        "dataset"
+      ]
+    },
+    "ScholarlyArticle": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "headline",
+        "url",
+        "sameAs",
+        "author",
+        "datePublished",
+        "isPartOf",
+        "identifier",
+        "about"
+      ]
+    },
+    "Periodical": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "issn",
+        "url"
+      ]
+    },
+    "Observation": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "value",
+        "unitText",
+        "observationDate",
+        "about",
+        "measurementTechnique",
+        "mainEntityOfPage"
+      ]
+    },
+    "Offer": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "url",
+        "itemOffered",
+        "offeredBy",
+        "availability"
+      ]
+    },
+    "Service": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "provider",
+        "areaServed",
+        "serviceType",
+        "url"
+      ]
+    },
+    "ServiceChannel": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "serviceUrl",
+        "servicePhone",
+        "availableLanguage",
+        "providesService"
+      ]
+    },
+    "EducationalAudience": {
+      "include": [
+        "@id",
+        "@type",
+        "audienceType",
+        "name",
+        "description"
+      ]
+    },
+    "Course": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "provider",
+        "instructor",
+        "hasCourseInstance",
+        "educationalLevel",
+        "audience",
+        "url"
+      ]
+    },
+    "CourseInstance": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "courseMode",
+        "location",
+        "instructor",
+        "startDate",
+        "endDate",
+        "url"
+      ]
+    },
+    "EducationEvent": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "startDate",
+        "endDate",
+        "location",
+        "organizer",
+        "performer",
+        "audience",
+        "url"
+      ]
+    },
+    "SpeakableSpecification": {
+      "include": [
+        "@id",
+        "@type",
+        "cssSelector",
+        "xpath"
+      ]
+    }
+  },
+  "idProfiles": {},
+  "mode": "projected"
+}

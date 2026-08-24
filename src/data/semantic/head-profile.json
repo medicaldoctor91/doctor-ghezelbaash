@@ -1,0 +1,208 @@
+{
+  "maxBytes": 35000,
+  "nodes": {
+    "https://www.ghezelbaash.ir/#saeed-ghezelbash": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "givenName",
+        "familyName",
+        "alternateName",
+        "jobTitle",
+        "url",
+        "mainEntityOfPage",
+        "hasCredential",
+        "practicesAt",
+        "worksFor",
+        "affiliation",
+        "workLocation",
+        "owns",
+        "areaServed",
+        "image",
+        "identifier",
+        "sameAs",
+        "description",
+        "disambiguatingDescription",
+        "telephone",
+        "memberOf",
+        "knowsAbout",
+        "hasOccupation",
+        "medicalSpecialty",
+        "alumniOf",
+        "honorificPrefix",
+        "knowsLanguage",
+        "address",
+        "additionalName",
+        "potentialAction"
+      ],
+      "refAllow": {
+        "hasCredential": [
+          "https://www.ghezelbaash.ir/#credential-doctor-of-medicine",
+          "https://www.ghezelbaash.ir/#irimc-credential-167430"
+        ],
+        "workLocation": [
+          "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        ],
+        "worksFor": [
+          "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        ],
+        "affiliation": [
+          "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        ],
+        "owns": [
+          "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        ],
+        "image": [
+          "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master"
+        ],
+        "identifier": [
+          "https://www.ghezelbaash.ir/#identifier-person-google-kgid",
+          "https://www.ghezelbaash.ir/#identifier-person-wikidata",
+          "https://www.ghezelbaash.ir/#identifier-person-irimc",
+          "https://www.ghezelbaash.ir/#identifier-person-orcid"
+        ],
+        "memberOf": [
+          "https://www.ghezelbaash.ir/#organization-iran-medical-council",
+          "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        ],
+        "potentialAction": [
+          "https://www.ghezelbaash.ir/#action-contact-clinic",
+          "https://www.ghezelbaash.ir/#action-online-initial-consultation",
+          "https://www.ghezelbaash.ir/#action-view-clinic-map",
+          "https://www.ghezelbaash.ir/#action-follow-instagram"
+        ]
+      },
+      "valueAllow": {
+        "sameAs": [
+          "https://www.wikidata.org/entity/Q140287622",
+          "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash",
+          "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
+          "https://orcid.org/0009-0001-9346-8475",
+          "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+          "https://openalex.org/A5064828898",
+          "https://www.semanticscholar.org/author/-/3786699",
+          "https://scholar.google.com/citations?user=BcWBirUAAAAJ",
+          "https://github.com/medicaldoctor91",
+          "https://huggingface.co/Ghezelbaash",
+          "https://www.instagram.com/doctor.ghezelbaash/",
+          "https://about.me/ghezelbaash",
+          "https://www.facebook.com/ghezelbaash",
+          "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
+          "https://x.com/qezelbaash",
+          "https://www.pinterest.com/medicaldoctor91/",
+          "https://linktr.ee/Doctor.ghezelbaash",
+          "https://www.threads.com/@doctor.ghezelbaash",
+          "https://www.youtube.com/@ghezelbaash"
+        ],
+        "alternateName": [
+          "Mohammad Saeed Ghezelbash",
+          "Dr. Mohammad Saeed Ghezelbash",
+          "Saeed Ghezelbash",
+          "Dr. Saeed Ghezelbash",
+          "محمد‌سعید قزلباش",
+          "دکتر محمد‌سعید قزلباش",
+          "محمدسعید قزلباش",
+          "دکتر محمدسعید قزلباش",
+          "محمد سعید قزلباش",
+          "دکتر محمد سعید قزلباش",
+          "سعید قزلباش",
+          "دکتر سعید قزلباش",
+          "Saeed Ghezelbaash",
+          "Dr. Saeed Ghezelbaash",
+          "Dr Saeed Ghezelbash",
+          "MohammadSaeed Ghezelbash",
+          "Mohamadsaeed Ghezelbash"
+        ]
+      }
+    },
+    "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "url",
+        "address",
+        "telephone",
+        "location",
+        "owner",
+        "founder",
+        "areaServed",
+        "identifier",
+        "sameAs",
+        "image",
+        "alternateName",
+        "description",
+        "geo",
+        "openingHoursSpecification",
+        "hasMap",
+        "medicalSpecialty",
+        "containedInPlace",
+        "logo",
+        "priceRange",
+        "employee",
+        "openingHours",
+        "additionalProperty",
+        "contactPoint",
+        "potentialAction"
+      ],
+      "refAllow": {
+        "identifier": [
+          "https://www.ghezelbaash.ir/#identifier-clinic-google-kgid",
+          "https://www.ghezelbaash.ir/#identifier-clinic-google-place-id",
+          "https://www.ghezelbaash.ir/#identifier-clinic-google-maps-cid",
+          "https://www.ghezelbaash.ir/#identifier-clinic-osm-node",
+          "https://www.ghezelbaash.ir/#identifier-clinic-wikidata"
+        ],
+        "image": [
+          "https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo"
+        ],
+        "hasMap": [],
+        "potentialAction": [
+          "https://www.ghezelbaash.ir/#action-contact-clinic",
+          "https://www.ghezelbaash.ir/#action-online-initial-consultation",
+          "https://www.ghezelbaash.ir/#action-view-clinic-map"
+        ]
+      }
+    },
+    "https://www.ghezelbaash.ir/#webpage": {
+      "include": [
+        "@id",
+        "@type",
+        "url",
+        "name",
+        "description",
+        "mainEntity",
+        "author",
+        "publisher",
+        "isPartOf",
+        "inLanguage",
+        "primaryImageOfPage",
+        "about",
+        "keywords",
+        "specialty",
+        "dateModified",
+        "reviewedBy",
+        "speakable",
+        "schemaVersion",
+        "lastReviewed",
+        "potentialAction"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#website": {
+      "include": [
+        "@id",
+        "@type",
+        "url",
+        "name",
+        "about",
+        "publisher",
+        "inLanguage",
+        "alternateName",
+        "dateModified",
+        "image",
+        "schemaVersion"
+      ]
+    }
+  }
+}

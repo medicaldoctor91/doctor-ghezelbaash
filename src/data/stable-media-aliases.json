@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "purpose": "Stable first-party media URLs referenced by Wikimedia Commons and embedded image metadata.",
+  "subject": {
+    "canonicalPersonIri": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+    "wikidataPersonIri": "https://www.wikidata.org/entity/Q140287622",
+    "googleKnowledgeGraphId": "/g/11nqdfk76c",
+    "googleKnowledgeGraphUrl": "https://www.google.com/search?kgmid=/g/11nqdfk76c"
+  },
+  "aliases": [
+    {
+      "path": "media/images/physician/master/saeed-ghezelbaash-physician-portrait.jpg",
+      "target": "media/images/physician/master/saeed-ghezelbaash-physician-portrait.55e6a60c60bc.jpg",
+      "imageId": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master",
+      "commons": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg"
+    },
+    {
+      "path": "media/images/physician/master/saeed-ghezelbaash-physician-portrait.webp",
+      "target": "media/images/physician/master/saeed-ghezelbaash-physician-portrait.125260cede25.webp",
+      "imageId": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master-webp",
+      "commons": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg"
+    },
+    {
+      "path": "media/images/physician/master/saeed-ghezelbaash-in-clinical-office.jpg",
+      "target": "media/images/physician/master/saeed-ghezelbaash-in-clinical-office.da2f60febc2e.jpg",
+      "imageId": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master",
+      "commons": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg"
+    },
+    {
+      "path": "media/images/physician/master/saeed-ghezelbaash-in-clinical-office.webp",
+      "target": "media/images/physician/master/saeed-ghezelbaash-in-clinical-office.3d021030c80b.webp",
+      "imageId": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master-webp",
+      "commons": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg"
+    },
+    {
+      "path": "media/images/physician/master/saeed-ghezelbaash-with-clinical-team.jpg",
+      "target": "media/images/physician/master/saeed-ghezelbaash-with-clinical-team.005acd2c0a87.jpg",
+      "imageId": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master",
+      "commons": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg"
+    },
+    {
+      "path": "media/images/physician/master/saeed-ghezelbaash-with-clinical-team.webp",
+      "target": "media/images/physician/master/saeed-ghezelbaash-with-clinical-team.dc4f648f84fd.webp",
+      "imageId": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master-webp",
+      "commons": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import jsonld from 'jsonld';
+import rdfCanonize from 'rdf-canonize';
+import {generatedWorkspace} from './generated-workspace.mjs';
+
+const source='src/data/semantic/knowledge-graph.jsonld';
+const generated=generatedWorkspace();
+const target=path.join(generated.semantic,'knowledge-graph.ttl');
+const lockPath=path.join(generated.semantic,'rdf-lock.json');
+fs.mkdirSync(generated.semantic,{recursive:true});
+const release=JSON.parse(fs.readFileSync('src/data/release.json','utf8'));
+const doc=JSON.parse(fs.readFileSync(source,'utf8'));
+const raw=await jsonld.toRDF(doc,{format:'application/n-quads',safe:true});
+const canonical=await rdfCanonize.canonize(raw,{algorithm:'RDFC-1.0',inputFormat:'application/n-quads',format:'application/n-quads',maxWorkFactor:3,rejectURDNA2015:true});
+const text=canonical.endsWith('\n')?canonical:canonical+'\n';
+fs.writeFileSync(target,text);
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const distribution='.generated/semantic/knowledge-graph.ttl';
+const lock={release:release.release,source,distribution,triples:text.split(/\r?\n/).filter(Boolean).length,jsonldSha256:sha(fs.readFileSync(source)),ttlSha256:sha(fs.readFileSync(target)),canonicalizedBlankNodes:true,jsonLdProcessor:'jsonld',jsonLdProcessorVersion:'9.0.0',canonicalizationAlgorithm:'RDFC-1.0',canonicalizationLibrary:'rdf-canonize',canonicalizationLibraryVersion:'5.0.0',canonicalSyntax:'canonical-n-quads-default-graph-as-ntriples-compatible-turtle',generated:release.dateModified};
+fs.writeFileSync(lockPath,JSON.stringify(lock,null,2)+'\n');
+console.log(JSON.stringify(lock,null,2));

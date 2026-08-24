@@ -1,0 +1,21 @@
+---
+import release from '../data/release.json';
+import {headGraph} from '../lib/knowledge-graph';
+import {deriveSiteData} from '../lib/site-data.mjs';
+import {FOOTER_RESOURCES} from '../lib/resources.mjs';
+const site=deriveSiteData(release,headGraph);
+const footerLinks=FOOTER_RESOURCES.map((resource,index)=>({path:resource.path,label:resource.footerLabel,separator:index===FOOTER_RESOURCES.length-1?'':' · '}));
+---
+<footer aria-label="هویت رسمی، تماس و داده‌های ماشینی" class="site-footer">
+  <div class="site-footer__brand">
+    <img alt="" aria-hidden="true" decoding="async" height="52" src="/favicon.svg" width="52" />
+    <div class="site-footer__brand-copy"><strong>دکتر سعید قزلباش</strong><span>پزشک زیبایی در کرمانشاه · وب‌سایت رسمی</span></div>
+    <span class="site-footer__brand-seal">نظام پزشکی <bdi>{release.primaryEntity.irimc}</bdi></span>
+  </div>
+  <p><strong>موجودیت اصلی این وب‌سایت دکتر سعید قزلباش است</strong>؛ کلینیک زیبایی و مخزن دادهٔ ساختاریافته، دارایی‌های تحت مالکیت و انتشار پزشک هستند. شناسهٔ Google Knowledge Graph پزشک: <code>{release.primaryEntity.googleKnowledgeGraphId}</code>.</p>
+  <p class="entity-fingerprint"><strong>اثر انگشت هویتی:</strong> Saeed Ghezelbash · Wikidata <code>{release.primaryEntity.wikidata}</code> · IRIMC <code>{release.primaryEntity.irimc}</code> · ORCID <code>{release.primaryEntity.orcid}</code> · Clinic KG <code>{release.clinic.googleLocalKgmid}</code> · Place ID <code>{release.clinic.placeId}</code>.</p>
+  <address>{site.clinicName}، {site.locality}، {site.street}، کدپستی {site.postalCode}، {site.hoursDisplay} — <a href={site.telHref}>{site.phoneDisplay}</a> — <a href={site.mapsUrl} rel="external">Google Maps</a></address>
+  <nav aria-label="نسخه‌های ماشینی رسمی">{footerLinks.map(link=><Fragment><a href={`/${link.path}`}>{link.label}</a>{link.separator}</Fragment>)}</nav>
+  <details class="editorial-governance"><summary>روش بازبینی پزشکی، حریم اطلاعات و مرز مشاوره آنلاین</summary><p>محتوای پزشکی این صفحه توسط خود دکتر سعید قزلباش بازبینی و همراه تاریخ release به‌روزرسانی می‌شود؛ ارجاعات علمی و هویتی در همان بخش یا گراف رسمی قابل ردیابی‌اند. ارزیابی اولیه آنلاین جایگزین معاینه و تصمیم درمانی حضوری نیست. برای حفاظت از حریم اطلاعات، جزئیات حساس پزشکی را در پیام عمومی شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام پزشکی، ارزیابی حضوری فوری اولویت دارد.</p></details>
+  <p><small>آخرین بازبینی پزشکی ثبت‌شده: <time datetime={site.medicalReviewedAt}>{site.medicalReviewedPersian} / {site.medicalReviewedGregorian}</time>.</small></p>
+</footer>

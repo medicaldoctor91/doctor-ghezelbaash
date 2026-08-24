@@ -1,0 +1,34 @@
+{
+  "policyVersion": "2.0",
+  "release": "1.2.3",
+  "verifiedAt": "2026-08-07",
+  "maxAgeDays": 30,
+  "facts": [
+    {
+      "id": "google-maps-rating",
+      "entity": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+      "property": "ratingValue",
+      "value": 5,
+      "source": "Google Places API (New)",
+      "sourceId": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
+      "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+      "observedAt": "2026-08-17T13:16:11Z"
+    },
+    {
+      "id": "google-maps-review-count",
+      "entity": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+      "property": "reviewCount",
+      "value": 166,
+      "source": "Google Places API (New)",
+      "sourceId": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
+      "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+      "observedAt": "2026-08-17T13:16:11Z"
+    }
+  ],
+  "entity": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+  "placeId": "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+  "rating": 5,
+  "reviewCount": 166,
+  "valueObservedAt": "2026-08-17T13:16:11Z",
+  "source": "Google Places API (New)"
+}

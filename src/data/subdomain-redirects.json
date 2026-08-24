@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 2,
+  "zone": "ghezelbaash.ir",
+  "canonicalOrigin": "https://www.ghezelbaash.ir",
+  "singleRedirects": {
+    "cloudflareProduct": "Single Redirects",
+    "planRuleLimit": 10,
+    "rules": [
+      {
+        "ref": "ghezelbaash_doctor_maps_v1",
+        "host": "doctor.ghezelbaash.ir",
+        "match": "allPaths",
+        "target": "https://www.google.com/maps/search/?api=1&query=Dr.%20Saeed%20Ghezelbash%20Aesthetic%20Clinic&query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "ghezelbaash_github_entity_graph_v1",
+        "host": "github.ghezelbaash.ir",
+        "match": "allPaths",
+        "target": "https://www.ghezelbaash.ir/graph.jsonld",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "ghezelbaash_ig_ai_corpus_v1",
+        "host": "ig.ghezelbaash.ir",
+        "match": "allPaths",
+        "target": "https://www.ghezelbaash.ir/llms-full.txt",
+        "statusCode": 301,
+        "preserveQueryString": false
+      }
+    ]
+  },
+  "bulkRedirects": {
+    "cloudflareProduct": "Bulk Redirects",
+    "planUrlLimit": 10000,
+    "listName": "ghezelbaash_blog_legacy_urls",
+    "listDescription": "Git-managed historical Blogspot URLs for Dr. Saeed Ghezelbash",
+    "ruleRef": "ghezelbaash_blog_legacy_bulk_v1",
+    "ruleDescription": "Exact historical blog URLs to the closest visible canonical passage",
+    "host": "blog.ghezelbaash.ir",
+    "unmatchedPathPolicy": "return-404",
+    "evidence": {
+      "verifiedAt": "2026-08-13",
+      "sources": [
+        "Internet Archive CDX",
+        "Common Crawl URL Index"
+      ],
+      "sourceUrls": [
+        "https://web.archive.org/cdx/search/cdx?url=blog.ghezelbaash.ir/*&output=json&filter=statuscode:200&filter=mimetype:text/html&collapse=urlkey",
+        "https://index.commoncrawl.org/collinfo.json"
+      ],
+      "archivedHtmlUrls": 88,
+      "uniqueExecutableSourcePaths": 87,
+      "historicalArticlePaths": 48,
+      "historicalLabelPaths": 32,
+      "queryOnlyVariantsCollapsed": 1,
+      "excludedArchived404Paths": [
+        "/2025/02/blog-post_57.html",
+        "/2025/02/blog-post_87.html",
+        "/2025/03/blog-post_06.html"
+      ],
+      "topicMappingBasis": "Archived Blogger page titles plus the closest current visible canonical passage"
+    },
+    "groups": [
+      {
+        "ref": "blog_archive_navigation_v1",
+        "paths": [
+          "/",
+          "/2025/02/",
+          "/2025/03/",
+          "/2025/04/",
+          "/2025/05/",
+          "/2025/08/",
+          "/search"
+        ],
+        "target": "https://www.ghezelbaash.ir/#aesthetic-medicine-table-of-contents",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_clinic_identity_v1",
+        "paths": [
+          "/2025/02/blog-post_102.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87"
+        ],
+        "target": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_treatment_selection_v1",
+        "paths": [
+          "/2025/02/blog-post_14.html",
+          "/2025/02/blog-post_20.html",
+          "/2025/02/blog-post_26.html",
+          "/2025/02/blog-post_49.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#aesthetic-treatment-selection",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_filler_general_v1",
+        "paths": [
+          "/2025/02/blog-post_08.html",
+          "/2025/02/blog-post_43.html",
+          "/2025/03/blog-post_07.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%A8%D8%B1%D9%86%D8%AF%20%D9%81%DB%8C%D9%84%D8%B1%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1"
+        ],
+        "target": "https://www.ghezelbaash.ir/#filler",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_lip_filler_v1",
+        "paths": [
+          "/2025/02/blog-post_53.html",
+          "/2025/08/blog-post.html",
+          "/search/label/%DA%98%D9%84%20%D9%84%D8%A8%20%D8%B1%D9%88%D8%B3%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#lip-filler-proportion-vs-volume",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_cheek_filler_v1",
+        "paths": [
+          "/2025/08/blog-post_25.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#cheek-filler-structural-support-vs-overfilling",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_nose_filler_v1",
+        "paths": [
+          "/2025/03/blog-post_10.html",
+          "/2025/03/blog-post_18.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1%20%D8%A8%DB%8C%D9%86%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%A8%DB%8C%D9%86%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_nasal_enzyme_safety_v1",
+        "paths": [
+          "/2025/03/blog-post_08.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#hyaluronidase-for-nasal-filler-complications",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_under_eye_filler_v1",
+        "paths": [
+          "/2025/03/blog-post_553.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1%20%D8%B2%DB%8C%D8%B1%20%DA%86%D8%B4%D9%85%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#tear-trough-hollowing-shadow-and-puffiness-assessment",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_facial_contouring_v1",
+        "paths": [
+          "/2025/02/blog-post_4175.html",
+          "/2025/03/blog-post_15.html",
+          "/2025/03/blog-post_17.html",
+          "/2025/03/blog-post_26.html",
+          "/2025/04/blog-post_30.html",
+          "/2025/08/blog-post_29.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%D8%A7%D9%88%DB%8C%D9%87%20%D8%B3%D8%A7%D8%B2%DB%8C%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%DA%A9%D8%A7%D9%86%D8%AA%D9%88%D8%B1%DB%8C%D9%86%DA%AF%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D9%85%D8%A7%D8%AF%D9%84%DB%8C%D9%86%DA%AF%20%D8%B5%D9%88%D8%B1%D8%AA%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%DA%A9%D8%A7%D9%86%D8%AA%D9%88%D8%B1%DB%8C%D9%86%DA%AF"
+        ],
+        "target": "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_submental_contouring_v1",
+        "paths": [
+          "/2025/03/blog-post_16.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#submental-fat-vs-skin-laxity-vs-retruded-chin",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_botox_general_v1",
+        "paths": [
+          "/2025/02/blog-post_743.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%A8%D9%88%D8%AA%D8%A7%DA%A9%D8%B3%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%A8%D8%A7%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%88%D8%AA%D8%A7%DA%A9%D8%B3%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%A8%D9%88%D8%AA%D8%A7%DA%A9%D8%B3"
+        ],
+        "target": "https://www.ghezelbaash.ir/#botox",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_botox_hyperhidrosis_v1",
+        "paths": [
+          "/2025/02/blog-post_17.html",
+          "/2025/02/blog-post_325.html",
+          "/2025/02/blog-post_344.html",
+          "/2025/02/blog-post_945.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#hyperhidrosis-botox-clinical-decision",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_botox_cat_eye_v1",
+        "paths": [
+          "/2025/03/blog-post_19.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#botox-cat-eye-limitations",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_perioral_botox_filler_v1",
+        "paths": [
+          "/2025/03/blog-post_20.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#perioral-lines-filler-and-skin-treatment-combination",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_wrinkle_treatment_comparison_v1",
+        "paths": [
+          "/2025/03/blog-post_22.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#filler-vs-botox-for-static-and-dynamic-lines",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_thread_lift_general_v1",
+        "paths": [
+          "/2025/02/blog-post_512.html",
+          "/2025/02/blog-post_69.html",
+          "/2025/02/blog-post_96.html",
+          "/2025/03/blog-post_11.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%84%DB%8C%D9%81%D8%AA%20%D9%86%D8%AE%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D9%84%DB%8C%D9%81%D8%AA%20%D9%86%D8%AE%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%84%DB%8C%D9%81%D8%AA%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#thread-lift",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_thread_lift_temple_v1",
+        "paths": [
+          "/2025/02/blog-post_76.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%84%DB%8C%D9%81%D8%AA%20%D8%B4%D9%82%DB%8C%D9%82%D9%87%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#thread-treatment-area-selection",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_thread_lift_cat_eye_v1",
+        "paths": [
+          "/2025/02/blog-post_93.html",
+          "/search/label/%D9%84%DB%8C%D9%81%D8%AA%20%DA%86%D8%B4%D9%85%20%DA%AF%D8%B1%D8%A8%D9%87%E2%80%8C%D8%A7%DB%8C%20%D8%AF%D8%B1%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#cat-eye-thread-lift-candidacy-swelling-and-results",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_thread_lift_neck_submental_v1",
+        "paths": [
+          "/2025/02/blog-post_899.html",
+          "/search/label/%D9%84%DB%8C%D9%81%D8%AA%20%D8%BA%D8%A8%D8%BA%D8%A8%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#submental-thread-lift-cause-assessment",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_subcision_v1",
+        "paths": [
+          "/2025/02/blog-post54.html",
+          "/2025/02/blog-post_274.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#subcision-for-tethered-acne-scars",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_acne_scars_v1",
+        "paths": [
+          "/2025/02/blog-post_24.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#acne-scars",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_prp_skin_hair_v1",
+        "paths": [
+          "/2025/02/blog-post_10.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D9%BE%DB%8C%20%D8%A2%D8%B1%20%D9%BE%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D9%BE%DB%8C%20%D8%A2%D8%B1%20%D9%BE%DB%8C"
+        ],
+        "target": "https://www.ghezelbaash.ir/#prp-for-skin-and-hair",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_hand_rejuvenation_v1",
+        "paths": [
+          "/2025/02/blog-post_383.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#hand-rejuvenation",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_jalupro_profhilo_v1",
+        "paths": [
+          "/2025/03/blog-post_05.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#jalupro-vs-profhilo-selection",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_skin_mesotherapy_v1",
+        "paths": [
+          "/2025/03/blog-post_12.html",
+          "/2025/04/blog-post.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%AC%D9%88%D8%A7%D9%86%D8%B3%D8%A7%D8%B2%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D9%BE%D9%88%D8%B3%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%85%D8%B2%D9%88%D8%AA%D8%B1%D8%A7%D9%BE%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D9%85%D8%B2%D9%88%DA%98%D9%84%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D9%85%D8%B2%D9%88%D8%AA%D8%B1%D8%A7%D9%BE%DB%8C"
+        ],
+        "target": "https://www.ghezelbaash.ir/#skin-rejuvenation",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_hair_loss_v1",
+        "paths": [
+          "/2025/03/blog-post_14.html",
+          "/search/label/%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D9%85%D8%B2%D9%88%D8%AA%D8%B1%D8%A7%D9%BE%DB%8C%20%D9%85%D9%88"
+        ],
+        "target": "https://www.ghezelbaash.ir/#hair-loss",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_prp_mesotherapy_comparison_v1",
+        "paths": [
+          "/2025/03/blog-post_29.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#prp-vs-mesotherapy-selection-framework",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_pigmentation_v1",
+        "paths": [
+          "/2025/05/blog-post.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#skin-pigmentation-cause-assessment",
+        "statusCode": 301,
+        "preserveQueryString": false
+      }
+    ]
+  }
+}

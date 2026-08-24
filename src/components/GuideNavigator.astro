@@ -1,0 +1,51 @@
+---
+import release from '../data/release.json';
+const entityAliases=[...release.primaryEntity.officialAliases,...(release.primaryEntity.reconciliationAliases||[]),...release.primaryEntity.retrievalVariants].join('|');
+---
+<nav aria-label="ناوبری فصل‌های راهنمای جامع" class="chapter-rail" data-chapter-rail hidden>
+  <div class="chapter-rail__header">
+    <p><span aria-hidden="true"></span>فصل جاری راهنما</p>
+    <button aria-controls="guide-search" aria-haspopup="dialog" aria-label="جست‌وجو در راهنمای جامع" data-guide-search-open type="button">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+    </button>
+  </div>
+  <ol data-chapter-rail-list></ol>
+</nav>
+
+<dialog aria-labelledby="guide-search-title" class="guide-search" closedby="any" data-entity-aliases={entityAliases} id="guide-search">
+  <div class="guide-search__panel">
+    <header class="guide-search__header">
+      <div><p class="guide-search__eyebrow">راهنمای یک‌صفحه‌ای</p><h2 id="guide-search-title">جست‌وجوی سریع در محتوای پزشکی زیبایی</h2></div>
+      <form method="dialog"><button aria-label="بستن جست‌وجو" class="guide-search__close" data-guide-search-close type="submit" value="close">×</button></form>
+    </header>
+    <search class="guide-search__body">
+      <label class="guide-search__field" for="guide-search-input"><span>نام درمان، عارضه یا سؤال را بنویسید</span><input aria-describedby="guide-search-status" autocomplete="off" enterkeyhint="search" id="guide-search-input" inputmode="search" placeholder="مثلاً فیلر زیر چشم، افتادگی پلک یا عارضه بوتاکس" type="search" /></label>
+      <p aria-live="polite" class="guide-search__status" id="guide-search-status" role="status">عنوان‌های H2 تا H4 همین صفحه جست‌وجو می‌شوند. کلید / نیز جست‌وجو را باز می‌کند.</p>
+      <ol aria-label="نتایج جست‌وجوی درون صفحه" class="guide-search__results" id="guide-search-results"></ol>
+      <noscript><p>برای جست‌وجوی درون‌صفحه‌ای از قابلیت Find مرورگر استفاده کنید. فهرست مطالب کامل بدون جاوااسکریپت در صفحه فعال است.</p></noscript>
+    </search>
+  </div>
+</dialog>
+
+<script is:inline id="site-runtime">
+(()=>{const d=document,s=d.documentElement;s.classList.add('js');
+const norm=v=>(v||'').toLocaleLowerCase('fa').replace(/[يى]/g,'ی').replace(/ك/g,'ک').replace(/[\u200c\u200f\u200e]/g,' ').replace(/[^\p{L}\p{N}\s-]/gu,' ').replace(/\s+/g,' ').trim();
+const dialog=d.getElementById('guide-search'),input=d.getElementById('guide-search-input'),results=d.getElementById('guide-search-results'),status=d.getElementById('guide-search-status');let index;
+const aliasKeys=(dialog?.dataset.entityAliases||'').split('|').map(norm).filter(Boolean);
+const build=()=>index??=[...d.querySelectorAll('main h2[id],main h3[id],main h4[id]')].filter(x=>!x.closest('.guide-search')).map(x=>{const text=x.textContent.trim(),headingAlias=x.dataset.retrievalAlias||'',level=Number(x.tagName.slice(1)),entity=/سعید\s*قزلباش|Saeed\s+Ghezelbash/i.test(text+' '+headingAlias);return{id:x.id,text,level,key:norm(text+' '+headingAlias)+(entity?' '+aliasKeys.join(' '):'')}});
+const score=(x,q)=>{const key=x.key,base=key===q?0:key.startsWith(q)?1:key.split(' ').some(t=>t.startsWith(q))?2:key.includes(q)?3:99;return base===99?99:base*10+x.level};
+const revealTarget=id=>{const target=d.getElementById(id),disclosure=target?.closest('details');if(disclosure&&!disclosure.open)disclosure.open=true;return target};
+const render=()=>{const q=norm(input.value);results.replaceChildren();if(q.length<2){status.textContent='برای جست‌وجوی دقیق‌تر دست‌کم دو حرف وارد کنید.';return}const hits=build().map(x=>({...x,rank:score(x,q)})).filter(x=>x.rank<99).sort((a,b)=>a.rank-b.rank||a.text.length-b.text.length).slice(0,24);for(const hit of hits){const li=d.createElement('li'),a=d.createElement('a');a.href='#'+hit.id;a.textContent=hit.text;a.addEventListener('click',()=>{revealTarget(hit.id);dialog.close()},{once:true});li.append(a);results.append(li)}status.textContent=hits.length?`${hits.length} نتیجه از عنوان‌های صفحه پیدا شد.`:'نتیجه‌ای پیدا نشد؛ واژه کوتاه‌تر یا مترادف را امتحان کنید.'};
+const open=()=>{if(!dialog.open)dialog.showModal();requestAnimationFrame(()=>input.focus())};
+d.addEventListener('click',e=>{if(e.target.closest('[data-guide-search-open]'))open()});
+d.addEventListener('keydown',e=>{if(e.key==='/'&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(d.activeElement?.tagName)&&!d.activeElement?.isContentEditable){e.preventDefault();open()}});
+input?.addEventListener('input',render);dialog?.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
+const syncTarget=()=>{d.querySelector('.render-chunk.is-target-chunk')?.classList.remove('is-target-chunk');if(!location.hash)return;let id;try{id=decodeURIComponent(location.hash.slice(1))}catch{id=location.hash.slice(1)}revealTarget(id)?.closest('.render-chunk')?.classList.add('is-target-chunk')};
+addEventListener('hashchange',syncTarget,{passive:true});syncTarget();
+const toc=d.getElementById('aesthetic-medicine-table-of-contents'),rail=d.querySelector('[data-chapter-rail]'),railList=rail?.querySelector('[data-chapter-rail-list]'),tocLinks=toc?[...toc.querySelectorAll('a[href^="#"]')]:[],railLinks=[];
+if(toc&&rail&&railList&&tocLinks.length){for(const source of tocLinks){const li=d.createElement('li'),a=d.createElement('a');a.href=source.getAttribute('href');a.textContent=source.textContent.trim();a.title=a.textContent;li.append(a);railList.append(li);railLinks.push(a)}const all=[...tocLinks,...railLinks],activate=id=>{for(const link of all){const active=link.hash==='#'+id;link.classList.toggle('is-current',active);if(active)link.setAttribute('aria-current','location');else link.removeAttribute('aria-current')}railLinks.find(link=>link.hash==='#'+id)?.scrollIntoView({block:'nearest'})};const sections=tocLinks.map(link=>d.getElementById(link.hash.slice(1))).filter(Boolean);if('IntersectionObserver'in window){const sectionObserver=new IntersectionObserver(entries=>{const active=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>Math.abs(a.boundingClientRect.top)-Math.abs(b.boundingClientRect.top))[0];if(active)activate(active.target.id)},{rootMargin:'-14% 0px -78%',threshold:0});sections.forEach(section=>sectionObserver.observe(section));const wide=matchMedia('(min-width:80rem)'),setRail=entry=>{rail.hidden=!(wide.matches&&entry.boundingClientRect.bottom<0)},tocObserver=new IntersectionObserver(entries=>setRail(entries[0]),{threshold:0});tocObserver.observe(toc);wide.addEventListener?.('change',()=>{if(!wide.matches)rail.hidden=true})}const hashId=location.hash.slice(1);if(hashId&&sections.some(section=>section.id===hashId))activate(hashId)}
+const revealPoster=video=>{if(!video.poster&&video.dataset.poster)video.poster=video.dataset.poster},posterVideos=[...d.querySelectorAll('video[data-poster]')];
+if('IntersectionObserver'in window){const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){revealPoster(entry.target);observer.unobserve(entry.target)}},{rootMargin:'600px 0px'});for(const video of posterVideos)observer.observe(video)}else{const idle=window.requestIdleCallback||((fn)=>setTimeout(fn,1));idle(()=>posterVideos.forEach(revealPoster))}
+const p=new URLSearchParams(location.search),slug=p.get('video'),seconds=Number(p.get('t'));if(slug){const video=d.getElementById('video-saeed-ghezelbash-'+slug);if(video){revealPoster(video);video.preload='metadata';const seek=()=>{if(Number.isFinite(seconds)&&seconds>=0)video.currentTime=Math.min(seconds,Number.isFinite(video.duration)?video.duration:seconds);video.closest('figure')?.classList.add('video-deeplink-target');video.scrollIntoView({block:'center'});video.focus({preventScroll:true})};video.readyState>=1?seek():video.addEventListener('loadedmetadata',seek,{once:true})}}
+})();
+</script>
