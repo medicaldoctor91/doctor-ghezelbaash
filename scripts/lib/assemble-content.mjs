@@ -2,6 +2,7 @@ import path from 'node:path';
 import {readFile,readdir} from 'node:fs/promises';
 import {bindHeroPictureSizes} from '../../src/lib/hero-image-contract.mjs';
 import {bindHeroSearchLabel} from '../../src/lib/hero-search-presentation.mjs';
+import {bindHeroMastheadPresentation} from '../../src/lib/hero-subtitle-presentation.mjs';
 import {bindLanguageRegions} from '../../src/lib/language-regions.mjs';
 import {bindReleaseTokens} from '../../src/lib/release-tokens.mjs';
 import {bindSiteTokens,deriveSiteData} from '../../src/lib/site-data.mjs';
@@ -37,6 +38,7 @@ export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
   let content=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
   content=bindLanguageRegions(content);
   content=compactAuthoredHtmlLayout(content);
+  content=bindHeroMastheadPresentation(content);
   content=bindHeroSearchLabel(content);
   content=bindHeroPictureSizes(content);
   content=bindReleaseTokens(content,release);
