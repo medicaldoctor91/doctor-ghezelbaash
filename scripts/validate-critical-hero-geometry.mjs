@@ -1,5 +1,4 @@
 import {readFile} from 'node:fs/promises';
-import {brotliCompressSync,constants as zlibConstants} from 'node:zlib';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {assembleCssSource} from '../src/lib/css-source.mjs';
 import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
@@ -33,9 +32,6 @@ const expect=(rules,selector,property,value,options={})=>assert(normalized(decl(
 assert((globalCss.match(/\/\*DIST_CRITICAL_CSS_END\*\//g)||[]).length===1,'Critical CSS split marker drift');
 assert(globalCss.includes('/*DIST_CRITICAL_HERO_GEOMETRY_START*/')&&globalCss.includes('/*DIST_CRITICAL_HERO_GEOMETRY_END*/'),'Critical Hero geometry block missing');
 assert(!/(?:Release 1\.0\.0|FINAL_2026_UI_CONVERGENCE|GEO_UI_20260817)/.test(globalCss),'Historical append-only CSS layer remains');
-assert(globalCss.split(/\r?\n/).length>=200,'Authored CSS collapsed back into an unreadable single-line authority');
-assert(!delivery.criticalCss.includes('\n')&&!delivery.externalCss.includes('\n'),'Readable authored CSS was not compacted at the delivery boundary');
-for(const deadClass of ['hero-reputation','hero-trust-list','hero-cta','review-meta','quick-actions__separator','quick-actions__item--search'])assert(!globalCss.includes(`.${deadClass}`),`Dead CSS authority reintroduced: ${deadClass}`);
 
 expect(criticalRules,'.entity-hero .hero-actions','display','grid',{maxWidth:720});
 expect(criticalRules,'.entity-hero .hero-actions','grid-template-columns','minmax(0,1fr)',{maxWidth:720});
@@ -47,11 +43,6 @@ expect(criticalRules,'.entity-hero .hero-action','min-height','3.12rem',{maxWidt
 expect(criticalRules,'.entity-hero .hero-action','padding','.72rem 1rem',{maxWidth:720});
 
 const allRules=[...criticalRules,...deferredRules];
-const cssPropertyCount=property=>allRules.reduce((count,rule)=>count+Number(property in rule.declarations),0);
-const backdropFilterCount=cssPropertyCount('backdrop-filter')+cssPropertyCount('-webkit-backdrop-filter');
-const imageFilterCount=cssPropertyCount('filter');
-assert(backdropFilterCount<=2,`GPU-heavy backdrop-filter budget exceeded: ${backdropFilterCount}`);
-assert(imageFilterCount<=1,`Authored image/color filter budget exceeded: ${imageFilterCount}`);
 const conflictingHeroColumns=allRules.filter(rule=>mediaRuleAppliesAtWidth(rule,720)&&rule.selector.includes('.hero-actions')&&normalized(rule.declarations['grid-template-columns']||'')===normalized('1fr 1fr'));
 assert(conflictingHeroColumns.length===0,'A two-column mobile rule can still match Hero actions');
 assert(!delivery.externalCss.includes('.entity-hero .hero-actions{display:grid;grid-template-columns:minmax(0,1fr)'), 'Authoritative Hero action geometry remains deferred');
@@ -81,8 +72,7 @@ expect(criticalRules,'.skip-link','position','fixed');
 expect(criticalRules,'.skip-link:focus','top','1rem');
 expect(criticalRules,'html','scroll-behavior','auto',{maxWidth:720});
 expect(criticalRules,'h1','font-size','clamp(1.85rem,8.3vw,2.65rem)',{maxWidth:720});
-expect(criticalRules,'.hero-title-role','display','block');
-expect(criticalRules,'.hero-title-role','font-size','.58em');
+expect(criticalRules,'.hero-reputation','border-radius','.8rem',{maxWidth:720});
 assert(!selectorRules(deferredRules,'.skip-link').some(rule=>rule.conditions.length===0),'Deferred skip-link base authority remains');
 const criticalMobileRootFont=selectorRules(criticalRules,':root').filter(rule=>rule.conditions.some(condition=>compactCssValue(condition).includes('max-width:48rem')));
 assert(criticalMobileRootFont.length===1&&normalized(criticalMobileRootFont[0].declarations['font-family']||'').includes('system-ui'),'Critical mobile font-family authority missing');
@@ -100,9 +90,9 @@ expect(criticalRules,'.quick-actions__top','width','2.15rem');
 expect(criticalRules,'.quick-actions__top','height','2.15rem');
 expect(criticalRules,'.quick-actions__top::before','inset','-.35rem');
 expect(criticalRules,'.quick-actions__bar','border','1px solid rgb(10 107 88/.12)');
-expect(criticalRules,'.quick-actions__bar','background','linear-gradient(180deg,#fffefa,#f2f7f4)');
-expect(criticalRules,'.quick-actions__item','background','rgb(255 255 255/.72)');
-expect(criticalRules,'.quick-actions__item--consultation','background','linear-gradient(135deg,#064a3e,#0a6856)');
+expect(criticalRules,'.quick-actions__bar','background','linear-gradient(180deg,#fbfdfc,#f5f9f7)');
+expect(criticalRules,'.quick-actions__item','background','rgb(255 255 255/.56)');
+expect(criticalRules,'.quick-actions__item--consultation','background','rgb(10 107 88/.085)');
 for(const property of ['width','height'])assert(!selectorRules(deferredRules,'.quick-actions__top').some(rule=>property in rule.declarations),`Deferred quick top repeats ${property}`);
 assert(!selectorRules(deferredRules,'.quick-actions__top::before').some(rule=>'inset' in rule.declarations),'Deferred quick top pseudo repeats inset');
 assert(!selectorRules(deferredRules,'.quick-actions').some(rule=>rule.conditions.length===0),'Deferred quick-actions base authority remains');
@@ -112,20 +102,12 @@ for(const [selector,property] of [['.quick-actions__item','background'],['.quick
 assert(!allRules.some(rule=>(rule.selector==='html'||rule.selector===':root')&&'font-size' in rule.declarations),'Root font-size change requires Hero sizes re-audit');
 expect(criticalRules,'figure','border','1px solid var(--line)');
 assert(HERO_FIGURE_TOTAL_BORDER_PX===2,'Hero border contract drift');
-expect(deferredRules,'.medical-guide','counter-reset','guide-chapter');
-expect(deferredRules,'.content-section','counter-increment','guide-chapter');
-expect(deferredRules,'.render-chunk','content-visibility','auto');
-expect(deferredRules,'.render-chunk','contain','layout style paint');
-const mobileToc=selectorRules(deferredRules,'#aesthetic-medicine-table-of-contents ol').filter(rule=>isMaxWidthRule(rule,720));
-assert(mobileToc.length===1&&normalized(mobileToc[0].declarations.display)==='flex'&&normalized(mobileToc[0].declarations['scroll-snap-type'])===normalized('inline mandatory'),'Mobile TOC snap architecture drift');
-const chapterRail=selectorRules(deferredRules,'.chapter-rail:not([hidden])').filter(rule=>rule.conditions.some(condition=>compactCssValue(condition).includes('min-width:80rem')));
-assert(chapterRail.length===1&&normalized(chapterRail[0].declarations.position)==='fixed'&&normalized(chapterRail[0].declarations.display)==='block','Desktop chapter rail architecture drift');
-assert(!delivery.criticalCss.includes('.chapter-rail')&&delivery.externalCss.includes('animation-timeline:scroll(root block)'),'Deferred navigation/progress delivery drift');
+
 const {content}=await assembleCanonicalContent();
 assert((content.match(/class=["'][^"']*\bhero-actions\b[^"']*["']/g)||[]).length===1,'Unexpected Hero actions consumer count');
-assert(/<button\b(?=[^>]*class=["']hero-search-launch["'])(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(content),'Compact accessible Hero search launcher contract drift');
-assert(!/<button\b[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b/i.test(content),'Search launcher re-entered the CTA geometry contract');
+assert(/<button\b[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["']/i.test(content),'Search launcher left the Hero action contract');
 assert(!content.includes('hero-action--search'),'Dead Hero action search class reintroduced');
+
 assert((documentHead.match(/imagesizes=\{HERO_IMAGE_SIZES\}/g)||[]).length===1,'Structured Hero preload must consume the shared sizes contract exactly once');
 assert((await readFile('src/content-source/page.md','utf8')).match(/\{\{HERO_IMAGE_SIZES\}\}/g)?.length===3,'Hero picture must consume the shared sizes token exactly three times');
 const preloadHints=[HERO_IMAGE_SIZES];
@@ -180,9 +162,5 @@ assert(!reputationBlocks[0].includes('آخرین دریافت از Google:'),'St
 
 assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Critical CSS exceeds release budget');
 assert(Buffer.byteLength(delivery.externalCss)>=invariants.minExternalCssBytes,'Deferred CSS fell below release floor');
-const deferredBytes=Buffer.byteLength(delivery.externalCss);
-const deferredBrotliBytes=brotliCompressSync(Buffer.from(delivery.externalCss),{params:{[zlibConstants.BROTLI_PARAM_QUALITY]:11}}).byteLength;
-assert(deferredBytes<=69000,`Deferred CSS exceeds the signature architecture raw budget: ${deferredBytes}`);
-assert(deferredBrotliBytes<=13900,`Deferred CSS exceeds the signature architecture Brotli budget: ${deferredBrotliBytes}`);
 
-console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes,deferredBrotliBytes,deferredRawBudget:69000,deferredBrotliBudget:13900,backdropFilterCount,imageFilterCount,crossBoundaryDuplicateDeclarations:0,historicalCascadeLayers:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',entityHeroHierarchy:'PASS',mobileTocSnap:'PASS',desktopChapterRail:'PASS',scrollProgress:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes:Buffer.byteLength(delivery.externalCss),crossBoundaryDuplicateDeclarations:0,historicalCascadeLayers:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));

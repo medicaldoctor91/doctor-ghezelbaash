@@ -21,7 +21,7 @@
       "blog.ghezelbaash.ir"
     ],
     "build": {
-      "command": "npm run build",
+      "command": "npm ci --ignore-scripts && npm run build",
       "destinationDir": "dist",
       "rootDir": ""
     },

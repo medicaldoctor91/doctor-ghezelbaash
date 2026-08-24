@@ -16,3 +16,6 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.18765168
     description: Zenodo Concept DOI for the evolving Dataset
+  - type: other
+    value: https://www.wikidata.org/entity/Q140304972
+    description: Wikidata Dataset entity

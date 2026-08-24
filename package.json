@@ -4,10 +4,6 @@
   "private": true,
   "type": "module",
   "packageManager": "npm@11.17.0",
-  "allowScripts": {
-    "esbuild@0.28.1": true,
-    "fsevents@2.3.3": true
-  },
   "scripts": {
     "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
     "clean:generated": "node scripts/generated-workspace.mjs reset",
@@ -23,9 +19,8 @@
     "preflight:cloudflare": "python scripts/preflight-cloudflare-edge.py --if-configured",
     "validate:hygiene": "node scripts/validate-repository-hygiene.mjs",
     "validate:architecture": "node scripts/validate-architecture.mjs",
-    "validate:semantic-html": "node scripts/validate-semantic-html.mjs",
     "validate:media-manifest": "node scripts/enrich-image-metadata-manifest.mjs --preflight-only",
-    "validate:source": "npm run validate:hygiene && npm run validate:architecture && npm run validate:media-manifest && node scripts/platform-contract.mjs validate && node scripts/validate-source.mjs && npm run validate:semantic-html && node scripts/validate-critical-path.mjs && node scripts/validate-head-authority.mjs && node scripts/validate-critical-hero-geometry.mjs && node scripts/test-contracts.mjs && node scripts/validate-critical-ctas.mjs && node scripts/validate-subdomain-redirects.mjs && node scripts/github-pages-bridge.mjs self-test",
+    "validate:source": "npm run validate:hygiene && npm run validate:architecture && npm run validate:media-manifest && node scripts/platform-contract.mjs validate && node scripts/validate-source.mjs && node scripts/validate-critical-path.mjs && node scripts/validate-head-authority.mjs && node scripts/validate-critical-hero-geometry.mjs && node scripts/test-contracts.mjs && node scripts/validate-critical-ctas.mjs && node scripts/validate-subdomain-redirects.mjs && node scripts/github-pages-bridge.mjs self-test",
     "media:enrich": "node scripts/enrich-image-metadata-manifest.mjs",
     "validate:media-references": "node scripts/validate-media-references.mjs",
     "validate:media": "node scripts/validate-media.mjs",

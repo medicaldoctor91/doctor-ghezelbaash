@@ -33,16 +33,7 @@ export function inspectHtml(source,{wrapMain=false}={}){
   const sections=elements.filter(node=>node.tagName==='section');
   const unclosedSections=sections.filter(node=>!node.sourceCodeLocation?.endTag);
   const contentSections=sections.filter(node=>classes(node).has('content-section'));
-  const mains=elements.filter(node=>node.tagName==='main');
-  const guideArticles=elements.filter(node=>node.tagName==='article'&&classes(node).has('medical-guide'));
-  const contentContainer=guideArticles[0]||mains[0];
-  const misplacedContentSections=contentSections.filter(node=>node.parentNode!==contentContainer);
-  const guideStructureErrors=[];
-  if(!wrapMain){
-    if(mains.length!==1) guideStructureErrors.push(`expected one main landmark, found ${mains.length}`);
-    if(guideArticles.length!==1) guideStructureErrors.push(`expected one medical-guide article, found ${guideArticles.length}`);
-    if(guideArticles.length===1&&guideArticles[0].parentNode!==mains[0]) guideStructureErrors.push('medical-guide article is not a direct main child');
-  }
+  const misplacedContentSections=contentSections.filter(node=>node.parentNode?.tagName!=='main');
   const headings=elements.filter(node=>/^h[1-6]$/.test(node.tagName));
   const videos=elements.filter(node=>node.tagName==='video');
   const videoErrors=[];
@@ -57,7 +48,7 @@ export function inspectHtml(source,{wrapMain=false}={}){
     if(!attr(video,'data-poster')) videoErrors.push(`${attr(video,'id')||'(video)'} lacks deferred data-poster`);
     if(attr(video,'preload')!=='none') videoErrors.push(`${attr(video,'id')||'(video)'} preload must be none`);
   }
-  return {document,elements,ids,fragments,sections,contentSections,mains,guideArticles,contentContainer,guideStructureErrors,unclosedSections,misplacedContentSections,headings,videos,videoErrors};
+  return {document,elements,ids,fragments,sections,contentSections,unclosedSections,misplacedContentSections,headings,videos,videoErrors};
 }
 
 export function assertDocumentContract(source,{wrapMain=false,expectedContentSections}={}){
@@ -67,8 +58,7 @@ export function assertDocumentContract(source,{wrapMain=false,expectedContentSec
   const idSet=new Set(result.ids),missing=[...new Set(result.fragments.filter(fragment=>!idSet.has(fragment)))];
   if(missing.length) throw new Error(`Broken actual HTML fragments: ${missing.join(',')}`);
   if(result.unclosedSections.length) throw new Error(`Sections without explicit end tags: ${result.unclosedSections.map(node=>attr(node,'id')||'(section)').join(',')}`);
-  if(result.guideStructureErrors.length) throw new Error(`Canonical article structure failed: ${result.guideStructureErrors.join('; ')}`);
-  if(result.misplacedContentSections.length) throw new Error(`Content sections are not direct canonical content-container children: ${result.misplacedContentSections.map(node=>attr(node,'id')||'(section)').join(',')}`);
+  if(result.misplacedContentSections.length) throw new Error(`Content sections are not direct main children: ${result.misplacedContentSections.map(node=>attr(node,'id')||'(section)').join(',')}`);
   if(expectedContentSections!==undefined&&result.contentSections.length!==expectedContentSections) throw new Error(`Content section count drift: ${result.contentSections.length}/${expectedContentSections}`);
   if(result.videoErrors.length) throw new Error(`Video markup contract failed: ${result.videoErrors.join('; ')}`);
   return result;

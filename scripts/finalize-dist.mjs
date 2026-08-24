@@ -82,7 +82,7 @@ const liveBytes=await readFile(path.join(dist,'live-observations.jsonld'));
 const manifest={
  architecture:'Astro pure-static single-page SSG with physician-first identity graph, deterministic release projections, Query Matrix 2.0, evidence/provenance, immutable release semantics separated from mutable live observations, single-pass current-serving integrity and native Cloudflare Git deployment.',
  generatedAt,canonicalUrl:release.canonicalUrl,release:release.release,baseRelease:release.release,liveRevision,
- dataset:{id:release.dataset.id,name:datasetName,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,zenodoRecordId:String(release.dataset.zenodo.recordId)},
+ dataset:{id:release.dataset.id,name:datasetName,wikidata:release.dataset.wikidata,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,zenodoRecordId:String(release.dataset.zenodo.recordId)},
  primaryEntity:{name:release.primaryEntity.name,fullNameAliases:release.primaryEntity.officialAliases,googleKnowledgeGraphId:release.primaryEntity.googleKnowledgeGraphId,wikidata:release.primaryEntity.wikidata},
  stableMediaIdentity:{...stableMediaInventory.subject,authorityMasterCount:(stableMediaInventory.aliases||[]).length,contract:'IPTC PersonInImageId + Dublin Core relation + embedded entity graph + HTTP Link'},
  identityFingerprint:{sha256:hashIdentityFingerprint(release),value:deriveIdentityFingerprint(release)},

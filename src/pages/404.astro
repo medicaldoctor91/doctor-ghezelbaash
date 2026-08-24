@@ -6,28 +6,5 @@ import {deriveSiteData} from '../lib/site-data.mjs';
 const site=deriveSiteData(release,headGraph);
 const frontmatter={title:'صفحه پیدا نشد | دکتر سعید قزلباش',description:'صفحه درخواستی پیدا نشد؛ از مسیرهای اصلی وب‌سایت رسمی دکتر سعید قزلباش استفاده کنید.',lang:'fa-IR',dir:'rtl',robots:'noindex, follow'} as const;
 ---
-<BaseLayout frontmatter={frontmatter} url="/404">
-  <section aria-labelledby="not-found-title" class="not-found-page">
-    <div class="not-found-page__status"><img alt="" aria-hidden="true" height="34" src="/favicon.svg" width="34" /><span><strong>وب‌سایت رسمی دکتر سعید قزلباش</strong><small>خطای مسیریابی، نه پایان راهنما</small></span></div>
-    <p class="not-found-page__code" aria-hidden="true">404</p>
-    <h1 id="not-found-title">این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1>
-    <p class="not-found-page__lead">این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد. از مسیرهای معتبر زیر ادامه دهید.</p>
-    <nav aria-label="مسیرهای اصلی" class="not-found-page__links"><a href="/#botox">بوتاکس</a><a href="/#filler">فیلر</a><a href="/#thread-lift">لیفت نخ</a><a href="/#acne-pigmentation-and-scars">جوش، لک و اسکار</a><a href="/#hair-loss">ریزش مو</a><a href="/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی</a></nav>
-    <div class="not-found-page__actions"><a class="not-found-page__primary" href="/">بازگشت به صفحه اصلی</a><a href={site.telHref}>تماس با کلینیک</a><a href={site.chatUrl} rel="external">ارزیابی اولیه آنلاین</a></div>
-  </section>
-</BaseLayout>
-<style>
-  .not-found-page{position:relative;display:grid;align-content:center;min-height:100svh;padding:clamp(1rem,3vw,2rem);padding-block:clamp(2rem,8vw,7rem) 8rem;overflow:hidden;border:1px solid rgb(10 104 86/.14);border-radius:1.6rem;background:radial-gradient(circle at 8% 0,rgb(169 120 66/.16),transparent 18rem),linear-gradient(145deg,#fffefa,#eaf5f1);box-shadow:0 22px 66px rgb(15 43 34/.12)}
-  .not-found-page::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:.25rem;background:linear-gradient(var(--signature),var(--accent))}
-  .not-found-page__status{display:flex;gap:.65rem;align-items:center;color:var(--accent-strong)}
-  .not-found-page__status img{width:2.15rem;height:2.15rem;padding:.42rem;border:1px solid #ddc8ad;border-radius:.78rem;background:var(--signature-soft)}
-  .not-found-page__status span{display:grid;line-height:1.35}.not-found-page__status strong{font-size:.84rem}.not-found-page__status small{color:var(--muted);font-size:.7rem}
-  .not-found-page__code{margin:.8rem 0 0;background:linear-gradient(135deg,var(--accent),var(--signature));background-clip:text;color:transparent;font-size:clamp(5rem,18vw,11rem);font-weight:900;line-height:.78;letter-spacing:-.06em}
-  .not-found-page h1{max-width:18ch;margin-block:1rem .55rem}.not-found-page__lead{max-width:58ch;margin-block:0;color:var(--muted)}
-  .not-found-page__links,.not-found-page__actions{display:flex;flex-wrap:wrap;gap:.7rem;max-width:var(--reading-measure)}
-  .not-found-page__links{margin-block:1.25rem;padding:1rem;border:1px solid var(--line);border-radius:1rem;background:rgb(255 254 250/.7);box-shadow:0 10px 28px rgb(17 53 42/.05)}
-  .not-found-page__links a,.not-found-page__actions a{display:inline-flex;align-items:center;justify-content:center;min-height:2.75rem;padding:.55rem .85rem;border:1px solid #cfe3dc;border-radius:999px;background:#fff;font-weight:720;text-decoration:none}
-  .not-found-page__actions .not-found-page__primary{border-color:var(--accent-strong);background:linear-gradient(135deg,var(--accent-strong),var(--accent));color:#fff;box-shadow:0 10px 24px rgb(6 74 62/.18)}
-  @media(max-width:520px){.not-found-page{border-radius:1.15rem}.not-found-page__links,.not-found-page__actions{display:grid;grid-template-columns:1fr 1fr}.not-found-page__actions .not-found-page__primary{grid-column:1/-1}}
-  @media(max-width:360px){.not-found-page__links,.not-found-page__actions{grid-template-columns:1fr}}
-</style>
+<BaseLayout frontmatter={frontmatter} url="/404"><div class="not-found-page"><p class="not-found-page__code" aria-hidden="true">404</p><h1>این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است</h1><p>این نشانی در وب‌سایت رسمی دکتر سعید قزلباش وجود ندارد. از مسیرهای اصلی زیر ادامه دهید.</p><nav class="not-found-page__links" aria-label="مسیرهای اصلی"><a href="/#botox">بوتاکس</a><a href="/#filler">فیلر</a><a href="/#thread-lift">لیفت نخ</a><a href="/#acne-pigmentation-and-scars">جوش، لک و اسکار</a><a href="/#hair-loss">ریزش مو</a><a href="/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی</a></nav><div class="not-found-page__actions"><a class="not-found-page__primary" href="/">بازگشت به صفحه اصلی</a><a href={site.telHref}>تماس با کلینیک</a><a href={site.chatUrl} rel="external">ارزیابی اولیه آنلاین</a></div></div></BaseLayout>
+<style>.not-found-page{min-height:100svh;display:grid;align-content:center;gap:1rem;padding-block:clamp(2rem,8vw,7rem) 8rem}.not-found-page__code{margin:0;color:var(--accent);font-size:clamp(4rem,18vw,10rem);font-weight:900;line-height:.8;letter-spacing:-.06em}.not-found-page h1{max-width:18ch;margin-block:.4rem .8rem}.not-found-page__links,.not-found-page__actions{display:flex;flex-wrap:wrap;gap:.7rem;max-width:var(--reading-measure)}.not-found-page__links{margin-block:1rem;padding:1rem;border:1px solid var(--line);border-radius:1rem;background:var(--surface-soft)}.not-found-page__links a,.not-found-page__actions a{display:inline-flex;align-items:center;min-height:2.75rem;padding:.55rem .85rem;border:1px solid #cfe3dc;border-radius:999px;background:#fff;font-weight:720;text-decoration:none}.not-found-page__actions .not-found-page__primary{background:var(--accent-strong);color:#fff}</style>

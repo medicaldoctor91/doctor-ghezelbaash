@@ -88,6 +88,7 @@
   "dataset": {
     "id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
     "name": "Dr. Saeed Ghezelbash Public Knowledge Graph",
+    "wikidata": "Q140304972",
     "creator": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
     "creatorWikidata": "Q140287622",
     "creatorOrcid": "0009-0001-9346-8475",

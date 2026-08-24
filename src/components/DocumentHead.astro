@@ -31,6 +31,7 @@ const discoveryLinks:DiscoveryLink[]=[
   {href:`https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`,rel:'about',title:'Wikidata — clinic'},
   {href:`https://www.google.com/maps?cid=${release.clinic.cid}`,rel:'about',title:'Google Maps — clinic'},
   {href:'https://www.openstreetmap.org/node/13530287096',rel:'about',title:'OpenStreetMap — clinic'},
+  {href:`https://www.wikidata.org/entity/${release.dataset.wikidata}`,rel:'related',title:'Wikidata — structured-data project'},
   {href:release.dataset.github.repository,rel:'related',title:'GitHub — canonical repository'},
   {href:`https://doi.org/${versionDoi}`,rel:'related',title:`Zenodo preservation Version DOI ${release.release}`},
   {href:release.dataset.license,rel:'license'},

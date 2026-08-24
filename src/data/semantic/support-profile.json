@@ -50,43 +50,6 @@
         "isPartOf"
       ]
     },
-    "MedicalCondition": {
-      "include": [
-        "@id",
-        "@type",
-        "name",
-        "termCode",
-        "identifier",
-        "sameAs",
-        "possibleTreatment"
-      ]
-    },
-    "HowTo": {
-      "include": [
-        "@id",
-        "@type",
-        "name",
-        "description",
-        "url",
-        "inLanguage",
-        "author",
-        "reviewedBy",
-        "mainEntityOfPage",
-        "about",
-        "step"
-      ]
-    },
-    "HowToStep": {
-      "include": [
-        "@id",
-        "@type",
-        "position",
-        "name",
-        "text",
-        "url",
-        "isPartOf"
-      ]
-    },
     "Question": {
       "include": [
         "@id",

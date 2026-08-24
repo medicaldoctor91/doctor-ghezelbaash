@@ -171,6 +171,7 @@ export async function compileRetrievalCorpus(context,{answerRecords}={}){
     '{{ZENODO_VERSION_DOI}}':release.dataset.zenodo.versionDoi,
     '{{ZENODO_VERSION_DOI_URL}}':`https://doi.org/${release.dataset.zenodo.versionDoi}`,
     '{{ZENODO_RECORD_ID}}':String(release.dataset.zenodo.recordId),
+    '{{DATASET_WIKIDATA}}':release.dataset.wikidata,
     '{{HUGGING_FACE_DATASET}}':release.dataset.huggingFace.dataset,
     '{{EVIDENCE_TIER_LINE}}':evidenceTierLine,
   });

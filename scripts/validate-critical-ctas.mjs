@@ -18,13 +18,12 @@ const heroContract=[
   {label:'مشاهده نمونه‌کارهای دکتر قزلباش',href:site.instagramUrl},
   {label:'آدرس دقیق کلینیک',href:'https://doctor.ghezelbaash.ir/'}
 ];
-const visibleText=anchor=>anchor.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
 for(const contract of heroContract){
-  const hits=hero.filter(anchor=>visibleText(anchor)===contract.label&&anchor.includes(`href="${contract.href}"`));
+  const hits=hero.filter(anchor=>anchor.includes(`>${contract.label}</a>`)&&anchor.includes(`href="${contract.href}"`));
   if(hits.length!==1)fail(`Hero CTA contract drift: ${contract.label} (${hits.length})`);
   if(contract.primary&&!hits[0].includes('hero-action--primary'))fail('Reservation CTA lost primary hierarchy');
-  const text=visibleText(hits[0]);
-  if(text!==contract.label)fail(`Hero CTA accessible text drift: ${contract.label} -> ${text}`);
+  const visibleText=hits[0].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  if(visibleText!==contract.label)fail(`Hero CTA accessible text drift: ${contract.label} -> ${visibleText}`);
 }
 
 if(!redirectsRaw.includes('doctor.ghezelbaash.ir')||!/(google\.com\/maps|maps\.google)/i.test(redirectsRaw))fail('doctor subdomain no longer maps to the clinic map redirect contract');

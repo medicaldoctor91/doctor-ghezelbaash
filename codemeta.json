@@ -28,6 +28,7 @@
     "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
     "name": "Dr. Saeed Ghezelbash Public Knowledge Graph",
     "version": "1.2.3",
-    "identifier": "https://doi.org/10.5281/zenodo.22032822"
+    "identifier": "https://doi.org/10.5281/zenodo.22032822",
+    "sameAs": "https://www.wikidata.org/entity/Q140304972"
   }
 }
