@@ -1,5 +1,6 @@
 import path from 'node:path';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
+import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs';
 import {normalizeGoogleSupportGraph} from '../google-support-graph.mjs';
 import {nodeTypes,refId} from '../projection-context.mjs';
 
@@ -31,7 +32,7 @@ const projectNode=(node,spec={})=>{
 };
 
 export async function compileGraphProjections(context){
-  const {semantic,generatedSemantic,graph,byId,readIds}=context;
+  const {semantic,generatedSemantic,graph,byId,readIds,release}=context;
   const [headIds,headProfile,supportIds,supportProfile]=await Promise.all([
     readIds('head'),
     readFile(path.join(semantic,'head-profile.json'),'utf8').then(JSON.parse),
@@ -40,11 +41,14 @@ export async function compileGraphProjections(context){
   ]);
   await mkdir(generatedSemantic,{recursive:true});
 
+  const multilingualResourceIds=new Set([`${release.canonicalUrl}#website`,`${release.canonicalUrl}#webpage`]);
   const headNodes=[];
   for(const id of headIds){
     const node=byId.get(id);
     if(!node)throw new Error(`Head selection missing ${id}`);
-    headNodes.push(projectNode(node,headProfile.nodes?.[id]));
+    const projected=projectNode(node,headProfile.nodes?.[id]);
+    if(multilingualResourceIds.has(id))projected.inLanguage=[...CONTENT_LANGUAGES];
+    headNodes.push(projected);
   }
   const headDoc={'@context':graph['@context'],'@graph':headNodes};
   const headRaw=`${JSON.stringify(headDoc)}\n`;
