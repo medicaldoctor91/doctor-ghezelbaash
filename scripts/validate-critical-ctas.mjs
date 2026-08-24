@@ -25,7 +25,6 @@ for(const contract of heroContract){
   if(contract.primary&&!hits[0].includes('hero-action--primary'))fail('Reservation CTA lost primary hierarchy');
   const text=visibleText(hits[0]);
   if(text!==contract.label)fail(`Hero CTA accessible text drift: ${contract.label} -> ${text}`);
-  if(!/<svg\b(?=[^>]*aria-hidden=["']true["'])[^>]*>[\s\S]*?<\/svg>/i.test(hits[0]))fail(`Hero CTA decorative icon contract drift: ${contract.label}`);
 }
 
 if(!redirectsRaw.includes('doctor.ghezelbaash.ir')||!/(google\.com\/maps|maps\.google)/i.test(redirectsRaw))fail('doctor subdomain no longer maps to the clinic map redirect contract');

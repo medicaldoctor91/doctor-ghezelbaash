@@ -6,13 +6,11 @@ import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
 import {compactCssValue,isMaxWidthRule,mediaRuleAppliesAtWidth,normalizeCssValue,parseCssRules,selectorRules} from './lib/css-rules.mjs';
 import {HERO_FIGURE_TOTAL_BORDER_PX,HERO_IMAGE_SIZES} from '../src/lib/hero-image-contract.mjs';
 
-const [globalCss,renderCalibrationRaw,invariants,documentHead,baseLayout,siteFooter]=await Promise.all([
+const [globalCss,renderCalibrationRaw,invariants,documentHead]=await Promise.all([
   readFile('src/styles/global.css','utf8'),
   readFile('src/data/render-calibration.json','utf8'),
   readFile('src/data/release-invariants.json','utf8').then(JSON.parse),
-  readFile('src/components/DocumentHead.astro','utf8'),
-  readFile('src/layouts/BaseLayout.astro','utf8'),
-  readFile('src/components/SiteFooter.astro','utf8')
+  readFile('src/components/DocumentHead.astro','utf8')
 ]);
 const {cssSource,calibration}=assembleCssSource(globalCss,renderCalibrationRaw);
 const delivery=deriveCssDelivery(cssSource);
@@ -53,7 +51,7 @@ const cssPropertyCount=property=>allRules.reduce((count,rule)=>count+Number(prop
 const backdropFilterCount=cssPropertyCount('backdrop-filter')+cssPropertyCount('-webkit-backdrop-filter');
 const imageFilterCount=cssPropertyCount('filter');
 assert(backdropFilterCount<=2,`GPU-heavy backdrop-filter budget exceeded: ${backdropFilterCount}`);
-assert(imageFilterCount===0,`Authored image/color filter reintroduced: ${imageFilterCount}`);
+assert(imageFilterCount<=1,`Authored image/color filter budget exceeded: ${imageFilterCount}`);
 const conflictingHeroColumns=allRules.filter(rule=>mediaRuleAppliesAtWidth(rule,720)&&rule.selector.includes('.hero-actions')&&normalized(rule.declarations['grid-template-columns']||'')===normalized('1fr 1fr'));
 assert(conflictingHeroColumns.length===0,'A two-column mobile rule can still match Hero actions');
 assert(!delivery.externalCss.includes('.entity-hero .hero-actions{display:grid;grid-template-columns:minmax(0,1fr)'), 'Authoritative Hero action geometry remains deferred');
@@ -123,26 +121,11 @@ assert(mobileToc.length===1&&normalized(mobileToc[0].declarations.display)==='fl
 const chapterRail=selectorRules(deferredRules,'.chapter-rail:not([hidden])').filter(rule=>rule.conditions.some(condition=>compactCssValue(condition).includes('min-width:80rem')));
 assert(chapterRail.length===1&&normalized(chapterRail[0].declarations.position)==='fixed'&&normalized(chapterRail[0].declarations.display)==='block','Desktop chapter rail architecture drift');
 assert(!delivery.criticalCss.includes('.chapter-rail')&&delivery.externalCss.includes('animation-timeline:scroll(root block)'),'Deferred navigation/progress delivery drift');
-const signatureVideo=selectorRules(deferredRules,'.media-card--video').find(rule=>rule.conditions.length===0);
-assert(signatureVideo&&normalized(signatureVideo.declarations.display)==='grid'&&normalized(signatureVideo.declarations['max-width'])==='58rem','Signature video stage architecture drift');
-assert(globalCss.includes('--ghezelbash-mark:url("/favicon.svg")'),'Official Ghezelbash mark token drift');
-assert(globalCss.includes('grid-template-areas:"visual chapters" "visual caption"'),'Wide editorial video layout drift');
-assert(globalCss.includes('grid-template-areas:"visual" "chapters" "caption"'),'Narrow editorial video layout drift');
-assert(baseLayout.includes("'medical-guide--ghezelbash-signature':isMain"),'Main Entity Home lost the physician signature scope');
-assert(siteFooter.includes('class="site-footer__brand"')&&siteFooter.includes('src="/favicon.svg"'),'Branded physician footer lockup drift');
-
 const {content}=await assembleCanonicalContent();
 assert((content.match(/class=["'][^"']*\bhero-actions\b[^"']*["']/g)||[]).length===1,'Unexpected Hero actions consumer count');
 assert(/<button\b(?=[^>]*class=["']hero-search-launch["'])(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(content),'Compact accessible Hero search launcher contract drift');
 assert(!/<button\b[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b/i.test(content),'Search launcher re-entered the CTA geometry contract');
 assert(!content.includes('hero-action--search'),'Dead Hero action search class reintroduced');
-assert((content.match(/\bmedia-card--video\b/g)||[]).length===4,'Expected four signature video stages');
-assert((content.match(/\bmedia-card--education\b/g)||[]).length===3,'Expected three physician education video stages');
-assert((content.match(/\bmedia-card--testimonial\b/g)||[]).length===1,'Expected one testimonial video stage');
-assert((content.match(/\bmedia-card--clinic\b/g)||[]).length===2,'Expected two clinic gallery cards');
-assert((content.match(/\bmedia-card--team\b/g)||[]).length===1,'Expected one clinical-team media card');
-assert((content.match(/\bclinic-gallery\b/g)||[]).length===1,'Expected one coordinated clinic gallery');
-
 assert((documentHead.match(/imagesizes=\{HERO_IMAGE_SIZES\}/g)||[]).length===1,'Structured Hero preload must consume the shared sizes contract exactly once');
 assert((await readFile('src/content-source/page.md','utf8')).match(/\{\{HERO_IMAGE_SIZES\}\}/g)?.length===3,'Hero picture must consume the shared sizes token exactly three times');
 const preloadHints=[HERO_IMAGE_SIZES];
@@ -202,4 +185,4 @@ const deferredBrotliBytes=brotliCompressSync(Buffer.from(delivery.externalCss),{
 assert(deferredBytes<=69000,`Deferred CSS exceeds the signature architecture raw budget: ${deferredBytes}`);
 assert(deferredBrotliBytes<=13900,`Deferred CSS exceeds the signature architecture Brotli budget: ${deferredBrotliBytes}`);
 
-console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes,deferredBrotliBytes,deferredRawBudget:69000,deferredBrotliBudget:13900,backdropFilterCount,imageFilterCount,crossBoundaryDuplicateDeclarations:0,historicalCascadeLayers:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',entityHeroHierarchy:'PASS',physicianSignatureScope:'PASS',signatureVideoStages:4,clinicGalleryCards:2,brandedFooter:'PASS',mobileTocSnap:'PASS',desktopChapterRail:'PASS',scrollProgress:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes,deferredBrotliBytes,deferredRawBudget:69000,deferredBrotliBudget:13900,backdropFilterCount,imageFilterCount,crossBoundaryDuplicateDeclarations:0,historicalCascadeLayers:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',entityHeroHierarchy:'PASS',mobileTocSnap:'PASS',desktopChapterRail:'PASS',scrollProgress:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));

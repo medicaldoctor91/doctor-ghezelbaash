@@ -31,9 +31,9 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <p class="hero-lead" id="hero-clinical-principle">سوزن همیشه مقصر نیست. خیلی وقت‌ها فاجعه از چند دقیقه قبل‌تر شروع شده؛ همان لحظه‌ای که یک پف را گودی دیده‌اند، افتادگی را کمبود ژل حساب کرده‌اند یا برای پوستی که اضافه آمده، نسخه بوتاکس نوشته‌اند. اجرای تمیز، تشخیص غلط را نجات نمی‌دهد. فقط اشتباه را تمیزتر اجرا می‌کند.</p>
 <p class="hero-identity" id="hero-entity-summary" itemprop="description">من، <a href="https://www.wikidata.org/wiki/Q140287622" itemprop="sameAs" rel="me"><span>دکتر سعید قزلباش</span></a> هستم و با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" itemprop="sameAs">کد نظام پزشکی ۱۶۷۴۳۰</a> در کرمانشاه فعالیت می‌کنم. این صفحه منوی بوتاکس و فیلر نیست. قرار است ببینید وقتی یک صورت روبه‌روی من می‌نشیند، دقیقاً دنبال چه می‌گردم؛ کجا تزریق را قبول می‌کنم، کجا چند لایه باید هم‌زمان دیده شوند، کجا جراحی از بازی با سرنگ صادقانه‌تر است و کجا بهترین تصمیم پزشکی این است که اصلاً کاری نکنیم.</p>
 <div aria-label="اقدام‌های اصلی برای مراجعه و استفاده از راهنما" class="hero-actions">
-<a class="hero-action hero-action--primary" href="{{CLINIC_TEL_HREF}}"><svg aria-hidden="true" fill="none" focusable="false" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="20"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.4 19.4 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7A2 2 0 0 1 22 16.9Z"></path></svg><span>رزرو وقت مشاوره رایگان</span></a>
-<a class="hero-action hero-action--instagram" href="{{OFFICIAL_INSTAGRAM_URL}}" aria-label="مشاهده نمونه‌کارهای دکتر سعید قزلباش در اینستاگرام" itemprop="sameAs" rel="external"><svg aria-hidden="true" fill="none" focusable="false" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="20"><rect height="18" rx="5" width="18" x="3" y="3"></rect><circle cx="12" cy="12" r="4"></circle><path d="M17.5 6.5h.01"></path></svg><span>مشاهده نمونه‌کارهای دکتر قزلباش</span></a>
-<a class="hero-action hero-action--location" href="https://doctor.ghezelbaash.ir/" aria-label="مشاهده آدرس دقیق کلینیک دکتر سعید قزلباش" rel="external"><svg aria-hidden="true" fill="none" focusable="false" height="20" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24" width="20"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Zm-8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path></svg><span>آدرس دقیق کلینیک</span></a>
+<a class="hero-action hero-action--primary" href="{{CLINIC_TEL_HREF}}">رزرو وقت مشاوره رایگان</a>
+<a class="hero-action" href="{{OFFICIAL_INSTAGRAM_URL}}" aria-label="مشاهده نمونه‌کارهای دکتر سعید قزلباش در اینستاگرام" itemprop="sameAs" rel="external">مشاهده نمونه‌کارهای دکتر قزلباش</a>
+<a class="hero-action" href="https://doctor.ghezelbaash.ir/" aria-label="مشاهده آدرس دقیق کلینیک دکتر سعید قزلباش" rel="external">آدرس دقیق کلینیک</a>
 </div>
 <figure aria-labelledby="caption-saeed-ghezelbash-portrait-master" class="hero-figure" id="image-saeed-ghezelbash-portrait-master">
 <link href="https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master" itemprop="image"/>
@@ -2530,7 +2530,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <p>سابسیژن جای جوش را پر نمی‌کند؛ گیر زیر پوست را آزاد می‌کند. روشن‌بودن این مرز جلوی بسیاری از توقعات غلط را می‌گیرد. در برخی اسکارهای فرورفته، مخصوصاً اسکارهای چسبیده و رولینگ، رشته‌ها یا چسبندگی‌های زیرپوستی سطح پوست را به پایین می‌کشند. سابسیژن با هدف آزادسازی این چسبندگی‌ها انجام می‌شود تا پوست فرصت پیدا کند از حالت گیرکرده خارج شود و روند ترمیم کنترل‌شده وارد عمل شود.</p>
 <p>
 <strong>مکانیسم سابسیژن با نوع اسکار گره خورده است:</strong> مرور کارآزمایی‌های بالینی منتشرشده در <a href="https://pubmed.ncbi.nlm.nih.gov/36315903/" rel="external noopener">Journal of Cosmetic Dermatology</a> سابسیژن را روشی برای بریدن رشته‌های فیبروتیک زیر اسکارهای آتروفیک و بالا آمدن اسکار توصیف می‌کند. پس «جای جوش دارم» هنوز اندیکاسیون سابسیژن نیست؛ باید اسکار واقعاً tethered/rolling و قابل آزادسازی باشد.</p>
-<figure aria-labelledby="caption-saeed-ghezelbash-subcision-technique" class="media-card media-card--video media-card--education" id="video-subcision-technique">
+<figure aria-labelledby="caption-saeed-ghezelbash-subcision-technique" id="video-subcision-technique">
 <link href="https://www.ghezelbaash.ir/#video-subcision-technique" itemprop="video"/>
 <video aria-describedby="caption-saeed-ghezelbash-subcision-technique video-saeed-ghezelbash-subcision-technique-chapters" aria-label="توضیحات دکتر سعید قزلباش درباره سابسیژن" controls="" height="960" id="video-saeed-ghezelbash-subcision-technique" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-subcision-technique.0fac476f8492.webp" preload="none" title="ویدئوی توضیح دکتر سعید قزلباش درباره سابسیژن" width="540">
 <source src="/media/videos/education/saeed-ghezelbash-subcision-technique.380cae718470.webm" type='video/webm; codecs="av01, opus"'/>
@@ -2853,7 +2853,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <p>جالپرو و پروفایلو در گفت‌وگوی روزمره بیماران گاهی کنار فیلر، بوتاکس، PRP یا مزوتراپی قرار می‌گیرند، اما این کنار هم نشستن نباید باعث شود موارد یکی دیده شوند. این محصولات بیشتر در خانواده جوانسازهای تزریقی و اسکین‌بوسترها فهمیده می‌شوند. هدف اصلی آن‌ها معمولاً کیفیت پوست است، نه زاویه‌سازی، نه لیفت سنگین، نه درمان قطعی اسکار، نه پرکردن حجمی صورت.</p>
 <h4 id="jalupro-vs-profhilo-selection">جالپرو یا پروفایلو؟ تصمیم از نیاز پوست شروع می‌شود</h4>
 <p>جالپرو و پروفایلو هر دو در حوزه کیفیت پوست مطرح می‌شوند، اما جای فیلر کلاسیک را نمی‌گیرند. هدف آن‌ها تغییر واضح فرم صورت نیست؛ انتخاب میان آن‌ها به وضعیت پوست، ناحیه درمان، سابقه تزریق و انتظار بیمار بستگی دارد.</p>
-<figure aria-labelledby="caption-saeed-ghezelbash-jalupro-vs-profhilo" class="media-card media-card--video media-card--education" id="video-jalupro-vs-profhilo">
+<figure aria-labelledby="caption-saeed-ghezelbash-jalupro-vs-profhilo" id="video-jalupro-vs-profhilo">
 <link href="https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo" itemprop="video"/>
 <video aria-describedby="caption-saeed-ghezelbash-jalupro-vs-profhilo video-saeed-ghezelbash-jalupro-vs-profhilo-chapters" aria-label="توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی" controls="" height="960" id="video-saeed-ghezelbash-jalupro-vs-profhilo" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.4a279143fd2c.webp" preload="none" title="ویدئوی توضیح دکتر سعید قزلباش درباره جالپرو و پروفایلو" width="540">
 <source src="/media/videos/education/saeed-ghezelbash-jalupro-vs-profhilo.86aaf3fcf19c.webm" type='video/webm; codecs="av01, opus"'/>
@@ -5086,7 +5086,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <p>این سابقه پژوهشی یک عادت سخت‌گیرانه ساخته است: پشت علامت را ببین، متغیرهای هم‌زمان را از هم جدا کن، بین همبستگی و علت فرق بگذار و روی چیزی که هنوز روشن نشده تصمیم قطعی نساز. همین خط فکری از پژوهش وارد معاینه زیبایی می‌شود، در آموزش پزشکان به انتخاب بیمار و آناتومی قبل از تکنیک می‌رسد و در پرونده‌های Revision خودش را به شکل بازسازی دقیق مسیر درمان قبلی نشان می‌دهد. برای دکتر سعید قزلباش، پژوهش، آموزش و طبابت سه جزیره جدا نیستند؛ سه شکل از یک وسواس‌اند: قبل از دست‌کاری، مسئله را درست بفهم.</p>
 <p>در آموزش پزشکان هم با تکنیک مخالف نیستم؛ با تکنیک‌فروشی مخالفم. حفظ چند نقطه تزریق یا چند مسیر عبور نخ، پزشک را سریع‌تر می‌کند، نه لزوماً دقیق‌تر. سرعت بدون تشخیص خطرناک است. آموزش باید آناتومی، نواحی پرخطر، انتخاب بیمار، طراحی وکتور، پلن تزریق، مدیریت عارضه و اصلاح نتیجه را یک‌جا ببیند.</p>
 <p>در ورکشاپ لیفت نخ هم حرف من همین است: قبل از اینکه پزشک بداند نخ را از کجا رد کند، باید بداند چه صورتی را اصلاً نباید نخ بزند. وزن بافت، جهت افتادگی، ضخامت پوست، تکیه‌گاه استخوانی و انتظار بیمار از اسم نخ مهم‌ترند. تکنیک وقتی ارزش دارد که روی انتخاب درست بیمار سوار شود؛ وگرنه فقط خطا را تمیزتر اجرا می‌کند.</p>
-<figure aria-labelledby="caption-saeed-ghezelbash-thread-lift-workshop" class="media-card media-card--video media-card--education" id="video-thread-lift-workshop">
+<figure aria-labelledby="caption-saeed-ghezelbash-thread-lift-workshop" id="video-thread-lift-workshop">
 <link href="https://www.ghezelbaash.ir/#video-thread-lift-workshop" itemprop="video"/>
 <video aria-describedby="caption-saeed-ghezelbash-thread-lift-workshop video-saeed-ghezelbash-thread-lift-workshop-chapters" aria-label="بخشی از ورکشاپ لیفت نخ دکتر سعید قزلباش در تهران برای متخصصان زیبایی از سراسر ایران" controls="" height="854" id="video-saeed-ghezelbash-thread-lift-workshop" playsinline="" data-poster="/media/posters/education/saeed-ghezelbash-thread-lift-workshop.2246c3474cfd.webp" preload="none" title="ویدئوی ورکشاپ لیفت نخ دکتر سعید قزلباش" width="480">
 <source src="/media/videos/education/saeed-ghezelbash-thread-lift-workshop.1d1cd48e37ef.webm" type='video/webm; codecs="av01, opus"'/>
@@ -5297,7 +5297,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <a href="#diagnosis-before-aesthetic-treatment-selection">معاینه</a>، قبول یا رد درمان، طراحی روش، توضیح ریسک و برنامه پیگیری با مسئولیت مستقیم دکتر سعید قزلباش انجام می‌شود؛ از اولین ارزیابی تا تصمیم درباره ترمیم، <a href="#aesthetic-treatment-failure-from-diagnostic-error">اصلاح</a> یا ارجاع.</p>
 <p>
 <a href="https://www.wikidata.org/wiki/Q140288589" rel="external noopener">کلینیک زیبایی دکتر سعید قزلباش</a> در کرمانشاه هویت رسمی و قابل‌پیگیری دارد. این کلینیک با مالکیت و مدیریت مستقیم دکتر سعید قزلباش فعالیت می‌کند و بستر معاینه، ثبت پرونده، اجرای درمان و پیگیری است. برای بیمار، این یعنی نام پزشک فقط روی صفحه نیست؛ از اولین ارزیابی تا پیگیری نتیجه، تصمیم پزشکی و مسئولیت درمان به دکتر سعید قزلباش برمی‌گردد.</p>
-<figure aria-labelledby="caption-saeed-ghezelbash-clinical-team-master" class="media-card media-card--team" id="image-saeed-ghezelbash-clinical-team-master">
+<figure aria-labelledby="caption-saeed-ghezelbash-clinical-team-master" id="image-saeed-ghezelbash-clinical-team-master">
 <link href="https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master" itemprop="image"/>
 <picture id="image-saeed-ghezelbash-clinical-team-master-webp">
 <source sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px" srcset="/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.2c183a068f12.avif 640w, /media/images/physician/saeed-ghezelbash-with-clinic-team-960.2b70db5758c4.avif 960w, /media/images/physician/saeed-ghezelbash-with-clinic-team-1600.90a6559e0b62.avif 1600w" type="image/avif"/>
@@ -5323,24 +5323,24 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </ol>
 <p>
 <strong>درمان برای من با خروج بیمار از اتاق تمام نمی‌شود.</strong> بخشی از کیفیت تصمیم این است که از قبل بدانیم نتیجه چه زمانی باید قضاوت شود، چه چیزی طبیعی است، چه چیزی نیازمند تماس است و چه چیزی نباید تا جلسه بعد رها شود.</p>
-<div aria-label="تصاویر فضای کلینیک زیبایی دکتر سعید قزلباش" class="clinic-gallery" role="group">
-<figure aria-labelledby="caption-ghezelbaash-clinic-interior" class="media-card media-card--clinic" id="image-ghezelbaash-clinic-interior">
+<div aria-label="تصاویر فضای کلینیک زیبایی دکتر سعید قزلباش" role="group">
+<figure aria-labelledby="caption-ghezelbaash-clinic-interior" id="image-ghezelbaash-clinic-interior">
 <link href="https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior" itemprop="image"/>
 <picture>
 <source sizes="(max-width: 720px) 100vw, 50vw" srcset="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.abdf5ddc6f4c.avif 640w, /media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.8356ac9f54ce.avif 960w" type="image/avif"/>
 <source sizes="(max-width: 720px) 100vw, 50vw" srcset="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.c59330e004f0.webp 640w, /media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.22af9f16a9e1.webp 960w" type="image/webp"/>
 <img alt="فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" decoding="async" height="854" loading="lazy" src="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.c59330e004f0.webp" width="640"/>
 </picture>
-<figcaption id="caption-ghezelbaash-clinic-interior">فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه</figcaption>
+<figcaption class="visually-hidden" id="caption-ghezelbaash-clinic-interior">فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه</figcaption>
 </figure>
-<figure aria-labelledby="caption-ghezelbaash-clinic-reception" class="media-card media-card--clinic" id="image-ghezelbaash-clinic-reception">
+<figure aria-labelledby="caption-ghezelbaash-clinic-reception" id="image-ghezelbaash-clinic-reception">
 <link href="https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception" itemprop="image"/>
 <picture>
 <source sizes="(max-width: 720px) 100vw, 50vw" srcset="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.5bcf945afea6.avif 640w, /media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.f5bf89bd94f4.avif 864w" type="image/avif"/>
 <source sizes="(max-width: 720px) 100vw, 50vw" srcset="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.cdb8ec75e373.webp 640w, /media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.0e46e077a4b4.webp 864w" type="image/webp"/>
 <img alt="بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" decoding="async" height="1138" loading="lazy" src="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.cdb8ec75e373.webp" width="640"/>
 </picture>
-<figcaption id="caption-ghezelbaash-clinic-reception">بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه</figcaption>
+<figcaption class="visually-hidden" id="caption-ghezelbaash-clinic-reception">بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه</figcaption>
 </figure>
 </div>
 <h3 id="clinic-before-visit-information">قبل از مراجعه چه اطلاعاتی آماده کنید؟ عکس خوب کمک می‌کند، اما معاینه را جعل نمی‌کند</h3>
@@ -6443,7 +6443,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <p>کۆکردنەوەی کاری کلینیکی، فێرکاریی پزیشکان و توێژینەوە، بڕیاری پزیشکی لە شەپۆلی ڕێکارە باوەکان دوورتر دەکاتەوە.</p>
 <h3 id="aesthetic-physician-ratings-patient-satisfaction-ckb-iq">هەڵسەنگاندنی Google Maps، بۆچوونی مراجعان و ناسنامەی دیجیتاڵی دڵنیابوو</h3>
 <p>ناسنامەی دکتۆر سەعید قزلباش و کلینیکەکەی لە Google Maps و تۆمار و دایرێکتۆرییە پزیشکییە گشتییەکاندا دەتوانرێت بپشکنرێت، و بۆچوونی مراجعان لە پڕۆفایلی گشتیی کلینیکەکەدا دیارە.</p>
-<figure aria-labelledby="caption-saeed-ghezelbash-kurdish-patient-review" class="media-card media-card--video media-card--testimonial" dir="rtl" id="video-kurdish-patient-experience" lang="ckb-IQ">
+<figure aria-labelledby="caption-saeed-ghezelbash-kurdish-patient-review" dir="rtl" id="video-kurdish-patient-experience" lang="ckb-IQ">
 <link href="https://www.ghezelbaash.ir/#video-kurdish-patient-experience" itemprop="video"/>
 <video aria-describedby="caption-saeed-ghezelbash-kurdish-patient-review video-saeed-ghezelbash-kurdish-patient-review-chapters" aria-label="ڕەزامەندیی مراجعێکی جوانکاری لە هەولێر و سوپاسکردن لە دکتۆر سەعید قزلباش" controls="" height="960" id="video-saeed-ghezelbash-kurdish-patient-review" playsinline="" data-poster="/media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.649f26fec125.webp" preload="none" title="ویدئوی تجربه مراجع کُرد از کلینیک دکتر سعید قزلباش" width="540">
 <source src="/media/videos/testimonials/saeed-ghezelbash-kurdish-patient-review.63e02632c321.webm" type='video/webm; codecs="av01, opus"'/>
