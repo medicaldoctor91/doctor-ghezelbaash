@@ -2,15 +2,17 @@ import {MULTILINGUAL_HEADING_BOUNDARIES,MULTILINGUAL_RETURN_TO_PRIMARY} from './
 
 const LANGUAGE_BLOCK_TAGS='h1|h2|h3|h4|h5|h6|p|li|dt|dd|th|td|caption|summary|figcaption|blockquote|address|pre';
 const blockTagPattern=new RegExp(`<(${LANGUAGE_BLOCK_TAGS})\\b([^>]*)>`,'gi');
+const h2Pattern=/<h2\b[^>]*>[\s\S]*?<\/h2>/gi;
 const hasAttribute=(attrs,name)=>new RegExp(`(?:^|\\s)${name}\\s*=`,'i').test(attrs);
+const normalize=value=>String(value??'').replace(/<[^>]*>/g,' ').replace(/&nbsp;/gi,' ').replace(/\s+/g,' ').trim();
 
-const headingStart=(source,marker)=>{
-  const markerIndex=source.indexOf(marker);
-  if(markerIndex<0)throw new Error(`Language boundary marker missing: ${marker}`);
-  const start=source.lastIndexOf('<h2',markerIndex);
-  const close=start<0?-1:source.indexOf('>',start);
-  if(start<0||close<0||close>markerIndex)throw new Error(`Language boundary is not inside an H2: ${marker}`);
-  return start;
+export const headingStart=(source,marker)=>{
+  const target=normalize(marker);
+  h2Pattern.lastIndex=0;
+  for(const match of String(source).matchAll(h2Pattern)){
+    if(normalize(match[0]).startsWith(target))return match.index;
+  }
+  throw new Error(`Language boundary H2 missing: ${marker}`);
 };
 
 const annotateSegment=(segment,{lang,dir})=>segment.replace(blockTagPattern,(tag,tagName,attrs)=>{
