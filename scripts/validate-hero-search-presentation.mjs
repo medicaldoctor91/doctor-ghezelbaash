@@ -21,7 +21,7 @@ const authoredSplitEnd=authoredCss.indexOf(CSS_SPLIT_MARKER)+CSS_SPLIT_MARKER.le
 const authoredCritical=authoredCss.slice(0,authoredSplitEnd).replace(/\r?\n/g,'');
 
 assert(HERO_SEARCH_PRESENTATION_CONTRACT.visibleLabel==='جست‌وجو','Hero search visible label contract drift');
-assert(HERO_SEARCH_PRESENTATION_CONTRACT.editorialCommand&&HERO_SEARCH_PRESENTATION_CONTRACT.desktopCompact&&HERO_SEARCH_PRESENTATION_CONTRACT.mobileCompact&&!HERO_SEARCH_PRESENTATION_CONTRACT.mobileFullWidth&&HERO_SEARCH_PRESENTATION_CONTRACT.centered,'Hero search editorial responsive contract drift');
+assert(HERO_SEARCH_PRESENTATION_CONTRACT.premiumControl&&HERO_SEARCH_PRESENTATION_CONTRACT.desktopCompact&&HERO_SEARCH_PRESENTATION_CONTRACT.mobileFullWidth&&HERO_SEARCH_PRESENTATION_CONTRACT.centeredDesktop,'Hero search responsive presentation contract drift');
 assert(HERO_SEARCH_PRESENTATION_CONTRACT.shadow===false,'Hero search shadow must remain absent');
 assert(HERO_SEARCH_PRESENTATION_CONTRACT.dialogBehaviorPreserved&&HERO_SEARCH_PRESENTATION_CONTRACT.keyboardHintDesktopOnly,'Hero search interaction contract drift');
 assert(HERO_SEARCH_PRESENTATION_CONTRACT.heroOrderChanged===false&&HERO_SEARCH_PRESENTATION_CONTRACT.heroImageGeometryChanged===false,'Hero search presentation altered protected Hero structure/image geometry');
@@ -34,12 +34,13 @@ assert(content.includes('aria-keyshortcuts="/"')&&content.includes('aria-control
 const subtitleAt=content.indexOf('class="hero-subtitle"'),searchAt=content.indexOf('class="hero-action hero-search-launch"'),leadAt=content.indexOf('class="hero-lead"');
 assert(subtitleAt>=0&&searchAt>subtitleAt&&leadAt>searchAt,'Hero element order changed');
 
-const editorialRule='.hero-search-launch{grid-area:search;display:inline-flex;gap:.45rem;align-items:center;justify-self:center;width:fit-content;min-height:2.75rem;margin:.05rem auto .55rem;padding:.35rem .1rem;border:0;border-bottom:1px solid #bfd8d0;border-radius:0;background:transparent;box-shadow:none;color:var(--accent-strong);font:inherit;font-weight:760;line-height:1.35;cursor:pointer}';
-assert(delivery.criticalCss.includes(editorialRule),'Editorial Hero search command rule missing');
-assert(delivery.criticalCss.includes('.entity-hero .hero-action.hero-search-launch{width:fit-content;min-height:2.85rem;margin:0 auto .45rem;padding:.35rem .1rem}'),'Compact mobile Hero search override missing');
-assert(!delivery.criticalCss.includes('grid-template-columns:1.15rem minmax(0,1fr);padding-inline:.75rem'),'Legacy narrow full-width search geometry survived');
+const premiumRule='.hero-search-launch{grid-area:search;display:inline-flex;gap:.45rem;align-items:center;justify-self:center;width:fit-content;min-height:2.75rem;margin:0 auto .35rem;padding:.45rem .65rem;border:1px solid #d3e0db;border-radius:.75rem;background:#fff;color:var(--accent-strong);font:inherit;font-weight:740;line-height:1.35;cursor:pointer}';
+const mobileRule='.entity-hero .hero-action.hero-search-launch{width:100%;min-height:2.95rem;margin:0 0 .25rem;padding:.55rem .75rem;border:1px solid #d3e0db;border-radius:.85rem;background:#fff}';
+assert(delivery.criticalCss.includes(premiumRule),'Premium desktop Hero search control missing');
+assert(delivery.criticalCss.includes(mobileRule),'Premium full-width mobile Hero search control missing');
+assert(!delivery.criticalCss.includes('grid-template-columns:1.15rem minmax(0,1fr);padding-inline:.75rem'),'Legacy narrow search geometry survived');
 assert(!delivery.criticalCss.includes('box-shadow:0 7px 22px rgb(7 82 68/.055)')&&!delivery.criticalCss.includes('background:linear-gradient(135deg,#fff,#f6faf8)'),'Legacy Hero search chrome survived');
 assert(delivery.criticalCss.includes('.hero-search-launch kbd{display:none}'),'Mobile keyboard hint suppression missing');
 assert(Buffer.byteLength(delivery.criticalCss)<=invariants.maxCriticalCssBytes,'Hero search plus art-directed Hero exceeds critical CSS release budget');
 
-console.log(JSON.stringify({stage:'HERO_SEARCH_PRESENTATION',visibleLabel:'جست‌وجو',desktop:'editorial-command',mobile:'compact-centered',fullWidth:false,heroPresentation:'COORDINATED',heroOrder:'UNCHANGED',criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,status:'PASS'},null,2));
+console.log(JSON.stringify({stage:'HERO_SEARCH_PRESENTATION',visibleLabel:'جست‌وجو',desktop:'compact-premium-control',mobile:'full-width-premium-control',fullWidthMobile:true,heroPresentation:'COORDINATED',heroOrder:'UNCHANGED',criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,status:'PASS'},null,2));
