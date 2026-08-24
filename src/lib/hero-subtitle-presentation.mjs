@@ -4,13 +4,13 @@ const AUTHORED_HERO_SUBTITLE='<p class="hero-subtitle">سفارش از منوی 
 const ASSEMBLED_HERO_SUBTITLE='<p class="hero-subtitle">سفارش از منوی خدمات زیبایی <strong class="hero-subtitle__stop">ممنوع!</strong></p>';
 
 const LEGACY_HERO_TITLE_RULE='.entity-hero .hero-title{grid-area:title}';
-const MASTHEAD_HERO_TITLE_RULE='.entity-hero .hero-title{grid-area:title;display:flex;flex-wrap:wrap;align-items:baseline;column-gap:.14em;row-gap:.08rem;margin-block-end:.9rem;direction:rtl}.hero-title__descriptor{order:1;color:#52645e;font-size:clamp(.98rem,.91rem + .28vw,1.16rem);font-weight:650;line-height:1.45;white-space:nowrap}.hero-title__semantic-separator{order:2;color:#52645e;font-size:clamp(.98rem,.91rem + .28vw,1.16rem);font-weight:650}.hero-title__name{order:3;flex-basis:100%;color:var(--ink);font-weight:830;line-height:1.2;white-space:nowrap}.hero-title__name::after{content:":"}';
+const MASTHEAD_HERO_TITLE_RULE='.entity-hero .hero-title{grid-area:title;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 .14em;margin-block-end:.65rem}.hero-title__descriptor{order:1}.hero-title__semantic-separator{order:2}.hero-title__name{order:3}.hero-title__name::after{content:":"}';
 const LEGACY_HERO_SUBTITLE_RULE='.entity-hero .hero-subtitle{grid-area:subtitle}';
-const MANIFESTO_HERO_SUBTITLE_RULE='.entity-hero .hero-subtitle{grid-area:subtitle;justify-self:center;max-width:32ch;margin:.05rem auto 1.05rem;color:#344b44;font-size:clamp(1.04rem,.98rem + .24vw,1.2rem);font-weight:650;line-height:1.58;text-align:center;text-wrap:balance}.hero-subtitle__stop{color:#9b2c2c;font-weight:850;white-space:nowrap}';
+const MANIFESTO_HERO_SUBTITLE_RULE='.entity-hero .hero-subtitle{grid-area:subtitle;justify-self:center;max-width:34ch;margin:.05rem auto .9rem;color:#40564f;font-size:1.08em;font-weight:650;text-align:center;text-wrap:balance}.hero-subtitle__stop{color:#9b2c2c;font-weight:850;white-space:nowrap}';
 const LEGACY_MOBILE_TITLE_RULE='.entity-hero .hero-title{margin-block-end:.15rem}';
-const MASTHEAD_MOBILE_TITLE_RULE='.entity-hero .hero-title{margin-block-end:.72rem}';
+const MASTHEAD_MOBILE_TITLE_RULE='.entity-hero .hero-title{margin-block-end:.35rem}';
 const LEGACY_MOBILE_SUBTITLE_RULE='.entity-hero .hero-subtitle{margin-block:0 .25rem}';
-const MANIFESTO_MOBILE_SUBTITLE_RULE='.entity-hero .hero-subtitle{margin-block:.05rem .8rem}';
+const MANIFESTO_MOBILE_SUBTITLE_RULE='.entity-hero .hero-subtitle{margin-block:0 .55rem}';
 
 const count=(source,needle)=>String(source).split(needle).length-1;
 const replaceExactlyOnce=(source,from,to,label)=>{
@@ -36,8 +36,9 @@ export function applyHeroSubtitlePresentationCss(authoredCss){
 
 export const HERO_SUBTITLE_PRESENTATION_CONTRACT=Object.freeze({
   semanticH1TextChanged:false,
-  visualH1Order:'profession-location-first',
+  visualH1Order:'profession-location-first-inline',
   visualNameSuffix:':',
+  forcedTitleLineBreak:false,
   manifestoCentered:true,
   manifestoStop:'ممنوع!',
   manifestoStopColor:'#9b2c2c',
