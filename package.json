@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "packageManager": "npm@11.17.0",
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "fsevents@2.3.3": true
+  },
   "scripts": {
     "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
     "clean:generated": "node scripts/generated-workspace.mjs reset",

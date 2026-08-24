@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.14.6'
-      - run: npm ci --ignore-scripts
+      - run: npm ci
       - name: Resolve finalized current release and external identities
         shell: bash
         run: |
@@ -101,7 +101,7 @@ jobs:
           git checkout --detach "$PUBLISHED_REVISION"
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$PUBLISHED_REVISION")"
           export CF_PAGES_COMMIT_SHA="$PUBLISHED_REVISION"
-          npm ci --ignore-scripts
+          npm ci
           npm run build
           node scripts/cloudflare-pages.mjs ensure --verify-config
           node scripts/cloudflare-pages.mjs ensure

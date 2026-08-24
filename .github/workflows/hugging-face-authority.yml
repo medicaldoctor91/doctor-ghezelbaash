@@ -78,7 +78,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y ffmpeg
           ffprobe -version
-      - run: npm ci --ignore-scripts
+      - run: npm ci
       - name: Load canonical platform contract
         run: node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
       - name: Resolve release transaction

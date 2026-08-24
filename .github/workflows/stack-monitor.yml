@@ -46,7 +46,7 @@ jobs:
           echo "release=$RELEASE" >> "$GITHUB_OUTPUT"
           printf 'HF_REPO=%s\n' "$HF_REPO" >> "$GITHUB_ENV"
           echo "STACK_MONITOR_RELEASE=$RELEASE"
-      - run: npm ci --ignore-scripts
+      - run: npm ci
       - name: Build exact current source
         shell: bash
         run: |
@@ -116,7 +116,7 @@ jobs:
           git reset --hard HEAD
           git clean -fdx
           git checkout --detach "$TAG"
-          npm ci --ignore-scripts
+          npm ci
           C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
           node scripts/verify-live.mjs release
