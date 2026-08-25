@@ -1,8 +1,9 @@
 import {readFile} from 'node:fs/promises';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
-import {projectNode} from './lib/projections/graph-projections.mjs';
 import {deriveGooglePageMicrodata} from '../src/lib/google-page-microdata.mjs';
+import {deriveGooglePageNode} from '../src/lib/google-semantic-html.mjs';
 import {CONTENT_LANGUAGES} from '../src/lib/language-contract.mjs';
+import {projectNode} from '../src/lib/semantic-projection.mjs';
 
 const fail=message=>{throw new Error(message)};
 const attr=(source,name)=>source.match(new RegExp(`\\b${name}=["']([^"']+)["']`,'i'))?.[1];
@@ -36,8 +37,7 @@ const person=graphNode(personId);
 if(!webpage||!person)fail('Canonical page/person node missing');
 const supportProfilePages=supportIds.filter(id=>graphTypes(graphNode(id)).includes('ProfilePage'));
 if(supportProfilePages.length)fail(`Google support projection contains competing ProfilePage nodes: ${supportProfilePages.join(', ')}`);
-const googlePageNode=projectNode(webpage,headProfile.nodes?.[webpageId]);
-googlePageNode.inLanguage=[...CONTENT_LANGUAGES];
+const googlePageNode=deriveGooglePageNode(knowledgeGraphDocument,headProfile,webpageId,CONTENT_LANGUAGES);
 const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePageNode]},webpageId);
 
 const headings=[...body.matchAll(/<h([1-6])\b[^>]*>/gi)].map(match=>({level:Number(match[1]),tag:match[0],id:attr(match[0],'id')}));
@@ -108,11 +108,13 @@ const pageMicrodata=
   googlePageNode.lastReviewed===release.medicalReviewedAt&&
   googlePageMicrodata.itemType==='https://schema.org/ProfilePage'&&
   googlePageMicrodata.mainEntityId===personId&&
-  pageLinkProperties.get('author')?.has(personId)&&
-  pageLinkProperties.get('publisher')?.has(personId)&&
-  pageLinkProperties.get('reviewedBy')?.has(personId)&&
+  exactSet(new Set(googlePageMicrodata.mainEntityProperties),new Set(['mainEntity','author','publisher','reviewedBy','about']))&&
+  !pageLinkProperties.get('author')?.has(personId)&&
+  !pageLinkProperties.get('publisher')?.has(personId)&&
+  !pageLinkProperties.get('reviewedBy')?.has(personId)&&
   pageLinkProperties.get('isPartOf')?.has(graphRef(googlePageNode.isPartOf))&&
   pageLinkProperties.get('primaryImageOfPage')?.has(graphRef(googlePageNode.primaryImageOfPage))&&
+  !Object.hasOwn(googlePageNode,'specialty')&&
   exactSet(new Set(googlePageMicrodata.meta.filter(item=>item.itemprop==='inLanguage').map(item=>item.content)),new Set(CONTENT_LANGUAGES))&&
   googlePageMicrodata.meta.some(item=>item.itemprop==='lastReviewed'&&item.content===googlePageNode.lastReviewed)&&
   baseLayout.includes('deriveGooglePageMicrodata(headGraph')&&
@@ -125,10 +127,12 @@ const pageMicrodata=
   !baseLayout.includes('https://schema.org/MedicalWebPage https://schema.org/ProfilePage')&&
   baseLayout.includes('<article class:list=');
 
-const personHeader=body.match(/<header\b(?=[^>]*\bitemprop=["']mainEntity["'])[^>]*>[\s\S]*?<\/header>/i)?.[0]||'';
+const personHeader=body.match(/<header\b(?=[^>]*\bitemprop=["'][^"']*\bmainEntity\b[^"']*["'])[^>]*>[\s\S]*?<\/header>/i)?.[0]||'';
 const personOpen=personHeader.match(/<header\b[^>]*>/i)?.[0]||'';
 const personPropertyTags=[...personHeader.matchAll(/<[^>]+\bitemprop=["'][^"']+["'][^>]*>/gi)].map(match=>match[0]);
 const personValues=property=>personPropertyTags.filter(tag=>tagProperties(tag).includes(property)).map(tagValue).filter(Boolean);
+const personTextValues=property=>[...personHeader.matchAll(new RegExp(`<([a-z][a-z0-9:-]*)\\b(?=[^>]*\\bitemprop=["'][^"']*\\b${escapeRegExp(property)}\\b[^"']*["'])[^>]*>([\\s\\S]*?)<\\/\\1>`,'gi'))]
+  .map(match=>stripMarkup(match[2])).filter(Boolean);
 const personItemTypes=new Set((attr(personOpen,'itemtype')||'').split(/\s+/).filter(Boolean));
 const projectedPerson=projectNode(person,headProfile.nodes?.[personId]);
 const expectedSameAs=new Set([
@@ -138,10 +142,10 @@ const expectedSameAs=new Set([
 ].filter(Boolean));
 const personMicrodata=
   attr(personOpen,'itemid')===personId&&
-  tagProperties(personOpen).includes('mainEntity')&&
+  exactSet(new Set(tagProperties(personOpen)),new Set(googlePageMicrodata.mainEntityProperties))&&
   exactSet(personItemTypes,new Set(['https://schema.org/Person','https://schema.org/IndividualPhysician']))&&
-  exactSet(new Set(personValues('name')),new Set([localizedValue(projectedPerson.name,'fa')]))&&
-  exactSet(new Set(personValues('jobTitle')),new Set([localizedValue(projectedPerson.jobTitle,'fa')]))&&
+  exactSet(new Set(personTextValues('name')),new Set([localizedValue(projectedPerson.name,'fa')]))&&
+  exactSet(new Set(personTextValues('jobTitle')),new Set([localizedValue(projectedPerson.jobTitle,'fa')]))&&
   exactSet(new Set(personValues('workLocation')),new Set([graphRef(projectedPerson.workLocation?.[0]??projectedPerson.workLocation)]))&&
   exactSet(new Set(personValues('sameAs')),expectedSameAs)&&
   exactSet(new Set(personValues('image')),new Set([graphRef(projectedPerson.image?.[0]??projectedPerson.image)]))&&
@@ -150,20 +154,25 @@ const personMicrodata=
 const runtime=guideNavigator.match(/<script\b(?=[^>]*\bid=["']site-runtime["'])[^>]*>([\s\S]*?)<\/script>/i)?.[1]||'';
 try{new Function(runtime)}catch(error){fail(`Site runtime syntax failed: ${error.message}`)}
 const searchSemantics=/<dialog\b(?=[^>]*\bid=["']guide-search["'])(?=[^>]*\baria-modal=["']true["'])[^>]*>/i.test(guideNavigator)&&/<div\b(?=[^>]*\bclass=["']guide-search__panel["'])(?=[^>]*\brole=["']search["'])[^>]*>/i.test(guideNavigator)&&/<input\b(?=[^>]*\btype=["']search["'])(?=[^>]*\baria-describedby=["']guide-search-status["'])[^>]*>/i.test(guideNavigator)&&runtime.includes("setAttribute('aria-current','location')");
-const expectedMainContentIds=new Set((webpage?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
+const canonicalMainContentIds=new Set((webpage?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
+const expectedMainContentIds=new Set((googlePageNode?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
 const projectedMainContentTags=[...body.matchAll(/<(?:section|details)\b(?=[^>]*\bitemprop=["']mainContentOfPage["'])[^>]*>/gi)].map(match=>match[0]);
 const projectedMainContentIds=new Set(projectedMainContentTags.map(tag=>attr(tag,'itemid')).filter(Boolean));
 const missingMainContent=[...expectedMainContentIds].filter(id=>!projectedMainContentIds.has(id));
 const extraMainContent=[...projectedMainContentIds].filter(id=>!expectedMainContentIds.has(id));
-if(!expectedMainContentIds.size||missingMainContent.length||extraMainContent.length||projectedMainContentTags.some(tag=>attr(tag,'itemtype')!=='https://schema.org/WebPageElement'))fail(`Visible mainContentOfPage projection drift: missing=${missingMainContent.join(',')} extra=${extraMainContent.join(',')}`);
+if(!expectedMainContentIds.size||!exactSet(expectedMainContentIds,canonicalMainContentIds)||missingMainContent.length||extraMainContent.length||[...expectedMainContentIds].some(id=>!supportIds.includes(id))||projectedMainContentTags.some(tag=>attr(tag,'itemtype')!=='https://schema.org/WebPageElement'))fail(`Visible/Head/support mainContentOfPage projection drift: missing=${missingMainContent.join(',')} extra=${extraMainContent.join(',')}`);
 for(const tag of projectedMainContentTags){
   const itemId=attr(tag,'itemid'),labelId=attr(tag,'aria-labelledby'),node=graphNode(itemId);
+  const scopeStart=body.indexOf(tag)+tag.length;
+  const scopePrelude=body.slice(scopeStart,scopeStart+2500);
   const heading=labelId
     ?body.match(new RegExp(`<h[2-6]\\b(?=[^>]*\\bid=["']${escapeRegExp(labelId)}["'])[^>]*>[\\s\\S]*?<\\/h[2-6]>`,'i'))?.[0]||''
     :body.slice(body.indexOf(tag)+tag.length).match(/<h[2-6]\b[^>]*>[\s\S]*?<\/h[2-6]>/i)?.[0]||'';
   const visibleName=stripMarkup(heading);
   const canonicalNames=graphValues(node?.name).map(graphText).filter(Boolean);
-  if(!heading||!tagProperties(heading).includes('name')||!canonicalNames.includes(visibleName))fail(`Visible WebPageElement name drift: ${itemId} -> ${visibleName||'missing'}`);
+  const sectionLinks=[...scopePrelude.matchAll(/<link\b[^>]*>/gi)].map(match=>match[0]);
+  const sectionMeta=[...scopePrelude.matchAll(/<meta\b[^>]*>/gi)].map(match=>match[0]);
+  if(!heading||!tagProperties(heading).includes('name')||!canonicalNames.includes(visibleName)||!sectionLinks.some(link=>tagProperties(link).includes('url')&&attr(link,'href')===node.url)||!sectionMeta.some(meta=>tagProperties(meta).includes('inLanguage')&&attr(meta,'content')===node.inLanguage))fail(`Visible WebPageElement name/url/language drift: ${itemId} -> ${visibleName||'missing'}`);
 }
 
 const howToId='https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway';
@@ -172,6 +181,7 @@ const expectedStepIds=(howTo?.step||[]).map(graphRef).filter(Boolean);
 const howToTarget=String(howTo?.url||'').split('#')[1]||'';
 const graphHowToValid=graphTypes(howTo).includes('HowTo')&&expectedStepIds.length===4&&howToTarget&&idSet.has(howToTarget)&&expectedStepIds.every((stepId,index)=>{const step=graphNode(stepId);return graphTypes(step).includes('HowToStep')&&step?.position===index+1&&String(step?.name||'').trim()&&String(step?.text||'').trim()});
 if(!graphHowToValid)fail('HowTo graph-to-visible-diagnostic-content contract drift');
-if(!pageMicrodata||!personMicrodata||!searchSemantics||!/<header\b[^>]*\baria-labelledby=["']saeed-ghezelbash["']/i.test(body)||!/<nav\b[^>]*\bid=["']aesthetic-medicine-table-of-contents["']/i.test(body))fail('Entity Home/Article/Header/Nav/Search semantic contract drift');
+const headerLandmark=/<header\b[^>]*\baria-labelledby=["']saeed-ghezelbash["']/i.test(body),navigationLandmark=/<nav\b[^>]*\bid=["']aesthetic-medicine-table-of-contents["']/i.test(body);
+if(!pageMicrodata||!personMicrodata||!searchSemantics||!headerLandmark||!navigationLandmark)fail(`Entity Home/Article/Header/Nav/Search semantic contract drift: page=${pageMicrodata} person=${personMicrodata} search=${searchSemantics} header=${headerLandmark} nav=${navigationLandmark}`);
 
 console.log(JSON.stringify({stage:'SEMANTIC_HTML',h1:1,h2:headings.filter(item=>item.level===2).length,headings:headings.length,sections:sections.length,details:details.length,figures:(body.match(/<figure\b/gi)||[]).length,images:(body.match(/<img\b/gi)||[]).length,duplicateIds:0,brokenFragments:0,headingJumps:0,verifiedIdentity:'PASS',entityHomeMicrodata:'PASS',inlineProfilePages:1,medicalReviewParity:'PASS',articleLandmark:'PASS',mainContentProjections:projectedMainContentIds.size,howToSteps:expectedStepIds.length,howToGraphProjection:'PASS',mediaGraphBridges:mediaBridges.length,mediaCaptionBindings:mediaBridges.filter(item=>item.caption).length,searchLandmark:'PASS',landmarks:'PASS',integrity:'PASS'},null,2));

@@ -180,13 +180,35 @@
         "primaryImageOfPage",
         "about",
         "keywords",
-        "specialty",
         "reviewedBy",
         "speakable",
         "schemaVersion",
         "lastReviewed",
+        "mainContentOfPage",
         "potentialAction"
       ],
+      "refAllow": {
+        "mainContentOfPage": [
+          "https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection",
+          "https://www.ghezelbaash.ir/#facial-aging-differential-diagnosis",
+          "https://www.ghezelbaash.ir/#botox",
+          "https://www.ghezelbaash.ir/#filler",
+          "https://www.ghezelbaash.ir/#thread-lift",
+          "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars",
+          "https://www.ghezelbaash.ir/#skin-rejuvenation",
+          "https://www.ghezelbaash.ir/#hair-loss",
+          "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+          "https://www.ghezelbaash.ir/#aesthetic-treatment-selection",
+          "https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy",
+          "https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up",
+          "https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy",
+          "https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error",
+          "https://www.ghezelbaash.ir/#webpage-element-dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+          "https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq",
+          "https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en",
+          "https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq"
+        ]
+      },
       "valueAllow": {
         "@type": [
           "ProfilePage"

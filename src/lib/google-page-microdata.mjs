@@ -25,6 +25,10 @@ export function deriveGooglePageMicrodata(graphDocument,pageId){
   }
 
   const mainEntityId=requireValue(refId(page.mainEntity),'mainEntity');
+  const mainEntityProperties=['mainEntity','author','publisher','reviewedBy','about'].filter(property=>
+    asArray(page[property]).some(value=>refId(value)===mainEntityId)
+  );
+  if(mainEntityProperties[0]!=='mainEntity')throw new Error('Google ProfilePage mainEntity relation is not canonical');
   const linkValues=new Map();
   const addLink=(itemprop,href)=>{
     const value=requireValue(href,itemprop);
@@ -34,8 +38,12 @@ export function deriveGooglePageMicrodata(graphDocument,pageId){
   };
 
   addLink('url',requireValue(page.url,'url'));
-  for(const property of ['author','publisher','reviewedBy','isPartOf','primaryImageOfPage','about','specialty']){
-    for(const value of asArray(page[property]))addLink(property,refId(value));
+  for(const property of ['author','publisher','reviewedBy','isPartOf','primaryImageOfPage','about']){
+    for(const value of asArray(page[property])){
+      const id=refId(value);
+      if(id===mainEntityId&&mainEntityProperties.includes(property))continue;
+      addLink(property,id);
+    }
   }
 
   const meta=[];
@@ -52,6 +60,8 @@ export function deriveGooglePageMicrodata(graphDocument,pageId){
     itemId:page['@id'],
     itemType:'https://schema.org/ProfilePage',
     mainEntityId,
+    mainEntityProperties:Object.freeze(mainEntityProperties),
+    mainEntityItemprop:mainEntityProperties.join(' '),
     links:[...linkValues].map(([href,properties])=>Object.freeze({href,itemprop:properties.join(' ')})),
     meta:meta.map(value=>Object.freeze(value)),
   });

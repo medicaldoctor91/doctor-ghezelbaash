@@ -24,12 +24,13 @@ assert(HERO_SUBTITLE_PRESENTATION_CONTRACT.manifestoCentered&&HERO_SUBTITLE_PRES
 assert(HERO_SUBTITLE_PRESENTATION_CONTRACT.mobileRhythm==='compact'&&HERO_SUBTITLE_PRESENTATION_CONTRACT.portraitFooter==='white-editorial'&&HERO_SUBTITLE_PRESENTATION_CONTRACT.searchPresentationCoordinated,'Hero composition contract drift');
 assert(HERO_SUBTITLE_PRESENTATION_CONTRACT.heroOrderChanged===false&&HERO_SUBTITLE_PRESENTATION_CONTRACT.heroImageGeometryChanged===false,'Hero art direction altered protected structure/image geometry');
 
-assert(authoredPage.includes('<span id="saeed-ghezelbash-aesthetic-medicine">دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه</span>'),'Canonical authored H1 changed');
+assert(authoredPage.includes('<span itemprop="name">دکتر سعید قزلباش</span><span>؛ </span><span id="saeed-ghezelbash-aesthetic-medicine"><span itemprop="jobTitle">پزشک زیبایی</span> در کرمانشاه</span>'),'Canonical authored H1 semantic identity changed');
 assert(authoredPage.includes('<p class="hero-subtitle">سفارش از منوی خدمات زیبایی ممنوع</p>'),'Canonical authored manifesto source changed');
 const h1=content.match(/<h1\b[^>]*id="saeed-ghezelbash"[^>]*>[\s\S]*?<\/h1>/i)?.[0]||'';
 const h1Text=h1.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
 assert(h1Text==='دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه','Assembled semantic H1 text/order changed');
 assert(h1.includes('class="hero-title__name"')&&h1.includes('class="hero-title__semantic-separator"')&&h1.includes('class="hero-title__descriptor"'),'Hero visual title spans missing');
+assert(h1.includes('class="hero-title__name" itemprop="name"')&&h1.includes('<span itemprop="jobTitle">پزشک زیبایی</span>'),'Visible Person name/jobTitle Microdata missing');
 assert(h1.indexOf('hero-title__name')<h1.indexOf('hero-title__semantic-separator')&&h1.indexOf('hero-title__semantic-separator')<h1.indexOf('hero-title__descriptor'),'DOM H1 order no longer entity-first');
 assert(content.includes('<p class="hero-subtitle">سفارش از منوی خدمات زیبایی <strong class="hero-subtitle__stop">ممنوع!</strong></p>'),'Hero manifesto markup missing');
 

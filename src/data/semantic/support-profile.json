@@ -61,6 +61,16 @@
         "possibleTreatment"
       ]
     },
+    "DefinedTerm": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "termCode",
+        "identifier",
+        "sameAs"
+      ]
+    },
     "HowTo": {
       "include": [
         "@id",

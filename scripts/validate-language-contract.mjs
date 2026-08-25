@@ -2,7 +2,7 @@ import {readFile} from 'node:fs/promises';
 import {CONTENT_LANGUAGES,MULTILINGUAL_HEADING_BOUNDARIES,MULTILINGUAL_RETURN_TO_PRIMARY,PRIMARY_DOCUMENT_LANGUAGE} from '../src/lib/language-contract.mjs';
 import {bindLanguageRegions,headingStart} from '../src/lib/language-regions.mjs';
 import {deriveGooglePageMicrodata} from '../src/lib/google-page-microdata.mjs';
-import {projectNode} from './lib/projections/graph-projections.mjs';
+import {deriveGooglePageNode} from '../src/lib/google-semantic-html.mjs';
 
 const fail=message=>{throw new Error(message)};
 const [source,astroConfig,baseLayout,documentHead,graphCompiler,assembler,knowledgeGraph,headProfile]=await Promise.all([
@@ -53,11 +53,10 @@ if(!assembler.includes("import {bindLanguageRegions} from '../../src/lib/languag
 const webpageId='https://www.ghezelbaash.ir/#webpage';
 const canonicalPage=(knowledgeGraph['@graph']||[]).find(node=>node?.['@id']===webpageId);
 if(!canonicalPage)fail('Canonical WebPage node missing');
-const googlePage=projectNode(canonicalPage,headProfile.nodes?.[webpageId]);
-googlePage.inLanguage=[...CONTENT_LANGUAGES];
+const googlePage=deriveGooglePageNode(knowledgeGraph,headProfile,webpageId,CONTENT_LANGUAGES);
 const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePage]},webpageId);
 const microdataLanguages=googlePageMicrodata.meta.filter(item=>item.itemprop==='inLanguage').map(item=>item.content);
-if(JSON.stringify(microdataLanguages)!==JSON.stringify(CONTENT_LANGUAGES)||!baseLayout.includes("import { deriveGooglePageMicrodata } from '../lib/google-page-microdata.mjs'")||!baseLayout.includes('deriveGooglePageMicrodata(headGraph')||!baseLayout.includes('googlePageMicrodata.meta.map'))fail('Graph-derived multilingual WebPage microdata wiring missing');
+if(JSON.stringify(microdataLanguages)!==JSON.stringify(CONTENT_LANGUAGES)||!baseLayout.includes("import { deriveGooglePageMicrodata } from '../lib/google-page-microdata.mjs'")||!baseLayout.includes('deriveGooglePageMicrodata(headGraph')||!baseLayout.includes('googlePageMicrodata.meta.map')||!assembler.includes('bindGoogleSemanticHtml(content')||!assembler.includes('languages:CONTENT_LANGUAGES'))fail('Graph-derived multilingual WebPage/Microdata wiring missing');
 if(/\bhreflang\s*=/.test(documentHead))fail('Single-URL document must not emit localized-alternate hreflang');
 if(!graphCompiler.includes("import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs'")||!graphCompiler.includes('projected.inLanguage=[...CONTENT_LANGUAGES]'))fail('Head JSON-LD multilingual projection wiring missing');
 

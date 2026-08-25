@@ -14,7 +14,7 @@ const id=v=>typeof v==='string'?v:v?.['@id'];
 const release=await readJson('src/data/release.json'),releaseInvariants=await readJson('src/data/release-invariants.json'),graph=await readJson('src/data/semantic/knowledge-graph.jsonld'),visible=await readJson('src/data/visible-contract.json'),services=await readJson('src/data/service-registry.json'),answers=await readJson('src/data/answer-registry.json'),authority=await readJson('.release/policy/authority-surface-contract.json'),platform=await readJson('.release/policy/platform-contract.json'),headProfile=await readJson('src/data/semantic/head-profile.json'),hf=authority.surfaces.huggingFace;
 
 const requiredFiles=[
-  'CITATION.cff','codemeta.json','src/content-source/page.md','src/layouts/BaseLayout.astro','src/lib/css-delivery.mjs','src/lib/css-source.mjs','src/lib/hero-image-contract.mjs','src/lib/release-tokens.mjs',
+  'CITATION.cff','codemeta.json','src/content-source/page.md','src/layouts/BaseLayout.astro','src/lib/css-delivery.mjs','src/lib/css-source.mjs','src/lib/google-semantic-html.mjs','src/lib/semantic-projection.mjs','src/lib/hero-image-contract.mjs','src/lib/release-tokens.mjs',
   'src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
   '.release/policy/platform-contract.json','.release/policy/authority-surface-contract.json','scripts/lib/css-rules.mjs','scripts/lib/graph-integrity.mjs','scripts/lib/release-graph.mjs','scripts/lib/projection-context.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
@@ -123,9 +123,10 @@ if(authoredPage.split(/\r?\n/).length<3000)fail('Canonical HTML source collapsed
 if(/>\s*\r?\n\s*</.test(assembled.content))fail('Readable authored HTML layout leaked into delivery content bytes');
 if(!assembled.content.includes('id="saeed-ghezelbash-clinical-decision-framework"')||!assembled.content.includes('id="verified-physician-identity-core"'))fail('Physician-specific diagnostic/identity surface missing');
 const headIds=await readJson('src/data/semantic/head-ids.json'),personHeadProfile=headProfile.nodes?.[release.primaryEntity.id],allowedHeadMemberships=new Set(personHeadProfile?.refAllow?.memberOf||[]);
+const semanticProjection=await readSource('src/lib/semantic-projection.mjs');
 if(headProfile.maxBytes!==releaseInvariants.maxHeadGraphBytes)fail('Head profile byte ceiling drift from release invariant');
 if(!Array.isArray(personHeadProfile?.include)||!personHeadProfile.include.includes('memberOf')||!Array.isArray(personHeadProfile?.refAllow?.memberOf))fail('Head Person membership projection policy incomplete');
-if(!graphCompiler.includes('headNodes.push(projectNode(node,headProfile.nodes?.[id]))')||!graphCompiler.includes('allow.includes(id)'))fail('Head graph compiler no longer enforces the declarative Head profile');
+if(!graphCompiler.includes("import {projectNode} from '../../../src/lib/semantic-projection.mjs'")||!graphCompiler.includes('headNodes.push(projectNode(node,headProfile.nodes?.[id]))')||!semanticProjection.includes('allow.includes(id)'))fail('Head graph compiler no longer enforces the shared declarative Head profile');
 for(const [organizationId] of fullGraphOnlyMemberships)if(headIds.includes(organizationId)||allowedHeadMemberships.has(organizationId))fail(`Full-graph-only membership admitted by Head source policy ${organizationId}`);
 
 const headNodes=headIds.map(ref=>byId.get(ref)).filter(Boolean),headRefs=new Set();

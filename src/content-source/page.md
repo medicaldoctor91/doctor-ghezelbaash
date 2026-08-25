@@ -5,12 +5,10 @@ lang: "fa-IR"
 dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 ---
-<header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity" itemscope itemtype="https://schema.org/Person https://schema.org/IndividualPhysician">
-<meta content="دکتر سعید قزلباش" itemprop="name"/>
-<meta content="پزشک زیبایی" itemprop="jobTitle"/>
+<header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="{{GOOGLE_MAIN_ENTITY_ITEMPROP}}" itemscope itemtype="https://schema.org/Person https://schema.org/IndividualPhysician">
 <link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation"/>
 <link href="https://www.wikidata.org/entity/Q140287622" itemprop="sameAs"/>
-<h1 class="hero-title" id="saeed-ghezelbash"><span id="saeed-ghezelbash-aesthetic-medicine">دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه</span>
+<h1 class="hero-title" id="saeed-ghezelbash"><span itemprop="name">دکتر سعید قزلباش</span><span>؛ </span><span id="saeed-ghezelbash-aesthetic-medicine"><span itemprop="jobTitle">پزشک زیبایی</span> در کرمانشاه</span>
 </h1>
 <p class="hero-subtitle">سفارش از منوی خدمات زیبایی ممنوع</p><button aria-controls="guide-search" aria-haspopup="dialog" aria-keyshortcuts="/" aria-label="باز کردن جست‌وجوی راهنمای جامع" class="hero-action hero-search-launch" data-guide-search-open type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><span>جست‌وجو در راهنمای جامع</span><kbd aria-hidden="true">/</kbd></button>
 <p class="hero-lead" id="hero-clinical-principle">سوزن همیشه مقصر نیست. خیلی وقت‌ها فاجعه از چند دقیقه قبل‌تر شروع شده؛ همان لحظه‌ای که یک پف را گودی دیده‌اند، افتادگی را کمبود ژل حساب کرده‌اند یا برای پوستی که اضافه آمده، نسخه بوتاکس نوشته‌اند. اجرای تمیز، تشخیص غلط را نجات نمی‌دهد. فقط اشتباه را تمیزتر اجرا می‌کند.</p>
