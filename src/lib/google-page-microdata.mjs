@@ -25,6 +25,12 @@ export function deriveGooglePageMicrodata(graphDocument,pageId){
   }
 
   const mainEntityId=requireValue(refId(page.mainEntity),'mainEntity');
+  const mainEntity=nodes.find(node=>node?.['@id']===mainEntityId);
+  if(!mainEntity)throw new Error(`Google page projection is missing mainEntity node ${mainEntityId}`);
+  const mainEntityTypes=asArray(mainEntity['@type']);
+  if(mainEntityTypes.length!==1||mainEntityTypes[0]!=='Person'){
+    throw new Error(`Google ProfilePage mainEntity must be exactly Person, received ${mainEntityTypes.join(', ')||'none'}`);
+  }
   const mainEntityProperties=['mainEntity','author','publisher','reviewedBy','about'].filter(property=>
     asArray(page[property]).some(value=>refId(value)===mainEntityId)
   );
@@ -60,6 +66,7 @@ export function deriveGooglePageMicrodata(graphDocument,pageId){
     itemId:page['@id'],
     itemType:'https://schema.org/ProfilePage',
     mainEntityId,
+    mainEntityItemType:'https://schema.org/Person',
     mainEntityProperties:Object.freeze(mainEntityProperties),
     mainEntityItemprop:mainEntityProperties.join(' '),
     links:[...linkValues].map(([href,properties])=>Object.freeze({href,itemprop:properties.join(' ')})),

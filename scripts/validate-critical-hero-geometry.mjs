@@ -44,6 +44,9 @@ expect(criticalRules,'.entity-hero .hero-action','min-height','3.12rem',{maxWidt
 expect(criticalRules,'.entity-hero .hero-action','padding','.72rem 1rem',{maxWidth:720});
 
 const allRules=[...criticalRules,...deferredRules];
+expect(criticalRules,'.quick-actions__item','display','inline-flex');
+const telephoneLinkRules=selectorRules(allRules,'a[href^="tel:"]');
+assert(telephoneLinkRules.length===1&&!telephoneLinkRules.some(rule=>'display' in rule.declarations),'Global telephone-link semantics must not override component layout display');
 const cssPropertyCount=property=>allRules.reduce((count,rule)=>count+Number(property in rule.declarations),0);
 const backdropFilterCount=cssPropertyCount('backdrop-filter')+cssPropertyCount('-webkit-backdrop-filter');
 const imageFilterCount=cssPropertyCount('filter');

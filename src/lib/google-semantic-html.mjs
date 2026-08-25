@@ -2,6 +2,7 @@ import {deriveGooglePageMicrodata} from './google-page-microdata.mjs';
 import {projectNode} from './semantic-projection.mjs';
 
 const MAIN_ENTITY_ITEMPROP_TOKEN='{{GOOGLE_MAIN_ENTITY_ITEMPROP}}';
+const MAIN_ENTITY_ITEMTYPE_TOKEN='{{GOOGLE_MAIN_ENTITY_ITEMTYPE}}';
 const asArray=value=>Array.isArray(value)?value:(value==null?[]:[value]);
 const refId=value=>typeof value==='string'?value:value?.['@id'];
 const attr=(source,name)=>source.match(new RegExp(`\\b${name}=["']([^"']+)["']`,'i'))?.[1];
@@ -32,11 +33,17 @@ export function bindGoogleSemanticHtml(source,{graphDocument,headProfile,pageId,
   if(!Array.isArray(nodes))throw new Error('Canonical graph lacks @graph');
   const byId=new Map(nodes.filter(node=>typeof node?.['@id']==='string').map(node=>[node['@id'],node]));
   const page=deriveGooglePageNode(graphDocument,headProfile,pageId,languages);
-  const pageMicrodata=deriveGooglePageMicrodata({'@graph':[page]},pageId);
+  const mainEntityId=refId(page.mainEntity);
+  const canonicalMainEntity=byId.get(mainEntityId);
+  const mainEntitySpec=headProfile?.nodes?.[mainEntityId];
+  if(!canonicalMainEntity||!mainEntitySpec)throw new Error(`Google Head projection is missing mainEntity policy for ${mainEntityId||'unknown'}`);
+  const projectedMainEntity=projectNode(canonicalMainEntity,mainEntitySpec);
+  const pageMicrodata=deriveGooglePageMicrodata({'@graph':[page,projectedMainEntity]},pageId);
   let output=String(source);
-  const tokenCount=output.split(MAIN_ENTITY_ITEMPROP_TOKEN).length-1;
-  if(tokenCount!==1)throw new Error(`Expected one Google main-entity itemprop token; found ${tokenCount}`);
+  const tokenCount=token=>output.split(token).length-1;
+  if(tokenCount(MAIN_ENTITY_ITEMPROP_TOKEN)!==1||tokenCount(MAIN_ENTITY_ITEMTYPE_TOKEN)!==1)throw new Error('Expected one Google main-entity itemprop and itemtype token');
   output=output.replace(MAIN_ENTITY_ITEMPROP_TOKEN,pageMicrodata.mainEntityItemprop);
+  output=output.replace(MAIN_ENTITY_ITEMTYPE_TOKEN,pageMicrodata.mainEntityItemType);
 
   const expectedIds=asArray(page.mainContentOfPage).map(refId).filter(Boolean);
   if(!expectedIds.length||new Set(expectedIds).size!==expectedIds.length)throw new Error('Google page mainContentOfPage projection is empty or duplicated');

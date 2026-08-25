@@ -27,9 +27,9 @@ Generated representations are intentionally not committed. `npm run build` boots
 
 ## Semantic HTML and presentation boundary
 
-The uploaded v1.2.3 page is the locked human-facing visual baseline. Technical upgrades must not add visible cards, chapter rails, TOC entries, content sections or append-only style overrides. `src/styles/global.css` remains the single presentation authority; the `article` wrapper has only the selector continuity required to preserve the baseline reading measure.
+The established human-facing page is the locked visual baseline. Technical upgrades must not add visible cards, chapter rails, TOC entries, content sections or append-only style overrides. `src/styles/global.css` remains the single presentation authority; the `article` wrapper has only the selector continuity required to preserve the baseline reading measure.
 
-The page is a real HTML `article` inside the primary `main` landmark. Consistent Microdata projects the same `MedicalWebPage` + `ProfilePage` and `Person` identifiers already used by the canonical JSON-LD graph. Existing visible Hero identity, physician imagery and verified external links provide the human-readable evidence surface without creating a competing entity ID.
+The page is a real HTML `article` inside the primary `main` landmark. The canonical master page retains `MedicalWebPage` + `ProfilePage`, and the canonical physician retains `Person` + `IndividualPhysician`. The shared Head Profile compiles Google-safe `ProfilePage` + `Person` nodes; the DOM Microdata is derived from that exact projection rather than maintained as a second schema authority. The nested visible `Person` scope reuses the canonical physician ID and binds page roles, identity evidence, physician imagery and verified external links without creating a competing entity.
 
 The complete server-rendered TOC remains the only visible chapter navigation. The existing search dialog keeps its original copy and presentation while receiving native search semantics and accessible state. Its small inline runtime only indexes existing headings, exposes the current TOC destination through `aria-current`, reveals deferred video posters and supports media deep links; it does not construct new visible navigation.
 

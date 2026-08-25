@@ -5,6 +5,7 @@ import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {assertIdentityFingerprintSource} from './lib/release-identity.mjs';
 import {currentReleaseMetadataMismatches,releaseHistoryNodeId,selectCurrentReleaseBoundNodes,nodeTypes} from './lib/release-graph.mjs';
 import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
+import {validateCoreEntityIdentity} from './lib/core-entity-identity.mjs';
 
 const root=process.cwd();
 const fail=message=>{throw new Error(message)};
@@ -76,10 +77,6 @@ if(!documentHead.includes("{href:`https://doi.org/${versionDoi}`,rel:'related',t
 const pageSource=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
 for(const removedId of ['doctor-ghezelbaash-structured-data-repository','doctor-ghezelbaash-structured-data-project','doctor-ghezelbaash-structured-data-section','data-catalog'])if(pageSource.includes(`id="${removedId}"`))fail(`Machine Dataset landing block leaked into visible content: ${removedId}`);
 if(pageSource.includes('Public Knowledge Graph'))fail('Machine Dataset title leaked into visible page content');
-const forbiddenKnowledgeEntity=['Q140','304972'].join('');
-for(const file of ['src/content-source/page.md','src/data/semantic/knowledge-graph.jsonld','src/data/release.json','src/data/evidence-registry.json','src/data/answer-registry.json','src/data/service-registry.json','public/favicon.svg','README.md']){
-  if((await readFile(path.join(root,file),'utf8')).includes(forbiddenKnowledgeEntity))fail(`Forbidden Knowledge Graph entity remains in ${file}`);
-}
 
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
 const nodes=graph['@graph']||[];
@@ -90,6 +87,7 @@ if(graphClosure.duplicateIds.length)fail(`Duplicate graph IDs: ${graphClosure.du
 if(graphClosure.danglingSameSiteCount>invariants.maxOrphanGraphNodes)fail(`Dangling same-site graph IDs: ${graphClosure.danglingSameSiteIds.join(', ')}`);
 const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id);
 if(!person||!clinic||!dataset)fail('Core Person/Clinic/Dataset topology is incomplete');
+validateCoreEntityIdentity({release,nodes});
 if(dataset.name!==release.dataset.name||dataset.version!==R||dataset.dateModified!==release.dateModified)fail('Dataset identity/release projection drift');
 if(id(dataset.creator)!==release.primaryEntity.id||id(dataset.publisher)!==release.primaryEntity.id)fail('Dataset creator/publisher must resolve to the physician');
 const datasetAbout=new Set(arr(dataset.about).map(id));
@@ -176,4 +174,4 @@ if(authorityPolicy.identitySource!=='src/data/release.json')fail('Authority poli
 for(const task of ['question-answering','text-retrieval','text-generation'])if(!hfPolicy.taskCategories?.includes(task))fail(`HF task contract missing: ${task}`);
 for(const language of ['fa','en','ar','ckb'])if(!hfPolicy.languages?.includes(language))fail(`HF language contract missing: ${language}`);
 
-console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),releaseHistory:Z.releaseHistory.length,releaseBoundNodes:releaseBound.length,graphClosure,redirectsSha256,services:registered.size,answers:(answers.answers||[]).length,medicalReviewedAt:release.medicalReviewedAt,headReleaseBinding:'ASTRO_NATIVE_PASS',physicianEntityHome:'PASS',semanticDestinations:'PASS',forbiddenEntityExclusion:'PASS',medicalConditionSemantics:'PASS',physicianHowTo:'PASS',integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'RELEASE_CONTRACT',release:R,conceptDoi:Z.conceptDoi,versionDoi:Z.versionDoi,recordId:String(Z.recordId),releaseHistory:Z.releaseHistory.length,releaseBoundNodes:releaseBound.length,graphClosure,redirectsSha256,services:registered.size,answers:(answers.answers||[]).length,medicalReviewedAt:release.medicalReviewedAt,headReleaseBinding:'ASTRO_NATIVE_PASS',physicianEntityHome:'PASS',semanticDestinations:'PASS',coreWikidataOwnership:'PASS',medicalConditionSemantics:'PASS',physicianHowTo:'PASS',integrity:'PASS'},null,2));
