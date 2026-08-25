@@ -4,9 +4,9 @@ const AUTHORED_HERO_SUBTITLE='<p class="hero-subtitle">سفارش از منوی 
 const ASSEMBLED_HERO_SUBTITLE='<p class="hero-subtitle">سفارش از منوی خدمات زیبایی <strong class="hero-subtitle__stop">ممنوع!</strong></p>';
 
 const LEGACY_HERO_TITLE_RULE='.entity-hero .hero-title{grid-area:title}';
-const ART_HERO_TITLE_RULE='.entity-hero .hero-title{grid-area:title;display:flex;flex-direction:column;gap:.4rem;justify-self:center;margin-block-end:.05rem;text-align:center}.hero-title__descriptor{order:-1;padding-block-end:.28rem;border-block-end:1px solid var(--line);color:var(--muted);font-size:clamp(.82rem,.42em,1rem);font-weight:650}.hero-title__semantic-separator{display:none}.hero-title__name{font-size:clamp(2.05rem,1.05em,3rem);font-weight:820;line-height:1.14}.hero-title__name::after{content:":"}';
+const ART_HERO_TITLE_RULE='.entity-hero .hero-title{grid-area:title;display:flex;flex-direction:column;gap:.4rem;justify-self:stretch;margin-block-end:.05rem;text-align:start}.hero-title__descriptor{order:-1;display:flex;gap:.7rem;align-items:center;color:var(--muted);font-size:clamp(.82rem,.42em,1rem);font-weight:650;line-height:1.4}.hero-title__descriptor::after{content:"";height:1px;flex:1;background:var(--line)}.hero-title__semantic-separator{display:none}.hero-title__name{font-size:clamp(2.05rem,1.05em,3rem);font-weight:820;line-height:1.14}.hero-title__name::after{content:":"}';
 const LEGACY_HERO_SUBTITLE_RULE='.entity-hero .hero-subtitle{grid-area:subtitle}';
-const MANIFESTO_HERO_SUBTITLE_RULE='.entity-hero .hero-subtitle{grid-area:subtitle;justify-self:center;max-width:30ch;margin:.05rem auto .3rem;color:#43564f;font-size:1.04em;font-weight:600;line-height:1.55;text-align:center;text-wrap:balance}.hero-subtitle__stop{color:#8f3934;font-weight:820;white-space:nowrap}';
+const MANIFESTO_HERO_SUBTITLE_RULE='.entity-hero .hero-subtitle{grid-area:subtitle;justify-self:start;max-width:30ch;margin:.05rem 0 .3rem;color:#43564f;font-size:1.04em;font-weight:600;line-height:1.55;text-align:start;text-wrap:balance}.hero-subtitle__stop{color:#8f3934;font-weight:820;white-space:nowrap}';
 const LEGACY_MOBILE_HERO_GRID_RULE='.entity-hero{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "subtitle" "search" "portrait" "actions" "lead" "identity";gap:.75rem;margin-block-end:2.2rem}';
 const ART_MOBILE_HERO_GRID_RULE='.entity-hero{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "subtitle" "search" "portrait" "actions" "lead" "identity";gap:.5rem;margin-block-end:2.2rem}';
 const LEGACY_MOBILE_TITLE_RULE='.entity-hero .hero-title{margin-block-end:.15rem}';
@@ -33,7 +33,7 @@ export function bindHeroMastheadPresentation(content){
 
 export function applyHeroSubtitlePresentationCss(authoredCss){
   let source=String(authoredCss);
-  source=replaceExactlyOnce(source,LEGACY_HERO_TITLE_RULE,ART_HERO_TITLE_RULE,'Hero context rail and centered identity');
+  source=replaceExactlyOnce(source,LEGACY_HERO_TITLE_RULE,ART_HERO_TITLE_RULE,'Hero context rail and RTL identity');
   source=replaceExactlyOnce(source,LEGACY_HERO_SUBTITLE_RULE,MANIFESTO_HERO_SUBTITLE_RULE,'Hero integrated manifesto');
   source=replaceExactlyOnce(source,LEGACY_MOBILE_HERO_GRID_RULE,ART_MOBILE_HERO_GRID_RULE,'Hero mobile rhythm');
   source=replaceExactlyOnce(source,LEGACY_MOBILE_TITLE_RULE,ART_MOBILE_TITLE_RULE,'Hero mobile identity spacing');
@@ -46,11 +46,12 @@ export function applyHeroSubtitlePresentationCss(authoredCss){
 export const HERO_SUBTITLE_PRESENTATION_CONTRACT=Object.freeze({
   semanticH1TextChanged:false,
   contextLabel:'پزشک زیبایی در کرمانشاه',
-  contextTreatment:'horizontal-hairline',
+  contextTreatment:'asymmetric-rail',
   visualSemanticSeparator:false,
   visualNameSuffix:':',
-  identityCentered:true,
-  manifestoCentered:true,
+  identityCentered:false,
+  identityAxis:'rtl-start',
+  manifestoCentered:false,
   manifestoStop:'ممنوع!',
   manifestoStopBlock:false,
   manifestoStopColor:'#8f3934',
