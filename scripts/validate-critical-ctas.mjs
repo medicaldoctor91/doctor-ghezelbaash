@@ -33,7 +33,8 @@ for(const contract of heroContract){
 
 if(!redirectsRaw.includes('doctor.ghezelbaash.ir')||!/(google\.com\/maps|maps\.google)/i.test(redirectsRaw))fail('doctor subdomain no longer maps to the clinic map redirect contract');
 if(!quick.includes('class="quick-actions" data-hero-dock hidden')||!quick.includes('class="quick-actions__top"')||!quick.includes('data-quick-actions-top hidden')||!quick.includes('href="#main-content"'))fail('Flash-free Hero-aware floating controls drift');
-if(!quick.includes("'IntersectionObserver'in window")||!quick.includes('s(!e.isIntersecting)')||!quick.includes("d.querySelector('.entity-hero')"))fail('Hero-aware dock runtime contract drift');
+if(quick.includes('hero-dock-runtime')||/<script\b/i.test(quick))fail('Floating dock reintroduced a third inline runtime');
+if(!runtime.includes("dock=d.querySelector('[data-hero-dock]')")||!runtime.includes("hero=d.querySelector('.entity-hero')")||!runtime.includes("'IntersectionObserver'in window")||!runtime.includes('dock.hidden=e.isIntersecting')||!runtime.includes('syncDock'))fail('Hero-aware dock behavior escaped canonical site runtime');
 if(!runtime.includes("top.hidden=scrollY<800")||!runtime.includes("addEventListener('scroll',syncTop,{passive:true})")||!runtime.includes('syncTop();'))fail('Back-to-top scroll visibility contract drift');
 if(!sitePresentation.includes('a[href^="tel:"]:not(.quick-actions__item)'))fail('Floating phone CTA escaped shared flex/RTL alignment contract');
 for(const [binding,label] of [['href={site.telHref}','تماس'],['href={site.chatUrl}','چت با دکتر قزلباش'],['href={site.directionsUrl}','مسیریابی']])if(!quick.includes(binding))fail(`Floating CTA canonical binding drift: ${label}`);
@@ -51,7 +52,8 @@ console.log(JSON.stringify({
   criticalCtas:'PASS',
   hero:heroContract.map(item=>item.label),
   floating:['تماس','چت با دکتر قزلباش','مسیریابی'],
-  floatingDock:'FIRST_PAINT_HIDDEN_AND_HERO_AWARE',
+  floatingDock:'FIRST_PAINT_HIDDEN_AND_HERO_AWARE_IN_SITE_RUNTIME',
+  inlineRuntimeCount:'UNCHANGED',
   backToTop:'HIDDEN_UNTIL_800PX_SCROLL',
   phoneAlignment:'SHARED_FLEX_RTL',
   directionsPlaceId:release.clinic.placeId,
