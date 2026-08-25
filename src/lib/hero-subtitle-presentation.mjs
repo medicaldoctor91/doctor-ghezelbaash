@@ -1,5 +1,5 @@
-const AUTHORED_HERO_TITLE='<h1 class="hero-title" id="saeed-ghezelbash"><span id="saeed-ghezelbash-aesthetic-medicine">دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه</span></h1>';
-const ASSEMBLED_HERO_TITLE='<h1 class="hero-title" id="saeed-ghezelbash"><span class="hero-title__name">دکتر سعید قزلباش</span><span class="hero-title__semantic-separator">؛ </span><span class="hero-title__descriptor" id="saeed-ghezelbash-aesthetic-medicine">پزشک زیبایی در کرمانشاه</span></h1>';
+const AUTHORED_HERO_TITLE='<h1 class="hero-title" id="saeed-ghezelbash"><span itemprop="name">دکتر سعید قزلباش</span><span>؛ </span><span id="saeed-ghezelbash-aesthetic-medicine"><span itemprop="jobTitle">پزشک زیبایی</span> در کرمانشاه</span></h1>';
+const ASSEMBLED_HERO_TITLE='<h1 class="hero-title" id="saeed-ghezelbash"><span class="hero-title__name" itemprop="name">دکتر سعید قزلباش</span><span class="hero-title__semantic-separator">؛ </span><span class="hero-title__descriptor" id="saeed-ghezelbash-aesthetic-medicine"><span itemprop="jobTitle">پزشک زیبایی</span> در کرمانشاه</span></h1>';
 const AUTHORED_HERO_SUBTITLE='<p class="hero-subtitle">سفارش از منوی خدمات زیبایی ممنوع</p>';
 const ASSEMBLED_HERO_SUBTITLE='<p class="hero-subtitle">سفارش از منوی خدمات زیبایی <strong class="hero-subtitle__stop">ممنوع!</strong></p>';
 

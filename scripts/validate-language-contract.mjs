@@ -1,15 +1,19 @@
 import {readFile} from 'node:fs/promises';
 import {CONTENT_LANGUAGES,MULTILINGUAL_HEADING_BOUNDARIES,MULTILINGUAL_RETURN_TO_PRIMARY,PRIMARY_DOCUMENT_LANGUAGE} from '../src/lib/language-contract.mjs';
 import {bindLanguageRegions,headingStart} from '../src/lib/language-regions.mjs';
+import {deriveGooglePageMicrodata} from '../src/lib/google-page-microdata.mjs';
+import {deriveGooglePageNode} from '../src/lib/google-semantic-html.mjs';
 
 const fail=message=>{throw new Error(message)};
-const [source,astroConfig,baseLayout,documentHead,graphCompiler,assembler]=await Promise.all([
+const [source,astroConfig,baseLayout,documentHead,graphCompiler,assembler,knowledgeGraph,headProfile]=await Promise.all([
   readFile('src/content-source/page.md','utf8'),
   readFile('astro.config.mjs','utf8'),
   readFile('src/layouts/BaseLayout.astro','utf8'),
   readFile('src/components/DocumentHead.astro','utf8'),
   readFile('scripts/lib/projections/graph-projections.mjs','utf8'),
   readFile('scripts/lib/assemble-content.mjs','utf8'),
+  readFile('src/data/semantic/knowledge-graph.jsonld','utf8').then(JSON.parse),
+  readFile('src/data/semantic/head-profile.json','utf8').then(JSON.parse),
 ]);
 
 if(PRIMARY_DOCUMENT_LANGUAGE!=='fa-IR')fail('Primary document language must remain fa-IR');
@@ -46,7 +50,13 @@ for(let index=0;index<MULTILINGUAL_HEADING_BOUNDARIES.length;index++){
 
 if(astroConfig.includes('rehype-language-regions')||astroConfig.includes('rehypePlugins'))fail('Legacy Markdown language-plugin wiring must remain absent on Astro 7');
 if(!assembler.includes("import {bindLanguageRegions} from '../../src/lib/language-regions.mjs'")||!assembler.includes('content=bindLanguageRegions(content);'))fail('Canonical assembly language binding missing');
-if(!baseLayout.includes("import { CONTENT_LANGUAGES } from '../lib/language-contract.mjs'")||!baseLayout.includes('documentLanguages.map(language=><meta itemprop="inLanguage" content={language} />)'))fail('Multilingual WebPage microdata wiring missing');
+const webpageId='https://www.ghezelbaash.ir/#webpage';
+const canonicalPage=(knowledgeGraph['@graph']||[]).find(node=>node?.['@id']===webpageId);
+if(!canonicalPage)fail('Canonical WebPage node missing');
+const googlePage=deriveGooglePageNode(knowledgeGraph,headProfile,webpageId,CONTENT_LANGUAGES);
+const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePage]},webpageId);
+const microdataLanguages=googlePageMicrodata.meta.filter(item=>item.itemprop==='inLanguage').map(item=>item.content);
+if(JSON.stringify(microdataLanguages)!==JSON.stringify(CONTENT_LANGUAGES)||!baseLayout.includes("import { deriveGooglePageMicrodata } from '../lib/google-page-microdata.mjs'")||!baseLayout.includes('deriveGooglePageMicrodata(headGraph')||!baseLayout.includes('googlePageMicrodata.meta.map')||!assembler.includes('bindGoogleSemanticHtml(content')||!assembler.includes('languages:CONTENT_LANGUAGES'))fail('Graph-derived multilingual WebPage/Microdata wiring missing');
 if(/\bhreflang\s*=/.test(documentHead))fail('Single-URL document must not emit localized-alternate hreflang');
 if(!graphCompiler.includes("import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs'")||!graphCompiler.includes('projected.inLanguage=[...CONTENT_LANGUAGES]'))fail('Head JSON-LD multilingual projection wiring missing');
 

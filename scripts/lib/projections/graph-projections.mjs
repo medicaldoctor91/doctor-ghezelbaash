@@ -1,35 +1,11 @@
 import path from 'node:path';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs';
+import {projectNode} from '../../../src/lib/semantic-projection.mjs';
 import {normalizeGoogleSupportGraph} from '../google-support-graph.mjs';
 import {nodeTypes,refId} from '../projection-context.mjs';
 
-const projectNode=(node,spec={})=>{
-  if(!spec.include)return structuredClone(node);
-  const out={};
-  for(const key of spec.include)if(Object.hasOwn(node,key))out[key]=structuredClone(node[key]);
-  for(const [key,allow] of Object.entries(spec.refAllow||{})){
-    if(!Object.hasOwn(out,key))continue;
-    const values=Array.isArray(out[key])?out[key]:[out[key]];
-    const filtered=values.filter(value=>{
-      const id=refId(value);
-      return id?allow.includes(id):true;
-    });
-    if(!filtered.length)delete out[key];
-    else out[key]=Array.isArray(node[key])?filtered:filtered[0];
-  }
-  for(const [key,allow] of Object.entries(spec.valueAllow||{})){
-    if(!Object.hasOwn(out,key))continue;
-    const values=Array.isArray(out[key])?out[key]:[out[key]];
-    const filtered=values.filter(value=>{
-      const literal=value&&typeof value==='object'&&value['@value']!=null?String(value['@value']):typeof value==='string'?value:null;
-      return literal===null?true:allow.includes(literal);
-    });
-    if(!filtered.length)delete out[key];
-    else out[key]=Array.isArray(node[key])?filtered:filtered[0];
-  }
-  return out;
-};
+export {projectNode};
 
 export async function compileGraphProjections(context){
   const {semantic,generatedSemantic,graph,byId,readIds,release}=context;

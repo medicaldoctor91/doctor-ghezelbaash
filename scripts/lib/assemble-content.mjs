@@ -3,6 +3,8 @@ import {readFile,readdir} from 'node:fs/promises';
 import {bindHeroPictureSizes} from '../../src/lib/hero-image-contract.mjs';
 import {bindHeroSearchLabel} from '../../src/lib/hero-search-presentation.mjs';
 import {bindHeroMastheadPresentation} from '../../src/lib/hero-subtitle-presentation.mjs';
+import {bindGoogleSemanticHtml} from '../../src/lib/google-semantic-html.mjs';
+import {CONTENT_LANGUAGES} from '../../src/lib/language-contract.mjs';
 import {bindLanguageRegions} from '../../src/lib/language-regions.mjs';
 import {bindReleaseTokens} from '../../src/lib/release-tokens.mjs';
 import {bindSiteTokens,deriveSiteData} from '../../src/lib/site-data.mjs';
@@ -32,7 +34,10 @@ export async function canonicalSourceNames(root=process.cwd()){
 
 export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
   const names=await canonicalSourceNames(root);
-  const release=JSON.parse(await readFile(path.join(root,'src/data/release.json'),'utf8'));
+  const [release,headProfile]=await Promise.all([
+    readFile(path.join(root,'src/data/release.json'),'utf8').then(JSON.parse),
+    readFile(path.join(root,'src/data/semantic/head-profile.json'),'utf8').then(JSON.parse),
+  ]);
   const canonicalGraph=graph??JSON.parse(await readFile(path.join(root,'src/data/semantic/knowledge-graph.jsonld'),'utf8'));
   const site=deriveSiteData(release,canonicalGraph);
   let content=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
@@ -44,5 +49,6 @@ export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
   content=bindReleaseTokens(content,release);
   content=bindSiteTokens(content,site);
   content=await bindLiveReputation(root,content,release);
+  content=bindGoogleSemanticHtml(content,{graphDocument:canonicalGraph,headProfile,pageId:`${release.canonicalUrl}#webpage`,languages:CONTENT_LANGUAGES});
   return {content,names};
 }
