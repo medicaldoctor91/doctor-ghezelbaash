@@ -38,7 +38,8 @@ if(!webpage||!person)fail('Canonical page/person node missing');
 const supportProfilePages=supportIds.filter(id=>graphTypes(graphNode(id)).includes('ProfilePage'));
 if(supportProfilePages.length)fail(`Google support projection contains competing ProfilePage nodes: ${supportProfilePages.join(', ')}`);
 const googlePageNode=deriveGooglePageNode(knowledgeGraphDocument,headProfile,webpageId,CONTENT_LANGUAGES);
-const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePageNode]},webpageId);
+const projectedPerson=projectNode(person,headProfile.nodes?.[personId]);
+const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePageNode,projectedPerson]},webpageId);
 
 const headings=[...body.matchAll(/<h([1-6])\b[^>]*>/gi)].map(match=>({level:Number(match[1]),tag:match[0],id:attr(match[0],'id')}));
 if(headings.filter(item=>item.level===1).length!==1)fail('Canonical page must contain exactly one H1');
@@ -107,6 +108,7 @@ const pageMicrodata=
   webpage.lastReviewed===release.medicalReviewedAt&&
   googlePageNode.lastReviewed===release.medicalReviewedAt&&
   googlePageMicrodata.itemType==='https://schema.org/ProfilePage'&&
+  googlePageMicrodata.mainEntityItemType==='https://schema.org/Person'&&
   googlePageMicrodata.mainEntityId===personId&&
   exactSet(new Set(googlePageMicrodata.mainEntityProperties),new Set(['mainEntity','author','publisher','reviewedBy','about']))&&
   !pageLinkProperties.get('author')?.has(personId)&&
@@ -134,7 +136,6 @@ const personValues=property=>personPropertyTags.filter(tag=>tagProperties(tag).i
 const personTextValues=property=>[...personHeader.matchAll(new RegExp(`<([a-z][a-z0-9:-]*)\\b(?=[^>]*\\bitemprop=["'][^"']*\\b${escapeRegExp(property)}\\b[^"']*["'])[^>]*>([\\s\\S]*?)<\\/\\1>`,'gi'))]
   .map(match=>stripMarkup(match[2])).filter(Boolean);
 const personItemTypes=new Set((attr(personOpen,'itemtype')||'').split(/\s+/).filter(Boolean));
-const projectedPerson=projectNode(person,headProfile.nodes?.[personId]);
 const expectedSameAs=new Set([
   graphValues(projectedPerson.sameAs).find(value=>value==='https://www.wikidata.org/entity/Q140287622'),
   graphValues(projectedPerson.sameAs).find(value=>/membersearch\.irimc\.org/.test(value)),
@@ -143,11 +144,12 @@ const expectedSameAs=new Set([
 const personMicrodata=
   attr(personOpen,'itemid')===personId&&
   exactSet(new Set(tagProperties(personOpen)),new Set(googlePageMicrodata.mainEntityProperties))&&
-  exactSet(personItemTypes,new Set(['https://schema.org/Person','https://schema.org/IndividualPhysician']))&&
+  exactSet(personItemTypes,new Set([googlePageMicrodata.mainEntityItemType]))&&
   exactSet(new Set(personTextValues('name')),new Set([localizedValue(projectedPerson.name,'fa')]))&&
   exactSet(new Set(personTextValues('jobTitle')),new Set([localizedValue(projectedPerson.jobTitle,'fa')]))&&
   exactSet(new Set(personValues('workLocation')),new Set([graphRef(projectedPerson.workLocation?.[0]??projectedPerson.workLocation)]))&&
   exactSet(new Set(personValues('sameAs')),expectedSameAs)&&
+  personPropertyTags.filter(tag=>tagProperties(tag).includes('sameAs')).every(tag=>/^<a\b/i.test(tag))&&
   exactSet(new Set(personValues('image')),new Set([graphRef(projectedPerson.image?.[0]??projectedPerson.image)]))&&
   personValues('description').length===0&&
   !/<img\b(?=[^>]*\bitemprop=["'][^"']*\bimage\b[^"']*["'])[^>]*>/i.test(personHeader);

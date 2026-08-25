@@ -3,6 +3,7 @@ import {CONTENT_LANGUAGES,MULTILINGUAL_HEADING_BOUNDARIES,MULTILINGUAL_RETURN_TO
 import {bindLanguageRegions,headingStart} from '../src/lib/language-regions.mjs';
 import {deriveGooglePageMicrodata} from '../src/lib/google-page-microdata.mjs';
 import {deriveGooglePageNode} from '../src/lib/google-semantic-html.mjs';
+import {projectNode} from '../src/lib/semantic-projection.mjs';
 
 const fail=message=>{throw new Error(message)};
 const [source,astroConfig,baseLayout,documentHead,graphCompiler,assembler,knowledgeGraph,headProfile]=await Promise.all([
@@ -54,7 +55,10 @@ const webpageId='https://www.ghezelbaash.ir/#webpage';
 const canonicalPage=(knowledgeGraph['@graph']||[]).find(node=>node?.['@id']===webpageId);
 if(!canonicalPage)fail('Canonical WebPage node missing');
 const googlePage=deriveGooglePageNode(knowledgeGraph,headProfile,webpageId,CONTENT_LANGUAGES);
-const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePage]},webpageId);
+const personId=googlePage.mainEntity?.['@id'];
+const canonicalPerson=(knowledgeGraph['@graph']||[]).find(node=>node?.['@id']===personId);
+const googlePerson=projectNode(canonicalPerson,headProfile.nodes?.[personId]);
+const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePage,googlePerson]},webpageId);
 const microdataLanguages=googlePageMicrodata.meta.filter(item=>item.itemprop==='inLanguage').map(item=>item.content);
 if(JSON.stringify(microdataLanguages)!==JSON.stringify(CONTENT_LANGUAGES)||!baseLayout.includes("import { deriveGooglePageMicrodata } from '../lib/google-page-microdata.mjs'")||!baseLayout.includes('deriveGooglePageMicrodata(headGraph')||!baseLayout.includes('googlePageMicrodata.meta.map')||!assembler.includes('bindGoogleSemanticHtml(content')||!assembler.includes('languages:CONTENT_LANGUAGES'))fail('Graph-derived multilingual WebPage/Microdata wiring missing');
 if(/\bhreflang\s*=/.test(documentHead))fail('Single-URL document must not emit localized-alternate hreflang');

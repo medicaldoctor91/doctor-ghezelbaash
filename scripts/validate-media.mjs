@@ -8,6 +8,8 @@ const root=path.join(project,'public/media');
 const exiftool=path.join(project,'node_modules','.bin','exiftool');
 const exiftoolConfig=path.join(project,'scripts/exiftool-entity.config');
 const release=JSON.parse(await readFile(path.join(project,'src/data/release.json'),'utf8'));
+const canonicalGraph=JSON.parse(await readFile(path.join(project,'src/data/semantic/knowledge-graph.jsonld'),'utf8'));
+const canonicalById=new Map((canonicalGraph['@graph']||[]).filter(node=>typeof node?.['@id']==='string').map(node=>[node['@id'],node]));
 const current=release.clinic.placeId,personWikidataIri=`https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`,clinicWikidataIri=`https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`;
 if(!/^ChIJ[\w-]+$/.test(current))fail('Release Google Place ID is invalid');
 const rasterPattern=/\.(?:avif|webp|jpe?g|png)$/i;
@@ -125,7 +127,7 @@ for(const row of rows){
 if(validatedAuthorityMasters.size!==authorityMasterTargets.size)fail(`Authority-master Google KG URL coverage drift: ${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`);
 
 const ffprobe=spawnSync('ffprobe',['-version']);
-let videoFiles=0,imageFiles=0,videoMetadataFiles=0,vttMetadataFiles=0;
+let videoFiles=0,imageFiles=0,videoMetadataFiles=0,vttMetadataFiles=0,embeddedVideoGraphs=0;
 const videoCandidates=all.filter(candidate=>/\.(?:mp4|webm)$/i.test(candidate));
 if(videoCandidates.length!==8)fail(`Expected exactly 8 published videos, found ${videoCandidates.length}`);
 if(ffprobe.status!==0)fail('ffprobe is required for published media validation');
@@ -137,8 +139,21 @@ for(const file of videoCandidates){
   if(streams.filter(stream=>stream.codec_type==='video').length!==1||streams.filter(stream=>stream.codec_type==='audio').length!==1||streams.some(stream=>!['video','audio'].includes(stream.codec_type)))fail(`Unexpected streams ${file}`);
   const metadataText=Object.entries(tags).map(([key,value])=>`${key}=${value}`).join('\n');
   for(const required of ['Saeed Ghezelbash','Q140287622','/g/11nqdfk76c','https://www.ghezelbaash.ir/#saeed-ghezelbash',current,'creativecommons.org/licenses/by/4.0','Entity Media Profile 3.1.0'])if(!metadataText.includes(required))fail(`Published video metadata missing ${required}: ${file}`);
+  if(file.endsWith('.webm')){
+    let embedded;
+    try{embedded=JSON.parse(tags.entity_graph_jsonld)}catch{fail(`WebM embedded entity graph is invalid JSON: ${file}`)}
+    const embeddedNodes=embedded?.['@graph']||[],embeddedById=new Map(embeddedNodes.filter(node=>typeof node?.['@id']==='string').map(node=>[node['@id'],node]));
+    if(embeddedById.size!==embeddedNodes.length||embeddedNodes.some(node=>!canonicalById.has(node?.['@id'])))fail(`WebM embedded entity graph is stale or duplicated: ${file}`);
+    const scalarRefs=value=>(Array.isArray(value)?value:value==null?[]:[value]).map(item=>typeof item==='string'?item:item?.['@id']).filter(Boolean).sort();
+    for(const entityId of [release.primaryEntity.id,release.clinic.id,`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`]){
+      const actual=embeddedById.get(entityId),expected=canonicalById.get(entityId);
+      if(!actual||!expected||JSON.stringify(scalarRefs(actual['@type']))!==JSON.stringify(scalarRefs(expected['@type']))||JSON.stringify(scalarRefs(actual.sameAs))!==JSON.stringify(scalarRefs(expected.sameAs)))fail(`WebM core entity identity projection drift: ${entityId} in ${file}`);
+    }
+    embeddedVideoGraphs++;
+  }
   videoMetadataFiles++;
 }
+if(embeddedVideoGraphs!==4)fail(`Expected four canonical embedded WebM graphs, found ${embeddedVideoGraphs}`);
 for(const file of rasters){
   imageFiles++;
   const probe=spawnSync('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=codec_type,codec_name,width,height','-of','json',file],{encoding:'utf8'});
@@ -155,4 +170,4 @@ for(const file of vttFiles){
   vttMetadataFiles++;
 }
 if(currentHits<49)fail(`Entity Place ID metadata unexpectedly sparse: ${currentHits}`);
-console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'49/49 rasters',videoMetadataCoverage:`${videoMetadataFiles}/8`,webVttMetadataCoverage:`${vttMetadataFiles}/6`,googleKnowledgeGraphRawIdCoverage:'49/49 raster + 8/8 video + 6/6 VTT',authorityMasterGoogleKgUrlCoverage:`${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`,authorityMasterIdentityFields:['IPTC PersonInImageId','Dublin Core relation','embedded DoctorIdentifiers','embedded EntityGraphJSONLD'],metadataProfile:'Entity Media Profile 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));
+console.log(JSON.stringify({valid:true,mediaFiles:all.length,videoFiles,imageFiles,rasterImages:rasters.length,currentPlaceIdMetadataFiles:currentHits,embeddedMetadataCoverage:'49/49 rasters',videoMetadataCoverage:`${videoMetadataFiles}/8`,embeddedVideoGraphConvergence:`${embeddedVideoGraphs}/4`,webVttMetadataCoverage:`${vttMetadataFiles}/6`,googleKnowledgeGraphRawIdCoverage:'49/49 raster + 8/8 video + 6/6 VTT',authorityMasterGoogleKgUrlCoverage:`${validatedAuthorityMasters.size}/${authorityMasterTargets.size}`,authorityMasterIdentityFields:['IPTC PersonInImageId','Dublin Core relation','embedded DoctorIdentifiers','embedded EntityGraphJSONLD'],metadataProfile:'Entity Media Profile 3.1.0',dimensionsLocked:true,selfReferencedSvgIntegrityChecks:selfReferencedSvg},null,2));

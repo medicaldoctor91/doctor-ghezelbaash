@@ -3,6 +3,7 @@ import {readFile,readdir,access} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
 import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
+import {validateCoreEntityIdentity} from './lib/core-entity-identity.mjs';
 import {assembleCssSource,RENDER_CALIBRATION_SLOT,RENDER_CALIBRATION_WIDTHS} from '../src/lib/css-source.mjs';
 
 const root=process.cwd(),data=path.join(root,'src/data');
@@ -17,6 +18,7 @@ const requiredFiles=[
   'CITATION.cff','codemeta.json','src/content-source/page.md','src/layouts/BaseLayout.astro','src/lib/css-delivery.mjs','src/lib/css-source.mjs','src/lib/google-semantic-html.mjs','src/lib/semantic-projection.mjs','src/lib/hero-image-contract.mjs','src/lib/release-tokens.mjs',
   'src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
   '.release/policy/platform-contract.json','.release/policy/authority-surface-contract.json','scripts/lib/css-rules.mjs','scripts/lib/graph-integrity.mjs','scripts/lib/release-graph.mjs','scripts/lib/projection-context.mjs',
+  'scripts/lib/core-entity-identity.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
   'scripts/apply-render-calibration.mjs','scripts/generate-retrieval-projections.mjs','scripts/generate-descriptors.mjs','scripts/finalize-dist.mjs','scripts/promote-release.mjs','scripts/write-release-attestation.mjs','scripts/zenodo_release.py','scripts/validate-media-references.mjs','scripts/validate-release-contract.mjs','scripts/validate-semantic-html.mjs','scripts/platform-contract.mjs','scripts/huggingface.mjs'
 ];
@@ -84,6 +86,7 @@ if(release.dataset.zenodo.conceptDoi===release.dataset.zenodo.versionDoi)fail('C
 
 const nodes=graph['@graph']||[],byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n])),person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id),page=byId.get(`${release.canonicalUrl}#webpage`);
 if(!person||!clinic||!dataset||!page)fail('Person/Clinic/Dataset/ProfilePage graph constitution broken');
+validateCoreEntityIdentity({release,nodes});
 if(id(dataset.creator)!==release.primaryEntity.id||id(dataset.publisher)!==release.primaryEntity.id)fail('Dataset creator/publisher is not the physician');
 if(Object.hasOwn(release.dataset,'wikidata')||arr(dataset.sameAs).length)fail('Dataset external identity-equivalence contract must remain absent');
 if(!arr(page['@type']).includes('ProfilePage')||!arr(page['@type']).includes('MedicalWebPage')||id(page.mainEntity)!==release.primaryEntity.id||id(person.mainEntityOfPage)!==page['@id'])fail('Physician entity-home ProfilePage topology broken');
@@ -181,4 +184,4 @@ const {cssSource:assembledCss,calibration}=assembleCssSource(authoredCss,renderC
 if(calibration.widths.join(',')!==RENDER_CALIBRATION_WIDTHS.join(',')||calibration.chunkCount!==renderChunkIds.length)fail('Render calibration shared contract drift');
 if(!assembledCss.includes(`/*DIST_CHUNK_CALIBRATION_SHA256:${calibration.sha256}*/`)||(assembledCss.match(/#[A-Za-z][\w:-]*\{--cis:/g)||[]).length!==calibration.ruleCount)fail('In-memory render calibration assembly drift');
 
-console.log(JSON.stringify({stage:'SOURCE_SEMANTIC_CONTRACT',release:release.release,services:registered.size,answers:answers.answers.length,protectedAggressiveHeadings:visible.protected.aggressiveHeadings.length,protectedInstagramHeadings:visible.protected.instagramHeadingLinks.length,renderChunks:renderChunkIds.length,canonicalWriterTopology:'PASS',projectionCompilerTopology:'PASS',platformContract:'PASS',authoritySurfaceContract:'PASS',headProjectionPolicy:'SOURCE_VALIDATED',generatedFilePrerequisite:'NONE',buildSourceMutation:'FORBIDDEN',descriptorWriterPhases:['source-input','dist-final'],integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'SOURCE_SEMANTIC_CONTRACT',release:release.release,services:registered.size,answers:answers.answers.length,protectedAggressiveHeadings:visible.protected.aggressiveHeadings.length,protectedInstagramHeadings:visible.protected.instagramHeadingLinks.length,renderChunks:renderChunkIds.length,canonicalWriterTopology:'PASS',projectionCompilerTopology:'PASS',platformContract:'PASS',authoritySurfaceContract:'PASS',coreWikidataOwnership:'PASS',headProjectionPolicy:'SOURCE_VALIDATED',generatedFilePrerequisite:'NONE',buildSourceMutation:'FORBIDDEN',descriptorWriterPhases:['source-input','dist-final'],integrity:'PASS'},null,2));

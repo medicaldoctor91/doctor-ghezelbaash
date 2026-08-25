@@ -74,6 +74,9 @@
         ]
       },
       "valueAllow": {
+        "@type": [
+          "Person"
+        ],
         "sameAs": [
           "https://www.wikidata.org/entity/Q140287622",
           "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash",
