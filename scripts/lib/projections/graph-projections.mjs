@@ -4,7 +4,7 @@ import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs';
 import {normalizeGoogleSupportGraph} from '../google-support-graph.mjs';
 import {nodeTypes,refId} from '../projection-context.mjs';
 
-const projectNode=(node,spec={})=>{
+export const projectNode=(node,spec={})=>{
   if(!spec.include)return structuredClone(node);
   const out={};
   for(const key of spec.include)if(Object.hasOwn(node,key))out[key]=structuredClone(node[key]);

@@ -1,14 +1,20 @@
 import {readFile} from 'node:fs/promises';
 import {assembleCanonicalContent} from './lib/assemble-content.mjs';
+import {projectNode} from './lib/projections/graph-projections.mjs';
+import {deriveGooglePageMicrodata} from '../src/lib/google-page-microdata.mjs';
+import {CONTENT_LANGUAGES} from '../src/lib/language-contract.mjs';
 
 const fail=message=>{throw new Error(message)};
 const attr=(source,name)=>source.match(new RegExp(`\\b${name}=["']([^"']+)["']`,'i'))?.[1];
 const {content}=await assembleCanonicalContent();
 const body=content.startsWith('---')?content.slice(content.indexOf('\n---',3)+4):content;
-const [baseLayout,guideNavigator,knowledgeGraphSource]=await Promise.all([
+const [baseLayout,guideNavigator,knowledgeGraphSource,headProfile,supportIds,release]=await Promise.all([
   readFile('src/layouts/BaseLayout.astro','utf8'),
   readFile('src/components/GuideNavigator.astro','utf8'),
-  readFile('src/data/semantic/knowledge-graph.jsonld','utf8')
+  readFile('src/data/semantic/knowledge-graph.jsonld','utf8'),
+  readFile('src/data/semantic/head-profile.json','utf8').then(JSON.parse),
+  readFile('src/data/semantic/support-ids.json','utf8').then(JSON.parse),
+  readFile('src/data/release.json','utf8').then(JSON.parse)
 ]);
 const knowledgeGraphDocument=JSON.parse(knowledgeGraphSource);
 const knowledgeGraph=knowledgeGraphDocument['@graph']||knowledgeGraphDocument;
@@ -16,6 +22,23 @@ const graphNode=id=>knowledgeGraph.find(node=>node['@id']===id);
 const graphRef=value=>typeof value==='string'?value:value?.['@id'];
 const escapeRegExp=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const graphTypes=node=>Array.isArray(node?.['@type'])?node['@type']:[node?.['@type']].filter(Boolean);
+const graphValues=value=>(Array.isArray(value)?value:[value]).filter(item=>item!=null);
+const graphText=value=>typeof value==='string'?value:value?.['@value'];
+const localizedValue=(value,language)=>graphValues(value).find(item=>item?.['@language']===language)?.['@value'];
+const tagProperties=tag=>(attr(tag,'itemprop')||'').trim().split(/\s+/).filter(Boolean);
+const tagValue=tag=>attr(tag,'content')||attr(tag,'href')||attr(tag,'src')||attr(tag,'datetime');
+const stripMarkup=value=>value.replace(/<[^>]+>/g,'').replaceAll('&amp;','&').replaceAll('&nbsp;',' ').replace(/\s+/g,' ').trim();
+
+const webpageId='https://www.ghezelbaash.ir/#webpage';
+const personId='https://www.ghezelbaash.ir/#saeed-ghezelbash';
+const webpage=graphNode(webpageId);
+const person=graphNode(personId);
+if(!webpage||!person)fail('Canonical page/person node missing');
+const supportProfilePages=supportIds.filter(id=>graphTypes(graphNode(id)).includes('ProfilePage'));
+if(supportProfilePages.length)fail(`Google support projection contains competing ProfilePage nodes: ${supportProfilePages.join(', ')}`);
+const googlePageNode=projectNode(webpage,headProfile.nodes?.[webpageId]);
+googlePageNode.inLanguage=[...CONTENT_LANGUAGES];
+const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePageNode]},webpageId);
 
 const headings=[...body.matchAll(/<h([1-6])\b[^>]*>/gi)].map(match=>({level:Number(match[1]),tag:match[0],id:attr(match[0],'id')}));
 if(headings.filter(item=>item.level===1).length!==1)fail('Canonical page must contain exactly one H1');
@@ -67,18 +90,81 @@ for(const token of ['Wikidata Q140287622','نظام پزشکی ۱۶۷۴۳۰','OR
 
 for(const image of [...body.matchAll(/<img\b[^>]*>/gi)].map(match=>match[0]))if(!/\balt=["'][^"']*["']/i.test(image))fail(`Image lacks explicit alt: ${image}`);
 if(/<button\b[^>]*>(?:(?!<\/button>)[\s\S])*<a\b/i.test(body)||/<a\b[^>]*>(?:(?!<\/a>)[\s\S])*<button\b/i.test(body))fail('Nested interactive controls detected');
-const pageMicrodata=baseLayout.includes('itemscope={isMain?true:undefined}')&&baseLayout.includes("itemtype={isMain?'https://schema.org/MedicalWebPage https://schema.org/ProfilePage':undefined}")&&baseLayout.includes('itemprop="author reviewedBy"')&&baseLayout.includes('itemprop="dateModified"')&&baseLayout.includes('<article class:list=');
-const personMicrodata=/<header\b(?=[^>]*\bitemprop=["']mainEntity["'])(?=[^>]*\bitemid=["']https:\/\/www\.ghezelbaash\.ir\/#saeed-ghezelbash["'])(?=[^>]*\bitemtype=["']https:\/\/schema\.org\/Person["'])[^>]*>/i.test(body)&&/\bitemprop=["']name["']/.test(body)&&/\bitemprop=["']jobTitle["']/.test(body)&&/\bitemprop=["']workLocation["']/.test(body)&&/<img\b(?=[^>]*\bitemprop=["']image["'])[^>]*>/i.test(body);
+const pageLinkProperties=new Map();
+for(const link of googlePageMicrodata.links){
+  for(const property of link.itemprop.split(/\s+/)){
+    if(!pageLinkProperties.has(property))pageLinkProperties.set(property,new Set());
+    pageLinkProperties.get(property).add(link.href);
+  }
+}
+const exactSet=(actual,expected)=>actual.size===expected.size&&[...expected].every(value=>actual.has(value));
+const pageMicrodata=
+  graphTypes(webpage).includes('MedicalWebPage')&&
+  graphTypes(webpage).includes('ProfilePage')&&
+  graphTypes(googlePageNode).length===1&&
+  graphTypes(googlePageNode)[0]==='ProfilePage'&&
+  !Object.hasOwn(googlePageNode,'dateModified')&&
+  webpage.lastReviewed===release.medicalReviewedAt&&
+  googlePageNode.lastReviewed===release.medicalReviewedAt&&
+  googlePageMicrodata.itemType==='https://schema.org/ProfilePage'&&
+  googlePageMicrodata.mainEntityId===personId&&
+  pageLinkProperties.get('author')?.has(personId)&&
+  pageLinkProperties.get('publisher')?.has(personId)&&
+  pageLinkProperties.get('reviewedBy')?.has(personId)&&
+  pageLinkProperties.get('isPartOf')?.has(graphRef(googlePageNode.isPartOf))&&
+  pageLinkProperties.get('primaryImageOfPage')?.has(graphRef(googlePageNode.primaryImageOfPage))&&
+  exactSet(new Set(googlePageMicrodata.meta.filter(item=>item.itemprop==='inLanguage').map(item=>item.content)),new Set(CONTENT_LANGUAGES))&&
+  googlePageMicrodata.meta.some(item=>item.itemprop==='lastReviewed'&&item.content===googlePageNode.lastReviewed)&&
+  baseLayout.includes('deriveGooglePageMicrodata(headGraph')&&
+  baseLayout.includes('itemscope={googlePageMicrodata?true:undefined}')&&
+  baseLayout.includes('itemtype={googlePageMicrodata?.itemType}')&&
+  baseLayout.includes('itemid={googlePageMicrodata?.itemId}')&&
+  baseLayout.includes('googlePageMicrodata.links.map')&&
+  baseLayout.includes('googlePageMicrodata.meta.map')&&
+  !baseLayout.includes('itemprop="dateModified"')&&
+  !baseLayout.includes('https://schema.org/MedicalWebPage https://schema.org/ProfilePage')&&
+  baseLayout.includes('<article class:list=');
+
+const personHeader=body.match(/<header\b(?=[^>]*\bitemprop=["']mainEntity["'])[^>]*>[\s\S]*?<\/header>/i)?.[0]||'';
+const personOpen=personHeader.match(/<header\b[^>]*>/i)?.[0]||'';
+const personPropertyTags=[...personHeader.matchAll(/<[^>]+\bitemprop=["'][^"']+["'][^>]*>/gi)].map(match=>match[0]);
+const personValues=property=>personPropertyTags.filter(tag=>tagProperties(tag).includes(property)).map(tagValue).filter(Boolean);
+const personItemTypes=new Set((attr(personOpen,'itemtype')||'').split(/\s+/).filter(Boolean));
+const projectedPerson=projectNode(person,headProfile.nodes?.[personId]);
+const expectedSameAs=new Set([
+  graphValues(projectedPerson.sameAs).find(value=>value==='https://www.wikidata.org/entity/Q140287622'),
+  graphValues(projectedPerson.sameAs).find(value=>/membersearch\.irimc\.org/.test(value)),
+  graphValues(projectedPerson.sameAs).find(value=>/instagram\.com\/doctor\.ghezelbaash/.test(value))
+].filter(Boolean));
+const personMicrodata=
+  attr(personOpen,'itemid')===personId&&
+  tagProperties(personOpen).includes('mainEntity')&&
+  exactSet(personItemTypes,new Set(['https://schema.org/Person','https://schema.org/IndividualPhysician']))&&
+  exactSet(new Set(personValues('name')),new Set([localizedValue(projectedPerson.name,'fa')]))&&
+  exactSet(new Set(personValues('jobTitle')),new Set([localizedValue(projectedPerson.jobTitle,'fa')]))&&
+  exactSet(new Set(personValues('workLocation')),new Set([graphRef(projectedPerson.workLocation?.[0]??projectedPerson.workLocation)]))&&
+  exactSet(new Set(personValues('sameAs')),expectedSameAs)&&
+  exactSet(new Set(personValues('image')),new Set([graphRef(projectedPerson.image?.[0]??projectedPerson.image)]))&&
+  personValues('description').length===0&&
+  !/<img\b(?=[^>]*\bitemprop=["'][^"']*\bimage\b[^"']*["'])[^>]*>/i.test(personHeader);
 const runtime=guideNavigator.match(/<script\b(?=[^>]*\bid=["']site-runtime["'])[^>]*>([\s\S]*?)<\/script>/i)?.[1]||'';
 try{new Function(runtime)}catch(error){fail(`Site runtime syntax failed: ${error.message}`)}
 const searchSemantics=/<dialog\b(?=[^>]*\bid=["']guide-search["'])(?=[^>]*\baria-modal=["']true["'])[^>]*>/i.test(guideNavigator)&&/<div\b(?=[^>]*\bclass=["']guide-search__panel["'])(?=[^>]*\brole=["']search["'])[^>]*>/i.test(guideNavigator)&&/<input\b(?=[^>]*\btype=["']search["'])(?=[^>]*\baria-describedby=["']guide-search-status["'])[^>]*>/i.test(guideNavigator)&&runtime.includes("setAttribute('aria-current','location')");
-const webpage=graphNode('https://www.ghezelbaash.ir/#webpage');
 const expectedMainContentIds=new Set((webpage?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
 const projectedMainContentTags=[...body.matchAll(/<(?:section|details)\b(?=[^>]*\bitemprop=["']mainContentOfPage["'])[^>]*>/gi)].map(match=>match[0]);
 const projectedMainContentIds=new Set(projectedMainContentTags.map(tag=>attr(tag,'itemid')).filter(Boolean));
 const missingMainContent=[...expectedMainContentIds].filter(id=>!projectedMainContentIds.has(id));
 const extraMainContent=[...projectedMainContentIds].filter(id=>!expectedMainContentIds.has(id));
 if(!expectedMainContentIds.size||missingMainContent.length||extraMainContent.length||projectedMainContentTags.some(tag=>attr(tag,'itemtype')!=='https://schema.org/WebPageElement'))fail(`Visible mainContentOfPage projection drift: missing=${missingMainContent.join(',')} extra=${extraMainContent.join(',')}`);
+for(const tag of projectedMainContentTags){
+  const itemId=attr(tag,'itemid'),labelId=attr(tag,'aria-labelledby'),node=graphNode(itemId);
+  const heading=labelId
+    ?body.match(new RegExp(`<h[2-6]\\b(?=[^>]*\\bid=["']${escapeRegExp(labelId)}["'])[^>]*>[\\s\\S]*?<\\/h[2-6]>`,'i'))?.[0]||''
+    :body.slice(body.indexOf(tag)+tag.length).match(/<h[2-6]\b[^>]*>[\s\S]*?<\/h[2-6]>/i)?.[0]||'';
+  const visibleName=stripMarkup(heading);
+  const canonicalNames=graphValues(node?.name).map(graphText).filter(Boolean);
+  if(!heading||!tagProperties(heading).includes('name')||!canonicalNames.includes(visibleName))fail(`Visible WebPageElement name drift: ${itemId} -> ${visibleName||'missing'}`);
+}
 
 const howToId='https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway';
 const howTo=graphNode(howToId);
@@ -88,4 +174,4 @@ const graphHowToValid=graphTypes(howTo).includes('HowTo')&&expectedStepIds.lengt
 if(!graphHowToValid)fail('HowTo graph-to-visible-diagnostic-content contract drift');
 if(!pageMicrodata||!personMicrodata||!searchSemantics||!/<header\b[^>]*\baria-labelledby=["']saeed-ghezelbash["']/i.test(body)||!/<nav\b[^>]*\bid=["']aesthetic-medicine-table-of-contents["']/i.test(body))fail('Entity Home/Article/Header/Nav/Search semantic contract drift');
 
-console.log(JSON.stringify({stage:'SEMANTIC_HTML',h1:1,h2:headings.filter(item=>item.level===2).length,headings:headings.length,sections:sections.length,details:details.length,figures:(body.match(/<figure\b/gi)||[]).length,images:(body.match(/<img\b/gi)||[]).length,duplicateIds:0,brokenFragments:0,headingJumps:0,verifiedIdentity:'PASS',entityHomeMicrodata:'PASS',articleLandmark:'PASS',mainContentProjections:projectedMainContentIds.size,howToSteps:expectedStepIds.length,howToGraphProjection:'PASS',mediaGraphBridges:mediaBridges.length,mediaCaptionBindings:mediaBridges.filter(item=>item.caption).length,searchLandmark:'PASS',landmarks:'PASS',integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'SEMANTIC_HTML',h1:1,h2:headings.filter(item=>item.level===2).length,headings:headings.length,sections:sections.length,details:details.length,figures:(body.match(/<figure\b/gi)||[]).length,images:(body.match(/<img\b/gi)||[]).length,duplicateIds:0,brokenFragments:0,headingJumps:0,verifiedIdentity:'PASS',entityHomeMicrodata:'PASS',inlineProfilePages:1,medicalReviewParity:'PASS',articleLandmark:'PASS',mainContentProjections:projectedMainContentIds.size,howToSteps:expectedStepIds.length,howToGraphProjection:'PASS',mediaGraphBridges:mediaBridges.length,mediaCaptionBindings:mediaBridges.filter(item=>item.caption).length,searchLandmark:'PASS',landmarks:'PASS',integrity:'PASS'},null,2));

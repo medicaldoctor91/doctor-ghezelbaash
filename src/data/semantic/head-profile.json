@@ -181,13 +181,17 @@
         "about",
         "keywords",
         "specialty",
-        "dateModified",
         "reviewedBy",
         "speakable",
         "schemaVersion",
         "lastReviewed",
         "potentialAction"
-      ]
+      ],
+      "valueAllow": {
+        "@type": [
+          "ProfilePage"
+        ]
+      }
     },
     "https://www.ghezelbaash.ir/#website": {
       "include": [

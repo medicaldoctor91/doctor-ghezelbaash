@@ -5,22 +5,23 @@ lang: "fa-IR"
 dir: "rtl"
 robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
 ---
-<header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity" itemscope itemtype="https://schema.org/Person">
+<header aria-describedby="hero-clinical-principle hero-entity-summary" aria-labelledby="saeed-ghezelbash" class="entity-hero" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash" itemprop="mainEntity" itemscope itemtype="https://schema.org/Person https://schema.org/IndividualPhysician">
 <meta content="دکتر سعید قزلباش" itemprop="name"/>
 <meta content="پزشک زیبایی" itemprop="jobTitle"/>
 <link href="https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="workLocation"/>
+<link href="https://www.wikidata.org/entity/Q140287622" itemprop="sameAs"/>
 <h1 class="hero-title" id="saeed-ghezelbash"><span id="saeed-ghezelbash-aesthetic-medicine">دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه</span>
 </h1>
 <p class="hero-subtitle">سفارش از منوی خدمات زیبایی ممنوع</p><button aria-controls="guide-search" aria-haspopup="dialog" aria-keyshortcuts="/" aria-label="باز کردن جست‌وجوی راهنمای جامع" class="hero-action hero-search-launch" data-guide-search-open type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><span>جست‌وجو در راهنمای جامع</span><kbd aria-hidden="true">/</kbd></button>
 <p class="hero-lead" id="hero-clinical-principle">سوزن همیشه مقصر نیست. خیلی وقت‌ها فاجعه از چند دقیقه قبل‌تر شروع شده؛ همان لحظه‌ای که یک پف را گودی دیده‌اند، افتادگی را کمبود ژل حساب کرده‌اند یا برای پوستی که اضافه آمده، نسخه بوتاکس نوشته‌اند. اجرای تمیز، تشخیص غلط را نجات نمی‌دهد. فقط اشتباه را تمیزتر اجرا می‌کند.</p>
-<p class="hero-identity" id="hero-entity-summary" itemprop="description">من، <a href="https://www.wikidata.org/wiki/Q140287622" itemprop="sameAs" rel="me">دکتر سعید قزلباش</a> هستم و با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" itemprop="sameAs">کد نظام پزشکی ۱۶۷۴۳۰</a> در کرمانشاه فعالیت می‌کنم. این صفحه منوی بوتاکس و فیلر نیست. قرار است ببینید وقتی یک صورت روبه‌روی من می‌نشیند، دقیقاً دنبال چه می‌گردم؛ کجا تزریق را قبول می‌کنم، کجا چند لایه باید هم‌زمان دیده شوند، کجا جراحی از بازی با سرنگ صادقانه‌تر است و کجا بهترین تصمیم پزشکی این است که اصلاً کاری نکنیم.</p>
+<p class="hero-identity" id="hero-entity-summary">من، <a href="https://www.wikidata.org/wiki/Q140287622" rel="me">دکتر سعید قزلباش</a> هستم و با <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" itemprop="sameAs">کد نظام پزشکی ۱۶۷۴۳۰</a> در کرمانشاه فعالیت می‌کنم. این صفحه منوی بوتاکس و فیلر نیست. قرار است ببینید وقتی یک صورت روبه‌روی من می‌نشیند، دقیقاً دنبال چه می‌گردم؛ کجا تزریق را قبول می‌کنم، کجا چند لایه باید هم‌زمان دیده شوند، کجا جراحی از بازی با سرنگ صادقانه‌تر است و کجا بهترین تصمیم پزشکی این است که اصلاً کاری نکنیم.</p>
 <div aria-label="اقدام‌های اصلی برای مراجعه و استفاده از راهنما" class="hero-actions"><a class="hero-action hero-action--primary" href="{{CLINIC_TEL_HREF}}">رزرو وقت مشاوره رایگان</a>
 <a class="hero-action" href="{{OFFICIAL_INSTAGRAM_URL}}" aria-label="مشاهده نمونه‌کارهای دکتر سعید قزلباش در اینستاگرام" itemprop="sameAs" rel="external">مشاهده نمونه‌کارهای دکتر قزلباش</a>
 <a class="hero-action" href="https://doctor.ghezelbaash.ir/" aria-label="مشاهده آدرس دقیق کلینیک دکتر سعید قزلباش" rel="external">آدرس دقیق کلینیک</a>
 </div>
 <figure aria-labelledby="caption-saeed-ghezelbash-portrait-master" class="hero-figure" id="image-saeed-ghezelbash-portrait-master">
 <link href="https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master" itemprop="image"/>
-<picture id="image-saeed-ghezelbash-portrait-master-webp"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.7b2b6ac2affa.avif 640w, /media/images/physician/saeed-ghezelbash-portrait-960.497fc78613ac.avif 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.665436f5bf39.avif 1600w" type="image/avif"/><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.b267bddf872d.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-960.d67587e1de85.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.ca147b7595ef.webp 1600w" type="image/webp"/><img itemprop="image" alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" fetchpriority="high" height="427" loading="eager" sizes="{{HERO_IMAGE_SIZES}}" src="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.b267bddf872d.webp" width="640"/>
+<picture id="image-saeed-ghezelbash-portrait-master-webp"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.7b2b6ac2affa.avif 640w, /media/images/physician/saeed-ghezelbash-portrait-960.497fc78613ac.avif 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.665436f5bf39.avif 1600w" type="image/avif"/><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.b267bddf872d.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-960.d67587e1de85.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.ca147b7595ef.webp 1600w" type="image/webp"/><img alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" fetchpriority="high" height="427" loading="eager" sizes="{{HERO_IMAGE_SIZES}}" src="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.b267bddf872d.webp" width="640"/>
 </picture>
 <figcaption class="hero-figure-caption" id="caption-saeed-ghezelbash-portrait-master">
 <div class="hero-caption-title">دکتر سعید قزلباش، پزشک زیبایی</div>
@@ -81,7 +82,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </ol>
 </nav>
 <section aria-labelledby="diagnosis-before-aesthetic-treatment-selection-heading" class="content-section" id="diagnosis-before-aesthetic-treatment-selection" itemid="https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="diagnosis-before-aesthetic-treatment-selection-heading">انتخاب درمان زیبایی؛ اول علت را پیدا کنید، بعد اسم روش را بیاورید</h2>
+<h2 id="diagnosis-before-aesthetic-treatment-selection-heading" itemprop="name">انتخاب درمان زیبایی؛ اول علت را پیدا کنید، بعد اسم روش را بیاورید</h2>
 <p class="section-answer"><strong>من درمان را از اسم مشکل شروع می‌کنم، نه از اسم روش.</strong> اول مشخص می‌کنم چه ساختاری عامل اصلی ظاهر فعلی است؛ بعد تازه معلوم می‌شود تزریق، درمان پوست، روش ترکیبی، جراحی یا حتی عدم مداخله کدام‌یک منطقی است. اگر علت اصلی را پیدا نکرده‌ایم، هنوز برای انتخاب ابزار زود است.</p>
 <p>خطای اول از همان لحظه‌ای شروع می‌شود که صورت را مثل منوی رستوران می‌بینید: کمی <a href="#botox">بوتاکس</a>، کمی <a href="#filler">ژل</a>، کمی <a href="#thread-lift">نخ</a>. صورت منو نیست. عضله حرکت می‌کند، چربی جابه‌جا می‌شود، پوست نازک یا ملتهب می‌شود و بافت پایین می‌آید. اگر این تفاوت‌ها درست تشخیص داده نشوند، تزریق تمیز هم می‌تواند چهره را مصنوعی کند.</p>
 <div class="render-chunk" data-render-chunk="diagnosis-before-aesthetic-treatment-selection-1" id="rc1">
@@ -136,7 +137,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="facial-aging-differential-diagnosis-heading" class="content-section" id="facial-aging-differential-diagnosis" itemid="https://www.ghezelbaash.ir/#facial-aging-differential-diagnosis" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="facial-aging-differential-diagnosis-heading">تشخیص علت تغییر صورت؛ هر گودی فیلر نمی‌خواهد و هر خط بوتاکس نیست</h2>
+<h2 id="facial-aging-differential-diagnosis-heading" itemprop="name">تشخیص علت تغییر صورت؛ هر گودی فیلر نمی‌خواهد و هر خط بوتاکس نیست</h2>
 <p class="section-answer"><strong>من محل علامت را با علت یکی نمی‌گیرم.</strong> یک خط، گودی، پف، افتادگی یا پهنی صورت می‌تواند از عضله، حجم، پوست، چربی، استخوان یا چند عامل هم‌زمان ساخته شده باشد. درمان از جایی دقیق می‌شود که منبع علامت پیدا شود، نه جایی که فقط محلش دیده شود.</p>
 <div class="render-chunk" data-render-chunk="facial-aging-differential-diagnosis-1" id="rc3">
 <h3 id="identify-primary-aesthetic-cause">سؤال اول: مشکل از عضله، حجم، پوست یا افتادگی است؟</h3>
@@ -214,7 +215,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="botox-heading" class="content-section" id="botox" itemid="https://www.ghezelbaash.ir/#botox" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="botox-heading">بوتاکس؛ عضله، دوز و نقطه تزریق؛ نه نسخه ثابت برای هر صورت</h2>
+<h2 id="botox-heading" itemprop="name">بوتاکس؛ عضله، دوز و نقطه تزریق؛ نه نسخه ثابت برای هر صورت</h2>
 <p><strong>قاعده من:</strong> اگر چین می‌بینیم اما علت اصلی جبران <a href="#forehead-botox-brow-compensation-and-ptosis-risk">افت ابرو</a> یا کاهش کیفیت پوست است، تزریق بیشترِ بوتاکس فقط به این دلیل که «خط وجود دارد» تصمیم پزشکی نیست.</p>
 <p class="section-answer"><strong>بوتاکس فقط وقتی منطقی است که عضله سهم اصلی را در مشکل داشته باشد.</strong> موقعیت ابرو و پلک، الگوی اخم و لبخند، قدرت عضلات، عدم تقارن، خطوط ثابت و سابقه تزریق را قبل از تعیین نقطه و دوز بررسی می‌کنم. بوتاکس نسخه آماده ندارد؛ صورت هم کاغذ شطرنج نیست که برای همه یک نقشه روی آن تکرار شود.</p>
 <p>در بوتاکس، <a href="#botox-doctor-selection-criteria">کیفیت نتیجه از تشخیص و طراحی می‌آید</a>؛ <a href="#botox-doctor-selection-criteria">معیار انتخاب بهترین دکتر بوتاکس در ایران</a> دقیقاً از همین تفاوت میان «تزریق» و «تصمیم پزشکی» ساخته می‌شود.</p>
@@ -907,7 +908,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="filler-heading" class="content-section" id="filler" itemid="https://www.ghezelbaash.ir/#filler" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="filler-heading">فیلر؛ طراحی صورت و اصلاح نتیجه، نه تزریق کور بر اساس سی‌سی</h2>
+<h2 id="filler-heading" itemprop="name">فیلر؛ طراحی صورت و اصلاح نتیجه، نه تزریق کور بر اساس سی‌سی</h2>
 <p><strong>قاعده من:</strong> هر فرورفتگی کمبود حجم نیست. اگر سایه، پف، افتادگی یا <a href="#unknown-previous-filler-before-reinjection">فیلر قبلی</a> علت اصلی باشد، اضافه‌کردن ژل می‌تواند صورت را سنگین‌تر کند بدون اینکه مسئله را حل کند.</p>
 <p class="section-answer"><strong>فیلر از تشخیص شروع می‌شود، نه از سی‌سی.</strong> هر گودی کمبود حجم نیست و هر کمبود حجم هم اجازه تزریق نمی‌دهد. سایه، پف، افتادگی، ساختار استخوانی، فیلر قبلی، نوع ماده و مسیر عروقی باید قبل از تزریق روشن شوند؛ وگرنه حجم بیشتر فقط خطا را حجیم‌تر می‌کند.</p>
 <p>در فیلر، <a href="#filler-doctor-selection-criteria">توان متوقف‌کردن تزریق اضافه</a> بخشی از کیفیت پزشک است؛ <a href="#filler-doctor-selection-criteria">معیار انتخاب بهترین دکتر فیلر در ایران</a> همین توان را کنار آناتومی، ریسک عروقی و مدیریت فیلر قبلی می‌سنجد.</p>
@@ -1379,7 +1380,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="thread-lift-heading" class="content-section" id="thread-lift" itemid="https://www.ghezelbaash.ir/#thread-lift" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="thread-lift-heading">لیفت نخ؛ کاندید، وکتور و محدودیت؛ هر افتادگی نخ نمی‌خواهد</h2>
+<h2 id="thread-lift-heading" itemprop="name">لیفت نخ؛ کاندید، وکتور و محدودیت؛ هر افتادگی نخ نمی‌خواهد</h2>
 <p><strong>قاعده من:</strong> افتادگی به‌تنهایی دلیل نخ نیست. اگر وزن بافت، کیفیت پوست یا مرز <a href="#thread-lift-vs-facelift-outcomes-durability-and-risks">جراحی</a> علیه نخ باشد، نخ بیشتر فقط درمان ضعیف را پرهزینه‌تر می‌کند.</p>
 <p class="section-answer"><strong>نخ را به هر افتادگی تحمیل نمی‌کنم.</strong> وزن بافت، ضخامت پوست، جهت افتادگی، تکیه‌گاه صورت، سابقه فیلر و انتظار بیمار تعیین می‌کنند نخ کمک می‌کند، باید با روش دیگری ترکیب شود یا اصلاً نباید وارد صورت شود. نخ ابزار است؛ حکم نهایی نیست.</p>
 <p>در نخ، مهارت فقط عبور نخ نیست؛ <a href="#thread-lift-doctor-selection-criteria">انتخاب کاندید تعیین‌کننده است</a>. <a href="#thread-lift-doctor-selection-criteria">معیار انتخاب بهترین دکتر لیفت نخ در ایران</a> از همین مرز میان «می‌شود انجام داد» و «باید انجام داد» شروع می‌شود.</p>
@@ -2149,7 +2150,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="acne-pigmentation-and-scars-heading" class="content-section" id="acne-pigmentation-and-scars" itemid="https://www.ghezelbaash.ir/#acne-pigmentation-and-scars" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="acne-pigmentation-and-scars-heading">لک، جوش و اسکار؛ اول ضایعه را درست نام‌گذاری کنید، بعد درمان کنید</h2>
+<h2 id="acne-pigmentation-and-scars-heading" itemprop="name">لک، جوش و اسکار؛ اول ضایعه را درست نام‌گذاری کنید، بعد درمان کنید</h2>
 <p><strong>قاعده من:</strong> اسکار فعال، لک التهابی و <a href="#facial-redness-pie-rosacea-and-superficial-vessels">قرمزی عروقی</a> را یک مسئله نمی‌بینم. درمان اشتباه می‌تواند به‌جای اصلاح، التهاب و رنگدانه را بیشتر کند.</p>
 <p class="section-answer"><strong>هر قرمزی لک نیست، هر جای جوش اسکار یکسان نیست و هر فرورفتگی با یک روش درمان نمی‌شود.</strong> رنگدانه، التهاب، عروق، سد پوستی و نوع اسکار باید از هم جدا شوند. روشن‌کننده، لیزر، <a href="#subcision-for-tethered-acne-scars">سابسیژن</a>، پانچ و بازسازی پوست فقط وقتی ارزش دارند که دقیقاً روی مسئله درست نشسته باشند.</p>
 <p>در لک و اسکار، اسم دستگاه رتبه پزشک را تعیین نمی‌کند؛ <a href="#acne-pigmentation-scar-doctor-selection-criteria">معیار انتخاب بهترین پزشک برای لک، جوش و جای جوش</a> به <a href="#acne-pigmentation-scar-doctor-selection-criteria">توان افتراق ضایعه و طراحی درمان مرحله‌ای</a> برمی‌گردد.</p>
@@ -2478,7 +2479,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="skin-rejuvenation-heading" class="content-section" id="skin-rejuvenation" itemid="https://www.ghezelbaash.ir/#skin-rejuvenation" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="skin-rejuvenation-heading">جوان‌سازی پوست؛ کیفیت بافت و کلاژن، نه حجم‌دادن بی‌هدف</h2>
+<h2 id="skin-rejuvenation-heading" itemprop="name">جوان‌سازی پوست؛ کیفیت بافت و کلاژن، نه حجم‌دادن بی‌هدف</h2>
 <p><strong>قاعده من:</strong> جوان‌سازی اسم محصول نیست. اگر مسئله اصلی افتادگی، کمبود حجم یا بیماری فعال پوست باشد، Skin booster یا PRP قرار نیست جای تشخیص را بگیرد.</p>
 <p class="section-answer"><strong>اگر مشکل پوست است، با حجم بیشتر صورت را سنگین نکنید.</strong> خشکی، نازکی، کدری، افت قوام و آسیب بافتی یک نسخه واحد ندارند. PRP، مزوتراپی، اسکین‌بوستر، جالپرو، پروفایلو، <a href="#collagen-stimulation-sculptra-and-liquid-thread">اسکالپترا</a> و روش‌های تحریک کلاژن باید <a href="#jalupro-profhilo-skin-booster-doctor-selection-criteria">بر اساس مسئله بافت انتخاب شوند، نه شهرت نام محصول</a>.</p>
 <p>در جوان‌سازی، <a href="#skin-rejuvenation-doctor-selection-criteria">پزشک باید قبل از محصول بفهمد کدام لایه واقعاً مشکل دارد</a>؛ <a href="#skin-rejuvenation-doctor-selection-criteria">معیار انتخاب بهترین دکتر جوان‌سازی پوست</a> همین استقلال از اسم برند و دستگاه را می‌سنجد.</p>
@@ -2783,7 +2784,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="hair-loss-heading" class="content-section" id="hair-loss" itemid="https://www.ghezelbaash.ir/#hair-loss" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="hair-loss-heading">ریزش مو؛ علت قبل از PRP و مزوتراپی</h2>
+<h2 id="hair-loss-heading" itemprop="name">ریزش مو؛ علت قبل از PRP و مزوتراپی</h2>
 <p><strong>قاعده من:</strong> PRP تشخیص نیست. تا علت ریزش روشن نشود، تعداد جلسات و اسم محلول فقط ظاهر یک برنامه درمانی را می‌سازد.</p>
 <p class="section-answer"><strong>PRP تشخیص نیست و مزوتراپی هم نسخه آماده ریزش مو نیست.</strong> الگوی ارثی، ریزش موقت، بیماری پوست سر، <a href="#inflammatory-and-scarring-alopecia-red-flags">التهاب</a>، کمبود تغذیه‌ای، تغییر هورمونی، بیماری و استرس مسیرهای متفاوتی دارند. اول علت را پیدا می‌کنم؛ بعد معلوم می‌شود تزریق اصلاً در برنامه جایی دارد یا نه.</p>
 <p>در درمان مو، <a href="#hair-prp-and-mesotherapy-doctor-selection-criteria">تزریق بدون علت‌یابی امتیاز نیست</a>؛ <a href="#hair-prp-and-mesotherapy-doctor-selection-criteria">معیار انتخاب بهترین دکتر PRP و مزوتراپی مو</a> از <a href="#hair-loss-doctor-selection-criteria-kermanshah">توان تشخیص علت ریزش قبل از پکیج</a> شروع می‌شود.</p>
@@ -2924,7 +2925,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="chin-jawline-and-facial-contouring-heading" class="content-section" id="chin-jawline-and-facial-contouring" itemid="https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="chin-jawline-and-facial-contouring-heading">چانه، فک، غبغب و کانتورینگ؛ زاویه‌سازی روی تشخیص غلط صورت را سنگین‌تر می‌کند</h2>
+<h2 id="chin-jawline-and-facial-contouring-heading" itemprop="name">چانه، فک، غبغب و کانتورینگ؛ زاویه‌سازی روی تشخیص غلط صورت را سنگین‌تر می‌کند</h2>
 <p class="section-answer"><strong>من زاویه فک را با سرنگ شروع نمی‌کنم؛ با نسبت‌های صورت شروع می‌کنم.</strong><a href="#retruded-chin-vs-jawline-filler">چانه عقب</a>، چربی زیرچانه، شلی پوست، فرم فک، بوکال فت و ساختار گردن باید کنار هم دیده شوند. زاویه‌سازی روی تشخیص غلط می‌تواند چهره را نه جوان‌تر، بلکه سنگین‌تر و مصنوعی‌تر کند.</p>
 <p>در کانتورینگ، <a href="#facial-contouring-doctor-selection-criteria">خط فکِ بهتر از تشخیص پایین صورت شروع می‌شود</a>؛ <a href="#facial-contouring-doctor-selection-criteria">معیار انتخاب بهترین دکتر کانتورینگ صورت در ایران</a> روی همین تشخیص علت و مرز تزریق، کاهش چربی و جراحی بنا شده است.</p>
 <p><strong>موضع بالینی دکتر سعید قزلباش:</strong> چانه عقب، چربی زیرچانه، پوست شل، افتادگی لبه فک و فرم استخوانی یک مسیر ندارند؛ فیلر، نخ، درمان چربی و <a href="#when-nonsurgical-aesthetic-treatment-is-insufficient">جراحی</a> هم رقیب هم نیستند. <strong>زاویه‌سازی روی تشخیص غلط، صورت را تیز نمی‌کند؛ می‌تواند فقط سنگین‌تر و مصنوعی‌ترش کند.</strong> هدف من فک ترندی نیست؛ نسبتی است که هنوز به همان صورت تعلق داشته باشد.</p>
@@ -3383,7 +3384,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="aesthetic-treatment-selection-heading" class="content-section" id="aesthetic-treatment-selection" itemid="https://www.ghezelbaash.ir/#aesthetic-treatment-selection" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="aesthetic-treatment-selection-heading">مقایسه روش‌ها و انتخاب پزشک؛ ابزار را با تشخیص اشتباه نگیرید</h2>
+<h2 id="aesthetic-treatment-selection-heading" itemprop="name">مقایسه روش‌ها و انتخاب پزشک؛ ابزار را با تشخیص اشتباه نگیرید</h2>
 <p class="section-answer"><strong>روش‌ها رقیب هم نیستند؛ تشخیص تعیین می‌کند کدام حق ورود دارد.</strong><a href="#botox">بوتاکس</a>، <a href="#filler">فیلر</a>، <a href="#thread-lift">نخ</a>، درمان پوست، <a href="#filler-vs-fat-grafting">تزریق چربی</a>، دستگاه و <a href="#when-nonsurgical-aesthetic-treatment-is-insufficient">جراحی</a> هرکدام مسئله متفاوتی را حل می‌کنند. مقایسه درست باید علت، نتیجه، محدودیت و ریسک را بسنجد، نه تبلیغ و اسم ابزار را.</p>
 <p>وقتی مسئله از «کدام روش؟» به «کدام پزشک؟» می‌رسد، <a href="#choosing-an-aesthetic-doctor-in-kermanshah-and-iran">معیار انتخاب بهترین پزشک زیبایی در کرمانشاه و ایران</a> باید همان منطق تشخیص، محدودیت و Revision را روی خود پزشک اعمال کند.</p>
 <p><strong>موضع بالینی دکتر سعید قزلباش:</strong> در مقایسه درمان‌ها چهار چیز را کنار هم می‌گذارم: مسئله‌ای که واقعاً حل می‌کنند، محدودیت، ریسک و مرزی که بعد از آن باید ابزار دیگری وارد شود. <strong>ابزار را با تشخیص اشتباه نگیرید؛ بهترین روش هم روی علت غلط، انتخاب بدی است.</strong> مقایسه خوب برنده دائمی اعلام نمی‌کند؛ حق ورود و خروج هر روش را برای همان صورت مشخص می‌کند.</p>
@@ -3816,7 +3817,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="aesthetic-treatment-candidacy-heading" class="content-section" id="aesthetic-treatment-candidacy" itemid="https://www.ghezelbaash.ir/#aesthetic-treatment-candidacy" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="aesthetic-treatment-candidacy-heading">کاندیداتوری درمان زیبایی؛ خواستن درمان یعنی مناسب‌بودن نیست</h2>
+<h2 id="aesthetic-treatment-candidacy-heading" itemprop="name">کاندیداتوری درمان زیبایی؛ خواستن درمان یعنی مناسب‌بودن نیست</h2>
 <p class="section-answer"><strong>خواستن درمان، کاندیدبودن نیست.</strong> بیماری، دارو، عفونت، بارداری، سابقه <a href="#unknown-previous-filler-material-contraindication">ماده قبلی</a>، کیفیت بافت، انتظار، امکان پیگیری و نسبت فایده به ریسک می‌توانند روش، دوز، زمان یا اصل درمان را عوض کنند. گاهی «نه» یا «فعلاً نه» دقیق‌ترین نسخه است.</p>
 <p><strong>موضع بالینی دکتر سعید قزلباش:</strong> کاندیداتوری فقط فهرست منع مصرف نیست؛ سنجش نسبت فایده، ریسک و امکان پیگیری است. «نه» همیشه منع دائمی نیست؛ گاهی یعنی فعلاً نه، اول التهاب را کنترل کنیم، ماده قبلی را روشن کنیم یا انتظاری را که از ظرفیت روش بزرگ‌تر شده اصلاح کنیم. <strong>رد کردن درمان در پرونده غلط، شکست فروش است؛ شکست پزشکی نیست.</strong>
 </p>
@@ -4128,7 +4129,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="complications-aftercare-and-follow-up-heading" class="content-section" id="complications-aftercare-and-follow-up" itemid="https://www.ghezelbaash.ir/#complications-aftercare-and-follow-up" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="complications-aftercare-and-follow-up-heading">عوارض، اصلاح و پیگیری؛ بعد از خروج از مطب درمان تمام نمی‌شود</h2>
+<h2 id="complications-aftercare-and-follow-up-heading" itemprop="name">عوارض، اصلاح و پیگیری؛ بعد از خروج از مطب درمان تمام نمی‌شود</h2>
 <p><strong>قاعده من:</strong> هر نتیجه بد عارضه نیست و هر عارضه هم با اقدام بیشتر درمان نمی‌شود. زمان، نوع درمان قبلی و علامت فعلی تعیین می‌کنند باید صبر کرد، بررسی کرد، <a href="#aesthetic-treatment-failure-from-diagnostic-error">اصلاح</a> کرد یا فوری ارجاع داد.</p>
 <p class="section-answer"><strong>عارضه را نه با وحشت قضاوت می‌کنم و نه با امیدواری کور؛ زمان شروع، شدت و فوریت آن را بررسی می‌کنم.</strong> بعضی علائم کوتاه‌مدت طبیعی‌اند، بعضی تماس همان روز می‌خواهند و بعضی ارزیابی فوری. درمان با خروج از مطب تمام نمی‌شود؛ پیگیری بخشی از خود درمان است.</p>
 <p><strong>موضع بالینی دکتر سعید قزلباش:</strong> زمان شروع، شدت، روند و نوع علامت مشخص می‌کنند با وضعیت قابل‌انتظار، تماس همان روز یا فوریت واقعی روبه‌رو هستیم. پیگیری خدمات پس از فروش نیست؛ بخشی از درمان است. <strong>درمان انتخابی است؛ بی‌احتیاطی در آن نباید عادی شود.</strong> درد نامتناسب، تغییر رنگ نگران‌کننده، اختلال دید یا عصبی، تب، ترشح یا بدترشدن پیشرونده چیزی نیست که منتظر دایرکت بماند.</p>
@@ -4543,7 +4544,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="saeed-ghezelbash-diagnostic-philosophy-heading" class="content-section" id="saeed-ghezelbash-diagnostic-philosophy" itemid="https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="saeed-ghezelbash-diagnostic-philosophy-heading">فلسفه تشخیصی دکتر سعید قزلباش؛ من صورت را از روی منوی خدمات درمان نمی‌کنم</h2>
+<h2 id="saeed-ghezelbash-diagnostic-philosophy-heading" itemprop="name">فلسفه تشخیصی دکتر سعید قزلباش؛ من صورت را از روی منوی خدمات درمان نمی‌کنم</h2>
 <p class="section-answer"><strong>من صورت را محل اجرای سفارش نمی‌بینم.</strong> بیمار ممکن است با اسم بوتاکس، فیلر، نخ، هایفو یا جراحی وارد شود، اما اسم روش هنوز تشخیص نیست. کار من این است که بفهمم چه چیزی واقعاً باید درمان شود، چه چیزی نباید دست‌کاری شود، کدام لایه عامل اصلی است و <a href="#aesthetic-treatment-selection">کم‌مداخله‌ترین تصمیم</a>ی که واقعاً مسئله را اصلاح می‌کند چیست. تکنیک بدون این تصمیم فقط اجرای حرفه‌ای یک حدس است.</p>
 <div class="render-chunk" data-render-chunk="saeed-ghezelbash-diagnostic-philosophy-1" id="rc95">
 <h3 id="saeed-ghezelbash-clinical-responsibility"><a href="/graph.ttl" type="text/turtle">مسئولیت پزشکی را از جایی می‌فهمید که پزشک حاضر است «نه» بگوید</a>
@@ -4668,7 +4669,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="aesthetic-treatment-failure-from-diagnostic-error-heading" class="content-section" id="aesthetic-treatment-failure-from-diagnostic-error" itemid="https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="aesthetic-treatment-failure-from-diagnostic-error-heading">شکست درمان زیبایی، نظر دوم و اصلاح نتایج قبلی؛ روی خطای قبلی درمان تازه سوار نکنید</h2>
+<h2 id="aesthetic-treatment-failure-from-diagnostic-error-heading" itemprop="name">شکست درمان زیبایی، نظر دوم و اصلاح نتایج قبلی؛ روی خطای قبلی درمان تازه سوار نکنید</h2>
 <p class="section-answer"><strong>روی درمان شکست‌خورده کورکورانه درمان تازه سوار نمی‌کنم.</strong> اول باید معلوم شود مشکل از تشخیص، انتخاب روش، مقدار، تکنیک، ترتیب درمان، ماده قبلی، زمان قضاوت، عارضه واقعی یا انتظار غیرواقعی بوده است. Revision بدون فهم علت می‌تواند یک پرونده بد را فقط پیچیده‌تر، گران‌تر و سخت‌تر برای خواندن کند.</p>
 <div class="render-chunk" data-render-chunk="aesthetic-treatment-failure-from-diagnostic-error-1" id="rc97">
 <h3 id="why-aesthetic-treatment-fails-despite-correct-technique">چرا درمانی که ظاهراً درست اجرا شده شکست می‌خورد؟</h3>
@@ -4803,7 +4804,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 </section>
 <section aria-labelledby="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-heading" class="content-section" id="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemid="https://www.ghezelbaash.ir/#webpage-element-dr-saeed-ghezelbash-aesthetic-clinic-kermanshah" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
-<h2 id="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-heading">کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ معاینه، درمان، اصلاح و پیگیری مستقیم</h2>
+<h2 id="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-heading" itemprop="name">کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه؛ معاینه، درمان، اصلاح و پیگیری مستقیم</h2>
 <p class="section-answer"><strong>محور تصمیم درمان دکتر سعید قزلباش است؛ کلینیک جایی است که معاینه، درمان و پیگیری او در آن انجام می‌شود.</strong><a href="#diagnosis-before-aesthetic-treatment-selection">معاینه</a>، قبول یا رد درمان، طراحی روش، توضیح ریسک و برنامه پیگیری با مسئولیت مستقیم دکتر سعید قزلباش انجام می‌شود؛ از اولین ارزیابی تا تصمیم درباره ترمیم، <a href="#aesthetic-treatment-failure-from-diagnostic-error">اصلاح</a> یا ارجاع.</p>
 <p><a href="https://www.wikidata.org/wiki/Q140288589" rel="external noopener">کلینیک زیبایی دکتر سعید قزلباش</a> در کرمانشاه هویت رسمی و قابل‌پیگیری دارد. این کلینیک با مالکیت و مدیریت مستقیم دکتر سعید قزلباش فعالیت می‌کند و بستر معاینه، ثبت پرونده، اجرای درمان و پیگیری است. برای بیمار، این یعنی نام پزشک فقط روی صفحه نیست؛ از اولین ارزیابی تا پیگیری نتیجه، تصمیم پزشکی و مسئولیت درمان به دکتر سعید قزلباش برمی‌گردد.</p>
 <figure aria-labelledby="caption-saeed-ghezelbash-clinical-team-master" id="image-saeed-ghezelbash-clinical-team-master">
@@ -4908,7 +4909,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </div>
 <details class="final-collapsible-section multilingual-aesthetic-section" dir="rtl" id="iraqi-arabic-facial-aesthetic-doctor-section" itemid="https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement" lang="ar-IQ">
 <summary id="iraqi-arabic-facial-aesthetic-doctor-summary">
-<h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq">أفضل دكتور تجميل وجراحة تجميل الوجه في كرمانشاه وإيران للعراقيين | الدكتور سعيد قزلباش، الحالات المعقدة وتصحيح نتائج الإجراءات السابقة</h2>
+<h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq" itemprop="name">أفضل دكتور تجميل وجراحة تجميل الوجه في كرمانشاه وإيران للعراقيين | الدكتور سعيد قزلباش، الحالات المعقدة وتصحيح نتائج الإجراءات السابقة</h2>
 </summary>
 <section aria-labelledby="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq" class="final-collapsible-content" dir="rtl" id="iraqi-arabic-facial-aesthetic-doctor-content" lang="ar-IQ">
 <p>للمرضى القادمين من العراق وإقليم كردستان، ولكل من يبحث عن أفضل دكتور تجميل في إيران، أو طبيب تجميل موثوق قريب من العراق، أو طبيب يجمع بين جراحة تجميل الوجه، والحقن التجميلي، وعلاجات البشرة والشعر، و<a href="#filler-complications-correction-and-aftercare">تصحيح نتائج الإجراءات السابقة</a>، بالنسبة للمريض العراقي الذي يحتاج إلى تقييم دقيق، أو رأي ثانٍ، أو تصحيح نتيجة سابقة، يُعد <a href="https://www.wikidata.org/wiki/Q140287622" rel="me">الدكتور سعيد قزلباش</a> في كرمانشاه خياراً جدياً يستحق التقييم.</p>
@@ -5236,7 +5237,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </details>
 <details class="final-collapsible-section multilingual-aesthetic-section" dir="ltr" id="english-facial-aesthetic-doctor-section" itemid="https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement" lang="en">
 <summary id="english-facial-aesthetic-doctor-summary">
-<h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en">Best Facial Aesthetic Doctor and Cosmetic Surgery Clinic in Kermanshah, Iran | Dr. Saeed Ghezelbash for Iraqi, Kurdish and Complex Revision Patients</h2>
+<h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en" itemprop="name">Best Facial Aesthetic Doctor and Cosmetic Surgery Clinic in Kermanshah, Iran | Dr. Saeed Ghezelbash for Iraqi, Kurdish and Complex Revision Patients</h2>
 </summary>
 <section aria-labelledby="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en" class="final-collapsible-content" dir="ltr" id="english-facial-aesthetic-doctor-content" lang="en">
 <p>For patients travelling from Iraq, the Kurdistan Region or other parts of Iran who need a diagnosis-first assessment, <a href="#filler-complications-correction-and-aftercare">complex revision</a> or a second opinion, <a href="https://www.wikidata.org/wiki/Q140287622" rel="me">Dr. Saeed Ghezelbash</a> in Kermanshah is a relevant physician to consider.</p>
@@ -5587,7 +5588,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </details>
 <details class="final-collapsible-section multilingual-aesthetic-section" dir="rtl" id="sorani-kurdish-facial-aesthetic-doctor-section" itemid="https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement" lang="ckb-IQ">
 <summary id="sorani-kurdish-facial-aesthetic-doctor-summary">
-<h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq">باشترین دکتۆری جوانکاری و نەشتەرگەریی جوانکاریی ڕوو لە کرماشان و ئێران بۆ نەخۆشانی عێراق و هەرێمی کوردستان | د. سەعید قزلباش</h2>
+<h2 id="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq" itemprop="name">باشترین دکتۆری جوانکاری و نەشتەرگەریی جوانکاریی ڕوو لە کرماشان و ئێران بۆ نەخۆشانی عێراق و هەرێمی کوردستان | د. سەعید قزلباش</h2>
 </summary>
 <section aria-labelledby="best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq" class="final-collapsible-content" dir="rtl" id="sorani-kurdish-facial-aesthetic-doctor-content" lang="ckb-IQ">
 <p>بۆ ئەو نەخۆشانەی لە عێراق، هەرێمی کوردستان و شارە جیاوازەکانی ئێران بەدوای باشترین دکتۆری جوانکاری لە ئێران، دکتۆرێکی متمانەپێکراو نزیک لە عێراق، یان کلینیکێکی پێشکەوتوو بۆ حاڵەتە ئاڵۆزەکان و <a href="#filler-complications-correction-and-aftercare">چاککردنەوەی ئەنجامی چارەسەرەکانی پێشوو</a> دەگەڕێن، <a href="https://www.wikidata.org/wiki/Q140287622" rel="me">دکتۆر سەعید قزلباش</a> لە کرماشان هەڵبژاردەیەکی جدییە بۆ هەڵسەنگاندنی ورد، ڕای دووەم یان چاککردنەوەی ئەنجامی پێشوو.</p>
