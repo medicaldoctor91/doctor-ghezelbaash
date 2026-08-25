@@ -12,6 +12,3 @@ const site=deriveSiteData(release,headGraph);
     <a aria-label="مسیریابی به کلینیک زیبایی دکتر سعید قزلباش در Google Maps" class="quick-actions__item quick-actions__item--address" href={site.directionsUrl} rel="external" title="مسیر کلینیک زیبایی"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Zm-8 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"></path></svg><span>مسیریابی</span></a>
   </div>
 </nav>
-<script is:inline id="hero-dock-runtime">
-(()=>{const d=document,k=d.querySelector('[data-hero-dock]'),h=d.querySelector('.entity-hero');if(!k)return;if(!h){k.hidden=false;return}const s=v=>k.hidden=!v;if('IntersectionObserver'in window)new IntersectionObserver(([e])=>s(!e.isIntersecting),{threshold:0}).observe(h);else{const f=()=>s(scrollY>h.offsetTop+h.offsetHeight);addEventListener('scroll',f,{passive:true});f()}})();
-</script>
