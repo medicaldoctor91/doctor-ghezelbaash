@@ -53,6 +53,7 @@ const RULES=Object.freeze([
 ]);
 
 const SPLIT='/*DIST_CRITICAL_CSS_END*/';
+const CALIBRATION_SLOT='/*DIST_CHUNK_INTRINSIC_SLOT*/';
 const CHAPTER_CSS='.medical-guide{counter-reset:chapter}.content-section>h2{counter-increment:chapter}.content-section>h2::before{content:counter(chapter,decimal-leading-zero);position:absolute;inset-inline-end:0;top:-1.05rem;color:#85938e;font:800 .64rem/1 "Vazirmatn",system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.08em}';
 
 export function applySitePresentationCss(authoredCss){
@@ -61,7 +62,8 @@ export function applySitePresentationCss(authoredCss){
   source=source.replace('a[href^="tel:"]{','a[href^="tel:"]:not(.quick-actions__item){');
   for(const [anchor,changes,label] of RULES)source=patchRule(source,anchor,changes,label);
   if(count(source,SPLIT)!==1)throw new Error('Critical CSS split marker drift in site presentation');
-  source=source.replace(SPLIT,SPLIT+CHAPTER_CSS);
+  if(count(source,CALIBRATION_SLOT)!==1)throw new Error('Render calibration slot drift in site presentation');
+  source=source.replace(CALIBRATION_SLOT,CHAPTER_CSS+CALIBRATION_SLOT);
   return source;
 }
 
