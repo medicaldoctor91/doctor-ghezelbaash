@@ -31,6 +31,8 @@ jobs:
         with:
           python-version: '3.14.6'
       - run: npm ci
+      - name: Enforce high-severity dependency advisory gate
+        run: npm run audit:dependencies
       - name: Load canonical platform contract
         shell: bash
         run: |

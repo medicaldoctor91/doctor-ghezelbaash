@@ -18,6 +18,13 @@ const externalOperationScriptPattern=/^scripts\/(?:commons_|wiki(?:media|journal
 const textExtensions=new Set(['.astro','.cff','.css','.csv','.html','.ini','.js','.json','.jsonld','.md','.mjs','.py','.toml','.ts','.tsv','.ttl','.txt','.xml','.yaml','.yml']);
 const textExactNames=new Set(['.gitignore','.npmrc','.nvmrc','LICENSE']);
 const devMarker=/\b(?:TODO|FIXME|HACK)\b/g;
+const [npmrc,packageJson]=await Promise.all([
+  readFile(path.join(root,'.npmrc'),'utf8'),
+  readFile(path.join(root,'package.json'),'utf8').then(JSON.parse),
+]);
+if(!/^audit=true$/m.test(npmrc)||/^audit=false$/m.test(npmrc))throw new Error('npm advisory reporting must remain enabled');
+if(packageJson.scripts?.['audit:dependencies']!=='npm audit --audit-level=high')throw new Error('High-severity dependency advisory gate drift');
+if(packageJson.overrides?.nanoid!=='3.3.18')throw new Error('Patched nanoid override drift');
 
 for(const name of tracked){
   const normalized=name.replaceAll('\\','/');
@@ -62,6 +69,12 @@ for(const workflow of workflows){
     if(/^\s*environment\s*:/m.test(content))throw new Error('Pull-request CI must not bind a deployment environment');
   }
   if(/\bgithub\.(?:head_ref|base_ref)\b|refs\/pull\//.test(content))throw new Error(`Canonical workflows must not depend on pull-request refs: ${workflow}`);
+  if(/^\s+persist-credentials:\s*true\s*$/m.test(content))throw new Error(`Checkout credentials must never persist across workflow steps: ${workflow}`);
+  if(/^ {4}env:\s*\n(?: {6}[^\n]*\n)*? {6}[^:\n]+:\s*\$\{\{\s*(?:secrets\.|github\.token)/m.test(content))throw new Error(`Job-level secret/token exposure is forbidden: ${workflow}`);
+  if(/https:\/\/[^\s"']*(?:\$\{\{\s*secrets\.|\$\{(?:HF|HUGGING_FACE|HUGGINGFACE|GITHUB|CLOUDFLARE|ZENODO)[A-Z_]*TOKEN)/.test(content))throw new Error(`Credential-bearing remote URL is forbidden: ${workflow}`);
+  const installCount=(content.match(/\bnpm ci\b/g)||[]).length;
+  const auditCount=(content.match(/\bnpm (?:run audit:dependencies|audit --audit=true --audit-level=high)\b/g)||[]).length;
+  if(installCount!==auditCount)throw new Error(`Every npm ci must be followed by the explicit dependency advisory gate: ${workflow} (${installCount}/${auditCount})`);
   for(const match of content.matchAll(/^\s*branches:\s*\[([^\]]*)\]\s*$/gm)){
     const branches=match[1].split(',').map(value=>value.trim().replace(/^['"]|['"]$/g,'')).filter(Boolean);
     if(branches.some(branch=>branch!=='main'))throw new Error(`Canonical workflow branch trigger must be main-only: ${workflow} -> ${branches.join(', ')}`);
@@ -87,4 +100,4 @@ for(const name of tracked){
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestTargetWorkflowCoupling:false,pullRequestValidationWorkflow:'.github/workflows/ci.yml',pullRequestValidationReadOnly:true,nonMainWorkflowBranchTriggers:false,developmentMarkers:false,forbiddenAsciiControlBytes:false,intentionalTrackedDeletionsHandled:true},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestTargetWorkflowCoupling:false,pullRequestValidationWorkflow:'.github/workflows/ci.yml',pullRequestValidationReadOnly:true,nonMainWorkflowBranchTriggers:false,persistentCheckoutCredentials:false,jobLevelSecrets:false,credentialBearingRemoteUrls:false,dependencyAdvisoryGate:'high',developmentMarkers:false,forbiddenAsciiControlBytes:false,intentionalTrackedDeletionsHandled:true},null,2));

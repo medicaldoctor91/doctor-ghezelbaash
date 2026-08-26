@@ -55,16 +55,13 @@ jobs:
     env:
       ASTRO_TELEMETRY_DISABLED: '1'
       RELEASE_TARGET: ${{ inputs.version }}
-      ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
-      HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_EXPECTED_ENVIRONMENT: production
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: main
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.19.0
@@ -79,6 +76,8 @@ jobs:
           sudo apt-get install --no-install-recommends -y ffmpeg
           ffprobe -version
       - run: npm ci
+      - name: Enforce high-severity dependency advisory gate
+        run: npm run audit:dependencies
       - name: Load canonical platform contract
         run: node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
       - name: Resolve release transaction
@@ -86,9 +85,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
-          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
           [[ "$RELEASE_TARGET" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           BASE_SHA="$(git rev-parse HEAD)"
           CURRENT_VERSION="$(node -p "require('./src/data/release.json').release")"
@@ -116,7 +112,7 @@ jobs:
           printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\n' \
             "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" >> "$GITHUB_ENV"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
-      - name: Reconcile current release surfaces
+      - name: Build exact current release distribution
         if: steps.release.outputs.mode == 'current'
         shell: bash
         run: |
@@ -124,35 +120,75 @@ jobs:
           C="$(git rev-parse HEAD)"
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$C")" CF_PAGES_COMMIT_SHA="$C"
           npm run build
+      - name: Verify current Zenodo surface
+        if: steps.release.outputs.mode == 'current'
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
           python scripts/zenodo_release.py verify-public \
             --record "$CURRENT_RECORD" --doi "$CURRENT_DOI" --concept-doi "$CONCEPT_DOI" --version "$CURRENT_VERSION"
+      - name: Prepare current Hugging Face distribution
+        if: steps.release.outputs.mode == 'current'
+        shell: bash
+        run: |
+          set -euo pipefail
           rm -rf .release/huggingface
-          git clone "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface
+          git clone "https://huggingface.co/datasets/$HF_REPO" .release/huggingface
           node scripts/huggingface.mjs prepare dist .release/huggingface
           git -C .release/huggingface config user.name ghezelbaash-release-bot
           git -C .release/huggingface config user.email actions@users.noreply.github.com
           git -C .release/huggingface add -A
           git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Reconcile release $CURRENT_VERSION authority distribution"
-          git -C .release/huggingface push origin HEAD:main
+      - name: Publish current Hugging Face distribution
+        if: steps.release.outputs.mode == 'current'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
+          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main
+          unset HF_AUTH
+      - name: Verify current Hugging Face surfaces
+        if: steps.release.outputs.mode == 'current'
+        shell: bash
+        run: |
+          set -euo pipefail
           node scripts/huggingface.mjs verify --profile
           node scripts/huggingface.mjs verify --viewer
+      - name: Verify current Cloudflare deployment contract
+        if: steps.release.outputs.mode == 'current'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          node scripts/cloudflare-pages.mjs ensure --verify-config
       - name: Verify current website after reconciliation
         if: steps.release.outputs.mode == 'current'
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/cloudflare-pages.mjs ensure --verify-config
           node scripts/verify-live.mjs current --website-only
-      - name: Create or resume release candidate
+      - name: Create or resume release candidate source
         if: steps.release.outputs.mode == 'new'
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
           BRANCH="release/v$RELEASE_TARGET"
           git fetch origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" || true
           if git rev-parse -q --verify "refs/remotes/origin/$BRANCH" >/dev/null; then
             git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
             test "$(node -p "require('./src/data/release.json').release")" = "$RELEASE_TARGET"
+            CANDIDATE_NEEDS_COMMIT=false
           else
             test -z "$(git tag -l "v$RELEASE_TARGET")"
             python scripts/zenodo_release.py reserve \
@@ -165,20 +201,39 @@ jobs:
             EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/evidence-snapshot.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json'
             ACTUAL="$(git diff --name-only | sort | tr '\n' ' ' | sed 's/ $//')"
             test "$ACTUAL" = "$EXPECTED"
+            CANDIDATE_NEEDS_COMMIT=true
+          fi
+          printf 'RELEASE_BRANCH=%s\nCANDIDATE_NEEDS_COMMIT=%s\n' "$BRANCH" "$CANDIDATE_NEEDS_COMMIT" >> "$GITHUB_ENV"
+      - name: Validate and commit exact release candidate
+        if: steps.release.outputs.mode == 'new'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$CANDIDATE_NEEDS_COMMIT" = true ]; then
             npm run validate:release-contract
             npm run validate:source
             git config user.name ghezelbaash-release-bot
             git config user.email actions@users.noreply.github.com
-            git checkout -b "$BRANCH"
+            git checkout -b "$RELEASE_BRANCH"
             git add CITATION.cff codemeta.json package-lock.json package.json src/data/evidence-snapshot.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json
             git commit -m "release: prepare v$RELEASE_TARGET authority snapshot"
-            git push origin HEAD:"refs/heads/$BRANCH"
           fi
           CANDIDATE_SHA="$(git rev-parse HEAD)"
           ZENODO_RECORD="$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")"
           ZENODO_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")"
           RELEASE_DATE="$(node -p "require('./src/data/release.json').dateModified")"
           printf 'CANDIDATE_SHA=%s\nZENODO_RECORD=%s\nZENODO_DOI=%s\nRELEASE_DATE=%s\n' "$CANDIDATE_SHA" "$ZENODO_RECORD" "$ZENODO_DOI" "$RELEASE_DATE" >> "$GITHUB_ENV"
+      - name: Push newly prepared release candidate
+        if: steps.release.outputs.mode == 'new' && env.CANDIDATE_NEEDS_COMMIT == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GITHUB_TOKEN:-}"; echo "::add-mask::$GITHUB_TOKEN"
+          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:"refs/heads/$RELEASE_BRANCH"
+          unset GITHUB_AUTH
       - name: Build and attest exact release candidate
         if: steps.release.outputs.mode == 'new'
         shell: bash
@@ -188,14 +243,14 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$CANDIDATE_SHA")"
           export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA"
           npm run release
-      - name: Stage Hugging Face candidate
+      - name: Prepare Hugging Face candidate
         if: steps.release.outputs.mode == 'new'
         shell: bash
         run: |
           set -euo pipefail
           HF_BRANCH="release/v$RELEASE_TARGET"
           rm -rf .release/huggingface
-          git clone "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface
+          git clone "https://huggingface.co/datasets/$HF_REPO" .release/huggingface
           git -C .release/huggingface fetch origin "$HF_BRANCH" || true
           if git -C .release/huggingface rev-parse -q --verify "refs/remotes/origin/$HF_BRANCH" >/dev/null; then
             git -C .release/huggingface checkout -B "$HF_BRANCH" "refs/remotes/origin/$HF_BRANCH"
@@ -207,14 +262,27 @@ jobs:
           git -C .release/huggingface config user.email actions@users.noreply.github.com
           git -C .release/huggingface add -A
           git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Stage release $RELEASE_TARGET authority distribution"
-          git -C .release/huggingface push origin HEAD:"$HF_BRANCH"
           HF_CANDIDATE_SHA="$(git -C .release/huggingface rev-parse HEAD)"
-          echo "HF_CANDIDATE_SHA=$HF_CANDIDATE_SHA" >> "$GITHUB_ENV"
-      - name: Stage immutable Zenodo candidate
+          printf 'HF_BRANCH=%s\nHF_CANDIDATE_SHA=%s\n' "$HF_BRANCH" "$HF_CANDIDATE_SHA" >> "$GITHUB_ENV"
+      - name: Push Hugging Face candidate
         if: steps.release.outputs.mode == 'new'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
+          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:"$HF_BRANCH"
+          unset HF_AUTH
+      - name: Stage immutable Zenodo candidate
+        if: steps.release.outputs.mode == 'new'
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
           export SOURCE_COMMIT="$CANDIDATE_SHA"
           python scripts/zenodo_release.py stage --version "$RELEASE_TARGET"
       - name: Final pre-publication transaction gate
@@ -229,53 +297,77 @@ jobs:
           node -e "const s=require('./.release/runtime/zenodo-stage.json');if(s.release!==process.env.RELEASE_TARGET||s.recordId!==process.env.ZENODO_RECORD||s.versionDoi!==process.env.ZENODO_DOI||s.sourceCommit!==process.env.CANDIDATE_SHA)throw new Error('Zenodo stage ledger drift')"
       - name: Publish immutable Zenodo release
         if: steps.release.outputs.mode == 'new'
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
           export SOURCE_COMMIT="$CANDIDATE_SHA"
           python scripts/zenodo_release.py publish
       - name: Promote exact candidate to canonical GitHub main and tag
         if: steps.release.outputs.mode == 'new'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          git push origin HEAD:main
+          test -n "${GITHUB_TOKEN:-}"; echo "::add-mask::$GITHUB_TOKEN"
+          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
           if git ls-remote --exit-code --tags origin "refs/tags/v$RELEASE_TARGET" >/dev/null 2>&1; then
             test "$(git ls-remote origin "refs/tags/v$RELEASE_TARGET^{}" | awk '{print $1}')" = "$CANDIDATE_SHA" || \
               test "$(git ls-remote origin "refs/tags/v$RELEASE_TARGET" | awk '{print $1}')" = "$CANDIDATE_SHA"
           else
             git tag -a "v$RELEASE_TARGET" -m "Dr. Saeed Ghezelbash Public Knowledge Graph v$RELEASE_TARGET"
-            git push origin "refs/tags/v$RELEASE_TARGET"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin "refs/tags/v$RELEASE_TARGET"
           fi
+          unset GITHUB_AUTH
       - name: Promote exact candidate to Hugging Face main and frozen tag
         if: steps.release.outputs.mode == 'new'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          git -C .release/huggingface push origin HEAD:main
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
+          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main
           if git -C .release/huggingface ls-remote --exit-code --tags origin "refs/tags/v$RELEASE_TARGET" >/dev/null 2>&1; then
             test "$(git -C .release/huggingface ls-remote origin "refs/tags/v$RELEASE_TARGET^{}" | awk '{print $1}')" = "$HF_CANDIDATE_SHA" || \
               test "$(git -C .release/huggingface ls-remote origin "refs/tags/v$RELEASE_TARGET" | awk '{print $1}')" = "$HF_CANDIDATE_SHA"
           else
             git -C .release/huggingface tag -a "v$RELEASE_TARGET" -m "Dr. Saeed Ghezelbash Public Knowledge Graph v$RELEASE_TARGET"
-            git -C .release/huggingface push origin "refs/tags/v$RELEASE_TARGET"
+            git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin "refs/tags/v$RELEASE_TARGET"
           fi
+          unset HF_AUTH
       - name: Converge canonical Cloudflare Pages deployment
         if: steps.release.outputs.mode == 'new'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
           export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA" CF_EXPECTED_COMMIT="$CANDIDATE_SHA"
           node scripts/cloudflare-pages.mjs ensure --configure
           node scripts/cloudflare-pages.mjs ensure
-      - name: Verify public cross-surface release truth
+      - name: Verify published Zenodo release truth
+        if: steps.release.outputs.mode == 'new'
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
+          export SOURCE_COMMIT="$CANDIDATE_SHA"
+          python scripts/zenodo_release.py verify-public \
+            --record "$ZENODO_RECORD" --doi "$ZENODO_DOI" --concept-doi "$CONCEPT_DOI" --version "$RELEASE_TARGET"
+      - name: Verify public Hugging Face and website release truth
         if: steps.release.outputs.mode == 'new'
         shell: bash
         run: |
           set -euo pipefail
-          export SOURCE_COMMIT="$CANDIDATE_SHA"
-          python scripts/zenodo_release.py verify-public \
-            --record "$ZENODO_RECORD" --doi "$ZENODO_DOI" --concept-doi "$CONCEPT_DOI" --version "$RELEASE_TARGET"
           for attempt in $(seq 1 18); do
             if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then break; fi
             test "$attempt" -lt 18
@@ -289,8 +381,16 @@ jobs:
           node scripts/verify-live.mjs release
       - name: Remove successful candidate branches
         if: steps.release.outputs.mode == 'new' && success()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          git push origin --delete "release/v$RELEASE_TARGET" || true
-          git -C .release/huggingface push origin --delete "release/v$RELEASE_TARGET" || true
+          test -n "${GITHUB_TOKEN:-}"; echo "::add-mask::$GITHUB_TOKEN"
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin --delete "release/v$RELEASE_TARGET" || true
+          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin --delete "release/v$RELEASE_TARGET" || true
+          unset GITHUB_AUTH HF_AUTH

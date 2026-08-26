@@ -17,7 +17,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.19.0
@@ -28,6 +28,8 @@ jobs:
         with:
           python-version: '3.14.6'
       - run: npm ci
+      - name: Enforce high-severity dependency advisory gate
+        run: npm run audit:dependencies
       - name: Resolve finalized current release and external identities
         shell: bash
         run: |
@@ -57,7 +59,7 @@ jobs:
           set -euo pipefail
           test -z "$(git status --porcelain -- src/data/volatile-facts.json src/content-source src/data/semantic/knowledge-graph.jsonld)"
           echo 'GOOGLE_REPUTATION_NO_PUBLIC_MUTATION_PASS'
-      - name: Build and publish only the approved mutable observation
+      - name: Build and commit only the approved mutable observation
         if: steps.places.outputs.changed == 'true'
         shell: bash
         run: |
@@ -75,7 +77,17 @@ jobs:
           git config user.email actions@users.noreply.github.com
           git commit -m "chore: update current Google reputation observation"
           git pull --rebase origin main
-          git push origin HEAD:main
+      - name: Push approved reputation observation
+        if: steps.places.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GITHUB_TOKEN:-}"; echo "::add-mask::$GITHUB_TOKEN"
+          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
+          unset GITHUB_AUTH
       - name: Capture current public revision when source did not change
         if: steps.places.outputs.changed != 'true'
         shell: bash
@@ -88,6 +100,19 @@ jobs:
         run: |
           set -euo pipefail
           printf 'PUBLISHED_REVISION=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Rebuild exact published reputation revision
+        if: steps.places.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          git checkout --detach "$PUBLISHED_REVISION"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$PUBLISHED_REVISION")"
+          export CF_PAGES_COMMIT_SHA="$PUBLISHED_REVISION"
+          npm ci
+          npm run audit:dependencies
+          npm run build
+          node scripts/reputation.mjs visible dist/index.html
       - name: Reconcile Cloudflare production only when a public revision changed
         if: steps.places.outputs.changed == 'true'
         env:
@@ -97,17 +122,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin main
-          git checkout --detach "$PUBLISHED_REVISION"
-          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$PUBLISHED_REVISION")"
-          export CF_PAGES_COMMIT_SHA="$PUBLISHED_REVISION"
-          npm ci
-          npm run build
+          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
           node scripts/cloudflare-pages.mjs ensure --verify-config
           node scripts/cloudflare-pages.mjs ensure
           node scripts/cloudflare-pages.mjs verify --fresh-only
-          node scripts/reputation.mjs visible dist/index.html
-      - name: Reconcile complete current Hugging Face distribution on tuple change
+      - name: Prepare complete current Hugging Face distribution on tuple change
+        if: steps.places.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .release/huggingface-live
+          git clone --depth=1 "https://huggingface.co/datasets/$HF_REPO" .release/huggingface-live
+          node scripts/huggingface.mjs prepare dist .release/huggingface-live
+          node scripts/reputation.mjs sync-hf .release/huggingface-live
+          git -C .release/huggingface-live config user.name ghezelbaash-reputation-bot
+          git -C .release/huggingface-live config user.email actions@users.noreply.github.com
+          git -C .release/huggingface-live add -A
+          git -C .release/huggingface-live diff --cached --quiet || git -C .release/huggingface-live commit -m "Update current authority distribution after Google reputation observation"
+      - name: Publish current Hugging Face reputation distribution
         if: steps.places.outputs.changed == 'true'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
@@ -115,15 +147,9 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          rm -rf .release/huggingface-live
-          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-live
-          node scripts/huggingface.mjs prepare dist .release/huggingface-live
-          node scripts/reputation.mjs sync-hf .release/huggingface-live
-          git -C .release/huggingface-live config user.name ghezelbaash-reputation-bot
-          git -C .release/huggingface-live config user.email actions@users.noreply.github.com
-          git -C .release/huggingface-live add -A
-          git -C .release/huggingface-live diff --cached --quiet || git -C .release/huggingface-live commit -m "Update current authority distribution after Google reputation observation"
-          git -C .release/huggingface-live push origin HEAD:main
+          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
+          git -C .release/huggingface-live -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main
+          unset HF_AUTH
       - name: Verify Hugging Face convergence after mutation
         if: steps.places.outputs.changed == 'true'
         shell: bash
@@ -138,19 +164,25 @@ jobs:
           done
           echo '::error::Hugging Face current observation did not converge after publish'
           exit 1
-      - name: Verify Cloudflare convergence after mutation
+      - name: Verify exact Cloudflare deployment after mutation
         if: steps.places.outputs.changed == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
           if ! node scripts/cloudflare-pages.mjs verify; then
             echo '::warning::Production bytes stale after canonical Git deployment; purging edge cache and retrying exact byte verification.'
             python scripts/configure-cloudflare-edge.py --purge-cache-only
             sleep 30
             node scripts/cloudflare-pages.mjs verify
           fi
+      - name: Verify public discovery convergence after mutation
+        if: steps.places.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
           node scripts/verify-live.mjs current --website-only
           if node scripts/verify-live.mjs discovery; then
             echo 'PUBLIC_DISCOVERY_REPUTATION_T0_PASS'

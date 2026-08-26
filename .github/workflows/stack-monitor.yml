@@ -45,6 +45,8 @@ jobs:
           printf 'HF_REPO=%s\n' "$HF_REPO" >> "$GITHUB_ENV"
           echo "STACK_MONITOR_RELEASE=$RELEASE"
       - run: npm ci
+      - name: Enforce high-severity dependency advisory gate
+        run: npm run audit:dependencies
       - name: Build exact current source
         shell: bash
         run: |
@@ -68,27 +70,47 @@ jobs:
           node scripts/verify-live.mjs discovery
           node scripts/verify-live.mjs current --website-only
           echo 'FIRST_PARTY_EDGE_SELF_HEAL_PASS'
-      - name: Verify and reconcile Hugging Face current authority surface
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      - name: Check Hugging Face current authority surface
+        id: hf
         shell: bash
         run: |
           set -euo pipefail
           if node scripts/verify-live.mjs current --hf-only; then
             echo 'HF_CURRENT_AUTHORITY_PASS'
-            exit 0
+            echo 'needs_reconcile=false' >> "$GITHUB_OUTPUT"
+          else
+            echo '::warning::Hugging Face current distribution drift detected; preparing exact current DIST reconciliation.'
+            echo 'needs_reconcile=true' >> "$GITHUB_OUTPUT"
           fi
-          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          echo '::warning::Hugging Face current distribution drift detected; reconciling the complete mutable main distribution from exact current DIST.'
+      - name: Prepare Hugging Face current authority reconciliation
+        if: steps.hf.outputs.needs_reconcile == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
           rm -rf .release/huggingface-monitor
-          git clone --depth=1 "https://oauth2:${HF_TOKEN}@huggingface.co/datasets/$HF_REPO" .release/huggingface-monitor
+          git clone --depth=1 "https://huggingface.co/datasets/$HF_REPO" .release/huggingface-monitor
           node scripts/huggingface.mjs prepare dist .release/huggingface-monitor
           node scripts/reputation.mjs sync-hf .release/huggingface-monitor
           git -C .release/huggingface-monitor config user.name ghezelbaash-reputation-bot
           git -C .release/huggingface-monitor config user.email actions@users.noreply.github.com
           git -C .release/huggingface-monitor add -A
           git -C .release/huggingface-monitor diff --cached --quiet || git -C .release/huggingface-monitor commit -m "Reconcile complete current authority distribution"
-          git -C .release/huggingface-monitor push origin HEAD:main
+      - name: Publish Hugging Face current authority reconciliation
+        if: steps.hf.outputs.needs_reconcile == 'true'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
+          git -C .release/huggingface-monitor -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main
+          unset HF_AUTH
+      - name: Verify Hugging Face convergence after reconciliation
+        if: steps.hf.outputs.needs_reconcile == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
           for attempt in $(seq 1 12); do
             if node scripts/verify-live.mjs current --hf-only; then
               echo 'HF_CURRENT_AUTHORITY_SELF_HEAL_PASS'
@@ -115,6 +137,7 @@ jobs:
           git clean -fdx
           git checkout --detach "$TAG"
           npm ci
+          npm audit --audit=true --audit-level=high
           C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
           node scripts/verify-live.mjs release

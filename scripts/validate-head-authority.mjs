@@ -59,7 +59,8 @@ assert(!documentHead.includes('discovery-head.html?raw')&&!documentHead.includes
 assert(documentHead.includes("head-profile.json")&&documentHead.includes("release.json"),'DocumentHead is not bound to canonical Head inputs');
 assert(!documentHead.includes('page-metadata.json'),'DocumentHead reintroduced duplicate page metadata authority');
 assert(documentHead.includes('release.canonicalUrl'),'DocumentHead canonical URL authority drift');
-assert(documentHead.includes('HERO_PRELOAD_HREF')&&documentHead.includes('HERO_PRELOAD_SRCSET')&&documentHead.includes('HERO_IMAGE_SIZES'),'DocumentHead is not bound to canonical Hero preload inputs');
+assert(documentHead.includes('HERO_PRELOAD_SRCSET')&&documentHead.includes('HERO_IMAGE_SIZES'),'DocumentHead is not bound to canonical responsive Hero preload inputs');
+assert(!documentHead.includes('href={HERO_PRELOAD_HREF}'),'Responsive Hero preload must not fetch its fallback candidate alongside the selected srcset candidate');
 assert(!documentHead.includes('main-head.html')&&!documentHead.includes('head-delivery'),'Runtime DocumentHead still depends on legacy Head transport');
 assert(!baseLayout.includes('page-metadata.json')&&baseLayout.includes("release.json")&&!baseLayout.includes('effectiveFrontmatter'),'BaseLayout content metadata authority drift');
 assert(baseLayout.includes('new URL(release.canonicalUrl)'),'BaseLayout canonical URL authority drift');
