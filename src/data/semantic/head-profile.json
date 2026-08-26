@@ -156,14 +156,17 @@
           "https://www.ghezelbaash.ir/#identifier-clinic-osm-node",
           "https://www.ghezelbaash.ir/#identifier-clinic-wikidata"
         ],
-        "image": [
-          "https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo"
-        ],
+        "image": [],
         "hasMap": [],
         "potentialAction": [
           "https://www.ghezelbaash.ir/#action-contact-clinic",
           "https://www.ghezelbaash.ir/#action-online-initial-consultation",
           "https://www.ghezelbaash.ir/#action-view-clinic-map"
+        ]
+      },
+      "valueAllow": {
+        "name": [
+          "کلینیک زیبایی دکتر سعید قزلباش"
         ]
       }
     },
