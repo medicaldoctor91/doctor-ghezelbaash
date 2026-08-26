@@ -55,5 +55,10 @@ for(const id of ['video-subcision-technique','video-jalupro-vs-profhilo','video-
   assert(attr(video,'preload')==='none'&&attr(video,'data-poster'),`Deferred video fetch contract drift: ${id}`);
   assert(attr(video,'width')&&attr(video,'height')&&/\bcontrols\b/i.test(video)&&/\bplaysinline\b/i.test(video),`Video geometry/control contract drift: ${id}`);
 }
+const videoHub=pageSource.match(/<aside\b(?=[^>]*\bid=["']video-library["'])[^>]*>[\s\S]*?<\/aside>/i)?.[0]||'';
+assert(videoHub&&/<nav\b/i.test(videoHub),'Canonical in-page Video hub missing');
+for(const id of ['video-saeed-ghezelbash-subcision-technique','video-saeed-ghezelbash-jalupro-vs-profhilo','video-saeed-ghezelbash-thread-lift-workshop','video-saeed-ghezelbash-kurdish-patient-review']){
+  assert(videoHub.includes(`href="#${id}"`),`Canonical Video hub target missing: ${id}`);
+}
 
-console.log(JSON.stringify({stage:'MEDIA_PRESENTATION_V3',mode:'DUAL_VISUAL_RENDER',geometryChanged:false,ordinaryFigureCardPaint:false,criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,renderCalibrationSha256:calibration.sha256,heroGeometry:'PRESERVED',lazyImages:'PRESERVED',deferredVideoFetch:'PRESERVED',status:'PASS'},null,2));
+console.log(JSON.stringify({stage:'MEDIA_PRESENTATION_V3',mode:'DUAL_VISUAL_RENDER',geometryChanged:false,ordinaryFigureCardPaint:false,criticalBytes:Buffer.byteLength(delivery.criticalCss),authoredCriticalBytes:Buffer.byteLength(authoredCritical),criticalByteDelta:Buffer.byteLength(delivery.criticalCss)-Buffer.byteLength(authoredCritical),criticalBudget:invariants.maxCriticalCssBytes,renderCalibrationSha256:calibration.sha256,heroGeometry:'PRESERVED',lazyImages:'PRESERVED',deferredVideoFetch:'PRESERVED',canonicalVideoHub:'PRESERVED',status:'PASS'},null,2));
