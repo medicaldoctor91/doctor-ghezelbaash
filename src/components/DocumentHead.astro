@@ -1,7 +1,7 @@
 ---
 import headProfile from '../data/head-profile.json';
 import release from '../data/release.json';
-import {HERO_IMAGE_SIZES,HERO_PRELOAD_HREF,HERO_PRELOAD_SRCSET} from '../lib/hero-image-contract.mjs';
+import {HERO_IMAGE_SIZES,HERO_PRELOAD_SRCSET} from '../lib/hero-image-contract.mjs';
 import {HEAD_RESOURCES} from '../lib/resources.mjs';
 
 type HeadStage='critical'|'discovery';
@@ -43,7 +43,7 @@ const discoveryLinks:DiscoveryLink[]=[
 ---
 {isMain&&stage==='critical'&&<>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
-<link as="image" fetchpriority="high" href={HERO_PRELOAD_HREF} imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif" />
+<link as="image" fetchpriority="high" imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif" />
 <title>{title}</title><meta content={description} name="description" /><meta content={robots} name="robots" /><meta content={robots} name="googlebot" /><meta content={robots} name="bingbot" />
 <meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={headProfile.author} name="author" /><meta content={headProfile.applicationName} name="application-name" /><meta content={headProfile.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
 <meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={headProfile.themeColor} name="theme-color" /><meta content={headProfile.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />

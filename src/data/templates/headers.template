@@ -24,6 +24,7 @@ https://:version.:project.pages.dev/*
   Repr-Digest: sha-256=:{{DIGEST:index.html}}:
   Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/linkset.json>; rel="linkset"; type="application/linkset+json", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/provenance.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/live-observations.jsonld>; rel="describedby"; type="application/ld+json"
   Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="author", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="about"
+  Link: </media/images/physician/saeed-ghezelbash-portrait-960.497fc78613ac.avif>; rel=preload; as=image; type="image/avif"; media="screen and (max-width: 540px) and (min-resolution: 1.25dppx) and (max-resolution: 2.5dppx)"; fetchpriority=high
 
 /404.html
   Content-Type: text/html; charset=utf-8

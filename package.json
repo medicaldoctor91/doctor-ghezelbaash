@@ -9,6 +9,7 @@
     "fsevents@2.3.3": true
   },
   "scripts": {
+    "audit:dependencies": "npm audit --audit-level=high",
     "rdf:deps": "PYTHONPATH=.python-deps python -c \"import rdflib\" || python -m pip install --disable-pip-version-check --no-input --target .python-deps -r requirements-rdf.txt",
     "clean:generated": "node scripts/generated-workspace.mjs reset",
     "prepare:generated": "npm run validate:media-references && npm run clean:generated && npm run rdf:generate && npm run generate",

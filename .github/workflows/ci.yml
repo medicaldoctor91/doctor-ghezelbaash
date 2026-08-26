@@ -30,6 +30,8 @@ jobs:
           sudo apt-get install --no-install-recommends -y ffmpeg
           ffprobe -version
       - run: npm ci
+      - name: Enforce high-severity dependency advisory gate
+        run: npm run audit:dependencies
       - name: Release preparation diagnostics
         shell: bash
         run: |

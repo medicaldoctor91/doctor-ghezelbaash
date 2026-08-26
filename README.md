@@ -54,12 +54,15 @@ Useful integrity operations:
 
 ```bash
 npm run media:enrich
+npm run audit:dependencies
 npm run render:calibration:apply -- path/to/chromium-measurements.json
 npm run release:prepare
 npm run verify:production -- https://www.ghezelbaash.ir/
 ```
 
 `media:enrich` is idempotent and preserves pixel dimensions. The render-calibration command validates all 134 chunk identities across the six measured viewport widths and atomically updates only the canonical JSON; production interpolation CSS is derived from that JSON in memory by the shared CSS assembly contract. Production verification checks asynchronous CSS delivery, response-budget safety, native answer integration, crawler access, machine-resource headers and the real 404 contract.
+
+All dependency-installing CI lanes enforce the explicit high-severity npm advisory gate. Release credentials are step-scoped, checkout credentials never persist across build steps, and authenticated Git pushes use transient request headers rather than credential-bearing remote URLs.
 
 Runtime versions are defined only by `.release/policy/platform-contract.json`; the release validators enforce convergence with `.nvmrc`, `package.json` and CodeMeta. Deployment target: Cloudflare Pages static output.
 

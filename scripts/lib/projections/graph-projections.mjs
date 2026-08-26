@@ -3,7 +3,7 @@ import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs';
 import {projectNode} from '../../../src/lib/semantic-projection.mjs';
 import {normalizeGoogleSupportGraph} from '../google-support-graph.mjs';
-import {nodeTypes,refId} from '../projection-context.mjs';
+import {nodeTypes} from '../projection-context.mjs';
 
 export {projectNode};
 
