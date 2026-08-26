@@ -37,6 +37,15 @@ export function normalizeGoogleSupportGraph(doc){
       });
       if(valid.length)node.hasPart=Array.isArray(node.hasPart)?valid:valid[0];else delete node.hasPart;
     }
+    if(nodeTypes(node).includes('ScholarlyArticle')){
+      const images=(Array.isArray(node.image)?node.image:[node.image]).filter(Boolean);
+      if(!images.length)throw new Error(`ScholarlyArticle missing image in Google support graph: ${node['@id']||node.name||'(unknown)'}`);
+      for(const image of images){
+        if(typeof image==='string'&&/^https?:\/\//i.test(image))continue;
+        const imageId=image&&typeof image==='object'?image['@id']:null,target=imageId?byId.get(imageId):null;
+        if(!target||!nodeTypes(target).includes('ImageObject'))throw new Error(`ScholarlyArticle image target missing from Google support graph: ${imageId||'(invalid image)'}`);
+      }
+    }
     output.push(node);
   }
   normalized['@graph']=output;
