@@ -32,7 +32,7 @@ for(const contract of heroContract){
 
 if(!redirectsRaw.includes('doctor.ghezelbaash.ir')||!/(google\.com\/maps|maps\.google)/i.test(redirectsRaw))fail('doctor subdomain no longer maps to the clinic map redirect contract');
 if(!quick.includes('class="quick-actions__top"')||!quick.includes('data-quick-actions-top hidden')||!quick.includes('href="#main-content"'))fail('Deferred back-to-top control drift');
-if(!runtime.includes("top.hidden=scrollY<800")||!runtime.includes("addEventListener('scroll',syncTop,{passive:true})")||!runtime.includes("addEventListener('load',syncTop,{once:true})")||runtime.includes('syncTop();'))fail('Deferred back-to-top visibility contract drift');
+if(!runtime.includes("top.hidden=scrollY<800")||!runtime.includes("hero=d.querySelector('.entity-hero')")||!runtime.includes("const topObserver=new IntersectionObserver")||!runtime.includes("top.hidden=entry.isIntersecting")||!runtime.includes("topObserver.observe(hero)")||!runtime.includes("else addEventListener('scroll',syncTop,{passive:true})")||runtime.includes("addEventListener('load',syncTop")||runtime.includes('syncTop();'))fail('Observer-driven back-to-top visibility contract drift');
 for(const [binding,label] of [['href={site.telHref}','تماس'],['href={site.chatUrl}','چت با دکتر قزلباش'],['href={site.directionsUrl}','مسیریابی']])if(!quick.includes(binding))fail(`Floating CTA canonical binding drift: ${label}`);
 const floating=[...quick.matchAll(/<a\b([^>]*)>[\s\S]*?<\/a>/g)]
   .filter(match=>((match[1].match(/\bclass=["']([^"']+)["']/i)||[])[1]||'').split(/\s+/).includes('quick-actions__item'))
@@ -48,7 +48,7 @@ console.log(JSON.stringify({
   criticalCtas:'PASS',
   hero:heroContract.map(item=>item.label),
   floating:['تماس','چت با دکتر قزلباش','مسیریابی'],
-  backToTop:'HIDDEN_UNTIL_800PX_SCROLL',
+  backToTop:'HIDDEN_UNTIL_HERO_EXIT',
   directionsPlaceId:release.clinic.placeId,
   contactAuthority:'release+canonical-graph',
   validationSurface:'assembled-canonical-content',
