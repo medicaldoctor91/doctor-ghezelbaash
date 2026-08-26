@@ -235,6 +235,7 @@
         "@type",
         "name",
         "headline",
+        "image",
         "url",
         "sameAs",
         "author",
