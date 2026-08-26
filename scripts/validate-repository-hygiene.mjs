@@ -24,6 +24,7 @@ const [npmrc,packageJson]=await Promise.all([
 ]);
 if(!/^audit=true$/m.test(npmrc)||/^audit=false$/m.test(npmrc))throw new Error('npm advisory reporting must remain enabled');
 if(packageJson.scripts?.['audit:dependencies']!=='npm audit --audit-level=high')throw new Error('High-severity dependency advisory gate drift');
+if(packageJson.overrides?.nanoid!=='3.3.18')throw new Error('Patched nanoid override drift');
 
 for(const name of tracked){
   const normalized=name.replaceAll('\\','/');
