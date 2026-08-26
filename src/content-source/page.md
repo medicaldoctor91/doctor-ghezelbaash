@@ -78,6 +78,16 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </li>
 </ol>
 </nav>
+<aside aria-labelledby="video-library-title" class="quick-start" id="video-library">
+<p id="video-library-title"><strong>ویدئوهای آموزشی و تجربه مراجع دکتر سعید قزلباش در همین راهنما</strong></p>
+<p>هر ویدئو کنار متن و زمینه بالینی مرتبط خودش قرار گرفته است؛ برای رفتن مستقیم به ویدئو، موضوع را انتخاب کنید.</p>
+<nav aria-label="دسترسی مستقیم به ویدئوهای دکتر سعید قزلباش">
+<a href="#video-saeed-ghezelbash-subcision-technique">تکنیک صحیح سابسیژن</a>
+<a href="#video-saeed-ghezelbash-jalupro-vs-profhilo">جالپرو یا پروفایلو</a>
+<a href="#video-saeed-ghezelbash-thread-lift-workshop">ورکشاپ لیفت نخ</a>
+<a href="#video-saeed-ghezelbash-kurdish-patient-review">تجربه مراجع کُرد</a>
+</nav>
+</aside>
 <section aria-labelledby="diagnosis-before-aesthetic-treatment-selection-heading" class="content-section" id="diagnosis-before-aesthetic-treatment-selection" itemid="https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">
 <h2 id="diagnosis-before-aesthetic-treatment-selection-heading" itemprop="name">انتخاب درمان زیبایی؛ اول علت را پیدا کنید، بعد اسم روش را بیاورید</h2>
 <p class="section-answer"><strong>من درمان را از اسم مشکل شروع می‌کنم، نه از اسم روش.</strong> اول مشخص می‌کنم چه ساختاری عامل اصلی ظاهر فعلی است؛ بعد تازه معلوم می‌شود تزریق، درمان پوست، روش ترکیبی، جراحی یا حتی عدم مداخله کدام‌یک منطقی است. اگر علت اصلی را پیدا نکرده‌ایم، هنوز برای انتخاب ابزار زود است.</p>
