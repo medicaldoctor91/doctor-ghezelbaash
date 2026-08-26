@@ -51,54 +51,6 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
           npm run build
-      - name: Resolve current authority release
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "CURRENT_VERSION=$(node -p \"require('./src/data/release.json').release\")" >> "$GITHUB_ENV"
-          echo "CURRENT_RECORD=$(node -p \"require('./src/data/release.json').dataset.zenodo.recordId\")" >> "$GITHUB_ENV"
-          echo "CURRENT_DOI=$(node -p \"require('./src/data/release.json').dataset.zenodo.versionDoi\")" >> "$GITHUB_ENV"
-          echo "CONCEPT_DOI=$(node -p \"require('./src/data/release.json').dataset.zenodo.conceptDoi\")" >> "$GITHUB_ENV"
-          HF_URL="$(node -p \"require('./src/data/release.json').dataset.huggingFace.dataset\")"
-          echo "HF_REPO=${HF_URL#https://huggingface.co/datasets/}" >> "$GITHUB_ENV"
-      - name: Verify immutable Zenodo authority surface
-        env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${ZENODO_TOKEN:-}"
-          echo "::add-mask::$ZENODO_TOKEN"
-          python scripts/zenodo_release.py verify-public \
-            --record "$CURRENT_RECORD" --doi "$CURRENT_DOI" --concept-doi "$CONCEPT_DOI" --version "$CURRENT_VERSION"
-      - name: Prepare Hugging Face from canonical DIST
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -rf .release/huggingface
-          git clone "https://huggingface.co/datasets/$HF_REPO" .release/huggingface
-          node scripts/huggingface.mjs prepare dist .release/huggingface
-          git -C .release/huggingface config user.name ghezelbaash-release-bot
-          git -C .release/huggingface config user.email actions@users.noreply.github.com
-          git -C .release/huggingface add -A
-          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Reconcile release $CURRENT_VERSION authority distribution"
-      - name: Publish Hugging Face convergence
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${HF_TOKEN:-}"
-          echo "::add-mask::$HF_TOKEN"
-          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
-          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main
-          unset HF_AUTH
-      - name: Verify Hugging Face authority surfaces
-        shell: bash
-        run: |
-          set -euo pipefail
-          node scripts/huggingface.mjs verify --profile
-          node scripts/huggingface.mjs verify --viewer
       - name: Converge Cloudflare Pages to canonical Git deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
