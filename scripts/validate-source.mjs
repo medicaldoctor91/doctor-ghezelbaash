@@ -12,11 +12,11 @@ const fail=m=>{throw new Error(m)};
 const arr=v=>Array.isArray(v)?v:(v==null?[]:[v]);
 const id=v=>typeof v==='string'?v:v?.['@id'];
 
-const release=await readJson('src/data/release.json'),releaseInvariants=await readJson('src/data/release-invariants.json'),graph=await readJson('src/data/semantic/knowledge-graph.jsonld'),visible=await readJson('src/data/visible-contract.json'),services=await readJson('src/data/service-registry.json'),answers=await readJson('src/data/answer-registry.json'),authority=await readJson('.release/policy/authority-surface-contract.json'),platform=await readJson('.release/policy/platform-contract.json'),headProfile=await readJson('src/data/semantic/head-profile.json'),hf=authority.surfaces.huggingFace;
+const release=await readJson('src/data/release.json'),releaseInvariants=await readJson('src/data/release-invariants.json'),graph=await readJson('src/data/semantic/knowledge-graph.jsonld'),visible=await readJson('src/data/visible-contract.json'),services=await readJson('src/data/service-registry.json'),answers=await readJson('src/data/answer-registry.json'),authority=await readJson('.release/policy/authority-surface-contract.json'),platform=await readJson('.release/policy/platform-contract.json'),headProfile=await readJson('src/data/semantic/head-profile.json'),supportProfile=await readJson('src/data/semantic/support-profile.json'),hf=authority.surfaces.huggingFace;
 
 const requiredFiles=[
   'CITATION.cff','codemeta.json','src/content-source/page.md','src/layouts/BaseLayout.astro','src/lib/css-delivery.mjs','src/lib/css-source.mjs','src/lib/google-semantic-html.mjs','src/lib/semantic-projection.mjs','src/lib/hero-image-contract.mjs','src/lib/release-tokens.mjs',
-  'src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
+  'src/data/semantic/head-ids.json','src/data/semantic/head-profile.json','src/data/semantic/support-ids.json','src/data/semantic/support-profile.json','src/data/semantic/shapes.ttl','src/data/evidence-registry.json','src/data/evidence-snapshot.json','src/data/volatile-facts.json','src/data/render-calibration.json',
   '.release/policy/platform-contract.json','.release/policy/authority-surface-contract.json','scripts/lib/css-rules.mjs','scripts/lib/graph-integrity.mjs','scripts/lib/release-graph.mjs','scripts/lib/projection-context.mjs',
   'scripts/lib/core-entity-identity.mjs',
   'scripts/lib/projections/page-assets.mjs','scripts/lib/projections/graph-projections.mjs','scripts/lib/projections/semantic-corpus.mjs','scripts/lib/projections/retrieval-corpus.mjs','scripts/lib/projections/contact-discovery.mjs',
@@ -129,6 +129,13 @@ const headIds=await readJson('src/data/semantic/head-ids.json'),personHeadProfil
 const semanticProjection=await readSource('src/lib/semantic-projection.mjs');
 if(headProfile.maxBytes!==releaseInvariants.maxHeadGraphBytes)fail('Head profile byte ceiling drift from release invariant');
 if(!Array.isArray(personHeadProfile?.include)||!personHeadProfile.include.includes('memberOf')||!Array.isArray(personHeadProfile?.refAllow?.memberOf))fail('Head Person membership projection policy incomplete');
+const googleProjectionProfiles=[
+  ...Object.entries(headProfile.nodes||{}).map(([key,profile])=>[`head:${key}`,profile]),
+  ...Object.entries(supportProfile.typeProfiles||{}).map(([key,profile])=>[`support:type:${key}`,profile]),
+  ...Object.entries(supportProfile.idProfiles||{}).map(([key,profile])=>[`support:id:${key}`,profile]),
+];
+const reversePageProjectionPolicies=googleProjectionProfiles.filter(([,profile])=>arr(profile?.include).includes('mainEntityOfPage')).map(([key])=>key);
+if(supportProfile.mode!=='projected'||reversePageProjectionPolicies.length)fail(`Google projection must keep ProfilePage top-level; mode=${supportProfile.mode}, reverse mainEntityOfPage policy=${reversePageProjectionPolicies.join(', ')||'none'}`);
 if(!graphCompiler.includes("import {projectNode} from '../../../src/lib/semantic-projection.mjs'")||!graphCompiler.includes('headNodes.push(projectNode(node,headProfile.nodes?.[id]))')||!semanticProjection.includes('allow.includes(id)'))fail('Head graph compiler no longer enforces the shared declarative Head profile');
 for(const [organizationId] of fullGraphOnlyMemberships)if(headIds.includes(organizationId)||allowedHeadMemberships.has(organizationId))fail(`Full-graph-only membership admitted by Head source policy ${organizationId}`);
 
@@ -184,4 +191,4 @@ const {cssSource:assembledCss,calibration}=assembleCssSource(authoredCss,renderC
 if(calibration.widths.join(',')!==RENDER_CALIBRATION_WIDTHS.join(',')||calibration.chunkCount!==renderChunkIds.length)fail('Render calibration shared contract drift');
 if(!assembledCss.includes(`/*DIST_CHUNK_CALIBRATION_SHA256:${calibration.sha256}*/`)||(assembledCss.match(/#[A-Za-z][\w:-]*\{--cis:/g)||[]).length!==calibration.ruleCount)fail('In-memory render calibration assembly drift');
 
-console.log(JSON.stringify({stage:'SOURCE_SEMANTIC_CONTRACT',release:release.release,services:registered.size,answers:answers.answers.length,protectedAggressiveHeadings:visible.protected.aggressiveHeadings.length,protectedInstagramHeadings:visible.protected.instagramHeadingLinks.length,renderChunks:renderChunkIds.length,canonicalWriterTopology:'PASS',projectionCompilerTopology:'PASS',platformContract:'PASS',authoritySurfaceContract:'PASS',coreWikidataOwnership:'PASS',headProjectionPolicy:'SOURCE_VALIDATED',generatedFilePrerequisite:'NONE',buildSourceMutation:'FORBIDDEN',descriptorWriterPhases:['source-input','dist-final'],integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'SOURCE_SEMANTIC_CONTRACT',release:release.release,services:registered.size,answers:answers.answers.length,protectedAggressiveHeadings:visible.protected.aggressiveHeadings.length,protectedInstagramHeadings:visible.protected.instagramHeadingLinks.length,renderChunks:renderChunkIds.length,canonicalWriterTopology:'PASS',projectionCompilerTopology:'PASS',googleForwardPageTopology:'PASS',platformContract:'PASS',authoritySurfaceContract:'PASS',coreWikidataOwnership:'PASS',headProjectionPolicy:'SOURCE_VALIDATED',generatedFilePrerequisite:'NONE',buildSourceMutation:'FORBIDDEN',descriptorWriterPhases:['source-input','dist-final'],integrity:'PASS'},null,2));

@@ -16,7 +16,6 @@
         "followup",
         "status",
         "url",
-        "mainEntityOfPage",
         "provider",
         "performer",
         "about",
@@ -81,7 +80,6 @@
         "inLanguage",
         "author",
         "reviewedBy",
-        "mainEntityOfPage",
         "about",
         "step"
       ]
@@ -105,8 +103,7 @@
         "acceptedAnswer",
         "about",
         "url",
-        "inLanguage",
-        "mainEntityOfPage"
+        "inLanguage"
       ]
     },
     "Answer": {
@@ -118,8 +115,7 @@
         "url",
         "inLanguage",
         "author",
-        "reviewedBy",
-        "mainEntityOfPage"
+        "reviewedBy"
       ]
     },
     "VideoObject": {
@@ -137,7 +133,6 @@
         "creator",
         "publisher",
         "copyrightHolder",
-        "mainEntityOfPage",
         "url",
         "sameAs",
         "identifier",
@@ -172,7 +167,6 @@
         "creator",
         "copyrightHolder",
         "representativeOfPage",
-        "mainEntityOfPage",
         "license",
         "acquireLicensePage",
         "creditText",
@@ -268,8 +262,7 @@
         "unitText",
         "observationDate",
         "about",
-        "measurementTechnique",
-        "mainEntityOfPage"
+        "measurementTechnique"
       ]
     },
     "Offer": {

@@ -110,6 +110,8 @@ const pageMicrodata=
   googlePageMicrodata.itemType==='https://schema.org/ProfilePage'&&
   googlePageMicrodata.mainEntityItemType==='https://schema.org/Person'&&
   googlePageMicrodata.mainEntityId===personId&&
+  graphRef(person.mainEntityOfPage)===webpageId&&
+  !Object.hasOwn(projectedPerson,'mainEntityOfPage')&&
   exactSet(new Set(googlePageMicrodata.mainEntityProperties),new Set(['mainEntity','author','publisher','reviewedBy','about']))&&
   !pageLinkProperties.get('author')?.has(personId)&&
   !pageLinkProperties.get('publisher')?.has(personId)&&
@@ -186,4 +188,4 @@ if(!graphHowToValid)fail('HowTo graph-to-visible-diagnostic-content contract dri
 const headerLandmark=/<header\b[^>]*\baria-labelledby=["']saeed-ghezelbash["']/i.test(body),navigationLandmark=/<nav\b[^>]*\bid=["']aesthetic-medicine-table-of-contents["']/i.test(body);
 if(!pageMicrodata||!personMicrodata||!searchSemantics||!headerLandmark||!navigationLandmark)fail(`Entity Home/Article/Header/Nav/Search semantic contract drift: page=${pageMicrodata} person=${personMicrodata} search=${searchSemantics} header=${headerLandmark} nav=${navigationLandmark}`);
 
-console.log(JSON.stringify({stage:'SEMANTIC_HTML',h1:1,h2:headings.filter(item=>item.level===2).length,headings:headings.length,sections:sections.length,details:details.length,figures:(body.match(/<figure\b/gi)||[]).length,images:(body.match(/<img\b/gi)||[]).length,duplicateIds:0,brokenFragments:0,headingJumps:0,verifiedIdentity:'PASS',entityHomeMicrodata:'PASS',inlineProfilePages:1,medicalReviewParity:'PASS',articleLandmark:'PASS',mainContentProjections:projectedMainContentIds.size,howToSteps:expectedStepIds.length,howToGraphProjection:'PASS',mediaGraphBridges:mediaBridges.length,mediaCaptionBindings:mediaBridges.filter(item=>item.caption).length,searchLandmark:'PASS',landmarks:'PASS',integrity:'PASS'},null,2));
+console.log(JSON.stringify({stage:'SEMANTIC_HTML',h1:1,h2:headings.filter(item=>item.level===2).length,headings:headings.length,sections:sections.length,details:details.length,figures:(body.match(/<figure\b/gi)||[]).length,images:(body.match(/<img\b/gi)||[]).length,duplicateIds:0,brokenFragments:0,headingJumps:0,verifiedIdentity:'PASS',entityHomeMicrodata:'PASS',googleForwardPageTopology:'PASS',inlineProfilePages:1,medicalReviewParity:'PASS',articleLandmark:'PASS',mainContentProjections:projectedMainContentIds.size,howToSteps:expectedStepIds.length,howToGraphProjection:'PASS',mediaGraphBridges:mediaBridges.length,mediaCaptionBindings:mediaBridges.filter(item=>item.caption).length,searchLandmark:'PASS',landmarks:'PASS',integrity:'PASS'},null,2));
