@@ -1,6 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {applyCurrentReleaseMetadata,releaseHistoryNodeId} from './lib/release-graph.mjs';
 import {commitTextFiles} from './lib/file-transaction.mjs';
+import {canonicalizeRdfDocument} from './lib/rdf-measurement.mjs';
 
 const args=Object.fromEntries(process.argv.slice(2).map(x=>{const [k,...v]=x.replace(/^--/,'').split('=');return [k,v.join('=')]}));
 const readJson=async file=>JSON.parse(await readFile(file,'utf8'));
@@ -13,12 +14,13 @@ const replaceExactly=(source,pattern,replacement,label)=>{
 };
 const dryRun=args['dry-run']==='true'||args['dry-run']==='1';
 
-const [release,pkg,lock,volatile,evidenceSnapshot,graph,citationSource,codemeta]=await Promise.all([
+const [release,pkg,lock,volatile,evidenceSnapshot,invariants,graph,citationSource,codemeta]=await Promise.all([
   readJson('src/data/release.json'),
   readJson('package.json'),
   readJson('package-lock.json'),
   readJson('src/data/volatile-facts.json'),
   readJson('src/data/evidence-snapshot.json'),
+  readJson('src/data/release-invariants.json'),
   readJson('src/data/semantic/knowledge-graph.jsonld'),
   readFile('CITATION.cff','utf8'),
   readJson('codemeta.json'),
@@ -122,6 +124,12 @@ for(const h of z.releaseHistory){
 }
 dataset.citation=z.releaseHistory.map(h=>({'@id':releaseHistoryNodeId(release.canonicalUrl,h.release)}));
 
+// Release-derived RDF measurements are recomputed from the exact promoted graph.
+// This prevents a stale hand-maintained triple invariant from blocking or mis-describing a release.
+const rdfMeasurement=await canonicalizeRdfDocument(graph);
+invariants.externalRdfTripleCount=rdfMeasurement.triples;
+must(invariants.contractClasses?.releaseDerivedMeasurements?.rdfTripleCountField==='externalRdfTripleCount','RDF release-derived invariant contract drift');
+
 let citation=citationSource;
 citation=replaceExactly(citation,/^version: .+$/m,`version: ${next.release}`,'CITATION version');
 citation=replaceExactly(citation,/^date-released: .+$/m,`date-released: ${next.date}`,'CITATION release date');
@@ -140,15 +148,16 @@ const writes=[
   {file:'package-lock.json',content:json(lock)},
   {file:'src/data/volatile-facts.json',content:json(volatile)},
   {file:'src/data/evidence-snapshot.json',content:json(evidenceSnapshot)},
+  {file:'src/data/release-invariants.json',content:json(invariants)},
   {file:'src/data/semantic/knowledge-graph.jsonld',content:json(graph)},
   {file:'CITATION.cff',content:citation},
   {file:'codemeta.json',content:json(codemeta)},
 ];
 
 if(dryRun){
-  console.log(JSON.stringify({promoted:false,dryRun:true,prepared:true,from:old,to:next,conceptDoi:z.conceptDoi,history:z.releaseHistory,releaseBoundNodes:releaseBound.length,files:writes.map(x=>x.file)},null,2));
+  console.log(JSON.stringify({promoted:false,dryRun:true,prepared:true,from:old,to:next,conceptDoi:z.conceptDoi,history:z.releaseHistory,releaseBoundNodes:releaseBound.length,externalRdfTripleCount:rdfMeasurement.triples,files:writes.map(x=>x.file)},null,2));
   process.exit(0);
 }
 
 const transaction=await commitTextFiles(writes);
-console.log(JSON.stringify({promoted:true,transactional:true,transactionId:transaction.transactionId,from:old,to:next,conceptDoi:z.conceptDoi,history:z.releaseHistory,releaseBoundNodes:releaseBound.length,files:transaction.committed},null,2));
+console.log(JSON.stringify({promoted:true,transactional:true,transactionId:transaction.transactionId,from:old,to:next,conceptDoi:z.conceptDoi,history:z.releaseHistory,releaseBoundNodes:releaseBound.length,externalRdfTripleCount:rdfMeasurement.triples,files:transaction.committed},null,2));
