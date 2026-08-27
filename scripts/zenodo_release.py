@@ -71,15 +71,51 @@ def sanitize_metadata(md):
     for k in ['publication_type','image_type','doi','embargo_date','access_conditions']: md.pop(k,None)
     return md
 
+def compatible_draft(args,token,baseline):
+    """Return exactly one matching unpublished target-version draft, or None.
+
+    A failed transaction may already have reserved the next DOI. Reusing that exact
+    draft is required for idempotency and avoids creating parallel Zenodo versions.
+    Matching is intentionally strict and fail-closed.
+    """
+    rows=call(token,'GET',f'{BASE}/deposit/depositions?status=draft&sort=mostrecent&size=100')
+    if isinstance(rows,dict): rows=rows.get('hits',{}).get('hits',[]) if isinstance(rows.get('hits'),dict) else rows.get('hits',[])
+    if not isinstance(rows,list): raise RuntimeError('Unexpected Zenodo draft listing response')
+    release=load_release(); expected_title=release['dataset']['name']; expected_orcid=release['primaryEntity']['orcid']
+    baseline_concept=str(baseline.get('conceptrecid') or '')
+    concept_marker=f'Concept DOI {args.concept_doi}'
+    matches=[]
+    for row in rows:
+        if row.get('submitted') is True: continue
+        md=row.get('metadata') or {}; prere=md.get('prereserve_doi') or {}
+        if md.get('version')!=args.version or md.get('title')!=expected_title: continue
+        if not any((creator or {}).get('orcid')==expected_orcid for creator in (md.get('creators') or [])): continue
+        doi=prere.get('doi'); record=str(row.get('id') or '')
+        if not record or not doi or str(prere.get('recid') or record)!=record or not doi.startswith('10.5281/zenodo.'): continue
+        row_concept=str(row.get('conceptrecid') or '')
+        if baseline_concept and row_concept and row_concept!=baseline_concept: continue
+        keywords=md.get('keywords') or []; notes=str(md.get('notes') or '')
+        if concept_marker not in keywords and args.concept_doi not in notes: continue
+        matches.append(row)
+    if len(matches)>1: raise RuntimeError(f'Multiple compatible Zenodo drafts found for release {args.version}; refusing ambiguity')
+    return matches[0] if matches else None
+
 def reserve(args,token):
     # Read-only proof of the immutable baseline. Never unlock/edit/publish the prior version here.
     public=call(token,'GET',f'{BASE}/records/{args.current_record}')
     if public.get('doi')!=args.current_doi: raise RuntimeError('Current public Zenodo DOI mismatch')
     if (public.get('metadata') or {}).get('version')!=args.current_version: raise RuntimeError('Current public Zenodo version mismatch')
-    result=call(token,'POST',f'{BASE}/deposit/depositions/{args.current_record}/actions/newversion')
-    draft_url=(result.get('links') or {}).get('latest_draft')
-    if not draft_url: raise RuntimeError('Zenodo newversion did not return latest_draft')
-    draft=call(token,'GET',draft_url)
+    draft=compatible_draft(args,token,public)
+    if draft is None:
+        result=call(token,'POST',f'{BASE}/deposit/depositions/{args.current_record}/actions/newversion')
+        draft_url=(result.get('links') or {}).get('latest_draft')
+        if not draft_url: raise RuntimeError('Zenodo newversion did not return latest_draft')
+        draft=call(token,'GET',draft_url)
+    else:
+        record=str(draft.get('id'))
+        draft_url=(draft.get('links') or {}).get('self') or f'{BASE}/deposit/depositions/{record}'
+        draft=call(token,'GET',draft_url)
+        print(json.dumps({'stage':'DOI_RESERVATION_RESUMED','release':args.version,'recordId':record},separators=(',',':')))
     if draft.get('submitted') is True: raise RuntimeError('Latest draft is already submitted')
     record=str(draft.get('id'))
     md=sanitize_metadata(draft.get('metadata'))
@@ -92,7 +128,7 @@ def reserve(args,token):
     if not doi or recid!=record or not doi.startswith('10.5281/zenodo.'):
         raise RuntimeError('Zenodo DOI reservation mismatch')
     md=sanitize_metadata(draft.get('metadata')); md.update(metadata(args.version,args.date,doi,args.concept_doi))
-    updated=call(token,'PUT',draft_url,json.dumps({'metadata':md},ensure_ascii=False).encode())
+    call(token,'PUT',draft_url,json.dumps({'metadata':md},ensure_ascii=False).encode())
     verify=call(token,'GET',draft_url); vmd=verify.get('metadata') or {}; vpre=vmd.get('prereserve_doi') or {}
     if verify.get('submitted') is True or str(verify.get('id'))!=record or vpre.get('doi')!=doi or vmd.get('version')!=args.version or vmd.get('publication_date')!=args.date:
         raise RuntimeError('Reserved Zenodo draft readback drift')
