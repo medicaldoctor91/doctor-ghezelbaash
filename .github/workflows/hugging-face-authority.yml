@@ -123,7 +123,7 @@ jobs:
       - name: Verify current Zenodo surface
         if: steps.release.outputs.mode == 'current'
         env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
         shell: bash
         run: |
           set -euo pipefail
@@ -178,7 +178,7 @@ jobs:
       - name: Create or resume release candidate source
         if: steps.release.outputs.mode == 'new'
         env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
         shell: bash
         run: |
           set -euo pipefail
@@ -278,7 +278,7 @@ jobs:
       - name: Stage immutable Zenodo candidate
         if: steps.release.outputs.mode == 'new'
         env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
         shell: bash
         run: |
           set -euo pipefail
@@ -298,7 +298,7 @@ jobs:
       - name: Publish immutable Zenodo release
         if: steps.release.outputs.mode == 'new'
         env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
         shell: bash
         run: |
           set -euo pipefail
@@ -355,7 +355,7 @@ jobs:
       - name: Verify published Zenodo release truth
         if: steps.release.outputs.mode == 'new'
         env:
-          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
         shell: bash
         run: |
           set -euo pipefail
