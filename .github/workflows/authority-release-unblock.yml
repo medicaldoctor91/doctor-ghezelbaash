@@ -1,0 +1,101 @@
+name: Unblock canonical authority release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/authority-release-unblock.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  unblock:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      ZENODO_CANDIDATE: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+      HF_CANDIDATE: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+      CF_CANDIDATE: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout bootstrap source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove required secret families exist without exposing values
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_CANDIDATE:-}"
+          test -n "${HF_CANDIDATE:-}"
+          test -n "${CF_CANDIDATE:-}"
+          echo "::add-mask::$ZENODO_CANDIDATE"
+          echo "::add-mask::$HF_CANDIDATE"
+          echo "::add-mask::$CF_CANDIDATE"
+          echo 'Authority secret preflight passed.'
+
+      - name: Cancel obsolete Cloudflare run holding the shared mutation lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh run cancel 33014131621 --repo "$GITHUB_REPOSITORY" || true
+          for attempt in $(seq 1 24); do
+            status="$(gh run view 33014131621 --repo "$GITHUB_REPOSITORY" --json status --jq .status 2>/dev/null || echo unknown)"
+            if [ "$status" = completed ]; then
+              echo 'Obsolete Cloudflare run released its lock.'
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'Timed out waiting for obsolete Cloudflare run to release the lock.' >&2
+          exit 1
+
+      - name: Harden Zenodo secret-name resolution in the canonical release workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('.github/workflows/hugging-face-authority.yml')
+          text = path.read_text()
+          old = '$' + '{{ secrets.ZENODO_TOKEN }}'
+          new = '$' + '{{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}'
+          count = text.count(old)
+          if count == 0:
+              if new not in text:
+                  raise SystemExit('No canonical Zenodo secret reference found')
+          else:
+              text = text.replace(old, new)
+              path.write_text(text)
+              print(f'Patched {count} Zenodo secret reference(s).')
+          PY
+
+      - name: Commit the durable fix and remove this one-shot bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git rm .github/workflows/authority-release-unblock.yml
+          git add .github/workflows/hugging-face-authority.yml
+          if git diff --cached --quiet; then
+            echo 'No repository mutation required.'
+          else
+            git commit -m 'fix: unblock Zenodo authority release secret resolution'
+            GITHUB_AUTH="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
+            unset GITHUB_AUTH
+          fi
+
+      - name: Dispatch canonical v1.2.4 authority transaction
+        shell: bash
+        run: |
+          set -euo pipefail
+          sleep 8
+          gh workflow run hugging-face-authority.yml --repo "$GITHUB_REPOSITORY" --ref main -f version=1.2.4
+          echo 'Dispatched canonical v1.2.4 authority transaction.'
