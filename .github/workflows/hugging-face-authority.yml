@@ -211,6 +211,7 @@ jobs:
           set -euo pipefail
           if [ "$CANDIDATE_NEEDS_COMMIT" = true ]; then
             npm run validate:release-contract
+            npm run prepare:generated
             npm run validate:source
             git config user.name ghezelbaash-release-bot
             git config user.email actions@users.noreply.github.com
