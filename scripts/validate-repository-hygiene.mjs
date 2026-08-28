@@ -52,7 +52,6 @@ const allowedWorkflows=[
   '.github/workflows/cloudflare-pages-deploy.yml',
   '.github/workflows/github-pages-bridge.yml',
   '.github/workflows/hugging-face-authority.yml',
-  '.github/workflows/reconcile-published-v1.2.4.yml',
   '.github/workflows/reputation-refresh.yml',
   '.github/workflows/stack-monitor.yml',
 ];

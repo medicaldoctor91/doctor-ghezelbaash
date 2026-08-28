@@ -7,7 +7,7 @@ import {mkdtemp,readFile,rm,writeFile} from 'node:fs/promises';
 const run=(cwd,args)=>execFileSync('git',args,{cwd,encoding:'utf8'}).trim();
 const workflow=await readFile('.github/workflows/hugging-face-authority.yml','utf8');
 const cloudflare=await readFile('.github/workflows/cloudflare-pages-deploy.yml','utf8');
-const recovery=await readFile('.github/workflows/reconcile-published-v1.2.4.yml','utf8');
+const stackMonitor=await readFile('.github/workflows/stack-monitor.yml','utf8');
 const huggingFace=await readFile('scripts/huggingface.mjs','utf8');
 const retiredDatasetId=['Q140','304972'].join('');
 
@@ -16,20 +16,13 @@ assert.match(workflow,/push --atomic origin HEAD:main "refs\/tags\/v\$RELEASE_TA
 assert.doesNotMatch(workflow,/push origin HEAD:main\s*\n\s*if git ls-remote/);
 assert.doesNotMatch(cloudflare,/configure-cloudflare-edge\.py\s+\\\s*\n\s*--apply\b/);
 assert.match(cloudflare,/--purge-cache-only/);
-for(const token of [
-  'dccd90c75c4604bd2f188b958eff3fa9dfb8d347',
-  '28f0eee13c813642af369281b0f42cf7ab2ee8ea',
-  'ef2333a9a2b9c5d2a2df757d7c42357c77eff659',
-  '10.5281/zenodo.22131441',
-  'git merge-base --is-ancestor "$RECOVERY_SOURCE_SHA" HEAD',
-])assert.ok(recovery.includes(token),`Recovery workflow missing ${token}`);
-assert.ok(recovery.includes('RECOVERY_HF_BASE_SHA'), 'Recovery must treat the historical HF candidate as a core baseline');
-assert.ok(recovery.includes('HF_FROZEN_SHA'), 'Recovery must bind the clean derived HF tag');
-assert.ok(recovery.includes('huggingface.mjs sanitize'), 'Recovery must sanitize HF enrichment before tagging and promotion');
+assert.match(stackMonitor,/on:\s*\n\s+push:\s*\n\s+branches: \[main\]/);
+assert.ok(stackMonitor.includes("if: github.event_name != 'push'"), 'Push reconciliation must not mutate the first-party edge');
+assert.ok(stackMonitor.includes('huggingface.mjs sanitize'), 'Push reconciliation must enforce the HF full-tree retired-identifier gate');
 assert.ok(huggingFace.includes("['Q140','304972'].join('')"), 'HF sanitizer must construct the retired identifier without publishing it literally');
 assert.ok(huggingFace.includes('assertNoRetiredDatasetId(hub)'), 'HF preparation must enforce the full-tree retired-identifier gate');
-assert.ok(!recovery.includes(retiredDatasetId), 'Recovery workflow republishes the retired identifier literally');
 assert.ok(!huggingFace.includes(retiredDatasetId), 'HF sanitizer republishes the retired identifier literally');
+assert.throws(()=>run(process.cwd(),['grep','-n','--',retiredDatasetId]), 'Tracked source republishes the retired identifier literally');
 
 const dir=await mkdtemp(path.join(os.tmpdir(),'ghezelbaash-release-topology-'));
 try{
