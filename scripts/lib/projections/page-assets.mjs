@@ -11,8 +11,8 @@ export async function compilePageAssets(context){
   const publicProjection=projectPublicContent(assembled.content);
   await mkdir(generatedContent,{recursive:true});
   await Promise.all([
-    writeFile(path.join(generatedContent,'home.md'),publicProjection.content),
-    writeFile(path.join(generatedContent,'canonical-page-corpus.md'),assembled.content),
+    writeFile(path.join(generatedContent,'home.md'),assembled.content),
+    writeFile(path.join(generatedContent,'public-home.md'),publicProjection.content),
   ]);
 
   const [authoredCss,renderCalibrationRaw]=await Promise.all([
@@ -28,5 +28,5 @@ export async function compilePageAssets(context){
     if(/^site\.[0-9a-f]{12}\.css$/.test(name)&&name!==assetName)await unlink(path.join(generatedAssets,name));
   }
   await writeFile(path.join(generatedAssets,assetName),externalCss);
-  return {home:publicProjection.content,corpusHome:assembled.content,publicProjection:publicProjection.stats,externalCssAssetName:assetName,calibration};
+  return {home:assembled.content,publicHome:publicProjection.content,publicProjection:publicProjection.stats,externalCssAssetName:assetName,calibration};
 }
