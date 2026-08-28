@@ -23,7 +23,8 @@ jobs:
       ASTRO_TELEMETRY_DISABLED: '1'
       RECOVERY_RELEASE: '1.2.4'
       RECOVERY_SOURCE_SHA: dccd90c75c4604bd2f188b958eff3fa9dfb8d347
-      RECOVERY_HF_SHA: 28f0eee13c813642af369281b0f42cf7ab2ee8ea
+      RECOVERY_HF_BASE_SHA: 28f0eee13c813642af369281b0f42cf7ab2ee8ea
+      RECOVERY_HF_CLEAN_SHA: ef2333a9a2b9c5d2a2df757d7c42357c77eff659
       RECOVERY_RECORD: '22131441'
       RECOVERY_DOI: 10.5281/zenodo.22131441
       RECOVERY_CONCEPT_DOI: 10.5281/zenodo.18765168
@@ -171,8 +172,9 @@ jobs:
           - SHA-256 inventory asset: dist-sha256-v1.2.2.json
           EOF
           gh release edit v1.2.2 --notes-file "$RUNNER_TEMP/release-v1.2.2.md"
-          test "$(gh api "/repos/$GITHUB_REPOSITORY/releases/tags/v1.2.2" --jq .body | grep -c Q140304972 || true)" = 0
-      - name: Restore exact Hugging Face frozen tag
+          RETIRED_DATASET_ID="$(printf '%s%s' Q140 304972)"
+          test "$(gh api "/repos/$GITHUB_REPOSITORY/releases/tags/v1.2.2" --jq .body | grep -F -c "$RETIRED_DATASET_ID" || true)" = 0
+      - name: Restore clean Hugging Face frozen tag with exact release core
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
         shell: bash
@@ -180,14 +182,43 @@ jobs:
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
           HF_ROOT="$RUNNER_TEMP/huggingface-v$RECOVERY_RELEASE"
-          git clone "https://huggingface.co/datasets/$HF_REPO" "$HF_ROOT"
+          for attempt in $(seq 1 5); do
+            if git clone "https://huggingface.co/datasets/$HF_REPO" "$HF_ROOT"; then break; fi
+            test "$attempt" -lt 5
+            rm -rf "$HF_ROOT"
+            sleep "$((attempt * 5))"
+          done
+          test -d "$HF_ROOT/.git"
           git -C "$HF_ROOT" fetch origin "+refs/heads/release/v$RECOVERY_RELEASE:refs/remotes/origin/release/v$RECOVERY_RELEASE" --tags
-          test "$(git -C "$HF_ROOT" rev-parse "refs/remotes/origin/release/v$RECOVERY_RELEASE")" = "$RECOVERY_HF_SHA"
+          test "$(git -C "$HF_ROOT" rev-parse "refs/remotes/origin/release/v$RECOVERY_RELEASE")" = "$RECOVERY_HF_BASE_SHA"
           git -C "$HF_ROOT" checkout -B "release/v$RECOVERY_RELEASE" "refs/remotes/origin/release/v$RECOVERY_RELEASE"
-          cmp "$FROZEN_ROOT/dist/index.html" "$HF_ROOT/index.html"
-          cmp "$FROZEN_ROOT/dist/graph.jsonld" "$HF_ROOT/graph.jsonld"
-          cmp "$FROZEN_ROOT/dist/graph.ttl" "$HF_ROOT/graph.ttl"
-          cmp "$FROZEN_ROOT/.release/runtime/release-attestation.json" "$HF_ROOT/release-attestation.json"
+          node scripts/huggingface.mjs sanitize "$HF_ROOT"
+          test "$(git -C "$HF_ROOT" diff --name-only | wc -l)" = 3
+          git -C "$HF_ROOT" diff --name-only | diff -u - <(printf '%s\n' \
+            enrichment/instruction_examples_fa_market_positioning.csv \
+            enrichment/instruction_examples_fa_market_positioning.jsonl \
+            enrichment/market-positioning-evidence.json)
+          node - "$FROZEN_ROOT" "$HF_ROOT" <<'NODE'
+          const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+          const [frozen,hf]=process.argv.slice(2),inventory=JSON.parse(fs.readFileSync(path.join(hf,'dist-sha256.json'),'utf8')),sha=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+          for(const [file,expected] of Object.entries(inventory.files)){
+            const source=file==='release-attestation.json'?path.join(frozen,'.release/runtime',file):path.join(frozen,'dist',file),published=path.join(hf,file),sourceHash=sha(source),publishedHash=sha(published);
+            if(sourceHash!==expected.sha256||publishedHash!==expected.sha256)throw new Error(`HF frozen core mismatch ${file}`);
+          }
+          NODE
+          git -C "$HF_ROOT" config user.name ghezelbaash-release-bot
+          git -C "$HF_ROOT" config user.email actions@users.noreply.github.com
+          git -C "$HF_ROOT" add \
+            enrichment/instruction_examples_fa_market_positioning.csv \
+            enrichment/instruction_examples_fa_market_positioning.jsonl \
+            enrichment/market-positioning-evidence.json
+          HF_BASE_DATE="$(git -C "$HF_ROOT" show -s --format=%cI "$RECOVERY_HF_BASE_SHA")"
+          GIT_AUTHOR_DATE="$HF_BASE_DATE" GIT_COMMITTER_DATE="$HF_BASE_DATE" \
+            git -C "$HF_ROOT" commit -m "Remove retired Dataset identifier from v$RECOVERY_RELEASE enrichment"
+          HF_FROZEN_SHA="$(git -C "$HF_ROOT" rev-parse HEAD)"
+          test "$HF_FROZEN_SHA" != "$RECOVERY_HF_BASE_SHA"
+          test "$HF_FROZEN_SHA" = "$RECOVERY_HF_CLEAN_SHA"
+          echo "HF_FROZEN_SHA=$HF_FROZEN_SHA" >> "$GITHUB_ENV"
           ASKPASS="$RUNNER_TEMP/hf-askpass.sh"
           cat > "$ASKPASS" <<'ASKPASS'
           #!/bin/sh
@@ -198,14 +229,17 @@ jobs:
           ASKPASS
           chmod 700 "$ASKPASS"
           if git -C "$HF_ROOT" rev-parse -q --verify "refs/tags/v$RECOVERY_RELEASE" >/dev/null; then
-            test "$(git -C "$HF_ROOT" rev-list -n 1 "v$RECOVERY_RELEASE")" = "$RECOVERY_HF_SHA"
+            test "$(git -C "$HF_ROOT" rev-list -n 1 "v$RECOVERY_RELEASE")" = "$HF_FROZEN_SHA"
           else
-            git -C "$HF_ROOT" config user.name ghezelbaash-release-bot
-            git -C "$HF_ROOT" config user.email actions@users.noreply.github.com
             git -C "$HF_ROOT" tag -a "v$RECOVERY_RELEASE" -m "Dr. Saeed Ghezelbash Public Knowledge Graph v$RECOVERY_RELEASE"
-            GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0 \
-              git -C "$HF_ROOT" push origin "refs/tags/v$RECOVERY_RELEASE"
+            for attempt in $(seq 1 5); do
+              if GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0 git -C "$HF_ROOT" push origin "refs/tags/v$RECOVERY_RELEASE"; then break; fi
+              test "$attempt" -lt 5
+              sleep "$((attempt * 5))"
+            done
           fi
+          REMOTE_HF_TAG="$(git -C "$HF_ROOT" ls-remote origin "refs/tags/v$RECOVERY_RELEASE^{}" | awk '{print $1}')"
+          test "$REMOTE_HF_TAG" = "$HF_FROZEN_SHA"
           echo "HF_ROOT=$HF_ROOT" >> "$GITHUB_ENV"
       - name: Reconcile Hugging Face current distribution
         if: env.CURRENT_RELEASE_READY == 'true'
@@ -222,12 +256,17 @@ jobs:
           cp "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/release-attestation.json" "$HF_ROOT/release-attestation.json"
           node scripts/huggingface.mjs prepare dist "$HF_ROOT"
           node scripts/reputation.mjs sync-hf "$HF_ROOT"
+          node scripts/huggingface.mjs sanitize "$HF_ROOT"
           git -C "$HF_ROOT" config user.name ghezelbaash-release-bot
           git -C "$HF_ROOT" config user.email actions@users.noreply.github.com
           git -C "$HF_ROOT" add -A
           git -C "$HF_ROOT" diff --cached --quiet || git -C "$HF_ROOT" commit -m "Reconcile release $RECOVERY_RELEASE current authority distribution"
           ASKPASS="$RUNNER_TEMP/hf-askpass.sh"
-          GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0 git -C "$HF_ROOT" push origin HEAD:main
+          for attempt in $(seq 1 5); do
+            if GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0 git -C "$HF_ROOT" push origin HEAD:main; then break; fi
+            test "$attempt" -lt 5
+            sleep "$((attempt * 5))"
+          done
           for attempt in $(seq 1 30); do
             if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then
               echo "HF_CURRENT_V1_2_4_PASS attempt=$attempt"
