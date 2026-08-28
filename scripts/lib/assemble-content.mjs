@@ -57,6 +57,7 @@ export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
 const PUBLIC_HEADING_TAGS=new Set(['h3','h4','h5','h6']);
 const PUBLIC_ANSWER_TAGS=new Set(['p','ul','ol','table','blockquote']);
 const PUBLIC_MEDIA_TAGS=new Set(['figure','video','audio']);
+const PUBLIC_REQUIRED_CLASSES=new Set(['section-answer','micro-answer']);
 const publicAttrs=node=>Object.fromEntries((node.attrs||[]).map(({name,value})=>[name,value]));
 const publicClasses=node=>new Set(String(publicAttrs(node).class||'').split(/\s+/).filter(Boolean));
 const publicText=node=>node?.nodeName==='#text'?(node.value||''):(node?.childNodes||[]).map(publicText).join(' ');
@@ -64,6 +65,7 @@ const publicId=node=>publicAttrs(node).id||'';
 const publicDescendants=(node,out=[])=>{for(const child of node.childNodes||[]){if(child.tagName)out.push(child);publicDescendants(child,out)}return out};
 const setPublicAttr=(node,name,value)=>{node.attrs=node.attrs||[];const found=node.attrs.find(a=>a.name===name);if(found)found.value=value;else node.attrs.push({name,value})};
 const publicAnchor=id=>({nodeName:'span',tagName:'span',namespaceURI:'http://www.w3.org/1999/xhtml',attrs:[{name:'id',value:id},{name:'class',value:'semantic-alias-anchor'},{name:'aria-hidden',value:'true'}],childNodes:[]});
+const hasRequiredPublicClass=node=>[node,...publicDescendants(node,[])].some(item=>[...publicClasses(item)].some(name=>PUBLIC_REQUIRED_CLASSES.has(name)));
 
 export function projectPublicContent(source){
   const raw=String(source),match=raw.match(/^(---\r?\n[\s\S]*?\r?\n---\r?\n)([\s\S]*)$/);
@@ -75,7 +77,7 @@ export function projectPublicContent(source){
     const children=(chunk.childNodes||[]).filter(child=>child.tagName),keep=[];let followup=0;
     for(const child of children){
       if(PUBLIC_HEADING_TAGS.has(child.tagName)){keep.push(child);followup=2;continue}
-      if(PUBLIC_MEDIA_TAGS.has(child.tagName)){keep.push(child);continue}
+      if(PUBLIC_MEDIA_TAGS.has(child.tagName)||hasRequiredPublicClass(child)){keep.push(child);continue}
       if(child.tagName==='details'&&publicDescendants(child,[]).some(node=>PUBLIC_MEDIA_TAGS.has(node.tagName))){keep.push(child);continue}
       if(followup>0&&PUBLIC_ANSWER_TAGS.has(child.tagName)){keep.push(child);followup-=1}
     }
