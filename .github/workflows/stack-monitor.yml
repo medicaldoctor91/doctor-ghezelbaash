@@ -1,6 +1,8 @@
 name: Canonical stack drift monitor
 
 on:
+  push:
+    branches: [main]
   schedule:
     - cron: '17 5 * * *'
   workflow_dispatch:
@@ -87,10 +89,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf .release/huggingface-monitor
-          git clone --depth=1 "https://huggingface.co/datasets/$HF_REPO" .release/huggingface-monitor
+          for attempt in $(seq 1 5); do
+            rm -rf .release/huggingface-monitor
+            if git clone --depth=1 "https://huggingface.co/datasets/$HF_REPO" .release/huggingface-monitor; then break; fi
+            test "$attempt" -lt 5
+            sleep "$((attempt * 5))"
+          done
           node scripts/huggingface.mjs prepare dist .release/huggingface-monitor
           node scripts/reputation.mjs sync-hf .release/huggingface-monitor
+          node scripts/huggingface.mjs sanitize .release/huggingface-monitor
           git -C .release/huggingface-monitor config user.name ghezelbaash-reputation-bot
           git -C .release/huggingface-monitor config user.email actions@users.noreply.github.com
           git -C .release/huggingface-monitor add -A
@@ -104,7 +111,11 @@ jobs:
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
           HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
-          git -C .release/huggingface-monitor -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main
+          for attempt in $(seq 1 5); do
+            if git -C .release/huggingface-monitor -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main; then break; fi
+            test "$attempt" -lt 5
+            sleep "$((attempt * 5))"
+          done
           unset HF_AUTH
       - name: Verify Hugging Face convergence after reconciliation
         if: steps.hf.outputs.needs_reconcile == 'true'
