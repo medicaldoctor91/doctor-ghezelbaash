@@ -1,6 +1,6 @@
 {
   "redirectsSha256": "6bacaef33c75dab185dd6b4f16ce78bb6095b7629ac17b6c706a459c230b9118",
-  "externalRdfTripleCount": 8711,
+  "externalRdfTripleCount": 8727,
   "maxHtmlBytes": 1950000,
   "maxHeadGraphBytes": 35000,
   "maxSupportGraphBytes": 135000,

@@ -14,8 +14,8 @@
     "Astro"
   ],
   "runtimePlatform": "Node.js 24.19.0",
-  "softwareVersion": "1.2.3",
-  "dateModified": "2026-08-21",
+  "softwareVersion": "1.2.4",
+  "dateModified": "2026-08-27",
   "developmentStatus": "active",
   "author": {
     "@type": "Person",
@@ -27,7 +27,7 @@
     "@type": "Dataset",
     "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
     "name": "Dr. Saeed Ghezelbash Public Knowledge Graph",
-    "version": "1.2.3",
-    "identifier": "https://doi.org/10.5281/zenodo.22032822"
+    "version": "1.2.4",
+    "identifier": "https://doi.org/10.5281/zenodo.22131441"
   }
 }
