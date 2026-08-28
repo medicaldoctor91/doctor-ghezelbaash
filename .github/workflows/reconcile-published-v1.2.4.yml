@@ -1,0 +1,247 @@
+name: Reconcile published v1.2.4 authority snapshot
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/reconcile-published-v1.2.4.yml'
+      - 'src/data/release.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-v1-2-4-recovery
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      ASTRO_TELEMETRY_DISABLED: '1'
+      RECOVERY_RELEASE: '1.2.4'
+      RECOVERY_SOURCE_SHA: dccd90c75c4604bd2f188b958eff3fa9dfb8d347
+      RECOVERY_HF_SHA: 28f0eee13c813642af369281b0f42cf7ab2ee8ea
+      RECOVERY_RECORD: '22131441'
+      RECOVERY_DOI: 10.5281/zenodo.22131441
+      RECOVERY_CONCEPT_DOI: 10.5281/zenodo.18765168
+      HF_REPO: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+      - name: Verify immutable Zenodo identity and source candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin "+refs/heads/release/v$RECOVERY_RELEASE:refs/remotes/origin/release/v$RECOVERY_RELEASE" --tags
+          test "$(git rev-parse "refs/remotes/origin/release/v$RECOVERY_RELEASE")" = "$RECOVERY_SOURCE_SHA"
+          mkdir -p "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE"
+          curl --fail --silent --show-error \
+            "https://zenodo.org/api/records/$RECOVERY_RECORD/files/release-attestation.json/content" \
+            -o "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/release-attestation.json"
+          curl --fail --silent --show-error \
+            "https://zenodo.org/api/records/$RECOVERY_RECORD/files/dist-sha256.json/content" \
+            -o "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/dist-sha256.json"
+          node - "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/release-attestation.json" <<'NODE'
+          const fs=require('node:fs');
+          const a=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          const expected={release:process.env.RECOVERY_RELEASE,sourceCommit:process.env.RECOVERY_SOURCE_SHA,zenodoVersionDoi:process.env.RECOVERY_DOI,zenodoConceptDoi:process.env.RECOVERY_CONCEPT_DOI,zenodoRecordId:process.env.RECOVERY_RECORD,primaryEntity:'Q140287622',clinicEntity:'Q140288589',validation:'PASS'};
+          for(const [key,value] of Object.entries(expected))if(String(a[key])!==String(value))throw new Error(`Zenodo attestation drift ${key}: ${a[key]} != ${value}`);
+          NODE
+          CURRENT_RELEASE="$(node -p "require('./src/data/release.json').release")"
+          if [ "$CURRENT_RELEASE" = "$RECOVERY_RELEASE" ]; then
+            git merge-base --is-ancestor "$RECOVERY_SOURCE_SHA" HEAD
+            echo 'CURRENT_RELEASE_READY=true' >> "$GITHUB_ENV"
+          else
+            test "$CURRENT_RELEASE" = '1.2.3'
+            echo 'CURRENT_RELEASE_READY=false' >> "$GITHUB_ENV"
+          fi
+      - name: Rebuild exact frozen candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          FROZEN_ROOT="$RUNNER_TEMP/github-v$RECOVERY_RELEASE"
+          git worktree add --detach "$FROZEN_ROOT" "$RECOVERY_SOURCE_SHA"
+          npm --prefix "$FROZEN_ROOT" ci
+          CANDIDATE_EPOCH="$(git -C "$FROZEN_ROOT" show -s --format=%ct HEAD)"
+          (
+            cd "$FROZEN_ROOT"
+            export SOURCE_COMMIT="$RECOVERY_SOURCE_SHA" CF_PAGES_COMMIT_SHA="$RECOVERY_SOURCE_SHA" SOURCE_DATE_EPOCH="$CANDIDATE_EPOCH"
+            npm run release
+          )
+          echo "FROZEN_ROOT=$FROZEN_ROOT" >> "$GITHUB_ENV"
+      - name: Prove every Zenodo snapshot byte equals the frozen rebuild
+        shell: bash
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN || secrets.ZENODO_ACCESS_TOKEN || secrets.ZENODO_API_TOKEN || secrets.ZENODO_API_KEY || secrets.ZENODO_PAT }}
+        run: |
+          set -euo pipefail
+          test -n "${ZENODO_TOKEN:-}"; echo "::add-mask::$ZENODO_TOKEN"
+          export SOURCE_COMMIT="$RECOVERY_SOURCE_SHA"
+          (
+            cd "$FROZEN_ROOT"
+            python scripts/zenodo_release.py stage --version "$RECOVERY_RELEASE"
+          )
+          cmp "$FROZEN_ROOT/.release/runtime/release-attestation.json" "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/release-attestation.json"
+          cmp "$FROZEN_ROOT/.release/runtime/dist-sha256.json" "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/dist-sha256.json"
+      - name: Restore exact GitHub frozen tag and Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --tags origin "refs/tags/v$RECOVERY_RELEASE" >/dev/null 2>&1; then
+            git fetch origin "refs/tags/v$RECOVERY_RELEASE:refs/tags/v$RECOVERY_RELEASE"
+            test "$(git rev-parse "v$RECOVERY_RELEASE^{}")" = "$RECOVERY_SOURCE_SHA"
+          else
+            TAG_OBJECT="$(gh api --method POST \
+              -H 'Accept: application/vnd.github+json' \
+              "/repos/$GITHUB_REPOSITORY/git/tags" \
+              -f tag="v$RECOVERY_RELEASE" \
+              -f message="Dr. Saeed Ghezelbash Public Knowledge Graph v$RECOVERY_RELEASE" \
+              -f object="$RECOVERY_SOURCE_SHA" \
+              -f type=commit --jq .sha)"
+            gh api --method POST \
+              -H 'Accept: application/vnd.github+json' \
+              "/repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="refs/tags/v$RECOVERY_RELEASE" \
+              -f sha="$TAG_OBJECT" >/dev/null
+            git fetch origin "refs/tags/v$RECOVERY_RELEASE:refs/tags/v$RECOVERY_RELEASE"
+            test "$(git rev-parse "v$RECOVERY_RELEASE^{}")" = "$RECOVERY_SOURCE_SHA"
+          fi
+          cp "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/release-attestation.json" "$RUNNER_TEMP/release-attestation-v$RECOVERY_RELEASE.json"
+          cp "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/dist-sha256.json" "$RUNNER_TEMP/dist-sha256-v$RECOVERY_RELEASE.json"
+          printf '%s\n' \
+            "Validated synchronized release $RECOVERY_RELEASE." \
+            "" \
+            "- Exact frozen source: $RECOVERY_SOURCE_SHA" \
+            "- Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset" \
+            "- Primary physician: Wikidata Q140287622" \
+            "- Supporting clinic: Wikidata Q140288589" \
+            "- Zenodo Version DOI: $RECOVERY_DOI" \
+            "- Zenodo Concept DOI: $RECOVERY_CONCEPT_DOI" \
+            > "$RUNNER_TEMP/release-v$RECOVERY_RELEASE.md"
+          if gh release view "v$RECOVERY_RELEASE" >/dev/null 2>&1; then
+            gh release edit "v$RECOVERY_RELEASE" \
+              --title "Dr. Saeed Ghezelbash Public Knowledge Graph v$RECOVERY_RELEASE" \
+              --notes-file "$RUNNER_TEMP/release-v$RECOVERY_RELEASE.md"
+          else
+            gh release create "v$RECOVERY_RELEASE" --verify-tag \
+              --title "Dr. Saeed Ghezelbash Public Knowledge Graph v$RECOVERY_RELEASE" \
+              --notes-file "$RUNNER_TEMP/release-v$RECOVERY_RELEASE.md"
+          fi
+          gh release upload "v$RECOVERY_RELEASE" --clobber \
+            "$RUNNER_TEMP/release-attestation-v$RECOVERY_RELEASE.json" \
+            "$RUNNER_TEMP/dist-sha256-v$RECOVERY_RELEASE.json"
+      - name: Remove retired Dataset identifier from historical GitHub Release metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/release-v1.2.2.md" <<'EOF'
+          # Dr. Saeed Ghezelbash Public Knowledge Graph v1.2.2
+
+          - Exact Candidate C: 41b779fae27f1eab4a9cb63fee17d2e6fec0075c
+          - Canonical Dataset IRI: https://www.ghezelbaash.ir/graph.jsonld#dataset
+          - Canonical site: https://www.ghezelbaash.ir/
+          - Person: Wikidata Q140287622
+          - Clinic: Wikidata Q140288589
+          - Zenodo Concept DOI: 10.5281/zenodo.18765168
+          - Zenodo Version DOI: 10.5281/zenodo.21930954
+          - Zenodo record: 21930954
+          - Hugging Face distribution: doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data
+          - Hugging Face frozen release: v1.2.2 at 21f657a7e004fd84ced4853b0180755a0ce5a4f7
+          - Git tag: v1.2.2 → 41b779fae27f1eab4a9cb63fee17d2e6fec0075c
+          - Release attestation asset: release-attestation-v1.2.2.json
+          - SHA-256 inventory asset: dist-sha256-v1.2.2.json
+          EOF
+          gh release edit v1.2.2 --notes-file "$RUNNER_TEMP/release-v1.2.2.md"
+          test "$(gh api "/repos/$GITHUB_REPOSITORY/releases/tags/v1.2.2" --jq .body | grep -c Q140304972 || true)" = 0
+      - name: Restore exact Hugging Face frozen tag
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          HF_ROOT="$RUNNER_TEMP/huggingface-v$RECOVERY_RELEASE"
+          git clone "https://huggingface.co/datasets/$HF_REPO" "$HF_ROOT"
+          git -C "$HF_ROOT" fetch origin "+refs/heads/release/v$RECOVERY_RELEASE:refs/remotes/origin/release/v$RECOVERY_RELEASE" --tags
+          test "$(git -C "$HF_ROOT" rev-parse "refs/remotes/origin/release/v$RECOVERY_RELEASE")" = "$RECOVERY_HF_SHA"
+          git -C "$HF_ROOT" checkout -B "release/v$RECOVERY_RELEASE" "refs/remotes/origin/release/v$RECOVERY_RELEASE"
+          cmp "$FROZEN_ROOT/dist/index.html" "$HF_ROOT/index.html"
+          cmp "$FROZEN_ROOT/dist/graph.jsonld" "$HF_ROOT/graph.jsonld"
+          cmp "$FROZEN_ROOT/dist/graph.ttl" "$HF_ROOT/graph.ttl"
+          cmp "$FROZEN_ROOT/.release/runtime/release-attestation.json" "$HF_ROOT/release-attestation.json"
+          ASKPASS="$RUNNER_TEMP/hf-askpass.sh"
+          cat > "$ASKPASS" <<'ASKPASS'
+          #!/bin/sh
+          case "$1" in
+            *Username*) printf '%s\n' oauth2 ;;
+            *) printf '%s\n' "$HF_TOKEN" ;;
+          esac
+          ASKPASS
+          chmod 700 "$ASKPASS"
+          if git -C "$HF_ROOT" rev-parse -q --verify "refs/tags/v$RECOVERY_RELEASE" >/dev/null; then
+            test "$(git -C "$HF_ROOT" rev-list -n 1 "v$RECOVERY_RELEASE")" = "$RECOVERY_HF_SHA"
+          else
+            git -C "$HF_ROOT" config user.name ghezelbaash-release-bot
+            git -C "$HF_ROOT" config user.email actions@users.noreply.github.com
+            git -C "$HF_ROOT" tag -a "v$RECOVERY_RELEASE" -m "Dr. Saeed Ghezelbash Public Knowledge Graph v$RECOVERY_RELEASE"
+            GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0 \
+              git -C "$HF_ROOT" push origin "refs/tags/v$RECOVERY_RELEASE"
+          fi
+          echo "HF_ROOT=$HF_ROOT" >> "$GITHUB_ENV"
+      - name: Reconcile Hugging Face current distribution
+        if: env.CURRENT_RELEASE_READY == 'true'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run audit:dependencies
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
+          npm run build
+          git -C "$HF_ROOT" checkout -B main origin/main
+          cp "$RUNNER_TEMP/zenodo-v$RECOVERY_RELEASE/release-attestation.json" "$HF_ROOT/release-attestation.json"
+          node scripts/huggingface.mjs prepare dist "$HF_ROOT"
+          node scripts/reputation.mjs sync-hf "$HF_ROOT"
+          git -C "$HF_ROOT" config user.name ghezelbaash-release-bot
+          git -C "$HF_ROOT" config user.email actions@users.noreply.github.com
+          git -C "$HF_ROOT" add -A
+          git -C "$HF_ROOT" diff --cached --quiet || git -C "$HF_ROOT" commit -m "Reconcile release $RECOVERY_RELEASE current authority distribution"
+          ASKPASS="$RUNNER_TEMP/hf-askpass.sh"
+          GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0 git -C "$HF_ROOT" push origin HEAD:main
+          for attempt in $(seq 1 30); do
+            if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then
+              echo "HF_CURRENT_V1_2_4_PASS attempt=$attempt"
+              exit 0
+            fi
+            test "$attempt" -lt 30
+            sleep 10
+          done
+      - name: Verify frozen GitHub, Zenodo and Hugging Face bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C "$FROZEN_ROOT" fetch origin "refs/tags/v$RECOVERY_RELEASE:refs/tags/v$RECOVERY_RELEASE"
+          (
+            cd "$FROZEN_ROOT"
+            node scripts/verify-live.mjs release
+          )

@@ -51,6 +51,16 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
           npm run build
+      - name: Detect release-bound deployment
+        id: release_change
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq src/data/release.json; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          fi
       - name: Converge Cloudflare Pages to canonical Git deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -66,18 +76,20 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/cloudflare-pages.mjs ensure
-      - name: Converge the complete production edge contract
+      - name: Validate edge contract without control-plane mutation
+        run: npm run validate:cloudflare
+      - name: Purge release-sensitive Cloudflare cache
+        if: steps.release_change.outputs.changed == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
           python scripts/configure-cloudflare-edge.py \
-            --apply \
+            --purge-cache-only \
             --outcome edge-reconciliation.json
       - name: Verify exact production serving and sample T+0 discovery
         env:
           CANDIDATE_SHA: ${{ github.sha }}
-          EDGE_RECONCILIATION_OUTCOME: edge-reconciliation.json
         run: |
           set -euo pipefail
           node scripts/cloudflare-pages.mjs verify

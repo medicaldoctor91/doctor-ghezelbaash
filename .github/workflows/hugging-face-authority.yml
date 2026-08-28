@@ -44,10 +44,20 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 24.19.0
-      - name: Verify physician-first Hugging Face authority topology
-        run: node scripts/huggingface.mjs verify --profile
-      - name: Verify Dataset Server viewer contracts
-        run: node scripts/huggingface.mjs verify --viewer
+      - name: Verify physician-first Hugging Face authority topology and viewer contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          attempts=1
+          if [ "$GITHUB_EVENT_NAME" = push ]; then attempts=60; fi
+          for attempt in $(seq 1 "$attempts"); do
+            if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then
+              echo "HF_AUTHORITY_CONVERGED attempt=$attempt"
+              exit 0
+            fi
+            test "$attempt" -lt "$attempts"
+            sleep 10
+          done
 
   release:
     if: github.event_name == 'workflow_dispatch' && inputs.version != ''
@@ -296,6 +306,7 @@ jobs:
           set -euo pipefail
           git fetch origin main
           test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_SHA"
+          git merge-base --is-ancestor "$BASE_SHA" "$CANDIDATE_SHA"
           test "$(git ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$CANDIDATE_SHA"
           test "$(git -C .release/huggingface ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$HF_CANDIDATE_SHA"
           node -e "const s=require('./.release/runtime/zenodo-stage.json');if(s.release!==process.env.RELEASE_TARGET||s.recordId!==process.env.ZENODO_RECORD||s.versionDoi!==process.env.ZENODO_DOI||s.sourceCommit!==process.env.CANDIDATE_SHA)throw new Error('Zenodo stage ledger drift')"
@@ -318,13 +329,13 @@ jobs:
           set -euo pipefail
           test -n "${GITHUB_TOKEN:-}"; echo "::add-mask::$GITHUB_TOKEN"
           GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
           if git ls-remote --exit-code --tags origin "refs/tags/v$RELEASE_TARGET" >/dev/null 2>&1; then
             test "$(git ls-remote origin "refs/tags/v$RELEASE_TARGET^{}" | awk '{print $1}')" = "$CANDIDATE_SHA" || \
               test "$(git ls-remote origin "refs/tags/v$RELEASE_TARGET" | awk '{print $1}')" = "$CANDIDATE_SHA"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
           else
             git tag -a "v$RELEASE_TARGET" -m "Dr. Saeed Ghezelbash Public Knowledge Graph v$RELEASE_TARGET"
-            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin "refs/tags/v$RELEASE_TARGET"
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push --atomic origin HEAD:main "refs/tags/v$RELEASE_TARGET"
           fi
           unset GITHUB_AUTH
       - name: Promote exact candidate to Hugging Face main and frozen tag
