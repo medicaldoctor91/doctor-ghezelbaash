@@ -1,4 +1,5 @@
 import path from 'node:path';
+import {parseFragment,serialize} from 'parse5';
 import {readFile,readdir} from 'node:fs/promises';
 import {bindHeroPictureSizes} from '../../src/lib/hero-image-contract.mjs';
 import {bindHeroSearchLabel} from '../../src/lib/hero-search-presentation.mjs';
@@ -51,4 +52,39 @@ export async function assembleCanonicalContent({root=process.cwd(),graph}={}){
   content=await bindLiveReputation(root,content,release);
   content=bindGoogleSemanticHtml(content,{graphDocument:canonicalGraph,headProfile,pageId:`${release.canonicalUrl}#webpage`,languages:CONTENT_LANGUAGES});
   return {content,names};
+}
+
+const PUBLIC_HEADING_TAGS=new Set(['h3','h4','h5','h6']);
+const PUBLIC_ANSWER_TAGS=new Set(['p','ul','ol','table','blockquote']);
+const PUBLIC_MEDIA_TAGS=new Set(['figure','video','audio']);
+const publicAttrs=node=>Object.fromEntries((node.attrs||[]).map(({name,value})=>[name,value]));
+const publicClasses=node=>new Set(String(publicAttrs(node).class||'').split(/\s+/).filter(Boolean));
+const publicText=node=>node?.nodeName==='#text'?(node.value||''):(node?.childNodes||[]).map(publicText).join(' ');
+const publicId=node=>publicAttrs(node).id||'';
+const publicDescendants=(node,out=[])=>{for(const child of node.childNodes||[]){if(child.tagName)out.push(child);publicDescendants(child,out)}return out};
+const setPublicAttr=(node,name,value)=>{node.attrs=node.attrs||[];const found=node.attrs.find(a=>a.name===name);if(found)found.value=value;else node.attrs.push({name,value})};
+const publicAnchor=id=>({nodeName:'span',tagName:'span',namespaceURI:'http://www.w3.org/1999/xhtml',attrs:[{name:'id',value:id},{name:'class',value:'semantic-alias-anchor'},{name:'aria-hidden',value:'true'}],childNodes:[]});
+
+export function projectPublicContent(source){
+  const raw=String(source),match=raw.match(/^(---\r?\n[\s\S]*?\r?\n---\r?\n)([\s\S]*)$/);
+  if(!match)throw new Error('Public projection requires Markdown frontmatter');
+  const [,frontmatter,body]=match,fragment=parseFragment(body),chunks=publicDescendants(fragment,[]).filter(node=>publicClasses(node).has('render-chunk')),changed=[];
+  for(const chunk of chunks){
+    const originalChars=publicText(chunk).replace(/\s+/g,' ').trim().length;
+    if(originalChars<=5000)continue;
+    const children=(chunk.childNodes||[]).filter(child=>child.tagName),keep=[];let followup=0;
+    for(const child of children){
+      if(PUBLIC_HEADING_TAGS.has(child.tagName)){keep.push(child);followup=2;continue}
+      if(PUBLIC_MEDIA_TAGS.has(child.tagName)){keep.push(child);continue}
+      if(child.tagName==='details'&&publicDescendants(child,[]).some(node=>PUBLIC_MEDIA_TAGS.has(node.tagName))){keep.push(child);continue}
+      if(followup>0&&PUBLIC_ANSWER_TAGS.has(child.tagName)){keep.push(child);followup-=1}
+    }
+    const originalIds=new Set(publicDescendants(chunk,[]).map(publicId).filter(Boolean)),keptIds=new Set();
+    for(const child of keep){if(publicId(child))keptIds.add(publicId(child));for(const node of publicDescendants(child,[]))if(publicId(node))keptIds.add(publicId(node))}
+    const anchors=[...originalIds].filter(id=>!keptIds.has(id)).sort().map(publicAnchor);
+    chunk.childNodes=[...anchors,...keep];for(const child of chunk.childNodes)child.parentNode=chunk;setPublicAttr(chunk,'data-public-projection','answer-first');
+    changed.push({originalChars,publicChars:publicText(chunk).replace(/\s+/g,' ').trim().length,anchorCount:anchors.length});
+  }
+  const content=frontmatter+serialize(fragment);
+  return {content,stats:{renderChunks:chunks.length,changedChunks:changed.length,originalChars:changed.reduce((n,x)=>n+x.originalChars,0),publicChars:changed.reduce((n,x)=>n+x.publicChars,0),preservedFragmentAnchors:changed.reduce((n,x)=>n+x.anchorCount,0),publicBytes:Buffer.byteLength(content),canonicalBytes:Buffer.byteLength(raw)}};
 }
