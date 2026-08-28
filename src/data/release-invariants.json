@@ -1,7 +1,7 @@
 {
   "redirectsSha256": "6bacaef33c75dab185dd6b4f16ce78bb6095b7629ac17b6c706a459c230b9118",
   "externalRdfTripleCount": 8711,
-  "maxHtmlBytes": 1950000,
+  "maxHtmlBytes": 1600000,
   "maxHeadGraphBytes": 35000,
   "maxSupportGraphBytes": 135000,
   "maxRagPassageChars": 4200,
@@ -11,10 +11,10 @@
   "minClaimEvidencePassages": 45,
   "googlebotFetchBudgetBytes": 2000000,
   "googlebotReservedResponseHeaderBytes": 20000,
-  "googlebotSafetyMarginBytes": 30000,
+  "googlebotSafetyMarginBytes": 350000,
   "maxRootCustomHeaderBytes": 8000,
   "maxCoreGraphEndByte": 35000,
-  "maxSupportGraphEndByte": 1940000,
+  "maxSupportGraphEndByte": 1550000,
   "maxCriticalCssBytes": 12000,
   "minExternalCssBytes": 42000,
   "contractClasses": {
