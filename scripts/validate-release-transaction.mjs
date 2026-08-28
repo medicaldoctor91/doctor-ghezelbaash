@@ -16,6 +16,8 @@ assert.match(workflow,/push --atomic origin HEAD:main "refs\/tags\/v\$RELEASE_TA
 assert.doesNotMatch(workflow,/push origin HEAD:main\s*\n\s*if git ls-remote/);
 assert.doesNotMatch(cloudflare,/configure-cloudflare-edge\.py\s+\\\s*\n\s*--apply\b/);
 assert.match(cloudflare,/--purge-cache-only/);
+assert.match(cloudflare,/Purge canonical deployment cache/);
+assert.doesNotMatch(cloudflare,/steps\.release_change/);
 assert.match(stackMonitor,/on:\s*\n\s+push:\s*\n\s+branches: \[main\]/);
 assert.ok(stackMonitor.includes("if: github.event_name != 'push'"), 'Push reconciliation must not mutate the first-party edge');
 assert.ok(stackMonitor.includes('huggingface.mjs sanitize'), 'Push reconciliation must enforce the HF full-tree retired-identifier gate');

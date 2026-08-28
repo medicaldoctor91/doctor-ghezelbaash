@@ -51,16 +51,6 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
           npm run build
-      - name: Detect release-bound deployment
-        id: release_change
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" | grep -Fxq src/data/release.json; then
-            echo 'changed=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'changed=false' >> "$GITHUB_OUTPUT"
-          fi
       - name: Converge Cloudflare Pages to canonical Git deployment
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -78,8 +68,7 @@ jobs:
           node scripts/cloudflare-pages.mjs ensure
       - name: Validate edge contract without control-plane mutation
         run: npm run validate:cloudflare
-      - name: Purge release-sensitive Cloudflare cache
-        if: steps.release_change.outputs.changed == 'true'
+      - name: Purge canonical deployment cache
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
