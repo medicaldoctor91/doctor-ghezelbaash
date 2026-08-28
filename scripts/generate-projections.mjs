@@ -1,4 +1,5 @@
-import {mkdir} from 'node:fs/promises';
+import path from 'node:path';
+import {mkdir,writeFile} from 'node:fs/promises';
 import {loadProjectionContext} from './lib/projection-context.mjs';
 import {compilePageAssets} from './lib/projections/page-assets.mjs';
 import {compileGraphProjections} from './lib/projections/graph-projections.mjs';
@@ -12,7 +13,14 @@ await mkdir(context.projections,{recursive:true});
 const page=await compilePageAssets(context);
 const graphs=await compileGraphProjections(context);
 const semantic=await compileSemanticCorpus(context);
-const retrieval=await compileRetrievalCorpus(context,{answerRecords:semantic.answerRecords});
+const publicHomePath=path.join(context.generatedContent,'home.md');
+await writeFile(publicHomePath,page.corpusHome);
+let retrieval;
+try{
+  retrieval=await compileRetrievalCorpus(context,{answerRecords:semantic.answerRecords});
+}finally{
+  await writeFile(publicHomePath,page.home);
+}
 const discovery=await compileContactDiscovery(context);
 
 console.log(JSON.stringify({
@@ -25,6 +33,10 @@ console.log(JSON.stringify({
   headBytes:Buffer.byteLength(graphs.headRaw),
   support:graphs.supportIds.length,
   supportBytes:Buffer.byteLength(graphs.supportRaw),
+  publicContentBytes:page.publicProjection.publicBytes,
+  canonicalContentBytes:page.publicProjection.canonicalBytes,
+  publicProjectedChunks:page.publicProjection.changedChunks,
+  preservedFragmentAnchors:page.publicProjection.preservedFragmentAnchors,
   markdownBytes:retrieval.markdownBytes,
   passages:retrieval.passages,
   maxPassageChars:retrieval.maxPassageChars,
