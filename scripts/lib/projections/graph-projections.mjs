@@ -25,6 +25,21 @@ const mergeProjectionProfiles=profiles=>{
   return merged;
 };
 
+const compactIdentityProfile=Object.freeze({include:['@id','@type','name','alternateName','sameAs','identifier']});
+const HEAD_NODE_PROFILE_EXTENSIONS=Object.freeze({
+  'https://www.ghezelbaash.ir/#credential-doctor-of-medicine':Object.freeze({include:['@id','@type','name','credentialCategory','identifier','recognizedBy','url','validIn','expires']}),
+  'https://www.ghezelbaash.ir/#irimc-credential-167430':Object.freeze({include:['@id','@type','name','credentialCategory','identifier','recognizedBy','url','validIn','expires']}),
+});
+const SUPPORT_TYPE_PROFILE_EXTENSIONS=Object.freeze({
+  DefinedTerm:Object.freeze({include:['url']}),
+  Country:compactIdentityProfile,
+  City:Object.freeze({include:[...compactIdentityProfile.include,'containedInPlace']}),
+  AdministrativeArea:Object.freeze({include:[...compactIdentityProfile.include,'containedInPlace']}),
+  MedicalSpecialty:compactIdentityProfile,
+  Occupation:compactIdentityProfile,
+  CollegeOrUniversity:Object.freeze({include:[...compactIdentityProfile.include,'url']}),
+});
+
 export async function compileGraphProjections(context){
   const {semantic,generatedSemantic,graph,byId,readIds,release}=context;
   const [headIds,headProfile,supportIds,supportProfile]=await Promise.all([
@@ -41,10 +56,10 @@ export async function compileGraphProjections(context){
     const node=byId.get(id);
     if(!node)throw new Error(`Head selection missing ${id}`);
     if(!multilingualResourceIds.has(id)){
-      headNodes.push(projectNode(node,headProfile.nodes?.[id]));
+      headNodes.push(projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],HEAD_NODE_PROFILE_EXTENSIONS[id]])||{}));
       continue;
     }
-    const projected=projectNode(node,headProfile.nodes?.[id]);
+    const projected=projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],HEAD_NODE_PROFILE_EXTENSIONS[id]])||{});
     projected.inLanguage=[...CONTENT_LANGUAGES];
     headNodes.push(projected);
   }
@@ -55,7 +70,7 @@ export async function compileGraphProjections(context){
 
   const supportSelected=new Set([...supportIds,...headIds]);
   const graphIds=new Set(byId.keys());
-  const profileFor=node=>supportProfile.idProfiles?.[node['@id']]??mergeProjectionProfiles(nodeTypes(node).map(type=>supportProfile.typeProfiles?.[type]));
+  const profileFor=node=>supportProfile.idProfiles?.[node['@id']]??mergeProjectionProfiles(nodeTypes(node).flatMap(type=>[supportProfile.typeProfiles?.[type],SUPPORT_TYPE_PROFILE_EXTENSIONS[type]]));
   const pruneInlineRefs=value=>{
     if(Array.isArray(value))return value.map(pruneInlineRefs).filter(item=>item!==undefined);
     if(value&&typeof value==='object'){
