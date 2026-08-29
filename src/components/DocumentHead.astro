@@ -16,6 +16,7 @@ const normalizedRobots=robots.split(',').map(value=>value.trim()).filter(Boolean
 const robotsWithLargeImagePreview=isMain&&!normalizedRobots.some(value=>value.toLowerCase().startsWith('max-image-preview:'))
   ? [...normalizedRobots,'max-image-preview:large'].join(',')
   : robots;
+const faviconPng='/favicon.png';
 const og=headProfile.openGraph;
 const canonical=release.canonicalUrl;
 const versionDoi=release.dataset.zenodo.versionDoi;
@@ -38,7 +39,6 @@ const discoveryLinks:DiscoveryLink[]=[
   {href:release.dataset.github.repository,rel:'related',title:'GitHub — canonical repository'},
   {href:`https://doi.org/${versionDoi}`,rel:'related',title:`Zenodo preservation Version DOI ${release.release}`},
   {href:release.dataset.license,rel:'license'},
-  {href:'/favicon.svg',rel:'icon',sizes:'any',type:'image/svg+xml'},
   {href:'/favicon.svg',rel:'mask-icon',color:headProfile.themeColor},
   {href:'/site.webmanifest',rel:'manifest'},
   {href:release.dataset.huggingFace.dataset,rel:'related'},
@@ -48,6 +48,7 @@ const discoveryLinks:DiscoveryLink[]=[
 {isMain&&stage==='critical'&&<>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
 <link as="image" fetchpriority="high" imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif" />
+<link href={faviconPng} rel="icon" sizes="192x192" type="image/png" />
 <title>{title}</title><meta content={description} name="description" /><meta content={robotsWithLargeImagePreview} name="robots" /><meta content={robotsWithLargeImagePreview} name="googlebot" /><meta content={robotsWithLargeImagePreview} name="bingbot" />
 <meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={headProfile.author} name="author" /><meta content={headProfile.applicationName} name="application-name" /><meta content={headProfile.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
 <meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={headProfile.themeColor} name="theme-color" /><meta content={headProfile.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />
@@ -66,5 +67,5 @@ const discoveryLinks:DiscoveryLink[]=[
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>{title}</title><meta name="description" content={description} /><meta name="robots" content={robots} />
 <meta name="author" content="دکتر سعید قزلباش" /><meta name="theme-color" content="#075244" />
-<link rel="canonical" href={canonicalURL.toString()} /><link rel="icon" href="/favicon.svg" sizes="any" type="image/svg+xml" />
+<link rel="canonical" href={canonicalURL.toString()} /><link rel="icon" href={faviconPng} sizes="192x192" type="image/png" />
 </>}
