@@ -95,10 +95,10 @@
           "https://www.pinterest.com/medicaldoctor91/",
           "https://linktr.ee/Doctor.ghezelbaash",
           "https://www.threads.com/@doctor.ghezelbaash",
-          "https://www.youtube.com/@ghezelbaash"
+          "https://www.youtube.com/@ghezelbash"
         ],
         "alternateName": [
-          "Mohammad Saeed Ghezelbash",
+          "Mohammad Saeed Ghezelbaash",
           "Dr. Mohammad Saeed Ghezelbash",
           "Saeed Ghezelbash",
           "Dr. Saeed Ghezelbash",
@@ -195,7 +195,7 @@
       "refAllow": {
         "mainContentOfPage": [
           "https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection",
-          "https://www.ghezelbaash.ir/#facial-aging-differential-diagnosis",
+          "https://www.ghezelbaash.ir/#facial-aging-differential-diagosis",
           "https://www.ghezelbaash.ir/#botox",
           "https://www.ghezelbaash.ir/#filler",
           "https://www.ghezelbaash.ir/#thread-lift",
@@ -209,7 +209,7 @@
           "https://www.ghezelbaash.ir/#saeed-ghezelbash-diagnostic-philosophy",
           "https://www.ghezelbaash.ir/#aesthetic-treatment-failure-from-diagnostic-error",
           "https://www.ghezelbaash.ir/#webpage-element-dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
-          "https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-iq",
+          "https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ar-qa",
           "https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-en",
           "https://www.ghezelbaash.ir/#best-facial-aesthetic-doctor-cosmetic-surgery-kermanshah-iran-ckb-iq"
         ]
@@ -233,6 +233,32 @@
         "dateModified",
         "image",
         "schemaVersion"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#credential-doctor-of-medicine": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "credentialCategory",
+        "identifier",
+        "recognizedBy",
+        "url",
+        "validIn",
+        "expires"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#irimc-credential-167430": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "credentialCategory",
+        "identifier",
+        "recognizedBy",
+        "url",
+        "validIn",
+        "expires"
       ]
     }
   }

@@ -67,7 +67,8 @@
         "name",
         "termCode",
         "identifier",
-        "sameAs"
+        "sameAs",
+        "url"
       ]
     },
     "HowTo": {
@@ -223,7 +224,7 @@
         "name",
         "description",
         "url",
-        "creator",
+      "creator",
         "publisher",
         "license",
         "dataset"
@@ -349,6 +350,69 @@
         "organizer",
         "performer",
         "audience",
+        "url"
+      ]
+    },
+    "Country": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier"
+      ]
+    },
+    "City": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "containedInPlace",
+        "sameAs",
+        "identifier"
+      ]
+    },
+    "AdministrativeArea": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "containedInPlace",
+        "sameAs",
+        "identifier"
+      ]
+    },
+    "MedicalSpecialty": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier"
+      ]
+    },
+    "Occupation": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier"
+      ]
+    },
+    "CollegeOrUniversity": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier",
         "url"
       ]
     },

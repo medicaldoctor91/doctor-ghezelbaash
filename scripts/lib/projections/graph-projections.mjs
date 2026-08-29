@@ -7,6 +7,24 @@ import {nodeTypes} from '../projection-context.mjs';
 
 export {projectNode};
 
+const appendUnique=(target,values)=>{for(const value of values||[])if(!target.includes(value))target.push(value)};
+const mergeProjectionProfiles=profiles=>{
+  const active=(profiles||[]).filter(profile=>profile&&typeof profile==='object');
+  if(!active.length)return null;
+  if(active.some(profile=>!Array.isArray(profile.include)))return {};
+  const merged={include:[]};
+  for(const profile of active)appendUnique(merged.include,profile.include);
+  for(const policy of ['refAllow','valueAllow']){
+    const entries={};
+    for(const profile of active)for(const [key,values] of Object.entries(profile[policy]||{})){
+      entries[key]??=[];
+      appendUnique(entries[key],values);
+    }
+    if(Object.keys(entries).length)merged[policy]=entries;
+  }
+  return merged;
+};
+
 export async function compileGraphProjections(context){
   const {semantic,generatedSemantic,graph,byId,readIds,release}=context;
   const [headIds,headProfile,supportIds,supportProfile]=await Promise.all([
@@ -37,7 +55,7 @@ export async function compileGraphProjections(context){
 
   const supportSelected=new Set([...supportIds,...headIds]);
   const graphIds=new Set(byId.keys());
-  const profileFor=node=>supportProfile.idProfiles?.[node['@id']]||nodeTypes(node).map(type=>supportProfile.typeProfiles?.[type]).find(Boolean)||null;
+  const profileFor=node=>supportProfile.idProfiles?.[node['@id']]??mergeProjectionProfiles(nodeTypes(node).map(type=>supportProfile.typeProfiles?.[type]));
   const pruneInlineRefs=value=>{
     if(Array.isArray(value))return value.map(pruneInlineRefs).filter(item=>item!==undefined);
     if(value&&typeof value==='object'){
