@@ -117,12 +117,16 @@ assert((content.match(/class=["'][^"']*\bhero-actions\b[^"']*["']/g)||[]).length
 assert(/<button\b(?=[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["'])(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(content),'Accessible search launcher left the Hero action contract');
 assert(!content.includes('hero-action--search'),'Dead Hero action search class reintroduced');
 assert((documentHead.match(/imagesizes=\{HERO_IMAGE_SIZES\}/g)||[]).length===1,'Structured Hero preload must consume the shared sizes contract exactly once');
-assert((await readFile('src/content-source/page.md','utf8')).match(/\{\{HERO_IMAGE_SIZES\}\}/g)?.length===3,'Hero picture must consume the shared sizes token exactly three times');
+assert((await readFile('src/content-source/page.md','utf8')).match(/\{\{HERO_IMAGE_SIZES\}\}/g)?.length===2,'Hero picture sources must consume the shared sizes token exactly twice');
 const preloadHints=[HERO_IMAGE_SIZES];
 const picture=content.match(/<picture\b(?=[^>]*\bid=["']image-saeed-ghezelbash-portrait-master-webp["'])[^>]*>[\s\S]*?<\/picture>/i)?.[0]||'';
 const pictureHints=[...(picture.matchAll(/\bsizes=["']([^"']+)["']/g))].map(match=>match[1]);
+const fallbackImage=picture.match(/<img\b[^>]*>/i)?.[0]||'';
+assert(fallbackImage&&/\bsrc=["'][^"']+["']/.test(fallbackImage),'Hero fallback img missing');
+assert(!/\bsizes\s*=/.test(fallbackImage),'Hero fallback img without srcset must not expose sizes');
+assert(!/\bsrcset\s*=/.test(fallbackImage),'Hero fallback img is intentionally a single-source fallback');
 const imageHints=[...preloadHints,...pictureHints];
-assert(preloadHints.length===1&&pictureHints.length===3,'Hero must expose exactly four responsive image hints');
+assert(preloadHints.length===1&&pictureHints.length===2,'Hero must expose exactly three responsive image hints: preload plus two picture sources');
 assert(imageHints.every(value=>value===HERO_IMAGE_SIZES),'Hero responsive image hints diverged');
 const expectedHeroImageSizes='(max-width: 720px) and (max-width: 79rem) calc(100vw - 2.56rem), (max-width: 720px) 76.44rem, (max-width: calc(45.19828rem + 2.1978px)) 18rem, (max-width: 80rem) calc(41.86vw - .92rem - .92px), (max-width: 100rem) calc(35.88rem - 4.14vw - .92px), calc(31.74rem - .92px)';
 assert(HERO_IMAGE_SIZES===expectedHeroImageSizes,'Hero responsive image six-state contract drift');
