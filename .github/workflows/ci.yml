@@ -58,6 +58,42 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Official Schema Markup Validator live diagnostic
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          http=$(curl --silent --show-error --location --max-time 90 \
+            --output /tmp/smv.raw \
+            --write-out '%{http_code}' \
+            --request POST 'https://validator.schema.org/validate' \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode 'url=https://www.ghezelbaash.ir/')
+          rc=$?
+          echo "SMV_HTTP=$http CURL_EXIT=$rc"
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          raw=Path('/tmp/smv.raw').read_text('utf-8',errors='replace').strip()
+          if raw.startswith(")]}'"):
+              raw=raw[4:].lstrip()
+          print(raw[:20000])
+          try:
+              data=json.loads(raw)
+              print('SMV_SUMMARY='+json.dumps({
+                  'fetchError': data.get('fetchError'),
+                  'isRendered': data.get('isRendered'),
+                  'numObjects': data.get('numObjects'),
+                  'totalNumErrors': data.get('totalNumErrors'),
+                  'totalNumWarnings': data.get('totalNumWarnings'),
+                  'tripleGroups': len(data.get('tripleGroups') or []),
+              },ensure_ascii=False))
+          except Exception as exc:
+              print('SMV_JSON_PARSE_ERROR='+repr(exc))
+          PY
+          exit 0
       - name: Package canonical source backup
         run: npm run package:source
       - name: Upload canonical source backup
