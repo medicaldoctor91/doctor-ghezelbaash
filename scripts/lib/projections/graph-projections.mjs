@@ -7,14 +7,71 @@ import {nodeTypes} from '../projection-context.mjs';
 
 export {projectNode};
 
+const appendUnique=(target,values)=>{for(const value of values||[])if(!target.includes(value))target.push(value)};
+const mergeProjectionProfiles=profiles=>{
+  const active=(profiles||[]).filter(profile=>profile&&typeof profile==='object');
+  if(!active.length)return null;
+  if(active.some(profile=>!Array.isArray(profile.include)))return {};
+  const merged={include:[]};
+  for(const profile of active)appendUnique(merged.include,profile.include);
+  for(const policy of ['refAllow','valueAllow']){
+    const entries={};
+    for(const profile of active)for(const [key,values] of Object.entries(profile[policy]||{})){
+      entries[key]??=[];
+      appendUnique(entries[key],values);
+    }
+    if(Object.keys(entries).length)merged[policy]=entries;
+  }
+  return merged;
+};
+
+const compactIdentityProfile=Object.freeze({include:['@id','@type','name','alternateName','sameAs','identifier']});
+const HEAD_NODE_PROFILE_EXTENSIONS=Object.freeze({
+  'https://www.ghezelbaash.ir/#credential-doctor-of-medicine':Object.freeze({include:['@id','@type','name','credentialCategory','identifier','recognizedBy','url','validIn','expires']}),
+  'https://www.ghezelbaash.ir/#irimc-credential-167430':Object.freeze({include:['@id','@type','name','credentialCategory','identifier','recognizedBy','url','validIn','expires']}),
+});
+const SUPPORT_ID_EXCLUSIONS=Object.freeze(new Set([
+  'https://www.ghezelbaash.ir/#online-consultation-channel',
+]));
+const SUPPORT_ID_ADDITIONS=Object.freeze([
+  'https://www.ghezelbaash.ir/#country-iran',
+  'https://www.ghezelbaash.ir/#country-iraq',
+  'https://www.ghezelbaash.ir/#city-kermanshah',
+  'https://www.ghezelbaash.ir/#city-tehran',
+  'https://www.ghezelbaash.ir/#district-1-kermanshah',
+  'https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine',
+  'https://www.ghezelbaash.ir/#occupation-physician',
+  'https://www.ghezelbaash.ir/#occupation-medical-researcher',
+  'https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences',
+  'https://www.ghezelbaash.ir/#topic-botox-migraine-context',
+  'https://www.ghezelbaash.ir/#topic-botox-neurology-context',
+  'https://www.ghezelbaash.ir/#topic-hair-transplant-boundary',
+  'https://www.ghezelbaash.ir/#topic-orthognathic-boundary',
+  'https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction',
+  'https://www.ghezelbaash.ir/#clinic-consultation-treatment-and-follow-up-path',
+]);
+const SUPPORT_TYPE_PROFILE_EXTENSIONS=Object.freeze({
+  DefinedTerm:Object.freeze({include:['url']}),
+  Country:compactIdentityProfile,
+  City:Object.freeze({include:[...compactIdentityProfile.include,'containedInPlace']}),
+  AdministrativeArea:Object.freeze({include:[...compactIdentityProfile.include,'containedInPlace']}),
+  MedicalSpecialty:compactIdentityProfile,
+  Occupation:compactIdentityProfile,
+  CollegeOrUniversity:Object.freeze({include:[...compactIdentityProfile.include,'url']}),
+});
+
 export async function compileGraphProjections(context){
   const {semantic,generatedSemantic,graph,byId,readIds,release}=context;
-  const [headIds,headProfile,supportIds,supportProfile]=await Promise.all([
+  const [headIds,headProfile,configuredSupportIds,supportProfile]=await Promise.all([
     readIds('head'),
     readFile(path.join(semantic,'head-profile.json'),'utf8').then(JSON.parse),
     readIds('support'),
     readFile(path.join(semantic,'support-profile.json'),'utf8').then(JSON.parse),
   ]);
+  const supportIds=[...new Set([
+    ...configuredSupportIds.filter(id=>!SUPPORT_ID_EXCLUSIONS.has(id)),
+    ...SUPPORT_ID_ADDITIONS,
+  ])];
   await mkdir(generatedSemantic,{recursive:true});
 
   const multilingualResourceIds=new Set([`${release.canonicalUrl}#website`,`${release.canonicalUrl}#webpage`]);
@@ -22,11 +79,15 @@ export async function compileGraphProjections(context){
   for(const id of headIds){
     const node=byId.get(id);
     if(!node)throw new Error(`Head selection missing ${id}`);
+    const extension=HEAD_NODE_PROFILE_EXTENSIONS[id];
     if(!multilingualResourceIds.has(id)){
-      headNodes.push(projectNode(node,headProfile.nodes?.[id]));
+      if(extension)headNodes.push(projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],extension])||{}));
+      else headNodes.push(projectNode(node,headProfile.nodes?.[id]));
       continue;
     }
-    const projected=projectNode(node,headProfile.nodes?.[id]);
+    const projected=extension
+      ? projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],extension])||{})
+      : projectNode(node,headProfile.nodes?.[id]);
     projected.inLanguage=[...CONTENT_LANGUAGES];
     headNodes.push(projected);
   }
@@ -37,7 +98,7 @@ export async function compileGraphProjections(context){
 
   const supportSelected=new Set([...supportIds,...headIds]);
   const graphIds=new Set(byId.keys());
-  const profileFor=node=>supportProfile.idProfiles?.[node['@id']]||nodeTypes(node).map(type=>supportProfile.typeProfiles?.[type]).find(Boolean)||null;
+  const profileFor=node=>supportProfile.idProfiles?.[node['@id']]??mergeProjectionProfiles(nodeTypes(node).flatMap(type=>[supportProfile.typeProfiles?.[type],SUPPORT_TYPE_PROFILE_EXTENSIONS[type]]));
   const pruneInlineRefs=value=>{
     if(Array.isArray(value))return value.map(pruneInlineRefs).filter(item=>item!==undefined);
     if(value&&typeof value==='object'){
