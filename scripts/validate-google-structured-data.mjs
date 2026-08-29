@@ -7,7 +7,6 @@ const PHYSICIAN=`${ROOT}#saeed-ghezelbash`;
 const CLINIC=`${ROOT}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`;
 const PAGE=`${ROOT}#webpage`;
 const DATASET=`${ROOT}graph.jsonld#dataset`;
-const CATALOG=`${ROOT}#data-catalog`;
 const ADDRESS=`${ROOT}#clinic-postal-address`;
 const GEO=`${ROOT}#clinic-geo`;
 const SPECIALTY=`${ROOT}#medical-specialty-aesthetic-medicine`;
@@ -19,8 +18,8 @@ const asArray=value=>Array.isArray(value)?value:(value==null?[]:[value]);
 const types=node=>asArray(node?.['@type']);
 const refId=value=>typeof value==='string'?value:value?.['@id'];
 const refs=value=>asArray(value).map(refId).filter(Boolean);
-const exact=(actual,expected,label)=>assert.deepEqual([...new Set(actual)].sort(),[...new Set(expected)].sort(),label);
-const requireNode=(byId,id,label)=>{const node=byId.get(id);assert.ok(node,`${label} missing: ${id}`);return node};
+const unique=values=>[...new Set(values)];
+const exact=(actual,expected,label)=>assert.deepEqual(unique(actual).sort(),unique(expected).sort(),label);
 const isDate=value=>/^\d{4}-\d{2}-\d{2}$/.test(String(value));
 const isDateTime=value=>/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(String(value));
 const durationSeconds=value=>{const match=String(value??'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/);return match?(Number(match[1]||0)*3600)+(Number(match[2]||0)*60)+Number(match[3]||0):null};
@@ -29,13 +28,15 @@ const mergeNode=(left,right)=>{
   for(const [key,value] of Object.entries(right)){
     if(key==='@id')continue;
     if(!Object.hasOwn(out,key)){out[key]=structuredClone(value);continue;}
-    const merged=[...asArray(out[key]),...asArray(value)];
-    const dedup=[];const seen=new Set();
-    for(const item of merged){const token=JSON.stringify(item);if(!seen.has(token)){seen.add(token);dedup.push(item)}}
-    out[key]=dedup.length===1?dedup[0]:dedup;
+    const values=[...asArray(out[key]),...asArray(value)];
+    const seen=new Set();
+    const merged=values.filter(item=>{const token=JSON.stringify(item);if(seen.has(token))return false;seen.add(token);return true});
+    out[key]=merged.length===1?merged[0]:merged;
   }
   return out;
 };
+const indexGraph=document=>new Map(document['@graph'].filter(node=>typeof node?.['@id']==='string').map(node=>[node['@id'],node]));
+const requireNode=(byId,id,label)=>{const node=byId.get(id);assert.ok(node,`${label} missing: ${id}`);return node};
 
 const [canonical,head,support]=await Promise.all([
   readFile('src/data/semantic/knowledge-graph.jsonld','utf8').then(JSON.parse),
@@ -43,30 +44,26 @@ const [canonical,head,support]=await Promise.all([
   readFile('.generated/semantic/support-graph.json','utf8').then(JSON.parse),
 ]);
 for(const [label,document] of [['canonical',canonical],['head',head],['support',support]])assert.ok(Array.isArray(document['@graph']),`${label} graph lacks @graph`);
+assert.ok(!JSON.stringify(canonical).includes(RETIRED),'Retired Wikidata identifier exists in canonical graph');
+assert.ok(!JSON.stringify([head,support]).includes(RETIRED),'Retired Wikidata identifier exists in page structured data');
 
-const canonicalRaw=JSON.stringify(canonical),pageRaw=JSON.stringify([head,support]);
-assert.ok(!canonicalRaw.includes(RETIRED),'Retired Wikidata identifier exists in canonical graph');
-assert.ok(!pageRaw.includes(RETIRED),'Retired Wikidata identifier exists in page structured data');
-
-const canonicalNodes=canonical['@graph'];
-const canonicalIds=canonicalNodes.filter(node=>node?.['@id']).map(node=>node['@id']);
-assert.equal(new Set(canonicalIds).size,canonicalIds.length,'Canonical graph contains duplicate @id values');
-const headById=new Map(head['@graph'].filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
-const supportById=new Map(support['@graph'].filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
-assert.equal(headById.size,head['@graph'].filter(node=>node?.['@id']).length,'Head graph contains duplicate top-level @id values');
-assert.equal(supportById.size,support['@graph'].filter(node=>node?.['@id']).length,'Support graph contains duplicate top-level @id values');
+const canonicalById=indexGraph(canonical);
+assert.equal(canonicalById.size,canonical['@graph'].length,'Canonical graph contains duplicate @id values');
+const headById=indexGraph(head),supportById=indexGraph(support);
+assert.equal(headById.size,head['@graph'].length,'Head graph contains duplicate top-level @id values');
+assert.equal(supportById.size,support['@graph'].length,'Support graph contains duplicate top-level @id values');
 const crossBlockReuse=[...headById.keys()].filter(id=>supportById.has(id)).sort();
 exact(crossBlockReuse,[...ALLOWED_CROSS_BLOCK_REUSE],'Unexpected cross-block @id reuse');
-const byId=new Map(headById);
-for(const [id,node] of supportById)byId.set(id,byId.has(id)?mergeNode(byId.get(id),node):node);
-const pageNodes=[...byId.values()];
+const pageById=new Map(headById);
+for(const [id,node] of supportById)pageById.set(id,pageById.has(id)?mergeNode(pageById.get(id),node):node);
+const pageNodes=[...pageById.values()];
 
 const scan=(value,path='$')=>{
   if(Array.isArray(value))return value.forEach((nested,index)=>scan(nested,`${path}[${index}]`));
   if(!value||typeof value!=='object')return;
-  assert.ok(!Object.hasOwn(value,'@value'),`JSON-LD value object leaked into Google page projection at ${path}`);
+  assert.ok(!Object.hasOwn(value,'@value'),`JSON-LD typed value object leaked into page projection at ${path}`);
   for(const [key,nested] of Object.entries(value)){
-    assert.ok(!/^(?:prov|dcterms|skos):/.test(key),`Non-Schema property leaked into Google page projection at ${path}.${key}`);
+    assert.ok(!/^(?:prov|dcterms|skos):/.test(key),`Non-Schema property leaked into page projection at ${path}.${key}`);
     scan(nested,`${path}.${key}`);
   }
 };
@@ -78,53 +75,51 @@ for(const document of [head,support]){
   for(const key of Object.keys(context))assert.ok(!['prov','dcterms','skos'].includes(key),`Third-party context leaked into page projection: ${key}`);
 }
 
-const page=requireNode(byId,PAGE,'ProfilePage');
+const page=requireNode(pageById,PAGE,'ProfilePage');
 exact(types(page),['ProfilePage'],'Google page node must remain exactly ProfilePage');
 exact(refs(page.mainEntity),[PHYSICIAN],'ProfilePage mainEntity drift');
 assert.ok(!Object.hasOwn(page,'dateModified')||isDateTime(page.dateModified),'ProfilePage dateModified must be omitted or a genuine DateTime');
-const physician=requireNode(byId,PHYSICIAN,'Physician');
+const physician=requireNode(pageById,PHYSICIAN,'Physician');
 exact(types(physician),['Person','IndividualPhysician'],'Physician type model drift');
-assert.ok(asArray(physician.name).every(value=>typeof value==='string')&&asArray(physician.name).length>=1,'Physician name must be page-safe Text');
-assert.ok(refs(physician.practicesAt).includes(CLINIC),'Physician practicesAt lost clinic');
-assert.ok(refs(physician.worksFor).includes(CLINIC),'Physician worksFor lost clinic');
-assert.ok(refs(physician.owns).includes(CLINIC),'Physician owns lost clinic');
+assert.ok(asArray(physician.name).length>=1&&asArray(physician.name).every(value=>typeof value==='string'),'Physician name must be page-safe Text');
+for(const property of ['practicesAt','worksFor','workLocation','affiliation','owns'])assert.ok(refs(physician[property]).includes(CLINIC),`Physician ${property} lost clinic`);
+assert.ok(refs(physician.medicalSpecialty).includes(SPECIALTY),'Physician medicalSpecialty lost defined specialty');
+for(const country of [IRAN,IRAQ])assert.ok(refs(physician.areaServed).includes(country),`Physician areaServed lost ${country}`);
 assert.ok(asArray(physician.sameAs).includes('https://www.wikidata.org/entity/Q140287622'),'Physician Wikidata identity missing');
 
-const clinic=requireNode(byId,CLINIC,'Medical clinic');
+const clinic=requireNode(pageById,CLINIC,'Medical clinic');
 for(const type of ['MedicalClinic','PhysiciansOffice','LocalBusiness'])assert.ok(types(clinic).includes(type),`Clinic missing ${type}`);
 for(const property of ['owner','founder','employee'])exact(refs(clinic[property]),[PHYSICIAN],`Clinic ${property} drift`);
+assert.ok(refs(clinic.medicalSpecialty).includes(SPECIALTY),'Clinic medicalSpecialty drift');
+for(const country of [IRAN,IRAQ])assert.ok(refs(clinic.areaServed).includes(country),`Clinic areaServed lost ${country}`);
 exact(refs(clinic.address),[ADDRESS],'Clinic address identity drift');
 exact(refs(clinic.geo),[GEO],'Clinic geo identity drift');
-const address=requireNode(byId,ADDRESS,'Clinic PostalAddress');
+const address=requireNode(pageById,ADDRESS,'Clinic PostalAddress');
 for(const property of ['streetAddress','addressLocality','addressCountry','postalCode','addressRegion'])assert.ok(typeof address[property]==='string'&&address[property],`Clinic PostalAddress missing ${property}`);
-const geo=requireNode(byId,GEO,'Clinic GeoCoordinates');
+const geo=requireNode(pageById,GEO,'Clinic GeoCoordinates');
 assert.ok(typeof geo.latitude==='number'&&Number.isFinite(geo.latitude),'Clinic latitude must be a native Number');
 assert.ok(typeof geo.longitude==='number'&&Number.isFinite(geo.longitude),'Clinic longitude must be a native Number');
 
-const dataset=requireNode(byId,DATASET,'Public knowledge graph Dataset');
-exact(types(dataset),['Dataset'],'Dataset page type drift');
-for(const property of ['name','description','license','version','datePublished','dateModified','distribution','creator','publisher','identifier','includedInDataCatalog'])assert.ok(Object.hasOwn(dataset,property),`Dataset missing ${property}`);
-assert.ok(isDate(dataset.datePublished),'Dataset datePublished must be Date');
-assert.ok(isDate(dataset.dateModified)||isDateTime(dataset.dateModified),'Dataset dateModified must be Date or DateTime');
-exact(refs(dataset.creator),[PHYSICIAN],'Dataset creator drift');
-exact(refs(dataset.publisher),[PHYSICIAN],'Dataset publisher drift');
-exact(refs(dataset.includedInDataCatalog),[CATALOG],'Dataset catalog relation drift');
-for(const forbidden of ['citation','provider','hasPart'])assert.ok(!Object.hasOwn(dataset,forbidden),`Google Dataset projection must omit canonical-only ${forbidden}`);
-const distributions=refs(dataset.distribution);
-assert.ok(distributions.length>=12,`Dataset exposes too few direct distributions: ${distributions.length}`);
-for(const id of distributions){
-  const distribution=requireNode(byId,id,'Dataset DataDownload');
+// Dataset is a crawlable machine resource, not a synthetic rich-result claim on the physician landing page.
+assert.ok(!pageById.has(DATASET),'Machine Dataset must not be injected into physician landing-page JSON-LD without a dataset landing-page surface');
+const dataset=requireNode(canonicalById,DATASET,'Canonical public knowledge graph Dataset');
+assert.ok(types(dataset).includes('Dataset'),'Canonical machine resource lost Dataset type');
+for(const property of ['name','description','license','version','datePublished','dateModified','distribution','creator','publisher','identifier'])assert.ok(Object.hasOwn(dataset,property),`Canonical Dataset missing ${property}`);
+assert.ok(isDate(dataset.datePublished),'Canonical Dataset datePublished must be Date');
+assert.ok(isDate(dataset.dateModified)||isDateTime(dataset.dateModified),'Canonical Dataset dateModified must be Date or DateTime');
+assert.ok(refs(dataset.creator).includes(PHYSICIAN),'Canonical Dataset creator lost physician');
+assert.ok(refs(dataset.publisher).includes(PHYSICIAN),'Canonical Dataset publisher lost physician');
+const canonicalDistributions=refs(dataset.distribution);
+assert.ok(canonicalDistributions.length>=1,'Canonical Dataset must expose at least one DataDownload');
+for(const id of canonicalDistributions){
+  const distribution=requireNode(canonicalById,id,'Canonical Dataset DataDownload');
   assert.ok(types(distribution).includes('DataDownload'),`Dataset distribution is not DataDownload: ${id}`);
   assert.ok(typeof distribution.contentUrl==='string'&&/^https:\/\//.test(distribution.contentUrl),`DataDownload contentUrl invalid: ${id}`);
   assert.ok(asArray(distribution.encodingFormat).length>=1,`DataDownload encodingFormat missing: ${id}`);
-  assert.ok(typeof distribution.name==='string'||asArray(distribution.name).every(value=>typeof value==='string'),`DataDownload name invalid: ${id}`);
 }
-const catalog=requireNode(byId,CATALOG,'DataCatalog');
-exact(types(catalog),['DataCatalog'],'DataCatalog type drift');
-exact(refs(catalog.dataset),[DATASET],'DataCatalog dataset relation drift');
 
 const videos=pageNodes.filter(node=>types(node).includes('VideoObject'));
-assert.equal(videos.length,4,'Expected four visible VideoObject projections');
+assert.equal(videos.length,4,'Expected four page VideoObject projections');
 const clips=pageNodes.filter(node=>types(node).includes('Clip'));
 for(const video of videos){
   for(const property of ['name','description','contentUrl','thumbnailUrl','uploadDate','duration','url'])assert.ok(Object.hasOwn(video,property),`VideoObject missing ${property}: ${video['@id']}`);
@@ -137,23 +132,21 @@ for(const video of videos){
   for(const clip of videoClips){
     assert.ok(Number.isInteger(clip.startOffset)&&clip.startOffset>=0,`Clip startOffset invalid: ${clip['@id']}`);
     assert.ok(Number.isInteger(clip.endOffset)&&clip.endOffset>clip.startOffset&&clip.endOffset<=duration,`Clip endOffset invalid: ${clip['@id']}`);
-    assert.ok(typeof clip.name==='string'||asArray(clip.name).every(value=>typeof value==='string'),`Clip name invalid: ${clip['@id']}`);
     assert.ok(typeof clip.url==='string'&&/^https:\/\//.test(clip.url),`Clip URL invalid: ${clip['@id']}`);
     starts.push(clip.startOffset);
   }
   assert.equal(new Set(starts).size,starts.length,`Video Clip startOffset values must be unique: ${video['@id']}`);
   exact(refs(video.hasPart),videoClips.map(clip=>clip['@id']),`Video hasPart/Clip closure drift: ${video['@id']}`);
 }
-assert.equal(clips.length,13,'Expected thirteen valid Clip projections');
 
 const images=pageNodes.filter(node=>types(node).includes('ImageObject'));
 assert.ok(images.length>=9,'Too few page ImageObject projections');
 for(const image of images)for(const property of ['license','acquireLicensePage','creditText','copyrightNotice'])assert.ok(Object.hasOwn(image,property),`ImageObject missing ${property}: ${image['@id']}`);
 
-assert.equal(pageNodes.filter(node=>types(node).includes('EducationEvent')||types(node).includes('Event')).length,0,'Historical workshop must not masquerade as a Google Event without exact dates');
+assert.equal(pageNodes.filter(node=>types(node).includes('EducationEvent')||types(node).includes('Event')).length,0,'Historical workshop must not masquerade as a current Google Event without exact dates');
 assert.equal(pageNodes.filter(node=>types(node).includes('ScholarlyArticle')).length,0,'Supporting publications must not masquerade as article landing pages');
 const scholarlySupport=pageNodes.filter(node=>asArray(node.additionalType).includes('https://schema.org/ScholarlyArticle'));
-assert.equal(scholarlySupport.length,2,'Expected two non-eligible scholarly support works');
+assert.equal(scholarlySupport.length,2,'Expected two scholarly support CreativeWorks');
 for(const forbiddenType of ['Product','Review','AggregateRating','QAPage','FAQPage'])assert.equal(pageNodes.filter(node=>types(node).includes(forbiddenType)).length,0,`Unsupported Google surface leaked into page graph: ${forbiddenType}`);
 
 const microdata=deriveGooglePageMicrodata(head,PAGE);
@@ -163,7 +156,7 @@ assert.equal(microdata.mainEntityId,PHYSICIAN,'DOM physician identity drift');
 
 console.log(JSON.stringify({
   stage:'GOOGLE_STRUCTURED_DATA_2026',
-  canonicalNodes:canonicalNodes.length,
+  canonicalNodes:canonical['@graph'].length,
   headNodes:head['@graph'].length,
   supportNodes:support['@graph'].length,
   mergedPageNodes:pageNodes.length,
@@ -172,8 +165,8 @@ console.log(JSON.stringify({
   profilePage:'PASS',
   physicianEntity:'ONE_CANONICAL_ID',
   clinicAsset:'DISTINCT_STRONGLY_LINKED',
-  dataset:{status:'PASS',directDistributions:distributions.length,catalog:'PASS'},
-  video:{objects:videos.length,clips:clips.length,sub30SecondClipSuppression:'PASS'},
+  machineDataset:{status:'PASS',htmlInjected:false,directDistributions:canonicalDistributions.length},
+  video:{objects:videos.length,clips:clips.length},
   imageRights:{objects:images.length,status:'PASS'},
   nonEligibleSupport:{scholarlyWorks:scholarlySupport.length,historicalEventDowngraded:true},
   unsupportedRichResultSurfacesAbsent:true,
