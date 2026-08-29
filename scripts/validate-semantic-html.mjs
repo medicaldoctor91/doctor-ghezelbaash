@@ -161,6 +161,8 @@ const searchSemantics=/<dialog\b(?=[^>]*\bid=["']guide-search["'])(?=[^>]*\baria
 const canonicalMainContentIds=new Set((webpage?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
 const expectedMainContentIds=new Set((googlePageNode?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
 const projectedMainContentTags=[...body.matchAll(/<(?:section|details)\b(?=[^>]*\bitemprop=["']mainContentOfPage["'])[^>]*>/gi)].map(match=>match[0]);
+const interactiveMainContentTags=[...body.matchAll(/<details\b(?=[^>]*\bitemprop=["']mainContentOfPage["'])[^>]*>/gi)].map(match=>match[0]);
+if(interactiveMainContentTags.length)fail(`Schema Markup Validator warning regression: mainContentOfPage must bind content sections, not details containers (${interactiveMainContentTags.length})`);
 const projectedMainContentIds=new Set(projectedMainContentTags.map(tag=>attr(tag,'itemid')).filter(Boolean));
 const missingMainContent=[...expectedMainContentIds].filter(id=>!projectedMainContentIds.has(id));
 const extraMainContent=[...projectedMainContentIds].filter(id=>!expectedMainContentIds.has(id));
