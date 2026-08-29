@@ -58,6 +58,34 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Post-deploy W3C Nu verification
+        shell: bash
+        run: |
+          curl --fail --silent --show-error --location --max-time 120 \
+            --get 'https://validator.w3.org/nu/' \
+            --data-urlencode 'doc=https://www.ghezelbaash.ir/' \
+            --data-urlencode 'out=json' \
+            -o /tmp/w3c-nu.json
+          python - <<'PY'
+          import json
+          from collections import Counter
+          p='/tmp/w3c-nu.json'
+          data=json.load(open(p,encoding='utf-8'))
+          msgs=data.get('messages') or []
+          counts=Counter(m.get('type','unknown') for m in msgs)
+          errors=[m for m in msgs if m.get('type')=='error']
+          warnings=[m for m in msgs if m.get('type')=='info' and m.get('subType')=='warning']
+          print('W3C_NU_LIVE_SUMMARY='+json.dumps({
+            'messageCount':len(msgs),
+            'counts':dict(counts),
+            'errorCount':len(errors),
+            'warningCount':len(warnings),
+            'errors':errors[:20],
+            'warnings':warnings[:20]
+          },ensure_ascii=False))
+          if errors:
+              raise SystemExit(f'W3C Nu reports {len(errors)} HTML conformance errors')
+          PY
       - name: Package canonical source backup
         run: npm run package:source
       - name: Upload canonical source backup
