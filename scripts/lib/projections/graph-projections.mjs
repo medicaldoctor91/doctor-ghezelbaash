@@ -63,6 +63,7 @@ const SUPPORT_TYPE_PROFILE_EXTENSIONS=Object.freeze({
   MedicalSpecialty:compactIdentityProfile,
   Occupation:compactIdentityProfile,
   CollegeOrUniversity:Object.freeze({include:[...compactIdentityProfile.include,'url']}),
+  ImageObject:Object.freeze({include:['url','sameAs']}),
 });
 
 const normalizePhysicianGoogleIdentity=projected=>{
