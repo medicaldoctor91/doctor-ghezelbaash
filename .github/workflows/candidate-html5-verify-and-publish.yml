@@ -1,0 +1,123 @@
+name: Candidate HTML5 scope repair prevalidation
+
+on:
+  push:
+    branches: [audit/smv-postmerge-2026-08-29]
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 1d3b3d8a7ba8327798721810cdaf841d24bb0486
+          persist-credentials: true
+          fetch-depth: 1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - name: Apply minimal source nesting repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/content-source/page.md')
+          s=p.read_text('utf-8')
+          opening='''<div class="render-chunk" data-render-chunk="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-continued" id="rc109">'''
+          start=s.index(opening)
+          end=s.index('<details class="final-collapsible-section multilingual-aesthetic-section"',start)
+          segment=s[start:end]
+          old='''</dl>\n</section>\n<section aria-labelledby="medical-content-governance-title" class="trust-governance" id="medical-content-governance">'''
+          new='''</dl>\n</div>\n</section>\n<section aria-labelledby="medical-content-governance-title" class="trust-governance" id="medical-content-governance">'''
+          if segment.count(old)!=1:
+              raise SystemExit(f'expected one clinic close marker, found {segment.count(old)}')
+          segment=segment.replace(old,new,1)
+          tail='''</aside>\n</section>\n</div>\n'''
+          if segment.count(tail)!=1:
+              raise SystemExit(f'expected one stale late render-chunk close, found {segment.count(tail)}')
+          segment=segment.replace(tail,'''</aside>\n</section>\n''',1)
+          s2=s[:start]+segment+s[end:]
+          if s2==s:
+              raise SystemExit('no source mutation')
+          p.write_text(s2,'utf-8')
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = "src/content-source/page.md"
+          git diff -- src/content-source/page.md
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('src/content-source/page.md').read_text('utf-8')
+          start=s.index('<div class="render-chunk" data-render-chunk="dr-saeed-ghezelbash-aesthetic-clinic-kermanshah-1-continued" id="rc109">')
+          end=s.index('<details class="final-collapsible-section multilingual-aesthetic-section"',start)
+          segment=s[start:end]
+          required='''</dl>\n</div>\n</section>\n<section aria-labelledby="medical-content-governance-title" class="trust-governance" id="medical-content-governance">'''
+          forbidden='''</dl>\n</section>\n<section aria-labelledby="medical-content-governance-title" class="trust-governance" id="medical-content-governance">'''
+          if required not in segment or forbidden in segment or segment.rstrip().endswith('</div>'):
+              raise SystemExit('clinic/render-chunk close-order invariant failed')
+          print('HTML5_SOURCE_NESTING_REPAIR=PASS')
+          PY
+      - run: npm ci
+      - name: Build exact candidate
+        run: npm run build
+      - name: Validate built candidate with official Schema Markup Validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          http=$(curl --silent --show-error --location --max-time 120 \
+            --output /tmp/smv.raw \
+            --write-out '%{http_code}' \
+            --request POST 'https://validator.schema.org/validate' \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode html@dist/index.html)
+          HTTP="$http" python - <<'PY'
+          from pathlib import Path
+          from collections import Counter
+          import json, os
+          raw=Path('/tmp/smv.raw').read_text('utf-8',errors='replace').strip()
+          if raw.startswith(")]}'"):
+              raw=raw[4:].lstrip()
+          data=json.loads(raw)
+          issues=[]
+          def walk(v):
+              if isinstance(v,dict):
+                  for issue in v.get('errors') or []:
+                      if isinstance(issue,dict) and issue:
+                          issues.append(issue)
+                  for k,n in v.items():
+                      if k!='errors': walk(n)
+              elif isinstance(v,list):
+                  for n in v: walk(n)
+          walk(data)
+          signatures=Counter((i.get('errorType'),bool(i.get('isSevere')),json.dumps(i.get('args'),ensure_ascii=False,sort_keys=True,default=str)) for i in issues)
+          target=any(t=='UNKNOWN_FIELD' and 'mainContentOfPage' in a and 'WebPageElement' in a for t,_sev,a in signatures)
+          summary={
+              'http':os.environ['HTTP'],
+              'isRendered':data.get('isRendered'),
+              'numObjects':data.get('numObjects'),
+              'totalNumErrors':data.get('totalNumErrors'),
+              'totalNumWarnings':data.get('totalNumWarnings'),
+              'targetWarningPresent':target,
+              'uniqueIssueSignatures':[{'count':c,'errorType':s[0],'isSevere':s[1],'args':json.loads(s[2]) if s[2] not in ('null','') else None} for s,c in signatures.most_common(20)],
+          }
+          print('SMV_CANDIDATE='+json.dumps(summary,ensure_ascii=False,sort_keys=True))
+          ok=(os.environ['HTTP']=='200' and data.get('isRendered') is False and int(data.get('numObjects') or 0)>=80 and int(data.get('totalNumErrors') or 0)==0 and int(data.get('totalNumWarnings') or 0)==0 and not target)
+          if not ok:
+              raise SystemExit('official direct-markup Schema Markup Validator acceptance failed')
+          print('OFFICIAL_SMV_CANDIDATE_ACCEPTANCE=PASS')
+          PY
+      - name: Publish verified candidate branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Dr. Saeed Ghezelbash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git add src/content-source/page.md
+          git commit -m 'fix: repair clinic HTML nesting and Microdata ownership'
+          git push origin HEAD:refs/heads/fix/html5-clinic-scope-ownership-2026-08-29
