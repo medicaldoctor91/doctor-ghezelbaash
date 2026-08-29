@@ -23,7 +23,7 @@ def save(d,label):
 
 def click_text(d,pattern):
     rx=re.compile(pattern,re.I)
-    for el in d.find_elements(By.XPATH,"//button|//*[@role='button']"):
+    for el in d.find_elements(By.XPATH,"//button|//*[@role='button']|//*[@role='tab']"):
         try:
             text=(el.text or el.get_attribute('aria-label') or '').strip()
             if el.is_displayed() and el.is_enabled() and rx.search(text):
@@ -33,6 +33,30 @@ def click_text(d,pattern):
         except Exception:pass
     return None
 
+def click_exact_ui(d,label):
+    literal=label.replace("'","\\'")
+    queries=[
+      f"//*[@role='tab' and normalize-space(.)='{literal}']",
+      f"//*[@role='button' and normalize-space(.)='{literal}']",
+      f"//button[normalize-space(.)='{literal}']",
+      f"//*[normalize-space(.)='{literal}']",
+    ]
+    seen=set()
+    for query in queries:
+        for el in d.find_elements(By.XPATH,query):
+            try:
+                key=el.id
+                if key in seen:continue
+                seen.add(key)
+                target=d.execute_script("return arguments[0].closest('[role=tab],[role=button],button,a') || arguments[0]",el)
+                text=(target.text or target.get_attribute('aria-label') or el.text or '').strip()
+                if not target.is_displayed() or not target.is_enabled():continue
+                d.execute_script("arguments[0].scrollIntoView({block:'center'});",target)
+                d.execute_script("arguments[0].click();",target)
+                return {'text':text,'tag':target.tag_name,'role':target.get_attribute('role'),'class':target.get_attribute('class')}
+            except Exception:pass
+    return None
+
 def fetch_live_html():
     p=subprocess.run(['curl','--silent','--show-error','--location','--max-time','90','--user-agent','Mozilla/5.0 Chrome/151','--write-out','\n__HTTP__%{http_code}','--',TARGET],text=True,capture_output=True)
     if p.returncode: raise RuntimeError('live HTML fetch failed: '+p.stderr.strip())
@@ -40,6 +64,7 @@ def fetch_live_html():
     if sep=='' or status.strip()!='200': raise RuntimeError(f'live HTML HTTP status={status!r}')
     if '<html' not in body.lower() or len(body)<100000: raise RuntimeError(f'live HTML unexpectedly small: {len(body)}')
     OUT.joinpath('production-live.html').write_text(body,encoding='utf-8')
+    print('LIVE_HTML='+json.dumps({'chars':len(body),'bytes':len(body.encode('utf-8'))},ensure_ascii=False))
     return body
 
 def summarize(text,url):
@@ -51,7 +76,7 @@ def summarize(text,url):
       'invalidItems':[x for x in lines if re.search(r'\b\d+ invalid item(?:s)? detected\b|invalid item',x,re.I)],
       'critical':[x for x in lines if re.search(r'critical issue',x,re.I)],
       'nonCritical':[x for x in lines if re.search(r'non-critical',x,re.I)],
-      'detectedTypes':[x for x in lines if re.search(r'Profile page|Video|Local business|Organization|Dataset|Image metadata|Article|Event|Course|Breadcrumb|Review snippet|FAQ',x,re.I)][:80],
+      'detectedTypes':[x for x in lines if re.search(r'Profile page|Video|Local business|Organization|Dataset|Image metadata|Article|Event|Course|Breadcrumb|Review snippet|FAQ',x,re.I)][:100],
       'errorLike':[x for x in lines if re.search(r'something went wrong|could not|cannot|failed|error|problem|log in',x,re.I)][:40]
     }
 
@@ -64,8 +89,10 @@ def run_rrt_code(html):
     try:
         d.get('https://search.google.com/test/rich-results')
         WebDriverWait(d,30).until(lambda x:'Rich Results Test' in body_text(x))
-        clicked=click_text(d,r'^CODE$')
-        print('RRT_CODE_TAB_CLICKED='+repr(clicked))
+        tabs=d.execute_script("return [...document.querySelectorAll('[role=tab]')].map((e,i)=>({i,text:e.innerText,ariaSelected:e.getAttribute('aria-selected'),cls:e.className,tag:e.tagName}));")
+        print('RRT_TABS='+json.dumps(tabs,ensure_ascii=False))
+        clicked=click_exact_ui(d,'CODE') or click_text(d,r'^CODE$')
+        print('RRT_CODE_TAB_CLICKED='+json.dumps(clicked,ensure_ascii=False) if isinstance(clicked,dict) else 'RRT_CODE_TAB_CLICKED='+repr(clicked))
         if not clicked: raise RuntimeError('CODE tab not found')
         WebDriverWait(d,30).until(lambda x:any(e.is_displayed() for e in x.find_elements(By.CSS_SELECTOR,'.CodeMirror')))
         meta=d.execute_script("return [...document.querySelectorAll('.CodeMirror')].map((e,i)=>({i,visible:!!e.offsetParent,hasApi:!!e.CodeMirror,cls:e.className,textarea:!!e.querySelector('textarea')}));")
@@ -82,16 +109,8 @@ def run_rrt_code(html):
         """,html)
         print('RRT_CODE_SET='+json.dumps(result,ensure_ascii=False))
         if not result or not result.get('ok') or result.get('length')!=len(html): raise RuntimeError('CODE editor did not receive full production HTML')
-        # CodeMirror.setValue fires change, but focus/blur makes Google UI commit its model too.
         d.execute_script("document.body.click()")
-        def test_code_enabled(x):
-            for el in x.find_elements(By.XPATH,"//*[@role='button']"):
-                try:
-                    if (el.text or '').strip().lower()=='test code' and el.is_displayed():
-                        return el.get_attribute('aria-disabled')!='true'
-                except Exception:pass
-            return False
-        WebDriverWait(d,30).until(test_code_enabled)
+        WebDriverWait(d,30).until(lambda x:any((e.text or '').strip().lower()=='test code' and e.is_displayed() and e.get_attribute('aria-disabled')!='true' for e in x.find_elements(By.XPATH,"//button|//*[@role='button']")))
         clicked=click_text(d,r'^test code$')
         print('RRT_TEST_CODE_CLICKED='+repr(clicked))
         if not clicked: raise RuntimeError('TEST CODE did not become clickable')
