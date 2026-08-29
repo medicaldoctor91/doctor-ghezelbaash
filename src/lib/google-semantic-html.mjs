@@ -6,6 +6,8 @@ const MAIN_ENTITY_ITEMTYPE_TOKEN='{{GOOGLE_MAIN_ENTITY_ITEMTYPE}}';
 const asArray=value=>Array.isArray(value)?value:(value==null?[]:[value]);
 const refId=value=>typeof value==='string'?value:value?.['@id'];
 const attr=(source,name)=>source.match(new RegExp(`\\b${name}=["']([^"']+)["']`,'i'))?.[1];
+const withoutAttr=(source,name)=>source.replace(new RegExp(`\\s+${name}(?:\\s*=\\s*(?:"[^"]*"|'[^']*'|[^\\s>]+))?`,'gi'),'');
+const addAttrs=(source,attrs)=>source.replace(/>$/,` ${attrs}>`);
 const escapeAttribute=value=>String(value).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 
 const graphNodes=document=>Array.isArray(document)?document:document?.['@graph'];
@@ -64,8 +66,24 @@ export function bindGoogleSemanticHtml(source,{graphDocument,headProfile,pageId,
   };
   const scopedSection=/<section\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>/gi;
   output=output.replace(scopedSection,tag=>enrich(tag));
-  const scopedDetails=/(<details\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>)(<summary\b[^>]*>[\s\S]*?<\/summary>)/gi;
-  output=output.replace(scopedDetails,(_match,tag,summary)=>enrich(tag,summary));
+
+  // Schema Markup Validator currently emits UNKNOWN_FIELD for mainContentOfPage
+  // when the WebPageElement scope is carried directly by an interactive
+  // <details> container. Keep the visible <details>/<summary> UI untouched,
+  // but bind the Microdata item to its actual content <section> instead.
+  const scopedDetails=/(<details\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>)(<summary\b[^>]*>[\s\S]*?<\/summary>)(\s*)(<section\b[^>]*>)/gi;
+  output=output.replace(scopedDetails,(_match,detailsTag,summary,gap,sectionTag)=>{
+    const itemId=attr(detailsTag,'itemid');
+    if(!expected.has(itemId))throw new Error(`Visible details mainContentOfPage is outside the Head projection: ${itemId}`);
+    const node=byId.get(itemId);
+    const canonicalName=typeof node?.name==='string'?node.name:null;
+    if(!canonicalName)throw new Error(`Visible details WebPageElement lacks canonical name: ${itemId}`);
+    const cleanDetails=['itemid','itemprop','itemscope','itemtype'].reduce((tag,name)=>withoutAttr(tag,name),detailsTag);
+    const cleanSummary=summary.replace(/\s+itemprop=["']name["']/gi,'');
+    const scopedContent=addAttrs(sectionTag,`itemid="${escapeAttribute(itemId)}" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement"`);
+    const nameMeta=`<meta content="${escapeAttribute(canonicalName)}" itemprop="name"/>`;
+    return `${cleanDetails}${cleanSummary}${gap}${enrich(scopedContent,nameMeta)}`;
+  });
   const missing=expectedIds.filter(id=>!seen.has(id));
   if(missing.length)throw new Error(`Head mainContentOfPage nodes lack visible scopes: ${missing.join(', ')}`);
   return output;
