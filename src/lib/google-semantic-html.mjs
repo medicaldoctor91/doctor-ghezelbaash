@@ -51,8 +51,8 @@ export function bindGoogleSemanticHtml(source,{graphDocument,headProfile,pageId,
   const expected=new Set(expectedIds),seen=new Set();
   const enrich=(tag,tail='')=>{
     const itemId=attr(tag,'itemid');
-    if(!expected.has(itemId))throw new Error(`Visible mainContentOfPage is outside the Head projection: ${itemId}`);
-    if(seen.has(itemId))throw new Error(`Duplicate visible mainContentOfPage scope: ${itemId}`);
+    if(!expected.has(itemId))throw new Error(`Visible WebPageElement is outside the Head projection: ${itemId}`);
+    if(seen.has(itemId))throw new Error(`Duplicate visible WebPageElement scope: ${itemId}`);
     const node=byId.get(itemId);
     const types=asArray(node?.['@type']);
     if(!node||!types.includes('WebPageElement'))throw new Error(`Canonical WebPageElement missing for ${itemId}`);
@@ -61,35 +61,20 @@ export function bindGoogleSemanticHtml(source,{graphDocument,headProfile,pageId,
     const inLanguage=asArray(node.inLanguage);
     if(!url||inLanguage.length!==1||typeof inLanguage[0]!=='string')throw new Error(`Visible WebPageElement lacks one canonical url/inLanguage: ${itemId}`);
     seen.add(itemId);
-    return `${tag}${tail}<link href="${escapeAttribute(url)}" itemprop="url"/><meta content="${escapeAttribute(inLanguage[0])}" itemprop="inLanguage"/>`;
+    return `${withoutAttr(tag,'itemprop')}${tail}<link href="${escapeAttribute(url)}" itemprop="url"/><meta content="${escapeAttribute(inLanguage[0])}" itemprop="inLanguage"/>`;
   };
-  const scopedSection=/<section\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>/gi;
-  output=output.replace(scopedSection,tag=>enrich(tag));
 
-  // Schema Markup Validator emits UNKNOWN_FIELD for mainContentOfPage when the
-  // item scope itself is an interactive <details>. Keep the exact details /
-  // summary UI and its canonical H2 name property, but move only the item scope
-  // to a labeled semantic <section> wrapper around that details block.
-  const scopedDetails=/(<details\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>)(<summary\b[^>]*>[\s\S]*?<\/summary>)(\s*)(<section\b[^>]*>)/gi;
-  let wrappedDetails=0;
-  output=output.replace(scopedDetails,(_match,detailsTag,summary,gap,sectionTag)=>{
-    const itemId=attr(detailsTag,'itemid'),detailsId=attr(detailsTag,'id'),labelId=attr(sectionTag,'aria-labelledby');
-    if(!expected.has(itemId))throw new Error(`Visible details mainContentOfPage is outside the Head projection: ${itemId}`);
-    if(!detailsId||!labelId)throw new Error(`Visible details WebPageElement lacks stable id/label binding: ${itemId}`);
-    const cleanDetails=['itemid','itemprop','itemscope','itemtype'].reduce((tag,name)=>withoutAttr(tag,name),detailsTag);
-    const scopeTag=`<section aria-labelledby="${escapeAttribute(labelId)}" id="${escapeAttribute(detailsId)}-semantic-scope" itemid="${escapeAttribute(itemId)}" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">`;
-    wrappedDetails+=1;
-    return `${enrich(scopeTag)}${cleanDetails}${summary}${gap}${sectionTag}`;
-  });
-  if(wrappedDetails){
-    let closedWrappers=0;
-    output=output.replace(/<\/section>\s*<\/details>/gi,match=>{
-      closedWrappers+=1;
-      return `${match}</section>`;
-    });
-    if(closedWrappers!==wrappedDetails)throw new Error(`Google details wrapper closure drift: opened=${wrappedDetails}, closed=${closedWrappers}`);
-  }
+  // JSON-LD is the authoritative owner of ProfilePage -> mainContentOfPage.
+  // The DOM keeps the same 18 visible WebPageElement identities and their
+  // intrinsic name/url/language facts, but deliberately omits the duplicated
+  // mainContentOfPage Microdata edge. This prevents nested WebPageElement
+  // scopes from re-owning the page-level property while preserving the full
+  // canonical relationship in the Google-facing JSON-LD graph.
+  const visibleSection=/<section\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])(?=[^>]*\bitemscope\b)(?=[^>]*\bitemtype=["']https:\/\/schema\.org\/WebPageElement["'])[^>]*>/gi;
+  output=output.replace(visibleSection,tag=>enrich(tag));
+  const visibleDetails=/(<details\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])(?=[^>]*\bitemscope\b)(?=[^>]*\bitemtype=["']https:\/\/schema\.org\/WebPageElement["'])[^>]*>)(<summary\b[^>]*>[\s\S]*?<\/summary>)/gi;
+  output=output.replace(visibleDetails,(_match,tag,summary)=>enrich(tag,summary));
   const missing=expectedIds.filter(id=>!seen.has(id));
-  if(missing.length)throw new Error(`Head mainContentOfPage nodes lack visible scopes: ${missing.join(', ')}`);
+  if(missing.length)throw new Error(`Head mainContentOfPage nodes lack visible WebPageElement scopes: ${missing.join(', ')}`);
   return output;
 }
