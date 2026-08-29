@@ -89,14 +89,16 @@ delete github.contentUrl;
 github.description=`Version-controlled GitHub source for Version ${next.release} of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.`;
 hf.version=next.release;
 hf.dateModified=next.date;
-hf['@type']='DataDownload';
+hf['@type']='Dataset';
 hf.url=release.dataset.huggingFace.dataset;
 delete hf.contentUrl;
+delete hf.isPartOf;
+hf.isBasedOn={'@id':release.dataset.id};
 hf.encodingFormat=['application/ld+json','text/turtle','text/csv','text/plain','application/json','application/xml','application/jsonl'];
-hf.description=`AI and retrieval distribution of Version ${next.release} of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core plus separately governed retrieval positioning and live-observation layers.`;
+hf.description=`AI and retrieval Dataset derived from Version ${next.release} of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core plus separately governed retrieval positioning and live-observation layers.`;
 delete hf.additionalType;
-zenodo['@type']='DataDownload';
-zenodo.name=`Dr. Saeed Ghezelbash Public Knowledge Graph — Zenodo preservation distribution ${next.release}`;
+zenodo['@type']='Dataset';
+zenodo.name=`Dr. Saeed Ghezelbash Public Knowledge Graph — Zenodo preservation Dataset ${next.release}`;
 zenodo.url=`https://doi.org/${next.versionDoi}`;
 delete zenodo.contentUrl;
 zenodo.identifier=`DOI:${next.versionDoi}`;
@@ -105,12 +107,22 @@ zenodo.datePublished=next.date;
 zenodo.dateModified=next.date;
 zenodo.sameAs=`https://zenodo.org/records/${next.recordId}`;
 delete zenodo.codeRepository;
-zenodo.description=`Immutable DOI-preserved Version ${next.release} distribution of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph Dataset.`;
+zenodo.isPartOf={'@id':release.dataset.id};
+zenodo.isBasedOn={'@id':github['@id']};
+zenodo.description=`Immutable DOI-preserved Version ${next.release} Dataset release of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph.`;
 catalog.version=next.release;
 catalog.dateModified=next.date;
 catalog.name='Dr. Saeed Ghezelbash Public Knowledge Graph — Data Catalog';
 catalog.description='First-party machine-readable catalog for the Dr. Saeed Ghezelbash Public Knowledge Graph, preserving physician-first identity and explicit source, preservation, AI/retrieval and live-observation roles.';
 catalog.url=`${release.canonicalUrl}dcat.ttl`;
+// schema:distribution is reserved for directly downloadable DataDownload nodes.
+// Platform/DOI landing resources remain linked through the project graph but are not fake file downloads.
+dataset.distribution=(Array.isArray(dataset.distribution)?dataset.distribution:[dataset.distribution]).filter(ref=>{
+  const rid=typeof ref==='string'?ref:ref?.['@id'];
+  const target=rid?byId.get(rid):null;
+  const targetTypes=new Set(Array.isArray(target?.['@type'])?target['@type']:[target?.['@type']].filter(Boolean));
+  return targetTypes.has('DataDownload')&&typeof target?.contentUrl==='string'&&target.contentUrl.length>0;
+});
 const releaseBound=applyCurrentReleaseMetadata(nodes,{datasetId:release.dataset.id,release:next.release,dateModified:next.date});
 must(releaseBound.length>0,'No current release-bound graph distributions were selected');
 

@@ -65,6 +65,21 @@ ex:GitHubSourceRoleShape a sh:NodeShape ;
   sh:property [ sh:path schema:contentUrl ; sh:maxCount 0 ] ;
   sh:not [ sh:property [ sh:path rdf:type ; sh:hasValue schema:DataDownload ] ] .
 
+ex:HuggingFaceDatasetRoleShape a sh:NodeShape ;
+  sh:targetNode ex:project-huggingface-dataset ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Dataset ] ;
+  sh:property [ sh:path schema:isBasedOn ; sh:hasValue <https://www.ghezelbaash.ir/graph.jsonld#dataset> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:contentUrl ; sh:maxCount 0 ] ;
+  sh:not [ sh:property [ sh:path rdf:type ; sh:hasValue schema:DataDownload ] ] .
+
+ex:ZenodoDatasetRoleShape a sh:NodeShape ;
+  sh:targetNode ex:project-zenodo-release ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Dataset ] ;
+  sh:property [ sh:path schema:isPartOf ; sh:hasValue <https://www.ghezelbaash.ir/graph.jsonld#dataset> ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:project-github-source ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:contentUrl ; sh:maxCount 0 ] ;
+  sh:not [ sh:property [ sh:path rdf:type ; sh:hasValue schema:DataDownload ] ] .
+
 ex:PhysicianDecisionHowToShape a sh:NodeShape ;
   sh:targetNode ex:howto-clinical-aesthetic-decision-pathway ;
   sh:property [ sh:path rdf:type ; sh:hasValue schema:HowTo ] ;
