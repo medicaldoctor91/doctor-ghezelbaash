@@ -10,7 +10,11 @@ const DATASET=`${ROOT}graph.jsonld#dataset`;
 const CATALOG=`${ROOT}#data-catalog`;
 const ADDRESS=`${ROOT}#clinic-postal-address`;
 const GEO=`${ROOT}#clinic-geo`;
+const SPECIALTY=`${ROOT}#medical-specialty-aesthetic-medicine`;
+const IRAN=`${ROOT}#country-iran`;
+const IRAQ=`${ROOT}#country-iraq`;
 const RETIRED='Q140304972';
+const ALLOWED_CROSS_BLOCK_REUSE=new Set([SPECIALTY,IRAN,IRAQ]);
 const asArray=value=>Array.isArray(value)?value:(value==null?[]:[value]);
 const types=node=>asArray(node?.['@type']);
 const refId=value=>typeof value==='string'?value:value?.['@id'];
@@ -20,13 +24,23 @@ const requireNode=(byId,id,label)=>{const node=byId.get(id);assert.ok(node,`${la
 const isDate=value=>/^\d{4}-\d{2}-\d{2}$/.test(String(value));
 const isDateTime=value=>/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/.test(String(value));
 const durationSeconds=value=>{const match=String(value??'').match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?$/);return match?(Number(match[1]||0)*3600)+(Number(match[2]||0)*60)+Number(match[3]||0):null};
+const mergeNode=(left,right)=>{
+  const out=structuredClone(left);
+  for(const [key,value] of Object.entries(right)){
+    if(key==='@id')continue;
+    if(!Object.hasOwn(out,key)){out[key]=structuredClone(value);continue;}
+    const merged=[...asArray(out[key]),...asArray(value)];
+    const dedup=[];const seen=new Set();
+    for(const item of merged){const token=JSON.stringify(item);if(!seen.has(token)){seen.add(token);dedup.push(item)}}
+    out[key]=dedup.length===1?dedup[0]:dedup;
+  }
+  return out;
+};
 
-const [canonical,head,support,headProfile,supportProfile]=await Promise.all([
+const [canonical,head,support]=await Promise.all([
   readFile('src/data/semantic/knowledge-graph.jsonld','utf8').then(JSON.parse),
   readFile('.generated/semantic/head-graph.json','utf8').then(JSON.parse),
   readFile('.generated/semantic/support-graph.json','utf8').then(JSON.parse),
-  readFile('src/data/semantic/head-profile.json','utf8').then(JSON.parse),
-  readFile('src/data/semantic/support-profile.json','utf8').then(JSON.parse),
 ]);
 for(const [label,document] of [['canonical',canonical],['head',head],['support',support]])assert.ok(Array.isArray(document['@graph']),`${label} graph lacks @graph`);
 
@@ -37,10 +51,15 @@ assert.ok(!pageRaw.includes(RETIRED),'Retired Wikidata identifier exists in page
 const canonicalNodes=canonical['@graph'];
 const canonicalIds=canonicalNodes.filter(node=>node?.['@id']).map(node=>node['@id']);
 assert.equal(new Set(canonicalIds).size,canonicalIds.length,'Canonical graph contains duplicate @id values');
-const pageNodes=[...head['@graph'],...support['@graph']];
-const pageIds=pageNodes.filter(node=>node?.['@id']).map(node=>node['@id']);
-assert.equal(new Set(pageIds).size,pageIds.length,'Head/support page graphs contain duplicate top-level @id values');
-const byId=new Map(pageNodes.filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
+const headById=new Map(head['@graph'].filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
+const supportById=new Map(support['@graph'].filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
+assert.equal(headById.size,head['@graph'].filter(node=>node?.['@id']).length,'Head graph contains duplicate top-level @id values');
+assert.equal(supportById.size,support['@graph'].filter(node=>node?.['@id']).length,'Support graph contains duplicate top-level @id values');
+const crossBlockReuse=[...headById.keys()].filter(id=>supportById.has(id)).sort();
+exact(crossBlockReuse,[...ALLOWED_CROSS_BLOCK_REUSE],'Unexpected cross-block @id reuse');
+const byId=new Map(headById);
+for(const [id,node] of supportById)byId.set(id,byId.has(id)?mergeNode(byId.get(id),node):node);
+const pageNodes=[...byId.values()];
 
 const scan=(value,path='$')=>{
   if(Array.isArray(value))return value.forEach((nested,index)=>scan(nested,`${path}[${index}]`));
@@ -147,7 +166,8 @@ console.log(JSON.stringify({
   canonicalNodes:canonicalNodes.length,
   headNodes:head['@graph'].length,
   supportNodes:support['@graph'].length,
-  pageTopLevelIdsUnique:true,
+  mergedPageNodes:pageNodes.length,
+  intentionalCrossBlockIdentityReuse:crossBlockReuse,
   nativeScalarProjection:true,
   profilePage:'PASS',
   physicianEntity:'ONE_CANONICAL_ID',
