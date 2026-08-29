@@ -75,25 +75,92 @@ jobs:
           echo "SMV_HTTP=$http CURL_EXIT=$rc"
           python - <<'PY'
           from pathlib import Path
+          from collections import Counter
           import json
+
           raw=Path('/tmp/smv.raw').read_text('utf-8',errors='replace').strip()
           if raw.startswith(")]}'"):
               raw=raw[4:].lstrip()
-          print(raw[:20000])
+          Path('smv-report.json').write_text(raw,encoding='utf-8')
           try:
               data=json.loads(raw)
-              print('SMV_SUMMARY='+json.dumps({
-                  'fetchError': data.get('fetchError'),
-                  'isRendered': data.get('isRendered'),
-                  'numObjects': data.get('numObjects'),
-                  'totalNumErrors': data.get('totalNumErrors'),
-                  'totalNumWarnings': data.get('totalNumWarnings'),
-                  'tripleGroups': len(data.get('tripleGroups') or []),
-              },ensure_ascii=False))
           except Exception as exc:
               print('SMV_JSON_PARSE_ERROR='+repr(exc))
+              raise SystemExit(0)
+
+          print('SMV_SUMMARY='+json.dumps({
+              'fetchError': data.get('fetchError'),
+              'isRendered': data.get('isRendered'),
+              'numObjects': data.get('numObjects'),
+              'totalNumErrors': data.get('totalNumErrors'),
+              'totalNumWarnings': data.get('totalNumWarnings'),
+              'tripleGroups': len(data.get('tripleGroups') or []),
+          },ensure_ascii=False))
+
+          issue_rows=[]
+          warning_nodes=[]
+          def walk(value,path='$'):
+              if isinstance(value,dict):
+                  nw=value.get('numWarnings')
+                  if isinstance(nw,int) and nw:
+                      ident=value.get('idProperty') if isinstance(value.get('idProperty'),dict) else {}
+                      warning_nodes.append({
+                          'path':path,
+                          'id':ident.get('value'),
+                          'typeGroup':value.get('typeGroup'),
+                          'numWarnings':nw,
+                          'numErrors':value.get('numErrors'),
+                      })
+                  errors=value.get('errors')
+                  if isinstance(errors,list):
+                      for issue in errors:
+                          if isinstance(issue,dict) and issue:
+                              issue_rows.append((path,issue))
+                  for key,nested in value.items():
+                      if key!='errors': walk(nested,f'{path}.{key}')
+              elif isinstance(value,list):
+                  for index,nested in enumerate(value): walk(nested,f'{path}[{index}]')
+          walk(data)
+
+          def signature(issue):
+              keys=('errorType','isSevere','severity','code','pred','value','message')
+              return tuple((key,json.dumps(issue.get(key),ensure_ascii=False,sort_keys=True,default=str)) for key in keys if key in issue)
+          counts=Counter(signature(issue) for _,issue in issue_rows)
+          unique=[]
+          for sig,count in counts.most_common():
+              sample=next((issue for _,issue in issue_rows if signature(issue)==sig),{})
+              unique.append({
+                  'count':count,
+                  'errorType':sample.get('errorType'),
+                  'isSevere':sample.get('isSevere'),
+                  'severity':sample.get('severity'),
+                  'code':sample.get('code'),
+                  'pred':sample.get('pred'),
+                  'value':sample.get('value'),
+                  'message':sample.get('message'),
+                  'keys':sorted(sample.keys()),
+              })
+          print('SMV_ISSUE_OBJECTS='+str(len(issue_rows)))
+          print('SMV_UNIQUE_ISSUE_SIGNATURES='+str(len(unique)))
+          print('SMV_TOP_ISSUES='+json.dumps(unique[:120],ensure_ascii=False,default=str))
+
+          node_keys={}
+          for row in warning_nodes:
+              key=(row.get('id'),row.get('typeGroup'),row.get('numWarnings'),row.get('numErrors'))
+              node_keys.setdefault(key,row)
+          nodes=sorted(node_keys.values(),key=lambda row:(-int(row.get('numWarnings') or 0),str(row.get('typeGroup') or ''),str(row.get('id') or '')))
+          print('SMV_UNIQUE_WARNING_NODES='+str(len(nodes)))
+          print('SMV_TOP_WARNING_NODES='+json.dumps(nodes[:120],ensure_ascii=False,default=str))
           PY
           exit 0
+      - name: Upload official Schema Markup Validator report
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: official-schema-validator-${{ github.sha }}
+          path: smv-report.json
+          if-no-files-found: warn
+          retention-days: 1
       - name: Package canonical source backup
         run: npm run package:source
       - name: Upload canonical source backup
