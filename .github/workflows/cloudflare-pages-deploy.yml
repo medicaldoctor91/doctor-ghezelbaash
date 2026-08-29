@@ -102,3 +102,7 @@ jobs:
           npm run verify:public-discovery
           node scripts/verify-live.mjs current --website-only
           echo 'PUBLIC_DISCOVERY_T5_HARD_PASS'
+      - name: Notify IndexNow after verified production convergence
+        run: |
+          set -euo pipefail
+          npm run indexnow:submit
