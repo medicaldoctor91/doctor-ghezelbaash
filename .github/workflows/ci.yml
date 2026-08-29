@@ -12,7 +12,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -58,13 +58,40 @@ jobs:
             done
             exit "$rc"
           fi
-      - name: Public Rich Results and online quality diagnostics
+      - name: Google Rich Results CODE mode and W3C diagnostics
         if: github.event_name == 'pull_request'
         run: |
           python -m pip install --disable-pip-version-check --no-input selenium==4.35.0
           (google-chrome --version || chromium --version)
           (chromedriver --version || true)
           python scripts/diagnostic-online-audit.py
+      - name: Lighthouse mobile and desktop lab diagnostics
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set +e
+          mkdir -p /tmp/online-audit
+          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=/tmp/online-audit/lighthouse-mobile.json --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          mobile_rc=$?
+          npx --yes lighthouse@latest https://www.ghezelbaash.ir/ --preset=desktop --only-categories=performance,accessibility,best-practices,seo --output=json --output-path=/tmp/online-audit/lighthouse-desktop.json --chrome-flags='--headless --no-sandbox --disable-dev-shm-usage' --quiet
+          desktop_rc=$?
+          node <<'NODE'
+          const fs=require('fs');
+          for(const mode of ['mobile','desktop']){
+            const p=`/tmp/online-audit/lighthouse-${mode}.json`;
+            if(!fs.existsSync(p)){console.log(`LIGHTHOUSE_${mode.toUpperCase()}_MISSING`);continue;}
+            const r=JSON.parse(fs.readFileSync(p,'utf8'));
+            const scores=Object.fromEntries(Object.entries(r.categories||{}).map(([k,v])=>[k,Math.round((v.score||0)*100)]));
+            const core={};
+            for(const id of ['largest-contentful-paint','cumulative-layout-shift','interaction-to-next-paint','total-blocking-time','server-response-time']){
+              const a=r.audits?.[id]; if(a) core[id]={score:a.score,displayValue:a.displayValue,numericValue:a.numericValue};
+            }
+            const failed=Object.entries(r.audits||{}).filter(([,a])=>typeof a.score==='number'&&a.score<0.9&&a.scoreDisplayMode!=='notApplicable').map(([id,a])=>({id,title:a.title,score:a.score,displayValue:a.displayValue})).slice(0,80);
+            console.log(`LIGHTHOUSE_${mode.toUpperCase()}_SUMMARY=`+JSON.stringify({lighthouseVersion:r.lighthouseVersion,finalUrl:r.finalUrl,scores,core,failed}));
+          }
+          NODE
+          echo "LIGHTHOUSE_EXIT mobile=$mobile_rc desktop=$desktop_rc"
+          exit 0
       - name: Upload online audit evidence
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
