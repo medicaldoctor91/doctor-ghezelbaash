@@ -79,11 +79,15 @@ export async function compileGraphProjections(context){
   for(const id of headIds){
     const node=byId.get(id);
     if(!node)throw new Error(`Head selection missing ${id}`);
+    const extension=HEAD_NODE_PROFILE_EXTENSIONS[id];
     if(!multilingualResourceIds.has(id)){
-      headNodes.push(projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],HEAD_NODE_PROFILE_EXTENSIONS[id]])||{}));
+      if(extension)headNodes.push(projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],extension])||{}));
+      else headNodes.push(projectNode(node,headProfile.nodes?.[id]));
       continue;
     }
-    const projected=projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],HEAD_NODE_PROFILE_EXTENSIONS[id]])||{});
+    const projected=extension
+      ? projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],extension])||{})
+      : projectNode(node,headProfile.nodes?.[id]);
     projected.inLanguage=[...CONTENT_LANGUAGES];
     headNodes.push(projected);
   }
