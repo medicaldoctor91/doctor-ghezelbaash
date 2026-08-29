@@ -46,26 +46,26 @@ const discoveryLinks:DiscoveryLink[]=[
 ];
 ---
 {isMain&&stage==='critical'&&<>
-<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
-<link as="image" fetchpriority="high" imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif" />
-<link href={faviconPng} rel="icon" sizes="192x192" type="image/png" />
-<title>{title}</title><meta content={description} name="description" /><meta content={robotsWithLargeImagePreview} name="robots" /><meta content={robotsWithLargeImagePreview} name="googlebot" /><meta content={robotsWithLargeImagePreview} name="bingbot" />
-<meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={headProfile.author} name="author" /><meta content={headProfile.applicationName} name="application-name" /><meta content={headProfile.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
-<meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={headProfile.themeColor} name="theme-color" /><meta content={headProfile.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />
-<link as="font" crossorigin="anonymous" href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2" media="(min-width:48.01rem)" rel="preload" type="font/woff2" />
-<link href={canonicalURL.toString()} rel="canonical" />
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport">
+<link as="image" fetchpriority="high" imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif">
+<link href={faviconPng} rel="icon" sizes="192x192" type="image/png">
+<title>{title}</title><meta content={description} name="description"><meta content={robotsWithLargeImagePreview} name="robots"><meta content={robotsWithLargeImagePreview} name="googlebot"><meta content={robotsWithLargeImagePreview} name="bingbot">
+<meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification"><meta content={headProfile.author} name="author"><meta content={headProfile.applicationName} name="application-name"><meta content={headProfile.appleMobileWebAppTitle} name="apple-mobile-web-app-title">
+<meta content="telephone=no" name="format-detection"><meta content="light" name="color-scheme"><meta content={headProfile.themeColor} name="theme-color"><meta content={headProfile.themeColor} name="msapplication-TileColor"><meta content="/browserconfig.xml" name="msapplication-config">
+<link as="font" crossorigin="anonymous" href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2" media="(min-width:48.01rem)" rel="preload" type="font/woff2">
+<link href={canonicalURL.toString()} rel="canonical">
 </>}
 {isMain&&stage==='discovery'&&<>
-{discoveryLinks.map(link=><link {...link} />)}
-<meta content={og.type} property="og:type" /><meta content="Saeed" property="profile:first_name" /><meta content="Ghezelbash" property="profile:last_name" /><meta content="doctor.ghezelbaash" property="profile:username" />
-<meta content={og.locale} property="og:locale" />{og.alternateLocales.map(locale=><meta content={locale} property="og:locale:alternate" />)}
-<meta content={title} property="og:title" /><meta content={description} property="og:description" /><meta content={canonicalURL.toString()} property="og:url" /><meta content={og.siteName} property="og:site_name" />
-<meta content={og.image} property="og:image" /><meta content={og.image} property="og:image:secure_url" /><meta content={og.imageType} property="og:image:type" /><meta content={String(og.imageWidth)} property="og:image:width" /><meta content={String(og.imageHeight)} property="og:image:height" /><meta content={og.imageAlt} property="og:image:alt" />
-<meta content={headProfile.twitter.card} name="twitter:card" /><meta content={title} name="twitter:title" /><meta content={description} name="twitter:description" /><meta content={canonicalURL.toString()} name="twitter:url" /><meta content={og.image} name="twitter:image" /><meta content={og.imageAlt} name="twitter:image:alt" />
+{discoveryLinks.map(link=><link {...link}>)}
+<meta content={og.type} property="og:type"><meta content="Saeed" property="profile:first_name"><meta content="Ghezelbash" property="profile:last_name"><meta content="doctor.ghezelbaash" property="profile:username">
+<meta content={og.locale} property="og:locale">{og.alternateLocales.map(locale=><meta content={locale} property="og:locale:alternate">)}
+<meta content={title} property="og:title"><meta content={description} property="og:description"><meta content={canonicalURL.toString()} property="og:url"><meta content={og.siteName} property="og:site_name">
+<meta content={og.image} property="og:image"><meta content={og.image} property="og:image:secure_url"><meta content={og.imageType} property="og:image:type"><meta content={String(og.imageWidth)} property="og:image:width"><meta content={String(og.imageHeight)} property="og:image:height"><meta content={og.imageAlt} property="og:image:alt">
+<meta content={headProfile.twitter.card} name="twitter:card"><meta content={title} name="twitter:title"><meta content={description} name="twitter:description"><meta content={canonicalURL.toString()} name="twitter:url"><meta content={og.image} name="twitter:image"><meta content={og.imageAlt} name="twitter:image:alt">
 </>}
 {!isMain&&stage==='critical'&&<>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>{title}</title><meta name="description" content={description} /><meta name="robots" content={robots} />
-<meta name="author" content="دکتر سعید قزلباش" /><meta name="theme-color" content="#075244" />
-<link rel="canonical" href={canonicalURL.toString()} /><link rel="icon" href={faviconPng} sizes="192x192" type="image/png" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{title}</title><meta name="description" content={description}><meta name="robots" content={robots}>
+<meta name="author" content="دکتر سعید قزلباش"><meta name="theme-color" content="#075244">
+<link rel="canonical" href={canonicalURL.toString()}><link rel="icon" href={faviconPng} sizes="192x192" type="image/png">
 </>}
