@@ -25,9 +25,9 @@ Keep the physician and clinic distinct but explicitly related.
 - Google Maps CID: `12350483144643112463`
 - Google Place ID: `ChIJBT0YDOTt-j8RD-7mAPy6Zas`
 
-### Retired identifier
+### Retired identifiers
 
-- `Q140304972` is deleted and retired. Remove or reject every reference to it. Never reintroduce it as an alias, citation, identifier, redirect target, or historical entity key.
+- Follow the repository's retired-identifier sanitizer and release-contract gates. Never publish, reconstruct, alias, cite, or reintroduce an identifier that the canonical registry marks deleted or retired.
 
 ## Evidence model
 
