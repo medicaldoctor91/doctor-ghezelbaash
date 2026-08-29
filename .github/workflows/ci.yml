@@ -58,28 +58,114 @@ jobs:
             done
             exit "$rc"
           fi
-      - name: Schema.org v30 rendered-markup diagnostics
+      - name: Official Schema.org 30.0 rendered-markup diagnostics
         shell: bash
         run: |
-          cargo install schemaorg-validate --version 0.3.0 --locked --features cli
-          schemaorg-validate --schema-version
+          set -euo pipefail
           mkdir -p schema-audit
-          for profile in none google; do
-            report="schema-audit/schemaorg-v30-${profile}.json"
-            set +e
-            schemaorg-validate --file dist/index.html --profile "$profile" --severity warning --format json > "$report"
-            rc=$?
-            set -e
-            echo "::group::Schema.org v30 profile=${profile} exit=${rc}"
-            jq '{schema_version, extraction, vocabulary: {error_count: .vocabulary.error_count, warning_count: .vocabulary.warning_count}, profile: (.profile // null)}' "$report"
-            echo "::endgroup::"
+          base='https://raw.githubusercontent.com/schemaorg/schemaorg/main/data/releases/30.0'
+          for file in \
+            schemaorg-current-https-properties.csv \
+            schemaorg-current-https-types.csv \
+            schemaorg-current-https.ttl \
+            schemaorg-shapes.shacl \
+            schemaorg-subclasses.shacl
+          do
+            curl --fail --silent --show-error --location --retry 3 --retry-all-errors \
+              "$base/$file" --output "schema-audit/$file"
           done
-      - name: Upload Schema.org v30 diagnostic reports
+          sha256sum schema-audit/schemaorg-* > schema-audit/SHA256SUMS
+          python -m pip install --disable-pip-version-check --no-input 'pyshacl==0.40.1'
+          python - <<'PY'
+          from __future__ import annotations
+          import json
+          from pathlib import Path
+          from rdflib import Graph, Namespace, RDF
+          from pyshacl import validate
+
+          root = Path('schema-audit')
+          sh = Namespace('http://www.w3.org/ns/shacl#')
+          ontology = Graph().parse(root / 'schemaorg-current-https.ttl', format='turtle')
+          shapes = Graph().parse(root / 'schemaorg-shapes.shacl', format='turtle')
+          sources = {
+              'canonical': Path('src/data/semantic/knowledge-graph.jsonld'),
+              'entity-core': Path('.generated/semantic/head-graph.json'),
+              'entity-support': Path('.generated/semantic/support-graph.json'),
+          }
+          summary = {
+              'schemaRelease': '30.0',
+              'schemaVocabulary': 'schemaorg-current-https.ttl',
+              'shapeGraph': 'schemaorg-shapes.shacl',
+              'pyshacl': '0.40.1',
+              'sources': {},
+          }
+          parse_failures = []
+          for label, source in sources.items():
+              try:
+                  data = Graph().parse(source, format='json-ld')
+                  conforms, report_graph, report_text = validate(
+                      data,
+                      shacl_graph=shapes,
+                      ont_graph=ontology,
+                      inference='rdfs',
+                      abort_on_first=False,
+                      allow_infos=True,
+                      allow_warnings=True,
+                      meta_shacl=False,
+                      advanced=True,
+                      iterate_rules=True,
+                      debug=False,
+                  )
+                  results = []
+                  for result in report_graph.subjects(RDF.type, sh.ValidationResult):
+                      value = lambda predicate: next(report_graph.objects(result, predicate), None)
+                      results.append({
+                          'severity': str(value(sh.resultSeverity) or ''),
+                          'focusNode': str(value(sh.focusNode) or ''),
+                          'resultPath': str(value(sh.resultPath) or ''),
+                          'value': str(value(sh.value) or ''),
+                          'sourceConstraintComponent': str(value(sh.sourceConstraintComponent) or ''),
+                          'sourceShape': str(value(sh.sourceShape) or ''),
+                          'message': str(value(sh.resultMessage) or ''),
+                      })
+                  (root / f'{label}-pyshacl-report.ttl').write_text(
+                      report_graph.serialize(format='turtle'), encoding='utf-8'
+                  )
+                  (root / f'{label}-pyshacl-report.txt').write_text(str(report_text), encoding='utf-8')
+                  summary['sources'][label] = {
+                      'path': str(source),
+                      'triples': len(data),
+                      'conforms': bool(conforms),
+                      'validationResults': len(results),
+                      'results': results,
+                  }
+              except Exception as error:
+                  parse_failures.append(f'{label}: {type(error).__name__}: {error}')
+                  summary['sources'][label] = {
+                      'path': str(source),
+                      'parseOrValidationError': f'{type(error).__name__}: {error}',
+                  }
+          (root / 'official-schemaorg-v30-summary.json').write_text(
+              json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps({
+              label: {
+                  'triples': item.get('triples'),
+                  'conforms': item.get('conforms'),
+                  'validationResults': item.get('validationResults'),
+                  'error': item.get('parseOrValidationError'),
+              }
+              for label, item in summary['sources'].items()
+          }, ensure_ascii=False, indent=2))
+          if parse_failures:
+              raise SystemExit('\n'.join(parse_failures))
+          PY
+      - name: Upload official Schema.org 30.0 diagnostic corpus
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: schemaorg-v30-${{ github.sha }}
-          path: schema-audit/*.json
+          path: schema-audit/
           if-no-files-found: error
           retention-days: 14
           compression-level: 9
