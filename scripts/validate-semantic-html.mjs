@@ -160,13 +160,13 @@ try{new Function(runtime)}catch(error){fail(`Site runtime syntax failed: ${error
 const searchSemantics=/<dialog\b(?=[^>]*\bid=["']guide-search["'])(?=[^>]*\baria-modal=["']true["'])[^>]*>/i.test(guideNavigator)&&/<div\b(?=[^>]*\bclass=["']guide-search__panel["'])(?=[^>]*\brole=["']search["'])[^>]*>/i.test(guideNavigator)&&/<input\b(?=[^>]*\btype=["']search["'])(?=[^>]*\baria-describedby=["']guide-search-status["'])[^>]*>/i.test(guideNavigator)&&runtime.includes("setAttribute('aria-current','location')");
 const canonicalMainContentIds=new Set((webpage?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
 const expectedMainContentIds=new Set((googlePageNode?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
-const projectedMainContentTags=[...body.matchAll(/<(?:section|details)\b(?=[^>]*\bitemprop=["']mainContentOfPage["'])[^>]*>/gi)].map(match=>match[0]);
-const interactiveMainContentTags=[...body.matchAll(/<details\b(?=[^>]*\bitemprop=["']mainContentOfPage["'])[^>]*>/gi)].map(match=>match[0]);
-if(interactiveMainContentTags.length)fail(`Schema Markup Validator warning regression: mainContentOfPage must bind content sections, not details containers (${interactiveMainContentTags.length})`);
+const projectedMainContentTags=[...body.matchAll(/<(?:section|details)\b(?=[^>]*\bitemscope\b)(?=[^>]*\bitemtype=["']https:\/\/schema\.org\/WebPageElement["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>/gi)].map(match=>match[0]);
+const misownedMainContentTags=projectedMainContentTags.filter(tag=>tagProperties(tag).includes('mainContentOfPage'));
+if(misownedMainContentTags.length)fail(`Schema Markup Validator ownership regression: visible WebPageElement scopes must not duplicate ProfilePage.mainContentOfPage (${misownedMainContentTags.length})`);
 const projectedMainContentIds=new Set(projectedMainContentTags.map(tag=>attr(tag,'itemid')).filter(Boolean));
 const missingMainContent=[...expectedMainContentIds].filter(id=>!projectedMainContentIds.has(id));
 const extraMainContent=[...projectedMainContentIds].filter(id=>!expectedMainContentIds.has(id));
-if(!expectedMainContentIds.size||!exactSet(expectedMainContentIds,canonicalMainContentIds)||missingMainContent.length||extraMainContent.length||[...expectedMainContentIds].some(id=>!supportIds.includes(id))||projectedMainContentTags.some(tag=>attr(tag,'itemtype')!=='https://schema.org/WebPageElement'))fail(`Visible/Head/support mainContentOfPage projection drift: missing=${missingMainContent.join(',')} extra=${extraMainContent.join(',')}`);
+if(!expectedMainContentIds.size||!exactSet(expectedMainContentIds,canonicalMainContentIds)||missingMainContent.length||extraMainContent.length||[...expectedMainContentIds].some(id=>!supportIds.includes(id))||projectedMainContentTags.some(tag=>attr(tag,'itemtype')!=='https://schema.org/WebPageElement'))fail(`Visible/Head/support WebPageElement projection drift: missing=${missingMainContent.join(',')} extra=${extraMainContent.join(',')}`);
 for(const tag of projectedMainContentTags){
   const itemId=attr(tag,'itemid'),labelId=attr(tag,'aria-labelledby'),node=graphNode(itemId);
   const scopeStart=body.indexOf(tag)+tag.length;
