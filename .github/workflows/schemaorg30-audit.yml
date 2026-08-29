@@ -21,8 +21,14 @@ jobs:
           node-version: 24.19.0
           cache: npm
       - run: npm ci
-      - name: Build exact production surfaces
-        run: npm run build
+      - name: Materialize production-equivalent semantic surfaces
+        run: |
+          npm run prepare:generated
+          ASTRO_TELEMETRY_DISABLED=1 npx astro build
+          npm run materialize:static
+          npm run indexnow:prepare
+          npm run descriptors:finalize
+          node scripts/finalize-dist.mjs
       - name: Audit canonical, projected, and rendered Schema.org surfaces
         run: node scripts/audit-schemaorg-30.mjs --output schema-audit-report.json
       - name: Upload full audit report
