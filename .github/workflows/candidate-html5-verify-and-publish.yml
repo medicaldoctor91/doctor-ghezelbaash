@@ -71,12 +71,14 @@ jobs:
           git add src/content-source/page.md
           git commit -m 'fix: repair clinic HTML nesting and Microdata ownership'
           candidate_sha=$(git rev-parse HEAD)
+          source_date_epoch=$(git show -s --format='%ct' "$candidate_sha")
           git show -s --format='%H %ct %s' "$candidate_sha"
           echo "CANDIDATE_SHA=$candidate_sha" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$source_date_epoch" >> "$GITHUB_ENV"
       - run: npm ci
       - name: Build exact candidate
         env:
-          GITHUB_SHA: ${{ env.CANDIDATE_SHA }}
+          SOURCE_DATE_EPOCH: ${{ env.SOURCE_DATE_EPOCH }}
         run: npm run build
       - name: Validate built candidate with official Schema Markup Validator
         shell: bash
