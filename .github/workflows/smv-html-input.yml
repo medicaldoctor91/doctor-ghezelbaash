@@ -1,0 +1,39 @@
+name: SMV direct markup input diagnostic
+
+on:
+  push:
+    branches: [audit/smv-postmerge-2026-08-29]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verify direct markup validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          sample='<!doctype html><html><body><main itemscope itemtype="https://schema.org/ProfilePage"><div itemprop="mainEntity" itemscope itemtype="https://schema.org/Person"><span itemprop="name">Direct Input Probe</span></div></main></body></html>'
+          http=$(curl --silent --show-error --location --max-time 90 \
+            --output /tmp/smv.raw \
+            --write-out '%{http_code}' \
+            --request POST 'https://validator.schema.org/validate' \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode "html=$sample")
+          HTTP="$http" python - <<'PY'
+          from pathlib import Path
+          import json, os
+          raw=Path('/tmp/smv.raw').read_text('utf-8',errors='replace').strip()
+          if raw.startswith(")]}'"):
+              raw=raw[4:].lstrip()
+          data=json.loads(raw)
+          summary={k:data.get(k) for k in ('url','fetchError','isRendered','numObjects','totalNumErrors','totalNumWarnings')}
+          summary['http']=os.environ['HTTP']
+          print('SMV_DIRECT_INPUT='+json.dumps(summary,ensure_ascii=False,sort_keys=True))
+          if os.environ['HTTP']!='200' or int(data.get('numObjects') or 0)<2:
+              raise SystemExit(1)
+          PY
