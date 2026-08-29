@@ -161,6 +161,8 @@ const searchSemantics=/<dialog\b(?=[^>]*\bid=["']guide-search["'])(?=[^>]*\baria
 const canonicalMainContentIds=new Set((webpage?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
 const expectedMainContentIds=new Set((googlePageNode?.mainContentOfPage||[]).map(graphRef).filter(Boolean));
 const projectedMainContentTags=[...body.matchAll(/<(?:section|details)\b(?=[^>]*\bitemprop=["']mainContentOfPage["'])[^>]*>/gi)].map(match=>match[0]);
+const interactiveMainContentTags=[...body.matchAll(/<details\b(?=[^>]*\bitemprop=["']mainContentOfPage["'])[^>]*>/gi)].map(match=>match[0]);
+if(interactiveMainContentTags.length)fail(`Schema Markup Validator warning regression: mainContentOfPage must bind content sections, not details containers (${interactiveMainContentTags.length})`);
 const projectedMainContentIds=new Set(projectedMainContentTags.map(tag=>attr(tag,'itemid')).filter(Boolean));
 const missingMainContent=[...expectedMainContentIds].filter(id=>!projectedMainContentIds.has(id));
 const extraMainContent=[...projectedMainContentIds].filter(id=>!expectedMainContentIds.has(id));
@@ -176,7 +178,8 @@ for(const tag of projectedMainContentTags){
   const canonicalNames=graphValues(node?.name).map(graphText).filter(Boolean);
   const sectionLinks=[...scopePrelude.matchAll(/<link\b[^>]*>/gi)].map(match=>match[0]);
   const sectionMeta=[...scopePrelude.matchAll(/<meta\b[^>]*>/gi)].map(match=>match[0]);
-  if(!heading||!tagProperties(heading).includes('name')||!canonicalNames.includes(visibleName)||!sectionLinks.some(link=>tagProperties(link).includes('url')&&attr(link,'href')===node.url)||!sectionMeta.some(meta=>tagProperties(meta).includes('inLanguage')&&attr(meta,'content')===node.inLanguage))fail(`Visible WebPageElement name/url/language drift: ${itemId} -> ${visibleName||'missing'}`);
+  const hasCanonicalNameProperty=tagProperties(heading).includes('name')||sectionMeta.some(meta=>tagProperties(meta).includes('name')&&canonicalNames.includes(attr(meta,'content')));
+  if(!heading||!hasCanonicalNameProperty||!canonicalNames.includes(visibleName)||!sectionLinks.some(link=>tagProperties(link).includes('url')&&attr(link,'href')===node.url)||!sectionMeta.some(meta=>tagProperties(meta).includes('inLanguage')&&attr(meta,'content')===node.inLanguage))fail(`Visible WebPageElement name/url/language drift: ${itemId} -> ${visibleName||'missing'}`);
 }
 
 const howToId='https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway';
