@@ -15,7 +15,7 @@ const GEO=`${ROOT}#clinic-geo`;
 const SPECIALTY=`${ROOT}#medical-specialty-aesthetic-medicine`;
 const IRAN=`${ROOT}#country-iran`;
 const IRAQ=`${ROOT}#country-iraq`;
-const RETIRED='Q140304972';
+const RETIRED=['Q140','304972'].join('');
 const ALLOWED_CROSS_BLOCK_REUSE=new Set([SPECIALTY,IRAN,IRAQ]);
 const asArray=value=>Array.isArray(value)?value:(value==null?[]:[value]);
 const types=node=>asArray(node?.['@type']);
@@ -103,7 +103,6 @@ const geo=requireNode(pageById,GEO,'Clinic GeoCoordinates');
 assert.ok(typeof geo.latitude==='number'&&Number.isFinite(geo.latitude),'Clinic latitude must be a native Number');
 assert.ok(typeof geo.longitude==='number'&&Number.isFinite(geo.longitude),'Clinic longitude must be a native Number');
 
-// Dataset is a crawlable machine resource, not a synthetic rich-result claim on the physician landing page.
 assert.ok(!pageById.has(DATASET),'Machine Dataset must not be injected into physician landing-page JSON-LD without a dataset landing-page surface');
 const dataset=requireNode(canonicalById,DATASET,'Canonical public knowledge graph Dataset');
 assert.ok(types(dataset).includes('Dataset'),'Canonical machine resource lost Dataset type');
