@@ -63,16 +63,26 @@ jobs:
         run: |
           cargo install schemaorg-validate --version 0.3.0 --locked --features cli
           schemaorg-validate --schema-version
+          mkdir -p schema-audit
           for profile in none google; do
-            report="/tmp/schemaorg-v30-${profile}.json"
+            report="schema-audit/schemaorg-v30-${profile}.json"
             set +e
             schemaorg-validate --file dist/index.html --profile "$profile" --severity warning --format json > "$report"
             rc=$?
             set -e
             echo "::group::Schema.org v30 profile=${profile} exit=${rc}"
-            cat "$report"
+            jq '{schema_version, extraction, vocabulary: {error_count: .vocabulary.error_count, warning_count: .vocabulary.warning_count}, profile: (.profile // null)}' "$report"
             echo "::endgroup::"
           done
+      - name: Upload Schema.org v30 diagnostic reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: schemaorg-v30-${{ github.sha }}
+          path: schema-audit/*.json
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 9
       - name: Package canonical source backup
         run: npm run package:source
       - name: Upload canonical source backup
