@@ -58,6 +58,14 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Schema Markup Validator parity diagnostics
+        shell: bash
+        run: |
+          set +e
+          npx --yes schemacraft-validator@1.0.1 check dist/index.html --format json 2>&1 | tee /tmp/schema-markup-validator.json
+          rc=${PIPESTATUS[0]}
+          echo "SCHEMA_MARKUP_VALIDATOR_DIAGNOSTIC_EXIT=$rc"
+          exit 0
       - name: Package canonical source backup
         run: npm run package:source
       - name: Upload canonical source backup
