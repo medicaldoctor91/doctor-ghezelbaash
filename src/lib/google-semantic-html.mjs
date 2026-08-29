@@ -69,14 +69,15 @@ export function bindGoogleSemanticHtml(source,{graphDocument,headProfile,pageId,
   // Schema Markup Validator emits UNKNOWN_FIELD for mainContentOfPage when the
   // item scope itself is an interactive <details>. Keep the exact details /
   // summary UI and its canonical H2 name property, but move only the item scope
-  // to a neutral semantic <section> wrapper around that details block.
+  // to a labeled semantic <section> wrapper around that details block.
   const scopedDetails=/(<details\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>)(<summary\b[^>]*>[\s\S]*?<\/summary>)(\s*)(<section\b[^>]*>)/gi;
   let wrappedDetails=0;
   output=output.replace(scopedDetails,(_match,detailsTag,summary,gap,sectionTag)=>{
-    const itemId=attr(detailsTag,'itemid');
+    const itemId=attr(detailsTag,'itemid'),detailsId=attr(detailsTag,'id'),labelId=attr(sectionTag,'aria-labelledby');
     if(!expected.has(itemId))throw new Error(`Visible details mainContentOfPage is outside the Head projection: ${itemId}`);
+    if(!detailsId||!labelId)throw new Error(`Visible details WebPageElement lacks stable id/label binding: ${itemId}`);
     const cleanDetails=['itemid','itemprop','itemscope','itemtype'].reduce((tag,name)=>withoutAttr(tag,name),detailsTag);
-    const scopeTag=`<section itemid="${escapeAttribute(itemId)}" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">`;
+    const scopeTag=`<section aria-labelledby="${escapeAttribute(labelId)}" id="${escapeAttribute(detailsId)}-semantic-scope" itemid="${escapeAttribute(itemId)}" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">`;
     wrappedDetails+=1;
     return `${enrich(scopeTag)}${cleanDetails}${summary}${gap}${sectionTag}`;
   });
