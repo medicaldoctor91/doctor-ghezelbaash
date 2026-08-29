@@ -7,7 +7,11 @@ import {nodeTypes} from '../projection-context.mjs';
 
 export {projectNode};
 
+const PHYSICIAN_ID='https://www.ghezelbaash.ir/#saeed-ghezelbash';
+const CLINIC_ID='https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah';
 const appendUnique=(target,values)=>{for(const value of values||[])if(!target.includes(value))target.push(value)};
+const asArray=value=>Array.isArray(value)?value:(value==null?[]:[value]);
+const literalText=value=>value&&typeof value==='object'&&value['@value']!=null?String(value['@value']):typeof value==='string'?value:null;
 const mergeProjectionProfiles=profiles=>{
   const active=(profiles||[]).filter(profile=>profile&&typeof profile==='object');
   if(!active.length)return null;
@@ -27,6 +31,7 @@ const mergeProjectionProfiles=profiles=>{
 
 const compactIdentityProfile=Object.freeze({include:['@id','@type','name','alternateName','sameAs','identifier']});
 const HEAD_NODE_PROFILE_EXTENSIONS=Object.freeze({
+  [PHYSICIAN_ID]:Object.freeze({include:['priceRange']}),
   'https://www.ghezelbaash.ir/#credential-doctor-of-medicine':Object.freeze({include:['@id','@type','name','credentialCategory','identifier','recognizedBy','url','validIn','expires']}),
   'https://www.ghezelbaash.ir/#irimc-credential-167430':Object.freeze({include:['@id','@type','name','credentialCategory','identifier','recognizedBy','url','validIn','expires']}),
 });
@@ -60,6 +65,18 @@ const SUPPORT_TYPE_PROFILE_EXTENSIONS=Object.freeze({
   CollegeOrUniversity:Object.freeze({include:[...compactIdentityProfile.include,'url']}),
 });
 
+const normalizePhysicianGoogleIdentity=projected=>{
+  const names=asArray(projected.name).map(value=>({raw:value,text:literalText(value)})).filter(item=>item.text);
+  if(names.length){
+    const preferred=names.find(item=>item.text==='دکتر سعید قزلباش')||names.find(item=>item.raw?.['@language']==='fa')||names[0];
+    const canonicalName=preferred.text;
+    const aliases=[...asArray(projected.alternateName).map(literalText),...names.filter(item=>item!==preferred).map(item=>item.text)].filter(Boolean);
+    projected.name=canonicalName;
+    projected.alternateName=[...new Set(aliases.filter(value=>value!==canonicalName))];
+  }
+  return projected;
+};
+
 export async function compileGraphProjections(context){
   const {semantic,generatedSemantic,graph,byId,readIds,release}=context;
   const [headIds,headProfile,configuredSupportIds,supportProfile]=await Promise.all([
@@ -79,15 +96,20 @@ export async function compileGraphProjections(context){
   for(const id of headIds){
     const node=byId.get(id);
     if(!node)throw new Error(`Head selection missing ${id}`);
+    const sourceNode=id===PHYSICIAN_ID
+      ? {...structuredClone(node),priceRange:node.priceRange??byId.get(CLINIC_ID)?.priceRange}
+      : node;
     const extension=HEAD_NODE_PROFILE_EXTENSIONS[id];
     if(!multilingualResourceIds.has(id)){
-      if(extension)headNodes.push(projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],extension])||{}));
-      else headNodes.push(projectNode(node,headProfile.nodes?.[id]));
+      const projected=extension
+        ? projectNode(sourceNode,mergeProjectionProfiles([headProfile.nodes?.[id],extension])||{})
+        : projectNode(sourceNode,headProfile.nodes?.[id]);
+      headNodes.push(id===PHYSICIAN_ID?normalizePhysicianGoogleIdentity(projected):projected);
       continue;
     }
     const projected=extension
-      ? projectNode(node,mergeProjectionProfiles([headProfile.nodes?.[id],extension])||{})
-      : projectNode(node,headProfile.nodes?.[id]);
+      ? projectNode(sourceNode,mergeProjectionProfiles([headProfile.nodes?.[id],extension])||{})
+      : projectNode(sourceNode,headProfile.nodes?.[id]);
     projected.inLanguage=[...CONTENT_LANGUAGES];
     headNodes.push(projected);
   }
