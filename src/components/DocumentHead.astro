@@ -12,6 +12,10 @@ const {title,description,robots,canonicalURL,isMain=false,stage='critical'}=Astr
 if(stage!=='critical'&&stage!=='discovery')throw new Error(`Unknown DocumentHead stage: ${stage}`);
 if(isMain&&canonicalURL.toString()!==release.canonicalUrl)throw new Error('Canonical page URL drift');
 
+const normalizedRobots=robots.split(',').map(value=>value.trim()).filter(Boolean);
+const robotsWithLargeImagePreview=isMain&&!normalizedRobots.some(value=>value.toLowerCase().startsWith('max-image-preview:'))
+  ? [...normalizedRobots,'max-image-preview:large'].join(',')
+  : robots;
 const og=headProfile.openGraph;
 const canonical=release.canonicalUrl;
 const versionDoi=release.dataset.zenodo.versionDoi;
@@ -44,7 +48,7 @@ const discoveryLinks:DiscoveryLink[]=[
 {isMain&&stage==='critical'&&<>
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport" />
 <link as="image" fetchpriority="high" imagesizes={HERO_IMAGE_SIZES} imagesrcset={HERO_PRELOAD_SRCSET} rel="preload" type="image/avif" />
-<title>{title}</title><meta content={description} name="description" /><meta content={robots} name="robots" /><meta content={robots} name="googlebot" /><meta content={robots} name="bingbot" />
+<title>{title}</title><meta content={description} name="description" /><meta content={robotsWithLargeImagePreview} name="robots" /><meta content={robotsWithLargeImagePreview} name="googlebot" /><meta content={robotsWithLargeImagePreview} name="bingbot" />
 <meta content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ" name="google-site-verification" /><meta content={headProfile.author} name="author" /><meta content={headProfile.applicationName} name="application-name" /><meta content={headProfile.appleMobileWebAppTitle} name="apple-mobile-web-app-title" />
 <meta content="telephone=no" name="format-detection" /><meta content="light" name="color-scheme" /><meta content={headProfile.themeColor} name="theme-color" /><meta content={headProfile.themeColor} name="msapplication-TileColor" /><meta content="/browserconfig.xml" name="msapplication-config" />
 <link as="font" crossorigin="anonymous" href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2" media="(min-width:48.01rem)" rel="preload" type="font/woff2" />
