@@ -7,6 +7,9 @@ const PHYSICIAN=`${ROOT}#saeed-ghezelbash`;
 const CLINIC=`${ROOT}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`;
 const PAGE=`${ROOT}#webpage`;
 const DATASET=`${ROOT}graph.jsonld#dataset`;
+const HF_DATASET=`${ROOT}#project-huggingface-dataset`;
+const ZENODO_DATASET=`${ROOT}#project-zenodo-release`;
+const GITHUB_SOURCE=`${ROOT}#project-github-source`;
 const ADDRESS=`${ROOT}#clinic-postal-address`;
 const GEO=`${ROOT}#clinic-geo`;
 const SPECIALTY=`${ROOT}#medical-specialty-aesthetic-medicine`;
@@ -110,13 +113,25 @@ assert.ok(isDate(dataset.dateModified)||isDateTime(dataset.dateModified),'Canoni
 assert.ok(refs(dataset.creator).includes(PHYSICIAN),'Canonical Dataset creator lost physician');
 assert.ok(refs(dataset.publisher).includes(PHYSICIAN),'Canonical Dataset publisher lost physician');
 const canonicalDistributions=refs(dataset.distribution);
-assert.ok(canonicalDistributions.length>=1,'Canonical Dataset must expose at least one DataDownload');
+assert.ok(canonicalDistributions.length>=12,'Canonical Dataset exposes too few direct DataDownload distributions');
 for(const id of canonicalDistributions){
   const distribution=requireNode(canonicalById,id,'Canonical Dataset DataDownload');
   assert.ok(types(distribution).includes('DataDownload'),`Dataset distribution is not DataDownload: ${id}`);
   assert.ok(typeof distribution.contentUrl==='string'&&/^https:\/\//.test(distribution.contentUrl),`DataDownload contentUrl invalid: ${id}`);
   assert.ok(asArray(distribution.encodingFormat).length>=1,`DataDownload encodingFormat missing: ${id}`);
 }
+for(const externalId of [HF_DATASET,ZENODO_DATASET])assert.ok(!canonicalDistributions.includes(externalId),`External Dataset landing resource leaked into direct distribution: ${externalId}`);
+const hfDataset=requireNode(canonicalById,HF_DATASET,'Hugging Face Dataset');
+exact(types(hfDataset),['Dataset'],'Hugging Face resource must remain a derived Dataset, not DataDownload');
+exact(refs(hfDataset.isBasedOn),[DATASET],'Hugging Face Dataset provenance drift');
+assert.ok(!Object.hasOwn(hfDataset,'contentUrl'),'Hugging Face landing page must not masquerade as contentUrl');
+assert.ok(typeof hfDataset.url==='string'&&hfDataset.url.startsWith('https://huggingface.co/datasets/'),'Hugging Face Dataset URL drift');
+const zenodoDataset=requireNode(canonicalById,ZENODO_DATASET,'Zenodo preservation Dataset');
+exact(types(zenodoDataset),['Dataset'],'Zenodo preservation resource must remain a Dataset, not DataDownload');
+exact(refs(zenodoDataset.isPartOf),[DATASET],'Zenodo release lineage drift');
+exact(refs(zenodoDataset.isBasedOn),[GITHUB_SOURCE],'Zenodo source provenance drift');
+assert.ok(!Object.hasOwn(zenodoDataset,'contentUrl'),'Zenodo DOI landing page must not masquerade as contentUrl');
+assert.ok(typeof zenodoDataset.url==='string'&&zenodoDataset.url.startsWith('https://doi.org/10.5281/zenodo.'),'Zenodo DOI URL drift');
 
 const videos=pageNodes.filter(node=>types(node).includes('VideoObject'));
 assert.equal(videos.length,4,'Expected four page VideoObject projections');
@@ -165,7 +180,7 @@ console.log(JSON.stringify({
   profilePage:'PASS',
   physicianEntity:'ONE_CANONICAL_ID',
   clinicAsset:'DISTINCT_STRONGLY_LINKED',
-  machineDataset:{status:'PASS',htmlInjected:false,directDistributions:canonicalDistributions.length},
+  machineDataset:{status:'PASS',htmlInjected:false,directDistributions:canonicalDistributions.length,huggingFace:'DERIVED_DATASET',zenodo:'VERSIONED_PRESERVATION_DATASET'},
   video:{objects:videos.length,clips:clips.length},
   imageRights:{objects:images.length,status:'PASS'},
   nonEligibleSupport:{scholarlyWorks:scholarlySupport.length,historicalEventDowngraded:true},
