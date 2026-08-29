@@ -12,7 +12,7 @@ const schemaOnlyContext=context=>{
     else if(value&&typeof value==='object'&&typeof value['@id']==='string'&&value['@id'].startsWith(SCHEMA_BASE))out[key]=structuredClone(value);
   }
   out['@version']??=1.1;
-  out['@vocac']=SCHEMA_BASE;
+  out['@vocab']=SCHEMA_BASE;
   out.schema=SCHEMA_BASE;
   return out;
 };
@@ -85,9 +85,8 @@ const normalizeGoogleRole=node=>{
     addAdditionalType(node,`${SCHEMA_BASE}EducationEvent`);
   }
   if(nodeTypes(node).includes('Dataset')){
-    // These remain in the canonical research graph. They are intentionally
-    // excluded from the page projection because Google assigns them a more
-    // restrictive Dataset meaning than Schema.org's general graph semantics.
+    // Preserve the full research semantics in the canonical RDF while keeping
+    // the in-page Dataset projection aligned with Google's narrower surface.
     for(const key of ['citation','provider','hasPart'])delete node[key];
   }
   return node;
@@ -106,11 +105,11 @@ const normalizeDatasetDistribution=(nodes,byId)=>{
 };
 
 /**
- * Compiles the JSON-LD delivered in HTML into a conservative Google-facing
- * projection while preserving the canonical research RDF unchanged. The page
- * projection uses only Schema.org context terms, native JSON scalars and
- * non-eligible support roles for historical events/publications that are not
- * landing pages for those Google rich-result features.
+ * Compiles HTML-delivered JSON-LD into a conservative Google-facing projection
+ * while preserving the canonical research RDF unchanged. The page projection
+ * uses Schema.org context terms, native JSON scalars, and non-eligible support
+ * roles for historical events/publications that are not landing pages for
+ * those Google rich-result features.
  */
 export function normalizeGooglePageGraph(document,{lane='support'}={}){
   if(!document||typeof document!=='object'||Array.isArray(document))throw new Error('Google page graph must be an object');
