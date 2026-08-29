@@ -61,7 +61,7 @@ jobs:
       - name: Schema.org v30 rendered-markup diagnostics
         shell: bash
         run: |
-          cargo install schemaorg-validate --version 0.3.0 --locked
+          cargo install schemaorg-validate --version 0.3.0 --locked --features cli
           schemaorg-validate --schema-version
           for profile in none google; do
             report="/tmp/schemaorg-v30-${profile}.json"
