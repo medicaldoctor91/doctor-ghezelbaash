@@ -7,7 +7,6 @@ const asArray=value=>Array.isArray(value)?value:(value==null?[]:[value]);
 const refId=value=>typeof value==='string'?value:value?.['@id'];
 const attr=(source,name)=>source.match(new RegExp(`\\b${name}=["']([^"']+)["']`,'i'))?.[1];
 const withoutAttr=(source,name)=>source.replace(new RegExp(`\\s+${name}(?:\\s*=\\s*(?:"[^"]*"|'[^']*'|[^\\s>]+))?`,'gi'),'');
-const addAttrs=(source,attrs)=>source.replace(/>$/,` ${attrs}>`);
 const escapeAttribute=value=>String(value).replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 
 const graphNodes=document=>Array.isArray(document)?document:document?.['@graph'];
@@ -67,23 +66,28 @@ export function bindGoogleSemanticHtml(source,{graphDocument,headProfile,pageId,
   const scopedSection=/<section\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>/gi;
   output=output.replace(scopedSection,tag=>enrich(tag));
 
-  // Schema Markup Validator currently emits UNKNOWN_FIELD for mainContentOfPage
-  // when the WebPageElement scope is carried directly by an interactive
-  // <details> container. Keep the visible <details>/<summary> UI untouched,
-  // but bind the Microdata item to its actual content <section> instead.
+  // Schema Markup Validator emits UNKNOWN_FIELD for mainContentOfPage when the
+  // item scope itself is an interactive <details>. Keep the exact details /
+  // summary UI and its canonical H2 name property, but move only the item scope
+  // to a neutral semantic <section> wrapper around that details block.
   const scopedDetails=/(<details\b(?=[^>]*\bitemprop=["'][^"']*\bmainContentOfPage\b[^"']*["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>)(<summary\b[^>]*>[\s\S]*?<\/summary>)(\s*)(<section\b[^>]*>)/gi;
+  let wrappedDetails=0;
   output=output.replace(scopedDetails,(_match,detailsTag,summary,gap,sectionTag)=>{
     const itemId=attr(detailsTag,'itemid');
     if(!expected.has(itemId))throw new Error(`Visible details mainContentOfPage is outside the Head projection: ${itemId}`);
-    const node=byId.get(itemId);
-    const canonicalName=typeof node?.name==='string'?node.name:null;
-    if(!canonicalName)throw new Error(`Visible details WebPageElement lacks canonical name: ${itemId}`);
     const cleanDetails=['itemid','itemprop','itemscope','itemtype'].reduce((tag,name)=>withoutAttr(tag,name),detailsTag);
-    const cleanSummary=summary.replace(/\s+itemprop=["']name["']/gi,'');
-    const scopedContent=addAttrs(sectionTag,`itemid="${escapeAttribute(itemId)}" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement"`);
-    const nameMeta=`<meta content="${escapeAttribute(canonicalName)}" itemprop="name"/>`;
-    return `${cleanDetails}${cleanSummary}${gap}${enrich(scopedContent,nameMeta)}`;
+    const scopeTag=`<section itemid="${escapeAttribute(itemId)}" itemprop="mainContentOfPage" itemscope itemtype="https://schema.org/WebPageElement">`;
+    wrappedDetails+=1;
+    return `${enrich(scopeTag)}${cleanDetails}${summary}${gap}${sectionTag}`;
   });
+  if(wrappedDetails){
+    let closedWrappers=0;
+    output=output.replace(/<\/section>\s*<\/details>/gi,match=>{
+      closedWrappers+=1;
+      return `${match}</section>`;
+    });
+    if(closedWrappers!==wrappedDetails)throw new Error(`Google details wrapper closure drift: opened=${wrappedDetails}, closed=${closedWrappers}`);
+  }
   const missing=expectedIds.filter(id=>!seen.has(id));
   if(missing.length)throw new Error(`Head mainContentOfPage nodes lack visible scopes: ${missing.join(', ')}`);
   return output;
