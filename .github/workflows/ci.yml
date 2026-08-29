@@ -58,6 +58,68 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Official Schema Markup Validator post-deploy diagnostic
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          http=$(curl --silent --show-error --location --max-time 90 \
+            --output /tmp/smv.raw \
+            --write-out '%{http_code}' \
+            --request POST 'https://validator.schema.org/validate' \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode 'url=https://www.ghezelbaash.ir/')
+          echo "SMV_HTTP=$http"
+          test "$http" = "200"
+          python - <<'PY'
+          from pathlib import Path
+          from collections import Counter
+          import json
+
+          raw=Path('/tmp/smv.raw').read_text('utf-8',errors='replace').strip()
+          if raw.startswith(")]}'"):
+              raw=raw[4:].lstrip()
+          data=json.loads(raw)
+          summary={
+              'fetchError': data.get('fetchError'),
+              'isRendered': data.get('isRendered'),
+              'numObjects': data.get('numObjects'),
+              'totalNumErrors': data.get('totalNumErrors'),
+              'totalNumWarnings': data.get('totalNumWarnings'),
+              'tripleGroups': len(data.get('tripleGroups') or []),
+          }
+          print('SMV_SUMMARY='+json.dumps(summary,ensure_ascii=False))
+
+          issues=[]
+          def walk(value):
+              if isinstance(value,dict):
+                  errors=value.get('errors')
+                  if isinstance(errors,list):
+                      issues.extend(x for x in errors if isinstance(x,dict) and x)
+                  for key,nested in value.items():
+                      if key!='errors': walk(nested)
+              elif isinstance(value,list):
+                  for nested in value: walk(nested)
+          walk(data)
+          sigs=Counter(json.dumps({
+              'errorType':x.get('errorType'),
+              'isSevere':x.get('isSevere'),
+              'severity':x.get('severity'),
+              'code':x.get('code'),
+              'pred':x.get('pred'),
+              'args':x.get('args'),
+              'message':x.get('message'),
+          },ensure_ascii=False,sort_keys=True,default=str) for x in issues)
+          print('SMV_UNIQUE_SIGNATURES='+str(len(sigs)))
+          print('SMV_SIGNATURES='+json.dumps([{'count':count,'signature':json.loads(sig)} for sig,count in sigs.most_common()],ensure_ascii=False))
+          if summary['fetchError'] is not None:
+              raise SystemExit('SMV fetchError is not null')
+          if (summary['totalNumErrors'] or 0) != 0:
+              raise SystemExit('SMV still reports errors')
+          if (summary['totalNumWarnings'] or 0) != 0:
+              raise SystemExit('SMV still reports warnings')
+          PY
       - name: Package canonical source backup
         run: npm run package:source
       - name: Upload canonical source backup
