@@ -178,8 +178,7 @@ for(const tag of projectedMainContentTags){
   const canonicalNames=graphValues(node?.name).map(graphText).filter(Boolean);
   const sectionLinks=[...scopePrelude.matchAll(/<link\b[^>]*>/gi)].map(match=>match[0]);
   const sectionMeta=[...scopePrelude.matchAll(/<meta\b[^>]*>/gi)].map(match=>match[0]);
-  const hasCanonicalNameProperty=tagProperties(heading).includes('name')||sectionMeta.some(meta=>tagProperties(meta).includes('name')&&canonicalNames.includes(attr(meta,'content')));
-  if(!heading||!hasCanonicalNameProperty||!canonicalNames.includes(visibleName)||!sectionLinks.some(link=>tagProperties(link).includes('url')&&attr(link,'href')===node.url)||!sectionMeta.some(meta=>tagProperties(meta).includes('inLanguage')&&attr(meta,'content')===node.inLanguage))fail(`Visible WebPageElement name/url/language drift: ${itemId} -> ${visibleName||'missing'}`);
+  if(!heading||!tagProperties(heading).includes('name')||!canonicalNames.includes(visibleName)||!sectionLinks.some(link=>tagProperties(link).includes('url')&&attr(link,'href')===node.url)||!sectionMeta.some(meta=>tagProperties(meta).includes('inLanguage')&&attr(meta,'content')===node.inLanguage))fail(`Visible WebPageElement name/url/language drift: ${itemId} -> ${visibleName||'missing'}`);
 }
 
 const howToId='https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway';
