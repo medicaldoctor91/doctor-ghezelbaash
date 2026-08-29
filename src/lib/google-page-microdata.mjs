@@ -7,8 +7,9 @@ const requireValue=(value,label)=>{
 
 /**
  * Builds the deliberately small DOM-bound Microdata view of the canonical
- * Google JSON-LD page node. The JSON-LD projection remains authoritative;
- * this view only repeats relations that bind that node to visible HTML.
+ * Google JSON-LD page node. The JSON-LD projection remains authoritative and
+ * may preserve the canonical IndividualPhysician provider type; this DOM view
+ * deliberately emits only Person to bind the ProfilePage to visible identity.
  */
 export function deriveGooglePageMicrodata(graphDocument,pageId){
   const nodes=Array.isArray(graphDocument)?graphDocument:graphDocument?.['@graph'];
@@ -28,8 +29,10 @@ export function deriveGooglePageMicrodata(graphDocument,pageId){
   const mainEntity=nodes.find(node=>node?.['@id']===mainEntityId);
   if(!mainEntity)throw new Error(`Google page projection is missing mainEntity node ${mainEntityId}`);
   const mainEntityTypes=asArray(mainEntity['@type']);
-  if(mainEntityTypes.length!==1||mainEntityTypes[0]!=='Person'){
-    throw new Error(`Google ProfilePage mainEntity must be exactly Person, received ${mainEntityTypes.join(', ')||'none'}`);
+  const uniqueMainEntityTypes=new Set(mainEntityTypes);
+  const allowedMainEntityTypes=new Set(['Person','IndividualPhysician']);
+  if(!uniqueMainEntityTypes.has('Person')||uniqueMainEntityTypes.size!==mainEntityTypes.length||[...uniqueMainEntityTypes].some(type=>!allowedMainEntityTypes.has(type))){
+    throw new Error(`Google ProfilePage mainEntity must include Person and may additionally include IndividualPhysician, received ${mainEntityTypes.join(', ')||'none'}`);
   }
   const mainEntityProperties=['mainEntity','author','publisher','reviewedBy','about'].filter(property=>
     asArray(page[property]).some(value=>refId(value)===mainEntityId)
