@@ -25,6 +25,7 @@ jobs:
             --data-urlencode 'url=https://www.ghezelbaash.ir/'
           python - <<'PY'
           from pathlib import Path
+          from html.parser import HTMLParser
           import json, re
           live=Path('/tmp/live.html').read_text('utf-8',errors='replace')
           raw=Path('/tmp/smv.raw').read_text('utf-8',errors='replace').strip()
@@ -38,18 +39,12 @@ jobs:
                       if isinstance(issue,dict) and issue.get('errorType')=='UNKNOWN_FIELD' and issue.get('args')==['mainContentOfPage','WebPageElement']:
                           eid=issue.get('errorID')
                           if eid not in found:
-                              begin=issue.get('begin') if isinstance(issue.get('begin'),int) else None
-                              end=issue.get('end') if isinstance(issue.get('end'),int) else None
-                              snippet=None
-                              if begin is not None:
-                                  snippet=live[max(0,begin-220):min(len(live),(end or begin)+300)]
                               found[eid]={
                                   'path':path,
-                                  'begin':begin,
-                                  'end':end,
+                                  'begin':issue.get('begin'),
+                                  'end':issue.get('end'),
                                   'ownerSet':issue.get('ownerSet'),
                                   'ownerToSeverity':issue.get('ownerToSeverity'),
-                                  'snippet':snippet,
                               }
                   for key,nested in value.items():
                       if key!='errors': walk(nested,f'{path}.{key}')
@@ -57,8 +52,42 @@ jobs:
                   for i,nested in enumerate(value): walk(nested,f'{path}[{i}]')
           walk(data)
           print('SMV_OWNER_SAMPLES='+json.dumps(found,ensure_ascii=False,sort_keys=True))
-          wrappers=[]
-          for m in re.finditer(r'<section\b(?=[^>]*\bid=["\'][^"\']+-semantic-scope["\'])[^>]*>',live,re.I):
-              wrappers.append(live[m.start():min(len(live),m.start()+900)])
-          print('LIVE_WRAPPER_SAMPLES='+json.dumps(wrappers,ensure_ascii=False))
+
+          VOID={'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'}
+          class Trace(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=True)
+                  self.stack=[]
+                  self.rows=[]
+              def handle_starttag(self,tag,attrs):
+                  a={k:(v if v is not None else '') for k,v in attrs}
+                  props=set((a.get('itemprop') or '').split())
+                  ancestors=[{
+                      'tag':x['tag'],
+                      'id':x['attrs'].get('id'),
+                      'itemid':x['attrs'].get('itemid'),
+                      'itemtype':x['attrs'].get('itemtype'),
+                      'itemprop':x['attrs'].get('itemprop'),
+                  } for x in self.stack if 'itemscope' in x['attrs']]
+                  if 'mainContentOfPage' in props:
+                      self.rows.append({
+                          'tag':tag,
+                          'id':a.get('id'),
+                          'itemid':a.get('itemid'),
+                          'itemtype':a.get('itemtype'),
+                          'ancestors':ancestors,
+                      })
+                  if tag not in VOID:
+                      self.stack.append({'tag':tag,'attrs':a})
+              def handle_startendtag(self,tag,attrs):
+                  self.handle_starttag(tag,attrs)
+                  if tag not in VOID and self.stack and self.stack[-1]['tag']==tag:
+                      self.stack.pop()
+              def handle_endtag(self,tag):
+                  for i in range(len(self.stack)-1,-1,-1):
+                      if self.stack[i]['tag']==tag:
+                          del self.stack[i:]
+                          return
+          trace=Trace(); trace.feed(live)
+          print('MICRODATA_MAINCONTENT_ANCESTORS='+json.dumps(trace.rows,ensure_ascii=False))
           PY
