@@ -16,5 +16,9 @@ function bindExactHeroTokens(value,expectedCount,context){
 }
 
 export function bindHeroPictureSizes(value){
-  return bindExactHeroTokens(value,3,'Canonical Hero picture');
+  const source=String(value);
+  const fallback=source.match(/<img\b(?=[^>]*\bsrc=["']\/media\/images\/physician\/saeed-ghezelbash-portrait-delivery-640\.b267bddf872d\.webp["'])[^>]*>/i)?.[0];
+  if(!fallback)throw new Error('Canonical Hero picture: fallback img missing');
+  if(/\bsizes\s*=/.test(fallback)&&!/\bsrcset\s*=/.test(fallback))throw new Error('Canonical Hero picture: fallback img must not carry sizes without srcset');
+  return bindExactHeroTokens(source,2,'Canonical Hero picture sources');
 }
