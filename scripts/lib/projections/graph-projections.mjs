@@ -30,6 +30,26 @@ const HEAD_NODE_PROFILE_EXTENSIONS=Object.freeze({
   'https://www.ghezelbaash.ir/#credential-doctor-of-medicine':Object.freeze({include:['@id','@type','name','credentialCategory','identifier','recognizedBy','url','validIn','expires']}),
   'https://www.ghezelbaash.ir/#irimc-credential-167430':Object.freeze({include:['@id','@type','name','credentialCategory','identifier','recognizedBy','url','validIn','expires']}),
 });
+const SUPPORT_ID_EXCLUSIONS=Object.freeze(new Set([
+  'https://www.ghezelbaash.ir/#online-consultation-channel',
+]));
+const SUPPORT_ID_ADDITIONS=Object.freeze([
+  'https://www.ghezelbaash.ir/#country-iran',
+  'https://www.ghezelbaash.ir/#country-iraq',
+  'https://www.ghezelbaash.ir/#city-kermanshah',
+  'https://www.ghezelbaash.ir/#city-tehran',
+  'https://www.ghezelbaash.ir/#district-1-kermanshah',
+  'https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine',
+  'https://www.ghezelbaash.ir/#occupation-physician',
+  'https://www.ghezelbaash.ir/#occupation-medical-researcher',
+  'https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences',
+  'https://www.ghezelbaash.ir/#topic-botox-migraine-context',
+  'https://www.ghezelbaash.ir/#topic-botox-neurology-context',
+  'https://www.ghezelbaash.ir/#topic-hair-transplant-boundary',
+  'https://www.ghezelbaash.ir/#topic-orthognathic-boundary',
+  'https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction',
+  'https://www.ghezelbaash.ir/#clinic-consultation-treatment-and-follow-up-path',
+]);
 const SUPPORT_TYPE_PROFILE_EXTENSIONS=Object.freeze({
   DefinedTerm:Object.freeze({include:['url']}),
   Country:compactIdentityProfile,
@@ -42,12 +62,16 @@ const SUPPORT_TYPE_PROFILE_EXTENSIONS=Object.freeze({
 
 export async function compileGraphProjections(context){
   const {semantic,generatedSemantic,graph,byId,readIds,release}=context;
-  const [headIds,headProfile,supportIds,supportProfile]=await Promise.all([
+  const [headIds,headProfile,configuredSupportIds,supportProfile]=await Promise.all([
     readIds('head'),
     readFile(path.join(semantic,'head-profile.json'),'utf8').then(JSON.parse),
     readIds('support'),
     readFile(path.join(semantic,'support-profile.json'),'utf8').then(JSON.parse),
   ]);
+  const supportIds=[...new Set([
+    ...configuredSupportIds.filter(id=>!SUPPORT_ID_EXCLUSIONS.has(id)),
+    ...SUPPORT_ID_ADDITIONS,
+  ])];
   await mkdir(generatedSemantic,{recursive:true});
 
   const multilingualResourceIds=new Set([`${release.canonicalUrl}#website`,`${release.canonicalUrl}#webpage`]);
