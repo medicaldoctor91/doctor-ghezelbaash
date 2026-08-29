@@ -58,6 +58,21 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Schema.org v30 rendered-markup diagnostics
+        shell: bash
+        run: |
+          cargo install schemaorg-validate --version 0.3.0 --locked
+          schemaorg-validate --schema-version
+          for profile in none google; do
+            report="/tmp/schemaorg-v30-${profile}.json"
+            set +e
+            schemaorg-validate --file dist/index.html --profile "$profile" --severity warning --format json > "$report"
+            rc=$?
+            set -e
+            echo "::group::Schema.org v30 profile=${profile} exit=${rc}"
+            cat "$report"
+            echo "::endgroup::"
+          done
       - name: Package canonical source backup
         run: npm run package:source
       - name: Upload canonical source backup
