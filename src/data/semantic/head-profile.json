@@ -40,6 +40,16 @@
           "https://www.ghezelbaash.ir/#credential-doctor-of-medicine",
           "https://www.ghezelbaash.ir/#irimc-credential-167430"
         ],
+        "practicesAt": [
+          "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        ],
+        "medicalSpecialty": [
+          "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
+        ],
+        "areaServed": [
+          "https://www.ghezelbaash.ir/#country-iran",
+          "https://www.ghezelbaash.ir/#country-iraq"
+        ],
         "workLocation": [
           "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
         ],
@@ -74,7 +84,8 @@
       },
       "valueAllow": {
         "@type": [
-          "Person"
+          "Person",
+          "IndividualPhysician"
         ],
         "sameAs": [
           "https://www.wikidata.org/entity/Q140287622",
@@ -156,6 +167,22 @@
           "https://www.ghezelbaash.ir/#identifier-clinic-osm-node",
           "https://www.ghezelbaash.ir/#identifier-clinic-wikidata"
         ],
+        "medicalSpecialty": [
+          "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
+        ],
+        "areaServed": [
+          "https://www.ghezelbaash.ir/#country-iran",
+          "https://www.ghezelbaash.ir/#country-iraq"
+        ],
+        "owner": [
+          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        ],
+        "founder": [
+          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        ],
+        "employee": [
+          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        ],
         "image": [],
         "hasMap": [],
         "potentialAction": [
@@ -167,6 +194,50 @@
       "valueAllow": {
         "name": [
           "کلینیک زیبایی دکتر سعید قزلباش"
+        ]
+      }
+    },
+    "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs"
+      ],
+      "valueAllow": {
+        "@type": [
+          "MedicalSpecialty"
+        ]
+      }
+    },
+    "https://www.ghezelbaash.ir/#country-iran": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "sameAs",
+        "identifier"
+      ],
+      "valueAllow": {
+        "@type": [
+          "Country",
+          "Place"
+        ]
+      }
+    },
+    "https://www.ghezelbaash.ir/#country-iraq": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "sameAs",
+        "identifier"
+      ],
+      "valueAllow": {
+        "@type": [
+          "Country",
+          "Place"
         ]
       }
     },
