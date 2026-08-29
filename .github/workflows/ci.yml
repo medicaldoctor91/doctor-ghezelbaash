@@ -58,6 +58,98 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Official Schema Markup Validator post-merge live audit
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --location --max-time 90 \
+            --output /tmp/live.html \
+            'https://www.ghezelbaash.ir/'
+          http=$(curl --silent --show-error --location --max-time 90 \
+            --output /tmp/smv.raw \
+            --write-out '%{http_code}' \
+            --request POST 'https://validator.schema.org/validate' \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode 'url=https://www.ghezelbaash.ir/')
+          SMV_HTTP="$http" python - <<'PY'
+          from pathlib import Path
+          from collections import Counter
+          import json, os, re, sys
+
+          live=Path('/tmp/live.html').read_text('utf-8',errors='replace')
+          details_scoped=len(re.findall(r'<details\b(?=[^>]*\bitemprop=["\'][^"\']*\bmainContentOfPage\b[^"\']*["\'])[^>]*>',live,re.I))
+          section_scoped=len(re.findall(r'<section\b(?=[^>]*\bitemprop=["\'][^"\']*\bmainContentOfPage\b[^"\']*["\'])[^>]*>',live,re.I))
+          semantic_wrappers=len(re.findall(r'<section\b(?=[^>]*\bid=["\'][^"\']+-semantic-scope["\'])[^>]*>',live,re.I))
+          wrapper_headings=0
+          for match in re.finditer(r'<section\b(?=[^>]*\bid=["\'][^"\']+-semantic-scope["\'])[^>]*>',live,re.I):
+              fragment=live[match.end():match.end()+5000]
+              if re.search(r'<h[2-6]\b(?=[^>]*\bitemprop=["\'][^"\']*\bname\b[^"\']*["\'])[^>]*>',fragment,re.I):
+                  wrapper_headings+=1
+          print('LIVE_DOM_SUMMARY='+json.dumps({
+              'detailsScopedMainContentOfPage':details_scoped,
+              'sectionScopedMainContentOfPage':section_scoped,
+              'semanticScopeWrappers':semantic_wrappers,
+              'semanticScopeWrappersWithHeadingName':wrapper_headings,
+          },sort_keys=True))
+
+          raw=Path('/tmp/smv.raw').read_text('utf-8',errors='replace').strip()
+          if raw.startswith(")]}'"):
+              raw=raw[4:].lstrip()
+          data=json.loads(raw)
+          issue_rows=[]
+          def walk(value):
+              if isinstance(value,dict):
+                  errors=value.get('errors')
+                  if isinstance(errors,list):
+                      issue_rows.extend(issue for issue in errors if isinstance(issue,dict) and issue)
+                  for key,nested in value.items():
+                      if key!='errors': walk(nested)
+              elif isinstance(value,list):
+                  for nested in value: walk(nested)
+          walk(data)
+          signatures=Counter((
+              issue.get('errorType'),
+              bool(issue.get('isSevere')),
+              json.dumps(issue.get('args'),ensure_ascii=False,sort_keys=True,default=str),
+              issue.get('errorID'),
+          ) for issue in issue_rows)
+          unique=[{
+              'count':count,
+              'errorType':sig[0],
+              'isSevere':sig[1],
+              'args':json.loads(sig[2]) if sig[2] not in ('null','') else None,
+              'errorID':sig[3],
+          } for sig,count in signatures.most_common()]
+          summary={
+              'http':os.environ.get('SMV_HTTP'),
+              'fetchError':data.get('fetchError'),
+              'isRendered':data.get('isRendered'),
+              'numObjects':data.get('numObjects'),
+              'totalNumErrors':data.get('totalNumErrors'),
+              'totalNumWarnings':data.get('totalNumWarnings'),
+              'uniqueIssueSignatures':unique[:20],
+          }
+          print('SMV_POSTMERGE='+json.dumps(summary,ensure_ascii=False,sort_keys=True))
+          target=('UNKNOWN_FIELD',False,json.dumps(['mainContentOfPage','WebPageElement'],ensure_ascii=False,sort_keys=True),'UNKNOWN_FIELD')
+          target_present=any(sig[0]=='UNKNOWN_FIELD' and 'mainContentOfPage' in sig[2] and 'WebPageElement' in sig[2] for sig in signatures)
+          ok=(
+              os.environ.get('SMV_HTTP')=='200'
+              and data.get('fetchError') in (None,'')
+              and data.get('isRendered') is True
+              and int(data.get('totalNumErrors') or 0)==0
+              and not target_present
+              and details_scoped==0
+              and section_scoped==18
+              and semantic_wrappers==3
+              and wrapper_headings==3
+          )
+          if not ok:
+              print('POSTMERGE_SCHEMA_ACCEPTANCE=FAIL',file=sys.stderr)
+              raise SystemExit(1)
+          print('POSTMERGE_SCHEMA_ACCEPTANCE=PASS')
+          PY
       - name: Package canonical source backup
         run: npm run package:source
       - name: Upload canonical source backup
