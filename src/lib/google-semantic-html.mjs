@@ -61,7 +61,7 @@ export function bindGoogleSemanticHtml(source,{graphDocument,headProfile,pageId,
     const inLanguage=asArray(node.inLanguage);
     if(!url||inLanguage.length!==1||typeof inLanguage[0]!=='string')throw new Error(`Visible WebPageElement lacks one canonical url/inLanguage: ${itemId}`);
     seen.add(itemId);
-    return `${withoutAttr(tag,'itemprop')}${tail}<link href="${escapeAttribute(url)}" itemprop="url"/><meta content="${escapeAttribute(inLanguage[0])}" itemprop="inLanguage"/>`;
+    return `${withoutAttr(tag,'itemprop')}${tail}<link href="${escapeAttribute(url)}" itemprop="url"><meta content="${escapeAttribute(inLanguage[0])}" itemprop="inLanguage">`;
   };
 
   // JSON-LD is the authoritative owner of ProfilePage -> mainContentOfPage.
