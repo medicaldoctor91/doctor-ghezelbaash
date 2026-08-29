@@ -58,13 +58,26 @@ jobs:
             done
             exit "$rc"
           fi
-      - name: Schema Markup Validator parity diagnostics
+      - name: Official Schema Markup Validator diagnostics
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
         shell: bash
         run: |
           set +e
-          npx --yes schemacraft-validator@1.0.1 check dist/index.html --format json 2>&1 | tee /tmp/schema-markup-validator.json
-          rc=${PIPESTATUS[0]}
-          echo "SCHEMA_MARKUP_VALIDATOR_DIAGNOSTIC_EXIT=$rc"
+          status=$(curl --silent --show-error --location --max-time 90 \
+            --output /tmp/schema-markup-validator.json \
+            --write-out '%{http_code}' \
+            --request POST 'https://validator.schema.org/validate' \
+            --header 'Accept: application/json' \
+            --data-urlencode 'parser=auto' \
+            --data-urlencode 'code@dist/index.html')
+          rc=$?
+          echo "SCHEMA_MARKUP_VALIDATOR_HTTP=$status CURL_EXIT=$rc"
+          if jq -e . /tmp/schema-markup-validator.json >/dev/null 2>&1; then
+            jq '{totalErrors:(.totalNumErrors // .numErrors // null), totalWarnings:(.totalNumWarnings // .numWarnings // null), tripleGroups:(.tripleGroups | length? // null), keys:(keys)}' /tmp/schema-markup-validator.json
+          else
+            head -c 4000 /tmp/schema-markup-validator.json || true
+          fi
           exit 0
       - name: Package canonical source backup
         run: npm run package:source
