@@ -3,6 +3,7 @@ import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs';
 import {projectNode} from '../../../src/lib/semantic-projection.mjs';
 import {normalizeGoogleSupportGraph} from '../google-support-graph.mjs';
+import {normalizeGooglePageGraph} from '../google-page-graph.mjs';
 import {nodeTypes} from '../projection-context.mjs';
 
 export {projectNode};
@@ -91,7 +92,7 @@ export async function compileGraphProjections(context){
     projected.inLanguage=[...CONTENT_LANGUAGES];
     headNodes.push(projected);
   }
-  const headDoc={'@context':graph['@context'],'@graph':headNodes};
+  const headDoc=normalizeGooglePageGraph({'@context':graph['@context'],'@graph':headNodes},{lane:'head'});
   const headRaw=`${JSON.stringify(headDoc)}\n`;
   if(Buffer.byteLength(headRaw)>headProfile.maxBytes)throw new Error(`Head graph ${Buffer.byteLength(headRaw)} exceeds ${headProfile.maxBytes}`);
   await writeFile(path.join(generatedSemantic,'head-graph.json'),headRaw);
@@ -118,7 +119,7 @@ export async function compileGraphProjections(context){
     if(!node)throw new Error(`Support selection missing ${id}`);
     supportNodes.push(supportProfile.mode==='full'?structuredClone(node):pruneInlineRefs(projectNode(node,profileFor(node)||{})));
   }
-  const supportDoc=normalizeGoogleSupportGraph({'@context':graph['@context'],'@graph':supportNodes});
+  const supportDoc=normalizeGooglePageGraph(normalizeGoogleSupportGraph({'@context':graph['@context'],'@graph':supportNodes}),{lane:'support'});
   const supportRaw=`${JSON.stringify(supportDoc)}\n`;
   if(Buffer.byteLength(supportRaw)>supportProfile.maxBytes)throw new Error(`Support graph ${Buffer.byteLength(supportRaw)} exceeds ${supportProfile.maxBytes}`);
   await writeFile(path.join(generatedSemantic,'support-graph.json'),supportRaw);
