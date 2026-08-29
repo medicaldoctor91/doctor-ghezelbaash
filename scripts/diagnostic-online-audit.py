@@ -21,50 +21,13 @@ def save(d,label):
     except Exception:pass
     return text
 
-def click_text(d,pattern):
-    rx=re.compile(pattern,re.I)
-    for el in d.find_elements(By.XPATH,"//button|//*[@role='button']|//*[@role='tab']"):
-        try:
-            text=(el.text or el.get_attribute('aria-label') or '').strip()
-            if el.is_displayed() and el.is_enabled() and rx.search(text):
-                d.execute_script("arguments[0].scrollIntoView({block:'center'});",el)
-                d.execute_script("arguments[0].click();",el)
-                return text
-        except Exception:pass
-    return None
-
-def click_exact_ui(d,label):
-    literal=label.replace("'","\\'")
-    queries=[
-      f"//*[@role='tab' and normalize-space(.)='{literal}']",
-      f"//*[@role='button' and normalize-space(.)='{literal}']",
-      f"//button[normalize-space(.)='{literal}']",
-      f"//*[normalize-space(.)='{literal}']",
-    ]
-    seen=set()
-    for query in queries:
-        for el in d.find_elements(By.XPATH,query):
-            try:
-                key=el.id
-                if key in seen:continue
-                seen.add(key)
-                target=d.execute_script("return arguments[0].closest('[role=tab],[role=button],button,a') || arguments[0]",el)
-                text=(target.text or target.get_attribute('aria-label') or el.text or '').strip()
-                if not target.is_displayed() or not target.is_enabled():continue
-                d.execute_script("arguments[0].scrollIntoView({block:'center'});",target)
-                d.execute_script("arguments[0].click();",target)
-                return {'text':text,'tag':target.tag_name,'role':target.get_attribute('role'),'class':target.get_attribute('class')}
-            except Exception:pass
-    return None
-
 def fetch_live_html():
     p=subprocess.run(['curl','--silent','--show-error','--location','--max-time','90','--user-agent','Mozilla/5.0 Chrome/151','--write-out','\n__HTTP__%{http_code}','--',TARGET],text=True,capture_output=True)
-    if p.returncode: raise RuntimeError('live HTML fetch failed: '+p.stderr.strip())
+    if p.returncode:raise RuntimeError('live HTML fetch failed: '+p.stderr.strip())
     body,sep,status=p.stdout.rpartition('\n__HTTP__')
-    if sep=='' or status.strip()!='200': raise RuntimeError(f'live HTML HTTP status={status!r}')
-    if '<html' not in body.lower() or len(body)<100000: raise RuntimeError(f'live HTML unexpectedly small: {len(body)}')
+    if sep=='' or status.strip()!='200':raise RuntimeError(f'live HTML HTTP status={status!r}')
     OUT.joinpath('production-live.html').write_text(body,encoding='utf-8')
-    print('LIVE_HTML='+json.dumps({'chars':len(body),'bytes':len(body.encode('utf-8'))},ensure_ascii=False))
+    print('LIVE_HTML='+json.dumps({'chars':len(body),'bytes':len(body.encode())}))
     return body
 
 def summarize(text,url):
@@ -76,78 +39,66 @@ def summarize(text,url):
       'invalidItems':[x for x in lines if re.search(r'\b\d+ invalid item(?:s)? detected\b|invalid item',x,re.I)],
       'critical':[x for x in lines if re.search(r'critical issue',x,re.I)],
       'nonCritical':[x for x in lines if re.search(r'non-critical',x,re.I)],
-      'detectedTypes':[x for x in lines if re.search(r'Profile page|Video|Local business|Organization|Dataset|Image metadata|Article|Event|Course|Breadcrumb|Review snippet|FAQ',x,re.I)][:100],
-      'errorLike':[x for x in lines if re.search(r'something went wrong|could not|cannot|failed|error|problem|log in',x,re.I)][:40]
+      'detectedTypes':[x for x in lines if re.search(r'Profile page|Video|Local business|Organization|Dataset|Image metadata|Article|Event|Course|Breadcrumb|Review snippet|FAQ',x,re.I)][:120],
+      'errors':[x for x in lines if re.search(r'something went wrong|could not|cannot|failed|error|problem|log in',x,re.I)][:40]
     }
 
-def run_rrt_code(html):
-    opts=Options()
-    for arg in ('--headless=new','--no-sandbox','--disable-dev-shm-usage','--window-size=1600,1600','--lang=en-US','--disable-gpu'):
-        opts.add_argument(arg)
-    opts.set_capability('goog:loggingPrefs',{'browser':'ALL'})
-    d=webdriver.Chrome(options=opts); d.set_page_load_timeout(60)
-    try:
-        d.get('https://search.google.com/test/rich-results')
-        WebDriverWait(d,30).until(lambda x:'Rich Results Test' in body_text(x))
-        tabs=d.execute_script("return [...document.querySelectorAll('[role=tab]')].map((e,i)=>({i,text:e.innerText,ariaSelected:e.getAttribute('aria-selected'),cls:e.className,tag:e.tagName}));")
-        print('RRT_TABS='+json.dumps(tabs,ensure_ascii=False))
-        clicked=click_exact_ui(d,'CODE') or click_text(d,r'^CODE$')
-        print('RRT_CODE_TAB_CLICKED='+json.dumps(clicked,ensure_ascii=False) if isinstance(clicked,dict) else 'RRT_CODE_TAB_CLICKED='+repr(clicked))
-        if not clicked: raise RuntimeError('CODE tab not found')
-        WebDriverWait(d,30).until(lambda x:any(e.is_displayed() for e in x.find_elements(By.CSS_SELECTOR,'.CodeMirror')))
-        meta=d.execute_script("return [...document.querySelectorAll('.CodeMirror')].map((e,i)=>({i,visible:!!e.offsetParent,hasApi:!!e.CodeMirror,cls:e.className,textarea:!!e.querySelector('textarea')}));")
-        print('RRT_CODE_EDITORS='+json.dumps(meta,ensure_ascii=False))
-        result=d.execute_script("""
-          const html=arguments[0];
-          const editors=[...document.querySelectorAll('.CodeMirror')].filter(e=>e.offsetParent!==null);
-          for(const el of editors){
-            if(el.CodeMirror){el.CodeMirror.setValue(html);el.CodeMirror.focus();return {ok:true,mode:'CodeMirror',length:el.CodeMirror.getValue().length};}
-            const ta=el.querySelector('textarea');
-            if(ta){const s=Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set;s.call(ta,html);ta.dispatchEvent(new Event('input',{bubbles:true}));ta.dispatchEvent(new Event('change',{bubbles:true}));return {ok:true,mode:'textarea',length:ta.value.length};}
-          }
-          return {ok:false};
-        """,html)
-        print('RRT_CODE_SET='+json.dumps(result,ensure_ascii=False))
-        if not result or not result.get('ok') or result.get('length')!=len(html): raise RuntimeError('CODE editor did not receive full production HTML')
-        d.execute_script("document.body.click()")
-        WebDriverWait(d,30).until(lambda x:any((e.text or '').strip().lower()=='test code' and e.is_displayed() and e.get_attribute('aria-disabled')!='true' for e in x.find_elements(By.XPATH,"//button|//*[@role='button']")))
-        clicked=click_text(d,r'^test code$')
-        print('RRT_TEST_CODE_CLICKED='+repr(clicked))
-        if not clicked: raise RuntimeError('TEST CODE did not become clickable')
-        terminal=[r'Page is eligible for rich results',r'No items detected',r'invalid item',r'Detected structured data',r'Something went wrong',r'log in and try again']
-        start=time.time(); final=''; hit=None
-        while time.time()-start<180:
-            text=body_text(d)
-            for pat in terminal:
-                if re.search(pat,text,re.I): final=text;hit=pat;break
-            if hit:break
-            time.sleep(2)
-        final=save(d,'code-final') if not final else (save(d,'code-final') or final)
-        summary=summarize(final,d.current_url); summary['terminal']=hit; summary['elapsed']=round(time.time()-start,1); summary['inputBytes']=len(html.encode())
-        print('RRT_CODE_SUMMARY='+json.dumps(summary,ensure_ascii=False))
-        print('RRT_CODE_TEXT_BEGIN\n'+final[:30000]+'\nRRT_CODE_TEXT_END')
-        try:
-            logs=d.get_log('browser'); OUT.joinpath('rrt-code-console.json').write_text(json.dumps(logs,ensure_ascii=False,indent=2),encoding='utf-8')
-            print('RRT_CODE_BROWSER_LOGS='+json.dumps(logs[-20:],ensure_ascii=False))
-        except Exception as e:print('RRT_CODE_BROWSER_LOG_ERROR='+repr(e))
-        return summary
-    except Exception as e:
-        state=save(d,'code-exception')
-        print('RRT_CODE_EXCEPTION='+json.dumps({'error':repr(e),'url':d.current_url,'body':state[:12000]},ensure_ascii=False))
-        return {'harnessError':repr(e),'url':d.current_url}
-    finally:d.quit()
-
-def run_w3c():
-    p=subprocess.run(['curl','--silent','--show-error','--location','--max-time','120','--get','https://validator.w3.org/nu/','--data-urlencode','doc='+TARGET,'--data-urlencode','out=json'],text=True,capture_output=True)
-    if p.returncode:print('W3C_NU_FETCH_ERROR='+p.stderr.strip());return None
-    data=json.loads(p.stdout);msgs=data.get('messages') or [];counts={}
-    for x in msgs:counts[x.get('type','unknown')]=counts.get(x.get('type','unknown'),0)+1
-    errors=[x for x in msgs if x.get('type')=='error']
-    report={'messageCount':len(msgs),'counts':counts,'errors':errors}
-    print('W3C_NU_SUMMARY='+json.dumps(report,ensure_ascii=False));OUT.joinpath('w3c-nu.json').write_text(p.stdout,encoding='utf-8')
-    return report
-
 html=fetch_live_html()
-rrt=run_rrt_code(html)
-w3c=run_w3c()
-OUT.joinpath('summary.json').write_text(json.dumps({'target':TARGET,'rrtCode':rrt,'w3c':w3c},ensure_ascii=False,indent=2),encoding='utf-8')
+opts=Options()
+for arg in ('--headless=new','--no-sandbox','--disable-dev-shm-usage','--window-size=1600,1600','--lang=en-US','--disable-gpu'):opts.add_argument(arg)
+opts.set_capability('goog:loggingPrefs',{'browser':'ALL'})
+d=webdriver.Chrome(options=opts);d.set_page_load_timeout(60)
+summary={}
+try:
+    d.get('https://search.google.com/test/rich-results')
+    WebDriverWait(d,30).until(lambda x:'Rich Results Test' in body_text(x))
+    tabs=d.find_elements(By.XPATH,"//*[@role='tab']")
+    print('RRT_TABS='+json.dumps([{'text':t.text,'selected':t.get_attribute('aria-selected'),'tag':t.tag_name} for t in tabs],ensure_ascii=False))
+    code=next((t for t in tabs if (t.text or '').strip().upper().endswith('CODE')),None)
+    if code is None:raise RuntimeError('CODE role=tab not found')
+    d.execute_script("arguments[0].scrollIntoView({block:'center'});arguments[0].click();",code)
+    print('RRT_CODE_TAB_CLICKED='+repr(code.text))
+    WebDriverWait(d,30).until(lambda x:any(e.is_displayed() for e in x.find_elements(By.CSS_SELECTOR,'.CodeMirror')))
+    result=d.execute_script("""
+      const html=arguments[0];
+      const editors=[...document.querySelectorAll('.CodeMirror')].filter(e=>e.offsetParent!==null);
+      for(const el of editors){
+        if(el.CodeMirror){el.CodeMirror.setValue(html);el.CodeMirror.focus();return {ok:true,mode:'CodeMirror',length:el.CodeMirror.getValue().length};}
+        const ta=el.querySelector('textarea');
+        if(ta){const s=Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set;s.call(ta,html);ta.dispatchEvent(new Event('input',{bubbles:true}));ta.dispatchEvent(new Event('change',{bubbles:true}));return {ok:true,mode:'textarea',length:ta.value.length};}
+      }
+      return {ok:false};
+    """,html)
+    print('RRT_CODE_SET='+json.dumps(result))
+    if not result or not result.get('ok') or result.get('length')!=len(html):raise RuntimeError('full HTML not set')
+    d.execute_script("document.body.click()")
+    def test_button(x):
+        for e in x.find_elements(By.XPATH,"//button|//*[@role='button']"):
+            try:
+                if (e.text or '').strip().upper().endswith('TEST CODE') and e.is_displayed() and e.get_attribute('aria-disabled')!='true':return e
+            except Exception:pass
+        return False
+    btn=WebDriverWait(d,30).until(test_button)
+    d.execute_script("arguments[0].scrollIntoView({block:'center'});arguments[0].click();",btn)
+    print('RRT_TEST_CODE_CLICKED='+repr(btn.text))
+    terminal=[r'Page is eligible for rich results',r'No items detected',r'invalid item',r'Detected structured data',r'Something went wrong',r'log in and try again']
+    start=time.time();hit=None
+    while time.time()-start<180:
+        text=body_text(d)
+        hit=next((p for p in terminal if re.search(p,text,re.I)),None)
+        if hit:break
+        time.sleep(2)
+    text=save(d,'code-final')
+    summary=summarize(text,d.current_url);summary.update({'terminal':hit,'elapsed':round(time.time()-start,1),'inputBytes':len(html.encode())})
+    print('RRT_CODE_SUMMARY='+json.dumps(summary,ensure_ascii=False))
+    print('RRT_CODE_TEXT_BEGIN\n'+text[:40000]+'\nRRT_CODE_TEXT_END')
+except Exception as e:
+    text=save(d,'code-exception')
+    summary={'harnessError':repr(e),'url':d.current_url,'body':text[:12000]}
+    print('RRT_CODE_EXCEPTION='+json.dumps(summary,ensure_ascii=False))
+finally:
+    try:
+        OUT.joinpath('rrt-console.json').write_text(json.dumps(d.get_log('browser'),ensure_ascii=False,indent=2),encoding='utf-8')
+    except Exception:pass
+    d.quit()
+OUT.joinpath('summary.json').write_text(json.dumps({'target':TARGET,'rrtCode':summary},ensure_ascii=False,indent=2),encoding='utf-8')
