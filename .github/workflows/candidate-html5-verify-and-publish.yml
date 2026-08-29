@@ -62,8 +62,21 @@ jobs:
               raise SystemExit('clinic/render-chunk close-order invariant failed')
           print('HTML5_SOURCE_NESTING_REPAIR=PASS')
           PY
+      - name: Create exact local candidate commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Dr. Saeed Ghezelbash | دکتر سعید قزلباش'
+          git config user.email 'medicaldoctor91@gmail.com'
+          git add src/content-source/page.md
+          git commit -m 'fix: repair clinic HTML nesting and Microdata ownership'
+          candidate_sha=$(git rev-parse HEAD)
+          git show -s --format='%H %ct %s' "$candidate_sha"
+          echo "CANDIDATE_SHA=$candidate_sha" >> "$GITHUB_ENV"
       - run: npm ci
       - name: Build exact candidate
+        env:
+          GITHUB_SHA: ${{ env.CANDIDATE_SHA }}
         run: npm run build
       - name: Validate built candidate with official Schema Markup Validator
         shell: bash
@@ -116,8 +129,5 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name 'Dr. Saeed Ghezelbash | دکتر سعید قزلباش'
-          git config user.email 'medicaldoctor91@gmail.com'
-          git add src/content-source/page.md
-          git commit -m 'fix: repair clinic HTML nesting and Microdata ownership'
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           git push origin HEAD:refs/heads/fix/html5-clinic-scope-ownership-2026-08-29
