@@ -12,11 +12,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Inspect live SMV warning owners
+      - name: Inspect live SMV warning contexts
         shell: bash
         run: |
           set -euo pipefail
-          curl --silent --show-error --location --max-time 90 --output /tmp/live.html 'https://www.ghezelbaash.ir/'
           curl --silent --show-error --location --max-time 90 \
             --output /tmp/smv.raw \
             --request POST 'https://validator.schema.org/validate' \
@@ -25,69 +24,43 @@ jobs:
             --data-urlencode 'url=https://www.ghezelbaash.ir/'
           python - <<'PY'
           from pathlib import Path
-          from html.parser import HTMLParser
-          import json, re
-          live=Path('/tmp/live.html').read_text('utf-8',errors='replace')
+          from collections import Counter, defaultdict
+          import json
           raw=Path('/tmp/smv.raw').read_text('utf-8',errors='replace').strip()
           if raw.startswith(")]}'"):
               raw=raw[4:].lstrip()
           data=json.loads(raw)
-          found={}
+          rows=defaultdict(list)
+          def target(issue):
+              return isinstance(issue,dict) and issue.get('errorType')=='UNKNOWN_FIELD' and issue.get('args')==['mainContentOfPage','WebPageElement']
           def walk(value,path='$'):
               if isinstance(value,dict):
-                  for issue in value.get('errors') or []:
-                      if isinstance(issue,dict) and issue.get('errorType')=='UNKNOWN_FIELD' and issue.get('args')==['mainContentOfPage','WebPageElement']:
-                          eid=issue.get('errorID')
-                          if eid not in found:
-                              found[eid]={
-                                  'path':path,
-                                  'begin':issue.get('begin'),
-                                  'end':issue.get('end'),
-                                  'ownerSet':issue.get('ownerSet'),
-                                  'ownerToSeverity':issue.get('ownerToSeverity'),
-                              }
+                  hits=[issue for issue in value.get('errors') or [] if target(issue)]
+                  if hits:
+                      ident=value.get('idProperty') if isinstance(value.get('idProperty'),dict) else {}
+                      context={
+                          'path':path,
+                          'typeGroup':value.get('typeGroup'),
+                          'id':ident.get('value'),
+                          'pred':value.get('pred'),
+                          'value':value.get('value') if isinstance(value.get('value'),(str,int,float,bool)) else None,
+                          'keys':sorted(value.keys()),
+                      }
+                      for issue in hits:
+                          rows[issue.get('errorID')].append(context)
                   for key,nested in value.items():
                       if key!='errors': walk(nested,f'{path}.{key}')
               elif isinstance(value,list):
                   for i,nested in enumerate(value): walk(nested,f'{path}[{i}]')
           walk(data)
-          print('SMV_OWNER_SAMPLES='+json.dumps(found,ensure_ascii=False,sort_keys=True))
-
-          VOID={'area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr'}
-          class Trace(HTMLParser):
-              def __init__(self):
-                  super().__init__(convert_charrefs=True)
-                  self.stack=[]
-                  self.rows=[]
-              def handle_starttag(self,tag,attrs):
-                  a={k:(v if v is not None else '') for k,v in attrs}
-                  props=set((a.get('itemprop') or '').split())
-                  ancestors=[{
-                      'tag':x['tag'],
-                      'id':x['attrs'].get('id'),
-                      'itemid':x['attrs'].get('itemid'),
-                      'itemtype':x['attrs'].get('itemtype'),
-                      'itemprop':x['attrs'].get('itemprop'),
-                  } for x in self.stack if 'itemscope' in x['attrs']]
-                  if 'mainContentOfPage' in props:
-                      self.rows.append({
-                          'tag':tag,
-                          'id':a.get('id'),
-                          'itemid':a.get('itemid'),
-                          'itemtype':a.get('itemtype'),
-                          'ancestors':ancestors,
-                      })
-                  if tag not in VOID:
-                      self.stack.append({'tag':tag,'attrs':a})
-              def handle_startendtag(self,tag,attrs):
-                  self.handle_starttag(tag,attrs)
-                  if tag not in VOID and self.stack and self.stack[-1]['tag']==tag:
-                      self.stack.pop()
-              def handle_endtag(self,tag):
-                  for i in range(len(self.stack)-1,-1,-1):
-                      if self.stack[i]['tag']==tag:
-                          del self.stack[i:]
-                          return
-          trace=Trace(); trace.feed(live)
-          print('MICRODATA_MAINCONTENT_ANCESTORS='+json.dumps(trace.rows,ensure_ascii=False))
+          out={}
+          for eid,contexts in rows.items():
+              counts=Counter(json.dumps(c,ensure_ascii=False,sort_keys=True,default=str) for c in contexts)
+              unique=[dict(json.loads(raw),count=count) for raw,count in counts.most_common()]
+              informative=[c for c in unique if c.get('typeGroup') or c.get('id') or c.get('pred')]
+              out[eid]={
+                  'totalOccurrences':len(contexts),
+                  'informativeContexts':informative[:80],
+              }
+          print('SMV_ERROR_CONTEXTS='+json.dumps(out,ensure_ascii=False,sort_keys=True))
           PY
