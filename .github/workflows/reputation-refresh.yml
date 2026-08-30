@@ -70,7 +70,7 @@ jobs:
           npm run release:prepare
           npm run compile:dist
           npm run preflight:cloudflare
-          git diff --exit-code -- src/content-source src/data/semantic/knowledge-graph.jsonld src/data/service-registry.json src/data/answer-registry.json src/data/evidence-registry.json src/data/release.json
+          git diff --exit-code -- src/content-source src/data/semantic/knowledge-graph.jsonld src/data/evidence-registry.json src/data/release.json
           test "$(git status --porcelain -- src/data/volatile-facts.json | wc -l | tr -d ' ')" = "1"
           git add src/data/volatile-facts.json
           git diff --cached --quiet && { echo '::error::changed=true but no volatile reputation diff was staged'; exit 1; }

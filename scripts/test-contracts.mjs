@@ -10,6 +10,10 @@ import {
   composeChangedReputation,
 } from "./lib/reputation-observation.mjs";
 import { assertDocumentContract } from "./lib/html-contract.mjs";
+import {
+  canonicalSemanticSource,
+  deriveCanonicalSemanticSets,
+} from "../src/lib/semantic-projection.mjs";
 async function file_transaction() {
   const must = (condition, message) => {
       if (!condition) throw new Error(message);
@@ -338,14 +342,113 @@ function semantic_article_contract() {
     ),
   );
 }
+async function canonical_semantic_derivation_contract() {
+  const [release, policy] = await Promise.all([
+      readFile("src/data/release.json", "utf8").then(JSON.parse),
+      readFile("src/data/retrieval/query-matrix-policy.json", "utf8").then(
+        JSON.parse,
+      ),
+    ]),
+    semanticSource = canonicalSemanticSource(policy),
+    graph = JSON.parse(await readFile(semanticSource, "utf8")),
+    derived = deriveCanonicalSemanticSets(graph, release),
+    graphNodes = graph["@graph"],
+    questions = graphNodes.filter((node) =>
+      [node["@type"]].flat().includes("Question"),
+    ),
+    services = graphNodes.filter((node) =>
+      [node["@type"]].flat().includes("Service"),
+    );
+  assert.equal(derived.answers.length, questions.length);
+  assert.equal(derived.services.length, services.length);
+
+  const sharedAnswer = structuredClone(graph),
+    sharedQuestions = sharedAnswer["@graph"].filter((node) =>
+      [node["@type"]].flat().includes("Question"),
+    );
+  sharedQuestions[1].acceptedAnswer = structuredClone(
+    sharedQuestions[0].acceptedAnswer,
+  );
+  sharedQuestions[1].url = sharedQuestions[0].url;
+  sharedQuestions[1].inLanguage = sharedQuestions[0].inLanguage;
+  assert.throws(
+    () => deriveCanonicalSemanticSets(sharedAnswer, release),
+    /Question\/Answer topology is not one-to-one/,
+  );
+
+  const providerDrift = structuredClone(graph),
+    service = providerDrift["@graph"].find((node) =>
+      [node["@type"]].flat().includes("Service"),
+    );
+  service.provider = { "@id": release.clinic.id };
+  assert.throws(
+    () => deriveCanonicalSemanticSets(providerDrift, release),
+    /canonical physician provider/,
+  );
+
+  const pathDrift = structuredClone(graph),
+    pathQuestion = pathDrift["@graph"].find((node) =>
+      [node["@type"]].flat().includes("Question"),
+    ),
+    pathAnswerId = pathQuestion.acceptedAnswer["@id"],
+    pathAnswer = pathDrift["@graph"].find(
+      (node) => node["@id"] === pathAnswerId,
+    ),
+    noncanonicalSource = new URL(pathQuestion.url);
+  noncanonicalSource.pathname = "/parallel";
+  pathQuestion.url = noncanonicalSource.href;
+  pathAnswer.url = noncanonicalSource.href;
+  assert.throws(
+    () => deriveCanonicalSemanticSets(pathDrift, release),
+    /outside the canonical document/,
+  );
+
+  const anonymousService = structuredClone(graph);
+  anonymousService["@graph"].push({ "@type": "Service" });
+  assert.throws(
+    () => deriveCanonicalSemanticSets(anonymousService, release),
+    /Every canonical Service must have an ID/,
+  );
+
+  assert.throws(
+    () =>
+      canonicalSemanticSource({
+        ...policy,
+        serviceAliasCoverage: {
+          ...policy.serviceAliasCoverage,
+          unexpected: true,
+        },
+      }),
+    /Service alias policy fields are not canonical/,
+  );
+  console.log(
+    JSON.stringify(
+      {
+        stage: "CANONICAL_SEMANTIC_DERIVATION",
+        source: semanticSource,
+        answers: derived.answers.length,
+        services: derived.services.length,
+        sharedAnswerRejection: "PASS",
+        providerDriftRejection: "PASS",
+        pathDriftRejection: "PASS",
+        anonymousServiceRejection: "PASS",
+        policyShapeRejection: "PASS",
+        integrity: "PASS",
+      },
+      null,
+      2,
+    ),
+  );
+}
 await file_transaction();
 await release_promotion();
 await reputation_observation();
 semantic_article_contract();
+await canonical_semantic_derivation_contract();
 console.log(
   JSON.stringify({
     stage: "CONTRACT_TEST_SUITE",
-    contracts: 4,
+    contracts: 5,
     integrity: "PASS",
   }),
 );

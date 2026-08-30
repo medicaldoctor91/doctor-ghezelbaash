@@ -1,14 +1,19 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
+import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
 const release = JSON.parse(
   await readFile(path.join(root, "src/data/release.json"), "utf8"),
 );
-const serviceRegistry = JSON.parse(
-  await readFile(path.join(root, "src/data/service-registry.json"), "utf8"),
+const graph = JSON.parse(
+  await readFile(
+    path.join(root, "src/data/semantic/knowledge-graph.jsonld"),
+    "utf8",
+  ),
 );
+const { services } = deriveCanonicalSemanticSets(graph, release);
 const fail = (message) => {
   throw new Error(message);
 };
@@ -30,12 +35,8 @@ if (
 )
   fail("Current release/history identity drift");
 
-const publishableIds = new Set(
-  (serviceRegistry.services || [])
-    .filter((item) => item.publishable)
-    .map((item) => item.id),
-);
-if (!publishableIds.size) fail("Publishable service registry is empty");
+const serviceIds = new Set(services.map((item) => item.id));
+if (!serviceIds.size) fail("Graph-derived offered-service set is empty");
 
 const matrix = JSON.parse(
   await readFile(
@@ -59,11 +60,11 @@ for (const [key, value] of Object.entries(expectedMatrix))
   if (String(matrix[key]) !== String(value))
     fail(`Current matrix ${key} drift`);
 if (
-  matrix.servicesWithAliasCoverage !== publishableIds.size ||
-  matrix.serviceCount !== publishableIds.size
+  matrix.servicesWithAliasCoverage !== serviceIds.size ||
+  matrix.serviceCount !== serviceIds.size
 )
   fail(
-    `Service retrieval coverage drift matrix=${matrix.servicesWithAliasCoverage}/${matrix.serviceCount} registry=${publishableIds.size}`,
+    `Service retrieval coverage drift matrix=${matrix.servicesWithAliasCoverage}/${matrix.serviceCount} derived=${serviceIds.size}`,
   );
 
 if (
@@ -105,7 +106,7 @@ console.log(
     versionDoi: Z.versionDoi,
     recordId: String(Z.recordId),
     history: history.map((entry) => entry.release),
-    publishableServiceCount: publishableIds.size,
+    offeredServiceCount: serviceIds.size,
     serviceCoverage: `${matrix.servicesWithAliasCoverage}/${matrix.serviceCount}`,
   }),
 );

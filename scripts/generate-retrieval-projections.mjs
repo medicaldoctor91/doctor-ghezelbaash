@@ -3,6 +3,10 @@ import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { generatedWorkspace } from "./generated-workspace.mjs";
 import { buildLiveReputationArtifacts } from "./lib/live-reputation-artifacts.mjs";
+import {
+  canonicalSemanticSource,
+  deriveCanonicalSemanticSets,
+} from "../src/lib/semantic-projection.mjs";
 
 const root = process.cwd();
 const generated = generatedWorkspace(root);
@@ -17,33 +21,14 @@ const id = (v) => (typeof v === "string" ? v : v?.["@id"]);
 
 const release = await readJson("src/data/release.json");
 const volatile = await readJson("src/data/volatile-facts.json");
-const answerRegistry = await readJson("src/data/answer-registry.json");
-const serviceRegistry = await readJson("src/data/service-registry.json");
 const policy = await readJson("src/data/retrieval/query-matrix-policy.json");
-const graph = await readJson("src/data/semantic/knowledge-graph.jsonld");
+const graph = await readJson(canonicalSemanticSource(policy));
 const evidenceRegistry = await readJson("src/data/evidence-registry.json");
+const { answers, services } = deriveCanonicalSemanticSets(graph, release);
 
 const nodes = graph["@graph"] || [];
 const byId = new Map(nodes.filter((n) => n?.["@id"]).map((n) => [n["@id"], n]));
-const person = byId.get(release.primaryEntity.id),
-  clinic = byId.get(release.clinic.id);
-if (!person || !clinic) throw new Error("Core entity missing");
-const publishableServices = serviceRegistry.services.filter(
-  (x) => x.publishable,
-);
-const offered = new Set(
-  [
-    ...arr(person.availableService).map(id),
-    ...arr(clinic.availableService).map(id),
-  ].filter(Boolean),
-);
-const registered = new Set(publishableServices.map((x) => x.id));
-const missing = [...registered].filter((x) => !offered.has(x)),
-  extra = [...offered].filter((x) => !registered.has(x));
-if (missing.length || extra.length)
-  throw new Error(
-    `Service registry projection mismatch missing=${missing.length} extra=${extra.length}`,
-  );
+const serviceIds = new Set(services.map((service) => service.id));
 
 const { rating, reviewCount, observedAt, liveObservationId, jsonLdJson } =
   buildLiveReputationArtifacts(release, volatile);
@@ -113,10 +98,10 @@ const boundedEvidence = (...groups) =>
   );
 
 const answerById = new Map(
-  answerRegistry.answers.map((answer) => [answer.answerId, answer]),
+  answers.map((answer) => [answer.answerId, answer]),
 );
 const answerEvidence = new Map();
-for (const row of answerRegistry.answers) {
+for (const row of answers) {
   const q = byId.get(row.questionId),
     a = byId.get(row.answerId),
     source = byId.get(row.sourceUrl);
@@ -300,7 +285,7 @@ const inferScope = (text, lang) =>
       ? "Iran"
       : "unspecified";
 let serviceAliases = 0;
-for (const service of publishableServices) {
+for (const service of services) {
   const explicitAliases = [
     ...new Set(
       arr(service.aliases)
@@ -318,7 +303,7 @@ for (const service of publishableServices) {
     ? explicitAliases
     : [canonicalFallback].filter(Boolean);
   if (!aliases.length)
-    throw new Error(`Publishable service has no retrieval label ${service.id}`);
+    throw new Error(`Offered service has no retrieval label ${service.id}`);
   const stable = boundedEvidence(subjectEvidenceFor([service.id]));
   for (const alias of aliases) {
     serviceAliases++;
@@ -404,12 +389,12 @@ for (const row of dedup)
   for (const ref of row.stable_evidence_refs)
     if (!evidenceById.has(ref))
       throw new Error(`Query Matrix unresolved evidence ref ${ref}`);
-const uncoveredServices = publishableServices
+const uncoveredServices = services
   .map((s) => s.id)
   .filter((s) => !dedup.some((r) => arr(r.service_ids).includes(s)));
 if (uncoveredServices.length)
   throw new Error(
-    `Query Matrix publishable service coverage missing ${uncoveredServices.length} services: ${uncoveredServices.join(", ")}`,
+    `Query Matrix offered-service coverage missing ${uncoveredServices.length} services: ${uncoveredServices.join(", ")}`,
   );
 const queryMatrix = dedup.map((r) => JSON.stringify(r)).join("\n") + "\n";
 await write(
@@ -430,7 +415,7 @@ const matrix = {
   serviceAliasRows: dedup.filter((r) => r.row_kind === "service_alias").length,
   servicesWithAliasCoverage: new Set(dedup.flatMap((r) => arr(r.service_ids)))
     .size,
-  serviceCount: registered.size,
+  serviceCount: serviceIds.size,
   medicalReviewedAt: reviewedAt,
   reputation: {
     rating,
@@ -451,7 +436,7 @@ console.log(
       serviceAliasRows: matrix.serviceAliasRows,
       servicesWithAliasCoverage: matrix.servicesWithAliasCoverage,
       sourceServiceAliases: serviceAliases,
-      services: registered.size,
+      services: serviceIds.size,
       rating,
       reviewCount,
       baselineStableEvidenceRefs: baselineEvidence.length,

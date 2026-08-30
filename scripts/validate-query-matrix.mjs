@@ -1,5 +1,9 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
+import {
+  canonicalSemanticSource,
+  deriveCanonicalSemanticSets,
+} from "../src/lib/semantic-projection.mjs";
 
 const root = process.cwd();
 const sourceTarget = path.resolve(
@@ -20,8 +24,8 @@ const arr = (value) =>
 
 const release = await readJson("src/data/release.json");
 const policy = await readJson("src/data/retrieval/query-matrix-policy.json");
-const serviceRegistry = await readJson("src/data/service-registry.json");
-const answerRegistry = await readJson("src/data/answer-registry.json");
+const graph = await readJson(canonicalSemanticSource(policy));
+const { answers, services } = deriveCanonicalSemanticSets(graph, release);
 const evidenceRegistry = await readJson("src/data/evidence-registry.json");
 
 if (
@@ -86,7 +90,7 @@ if (
   fail("Query Matrix stable evidence limit is invalid");
 
 const answerIds = new Set(
-  (answerRegistry.answers || []).map((entry) => entry.answerId),
+  answers.map((entry) => entry.answerId),
 );
 const intentAnswerIds = policy.intentAnswerIds || {};
 if (
@@ -101,10 +105,7 @@ if (
 for (const [intent, answerId] of Object.entries(intentAnswerIds))
   if (!answerIds.has(answerId))
     fail(`Intent answer mapping is unresolved: ${intent}`);
-const publishableServices = serviceRegistry.services.filter(
-  (service) => service.publishable,
-);
-const serviceIds = new Set(publishableServices.map((service) => service.id));
+const serviceIds = new Set(services.map((service) => service.id));
 const liveObservationId = `${release.canonicalUrl}live-observations.jsonld#clinic-google-reputation`;
 const uniqueRows = new Set();
 const commonFields = [
@@ -217,7 +218,7 @@ for (const row of rows) {
       ...new Set(
         targets.flatMap(
           (serviceId) =>
-            publishableServices.find((service) => service.id === serviceId)
+            services.find((service) => service.id === serviceId)
               ?.types || [],
         ),
       ),
@@ -262,7 +263,7 @@ if (intentAliasRows < minimumIntentRows)
   fail(`Intent alias coverage sparse ${intentAliasRows}/${minimumIntentRows}`);
 
 if (policy.serviceAliasCoverage?.enabled) {
-  for (const service of publishableServices) {
+  for (const service of services) {
     const explicitAliases = [
       ...new Set(
         arr(service.aliases)
@@ -280,13 +281,13 @@ if (policy.serviceAliasCoverage?.enabled) {
       ? explicitAliases
       : [canonicalFallback].filter(Boolean);
     if (!expectedAliases.length)
-      fail(`Publishable service has no retrieval label ${service.id}`);
+      fail(`Offered service has no retrieval label ${service.id}`);
 
     const serviceRows = rows.filter((row) =>
       arr(row.service_ids).includes(service.id),
     );
     if (!serviceRows.length)
-      fail(`Publishable service coverage missing ${service.id}`);
+      fail(`Offered-service coverage missing ${service.id}`);
     for (const alias of expectedAliases)
       if (!serviceRows.some((row) => row.query === alias))
         fail(`Exact service retrieval label missing ${service.id}: ${alias}`);
@@ -301,10 +302,10 @@ if (
 const coveredServices = new Set(rows.flatMap((row) => arr(row.service_ids)));
 if (
   policy.serviceAliasCoverage?.enabled &&
-  coveredServices.size !== publishableServices.length
+  coveredServices.size !== services.length
 )
   fail(
-    `Publishable service set coverage drift ${coveredServices.size}/${publishableServices.length}`,
+    `Offered-service coverage drift ${coveredServices.size}/${services.length}`,
   );
 
 console.log(
@@ -317,8 +318,8 @@ console.log(
       intentAliasRows,
       serviceAliasRows,
       servicesWithAliasCoverage: coveredServices.size,
-      expectedServicesWithAliases: publishableServices.length,
-      expectedPublishableServices: publishableServices.length,
+      expectedServicesWithAliases: services.length,
+      expectedOfferedServices: services.length,
       identityBaselineEvidenceRefs: baselineEvidence.length,
       maximumStableEvidenceRefs: Math.max(
         ...rows.map((row) => arr(row.stable_evidence_refs).length),

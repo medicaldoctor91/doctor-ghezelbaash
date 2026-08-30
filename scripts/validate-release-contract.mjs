@@ -15,6 +15,7 @@ import {
   loadRedirectRegistry,
   renderCanonicalHostRedirects,
 } from "./lib/redirect-registry.mjs";
+import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
 
 const root = process.cwd();
 const fail = (message) => {
@@ -211,6 +212,7 @@ const person = byId.get(release.primaryEntity.id),
   dataset = byId.get(release.dataset.id);
 if (!person || !clinic || !dataset)
   fail("Core Person/Clinic/Dataset topology is incomplete");
+const { services, answers } = deriveCanonicalSemanticSets(graph, release);
 validateCoreEntityIdentity({ release, nodes });
 if (
   dataset.name !== release.dataset.name ||
@@ -383,38 +385,17 @@ for (const entry of Z.releaseHistory) {
     fail(`Release-history graph projection drift: ${entry.release}`);
 }
 
-const services = await readJson("src/data/service-registry.json");
-const registered = new Set(
-  (services.services || [])
-    .filter((item) => item.publishable)
-    .map((item) => item.id),
-);
-const offered = new Set(
-  [
-    ...arr(person.availableService).map(id),
-    ...arr(clinic.availableService).map(id),
-  ].filter(Boolean),
-);
+const serviceIds = new Set(services.map((service) => service.id));
+if (serviceIds.size < 100)
+  fail("Graph-derived offered-service set is unexpectedly sparse");
 if (
-  !registered.size ||
-  registered.size !== offered.size ||
-  [...registered].some((value) => !offered.has(value))
-)
-  fail("Publishable service set must equal graph offered-service set");
-if (
-  ![...registered].some((value) =>
+  ![...serviceIds].some((value) =>
     value.includes("botulinum-toxin-chronic-migraine"),
   )
 )
   fail("Migraine Botox offered-service identity is missing");
-
-const answers = await readJson("src/data/answer-registry.json");
-for (const row of answers.answers || []) {
-  const question = byId.get(row.questionId),
-    answer = byId.get(row.answerId);
-  if (!question || !answer || id(question.acceptedAnswer) !== row.answerId)
-    fail(`Answer registry projection drift: ${row.questionId}`);
-}
+if (answers.length < 100)
+  fail("Graph-derived canonical answer set is unexpectedly sparse");
 
 const { content } = await assembleCanonicalContent({ root, graph });
 if (!content.includes('id="saeed-ghezelbash"')) fail("Physician H1 is missing");
@@ -517,8 +498,8 @@ console.log(
       releaseBoundNodes: releaseBound.length,
       graphClosure,
       redirectsSha256,
-      services: registered.size,
-      answers: (answers.answers || []).length,
+      services: serviceIds.size,
+      answers: answers.length,
       medicalReviewedAt: release.medicalReviewedAt,
       headReleaseBinding: "ASTRO_NATIVE_PASS",
       physicianEntityHome: "PASS",

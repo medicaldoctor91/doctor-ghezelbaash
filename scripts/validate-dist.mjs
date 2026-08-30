@@ -4,6 +4,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { assembleCssSource } from "../src/lib/css-source.mjs";
 import { deriveCssDelivery } from "../src/lib/css-delivery.mjs";
 import { deriveGooglePageMicrodata } from "../src/lib/google-page-microdata.mjs";
+import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { analyzeGraphClosure } from "./lib/graph-integrity.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
@@ -49,8 +50,6 @@ const release = await readJson(path.join(data, "release.json")),
   supportProfile = await readJson(
     path.join(data, "semantic/support-profile.json"),
   ),
-  registry = await readJson(path.join(data, "service-registry.json")),
-  answerRegistry = await readJson(path.join(data, "answer-registry.json")),
   volatile = await readJson(path.join(data, "volatile-facts.json")),
   stableMedia = await readJson(path.join(data, "stable-media-aliases.json")),
   rdfLock = await readJson(
@@ -110,6 +109,7 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
   liveBytes = await readFile(path.join(dist, "live-observations.jsonld")),
   live = JSON.parse(liveBytes),
   sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
+const { services, answers } = deriveCanonicalSemanticSets(graph, release);
 if (/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>/i.test(notFound))
   fail("404 page must not declare a canonical URL");
 const rdfTripleCount = rdfText.split(/\r?\n/).filter(Boolean).length;
@@ -585,36 +585,13 @@ if (
   !has(page, "publisher", release.primaryEntity.id)
 )
   fail("Physician/clinic/WebPage authority topology broken");
-const offered = new Set([
-    ...refs(person.availableService),
-    ...refs(clinic.availableService),
-  ]),
-  registered = new Set(
-    registry.services.filter((x) => x.publishable).map((x) => x.id),
-  );
-for (const x of registered)
-  if (!offered.has(x)) fail(`Registry service not projected ${x}`);
-for (const x of offered)
-  if (!registered.has(x)) fail(`Projected service missing registry ${x}`);
+const serviceIds = new Set(services.map((service) => service.id));
 if (
-  ![...registered].some((x) => x.includes("botulinum-toxin-chronic-migraine"))
+  ![...serviceIds].some((x) =>
+    x.includes("botulinum-toxin-chronic-migraine"),
+  )
 )
   fail("Migraine Botox offering missing");
-for (const sid of offered) {
-  const s = byId.get(sid);
-  if (
-    !s ||
-    !types(s).includes("Service") ||
-    !refs(s.provider).includes(release.primaryEntity.id)
-  )
-    fail(`Service provider/type drift ${sid}`);
-}
-for (const r of answerRegistry.answers) {
-  const q = byId.get(r.questionId),
-    a = byId.get(r.answerId);
-  if (!q || !a || id(q.acceptedAnswer) !== r.answerId)
-    fail(`Answer atom drift ${r.questionId}`);
-}
 const expectedRating = Number(volatile.rating),
   expectedCount = Number(volatile.reviewCount);
 if (
@@ -699,8 +676,8 @@ console.log(
       distInventory: "EXACT",
       graphNodes: nodes.length,
       rdfTriples: rdfTripleCount,
-      services: registered.size,
-      answers: answerRegistry.answers.length,
+      services: serviceIds.size,
+      answers: answers.length,
       headNodes: coreIds.size,
       supportNodes: supportIds.size,
       headSupportOverlap: 0,

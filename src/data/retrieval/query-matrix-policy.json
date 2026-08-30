@@ -1,8 +1,7 @@
 {
-  "schemaVersion": "2.2",
+  "schemaVersion": "2.3",
   "identitySource": "src/data/release.json",
-  "answerRegistry": "src/data/answer-registry.json",
-  "serviceRegistry": "src/data/service-registry.json",
+  "semanticSource": "src/data/semantic/knowledge-graph.jsonld",
   "evidenceRegistry": "src/data/evidence-registry.json",
   "languages": [
     "fa",
@@ -37,8 +36,7 @@
   },
   "serviceAliasCoverage": {
     "enabled": true,
-    "source": "src/data/service-registry.json",
-    "coverage": "all-publishable-services",
+    "coverage": "all-offered-services",
     "expandUnscopedAliasesTo": [
       "unspecified",
       "Kermanshah",

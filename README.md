@@ -6,7 +6,7 @@ Pure-static Astro source for the canonical physician entity home at `https://www
 
 - `src/content-source/page.md`: canonical visible content and page metadata.
 - `src/styles/global.css`: the only authored stylesheet.
-- `src/data/semantic/knowledge-graph.jsonld`: canonical knowledge graph.
+- `src/data/semantic/knowledge-graph.jsonld`: canonical knowledge graph and the direct source of offered services and answers.
 - `src/data/semantic/head-profile.json`: Google head projection selection, policies and byte limit.
 - `src/data/semantic/support-profile.json`: Google support projection selection, policies and byte limit.
 - `src/data/document-head.json`: Open Graph, Twitter and application presentation metadata.
@@ -14,7 +14,6 @@ Pure-static Astro source for the canonical physician entity home at `https://www
 - `src/data/release-invariants.json`: explicit delivery and validation limits.
 - `src/data/machine-resources.json`: one registry for website, Hugging Face, Zenodo, head and footer projections.
 - `src/data/redirects.json`: one registry for canonical aliases, Cloudflare host redirects and GitHub Pages bridges.
-- `src/data/service-registry.json` and `src/data/answer-registry.json`: publishable service and answer sets.
 - `src/data/retrieval/query-matrix-policy.json`: explicit intent-to-answer mappings, languages, scopes and evidence bounds.
 - `src/data/evidence-registry.json` and `src/data/volatile-facts.json`: canonical evidence and current Google Places observation; the release snapshot is generated directly from them.
 - `src/data/render-calibration.json`: measured chunk geometry used to derive responsive calibration CSS.

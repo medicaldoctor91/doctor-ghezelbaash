@@ -12,6 +12,10 @@ import {
   RENDER_CALIBRATION_SLOT,
   RENDER_CALIBRATION_WIDTHS,
 } from "../src/lib/css-source.mjs";
+import {
+  canonicalSemanticSource,
+  deriveCanonicalSemanticSets,
+} from "../src/lib/semantic-projection.mjs";
 
 const root = process.cwd(),
   data = path.join(root, "src/data");
@@ -26,18 +30,17 @@ const escapeRegExp = (value) =>
   String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const release = await readJson("src/data/release.json"),
-  graph = await readJson("src/data/semantic/knowledge-graph.jsonld"),
-  services = await readJson("src/data/service-registry.json"),
-  answers = await readJson("src/data/answer-registry.json"),
   retrievalPolicy = await readJson(
     "src/data/retrieval/query-matrix-policy.json",
   ),
+  graph = await readJson(canonicalSemanticSource(retrievalPolicy)),
   machineResourceRegistry = await readJson("src/data/machine-resources.json"),
   authority = await readJson(".release/policy/authority-surface-contract.json"),
   platform = await readJson(".release/policy/platform-contract.json"),
   headProfile = await readJson("src/data/semantic/head-profile.json"),
   supportProfile = await readJson("src/data/semantic/support-profile.json"),
   hf = authority.surfaces.huggingFace;
+const { services, answers } = deriveCanonicalSemanticSets(graph, release);
 const machineResourcesByPath = new Map(
   machineResourceRegistry.resources.map((resource) => [
     resource.path,
@@ -631,31 +634,15 @@ for (const [name, profile] of [
     if (!graphIds.has(ref))
       fail(`${name} profile references missing graph node ${ref}`);
 
-const offered = new Set(
-    [
-      ...arr(person.availableService).map(id),
-      ...arr(clinic.availableService).map(id),
-    ].filter(Boolean),
-  ),
-  registered = new Set(
-    services.services.filter((x) => x.publishable).map((x) => x.id),
-  );
-if (registered.size < 100) fail("Service registry unexpectedly sparse");
-for (const x of registered)
-  if (!offered.has(x)) fail(`Registry service not projected: ${x}`);
-for (const x of offered)
-  if (!registered.has(x)) fail(`Projected service missing from registry: ${x}`);
+const serviceIds = new Set(services.map((service) => service.id));
+if (serviceIds.size < 100)
+  fail("Graph-derived service set is unexpectedly sparse");
 if (
-  ![...registered].some((x) => x.includes("botulinum-toxin-chronic-migraine"))
+  ![...serviceIds].some((x) =>
+    x.includes("botulinum-toxin-chronic-migraine"),
+  )
 )
   fail("Migraine Botox offered-service identity missing");
-for (const r of answers.answers) {
-  const q = byId.get(r.questionId),
-    a = byId.get(r.answerId);
-  if (!q || !a || id(q.acceptedAnswer) !== r.answerId)
-    fail(`Answer Registry drift ${r.questionId}`);
-}
-
 const assembled = await assembleCanonicalContent({ root, graph });
 if (/{{[A-Z0-9_]+}}/.test(assembled.content))
   fail("Canonical page assembly contains unresolved release/content tokens");
@@ -928,8 +915,8 @@ console.log(
     {
       stage: "SOURCE_SEMANTIC_CONTRACT",
       release: release.release,
-      services: registered.size,
-      answers: answers.answers.length,
+      services: serviceIds.size,
+      answers: answers.length,
       renderChunks: renderChunkIds.length,
       canonicalWriterTopology: "PASS",
       projectionCompilerTopology: "PASS",

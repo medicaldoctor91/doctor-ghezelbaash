@@ -244,6 +244,26 @@ const deletedInWorktree = new Set(
     .split("\0")
     .filter(Boolean),
 );
+const authoredSemanticSets = [];
+for (const name of tracked.filter(
+  (item) =>
+    item.startsWith("src/data/") &&
+    (item.endsWith(".json") || item.endsWith(".jsonld")),
+)) {
+  let value;
+  try {
+    value = JSON.parse(await readFile(path.join(root, name), "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT" && deletedInWorktree.has(name)) continue;
+    throw error;
+  }
+  if (Array.isArray(value?.answers) || Array.isArray(value?.services))
+    authoredSemanticSets.push(name);
+}
+if (authoredSemanticSets.length)
+  throw new Error(
+    `Answer and service sets must be graph-derived: ${authoredSemanticSets.join(", ")}`,
+  );
 const forbiddenControlByte = (byte) =>
   byte <= 0x08 ||
   (byte >= 0x0b && byte <= 0x0c) ||
@@ -296,6 +316,7 @@ console.log(
       jobLevelSecrets: false,
       credentialBearingRemoteUrls: false,
       dependencyAdvisoryGate: "high",
+      authoredAnswerServiceSets: false,
       developmentMarkers: false,
       forbiddenAsciiControlBytes: false,
     },
