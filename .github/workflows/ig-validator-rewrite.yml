@@ -1,0 +1,43 @@
+name: One-shot IG validator rewrite
+
+on:
+  push:
+    branches:
+      - optimize/ig-entity-consolidation-2026-08-30
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite:
+    if: ${{ !contains(github.event.head_commit.message, '[ig-validator-rewritten]') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: optimize/ig-entity-consolidation-2026-08-30
+          fetch-depth: 1
+          persist-credentials: true
+      - name: Rewrite IG validator role only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/validate-subdomain-redirects.mjs')
+          s=p.read_text(encoding='utf-8')
+          old="const machineEntrypoints=new Map([['github.ghezelbaash.ir',{ref:'ghezelbaash_github_entity_graph_v1',route:'/graph.jsonld'}],['ig.ghezelbaash.ir',{ref:'ghezelbaash_ig_ai_corpus_v1',route:'/llms-full.txt'}]]);\nfor(const [host,expected] of machineEntrypoints){const rule=single.rules.find(row=>row.host===host);const expectedTarget=`${contract.canonicalOrigin}${expected.route}`;if(rule?.ref!==expected.ref||rule?.target!==expectedTarget)fail(`${host} machine entrypoint drift`);const target=new URL(rule.target);if(target.origin!==canonical.origin||target.pathname!==expected.route||target.search||target.hash)fail(`${host} must terminate on its exact first-party machine endpoint`);if(!machineRoutes.has(expected.route))fail(`${host} target is not an approved machine representation`);const artifact=staticArtifactForRoute(expected.route);if(!artifact)fail(`Missing static artifact registry entry for ${expected.route}`);await readFile(path.join(root,artifact.source),'utf8').catch(()=>fail(`Missing static artifact source for ${expected.route}: ${artifact.source}`))}\n"
+          new="const machineEntrypoints=new Map([['github.ghezelbaash.ir',{ref:'ghezelbaash_github_entity_graph_v1',route:'/graph.jsonld'}]]);\nfor(const [host,expected] of machineEntrypoints){const rule=single.rules.find(row=>row.host===host);const expectedTarget=`${contract.canonicalOrigin}${expected.route}`;if(rule?.ref!==expected.ref||rule?.target!==expectedTarget)fail(`${host} machine entrypoint drift`);const target=new URL(rule.target);if(target.origin!==canonical.origin||target.pathname!==expected.route||target.search||target.hash)fail(`${host} must terminate on its exact first-party machine endpoint`);if(!machineRoutes.has(expected.route))fail(`${host} target is not an approved machine representation`);const artifact=staticArtifactForRoute(expected.route);if(!artifact)fail(`Missing static artifact registry entry for ${expected.route}`);await readFile(path.join(root,artifact.source),'utf8').catch(()=>fail(`Missing static artifact source for ${expected.route}: ${artifact.source}`))}\nconst ig=single.rules.find(rule=>rule.host==='ig.ghezelbaash.ir');if(ig?.ref!=='ghezelbaash_ig_ai_corpus_v1'||ig?.target!==`${contract.canonicalOrigin}/`)fail('ig.ghezelbaash.ir entity-home redirect drift');const igTarget=new URL(ig.target);if(igTarget.origin!==canonical.origin||igTarget.pathname!=='/'||igTarget.search||igTarget.hash)fail('ig.ghezelbaash.ir must consolidate to the exact canonical entity home');\n"
+          if old not in s:
+              raise SystemExit('Expected machineEntrypoints validator block not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          grep -F "github.ghezelbaash.ir',{ref:'ghezelbaash_github_entity_graph_v1',route:'/graph.jsonld'" scripts/validate-subdomain-redirects.mjs >/dev/null
+          grep -F "ig?.target!==\`\${contract.canonicalOrigin}/\`" scripts/validate-subdomain-redirects.mjs >/dev/null
+          git diff --check
+          git config user.name 'OpenAI'
+          git config user.email 'noreply@openai.com'
+          git add scripts/validate-subdomain-redirects.mjs
+          git commit -m 'test: redefine IG as canonical entity-home redirect [ig-validator-rewritten]'
+          git push origin HEAD:optimize/ig-entity-consolidation-2026-08-30
