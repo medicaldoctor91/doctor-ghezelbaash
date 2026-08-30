@@ -44,11 +44,11 @@ const requireNode=(byId,id,label)=>{
   return node;
 };
 
-const [graphDocument,headProfile,headIds]=await Promise.all([
+const [graphDocument,headProfile]=await Promise.all([
   readFile('src/data/semantic/knowledge-graph.jsonld','utf8').then(JSON.parse),
   readFile('src/data/semantic/head-profile.json','utf8').then(JSON.parse),
-  readFile('src/data/semantic/head-ids.json','utf8').then(JSON.parse),
 ]);
+const headIds=headProfile.ids;
 const graph=graphDocument['@graph'];
 assert.ok(Array.isArray(graph),'Canonical graph lacks @graph');
 const byId=new Map(graph.filter(node=>node?.['@id']).map(node=>[node['@id'],node]));

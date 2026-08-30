@@ -90,7 +90,7 @@ jobs:
           ffprobe -version
       - run: npm ci
       - name: Enforce high-severity dependency advisory gate
-        run: npm run audit:dependencies
+        run: npm run security:dependencies
       - name: Load canonical platform contract
         run: node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
       - name: Resolve release transaction
@@ -211,7 +211,7 @@ jobs:
             DOI="$(node -p "require('./.release/runtime/zenodo-reservation.json').versionDoi")"
             node scripts/promote-release.mjs \
               --version="$RELEASE_TARGET" --date="$RELEASE_DATE" --zenodo-record="$RECORD" --zenodo-doi="$DOI"
-            EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/evidence-snapshot.json src/data/release-invariants.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json'
+            EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/evidence-snapshot.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json'
             ACTUAL="$(git diff --name-only | sort | tr '\n' ' ' | sed 's/ $//')"
             test "$ACTUAL" = "$EXPECTED"
             CANDIDATE_NEEDS_COMMIT=true
@@ -229,7 +229,7 @@ jobs:
             git config user.name ghezelbaash-release-bot
             git config user.email actions@users.noreply.github.com
             git checkout -b "$RELEASE_BRANCH"
-            git add CITATION.cff codemeta.json package-lock.json package.json src/data/evidence-snapshot.json src/data/release-invariants.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json
+            git add CITATION.cff codemeta.json package-lock.json package.json src/data/evidence-snapshot.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json
             git commit -m "release: prepare v$RELEASE_TARGET authority snapshot"
           fi
           CANDIDATE_SHA="$(git rev-parse HEAD)"

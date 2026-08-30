@@ -1,45 +1,10 @@
 {
-  "redirectsSha256": "6bacaef33c75dab185dd6b4f16ce78bb6095b7629ac17b6c706a459c230b9118",
-  "externalRdfTripleCount": 8867,
   "maxHtmlBytes": 1950000,
-  "maxHeadGraphBytes": 35000,
-  "maxSupportGraphBytes": 135000,
   "maxRagPassageChars": 4200,
-  "maxOrphanGraphNodes": 0,
   "evidenceSnapshotMaxAgeDays": 45,
-  "headAlternateNameMax": 17,
-  "minClaimEvidencePassages": 45,
   "googlebotFetchBudgetBytes": 2000000,
   "googlebotReservedResponseHeaderBytes": 20000,
   "googlebotSafetyMarginBytes": 30000,
-  "maxRootCustomHeaderBytes": 8000,
-  "maxCoreGraphEndByte": 35000,
-  "maxSupportGraphEndByte": 1940000,
   "maxCriticalCssBytes": 12000,
-  "minExternalCssBytes": 42000,
-  "contractClasses": {
-    "architectural": {
-      "singleCanonicalPage": true,
-      "maxHtmlBytesField": "maxHtmlBytes",
-      "googlebotFetchBudgetBytesField": "googlebotFetchBudgetBytes",
-      "maxOrphanGraphNodesField": "maxOrphanGraphNodes",
-      "maxHeadGraphBytesField": "maxHeadGraphBytes",
-      "maxSupportGraphBytesField": "maxSupportGraphBytes"
-    },
-    "strategic": {
-      "aggressiveHeadingSet": "src/data/visible-contract.json#protected.aggressiveHeadings",
-      "instagramHeadingAssociationSet": "src/data/visible-contract.json#protected.instagramHeadingLinks",
-      "serviceSet": "src/data/service-registry.json#services[publishable=true]",
-      "physicianFirstIdentity": true
-    },
-    "releaseDerivedMeasurements": {
-      "rdfTripleCountField": "externalRdfTripleCount",
-      "renderChunkSet": "src/data/render-calibration.json",
-      "graphNodeCount": "measured-at-build",
-      "serviceCount": "derived-from-service-registry",
-      "answerCount": "derived-from-answer-registry",
-      "supportNodeCount": "derived-from-projection",
-      "htmlBytes": "measured-at-build"
-    }
-  }
+  "minExternalCssBytes": 42000
 }

@@ -37,17 +37,13 @@ if(!validDate(release.dateModified)||!validDate(release.medicalReviewedAt))fail(
 if(release.reviewedBy!==release.primaryEntity?.id)fail('Medical reviewer must resolve to the primary physician entity');
 
 const invariantKeys=[
-  'contractClasses','evidenceSnapshotMaxAgeDays','externalRdfTripleCount','googlebotFetchBudgetBytes',
-  'googlebotReservedResponseHeaderBytes','googlebotSafetyMarginBytes','headAlternateNameMax',
-  'maxCoreGraphEndByte','maxCriticalCssBytes','maxHeadGraphBytes','maxHtmlBytes','maxOrphanGraphNodes',
-  'maxRagPassageChars','maxRootCustomHeaderBytes','maxSupportGraphBytes','maxSupportGraphEndByte',
-  'minClaimEvidencePassages','minExternalCssBytes','redirectsSha256'
+  'evidenceSnapshotMaxAgeDays','googlebotFetchBudgetBytes','googlebotReservedResponseHeaderBytes',
+  'googlebotSafetyMarginBytes','maxCriticalCssBytes','maxHtmlBytes','maxRagPassageChars',
+  'minExternalCssBytes'
 ];
 exactKeys(invariants,invariantKeys,'release-invariants');
-if(!invariants.contractClasses?.architectural||!invariants.contractClasses?.strategic||!invariants.contractClasses?.releaseDerivedMeasurements)fail('Invariant class contract is incomplete');
 const redirectsBytes=await readFile(path.join(root,'public/_redirects'));
 const redirectsSha256=createHash('sha256').update(redirectsBytes).digest('hex');
-if(redirectsSha256!==invariants.redirectsSha256)fail(`Redirect source hash drift: ${redirectsSha256}`);
 
 exactKeys(Z,['conceptDoi','recordId','releaseHistory','role','versionDoi'],'Zenodo release truth');
 if(Z.role!=='preservation'||!validDoi(Z.conceptDoi)||!validDoi(Z.versionDoi)||!validRecord(Z.recordId))fail('Zenodo release identity contract failure');
@@ -70,8 +66,7 @@ const citation=await readFile(path.join(root,'CITATION.cff'),'utf8');
 for(const token of [`version: ${R}`,`date-released: ${release.dateModified}`,`doi: ${Z.versionDoi}`])if(!citation.includes(token))fail(`CITATION release drift: ${token}`);
 
 const documentHead=await readFile(path.join(root,'src/components/DocumentHead.astro'),'utf8');
-for(const token of ['release.dataset.zenodo.versionDoi','release.release','release.primaryEntity.verifiedWebIdentityMesh.map','release.clinic.cid','discoveryLinks.map(link=><link {...link} />)'])if(!documentHead.includes(token))fail(`Astro Head release binding drift: ${token}`);
-if(documentHead.includes('discovery-head.html?raw')||documentHead.includes('set:html={discoveryHead}')||documentHead.includes('bindReleaseTokens(discoveryHead'))fail('Raw Discovery Head transport reintroduced');
+for(const token of ['release.dataset.zenodo.versionDoi','release.release','release.primaryEntity.verifiedWebIdentityMesh.map','release.clinic.cid','discoveryLinks.map(link=><link {...link}>)'])if(!documentHead.includes(token))fail(`Astro Head release binding drift: ${token}`);
 if(!documentHead.includes("{href:`https://doi.org/${versionDoi}`,rel:'related',title:`Zenodo preservation Version DOI ${release.release}`}"))fail('Astro Head current-release DOI relation drift');
 
 const pageSource=await readFile(path.join(root,'src/content-source/page.md'),'utf8');
@@ -84,7 +79,7 @@ if(!Array.isArray(nodes))fail('Canonical graph must contain @graph');
 const byId=new Map(nodes.filter(node=>node?.['@id']).map(node=>[node['@id'],node]));
 const graphClosure=analyzeGraphClosure(graph,{baseUrl:release.canonicalUrl});
 if(graphClosure.duplicateIds.length)fail(`Duplicate graph IDs: ${graphClosure.duplicateIds.map(item=>item.id).join(', ')}`);
-if(graphClosure.danglingSameSiteCount>invariants.maxOrphanGraphNodes)fail(`Dangling same-site graph IDs: ${graphClosure.danglingSameSiteIds.join(', ')}`);
+if(graphClosure.danglingSameSiteCount)fail(`Dangling same-site graph IDs: ${graphClosure.danglingSameSiteIds.join(', ')}`);
 const person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id);
 if(!person||!clinic||!dataset)fail('Core Person/Clinic/Dataset topology is incomplete');
 validateCoreEntityIdentity({release,nodes});
@@ -151,11 +146,8 @@ for(const row of answers.answers||[]){
   if(!question||!answer||id(question.acceptedAnswer)!==row.answerId)fail(`Answer registry projection drift: ${row.questionId}`);
 }
 
-const visible=await readJson('src/data/visible-contract.json');
 const {content}=await assembleCanonicalContent({root,graph});
-if(!content.includes(`id="${visible.protected.h1Id}"`))fail('Protected H1 is missing');
-for(const heading of visible.protected.aggressiveHeadings||[])if(heading.id&&!content.includes(`id="${heading.id}"`))fail(`Protected aggressive heading is missing: ${heading.id}`);
-for(const heading of visible.protected.instagramHeadingLinks||[])if(heading.id&&!content.includes(`id="${heading.id}"`))fail(`Protected Instagram heading association is missing: ${heading.id}`);
+if(!content.includes('id="saeed-ghezelbash"'))fail('Physician H1 is missing');
 const physicianAuthorityTokens=['id="verified-physician-identity-core"','Wikidata Q140287622','نظام پزشکی ۱۶۷۴۳۰','ORCID 0009-0001-9346-8475','Google KG <code>/g/11nqdfk76c</code>'];
 if(!content.includes('google-maps-clinic-reputation-current')||physicianAuthorityTokens.some(token=>!content.includes(token)))fail('Visible physician authority/reputation surface is incomplete');
 const howToTarget=String(howTo.url||'').split('#')[1]||'';

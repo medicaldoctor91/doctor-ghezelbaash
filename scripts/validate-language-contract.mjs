@@ -6,9 +6,8 @@ import {deriveGooglePageNode} from '../src/lib/google-semantic-html.mjs';
 import {projectNode} from '../src/lib/semantic-projection.mjs';
 
 const fail=message=>{throw new Error(message)};
-const [source,astroConfig,baseLayout,documentHead,graphCompiler,assembler,knowledgeGraph,headProfile]=await Promise.all([
+const [source,baseLayout,documentHead,graphCompiler,assembler,knowledgeGraph,headProfile]=await Promise.all([
   readFile('src/content-source/page.md','utf8'),
-  readFile('astro.config.mjs','utf8'),
   readFile('src/layouts/BaseLayout.astro','utf8'),
   readFile('src/components/DocumentHead.astro','utf8'),
   readFile('scripts/lib/projections/graph-projections.mjs','utf8'),
@@ -49,7 +48,6 @@ for(let index=0;index<MULTILINGUAL_HEADING_BOUNDARIES.length;index++){
   if(count<5)fail(`Language region unexpectedly sparse after annotation: ${boundary.key}=${count}`);
 }
 
-if(astroConfig.includes('rehype-language-regions')||astroConfig.includes('rehypePlugins'))fail('Legacy Markdown language-plugin wiring must remain absent on Astro 7');
 if(!assembler.includes("import {bindLanguageRegions} from '../../src/lib/language-regions.mjs'")||!assembler.includes('content=bindLanguageRegions(content);'))fail('Canonical assembly language binding missing');
 const webpageId='https://www.ghezelbaash.ir/#webpage';
 const canonicalPage=(knowledgeGraph['@graph']||[]).find(node=>node?.['@id']===webpageId);

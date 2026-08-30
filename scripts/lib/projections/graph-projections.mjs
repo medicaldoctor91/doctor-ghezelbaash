@@ -61,13 +61,14 @@ const SUPPORT_TYPE_PROFILE_EXTENSIONS=Object.freeze({
 });
 
 export async function compileGraphProjections(context){
-  const {semantic,generatedSemantic,graph,byId,readIds,release}=context;
-  const [headIds,headProfile,configuredSupportIds,supportProfile]=await Promise.all([
-    readIds('head'),
+  const {semantic,generatedSemantic,graph,byId,release}=context;
+  const [headProfile,supportProfile]=await Promise.all([
     readFile(path.join(semantic,'head-profile.json'),'utf8').then(JSON.parse),
-    readIds('support'),
     readFile(path.join(semantic,'support-profile.json'),'utf8').then(JSON.parse),
   ]);
+  const headIds=headProfile.ids;
+  const configuredSupportIds=supportProfile.ids;
+  if(!Array.isArray(headIds)||!Array.isArray(configuredSupportIds))throw new Error('Projection profile IDs are missing');
   const supportIds=[...new Set([
     ...configuredSupportIds.filter(id=>!SUPPORT_ID_EXCLUSIONS.has(id)),
     ...SUPPORT_ID_ADDITIONS,

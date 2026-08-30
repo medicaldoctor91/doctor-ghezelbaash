@@ -5,7 +5,7 @@ import {STATIC_ARTIFACTS} from '../src/lib/resources.mjs';
 const root=process.cwd();
 const dist=path.resolve(root,process.argv[2]||'dist');
 const pageSurface=(await readdir(path.join(root,'src/pages'),{withFileTypes:true})).map(entry=>entry.name).sort();
-if(JSON.stringify(pageSurface)!==JSON.stringify(['404.astro','index.astro']))throw new Error(`Astro route surface must remain exactly index.astro + 404.astro; found: ${pageSurface.join(', ')}`);
+if(JSON.stringify(pageSurface)!==JSON.stringify(['404.astro','favicon.png.ts','index.astro']))throw new Error(`Astro route surface drift: ${pageSurface.join(', ')}`);
 
 const resolveInside=(base,relative,label)=>{
   const target=path.resolve(base,String(relative));

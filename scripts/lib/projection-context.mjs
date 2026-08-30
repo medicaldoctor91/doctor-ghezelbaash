@@ -53,7 +53,6 @@ export async function loadProjectionContext({root=process.cwd()}={}){
     return [...new Set(found)];
   };
   const evidenceRefsForNode=node=>[...new Set(refsFromNode(node).map(id=>evidenceById.has(id)?id:evidenceByUrl.get(id)).filter(Boolean))];
-  const readIds=async name=>JSON.parse(await readFile(path.join(semantic,`${name}-ids.json`),'utf8'));
   const nodeName=node=>valueText(node?.name).split(' | ')[0];
 
   return {
@@ -64,7 +63,7 @@ export async function loadProjectionContext({root=process.cwd()}={}){
     generatedContent:generated.content,
     generatedAssets:generated.assets,
     release,invariants,evidenceRegistry,evidenceSnapshot,graph,byId,graphByUrl,
-    evidenceById,evidenceByUrl,tierAEvidenceIds,evidenceRefsForNode,readIds,nodeName,
+    evidenceById,evidenceByUrl,tierAEvidenceIds,evidenceRefsForNode,nodeName,
     identityFingerprintSha256:hashIdentityFingerprint(release),
   };
 }

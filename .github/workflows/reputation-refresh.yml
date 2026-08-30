@@ -29,7 +29,7 @@ jobs:
           python-version: '3.14.6'
       - run: npm ci
       - name: Enforce high-severity dependency advisory gate
-        run: npm run audit:dependencies
+        run: npm run security:dependencies
       - name: Resolve finalized current release and external identities
         shell: bash
         run: |
@@ -68,7 +68,6 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$(git rev-parse HEAD)"
           npm run build
-          node scripts/reputation.mjs visible dist/index.html
           git diff --exit-code -- src/content-source src/data/semantic/knowledge-graph.jsonld src/data/service-registry.json src/data/answer-registry.json src/data/evidence-registry.json src/data/release.json
           test "$(git status --porcelain -- src/data/volatile-facts.json | wc -l | tr -d ' ')" = "1"
           git add src/data/volatile-facts.json
@@ -110,9 +109,8 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$PUBLISHED_REVISION")"
           export CF_PAGES_COMMIT_SHA="$PUBLISHED_REVISION"
           npm ci
-          npm run audit:dependencies
+          npm run security:dependencies
           npm run build
-          node scripts/reputation.mjs visible dist/index.html
       - name: Reconcile Cloudflare production only when a public revision changed
         if: steps.places.outputs.changed == 'true'
         env:

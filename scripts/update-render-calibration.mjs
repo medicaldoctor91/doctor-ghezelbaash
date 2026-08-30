@@ -15,4 +15,4 @@ try{
 }finally{
   await rm(temporaryPath,{force:true});
 }
-console.log(JSON.stringify({applied:true,input:path.relative(root,inputPath),widths:calibration.widths,chunks:calibration.chunkCount,sha256:calibration.sha256,cssRules:calibration.ruleCount,cssMutation:false,cssAssembly:'in-memory'},null,2));
+console.log(JSON.stringify({updated:true,input:path.relative(root,inputPath),widths:calibration.widths,chunks:calibration.chunkCount,sha256:calibration.sha256,cssRules:calibration.ruleCount,cssMutation:false,cssAssembly:'in-memory'},null,2));

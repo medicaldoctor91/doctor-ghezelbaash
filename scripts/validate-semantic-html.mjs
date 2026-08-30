@@ -9,14 +9,15 @@ const fail=message=>{throw new Error(message)};
 const attr=(source,name)=>source.match(new RegExp(`\\b${name}=["']([^"']+)["']`,'i'))?.[1];
 const {content}=await assembleCanonicalContent();
 const body=content.startsWith('---')?content.slice(content.indexOf('\n---',3)+4):content;
-const [baseLayout,guideNavigator,knowledgeGraphSource,headProfile,supportIds,release]=await Promise.all([
+const [baseLayout,guideNavigator,knowledgeGraphSource,headProfile,supportProfile,release]=await Promise.all([
   readFile('src/layouts/BaseLayout.astro','utf8'),
   readFile('src/components/GuideNavigator.astro','utf8'),
   readFile('src/data/semantic/knowledge-graph.jsonld','utf8'),
   readFile('src/data/semantic/head-profile.json','utf8').then(JSON.parse),
-  readFile('src/data/semantic/support-ids.json','utf8').then(JSON.parse),
+  readFile('src/data/semantic/support-profile.json','utf8').then(JSON.parse),
   readFile('src/data/release.json','utf8').then(JSON.parse)
 ]);
+const supportIds=supportProfile.ids;
 const knowledgeGraphDocument=JSON.parse(knowledgeGraphSource);
 const knowledgeGraph=knowledgeGraphDocument['@graph']||knowledgeGraphDocument;
 const graphNode=id=>knowledgeGraph.find(node=>node['@id']===id);

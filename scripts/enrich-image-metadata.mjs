@@ -269,7 +269,7 @@ try{
     if(!compilerWritableConsumer(file)){protectedMutation.push(projectRelative(file));continue;}
     writable.push({file,next});
   }
-  if(protectedMutation.length)throw new Error(`Media compiler refuses to patch protected source surfaces; update these dependencies intentionally:\n${protectedMutation.join('\n')}`);
+  if(protectedMutation.length)throw new Error(`Media compiler refuses to rewrite protected source surfaces; update these dependencies intentionally:\n${protectedMutation.join('\n')}`);
   for(const {file,next} of writable){await writeFile(file,next);changedFiles++;}
 
   for(let pass=0;pass<3;pass++){

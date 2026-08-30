@@ -48,7 +48,7 @@ jobs:
           echo "STACK_MONITOR_RELEASE=$RELEASE"
       - run: npm ci
       - name: Enforce high-severity dependency advisory gate
-        run: npm run audit:dependencies
+        run: npm run security:dependencies
       - name: Build exact current source
         shell: bash
         run: |

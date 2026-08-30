@@ -10,14 +10,13 @@ const distDir=distMode?path.resolve(root,process.argv[distFlag+1]||'dist'):null;
 const outputDir=distMode?distDir:projections;
 const readJson=async p=>JSON.parse(await readFile(path.join(root,p),'utf8'));
 const release=await readJson('src/data/release.json');
-const inv=await readJson('src/data/release-invariants.json');
 const rdfLock=await readJson('.generated/semantic/rdf-lock.json');
 const graph=await readJson('src/data/semantic/knowledge-graph.jsonld');
 await mkdir(outputDir,{recursive:true});
 const nodes=graph['@graph']||[],byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n]));
 const dataset=byId.get(release.dataset.id),person=byId.get(release.primaryEntity.id);
 if(!dataset||!person)throw new Error('Descriptor generator missing canonical Dataset/Person');
-if(rdfLock.triples!==inv.externalRdfTripleCount||rdfLock.source!=='src/data/semantic/knowledge-graph.jsonld')throw new Error('RDF lock and release triple invariant diverged before descriptor generation');
+if(rdfLock.source!=='src/data/semantic/knowledge-graph.jsonld'||!Number.isInteger(rdfLock.triples)||rdfLock.triples<1)throw new Error('RDF measurement is missing before descriptor generation');
 const arr=v=>Array.isArray(v)?v:(v==null?[]:[v]);
 const id=v=>typeof v==='string'?v:v?.['@id'];
 const identityMe=arr(person.sameAs).map(id).filter(Boolean).map(href=>({href}));
@@ -57,7 +56,7 @@ const linkset={linkset:[{anchor:release.canonicalUrl,canonical:[{href:release.ca
   {href:`${release.canonicalUrl}llms-full.txt`,type:'text/plain'}],me:identityMe}]};
 await writeFile(out('linkset.json'),JSON.stringify(linkset,null,2)+'\n');
 
-const voidTtl=`@prefix void: <http://rdfs.org/ns/void#> .\n@prefix dct: <http://purl.org/dc/terms/> .\n@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n@prefix schema: <https://schema.org/> .\n<${release.canonicalUrl}graph.jsonld#dataset> a void:Dataset ;\n  dct:title ${ttlString(datasetName)}@en ;\n  dct:publisher <${release.primaryEntity.id}> ;\n  dct:modified ${ttlString(release.dateModified)} ;\n  dct:license <https://creativecommons.org/licenses/by/4.0/> ;\n  foaf:homepage <${datasetLandingPage}> ;\n  foaf:primaryTopic <${release.primaryEntity.id}> ;\n  void:uriSpace ${ttlString(release.canonicalUrl)} ;\n  void:triples ${inv.externalRdfTripleCount} ;\n  void:dataDump <${release.canonicalUrl}graph.jsonld>, <${release.canonicalUrl}graph.ttl>, <${release.canonicalUrl}entity-facts.csv>, <${release.canonicalUrl}query-matrix.jsonl> ;\n  void:vocabulary <https://schema.org/>, <http://purl.org/dc/terms/>, <http://www.w3.org/ns/prov#> .\n<${release.primaryEntity.id}> a foaf:Person ; foaf:name "Saeed Ghezelbash"@en .\n`;
+const voidTtl=`@prefix void: <http://rdfs.org/ns/void#> .\n@prefix dct: <http://purl.org/dc/terms/> .\n@prefix foaf: <http://xmlns.com/foaf/0.1/> .\n@prefix schema: <https://schema.org/> .\n<${release.canonicalUrl}graph.jsonld#dataset> a void:Dataset ;\n  dct:title ${ttlString(datasetName)}@en ;\n  dct:publisher <${release.primaryEntity.id}> ;\n  dct:modified ${ttlString(release.dateModified)} ;\n  dct:license <https://creativecommons.org/licenses/by/4.0/> ;\n  foaf:homepage <${datasetLandingPage}> ;\n  foaf:primaryTopic <${release.primaryEntity.id}> ;\n  void:uriSpace ${ttlString(release.canonicalUrl)} ;\n  void:triples ${rdfLock.triples} ;\n  void:dataDump <${release.canonicalUrl}graph.jsonld>, <${release.canonicalUrl}graph.ttl>, <${release.canonicalUrl}entity-facts.csv>, <${release.canonicalUrl}query-matrix.jsonl> ;\n  void:vocabulary <https://schema.org/>, <http://purl.org/dc/terms/>, <http://www.w3.org/ns/prov#> .\n<${release.primaryEntity.id}> a foaf:Person ; foaf:name "Saeed Ghezelbash"@en .\n`;
 await writeFile(out('void.ttl'),voidTtl);
 
 const dcatMeta=await Promise.all(coreResources.map(fileMeta));

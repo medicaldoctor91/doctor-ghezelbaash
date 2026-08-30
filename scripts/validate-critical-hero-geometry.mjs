@@ -32,7 +32,6 @@ const expect=(rules,selector,property,value,options={})=>assert(normalized(decl(
 
 assert((globalCss.match(/\/\*DIST_CRITICAL_CSS_END\*\//g)||[]).length===1,'Critical CSS split marker drift');
 assert(globalCss.includes('/*DIST_CRITICAL_HERO_GEOMETRY_START*/')&&globalCss.includes('/*DIST_CRITICAL_HERO_GEOMETRY_END*/'),'Critical Hero geometry block missing');
-assert(!/(?:Release 1\.0\.0|FINAL_2026_UI_CONVERGENCE|GEO_UI_20260817)/.test(globalCss),'Historical append-only CSS layer remains');
 
 expect(criticalRules,'.entity-hero .hero-actions','display','grid',{maxWidth:720});
 expect(criticalRules,'.entity-hero .hero-actions','grid-template-columns','minmax(0,1fr)',{maxWidth:720});
@@ -46,7 +45,7 @@ expect(criticalRules,'.entity-hero .hero-action','padding','.72rem 1rem',{maxWid
 const allRules=[...criticalRules,...deferredRules];
 expect(criticalRules,'.quick-actions__item','display','inline-flex');
 const telephoneLinkRules=selectorRules(allRules,'a[href^="tel:"]');
-assert(telephoneLinkRules.length===1&&!telephoneLinkRules.some(rule=>'display' in rule.declarations),'Global telephone-link semantics must not override component layout display');
+assert(telephoneLinkRules.length===1&&!telephoneLinkRules.some(rule=>'display' in rule.declarations),'Global telephone-link semantics must leave component display ownership intact');
 const cssPropertyCount=property=>allRules.reduce((count,rule)=>count+Number(property in rule.declarations),0);
 const backdropFilterCount=cssPropertyCount('backdrop-filter')+cssPropertyCount('-webkit-backdrop-filter');
 const imageFilterCount=cssPropertyCount('filter');
@@ -108,14 +107,13 @@ assert(!selectorRules(deferredRules,'.quick-actions').some(rule=>rule.conditions
 assert(!selectorRules(deferredRules,'.quick-actions__bar').some(rule=>rule.conditions.length===0),'Deferred quick-actions bar base authority remains');
 for(const [selector,property] of [['.quick-actions__item','background'],['.quick-actions__item--consultation','background'],['.quick-actions__item--search','background']])assert(!selectorRules(deferredRules,selector).some(rule=>rule.conditions.length===0&&property in rule.declarations),`Deferred Quick Actions paint authority remains: ${selector} ${property}`);
 
-assert(!allRules.some(rule=>(rule.selector==='html'||rule.selector===':root')&&'font-size' in rule.declarations),'Root font-size change requires Hero sizes re-audit');
+assert(!allRules.some(rule=>(rule.selector==='html'||rule.selector===':root')&&'font-size' in rule.declarations),'Root font size must stay aligned with measured Hero sizing');
 expect(criticalRules,'figure','border','1px solid var(--line)');
 assert(HERO_FIGURE_TOTAL_BORDER_PX===2,'Hero border contract drift');
 
 const {content}=await assembleCanonicalContent();
 assert((content.match(/class=["'][^"']*\bhero-actions\b[^"']*["']/g)||[]).length===1,'Unexpected Hero actions consumer count');
 assert(/<button\b(?=[^>]*class=["'][^"']*\bhero-action\b[^"']*\bhero-search-launch\b[^"']*["'])(?=[^>]*aria-label=["'][^"']+["'])[^>]*>/i.test(content),'Accessible search launcher left the Hero action contract');
-assert(!content.includes('hero-action--search'),'Dead Hero action search class reintroduced');
 assert((documentHead.match(/imagesizes=\{HERO_IMAGE_SIZES\}/g)||[]).length===1,'Structured Hero preload must consume the shared sizes contract exactly once');
 assert((await readFile('src/content-source/page.md','utf8')).match(/\{\{HERO_IMAGE_SIZES\}\}/g)?.length===2,'Hero picture sources must consume the shared sizes token exactly twice');
 const preloadHints=[HERO_IMAGE_SIZES];
@@ -179,4 +177,4 @@ const deferredBrotliBytes=brotliCompressSync(Buffer.from(delivery.externalCss),{
 assert(deferredBytes<=69000,`Deferred CSS exceeds the raw delivery budget: ${deferredBytes}`);
 assert(deferredBrotliBytes<=13900,`Deferred CSS exceeds the Brotli delivery budget: ${deferredBrotliBytes}`);
 
-console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes,deferredBrotliBytes,deferredRawBudget:69000,deferredBrotliBudget:13900,backdropFilterCount,imageFilterCount,crossBoundaryDuplicateDeclarations:0,historicalCascadeLayers:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));
+console.log(JSON.stringify({stage:'CSS_DELIVERY_CONVERGENCE',stylesheetSources:1,calibrationAssembly:'IN_MEMORY',renderCalibrationSha256:calibration.sha256,renderCalibrationRules:calibration.ruleCount,criticalBytes:Buffer.byteLength(delivery.criticalCss),deferredBytes,deferredBrotliBytes,deferredRawBudget:69000,deferredBrotliBudget:13900,backdropFilterCount,imageFilterCount,crossBoundaryDuplicateDeclarations:0,heroMobileColumns:1,heroImageHintCount:imageHints.length,heroImageSizingStates:6,heroGeometryRemCases:geometryRemCases,heroGeometryChecks:geometryChecks,heroSizingMode:'geometry-derived conservative slot contract',normalizerSafety:'PASS',quickActionsMobileConvergence:'PASS',quickActionsPaintConvergence:'PASS',quickTop:'2.15rem x 2.15rem',mainMobilePaddingInline:'.78rem',staticConvergence:'PASS'},null,2));

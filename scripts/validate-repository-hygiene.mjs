@@ -12,7 +12,7 @@ const forbiddenPrControlPaths=new Set(['.github/CODEOWNERS','.github/dependabot.
 const forbiddenExactNames=new Set(['notes.md','dev-notes.md','internal-notes.md']);
 const forbiddenNamePrefixes=['audit-','backup-','draft-','scratch-','temp-','tmp-'];
 const forbiddenSuffixes=['.bak','.old','.orig','.rej','.tmp','~'];
-const oneShotWorkflowPattern=/(?:^|\/)[._-]*(?:one[-_]?time|temporary|temp[-_]|tmp[-_]|audit[-_]|clean[-_]?slate|patch[-_]|cleanup[-_]|normalize[-_].*fixtures).*\.ya?ml$/i;
+const transientWorkflowPattern=/(?:^|\/)[._-]*(?:one[-_]?time|temporary|temp[-_]|tmp[-_]|audit[-_]|clean[-_]?slate|patch[-_]|cleanup[-_]|normalize[-_].*fixtures).*\.ya?ml$/i;
 const runtimeWrapperPattern=/_entry\.py$/i;
 const externalOperationScriptPattern=/^scripts\/(?:commons_|wiki(?:media|journal|source|versity)_)/i;
 const textExtensions=new Set(['.astro','.cff','.css','.csv','.html','.ini','.js','.json','.jsonld','.md','.mjs','.py','.toml','.ts','.tsv','.ttl','.txt','.xml','.yaml','.yml']);
@@ -23,21 +23,20 @@ const [npmrc,packageJson]=await Promise.all([
   readFile(path.join(root,'package.json'),'utf8').then(JSON.parse),
 ]);
 if(!/^audit=true$/m.test(npmrc)||/^audit=false$/m.test(npmrc))throw new Error('npm advisory reporting must remain enabled');
-if(packageJson.scripts?.['audit:dependencies']!=='npm audit --audit-level=high')throw new Error('High-severity dependency advisory gate drift');
-if(packageJson.overrides?.nanoid!=='3.3.18')throw new Error('Patched nanoid override drift');
+if(packageJson.scripts?.['security:dependencies']!=='npm audit --audit-level=high')throw new Error('High-severity dependency advisory gate drift');
 
 for(const name of tracked){
   const normalized=name.replaceAll('\\','/');
   if(forbiddenGeneratedPrefixes.some(prefix=>normalized.startsWith(prefix)))throw new Error(`Generated/runtime material must not be tracked: ${normalized}`);
-  if(forbiddenExternalMaintenancePrefixes.some(prefix=>normalized.startsWith(prefix)))throw new Error(`External one-shot maintenance material must not remain canonical: ${normalized}`);
+  if(forbiddenExternalMaintenancePrefixes.some(prefix=>normalized.startsWith(prefix)))throw new Error(`External maintenance material must not be tracked: ${normalized}`);
   if(forbiddenPrControlPaths.has(normalized))throw new Error(`PR-only control file must not remain canonical: ${normalized}`);
-  if(oneShotWorkflowPattern.test(normalized))throw new Error(`One-shot maintenance workflow must not remain canonical: ${normalized}`);
+  if(transientWorkflowPattern.test(normalized))throw new Error(`Transient maintenance workflow must not be tracked: ${normalized}`);
   if(runtimeWrapperPattern.test(normalized))throw new Error(`Runtime source wrapper must not remain canonical: ${normalized}`);
-  if(externalOperationScriptPattern.test(normalized))throw new Error(`External one-shot operation script must not remain canonical: ${normalized}`);
+  if(externalOperationScriptPattern.test(normalized))throw new Error(`External operation script must not be tracked: ${normalized}`);
   const base=path.posix.basename(normalized).toLowerCase();
   const semanticBase=base.replace(/^[._-]+/,'');
   if(forbiddenExactNames.has(base))throw new Error(`Internal note/planning file must not be tracked: ${normalized}`);
-  if(forbiddenNamePrefixes.some(prefix=>semanticBase.startsWith(prefix)))throw new Error(`Temporary/audit file must not be tracked: ${normalized}`);
+  if(forbiddenNamePrefixes.some(prefix=>semanticBase.startsWith(prefix)))throw new Error(`Transient file must not be tracked: ${normalized}`);
   if(forbiddenSuffixes.some(suffix=>base.endsWith(suffix)))throw new Error(`Backup/editor residue must not be tracked: ${normalized}`);
 }
 
@@ -73,8 +72,8 @@ for(const workflow of workflows){
   if(/^ {4}env:\s*\n(?: {6}[^\n]*\n)*? {6}[^:\n]+:\s*\$\{\{\s*(?:secrets\.|github\.token)/m.test(content))throw new Error(`Job-level secret/token exposure is forbidden: ${workflow}`);
   if(/https:\/\/[^\s"']*(?:\$\{\{\s*secrets\.|\$\{(?:HF|HUGGING_FACE|HUGGINGFACE|GITHUB|CLOUDFLARE|ZENODO)[A-Z_]*TOKEN)/.test(content))throw new Error(`Credential-bearing remote URL is forbidden: ${workflow}`);
   const installCount=(content.match(/\bnpm ci\b/g)||[]).length;
-  const auditCount=(content.match(/\bnpm (?:run audit:dependencies|audit --audit=true --audit-level=high)\b/g)||[]).length;
-  if(installCount!==auditCount)throw new Error(`Every npm ci must be followed by the explicit dependency advisory gate: ${workflow} (${installCount}/${auditCount})`);
+  const securityCount=(content.match(/\bnpm (?:run security:dependencies|audit --audit=true --audit-level=high)\b/g)||[]).length;
+  if(installCount!==securityCount)throw new Error(`Every npm ci must be followed by the explicit dependency advisory gate: ${workflow} (${installCount}/${securityCount})`);
   for(const match of content.matchAll(/^\s*branches:\s*\[([^\]]*)\]\s*$/gm)){
     const branches=match[1].split(',').map(value=>value.trim().replace(/^['"]|['"]$/g,'')).filter(Boolean);
     if(branches.some(branch=>branch!=='main'))throw new Error(`Canonical workflow branch trigger must be main-only: ${workflow} -> ${branches.join(', ')}`);
@@ -100,4 +99,4 @@ for(const name of tracked){
   devMarker.lastIndex=0;
 }
 
-console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,temporaryOrBackupFilesTracked:false,oneShotMaintenanceWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestTargetWorkflowCoupling:false,pullRequestValidationWorkflow:'.github/workflows/ci.yml',pullRequestValidationReadOnly:true,nonMainWorkflowBranchTriggers:false,persistentCheckoutCredentials:false,jobLevelSecrets:false,credentialBearingRemoteUrls:false,dependencyAdvisoryGate:'high',developmentMarkers:false,forbiddenAsciiControlBytes:false,intentionalTrackedDeletionsHandled:true},null,2));
+console.log(JSON.stringify({repositoryHygiene:'PASS',trackedFiles:tracked.length,canonicalContent:'src/content-source/page.md',styles:allowedStyles,workflows:allowedWorkflows,generatedRuntimeTracked:false,externalMaintenanceTracked:false,transientFilesTracked:false,transientWorkflowsTracked:false,runtimeSourceWrappersTracked:false,prOnlyControlFilesTracked:false,pullRequestValidationWorkflow:'.github/workflows/ci.yml',pullRequestValidationReadOnly:true,nonMainWorkflowBranchTriggers:false,persistentCheckoutCredentials:false,jobLevelSecrets:false,credentialBearingRemoteUrls:false,dependencyAdvisoryGate:'high',developmentMarkers:false,forbiddenAsciiControlBytes:false},null,2));

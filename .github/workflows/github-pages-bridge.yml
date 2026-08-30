@@ -1,4 +1,4 @@
-name: Consolidate legacy GitHub Pages
+name: Canonical GitHub Pages redirect bridge
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
-      - name: Build deterministic legacy bridge
+      - name: Build deterministic redirect bridge
         run: node scripts/github-pages-bridge.mjs build github-pages-bridge-dist
 
       - name: Upload GitHub Pages artifact

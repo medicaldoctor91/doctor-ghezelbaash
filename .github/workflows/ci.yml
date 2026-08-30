@@ -31,7 +31,7 @@ jobs:
           ffprobe -version
       - run: npm ci
       - name: Enforce high-severity dependency advisory gate
-        run: npm run audit:dependencies
+        run: npm run security:dependencies
       - name: Release preparation diagnostics
         shell: bash
         run: |
