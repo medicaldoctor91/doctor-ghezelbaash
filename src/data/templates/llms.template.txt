@@ -52,10 +52,10 @@ This evidence layer documents historical patient-origin geography inside the can
 
 - `https://www.ghezelbaash.ir/` is the canonical human-readable page and primary search document.
 - Machine representations (`graph.jsonld`, `graph.ttl`, `answers.txt`, `entity-facts.csv`, `knowledge.xml`, `llms.txt`, `index.md`, `llms-full.txt` and descriptor formats) remain public, crawlable, CORS-readable, graph-linked and explicitly `index, follow` for generic consumers. A second user-agent-scoped `X-Robots-Tag: googlebot: noindex, follow` consolidates Google Search results on the physician landing page without disarming direct retrieval by other agents, RAG systems or data consumers.
-- The XML sitemap contains the single canonical HTML URL with its high-value image and video extensions. Machine representations remain aggressively discoverable through HTTP `Link` headers, HTML discovery links, the Link Set, llms.txt and dataset descriptors, but are deliberately omitted from the Google-facing sitemap so `/` is the sole sitemap-declared Search landing.
+- The XML sitemap contains the single canonical HTML URL with its high-value image and video extensions. Machine representations remain directly discoverable through HTTP `Link` headers, HTML discovery links, the Link Set, llms.txt and dataset descriptors, but are deliberately omitted from the Google-facing sitemap so `/` is the sole sitemap-declared Search landing.
 - `doctor.vcf` and `clinic.vcf` are distinct vCard 4.0 contact projections with canonical entity UIDs. They are crawlable and graph-connected utilities served as `noindex, follow`, not independent ranking documents.
-- The web manifest, browser configuration and duplicate icon derivatives remain crawlable platform utility resources but are consolidated away from independent search indexing.
-- The canonical HTML page allows unrestricted snippets, large image previews and unrestricted video previews for Google Search, Discover, AI Overviews and AI Mode eligibility.
+- The web manifest remains a crawlable platform utility resource but is consolidated away from independent search indexing.
+- The canonical HTML page allows unrestricted snippets, large image previews and unrestricted video previews.
 
 ## Physician identity
 
@@ -77,8 +77,8 @@ This evidence layer documents historical patient-origin geography inside the can
 
 ## Canonical image identity
 
-- [Official physician and clinic brand symbol](https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.505de26d8f08.png): Canonical 512×512 brand ImageObject with embedded XMP, EXIF and entity identifiers for the physician and clinic.
-- [First-party canonical portrait](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.55e6a60c60bc.jpg): Byte-identical first-party master of the physician portrait.
+- [Official physician and clinic brand symbol](https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.6244472483fd.png): Canonical 512×512 brand ImageObject with standards-based XMP/IPTC identity and rights metadata for the physician and clinic.
+- [First-party canonical portrait](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.a43d5e8b8975.jpg): Pixel-identical first-party master of the physician portrait.
 - [Wikimedia Commons portrait](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg): CC BY 4.0 canonical portrait linked as Wikidata P18 and depicting Wikidata Q140287622.
 - [Clinical-team image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg): Contextual Commons image depicting the physician; not a P18 image.
 - [Clinical-office image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg): Contextual Commons image depicting the physician; not a P18 image.
@@ -210,9 +210,7 @@ PRP تشخیص نیست و مزوتراپی هم نسخه آماده ریزش م
 - [VoID dataset description](https://www.ghezelbaash.ir/void.ttl): RDF dataset metadata, publisher, primary topic, vocabularies, data dumps and triple count.
 - [W3C DCAT 3 catalog](https://www.ghezelbaash.ir/dcat.ttl): Dataset catalog and distribution metadata for standards-based dataset discovery.
 - [MLCommons Croissant 1.1 metadata](https://www.ghezelbaash.ir/croissant.json): Agent-ready dataset metadata with file sizes, media types and SHA-256 checksums.
-- [Query Matrix 2.0](https://www.ghezelbaash.ir/query-matrix.jsonl): Multilingual intent/service retrieval projection spanning Persian, English, Arabic and Central Kurdish with local, national and unspecified scopes, canonical answer IDs and stable evidence references.
 - [Current clinic reputation observation](https://www.ghezelbaash.ir/live-observations.jsonld): Mutable Google Places observation for the supporting clinic, separated from the immutable release snapshot.
-- [Artifact integrity manifest](https://www.ghezelbaash.ir/artifact-manifest.json): Deployable-file inventory with SHA-256 integrity metadata and production invariants.
 
 The physician is the primary entity, author, creator, publisher and owner. The clinic and structured-data project are supporting assets owned by the physician; neither is the primary entity of this website.
 
@@ -223,6 +221,6 @@ The physician is the primary entity, author, creator, publisher and owner. The c
 ## Evidence, provenance and validation
 
 - [Claim and passage provenance graph](/provenance.jsonld): Hash-addressed passage and answer provenance linked to canonical anchors and evidence identifiers.
-- [Release evidence snapshot](/evidence-snapshot.json): Release-time evidence registry/freshness snapshot.
+- [Evidence registry projection](/evidence-snapshot.json): Source records, verification dates and evidence tiers.
 - [SHACL entity constitution](/shapes.ttl): Machine-verifiable physician-first graph constraints and clinic subordination rules.
 {{EVIDENCE_TIER_LINE}}

@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "1.0",
+  "resources": [
+    {
+      "path": "index.html",
+      "source": "dist/index.html",
+      "mediaType": "text/html",
+      "targets": ["website", "huggingFace", "zenodo"]
+    },
+    {
+      "path": "graph.jsonld",
+      "source": "src/data/semantic/knowledge-graph.jsonld",
+      "mediaType": "application/ld+json",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Canonical JSON-LD entity knowledge graph",
+      "descriptorCore": true,
+      "head": {
+        "rel": "describedby",
+        "title": "Canonical full knowledge graph — JSON-LD"
+      },
+      "footerLabel": "JSON-LD"
+    },
+    {
+      "path": "graph.ttl",
+      "source": ".generated/semantic/knowledge-graph.ttl",
+      "mediaType": "text/turtle",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "RDF Turtle serialization isomorphic with JSON-LD",
+      "descriptorCore": true,
+      "head": {
+        "rel": "describedby",
+        "title": "Canonical full knowledge graph — Turtle"
+      },
+      "footerLabel": "RDF/Turtle"
+    },
+    {
+      "path": "shapes.ttl",
+      "source": "src/data/semantic/shapes.ttl",
+      "mediaType": "text/turtle",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "SHACL entity constitution",
+      "descriptorCore": true,
+      "head": {
+        "rel": "describedby",
+        "title": "SHACL entity constitution"
+      },
+      "footerLabel": "SHACL"
+    },
+    {
+      "path": "entity-facts.csv",
+      "source": ".generated/projections/entity-facts.csv",
+      "mediaType": "text/csv",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Flat fact projection of canonical graph",
+      "descriptorCore": true,
+      "head": {"rel": "describedby"},
+      "footerLabel": "CSV facts"
+    },
+    {
+      "path": "answers.txt",
+      "source": ".generated/projections/answers.txt",
+      "mediaType": "text/plain",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Canonical direct-answer corpus",
+      "descriptorCore": true,
+      "head": {"rel": "alternate"},
+      "footerLabel": "Answer corpus"
+    },
+    {
+      "path": "knowledge.xml",
+      "source": ".generated/projections/knowledge.xml",
+      "mediaType": "application/xml",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Hierarchical semantic knowledge projection",
+      "descriptorCore": true,
+      "head": {"rel": "alternate"},
+      "footerLabel": "XML"
+    },
+    {
+      "path": "llms.txt",
+      "source": ".generated/projections/llms.txt",
+      "mediaType": "text/plain",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Machine discovery and retrieval guide",
+      "descriptorCore": true,
+      "head": {
+        "rel": "describedby",
+        "title": "Machine-readable entity guide"
+      },
+      "footerLabel": "LLM guide"
+    },
+    {
+      "path": "index.md",
+      "source": ".generated/projections/index.md",
+      "mediaType": "text/markdown",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Full canonical content projection",
+      "descriptorCore": true,
+      "head": {
+        "rel": "alternate",
+        "title": "Markdown projection"
+      }
+    },
+    {
+      "path": "llms-full.txt",
+      "source": ".generated/projections/llms-full.txt",
+      "mediaType": "text/plain",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Passage-oriented full content projection",
+      "descriptorCore": true,
+      "head": {
+        "rel": "alternate",
+        "title": "Full text projection"
+      }
+    },
+    {
+      "path": "provenance.jsonld",
+      "source": ".generated/projections/provenance.jsonld",
+      "mediaType": "application/ld+json",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Claim and passage provenance graph",
+      "descriptorCore": true,
+      "head": {
+        "rel": "describedby",
+        "title": "Claim and passage provenance graph"
+      },
+      "footerLabel": "Provenance"
+    },
+    {
+      "path": "evidence-snapshot.json",
+      "source": ".generated/projections/evidence-snapshot.json",
+      "mediaType": "application/json",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "Evidence registry projection",
+      "descriptorCore": true,
+      "head": {
+        "rel": "describedby",
+        "title": "Evidence registry projection"
+      }
+    },
+    {
+      "path": "live-observations.jsonld",
+      "source": ".generated/projections/live-observations.jsonld",
+      "mediaType": "application/ld+json",
+      "targets": ["website"],
+      "materialize": true,
+      "mutable": true
+    },
+    {
+      "path": "doctor.vcf",
+      "source": ".generated/public/doctor.vcf",
+      "mediaType": "text/vcard",
+      "targets": ["website"],
+      "materialize": true,
+      "head": {
+        "rel": "related",
+        "title": "Physician vCard"
+      }
+    },
+    {
+      "path": "clinic.vcf",
+      "source": ".generated/public/clinic.vcf",
+      "mediaType": "text/vcard",
+      "targets": ["website"],
+      "materialize": true,
+      "head": {
+        "rel": "related",
+        "title": "Clinic vCard"
+      }
+    },
+    {
+      "path": "sitemap.xml",
+      "source": ".generated/projections/sitemap.xml",
+      "mediaType": "application/xml",
+      "targets": ["website"],
+      "materialize": true
+    },
+    {
+      "path": "linkset.json",
+      "source": ".generated/projections/linkset.json",
+      "mediaType": "application/linkset+json",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "RFC 9264 Web Link Set",
+      "head": {"rel": "linkset"},
+      "footerLabel": "Linkset"
+    },
+    {
+      "path": "datapackage.json",
+      "source": ".generated/projections/datapackage.json",
+      "mediaType": "application/json",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "head": {"rel": "describedby"},
+      "footerLabel": "Data Package"
+    },
+    {
+      "path": "void.ttl",
+      "source": ".generated/projections/void.ttl",
+      "mediaType": "text/turtle",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "VoID RDF dataset description",
+      "head": {"rel": "describedby"},
+      "footerLabel": "VoID"
+    },
+    {
+      "path": "dcat.ttl",
+      "source": ".generated/projections/dcat.ttl",
+      "mediaType": "text/turtle",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "descriptorTitle": "W3C DCAT 3 catalog and distribution metadata",
+      "head": {"rel": "describedby"},
+      "footerLabel": "DCAT 3"
+    },
+    {
+      "path": "croissant.json",
+      "source": ".generated/projections/croissant.json",
+      "mediaType": "application/ld+json",
+      "targets": ["website", "huggingFace", "zenodo"],
+      "materialize": true,
+      "head": {"rel": "describedby"},
+      "footerLabel": "Croissant 1.1"
+    },
+    {
+      "path": "query-matrix.jsonl",
+      "source": ".generated/projections/query-matrix.jsonl",
+      "mediaType": "application/x-ndjson",
+      "targets": ["huggingFace", "zenodo"]
+    },
+    {
+      "path": "current-release-matrix.json",
+      "source": ".generated/projections/current-release-matrix.json",
+      "mediaType": "application/json",
+      "targets": ["huggingFace", "zenodo"]
+    }
+  ]
+}

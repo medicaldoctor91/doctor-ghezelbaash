@@ -2,33 +2,16 @@ name: External authority release contract
 
 on:
   schedule:
-    - cron: '41 4 * * 1,4'
+    - cron: "41 4 * * 1,4"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Optional X.Y.Z release target; leave empty to verify current external authority surfaces'
+        description: "Optional X.Y.Z release target; leave empty to verify current external authority surfaces"
         required: false
         type: string
-  push:
-    branches: [main]
-    paths:
-      - '.release/policy/authority-surface-contract.json'
-      - 'src/data/release.json'
-      - 'src/data/release-invariants.json'
-      - 'scripts/huggingface.mjs'
-      - 'scripts/zenodo_release.py'
-      - 'scripts/promote-release.mjs'
-      - 'scripts/generate-rdf.mjs'
-      - 'scripts/lib/rdf-measurement.mjs'
-      - 'scripts/verify-live.mjs'
-      - '.github/workflows/hugging-face-authority.yml'
 
 permissions:
   contents: read
-
-concurrency:
-  group: doctor-ghezelbaash-external-mutation
-  cancel-in-progress: false
 
 jobs:
   verify:
@@ -38,35 +21,27 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'main' || github.sha }}
+          ref: main
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 24.19.0
+          node-version-file: .nvmrc
       - name: Verify physician-first Hugging Face authority topology and viewer contracts
-        shell: bash
-        run: |
-          set -euo pipefail
-          attempts=1
-          if [ "$GITHUB_EVENT_NAME" = push ]; then attempts=60; fi
-          for attempt in $(seq 1 "$attempts"); do
-            if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then
-              echo "HF_AUTHORITY_CONVERGED attempt=$attempt"
-              exit 0
-            fi
-            test "$attempt" -lt "$attempts"
-            sleep 10
-          done
+        run: node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer
 
   release:
     if: github.event_name == 'workflow_dispatch' && inputs.version != ''
     permissions:
       contents: write
+    concurrency:
+      group: doctor-ghezelbaash-external-mutation
+      cancel-in-progress: false
+      queue: max
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
-      ASTRO_TELEMETRY_DISABLED: '1'
+      ASTRO_TELEMETRY_DISABLED: "1"
       RELEASE_TARGET: ${{ inputs.version }}
       CF_EXPECTED_ENVIRONMENT: production
     steps:
@@ -77,11 +52,11 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 24.19.0
+          node-version-file: .nvmrc
           cache: npm
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: '3.14.6'
+          python-version: "3.14.6"
       - name: Provision release validation tools
         run: |
           set -euo pipefail
@@ -121,9 +96,14 @@ jobs:
           NODE
           fi
           git fetch --tags --force origin
-          if [ "$MODE" = current ]; then git rev-parse -q --verify "refs/tags/v$CURRENT_VERSION" >/dev/null; fi
-          printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\n' \
-            "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" >> "$GITHUB_ENV"
+          FROZEN_SOURCE_AT_HEAD=false
+          if [ "$MODE" = current ]; then
+            FROZEN_SOURCE_SHA="$(git rev-list -n 1 "v$CURRENT_VERSION")"
+            test -n "$FROZEN_SOURCE_SHA"
+            if [ "$BASE_SHA" = "$FROZEN_SOURCE_SHA" ]; then FROZEN_SOURCE_AT_HEAD=true; fi
+          fi
+          printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
+            "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
       - name: Build exact current release distribution
         if: steps.release.outputs.mode == 'current'
@@ -163,16 +143,38 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
-          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main
-          unset HF_AUTH
+          node scripts/huggingface.mjs push .release/huggingface HEAD:main
+      - name: Repair a missing frozen Hugging Face tag from its exact source tag
+        if: steps.release.outputs.mode == 'current'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          HF_TAG="v$CURRENT_VERSION"
+          RELEASE_RECOVERY=false
+          if ! git -C .release/huggingface ls-remote --exit-code --tags origin "refs/tags/$HF_TAG" >/dev/null 2>&1; then
+            test "$FROZEN_SOURCE_AT_HEAD" = true
+            git -C .release/huggingface tag -a "$HF_TAG" -m "Dr. Saeed Ghezelbash Public Knowledge Graph $HF_TAG"
+            node scripts/huggingface.mjs push .release/huggingface "refs/tags/$HF_TAG"
+            RELEASE_RECOVERY=true
+          fi
+          if git ls-remote --exit-code --heads origin "refs/heads/release/v$CURRENT_VERSION" >/dev/null 2>&1 || \
+             git -C .release/huggingface ls-remote --exit-code --heads origin "refs/heads/release/v$CURRENT_VERSION" >/dev/null 2>&1; then
+            RELEASE_RECOVERY=true
+          fi
+          printf 'RELEASE_RECOVERY=%s\n' "$RELEASE_RECOVERY" >> "$GITHUB_ENV"
       - name: Verify current Hugging Face surfaces
         if: steps.release.outputs.mode == 'current'
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/huggingface.mjs verify --profile
-          node scripts/huggingface.mjs verify --viewer
+          for attempt in $(seq 1 18); do
+            if node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then break; fi
+            test "$attempt" -lt 18
+            sleep 10
+          done
       - name: Verify current Cloudflare deployment contract
         if: steps.release.outputs.mode == 'current'
         env:
@@ -188,6 +190,16 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/verify-live.mjs current --website-only
+      - name: Verify the repaired or current frozen release snapshot
+        if: steps.release.outputs.mode == 'current' && env.FROZEN_SOURCE_AT_HEAD == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 18); do
+            if node scripts/verify-live.mjs release; then break; fi
+            test "$attempt" -lt 18
+            sleep 10
+          done
       - name: Create or resume release candidate source
         if: steps.release.outputs.mode == 'new'
         env:
@@ -211,7 +223,7 @@ jobs:
             DOI="$(node -p "require('./.release/runtime/zenodo-reservation.json').versionDoi")"
             node scripts/promote-release.mjs \
               --version="$RELEASE_TARGET" --date="$RELEASE_DATE" --zenodo-record="$RECORD" --zenodo-doi="$DOI"
-            EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/evidence-snapshot.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json'
+            EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json'
             ACTUAL="$(git diff --name-only | sort | tr '\n' ' ' | sed 's/ $//')"
             test "$ACTUAL" = "$EXPECTED"
             CANDIDATE_NEEDS_COMMIT=true
@@ -224,12 +236,12 @@ jobs:
           set -euo pipefail
           if [ "$CANDIDATE_NEEDS_COMMIT" = true ]; then
             npm run validate:release-contract
-            npm run prepare:generated
+            npm run prepare:distribution
             npm run validate:source
             git config user.name ghezelbaash-release-bot
             git config user.email actions@users.noreply.github.com
             git checkout -b "$RELEASE_BRANCH"
-            git add CITATION.cff codemeta.json package-lock.json package.json src/data/evidence-snapshot.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json
+            git add CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json
             git commit -m "release: prepare v$RELEASE_TARGET authority snapshot"
           fi
           CANDIDATE_SHA="$(git rev-parse HEAD)"
@@ -286,9 +298,7 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
-          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:"$HF_BRANCH"
-          unset HF_AUTH
+          node scripts/huggingface.mjs push .release/huggingface "HEAD:$HF_BRANCH"
       - name: Stage immutable Zenodo candidate
         if: steps.release.outputs.mode == 'new'
         env:
@@ -346,16 +356,14 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
-          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main
+          node scripts/huggingface.mjs push .release/huggingface HEAD:main
           if git -C .release/huggingface ls-remote --exit-code --tags origin "refs/tags/v$RELEASE_TARGET" >/dev/null 2>&1; then
             test "$(git -C .release/huggingface ls-remote origin "refs/tags/v$RELEASE_TARGET^{}" | awk '{print $1}')" = "$HF_CANDIDATE_SHA" || \
               test "$(git -C .release/huggingface ls-remote origin "refs/tags/v$RELEASE_TARGET" | awk '{print $1}')" = "$HF_CANDIDATE_SHA"
           else
             git -C .release/huggingface tag -a "v$RELEASE_TARGET" -m "Dr. Saeed Ghezelbash Public Knowledge Graph v$RELEASE_TARGET"
-            git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin "refs/tags/v$RELEASE_TARGET"
+            node scripts/huggingface.mjs push .release/huggingface "refs/tags/v$RELEASE_TARGET"
           fi
-          unset HF_AUTH
       - name: Converge canonical Cloudflare Pages deployment
         if: steps.release.outputs.mode == 'new'
         env:
@@ -395,7 +403,7 @@ jobs:
           done
           node scripts/verify-live.mjs release
       - name: Remove successful candidate branches
-        if: steps.release.outputs.mode == 'new' && success()
+        if: (steps.release.outputs.mode == 'new' || (env.FROZEN_SOURCE_AT_HEAD == 'true' && env.RELEASE_RECOVERY == 'true')) && success()
         env:
           GITHUB_TOKEN: ${{ github.token }}
           HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
@@ -405,7 +413,6 @@ jobs:
           test -n "${GITHUB_TOKEN:-}"; echo "::add-mask::$GITHUB_TOKEN"
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
           GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
-          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin --delete "release/v$RELEASE_TARGET" || true
-          git -C .release/huggingface -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin --delete "release/v$RELEASE_TARGET" || true
-          unset GITHUB_AUTH HF_AUTH
+          node scripts/huggingface.mjs push .release/huggingface --delete "release/v$RELEASE_TARGET" || true
+          unset GITHUB_AUTH

@@ -141,7 +141,7 @@ class FakeCloudflareApi:
                     {
                         "id": "zone-redirect-ruleset",
                         "kind": "zone",
-                        "phase": edge.SUBDOMAIN_REDIRECT_PHASE,
+                        "phase": edge.SINGLE_REDIRECT_PHASE,
                     }
                 ],
             }
@@ -374,7 +374,8 @@ class FakeZoneTokenAuthority:
 
 
 class FakeInventoryApi:
-    def __init__(self) -> None:
+    def __init__(self, blog_host: str) -> None:
+        self.blog_host = blog_host
         self.pages_domains = {"www.ghezelbaash.ir": "active"}
         self.project_domains = {
             "doctor-ghezelbaash.pages.dev",
@@ -409,7 +410,9 @@ class FakeInventoryApi:
 
     def blog_dns_exact(self) -> bool:
         rows = [row for row in self.dns_records if row.get("name") == "blog.ghezelbaash.ir"]
-        return len(rows) == 1 and edge.pages_dns_record_matches(rows[0])
+        return len(rows) == 1 and edge.pages_dns_record_matches(
+            rows[0], self.blog_host
+        )
 
     def expect(
         self,
@@ -488,7 +491,7 @@ class FakeInventoryApi:
         raise AssertionError((method, path, body))
 
 
-contract = edge.load_subdomain_redirect_contract(ROOT)
+contract = edge.load_redirect_registry(ROOT)
 api = FakeCloudflareApi()
 token_authority = FakeTokenAuthority()
 child_api, revoke_child_api = edge.issue_ephemeral_single_redirect_api(
@@ -513,11 +516,12 @@ revoke_zone_child_api()
 if not zone_token_authority.revoked:
     raise AssertionError("Ephemeral control-plane child token was not revoked")
 
-inventory_api = FakeInventoryApi()
+blog_host = contract["bulkRedirects"]["host"]
+inventory_api = FakeInventoryApi(blog_host)
 edge.ensure_pages_custom_domains(inventory_api, "test-account")
 if inventory_api.pages_domains.get("blog.ghezelbaash.ir") != "pending":
     raise AssertionError("Pages blog domain should remain pending before exact DNS")
-pages_dns = edge.reconcile_pages_dns_binding(inventory_api, "test-zone")
+pages_dns = edge.reconcile_pages_dns_binding(inventory_api, "test-zone", blog_host)
 if pages_dns.get("content") != "doctor-ghezelbaash.pages.dev":
     raise AssertionError("Exact Pages blog CNAME was not installed")
 pages_domains = edge.wait_pages_custom_domains(inventory_api, "test-account")
@@ -527,7 +531,11 @@ pages_contract = edge.read_pages_contract(
     inventory_api, "test-account", "www.ghezelbaash.ir"
 )
 dns_contract = edge.read_dns_contract(
-    inventory_api, "test-zone", "ghezelbaash.ir", "www.ghezelbaash.ir"
+    inventory_api,
+    "test-zone",
+    "ghezelbaash.ir",
+    "www.ghezelbaash.ir",
+    blog_host,
 )
 if pages_contract["repository"] != "medicaldoctor91/doctor-ghezelbaash":
     raise AssertionError("Pages repository contract was not read back")
@@ -539,10 +547,24 @@ if not all(dns_contract["requiredHostCoverage"].values()):
 bulk_first = edge.reconcile_bulk_redirects(api, "test-account", contract)
 if bulk_first["itemCount"] != 87:
     raise AssertionError("The complete 87-path historical inventory was not installed")
-single_first = edge.reconcile_subdomain_redirects(api, "test-zone", contract)
-if len(api.zone_rules) != 3 or single_first["managedRuleCount"] != 3:
-    raise AssertionError("Redirect reconciliation did not converge to three managed catchalls")
-if any("blog.ghezelbaash.ir" in row["expression"] for row in api.zone_rules):
+single_first = edge.reconcile_single_redirects(api, "test-zone", contract)
+expected_single_count = len(contract["singleRedirects"]["rules"])
+if (
+    len(api.zone_rules) != expected_single_count
+    or single_first["managedRuleCount"] != expected_single_count
+):
+    raise AssertionError("Redirect reconciliation did not converge to the registry")
+apex_source = next(
+    row for row in contract["singleRedirects"]["rules"]
+    if row["host"] == contract["zone"]
+)
+apex_rule = next(row for row in api.zone_rules if row["ref"] == apex_source["ref"])
+apex_from_value = apex_rule["action_parameters"]["from_value"]
+if apex_from_value["target_url"] != {"expression": apex_source["targetExpression"]}:
+    raise AssertionError("Apex redirect target expression drift")
+if apex_from_value["preserve_query_string"] is not True:
+    raise AssertionError("Apex redirect query preservation drift")
+if any(blog_host in row["expression"] for row in api.zone_rules):
     raise AssertionError("A Single Redirect still pre-empts historical blog URLs")
 if api.events.index("account:list-items-replaced") > api.events.index(
     "zone:conflicting-blog-deleted"
@@ -555,7 +577,7 @@ first_mutations = api.mutations
 api.mutations = 0
 api.events.clear()
 bulk_second = edge.reconcile_bulk_redirects(api, "test-account", contract)
-single_second = edge.reconcile_subdomain_redirects(api, "test-zone", contract)
+single_second = edge.reconcile_single_redirects(api, "test-zone", contract)
 if api.mutations != 0:
     raise AssertionError("Subdomain redirect reconciliation is not idempotent")
 if bulk_second != bulk_first or single_second["refs"] != single_first["refs"]:

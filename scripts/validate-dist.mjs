@@ -1,69 +1,714 @@
-import path from 'node:path';
-import {createHash} from 'node:crypto';
-import {readFile,readdir,access} from 'node:fs/promises';
-import {assembleCssSource} from '../src/lib/css-source.mjs';
-import {deriveCssDelivery} from '../src/lib/css-delivery.mjs';
-import {deriveGooglePageMicrodata} from '../src/lib/google-page-microdata.mjs';
-import {analyzeGraphClosure} from './lib/graph-integrity.mjs';
-import {validateCoreEntityIdentity} from './lib/core-entity-identity.mjs';
-import {currentReleaseMetadataMismatches,selectCurrentReleaseBoundNodes} from './lib/release-graph.mjs';
-const root=process.cwd(),dist=path.resolve(root,process.argv[2]||'dist'),data=path.join(root,'src/data');
-const readJson=async p=>JSON.parse(await readFile(p,'utf8')),fail=m=>{throw new Error(m)},arr=v=>Array.isArray(v)?v:(v==null?[]:[v]),id=v=>typeof v==='string'?v:v?.['@id'],types=n=>arr(n?.['@type']),refs=v=>arr(v).map(id).filter(Boolean),attr=(source,name)=>source.match(new RegExp(`\\b${name}=["']([^"']+)["']`,'i'))?.[1],sha=b=>createHash('sha256').update(b).digest('hex'),b64=b=>createHash('sha256').update(b).digest('base64');
-const release=await readJson(path.join(data,'release.json')),inv=await readJson(path.join(data,'release-invariants.json')),headProfile=await readJson(path.join(data,'semantic/head-profile.json')),supportProfile=await readJson(path.join(data,'semantic/support-profile.json')),registry=await readJson(path.join(data,'service-registry.json')),answerRegistry=await readJson(path.join(data,'answer-registry.json')),volatile=await readJson(path.join(data,'volatile-facts.json')),queryPolicy=await readJson(path.join(data,'retrieval/query-matrix-policy.json'));
-const required=['index.html','404.html','_headers','_redirects','artifact-manifest.json','live-serving-attestation.json','live-observations.jsonld','query-matrix.jsonl','current-release-matrix.json','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','llms-full.txt','index.md','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','sitemap.xml','robots.txt'];for(const f of required)await access(path.join(dist,f));
-const html=await readFile(path.join(dist,'index.html'),'utf8'),htmlBytes=Buffer.byteLength(html),headers=await readFile(path.join(dist,'_headers'),'utf8'),robots=await readFile(path.join(dist,'robots.txt'),'utf8'),graphBytes=await readFile(path.join(dist,'graph.jsonld')),graph=JSON.parse(graphBytes),graphText=graphBytes.toString(),rdfText=await readFile(path.join(dist,'graph.ttl'),'utf8'),manifestBytes=await readFile(path.join(dist,'artifact-manifest.json')),manifest=JSON.parse(manifestBytes),att=JSON.parse(await readFile(path.join(dist,'live-serving-attestation.json'),'utf8')),liveBytes=await readFile(path.join(dist,'live-observations.jsonld')),live=JSON.parse(liveBytes),matrix=await readJson(path.join(dist,'current-release-matrix.json')),sitemap=await readFile(path.join(dist,'sitemap.xml'),'utf8');
-const rdfTripleCount=rdfText.split(/\r?\n/).filter(Boolean).length;
-if(rdfTripleCount!==manifest.invariants?.externalRdfTripleCount)fail(`DIST RDF measurement drift: ${rdfTripleCount}/${manifest.invariants?.externalRdfTripleCount}`);
-const dp=await readJson(path.join(dist,'datapackage.json')),cr=await readJson(path.join(dist,'croissant.json')),answersText=await readFile(path.join(dist,'answers.txt'),'utf8'),dcatText=await readFile(path.join(dist,'dcat.ttl'),'utf8'),voidText=await readFile(path.join(dist,'void.ttl'),'utf8'),createdAt=(release.dataset.zenodo.releaseHistory||[]).map(x=>x.publicationDate).sort()[0]||release.dateModified,datasetLandingPage=`https://doi.org/${release.dataset.zenodo.versionDoi}`;
-const graphClosure=analyzeGraphClosure(graph,{baseUrl:release.canonicalUrl});if(graphClosure.duplicateIds.length||graphClosure.danglingSameSiteCount)fail(`DIST graph closure drift: duplicates=${graphClosure.duplicateIds.length}, dangling=${graphClosure.danglingSameSiteCount}`);const releaseBound=selectCurrentReleaseBoundNodes(graph,release.dataset.id),releaseBoundMismatches=currentReleaseMetadataMismatches(releaseBound,{datasetId:release.dataset.id,release:release.release,dateModified:release.dateModified});if(!releaseBound.length||releaseBoundMismatches.length)fail(`DIST release-bound graph drift: nodes=${releaseBound.length}, mismatches=${releaseBoundMismatches.length}`);
-const resourceNames=(dp.resources||[]).map(resource=>resource.name),resourcePaths=(dp.resources||[]).map(resource=>resource.path);if(new Set(resourceNames).size!==resourceNames.length||new Set(resourcePaths).size!==resourcePaths.length)fail('Data Package resource names/paths must be unique');for(const name of resourceNames)if(!/^[a-z0-9][a-z0-9._-]*$/.test(String(name)))fail(`Invalid Data Package resource name ${name}`);
-if(dp.name!=='dr-saeed-ghezelbash-public-knowledge-graph'||dp.title!==`${release.dataset.name} — Data Package`||dp.version!==release.release||dp.created!==createdAt||dp.lastUpdated!==release.dateModified||dp.homepage!==datasetLandingPage)fail('Data Package canonical identity/date/landing-page drift');
-if(cr.name!==release.dataset.name||cr.version!==release.release||cr.dateCreated!==createdAt||cr.datePublished!==release.dateModified||cr.dateModified!==release.dateModified||cr.url!==datasetLandingPage)fail('Croissant canonical identity/date/landing-page drift');
-if(!dcatText.includes(`dct:title "${release.dataset.name} — Data Catalog"@en`)||!dcatText.includes(`dcat:landingPage <${datasetLandingPage}>`))fail('DCAT canonical Dataset catalog/landing-page drift');
-if(!voidText.includes(`foaf:homepage <${datasetLandingPage}>`))fail('VoID Dataset landing-page drift');
-if(!answersText.includes(`REVIEWED_AT: ${release.medicalReviewedAt}`)||!answersText.includes(`# Release ${release.release}; medically reviewed ${release.medicalReviewedAt};`))fail('Answer corpus medical review truth drift');
-if(release.medicalReviewedAt!==release.dateModified&&answersText.includes(`REVIEWED_AT: ${release.dateModified}`))fail('Release date leaked into medical review timestamp');
-if(htmlBytes>=inv.maxHtmlBytes)fail(`HTML safety ceiling exceeded ${htmlBytes}/${inv.maxHtmlBytes}`);if(inv.maxHtmlBytes+inv.googlebotReservedResponseHeaderBytes+inv.googlebotSafetyMarginBytes>inv.googlebotFetchBudgetBytes)fail('Response budget contract exceeds Googlebot budget');
-const h1Text=(html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1]||'').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();if(!/<title>\s*دکتر سعید قزلباش \| پزشک زیبایی در کرمانشاه\s*<\/title>/i.test(html)||!h1Text.includes('دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه'))fail('Entity-first title/H1 regressed');if(!html.includes('google-maps-clinic-reputation-current'))fail('Visible Google reputation slot missing');if(!html.includes('جمعه تعطیل'))fail('Owner-confirmed Friday closure missing');
-const [authoredCss,renderCalibrationRaw]=await Promise.all([readFile(path.join(root,'src/styles/global.css'),'utf8'),readFile(path.join(root,'src/data/render-calibration.json'),'utf8')]);const {cssSource,calibration:cssCalibration}=assembleCssSource(authoredCss,renderCalibrationRaw),cssDelivery=deriveCssDelivery(cssSource),ext=cssDelivery.externalCss,cssRel=`assets/${cssDelivery.assetName}`;if(!ext.includes(`/*DIST_CHUNK_CALIBRATION_SHA256:${cssCalibration.sha256}*/`))fail('DIST CSS calibration assembly drift');if(await readFile(path.join(dist,cssRel),'utf8')!==ext)fail('Fingerprint CSS bytes drift');const siteAssets=(await readdir(path.join(dist,'assets'))).filter(x=>/^site\.[0-9a-f]{12}\.css$/.test(x));if(siteAssets.length!==1||siteAssets[0]!==path.basename(cssRel))fail('Stale fingerprint CSS asset shipped');const tags=[...html.matchAll(/<link\b[^>]*>/gi)].map(m=>m[0]);if(!tags.some(t=>t.includes(`href="/${cssRel}"`)&&/rel=["']preload["']/i.test(t)&&/as=["']style["']/i.test(t))||!tags.some(t=>t.includes(`href="/${cssRel}"`)&&/rel=["']stylesheet["']/i.test(t)))fail('Asynchronous CSS preload/fallback missing');const inlineStyles=[...html.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi)].map(m=>m[1]);if(inlineStyles.length!==1||inlineStyles[0]!==cssDelivery.criticalCss)fail('Critical inline CSS drift');
-if(!robots.includes('Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full')||!headers.includes('Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full'))fail('Maximum Content-Signal policy missing');
-const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].map(m=>({attrs:m[1],body:m[2]})),ld=scripts.filter(x=>/application\/ld\+json/i.test(x.attrs)),exec=scripts.filter(x=>!/application\/ld\+json/i.test(x.attrs));const coreScript=ld.find(x=>/id=["']entity-core["']/i.test(x.attrs)),supportScript=ld.find(x=>/id=["']entity-support["']/i.test(x.attrs));if(ld.length!==2||!coreScript||!supportScript||exec.length!==2||!exec.some(x=>/id=["']site-runtime["']/i.test(x.attrs))||!exec.some(x=>/id=["']deferred-stylesheet-loader["']/i.test(x.attrs)))fail(`Inline script contract drift ld=${ld.length} exec=${exec.length}`);const core=JSON.parse(coreScript.body),support=JSON.parse(supportScript.body);if(Buffer.byteLength(coreScript.body)>headProfile.maxBytes||Buffer.byteLength(supportScript.body)>supportProfile.maxBytes)fail('Inline semantic byte budget exceeded');const supportIds=new Set((support['@graph']||[]).map(n=>n['@id']));for(const forbidden of [`${release.canonicalUrl}#observation-clinic-google-rating-current`,`${release.canonicalUrl}#observation-clinic-google-review-count-current`,`${release.canonicalUrl}#speakable-primary-content`])if(supportIds.has(forbidden))fail(`Mutable/low-ROI node leaked into frozen support lane: ${forbidden}`);const inlineNodes=[...(core['@graph']||[]),...(support['@graph']||[])],reversePageNodes=inlineNodes.filter(node=>Object.hasOwn(node,'mainEntityOfPage'));if(reversePageNodes.length)fail(`Inline Google projection must keep ProfilePage top-level; reverse mainEntityOfPage found on ${reversePageNodes.map(node=>node['@id']).join(', ')}`);
-const inlineProfilePages=inlineNodes.filter(node=>types(node).includes('ProfilePage'));
-if(inlineProfilePages.length!==1||inlineProfilePages[0]?.['@id']!==`${release.canonicalUrl}#webpage`)fail(`Inline ProfilePage authority collision: ${inlineProfilePages.map(node=>node?.['@id']).join(', ')}`);
-const googlePageMicrodata=deriveGooglePageMicrodata(core,`${release.canonicalUrl}#webpage`),mainMatch=html.match(/<main\b(?=[^>]*\bid=["']main-content["'])[^>]*>([\s\S]*?)<article\b/i),mainTag=mainMatch?.[0].match(/^<main\b[^>]*>/i)?.[0]||'',mainPrelude=mainMatch?.[1]||'';
-if(!mainTag||!/\bitemscope\b/i.test(mainTag)||attr(mainTag,'itemid')!==googlePageMicrodata.itemId||attr(mainTag,'itemtype')!==googlePageMicrodata.itemType)fail('Rendered root ProfilePage Microdata identity/type drift');
-const renderedLinks=[...mainPrelude.matchAll(/<link\b(?=[^>]*\bitemprop=["'][^"']+["'])[^>]*>/gi)].map(match=>({itemprop:attr(match[0],'itemprop'),href:attr(match[0],'href')})),renderedMeta=[...mainPrelude.matchAll(/<meta\b(?=[^>]*\bitemprop=["'][^"']+["'])[^>]*>/gi)].map(match=>({itemprop:attr(match[0],'itemprop'),content:attr(match[0],'content')})),signature=values=>values.map(value=>`${value.itemprop}|${value.href??value.content}`).sort();
-if(JSON.stringify(signature(renderedLinks))!==JSON.stringify(signature(googlePageMicrodata.links))||JSON.stringify(signature(renderedMeta))!==JSON.stringify(signature(googlePageMicrodata.meta))||renderedMeta.some(item=>item.itemprop.split(/\s+/).includes('dateModified')))fail('Rendered root Microdata is not an exact Google page projection');
-const nodes=graph['@graph']||[],byId=new Map(nodes.filter(n=>n?.['@id']).map(n=>[n['@id'],n])),person=byId.get(release.primaryEntity.id),clinic=byId.get(release.clinic.id),dataset=byId.get(release.dataset.id),page=byId.get(`${release.canonicalUrl}#webpage`),site=byId.get(`${release.canonicalUrl}#website`);if(!person||!clinic||!dataset||!page||!site)fail('Core graph entity missing');if(id(dataset.creator)!==release.primaryEntity.id||id(dataset.publisher)!==release.primaryEntity.id||dataset.version!==release.release)fail('Dataset physician-first/version contract broken');const dSame=new Set(refs(dataset.sameAs));if(dSame.size)fail('Dataset identity/distribution topology collision');
-validateCoreEntityIdentity({release,nodes});
-const inlineByIdForPage=new Map(inlineNodes.filter(node=>node?.['@id']).map(node=>[node['@id'],node])),corePage=inlineByIdForPage.get(`${release.canonicalUrl}#webpage`),mainContentIds=refs(corePage?.mainContentOfPage),mainContentTags=[...html.matchAll(/<(?:section|details)\b(?=[^>]*\bitemscope\b)(?=[^>]*\bitemtype=["']https:\/\/schema\.org\/WebPageElement["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>/gi)].map(match=>match[0]),mainContentTagIds=mainContentTags.map(tag=>attr(tag,'itemid')).filter(Boolean),sameSet=(left,right)=>left.size===right.size&&[...right].every(value=>left.has(value)),tagProps=tag=>(attr(tag,'itemprop')||'').split(/\s+/).filter(Boolean),strip=value=>String(value||'').replace(/<[^>]+>/g,'').replaceAll('&amp;','&').replaceAll('&nbsp;',' ').replace(/\s+/g,' ').trim();
-const personHeaderTag=html.match(/<header\b(?=[^>]*\bitemid=["'][^"']+["'])(?=[^>]*\bitemprop=["'][^"']*\bmainEntity\b[^"']*["'])[^>]*>/i)?.[0]||'';
-if(attr(personHeaderTag,'itemid')!==googlePageMicrodata.mainEntityId||attr(personHeaderTag,'itemtype')!==googlePageMicrodata.mainEntityItemType||!sameSet(new Set(tagProps(personHeaderTag)),new Set(googlePageMicrodata.mainEntityProperties)))fail('Nested Person-to-ProfilePage Microdata roles/type drift');
-if(mainContentIds.length!==18||!sameSet(new Set(mainContentTagIds),new Set(mainContentIds))||new Set(mainContentTagIds).size!==mainContentTagIds.length||mainContentTags.some(tag=>tagProps(tag).includes('mainContentOfPage')))fail(`DIST ProfilePage/WebPageElement ownership parity drift: head=${mainContentIds.length}, dom=${mainContentTagIds.length}`);
-for(const tag of mainContentTags){
-  const itemId=attr(tag,'itemid'),node=inlineByIdForPage.get(itemId),start=html.indexOf(tag)+tag.length,scopePrelude=html.slice(start,start+2500);
-  if(!node||!types(node).includes('WebPageElement')||attr(tag,'itemtype')!=='https://schema.org/WebPageElement'||!supportIds.has(itemId)||!sameSet(new Set(refs(node.about)),new Set(refs(byId.get(itemId)?.about))))fail(`DIST WebPageElement definition/type/about drift: ${itemId}`);
-  const urlLink=[...scopePrelude.matchAll(/<link\b[^>]*>/gi)].map(match=>match[0]).find(link=>tagProps(link).includes('url'));
-  const languageMeta=[...scopePrelude.matchAll(/<meta\b[^>]*>/gi)].map(match=>match[0]).find(meta=>tagProps(meta).includes('inLanguage'));
-  const heading=scopePrelude.match(/<h[2-6]\b(?=[^>]*\bitemprop=["'][^"']*\bname\b[^"']*["'])[^>]*>[\s\S]*?<\/h[2-6]>/i)?.[0]||'';
-  if(attr(urlLink||'','href')!==node.url||attr(languageMeta||'','content')!==node.inLanguage||strip(heading)!==strip(node.name))fail(`DIST WebPageElement name/url/language Microdata drift: ${itemId}`);
+import path from "node:path";
+import { createHash } from "node:crypto";
+import { readFile, readdir } from "node:fs/promises";
+import { assembleCssSource } from "../src/lib/css-source.mjs";
+import { deriveCssDelivery } from "../src/lib/css-delivery.mjs";
+import { deriveGooglePageMicrodata } from "../src/lib/google-page-microdata.mjs";
+import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
+import { analyzeGraphClosure } from "./lib/graph-integrity.mjs";
+import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
+import {
+  currentReleaseMetadataMismatches,
+  selectCurrentReleaseBoundNodes,
+} from "./lib/release-graph.mjs";
+import {
+  loadRedirectRegistry,
+  renderCanonicalHostRedirects,
+} from "./lib/redirect-registry.mjs";
+const root = process.cwd(),
+  dist = path.resolve(root, process.argv[2] || "dist"),
+  data = path.join(root, "src/data");
+const readJson = async (p) => JSON.parse(await readFile(p, "utf8")),
+  fail = (m) => {
+    throw new Error(m);
+  },
+  arr = (v) => (Array.isArray(v) ? v : v == null ? [] : [v]),
+  id = (v) => (typeof v === "string" ? v : v?.["@id"]),
+  types = (n) => arr(n?.["@type"]),
+  refs = (v) => arr(v).map(id).filter(Boolean),
+  attr = (source, name) =>
+    source.match(new RegExp(`\\b${name}=["']([^"']+)["']`, "i"))?.[1],
+  b64 = (b) => createHash("sha256").update(b).digest("base64");
+const walkRelative = async (directory, prefix = "") => {
+  const files = [];
+  for (const entry of (await readdir(directory, { withFileTypes: true })).sort(
+    (left, right) => left.name.localeCompare(right.name),
+  )) {
+    const relative = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isDirectory())
+      files.push(
+        ...(await walkRelative(path.join(directory, entry.name), relative)),
+      );
+    else if (entry.isFile()) files.push(relative);
+  }
+  return files;
+};
+const release = await readJson(path.join(data, "release.json")),
+  inv = await readJson(path.join(data, "release-invariants.json")),
+  headProfile = await readJson(path.join(data, "semantic/head-profile.json")),
+  supportProfile = await readJson(
+    path.join(data, "semantic/support-profile.json"),
+  ),
+  registry = await readJson(path.join(data, "service-registry.json")),
+  answerRegistry = await readJson(path.join(data, "answer-registry.json")),
+  volatile = await readJson(path.join(data, "volatile-facts.json")),
+  stableMedia = await readJson(path.join(data, "stable-media-aliases.json")),
+  rdfLock = await readJson(
+    path.join(root, ".generated/semantic/rdf-lock.json"),
+  );
+const registryOwnedGeneratedPublic = new Set(
+  STATIC_ARTIFACTS.map((resource) => resource.source)
+    .filter((source) => source.startsWith(".generated/public/"))
+    .map((source) => source.slice(".generated/public/".length)),
+);
+const declaredDistFiles = [
+  ...(await walkRelative(path.join(root, "public"))),
+  ...(await walkRelative(path.join(root, ".generated/public"))).filter(
+    (file) => !registryOwnedGeneratedPublic.has(file),
+  ),
+  ...STATIC_ARTIFACTS.map((resource) => resource.path),
+  ...(stableMedia.aliases || []).map((alias) => alias.path),
+  "index.html",
+  "404.html",
+  "favicon.png",
+  "_headers",
+  "_redirects",
+];
+const declaredDistSet = new Set(declaredDistFiles);
+if (declaredDistSet.size !== declaredDistFiles.length)
+  fail("Public DIST sources declare a duplicate destination");
+const distFiles = await walkRelative(dist),
+  indexNowFiles = distFiles.filter((file) => /^[0-9a-f]{32}\.txt$/.test(file));
+if (indexNowFiles.length !== 1)
+  fail(
+    `IndexNow key-file inventory drift: ${indexNowFiles.join(", ") || "none"}`,
+  );
+const indexNowFile = indexNowFiles[0],
+  indexNowKey = indexNowFile.slice(0, -4);
+if (
+  (await readFile(path.join(dist, indexNowFile), "utf8")).trim() !== indexNowKey
+)
+  fail("IndexNow key filename/content drift");
+declaredDistSet.add(indexNowFile);
+const missingDistFiles = [...declaredDistSet].filter(
+    (file) => !distFiles.includes(file),
+  ),
+  undeclaredDistFiles = distFiles.filter((file) => !declaredDistSet.has(file));
+if (missingDistFiles.length || undeclaredDistFiles.length)
+  fail(
+    `DIST inventory drift: missing=${missingDistFiles.join(", ") || "none"} undeclared=${undeclaredDistFiles.join(", ") || "none"}`,
+  );
+const html = await readFile(path.join(dist, "index.html"), "utf8"),
+  notFound = await readFile(path.join(dist, "404.html"), "utf8"),
+  htmlBytes = Buffer.byteLength(html),
+  headers = await readFile(path.join(dist, "_headers"), "utf8"),
+  robots = await readFile(path.join(dist, "robots.txt"), "utf8"),
+  graphBytes = await readFile(path.join(dist, "graph.jsonld")),
+  graph = JSON.parse(graphBytes),
+  graphText = graphBytes.toString(),
+  rdfText = await readFile(path.join(dist, "graph.ttl"), "utf8"),
+  liveBytes = await readFile(path.join(dist, "live-observations.jsonld")),
+  live = JSON.parse(liveBytes),
+  sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
+if (/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>/i.test(notFound))
+  fail("404 page must not declare a canonical URL");
+const rdfTripleCount = rdfText.split(/\r?\n/).filter(Boolean).length;
+if (rdfTripleCount !== rdfLock.triples)
+  fail(`DIST RDF measurement drift: ${rdfTripleCount}/${rdfLock.triples}`);
+const dp = await readJson(path.join(dist, "datapackage.json")),
+  cr = await readJson(path.join(dist, "croissant.json")),
+  answersText = await readFile(path.join(dist, "answers.txt"), "utf8"),
+  dcatText = await readFile(path.join(dist, "dcat.ttl"), "utf8"),
+  voidText = await readFile(path.join(dist, "void.ttl"), "utf8"),
+  createdAt =
+    (release.dataset.zenodo.releaseHistory || [])
+      .map((x) => x.publicationDate)
+      .sort()[0] || release.dateModified,
+  datasetLandingPage = `https://doi.org/${release.dataset.zenodo.versionDoi}`;
+for (const file of [
+  "linkset.json",
+  "void.ttl",
+  "dcat.ttl",
+  "datapackage.json",
+  "croissant.json",
+]) {
+  const [generatedBytes, distBytes] = await Promise.all([
+    readFile(path.join(root, ".generated/projections", file)),
+    readFile(path.join(dist, file)),
+  ]);
+  if (!generatedBytes.equals(distBytes))
+    fail(`Descriptor materialization drift ${file}`);
 }
-for(const idSuffix of ['biomedical-concept-botulinum-toxin-a','biomedical-concept-rejuvenation','biomedical-concept-cosmetic-techniques'])if(!types(inlineByIdForPage.get(`${release.canonicalUrl}#${idSuffix}`)).includes('DefinedTerm'))fail(`Compact section-topic DefinedTerm missing: ${idSuffix}`);
-const catalog=byId.get(`${release.canonicalUrl}#data-catalog`),github=byId.get(`${release.canonicalUrl}#project-github-source`),graphDownload=byId.get(`${release.canonicalUrl}graph.jsonld#download`),datasetDistributions=new Set(refs(dataset.distribution)),datasetSources=new Set(refs(dataset.isBasedOn));if(catalog?.url!==`${release.canonicalUrl}dcat.ttl`||Object.hasOwn(dataset,'url')||graphDownload?.contentUrl!==`${release.canonicalUrl}graph.jsonld`||!datasetDistributions.has(graphDownload?.['@id'])||github?.['@type']!=='SoftwareSourceCode'||Object.hasOwn(github||{},'contentUrl')||datasetDistributions.has(github?.['@id'])||!datasetSources.has(github?.['@id']))fail('DIST semantic destination contract broken');
-const howToId=`${release.canonicalUrl}#howto-clinical-aesthetic-decision-pathway`,howTo=byId.get(howToId),howToTarget=String(howTo?.url||'').split('#')[1]||'';if(!howTo||!types(howTo).includes('HowTo')||refs(howTo.step).length!==4||!howToTarget||!html.includes(`id="${howToTarget}"`)||!supportIds.has(howToId))fail('DIST physician HowTo projection drift');
-for(const slug of ['alopecia','androgenetic-alopecia','acne-vulgaris','scar','hyperpigmentation','melasma']){const condition=byId.get(`${release.canonicalUrl}#biomedical-concept-${slug}`),treatments=refs(condition?.possibleTreatment);if(!types(condition).includes('MedicalCondition')||!treatments.length||treatments.some(target=>!types(byId.get(target)).includes('MedicalTherapy')))fail(`DIST MedicalCondition treatment topology drift: ${slug}`)}
-const inlineById=new Map(inlineNodes.filter(node=>node?.['@id']).map(node=>[node['@id'],node])),speakableId=`${release.canonicalUrl}#speakable-primary-content`,inlineSpeakable=inlineById.get(speakableId);if(!inlineSpeakable||!types(inlineSpeakable).includes('SpeakableSpecification')||!refs(page.speakable).includes(speakableId))fail('Inline Speakable projection closure drift');for(const selector of arr(inlineSpeakable.cssSelector)){if(selector.startsWith('#')&&!html.includes(`id="${selector.slice(1)}"`))fail(`Speakable ID selector missing ${selector}`);if(selector.startsWith('.')&&!new RegExp(`class=["'][^"']*\\b${selector.slice(1)}\\b`).test(html))fail(`Speakable class selector missing ${selector}`)}
-const coreClinic=inlineById.get(release.clinic.id),coreClinicNames=arr(coreClinic?.name),coreClinicImages=arr(coreClinic?.image);if(coreClinicNames.length!==1||coreClinicNames[0]?.['@language']!=='fa'||coreClinicNames[0]?.['@value']!=='کلینیک زیبایی دکتر سعید قزلباش'||coreClinicImages.length<6||coreClinicImages.some(value=>typeof value!=='string'||!/^https:\/\//.test(value)))fail('Google Organization/LocalBusiness name/image projection drift');
-for(const t of ['Person','IndividualPhysician'])if(!types(person).includes(t))fail(`Physician type missing ${t}`);for(const t of ['MedicalClinic','PhysiciansOffice','LocalBusiness'])if(!types(clinic).includes(t))fail(`Clinic type missing ${t}`);const has=(o,k,v)=>refs(o?.[k]).includes(v);if(!has(person,'owns',release.clinic.id)||!has(person,'practicesAt',release.clinic.id)||!has(person,'mainEntityOfPage',page['@id'])||!has(clinic,'owner',release.primaryEntity.id)||!has(clinic,'founder',release.primaryEntity.id)||!has(page,'mainEntity',release.primaryEntity.id)||!has(page,'author',release.primaryEntity.id)||!has(page,'publisher',release.primaryEntity.id))fail('Physician/clinic/WebPage authority topology broken');
-const offered=new Set([...refs(person.availableService),...refs(clinic.availableService)]),registered=new Set(registry.services.filter(x=>x.publishable).map(x=>x.id));for(const x of registered)if(!offered.has(x))fail(`Registry service not projected ${x}`);for(const x of offered)if(!registered.has(x))fail(`Projected service missing registry ${x}`);if(![...registered].some(x=>x.includes('botulinum-toxin-chronic-migraine')))fail('Migraine Botox offering missing');for(const sid of offered){const s=byId.get(sid);if(!s||!types(s).includes('Service')||!refs(s.provider).includes(release.primaryEntity.id))fail(`Service provider/type drift ${sid}`)}
-for(const r of answerRegistry.answers){const q=byId.get(r.questionId),a=byId.get(r.answerId);if(!q||!a||id(q.acceptedAnswer)!==r.answerId)fail(`Answer atom drift ${r.questionId}`)}
-const expectedRating=Number(volatile.rating),expectedCount=Number(volatile.reviewCount);if(live.about?.['@id']!==release.clinic.id||live.item?.['@id']!==release.clinic.id||live.dateModified!==volatile.valueObservedAt)fail('Live observation target/timestamp drift');const props=arr(live.item?.additionalProperty),rating=Number(props.find(x=>x.propertyID==='Google Places rating')?.value),count=Number(props.find(x=>x.propertyID==='Google Places userRatingCount')?.value);if(rating!==expectedRating||count!==expectedCount)fail('Live observation value drift');
-for(const [k,v] of Object.entries({release:release.release,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,recordId:String(release.dataset.zenodo.recordId),datasetIri:release.dataset.id,personWikidata:release.primaryEntity.wikidata,clinicWikidata:release.dataset.supportingClinicWikidata}))if(String(matrix[k])!==String(v))fail(`Current release matrix drift ${k}`);if(matrix.reputation?.rating!==expectedRating||matrix.reputation?.reviewCount!==expectedCount)fail('Current release matrix reputation drift');
-const qlines=(await readFile(path.join(dist,'query-matrix.jsonl'),'utf8')).trim().split('\n').filter(Boolean).map(JSON.parse);const unique=new Set();for(const row of qlines){const key=`${row.language}|${row.query}`;if(unique.has(key))fail(`Duplicate Query Matrix row ${key}`);unique.add(key);if(row.preferred_entity!==release.primaryEntity.wikidata||row.dataset_iri!==release.dataset.id||row.release!==release.release||row.version_doi!==release.dataset.zenodo.versionDoi||row.retrieval_priority!==queryPolicy.retrievalPriority||row.positioning_mode!==queryPolicy.positioningMode)fail(`Query Matrix authority drift ${key}`)}for(const l of queryPolicy.languages)if(!qlines.some(r=>r.language===l))fail(`Query Matrix language missing ${l}`);for(const s of queryPolicy.scopes)if(!qlines.some(r=>r.query_scope===s))fail(`Query Matrix scope missing ${s}`);for(const i of queryPolicy.intentFamilies)if(!qlines.some(r=>r.intent_family===i))fail(`Query Matrix intent missing ${i}`);if(qlines.length<queryPolicy.languages.length*queryPolicy.scopes.length*queryPolicy.intentFamilies.length)fail('Query Matrix coverage unexpectedly sparse');
-if(manifest.release!==release.release||manifest.baseRelease!==release.release||manifest.dataset?.versionDoi!==release.dataset.zenodo.versionDoi||manifest.review?.date!==release.medicalReviewedAt||manifest.liveObservation?.reviewCount!==expectedCount)fail('Current-serving manifest release/review drift');for(const [rel,meta] of Object.entries(manifest.files||{})){const p=path.join(dist,rel);await access(p);const b=await readFile(p);if(b.length!==meta.bytes||sha(b)!==meta.sha256)fail(`Manifest file bytes/hash drift ${rel}`)}if(manifest.invariants?.rootHtmlSha256!==sha(Buffer.from(html)))fail('Manifest root HTML hash drift');
-if(manifest.invariants?.fullGraphClosed!==true||manifest.invariants?.orphanGraphNodeCount!==0||manifest.invariants?.duplicateGraphIdCount!==0||manifest.invariants?.releaseBoundNodeCount!==releaseBound.length)fail('Manifest graph integrity claims are not derived from DIST');
-if(att.baseRelease!==release.release||att.indexHtmlSha256!==sha(Buffer.from(html))||att.artifactManifestSha256!==sha(manifestBytes)||att.liveObservationSha256!==sha(liveBytes)||att.headersSha256!==sha(Buffer.from(headers))||att.versionDoi!==release.dataset.zenodo.versionDoi)fail('Live-serving attestation drift');
-const digestFor=route=>{const lines=headers.split(/\r?\n/),i=lines.findIndex(x=>x===`/${route}`);if(i<0)return null;for(let j=i+1;j<lines.length&&/^  /.test(lines[j]);j++){const m=lines[j].match(/^  Repr-Digest: sha-256=:([^:]+):$/);if(m)return m[1]}return null};for(const route of ['artifact-manifest.json','live-observations.jsonld','query-matrix.jsonl','current-release-matrix.json','datapackage.json','croissant.json','dcat.ttl','linkset.json']){const d=digestFor(route);if(!d||d!==b64(await readFile(path.join(dist,route))))fail(`Header Repr-Digest drift ${route}`)}
-const redirects=await readFile(path.join(dist,'_redirects'),'utf8'),canonicalRedirects=await readFile(path.join(root,'public/_redirects'),'utf8'),redirectsSha=sha(Buffer.from(redirects)),sources=new Set();if(redirects!==canonicalRedirects||manifest.invariants?.redirectsSha256!==redirectsSha||manifest.invariants?.redirectsPreservedByteIdentical!==true)fail('DIST redirect bytes/source drift');for(const line of redirects.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)){const [from,to,code]=line.split(/\s+/);if(code!=='301'||sources.has(from))fail(`Redirect contract drift ${line}`);sources.add(from);if(to.includes('#')){const frag=decodeURIComponent(to.split('#')[1]||'');if(frag&&!html.includes(`id="${frag}"`)&&!html.includes(`id='${frag}'`))fail(`Redirect target fragment absent ${line}`)}}
-const sitemapLocs=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1]);if(sitemapLocs.length!==1||sitemapLocs[0]!==release.canonicalUrl)fail('Sitemap must contain only canonical HTML landing');if(!graphText.includes(release.dataset.zenodo.conceptDoi)||!graphText.includes(release.dataset.zenodo.versionDoi))fail('Graph DOI topology incomplete');
-console.log(JSON.stringify({stage:'DIST_SEMANTIC_AND_SERVING_CONTRACT',release:release.release,htmlBytes,graphNodes:nodes.length,services:registered.size,answers:answerRegistry.answers.length,queryRows:qlines.length,supportNodes:supportIds.size,liveReputation:{rating,count,observedAt:volatile.valueObservedAt},manifestFiles:Object.keys(manifest.files||{}).length,googleOrganizationProjection:'PASS',integrity:'PASS'},null,2));
+const graphClosure = analyzeGraphClosure(graph, {
+  baseUrl: release.canonicalUrl,
+});
+if (graphClosure.duplicateIds.length || graphClosure.danglingSameSiteCount)
+  fail(
+    `DIST graph closure drift: duplicates=${graphClosure.duplicateIds.length}, dangling=${graphClosure.danglingSameSiteCount}`,
+  );
+const releaseBound = selectCurrentReleaseBoundNodes(graph, release.dataset.id),
+  releaseBoundMismatches = currentReleaseMetadataMismatches(releaseBound, {
+    datasetId: release.dataset.id,
+    release: release.release,
+    dateModified: release.dateModified,
+  });
+if (!releaseBound.length || releaseBoundMismatches.length)
+  fail(
+    `DIST release-bound graph drift: nodes=${releaseBound.length}, mismatches=${releaseBoundMismatches.length}`,
+  );
+const resourceNames = (dp.resources || []).map((resource) => resource.name),
+  resourcePaths = (dp.resources || []).map((resource) => resource.path);
+if (
+  new Set(resourceNames).size !== resourceNames.length ||
+  new Set(resourcePaths).size !== resourcePaths.length
+)
+  fail("Data Package resource names/paths must be unique");
+for (const name of resourceNames)
+  if (!/^[a-z0-9][a-z0-9._-]*$/.test(String(name)))
+    fail(`Invalid Data Package resource name ${name}`);
+if (
+  dp.name !== "dr-saeed-ghezelbash-public-knowledge-graph" ||
+  dp.title !== `${release.dataset.name} — Data Package` ||
+  dp.version !== release.release ||
+  dp.created !== createdAt ||
+  dp.lastUpdated !== release.dateModified ||
+  dp.homepage !== datasetLandingPage
+)
+  fail("Data Package canonical identity/date/landing-page drift");
+if (
+  cr.name !== release.dataset.name ||
+  cr.version !== release.release ||
+  cr.dateCreated !== createdAt ||
+  cr.datePublished !== release.dateModified ||
+  cr.dateModified !== release.dateModified ||
+  cr.url !== datasetLandingPage
+)
+  fail("Croissant canonical identity/date/landing-page drift");
+if (
+  !dcatText.includes(`dct:title "${release.dataset.name} — Data Catalog"@en`) ||
+  !dcatText.includes(`dcat:landingPage <${datasetLandingPage}>`)
+)
+  fail("DCAT canonical Dataset catalog/landing-page drift");
+if (!voidText.includes(`foaf:homepage <${datasetLandingPage}>`))
+  fail("VoID Dataset landing-page drift");
+if (
+  !answersText.includes(`REVIEWED_AT: ${release.medicalReviewedAt}`) ||
+  !answersText.includes(
+    `# Release ${release.release}; medically reviewed ${release.medicalReviewedAt};`,
+  )
+)
+  fail("Answer corpus medical review truth drift");
+if (
+  release.medicalReviewedAt !== release.dateModified &&
+  answersText.includes(`REVIEWED_AT: ${release.dateModified}`)
+)
+  fail("Release date leaked into medical review timestamp");
+if (htmlBytes >= inv.maxHtmlBytes)
+  fail(`HTML safety ceiling exceeded ${htmlBytes}/${inv.maxHtmlBytes}`);
+if (
+  inv.maxHtmlBytes +
+    inv.googlebotReservedResponseHeaderBytes +
+    inv.googlebotSafetyMarginBytes >
+  inv.googlebotFetchBudgetBytes
+)
+  fail("Response budget contract exceeds Googlebot budget");
+const h1Text = (html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || "")
+  .replace(/<[^>]+>/g, "")
+  .replace(/\s+/g, " ")
+  .trim();
+if (
+  !/<title>\s*دکتر سعید قزلباش \| پزشک زیبایی در کرمانشاه\s*<\/title>/i.test(
+    html,
+  ) ||
+  !h1Text.includes("دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه")
+)
+  fail("Entity-first title/H1 regressed");
+if (!html.includes("google-maps-clinic-reputation-current"))
+  fail("Visible Google reputation slot missing");
+if (!html.includes("جمعه تعطیل"))
+  fail("Owner-confirmed Friday closure missing");
+const [authoredCss, renderCalibrationRaw] = await Promise.all([
+  readFile(path.join(root, "src/styles/global.css"), "utf8"),
+  readFile(path.join(root, "src/data/render-calibration.json"), "utf8"),
+]);
+const { cssSource, calibration: cssCalibration } = assembleCssSource(
+    authoredCss,
+    renderCalibrationRaw,
+  ),
+  cssDelivery = deriveCssDelivery(cssSource),
+  ext = cssDelivery.externalCss,
+  cssRel = `assets/${cssDelivery.assetName}`;
+if (!ext.includes(`/*DIST_CHUNK_CALIBRATION_SHA256:${cssCalibration.sha256}*/`))
+  fail("DIST CSS calibration assembly drift");
+if ((await readFile(path.join(dist, cssRel), "utf8")) !== ext)
+  fail("Fingerprint CSS bytes drift");
+const siteAssets = (await readdir(path.join(dist, "assets"))).filter((x) =>
+  /^site\.[0-9a-f]{12}\.css$/.test(x),
+);
+if (siteAssets.length !== 1 || siteAssets[0] !== path.basename(cssRel))
+  fail("Stale fingerprint CSS asset shipped");
+const tags = [...html.matchAll(/<link\b[^>]*>/gi)].map((m) => m[0]);
+if (
+  !tags.some(
+    (t) =>
+      t.includes(`href="/${cssRel}"`) &&
+      /rel=["']preload["']/i.test(t) &&
+      /as=["']style["']/i.test(t),
+  ) ||
+  !tags.some(
+    (t) => t.includes(`href="/${cssRel}"`) && /rel=["']stylesheet["']/i.test(t),
+  )
+)
+  fail("Asynchronous CSS preload/fallback missing");
+const inlineStyles = [
+  ...html.matchAll(/<style(?:\s[^>]*)?>([\s\S]*?)<\/style>/gi),
+].map((m) => m[1]);
+if (inlineStyles.length !== 1 || inlineStyles[0] !== cssDelivery.criticalCss)
+  fail("Critical inline CSS drift");
+if (
+  !robots.includes(
+    "Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full",
+  ) ||
+  !headers.includes(
+    "Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full",
+  )
+)
+  fail("Maximum Content-Signal policy missing");
+const scripts = [
+    ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi),
+  ].map((m) => ({ attrs: m[1], body: m[2] })),
+  ld = scripts.filter((x) => /application\/ld\+json/i.test(x.attrs)),
+  exec = scripts.filter((x) => !/application\/ld\+json/i.test(x.attrs));
+const coreScript = ld.find((x) => /id=["']entity-core["']/i.test(x.attrs)),
+  supportScript = ld.find((x) => /id=["']entity-support["']/i.test(x.attrs));
+if (
+  ld.length !== 2 ||
+  !coreScript ||
+  !supportScript ||
+  exec.length !== 2 ||
+  !exec.some((x) => /id=["']site-runtime["']/i.test(x.attrs)) ||
+  !exec.some((x) => /id=["']deferred-stylesheet-loader["']/i.test(x.attrs))
+)
+  fail(`Inline script contract drift ld=${ld.length} exec=${exec.length}`);
+const core = JSON.parse(coreScript.body),
+  support = JSON.parse(supportScript.body);
+if (
+  Buffer.byteLength(coreScript.body) > headProfile.maxBytes ||
+  Buffer.byteLength(supportScript.body) > supportProfile.maxBytes
+)
+  fail("Inline semantic byte budget exceeded");
+const coreIds = new Set((core["@graph"] || []).map((n) => n["@id"])),
+  supportIds = new Set((support["@graph"] || []).map((n) => n["@id"])),
+  overlappingProjectionIds = [...coreIds].filter((value) =>
+    supportIds.has(value),
+  );
+if (overlappingProjectionIds.length)
+  fail(
+    `Head/support projection IDs overlap: ${overlappingProjectionIds.join(", ")}`,
+  );
+for (const forbidden of [
+  `${release.canonicalUrl}#observation-clinic-google-rating-current`,
+  `${release.canonicalUrl}#observation-clinic-google-review-count-current`,
+  `${release.canonicalUrl}#speakable-primary-content`,
+])
+  if (supportIds.has(forbidden))
+    fail(`Mutable/low-ROI node leaked into frozen support lane: ${forbidden}`);
+const inlineNodes = [...(core["@graph"] || []), ...(support["@graph"] || [])],
+  reversePageNodes = inlineNodes.filter((node) =>
+    Object.hasOwn(node, "mainEntityOfPage"),
+  );
+if (reversePageNodes.length)
+  fail(
+    `Inline Google projection must keep ProfilePage top-level; reverse mainEntityOfPage found on ${reversePageNodes.map((node) => node["@id"]).join(", ")}`,
+  );
+const inlineProfilePages = inlineNodes.filter((node) =>
+  types(node).includes("ProfilePage"),
+);
+if (
+  inlineProfilePages.length !== 1 ||
+  inlineProfilePages[0]?.["@id"] !== `${release.canonicalUrl}#webpage`
+)
+  fail(
+    `Inline ProfilePage authority collision: ${inlineProfilePages.map((node) => node?.["@id"]).join(", ")}`,
+  );
+const googlePageMicrodata = deriveGooglePageMicrodata(
+    core,
+    `${release.canonicalUrl}#webpage`,
+  ),
+  mainMatch = html.match(
+    /<main\b(?=[^>]*\bid=["']main-content["'])[^>]*>([\s\S]*?)<article\b/i,
+  ),
+  mainTag = mainMatch?.[0].match(/^<main\b[^>]*>/i)?.[0] || "",
+  mainPrelude = mainMatch?.[1] || "";
+if (
+  !mainTag ||
+  !/\bitemscope\b/i.test(mainTag) ||
+  attr(mainTag, "itemid") !== googlePageMicrodata.itemId ||
+  attr(mainTag, "itemtype") !== googlePageMicrodata.itemType
+)
+  fail("Rendered root ProfilePage Microdata identity/type drift");
+const renderedLinks = [
+    ...mainPrelude.matchAll(
+      /<link\b(?=[^>]*\bitemprop=["'][^"']+["'])[^>]*>/gi,
+    ),
+  ].map((match) => ({
+    itemprop: attr(match[0], "itemprop"),
+    href: attr(match[0], "href"),
+  })),
+  renderedMeta = [
+    ...mainPrelude.matchAll(
+      /<meta\b(?=[^>]*\bitemprop=["'][^"']+["'])[^>]*>/gi,
+    ),
+  ].map((match) => ({
+    itemprop: attr(match[0], "itemprop"),
+    content: attr(match[0], "content"),
+  })),
+  signature = (values) =>
+    values
+      .map((value) => `${value.itemprop}|${value.href ?? value.content}`)
+      .sort();
+if (
+  JSON.stringify(signature(renderedLinks)) !==
+    JSON.stringify(signature(googlePageMicrodata.links)) ||
+  JSON.stringify(signature(renderedMeta)) !==
+    JSON.stringify(signature(googlePageMicrodata.meta)) ||
+  renderedMeta.some((item) =>
+    item.itemprop.split(/\s+/).includes("dateModified"),
+  )
+)
+  fail("Rendered root Microdata is not an exact Google page projection");
+const nodes = graph["@graph"] || [],
+  byId = new Map(nodes.filter((n) => n?.["@id"]).map((n) => [n["@id"], n])),
+  person = byId.get(release.primaryEntity.id),
+  clinic = byId.get(release.clinic.id),
+  dataset = byId.get(release.dataset.id),
+  page = byId.get(`${release.canonicalUrl}#webpage`),
+  site = byId.get(`${release.canonicalUrl}#website`);
+if (!person || !clinic || !dataset || !page || !site)
+  fail("Core graph entity missing");
+if (
+  id(dataset.creator) !== release.primaryEntity.id ||
+  id(dataset.publisher) !== release.primaryEntity.id ||
+  dataset.version !== release.release
+)
+  fail("Dataset physician-first/version contract broken");
+const dSame = new Set(refs(dataset.sameAs));
+if (dSame.size) fail("Dataset identity/distribution topology collision");
+validateCoreEntityIdentity({ release, nodes });
+const inlineByIdForPage = new Map(
+    inlineNodes
+      .filter((node) => node?.["@id"])
+      .map((node) => [node["@id"], node]),
+  ),
+  corePage = inlineByIdForPage.get(`${release.canonicalUrl}#webpage`),
+  mainContentIds = refs(corePage?.mainContentOfPage),
+  mainContentTags = [
+    ...html.matchAll(
+      /<(?:section|details)\b(?=[^>]*\bitemscope\b)(?=[^>]*\bitemtype=["']https:\/\/schema\.org\/WebPageElement["'])(?=[^>]*\bitemid=["'][^"']+["'])[^>]*>/gi,
+    ),
+  ].map((match) => match[0]),
+  mainContentTagIds = mainContentTags
+    .map((tag) => attr(tag, "itemid"))
+    .filter(Boolean),
+  sameSet = (left, right) =>
+    left.size === right.size && [...right].every((value) => left.has(value)),
+  tagProps = (tag) =>
+    (attr(tag, "itemprop") || "").split(/\s+/).filter(Boolean),
+  strip = (value) =>
+    String(value || "")
+      .replace(/<[^>]+>/g, "")
+      .replaceAll("&amp;", "&")
+      .replaceAll("&nbsp;", " ")
+      .replace(/\s+/g, " ")
+      .trim();
+const personHeaderTag =
+  html.match(
+    /<header\b(?=[^>]*\bitemid=["'][^"']+["'])(?=[^>]*\bitemprop=["'][^"']*\bmainEntity\b[^"']*["'])[^>]*>/i,
+  )?.[0] || "";
+if (
+  attr(personHeaderTag, "itemid") !== googlePageMicrodata.mainEntityId ||
+  attr(personHeaderTag, "itemtype") !==
+    googlePageMicrodata.mainEntityItemType ||
+  !sameSet(
+    new Set(tagProps(personHeaderTag)),
+    new Set(googlePageMicrodata.mainEntityProperties),
+  )
+)
+  fail("Nested Person-to-ProfilePage Microdata roles/type drift");
+if (
+  mainContentIds.length !== 18 ||
+  !sameSet(new Set(mainContentTagIds), new Set(mainContentIds)) ||
+  new Set(mainContentTagIds).size !== mainContentTagIds.length ||
+  mainContentTags.some((tag) => tagProps(tag).includes("mainContentOfPage"))
+)
+  fail(
+    `DIST ProfilePage/WebPageElement ownership parity drift: head=${mainContentIds.length}, dom=${mainContentTagIds.length}`,
+  );
+for (const tag of mainContentTags) {
+  const itemId = attr(tag, "itemid"),
+    node = inlineByIdForPage.get(itemId),
+    start = html.indexOf(tag) + tag.length,
+    scopePrelude = html.slice(start, start + 2500);
+  if (
+    !node ||
+    !types(node).includes("WebPageElement") ||
+    attr(tag, "itemtype") !== "https://schema.org/WebPageElement" ||
+    !supportIds.has(itemId) ||
+    !sameSet(new Set(refs(node.about)), new Set(refs(byId.get(itemId)?.about)))
+  )
+    fail(`DIST WebPageElement definition/type/about drift: ${itemId}`);
+  const urlLink = [...scopePrelude.matchAll(/<link\b[^>]*>/gi)]
+    .map((match) => match[0])
+    .find((link) => tagProps(link).includes("url"));
+  const languageMeta = [...scopePrelude.matchAll(/<meta\b[^>]*>/gi)]
+    .map((match) => match[0])
+    .find((meta) => tagProps(meta).includes("inLanguage"));
+  const heading =
+    scopePrelude.match(
+      /<h[2-6]\b(?=[^>]*\bitemprop=["'][^"']*\bname\b[^"']*["'])[^>]*>[\s\S]*?<\/h[2-6]>/i,
+    )?.[0] || "";
+  if (
+    attr(urlLink || "", "href") !== node.url ||
+    attr(languageMeta || "", "content") !== node.inLanguage ||
+    strip(heading) !== strip(node.name)
+  )
+    fail(`DIST WebPageElement name/url/language Microdata drift: ${itemId}`);
+}
+for (const idSuffix of [
+  "biomedical-concept-botulinum-toxin-a",
+  "biomedical-concept-rejuvenation",
+  "biomedical-concept-cosmetic-techniques",
+])
+  if (
+    !types(
+      inlineByIdForPage.get(`${release.canonicalUrl}#${idSuffix}`),
+    ).includes("DefinedTerm")
+  )
+    fail(`Compact section-topic DefinedTerm missing: ${idSuffix}`);
+const catalog = byId.get(`${release.canonicalUrl}#data-catalog`),
+  github = byId.get(`${release.canonicalUrl}#project-github-source`),
+  graphDownload = byId.get(`${release.canonicalUrl}graph.jsonld#download`),
+  datasetDistributions = new Set(refs(dataset.distribution)),
+  datasetSources = new Set(refs(dataset.isBasedOn));
+if (
+  catalog?.url !== `${release.canonicalUrl}dcat.ttl` ||
+  Object.hasOwn(dataset, "url") ||
+  graphDownload?.contentUrl !== `${release.canonicalUrl}graph.jsonld` ||
+  !datasetDistributions.has(graphDownload?.["@id"]) ||
+  github?.["@type"] !== "SoftwareSourceCode" ||
+  Object.hasOwn(github || {}, "contentUrl") ||
+  datasetDistributions.has(github?.["@id"]) ||
+  !datasetSources.has(github?.["@id"])
+)
+  fail("DIST semantic destination contract broken");
+const howToId = `${release.canonicalUrl}#howto-clinical-aesthetic-decision-pathway`,
+  howTo = byId.get(howToId),
+  howToTarget = String(howTo?.url || "").split("#")[1] || "";
+if (
+  !howTo ||
+  !types(howTo).includes("HowTo") ||
+  refs(howTo.step).length !== 4 ||
+  !howToTarget ||
+  !html.includes(`id="${howToTarget}"`) ||
+  !supportIds.has(howToId)
+)
+  fail("DIST physician HowTo projection drift");
+for (const slug of [
+  "alopecia",
+  "androgenetic-alopecia",
+  "acne-vulgaris",
+  "scar",
+  "hyperpigmentation",
+  "melasma",
+]) {
+  const condition = byId.get(
+      `${release.canonicalUrl}#biomedical-concept-${slug}`,
+    ),
+    treatments = refs(condition?.possibleTreatment);
+  if (
+    !types(condition).includes("MedicalCondition") ||
+    !treatments.length ||
+    treatments.some(
+      (target) => !types(byId.get(target)).includes("MedicalTherapy"),
+    )
+  )
+    fail(`DIST MedicalCondition treatment topology drift: ${slug}`);
+}
+const inlineById = new Map(
+    inlineNodes
+      .filter((node) => node?.["@id"])
+      .map((node) => [node["@id"], node]),
+  ),
+  speakableId = `${release.canonicalUrl}#speakable-primary-content`,
+  inlineSpeakable = inlineById.get(speakableId);
+if (
+  !inlineSpeakable ||
+  !types(inlineSpeakable).includes("SpeakableSpecification") ||
+  !refs(page.speakable).includes(speakableId)
+)
+  fail("Inline Speakable projection closure drift");
+for (const selector of arr(inlineSpeakable.cssSelector)) {
+  if (selector.startsWith("#") && !html.includes(`id="${selector.slice(1)}"`))
+    fail(`Speakable ID selector missing ${selector}`);
+  if (
+    selector.startsWith(".") &&
+    !new RegExp(`class=["'][^"']*\\b${selector.slice(1)}\\b`).test(html)
+  )
+    fail(`Speakable class selector missing ${selector}`);
+}
+const coreClinic = inlineById.get(release.clinic.id),
+  coreClinicNames = arr(coreClinic?.name),
+  coreClinicImages = arr(coreClinic?.image);
+if (
+  coreClinicNames.length !== 1 ||
+  coreClinicNames[0]?.["@language"] !== "fa" ||
+  coreClinicNames[0]?.["@value"] !== "کلینیک زیبایی دکتر سعید قزلباش" ||
+  coreClinicImages.length < 6 ||
+  coreClinicImages.some(
+    (value) => typeof value !== "string" || !/^https:\/\//.test(value),
+  )
+)
+  fail("Google Organization/LocalBusiness name/image projection drift");
+for (const t of ["Person", "IndividualPhysician"])
+  if (!types(person).includes(t)) fail(`Physician type missing ${t}`);
+for (const t of ["MedicalClinic", "PhysiciansOffice", "LocalBusiness"])
+  if (!types(clinic).includes(t)) fail(`Clinic type missing ${t}`);
+const has = (o, k, v) => refs(o?.[k]).includes(v);
+if (
+  !has(person, "owns", release.clinic.id) ||
+  !has(person, "practicesAt", release.clinic.id) ||
+  !has(person, "mainEntityOfPage", page["@id"]) ||
+  !has(clinic, "owner", release.primaryEntity.id) ||
+  !has(clinic, "founder", release.primaryEntity.id) ||
+  !has(page, "mainEntity", release.primaryEntity.id) ||
+  !has(page, "author", release.primaryEntity.id) ||
+  !has(page, "publisher", release.primaryEntity.id)
+)
+  fail("Physician/clinic/WebPage authority topology broken");
+const offered = new Set([
+    ...refs(person.availableService),
+    ...refs(clinic.availableService),
+  ]),
+  registered = new Set(
+    registry.services.filter((x) => x.publishable).map((x) => x.id),
+  );
+for (const x of registered)
+  if (!offered.has(x)) fail(`Registry service not projected ${x}`);
+for (const x of offered)
+  if (!registered.has(x)) fail(`Projected service missing registry ${x}`);
+if (
+  ![...registered].some((x) => x.includes("botulinum-toxin-chronic-migraine"))
+)
+  fail("Migraine Botox offering missing");
+for (const sid of offered) {
+  const s = byId.get(sid);
+  if (
+    !s ||
+    !types(s).includes("Service") ||
+    !refs(s.provider).includes(release.primaryEntity.id)
+  )
+    fail(`Service provider/type drift ${sid}`);
+}
+for (const r of answerRegistry.answers) {
+  const q = byId.get(r.questionId),
+    a = byId.get(r.answerId);
+  if (!q || !a || id(q.acceptedAnswer) !== r.answerId)
+    fail(`Answer atom drift ${r.questionId}`);
+}
+const expectedRating = Number(volatile.rating),
+  expectedCount = Number(volatile.reviewCount);
+if (
+  live.about?.["@id"] !== release.clinic.id ||
+  live.item?.["@id"] !== release.clinic.id ||
+  live.dateModified !== volatile.valueObservedAt
+)
+  fail("Live observation target/timestamp drift");
+const props = arr(live.item?.additionalProperty),
+  rating = Number(
+    props.find((x) => x.propertyID === "Google Places rating")?.value,
+  ),
+  count = Number(
+    props.find((x) => x.propertyID === "Google Places userRatingCount")?.value,
+  );
+if (rating !== expectedRating || count !== expectedCount)
+  fail("Live observation value drift");
+const digestFor = (route) => {
+  const lines = headers.split(/\r?\n/),
+    i = lines.findIndex((x) => x === `/${route}`);
+  if (i < 0) return null;
+  for (let j = i + 1; j < lines.length && /^  /.test(lines[j]); j++) {
+    const m = lines[j].match(/^  Repr-Digest: sha-256=:([^:]+):$/);
+    if (m) return m[1];
+  }
+  return null;
+};
+for (const route of [
+  "live-observations.jsonld",
+  "datapackage.json",
+  "croissant.json",
+  "dcat.ttl",
+  "linkset.json",
+]) {
+  const d = digestFor(route);
+  if (!d || d !== b64(await readFile(path.join(dist, route))))
+    fail(`Header Repr-Digest drift ${route}`);
+}
+const redirects = await readFile(path.join(dist, "_redirects"), "utf8"),
+  canonicalRedirects = renderCanonicalHostRedirects(
+    await loadRedirectRegistry(root),
+  ),
+  sources = new Set();
+if (redirects !== canonicalRedirects) fail("DIST redirect bytes/source drift");
+for (const line of redirects
+  .split(/\r?\n/)
+  .map((x) => x.trim())
+  .filter(Boolean)) {
+  const [from, to, code] = line.split(/\s+/);
+  if (code !== "301" || sources.has(from))
+    fail(`Redirect contract drift ${line}`);
+  sources.add(from);
+  if (to.includes("#")) {
+    const frag = decodeURIComponent(to.split("#")[1] || "");
+    if (
+      frag &&
+      !html.includes(`id="${frag}"`) &&
+      !html.includes(`id='${frag}'`)
+    )
+      fail(`Redirect target fragment absent ${line}`);
+  }
+}
+const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+  (m) => m[1],
+);
+if (sitemapLocs.length !== 1 || sitemapLocs[0] !== release.canonicalUrl)
+  fail("Sitemap must contain only canonical HTML landing");
+if (
+  !graphText.includes(release.dataset.zenodo.conceptDoi) ||
+  !graphText.includes(release.dataset.zenodo.versionDoi)
+)
+  fail("Graph DOI topology incomplete");
+console.log(
+  JSON.stringify(
+    {
+      stage: "DIST_SEMANTIC_AND_SERVING_CONTRACT",
+      release: release.release,
+      htmlBytes,
+      distFiles: distFiles.length,
+      distInventory: "EXACT",
+      graphNodes: nodes.length,
+      rdfTriples: rdfTripleCount,
+      services: registered.size,
+      answers: answerRegistry.answers.length,
+      headNodes: coreIds.size,
+      supportNodes: supportIds.size,
+      headSupportOverlap: 0,
+      notFoundCanonical: "ABSENT",
+      liveReputation: { rating, count, observedAt: volatile.valueObservedAt },
+      descriptorMaterialization: "BYTE_IDENTICAL",
+      googleOrganizationProjection: "PASS",
+      integrity: "PASS",
+    },
+    null,
+    2,
+  ),
+);

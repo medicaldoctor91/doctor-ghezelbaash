@@ -1,0 +1,154 @@
+{
+  "rights": {
+    "copyright": "© Saeed Ghezelbash. Licensed under Creative Commons Attribution 4.0 International (CC BY 4.0).",
+    "credit": "Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic",
+    "usageTerms": "CC BY 4.0; attribution required: Saeed Ghezelbash / Dr. Saeed Ghezelbash Aesthetic Clinic."
+  },
+  "imageProfiles": [
+    {
+      "includes": ["doctor-ghezelbaash-symbol"],
+      "title": "Doctor Ghezelbaash visual identity symbol",
+      "description": "Official visual identity symbol of Dr. Saeed Ghezelbash and Dr. Saeed Ghezelbash Aesthetic Clinic.",
+      "role": "Official physician and clinic identity symbol",
+      "subjects": ["official symbol", "physician identity", "clinic identity"],
+      "licensePage": "https://www.ghezelbaash.ir/#media-license",
+      "alt": {
+        "en": "Official visual identity symbol of Dr. Saeed Ghezelbash and his aesthetic clinic."
+      },
+      "depictsClinic": true
+    },
+    {
+      "includes": ["clinic-interior"],
+      "title": "Interior of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah",
+      "description": "فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران | Interior of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+      "role": "Clinic interior",
+      "subjects": ["clinic interior", "فضای داخلی کلینیک زیبایی", "aesthetic clinic Kermanshah"],
+      "licensePage": "https://www.ghezelbaash.ir/#media-license",
+      "alt": {
+        "en": "Interior of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+        "fa": "فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران."
+      },
+      "depictsClinic": true,
+      "clinicLocation": true
+    },
+    {
+      "includes": ["clinic-reception"],
+      "title": "Reception of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah",
+      "description": "بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران | Reception of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+      "role": "Clinic reception",
+      "subjects": ["clinic reception", "پذیرش کلینیک زیبایی", "aesthetic clinic Kermanshah"],
+      "licensePage": "https://www.ghezelbaash.ir/#media-license",
+      "alt": {
+        "en": "Reception area of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+        "fa": "بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران."
+      },
+      "depictsClinic": true,
+      "clinicLocation": true
+    },
+    {
+      "includes": ["jalupro-vs-profhilo"],
+      "title": "Dr. Saeed Ghezelbash explains Jalupro versus Profhilo",
+      "description": "Poster for physician-led education by Dr. Saeed Ghezelbash comparing Jalupro, Profhilo and injectable skin rejuvenation.",
+      "role": "Physician education video poster",
+      "subjects": ["Jalupro", "Profhilo", "injectable rejuvenation", "physician education"],
+      "licensePage": "https://www.ghezelbaash.ir/#media-license",
+      "alt": {
+        "en": "Dr. Saeed Ghezelbash in an educational video poster about Jalupro and Profhilo.",
+        "fa": "دکتر سعید قزلباش در پوستر ویدئوی آموزشی درباره جالپرو و پروفایلو."
+      },
+      "depictsPerson": true
+    },
+    {
+      "includes": ["subcision-technique"],
+      "title": "Dr. Saeed Ghezelbash demonstrates subcision technique",
+      "description": "Poster for physician-led education by Dr. Saeed Ghezelbash about subcision for tethered acne scars.",
+      "role": "Physician education video poster",
+      "subjects": ["subcision", "acne scars", "scar revision", "physician education"],
+      "licensePage": "https://www.ghezelbaash.ir/#media-license",
+      "alt": {
+        "en": "Dr. Saeed Ghezelbash in an educational video poster demonstrating subcision technique.",
+        "fa": "دکتر سعید قزلباش در پوستر ویدئوی آموزشی نمایش تکنیک سابسیژن."
+      },
+      "depictsPerson": true
+    },
+    {
+      "includes": ["thread-lift-workshop"],
+      "title": "Dr. Saeed Ghezelbash advanced thread-lift workshop",
+      "description": "Poster for an advanced physician workshop led by Dr. Saeed Ghezelbash on thread-lift anatomy, vectors and technique.",
+      "role": "Advanced physician workshop video poster",
+      "subjects": ["thread lift", "medical workshop", "facial anatomy", "physician education"],
+      "licensePage": "https://www.ghezelbaash.ir/#media-license",
+      "alt": {
+        "en": "Dr. Saeed Ghezelbash in an advanced thread-lift workshop video poster.",
+        "fa": "دکتر سعید قزلباش در پوستر ویدئوی کارگاه پیشرفته لیفت نخ."
+      },
+      "depictsPerson": true
+    },
+    {
+      "includes": ["kurdish-patient-review"],
+      "title": "Kurdish patient experience with Dr. Saeed Ghezelbash",
+      "description": "Poster for a Kurdish-language patient experience concerning Dr. Saeed Ghezelbash Aesthetic Clinic.",
+      "role": "Kurdish patient-experience video poster",
+      "subjects": ["Kurdish patient experience", "کوردی", "patient review", "Kermanshah clinic"],
+      "licensePage": "https://www.ghezelbaash.ir/#media-license",
+      "alt": {
+        "en": "Poster for a Kurdish-language patient experience with Dr. Saeed Ghezelbash Aesthetic Clinic.",
+        "ckb": "پوستەری ئەزموونی مراجعێکی کورد لە کلینیکی جوانکاری دکتۆر سەعید قزلباش."
+      }
+    },
+    {
+      "includes": ["clinical-team", "clinic-team", "social-1200x630"],
+      "title": "Saeed Ghezelbash with the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic",
+      "description": "دکتر سعید قزلباش همراه تیم بالینی کلینیک زیبایی در کرمانشاه | Saeed Ghezelbash with his clinical team in Kermanshah, Iran.",
+      "role": "Physician with clinical team",
+      "subjects": ["clinical team", "medical team", "aesthetic clinic", "physician portrait"],
+      "licensePage": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg",
+      "alt": {
+        "en": "Dr. Saeed Ghezelbash with members of his clinical team in Kermanshah, Iran.",
+        "fa": "دکتر سعید قزلباش همراه اعضای تیم بالینی در کرمانشاه، ایران."
+      },
+      "depictsPerson": true,
+      "depictsClinic": true,
+      "clinicLocation": true
+    },
+    {
+      "includes": ["clinical-office", "clinical-examination"],
+      "title": "Saeed Ghezelbash at Dr. Saeed Ghezelbash Aesthetic Clinic",
+      "description": "دکتر سعید قزلباش در محیط بالینی کلینیک زیبایی در کرمانشاه | Saeed Ghezelbash in his clinical office at Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+      "role": "Physician in clinical office",
+      "subjects": ["clinical office", "physician at work", "medical examination", "aesthetic clinic"],
+      "licensePage": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg",
+      "alt": {
+        "en": "Dr. Saeed Ghezelbash wearing a white coat and stethoscope in his clinical office in Kermanshah, Iran.",
+        "fa": "دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی در محیط بالینی خود در کرمانشاه، ایران."
+      },
+      "depictsPerson": true,
+      "depictsClinic": true,
+      "clinicLocation": true
+    },
+    {
+      "includes": ["portrait"],
+      "title": "Saeed Ghezelbash — canonical physician portrait",
+      "description": "Canonical portrait of Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine in Kermanshah, Iran.",
+      "role": "Canonical physician portrait",
+      "subjects": ["canonical portrait", "Iranian physician", "medical researcher", "aesthetic medicine physician"],
+      "licensePage": "https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg",
+      "alt": {
+        "en": "Portrait of Dr. Saeed Ghezelbash wearing a white coat and stethoscope in a clinical setting.",
+        "fa": "پرتره دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی در محیط بالینی."
+      },
+      "depictsPerson": true,
+      "clinicLocation": true
+    }
+  ],
+  "videoAuthoredTags": [
+    "title",
+    "description",
+    "language",
+    "artist",
+    "copyright",
+    "license",
+    "date",
+    "identifier"
+  ]
+}

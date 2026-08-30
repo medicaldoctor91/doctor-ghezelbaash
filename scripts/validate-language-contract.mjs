@@ -1,65 +1,167 @@
-import {readFile} from 'node:fs/promises';
-import {CONTENT_LANGUAGES,MULTILINGUAL_HEADING_BOUNDARIES,MULTILINGUAL_RETURN_TO_PRIMARY,PRIMARY_DOCUMENT_LANGUAGE} from '../src/lib/language-contract.mjs';
-import {bindLanguageRegions,headingStart} from '../src/lib/language-regions.mjs';
-import {deriveGooglePageMicrodata} from '../src/lib/google-page-microdata.mjs';
-import {deriveGooglePageNode} from '../src/lib/google-semantic-html.mjs';
-import {projectNode} from '../src/lib/semantic-projection.mjs';
+import { readFile } from "node:fs/promises";
+import { parseFragment } from "parse5";
+import {
+  CONTENT_LANGUAGES,
+  MULTILINGUAL_REGIONS,
+  PRIMARY_DOCUMENT_LANGUAGE,
+} from "../src/lib/language-contract.mjs";
+import {
+  deriveGooglePageMicrodata,
+  deriveGooglePageNode,
+} from "../src/lib/google-page-microdata.mjs";
+import { projectNode } from "../src/lib/semantic-projection.mjs";
 
-const fail=message=>{throw new Error(message)};
-const [source,baseLayout,documentHead,graphCompiler,assembler,knowledgeGraph,headProfile]=await Promise.all([
-  readFile('src/content-source/page.md','utf8'),
-  readFile('src/layouts/BaseLayout.astro','utf8'),
-  readFile('src/components/DocumentHead.astro','utf8'),
-  readFile('scripts/lib/projections/graph-projections.mjs','utf8'),
-  readFile('scripts/lib/assemble-content.mjs','utf8'),
-  readFile('src/data/semantic/knowledge-graph.jsonld','utf8').then(JSON.parse),
-  readFile('src/data/semantic/head-profile.json','utf8').then(JSON.parse),
-]);
-
-if(PRIMARY_DOCUMENT_LANGUAGE!=='fa-IR')fail('Primary document language must remain fa-IR');
-if(JSON.stringify(CONTENT_LANGUAGES)!==JSON.stringify(['fa-IR','ar-IQ','en','ckb']))fail('Single-page language inventory drift');
-if(new Set(CONTENT_LANGUAGES).size!==CONTENT_LANGUAGES.length)fail('Duplicate content language declaration');
-
-const markerPositions=MULTILINGUAL_HEADING_BOUNDARIES.map(boundary=>headingStart(source,boundary.startsWith));
-const returnPosition=headingStart(source,MULTILINGUAL_RETURN_TO_PRIMARY.startsWith);
-for(let index=1;index<markerPositions.length;index++)if(markerPositions[index]<=markerPositions[index-1])fail('Multilingual content boundary order drift');
-if(returnPosition<=markerPositions.at(-1))fail('Persian return boundary must follow the Sorani corpus');
-
-const annotated=bindLanguageRegions(source);
-const openingH2For=marker=>{
-  const start=headingStart(annotated,marker);
-  return annotated.slice(start,annotated.indexOf('>',start)+1);
+const fail = (message) => {
+  throw new Error(message);
 };
-for(const boundary of MULTILINGUAL_HEADING_BOUNDARIES){
-  const tag=openingH2For(boundary.startsWith);
-  if(!new RegExp(`\\blang=["']${boundary.lang}["']`,'i').test(tag))fail(`Annotated H2 language contract missing for ${boundary.key}`);
-  if(/\bdir\s*=/i.test(tag)&&!new RegExp(`\\bdir=["'](?:rtl|ltr|auto)["']`,'i').test(tag))fail(`Invalid authored direction on ${boundary.key} H2`);
+const [source, baseLayout, documentHead, knowledgeGraph, headProfile] =
+  await Promise.all([
+    readFile("src/content-source/page.md", "utf8"),
+    readFile("src/layouts/BaseLayout.astro", "utf8"),
+    readFile("src/components/DocumentHead.astro", "utf8"),
+    readFile("src/data/semantic/knowledge-graph.jsonld", "utf8").then(
+      JSON.parse,
+    ),
+    readFile("src/data/semantic/head-profile.json", "utf8").then(JSON.parse),
+  ]);
+
+if (PRIMARY_DOCUMENT_LANGUAGE !== "fa-IR")
+  fail("Primary document language must remain fa-IR");
+if (
+  JSON.stringify(CONTENT_LANGUAGES) !==
+  JSON.stringify(["fa-IR", "ar-IQ", "en", "ckb"])
+)
+  fail("Single-page language inventory drift");
+if (new Set(CONTENT_LANGUAGES).size !== CONTENT_LANGUAGES.length)
+  fail("Duplicate content language declaration");
+
+const fragment = parseFragment(
+  source.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, ""),
+);
+const attributes = (node) =>
+  Object.fromEntries(
+    (node.attrs || []).map((attribute) => [attribute.name, attribute.value]),
+  );
+const nodes = [];
+const visit = (node) => {
+  if (node?.tagName) nodes.push(node);
+  for (const child of node?.childNodes || []) visit(child);
+};
+visit(fragment);
+const authoredRegions = nodes.filter(
+  (node) =>
+    node.tagName === "details" &&
+    (attributes(node).class || "")
+      .split(/\s+/)
+      .includes("multilingual-aesthetic-section"),
+);
+if (authoredRegions.length !== MULTILINGUAL_REGIONS.length)
+  fail(
+    `Authored multilingual region inventory drift: ${authoredRegions.length}`,
+  );
+for (let index = 0; index < MULTILINGUAL_REGIONS.length; index++) {
+  const expected = MULTILINGUAL_REGIONS[index],
+    node = authoredRegions[index],
+    actual = attributes(node);
+  if (
+    actual.id !== expected.id ||
+    actual.lang !== expected.lang ||
+    actual.dir !== expected.dir
+  )
+    fail(`Authored multilingual container contract drift: ${expected.key}`);
+  const declaredLanguage = CONTENT_LANGUAGES.find(
+    (language) =>
+      expected.lang === language || expected.lang.startsWith(`${language}-`),
+  );
+  if (!declaredLanguage)
+    fail(
+      `Multilingual region is outside the page language inventory: ${expected.key}`,
+    );
+  const nestedLanguages = [];
+  const collectLanguages = (current) => {
+    for (const child of current.childNodes || []) {
+      const lang = attributes(child).lang;
+      if (lang) nestedLanguages.push(lang);
+      collectLanguages(child);
+    }
+  };
+  collectLanguages(node);
+  if (nestedLanguages.some((language) => language !== expected.lang))
+    fail(
+      `Nested language declaration escapes its authored container: ${expected.key}`,
+    );
 }
-const returnTag=openingH2For(MULTILINGUAL_RETURN_TO_PRIMARY.startsWith);
-if(/\blang=["'](?:ar-IQ|en|ckb)["']/i.test(returnTag))fail('Persian return H2 inherited a non-Persian explicit language');
+const webpageId = "https://www.ghezelbaash.ir/#webpage";
+const canonicalPage = (knowledgeGraph["@graph"] || []).find(
+  (node) => node?.["@id"] === webpageId,
+);
+if (!canonicalPage) fail("Canonical WebPage node missing");
+if (
+  JSON.stringify(canonicalPage.inLanguage) !== JSON.stringify(CONTENT_LANGUAGES)
+)
+  fail("Canonical WebPage language inventory drift");
+const website = (knowledgeGraph["@graph"] || []).find(
+  (node) => node?.["@id"] === "https://www.ghezelbaash.ir/#website",
+);
+if (JSON.stringify(website?.inLanguage) !== JSON.stringify(CONTENT_LANGUAGES))
+  fail("Canonical WebSite language inventory drift");
+const googlePage = deriveGooglePageNode(knowledgeGraph, headProfile, webpageId);
+const personId = googlePage.mainEntity?.["@id"];
+const canonicalPerson = (knowledgeGraph["@graph"] || []).find(
+  (node) => node?.["@id"] === personId,
+);
+const googlePerson = projectNode(
+  canonicalPerson,
+  headProfile.nodes?.[personId],
+);
+const googlePageMicrodata = deriveGooglePageMicrodata(
+  { "@graph": [googlePage, googlePerson] },
+  webpageId,
+);
+const microdataLanguages = googlePageMicrodata.meta
+  .filter((item) => item.itemprop === "inLanguage")
+  .map((item) => item.content);
+if (
+  JSON.stringify(microdataLanguages) !== JSON.stringify(CONTENT_LANGUAGES) ||
+  !baseLayout.includes(
+    "import { deriveGooglePageMicrodata } from '../lib/google-page-microdata.mjs'",
+  ) ||
+  !baseLayout.includes("deriveGooglePageMicrodata(headGraph") ||
+  !baseLayout.includes("googlePageMicrodata.meta.map")
+)
+  fail("Graph-derived multilingual WebPage/Microdata wiring missing");
+const physicianHeader = nodes.find(
+  (node) =>
+    node.tagName === "header" &&
+    attributes(node).itemid === "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+);
+const physicianHeaderAttributes = attributes(physicianHeader || {});
+const physicianRelations = new Set(
+  (physicianHeaderAttributes.itemprop || "").split(/\s+/).filter(Boolean),
+);
+if (
+  physicianHeaderAttributes.itemtype !== "https://schema.org/Person" ||
+  !Object.hasOwn(physicianHeaderAttributes, "itemscope") ||
+  JSON.stringify([...physicianRelations].sort()) !==
+    JSON.stringify(["about", "author", "mainEntity", "publisher", "reviewedBy"])
+)
+  fail("Visible physician Microdata ownership drift");
+if (/\bhreflang\s*=/.test(documentHead))
+  fail("Single-URL document must not emit localized-alternate hreflang");
 
-for(let index=0;index<MULTILINGUAL_HEADING_BOUNDARIES.length;index++){
-  const boundary=MULTILINGUAL_HEADING_BOUNDARIES[index];
-  const start=headingStart(annotated,boundary.startsWith);
-  const nextMarker=index+1<MULTILINGUAL_HEADING_BOUNDARIES.length?MULTILINGUAL_HEADING_BOUNDARIES[index+1].startsWith:MULTILINGUAL_RETURN_TO_PRIMARY.startsWith;
-  const end=headingStart(annotated,nextMarker);
-  const segment=annotated.slice(start,end);
-  const count=(segment.match(new RegExp(`\\blang=["']${boundary.lang}["']`,'gi'))||[]).length;
-  if(count<5)fail(`Language region unexpectedly sparse after annotation: ${boundary.key}=${count}`);
-}
-
-if(!assembler.includes("import {bindLanguageRegions} from '../../src/lib/language-regions.mjs'")||!assembler.includes('content=bindLanguageRegions(content);'))fail('Canonical assembly language binding missing');
-const webpageId='https://www.ghezelbaash.ir/#webpage';
-const canonicalPage=(knowledgeGraph['@graph']||[]).find(node=>node?.['@id']===webpageId);
-if(!canonicalPage)fail('Canonical WebPage node missing');
-const googlePage=deriveGooglePageNode(knowledgeGraph,headProfile,webpageId,CONTENT_LANGUAGES);
-const personId=googlePage.mainEntity?.['@id'];
-const canonicalPerson=(knowledgeGraph['@graph']||[]).find(node=>node?.['@id']===personId);
-const googlePerson=projectNode(canonicalPerson,headProfile.nodes?.[personId]);
-const googlePageMicrodata=deriveGooglePageMicrodata({'@graph':[googlePage,googlePerson]},webpageId);
-const microdataLanguages=googlePageMicrodata.meta.filter(item=>item.itemprop==='inLanguage').map(item=>item.content);
-if(JSON.stringify(microdataLanguages)!==JSON.stringify(CONTENT_LANGUAGES)||!baseLayout.includes("import { deriveGooglePageMicrodata } from '../lib/google-page-microdata.mjs'")||!baseLayout.includes('deriveGooglePageMicrodata(headGraph')||!baseLayout.includes('googlePageMicrodata.meta.map')||!assembler.includes('bindGoogleSemanticHtml(content')||!assembler.includes('languages:CONTENT_LANGUAGES'))fail('Graph-derived multilingual WebPage/Microdata wiring missing');
-if(/\bhreflang\s*=/.test(documentHead))fail('Single-URL document must not emit localized-alternate hreflang');
-if(!graphCompiler.includes("import {CONTENT_LANGUAGES} from '../../../src/lib/language-contract.mjs'")||!graphCompiler.includes('projected.inLanguage=[...CONTENT_LANGUAGES]'))fail('Head JSON-LD multilingual projection wiring missing');
-
-console.log(JSON.stringify({stage:'LANGUAGE_CONTRACT',primary:PRIMARY_DOCUMENT_LANGUAGE,languages:CONTENT_LANGUAGES,regions:MULTILINGUAL_HEADING_BOUNDARIES.map(({key,lang})=>({key,lang})),returnTo:PRIMARY_DOCUMENT_LANGUAGE,binding:'CANONICAL_ASSEMBLY',visualDirectionMutation:false,hreflang:'ABSENT_SINGLE_URL',status:'PASS'},null,2));
+console.log(
+  JSON.stringify(
+    {
+      stage: "LANGUAGE_CONTRACT",
+      primary: PRIMARY_DOCUMENT_LANGUAGE,
+      languages: CONTENT_LANGUAGES,
+      regions: MULTILINGUAL_REGIONS,
+      languageOwner: "authored-containers",
+      pageProjection: "graph-derived",
+      hreflang: "ABSENT_SINGLE_URL",
+      status: "PASS",
+    },
+    null,
+    2,
+  ),
+);

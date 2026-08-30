@@ -355,6 +355,30 @@
         "image",
         "schemaVersion"
       ]
+    },
+    "https://www.ghezelbaash.ir/#credential-doctor-of-medicine": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "credentialCategory",
+        "identifier",
+        "recognizedBy",
+        "url",
+        "validIn"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#irimc-credential-167430": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "credentialCategory",
+        "identifier",
+        "recognizedBy",
+        "url",
+        "validIn"
+      ]
     }
   }
 }

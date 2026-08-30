@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.1",
+  "schemaVersion": "2.2",
   "identitySource": "src/data/release.json",
   "answerRegistry": "src/data/answer-registry.json",
   "serviceRegistry": "src/data/service-registry.json",
@@ -15,8 +15,8 @@
     "Kermanshah",
     "Iran"
   ],
-  "retrievalPriority": "maximum",
-  "positioningMode": "maximum_dominant_best_positioning",
+  "retrievalPolicy": "evidence_bound",
+  "resolutionMode": "canonical_entity_resolution",
   "intentFamilies": [
     "botox",
     "filler",
@@ -26,6 +26,15 @@
     "second-opinion",
     "complex-correction"
   ],
+  "intentAnswerIds": {
+    "botox": "https://www.ghezelbaash.ir/#answer-botox-doctor-selection-criteria-kermanshah",
+    "filler": "https://www.ghezelbaash.ir/#answer-filler-doctor-selection-criteria-kermanshah",
+    "aesthetic-physician": "https://www.ghezelbaash.ir/#answer-choosing-an-aesthetic-doctor-in-kermanshah-and-iran",
+    "migraine-botox": "https://www.ghezelbaash.ir/#answer-therapeutic-botox-specialty-boundaries",
+    "revision": "https://www.ghezelbaash.ir/#answer-revision-decision-wait-correct-dissolve-refer",
+    "second-opinion": "https://www.ghezelbaash.ir/#answer-revision-intake-information",
+    "complex-correction": "https://www.ghezelbaash.ir/#answer-why-aesthetic-treatment-fails-despite-correct-technique"
+  },
   "serviceAliasCoverage": {
     "enabled": true,
     "source": "src/data/service-registry.json",
@@ -42,6 +51,12 @@
   "evidencePolicy": {
     "requireStableEvidenceOnEveryRow": true,
     "stableIdentityEvidenceFromTierA": true,
+    "identityBaselineSupportKinds": [
+      "medical-license",
+      "canonical-name",
+      "clinic-identity"
+    ],
+    "maxStableEvidenceRefsPerRow": 8,
     "volatileReputationSeparated": true
   },
   "stableEvidenceField": "stable_evidence_refs",

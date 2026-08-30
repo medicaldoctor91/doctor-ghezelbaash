@@ -12,16 +12,19 @@ Pure-static Astro source for the canonical physician entity home at `https://www
 - `src/data/document-head.json`: Open Graph, Twitter and application presentation metadata.
 - `src/data/release.json`: canonical URL, physician and clinic identifiers, current release and DOI lineage.
 - `src/data/release-invariants.json`: explicit delivery and validation limits.
+- `src/data/machine-resources.json`: one registry for website, Hugging Face, Zenodo, head and footer projections.
+- `src/data/redirects.json`: one registry for canonical aliases, Cloudflare host redirects and GitHub Pages bridges.
 - `src/data/service-registry.json` and `src/data/answer-registry.json`: publishable service and answer sets.
-- `src/data/evidence-registry.json`, `src/data/evidence-snapshot.json` and `src/data/volatile-facts.json`: evidence and current Google Places observation.
+- `src/data/retrieval/query-matrix-policy.json`: explicit intent-to-answer mappings, languages, scopes and evidence bounds.
+- `src/data/evidence-registry.json` and `src/data/volatile-facts.json`: canonical evidence and current Google Places observation; the release snapshot is generated directly from them.
 - `src/data/render-calibration.json`: measured chunk geometry used to derive responsive calibration CSS.
-- `public/media/` and `src/data/media-dimensions.tsv`: canonical media and intrinsic dimensions.
+- `public/media/`, `src/data/media-metadata.json` and `src/data/media-dimensions.tsv`: canonical media, standards-based authored metadata and intrinsic dimensions.
 
 The physician uses one canonical ID with `Person` and `IndividualPhysician` types. The clinic, `ProfilePage`, 18 `WebPageElement` sections, medical procedures, answers, images, videos, credentials and external identifiers all reference that graph. DOM Microdata and both inline JSON-LD projections are derived from the same graph and projection profiles.
 
 ## Build flow
 
-`npm run prepare:generated` recreates `.generated/` from canonical sources. Astro renders the site, the HTML5 output integration serializes void elements for validator-clean HTML, static resources are materialized into `dist/`, and finalization writes deployment headers plus integrity manifests. Generated files are not committed.
+`npm run prepare:site` creates only the content, graph, and CSS assets Astro needs for local development and type checking. `npm run prepare:distribution` recreates the complete machine-readable distribution for builds and releases. Astro renders native static HTML directly, the registered static resources are materialized into `dist/`, and the deployment-header step derives CSP and response headers while validating the finished descriptor hashes. Generated files are not committed.
 
 CSS delivery is derived directly from `global.css` and `render-calibration.json`: critical rules remain inline and the rest is emitted as one fingerprinted stylesheet. HTML content stays readable in `page.md`; canonical assembly compacts only structural whitespace and binds release, site, language, reputation, image and semantic tokens.
 
@@ -49,4 +52,4 @@ npm run release
 
 The website deploys as static output on Cloudflare Pages from `main`. Runtime and deployment settings are defined by `.release/policy/platform-contract.json` and validated against `.nvmrc`, `package.json` and CodeMeta.
 
-The canonical Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`. GitHub is its version-controlled source, Zenodo is its immutable DOI distribution and Hugging Face is its AI/retrieval distribution. Release promotion updates the release record, graph, package metadata, citation metadata and evidence snapshot as one transaction; external publication remains an explicit release operation.
+The canonical Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`. GitHub is its version-controlled source, Zenodo is its immutable DOI distribution, Hugging Face `main` is its current AI/retrieval distribution, and versioned Hugging Face tags preserve frozen release snapshots. Release promotion updates the release record, graph, package metadata and citation metadata as one transaction; the public evidence snapshot is derived from the evidence registry during generation, and external publication remains an explicit release operation.

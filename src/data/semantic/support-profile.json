@@ -27,7 +27,6 @@
     "https://www.ghezelbaash.ir/#procedure-submental-liposuction",
     "https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting",
     "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion-offer",
-    "https://www.ghezelbaash.ir/#online-consultation-channel",
     "https://www.ghezelbaash.ir/#free-online-aesthetic-initial-consultation-offer",
     "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo",
     "https://www.ghezelbaash.ir/#video-subcision-technique",
@@ -112,9 +111,6 @@
     "https://www.ghezelbaash.ir/#video-subcision-technique-clip-02",
     "https://www.ghezelbaash.ir/#video-subcision-technique-clip-03",
     "https://www.ghezelbaash.ir/#video-subcision-technique-clip-04",
-    "https://www.ghezelbaash.ir/#video-kurdish-patient-experience-clip-01",
-    "https://www.ghezelbaash.ir/#video-kurdish-patient-experience-clip-02",
-    "https://www.ghezelbaash.ir/#video-kurdish-patient-experience-clip-03",
     "https://www.ghezelbaash.ir/#evidence-wikidata-doctor",
     "https://www.ghezelbaash.ir/#evidence-ncbi-bibliography",
     "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
@@ -142,9 +138,21 @@
     "https://www.ghezelbaash.ir/#procedure-prp-acne-scar",
     "https://www.ghezelbaash.ir/#procedure-pigmentation",
     "https://www.ghezelbaash.ir/#procedure-post-inflammatory-hyperpigmentation-treatment",
-    "https://www.ghezelbaash.ir/#procedure-melasma-treatment"
+    "https://www.ghezelbaash.ir/#procedure-melasma-treatment",
+    "https://www.ghezelbaash.ir/#city-kermanshah",
+    "https://www.ghezelbaash.ir/#city-tehran",
+    "https://www.ghezelbaash.ir/#district-1-kermanshah",
+    "https://www.ghezelbaash.ir/#occupation-physician",
+    "https://www.ghezelbaash.ir/#occupation-medical-researcher",
+    "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences",
+    "https://www.ghezelbaash.ir/#topic-botox-migraine-context",
+    "https://www.ghezelbaash.ir/#topic-botox-neurology-context",
+    "https://www.ghezelbaash.ir/#topic-hair-transplant-boundary",
+    "https://www.ghezelbaash.ir/#topic-orthognathic-boundary",
+    "https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction",
+    "https://www.ghezelbaash.ir/#clinic-consultation-treatment-and-follow-up-path"
   ],
-  "maxBytes": 135000,
+  "maxBytes": 110000,
   "typeProfiles": {
     "MedicalProcedure": {
       "include": [
@@ -212,7 +220,8 @@
         "name",
         "termCode",
         "identifier",
-        "sameAs"
+        "sameAs",
+        "url"
       ]
     },
     "HowTo": {
@@ -224,7 +233,6 @@
         "url",
         "inLanguage",
         "author",
-        "reviewedBy",
         "about",
         "step"
       ]
@@ -506,8 +514,105 @@
         "cssSelector",
         "xpath"
       ]
+    },
+    "Country": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier"
+      ]
+    },
+    "City": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier",
+        "containedInPlace"
+      ]
+    },
+    "AdministrativeArea": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier",
+        "containedInPlace"
+      ]
+    },
+    "MedicalSpecialty": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier"
+      ]
+    },
+    "Occupation": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier"
+      ]
+    },
+    "CollegeOrUniversity": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs",
+        "identifier",
+        "url"
+      ]
     }
   },
-  "idProfiles": {},
+  "idProfiles": {
+    "https://www.ghezelbaash.ir/#video-thread-lift-workshop-clip-04": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "startOffset",
+        "url",
+        "isPartOf",
+        "endOffset"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo-clip-05": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "startOffset",
+        "url",
+        "isPartOf",
+        "endOffset"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#video-subcision-technique-clip-04": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "startOffset",
+        "url",
+        "isPartOf",
+        "endOffset"
+      ]
+    }
+  },
   "mode": "projected"
 }

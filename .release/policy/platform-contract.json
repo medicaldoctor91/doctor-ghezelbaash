@@ -7,8 +7,8 @@
   "runtime": {
     "node": "24.19.0",
     "nodeEngine": ">=24.19.0 <25",
-    "npm": "11.17.0",
-    "npmEngine": ">=11.17 <12"
+    "npm": "11.9.0",
+    "npmEngine": ">=11.9 <12"
   },
   "cloudflare": {
     "accountId": "884d1d90bd1fb6ecca14992c6c60d677",

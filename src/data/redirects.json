@@ -1,0 +1,1311 @@
+{
+  "schemaVersion": 3,
+  "zone": "ghezelbaash.ir",
+  "canonicalOrigin": "https://www.ghezelbaash.ir",
+  "githubPagesBridge": {
+    "origin": "https://medicaldoctor91.github.io/doctor-ghezelbaash/",
+    "humanRoutes": [
+      {
+        "path": "index.html",
+        "target": "/",
+        "title": "وب‌سایت رسمی دکتر سعید قزلباش"
+      },
+      {
+        "path": "contact/index.html",
+        "target": "/#saeed-ghezelbash-clinic-contact-and-location",
+        "title": "تماس و نشانی کلینیک دکتر سعید قزلباش"
+      },
+      {
+        "path": "dr-saeed-ghezelbash-aesthetic-clinic/index.html",
+        "target": "/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "title": "کلینیک زیبایی دکتر سعید قزلباش"
+      },
+      {
+        "path": "dr-saeed-ghezelbash/index.html",
+        "target": "/#verified-physician-identity-core",
+        "title": "هویت رسمی دکتر سعید قزلباش"
+      },
+      {
+        "path": "evidence/index.html",
+        "target": "/#medical-content-governance",
+        "title": "شواهد و حاکمیت محتوای پزشکی"
+      },
+      {
+        "path": "kg/index.html",
+        "target": "/#verified-physician-identity-core",
+        "title": "گراف هویت دکتر سعید قزلباش"
+      },
+      {
+        "path": "regulatory/index.html",
+        "target": "/#medical-content-governance",
+        "title": "حاکمیت محتوای پزشکی"
+      },
+      {
+        "path": "research/index.html",
+        "target": "/#saeed-ghezelbash-research-education-and-clinical-decisions",
+        "title": "پژوهش و آموزش دکتر سعید قزلباش"
+      },
+      {
+        "path": "services/index.html",
+        "target": "/#aesthetic-clinical-decision-pathway",
+        "title": "خدمات و مسیر تصمیم‌گیری بالینی"
+      },
+      {
+        "path": "botox-kermanshah/index.html",
+        "target": "/#botox",
+        "title": "بوتاکس در کرمانشاه"
+      },
+      {
+        "path": "filler-kermanshah/index.html",
+        "target": "/#filler",
+        "title": "فیلر در کرمانشاه"
+      },
+      {
+        "path": "thread-lift-kermanshah/index.html",
+        "target": "/#thread-lift",
+        "title": "لیفت نخ در کرمانشاه"
+      },
+      {
+        "path": "skin-hair-rejuvenation-kermanshah/index.html",
+        "target": "/#skin-rejuvenation",
+        "title": "جوان‌سازی پوست و مو در کرمانشاه"
+      },
+      {
+        "path": "double-chin-liposuction-kermanshah/index.html",
+        "target": "/#submental-fat-and-neck-contour",
+        "title": "فرم‌دهی غبغب و زیرچانه در کرمانشاه"
+      },
+      {
+        "path": "aesthetic-medicine-dataset.html",
+        "target": "/#medical-content-governance",
+        "title": "داده‌های پزشکی زیبایی دکتر سعید قزلباش"
+      },
+      {
+        "path": "google-maps-review-evidence.html",
+        "target": "/#google-maps-clinic-reputation-current",
+        "title": "شواهد حضور کلینیک در Google Maps"
+      }
+    ],
+    "machineRoutes": [
+      {
+        "path": "ai-discovery-index.json",
+        "target": "/datapackage.json"
+      },
+      {
+        "path": "authority-signals.json",
+        "target": "/evidence-snapshot.json"
+      },
+      {
+        "path": "brand-kb.ghezelbaash.ai-public.json",
+        "target": "/graph.jsonld"
+      },
+      {
+        "path": "dataset.json",
+        "target": "/datapackage.json"
+      },
+      {
+        "path": "entity-hardening-index.json",
+        "target": "/evidence-snapshot.json"
+      },
+      {
+        "path": "location.json",
+        "target": "/graph.jsonld"
+      },
+      {
+        "path": "profile-links.json",
+        "target": "/linkset.json"
+      },
+      {
+        "path": "sameas.json",
+        "target": "/linkset.json"
+      },
+      {
+        "path": "service-taxonomy.json",
+        "target": "/graph.jsonld"
+      },
+      {
+        "path": "services.json",
+        "target": "/answers.txt"
+      },
+      {
+        "path": "aesthetic_medicine_knowledge_kermanshah_fa.json",
+        "target": "/graph.jsonld"
+      },
+      {
+        "path": "dr-ghezelbaash-kermanshah-aesthetic-benchmark-2026-real-competitor-dominance.json",
+        "target": "/evidence-snapshot.json"
+      },
+      {
+        "path": "dataset-manifest.jsonld",
+        "target": "/datapackage.json"
+      },
+      {
+        "path": "graph-ghezelbaash-final.jsonld",
+        "target": "/graph.jsonld"
+      },
+      {
+        "path": "publishing-crosswalk.jsonld",
+        "target": "/linkset.json"
+      }
+    ]
+  },
+  "singleRedirects": {
+    "cloudflareProduct": "Single Redirects",
+    "planRuleLimit": 10,
+    "rules": [
+      {
+        "ref": "ghezelbaash_apex_canonical_v1",
+        "host": "ghezelbaash.ir",
+        "match": "allPaths",
+        "targetExpression": "concat(\"https://www.ghezelbaash.ir\", http.request.uri.path)",
+        "statusCode": 301,
+        "preserveQueryString": true
+      },
+      {
+        "ref": "ghezelbaash_doctor_maps_v1",
+        "host": "doctor.ghezelbaash.ir",
+        "match": "allPaths",
+        "target": "https://www.google.com/maps/search/?api=1&query=Dr.%20Saeed%20Ghezelbash%20Aesthetic%20Clinic&query_place_id=ChIJBT0YDOTt-j8RD-7mAPy6Zas",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "ghezelbaash_github_entity_graph_v1",
+        "host": "github.ghezelbaash.ir",
+        "match": "allPaths",
+        "target": "https://www.ghezelbaash.ir/graph.jsonld",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "ghezelbaash_ig_ai_corpus_v1",
+        "host": "ig.ghezelbaash.ir",
+        "match": "allPaths",
+        "target": "https://www.ghezelbaash.ir/",
+        "statusCode": 301,
+        "preserveQueryString": false
+      }
+    ]
+  },
+  "bulkRedirects": {
+    "cloudflareProduct": "Bulk Redirects",
+    "planUrlLimit": 10000,
+    "listName": "ghezelbaash_blog_legacy_urls",
+    "listDescription": "Historical Blogspot URLs for Dr. Saeed Ghezelbash",
+    "ruleRef": "ghezelbaash_blog_legacy_bulk_v1",
+    "ruleDescription": "Exact historical blog URLs to the closest visible canonical passage",
+    "host": "blog.ghezelbaash.ir",
+    "unmatchedPathPolicy": "return-404",
+    "groups": [
+      {
+        "ref": "blog_archive_navigation_v1",
+        "paths": [
+          "/",
+          "/2025/02/",
+          "/2025/03/",
+          "/2025/04/",
+          "/2025/05/",
+          "/2025/08/",
+          "/search"
+        ],
+        "target": "https://www.ghezelbaash.ir/#aesthetic-medicine-table-of-contents",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_clinic_identity_v1",
+        "paths": [
+          "/2025/02/blog-post_102.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87"
+        ],
+        "target": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_treatment_selection_v1",
+        "paths": [
+          "/2025/02/blog-post_14.html",
+          "/2025/02/blog-post_20.html",
+          "/2025/02/blog-post_26.html",
+          "/2025/02/blog-post_49.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#aesthetic-treatment-selection",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_filler_general_v1",
+        "paths": [
+          "/2025/02/blog-post_08.html",
+          "/2025/02/blog-post_43.html",
+          "/2025/03/blog-post_07.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%A8%D8%B1%D9%86%D8%AF%20%D9%81%DB%8C%D9%84%D8%B1%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1"
+        ],
+        "target": "https://www.ghezelbaash.ir/#filler",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_lip_filler_v1",
+        "paths": [
+          "/2025/02/blog-post_53.html",
+          "/2025/08/blog-post.html",
+          "/search/label/%DA%98%D9%84%20%D9%84%D8%A8%20%D8%B1%D9%88%D8%B3%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#lip-filler-proportion-vs-volume",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_cheek_filler_v1",
+        "paths": [
+          "/2025/08/blog-post_25.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#cheek-filler-structural-support-vs-overfilling",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_nose_filler_v1",
+        "paths": [
+          "/2025/03/blog-post_10.html",
+          "/2025/03/blog-post_18.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1%20%D8%A8%DB%8C%D9%86%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%A8%DB%8C%D9%86%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_nasal_enzyme_safety_v1",
+        "paths": [
+          "/2025/03/blog-post_08.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#hyaluronidase-for-nasal-filler-complications",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_under_eye_filler_v1",
+        "paths": [
+          "/2025/03/blog-post_553.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%AA%D8%B2%D8%B1%DB%8C%D9%82%20%D9%81%DB%8C%D9%84%D8%B1%20%D8%B2%DB%8C%D8%B1%20%DA%86%D8%B4%D9%85%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#tear-trough-hollowing-shadow-and-puffiness-assessment",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_facial_contouring_v1",
+        "paths": [
+          "/2025/02/blog-post_4175.html",
+          "/2025/03/blog-post_15.html",
+          "/2025/03/blog-post_17.html",
+          "/2025/03/blog-post_26.html",
+          "/2025/04/blog-post_30.html",
+          "/2025/08/blog-post_29.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%D8%A7%D9%88%DB%8C%D9%87%20%D8%B3%D8%A7%D8%B2%DB%8C%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%DA%A9%D8%A7%D9%86%D8%AA%D9%88%D8%B1%DB%8C%D9%86%DA%AF%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D9%85%D8%A7%D8%AF%D9%84%DB%8C%D9%86%DA%AF%20%D8%B5%D9%88%D8%B1%D8%AA%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%DA%A9%D8%A7%D9%86%D8%AA%D9%88%D8%B1%DB%8C%D9%86%DA%AF"
+        ],
+        "target": "https://www.ghezelbaash.ir/#chin-jawline-and-facial-contouring",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_submental_contouring_v1",
+        "paths": [
+          "/2025/03/blog-post_16.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#submental-fat-vs-skin-laxity-vs-retruded-chin",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_botox_general_v1",
+        "paths": [
+          "/2025/02/blog-post_743.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%A8%D9%88%D8%AA%D8%A7%DA%A9%D8%B3%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%A8%D8%A7%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%88%D8%AA%D8%A7%DA%A9%D8%B3%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%A8%D9%88%D8%AA%D8%A7%DA%A9%D8%B3"
+        ],
+        "target": "https://www.ghezelbaash.ir/#botox",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_botox_hyperhidrosis_v1",
+        "paths": [
+          "/2025/02/blog-post_17.html",
+          "/2025/02/blog-post_325.html",
+          "/2025/02/blog-post_344.html",
+          "/2025/02/blog-post_945.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#hyperhidrosis-botox-clinical-decision",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_botox_cat_eye_v1",
+        "paths": [
+          "/2025/03/blog-post_19.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#botox-cat-eye-limitations",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_perioral_botox_filler_v1",
+        "paths": [
+          "/2025/03/blog-post_20.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#perioral-lines-filler-and-skin-treatment-combination",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_wrinkle_treatment_comparison_v1",
+        "paths": [
+          "/2025/03/blog-post_22.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#filler-vs-botox-for-static-and-dynamic-lines",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_thread_lift_general_v1",
+        "paths": [
+          "/2025/02/blog-post_512.html",
+          "/2025/02/blog-post_69.html",
+          "/2025/02/blog-post_96.html",
+          "/2025/03/blog-post_11.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%84%DB%8C%D9%81%D8%AA%20%D9%86%D8%AE%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D9%84%DB%8C%D9%81%D8%AA%20%D9%86%D8%AE%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%84%DB%8C%D9%81%D8%AA%20%D8%B5%D9%88%D8%B1%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#thread-lift",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_thread_lift_temple_v1",
+        "paths": [
+          "/2025/02/blog-post_76.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%84%DB%8C%D9%81%D8%AA%20%D8%B4%D9%82%DB%8C%D9%82%D9%87%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#thread-treatment-area-selection",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_thread_lift_cat_eye_v1",
+        "paths": [
+          "/2025/02/blog-post_93.html",
+          "/search/label/%D9%84%DB%8C%D9%81%D8%AA%20%DA%86%D8%B4%D9%85%20%DA%AF%D8%B1%D8%A8%D9%87%E2%80%8C%D8%A7%DB%8C%20%D8%AF%D8%B1%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#cat-eye-thread-lift-candidacy-swelling-and-results",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_thread_lift_neck_submental_v1",
+        "paths": [
+          "/2025/02/blog-post_899.html",
+          "/search/label/%D9%84%DB%8C%D9%81%D8%AA%20%D8%BA%D8%A8%D8%BA%D8%A8%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4"
+        ],
+        "target": "https://www.ghezelbaash.ir/#submental-thread-lift-cause-assessment",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_subcision_v1",
+        "paths": [
+          "/2025/02/blog-post54.html",
+          "/2025/02/blog-post_274.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#subcision-for-tethered-acne-scars",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_acne_scars_v1",
+        "paths": [
+          "/2025/02/blog-post_24.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#acne-scars",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_prp_skin_hair_v1",
+        "paths": [
+          "/2025/02/blog-post_10.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D9%BE%DB%8C%20%D8%A2%D8%B1%20%D9%BE%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D9%BE%DB%8C%20%D8%A2%D8%B1%20%D9%BE%DB%8C"
+        ],
+        "target": "https://www.ghezelbaash.ir/#prp-for-skin-and-hair",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_hand_rejuvenation_v1",
+        "paths": [
+          "/2025/02/blog-post_383.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#hand-rejuvenation",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_jalupro_profhilo_v1",
+        "paths": [
+          "/2025/03/blog-post_05.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#jalupro-vs-profhilo-selection",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_skin_mesotherapy_v1",
+        "paths": [
+          "/2025/03/blog-post_12.html",
+          "/2025/04/blog-post.html",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%AC%D9%88%D8%A7%D9%86%D8%B3%D8%A7%D8%B2%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D9%BE%D9%88%D8%B3%D8%AA%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D8%A8%D9%87%D8%AA%D8%B1%DB%8C%D9%86%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%85%D8%B2%D9%88%D8%AA%D8%B1%D8%A7%D9%BE%DB%8C%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%D9%85%D8%B2%D9%88%DA%98%D9%84%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4",
+          "/search/label/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9%20%D8%B2%DB%8C%D8%A8%D8%A7%DB%8C%DB%8C%20%D8%AF%DA%A9%D8%AA%D8%B1%20%D8%B3%D8%B9%DB%8C%D8%AF%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D9%85%D8%B2%D9%88%D8%AA%D8%B1%D8%A7%D9%BE%DB%8C"
+        ],
+        "target": "https://www.ghezelbaash.ir/#skin-rejuvenation",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_hair_loss_v1",
+        "paths": [
+          "/2025/03/blog-post_14.html",
+          "/search/label/%D8%AF%DA%A9%D8%AA%D8%B1%20%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4%20%DA%A9%D8%B1%D9%85%D8%A7%D9%86%D8%B4%D8%A7%D9%87%20-%20%D9%85%D8%B2%D9%88%D8%AA%D8%B1%D8%A7%D9%BE%DB%8C%20%D9%85%D9%88"
+        ],
+        "target": "https://www.ghezelbaash.ir/#hair-loss",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_prp_mesotherapy_comparison_v1",
+        "paths": [
+          "/2025/03/blog-post_29.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#prp-vs-mesotherapy-selection-framework",
+        "statusCode": 301,
+        "preserveQueryString": false
+      },
+      {
+        "ref": "blog_pigmentation_v1",
+        "paths": [
+          "/2025/05/blog-post.html"
+        ],
+        "target": "https://www.ghezelbaash.ir/#skin-pigmentation-cause-assessment",
+        "statusCode": 301,
+        "preserveQueryString": false
+      }
+    ]
+  },
+  "canonicalHostRedirects": {
+    "host": "www.ghezelbaash.ir",
+    "rules": [
+      {
+        "source": "/index.html",
+        "target": "/",
+        "statusCode": 301
+      },
+      {
+        "source": "/gel-injection-doctor-in-kermanshah/",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post54.html",
+        "target": "/#subcision-for-tethered-acne-scars",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_08.html",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_10.html",
+        "target": "/#prp-for-skin-and-hair",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_102.html",
+        "target": "/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_14.html",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_17.html",
+        "target": "/#hyperhidrosis-botox-clinical-decision",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_20.html",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_24.html",
+        "target": "/#acne-scars",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_26.html",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_274.html",
+        "target": "/#subcision-for-tethered-acne-scars",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_325.html",
+        "target": "/#hyperhidrosis-botox-clinical-decision",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_344.html",
+        "target": "/#hyperhidrosis-botox-clinical-decision",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_383.html",
+        "target": "/#hand-rejuvenation",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_4175.html",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_43.html",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_49.html",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_512.html",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_53.html",
+        "target": "/#lip-filler-proportion-vs-volume",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_69.html",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_743.html",
+        "target": "/#botox",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_76.html",
+        "target": "/#thread-treatment-area-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_899.html",
+        "target": "/#submental-thread-lift-cause-assessment",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_93.html",
+        "target": "/#cat-eye-thread-lift-candidacy-swelling-and-results",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_945.html",
+        "target": "/#hyperhidrosis-botox-clinical-decision",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/02/blog-post_96.html",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_05.html",
+        "target": "/#jalupro-vs-profhilo-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_07.html",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_08.html",
+        "target": "/#hyaluronidase-for-nasal-filler-complications",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_10.html",
+        "target": "/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_11.html",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_12.html",
+        "target": "/#skin-rejuvenation",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_14.html",
+        "target": "/#hair-loss",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_15.html",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_16.html",
+        "target": "/#submental-fat-vs-skin-laxity-vs-retruded-chin",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_17.html",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_18.html",
+        "target": "/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_19.html",
+        "target": "/#botox-cat-eye-limitations",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_20.html",
+        "target": "/#perioral-lines-filler-and-skin-treatment-combination",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_22.html",
+        "target": "/#filler-vs-botox-for-static-and-dynamic-lines",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_26.html",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_29.html",
+        "target": "/#prp-vs-mesotherapy-selection-framework",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/03/blog-post_553.html",
+        "target": "/#tear-trough-hollowing-shadow-and-puffiness-assessment",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/04/blog-post.html",
+        "target": "/#skin-rejuvenation",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/04/blog-post_30.html",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/05/blog-post.html",
+        "target": "/#skin-pigmentation-cause-assessment",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/08/blog-post.html",
+        "target": "/#lip-filler-proportion-vs-volume",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/08/blog-post_25.html",
+        "target": "/#cheek-filler-structural-support-vs-overfilling",
+        "statusCode": 301
+      },
+      {
+        "source": "/2025/08/blog-post_29.html",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/datasets/historical-patient-origin-summary.json",
+        "target": "/#historical-patient-origin-summary",
+        "statusCode": 301
+      },
+      {
+        "source": "/services/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/contact/",
+        "target": "/#saeed-ghezelbash-clinic-contact-and-location",
+        "statusCode": 301
+      },
+      {
+        "source": "/botox-response-variables/",
+        "target": "/#botox",
+        "statusCode": 301
+      },
+      {
+        "source": "/nose-filler-longevity/",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/subcision-kermanshah/",
+        "target": "/#acne-pigmentation-and-scars",
+        "statusCode": 301
+      },
+      {
+        "source": "/best-double-chin-surgeon-kermanshah/",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/category/تزریق-بوتاکس/",
+        "target": "/#botox",
+        "statusCode": 301
+      },
+      {
+        "source": "/hifu-therapy-in-kermanshah/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/best-mesotherapy-doctor-kermanshah/",
+        "target": "/#mesotherapy-prp-skin-rejuvenation-en",
+        "statusCode": 301
+      },
+      {
+        "source": "/blog/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/category/blog/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/laser-scar-treatment-in-kermanshah/",
+        "target": "/#acne-pigmentation-and-scars",
+        "statusCode": 301
+      },
+      {
+        "source": "/fat-injection-in-kermanshah/",
+        "target": "/#fat-grafting-for-facial-contouring-limitations",
+        "statusCode": 301
+      },
+      {
+        "source": "/category/mesotherapy/",
+        "target": "/#mesotherapy-prp-skin-rejuvenation-en",
+        "statusCode": 301
+      },
+      {
+        "source": "/category/dermal-fillers/",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/category/درمان-اسکار/",
+        "target": "/#acne-pigmentation-and-scars",
+        "statusCode": 301
+      },
+      {
+        "source": "/double-chin-liposuction-kermanshah/",
+        "target": "/#submental-fat-vs-skin-laxity-vs-retruded-chin",
+        "statusCode": 301
+      },
+      {
+        "source": "/aesthetic-concerns-kermanshah/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/thread-lift-kermanshah/",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/filler-kermanshah/",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/botox-kermanshah/",
+        "target": "/#botox",
+        "statusCode": 301
+      },
+      {
+        "source": "/skin-hair-rejuvenation-kermanshah/",
+        "target": "/#skin-rejuvenation",
+        "statusCode": 301
+      },
+      {
+        "source": "/dr-saeed-ghezelbash-aesthetic-clinic/",
+        "target": "/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah",
+        "statusCode": 301
+      },
+      {
+        "source": "/dr-saeed-ghezelbash/",
+        "target": "/#saeed-ghezelbash",
+        "statusCode": 301
+      },
+      {
+        "source": "/botox-candidacy/",
+        "target": "/#aesthetic-treatment-candidacy",
+        "statusCode": 301
+      },
+      {
+        "source": "/best-central-lip-doctor-in-kermanshah/",
+        "target": "/#central-lip-lift-for-long-upper-lip",
+        "statusCode": 301
+      },
+      {
+        "source": "/about/",
+        "target": "/#saeed-ghezelbash",
+        "statusCode": 301
+      },
+      {
+        "source": "/category/lipotransfer/",
+        "target": "/#fat-grafting-for-facial-contouring-limitations",
+        "statusCode": 301
+      },
+      {
+        "source": "/botox-blepharoptosis/",
+        "target": "/#botox-induced-eyelid-ptosis-causes",
+        "statusCode": 301
+      },
+      {
+        "source": "/botox-aftercare/",
+        "target": "/#botox-aftercare-and-spread-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/",
+        "target": "/#video-library",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/nonsurgical-rhinoplasty-boundary/",
+        "target": "/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/home-workshop-thread-lift-training/",
+        "target": "/#video-saeed-ghezelbash-thread-lift-workshop",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/filler-under-eye-transformation/",
+        "target": "/#tear-trough-hollowing-shadow-and-puffiness-assessment",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/clinic-patient-experience-review/",
+        "target": "/#video-saeed-ghezelbash-kurdish-patient-review",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/cat-eye-thread-lift-before-after/",
+        "target": "/#cat-eye-thread-lift-candidacy-swelling-and-results",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/nose-filler-before-after/",
+        "target": "/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/aesthetic-jalupro-vs-profhilo-skin-boosters/",
+        "target": "/#video-saeed-ghezelbash-jalupro-vs-profhilo",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/jalupro-vs-profhilo-skin-boosters/",
+        "target": "/#video-saeed-ghezelbash-jalupro-vs-profhilo",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/proper-subcision-technique-guide/",
+        "target": "/#video-saeed-ghezelbash-subcision-technique",
+        "statusCode": 301
+      },
+      {
+        "source": "/category/blog/page/2/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+تزریق+فیلر+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+لیفت+شقیقه+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/کلینیک+زیبایی+دکتر+سعید+قزلباش+کرمانشاه+-+بوتاکس/",
+        "target": "/#botox",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/مادلینگ+صورت+دکتر+قزلباش+کرمانشاه/",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+تزریق+فیلر+زیر+چشم+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#tear-trough-hollowing-shadow-and-puffiness-assessment",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+لیفت+نخ+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+جوانسازی+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#skin-rejuvenation",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/کلینیک+زیبایی+دکتر+سعید+قزلباش+کرمانشاه+-+پی+آر+پی/",
+        "target": "/#prp-vs-mesotherapy-selection-framework",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+زاویه+سازی+صورت+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/کلینیک+زیبایی+دکتر+سعید+قزلباش+کرمانشاه+-+کانتورینگ/",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+بوتاکس+کرمانشاه+با+دکتر+قزلباش/",
+        "target": "/#botox",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/کلینیک+زیبایی+دکتر+سعید+قزلباش+کرمانشاه+-+مزوتراپی/",
+        "target": "/#mesotherapy-prp-skin-rejuvenation-en",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/مزوژل+کرمانشاه+دکتر+قزلباش/",
+        "target": "/#jalupro-vs-profhilo-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+پی+آر+پی+کرمانشاه+دکتر+قزلباش/",
+        "target": "/#prp-vs-mesotherapy-selection-framework",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+زیبایی+پوست+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#skin-rejuvenation",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+زیبایی+صورت+کرمانشاه+دکتر+سعید+قزلباش/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+کانتورینگ+صورت+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/تزریق+فیلرگونه+دکتر+قزلباش+کرمانشاه/",
+        "target": "/#cheek-filler-structural-support-vs-overfilling",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+لیفت+نخ+کرمانشاه+دکتر+قزلباش/",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/لیفت+چشم+گربه‌ای+در+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#cat-eye-thread-lift-candidacy-swelling-and-results",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+لیفت+پیشانی+کرمانشاه+-+دکتر+سعید+قزلباش/",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+مزوتراپی+کرمانشاه+-+دکتر+قزلباش/",
+        "target": "/#mesotherapy-prp-skin-rejuvenation-en",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/کلینیک+زیبایی+دکتر+سعید+قزلباش+کرمانشاه+-+تزریق+فیلر/",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/دکتر+لیفت+صورت+کرمانشاه+دکتر+قزلباش/",
+        "target": "/#thread-lift",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/دکتر+قزلباش+کرمانشاه+-+مزوتراپی+مو/",
+        "target": "/#hair-loss",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+زیبایی+بینی+کرمانشاه+دکتر+سعید+قزلباش/",
+        "target": "/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+تزریق+فیلر+بینی+کرمانشاه+-+دکتر+سعید+قزلباش",
+        "target": "/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/لیفت+غبغب+کرمانشاه+دکتر+قزلباش",
+        "target": "/#submental-thread-lift-cause-assessment",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/دکتر%20قزلباش%20کرمانشاه%20-%20مزوتراپی%20مو",
+        "target": "/#hair-loss",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/دکتر%20قزلباش%20کرمانشاه%20-%20مزوتراپی%20مو/",
+        "target": "/#hair-loss",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/مادلینگ%20صورت%20دکتر%20قزلباش%20کرمانشاه",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/مادلینگ%20صورت%20دکتر%20قزلباش%20کرمانشاه/",
+        "target": "/#chin-jawline-and-facial-contouring",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین%20دکتر%20تزریق%20فیلر%20بینی%20کرمانشاه%20-%20دکتر%20سعید%20قزلباش",
+        "target": "/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین%20دکتر%20تزریق%20فیلر%20بینی%20کرمانشاه%20-%20دکتر%20سعید%20قزلباش/",
+        "target": "/#nonsurgical-rhinoplasty-filler-risk",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/لیفت%20غبغب%20کرمانشاه%20دکتر%20قزلباش",
+        "target": "/#submental-thread-lift-cause-assessment",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/لیفت%20غبغب%20کرمانشاه%20دکتر%20قزلباش/",
+        "target": "/#submental-thread-lift-cause-assessment",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+دکتر+تزریق+فیلر+کرمانشاه+-+دکتر+سعید+قزلباش/feed/rss2/",
+        "target": "/#filler",
+        "statusCode": 301
+      },
+      {
+        "source": "/search/label/بهترین+بوتاکس+کرمانشاه+با+دکتر+قزلباش/feed/rss2/",
+        "target": "/#botox",
+        "statusCode": 301
+      },
+      {
+        "source": "/category/تزریق-بوتاکس/feed/",
+        "target": "/#botox",
+        "statusCode": 301
+      },
+      {
+        "source": "/feeds/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/feeds/posts/default",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/feeds/posts/default/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/home-workshop-thread-lift-advanced/",
+        "target": "/#video-saeed-ghezelbash-thread-lift-workshop",
+        "statusCode": 301
+      },
+      {
+        "source": "/videos/thread-lift-cat-eye-before-after/",
+        "target": "/#cat-eye-thread-lift-candidacy-swelling-and-results",
+        "statusCode": 301
+      },
+      {
+        "source": "/aesthetic-medicine-dataset.html",
+        "target": "/#historical-patient-origin-summary",
+        "statusCode": 301
+      },
+      {
+        "source": "/evidence/",
+        "target": "/#aesthetic-treatment-selection",
+        "statusCode": 301
+      },
+      {
+        "source": "/kg/",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/kg/graph.jsonld",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/kg/entity.jsonld",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/routes.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/dataset.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/seo-aeo-index.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/service-taxonomy.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/page-context.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/regulatory.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/entity-hardening-index.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/research/",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/ai-discovery-index.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/aesthetic_medicine_knowledge_kermanshah_fa.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/services.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/authority-signals.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/research.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/nap.csv",
+        "target": "/#saeed-ghezelbash-clinic-contact-and-location",
+        "statusCode": 301
+      },
+      {
+        "source": "/brand-kb.ghezelbaash.ai-public.json",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      },
+      {
+        "source": "/kb/graph-ghezelbaash-final.jsonld",
+        "target": "/graph.jsonld",
+        "statusCode": 301
+      }
+    ]
+  }
+}

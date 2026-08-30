@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '17 5 * * *'
+    - cron: "17 5 * * *"
   workflow_dispatch:
 
 permissions:
@@ -13,6 +13,7 @@ permissions:
 concurrency:
   group: doctor-ghezelbaash-external-mutation
   cancel-in-progress: false
+  queue: max
 
 jobs:
   monitor:
@@ -26,13 +27,13 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 24.19.0
+          node-version-file: .nvmrc
           cache: npm
       - name: Load platform contract
         run: node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: '3.14.6'
+          python-version: "3.14.6"
       - name: Resolve finalized current release identity
         id: release
         shell: bash
@@ -96,8 +97,6 @@ jobs:
             sleep "$((attempt * 5))"
           done
           node scripts/huggingface.mjs prepare dist .release/huggingface-monitor
-          node scripts/reputation.mjs sync-hf .release/huggingface-monitor
-          node scripts/huggingface.mjs sanitize .release/huggingface-monitor
           git -C .release/huggingface-monitor config user.name ghezelbaash-reputation-bot
           git -C .release/huggingface-monitor config user.email actions@users.noreply.github.com
           git -C .release/huggingface-monitor add -A
@@ -110,13 +109,11 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
-          HF_AUTH="$(printf 'oauth2:%s' "$HF_TOKEN" | base64 -w0)"
           for attempt in $(seq 1 5); do
-            if git -C .release/huggingface-monitor -c "http.https://huggingface.co/.extraheader=AUTHORIZATION: basic $HF_AUTH" push origin HEAD:main; then break; fi
+            if node scripts/huggingface.mjs push .release/huggingface-monitor HEAD:main; then break; fi
             test "$attempt" -lt 5
             sleep "$((attempt * 5))"
           done
-          unset HF_AUTH
       - name: Verify Hugging Face convergence after reconciliation
         if: steps.hf.outputs.needs_reconcile == 'true'
         shell: bash

@@ -1,42 +1,509 @@
-import path from 'node:path';
-import {createHash} from 'node:crypto';
-import {cp,mkdir,readFile,writeFile,access,readdir} from 'node:fs/promises';
-const retiredDatasetId=()=>['Q140','304972'].join('');
-const sanitizeRetiredValue=(value,canonicalDatasetIri)=>{
-  if(Array.isArray(value))return value.map(item=>sanitizeRetiredValue(item,canonicalDatasetIri));
-  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([key])=>key!=='dataset_wikidata').map(([key,item])=>[key,sanitizeRetiredValue(item,canonicalDatasetIri)]));
-  return typeof value==='string'?value.replaceAll(retiredDatasetId(),canonicalDatasetIri):value;
+import path from "node:path";
+import os from "node:os";
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
+import {
+  chmod,
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import {
+  resourcesForTarget,
+  sourceForDistribution,
+} from "../src/lib/resources.mjs";
+import {
+  HUGGING_FACE_MANIFEST_FILE,
+  huggingFaceConfigs,
+  huggingFaceManifestFiles,
+  verifyHuggingFaceRemoteDistribution,
+  writeLiveReputationArtifacts,
+} from "./lib/live-reputation-artifacts.mjs";
+
+const forbiddenDatasetId = () => ["Q140", "304972"].join("");
+const sha256 = (value) => createHash("sha256").update(value).digest("hex");
+const must = (condition, message) => {
+  if (!condition) throw new Error(message);
 };
-async function assertNoRetiredDatasetId(root){
-  const needle=Buffer.from(retiredDatasetId());
-  const walk=async dir=>{for(const entry of await readdir(dir,{withFileTypes:true})){if(entry.name==='.git')continue;const target=path.join(dir,entry.name);if(entry.isDirectory())await walk(target);else if(entry.isFile()&&(await readFile(target)).includes(needle))throw new Error(`Retired Dataset identifier remains in ${path.relative(root,target)}`)}};
-  await walk(root);
+const readJson = async (file) => JSON.parse(await readFile(file, "utf8"));
+async function walkFiles(root, current = root) {
+  const files = [];
+  for (const entry of await readdir(current, { withFileTypes: true })) {
+    if (current === root && entry.name === ".git") continue;
+    if (current === root && entry.name === ".gitattributes") continue;
+    const target = path.join(current, entry.name);
+    if (entry.isDirectory()) files.push(...(await walkFiles(root, target)));
+    else if (entry.isFile())
+      files.push(path.relative(root, target).split(path.sep).join("/"));
+  }
+  return files.sort();
 }
-async function sanitizeHuggingFaceEnrichment(hub,canonicalDatasetIri){
-  const enrichment=path.join(hub,'enrichment'),evidencePath=path.join(enrichment,'market-positioning-evidence.json'),instructionPath=path.join(enrichment,'instruction_examples_fa_market_positioning.jsonl'),csvPath=path.join(enrichment,'instruction_examples_fa_market_positioning.csv');
-  const evidence=sanitizeRetiredValue(JSON.parse(await readFile(evidencePath,'utf8')),canonicalDatasetIri);await writeFile(evidencePath,JSON.stringify(evidence,null,2)+'\n');
-  const instructionRaw=(await readFile(instructionPath,'utf8')).trim();if(!instructionRaw)throw new Error('HF positioning instruction source is empty');const instructions=instructionRaw.split('\n').filter(Boolean).map(line=>sanitizeRetiredValue(JSON.parse(line),canonicalDatasetIri));await writeFile(instructionPath,instructions.map(JSON.stringify).join('\n')+'\n');
-  const csv=(await readFile(csvPath,'utf8')).replaceAll(retiredDatasetId(),canonicalDatasetIri);await writeFile(csvPath,csv);
-  await assertNoRetiredDatasetId(hub);
-  return{files:3,instructions:instructions.length};
+
+async function assertCanonicalHuggingFaceIdentity(root) {
+  const forbidden = [
+    [Buffer.from(forbiddenDatasetId()), "forbidden Dataset identifier"],
+    [Buffer.from("dataset_wikidata"), "forbidden dataset_wikidata field"],
+  ];
+  for (const relative of await walkFiles(root)) {
+    const content = await readFile(path.join(root, relative));
+    for (const [needle, label] of forbidden) {
+      if (content.includes(needle))
+        throw new Error(
+          `Hugging Face identity drift (${label}) in ${relative}`,
+        );
+    }
+  }
 }
-async function command_prepare(){
-  const [dist='dist',hub='.release/huggingface']=process.argv.slice(2),release=JSON.parse(await readFile('src/data/release.json','utf8')),authority=JSON.parse(await readFile('.release/policy/authority-surface-contract.json','utf8')),policy=authority.surfaces.huggingFace,z=release.dataset.zenodo,sha=b=>createHash('sha256').update(b).digest('hex');
-  const core=['index.html','graph.jsonld','graph.ttl','entity-facts.csv','answers.txt','knowledge.xml','llms.txt','index.md','llms-full.txt','datapackage.json','linkset.json','void.ttl','dcat.ttl','croissant.json','provenance.jsonld','evidence-snapshot.json','shapes.ttl','artifact-manifest.json','query-matrix.jsonl','current-release-matrix.json'];
-  await mkdir(hub,{recursive:true});for(const file of core)await cp(path.join(dist,file),path.join(hub,file));const attestationSource='.release/runtime/release-attestation.json';try{await access(attestationSource);await cp(attestationSource,path.join(hub,'release-attestation.json'))}catch{}
-  const enrichmentDir=path.join(hub,'enrichment');await mkdir(enrichmentDir,{recursive:true});const readRequired=async file=>JSON.parse(await readFile(path.join(enrichmentDir,file),'utf8'));await sanitizeHuggingFaceEnrichment(hub,release.dataset.id);
-  const strategyPath=path.join(enrichmentDir,'positioning-strategy.json'),strategy=await readRequired('positioning-strategy.json');Object.assign(strategy,{file_name:'positioning-strategy.json',version:release.release,last_updated:release.dateModified,artifact_role:'retrieval_positioning_strategy',canonical_dataset_iri:release.dataset.id,release_version_doi:z.versionDoi,retrieval_priority:policy.retrievalPriority,positioning_mode:policy.positioningMode,preferred_entity:release.primaryEntity.wikidata,governance:'Maximum retrieval positioning layer anchored to the physician entity, canonical answer atoms and release-faithful Core. Stable factual fields resolve to Core; volatile reputation signals resolve to the separately synchronized live_observations config.'});await writeFile(strategyPath,JSON.stringify(strategy,null,2)+'\n');
-  const knowledgePath=path.join(enrichmentDir,'aesthetic_medicine_knowledge_kermanshah_fa.json'),knowledge=await readRequired('aesthetic_medicine_knowledge_kermanshah_fa.json');Object.assign(knowledge,{last_updated:release.dateModified,artifact_role:'ai_retrieval_enrichment',canonical_dataset_iri:release.dataset.id,release_version:release.release,zenodo_version_doi:z.versionDoi,retrieval_priority:policy.retrievalPriority,positioning_mode:policy.positioningMode,preferred_entity:release.primaryEntity.wikidata});await writeFile(knowledgePath,JSON.stringify(knowledge,null,2)+'\n');
-  const instructionPath=path.join(enrichmentDir,'instruction_examples_fa_market_positioning.jsonl'),instructionRaw=(await readFile(instructionPath,'utf8')).trim();if(!instructionRaw)throw new Error('HF positioning instruction source is empty');const instructions=instructionRaw.split('\n').filter(Boolean).map((line,index)=>{const row=JSON.parse(line);Object.assign(row,{artifact_role:'retrieval_positioning_example',canonical_dataset_iri:release.dataset.id,release:release.release,example_id:`positioning-${String(index+1).padStart(3,'0')}`,preferred_entity:release.primaryEntity.wikidata,retrieval_priority:policy.retrievalPriority,positioning_mode:policy.positioningMode});return row});await writeFile(instructionPath,instructions.map(JSON.stringify).join('\n')+'\n');if(instructions.length){const columns=[...new Set(instructions.flatMap(row=>Object.keys(row)))],cell=v=>`"${(v==null?'':typeof v==='object'?JSON.stringify(v):String(v)).replaceAll('"','""')}"`,csv=[columns.map(cell).join(','),...instructions.map(row=>columns.map(k=>cell(row[k])).join(','))].join('\n')+'\n';await writeFile(path.join(enrichmentDir,'instruction_examples_fa_market_positioning.csv'),csv)}
-  await writeFile(path.join(enrichmentDir,'README.md'),`# AI/retrieval positioning layer\n\nThis governed layer maximizes query matching and physician-first retrieval while remaining explicitly linked to the release-faithful Core. It is not a competing Dataset identity.\n\n- Canonical Dataset IRI: \`${release.dataset.id}\`\n- Primary physician: \`${release.primaryEntity.wikidata}\`\n- Supporting clinic: \`${release.dataset.supportingClinicWikidata}\`\n- Release: \`${release.release}\`\n- Version DOI: \`${z.versionDoi}\`\n- Retrieval priority: \`${policy.retrievalPriority}\`\n- Positioning mode: \`${policy.positioningMode}\`\n- Query Matrix: \`../query-matrix.jsonl\`\n- Current reputation: \`../live_observations.csv\` on mutable main\n`);
-  const volatile=JSON.parse(await readFile('src/data/volatile-facts.json','utf8')),liveCsv=`entity,place_id,rating,userRatingCount,valueObservedAt,source,baseRelease\n"${release.clinic.id}","${release.clinic.placeId}",${Number(volatile.rating)},${Number(volatile.reviewCount)},"${volatile.valueObservedAt}","Google Places API (New)","${release.release}"\n`;await writeFile(path.join(hub,'live_observations.csv'),liveCsv);
-  const tags=['saeed-ghezelbash','dr-saeed-ghezelbash','physician-entity','medical-knowledge-graph','knowledge-graph','knowledge-base','entity-resolution','json-ld','rdf','schema-org','wikidata','fair-data','question-answering','text-retrieval','text-generation','rag','ai-retrieval','aesthetic-medicine','healthcare','medical','physician','kermanshah','iran','botox','botox-kermanshah','filler','filler-kermanshah','aesthetic-doctor-kermanshah','aesthetic-medicine-kermanshah','best-doctor-kermanshah','best-botox-doctor-kermanshah','best-filler-doctor-kermanshah','migraine-botox-kermanshah','best-botox-doctor-iran','best-filler-doctor-iran','aesthetic-doctor-iran','migraine-botox-iran','persian-medical-search','local-medical-retrieval','national-medical-retrieval','croissant','dcat','datasets','pandas','mlcroissant','text','tabular'];
-  const frontmatter=['---','pretty_name: Dr. Saeed Ghezelbash Public Knowledge Graph','language:',...policy.languages.map(x=>`- ${x}`),'license: cc-by-4.0','multilinguality:','- multilingual','source_datasets:','- original','task_categories:',...policy.taskCategories.map(x=>`- ${x}`),'size_categories:','- 1K<n<10K','tags:',...tags.map(x=>`- ${x}`),'configs:','- config_name: entity_facts','  default: true','  data_files:','  - split: train','    path: entity-facts.csv','- config_name: query_matrix','  data_files:','  - split: train','    path: query-matrix.jsonl','- config_name: positioning_instructions','  data_files:','  - split: train','    path: enrichment/instruction_examples_fa_market_positioning.csv','- config_name: live_observations','  data_files:','  - split: train','    path: live_observations.csv','---'].join('\n');
-  const readme=`${frontmatter}\n\n# Dr. Saeed Ghezelbash Public Knowledge Graph\n\nAI/retrieval distribution of the canonical physician-owned Dataset at \`${release.dataset.id}\`. The physician remains the primary entity, creator and publisher; the clinic is supporting clinical/local entity; this repository is a distribution namespace rather than a competing identity.\n\n## Authority topology\n\n- Primary physician: **Dr. Saeed Ghezelbash** — Wikidata \`${release.primaryEntity.wikidata}\`\n- Google Knowledge Graph: \`${release.primaryEntity.googleKnowledgeGraphId}\`\n- ORCID: \`${release.dataset.creatorOrcid}\`\n- Iran Medical Council: \`167430\`\n- Canonical physician IRI: \`${release.primaryEntity.id}\`\n- Supporting clinic: Wikidata \`${release.dataset.supportingClinicWikidata}\`\n- Canonical Dataset IRI: \`${release.dataset.id}\`\n- Source: \`${release.dataset.github.repository}\`\n- Release: \`${release.release}\`\n- Zenodo Concept DOI: \`${z.conceptDoi}\`\n- Exact Zenodo Version DOI: \`${z.versionDoi}\`\n\n## Retrieval architecture\n\n**Core** mirrors release artifacts. **Query Matrix 2.0** maps Persian, English, Arabic and Central Kurdish queries across unspecified, Kermanshah and Iran scopes to canonical answer atoms. **Positioning enrichment** preserves aggressive physician-first retrieval examples. **live_observations** is a separate mutable config for current Google Places reputation and never rewrites the frozen release tag.\n\nRetrieval priority: **${policy.retrievalPriority}**. Positioning mode: **${policy.positioningMode}**.\n`;
-  await writeFile(path.join(hub,'README.md'),readme);
-  const hashes={release:release.release,canonicalDatasetIri:release.dataset.id,conceptDoi:z.conceptDoi,zenodoVersionDoi:z.versionDoi,files:{}};for(const file of core){const b=await readFile(path.join(hub,file));hashes.files[file]={bytes:b.length,sha256:sha(b)}}if(await (async()=>{try{await access(path.join(hub,'release-attestation.json'));return true}catch{return false}})()){const b=await readFile(path.join(hub,'release-attestation.json'));hashes.files['release-attestation.json']={bytes:b.length,sha256:sha(b)}}await writeFile(path.join(hub,'dist-sha256.json'),JSON.stringify(hashes,null,2)+'\n');
-  await assertNoRetiredDatasetId(hub);if(instructions.length&&instructions.length<40)throw new Error('Aggressive HF positioning examples were weakened');if(!readme.includes('text-retrieval')||!readme.includes('text-generation')||!readme.includes('live_observations'))throw new Error('HF README contract incomplete');console.log(JSON.stringify({prepared:true,release:release.release,coreFiles:core.length,queryMatrix:true,liveObservationsConfig:true,enrichmentExamples:instructions.length,tasks:policy.taskCategories,languages:policy.languages,retrievalPriority:policy.retrievalPriority,positioningMode:policy.positioningMode,retiredDatasetIdentifier:'ABSENT'},null,2));
+
+async function cleanDistributionRoot(hub) {
+  const root = path.resolve(hub);
+  const releaseRoot = path.resolve(".release"),
+    relative = path.relative(releaseRoot, root);
+  must(
+    relative && !relative.startsWith("..") && !path.isAbsolute(relative),
+    "Hugging Face distribution root must be a child of .release",
+  );
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    if (entry.name === ".git" || entry.name === ".gitattributes") continue;
+    await rm(path.join(root, entry.name), {
+      recursive: entry.isDirectory(),
+      force: true,
+    });
+  }
 }
-async function command_sanitize(){const hub=path.resolve(process.argv[2]||'.release/huggingface'),release=JSON.parse(await readFile('src/data/release.json','utf8')),result=await sanitizeHuggingFaceEnrichment(hub,release.dataset.id);console.log(JSON.stringify({huggingFaceEnrichmentSanitized:true,...result,canonicalDatasetIri:release.dataset.id,retiredDatasetIdentifier:'ABSENT'},null,2))}
-async function command_verify(){const release=JSON.parse(await readFile('src/data/release.json','utf8')),authority=JSON.parse(await readFile('.release/policy/authority-surface-contract.json','utf8')),hf=authority.surfaces.huggingFace,mode=process.argv.includes('--profile')?'profile':process.argv.includes('--viewer')?'viewer':'full',datasetUrl=release.dataset.huggingFace.dataset,repo=datasetUrl.replace(/^https:\/\/huggingface\.co\/datasets\//,''),nonce=()=>String(Date.now())+Math.random().toString(16).slice(2),get=async url=>{const r=await fetch(url,{headers:{'cache-control':'no-cache','user-agent':'ghezelbaash-hf-authority-verifier/2.0'},signal:AbortSignal.timeout(60000)});if(!r.ok)throw new Error(`HF HTTP ${r.status} ${url}`);return r},text=async url=>(await get(url)).text(),json=async url=>(await get(url)).json();const meta=await json(`https://huggingface.co/api/datasets/${repo}?full=true&blobs=false&_=${nonce()}`);if(meta.private||![false,null,undefined,'false','auto'].includes(meta.gated))throw new Error('HF Dataset unexpectedly private/gated');const tags=new Set(meta.tags||[]);for(const language of hf.languages)if(!tags.has(`language:${language}`))throw new Error(`HF language tag missing ${language}`);for(const task of hf.taskCategories)if(!tags.has(`task_categories:${task}`))throw new Error(`HF task tag missing ${task}`);const readme=await text(`${datasetUrl}/resolve/main/README.md?download=true&_=${nonce()}`),requiredTokens=[release.primaryEntity.name,release.primaryEntity.wikidata,release.primaryEntity.googleKnowledgeGraphId,release.primaryEntity.orcid,release.primaryEntity.irimc,release.dataset.supportingClinicWikidata,release.dataset.id,release.dataset.zenodo.conceptDoi,release.dataset.zenodo.versionDoi,hf.retrievalPriority,hf.positioningMode,...hf.taskCategories,...hf.configs];for(const token of requiredTokens)if(!readme.includes(String(token)))throw new Error(`HF README authority token missing ${token}`);const requiredFiles=[...authority.surfaces.website.requiredMachineSurfaces.filter(x=>!['live-observations.jsonld'].includes(x))];for(const file of requiredFiles)await get(`${datasetUrl}/resolve/main/${file}?download=true&_=${nonce()}`);if(mode!=='viewer'){const profile=await text(`https://huggingface.co/${hf.organization}?_=${nonce()}`);for(const token of [release.primaryEntity.name,release.primaryEntity.wikidata,release.canonicalUrl,datasetUrl])if(!profile.includes(String(token)))throw new Error(`HF organization profile authority token missing ${token}`)}if(mode!=='profile'){const base='https://datasets-server.huggingface.co',params=extra=>new URLSearchParams({dataset:repo,...extra,_:nonce()}),valid=await json(`${base}/is-valid?${params({})}`);for(const key of ['viewer','preview','search','filter','statistics'])if(valid[key]!==true)throw new Error(`Dataset Server unhealthy ${key}`);const splits=await json(`${base}/splits?${params({})}`),pairs=new Set((splits.splits||[]).map(x=>`${x.config}|${x.split}`));for(const config of hf.configs)if(!pairs.has(`${config}|train`))throw new Error(`HF Dataset Server config missing ${config}`)}console.log(JSON.stringify({hfAuthority:'PASS',mode,repo,primaryEntity:release.primaryEntity.wikidata,datasetIri:release.dataset.id,conceptDoi:release.dataset.zenodo.conceptDoi,versionDoi:release.dataset.zenodo.versionDoi,tasks:hf.taskCategories,languages:hf.languages,configs:hf.configs},null,2))}
-const command=process.argv[2];if(!command)throw new Error('Usage: node scripts/huggingface.mjs <prepare|sanitize|verify> [options]');process.argv.splice(2,1);switch(command){case 'prepare':await command_prepare();break;case 'sanitize':await command_sanitize();break;case 'verify':await command_verify();break;default:throw new Error('Usage: node scripts/huggingface.mjs <prepare|sanitize|verify> [options]')}
+
+const safePushRef =
+  /^(?:HEAD:(?:main|release\/v\d+\.\d+\.\d+)|refs\/tags\/v\d+\.\d+\.\d+)$/;
+const safeDeleteRef = /^release\/v\d+\.\d+\.\d+$/;
+
+async function commandPush() {
+  const [repo, ...pushArgs] = process.argv.slice(2);
+  must(
+    repo && pushArgs.length,
+    "Usage: node scripts/huggingface.mjs push <repo-under-.release> <refspec | --delete ref>",
+  );
+  must(
+    (pushArgs.length === 1 && safePushRef.test(pushArgs[0])) ||
+      (pushArgs.length === 2 &&
+        pushArgs[0] === "--delete" &&
+        safeDeleteRef.test(pushArgs[1])),
+    "Unsafe Hugging Face push arguments",
+  );
+  const hfToken = process.env.HF_TOKEN;
+  must(
+    typeof hfToken === "string" && hfToken.length > 0,
+    "HF_TOKEN is required",
+  );
+  const nonSecretEnvironment = { ...process.env };
+  delete nonSecretEnvironment.HF_TOKEN;
+
+  const [releaseRoot, repositoryRoot] = await Promise.all([
+    realpath(".release"),
+    realpath(repo),
+  ]);
+  const relative = path.relative(releaseRoot, repositoryRoot);
+  must(
+    relative && !relative.startsWith("..") && !path.isAbsolute(relative),
+    "Hugging Face repository must be a child of .release",
+  );
+
+  const remote = spawnSync(
+    "git",
+    ["-C", repositoryRoot, "remote", "get-url", "origin"],
+    {
+      encoding: "utf8",
+      env: { ...nonSecretEnvironment, GIT_TERMINAL_PROMPT: "0" },
+    },
+  );
+  must(remote.status === 0, "Unable to resolve Hugging Face origin");
+  must(
+    /^https:\/\/huggingface\.co\/datasets\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?\/?$/.test(
+      remote.stdout.trim(),
+    ),
+    "Hugging Face origin must be an HTTPS dataset repository without embedded credentials",
+  );
+
+  const temporaryDirectory = await mkdtemp(
+    path.join(os.tmpdir(), "ghezelbaash-hf-askpass-"),
+  );
+  const askpass = path.join(temporaryDirectory, "askpass.sh");
+  try {
+    await writeFile(
+      askpass,
+      `#!/bin/sh
+case "$1" in
+  *Username*) printf '%s\\n' "$HF_GIT_USERNAME" ;;
+  *Password*) printf '%s\\n' "$HF_TOKEN" ;;
+  *) exit 1 ;;
+esac
+`,
+      { mode: 0o700 },
+    );
+    await chmod(askpass, 0o700);
+    const pushed = spawnSync(
+      "git",
+      [
+        "-C",
+        repositoryRoot,
+        "-c",
+        "credential.helper=",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "push",
+        "origin",
+        ...pushArgs,
+      ],
+      {
+        stdio: "inherit",
+        env: {
+          ...nonSecretEnvironment,
+          GIT_ASKPASS: askpass,
+          GIT_TERMINAL_PROMPT: "0",
+          HF_GIT_USERNAME: "oauth2",
+          HF_TOKEN: hfToken,
+        },
+      },
+    );
+    must(
+      pushed.status === 0,
+      `Hugging Face push failed${pushed.signal ? ` (${pushed.signal})` : ""}`,
+    );
+  } finally {
+    await rm(temporaryDirectory, { recursive: true, force: true });
+  }
+}
+
+async function commandPrepare() {
+  const [dist = "dist", hub = ".release/huggingface"] = process.argv.slice(2);
+  const [release, authority, retrievalPolicy, volatile] = await Promise.all([
+    readJson("src/data/release.json"),
+    readJson(".release/policy/authority-surface-contract.json"),
+    readJson("src/data/retrieval/query-matrix-policy.json"),
+    readJson("src/data/volatile-facts.json"),
+  ]);
+  const hf = authority.surfaces.huggingFace;
+  const configs = huggingFaceConfigs(hf);
+  const zenodo = release.dataset.zenodo;
+  must(
+    authority.resourceRegistry === "src/data/machine-resources.json",
+    "Authority resource registry drift",
+  );
+  must(
+    authority.retrievalPolicySource === hf.retrievalPolicyRef,
+    "Hugging Face retrieval policy reference drift",
+  );
+
+  await cleanDistributionRoot(hub);
+
+  const resources = resourcesForTarget(hf.resourceTarget);
+  for (const resource of resources) {
+    const source = sourceForDistribution(resource, dist);
+    await mkdir(path.dirname(path.join(hub, resource.path)), {
+      recursive: true,
+    });
+    await cp(source, path.join(hub, resource.path));
+  }
+
+  await writeLiveReputationArtifacts(hub, release, volatile);
+
+  const tags = [
+    "saeed-ghezelbash",
+    "dr-saeed-ghezelbash",
+    "physician-entity",
+    "medical-knowledge-graph",
+    "knowledge-graph",
+    "knowledge-base",
+    "entity-resolution",
+    "json-ld",
+    "rdf",
+    "schema-org",
+    "wikidata",
+    "fair-data",
+    "question-answering",
+    "text-retrieval",
+    "text-generation",
+    "rag",
+    "evidence-bound-retrieval",
+    "aesthetic-medicine",
+    "healthcare",
+    "medical",
+    "physician",
+    "kermanshah",
+    "iran",
+    "croissant",
+    "dcat",
+    "datasets",
+    "multilingual",
+    "tabular",
+  ];
+  const frontmatter = [
+    "---",
+    `pretty_name: ${release.dataset.name}`,
+    "language:",
+    ...retrievalPolicy.languages.map((language) => `- ${language}`),
+    "license: cc-by-4.0",
+    "multilinguality:",
+    "- multilingual",
+    "source_datasets:",
+    "- original",
+    "task_categories:",
+    ...hf.taskCategories.map((task) => `- ${task}`),
+    "size_categories:",
+    "- 1K<n<10K",
+    "tags:",
+    ...tags.map((tag) => `- ${tag}`),
+    "configs:",
+    ...configs.flatMap((config) => [
+      `- config_name: ${config.name}`,
+      ...(config.default ? ["  default: true"] : []),
+      "  data_files:",
+      "  - split: train",
+      `    path: ${config.path}`,
+    ]),
+    "---",
+  ].join("\n");
+  const retrievalArchitecture = [
+    "**main** is rebuilt from the current canonical source and checked byte-for-byte against this repository's exact distribution manifest.",
+    `It is not claimed to be byte-identical to the frozen Zenodo version or the immutable Hugging Face tag \`v${release.release}\`.`,
+    "**Query Matrix 2.0** maps Persian, English, Arabic and Central Kurdish queries across unspecified, Kermanshah and Iran scopes to canonical answer atoms and their evidence references.",
+    "**live_observations** is the explicitly mutable current-reputation config; it never rewrites the frozen tag.",
+  ].join(" ");
+  const readme = `${frontmatter}
+
+# ${release.dataset.name}
+
+AI/retrieval distribution of the canonical physician-owned Dataset at \`${release.dataset.id}\`. The physician remains the primary entity, creator and publisher; the clinic is the supporting clinical/local entity; this repository is a distribution namespace rather than a competing identity.
+
+## Authority topology
+
+- Primary physician: **Dr. Saeed Ghezelbash** — Wikidata \`${release.primaryEntity.wikidata}\`
+- Google Knowledge Graph: \`${release.primaryEntity.googleKnowledgeGraphId}\`
+- ORCID: \`${release.dataset.creatorOrcid}\`
+- Iran Medical Council: \`${release.primaryEntity.irimc}\`
+- Canonical physician IRI: \`${release.primaryEntity.id}\`
+- Supporting clinic: Wikidata \`${release.dataset.supportingClinicWikidata}\`
+- Canonical Dataset IRI: \`${release.dataset.id}\`
+- Source: \`${release.dataset.github.repository}\`
+- Base release lineage: \`${release.release}\`
+- Zenodo Concept DOI: \`${zenodo.conceptDoi}\`
+- Frozen Zenodo Version DOI: \`${zenodo.versionDoi}\`
+
+## Retrieval architecture
+
+${retrievalArchitecture}
+
+Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${retrievalPolicy.resolutionMode}**.
+`;
+  await writeFile(path.join(hub, "README.md"), readme);
+
+  const manifestFiles = huggingFaceManifestFiles(hf);
+  const hashes = {
+    release: release.release,
+    canonicalDatasetIri: release.dataset.id,
+    conceptDoi: zenodo.conceptDoi,
+    zenodoVersionDoi: zenodo.versionDoi,
+    files: {},
+  };
+  for (const file of manifestFiles) {
+    const bytes = await readFile(path.join(hub, file));
+    hashes.files[file] = { bytes: bytes.length, sha256: sha256(bytes) };
+  }
+  await writeFile(
+    path.join(hub, HUGGING_FACE_MANIFEST_FILE),
+    JSON.stringify(hashes, null, 2) + "\n",
+  );
+
+  const expected = [...manifestFiles, HUGGING_FACE_MANIFEST_FILE].sort();
+  const actual = await walkFiles(hub);
+  must(
+    JSON.stringify(actual) === JSON.stringify(expected),
+    `Hugging Face distribution inventory drift: ${actual.filter((file) => !expected.includes(file)).join(", ") || "missing expected file"}`,
+  );
+  await assertCanonicalHuggingFaceIdentity(hub);
+  must(
+    hf.taskCategories.every((task) => readme.includes(task)) &&
+      configs.every(
+        (config) =>
+          readme.includes(config.name) && readme.includes(config.path),
+      ),
+    "HF README contract incomplete",
+  );
+
+  console.log(
+    JSON.stringify(
+      {
+        prepared: true,
+        release: release.release,
+        coreFiles: resources.length,
+        distributionFiles: expected.length,
+        queryMatrix: true,
+        liveObservationsConfig: true,
+        tasks: hf.taskCategories,
+        languages: retrievalPolicy.languages,
+        retrievalPolicy: retrievalPolicy.retrievalPolicy,
+        resolutionMode: retrievalPolicy.resolutionMode,
+        identityContract: "PASS",
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+async function commandVerify() {
+  const [release, authority, retrievalPolicy] = await Promise.all([
+    readJson("src/data/release.json"),
+    readJson(".release/policy/authority-surface-contract.json"),
+    readJson("src/data/retrieval/query-matrix-policy.json"),
+  ]);
+  const hf = authority.surfaces.huggingFace;
+  const configs = huggingFaceConfigs(hf);
+  const mode = process.argv.includes("--profile")
+    ? "profile"
+    : process.argv.includes("--viewer")
+      ? "viewer"
+      : "full";
+  const datasetUrl = release.dataset.huggingFace.dataset;
+  const repo = datasetUrl.replace(/^https:\/\/huggingface\.co\/datasets\//, "");
+  const nonce = () => String(Date.now()) + Math.random().toString(16).slice(2);
+  const get = async (url) => {
+    const response = await fetch(url, {
+      headers: {
+        "cache-control": "no-cache",
+        "user-agent": "ghezelbaash-hf-authority-verifier/2.0",
+      },
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!response.ok) throw new Error(`HF HTTP ${response.status} ${url}`);
+    return response;
+  };
+  const text = async (url) => (await get(url)).text();
+  const json = async (url) => (await get(url)).json();
+  const meta = await json(
+    `https://huggingface.co/api/datasets/${repo}?full=true&blobs=false&_=${nonce()}`,
+  );
+  if (
+    meta.private ||
+    ![false, null, undefined, "false", "auto"].includes(meta.gated)
+  )
+    throw new Error("HF Dataset unexpectedly private/gated");
+  const tags = new Set(meta.tags || []);
+  for (const language of retrievalPolicy.languages)
+    if (!tags.has(`language:${language}`))
+      throw new Error(`HF language tag missing ${language}`);
+  for (const task of hf.taskCategories)
+    if (!tags.has(`task_categories:${task}`))
+      throw new Error(`HF task tag missing ${task}`);
+
+  const remote = await verifyHuggingFaceRemoteDistribution({
+    release,
+    hf,
+    metadata: meta,
+    fetchBytes: async (file) =>
+      Buffer.from(
+        await (
+          await get(
+            `${datasetUrl}/resolve/main/${file}?download=true&_=${nonce()}`,
+          )
+        ).arrayBuffer(),
+      ),
+  });
+  const readme = remote.files.get("README.md").toString("utf8");
+  const requiredTokens = [
+    release.primaryEntity.name,
+    release.primaryEntity.wikidata,
+    release.primaryEntity.googleKnowledgeGraphId,
+    release.primaryEntity.orcid,
+    release.primaryEntity.irimc,
+    release.dataset.supportingClinicWikidata,
+    release.dataset.id,
+    release.dataset.zenodo.conceptDoi,
+    release.dataset.zenodo.versionDoi,
+    retrievalPolicy.retrievalPolicy,
+    retrievalPolicy.resolutionMode,
+    ...hf.taskCategories,
+    ...configs.flatMap((config) => [config.name, config.path]),
+  ];
+  for (const token of requiredTokens)
+    if (!readme.includes(String(token)))
+      throw new Error(`HF README authority token missing ${token}`);
+
+  if (mode !== "viewer") {
+    const profile = await text(
+      `https://huggingface.co/${hf.organization}?_=${nonce()}`,
+    );
+    for (const token of [
+      release.primaryEntity.name,
+      release.primaryEntity.wikidata,
+      release.canonicalUrl,
+      datasetUrl,
+    ]) {
+      if (!profile.includes(String(token)))
+        throw new Error(
+          `HF organization profile authority token missing ${token}`,
+        );
+    }
+  }
+  if (mode !== "profile") {
+    const base = "https://datasets-server.huggingface.co";
+    const params = (extra) =>
+      new URLSearchParams({ dataset: repo, ...extra, _: nonce() });
+    const valid = await json(`${base}/is-valid?${params({})}`);
+    for (const key of ["viewer", "preview", "search", "filter", "statistics"])
+      if (valid[key] !== true)
+        throw new Error(`Dataset Server unhealthy ${key}`);
+    const splits = await json(`${base}/splits?${params({})}`);
+    const pairs = new Set(
+      (splits.splits || []).map((item) => `${item.config}|${item.split}`),
+    );
+    for (const config of configs)
+      if (!pairs.has(`${config.name}|train`))
+        throw new Error(`HF Dataset Server config missing ${config.name}`);
+  }
+
+  console.log(
+    JSON.stringify(
+      {
+        hfAuthority: "PASS",
+        mode,
+        repo,
+        primaryEntity: release.primaryEntity.wikidata,
+        datasetIri: release.dataset.id,
+        conceptDoi: release.dataset.zenodo.conceptDoi,
+        versionDoi: release.dataset.zenodo.versionDoi,
+        tasks: hf.taskCategories,
+        languages: retrievalPolicy.languages,
+        configs: configs.map((config) => config.name),
+        remoteFiles: remote.repositoryFiles.length,
+        remoteInventory: "EXACT",
+        remoteHashes: "PASS",
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+const usage =
+  "Usage: node scripts/huggingface.mjs <prepare|verify|push> [options]";
+const command = process.argv[2];
+if (!command) throw new Error(usage);
+process.argv.splice(2, 1);
+switch (command) {
+  case "prepare":
+    await commandPrepare();
+    break;
+  case "verify":
+    await commandVerify();
+    break;
+  case "push":
+    await commandPush();
+    break;
+  default:
+    throw new Error(usage);
+}

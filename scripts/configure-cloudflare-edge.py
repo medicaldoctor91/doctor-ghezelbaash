@@ -33,18 +33,10 @@ CACHE_RULE_REF = "ghezelbaash_canonical_dist_cache_v1"
 HSTS_RULE_REF = "ghezelbaash_canonical_hsts_v1"
 NOT_FOUND_RULE_REF_PREFIX = "ghezelbaash_real_404_headers_"
 HSTS_VALUE = "max-age=63072000; includeSubDomains; preload"
-SUBDOMAIN_REDIRECT_PHASE = "http_request_dynamic_redirect"
-SUBDOMAIN_REDIRECT_RULESET_NAME = "Canonical subdomain redirects"
-SUBDOMAIN_REDIRECT_REFS = (
-    "ghezelbaash_doctor_maps_v1",
-    "ghezelbaash_github_entity_graph_v1",
-    "ghezelbaash_ig_ai_corpus_v1",
-)
+SINGLE_REDIRECT_PHASE = "http_request_dynamic_redirect"
+SINGLE_REDIRECT_RULESET_NAME = "Canonical host redirects"
 BULK_REDIRECT_PHASE = "http_request_redirect"
 BULK_REDIRECT_RULESET_NAME = "Canonical historical URL redirects"
-BULK_REDIRECT_LIST_NAME = "ghezelbaash_blog_legacy_urls"
-BULK_REDIRECT_RULE_REF = "ghezelbaash_blog_legacy_bulk_v1"
-BLOG_HOST = "blog.ghezelbaash.ir"
 PAGES_PROJECT_NAME = PLATFORM_CF["pagesProject"]
 PAGES_ORIGIN_HOST = f"{PAGES_PROJECT_NAME}.pages.dev"
 PAGES_REQUIRED_CUSTOM_DOMAINS = tuple(PLATFORM_CF["requiredCustomDomains"])
@@ -52,7 +44,7 @@ ZONE_SETTINGS_PERMISSION_IDS = (
     "517b21aee92c4d89936c976ba6e4be55",  # Zone Settings Read
     "3030687196b94b638145a3953da2b699",  # Zone Settings Write
 )
-SUBDOMAIN_SINGLE_REDIRECT_PERMISSION_ALIASES = (
+SINGLE_REDIRECT_PERMISSION_ALIASES = (
     ("Dynamic URL Redirects Read", "Single Redirect Read", "Single Redirects Read"),
     (
         "Dynamic URL Redirects Write",
@@ -169,9 +161,9 @@ def cache_rule(host: str) -> dict[str, Any]:
     }
 
 
-def not_found_rule(host: str, csp: str) -> dict[str, Any]:
+def not_found_rule(host: str, blog_host: str, csp: str) -> dict[str, Any]:
     protected_hosts = " ".join(
-        f'"{value}"' for value in (host, BLOG_HOST)
+        f'"{value}"' for value in (host, blog_host)
     )
     return {
         "ref": not_found_rule_ref(csp),
@@ -223,15 +215,17 @@ def hsts_rule(host: str) -> dict[str, Any]:
     }
 
 
-def load_subdomain_redirect_contract(root: Path) -> dict[str, Any]:
-    contract_path = root / "src" / "data" / "subdomain-redirects.json"
+def load_redirect_registry(root: Path) -> dict[str, Any]:
+    contract_path = root / "src" / "data" / "redirects.json"
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
-    if contract.get("schemaVersion") != 2:
-        raise CloudflareError("Unsupported subdomain redirect contract schema")
+    if contract.get("schemaVersion") != 3:
+        raise CloudflareError("Unsupported redirect registry schema")
     if contract.get("zone") != "ghezelbaash.ir":
         raise CloudflareError("Subdomain redirect zone drift")
     if contract.get("canonicalOrigin") != "https://www.ghezelbaash.ir":
         raise CloudflareError("Subdomain redirect canonical origin drift")
+    zone_name = str(contract["zone"])
+    canonical_origin = str(contract["canonicalOrigin"])
     single = contract.get("singleRedirects") or {}
     if single.get("cloudflareProduct") != "Single Redirects":
         raise CloudflareError("Subdomain contract must declare Single Redirects")
@@ -239,23 +233,56 @@ def load_subdomain_redirect_contract(root: Path) -> dict[str, Any]:
     rules = single.get("rules")
     if limit != 10 or not isinstance(rules, list) or not rules or len(rules) > limit:
         raise CloudflareError("Subdomain redirect contract exceeds Free-plan quota")
-    refs = tuple(row.get("ref") for row in rules)
-    if refs != SUBDOMAIN_REDIRECT_REFS:
-        raise CloudflareError("Subdomain redirect ref/order contract drift")
-    if any(
-        row.get("statusCode") != 301
-        or row.get("preserveQueryString") is not False
-        or row.get("match") != "allPaths"
-        for row in rules
+    refs = [row.get("ref") for row in rules]
+    hosts = [row.get("host") for row in rules]
+    if (
+        len(refs) != len(set(refs))
+        or any(
+            not isinstance(ref, str) or not re.fullmatch(r"[a-z0-9_]+", ref)
+            for ref in refs
+        )
+        or len(hosts) != len(set(hosts))
+        or any(
+            not isinstance(host, str)
+            or (host != zone_name and not host.endswith(f".{zone_name}"))
+            for host in hosts
+        )
     ):
-        raise CloudflareError("Subdomain redirect status/query/match contract drift")
+        raise CloudflareError("Invalid Single Redirect refs or hosts")
+    expected_apex_expression = f'concat("{canonical_origin}", http.request.uri.path)'
+    for row in rules:
+        has_target = "target" in row
+        has_expression = "targetExpression" in row
+        if (
+            row.get("statusCode") != 301
+            or row.get("match") != "allPaths"
+            or not isinstance(row.get("preserveQueryString"), bool)
+            or has_target == has_expression
+        ):
+            raise CloudflareError("Single Redirect behavior or target form drift")
+        if has_target:
+            if (
+                not isinstance(row.get("target"), str)
+                or not row["target"].startswith("https://")
+                or row.get("preserveQueryString") is not False
+            ):
+                raise CloudflareError("Invalid static Single Redirect target")
+        elif (
+            row.get("host") != zone_name
+            or row.get("targetExpression") != expected_apex_expression
+            or row.get("preserveQueryString") is not True
+        ):
+            raise CloudflareError("Invalid apex Single Redirect expression")
+    if sum(1 for row in rules if row.get("host") == zone_name) != 1:
+        raise CloudflareError("Apex Single Redirect is missing or ambiguous")
     bulk = contract.get("bulkRedirects") or {}
     if (
         bulk.get("cloudflareProduct") != "Bulk Redirects"
         or bulk.get("planUrlLimit") != 10_000
-        or bulk.get("host") != BLOG_HOST
-        or bulk.get("listName") != BULK_REDIRECT_LIST_NAME
-        or bulk.get("ruleRef") != BULK_REDIRECT_RULE_REF
+        or not isinstance(bulk.get("host"), str)
+        or not bulk["host"].endswith(f".{zone_name}")
+        or not re.fullmatch(r"[a-z0-9_]{1,50}", str(bulk.get("listName") or ""))
+        or not re.fullmatch(r"[a-z0-9_]+", str(bulk.get("ruleRef") or ""))
         or bulk.get("unmatchedPathPolicy") != "return-404"
         or not isinstance(bulk.get("groups"), list)
         or not bulk.get("groups")
@@ -264,25 +291,53 @@ def load_subdomain_redirect_contract(root: Path) -> dict[str, Any]:
     paths = [path for group in bulk["groups"] for path in group.get("paths", [])]
     if len(paths) != len(set(paths)) or len(paths) > int(bulk["planUrlLimit"]):
         raise CloudflareError("Bulk Redirect source path duplication or quota drift")
-    if len(paths) != int((bulk.get("evidence") or {}).get("uniqueExecutableSourcePaths", -1)):
-        raise CloudflareError("Bulk Redirect archive evidence count drift")
+    canonical_host = contract.get("canonicalHostRedirects") or {}
+    canonical_rules = canonical_host.get("rules")
+    if (
+        canonical_host.get("host") != "www.ghezelbaash.ir"
+        or not isinstance(canonical_rules, list)
+        or not canonical_rules
+    ):
+        raise CloudflareError("Invalid canonical-host redirect registry")
+    canonical_sources = [row.get("source") for row in canonical_rules]
+    if len(canonical_sources) != len(set(canonical_sources)):
+        raise CloudflareError("Canonical-host redirect source duplication")
+    if any(
+        not isinstance(row.get("source"), str)
+        or not row["source"].startswith("/")
+        or row["source"].startswith("//")
+        or re.search(r"[\s?#]", row["source"])
+        or not isinstance(row.get("target"), str)
+        or not row["target"].startswith("/")
+        or row["target"].startswith("//")
+        or "?" in row["target"]
+        or re.search(r"\s", row["target"])
+        or row.get("statusCode") != 301
+        for row in canonical_rules
+    ):
+        raise CloudflareError("Canonical-host redirect rule drift")
     return contract
 
 
-def subdomain_redirect_rule(row: dict[str, Any]) -> dict[str, Any]:
+def single_redirect_rule(row: dict[str, Any]) -> dict[str, Any]:
     host = str(row["host"])
     if row["match"] != "allPaths" or "paths" in row:
         raise CloudflareError(f"Single Redirect must be a host catchall: {row['ref']}")
     expression = f'(http.host eq "{host}")'
+    target_url = (
+        {"value": row["target"]}
+        if "target" in row
+        else {"expression": row["targetExpression"]}
+    )
     return {
         "ref": row["ref"],
         "expression": expression,
-        "description": f"Git-managed permanent redirect for {host}",
+        "description": f"Permanent redirect for {host}",
         "action": "redirect",
         "action_parameters": {
             "from_value": {
                 "status_code": row["statusCode"],
-                "target_url": {"value": row["target"]},
+                "target_url": target_url,
                 "preserve_query_string": row["preserveQueryString"],
             }
         },
@@ -290,9 +345,9 @@ def subdomain_redirect_rule(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def subdomain_redirect_rules(contract: dict[str, Any]) -> list[dict[str, Any]]:
+def single_redirect_rules(contract: dict[str, Any]) -> list[dict[str, Any]]:
     return [
-        subdomain_redirect_rule(row)
+        single_redirect_rule(row)
         for row in contract["singleRedirects"]["rules"]
     ]
 
@@ -642,7 +697,11 @@ def issue_ephemeral_zone_api(
 
 
 def read_dns_contract(
-    api: CloudflareApi, zone: str, zone_name: str, canonical_host: str
+    api: CloudflareApi,
+    zone: str,
+    zone_name: str,
+    canonical_host: str,
+    blog_host: str,
 ) -> dict[str, Any]:
     query = urllib.parse.urlencode({"per_page": 500})
     records = api.expect(
@@ -652,7 +711,7 @@ def read_dns_contract(
     required_hosts = [
         zone_name,
         canonical_host,
-        f"blog.{zone_name}",
+        blog_host,
         f"doctor.{zone_name}",
         f"github.{zone_name}",
         f"ig.{zone_name}",
@@ -677,11 +736,11 @@ def read_dns_contract(
     blog_exact = [
         row
         for row in records
-        if str(row.get("name") or "").rstrip(".").lower() == BLOG_HOST
+        if str(row.get("name") or "").rstrip(".").lower() == blog_host
         and str(row.get("type") or "").upper() in {"A", "AAAA", "CNAME"}
     ]
-    if len(blog_exact) != 1 or not pages_dns_record_matches(blog_exact[0]):
-        raise CloudflareError("Exact Pages CNAME binding for blog.ghezelbaash.ir is missing or drifted")
+    if len(blog_exact) != 1 or not pages_dns_record_matches(blog_exact[0], blog_host):
+        raise CloudflareError(f"Exact Pages CNAME binding for {blog_host} is missing or drifted")
 
     relevant_names = set(required_hosts) | {wildcard}
     relevant = [
@@ -746,18 +805,20 @@ def ensure_pages_custom_domains(api: CloudflareApi, account: str) -> None:
         )
 
 
-def pages_dns_record_matches(row: dict[str, Any]) -> bool:
+def pages_dns_record_matches(row: dict[str, Any], blog_host: str) -> bool:
     return (
         str(row.get("type") or "").upper() == "CNAME"
-        and str(row.get("name") or "").rstrip(".").lower() == BLOG_HOST
+        and str(row.get("name") or "").rstrip(".").lower() == blog_host
         and str(row.get("content") or "").rstrip(".").lower() == PAGES_ORIGIN_HOST
         and row.get("proxied") is True
         and int(row.get("ttl") or 0) == 1
     )
 
 
-def reconcile_pages_dns_binding(api: CloudflareApi, zone: str) -> dict[str, Any]:
-    query = urllib.parse.urlencode({"name": BLOG_HOST, "per_page": 100})
+def reconcile_pages_dns_binding(
+    api: CloudflareApi, zone: str, blog_host: str
+) -> dict[str, Any]:
+    query = urllib.parse.urlencode({"name": blog_host, "per_page": 100})
     collection = f"/zones/{zone}/dns_records"
 
     def read_exact() -> list[dict[str, Any]]:
@@ -767,13 +828,13 @@ def reconcile_pages_dns_binding(api: CloudflareApi, zone: str) -> dict[str, Any]
         return [
             row
             for row in rows
-            if str(row.get("name") or "").rstrip(".").lower() == BLOG_HOST
+            if str(row.get("name") or "").rstrip(".").lower() == blog_host
             and str(row.get("type") or "").upper() in {"A", "AAAA", "CNAME"}
         ]
 
     desired = {
         "type": "CNAME",
-        "name": BLOG_HOST,
+        "name": blog_host,
         "content": PAGES_ORIGIN_HOST,
         "proxied": True,
         "ttl": 1,
@@ -797,16 +858,16 @@ def reconcile_pages_dns_binding(api: CloudflareApi, zone: str) -> dict[str, Any]
         )
     if not rows:
         api.expect("POST", collection, desired, ok=(200, 201))
-        print("PAGES_BLOG_DNS_CREATED", BLOG_HOST, PAGES_ORIGIN_HOST)
-    elif not pages_dns_record_matches(rows[0]):
+        print("PAGES_BLOG_DNS_CREATED", blog_host, PAGES_ORIGIN_HOST)
+    elif not pages_dns_record_matches(rows[0], blog_host):
         record_id = str(rows[0].get("id") or "")
         if not record_id:
             raise CloudflareError("Existing blog CNAME has no DNS record ID")
         api.expect("PATCH", f"{collection}/{record_id}", desired)
-        print("PAGES_BLOG_DNS_UPDATED", BLOG_HOST, PAGES_ORIGIN_HOST)
+        print("PAGES_BLOG_DNS_UPDATED", blog_host, PAGES_ORIGIN_HOST)
 
     after = read_exact()
-    if len(after) != 1 or not pages_dns_record_matches(after[0]):
+    if len(after) != 1 or not pages_dns_record_matches(after[0], blog_host):
         raise CloudflareError("Exact Pages blog DNS binding read-back drift")
     summary = {
         "id": after[0].get("id"),
@@ -948,7 +1009,7 @@ def issue_ephemeral_single_redirect_api(
         f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account.zone",
     ).get("result") or []
     groups: list[dict[str, str]] = []
-    for aliases in SUBDOMAIN_SINGLE_REDIRECT_PERMISSION_ALIASES:
+    for aliases in SINGLE_REDIRECT_PERMISSION_ALIASES:
         match: dict[str, Any] | None = None
         for permission_name in aliases:
             candidates = [
@@ -1539,40 +1600,48 @@ def reconcile_bulk_redirects(
     }
 
 
-def reconcile_subdomain_redirects(
+def reconcile_single_redirects(
     api: CloudflareApi,
     zone: str,
     contract: dict[str, Any],
 ) -> dict[str, Any]:
-    """Reconcile three host catchalls and remove Single Redirects that pre-empt blog Bulk Redirects."""
+    """Reconcile managed host catchalls and remove redirects that pre-empt blog paths."""
     desired_rows = contract["singleRedirects"]["rules"]
-    desired_rules = subdomain_redirect_rules(contract)
+    desired_rules = single_redirect_rules(contract)
     desired_by_ref = {row["ref"]: row for row in desired_rules}
     desired_refs = set(desired_by_ref)
     plan_limit = int(contract["singleRedirects"]["planRuleLimit"])
     managed_hosts = {str(row["host"]) for row in desired_rows}
     blog_host = str(contract["bulkRedirects"]["host"])
 
+    def expression_hosts(row: dict[str, Any]) -> set[str]:
+        return set(
+            re.findall(
+                r'http\.host\s+eq\s+"([^"]+)"',
+                str(row.get("expression") or ""),
+            )
+        )
+
     listing = api.expect("GET", f"/zones/{zone}/rulesets").get("result") or []
     candidates = [
         row
         for row in listing
         if row.get("kind") == "zone"
-        and row.get("phase") == SUBDOMAIN_REDIRECT_PHASE
+        and row.get("phase") == SINGLE_REDIRECT_PHASE
     ]
     if len(candidates) > 1:
         raise CloudflareError(
-            f"Multiple zone entry-point rulesets found for {SUBDOMAIN_REDIRECT_PHASE}"
+            f"Multiple zone entry-point rulesets found for {SINGLE_REDIRECT_PHASE}"
         )
     if not candidates:
         payload = api.expect(
             "POST",
             f"/zones/{zone}/rulesets",
             {
-                "name": SUBDOMAIN_REDIRECT_RULESET_NAME,
-                "description": "Git-managed machine entrypoints and external-intent subdomain redirects",
+                "name": SINGLE_REDIRECT_RULESET_NAME,
+                "description": "Canonical host and external-intent redirects",
                 "kind": "zone",
-                "phase": SUBDOMAIN_REDIRECT_PHASE,
+                "phase": SINGLE_REDIRECT_PHASE,
                 "rules": desired_rules,
             },
             ok=(200, 201),
@@ -1598,10 +1667,7 @@ def reconcile_subdomain_redirects(
             expression = str(current.get("expression") or "")
             if blog_host not in expression:
                 continue
-            expression_hosts = set(
-                re.findall(r'http\.host\s+eq\s+"([^"]+)"', expression)
-            )
-            if expression_hosts != {blog_host}:
+            if expression_hosts(current) != {blog_host}:
                 raise CloudflareError(
                     "Refusing to delete a competing blog redirect with an ambiguous "
                     "host expression: " + expression
@@ -1622,12 +1688,7 @@ def reconcile_subdomain_redirects(
                 row
                 for row in rules
                 if row.get("ref") not in desired_refs
-                and host in str(row.get("expression") or "")
-                and not any(
-                    other in str(row.get("expression") or "")
-                    for other in managed_hosts
-                    if other != host
-                )
+                and expression_hosts(row) == {host}
             ]
             if len(conflicting) > 1:
                 raise CloudflareError(f"Ambiguous competing catchalls for {host}")
@@ -1640,14 +1701,14 @@ def reconcile_subdomain_redirects(
                     desired,
                     ok=(200, 201),
                 )
-                print("SUBDOMAIN_SINGLE_REDIRECT_CREATED", desired["ref"])
+                print("CANONICAL_SINGLE_REDIRECT_CREATED", desired["ref"])
             elif not rule_matches(current, desired):
                 api.expect(
                     "PATCH",
                     f"/zones/{zone}/rulesets/{ruleset_id}/rules/{current['id']}",
                     desired,
                 )
-                print("SUBDOMAIN_SINGLE_REDIRECT_UPDATED", desired["ref"])
+                print("CANONICAL_SINGLE_REDIRECT_UPDATED", desired["ref"])
 
             # Cloudflare treats a rule ref as immutable. Preserve continuous
             # redirect service by creating the owned rule first, then remove
@@ -1658,7 +1719,7 @@ def reconcile_subdomain_redirects(
                     f"/zones/{zone}/rulesets/{ruleset_id}/rules/{conflicting[0]['id']}",
                 )
                 print(
-                    "SUBDOMAIN_SINGLE_REDIRECT_CONFLICT_REMOVED_AFTER_CREATE",
+                    "CANONICAL_SINGLE_REDIRECT_CONFLICT_REMOVED_AFTER_CREATE",
                     host,
                     conflicting[0].get("ref") or conflicting[0]["id"],
                 )
@@ -1671,17 +1732,14 @@ def reconcile_subdomain_redirects(
         owned = [row for row in rules if row.get("ref") == desired["ref"]]
         if len(owned) != 1 or not rule_matches(owned[0], desired):
             raise CloudflareError(f"Single Redirect read-back drift for {desired['ref']}")
-    blog_conflicts = [
-        row for row in rules if blog_host in str(row.get("expression") or "")
-    ]
+    blog_conflicts = [row for row in rules if expression_hosts(row) == {blog_host}]
     if blog_conflicts:
         raise CloudflareError("A Single Redirect still pre-empts historical blog Bulk Redirects")
     for host in managed_hosts:
         conflicts = [
             row
             for row in rules
-            if host in str(row.get("expression") or "")
-            and row.get("ref") not in desired_refs
+            if expression_hosts(row) == {host} and row.get("ref") not in desired_refs
         ]
         if conflicts:
             raise CloudflareError(
@@ -1690,7 +1748,7 @@ def reconcile_subdomain_redirects(
             )
     print(
         state,
-        SUBDOMAIN_REDIRECT_PHASE,
+        SINGLE_REDIRECT_PHASE,
         "managed_rule_count=",
         len(desired_rules),
         "total_rule_count=",
@@ -1799,7 +1857,7 @@ def self_test(dist_dir: Path) -> None:
     headers_path = dist_dir / "_headers"
     if not headers_path.is_file():
         raise CloudflareError(
-            f"Self-test requires finalized DIST headers at {headers_path}"
+            f"Self-test requires generated DIST headers at {headers_path}"
         )
     headers_text = headers_path.read_text(encoding="utf-8")
     csp = extract_header(headers_text, "/404.html", "Content-Security-Policy")
@@ -1823,9 +1881,10 @@ def self_test(dist_dir: Path) -> None:
         if ZONE_SETTINGS.get(setting_id) != desired:
             raise CloudflareError(f"Zone contract drift for {setting_id}")
     hsts = hsts_rule("www.ghezelbaash.ir")
-    missing = not_found_rule("www.ghezelbaash.ir", csp)
-    subdomain_contract = load_subdomain_redirect_contract(Path.cwd().resolve())
-    subdomain_rules = subdomain_redirect_rules(subdomain_contract)
+    redirect_contract = load_redirect_registry(Path.cwd().resolve())
+    blog_host = str(redirect_contract["bulkRedirects"]["host"])
+    missing = not_found_rule("www.ghezelbaash.ir", blog_host, csp)
+    single_rules = single_redirect_rules(redirect_contract)
     if not rule_matches(json.loads(json.dumps(cache)), cache):
         raise CloudflareError("Cache rule subset comparator failed")
     drifted = json.loads(json.dumps(cache))
@@ -1834,7 +1893,7 @@ def self_test(dist_dir: Path) -> None:
         raise CloudflareError("Cache rule drift was not detected")
     if "http.response.code eq 404" not in missing["expression"]:
         raise CloudflareError("Real 404 response match is missing")
-    if BLOG_HOST not in missing["expression"]:
+    if blog_host not in missing["expression"]:
         raise CloudflareError("Historical blog 404 host is not protected by the fallback headers")
     if (
         hsts["action_parameters"]["headers"]["strict-transport-security"]["value"]
@@ -1858,25 +1917,35 @@ def self_test(dist_dir: Path) -> None:
         raise CloudflareError("TLS 1.3 / 0-RTT contract drift")
     if ZONE_SETTINGS.get("automatic_https_rewrites") != "off":
         raise CloudflareError("Automatic HTTPS Rewrites contract drift")
-    single_contract = subdomain_contract["singleRedirects"]
-    bulk_contract = subdomain_contract["bulkRedirects"]
-    bulk_items = expand_bulk_redirect_items(subdomain_contract)
-    desired_bulk_rule = bulk_redirect_rule(subdomain_contract)
-    if len(subdomain_rules) != 3 or len(subdomain_rules) > int(
-        single_contract["planRuleLimit"]
-    ):
-        raise CloudflareError("Cloudflare Free subdomain redirect quota drift")
-    if any(row.get("action") != "redirect" for row in subdomain_rules):
+    single_contract = redirect_contract["singleRedirects"]
+    bulk_contract = redirect_contract["bulkRedirects"]
+    bulk_items = expand_bulk_redirect_items(redirect_contract)
+    desired_bulk_rule = bulk_redirect_rule(redirect_contract)
+    if len(single_rules) != len(single_contract["rules"]) or len(
+        single_rules
+    ) > int(single_contract["planRuleLimit"]):
+        raise CloudflareError("Cloudflare Free Single Redirect quota drift")
+    if any(row.get("action") != "redirect" for row in single_rules):
         raise CloudflareError("Subdomain rule action drift")
     if any(
         bulk_contract["host"] in str(row.get("expression") or "")
-        for row in subdomain_rules
+        for row in single_rules
     ):
         raise CloudflareError("Blog must not have a pre-emptive Single Redirect")
+    apex_source = next(
+        row for row in single_contract["rules"]
+        if row["host"] == redirect_contract["zone"]
+    )
+    apex_rule = next(row for row in single_rules if row["ref"] == apex_source["ref"])
+    apex_from_value = apex_rule["action_parameters"]["from_value"]
+    if (
+        apex_from_value["target_url"]
+        != {"expression": apex_source["targetExpression"]}
+        or apex_from_value["preserve_query_string"] is not True
+    ):
+        raise CloudflareError("Apex path/query redirect projection drift")
     if len(bulk_items) != 87 or len(bulk_items) > int(bulk_contract["planUrlLimit"]):
         raise CloudflareError("Historical blog Bulk Redirect inventory drift")
-    if normalized_bulk_items(bulk_items) != normalized_bulk_items(bulk_items):
-        raise CloudflareError("Bulk Redirect normalization is not stable")
     if desired_bulk_rule.get("action") != "redirect" or desired_bulk_rule.get(
         "expression"
     ) != f'http.request.full_uri in ${bulk_contract["listName"]}':
@@ -1889,13 +1958,13 @@ def self_test(dist_dir: Path) -> None:
     ):
         raise CloudflareError("Historical blog target is not a visible canonical passage")
     machine_targets = {
-        "ghezelbaash_github_entity_graph_v1": "https://www.ghezelbaash.ir/graph.jsonld",
-        "ghezelbaash_ig_ai_corpus_v1": "https://www.ghezelbaash.ir/",
+        "github.ghezelbaash.ir": "https://www.ghezelbaash.ir/graph.jsonld",
+        "ig.ghezelbaash.ir": "https://www.ghezelbaash.ir/",
     }
     actual_machine_targets = {
-        str(row["ref"]): str(row["target"])
+        str(row["host"]): str(row["target"])
         for row in single_contract["rules"]
-        if row.get("ref") in machine_targets
+        if row.get("host") in machine_targets
     }
     if actual_machine_targets != machine_targets:
         raise CloudflareError("First-party machine subdomain target drift")
@@ -1908,8 +1977,8 @@ def self_test(dist_dir: Path) -> None:
                 "notFoundRuleRef": not_found_rule_ref(csp),
                 "zoneSettingCount": len(ZONE_SETTINGS),
                 "botAccessSettingCount": len(BOT_ACCESS_SETTINGS),
-                "subdomainRedirectRuleCount": len(subdomain_rules),
-                "subdomainRedirectRuleLimit": single_contract["planRuleLimit"],
+                "singleRedirectRuleCount": len(single_rules),
+                "singleRedirectRuleLimit": single_contract["planRuleLimit"],
                 "historicalBlogRedirectCount": len(bulk_items),
                 "bulkRedirectUrlLimit": bulk_contract["planUrlLimit"],
                 "cspBytes": len(csp.encode("utf-8")),
@@ -1939,9 +2008,10 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     if host != f"www.{zone_name}":
         raise CloudflareError(f"Unexpected canonical host/zone pairing: {host}/{zone_name}")
 
-    subdomain_contract = load_subdomain_redirect_contract(Path.cwd().resolve())
-    if subdomain_contract["zone"] != zone_name:
-        raise CloudflareError("Runtime zone differs from subdomain redirect contract")
+    redirect_contract = load_redirect_registry(Path.cwd().resolve())
+    if redirect_contract["zone"] != zone_name:
+        raise CloudflareError("Runtime zone differs from redirect registry")
+    blog_host = str(redirect_contract["bulkRedirects"]["host"])
 
     headers_text = (dist_dir / "_headers").read_text(encoding="utf-8")
     csp_404 = extract_header(headers_text, "/404.html", "Content-Security-Policy")
@@ -1967,7 +2037,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             "hstsTransformRule": False,
             "notFoundTransformRule": False,
             "historicalBlogBulkRedirects": False,
-            "subdomainRedirectRules": False,
+            "singleRedirectRules": False,
             "botManagement": False,
             "purgeCache": False,
         },
@@ -1985,7 +2055,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
 
     settings_readback = {}
     try:
-        pages_dns_readback = reconcile_pages_dns_binding(zone_api, zone)
+        pages_dns_readback = reconcile_pages_dns_binding(zone_api, zone, blog_host)
         outcome["capabilities"]["pagesDnsBinding"] = True
         outcome["pagesDnsBindingReadback"] = pages_dns_readback
         pages_domains_readback = wait_pages_custom_domains(parent_api, account)
@@ -2010,7 +2080,9 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             "editable": smart_tiered_readback.get("editable"),
         }
 
-        dns_readback = read_dns_contract(zone_api, zone, zone_name, host)
+        dns_readback = read_dns_contract(
+            zone_api, zone, zone_name, host, blog_host
+        )
         outcome["capabilities"]["dns"] = True
         outcome["dnsReadback"] = dns_readback
 
@@ -2052,9 +2124,9 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     bulk_ready = False
     try:
         bulk_readback = reconcile_bulk_redirects(
-            api, account, subdomain_contract
+            api, account, redirect_contract
         )
-        expected_bulk_count = len(expand_bulk_redirect_items(subdomain_contract))
+        expected_bulk_count = len(expand_bulk_redirect_items(redirect_contract))
         bulk_ready = bulk_readback.get("itemCount") == expected_bulk_count
         if not bulk_ready:
             raise CloudflareError("Historical blog Bulk Redirect read-back count drift")
@@ -2073,20 +2145,20 @@ def apply(dist_dir: Path) -> dict[str, Any]:
                 issue_ephemeral_single_redirect_api(api, account, zone)
             )
             try:
-                subdomain_readback = reconcile_subdomain_redirects(
-                    zone_redirect_api, zone, subdomain_contract
+                single_readback = reconcile_single_redirects(
+                    zone_redirect_api, zone, redirect_contract
                 )
             finally:
                 revoke_zone_redirect_api()
-            outcome["capabilities"]["subdomainRedirectRules"] = (
-                subdomain_readback.get("managedRuleCount")
-                == len(subdomain_contract["singleRedirects"]["rules"])
+            outcome["capabilities"]["singleRedirectRules"] = (
+                single_readback.get("managedRuleCount")
+                == len(redirect_contract["singleRedirects"]["rules"])
             )
-            outcome["subdomainRedirectsReadback"] = subdomain_readback
+            outcome["singleRedirectsReadback"] = single_readback
         except CloudflareError as exc:
             if not is_permission_error(exc):
                 raise
-            record_capability_gap(outcome, "subdomain_redirect_rules", exc)
+            record_capability_gap(outcome, "single_redirect_rules", exc)
 
     try:
         hsts_readback = reconcile_phase_rule(
@@ -2113,7 +2185,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             "http_response_headers_transform",
             "Canonical response header transforms",
             "Git-managed response corrections for canonical and fallback responses",
-            not_found_rule(host, csp_404),
+            not_found_rule(host, blog_host, csp_404),
         )
         expected_not_found_ref = not_found_rule_ref(csp_404)
         prune_superseded_not_found_rules(api, zone, expected_not_found_ref)
@@ -2151,7 +2223,7 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     return outcome
 
 
-def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
+def apply_redirects_only(dist_dir: Path) -> dict[str, Any]:
     token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
     account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
     zone_name = os.environ.get("ZONE_NAME", "").strip()
@@ -2166,9 +2238,10 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
     ]
     if missing_env:
         raise CloudflareError(f"Missing required environment: {', '.join(missing_env)}")
-    contract = load_subdomain_redirect_contract(Path.cwd().resolve())
+    contract = load_redirect_registry(Path.cwd().resolve())
     if contract["zone"] != zone_name:
-        raise CloudflareError("Runtime zone differs from subdomain redirect contract")
+        raise CloudflareError("Runtime zone differs from redirect registry")
+    blog_host = str(contract["bulkRedirects"]["host"])
     headers_text = (dist_dir / "_headers").read_text(encoding="utf-8")
     csp_404 = extract_header(headers_text, "/404.html", "Content-Security-Policy")
     api = CloudflareApi(token)
@@ -2180,7 +2253,9 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
         api, account, zone, include_control_plane=True
     )
     try:
-        pages_dns_readback = reconcile_pages_dns_binding(zone_control_api, zone)
+        pages_dns_readback = reconcile_pages_dns_binding(
+            zone_control_api, zone, blog_host
+        )
         pages_domains_readback = wait_pages_custom_domains(api, account)
 
         # Account-level Bulk Redirects execute after zone-level Single Redirects.
@@ -2195,7 +2270,7 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
             api, account, zone
         )
         try:
-            readback = reconcile_subdomain_redirects(zone_redirect_api, zone, contract)
+            readback = reconcile_single_redirects(zone_redirect_api, zone, contract)
         finally:
             revoke_zone_redirect_api()
 
@@ -2205,7 +2280,7 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
             "http_response_headers_transform",
             "Canonical response header transforms",
             "Git-managed response corrections for canonical and fallback responses",
-            not_found_rule(f"www.{zone_name}", csp_404),
+            not_found_rule(f"www.{zone_name}", blog_host, csp_404),
         )
         expected_not_found_ref = not_found_rule_ref(csp_404)
         prune_superseded_not_found_rules(
@@ -2216,19 +2291,19 @@ def apply_subdomains_only(dist_dir: Path) -> dict[str, Any]:
 
     outcome = {
         "schemaVersion": 1,
-        "mode": "subdomains-only",
+        "mode": "redirects-only",
         "zone": zone_name,
         "capabilities": {
             "pagesCustomDomains": True,
             "pagesDnsBinding": True,
             "historicalBlogBulkRedirects": True,
-            "subdomainRedirectRules": True,
+            "singleRedirectRules": True,
             "notFoundTransformRule": not_found_readback.get("ref") == expected_not_found_ref,
         },
         "pagesCustomDomainsReadback": pages_domains_readback,
         "pagesDnsBindingReadback": pages_dns_readback,
         "historicalBlogBulkRedirectsReadback": bulk_readback,
-        "subdomainRedirectsReadback": readback,
+        "singleRedirectsReadback": readback,
         "notFoundTransformRuleReadback": {
             "ref": not_found_readback.get("ref"),
             "expression": not_found_readback.get("expression"),
@@ -2284,7 +2359,7 @@ def main() -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--self-test", action="store_true")
     mode.add_argument("--apply", action="store_true")
-    mode.add_argument("--apply-subdomains-only", action="store_true")
+    mode.add_argument("--apply-redirects-only", action="store_true")
     mode.add_argument("--purge-cache-only", action="store_true")
     parser.add_argument("--dist", default="dist")
     parser.add_argument("--outcome", default="edge-reconciliation.json")
@@ -2293,8 +2368,8 @@ def main() -> int:
         dist_dir = Path(args.dist).resolve()
         if args.self_test:
             self_test(dist_dir)
-        elif args.apply_subdomains_only:
-            outcome = apply_subdomains_only(dist_dir)
+        elif args.apply_redirects_only:
+            outcome = apply_redirects_only(dist_dir)
             outcome_path = Path(args.outcome).resolve()
             outcome_path.write_text(
                 json.dumps(outcome, indent=2, sort_keys=True) + "\n",

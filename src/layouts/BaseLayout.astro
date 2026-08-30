@@ -10,19 +10,135 @@ import DocumentHead from '../components/DocumentHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
 import GuideNavigator from '../components/GuideNavigator.astro';
-interface Frontmatter { title:string; description:string; lang?:string; dir?:string; robots?:string; }
-interface Props { frontmatter:Frontmatter; url?:string; isMain?:boolean; }
-const {frontmatter,url,isMain=false}=Astro.props;
-const base=Astro.site??Astro.url;
-const canonicalURL=isMain?new URL(release.canonicalUrl):new URL(url??Astro.url.pathname,base);
-const lang=frontmatter.lang??'fa-IR';
-const dir=frontmatter.dir??'rtl';
-if(!['ltr','rtl','auto'].includes(dir))throw new Error(`Invalid document direction: ${dir}`);
-const robots=frontmatter.robots??'index, follow';
-const noindex=/(?:^|,)\s*noindex\b/i.test(robots);
-const {cssSource}=assembleCssSource(globalCss,renderCalibrationRaw);
-const {criticalCss,assetHref:externalCssHref}=deriveCssDelivery(cssSource);
-const googleSupportGraphRaw=supportGraphRaw;
-const googlePageMicrodata=isMain?deriveGooglePageMicrodata(headGraph,`${release.canonicalUrl}#webpage`):null;
+
+interface Frontmatter {
+  title: string;
+  description: string;
+  lang?: string;
+  dir?: string;
+  robots?: string;
+}
+
+interface Props {
+  frontmatter: Frontmatter;
+  url?: string;
+  isMain?: boolean;
+}
+
+const { frontmatter, url, isMain = false } = Astro.props;
+const base = Astro.site ?? Astro.url;
+const lang = frontmatter.lang ?? 'fa-IR';
+const dir = frontmatter.dir ?? 'rtl';
+if (!['ltr', 'rtl', 'auto'].includes(dir)) {
+  throw new Error(`Invalid document direction: ${dir}`);
+}
+const robots = frontmatter.robots ?? 'index, follow';
+const noindex = /(?:^|,)\s*noindex\b/i.test(robots);
+const canonicalURL = isMain
+  ? new URL(release.canonicalUrl)
+  : noindex
+    ? undefined
+    : new URL(url ?? Astro.url.pathname, base);
+
+const { cssSource } = assembleCssSource(globalCss, renderCalibrationRaw);
+const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(cssSource);
+const googlePageMicrodata = isMain
+  ? deriveGooglePageMicrodata(headGraph, `${release.canonicalUrl}#webpage`)
+  : null;
 ---
-<!doctype html><html lang={lang} dir={dir} prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#"><head><meta charset="utf-8"><DocumentHead title={frontmatter.title} description={frontmatter.description} robots={robots} canonicalURL={canonicalURL} isMain={isMain} stage="critical" /><style is:inline set:html={criticalCss}></style><link as="style" data-deferred-stylesheet fetchpriority="low" href={externalCssHref} rel="preload"><script is:inline id="deferred-stylesheet-loader">(()=>{const l=document.querySelector('link[data-deferred-stylesheet]');if(!l)return;const a=()=>{l.rel='stylesheet';l.removeAttribute('as')};l.addEventListener('load',a,{once:true})})();</script><noscript><link href={externalCssHref} rel="stylesheet"></noscript>{isMain&&<script is:inline id="entity-core" type="application/ld+json" set:html={headGraphRaw}></script>}<DocumentHead title={frontmatter.title} description={frontmatter.description} robots={robots} canonicalURL={canonicalURL} isMain={isMain} stage="discovery" /></head><body><a class="skip-link" href="#main-content">پرش به محتوای اصلی</a><main id="main-content" itemscope={googlePageMicrodata?true:undefined} itemtype={googlePageMicrodata?.itemType} itemid={googlePageMicrodata?.itemId}>{googlePageMicrodata&&<>{googlePageMicrodata.links.map(link=><link itemprop={link.itemprop} href={link.href}>)}{googlePageMicrodata.meta.map(meta=><meta itemprop={meta.itemprop} content={meta.content}>)}</>}<article class:list={['medical-guide',{'medical-guide--entity-home':isMain}]} aria-labelledby={isMain?'saeed-ghezelbash':undefined}><slot /></article></main>{isMain&&<script is:inline id="entity-support" type="application/ld+json" set:html={googleSupportGraphRaw}></script>}{!noindex&&<SiteFooter />}{!noindex&&<FloatingActionDock />}{isMain&&<GuideNavigator />}</body></html>
+
+<!doctype html>
+<html lang={lang} dir={dir} prefix="og: https://ogp.me/ns# profile: https://ogp.me/ns/profile#">
+  <head>
+    <meta charset="utf-8">
+    <DocumentHead
+      title={frontmatter.title}
+      description={frontmatter.description}
+      robots={robots}
+      canonicalURL={canonicalURL}
+      isMain={isMain}
+      stage="critical"
+    />
+    <style is:inline set:html={criticalCss}></style>
+    <link
+      as="style"
+      data-deferred-stylesheet
+      fetchpriority="low"
+      href={externalCssHref}
+      rel="preload"
+    >
+    <script is:inline id="deferred-stylesheet-loader">
+      (() => {
+        const link = document.querySelector('link[data-deferred-stylesheet]');
+        if (!link) return;
+
+        let activated = false;
+        const activate = () => {
+          if (activated) return;
+          activated = true;
+          link.rel = 'stylesheet';
+          link.removeAttribute('as');
+        };
+
+        link.addEventListener('load', activate, { once: true });
+        link.addEventListener('error', activate, { once: true });
+        if (link.sheet) activate();
+        else setTimeout(activate, 2500);
+      })();
+    </script>
+    <noscript><link href={externalCssHref} rel="stylesheet"></noscript>
+    {isMain && (
+      <script
+        is:inline
+        id="entity-core"
+        type="application/ld+json"
+        set:html={headGraphRaw}
+      ></script>
+    )}
+    <DocumentHead
+      title={frontmatter.title}
+      description={frontmatter.description}
+      robots={robots}
+      canonicalURL={canonicalURL}
+      isMain={isMain}
+      stage="discovery"
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>
+    <main
+      id="main-content"
+      itemscope={googlePageMicrodata ? true : undefined}
+      itemtype={googlePageMicrodata?.itemType}
+      itemid={googlePageMicrodata?.itemId}
+    >
+      {googlePageMicrodata && (
+        <>
+          {googlePageMicrodata.links.map((link) => (
+            <link itemprop={link.itemprop} href={link.href}>
+          ))}
+          {googlePageMicrodata.meta.map((meta) => (
+            <meta itemprop={meta.itemprop} content={meta.content}>
+          ))}
+        </>
+      )}
+      <article
+        class:list={['medical-guide', { 'medical-guide--entity-home': isMain }]}
+        aria-labelledby={isMain ? 'saeed-ghezelbash' : undefined}
+      >
+        <slot />
+      </article>
+    </main>
+    {isMain && (
+      <script
+        is:inline
+        id="entity-support"
+        type="application/ld+json"
+        set:html={supportGraphRaw}
+      ></script>
+    )}
+    {!noindex && <SiteFooter />}
+    {!noindex && <FloatingActionDock />}
+    {isMain && <GuideNavigator />}
+  </body>
+</html>
