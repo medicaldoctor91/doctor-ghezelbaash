@@ -11,6 +11,7 @@
         "alternateName",
         "jobTitle",
         "url",
+        "priceRange",
         "hasCredential",
         "practicesAt",
         "worksFor",
@@ -126,6 +127,9 @@
           "Dr Saeed Ghezelbash",
           "MohammadSaeed Ghezelbash",
           "Mohamadsaeed Ghezelbash"
+        ],
+        "name": [
+          "دکتر سعید قزلباش"
         ]
       }
     },
