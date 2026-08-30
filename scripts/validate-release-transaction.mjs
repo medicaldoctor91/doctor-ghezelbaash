@@ -35,10 +35,13 @@ assert.match(
   /push --atomic origin HEAD:main "refs\/tags\/v\$RELEASE_TARGET"/,
 );
 assert.doesNotMatch(workflow, /push origin HEAD:main\s*\n\s*if git ls-remote/);
-assert.doesNotMatch(cloudflare, /(?:^|\s)--apply(?=\s|\\|$)/m);
-assert.match(cloudflare, /--apply-redirects-only/);
-assert.match(cloudflare, /--purge-cache-only/);
-assert.match(cloudflare, /Purge canonical deployment cache/);
+assert.equal(
+  (cloudflare.match(/python scripts\/configure-cloudflare-edge\.py/g) || [])
+    .length,
+  1,
+);
+assert.match(cloudflare, /(?:^|\s)--apply(?=\s|\\|$)/m);
+assert.match(cloudflare, /Reconcile canonical Cloudflare edge/);
 assert.doesNotMatch(cloudflare, /steps\.release_change/);
 const cloudflareTimeout = Number(
   cloudflare.match(/^\s+timeout-minutes:\s*(\d+)\s*$/m)?.[1],
@@ -163,7 +166,7 @@ console.log(
     integrationKeepsBothParents: true,
     frozenTagExact: true,
     frozenTagRecovery: true,
-    cloudflareFullApplyDisabled: true,
+    cloudflareFullApplyCanonical: true,
     cloudflareTimeoutCoversConvergence: true,
     githubPagesBridgeDependencies: "COMPLETE",
   }),

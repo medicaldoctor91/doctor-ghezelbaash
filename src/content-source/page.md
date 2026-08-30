@@ -4864,12 +4864,12 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <div aria-label="تصاویر فضای کلینیک زیبایی دکتر سعید قزلباش" role="group">
 <figure aria-label="فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" id="image-ghezelbaash-clinic-interior">
 <link href="https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior" itemprop="image">
-<picture><source sizes="(max-width: 720px) 100vw, 50vw" srcset="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.6d6cff6a6188.avif 640w, /media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.778722cf9b9e.avif 960w" type="image/avif"><source sizes="(max-width: 720px) 100vw, 50vw" srcset="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.d904d3e3af1c.webp 640w, /media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.3fc0fe75b5df.webp 960w" type="image/webp"><img alt="فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" decoding="async" height="854" loading="lazy" src="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.d904d3e3af1c.webp" width="640">
+<picture><source sizes="(max-width: 720px) calc(100vw - 4rem), 640px" srcset="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.6d6cff6a6188.avif 640w, /media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.778722cf9b9e.avif 960w" type="image/avif"><source sizes="(max-width: 720px) calc(100vw - 4rem), 640px" srcset="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.d904d3e3af1c.webp 640w, /media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.3fc0fe75b5df.webp 960w" type="image/webp"><img alt="فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" decoding="async" height="854" loading="lazy" src="/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.d904d3e3af1c.webp" width="640">
 </picture>
 </figure>
 <figure aria-label="بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" id="image-ghezelbaash-clinic-reception">
 <link href="https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception" itemprop="image">
-<picture><source sizes="(max-width: 720px) 100vw, 50vw" srcset="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.6ffe954f9b11.avif 640w, /media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.5169229be1d8.avif 864w" type="image/avif"><source sizes="(max-width: 720px) 100vw, 50vw" srcset="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.bc186107c539.webp 640w, /media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.4dfc3e2ebf1f.webp 864w" type="image/webp"><img alt="بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" decoding="async" height="1138" loading="lazy" src="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.bc186107c539.webp" width="640">
+<picture><source sizes="(max-width: 720px) calc(100vw - 4rem), 640px" srcset="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.6ffe954f9b11.avif 640w, /media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.5169229be1d8.avif 864w" type="image/avif"><source sizes="(max-width: 720px) calc(100vw - 4rem), 640px" srcset="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.bc186107c539.webp 640w, /media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.4dfc3e2ebf1f.webp 864w" type="image/webp"><img alt="بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه" decoding="async" height="1138" loading="lazy" src="/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.bc186107c539.webp" width="640">
 </picture>
 </figure>
 </div>
@@ -5917,7 +5917,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 وێبگەڕەکەت پشتگیری لە لێدانی ڤیدیۆ ناکات.</video>
 <details class="video-chapters" id="video-saeed-ghezelbash-kurdish-patient-review-chapters" lang="ckb-IQ">
 <summary>بەشەکانی ڤیدیۆی ئەزموونی مراجع لە هەولێر</summary>
-<ol>
+<ol lang="fa">
 <li><a href="/?video=kurdish-patient-review&amp;t=0#video-saeed-ghezelbash-kurdish-patient-review"><time datetime="PT0S">00:00</time><span>معرفی مراجع کُردزبان از اربیل</span></a>
 </li>
 <li><a href="/?video=kurdish-patient-review&amp;t=4#video-saeed-ghezelbash-kurdish-patient-review"><time datetime="PT4S">00:04</time><span>بیان تجربه شخصی مراجعه</span></a>

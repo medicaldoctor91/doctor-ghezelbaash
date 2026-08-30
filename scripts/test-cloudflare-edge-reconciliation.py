@@ -293,39 +293,11 @@ class FakeZoneTokenAuthority:
                     }
                 )
             return {"success": True, "result": rows}
-        if method == "GET" and path.endswith(
-            "permission_groups?scope=com.cloudflare.api.account"
-        ):
-            return {
-                "success": True,
-                "result": [
-                    {
-                        "id": "account-rulesets-write",
-                        "name": "Account Rulesets Write",
-                        "scopes": ["com.cloudflare.api.account"],
-                    },
-                    {
-                        "id": "account-rulesets-read",
-                        "name": "Account Rulesets Read",
-                        "scopes": ["com.cloudflare.api.account"],
-                    },
-                    {
-                        "id": "account-lists-write",
-                        "name": "Account Rule Lists Write",
-                        "scopes": ["com.cloudflare.api.account"],
-                    },
-                    {
-                        "id": "account-lists-read",
-                        "name": "Account Rule Lists Read",
-                        "scopes": ["com.cloudflare.api.account"],
-                    },
-                ],
-            }
         if method == "POST" and path == "/accounts/test-account/tokens":
             assert isinstance(body, dict)
-            if len(body["policies"]) != 2:
-                raise AssertionError("Control-plane token must have zone and account policies")
-            zone_policy, account_policy = body["policies"]
+            if len(body["policies"]) != 1:
+                raise AssertionError("Control-plane token must be zone-scoped")
+            zone_policy = body["policies"][0]
             zone_ids = {row["id"] for row in zone_policy["permission_groups"]}
             required_zone = {
                 *edge.ZONE_SETTINGS_PERMISSION_IDS,
@@ -340,18 +312,8 @@ class FakeZoneTokenAuthority:
             }
             if zone_ids != required_zone:
                 raise AssertionError(zone_ids)
-            account_ids = {row["id"] for row in account_policy["permission_groups"]}
-            if account_ids != {
-                "account-rulesets-write",
-                "account-rulesets-read",
-                "account-lists-write",
-                "account-lists-read",
-            }:
-                raise AssertionError(account_ids)
             if zone_policy["resources"] != {
                 "com.cloudflare.api.account.zone.test-zone": "*"
-            } or account_policy["resources"] != {
-                "com.cloudflare.api.account.test-account": "*"
             }:
                 raise AssertionError(body["policies"])
             return {
@@ -490,6 +452,29 @@ class FakeInventoryApi:
             return {"success": True, "result": [dict(row) for row in self.dns_records]}
         raise AssertionError((method, path, body))
 
+
+for invalid_cache_policy in (
+    "public, max-age=60, immutable",
+    "public, max-age=60, no-cache, stale-while-revalidate=60",
+    "public, max-age=60, no-store, stale-if-error=60",
+    "public, max-age=60, must-revalidate, stale-while-revalidate=60",
+    "public, max-age=60, proxy-revalidate, stale-if-error=60",
+    "public, max-age=60, s-maxage=60, stale-if-error=60",
+    "private, max-age=60, stale-while-revalidate=60",
+    "public, max-age=60, stale-if-error=2.5",
+    "public, max-age=60, max-age=120",
+):
+    try:
+        edge.validate_edge_cache_policy(invalid_cache_policy)
+    except edge.CloudflareError:
+        pass
+    else:
+        raise AssertionError(f"Invalid cache policy accepted: {invalid_cache_policy}")
+
+if edge.cache_directives("public, max-age=60") != edge.cache_directives(
+    "MAX-AGE=60, PUBLIC"
+):
+    raise AssertionError("Cache directive normalization is order-sensitive")
 
 contract = edge.load_redirect_registry(ROOT)
 api = FakeCloudflareApi()

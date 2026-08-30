@@ -63,20 +63,6 @@ ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES = (
     ("Cache Rules Read", "Cache Settings Read"),
     ("Bot Management Read",),
 )
-ACCOUNT_CACHE_REQUIRED_PERMISSION_ALIASES = (
-    ("Account Rulesets Edit", "Account Rulesets Write"),
-    (
-        "Account Filter Lists Edit",
-        "Account Filter Lists Write",
-        "Account Rule Lists Write",
-    ),
-)
-ACCOUNT_CACHE_OPTIONAL_PERMISSION_ALIASES = (
-    ("Account Rulesets Read",),
-    ("Account Filter Lists Read", "Account Rule Lists Read"),
-)
-
-
 class CloudflareError(RuntimeError):
     def __init__(
         self,
@@ -356,7 +342,7 @@ ZONE_SETTINGS: dict[str, Any] = {
     "always_use_https": "on",
     "ssl": "strict",
     "min_tls_version": "1.2",
-    "always_online": "on",
+    "always_online": "off",
     "cache_level": "aggressive",
     "ech": "on",
     "pq_keyex": "on",
@@ -528,7 +514,6 @@ def issue_ephemeral_zone_api(
             groups.append({"id": permission_id})
 
     resolved_permissions: list[str] = []
-    account_groups: list[dict[str, str]] = []
     if include_control_plane:
         for aliases in ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES:
             match = next(
@@ -579,55 +564,6 @@ def issue_ephemeral_zone_api(
                 groups.append({"id": permission_id})
             resolved_permissions.append(str(match["name"]))
 
-        account_permissions = parent_api.expect(
-            "GET",
-            f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account",
-        ).get("result") or []
-        for aliases in ACCOUNT_CACHE_REQUIRED_PERMISSION_ALIASES:
-            match = next(
-                (
-                    row
-                    for permission_name in aliases
-                    for row in account_permissions
-                    if row.get("name") == permission_name
-                    and "com.cloudflare.api.account" in (row.get("scopes") or [])
-                ),
-                None,
-            )
-            if match is None:
-                relevant = sorted(
-                    str(row.get("name"))
-                    for row in account_permissions
-                    if "rule" in str(row.get("name") or "").lower()
-                    or "list" in str(row.get("name") or "").lower()
-                )
-                raise CloudflareError(
-                    "Required account cache permission group unavailable: "
-                    + " | ".join(aliases)
-                    + "; relevant available groups: "
-                    + ", ".join(relevant)
-                )
-            account_groups.append({"id": str(match["id"])})
-            resolved_permissions.append(str(match["name"]))
-
-        for aliases in ACCOUNT_CACHE_OPTIONAL_PERMISSION_ALIASES:
-            match = next(
-                (
-                    row
-                    for permission_name in aliases
-                    for row in account_permissions
-                    if row.get("name") == permission_name
-                    and "com.cloudflare.api.account" in (row.get("scopes") or [])
-                ),
-                None,
-            )
-            if match is None:
-                continue
-            permission_id = str(match["id"])
-            if permission_id not in {str(row["id"]) for row in account_groups}:
-                account_groups.append({"id": permission_id})
-            resolved_permissions.append(str(match["name"]))
-
     expires_on = (
         dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)
     ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -642,18 +578,7 @@ def issue_ephemeral_zone_api(
                     "effect": "allow",
                     "resources": {f"com.cloudflare.api.account.zone.{zone}": "*"},
                     "permission_groups": groups,
-                },
-                *(
-                    [
-                        {
-                            "effect": "allow",
-                            "resources": {f"com.cloudflare.api.account.{account}": "*"},
-                            "permission_groups": account_groups,
-                        }
-                    ]
-                    if account_groups
-                    else []
-                ),
+                }
             ],
         },
         ok=(200, 201),
@@ -928,13 +853,6 @@ def wait_pages_custom_domains(
             sort_keys=True,
         )
     )
-
-
-def reconcile_pages_custom_domains(
-    api: CloudflareApi, account: str
-) -> dict[str, Any]:
-    ensure_pages_custom_domains(api, account)
-    return wait_pages_custom_domains(api, account)
 
 
 def read_pages_contract(
@@ -1853,6 +1771,45 @@ def purge_canonical(api: CloudflareApi, zone: str, host: str) -> None:
         )
 
 
+def cache_directives(policy: str) -> dict[str, str | None]:
+    directives: dict[str, str | None] = {}
+    for raw_directive in policy.split(","):
+        directive = raw_directive.strip()
+        if not directive:
+            raise CloudflareError(f"Empty cache directive: {policy}")
+        name, separator, value = directive.partition("=")
+        name = name.strip().lower()
+        if not name or name in directives:
+            raise CloudflareError(f"Invalid or duplicate cache directive: {policy}")
+        directives[name] = value.strip().lower() if separator else None
+    return directives
+
+
+def validate_edge_cache_policy(policy: str) -> dict[str, str | None]:
+    directives = cache_directives(policy)
+    stale = {"stale-while-revalidate", "stale-if-error"} & directives.keys()
+    stale_blockers = {
+        "private",
+        "no-cache",
+        "no-store",
+        "must-revalidate",
+        "proxy-revalidate",
+        "s-maxage",
+    } & directives.keys()
+    if "immutable" in directives or (stale and stale_blockers):
+        raise CloudflareError(f"Contradictory Cloudflare cache policy: {policy}")
+    for name in {
+        "max-age",
+        "s-maxage",
+        "stale-while-revalidate",
+        "stale-if-error",
+    } & directives.keys():
+        value = directives[name]
+        if value is None or re.fullmatch(r"\d+", value) is None:
+            raise CloudflareError(f"Invalid cache delta-seconds in policy: {policy}")
+    return directives
+
+
 def self_test(dist_dir: Path) -> None:
     headers_path = dist_dir / "_headers"
     if not headers_path.is_file():
@@ -1860,6 +1817,26 @@ def self_test(dist_dir: Path) -> None:
             f"Self-test requires generated DIST headers at {headers_path}"
         )
     headers_text = headers_path.read_text(encoding="utf-8")
+    cdn_cache_policies = re.findall(
+        r"(?m)^  Cloudflare-CDN-Cache-Control:\s*(.+)$", headers_text
+    )
+    parsed_cdn_policies = [
+        validate_edge_cache_policy(policy) for policy in cdn_cache_policies
+    ]
+    has_swr = any("stale-while-revalidate" in row for row in parsed_cdn_policies)
+    has_sie = any("stale-if-error" in row for row in parsed_cdn_policies)
+    if not has_swr or not has_sie:
+        raise CloudflareError("Edge stale resilience contract missing")
+    for block in re.split(r"\n{2,}", headers_text):
+        browser = re.search(r"(?m)^  Cache-Control:\s*(.+)$", block)
+        edge = re.search(r"(?m)^  Cloudflare-CDN-Cache-Control:\s*(.+)$", block)
+        if (
+            browser
+            and edge
+            and cache_directives(browser.group(1))
+            == cache_directives(edge.group(1))
+        ):
+            raise CloudflareError("Redundant browser/edge cache policy")
     csp = extract_header(headers_text, "/404.html", "Content-Security-Policy")
     if "{{" in csp or "unsafe-inline" in csp or "unsafe-eval" in csp:
         raise CloudflareError("Final 404 CSP is unresolved or weakened")
@@ -1871,7 +1848,7 @@ def self_test(dist_dir: Path) -> None:
     for setting_id, desired in {
         "ssl": "strict",
         "min_tls_version": "1.2",
-        "always_online": "on",
+        "always_online": "off",
         "cache_level": "aggressive",
         "ech": "on",
         "pq_keyex": "on",
@@ -2223,100 +2200,6 @@ def apply(dist_dir: Path) -> dict[str, Any]:
     return outcome
 
 
-def apply_redirects_only(dist_dir: Path) -> dict[str, Any]:
-    token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
-    account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
-    zone_name = os.environ.get("ZONE_NAME", "").strip()
-    missing_env = [
-        name
-        for name, value in {
-            "CLOUDFLARE_API_TOKEN": token,
-            "CLOUDFLARE_ACCOUNT_ID": account,
-            "ZONE_NAME": zone_name,
-        }.items()
-        if not value
-    ]
-    if missing_env:
-        raise CloudflareError(f"Missing required environment: {', '.join(missing_env)}")
-    contract = load_redirect_registry(Path.cwd().resolve())
-    if contract["zone"] != zone_name:
-        raise CloudflareError("Runtime zone differs from redirect registry")
-    blog_host = str(contract["bulkRedirects"]["host"])
-    headers_text = (dist_dir / "_headers").read_text(encoding="utf-8")
-    csp_404 = extract_header(headers_text, "/404.html", "Content-Security-Policy")
-    api = CloudflareApi(token)
-    zone = zone_id(api, account, zone_name)
-    print("ZONE_RESOLVED", zone_name, zone)
-
-    ensure_pages_custom_domains(api, account)
-    zone_control_api, revoke_zone_control_api = issue_ephemeral_zone_api(
-        api, account, zone, include_control_plane=True
-    )
-    try:
-        pages_dns_readback = reconcile_pages_dns_binding(
-            zone_control_api, zone, blog_host
-        )
-        pages_domains_readback = wait_pages_custom_domains(api, account)
-
-        # Account-level Bulk Redirects execute after zone-level Single Redirects.
-        # The exact historical list must therefore be proven before any competing
-        # blog catchall is removed.
-        bulk_readback = reconcile_bulk_redirects(api, account, contract)
-        expected_bulk_count = len(expand_bulk_redirect_items(contract))
-        if bulk_readback.get("itemCount") != expected_bulk_count:
-            raise CloudflareError("Historical blog Bulk Redirect read-back count drift")
-
-        zone_redirect_api, revoke_zone_redirect_api = issue_ephemeral_single_redirect_api(
-            api, account, zone
-        )
-        try:
-            readback = reconcile_single_redirects(zone_redirect_api, zone, contract)
-        finally:
-            revoke_zone_redirect_api()
-
-        not_found_readback = reconcile_phase_rule(
-            zone_control_api,
-            zone,
-            "http_response_headers_transform",
-            "Canonical response header transforms",
-            "Git-managed response corrections for canonical and fallback responses",
-            not_found_rule(f"www.{zone_name}", blog_host, csp_404),
-        )
-        expected_not_found_ref = not_found_rule_ref(csp_404)
-        prune_superseded_not_found_rules(
-            zone_control_api, zone, expected_not_found_ref
-        )
-    finally:
-        revoke_zone_control_api()
-
-    outcome = {
-        "schemaVersion": 1,
-        "mode": "redirects-only",
-        "zone": zone_name,
-        "capabilities": {
-            "pagesCustomDomains": True,
-            "pagesDnsBinding": True,
-            "historicalBlogBulkRedirects": True,
-            "singleRedirectRules": True,
-            "notFoundTransformRule": not_found_readback.get("ref") == expected_not_found_ref,
-        },
-        "pagesCustomDomainsReadback": pages_domains_readback,
-        "pagesDnsBindingReadback": pages_dns_readback,
-        "historicalBlogBulkRedirectsReadback": bulk_readback,
-        "singleRedirectsReadback": readback,
-        "notFoundTransformRuleReadback": {
-            "ref": not_found_readback.get("ref"),
-            "expression": not_found_readback.get("expression"),
-            "enabled": not_found_readback.get("enabled"),
-        },
-        "scopeGaps": [],
-    }
-    if not outcome["capabilities"]["notFoundTransformRule"]:
-        raise CloudflareError("Historical blog 404 transform rule read-back drift")
-    print("SUBDOMAIN_EDGE_RECONCILIATION_COMPLETE", json.dumps(outcome, sort_keys=True))
-    return outcome
-
-
 def purge_cache_only() -> dict[str, Any]:
     token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
     account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
@@ -2359,7 +2242,6 @@ def main() -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--self-test", action="store_true")
     mode.add_argument("--apply", action="store_true")
-    mode.add_argument("--apply-redirects-only", action="store_true")
     mode.add_argument("--purge-cache-only", action="store_true")
     parser.add_argument("--dist", default="dist")
     parser.add_argument("--outcome", default="edge-reconciliation.json")
@@ -2368,30 +2250,14 @@ def main() -> int:
         dist_dir = Path(args.dist).resolve()
         if args.self_test:
             self_test(dist_dir)
-        elif args.apply_redirects_only:
-            outcome = apply_redirects_only(dist_dir)
-            outcome_path = Path(args.outcome).resolve()
-            outcome_path.write_text(
-                json.dumps(outcome, indent=2, sort_keys=True) + "\n",
-                encoding="utf-8",
-            )
-            print("EDGE_OUTCOME_WRITTEN", outcome_path)
-        elif args.purge_cache_only:
-            outcome = purge_cache_only()
-            outcome_path = Path(args.outcome).resolve()
-            outcome_path.write_text(
-                json.dumps(outcome, indent=2, sort_keys=True) + "\n",
-                encoding="utf-8",
-            )
-            print("EDGE_OUTCOME_WRITTEN", outcome_path)
-        else:
-            outcome = apply(dist_dir)
-            outcome_path = Path(args.outcome).resolve()
-            outcome_path.write_text(
-                json.dumps(outcome, indent=2, sort_keys=True) + "\n",
-                encoding="utf-8",
-            )
-            print("EDGE_OUTCOME_WRITTEN", outcome_path)
+            return 0
+        outcome = purge_cache_only() if args.purge_cache_only else apply(dist_dir)
+        outcome_path = Path(args.outcome).resolve()
+        outcome_path.write_text(
+            json.dumps(outcome, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        print("EDGE_OUTCOME_WRITTEN", outcome_path)
         return 0
     except (CloudflareError, OSError, ValueError, KeyError) as exc:
         print(f"CLOUDFLARE_EDGE_ERROR: {exc}", file=sys.stderr)

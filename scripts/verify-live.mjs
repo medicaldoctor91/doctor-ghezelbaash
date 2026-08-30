@@ -76,7 +76,7 @@ async function command_current() {
         );
       if (file === "live-observations.jsonld") {
         const cc = ordinary.r.headers.get("cache-control") || "";
-        if (!/max-age=0|must-revalidate/i.test(cc))
+        if (!/\bno-cache\b/i.test(cc))
           throw new Error(
             `Mutable/current machine resource cache policy too stale ${file}: ${cc}`,
           );
@@ -263,12 +263,14 @@ async function command_discovery() {
         );
       const cc = x.r.headers.get("cache-control") || "",
         maxAge = parseMaxAge(cc);
-      if (!/must-revalidate/i.test(cc))
-        throw new Error(`${rel} ${lane} missing must-revalidate: ${cc}`);
       if (mutable.includes(rel)) {
-        if (maxAge !== 0)
-          throw new Error(`${rel} ${lane} mutable max-age drift: ${cc}`);
-      } else if (maxAge === null || maxAge > 3600)
+        if (!/\bno-cache\b/i.test(cc))
+          throw new Error(`${rel} ${lane} mutable no-cache drift: ${cc}`);
+      } else if (
+        !/must-revalidate/i.test(cc) ||
+        maxAge === null ||
+        maxAge > 3600
+      )
         throw new Error(`${rel} ${lane} semantic max-age drift: ${cc}`);
       const rd = x.r.headers.get("repr-digest"),
         wanted = `sha-256=:${b64(expected)}:`;

@@ -41,6 +41,8 @@ def fail(message: str) -> None:
 
 
 def validate_static_contract() -> None:
+    if edge.ZONE_SETTINGS.get("always_online") != "off":
+        fail("Always Online must remain off so route-specific stale policy is effective")
     if edge.ZONE_SETTINGS.get("tls_1_3") != "zrt":
         fail("Required TLS 1.3 contract must be zrt")
     if edge.ZONE_SETTINGS.get("0rtt") != "on":

@@ -218,9 +218,6 @@ expect(criticalRules, "html", "scroll-behavior", "auto", { maxWidth: 720 });
 expect(criticalRules, "h1", "font-size", "clamp(1.85rem,8.3vw,2.65rem)", {
   maxWidth: 720,
 });
-expect(criticalRules, ".hero-reputation", "border-radius", ".8rem", {
-  maxWidth: 720,
-});
 assert(
   !selectorRules(deferredRules, ".skip-link").some(
     (rule) => rule.conditions.length === 0,
@@ -263,20 +260,12 @@ expect(
 expect(criticalRules, ".quick-actions__item--consultation", "gap", ".34rem", {
   maxWidth: 480,
 });
-expect(
-  criticalRules,
-  ".quick-actions__consultation-copy small",
-  "font-size",
-  ".8em",
-  { maxWidth: 480 },
-);
 for (const [selector, properties] of [
   [".quick-actions", ["left", "right", "width", "transform"]],
   [".quick-actions__bar", ["grid-template-columns", "min-height", "padding"]],
   [".quick-actions__item", ["gap", "min-height", "padding", "font-size"]],
   [".quick-actions__item--consultation", ["gap"]],
   [".quick-actions__item svg", ["width", "height"]],
-  [".quick-actions__consultation-copy small", ["font-size"]],
 ]) {
   for (const property of properties)
     assert(
@@ -342,7 +331,6 @@ assert(
 for (const [selector, property] of [
   [".quick-actions__item", "background"],
   [".quick-actions__item--consultation", "background"],
-  [".quick-actions__item--search", "background"],
 ])
   assert(
     !selectorRules(deferredRules, selector).some(

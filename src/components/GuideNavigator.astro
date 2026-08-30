@@ -138,7 +138,24 @@ const entityAliases = [
         a = d.createElement("a");
       a.href = "#" + hit.id;
       a.textContent = hit.text;
-      a.addEventListener("click", () => dialog.close(), { once: true });
+      a.addEventListener(
+        "click",
+        () => {
+          dialog.close();
+          const target = d.getElementById(hit.id),
+            restoreTabIndex = target && !target.hasAttribute("tabindex");
+          if (!target) return;
+          if (restoreTabIndex) target.tabIndex = -1;
+          requestAnimationFrame(() => target.focus({ preventScroll: true }));
+          if (restoreTabIndex)
+            target.addEventListener(
+              "blur",
+              () => target.removeAttribute("tabindex"),
+              { once: true },
+            );
+        },
+        { once: true },
+      );
       li.append(a);
       results.append(li);
     }

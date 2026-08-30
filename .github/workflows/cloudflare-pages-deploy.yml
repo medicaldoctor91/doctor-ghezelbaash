@@ -91,23 +91,14 @@ jobs:
       - name: Validate edge contract without control-plane mutation
         if: steps.tip.outputs.current == 'true'
         run: npm run validate:cloudflare
-      - name: Reconcile canonical host redirects
+      - name: Reconcile canonical Cloudflare edge
         if: steps.tip.outputs.current == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           set -euo pipefail
           python scripts/configure-cloudflare-edge.py \
-            --apply-redirects-only \
-            --outcome edge-reconciliation.json
-      - name: Purge canonical deployment cache
-        if: steps.tip.outputs.current == 'true'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          set -euo pipefail
-          python scripts/configure-cloudflare-edge.py \
-            --purge-cache-only \
+            --apply \
             --outcome edge-reconciliation.json
       - name: Verify exact production serving and sample T+0 discovery
         if: steps.tip.outputs.current == 'true'

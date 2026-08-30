@@ -179,19 +179,6 @@ figcaption {
   color: var(--muted);
   font-size: 0.925rem;
 }
-.hero-reputation {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  align-items: center;
-  margin-block: 0.35rem 1.25rem;
-  padding: 0.65rem 0.85rem;
-  border: 1px solid #cce3da;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: #174438;
-  font-size: 0.94rem;
-}
 .section-answer {
   margin-block: 1.35rem 1.7rem;
   padding: 1rem 1.15rem;
@@ -296,10 +283,6 @@ blockquote {
 }
 .entity-hero .hero-identity {
   grid-area: identity;
-}
-.entity-hero .hero-reputation {
-  grid-area: reputation;
-  justify-self: start;
 }
 .entity-hero .hero-actions {
   grid-area: actions;
@@ -425,11 +408,6 @@ blockquote {
   font-size: 1em;
   font-weight: 790;
 }
-.quick-actions__consultation-copy small {
-  color: #46665d;
-  font-size: 0.84em;
-  font-weight: 610;
-}
 .quick-actions__item svg,
 .quick-actions__top svg {
   width: 1.08rem;
@@ -478,9 +456,6 @@ blockquote {
   h1 {
     font-size: clamp(1.85rem, 8.3vw, 2.65rem);
   }
-  .hero-reputation {
-    border-radius: 0.8rem;
-  }
   .entity-hero {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "title" "subtitle" "search" "portrait" "actions" "lead" "identity";
@@ -497,10 +472,6 @@ blockquote {
   .entity-hero .hero-figure {
     width: 100%;
     border-radius: 0.9rem;
-  }
-  .entity-hero .hero-reputation {
-    width: 100%;
-    margin-block: 0.1rem 0.25rem;
   }
   .entity-hero .hero-lead,
   .entity-hero .hero-identity {
@@ -543,9 +514,6 @@ blockquote {
     width: 1rem;
     height: 1rem;
   }
-  .quick-actions__consultation-copy small {
-    font-size: 0.8em;
-  }
 }
 @media print {
   .quick-actions {
@@ -585,7 +553,7 @@ blockquote {
   padding: 0.05rem 0.22rem;
   border: 0;
   background: none;
-  color: #75827d;
+  color: #687671;
   font:
     600 0.66rem/1 ui-monospace,
     SFMono-Regular,
@@ -1276,17 +1244,6 @@ html {
   border-color: #acd0c3;
   background: var(--accent-soft);
 }
-.quick-actions__item--search {
-  appearance: none;
-  border: 0;
-  font: inherit;
-  cursor: pointer;
-}
-.quick-actions__item--search svg {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-}
 .js [data-guide-search-open] {
   visibility: visible;
 }
@@ -1308,12 +1265,6 @@ html {
 }
 .render-chunk.is-target-chunk :target {
   scroll-margin-top: 1.5rem;
-}
-.guide-search__results mark {
-  padding: 0;
-  background: transparent;
-  color: inherit;
-  font-weight: 900;
 }
 @media (prefers-contrast: more) {
   :focus-visible {

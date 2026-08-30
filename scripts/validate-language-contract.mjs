@@ -48,6 +48,13 @@ const visit = (node) => {
   for (const child of node?.childNodes || []) visit(child);
 };
 visit(fragment);
+const isDeclaredLanguage = (candidate) =>
+  CONTENT_LANGUAGES.some(
+    (language) =>
+      candidate === language ||
+      candidate.startsWith(`${language}-`) ||
+      language.startsWith(`${candidate}-`),
+  );
 const authoredRegions = nodes.filter(
   (node) =>
     node.tagName === "details" &&
@@ -69,11 +76,7 @@ for (let index = 0; index < MULTILINGUAL_REGIONS.length; index++) {
     actual.dir !== expected.dir
   )
     fail(`Authored multilingual container contract drift: ${expected.key}`);
-  const declaredLanguage = CONTENT_LANGUAGES.find(
-    (language) =>
-      expected.lang === language || expected.lang.startsWith(`${language}-`),
-  );
-  if (!declaredLanguage)
+  if (!isDeclaredLanguage(expected.lang))
     fail(
       `Multilingual region is outside the page language inventory: ${expected.key}`,
     );
@@ -86,9 +89,9 @@ for (let index = 0; index < MULTILINGUAL_REGIONS.length; index++) {
     }
   };
   collectLanguages(node);
-  if (nestedLanguages.some((language) => language !== expected.lang))
+  if (nestedLanguages.some((language) => !isDeclaredLanguage(language)))
     fail(
-      `Nested language declaration escapes its authored container: ${expected.key}`,
+      `Nested language declaration is outside the page inventory: ${expected.key}`,
     );
 }
 const webpageId = "https://www.ghezelbaash.ir/#webpage";

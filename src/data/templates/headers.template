@@ -18,7 +18,7 @@ https://:version.:project.pages.dev/*
   Content-Type: text/html; charset=utf-8
   Content-Language: fa-IR
   X-Robots-Tag: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
-  Cache-Control: public, max-age=0, must-revalidate, stale-if-error=604800
+  Cache-Control: public, no-cache
   Cloudflare-CDN-Cache-Control: public, max-age=86400, stale-while-revalidate=604800, stale-if-error=2592000
   Content-Security-Policy: {{MAIN_CSP}}
   Repr-Digest: sha-256=:{{DIGEST:index.html}}:
@@ -51,7 +51,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:graph.jsonld}}:
   Access-Control-Allow-Origin: *
@@ -63,7 +63,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/graph.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:graph.ttl}}:
   Access-Control-Allow-Origin: *
@@ -75,7 +75,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/entity-facts.csv>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:entity-facts.csv}}:
   Access-Control-Allow-Origin: *
@@ -87,7 +87,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/answers.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:answers.txt}}:
   Access-Control-Allow-Origin: *
@@ -99,7 +99,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/knowledge.xml>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:knowledge.xml}}:
   Access-Control-Allow-Origin: *
@@ -111,7 +111,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/llms.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:llms.txt}}:
   Access-Control-Allow-Origin: *
@@ -123,7 +123,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:index.md}}:
   Access-Control-Allow-Origin: *
@@ -135,7 +135,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:llms-full.txt}}:
   Access-Control-Allow-Origin: *
@@ -147,7 +147,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/datapackage.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:datapackage.json}}:
   Access-Control-Allow-Origin: *
@@ -159,7 +159,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/linkset.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:linkset.json}}:
   Access-Control-Allow-Origin: *
@@ -171,7 +171,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/void.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:void.ttl}}:
   Access-Control-Allow-Origin: *
@@ -183,7 +183,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/dcat.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:dcat.ttl}}:
   Access-Control-Allow-Origin: *
@@ -195,7 +195,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/croissant.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:croissant.json}}:
   Access-Control-Allow-Origin: *
@@ -208,7 +208,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/provenance.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:provenance.jsonld}}:
   Access-Control-Allow-Origin: *
@@ -220,7 +220,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/evidence-snapshot.json>; rel="canonical", <https://www.ghezelbaash.ir/provenance.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:evidence-snapshot.json}}:
   Access-Control-Allow-Origin: *
@@ -232,7 +232,7 @@ https://:version.:project.pages.dev/*
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/shapes.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.ttl>; rel="describedby"; type="text/turtle", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:shapes.ttl}}:
   Access-Control-Allow-Origin: *
@@ -243,7 +243,7 @@ https://:version.:project.pages.dev/*
   Content-Type: text/vcard; charset=utf-8
   X-Robots-Tag: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/doctor.vcf>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:doctor.vcf}}:
   Access-Control-Allow-Origin: *
@@ -254,7 +254,7 @@ https://:version.:project.pages.dev/*
   Content-Type: text/vcard; charset=utf-8
   X-Robots-Tag: noindex, follow
   Cache-Control: public, max-age=3600, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/clinic.vcf>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:clinic.vcf}}:
   Access-Control-Allow-Origin: *
@@ -268,31 +268,26 @@ https://:version.:project.pages.dev/*
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: same-origin
 
 /media/brand/*
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
 /media/images/clinic/*
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
 /media/images/physician/:file
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
 /media/images/physician/derived/*
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
@@ -305,25 +300,21 @@ https://:version.:project.pages.dev/*
 
 /media/posters/*
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
 /media/video-tracks/*
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
 /media/videos/*
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
-  Cloudflare-CDN-Cache-Control: public, max-age=31536000, immutable
   Access-Control-Allow-Origin: *
   Cross-Origin-Resource-Policy: cross-origin
 
@@ -339,8 +330,7 @@ https://:version.:project.pages.dev/*
   Content-Type: application/ld+json; charset=utf-8
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow
-  Cache-Control: public, max-age=0, must-revalidate
-  Cloudflare-CDN-Cache-Control: public, max-age=0, must-revalidate
+  Cache-Control: public, no-cache
   Link: <https://www.ghezelbaash.ir/live-observations.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="describedby", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
   Repr-Digest: sha-256=:{{DIGEST:live-observations.jsonld}}:
   Access-Control-Allow-Origin: *
