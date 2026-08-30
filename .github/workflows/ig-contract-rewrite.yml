@@ -1,0 +1,67 @@
+name: One-shot IG redirect contract rewrite
+
+on:
+  push:
+    branches:
+      - optimize/ig-entity-consolidation-2026-08-30
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite:
+    if: ${{ !contains(github.event.head_commit.message, '[ig-contract-rewritten]') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: optimize/ig-entity-consolidation-2026-08-30
+          fetch-depth: 1
+          persist-credentials: true
+      - name: Rewrite only IG target and matching invariant
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('node:fs');
+          const p='src/data/subdomain-redirects.json';
+          const doc=JSON.parse(fs.readFileSync(p,'utf8'));
+          const rules=doc?.singleRedirects?.rules;
+          if(!Array.isArray(rules)) throw new Error('singleRedirects.rules missing');
+          const github=rules.find(r=>r.ref==='ghezelbaash_github_entity_graph_v1');
+          const ig=rules.find(r=>r.ref==='ghezelbaash_ig_ai_corpus_v1');
+          if(!github||!ig) throw new Error('Expected github/ig redirect refs missing');
+          if(github.host!=='github.ghezelbaash.ir'||github.target!=='https://www.ghezelbaash.ir/graph.jsonld') throw new Error('Refusing: github redirect contract drift');
+          if(ig.host!=='ig.ghezelbaash.ir') throw new Error('Refusing: ig host drift');
+          if(!['https://www.ghezelbaash.ir/llms-full.txt','https://www.ghezelbaash.ir/'].includes(ig.target)) throw new Error('Refusing unexpected ig source target: '+ig.target);
+          ig.target='https://www.ghezelbaash.ir/';
+          fs.writeFileSync(p,JSON.stringify(doc,null,2)+'\n');
+          NODE
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/configure-cloudflare-edge.py')
+          s=p.read_text(encoding='utf-8')
+          old='"ghezelbaash_ig_ai_corpus_v1": "https://www.ghezelbaash.ir/llms-full.txt",'
+          new='"ghezelbaash_ig_ai_corpus_v1": "https://www.ghezelbaash.ir/",'
+          count=s.count(old)
+          if count not in (0,1):
+              raise SystemExit(f'unexpected old invariant occurrence count: {count}')
+          if count==1:
+              s=s.replace(old,new,1)
+          elif new not in s:
+              raise SystemExit('neither old nor new IG invariant found')
+          p.write_text(s,encoding='utf-8')
+          PY
+          node - <<'NODE'
+          const fs=require('node:fs');
+          const doc=JSON.parse(fs.readFileSync('src/data/subdomain-redirects.json','utf8'));
+          const byRef=new Map(doc.singleRedirects.rules.map(r=>[r.ref,r]));
+          if(byRef.get('ghezelbaash_ig_ai_corpus_v1')?.target!=='https://www.ghezelbaash.ir/') throw new Error('IG target rewrite failed');
+          if(byRef.get('ghezelbaash_github_entity_graph_v1')?.target!=='https://www.ghezelbaash.ir/graph.jsonld') throw new Error('GitHub target changed unexpectedly');
+          NODE
+          git diff --check
+          git config user.name 'OpenAI'
+          git config user.email 'noreply@openai.com'
+          git add src/data/subdomain-redirects.json scripts/configure-cloudflare-edge.py
+          git commit -m 'seo: consolidate IG subdomain to entity home [ig-contract-rewritten]'
+          git push origin HEAD:optimize/ig-entity-consolidation-2026-08-30
