@@ -239,11 +239,27 @@ https://:version.:project.pages.dev/*
   Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
-/*.vcf
+/doctor.vcf
   Content-Type: text/vcard; charset=utf-8
   X-Robots-Tag: noindex, follow
-  Cache-Control: public, max-age=86400, must-revalidate
+  Cache-Control: public, max-age=3600, must-revalidate
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Link: <https://www.ghezelbaash.ir/doctor.vcf>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
+  Repr-Digest: sha-256=:{{DIGEST:doctor.vcf}}:
   Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Cross-Origin-Resource-Policy: cross-origin
+
+/clinic.vcf
+  Content-Type: text/vcard; charset=utf-8
+  X-Robots-Tag: noindex, follow
+  Cache-Control: public, max-age=3600, must-revalidate
+  Cloudflare-CDN-Cache-Control: public, max-age=3600, must-revalidate, stale-if-error=86400
+  Link: <https://www.ghezelbaash.ir/clinic.vcf>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
+  Repr-Digest: sha-256=:{{DIGEST:clinic.vcf}}:
+  Access-Control-Allow-Origin: *
+  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Cross-Origin-Resource-Policy: cross-origin
 
 /site.webmanifest
   Content-Type: application/manifest+json; charset=utf-8

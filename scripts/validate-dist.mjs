@@ -644,6 +644,8 @@ const digestFor = (route) => {
 };
 for (const route of [
   "live-observations.jsonld",
+  "doctor.vcf",
+  "clinic.vcf",
   "datapackage.json",
   "croissant.json",
   "dcat.ttl",
