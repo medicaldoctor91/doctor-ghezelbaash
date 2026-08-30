@@ -14,6 +14,9 @@ export function normalizeGoogleSupportGraph(doc){
   }
   const output=[];
   for(const node of nodes){
+    if(nodeTypes(node).includes('ImageObject')&&!node.url&&typeof node.contentUrl==='string'&&/^https?:\/\//i.test(node.contentUrl)){
+      node.url=node.contentUrl;
+    }
     if(nodeTypes(node).includes('Clip')){
       const parentId=node?.isPartOf?.['@id'];
       if(parentId&&ineligibleVideoIds.has(parentId))continue;
@@ -44,6 +47,7 @@ export function normalizeGoogleSupportGraph(doc){
         if(typeof image==='string'&&/^https?:\/\//i.test(image))continue;
         const imageId=image&&typeof image==='object'?image['@id']:null,target=imageId?byId.get(imageId):null;
         if(!target||!nodeTypes(target).includes('ImageObject'))throw new Error(`ScholarlyArticle image target missing from Google support graph: ${imageId||'(invalid image)'}`);
+        if(!target.url&&typeof target.contentUrl==='string'&&/^https?:\/\//i.test(target.contentUrl))target.url=target.contentUrl;
       }
     }
     output.push(node);

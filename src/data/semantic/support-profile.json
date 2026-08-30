@@ -159,6 +159,8 @@
         "name",
         "caption",
         "contentUrl",
+        "sameAs",
+        "url",
         "thumbnailUrl",
         "encodingFormat",
         "width",
