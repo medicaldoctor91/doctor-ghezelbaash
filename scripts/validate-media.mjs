@@ -147,7 +147,10 @@ for(const file of videoCandidates){
     const scalarRefs=value=>(Array.isArray(value)?value:value==null?[]:[value]).map(item=>typeof item==='string'?item:item?.['@id']).filter(Boolean).sort();
     for(const entityId of [release.primaryEntity.id,release.clinic.id,`${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`]){
       const actual=embeddedById.get(entityId),expected=canonicalById.get(entityId);
-      if(!actual||!expected||JSON.stringify(scalarRefs(actual['@type']))!==JSON.stringify(scalarRefs(expected['@type']))||JSON.stringify(scalarRefs(actual.sameAs))!==JSON.stringify(scalarRefs(expected.sameAs)))fail(`WebM core entity identity projection drift: ${entityId} in ${file}`);
+      if(!actual||!expected||JSON.stringify(scalarRefs(actual['@type']))!==JSON.stringify(scalarRefs(expected['@type'])))fail(`WebM core entity identity projection drift: ${entityId} in ${file}`);
+      const actualSameAs=scalarRefs(actual.sameAs),expectedSameAs=new Set(scalarRefs(expected.sameAs));
+      if(actualSameAs.some(iri=>!expectedSameAs.has(iri)))fail(`WebM core entity identity projection contains a stale sameAs value: ${entityId} in ${file}`);
+      if(entityId===release.primaryEntity.id&&!actualSameAs.includes(personWikidataIri))fail(`WebM Person projection lost its Wikidata identity: ${file}`);
     }
     embeddedVideoGraphs++;
   }
