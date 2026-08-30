@@ -5,9 +5,14 @@
       "include": [
         "@id",
         "@type",
+        "additionalType",
         "name",
         "givenName",
         "familyName",
+        "birthDate",
+        "gender",
+        "nationality",
+        "email",
         "alternateName",
         "jobTitle",
         "url",
@@ -51,6 +56,9 @@
           "https://www.ghezelbaash.ir/#country-iran",
           "https://www.ghezelbaash.ir/#country-iraq"
         ],
+        "nationality": [
+          "https://www.ghezelbaash.ir/#country-iran"
+        ],
         "workLocation": [
           "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
         ],
@@ -91,6 +99,8 @@
         "sameAs": [
           "https://www.wikidata.org/entity/Q140287622",
           "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash",
+          "https://commons.wikimedia.org/wiki/Creator:Saeed_Ghezelbash",
+          "https://en.wikisource.org/wiki/Author:Mohammad_Saeed_Ghezelbash",
           "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
           "https://orcid.org/0009-0001-9346-8475",
           "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
@@ -105,9 +115,12 @@
           "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
           "https://x.com/qezelbaash",
           "https://www.pinterest.com/medicaldoctor91/",
+          "https://www.pinterest.com/qezelbaash/",
           "https://linktr.ee/Doctor.ghezelbaash",
           "https://www.threads.com/@doctor.ghezelbaash",
-          "https://www.youtube.com/@ghezelbaash"
+          "https://www.tiktok.com/@ghezelbaash",
+          "https://www.youtube.com/@ghezelbaash",
+          "https://www.youtube.com/channel/UCAiLkR6O3k9aDU9CYSeXPWQ"
         ],
         "alternateName": [
           "Mohammad Saeed Ghezelbash",

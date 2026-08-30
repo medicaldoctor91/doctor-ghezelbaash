@@ -9,7 +9,28 @@ const SPECIALTY='https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicin
 const IRAN='https://www.ghezelbaash.ir/#country-iran';
 const IRAQ='https://www.ghezelbaash.ir/#country-iraq';
 const WEBPAGE='https://www.ghezelbaash.ir/#webpage';
+const UNIVERSITY='https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences';
+const WPA_EVENT='https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017';
 const EXPECTED_AREAS=[IRAN,IRAQ];
+const WIKIDATA_FIELDS=['Q3332453','Q3745388','Q4095199','Q17081562','Q7049059','Q537918','Q613879','Q3675172','Q4936963','Q2276095','Q2697787','Q685286','Q2559992','Q3267987','Q16949888','Q305190','Q1641068','Q26967','Q840929','Q825490','Q1423937','Q851186','Q935781','Q133823','Q7439446','Q79928','Q5133849','Q2752427'].map(qid=>`https://www.wikidata.org/entity/${qid}`);
+const WIKIDATA_IDENTITY_URLS=[
+  'https://www.wikidata.org/entity/Q140287622',
+  'https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash',
+  'https://commons.wikimedia.org/wiki/Creator:Saeed_Ghezelbash',
+  'https://en.wikisource.org/wiki/Author:Mohammad_Saeed_Ghezelbash',
+  'https://www.pinterest.com/qezelbaash/',
+  'https://www.tiktok.com/@ghezelbaash',
+  'https://www.youtube.com/channel/UCAiLkR6O3k9aDU9CYSeXPWQ',
+];
+const WIKIDATA_PERSON_SUBJECTS=[
+  'https://www.ghezelbaash.ir/#evidence-magiran-author',
+  'https://www.ghezelbaash.ir/#evidence-wikimedia-commons-creator',
+  'https://www.ghezelbaash.ir/#evidence-wikisource-author',
+  'https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo',
+  'https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review',
+  'https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine',
+  'https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin',
+];
 
 const asArray=value=>Array.isArray(value)?value:(value==null?[]:[value]);
 const types=node=>asArray(node?.['@type']);
@@ -50,6 +71,17 @@ assert.ok(refs(physician.worksFor).includes(CLINIC),'Physician worksFor relation
 assert.ok(refs(physician.affiliation).includes(CLINIC),'Physician affiliation relation lost canonical clinic');
 assert.ok(refs(physician.workLocation).includes(CLINIC),'Physician workLocation relation lost canonical clinic');
 assert.ok(refs(physician.owns).includes(CLINIC),'Physician ownership relation lost canonical clinic');
+assertExact(refs(physician.additionalType),['https://www.wikidata.org/entity/Q5'],'Wikidata human classification drift');
+assert.equal(physician.birthDate,'1991-05-29','Wikidata birth date drift');
+assertExact(refs(physician.gender),['https://schema.org/Male'],'Wikidata gender drift');
+assertExact(refs(physician.nationality),[IRAN],'Wikidata citizenship/nationality drift');
+assertExact(asArray(physician.email),['mailto:medicaldoctor91@gmail.com','mailto:doctor@ghezelbaash.ir'],'Wikidata email set drift');
+for(const field of WIKIDATA_FIELDS)assert.ok(refs(physician.knowsAbout).includes(field),`Wikidata field-of-work missing from Person: ${field}`);
+assert.ok(refs(physician.hasOccupation).includes('https://www.wikidata.org/entity/Q256688'),'Wikidata medical-director position missing from Person');
+assert.ok(refs(physician.affiliation).includes(UNIVERSITY),'Wikidata university affiliation missing from Person');
+assert.ok(refs(physician.performerIn).includes(WPA_EVENT),'Wikidata WPA congress participation missing from Person');
+for(const url of WIKIDATA_IDENTITY_URLS)assert.ok(refs(physician.sameAs).includes(url),`Wikidata identity/sitelink missing from Person: ${url}`);
+for(const subject of WIKIDATA_PERSON_SUBJECTS)assert.ok(refs(physician.subjectOf).includes(subject),`Wikidata evidence/work missing from Person: ${subject}`);
 
 assert.ok(types(clinic).includes('MedicalClinic'),'Clinic lost MedicalClinic type');
 assertExact(refs(clinic.medicalSpecialty),[SPECIALTY],'Clinic medicalSpecialty must resolve to the canonical specialty');

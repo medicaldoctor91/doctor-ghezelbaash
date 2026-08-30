@@ -4234,6 +4234,7 @@
         "Person",
         "IndividualPhysician"
       ],
+      "additionalType": "https://www.wikidata.org/entity/Q5",
       "name": [
         {
           "@value": "دکتر سعید قزلباش",
@@ -4264,6 +4265,17 @@
           "@language": "en"
         }
       ],
+      "birthDate": "1991-05-29",
+      "gender": {
+        "@id": "https://schema.org/Male"
+      },
+      "nationality": {
+        "@id": "https://www.ghezelbaash.ir/#country-iran"
+      },
+      "email": [
+        "mailto:medicaldoctor91@gmail.com",
+        "mailto:doctor@ghezelbaash.ir"
+      ],
       "alternateName": [
         "Mohammad Saeed Ghezelbash",
         "Dr. Mohammad Saeed Ghezelbash",
@@ -4290,6 +4302,14 @@
         },
         {
           "@value": "Aesthetic physician",
+          "@language": "en"
+        },
+        {
+          "@value": "مدیر پزشکی کلینیک زیبایی دکتر سعید قزلباش",
+          "@language": "fa"
+        },
+        {
+          "@value": "Medical director of Dr. Saeed Ghezelbash Aesthetic Clinic",
           "@language": "en"
         }
       ],
@@ -4767,11 +4787,40 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#identifier-person-semantic-scholar"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-facebook"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-linktree"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-pinterest"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-threads"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-tiktok"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-x"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-youtube-channel"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-youtube-handle"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-wikimedia-commons-creator"
         }
       ],
       "sameAs": [
         "https://www.wikidata.org/entity/Q140287622",
         "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash",
+        "https://commons.wikimedia.org/wiki/Creator:Saeed_Ghezelbash",
+        "https://en.wikisource.org/wiki/Author:Mohammad_Saeed_Ghezelbash",
         "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
         "https://orcid.org/0009-0001-9346-8475",
         "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
@@ -4786,9 +4835,12 @@
         "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
         "https://x.com/qezelbaash",
         "https://www.pinterest.com/medicaldoctor91/",
+        "https://www.pinterest.com/qezelbaash/",
         "https://linktr.ee/Doctor.ghezelbaash",
         "https://www.threads.com/@doctor.ghezelbaash",
-        "https://www.youtube.com/@ghezelbaash"
+        "https://www.tiktok.com/@ghezelbaash",
+        "https://www.youtube.com/@ghezelbaash",
+        "https://www.youtube.com/channel/UCAiLkR6O3k9aDU9CYSeXPWQ"
       ],
       "subjectOf": [
         {
@@ -5021,6 +5073,27 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#evidence-youtube"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#evidence-magiran-author"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#evidence-wikimedia-commons-creator"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#evidence-wikisource-author"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
         }
       ],
       "description": [
@@ -5064,6 +5137,90 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q3332453"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q3745388"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q4095199"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q17081562"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q7049059"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q537918"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q613879"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q3675172"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q4936963"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q2276095"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q2697787"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q685286"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q2559992"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q3267987"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q16949888"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q305190"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q1641068"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q26967"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q840929"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q825490"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q1423937"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q851186"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q935781"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q133823"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q7439446"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q79928"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q5133849"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q2752427"
         }
       ],
       "hasOccupation": [
@@ -5072,6 +5229,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#occupation-medical-researcher"
+        },
+        {
+          "@id": "https://www.wikidata.org/entity/Q256688"
         }
       ],
       "medicalSpecialty": {
@@ -5083,6 +5243,9 @@
       "performerIn": [
         {
           "@id": "https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017"
         }
       ],
       "honorificPrefix": [
@@ -5129,9 +5292,14 @@
       "worksFor": {
         "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
       },
-      "affiliation": {
-        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-      },
+      "affiliation": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences"
+        }
+      ],
       "priceRange": "$$$$"
     },
     {
@@ -6526,7 +6694,10 @@
       "inLanguage": "fa-IR",
       "duration": "PT1M2S",
       "url": "https://www.ghezelbaash.ir/#jalupro-vs-profhilo-selection",
-      "sameAs": "https://www.instagram.com/reel/DDty1BcujKB/",
+      "sameAs": [
+        "https://www.instagram.com/reel/DDty1BcujKB/",
+        "https://commons.wikimedia.org/wiki/File:دکتر_سعید_قزلباش_درباره_جالپرو_و_پروفایلو.webm"
+      ],
       "identifier": "urn:uuid:a2a8de16-9dae-56c8-8df3-9ce4146e38cc",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo-width"
@@ -7020,7 +7191,8 @@
       ],
       "sameAs": [
         "https://pubmed.ncbi.nlm.nih.gov/27280013/",
-        "https://doi.org/10.4103/2008-7802.182734"
+        "https://doi.org/10.4103/2008-7802.182734",
+        "https://www.wikidata.org/entity/Q36942316"
       ],
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#periodical-int-j-prev-med"
@@ -7073,7 +7245,8 @@
       "sameAs": [
         "https://pubmed.ncbi.nlm.nih.gov/34574943/",
         "https://doi.org/10.3390/healthcare9091169",
-        "https://www.mdpi.com/2227-9032/9/9/1169"
+        "https://www.mdpi.com/2227-9032/9/9/1169",
+        "https://www.wikidata.org/entity/Q140298431"
       ],
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#periodical-healthcare"
@@ -18285,7 +18458,8 @@
       "@id": "https://www.ghezelbaash.ir/#profile-pinterest-qezelbaash",
       "@type": "ProfilePage",
       "name": "Pinterest profile — Saeed Ghezelbash",
-      "url": "https://www.pinterest.com/medicaldoctor91/",
+      "url": "https://www.pinterest.com/qezelbaash/",
+      "sameAs": "https://www.pinterest.com/medicaldoctor91/",
       "mainEntity": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -21645,6 +21819,146 @@
         "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
       },
       "url": "https://doi.org/10.5281/zenodo.22131441"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-facebook",
+      "@type": "PropertyValue",
+      "propertyID": "Facebook username",
+      "value": "ghezelbaash",
+      "url": "https://www.facebook.com/ghezelbaash/"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-linktree",
+      "@type": "PropertyValue",
+      "propertyID": "Linktree ID",
+      "value": "Doctor.ghezelbaash",
+      "url": "https://linktr.ee/Doctor.ghezelbaash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-pinterest",
+      "@type": "PropertyValue",
+      "propertyID": "Pinterest username",
+      "value": "qezelbaash",
+      "url": "https://www.pinterest.com/qezelbaash/"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-threads",
+      "@type": "PropertyValue",
+      "propertyID": "Threads username",
+      "value": "doctor.ghezelbaash",
+      "url": "https://www.threads.com/@doctor.ghezelbaash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-tiktok",
+      "@type": "PropertyValue",
+      "propertyID": "TikTok username",
+      "value": "ghezelbaash",
+      "url": "https://www.tiktok.com/@ghezelbaash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-x",
+      "@type": "PropertyValue",
+      "propertyID": "X username",
+      "value": "qezelbaash",
+      "url": "https://x.com/qezelbaash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-youtube-channel",
+      "@type": "PropertyValue",
+      "propertyID": "YouTube channel ID",
+      "value": "UCAiLkR6O3k9aDU9CYSeXPWQ",
+      "url": "https://www.youtube.com/channel/UCAiLkR6O3k9aDU9CYSeXPWQ"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-youtube-handle",
+      "@type": "PropertyValue",
+      "propertyID": "YouTube handle",
+      "value": "ghezelbaash",
+      "url": "https://www.youtube.com/@ghezelbaash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-wikimedia-commons-creator",
+      "@type": "PropertyValue",
+      "propertyID": "Wikimedia Commons Creator page",
+      "value": "Saeed Ghezelbash",
+      "url": "https://commons.wikimedia.org/wiki/Creator:Saeed_Ghezelbash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#evidence-magiran-author",
+      "@type": "ProfilePage",
+      "name": "Magiran author profile — Mohammad Saeed Ghezelbash",
+      "url": "https://www.magiran.com/author/mohammad-saeed-ghezelbash",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "inLanguage": "fa-IR"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#evidence-wikimedia-commons-creator",
+      "@type": "ProfilePage",
+      "name": "Wikimedia Commons Creator page — Saeed Ghezelbash",
+      "url": "https://commons.wikimedia.org/wiki/Creator:Saeed_Ghezelbash",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "identifier": {
+        "@id": "https://www.ghezelbaash.ir/#identifier-person-wikimedia-commons-creator"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#evidence-wikisource-author",
+      "@type": "ProfilePage",
+      "name": "English Wikisource author page — Mohammad Saeed Ghezelbash",
+      "url": "https://en.wikisource.org/wiki/Author:Mohammad_Saeed_Ghezelbash",
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "inLanguage": "en"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
+      "@type": "Article",
+      "name": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+      "url": "https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review",
+      "sameAs": "https://www.wikidata.org/entity/Q141099455",
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "inLanguage": "en",
+      "isAccessibleForFree": true
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
+      "@type": "Article",
+      "name": "Botulinum toxin in aesthetic medicine",
+      "url": "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine",
+      "sameAs": "https://www.wikidata.org/entity/Q141129555",
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "inLanguage": "en",
+      "isAccessibleForFree": true
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
+      "@type": "Article",
+      "name": "Facial assessment before aesthetic botulinum toxin treatment",
+      "url": "https://en.wikiversity.org/wiki/Facial_assessment_before_aesthetic_botulinum_toxin_treatment",
+      "sameAs": "https://www.wikidata.org/entity/Q141131757",
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "inLanguage": "en",
+      "isAccessibleForFree": true
     }
   ]
 }
