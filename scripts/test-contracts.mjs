@@ -13,6 +13,9 @@ import { assertDocumentContract } from "./lib/html-contract.mjs";
 import {
   canonicalSemanticSource,
   deriveCanonicalSemanticSets,
+  directLanguageLiterals,
+  exactLanguageLiteral,
+  indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
 async function file_transaction() {
   const must = (condition, message) => {
@@ -361,6 +364,37 @@ async function canonical_semantic_derivation_contract() {
     );
   assert.equal(derived.answers.length, questions.length);
   assert.equal(derived.services.length, services.length);
+  assert.equal(
+    exactLanguageLiteral(
+      [{ "@language": "en", "@value": "Canonical" }],
+      "en",
+      "Test literal",
+    ),
+    "Canonical",
+  );
+  assert.deepEqual(
+    directLanguageLiterals(
+      [
+        { "@language": "fa", "@value": "عنوان یک" },
+        { "@language": "fa", "@value": "عنوان دو" },
+      ],
+      "fa",
+      "Test literals",
+    ),
+    ["عنوان یک", "عنوان دو"],
+  );
+  assert.throws(
+    () =>
+      exactLanguageLiteral(
+        [
+          { "@language": "en", "@value": "One" },
+          { "@language": "en", "@value": "Two" },
+        ],
+        "en",
+        "Ambiguous literal",
+      ),
+    /exactly one en literal/,
+  );
 
   const sharedAnswer = structuredClone(graph),
     sharedQuestions = sharedAnswer["@graph"].filter((node) =>
@@ -386,6 +420,16 @@ async function canonical_semantic_derivation_contract() {
     /canonical physician provider/,
   );
 
+  const aliasDrift = structuredClone(graph),
+    aliaslessService = aliasDrift["@graph"].find((node) =>
+      [node["@type"]].flat().includes("Service"),
+    );
+  delete aliaslessService.alternateName;
+  assert.throws(
+    () => deriveCanonicalSemanticSets(aliasDrift, release),
+    /nonempty direct alternateName/,
+  );
+
   const pathDrift = structuredClone(graph),
     pathQuestion = pathDrift["@graph"].find((node) =>
       [node["@type"]].flat().includes("Question"),
@@ -407,7 +451,40 @@ async function canonical_semantic_derivation_contract() {
   anonymousService["@graph"].push({ "@type": "Service" });
   assert.throws(
     () => deriveCanonicalSemanticSets(anonymousService, release),
-    /Every canonical Service must have an ID/,
+    /top-level node without @id/,
+  );
+
+  const duplicateNode = structuredClone(graph);
+  duplicateNode["@graph"].push(structuredClone(duplicateNode["@graph"][0]));
+  assert.throws(
+    () => deriveCanonicalSemanticSets(duplicateNode, release),
+    /Duplicate canonical graph ID/,
+  );
+
+  const question = graph["@graph"].find((node) =>
+      [node["@type"]].flat().includes("Question"),
+    ),
+    answer = graph["@graph"].find(
+      (node) => node["@id"] === question.acceptedAnswer["@id"],
+    ),
+    directUrlMatches = indexCanonicalGraph(graph).nodesByUrl.get(question.url);
+  assert.ok(directUrlMatches.includes(question));
+  assert.ok(directUrlMatches.includes(answer));
+  const sourceUrl = "https://example.test/#source",
+    collisionIndex = indexCanonicalGraph({
+      "@graph": [
+        { "@id": sourceUrl },
+        { "@id": "https://example.test/#question", url: sourceUrl },
+        { "@id": "https://example.test/#answer", url: sourceUrl },
+      ],
+    });
+  assert.deepEqual(
+    collisionIndex.sourceNodesForUrl(sourceUrl).map((node) => node["@id"]),
+    [
+      sourceUrl,
+      "https://example.test/#question",
+      "https://example.test/#answer",
+    ],
   );
 
   assert.throws(
@@ -430,8 +507,12 @@ async function canonical_semantic_derivation_contract() {
         services: derived.services.length,
         sharedAnswerRejection: "PASS",
         providerDriftRejection: "PASS",
+        missingDirectServiceAliasRejection: "PASS",
+        ambiguousLanguageLiteralRejection: "PASS",
         pathDriftRejection: "PASS",
         anonymousServiceRejection: "PASS",
+        duplicateGraphIdRejection: "PASS",
+        directUrlMultimapPreservation: "PASS",
         policyShapeRejection: "PASS",
         integrity: "PASS",
       },

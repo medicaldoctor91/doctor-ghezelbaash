@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.3",
+  "schemaVersion": "2.4",
   "identitySource": "src/data/release.json",
   "semanticSource": "src/data/semantic/knowledge-graph.jsonld",
   "evidenceRegistry": "src/data/evidence-registry.json",
@@ -43,8 +43,7 @@
       "Iran"
     ],
     "preserveNativeAliasLanguage": true,
-    "rowKind": "service_alias",
-    "emptyAliasFallback": "canonical-service-name"
+    "rowKind": "service_alias"
   },
   "evidencePolicy": {
     "requireStableEvidenceOnEveryRow": true,

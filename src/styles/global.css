@@ -105,8 +105,14 @@ h3,
 h4,
 h5,
 h6 {
-  line-height: 1.45;
   scroll-margin-top: 1.5rem;
+}
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.45;
 }
 h1,
 h2 {
@@ -165,13 +171,10 @@ figure {
   contain: none;
   margin: 2.2rem 0;
   padding: clamp(0.65rem, 1.5vw, 1rem);
-  border: 1px solid var(--line);
-  border-color: transparent;
+  border: 1px solid transparent;
   background: none;
 }
 .hero-figure {
-  content-visibility: visible;
-  contain: none;
   contain-intrinsic-size: none;
 }
 figcaption {
@@ -199,7 +202,7 @@ figcaption {
   font-size: 0.96rem;
 }
 blockquote {
-  margin: 1.7rem 0;
+  margin: 1.5rem 0;
   padding: 0.9rem 1.1rem;
   border-inline-start: 0.25rem solid var(--accent);
   border-radius: 0.4rem;
@@ -222,7 +225,7 @@ blockquote {
 .render-chunk {
   content-visibility: auto;
   contain: layout style paint;
-  contain-intrinsic-size: auto 2800px;
+  contain-intrinsic-size: auto var(--cis, 2800px);
 }
 .entity-hero {
   display: grid;
@@ -666,9 +669,7 @@ figure:not(.hero-figure) figcaption::before {
   height: 1px;
   background: rgb(10 107 88/0.14);
 }
-nav,
-details,
-blockquote {
+nav {
   margin-block: 1.5rem;
 }
 #aesthetic-medicine-table-of-contents {
@@ -759,6 +760,7 @@ details {
   content-visibility: visible;
   contain: none;
   overflow: clip;
+  margin-block: 1.5rem;
   padding: 0.85rem 1rem;
   border: 1px solid var(--line);
   border-radius: 0.8rem;
@@ -807,6 +809,7 @@ address {
   border: 1px solid var(--line);
   border-radius: 0.8rem;
   background: var(--surface-soft);
+  font-style: normal;
 }
 :focus-visible {
   outline: 3px solid #12826b;
@@ -875,9 +878,6 @@ address {
   height: 0;
   overflow: hidden;
   scroll-margin-top: 1rem;
-}
-address {
-  font-style: normal;
 }
 .multilingual-collapsible-section[dir="rtl"],
 .multilingual-collapsible-content[dir="rtl"] {
@@ -1058,9 +1058,6 @@ html {
     grid-template-columns: 1fr;
   }
 }
-.render-chunk {
-  contain-intrinsic-size: auto var(--cis, 1600px);
-}
 .render-chunk.is-target-chunk {
   content-visibility: visible;
   contain-intrinsic-size: none;
@@ -1112,8 +1109,6 @@ html {
 }
 .render-chunk figure,
 .render-chunk details {
-  content-visibility: visible;
-  contain: none;
   contain-intrinsic-size: none;
 }
 /* Deferred interaction and navigation */
@@ -1262,9 +1257,6 @@ html {
   .guide-search {
     display: none !important;
   }
-}
-.render-chunk.is-target-chunk :target {
-  scroll-margin-top: 1.5rem;
 }
 @media (prefers-contrast: more) {
   :focus-visible {

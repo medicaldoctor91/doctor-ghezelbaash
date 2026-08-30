@@ -264,31 +264,12 @@ if (intentAliasRows < minimumIntentRows)
 
 if (policy.serviceAliasCoverage?.enabled) {
   for (const service of services) {
-    const explicitAliases = [
-      ...new Set(
-        arr(service.aliases)
-          .map((value) => String(value).trim())
-          .filter(Boolean),
-      ),
-    ];
-    const canonicalFallback = String(
-      service.name || service.id.split("#").pop() || "",
-    )
-      .trim()
-      .replace(/^procedure-/, "")
-      .replace(/-/g, " ");
-    const expectedAliases = explicitAliases.length
-      ? explicitAliases
-      : [canonicalFallback].filter(Boolean);
-    if (!expectedAliases.length)
-      fail(`Offered service has no retrieval label ${service.id}`);
-
     const serviceRows = rows.filter((row) =>
       arr(row.service_ids).includes(service.id),
     );
     if (!serviceRows.length)
       fail(`Offered-service coverage missing ${service.id}`);
-    for (const alias of expectedAliases)
+    for (const alias of service.aliases)
       if (!serviceRows.some((row) => row.query === alias))
         fail(`Exact service retrieval label missing ${service.id}: ${alias}`);
   }

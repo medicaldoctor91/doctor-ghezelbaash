@@ -1,10 +1,17 @@
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
-import { assembleCssSource } from "../src/lib/css-source.mjs";
-import { deriveCssDelivery } from "../src/lib/css-delivery.mjs";
+import {
+  assembleCssSource,
+  deriveCssDelivery,
+} from "../src/lib/css-delivery.mjs";
 import { deriveGooglePageMicrodata } from "../src/lib/google-page-microdata.mjs";
-import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
+import {
+  deriveCanonicalSemanticSets,
+  directLanguageLiterals,
+  exactLanguageLiteral,
+  indexCanonicalGraph,
+} from "../src/lib/semantic-projection.mjs";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
 import { analyzeGraphClosure } from "./lib/graph-integrity.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
@@ -108,7 +115,11 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
   rdfText = await readFile(path.join(dist, "graph.ttl"), "utf8"),
   liveBytes = await readFile(path.join(dist, "live-observations.jsonld")),
   live = JSON.parse(liveBytes),
-  sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8");
+  sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8"),
+  knowledgeXml = await readFile(path.join(dist, "knowledge.xml"), "utf8"),
+  doctorVcard = await readFile(path.join(dist, "doctor.vcf"), "utf8"),
+  llmsFull = await readFile(path.join(dist, "llms-full.txt"), "utf8"),
+  provenance = await readJson(path.join(dist, "provenance.jsonld"));
 const { services, answers } = deriveCanonicalSemanticSets(graph, release);
 if (/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>/i.test(notFound))
   fail("404 page must not declare a canonical URL");
@@ -120,11 +131,20 @@ const dp = await readJson(path.join(dist, "datapackage.json")),
   answersText = await readFile(path.join(dist, "answers.txt"), "utf8"),
   dcatText = await readFile(path.join(dist, "dcat.ttl"), "utf8"),
   voidText = await readFile(path.join(dist, "void.ttl"), "utf8"),
-  createdAt =
-    (release.dataset.zenodo.releaseHistory || [])
-      .map((x) => x.publicationDate)
-      .sort()[0] || release.dateModified,
+  releaseHistory = release.dataset.zenodo.releaseHistory,
   datasetLandingPage = `https://doi.org/${release.dataset.zenodo.versionDoi}`;
+if (
+  !Array.isArray(releaseHistory) ||
+  !releaseHistory.length ||
+  releaseHistory.some(
+    (entry) =>
+      typeof entry?.publicationDate !== "string" || !entry.publicationDate,
+  )
+)
+  fail("Zenodo release history lacks a publication date");
+const createdAt = releaseHistory
+  .map((entry) => entry.publicationDate)
+  .sort()[0];
 for (const file of [
   "linkset.json",
   "void.ttl",
@@ -377,15 +397,68 @@ if (
   )
 )
   fail("Rendered root Microdata is not an exact Google page projection");
-const nodes = graph["@graph"] || [],
-  byId = new Map(nodes.filter((n) => n?.["@id"]).map((n) => [n["@id"], n])),
-  person = byId.get(release.primaryEntity.id),
+const { nodes, byId, sourceNodesForUrl } = indexCanonicalGraph(graph);
+const person = byId.get(release.primaryEntity.id),
   clinic = byId.get(release.clinic.id),
   dataset = byId.get(release.dataset.id),
   page = byId.get(`${release.canonicalUrl}#webpage`),
   site = byId.get(`${release.canonicalUrl}#website`);
 if (!person || !clinic || !dataset || !page || !site)
   fail("Core graph entity missing");
+const vcardName = exactLanguageLiteral(
+    person.name,
+    "fa",
+    "Canonical physician name",
+  ),
+  vcardGivenName = exactLanguageLiteral(
+    person.givenName,
+    "fa",
+    "Canonical physician given name",
+  ),
+  vcardFamilyName = exactLanguageLiteral(
+    person.familyName,
+    "fa",
+    "Canonical physician family name",
+  ),
+  vcardHonorific = exactLanguageLiteral(
+    person.honorificPrefix,
+    "fa",
+    "Canonical physician honorific prefix",
+  ),
+  vcardTitles = directLanguageLiterals(
+    person.jobTitle,
+    "fa",
+    "Canonical physician job titles",
+  ),
+  unfoldedDoctorVcard = doctorVcard.replace(/\r?\n[ \t]/g, ""),
+  vcardLines = unfoldedDoctorVcard.split(/\r?\n/);
+if (
+  !vcardLines.includes(`FN:${vcardName}`) ||
+  !vcardLines.includes(
+    `N:${vcardFamilyName};${vcardGivenName};;${vcardHonorific};`,
+  ) ||
+  vcardLines.filter((line) => line.startsWith("TITLE:")).length !==
+    vcardTitles.length ||
+  vcardTitles.some((title) => !vcardLines.includes(`TITLE:${title}`))
+)
+  fail("Doctor vCard is not a direct canonical graph projection");
+if (/\bformat=["']{2}/.test(knowledgeXml))
+  fail("knowledge.xml contains an empty format fallback");
+if (
+  !llmsFull.includes(`MODIFIED: ${release.dateModified}`) ||
+  !llmsFull.includes(`MEDICALLY_REVIEWED: ${release.medicalReviewedAt}`) ||
+  /^GRAPH_NODE_ID:/m.test(llmsFull) ||
+  /GRAPH_NODE_IDS:\s*(?:\r?\n|$)/.test(llmsFull)
+)
+  fail("Retrieval corpus direct metadata projection drift");
+const passageLanguages = new Set(
+  [...llmsFull.matchAll(/^LANGUAGE:\s*(\S+)\s*$/gm)].map(
+    (match) => match[1],
+  ),
+);
+for (const language of ["fa-IR", "ar-IQ", "en", "ckb-IQ"])
+  if (!passageLanguages.has(language))
+    fail(`Retrieval corpus lacks authored language ${language}`);
 if (
   id(dataset.creator) !== release.primaryEntity.id ||
   id(dataset.publisher) !== release.primaryEntity.id ||
@@ -421,6 +494,69 @@ const inlineByIdForPage = new Map(
       .replaceAll("&nbsp;", " ")
       .replace(/\s+/g, " ")
       .trim();
+const provenanceById = new Map(
+    arr(provenance?.["@graph"]).map((node) => [node?.["@id"], node]),
+  ),
+  recordValue = (record, field) =>
+    record.match(new RegExp(`^${field}:\\s*(.+)$`, "m"))?.[1],
+  bindingIds = (record) => {
+    const value = recordValue(record, "GRAPH_NODE_IDS");
+    const ids = value ? value.split(" | ") : [];
+    if (new Set(ids).size !== ids.length || ids.some((value) => !byId.has(value)))
+      fail("Retrieval corpus contains invalid canonical graph bindings");
+    return ids;
+  },
+  assertBindingParity = (record, provenanceId, sourceUrl, requiredIds = []) => {
+    const graphIds = bindingIds(record),
+      expectedIds = sourceNodesForUrl(sourceUrl).map((node) => node["@id"]),
+      provenanceNode = provenanceById.get(provenanceId),
+      basedOnIds = refs(provenanceNode?.isBasedOn);
+    if (
+      !provenanceNode ||
+      !sameSet(new Set(graphIds), new Set(expectedIds)) ||
+      graphIds.length !== expectedIds.length ||
+      !sameSet(new Set(graphIds), new Set(basedOnIds)) ||
+      graphIds.length !== basedOnIds.length ||
+      (graphIds.length
+        ? !Array.isArray(provenanceNode.isBasedOn)
+        : Object.hasOwn(provenanceNode, "isBasedOn")) ||
+      requiredIds.some((value) => !graphIds.includes(value))
+    )
+      fail(`Retrieval provenance graph binding drift: ${provenanceId}`);
+  };
+const passageRecords = [...llmsFull.matchAll(/\[PASSAGE\]\r?\n([\s\S]*?)\[\/PASSAGE\]/g)].map(
+  (match) => match[1],
+);
+for (const record of passageRecords) {
+  const passageId = recordValue(record, "PASSAGE_ID"),
+    anchor = recordValue(record, "ANCHOR");
+  if (!passageId || !anchor)
+    fail("Retrieval passage lacks its direct identifiers");
+  assertBindingParity(
+    record,
+    `${release.canonicalUrl}provenance.jsonld#passage-${passageId}`,
+    anchor,
+  );
+}
+const answerRecords = [
+  ...answersText.matchAll(/^QUESTION_ID:\s*(.+)\r?\n([\s\S]*?)^VERSION:\s*.+$/gm),
+].map((match) => match[0]);
+for (const record of answerRecords) {
+  const sourceHash = recordValue(record, "SOURCE_HASH_SHA256"),
+    sourceUrl = recordValue(record, "SOURCE"),
+    questionId = recordValue(record, "QUESTION_ID"),
+    answerId = recordValue(record, "ANSWER_ID");
+  if (!sourceHash || !sourceUrl || !questionId || !answerId)
+    fail("Answer corpus lacks direct provenance identifiers");
+  assertBindingParity(
+    record,
+    `${release.canonicalUrl}provenance.jsonld#answer-${sourceHash.slice(0, 16)}`,
+    sourceUrl,
+    [questionId, answerId],
+  );
+}
+if (!passageRecords.length || answerRecords.length !== answers.length)
+  fail("Retrieval provenance record inventory drift");
 const personHeaderTag =
   html.match(
     /<header\b(?=[^>]*\bitemid=["'][^"']+["'])(?=[^>]*\bitemprop=["'][^"']*\bmainEntity\b[^"']*["'])[^>]*>/i,

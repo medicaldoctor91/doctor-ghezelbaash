@@ -20,10 +20,18 @@ const fail = (message) => {
 const readDistJson = async (file) =>
   JSON.parse(await readFile(path.join(dist, file), "utf8"));
 const Z = release.dataset.zenodo;
-const history = Z.releaseHistory || [];
+const history = Z.releaseHistory;
 const datasetLandingPage = `https://doi.org/${Z.versionDoi}`;
 
-if (!history.length) fail("Release history is empty");
+if (
+  !Array.isArray(history) ||
+  !history.length ||
+  history.some(
+    (entry) =>
+      typeof entry?.publicationDate !== "string" || !entry.publicationDate,
+  )
+)
+  fail("Release history lacks a publication date");
 const currentHistory = history.find(
   (entry) => entry.release === release.release,
 );

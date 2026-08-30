@@ -8,6 +8,7 @@ import {
   sha256,
   valueText,
 } from "../projection-context.mjs";
+import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
 
 export async function compileSemanticCorpus(context) {
   const {
@@ -16,7 +17,7 @@ export async function compileSemanticCorpus(context) {
     release,
     graph,
     byId,
-    graphByUrl,
+    sourceNodesForUrl,
     evidenceRefsForNode,
   } = context;
 
@@ -81,16 +82,43 @@ export async function compileSemanticCorpus(context) {
     nodeTypes(node).includes("Question"),
   )) {
     const answerId = question.acceptedAnswer?.["@id"];
-    const answer = answerId && byId.get(answerId);
-    if (!answer) continue;
-    const sourceUrl = question.url || question["@id"];
-    const section = graphByUrl.get(sourceUrl);
+    if (typeof answerId !== "string" || !answerId)
+      throw new Error(
+        `Question lacks an accepted Answer ID: ${question["@id"]}`,
+      );
+    const answer = byId.get(answerId);
+    if (
+      !answer ||
+      !nodeTypes(answer).includes("Answer") ||
+      typeof answer.text !== "string" ||
+      !answer.text.trim()
+    )
+      throw new Error(
+        `Question references an invalid Answer: ${question["@id"]} -> ${answerId}`,
+      );
+    const sourceUrl = question.url;
+    if (typeof sourceUrl !== "string" || !sourceUrl)
+      throw new Error(
+        `Question lacks a canonical source URL: ${question["@id"]}`,
+      );
+    if (
+      typeof question.inLanguage !== "string" ||
+      !question.inLanguage ||
+      answer.inLanguage !== question.inLanguage
+    )
+      throw new Error(
+        `Question/Answer language is missing or inconsistent: ${question["@id"]}`,
+      );
+    const sourceNodes = sourceNodesForUrl(sourceUrl);
+    if (
+      !sourceNodes?.includes(question) ||
+      !sourceNodes.includes(answer)
+    )
+      throw new Error(
+        `Question/Answer lack their direct source URL binding: ${question["@id"]}`,
+      );
     const claimEvidenceIds = [
-      ...new Set([
-        ...evidenceRefsForNode(question),
-        ...evidenceRefsForNode(answer),
-        ...evidenceRefsForNode(section),
-      ]),
+      ...new Set(sourceNodes.flatMap(evidenceRefsForNode)),
     ];
     const aboutEntityIds = refIds(question.about).filter(
       (id) => id === release.primaryEntity.id || id === release.clinic.id,
@@ -112,6 +140,7 @@ export async function compileSemanticCorpus(context) {
       q: question,
       a: answer,
       sourceUrl,
+      graphNodeIds: sourceNodes.map((node) => node["@id"]),
       evidenceIds,
       claimEvidenceIds,
       entityEvidenceIds,
@@ -125,6 +154,7 @@ export async function compileSemanticCorpus(context) {
       q,
       a,
       sourceUrl,
+      graphNodeIds,
       evidenceIds,
       claimEvidenceIds,
       entityEvidenceIds,
@@ -137,8 +167,9 @@ ANSWER_ID: ${a["@id"]}
 EXECUTIVE_SUMMARY: ${executiveSummary}
 EXECUTIVE_SUMMARY_HASH_SHA256: ${executiveSummaryHash}
 ANSWER: ${valueText(a.text)}
-LANGUAGE: ${a.inLanguage || q.inLanguage || "fa-IR"}
+LANGUAGE: ${a.inLanguage}
 SOURCE: ${sourceUrl}
+GRAPH_NODE_IDS: ${graphNodeIds.join(" | ")}
 SOURCE_HASH_SHA256: ${sourceHash}
 ABOUT_IDS: ${valueText(q.about)}
 EVIDENCE_IDS: ${evidenceIds.join(" | ")}
@@ -150,9 +181,21 @@ REVIEWED_AT: ${release.medicalReviewedAt}
 VERSION: ${release.release}
 `,
   );
+  const person = byId.get(release.primaryEntity.id);
+  if (!person) throw new Error("Answer corpus lacks the canonical physician");
+  const personName = exactLanguageLiteral(
+    person.name,
+    "en",
+    "Canonical physician name",
+  );
+  const honorific = exactLanguageLiteral(
+    person.honorificPrefix,
+    "en",
+    "Canonical physician honorific prefix",
+  );
   await writeFile(
     path.join(projections, "answers.txt"),
-    `# Direct-answer corpus — Dr. Saeed Ghezelbash
+    `# Direct-answer corpus — ${honorific} ${personName}
 # Release ${release.release}; medically reviewed ${release.medicalReviewedAt}; provenance-rich canonical answer records
 
 ${answers.join("\n---\n\n")}`,

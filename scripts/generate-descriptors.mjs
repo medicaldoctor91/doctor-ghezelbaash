@@ -3,6 +3,10 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { generatedWorkspace } from "./generated-workspace.mjs";
 import { MACHINE_RESOURCES } from "../src/lib/resources.mjs";
+import {
+  exactLanguageLiteral,
+  indexCanonicalGraph,
+} from "../src/lib/semantic-projection.mjs";
 
 const root = process.cwd(),
   generated = generatedWorkspace(root),
@@ -17,12 +21,12 @@ const retrievalPolicy = await readJson(
 const rdfLock = await readJson(".generated/semantic/rdf-lock.json");
 const graph = await readJson("src/data/semantic/knowledge-graph.jsonld");
 await mkdir(outputDir, { recursive: true });
-const nodes = graph["@graph"] || [],
-  byId = new Map(nodes.filter((n) => n?.["@id"]).map((n) => [n["@id"], n]));
+const { byId } = indexCanonicalGraph(graph);
 const dataset = byId.get(release.dataset.id),
-  person = byId.get(release.primaryEntity.id);
-if (!dataset || !person)
-  throw new Error("Descriptor generator missing canonical Dataset/Person");
+  person = byId.get(release.primaryEntity.id),
+  clinic = byId.get(release.clinic.id);
+if (!dataset || !person || !clinic)
+  throw new Error("Descriptor generator missing canonical Dataset/Person/Clinic");
 if (
   rdfLock.source !== "src/data/semantic/knowledge-graph.jsonld" ||
   !Number.isInteger(rdfLock.triples) ||
@@ -35,19 +39,44 @@ const identityMe = arr(person.sameAs)
   .map(id)
   .filter(Boolean)
   .map((href) => ({ href }));
-const datasetName =
-  typeof dataset.name === "string"
-    ? dataset.name
-    : "Dr. Saeed Ghezelbash Public Knowledge Graph";
-const datasetDescription =
-  typeof dataset.description === "string"
-    ? dataset.description
-    : "Physician-owned first-party entity, clinic, medical-topic, answer and provenance dataset for Saeed Ghezelbash.";
-const createdAt =
-  (release.dataset.zenodo.releaseHistory || [])
-    .map((x) => x.publicationDate)
-    .filter(Boolean)
-    .sort()[0] || release.dateModified;
+if (typeof dataset.name !== "string" || !dataset.name.trim())
+  throw new Error("Canonical Dataset name is missing");
+if (typeof dataset.description !== "string" || !dataset.description.trim())
+  throw new Error("Canonical Dataset description is missing");
+const datasetName = dataset.name;
+const datasetDescription = dataset.description;
+const personName = exactLanguageLiteral(
+  person.name,
+  "en",
+  "Canonical Person name",
+);
+const personHonorific = exactLanguageLiteral(
+  person.honorificPrefix,
+  "en",
+  "Canonical Person honorific prefix",
+);
+const personDisplayName = `${personHonorific} ${personName}`;
+const practiceCity = byId.get(id(clinic.location));
+if (!practiceCity)
+  throw new Error("Descriptor generator missing canonical clinic city");
+const practiceCityName = exactLanguageLiteral(
+  practiceCity.name,
+  "en",
+  "Canonical clinic city",
+);
+const releaseHistory = release.dataset.zenodo.releaseHistory;
+if (
+  !Array.isArray(releaseHistory) ||
+  !releaseHistory.length ||
+  releaseHistory.some(
+    (entry) =>
+      typeof entry?.publicationDate !== "string" || !entry.publicationDate,
+  )
+)
+  throw new Error("Zenodo release history lacks a publication date");
+const createdAt = releaseHistory
+  .map((entry) => entry.publicationDate)
+  .sort()[0];
 const datasetLandingPage = `https://doi.org/${release.dataset.zenodo.versionDoi}`;
 const shaHex = (b) => createHash("sha256").update(b).digest("hex");
 const ttlString = (s) =>
@@ -64,14 +93,19 @@ const artifactAbs = (rel) => {
   return path.join(root, resource.source);
 };
 const fileMeta = async (rel) => {
-  const resource = resourceByPath.get(rel),
-    bytes = await readFile(artifactAbs(rel));
+  const resource = resourceByPath.get(rel);
+  if (
+    typeof resource?.descriptorTitle !== "string" ||
+    !resource.descriptorTitle.trim()
+  )
+    throw new Error(`Descriptor resource lacks a canonical title: ${rel}`);
+  const bytes = await readFile(artifactAbs(rel));
   return {
     rel,
     bytes: bytes.length,
     sha256: shaHex(bytes),
     mediaType: resource.mediaType,
-    title: resource.descriptorTitle || rel,
+    title: resource.descriptorTitle,
   };
 };
 const coreResources = MACHINE_RESOURCES.filter(
@@ -150,7 +184,7 @@ const voidTtl = `${[
   `  void:triples ${rdfLock.triples} ;`,
   `  void:dataDump <${release.canonicalUrl}graph.jsonld>, <${release.canonicalUrl}graph.ttl>, <${release.canonicalUrl}entity-facts.csv> ;`,
   "  void:vocabulary <https://schema.org/>, <http://purl.org/dc/terms/>, <http://www.w3.org/ns/prov#> .",
-  `<${release.primaryEntity.id}> a foaf:Person ; foaf:name "Saeed Ghezelbash"@en .`,
+  `<${release.primaryEntity.id}> a foaf:Person ; foaf:name ${ttlString(personName)}@en .`,
 ].join("\n")}\n`;
 await writeFile(out("void.ttl"), voidTtl);
 
@@ -287,8 +321,7 @@ const dataPackage = {
   profile: "data-package",
   name: "dr-saeed-ghezelbash-public-knowledge-graph",
   title: `${datasetName} — Data Package`,
-  description:
-    "Physician-owned first-party knowledge graph, direct-answer, evidence, provenance and retrieval resources for Dr. Saeed Ghezelbash and the supporting clinic.",
+  description: `Physician-owned first-party knowledge graph, direct-answer, evidence, provenance and retrieval resources for ${personDisplayName} and the supporting clinic.`,
   homepage: datasetLandingPage,
   id: `${release.canonicalUrl}datapackage.json`,
   version: release.release,
@@ -303,7 +336,7 @@ const dataPackage = {
   ],
   contributors: [
     {
-      title: "Saeed Ghezelbash",
+      title: personName,
       path: release.primaryEntity.id,
       role: "author, creator, publisher, owner",
     },
@@ -328,8 +361,7 @@ const croissant = {
   "@type": "sc:Dataset",
   conformsTo: "http://mlcommons.org/croissant/1.1",
   name: datasetName,
-  description:
-    "Physician-owned first-party knowledge graph Dataset for Dr. Saeed Ghezelbaash, the supporting clinic, services, answers, provenance and machine retrieval.",
+  description: `Physician-owned first-party knowledge graph Dataset for ${personDisplayName}, the supporting clinic, services, answers, provenance and machine retrieval.`,
   url: datasetLandingPage,
   license: "https://creativecommons.org/licenses/by/4.0/",
   version: release.release,
@@ -339,19 +371,19 @@ const croissant = {
   creator: {
     "@id": release.primaryEntity.id,
     "@type": "sc:Person",
-    name: "Saeed Ghezelbash",
+    name: personName,
   },
   publisher: {
     "@id": release.primaryEntity.id,
     "@type": "sc:Person",
-    name: "Saeed Ghezelbash",
+    name: personName,
   },
   keywords: [
-    "Saeed Ghezelbash",
+    personName,
     ...release.primaryEntity.officialAliases.slice(0, 2),
     "physician knowledge graph",
     "aesthetic medicine",
-    "Kermanshah",
+    practiceCityName,
     "entity data",
     "linked data",
     "query matrix",

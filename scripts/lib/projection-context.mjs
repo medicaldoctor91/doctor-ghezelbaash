@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { hashIdentityFingerprint } from "./release-identity.mjs";
 import { generatedWorkspace } from "../generated-workspace.mjs";
+import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
 
 export const nodeTypes = (node) =>
   Array.isArray(node?.["@type"])
@@ -32,19 +33,29 @@ export const csvCell = (value) => {
 };
 export const sha256 = (value) =>
   createHash("sha256").update(value).digest("hex");
-export const deriveEvidenceSnapshot = (release, registry) => ({
-  release: release.release,
-  observedAt: registry.verifiedAt,
-  primaryEntity: release.primaryEntity.id,
-  entries: (registry.evidence || []).map((entry) => ({
-    id: entry.id,
-    tier: entry.tier,
-    url: entry.url,
-    status: entry.liveStatus,
-    verifiedAt: entry.verifiedAt ?? registry.verifiedAt,
-    expectedMarkers: entry.expectedMarkers ?? [],
-  })),
-});
+export const deriveEvidenceSnapshot = (release, registry) => {
+  const evidence = registry.evidence;
+  if (!Array.isArray(evidence) || !evidence.length)
+    throw new Error("Evidence registry is empty");
+  for (const entry of evidence)
+    if (typeof entry.verifiedAt !== "string" || !entry.verifiedAt)
+      throw new Error(
+        `Evidence entry lacks its canonical verification date: ${entry.id}`,
+      );
+  return {
+    release: release.release,
+    observedAt: registry.verifiedAt,
+    primaryEntity: release.primaryEntity.id,
+    entries: evidence.map((entry) => ({
+      id: entry.id,
+      tier: entry.tier,
+      url: entry.url,
+      status: entry.liveStatus,
+      verifiedAt: entry.verifiedAt,
+      expectedMarkers: entry.expectedMarkers ?? [],
+    })),
+  };
+};
 
 export async function loadProjectionContext({ root = process.cwd() } = {}) {
   const data = path.join(root, "src/data");
@@ -64,28 +75,34 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
   ]);
   if (!Array.isArray(graph["@graph"]))
     throw new Error("Canonical graph lacks @graph");
+  const evidenceEntries = evidenceRegistry.evidence;
+  if (
+    !Array.isArray(evidenceEntries) ||
+    !evidenceEntries.length ||
+    evidenceEntries.some(
+      (entry) =>
+        typeof entry?.id !== "string" ||
+        !entry.id ||
+        typeof entry.url !== "string" ||
+        !entry.url,
+    ) ||
+    new Set(evidenceEntries.map((entry) => entry.id)).size !==
+      evidenceEntries.length ||
+    new Set(evidenceEntries.map((entry) => entry.url)).size !==
+      evidenceEntries.length
+  )
+    throw new Error("Evidence registry requires unique direct IDs and URLs");
   const evidenceSnapshot = deriveEvidenceSnapshot(release, evidenceRegistry);
 
-  const byId = new Map(
-    graph["@graph"]
-      .filter((node) => node?.["@id"])
-      .map((node) => [node["@id"], node]),
-  );
-  const graphByUrl = new Map(
-    graph["@graph"]
-      .filter((node) => typeof node.url === "string")
-      .map((node) => [node.url, node]),
-  );
+  const { byId, sourceNodesForUrl } = indexCanonicalGraph(graph);
   const evidenceById = new Map(
-    (evidenceRegistry.evidence || []).map((item) => [item.id, item]),
+    evidenceEntries.map((item) => [item.id, item]),
   );
   const evidenceByUrl = new Map(
-    (evidenceRegistry.evidence || [])
-      .filter((item) => item.url)
-      .map((item) => [item.url, item.id]),
+    evidenceEntries.map((item) => [item.url, item.id]),
   );
   const tierAEvidenceIds = new Set(
-    (evidenceRegistry.evidence || [])
+    evidenceEntries
       .filter((item) => item.tier === "A")
       .map((item) => item.id),
   );
@@ -109,7 +126,7 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
         .filter(Boolean),
     ),
   ];
-  const nodeName = (node) => valueText(node?.name).split(" | ")[0];
+  const nodeName = (node) => valueText(node?.name);
 
   return {
     root,
@@ -127,7 +144,7 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
     evidenceSnapshot,
     graph,
     byId,
-    graphByUrl,
+    sourceNodesForUrl,
     evidenceById,
     evidenceByUrl,
     tierAEvidenceIds,

@@ -12,10 +12,6 @@ const fail = (message) => {
 };
 const attr = (source, name) =>
   source.match(new RegExp(`\\b${name}=["']([^"']+)["']`, "i"))?.[1];
-const { content } = await assembleCanonicalContent();
-const body = content.startsWith("---")
-  ? content.slice(content.indexOf("\n---", 3) + 4)
-  : content;
 const [
   baseLayout,
   guideNavigator,
@@ -33,6 +29,12 @@ const [
 ]);
 const supportIds = supportProfile.ids;
 const knowledgeGraphDocument = JSON.parse(knowledgeGraphSource);
+const { content } = await assembleCanonicalContent({
+  graph: knowledgeGraphDocument,
+});
+const body = content.startsWith("---")
+  ? content.slice(content.indexOf("\n---", 3) + 4)
+  : content;
 const knowledgeGraph =
   knowledgeGraphDocument["@graph"] || knowledgeGraphDocument;
 const graphNode = (id) => knowledgeGraph.find((node) => node["@id"] === id);

@@ -55,6 +55,19 @@ export function imageMetadataFor(release, profile) {
   const { rights } = mediaMetadata;
   const license = release.dataset.license;
   const alt = profile.alt;
+  const primaryAltLanguage = profile.primaryAltLanguage;
+  if (
+    typeof primaryAltLanguage !== "string" ||
+    !primaryAltLanguage ||
+    !alt ||
+    typeof alt !== "object" ||
+    Array.isArray(alt) ||
+    typeof alt[primaryAltLanguage] !== "string" ||
+    !alt[primaryAltLanguage]
+  )
+    throw new Error(
+      `Image metadata profile ${profile.title} lacks its explicit primary alt text`,
+    );
   const personWikidataIri = `https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`;
   const clinicWikidataIri = `https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`;
   const subjects = [
@@ -72,7 +85,7 @@ export function imageMetadataFor(release, profile) {
     "XMP-photoshop:Headline": profile.title,
     "XMP-photoshop:Credit": rights.credit,
     "XMP-iptcCore:CreatorWorkURL": release.primaryEntity.id,
-    "XMP-iptcCore:AltTextAccessibility": alt.fa ?? alt.ckb ?? alt.en,
+    "XMP-iptcCore:AltTextAccessibility": alt[primaryAltLanguage],
     "XMP-plus:ImageCreatorName": "Saeed Ghezelbash",
     "XMP-plus:CopyrightOwnerName": "Saeed Ghezelbash",
     "XMP-plus:LicensorName": "Saeed Ghezelbash",

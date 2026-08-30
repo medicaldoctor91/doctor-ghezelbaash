@@ -1,8 +1,10 @@
 import path from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { assembleCanonicalContent } from "../assemble-content.mjs";
-import { assembleCssSource } from "../../../src/lib/css-source.mjs";
-import { deriveCssDelivery } from "../../../src/lib/css-delivery.mjs";
+import {
+  assembleCssSource,
+  deriveCssDelivery,
+} from "../../../src/lib/css-delivery.mjs";
 
 export async function compilePageAssets(context) {
   const { root, data, graph, generatedContent, generatedAssets } = context;

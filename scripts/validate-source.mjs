@@ -11,7 +11,7 @@ import {
   assembleCssSource,
   RENDER_CALIBRATION_SLOT,
   RENDER_CALIBRATION_WIDTHS,
-} from "../src/lib/css-source.mjs";
+} from "../src/lib/css-delivery.mjs";
 import {
   canonicalSemanticSource,
   deriveCanonicalSemanticSets,
@@ -54,7 +54,6 @@ const requiredFiles = [
   "src/content-source/page.md",
   "src/layouts/BaseLayout.astro",
   "src/lib/css-delivery.mjs",
-  "src/lib/css-source.mjs",
   "src/lib/google-page-microdata.mjs",
   "src/lib/semantic-projection.mjs",
   "src/lib/hero-image-contract.mjs",

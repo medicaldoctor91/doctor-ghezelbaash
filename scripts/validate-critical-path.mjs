@@ -64,8 +64,9 @@ assert(
   documentHead.includes("document-head.json") &&
     documentHead.includes("release.json") &&
     documentHead.includes("HERO_PRELOAD_SRCSET") &&
-    /stage\s*===\s*["']critical["']/.test(documentHead) &&
-    /stage\s*===\s*["']discovery["']/.test(documentHead),
+    documentHead.includes("headGraph") &&
+    documentHead.includes("<slot />") &&
+    !/\bHeadStage\b|\bstage\s*=/.test(documentHead),
   "Structured DocumentHead contract missing",
 );
 assert(
@@ -107,8 +108,9 @@ assert(
   "Index must consume canonical generated Markdown frontmatter",
 );
 assert(
-  /stage="critical"/.test(baseLayout) && /stage="discovery"/.test(baseLayout),
-  "BaseLayout must emit both Head stages",
+  count(baseLayout, /<DocumentHead\b/g) === 1 &&
+    count(baseLayout, /<\/DocumentHead>/g) === 1,
+  "BaseLayout must compose one DocumentHead instance",
 );
 for (const field of [
   "title",
@@ -127,12 +129,12 @@ assert(
   "Canonical release URL identity drift",
 );
 const sourceOrder = [
-  'stage="critical"',
+  "<DocumentHead",
   "<style is:inline",
   'fetchpriority="low"',
   'id="deferred-stylesheet-loader"',
   'id="entity-core"',
-  'stage="discovery"',
+  "</DocumentHead>",
 ].map((token) => baseLayout.indexOf(token));
 assert(
   sourceOrder.every((index) => index >= 0) &&
@@ -239,7 +241,7 @@ console.log(
   JSON.stringify(
     {
       stage: "CRITICAL_PATH",
-      headAuthority: "astro-native-structured-three-lane",
+      headAuthority: "astro-native-single-pass",
       contentMetadataAuthority: "markdown-frontmatter",
       canonicalUrlAuthority: "release.json",
       presentationAuthority: "document-head.json",

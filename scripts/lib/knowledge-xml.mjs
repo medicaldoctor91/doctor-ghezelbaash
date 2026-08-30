@@ -1,3 +1,5 @@
+import { indexCanonicalGraph } from "../../src/lib/semantic-projection.mjs";
+
 const types = (node) =>
   Array.isArray(node?.["@type"])
     ? node["@type"]
@@ -28,6 +30,30 @@ const xml = (value) =>
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&apos;");
+const requiredText = (value, label) => {
+  const direct = text(value);
+  if (!direct) throw new Error(`knowledge.xml: ${label} is required`);
+  return direct;
+};
+const requiredId = (node, label) =>
+  requiredText(node?.["@id"], `${label} @id`);
+const requiredRefId = (value, label) => {
+  const id = refId(value);
+  if (!id) throw new Error(`knowledge.xml: ${label} reference is required`);
+  return id;
+};
+const canonicalDownloadUrl = (node) => {
+  const id = requiredId(node, "DataDownload");
+  const urls = [node.contentUrl, node.url].filter(
+    (value) => typeof value === "string" && value,
+  );
+  const uniqueUrls = [...new Set(urls)];
+  if (uniqueUrls.length !== 1)
+    throw new Error(
+      `knowledge.xml: ${id} must resolve to one canonical download URL`,
+    );
+  return uniqueUrls[0];
+};
 
 function canonicalIntentClusters(intentSource) {
   const marker = "## Canonical search-intent clusters";
@@ -48,7 +74,9 @@ function canonicalIntentClusters(intentSource) {
 }
 
 function canonicalEvidence(evidenceRegistry) {
-  const tiers = evidenceRegistry.tiers || {};
+  const tiers = evidenceRegistry.tiers;
+  if (!tiers || typeof tiers !== "object" || Array.isArray(tiers))
+    throw new Error("knowledge.xml: evidence tiers are required");
   for (const tier of ["A", "B", "C"])
     if (typeof tiers[tier] !== "string" || !tiers[tier])
       throw new Error(
@@ -73,36 +101,71 @@ function canonicalEvidence(evidenceRegistry) {
   return `  <evidence count="${evidence.length}"><tiers>${tierXml}</tiers>${itemXml}</evidence>`;
 }
 
-function canonicalMediaInventory(nodes) {
+function canonicalMediaInventory(nodes, byId) {
   const videos = nodes.filter((node) => types(node).includes("VideoObject")),
     images = nodes.filter((node) => types(node).includes("ImageObject"));
+  if (!videos.length || !images.length)
+    throw new Error(
+      "knowledge.xml: canonical video and image inventories are required",
+    );
   const videoXml = videos
     .map((video) => {
-      const clips = (
-        Array.isArray(video.hasPart) ? video.hasPart : [video.hasPart]
-      )
-        .map(refId)
-        .filter(Boolean);
-      return `<video id="${xml(video["@id"])}" contentUrl="${xml(text(video.contentUrl || video.url))}" duration="${xml(text(video.duration))}" language="${xml(text(video.inLanguage))}"><name>${xml(text(video.name))}</name>${clips.map((id) => `<clip ref="${xml(id)}"/>`).join("")}</video>`;
+      const id = requiredId(video, "VideoObject");
+      if (!Array.isArray(video.hasPart) || !video.hasPart.length)
+        throw new Error(`knowledge.xml: ${id} direct hasPart facts are required`);
+      const clips = video.hasPart.map((value, index) => {
+        const clipId = requiredRefId(value, `${id} hasPart ${index + 1}`);
+        if (!byId.has(clipId))
+          throw new Error(
+            `knowledge.xml: ${id} references missing clip ${clipId}`,
+          );
+        return clipId;
+      });
+      const contentUrl = requiredText(video.contentUrl, `${id} contentUrl`);
+      const duration = requiredText(video.duration, `${id} duration`);
+      const language = requiredText(video.inLanguage, `${id} inLanguage`);
+      const name = requiredText(video.name, `${id} name`);
+      return `<video id="${xml(id)}" contentUrl="${xml(contentUrl)}" duration="${xml(duration)}" language="${xml(language)}"><name>${xml(name)}</name>${clips.map((clipId) => `<clip ref="${xml(clipId)}"/>`).join("")}</video>`;
     })
     .join("");
   const imageXml = images
-    .map(
-      (image) =>
-        `<image id="${xml(image["@id"])}" contentUrl="${xml(text(image.contentUrl || image.url))}" encodingFormat="${xml(text(image.encodingFormat))}"><name>${xml(text(image.name))}</name></image>`,
-    )
+    .map((image) => {
+      const id = requiredId(image, "ImageObject");
+      const contentUrl = requiredText(image.contentUrl, `${id} contentUrl`);
+      const encodingFormat = requiredText(
+        image.encodingFormat,
+        `${id} encodingFormat`,
+      );
+      return `<image id="${xml(id)}" contentUrl="${xml(contentUrl)}" encodingFormat="${xml(encodingFormat)}"><name>${xml(text(image.name))}</name></image>`;
+    })
     .join("");
   return `  <mediaInventory videoCount="${videos.length}" imageCount="${images.length}">${videoXml}${imageXml}</mediaInventory>`;
 }
 
-function canonicalAnswerResources(questions, canonicalUrl) {
-  const units = questions
+function canonicalQuestionFacts(questions, byId) {
+  return questions.map((question) => {
+    const id = requiredId(question, "Question");
+    const url = requiredText(question.url, `${id} url`);
+    const name = requiredText(question.name, `${id} name`);
+    const answerId = requiredRefId(question.acceptedAnswer, `${id} acceptedAnswer`);
+    const answer = byId.get(answerId);
+    if (!answer || !types(answer).includes("Answer"))
+      throw new Error(
+        `knowledge.xml: ${id} references missing Answer ${answerId}`,
+      );
+    requiredText(answer.text, `${answerId} text`);
+    return { id, url, name, answerId };
+  });
+}
+
+function canonicalAnswerResources(questionFacts, canonicalUrl) {
+  const units = questionFacts
     .map(
-      (question) =>
-        `<unit questionRef="${xml(question["@id"])}" answerRef="${xml(refId(question.acceptedAnswer))}" source="${xml(text(question.url || question["@id"]))}"/>`,
+      ({ id, answerId, url }) =>
+        `<unit questionRef="${xml(id)}" answerRef="${xml(answerId)}" source="${xml(url)}"/>`,
     )
     .join("");
-  return `  <answerResources count="${questions.length}" corpus="${xml(`${canonicalUrl}answers.txt`)}">${units}</answerResources>`;
+  return `  <answerResources count="${questionFacts.length}" corpus="${xml(`${canonicalUrl}answers.txt`)}">${units}</answerResources>`;
 }
 
 export function compileKnowledgeXml({
@@ -111,14 +174,8 @@ export function compileKnowledgeXml({
   evidenceRegistry,
   intentSource,
 }) {
-  const nodes = Array.isArray(graph?.["@graph"]) ? graph["@graph"] : [];
+  const { nodes, byId } = indexCanonicalGraph(graph);
   if (!nodes.length) throw new Error("knowledge.xml: canonical graph is empty");
-
-  const byId = new Map(
-    nodes
-      .filter((node) => typeof node?.["@id"] === "string")
-      .map((node) => [node["@id"], node]),
-  );
   const person = byId.get(release.primaryEntity.id);
   const clinic = byId.get(release.clinic.id);
   const dataset = byId.get(`${release.canonicalUrl}graph.jsonld#dataset`);
@@ -127,10 +184,19 @@ export function compileKnowledgeXml({
       "knowledge.xml: canonical entity, clinic or Dataset node missing",
     );
 
-  const aliases = [
-    ...release.primaryEntity.officialAliases,
-    ...(release.primaryEntity.reconciliationAliases || []),
-  ];
+  const officialAliases = release.primaryEntity.officialAliases;
+  const reconciliationAliases = release.primaryEntity.reconciliationAliases;
+  if (
+    !Array.isArray(officialAliases) ||
+    !officialAliases.length ||
+    !Array.isArray(reconciliationAliases) ||
+    !reconciliationAliases.length ||
+    [...officialAliases, ...reconciliationAliases].some(
+      (alias) => typeof alias !== "string" || !alias,
+    )
+  )
+    throw new Error("knowledge.xml: canonical aliases are required");
+  const aliases = [...officialAliases, ...reconciliationAliases];
   const distributions = nodes.filter((node) =>
     types(node).includes("DataDownload"),
   );
@@ -139,20 +205,40 @@ export function compileKnowledgeXml({
     throw new Error(
       "knowledge.xml: canonical graph contains no Question nodes",
     );
+  const questionFacts = canonicalQuestionFacts(questions, byId);
 
   const aliasXml = aliases
     .map((alias) => `<alias>${xml(alias)}</alias>`)
     .join("");
   const distributionXml = distributions
-    .map(
-      (node) =>
-        `<distribution id="${xml(node["@id"])}" url="${xml(node.contentUrl || node.url)}" format="${xml(node.encodingFormat)}"/>`,
-    )
+    .map((node) => {
+      const id = requiredId(node, "DataDownload");
+      const url = canonicalDownloadUrl(node);
+      const formats = Object.hasOwn(node, "encodingFormat")
+        ? Array.isArray(node.encodingFormat)
+          ? node.encodingFormat
+          : [node.encodingFormat]
+        : [];
+      if (
+        (Object.hasOwn(node, "encodingFormat") && !formats.length) ||
+        formats.some(
+          (format) => typeof format !== "string" || !format.trim(),
+        ) ||
+        new Set(formats).size !== formats.length
+      )
+        throw new Error(
+          `knowledge.xml: ${id} encodingFormat values must be nonempty and unique`,
+        );
+      const formatAttribute = formats.length
+        ? ` format="${xml(formats.join(","))}"`
+        : "";
+      return `<distribution id="${xml(id)}" url="${xml(url)}"${formatAttribute}/>`;
+    })
     .join("");
-  const questionXml = questions
+  const questionXml = questionFacts
     .map(
-      (question) =>
-        `<question id="${xml(question["@id"])}" url="${xml(text(question.url || question["@id"]))}">${xml(text(question.name))}</question>`,
+      ({ id, url, name }) =>
+        `<question id="${xml(id)}" url="${xml(url)}">${xml(name)}</question>`,
     )
     .join("");
   const ownedClinicXml = [
@@ -174,8 +260,8 @@ export function compileKnowledgeXml({
     `  <answers count="${questions.length}">${questionXml}</answers>`,
     canonicalIntentClusters(intentSource),
     canonicalEvidence(evidenceRegistry),
-    canonicalMediaInventory(nodes),
-    canonicalAnswerResources(questions, release.canonicalUrl),
+    canonicalMediaInventory(nodes, byId),
+    canonicalAnswerResources(questionFacts, release.canonicalUrl),
     "</knowledge>",
   ];
   return `${document.join("\n")}\n`;

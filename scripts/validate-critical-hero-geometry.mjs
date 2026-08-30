@@ -1,8 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { brotliCompressSync, constants as zlibConstants } from "node:zlib";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
-import { assembleCssSource } from "../src/lib/css-source.mjs";
-import { deriveCssDelivery } from "../src/lib/css-delivery.mjs";
+import {
+  assembleCssSource,
+  deriveCssDelivery,
+} from "../src/lib/css-delivery.mjs";
 import {
   compactCssValue,
   isMaxWidthRule,
@@ -16,12 +18,15 @@ import {
   HERO_IMAGE_SIZES,
 } from "../src/lib/hero-image-contract.mjs";
 
-const [globalCss, renderCalibrationRaw, invariants, documentHead] =
+const [globalCss, renderCalibrationRaw, invariants, documentHead, graph] =
   await Promise.all([
     readFile("src/styles/global.css", "utf8"),
     readFile("src/data/render-calibration.json", "utf8"),
     readFile("src/data/release-invariants.json", "utf8").then(JSON.parse),
     readFile("src/components/DocumentHead.astro", "utf8"),
+    readFile("src/data/semantic/knowledge-graph.jsonld", "utf8").then(
+      JSON.parse,
+    ),
   ]);
 const { cssSource, calibration } = assembleCssSource(
   globalCss,
@@ -347,10 +352,10 @@ assert(
   ),
   "Root font size must stay aligned with measured Hero sizing",
 );
-expect(criticalRules, "figure", "border", "1px solid var(--line)");
+expect(criticalRules, "figure", "border", "1px solid transparent");
 assert(HERO_FIGURE_TOTAL_BORDER_PX === 2, "Hero border contract drift");
 
-const { content } = await assembleCanonicalContent();
+const { content } = await assembleCanonicalContent({ graph });
 assert(
   (content.match(/class=["'][^"']*\bhero-actions\b[^"']*["']/g) || [])
     .length === 1,

@@ -72,19 +72,15 @@ export async function assembleCanonicalContent({
   root = process.cwd(),
   graph,
 } = {}) {
+  if (!Array.isArray(graph?.["@graph"]))
+    throw new Error(
+      "assembleCanonicalContent requires the loaded canonical knowledge graph",
+    );
   const names = await canonicalSourceNames(root);
   const release = JSON.parse(
     await readFile(path.join(root, "src/data/release.json"), "utf8"),
   );
-  const canonicalGraph =
-    graph ??
-    JSON.parse(
-      await readFile(
-        path.join(root, "src/data/semantic/knowledge-graph.jsonld"),
-        "utf8",
-      ),
-    );
-  const site = deriveSiteData(release, canonicalGraph);
+  const site = deriveSiteData(release, graph);
   let content = await readFile(
     path.join(root, "src/content-source/page.md"),
     "utf8",

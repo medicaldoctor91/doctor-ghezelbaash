@@ -1,6 +1,6 @@
 import path from "node:path";
 import { readFile, rename, rm, writeFile } from "node:fs/promises";
-import { renderCalibrationCss } from "../src/lib/css-source.mjs";
+import { renderCalibrationCss } from "../src/lib/css-delivery.mjs";
 
 const root = process.cwd();
 const canonicalPath = path.join(root, "src/data/render-calibration.json");

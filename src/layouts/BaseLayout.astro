@@ -4,8 +4,7 @@ import renderCalibrationRaw from '../data/render-calibration.json?raw';
 import release from '../data/release.json';
 import { headGraph, headGraphRaw, supportGraphRaw } from '../lib/knowledge-graph';
 import { deriveGooglePageMicrodata } from '../lib/google-page-microdata.mjs';
-import { assembleCssSource } from '../lib/css-source.mjs';
-import { deriveCssDelivery } from '../lib/css-delivery.mjs';
+import { assembleCssSource, deriveCssDelivery } from '../lib/css-delivery.mjs';
 import DocumentHead from '../components/DocumentHead.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import FloatingActionDock from '../components/FloatingActionDock.astro';
@@ -14,31 +13,33 @@ import GuideNavigator from '../components/GuideNavigator.astro';
 interface Frontmatter {
   title: string;
   description: string;
-  lang?: string;
-  dir?: string;
-  robots?: string;
+  lang: string;
+  dir: string;
+  robots: string;
 }
 
 interface Props {
   frontmatter: Frontmatter;
-  url?: string;
-  isMain?: boolean;
+  isMain: boolean;
 }
 
-const { frontmatter, url, isMain = false } = Astro.props;
-const base = Astro.site ?? Astro.url;
-const lang = frontmatter.lang ?? 'fa-IR';
-const dir = frontmatter.dir ?? 'rtl';
+const { frontmatter, isMain } = Astro.props;
+const { lang, dir, robots } = frontmatter;
+if (!lang || !robots) {
+  throw new Error('Document frontmatter requires lang and robots');
+}
 if (!['ltr', 'rtl', 'auto'].includes(dir)) {
   throw new Error(`Invalid document direction: ${dir}`);
 }
-const robots = frontmatter.robots ?? 'index, follow';
 const noindex = /(?:^|,)\s*noindex\b/i.test(robots);
+if (!Astro.site) {
+  throw new Error('Astro site URL is required for canonical resolution');
+}
 const canonicalURL = isMain
   ? new URL(release.canonicalUrl)
   : noindex
     ? undefined
-    : new URL(url ?? Astro.url.pathname, base);
+    : new URL(Astro.url.pathname, Astro.site);
 
 const { cssSource } = assembleCssSource(globalCss, renderCalibrationRaw);
 const { criticalCss, assetHref: externalCssHref } = deriveCssDelivery(cssSource);
@@ -57,52 +58,44 @@ const googlePageMicrodata = isMain
       robots={robots}
       canonicalURL={canonicalURL}
       isMain={isMain}
-      stage="critical"
-    />
-    <style is:inline set:html={criticalCss}></style>
-    <link
-      as="style"
-      data-deferred-stylesheet
-      fetchpriority="low"
-      href={externalCssHref}
-      rel="preload"
     >
-    <script is:inline id="deferred-stylesheet-loader">
-      (() => {
-        const link = document.querySelector('link[data-deferred-stylesheet]');
-        if (!link) return;
+      <style is:inline set:html={criticalCss}></style>
+      <link
+        as="style"
+        data-deferred-stylesheet
+        fetchpriority="low"
+        href={externalCssHref}
+        rel="preload"
+      >
+      <script is:inline id="deferred-stylesheet-loader">
+        (() => {
+          const link = document.querySelector('link[data-deferred-stylesheet]');
+          if (!link) return;
 
-        let activated = false;
-        const activate = () => {
-          if (activated) return;
-          activated = true;
-          link.rel = 'stylesheet';
-          link.removeAttribute('as');
-        };
+          let activated = false;
+          const activate = () => {
+            if (activated) return;
+            activated = true;
+            link.rel = 'stylesheet';
+            link.removeAttribute('as');
+          };
 
-        link.addEventListener('load', activate, { once: true });
-        link.addEventListener('error', activate, { once: true });
-        if (link.sheet) activate();
-        else setTimeout(activate, 2500);
-      })();
-    </script>
-    <noscript><link href={externalCssHref} rel="stylesheet"></noscript>
-    {isMain && (
-      <script
-        is:inline
-        id="entity-core"
-        type="application/ld+json"
-        set:html={headGraphRaw}
-      ></script>
-    )}
-    <DocumentHead
-      title={frontmatter.title}
-      description={frontmatter.description}
-      robots={robots}
-      canonicalURL={canonicalURL}
-      isMain={isMain}
-      stage="discovery"
-    />
+          link.addEventListener('load', activate, { once: true });
+          link.addEventListener('error', activate, { once: true });
+          if (link.sheet) activate();
+          else setTimeout(activate, 2500);
+        })();
+      </script>
+      <noscript><link href={externalCssHref} rel="stylesheet"></noscript>
+      {isMain && (
+        <script
+          is:inline
+          id="entity-core"
+          type="application/ld+json"
+          set:html={headGraphRaw}
+        ></script>
+      )}
+    </DocumentHead>
   </head>
   <body>
     <a class="skip-link" href="#main-content">پرش به محتوای اصلی</a>

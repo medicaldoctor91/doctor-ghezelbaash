@@ -4,6 +4,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  rm,
   writeFile,
 } from "node:fs/promises";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
@@ -86,9 +87,24 @@ if (
   throw new Error(
     `Generated asset inventory drift: ${assetEntries.map((entry) => entry.name).join(", ")}`,
   );
+const activeAssetName = assetEntries[0].name;
+const distAssetDirectory = path.join(dist, "assets");
+await mkdir(distAssetDirectory, { recursive: true });
+const staleGeneratedAssets = (
+  await readdir(distAssetDirectory, { withFileTypes: true })
+).filter(
+  (entry) =>
+    entry.name !== activeAssetName &&
+    /^site\.[0-9a-f]{12}\.css$/.test(entry.name),
+);
+for (const entry of staleGeneratedAssets) {
+  if (!entry.isFile())
+    throw new Error(`Generated CSS destination is not a file: ${entry.name}`);
+  await rm(path.join(distAssetDirectory, entry.name));
+}
 await copyExact(
-  path.posix.join(".generated/public/assets", assetEntries[0].name),
-  path.posix.join("assets", assetEntries[0].name),
+  path.posix.join(".generated/public/assets", activeAssetName),
+  path.posix.join("assets", activeAssetName),
 );
 const generatedPublicEntries = (
   await readdir(generatedPublic, { withFileTypes: true })
@@ -144,6 +160,7 @@ console.log(
       astroRoutes: pageSurface,
       machineArtifacts: STATIC_ARTIFACTS.length,
       generatedPublicFiles: generatedPublicFiles.length + assetEntries.length,
+      staleGeneratedAssetsRemoved: staleGeneratedAssets.length,
       stableMediaAliases: stableMedia.aliases.length,
       canonicalHostRedirects: canonicalRedirects.length,
       destinations: destinations.size,

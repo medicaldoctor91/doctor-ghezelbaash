@@ -1,4 +1,5 @@
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { access, readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
@@ -38,6 +39,10 @@ const required = [
   "scripts/lib/projections/contact-discovery.mjs",
 ];
 for (const file of required) await access(path.join(root, file));
+assert(
+  !existsSync(path.join(root, "src/lib/css-source.mjs")),
+  "Legacy parallel CSS source must not exist",
+);
 
 const routes = (
   await readdir(path.join(root, "src/pages"), { withFileTypes: true })
@@ -102,6 +107,7 @@ const [
   materializer,
   deploymentHeadersGenerator,
   descriptorGenerator,
+  retrievalGenerator,
   astroConfigSource,
   release,
   machineResourceRegistry,
@@ -125,6 +131,7 @@ const [
   read("scripts/materialize-static-artifacts.mjs"),
   read("scripts/generate-deployment-headers.mjs"),
   read("scripts/generate-descriptors.mjs"),
+  read("scripts/generate-retrieval-projections.mjs"),
   read("astro.config.mjs"),
   readJson("src/data/release.json"),
   readJson("src/data/machine-resources.json"),
@@ -225,6 +232,9 @@ assert(
     /import\s+release\s+from\s+['"]\.\.\/data\/release\.json['"]/.test(
       documentHead,
     ) &&
+    /import\s*\{\s*headGraph\s*\}\s*from\s*['"]\.\.\/lib\/knowledge-graph['"]/.test(
+      documentHead,
+    ) &&
     /HEAD_RESOURCES\s*\.map\s*\(/.test(documentHead),
   "Document Head must use its direct metadata and resource sources",
 );
@@ -236,15 +246,48 @@ assert(
 );
 assert(
   baseLayout.includes("../styles/global.css?raw") &&
-    baseLayout.includes("../lib/css-source.mjs") &&
-    baseLayout.includes("../lib/css-delivery.mjs"),
+    baseLayout.includes("../lib/css-delivery.mjs") &&
+    !baseLayout.includes("../lib/css-source.mjs"),
   "Layout must assemble the single stylesheet directly",
 );
 assert(
-  baseLayout.includes("<DocumentHead") &&
+  !projectionContext.includes("graphByUrl") &&
+    /const\s+sourceNodes\s*=\s*sourceNodesForUrl\(sourceUrl\)/.test(
+      semanticCompiler,
+    ) &&
+    /const\s+graphNodes\s*=\s*sourceNodesForUrl\(anchor\)/.test(
+      retrievalCompiler,
+    ) &&
+    retrievalGenerator.includes("sourceNodesForUrl(row.sourceUrl)") &&
+    semanticCompiler.includes("sourceNodes.flatMap(evidenceRefsForNode)") &&
+    retrievalCompiler.includes("passage.graphNodeIds.map"),
+  "Semantic provenance must preserve every direct URL binding",
+);
+assert(
+  /from\s+["']parse5["']/.test(retrievalCompiler) &&
+    /lang\s*:\s*section\.lang/.test(retrievalCompiler) &&
+    !/\/-ckb-iq|\/-ar-iq|english\)\(\?:\$\|-\)/.test(retrievalCompiler),
+  "Retrieval language must propagate from the authored DOM",
+);
+assert(
+  (baseLayout.match(/<DocumentHead\b/g) || []).length === 1 &&
+    (baseLayout.match(/<\/DocumentHead>/g) || []).length === 1 &&
+    documentHead.includes("<slot />") &&
+    !/\bHeadStage\b|\bstage\s*=/.test(documentHead + baseLayout) &&
     baseLayout.includes("headGraphRaw") &&
     baseLayout.includes("supportGraphRaw"),
   "Layout must own head and semantic delivery",
+);
+assert(
+  ["lang", "dir", "robots"].every((field) =>
+    new RegExp(`\\b${field}\\s*:\\s*string`).test(baseLayout),
+  ) &&
+    /\bisMain\s*:\s*boolean/.test(baseLayout) &&
+    !/\b(?:lang|dir|robots)\s*\?:/.test(baseLayout) &&
+    !/\bisMain\s*\?:|\bisMain\s*=\s*(?:false|true)\b/.test(baseLayout) &&
+    !/frontmatter\.(?:lang|dir|robots)\s*\?\?/.test(baseLayout) &&
+    !/Astro\.site\s*\?\?|url\s*\?\?/.test(baseLayout),
+  "Layout intent, frontmatter, and canonical resolution must be fail-closed",
 );
 assert(
   /export\s+function\s+deriveGooglePageMicrodata\b/.test(googlePageMicrodata) &&

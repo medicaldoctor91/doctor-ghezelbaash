@@ -11,8 +11,14 @@ import {
 const root = process.cwd(),
   redirectRegistry = await loadRedirectRegistry(root),
   bridge = projectGithubPagesBridge(redirectRegistry),
-  { canonical, humanRoutes, machineRoutes } = bridge,
-  { content: sourceHtml } = await assembleCanonicalContent({ root });
+  { canonical, humanRoutes, machineRoutes } = bridge;
+const graph = JSON.parse(
+  await readFile(
+    path.join(root, "src/data/semantic/knowledge-graph.jsonld"),
+    "utf8",
+  ),
+);
+const { content: sourceHtml } = await assembleCanonicalContent({ root, graph });
 assert.ok(sourceHtml.length > 0, "Canonical assembled page is empty");
 const escapeHtml = (value) =>
   value

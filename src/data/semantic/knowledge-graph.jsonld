@@ -3146,6 +3146,9 @@
           "@language": "en"
         }
       ],
+      "alternateName": [
+        "botulinum toxin result correction"
+      ],
       "subjectOf": {
         "@id": "https://www.ghezelbaash.ir/#botox-and-thread-lift-result-correction"
       },
@@ -3176,6 +3179,9 @@
           "@value": "Thread lift result correction",
           "@language": "en"
         }
+      ],
+      "alternateName": [
+        "thread lift result correction"
       ],
       "subjectOf": {
         "@id": "https://www.ghezelbaash.ir/#botox-and-thread-lift-result-correction"
@@ -5324,6 +5330,9 @@
           "@value": "Free online initial aesthetic consultation",
           "@language": "en"
         }
+      ],
+      "alternateName": [
+        "free online aesthetic initial consultation"
       ],
       "serviceType": "Free online initial aesthetic consultation",
       "provider": {
@@ -19407,6 +19416,9 @@
           "@language": "en"
         }
       ],
+      "alternateName": [
+        "mesotherapy pigmentation"
+      ],
       "dcterms:isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#procedure-skin-mesotherapy"
       },
@@ -19466,6 +19478,9 @@
           "@language": "en"
         }
       ],
+      "alternateName": [
+        "mesogel under eye"
+      ],
       "dcterms:isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#procedure-mesogel"
       },
@@ -19496,6 +19511,9 @@
           "@value": "Injectable hydrogel treatment",
           "@language": "en"
         }
+      ],
+      "alternateName": [
+        "injectable hydrogel"
       ],
       "dcterms:subject": [
         {
@@ -19590,6 +19608,9 @@
           "@language": "en"
         }
       ],
+      "alternateName": [
+        "exosome skin treatment"
+      ],
       "dcterms:subject": [
         {
           "@id": "https://www.ghezelbaash.ir/#biomedical-concept-rejuvenation"
@@ -19614,6 +19635,9 @@
           "@value": "Exosome hair treatment",
           "@language": "en"
         }
+      ],
+      "alternateName": [
+        "exosome hair treatment"
       ],
       "dcterms:subject": [
         {

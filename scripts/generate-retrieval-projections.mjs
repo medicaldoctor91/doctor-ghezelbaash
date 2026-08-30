@@ -6,6 +6,8 @@ import { buildLiveReputationArtifacts } from "./lib/live-reputation-artifacts.mj
 import {
   canonicalSemanticSource,
   deriveCanonicalSemanticSets,
+  exactLanguageLiteral,
+  indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
 
 const root = process.cwd();
@@ -26,9 +28,25 @@ const graph = await readJson(canonicalSemanticSource(policy));
 const evidenceRegistry = await readJson("src/data/evidence-registry.json");
 const { answers, services } = deriveCanonicalSemanticSets(graph, release);
 
-const nodes = graph["@graph"] || [];
-const byId = new Map(nodes.filter((n) => n?.["@id"]).map((n) => [n["@id"], n]));
+const { nodes, byId, sourceNodesForUrl } = indexCanonicalGraph(graph);
 const serviceIds = new Set(services.map((service) => service.id));
+const clinic = byId.get(release.clinic.id);
+if (!clinic) throw new Error("Canonical clinic is missing from the graph");
+const practiceCity = byId.get(id(clinic.location));
+if (!practiceCity)
+  throw new Error("Canonical clinic location is missing from the graph");
+const practiceCountry = byId.get(id(practiceCity.containedInPlace));
+if (!practiceCountry)
+  throw new Error("Canonical clinic country is missing from the graph");
+const practiceLocation = `${exactLanguageLiteral(
+  practiceCity.name,
+  "en",
+  "Canonical clinic city",
+)}, ${exactLanguageLiteral(
+  practiceCountry.name,
+  "en",
+  "Canonical clinic country",
+)}`;
 
 const { rating, reviewCount, observedAt, liveObservationId, jsonLdJson } =
   buildLiveReputationArtifacts(release, volatile);
@@ -104,21 +122,19 @@ const answerEvidence = new Map();
 for (const row of answers) {
   const q = byId.get(row.questionId),
     a = byId.get(row.answerId),
-    source = byId.get(row.sourceUrl);
+    sourceNodes = sourceNodesForUrl(row.sourceUrl);
+  if (!sourceNodes.includes(q) || !sourceNodes.includes(a))
+    throw new Error(
+      `Canonical answer lacks its direct source URL binding: ${row.answerId}`,
+    );
   const answerSubjects = [
-    row.questionId,
-    row.answerId,
-    row.sourceUrl,
-    ...references(q, "about"),
-    ...references(a, "about"),
-    ...references(source, "about"),
+    ...sourceNodes.map((node) => node["@id"]),
+    ...sourceNodes.flatMap((node) => references(node, "about")),
   ];
   answerEvidence.set(
     row.answerId,
     boundedEvidence(
-      citationEvidenceFor(q),
-      citationEvidenceFor(a),
-      citationEvidenceFor(source),
+      sourceNodes.flatMap(citationEvidenceFor),
       subjectEvidenceFor(answerSubjects),
     ),
   );
@@ -227,7 +243,7 @@ const scopeSuffix = {
 const commonRow = (language, scope, stable) => ({
   language,
   query_scope: scope,
-  practice_location: "Kermanshah, Iran",
+  practice_location: practiceLocation,
   canonical_subject: release.primaryEntity.wikidata,
   canonical_subject_iri: release.primaryEntity.id,
   clinic_entity: release.dataset.supportingClinicWikidata,
@@ -244,17 +260,18 @@ for (const lang of policy.languages) {
   for (const intent of policy.intentFamilies) {
     const answer = intentAnswer[intent];
     if (!answer) throw new Error(`No answer for ${intent}`);
+    const stableEvidence = answerEvidence.get(answer.answerId);
+    if (!Array.isArray(stableEvidence) || !stableEvidence.length)
+      throw new Error(
+        `Canonical answer has no stable retrieval evidence: ${answer.answerId}`,
+      );
     for (const base of queries[lang]?.[intent] || []) {
       for (const scope of policy.scopes) {
         rows.push({
           row_kind: "intent_alias",
           query: `${base}${scopeSuffix[lang][scope]}`.trim(),
           intent_family: intent,
-          ...commonRow(
-            lang,
-            scope,
-            answerEvidence.get(answer.answerId) || baselineEvidence,
-          ),
+          ...commonRow(lang, scope, stableEvidence),
           answer_id: answer.answerId,
           answer_strategy: "resolve_to_canonical_answer_atom",
           service_ids: [],
@@ -286,26 +303,8 @@ const inferScope = (text, lang) =>
       : "unspecified";
 let serviceAliases = 0;
 for (const service of services) {
-  const explicitAliases = [
-    ...new Set(
-      arr(service.aliases)
-        .map((x) => String(x).trim())
-        .filter(Boolean),
-    ),
-  ];
-  const canonicalFallback = String(
-    service.name || service.id.split("#").pop() || "",
-  )
-    .trim()
-    .replace(/^procedure-/, "")
-    .replace(/-/g, " ");
-  const aliases = explicitAliases.length
-    ? explicitAliases
-    : [canonicalFallback].filter(Boolean);
-  if (!aliases.length)
-    throw new Error(`Offered service has no retrieval label ${service.id}`);
   const stable = boundedEvidence(subjectEvidenceFor([service.id]));
-  for (const alias of aliases) {
+  for (const alias of service.aliases) {
     serviceAliases++;
     const lang = detectLanguage(alias);
     const exactScope = inferScope(alias, lang);
@@ -401,7 +400,9 @@ await write(
   path.join(generated.projections, "query-matrix.jsonl"),
   queryMatrix,
 );
-const reviewedAt = release.medicalReviewedAt || release.dateModified;
+if (typeof release.medicalReviewedAt !== "string" || !release.medicalReviewedAt)
+  throw new Error("Release lacks the canonical medical review date");
+const reviewedAt = release.medicalReviewedAt;
 const matrix = {
   release: release.release,
   conceptDoi: release.dataset.zenodo.conceptDoi,

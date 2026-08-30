@@ -1,22 +1,18 @@
+import {
+  exactLanguageLiteral,
+  indexCanonicalGraph,
+} from "./semantic-projection.mjs";
+
 const faDigits = (value) =>
   String(value).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
-const text = (value, lang = "fa") => {
-  if (value == null) return "";
-  if (typeof value === "string" || typeof value === "number")
-    return String(value);
-  if (Array.isArray(value)) {
-    const preferred = value.find(
-      (item) => item && typeof item === "object" && item["@language"] === lang,
-    );
-    return text(preferred ?? value[0], lang);
-  }
-  if (typeof value === "object")
-    return String(value["@value"] ?? value.name ?? "");
-  return "";
+const exactText = (value, label) => {
+  if (typeof value !== "string" || !value.length)
+    throw new Error(`Canonical graph requires ${label}`);
+  return value;
 };
-const normalizePhone = (value) => `+${String(value ?? "").replace(/\D/g, "")}`;
+const normalizePhone = (value) => `+${String(value).replace(/\D/g, "")}`;
 const groupLocalPhone = (value) =>
   `${value.slice(0, 4)} ${value.slice(4, 7)} ${value.slice(7)}`;
 const groupInternationalPhone = (value) =>
@@ -32,11 +28,7 @@ const formatDate = (value, calendar) =>
 export function deriveSiteData(release, graph) {
   if (!release?.clinic?.id || !Array.isArray(graph?.["@graph"]))
     throw new Error("Site data requires release + graph");
-  const byId = new Map(
-    graph["@graph"]
-      .filter((node) => node?.["@id"])
-      .map((node) => [node["@id"], node]),
-  );
+  const { byId } = indexCanonicalGraph(graph);
   const clinic = byId.get(release.clinic.id);
   if (!clinic)
     throw new Error(`Head graph lacks clinic node: ${release.clinic.id}`);
@@ -48,31 +40,36 @@ export function deriveSiteData(release, graph) {
   if (!/^\+98\d{10}$/.test(phone))
     throw new Error(`Invalid canonical clinic telephone: ${clinic.telephone}`);
   const localPhone = `0${phone.slice(3)}`;
-  const instagramUrl = asArray(
+  const instagramUrls = asArray(
     release.primaryEntity?.verifiedWebIdentityMesh,
-  ).find((url) =>
+  ).filter((url) =>
     /^https:\/\/www\.instagram\.com\/[A-Za-z0-9._-]+\/?$/.test(String(url)),
   );
-  if (!instagramUrl)
-    throw new Error("Official Instagram URL missing from identity mesh");
+  if (instagramUrls.length !== 1)
+    throw new Error(
+      `Identity mesh requires one official Instagram URL; found ${instagramUrls.length}`,
+    );
+  const [instagramUrl] = instagramUrls;
   const instagramHandle = new URL(instagramUrl).pathname
     .split("/")
     .filter(Boolean)[0];
 
   if (String(address.postalCode) !== String(release.clinic.postalCode))
     throw new Error("Clinic postal-code authority drift");
-  const hours = String(release.clinic.hours || "").match(
+  const hours = String(release.clinic.hours).match(
     /^Saturday–Thursday (\d{2}:\d{2})–(\d{2}:\d{2}); Friday closed$/,
   );
   if (!hours || release.clinic.fridayClosed !== true)
     throw new Error(
       `Unsupported clinic hours contract: ${release.clinic.hours}`,
     );
-  const clinicName = text(clinic.name) || "کلینیک زیبایی دکتر سعید قزلباش";
-  const locality = text(address.addressLocality);
-  const street = text(address.streetAddress);
-  if (!locality || !street)
-    throw new Error("Canonical clinic address is incomplete");
+  const clinicName = exactLanguageLiteral(
+    clinic.name,
+    "fa",
+    "Canonical clinic name",
+  );
+  const locality = exactText(address.addressLocality, "clinic locality");
+  const street = exactText(address.streetAddress, "clinic street address");
 
   const directions = new URL("https://www.google.com/maps/dir/");
   directions.searchParams.set("api", "1");
@@ -106,7 +103,7 @@ const siteTokenPattern = /{{(?:CLINIC_[A-Z0-9_]+|OFFICIAL_[A-Z0-9_]+)}}/g;
 function siteTokenValues(site) {
   if (!site?.telHref || !site?.instagramUrl || !site?.chatUrl || !site?.mapsUrl)
     throw new Error("Invalid canonical site token source");
-  const hours = String(site.hoursDisplay || "").match(
+  const hours = String(site.hoursDisplay).match(
     /^شنبه تا پنجشنبه (\S+) تا (\S+) و جمعه تعطیل$/,
   );
   if (!hours)

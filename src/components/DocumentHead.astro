@@ -5,9 +5,12 @@ import {
   HERO_IMAGE_SIZES,
   HERO_PRELOAD_SRCSET,
 } from '../lib/hero-image-contract.mjs';
+import { headGraph } from '../lib/knowledge-graph';
 import { HEAD_RESOURCES } from '../lib/resources.mjs';
-
-type HeadStage = 'critical' | 'discovery';
+import {
+  exactLanguageLiteral,
+  indexCanonicalGraph,
+} from '../lib/semantic-projection.mjs';
 
 type DiscoveryLink = {
   href: string;
@@ -17,42 +20,84 @@ type DiscoveryLink = {
   color?: string;
 };
 
+type GraphNode = Record<string, unknown> & { '@id': string };
+
 interface Props {
   title: string;
   description: string;
   robots: string;
-  canonicalURL?: URL;
-  isMain?: boolean;
-  stage?: HeadStage;
+  canonicalURL: URL | undefined;
+  isMain: boolean;
 }
 
-const {
-  title,
-  description,
-  robots,
-  canonicalURL,
-  isMain = false,
-  stage = 'critical',
-} = Astro.props;
-
-if (stage !== 'critical' && stage !== 'discovery') {
-  throw new Error(`Unknown DocumentHead stage: ${stage}`);
-}
-if (isMain && canonicalURL?.toString() !== release.canonicalUrl) {
+const { title, description, robots, canonicalURL, isMain } = Astro.props;
+const canonicalUrl = canonicalURL?.toString();
+if (isMain && canonicalUrl !== release.canonicalUrl) {
   throw new Error('Canonical page URL drift');
 }
-
-const normalizedRobots = robots
-  .split(',')
-  .map((value) => value.trim())
-  .filter(Boolean);
-const robotsWithLargeImagePreview =
+if (
   isMain &&
-  !normalizedRobots.some((value) =>
-    value.toLowerCase().startsWith('max-image-preview:'),
+  !/(?:^|,)\s*max-image-preview:large\s*(?:,|$)/i.test(robots)
+) {
+  throw new Error('Canonical robots policy must declare max-image-preview:large');
+}
+
+const { byId: nodeById } = indexCanonicalGraph(headGraph) as {
+  byId: Map<string, GraphNode>;
+};
+const requireNode = (id: string, label: string) => {
+  const node = nodeById.get(id);
+  if (!node) throw new Error(`Head graph missing ${label}: ${id}`);
+  return node;
+};
+const exactUrl = (value: unknown, pattern: RegExp, label: string) => {
+  const matches = (Array.isArray(value) ? value : [value]).filter(
+    (item): item is string => typeof item === 'string' && pattern.test(item),
+  );
+  if (matches.length !== 1) {
+    throw new Error(`Head graph must define one ${label}`);
+  }
+  return matches[0];
+};
+
+const person = requireNode(release.primaryEntity.id, 'canonical person');
+const clinic = requireNode(release.clinic.id, 'canonical clinic');
+const profileFirstName = exactLanguageLiteral(
+  person.givenName,
+  'en',
+  'Canonical physician givenName',
+);
+const profileLastName = exactLanguageLiteral(
+  person.familyName,
+  'en',
+  'Canonical physician familyName',
+);
+const instagramUrl = exactUrl(
+  person.sameAs,
+  /^https:\/\/www\.instagram\.com\/[A-Za-z0-9._-]+\/?$/,
+  'official Instagram profile',
+);
+const profileUsername = new URL(instagramUrl).pathname
+  .split('/')
+  .filter(Boolean)[0];
+const clinicIdentifierNodes = (Array.isArray(clinic.identifier)
+  ? clinic.identifier
+  : [clinic.identifier]
+)
+  .map((reference) =>
+    typeof reference === 'object' &&
+    reference !== null &&
+    typeof reference['@id'] === 'string'
+      ? nodeById.get(reference['@id'])
+      : undefined,
   )
-    ? [...normalizedRobots, 'max-image-preview:large'].join(',')
-    : robots;
+  .filter((node): node is GraphNode => Boolean(node));
+const openStreetMapUrl = exactUrl(
+  clinicIdentifierNodes.map((node) => node.url),
+  /^https:\/\/www\.openstreetmap\.org\/node\/\d+$/,
+  'clinic OpenStreetMap identifier',
+);
+
 const faviconPng = '/favicon.png';
 const og = documentHead.openGraph;
 const canonical = release.canonicalUrl;
@@ -94,7 +139,7 @@ const discoveryLinks: DiscoveryLink[] = [
     title: 'Google Maps — clinic',
   },
   {
-    href: 'https://www.openstreetmap.org/node/13530287096',
+    href: openStreetMapUrl,
     rel: 'about',
     title: 'OpenStreetMap — clinic',
   },
@@ -119,68 +164,74 @@ const discoveryLinks: DiscoveryLink[] = [
 ];
 ---
 
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport">
 {
-  isMain && stage === 'critical' && (
-    <>
-      <meta
-        content="width=device-width,initial-scale=1,viewport-fit=cover"
-        name="viewport"
-      >
-      <link
-        as="image"
-        fetchpriority="high"
-        imagesizes={HERO_IMAGE_SIZES}
-        imagesrcset={HERO_PRELOAD_SRCSET}
-        rel="preload"
-        type="image/avif"
-      >
-      <link href={faviconPng} rel="icon" sizes="192x192" type="image/png">
-      <link href="/apple-touch-icon.png" rel="apple-touch-icon">
-      <title>{title}</title>
-      <meta content={description} name="description">
-      <meta content={robotsWithLargeImagePreview} name="robots">
-      <meta
-        content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ"
-        name="google-site-verification"
-      >
-      <meta content={documentHead.author} name="author">
-      <meta content={documentHead.applicationName} name="application-name">
-      <meta
-        content={documentHead.appleMobileWebAppTitle}
-        name="apple-mobile-web-app-title"
-      >
-      <meta content="telephone=no" name="format-detection">
-      <meta content="light" name="color-scheme">
-      <meta content={documentHead.themeColor} name="theme-color">
-      <link
-        as="font"
-        crossorigin="anonymous"
-        href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2"
-        media="(min-width:48.01rem)"
-        rel="preload"
-        type="font/woff2"
-      >
-      <link href={canonicalURL!.toString()} rel="canonical">
-    </>
+  isMain && (
+    <link
+      as="image"
+      fetchpriority="high"
+      imagesizes={HERO_IMAGE_SIZES}
+      imagesrcset={HERO_PRELOAD_SRCSET}
+      rel="preload"
+      type="image/avif"
+    >
   )
 }
+<link href={faviconPng} rel="icon" sizes="192x192" type="image/png">
+{isMain && <link href="/apple-touch-icon.png" rel="apple-touch-icon">}
+<title>{title}</title>
+<meta content={description} name="description">
+<meta content={robots} name="robots">
 {
-  isMain && stage === 'discovery' && (
+  isMain && (
+    <meta
+      content="8n4oKDWVkFyp-dUWoTAnLVO1HTr4ARpSPEVngAvybCQ"
+      name="google-site-verification"
+    >
+  )
+}
+<meta content={documentHead.author} name="author">
+{isMain && <meta content={documentHead.applicationName} name="application-name">}
+{
+  isMain && (
+    <meta
+      content={documentHead.appleMobileWebAppTitle}
+      name="apple-mobile-web-app-title"
+    >
+  )
+}
+{isMain && <meta content="telephone=no" name="format-detection">}
+{isMain && <meta content="light" name="color-scheme">}
+<meta content={documentHead.themeColor} name="theme-color">
+{
+  isMain && (
+    <link
+      as="font"
+      crossorigin="anonymous"
+      href="/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2"
+      media="(min-width:48.01rem)"
+      rel="preload"
+      type="font/woff2"
+    >
+  )
+}
+{canonicalUrl && <link href={canonicalUrl} rel="canonical">}
+<slot />
+{
+  isMain && (
     <>
       {discoveryLinks.map((link) => <link {...link}>)}
       <meta content={og.type} property="og:type">
-      <meta content="Saeed" property="profile:first_name">
-      <meta content="Ghezelbash" property="profile:last_name">
-      <meta content="doctor.ghezelbaash" property="profile:username">
+      <meta content={profileFirstName} property="profile:first_name">
+      <meta content={profileLastName} property="profile:last_name">
+      <meta content={profileUsername} property="profile:username">
       <meta content={og.locale} property="og:locale">
-      {
-        og.alternateLocales.map((locale) => (
-          <meta content={locale} property="og:locale:alternate">
-        ))
-      }
+      {og.alternateLocales.map((locale) => (
+        <meta content={locale} property="og:locale:alternate">
+      ))}
       <meta content={title} property="og:title">
       <meta content={description} property="og:description">
-      <meta content={canonicalURL!.toString()} property="og:url">
+      <meta content={canonicalUrl} property="og:url">
       <meta content={og.siteName} property="og:site_name">
       <meta content={og.image} property="og:image">
       <meta content={og.image} property="og:image:secure_url">
@@ -191,26 +242,9 @@ const discoveryLinks: DiscoveryLink[] = [
       <meta content={documentHead.twitter.card} name="twitter:card">
       <meta content={title} name="twitter:title">
       <meta content={description} name="twitter:description">
-      <meta content={canonicalURL!.toString()} name="twitter:url">
+      <meta content={canonicalUrl} name="twitter:url">
       <meta content={og.image} name="twitter:image">
       <meta content={og.imageAlt} name="twitter:image:alt">
-    </>
-  )
-}
-{
-  !isMain && stage === 'critical' && (
-    <>
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1, viewport-fit=cover"
-      >
-      <title>{title}</title>
-      <meta name="description" content={description}>
-      <meta name="robots" content={robots}>
-      <meta name="author" content={documentHead.author}>
-      <meta name="theme-color" content={documentHead.themeColor}>
-      {canonicalURL && <link rel="canonical" href={canonicalURL.toString()}>}
-      <link rel="icon" href={faviconPng} sizes="192x192" type="image/png">
     </>
   )
 }

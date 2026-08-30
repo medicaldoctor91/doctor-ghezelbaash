@@ -1,6 +1,8 @@
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
+import { parseFragment, serialize } from "parse5";
 import { sha256, valueText } from "../projection-context.mjs";
+import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
 
 const entityMap = {
   amp: "&",
@@ -105,7 +107,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     invariants,
     graph,
     byId,
-    graphByUrl,
+    sourceNodesForUrl,
     evidenceRegistry,
     evidenceSnapshot,
     evidenceByUrl,
@@ -119,29 +121,75 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     );
 
   const home = await readFile(path.join(generatedContent, "home.md"), "utf8");
+  const frontmatter = home.match(/^---\r?\n([\s\S]*?)\r?\n---\s*/);
+  if (!frontmatter)
+    throw new Error("Retrieval compiler requires Markdown frontmatter");
+  const frontmatterLines = frontmatter[1].split(/\r?\n/);
+  const frontmatterValue = (key) => {
+    const matches = frontmatterLines.filter((line) =>
+      line.startsWith(`${key}:`),
+    );
+    if (matches.length !== 1)
+      throw new Error(`Retrieval frontmatter requires one ${key}`);
+    const raw = matches[0].slice(key.length + 1).trim();
+    let value;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      throw new Error(`Retrieval frontmatter ${key} must be a JSON string`);
+    }
+    if (typeof value !== "string" || !value.trim())
+      throw new Error(`Retrieval frontmatter ${key} must be nonempty`);
+    return value;
+  };
+  const pageTitle = frontmatterValue("title");
+  const pageLanguage = frontmatterValue("lang");
   const body = home
-    .replace(/^---[\s\S]*?---\s*/, "")
+    .slice(frontmatter[0].length)
     .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[\s\S]*?<\/style>/gi, " ");
   const blocks = [];
-  const blockPattern =
-    /<(h[1-6]|p|li|figcaption|summary|dt|dd)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
-  let match;
-  while ((match = blockPattern.exec(body))) {
-    const tag = match[1].toLowerCase(),
-      attrs = match[2],
-      text = inline(match[3]);
-    if (!text) continue;
-    const id = (attrs.match(/\bid=["']([^"']+)["']/i) || [])[1] || "";
-    const retrievalAlias = decode(
-      (attrs.match(/\bdata-retrieval-alias=["']([^"']+)["']/i) || [])[1] || "",
-    );
-    blocks.push({ index: match.index, tag, id, text, retrievalAlias });
-  }
-  blocks.sort((left, right) => left.index - right.index);
+  const blockTags = new Set([
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "li",
+    "figcaption",
+    "summary",
+    "dt",
+    "dd",
+  ]);
+  const attribute = (node, name) =>
+    node.attrs?.find((candidate) => candidate.name === name)?.value;
+  const visit = (node, inheritedLanguage) => {
+    const ownLanguage = attribute(node, "lang");
+    const language = ownLanguage === undefined ? inheritedLanguage : ownLanguage;
+    const tag = node.tagName?.toLowerCase();
+    if (blockTags.has(tag)) {
+      const text = inline(serialize(node));
+      if (text) {
+        if (typeof language !== "string" || !language)
+          throw new Error(`Retrieval block lacks a direct language: ${tag}`);
+        blocks.push({
+          tag,
+          id: attribute(node, "id"),
+          text,
+          retrievalAlias: attribute(node, "data-retrieval-alias"),
+          lang: language,
+        });
+      }
+      return;
+    }
+    for (const child of node.childNodes ?? []) visit(child, language);
+  };
+  visit(parseFragment(body), pageLanguage);
 
   let markdown = [
-    "# دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
+    `# ${pageTitle}`,
     "",
     `> Canonical human source: ${release.canonicalUrl}`,
     `> Primary entity: ${release.primaryEntity.id} | Google KG ${release.primaryEntity.googleKnowledgeGraphId} | Wikidata ${release.primaryEntity.wikidata}`,
@@ -167,32 +215,49 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   await writeFile(path.join(projections, "index.md"), markdown);
 
   const sections = [];
-  let current = {
-    level: 1,
-    title: "دکتر سعید قزلباش | پزشک زیبایی در کرمانشاه",
-    id: "saeed-ghezelbash",
-    retrievalAlias: "",
-    parts: [],
-  };
+  let current;
   const flush = () => {
-    if (current.parts.length || current.title) sections.push(current);
+    if (current?.parts.length) sections.push(current);
   };
   for (const block of blocks) {
     if (/^h[1-4]$/.test(block.tag)) {
+      if (!block.id)
+        throw new Error(`Retrieval heading lacks an ID: ${block.text}`);
       flush();
       current = {
         level: Number(block.tag[1]),
         title: block.text,
-        id: block.id || "",
-        retrievalAlias: block.retrievalAlias || "",
+        id: block.id,
+        retrievalAlias: block.retrievalAlias,
+        lang: block.lang,
         parts: [],
       };
-    } else if (["p", "li", "figcaption", "summary", "dd"].includes(block.tag))
+    } else if (["p", "li", "figcaption", "summary", "dd"].includes(block.tag)) {
+      if (!current)
+        throw new Error(`Retrieval content precedes its heading: ${block.tag}`);
+      if (block.lang !== current.lang) {
+        const previous = current;
+        flush();
+        current = {
+          level: previous.level,
+          title: block.tag === "summary" ? block.text : previous.title,
+          id: block.id === undefined ? previous.id : block.id,
+          retrievalAlias:
+            block.retrievalAlias === undefined
+              ? previous.retrievalAlias
+              : block.retrievalAlias,
+          lang: block.lang,
+          parts: [],
+        };
+      }
       current.parts.push(block.text);
+    }
   }
   flush();
 
-  const maxPassage = Number(invariants.maxRagPassageChars || 4200);
+  const maxPassage = invariants.maxRagPassageChars;
+  if (!Number.isInteger(maxPassage) || maxPassage < 1)
+    throw new Error("Release invariants lack a valid maxRagPassageChars value");
   const emitted = [];
   for (const section of sections) {
     const joined = section.parts
@@ -202,31 +267,28 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     if (!joined) continue;
     const chunks = sentenceChunks(joined, maxPassage);
     chunks.forEach((text, index) => {
-      const anchor = section.id
-        ? `${release.canonicalUrl}#${section.id}`
-        : release.canonicalUrl;
+      const anchor = `${release.canonicalUrl}#${section.id}`;
       const hash = sha256(Buffer.from(`${anchor}|${index}|${text}`)).slice(
         0,
         16,
       );
-      const lang = /-ckb-iq(?:$|-)/i.test(section.id)
-        ? "ckb-IQ"
-        : /(?:^|-)(?:en|english)(?:$|-)/i.test(section.id)
-          ? "en"
-          : "fa-IR";
       const entityIds = [release.primaryEntity.id];
       if (/کلینیک|clinic|کلینیکەکە/i.test(text))
         entityIds.push(release.clinic.id);
-      const graphNode = graphByUrl.get(anchor) || byId.get(anchor);
+      const graphNodes = sourceNodesForUrl(anchor);
+      const graphNodeIds = graphNodes.map((node) => node["@id"]);
       const inlineEvidenceIds = [...evidenceByUrl]
         .filter(([url]) => text.includes(url))
         .map(([, id]) => id);
       const claimEvidenceIds = [
         ...new Set([
-          ...(graphNode?.["@id"] === release.primaryEntity.id ||
-          graphNode?.["@id"] === release.clinic.id
-            ? []
-            : evidenceRefsForNode(graphNode)),
+          ...graphNodes
+            .filter(
+              (node) =>
+                node["@id"] !== release.primaryEntity.id &&
+                node["@id"] !== release.clinic.id,
+            )
+            .flatMap(evidenceRefsForNode),
           ...inlineEvidenceIds,
         ]),
       ];
@@ -246,9 +308,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         part: index + 1,
         partsTotal: chunks.length,
         hash,
-        lang,
+        lang: section.lang,
         entityIds,
-        graphNodeId: graphNode?.["@id"] || "",
+        graphNodeIds,
         evidenceIds,
         claimEvidenceIds,
         entityEvidenceIds,
@@ -257,10 +319,22 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     });
   }
 
+  const person = byId.get(release.primaryEntity.id);
+  if (!person) throw new Error("Retrieval graph lacks the canonical physician");
+  const englishPersonName = exactLanguageLiteral(
+    person.name,
+    "en",
+    "Canonical physician name",
+  );
+  const persianPersonName = exactLanguageLiteral(
+    person.name,
+    "fa",
+    "Canonical physician name",
+  );
   let full = [
     "# ENTITY",
-    "NAME: Saeed Ghezelbash",
-    "PERSIAN_NAME: سعید قزلباش",
+    `NAME: ${englishPersonName}`,
+    `PERSIAN_NAME: ${persianPersonName}`,
     `ENTITY_ID: ${release.primaryEntity.id}`,
     `GOOGLE_KG: ${release.primaryEntity.googleKnowledgeGraphId}`,
     `WIKIDATA: ${release.primaryEntity.wikidata}`,
@@ -273,7 +347,8 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     `PRICE_RANGE: ${release.clinic.priceRange}`,
     `CANONICAL: ${release.canonicalUrl}`,
     `RELEASE: ${release.release}`,
-    `REVIEWED: ${release.dateModified}`,
+    `MODIFIED: ${release.dateModified}`,
+    `MEDICALLY_REVIEWED: ${release.medicalReviewedAt}`,
     `IDENTITY_FINGERPRINT_SHA256: ${identityFingerprintSha256}`,
     `PASSAGE_COUNT: ${emitted.length}`,
     "",
@@ -286,7 +361,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       `LEVEL: H${passage.level}`,
       `TITLE: ${passage.title}`,
       `ANCHOR: ${passage.anchor}`,
-      `GRAPH_NODE_ID: ${passage.graphNodeId}`,
+      ...(passage.graphNodeIds.length
+        ? [`GRAPH_NODE_IDS: ${passage.graphNodeIds.join(" | ")}`]
+        : []),
       `PART: ${passage.part}/${passage.partsTotal}`,
       `LANGUAGE: ${passage.lang}`,
       `ENTITY_IDS: ${passage.entityIds.join(" | ")}`,
@@ -315,7 +392,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     {
       "@id": `${release.canonicalUrl}provenance.jsonld#dataset`,
       "@type": ["Dataset", "prov:Entity"],
-      name: "Saeed Ghezelbash claim and passage provenance graph",
+      name: `${englishPersonName} claim and passage provenance graph`,
       creator: { "@id": release.primaryEntity.id },
       publisher: { "@id": release.primaryEntity.id },
       about: [
@@ -332,11 +409,13 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       },
     },
   ];
-  for (const evidence of evidenceRegistry.evidence || []) {
+  for (const evidence of evidenceRegistry.evidence) {
+    if (!Array.isArray(evidence.supports))
+      throw new Error(`Evidence supports[] missing: ${evidence.id}`);
     provenanceGraph.push({
       "@id": evidence.id,
       "@type": ["CreativeWork", "prov:Entity"],
-      name: evidence.label || evidence.id,
+      name: evidence.id,
       url: evidence.url,
       additionalType: `EvidenceTier${evidence.tier}`,
       identifier: {
@@ -345,17 +424,17 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         value: evidence.tier,
       },
       dateModified: evidenceRegistry.verifiedAt,
-      keywords: evidence.supports || [],
+      keywords: evidence.supports,
       additionalProperty: [
         {
           "@type": "PropertyValue",
           propertyID: "Evidence supports",
-          value: (evidence.supports || []).join(" | "),
+          value: evidence.supports.join(" | "),
         },
       ],
       about: [
         {
-          "@id": (evidence.supports || []).some((value) =>
+          "@id": evidence.supports.some((value) =>
             /clinic|place-id|cid|rating|review-count|opening-hours|local-identity|local-corroboration/.test(
               value,
             ),
@@ -380,8 +459,10 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         propertyID: "SHA-256",
         value: sha256(Buffer.from(passage.text)),
       },
-      ...(passage.graphNodeId
-        ? { isBasedOn: { "@id": passage.graphNodeId } }
+      ...(passage.graphNodeIds.length
+        ? {
+            isBasedOn: passage.graphNodeIds.map((id) => ({ "@id": id })),
+          }
         : {}),
       "prov:wasDerivedFrom": [{ "@id": passage.anchor }],
       ...(passage.claimEvidenceIds.length
@@ -403,8 +484,8 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   }
   for (const {
     q,
-    a,
     sourceUrl,
+    graphNodeIds,
     claimEvidenceIds,
     entityEvidenceIds,
     sourceHash,
@@ -417,7 +498,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       url: sourceUrl,
       about: [q.about].flat().filter(Boolean),
       isPartOf: { "@id": `${release.canonicalUrl}provenance.jsonld#dataset` },
-      isBasedOn: { "@id": a["@id"] },
+      isBasedOn: graphNodeIds.map((id) => ({ "@id": id })),
       identifier: {
         "@type": "PropertyValue",
         propertyID: "SHA-256",
@@ -463,7 +544,9 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     path.join(data, "templates/llms.template.txt"),
     "utf8",
   );
-  const tiers = evidenceRegistry.tiers || {};
+  const tiers = evidenceRegistry.tiers;
+  if (!tiers || typeof tiers !== "object" || Array.isArray(tiers))
+    throw new Error("llms.txt: evidence tiers are required");
   for (const tier of ["A", "B", "C"])
     if (typeof tiers[tier] !== "string" || !tiers[tier])
       throw new Error(
@@ -474,9 +557,8 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     "{{RELEASE}}": release.release,
     "{{REVIEW_DATE}}": release.dateModified,
     "{{OFFICIAL_ALIASES}}": release.primaryEntity.officialAliases.join(" | "),
-    "{{RECONCILIATION_ALIASES}}": (
-      release.primaryEntity.reconciliationAliases || []
-    ).join(" | "),
+    "{{RECONCILIATION_ALIASES}}":
+      release.primaryEntity.reconciliationAliases.join(" | "),
     "{{RETRIEVAL_VARIANTS}}":
       release.primaryEntity.retrievalVariants.join(" | "),
     "{{ZENODO_CONCEPT_DOI}}": release.dataset.zenodo.conceptDoi,
