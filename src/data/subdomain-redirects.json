@@ -26,7 +26,7 @@
         "ref": "ghezelbaash_ig_ai_corpus_v1",
         "host": "ig.ghezelbaash.ir",
         "match": "allPaths",
-        "target": "https://www.ghezelbaash.ir/llms-full.txt",
+        "target": "https://www.ghezelbaash.ir/",
         "statusCode": 301,
         "preserveQueryString": false
       }

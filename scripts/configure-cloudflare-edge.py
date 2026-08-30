@@ -1890,7 +1890,7 @@ def self_test(dist_dir: Path) -> None:
         raise CloudflareError("Historical blog target is not a visible canonical passage")
     machine_targets = {
         "ghezelbaash_github_entity_graph_v1": "https://www.ghezelbaash.ir/graph.jsonld",
-        "ghezelbaash_ig_ai_corpus_v1": "https://www.ghezelbaash.ir/llms-full.txt",
+        "ghezelbaash_ig_ai_corpus_v1": "https://www.ghezelbaash.ir/",
     }
     actual_machine_targets = {
         str(row["ref"]): str(row["target"])
