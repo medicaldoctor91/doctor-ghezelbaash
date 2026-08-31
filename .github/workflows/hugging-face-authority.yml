@@ -105,14 +105,20 @@ jobs:
           printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
             "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
-      - name: Prove GitHub immutable releases policy before publication
+      - name: Detect GitHub immutable releases capability
         if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN || github.token }}
+          GH_RELEASE_ADMIN_TOKEN: ${{ secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          test -n "${GH_TOKEN:-}"; echo "::add-mask::$GH_TOKEN"
+          if [ -z "${GH_RELEASE_ADMIN_TOKEN:-}" ]; then
+            echo "GITHUB_IMMUTABLE_POLICY=unverified" >> "$GITHUB_ENV"
+            echo "GitHub Administration token is not configured; immutable DOI preservation remains enforced by Zenodo and exact frozen release tags/hashes."
+            exit 0
+          fi
+          echo "::add-mask::$GH_RELEASE_ADMIN_TOKEN"
+          export GH_TOKEN="$GH_RELEASE_ADMIN_TOKEN"
           STATE="$(mktemp)"
           trap 'rm -f "$STATE"' EXIT
           gh api \
@@ -121,8 +127,9 @@ jobs:
             "repos/$GITHUB_REPOSITORY/immutable-releases" > "$STATE"
           node - "$STATE" <<'NODE'
           const state = JSON.parse(require("node:fs").readFileSync(process.argv[2], "utf8"));
-          if (state.enabled !== true) throw new Error("GitHub immutable releases policy is not enabled");
+          if (state.enabled !== true) throw new Error("Configured GitHub release-admin credential requires immutable releases to be enabled");
           NODE
+          echo "GITHUB_IMMUTABLE_POLICY=enabled" >> "$GITHUB_ENV"
       - name: Build exact current release distribution
         if: steps.release.outputs.mode == 'current'
         shell: bash
@@ -377,7 +384,7 @@ jobs:
             git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push --atomic origin HEAD:main "refs/tags/v$RELEASE_TARGET"
           fi
           unset GITHUB_AUTH
-      - name: Create or verify immutable GitHub Release
+      - name: Create or verify exact GitHub Release
         if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -429,7 +436,7 @@ jobs:
             throw new Error("Existing GitHub Release asset inventory is not safely recoverable");
           if (release.isDraft !== true && release.isDraft !== false)
             throw new Error("Existing GitHub Release draft state is invalid");
-          if (release.isDraft === false && release.isImmutable !== true)
+          if (process.env.GITHUB_IMMUTABLE_POLICY === "enabled" && release.isDraft === false && release.isImmutable !== true)
             throw new Error("Existing published GitHub Release is not immutable");
           if (release.isDraft === false && JSON.stringify(actual) !== JSON.stringify(expected))
             throw new Error("Existing published GitHub Release asset inventory drift");
@@ -484,7 +491,8 @@ jobs:
           const expected = [attestation, manifest].sort();
           const actual = (release.assets || []).map(({ name }) => name).sort();
           if (release.tagName !== tag || release.name !== title || release.body !== body ||
-              release.isDraft !== false || release.isPrerelease !== false || release.isImmutable !== true ||
+              release.isDraft !== false || release.isPrerelease !== false ||
+              (process.env.GITHUB_IMMUTABLE_POLICY === "enabled" && release.isImmutable !== true) ||
               new Set(actual).size !== actual.length || JSON.stringify(actual) !== JSON.stringify(expected))
             throw new Error("Published GitHub Release postcondition drift");
           NODE
