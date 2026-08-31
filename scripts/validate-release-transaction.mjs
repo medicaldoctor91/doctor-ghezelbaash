@@ -41,12 +41,17 @@ assert.match(
 const immutablePolicyGate = workflow.indexOf(
   "Prove GitHub immutable releases policy before publication",
 );
+const candidateMutation = workflow.indexOf(
+  "Create or resume release candidate source",
+);
 const zenodoPublish = workflow.indexOf("Publish immutable Zenodo release");
 assert.ok(
   immutablePolicyGate >= 0 &&
+    candidateMutation >= 0 &&
     zenodoPublish >= 0 &&
+    immutablePolicyGate < candidateMutation &&
     immutablePolicyGate < zenodoPublish,
-  "GitHub immutable-release policy must be proven before Zenodo publication",
+  "GitHub immutable-release policy must be proven before candidate mutation",
 );
 const immutablePolicyBlock = workflow.slice(immutablePolicyGate, zenodoPublish);
 for (const required of [

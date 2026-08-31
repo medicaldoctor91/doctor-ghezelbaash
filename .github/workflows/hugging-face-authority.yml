@@ -105,6 +105,24 @@ jobs:
           printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
             "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+      - name: Prove GitHub immutable releases policy before publication
+        if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN || github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GH_TOKEN:-}"; echo "::add-mask::$GH_TOKEN"
+          STATE="$(mktemp)"
+          trap 'rm -f "$STATE"' EXIT
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            "repos/$GITHUB_REPOSITORY/immutable-releases" > "$STATE"
+          node - "$STATE" <<'NODE'
+          const state = JSON.parse(require("node:fs").readFileSync(process.argv[2], "utf8"));
+          if (state.enabled !== true) throw new Error("GitHub immutable releases policy is not enabled");
+          NODE
       - name: Build exact current release distribution
         if: steps.release.outputs.mode == 'current'
         shell: bash
@@ -331,24 +349,6 @@ jobs:
           test "$(git ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$CANDIDATE_SHA"
           test "$(git -C .release/huggingface ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$HF_CANDIDATE_SHA"
           node -e "const s=require('./.release/runtime/zenodo-stage.json');if(s.release!==process.env.RELEASE_TARGET||s.recordId!==process.env.ZENODO_RECORD||s.versionDoi!==process.env.ZENODO_DOI||s.sourceCommit!==process.env.CANDIDATE_SHA)throw new Error('Zenodo stage ledger drift')"
-      - name: Prove GitHub immutable releases policy before publication
-        if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN || github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -n "${GH_TOKEN:-}"; echo "::add-mask::$GH_TOKEN"
-          STATE="$(mktemp)"
-          trap 'rm -f "$STATE"' EXIT
-          gh api \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            "repos/$GITHUB_REPOSITORY/immutable-releases" > "$STATE"
-          node - "$STATE" <<'NODE'
-          const state = JSON.parse(require("node:fs").readFileSync(process.argv[2], "utf8"));
-          if (state.enabled !== true) throw new Error("GitHub immutable releases policy is not enabled");
-          NODE
       - name: Publish immutable Zenodo release
         if: steps.release.outputs.mode == 'new'
         env:
