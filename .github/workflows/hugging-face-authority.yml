@@ -409,7 +409,7 @@ jobs:
           cp .release/runtime/release-attestation.json "$ATTESTATION"
           cp .release/runtime/dist-sha256.json "$MANIFEST"
           TITLE="Dr. Saeed Ghezelbash Public Knowledge Graph $TAG"
-          BODY="Immutable release metadata for $TAG. Zenodo Version DOI: $VERSION_DOI"
+          BODY="Exact GitHub release metadata for $TAG. Immutable Zenodo Version DOI: $VERSION_DOI"
           STATE="$TMP/release.json"
           JSON_FIELDS="assets,body,isDraft,isImmutable,isPrerelease,name,tagName,targetCommitish"
           EXISTS=false
