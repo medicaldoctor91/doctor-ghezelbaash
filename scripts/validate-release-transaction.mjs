@@ -51,7 +51,7 @@ assert.ok(
     zenodoPublish >= 0 &&
     immutableCapabilityGate < candidateMutation &&
     immutableCapabilityGate < zenodoPublish,
-  "Optional GitHub immutable-release capability detection must precede candidate mutation",
+  "GitHub immutable-release capability detection must precede candidate mutation",
 );
 const immutableCapabilityBlock = workflow.slice(
   immutableCapabilityGate,
@@ -85,6 +85,10 @@ assert.match(
 assert.match(
   workflow,
   /Create or verify exact GitHub Release[\s\S]*?steps\.release\.outputs\.mode == 'new' \|\| env\.FROZEN_SOURCE_AT_HEAD == 'true'/,
+);
+assert.match(
+  workflow,
+  /BODY="Exact GitHub release metadata for \$TAG\. Immutable Zenodo Version DOI: \$VERSION_DOI"/,
 );
 assert.match(
   workflow,
@@ -258,7 +262,7 @@ console.log(
     frozenTagExact: true,
     frozenTagRecovery: true,
     githubReleaseIdempotent: true,
-    githubImmutablePolicyPreflight: "OPTIONAL_ADMIN_HARDENING",
+    githubImmutablePolicyPreflight: "CAPABILITY_AWARE",
     githubReleaseExactPostcondition: true,
     cloudflareFrozenRecovery: true,
     cloudflareFullApplyCanonical: true,
