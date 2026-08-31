@@ -36,36 +36,45 @@ assert.match(
 );
 assert.match(
   workflow,
-  /Create or verify immutable GitHub Release[\s\S]*?gh release create "\$TAG" "\$ATTESTATION" "\$MANIFEST"[\s\S]*?--verify-tag/,
+  /Create or verify exact GitHub Release[\s\S]*?gh release create "\$TAG" "\$ATTESTATION" "\$MANIFEST"[\s\S]*?--verify-tag/,
 );
-const immutablePolicyGate = workflow.indexOf(
-  "Prove GitHub immutable releases policy before publication",
+const immutableCapabilityGate = workflow.indexOf(
+  "Detect GitHub immutable releases capability",
 );
 const candidateMutation = workflow.indexOf(
   "Create or resume release candidate source",
 );
 const zenodoPublish = workflow.indexOf("Publish immutable Zenodo release");
 assert.ok(
-  immutablePolicyGate >= 0 &&
+  immutableCapabilityGate >= 0 &&
     candidateMutation >= 0 &&
     zenodoPublish >= 0 &&
-    immutablePolicyGate < candidateMutation &&
-    immutablePolicyGate < zenodoPublish,
-  "GitHub immutable-release policy must be proven before candidate mutation",
+    immutableCapabilityGate < candidateMutation &&
+    immutableCapabilityGate < zenodoPublish,
+  "GitHub immutable-release capability detection must precede candidate mutation",
 );
-const immutablePolicyBlock = workflow.slice(immutablePolicyGate, zenodoPublish);
+const immutableCapabilityBlock = workflow.slice(
+  immutableCapabilityGate,
+  zenodoPublish,
+);
 for (const required of [
-  "secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN || github.token",
-  'X-GitHub-Api-Version: 2026-03-10',
-  'repos/$GITHUB_REPOSITORY/immutable-releases',
+  "secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN",
+  "X-GitHub-Api-Version: 2026-03-10",
+  "repos/$GITHUB_REPOSITORY/immutable-releases",
   "state.enabled !== true",
+  "GITHUB_IMMUTABLE_POLICY=unverified",
+  "GITHUB_IMMUTABLE_POLICY=enabled",
 ])
   assert.ok(
-    immutablePolicyBlock.includes(required),
-    `Immutable-release preflight misses ${required}`,
+    immutableCapabilityBlock.includes(required),
+    `Immutable-release capability detection misses ${required}`,
   );
+assert.ok(
+  !immutableCapabilityBlock.includes("|| github.token"),
+  "Repository GITHUB_TOKEN must not masquerade as an Administration credential",
+);
 assert.doesNotMatch(
-  immutablePolicyBlock,
+  immutableCapabilityBlock,
   /(?:--method|-X)\s+PUT/,
   "Release workflow must never enable immutable releases implicitly",
 );
@@ -75,7 +84,11 @@ assert.match(
 );
 assert.match(
   workflow,
-  /Create or verify immutable GitHub Release[\s\S]*?steps\.release\.outputs\.mode == 'new' \|\| env\.FROZEN_SOURCE_AT_HEAD == 'true'/,
+  /Create or verify exact GitHub Release[\s\S]*?steps\.release\.outputs\.mode == 'new' \|\| env\.FROZEN_SOURCE_AT_HEAD == 'true'/,
+);
+assert.match(
+  workflow,
+  /BODY="Exact GitHub release metadata for \$TAG\. Immutable Zenodo Version DOI: \$VERSION_DOI"/,
 );
 assert.match(
   workflow,
@@ -89,6 +102,7 @@ for (const required of [
   "Published GitHub Release postcondition drift",
   "release.isDraft !== false",
   "release.isPrerelease !== false",
+  "process.env.GITHUB_IMMUTABLE_POLICY === \"enabled\"",
   "release.isImmutable !== true",
   "release.tagName !== tag",
   "release.name !== title",
@@ -248,7 +262,7 @@ console.log(
     frozenTagExact: true,
     frozenTagRecovery: true,
     githubReleaseIdempotent: true,
-    githubImmutablePolicyPreflight: true,
+    githubImmutablePolicyPreflight: "CAPABILITY_AWARE",
     githubReleaseExactPostcondition: true,
     cloudflareFrozenRecovery: true,
     cloudflareFullApplyCanonical: true,
