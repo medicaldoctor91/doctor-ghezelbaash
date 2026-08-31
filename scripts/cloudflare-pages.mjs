@@ -187,6 +187,67 @@ async function command_ensure() {
         );
       return p.result;
     };
+    const printDeploymentFailure = async (deployment) => {
+      const stages = (deployment?.stages ?? []).map((stage) => ({
+        name: stage?.name ?? null,
+        status: stage?.status ?? null,
+        startedOn: stage?.started_on ?? null,
+        endedOn: stage?.ended_on ?? null,
+      }));
+      console.error(
+        "CF_DEPLOYMENT_FAILURE_STAGES",
+        JSON.stringify({ id: deployment?.id ?? null, stages }),
+      );
+      try {
+        const history = await req(
+          `${base}/deployments/${encodeURIComponent(deployment.id)}/history/logs`,
+        );
+        const lines = (history?.data ?? [])
+          .slice(-400)
+          .map(({ ts, line }) =>
+            `${String(ts ?? "")} ${String(line ?? "")}`
+              .replaceAll(token, "[REDACTED_CLOUDFLARE_TOKEN]")
+              .replace(/AIza[\w-]{20,}/g, "[REDACTED_GOOGLE_KEY]"),
+          );
+        console.error(
+          "CF_DEPLOYMENT_FAILURE_LOGS",
+          JSON.stringify({
+            id: deployment.id,
+            total: history?.total ?? lines.length,
+            includesContainerLogs: history?.includes_container_logs ?? null,
+            lines,
+          }),
+        );
+      } catch (error) {
+        console.error(
+          "CF_DEPLOYMENT_FAILURE_LOGS_UNAVAILABLE",
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+    };
+    const waitForDeployment = async (
+      deployment,
+      { allowTerminalFailure = false } = {},
+    ) => {
+      for (let attempt = 1; attempt <= 120; attempt++) {
+        deployment = await req(
+          `${base}/deployments/${encodeURIComponent(deployment.id)}`,
+        );
+        const status = statusOf(deployment);
+        console.log(
+          `CF_DEPLOYMENT_STATUS id=${deployment.id} attempt=${attempt} status=${status}`,
+        );
+        if (status === "success") return deployment;
+        if (["failure", "canceled"].includes(status)) {
+          await printDeploymentFailure(deployment);
+          if (allowTerminalFailure) return deployment;
+          throw new Error(`Cloudflare ${deployment.id} ${status}`);
+        }
+        if (attempt === 120)
+          throw new Error(`Cloudflare ${deployment.id} timeout`);
+        await sleep(10000);
+      }
+    };
     let p = await req(base);
     console.log("CF_PROJECT_BEFORE", JSON.stringify(safeProjectState(p)));
     if (process.argv.includes("--configure")) {
@@ -239,31 +300,27 @@ async function command_ensure() {
     assert(d, `No ${expectedEnv} github:push deployment for ${commitHash}`);
     const configurationChanged =
       process.env.CF_CONFIGURATION_CHANGED?.trim() === "true";
-    if (
-      configurationChanged ||
-      d.is_skipped ||
-      ["failure", "canceled"].includes(statusOf(d))
-    ) {
+    if (!d.is_skipped)
+      d = await waitForDeployment(d, { allowTerminalFailure: true });
+    const retryReason = [
+      configurationChanged ? "platform-config-changed" : null,
+      d.is_skipped
+        ? `skipped:${String(d.skip_reason || "unknown")}`
+        : null,
+      ["failure", "canceled"].includes(statusOf(d)) ? statusOf(d) : null,
+    ]
+      .filter(Boolean)
+      .join(",");
+    if (retryReason) {
       console.log(
-        `CF_DEPLOYMENT_RETRY_REQUEST id=${d.id} env=${expectedEnv} commit=${commitHash} prior=${configurationChanged ? "platform-config-changed" : d.is_skipped ? "skipped:" + String(d.skip_reason || "unknown") : statusOf(d)}`,
+        `CF_DEPLOYMENT_RETRY_REQUEST id=${d.id} env=${expectedEnv} commit=${commitHash} prior=${retryReason}`,
       );
       d = await req(`${base}/deployments/${encodeURIComponent(d.id)}/retry`, {
         method: "POST",
         body: {},
       });
       assert(d?.id, "Cloudflare retry did not return a deployment");
-    }
-    for (let attempt = 1; attempt <= 120; attempt++) {
-      d = await req(`${base}/deployments/${encodeURIComponent(d.id)}`);
-      const st = statusOf(d);
-      console.log(
-        `CF_DEPLOYMENT_STATUS id=${d.id} attempt=${attempt} status=${st}`,
-      );
-      if (st === "success") break;
-      if (["failure", "canceled"].includes(st))
-        throw new Error(`Cloudflare ${d.id} ${st}`);
-      if (attempt === 120) throw new Error("Cloudflare deployment timeout");
-      await sleep(10000);
+      d = await waitForDeployment(d);
     }
     assert.equal(d.environment, expectedEnv, "Deployment environment drift");
     assert.equal(
