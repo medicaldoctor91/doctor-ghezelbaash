@@ -14,10 +14,6 @@ import {
   exactLanguageLiteral,
   indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
-import {
-  normalizeGoogleMapsReputation,
-  onRequestGet as googleMapsReputation,
-} from "../functions/api/google-maps-reputation.js";
 async function file_transaction() {
   const must = (condition, message) => {
       if (!condition) throw new Error(message);
@@ -481,6 +477,25 @@ async function canonical_semantic_derivation_contract() {
 }
 async function google_maps_reputation_contract() {
   const release = JSON.parse(await readFile("src/data/release.json", "utf8")),
+    functionSource = await readFile(
+      "functions/api/google-maps-reputation.js",
+      "utf8",
+    ),
+    importPattern =
+      /^import release from "\.\.\/\.\.\/src\/data\/release\.json";$/m;
+  assert.match(functionSource, importPattern);
+  const functionModule = await import(
+      `data:text/javascript;base64,${Buffer.from(
+        functionSource.replace(
+          importPattern,
+          `const release = ${JSON.stringify(release)};`,
+        ),
+      ).toString("base64")}`
+    ),
+    {
+      normalizeGoogleMapsReputation,
+      onRequestGet: googleMapsReputation,
+    } = functionModule,
     valid = {
       id: release.clinic.placeId,
       rating: 5,

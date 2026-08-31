@@ -1,4 +1,4 @@
-import release from "../../src/data/release.json" with { type: "json" };
+import release from "../../src/data/release.json";
 
 const FIELD_MASK = [
   "id",
