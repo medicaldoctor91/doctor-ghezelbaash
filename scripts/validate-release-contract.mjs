@@ -271,29 +271,6 @@ for (const conditionId of conditionIds) {
         `MedicalCondition possibleTreatment is not a MedicalTherapy: ${conditionId} -> ${treatmentId}`,
       );
 }
-const howToId = `${release.canonicalUrl}#howto-clinical-aesthetic-decision-pathway`;
-const howTo = byId.get(howToId),
-  howToStepIds = arr(howTo?.step).map(id).filter(Boolean);
-if (
-  !howTo ||
-  !arr(howTo["@type"]).includes("HowTo") ||
-  howToStepIds.length !== 4 ||
-  !arr(page.hasPart).map(id).includes(howToId) ||
-  id(howTo.author) !== release.primaryEntity.id ||
-  Object.hasOwn(howTo, "reviewedBy")
-)
-  fail("Physician-authored HowTo decision pathway topology drift");
-for (const [index, stepId] of howToStepIds.entries()) {
-  const step = byId.get(stepId);
-  if (
-    !step ||
-    !arr(step["@type"]).includes("HowToStep") ||
-    step.position !== index + 1 ||
-    id(step.isPartOf) !== howToId ||
-    step.url !== stepId
-  )
-    fail(`HowToStep topology drift: ${stepId}`);
-}
 const releaseBound = selectCurrentReleaseBoundNodes(nodes, release.dataset.id);
 if (!releaseBound.length) fail("No current release-bound graph nodes selected");
 const releaseBoundMismatches = currentReleaseMetadataMismatches(nodes, {
@@ -406,35 +383,8 @@ const physicianAuthorityTokens = [
   "ORCID 0009-0001-9346-8475",
   "Google KG <code>/g/11nqdfk76c</code>",
 ];
-if (
-  !content.includes("google-maps-clinic-reputation-current") ||
-  physicianAuthorityTokens.some((token) => !content.includes(token))
-)
-  fail("Visible physician authority/reputation surface is incomplete");
-const howToTarget = String(howTo.url || "").split("#")[1] || "";
-if (!howToTarget || !content.includes(`id="${howToTarget}"`))
-  fail("HowTo canonical URL does not resolve to visible diagnostic content");
-for (const anchor of [
-  "saeed-ghezelbash-clinical-decision-framework",
-  "saeed-ghezelbash-layered-facial-analysis",
-  "saeed-ghezelbash-uncertainty-and-no-treatment",
-])
-  if (!content.includes(`id="${anchor}"`))
-    fail(`HowTo supporting diagnostic content is missing: ${anchor}`);
-for (const stepId of howToStepIds) {
-  const step = byId.get(stepId);
-  if (!String(step?.name || "").trim() || !String(step?.text || "").trim())
-    fail(`HowToStep explanatory content is incomplete: ${stepId}`);
-}
-
-const volatile = await readJson("src/data/volatile-facts.json");
-if (
-  volatile.placeId !== release.clinic.placeId ||
-  !(Number(volatile.rating) >= 1 && Number(volatile.rating) <= 5) ||
-  !Number.isInteger(Number(volatile.reviewCount)) ||
-  Number(volatile.reviewCount) < 0
-)
-  fail("Mutable reputation contract failure");
+if (physicianAuthorityTokens.some((token) => !content.includes(token)))
+  fail("Visible physician authority surface is incomplete");
 const authorityPolicy = await readJson(
   ".release/policy/authority-surface-contract.json",
 );
@@ -466,15 +416,6 @@ for (const target of ["website", "huggingFace", "zenodo"])
     )
   )
     fail(`Machine resource target is empty: ${target}`);
-if (
-  !machineResourceRegistry.resources.some(
-    (resource) =>
-      resource.path === "live-observations.jsonld" &&
-      resource.mutable === true &&
-      JSON.stringify(resource.targets) === JSON.stringify(["website"]),
-  )
-)
-  fail("Mutable website observation resource drift");
 const resourcePaths = (target) =>
   machineResourceRegistry.resources
     .filter((resource) => resource.targets.includes(target))
@@ -506,7 +447,6 @@ console.log(
       semanticDestinations: "PASS",
       coreWikidataOwnership: "PASS",
       medicalConditionSemantics: "PASS",
-      physicianHowTo: "PASS",
       integrity: "PASS",
     },
     null,

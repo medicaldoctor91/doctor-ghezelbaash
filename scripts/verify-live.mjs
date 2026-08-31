@@ -3,10 +3,9 @@ import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import {
-  buildLiveReputationArtifacts,
   huggingFaceDatasetRepo,
   verifyHuggingFaceRemoteDistribution,
-} from "./lib/live-reputation-artifacts.mjs";
+} from "./lib/hugging-face-distribution.mjs";
 import {
   resourcesForTarget,
   sourceForDistribution,
@@ -30,9 +29,8 @@ const walkRelative = async (directory, prefix = "") => {
 };
 
 async function command_current() {
-  const [release, volatile, authority] = await Promise.all([
+  const [release, authority] = await Promise.all([
     readFile("src/data/release.json", "utf8").then(JSON.parse),
-    readFile("src/data/volatile-facts.json", "utf8").then(JSON.parse),
     readFile(".release/policy/authority-surface-contract.json", "utf8").then(
       JSON.parse,
     ),
@@ -54,8 +52,6 @@ async function command_current() {
     if (!r.ok) throw new Error(`HTTP ${r.status} ${url}`);
     return { r, b: Buffer.from(await r.arrayBuffer()) };
   };
-  const { rating, reviewCount, observedAt, csv, attestationJson } =
-    buildLiveReputationArtifacts(release, volatile);
   const results = [];
 
   if (verifyWebsite) {
@@ -74,13 +70,6 @@ async function command_current() {
         throw new Error(
           `Current serving byte drift ${file}: ordinary=${oh} bypass=${bh} wanted=${wanted}`,
         );
-      if (file === "live-observations.jsonld") {
-        const cc = ordinary.r.headers.get("cache-control") || "";
-        if (!/\bno-cache\b/i.test(cc))
-          throw new Error(
-            `Mutable/current machine resource cache policy too stale ${file}: ${cc}`,
-          );
-      }
       results.push({
         file,
         sha256: wanted,
@@ -90,26 +79,6 @@ async function command_current() {
         age: ordinary.r.headers.get("age"),
       });
     }
-    const live = JSON.parse(
-        await readFile("dist/live-observations.jsonld", "utf8"),
-      ),
-      props = Array.isArray(live.item?.additionalProperty)
-        ? live.item.additionalProperty
-        : [],
-      liveRating = Number(
-        props.find((x) => x.propertyID === "Google Places rating")?.value,
-      ),
-      liveReviewCount = Number(
-        props.find((x) => x.propertyID === "Google Places userRatingCount")
-          ?.value,
-      );
-    if (
-      live.about?.["@id"] !== release.clinic.id ||
-      live.dateModified !== observedAt ||
-      liveRating !== rating ||
-      liveReviewCount !== reviewCount
-    )
-      throw new Error("Current website live observation drift");
   }
 
   let hfCoreFiles = 0;
@@ -154,16 +123,6 @@ async function command_current() {
         );
     }
     hfCoreFiles = core.length;
-    const hfCsv = remote.files.get("live_observations.csv");
-    const hfAttestation = remote.files.get("live-observation-attestation.json");
-    if (!hfCsv.equals(Buffer.from(csv)))
-      throw new Error(
-        `HF main live observation byte drift: actual=${sha(hfCsv)} expected=${sha(Buffer.from(csv))}`,
-      );
-    if (!hfAttestation.equals(Buffer.from(attestationJson)))
-      throw new Error(
-        `HF main live attestation byte drift: actual=${sha(hfAttestation)} expected=${sha(Buffer.from(attestationJson))}`,
-      );
   }
 
   console.log(
@@ -171,10 +130,8 @@ async function command_current() {
       {
         stage: "CURRENT_SERVING_TRUTH",
         release: release.release,
-        currentReputation: { rating, reviewCount, valueObservedAt: observedAt },
         websiteExact: verifyWebsite ? true : null,
         hfCurrentCoreExact: verifyHf ? true : null,
-        hfLiveObservationExact: verifyHf ? true : null,
         hfRemoteInventoryExact: verifyHf ? true : null,
         hfRemoteManifestExact: verifyHf ? true : null,
         hfCoreFiles,
@@ -463,7 +420,6 @@ async function command_release() {
     release.dataset.id,
     "text-retrieval",
     "text-generation",
-    "live_observations",
   ])
     if (!hfReadme.includes(token))
       throw new Error(`HF frozen release card lacks ${token}`);

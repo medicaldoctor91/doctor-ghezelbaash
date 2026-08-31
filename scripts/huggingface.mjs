@@ -22,8 +22,7 @@ import {
   huggingFaceConfigs,
   huggingFaceManifestFiles,
   verifyHuggingFaceRemoteDistribution,
-  writeLiveReputationArtifacts,
-} from "./lib/live-reputation-artifacts.mjs";
+} from "./lib/hugging-face-distribution.mjs";
 
 const forbiddenDatasetId = () => ["Q140", "304972"].join("");
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
@@ -180,11 +179,10 @@ esac
 
 async function commandPrepare() {
   const [dist = "dist", hub = ".release/huggingface"] = process.argv.slice(2);
-  const [release, authority, retrievalPolicy, volatile] = await Promise.all([
+  const [release, authority, retrievalPolicy] = await Promise.all([
     readJson("src/data/release.json"),
     readJson(".release/policy/authority-surface-contract.json"),
     readJson("src/data/retrieval/query-matrix-policy.json"),
-    readJson("src/data/volatile-facts.json"),
   ]);
   const hf = authority.surfaces.huggingFace;
   const configs = huggingFaceConfigs(hf);
@@ -208,8 +206,6 @@ async function commandPrepare() {
     });
     await cp(source, path.join(hub, resource.path));
   }
-
-  await writeLiveReputationArtifacts(hub, release, volatile);
 
   const tags = [
     "saeed-ghezelbash",
@@ -271,7 +267,6 @@ async function commandPrepare() {
     "**main** is rebuilt from the current canonical source and checked byte-for-byte against this repository's exact distribution manifest.",
     `It is not claimed to be byte-identical to the frozen Zenodo version or the immutable Hugging Face tag \`v${release.release}\`.`,
     "**Query Matrix 2.0** maps Persian, English, Arabic and Central Kurdish queries across unspecified, Kermanshah and Iran scopes to canonical answer atoms and their evidence references.",
-    "**live_observations** is the explicitly mutable current-reputation config; it never rewrites the frozen tag.",
   ].join(" ");
   const readme = `${frontmatter}
 
@@ -342,7 +337,6 @@ Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${r
         coreFiles: resources.length,
         distributionFiles: expected.length,
         queryMatrix: true,
-        liveObservationsConfig: true,
         tasks: hf.taskCategories,
         languages: retrievalPolicy.languages,
         retrievalPolicy: retrievalPolicy.retrievalPolicy,

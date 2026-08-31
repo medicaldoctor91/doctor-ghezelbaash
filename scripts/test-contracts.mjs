@@ -5,11 +5,8 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { commitTextFiles } from "./lib/file-transaction.mjs";
-import {
-  evaluateGoogleReputation,
-  composeChangedReputation,
-} from "./lib/reputation-observation.mjs";
 import { assertDocumentContract } from "./lib/html-contract.mjs";
+import { assertSameDocumentGraphUrlTargets } from "./lib/graph-integrity.mjs";
 import {
   canonicalSemanticSource,
   deriveCanonicalSemanticSets,
@@ -108,6 +105,84 @@ async function file_transaction() {
     await rm(dir, { recursive: true, force: true });
   }
 }
+function graph_url_target_contract() {
+  const canonicalUrl = "https://example.test/";
+  const graph = {
+    "@graph": [
+      {
+        "@id": `${canonicalUrl}#visible-node`,
+        url: `${canonicalUrl}#visible-section`,
+      },
+      { "@id": `${canonicalUrl}#abstract-node` },
+      { "@id": `${canonicalUrl}#document-node`, url: canonicalUrl },
+      {
+        "@id": `${canonicalUrl}graph.jsonld#download`,
+        url: `${canonicalUrl}graph.jsonld#download`,
+      },
+      {
+        "@id": "https://external.example/#resource",
+        url: "https://external.example/#resource",
+      },
+    ],
+  };
+  const result = assertSameDocumentGraphUrlTargets(graph, {
+    canonicalUrl,
+    htmlIds: new Set(["visible-section"]),
+  });
+  assert.deepEqual(result, { checked: 1, resolved: 1, missing: 0 });
+
+  const broken = structuredClone(graph);
+  broken["@graph"][0].url = `${canonicalUrl}#missing-section`;
+  assert.throws(
+    () =>
+      assertSameDocumentGraphUrlTargets(broken, {
+        canonicalUrl,
+        htmlIds: new Set(["visible-section"]),
+      }),
+    /Same-document graph URL targets are absent/,
+  );
+
+  const malformedUrl = structuredClone(graph);
+  malformedUrl["@graph"][0].url = "not a URL";
+  assert.throws(
+    () =>
+      assertSameDocumentGraphUrlTargets(malformedUrl, {
+        canonicalUrl,
+        htmlIds: new Set(["visible-section"]),
+      }),
+    /invalid direct URL/,
+  );
+
+  const malformedFragment = structuredClone(graph);
+  malformedFragment["@graph"][0].url = `${canonicalUrl}#%E0%A4%A`;
+  assert.throws(
+    () =>
+      assertSameDocumentGraphUrlTargets(malformedFragment, {
+        canonicalUrl,
+        htmlIds: new Set(["visible-section"]),
+      }),
+    /invalid fragment/,
+  );
+
+  console.log(
+    JSON.stringify(
+      {
+        stage: "GRAPH_URL_TARGET_CONTRACT",
+        sameDocumentUrls: result.checked,
+        abstractIdsIgnored: true,
+        fragmentlessUrlsIgnored: true,
+        otherDocumentUrlsIgnored: true,
+        externalUrlsIgnored: true,
+        brokenTargetRejection: "PASS",
+        malformedUrlRejection: "PASS",
+        malformedFragmentRejection: "PASS",
+        integrity: "PASS",
+      },
+      null,
+      2,
+    ),
+  );
+}
 async function release_promotion() {
   const execFileAsync = promisify(execFile),
     must = (condition, message) => {
@@ -117,7 +192,6 @@ async function release_promotion() {
       "src/data/release.json",
       "package.json",
       "package-lock.json",
-      "src/data/volatile-facts.json",
       "src/data/semantic/knowledge-graph.jsonld",
       "CITATION.cff",
       "codemeta.json",
@@ -178,126 +252,6 @@ async function release_promotion() {
       null,
       2,
     ),
-  );
-}
-async function reputation_observation() {
-  const [release, current] = await Promise.all([
-      readFile("src/data/release.json", "utf8").then(JSON.parse),
-      readFile("src/data/volatile-facts.json", "utf8").then(JSON.parse),
-    ]),
-    expectedPlaceId = release.clinic.placeId,
-    unchangedPlace = {
-      id: expectedPlaceId,
-      rating: current.rating,
-      userRatingCount: current.reviewCount,
-      businessStatus: "OPERATIONAL",
-    },
-    unchanged = evaluateGoogleReputation({
-      place: unchangedPlace,
-      current,
-      expectedPlaceId,
-    });
-  assert.equal(unchanged.changed, false);
-  assert.equal(
-    JSON.stringify(current),
-    JSON.stringify(
-      JSON.parse(await readFile("src/data/volatile-facts.json", "utf8")),
-    ),
-    "Unchanged fixture mutated canonical volatile source",
-  );
-  const changedPlace = {
-      ...unchangedPlace,
-      userRatingCount: Number(current.reviewCount) + 1,
-    },
-    changed = evaluateGoogleReputation({
-      place: changedPlace,
-      current,
-      expectedPlaceId,
-    });
-  assert.equal(changed.changed, true);
-  const observedAt = "2026-08-14T12:34:56.000Z",
-    next = composeChangedReputation({
-      current,
-      evaluation: changed,
-      observedAt,
-      release,
-    });
-  assert.equal(next.reviewCount, Number(current.reviewCount) + 1);
-  assert.equal(next.rating, Number(current.rating));
-  assert.equal(next.valueObservedAt, observedAt);
-  assert.equal(next.release, release.release);
-  assert.equal(next.entity, release.clinic.id);
-  assert.equal(next.placeId, expectedPlaceId);
-  assert.equal(
-    next.facts.find((x) => x.property === "ratingValue")?.entity,
-    release.clinic.id,
-  );
-  assert.equal(
-    next.facts.find((x) => x.property === "reviewCount")?.value,
-    Number(current.reviewCount) + 1,
-  );
-  assert.equal(
-    current.valueObservedAt,
-    JSON.parse(await readFile("src/data/volatile-facts.json", "utf8"))
-      .valueObservedAt,
-    "Synthetic changed fixture leaked into canonical source",
-  );
-  assert.throws(
-    () =>
-      evaluateGoogleReputation({
-        place: { ...unchangedPlace, id: "wrong-place" },
-        current,
-        expectedPlaceId,
-      }),
-    /identity drift/,
-  );
-  assert.throws(
-    () =>
-      evaluateGoogleReputation({
-        place: { ...unchangedPlace, movedPlace: "places/new" },
-        current,
-        expectedPlaceId,
-      }),
-    /moved\/merged/,
-  );
-  assert.throws(
-    () =>
-      evaluateGoogleReputation({
-        place: { ...unchangedPlace, rating: null },
-        current,
-        expectedPlaceId,
-      }),
-    /Malformed/,
-  );
-  assert.throws(
-    () =>
-      evaluateGoogleReputation({
-        place: { ...unchangedPlace, businessStatus: "CLOSED_PERMANENTLY" },
-        current,
-        expectedPlaceId,
-      }),
-    /businessStatus/,
-  );
-  assert.throws(
-    () =>
-      composeChangedReputation({
-        current,
-        evaluation: unchanged,
-        observedAt,
-        release,
-      }),
-    /unchanged/,
-  );
-  console.log(
-    JSON.stringify({
-      reputationObservationFixtures: "PASS",
-      unchangedNoMutation: true,
-      syntheticChanged: true,
-      wrongPlaceAbort: true,
-      movedAbort: true,
-      malformedAbort: true,
-      clinicTarget: release.clinic.id,
-    }),
   );
 }
 function semantic_article_contract() {
@@ -522,8 +476,8 @@ async function canonical_semantic_derivation_contract() {
   );
 }
 await file_transaction();
+graph_url_target_contract();
 await release_promotion();
-await reputation_observation();
 semantic_article_contract();
 await canonical_semantic_derivation_contract();
 console.log(

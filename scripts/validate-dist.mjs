@@ -13,7 +13,11 @@ import {
   indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
-import { analyzeGraphClosure } from "./lib/graph-integrity.mjs";
+import {
+  analyzeGraphClosure,
+  assertSameDocumentGraphUrlTargets,
+} from "./lib/graph-integrity.mjs";
+import { inspectHtml } from "./lib/html-contract.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
 import {
   currentReleaseMetadataMismatches,
@@ -57,7 +61,6 @@ const release = await readJson(path.join(data, "release.json")),
   supportProfile = await readJson(
     path.join(data, "semantic/support-profile.json"),
   ),
-  volatile = await readJson(path.join(data, "volatile-facts.json")),
   stableMedia = await readJson(path.join(data, "stable-media-aliases.json")),
   rdfLock = await readJson(
     path.join(root, ".generated/semantic/rdf-lock.json"),
@@ -113,13 +116,15 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
   graph = JSON.parse(graphBytes),
   graphText = graphBytes.toString(),
   rdfText = await readFile(path.join(dist, "graph.ttl"), "utf8"),
-  liveBytes = await readFile(path.join(dist, "live-observations.jsonld")),
-  live = JSON.parse(liveBytes),
   sitemap = await readFile(path.join(dist, "sitemap.xml"), "utf8"),
   knowledgeXml = await readFile(path.join(dist, "knowledge.xml"), "utf8"),
   doctorVcard = await readFile(path.join(dist, "doctor.vcf"), "utf8"),
   llmsFull = await readFile(path.join(dist, "llms-full.txt"), "utf8"),
   provenance = await readJson(path.join(dist, "provenance.jsonld"));
+const graphUrlTargets = assertSameDocumentGraphUrlTargets(graph, {
+  canonicalUrl: release.canonicalUrl,
+  htmlIds: inspectHtml(html).ids,
+});
 const { services, answers } = deriveCanonicalSemanticSets(graph, release);
 if (/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>/i.test(notFound))
   fail("404 page must not declare a canonical URL");
@@ -243,8 +248,6 @@ if (
   !h1Text.includes("دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه")
 )
   fail("Entity-first title/H1 regressed");
-if (!html.includes("google-maps-clinic-reputation-current"))
-  fail("Visible Google reputation slot missing");
 if (!html.includes("جمعه تعطیل"))
   fail("Owner-confirmed Friday closure missing");
 const [authoredCss, renderCalibrationRaw] = await Promise.all([
@@ -326,13 +329,9 @@ if (overlappingProjectionIds.length)
   fail(
     `Head/support projection IDs overlap: ${overlappingProjectionIds.join(", ")}`,
   );
-for (const forbidden of [
-  `${release.canonicalUrl}#observation-clinic-google-rating-current`,
-  `${release.canonicalUrl}#observation-clinic-google-review-count-current`,
-  `${release.canonicalUrl}#speakable-primary-content`,
-])
+for (const forbidden of [`${release.canonicalUrl}#speakable-primary-content`])
   if (supportIds.has(forbidden))
-    fail(`Mutable/low-ROI node leaked into frozen support lane: ${forbidden}`);
+    fail(`Low-ROI node leaked into frozen support lane: ${forbidden}`);
 const inlineNodes = [...(core["@graph"] || []), ...(support["@graph"] || [])],
   reversePageNodes = inlineNodes.filter((node) =>
     Object.hasOwn(node, "mainEntityOfPage"),
@@ -637,18 +636,6 @@ if (
   !datasetSources.has(github?.["@id"])
 )
   fail("DIST semantic destination contract broken");
-const howToId = `${release.canonicalUrl}#howto-clinical-aesthetic-decision-pathway`,
-  howTo = byId.get(howToId),
-  howToTarget = String(howTo?.url || "").split("#")[1] || "";
-if (
-  !howTo ||
-  !types(howTo).includes("HowTo") ||
-  refs(howTo.step).length !== 4 ||
-  !howToTarget ||
-  !html.includes(`id="${howToTarget}"`) ||
-  !supportIds.has(howToId)
-)
-  fail("DIST physician HowTo projection drift");
 for (const slug of [
   "alopecia",
   "androgenetic-alopecia",
@@ -728,23 +715,6 @@ if (
   )
 )
   fail("Migraine Botox offering missing");
-const expectedRating = Number(volatile.rating),
-  expectedCount = Number(volatile.reviewCount);
-if (
-  live.about?.["@id"] !== release.clinic.id ||
-  live.item?.["@id"] !== release.clinic.id ||
-  live.dateModified !== volatile.valueObservedAt
-)
-  fail("Live observation target/timestamp drift");
-const props = arr(live.item?.additionalProperty),
-  rating = Number(
-    props.find((x) => x.propertyID === "Google Places rating")?.value,
-  ),
-  count = Number(
-    props.find((x) => x.propertyID === "Google Places userRatingCount")?.value,
-  );
-if (rating !== expectedRating || count !== expectedCount)
-  fail("Live observation value drift");
 const digestFor = (route) => {
   const lines = headers.split(/\r?\n/),
     i = lines.findIndex((x) => x === `/${route}`);
@@ -756,7 +726,6 @@ const digestFor = (route) => {
   return null;
 };
 for (const route of [
-  "live-observations.jsonld",
   "doctor.vcf",
   "clinic.vcf",
   "datapackage.json",
@@ -818,7 +787,7 @@ console.log(
       supportNodes: supportIds.size,
       headSupportOverlap: 0,
       notFoundCanonical: "ABSENT",
-      liveReputation: { rating, count, observedAt: volatile.valueObservedAt },
+      sameDocumentGraphUrls: graphUrlTargets,
       descriptorMaterialization: "BYTE_IDENTICAL",
       googleOrganizationProjection: "PASS",
       integrity: "PASS",

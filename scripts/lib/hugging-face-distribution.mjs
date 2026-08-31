@@ -1,6 +1,4 @@
 import { createHash } from "node:crypto";
-import path from "node:path";
-import { writeFile } from "node:fs/promises";
 import { resourcesForTarget } from "../../src/lib/resources.mjs";
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
@@ -9,11 +7,7 @@ const must = (condition, message) => {
 };
 
 export const HUGGING_FACE_MANIFEST_FILE = "dist-sha256.json";
-const HUGGING_FACE_AUXILIARY_FILES = Object.freeze([
-  "README.md",
-  "live_observations.csv",
-  "live-observation-attestation.json",
-]);
+const HUGGING_FACE_AUXILIARY_FILES = Object.freeze(["README.md"]);
 const HUGGING_FACE_REPOSITORY_METADATA = Object.freeze([".gitattributes"]);
 
 export const huggingFaceConfigs = (hf) => {
@@ -210,90 +204,4 @@ export const huggingFaceDatasetRepo = (release) => {
   if (!url.startsWith(prefix) || url.length <= prefix.length)
     throw new Error("Invalid Hugging Face dataset URL in release contract");
   return url.slice(prefix.length).replace(/\/$/, "");
-};
-
-export const buildLiveReputationArtifacts = (release, volatile) => {
-  const rating = Number(volatile?.rating),
-    reviewCount = Number(volatile?.reviewCount),
-    observedAt = volatile?.valueObservedAt;
-  if (
-    !(rating >= 1 && rating <= 5) ||
-    !Number.isInteger(reviewCount) ||
-    reviewCount < 0 ||
-    volatile?.placeId !== release?.clinic?.placeId ||
-    Number.isNaN(Date.parse(observedAt || ""))
-  )
-    throw new Error("Invalid live reputation source");
-  const liveObservationId = `${release.canonicalUrl}live-observations.jsonld#clinic-google-reputation`;
-  const jsonLd = {
-    "@context": {
-      "@vocab": "https://schema.org/",
-      prov: "http://www.w3.org/ns/prov#",
-    },
-    "@id": liveObservationId,
-    "@type": "DataFeedItem",
-    item: {
-      "@id": release.clinic.id,
-      "@type": "MedicalClinic",
-      identifier: [
-        { propertyID: "Google Place ID", value: release.clinic.placeId },
-      ],
-      additionalProperty: [
-        {
-          "@type": "PropertyValue",
-          propertyID: "Google Places rating",
-          value: rating,
-        },
-        {
-          "@type": "PropertyValue",
-          propertyID: "Google Places userRatingCount",
-          value: reviewCount,
-        },
-      ],
-    },
-    dateModified: observedAt,
-    isPartOf: { "@id": release.dataset.id },
-    provider: { "@type": "Organization", name: "Google Places API" },
-    about: { "@id": release.clinic.id },
-  };
-  const csv = `entity,place_id,rating,userRatingCount,valueObservedAt,source,baseRelease\n"${release.clinic.id}","${release.clinic.placeId}",${rating},${reviewCount},"${observedAt}","Google Places API (New)","${release.release}"\n`;
-  const attestation = {
-    schemaVersion: "1.0",
-    baseRelease: release.release,
-    entity: release.clinic.id,
-    placeId: release.clinic.placeId,
-    rating,
-    reviewCount,
-    valueObservedAt: observedAt,
-    source: "Google Places API (New)",
-    canonicalObservationUrl: `${release.canonicalUrl}live-observations.jsonld`,
-    csvSha256: sha256(csv),
-  };
-  return {
-    rating,
-    reviewCount,
-    observedAt,
-    liveObservationId,
-    jsonLd,
-    jsonLdJson: JSON.stringify(jsonLd, null, 2) + "\n",
-    csv,
-    attestation,
-    attestationJson: JSON.stringify(attestation, null, 2) + "\n",
-  };
-};
-
-export const writeLiveReputationArtifacts = async (
-  directory,
-  release,
-  volatile,
-) => {
-  const artifacts = buildLiveReputationArtifacts(release, volatile);
-  await Promise.all([
-    writeFile(path.join(directory, "live_observations.csv"), artifacts.csv),
-    writeFile(
-      path.join(directory, "live-observation-attestation.json"),
-      artifacts.attestationJson,
-    ),
-  ]);
-  return artifacts;
 };

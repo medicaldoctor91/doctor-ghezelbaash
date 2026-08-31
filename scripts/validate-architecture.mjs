@@ -348,14 +348,6 @@ assert(
       machineResources.length,
   "Machine resource registry is invalid",
 );
-assert(
-  machineResources.some(
-    (resource) =>
-      resource.path === "live-observations.jsonld" &&
-      resource.targets?.includes("website"),
-  ),
-  "Website live-observation resource is missing",
-);
 for (const [resourcePath, title] of [
   ["doctor.vcf", "Physician vCard"],
   ["clinic.vcf", "Clinic vCard"],
@@ -417,7 +409,8 @@ assert(
   "Astro build output contract drift",
 );
 assert(
-  JSON.stringify(astroConfig.vite) === '{"build":{"sourcemap":false}}',
+  JSON.stringify(astroConfig.vite) ===
+    '{"build":{"emptyOutDir":true,"sourcemap":false}}',
   "Vite production output contract drift",
 );
 

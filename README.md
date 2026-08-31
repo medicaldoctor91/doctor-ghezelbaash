@@ -15,7 +15,7 @@ Pure-static Astro source for the canonical physician entity home at `https://www
 - `src/data/machine-resources.json`: one registry for website, Hugging Face, Zenodo, head and footer projections.
 - `src/data/redirects.json`: one registry for canonical aliases, Cloudflare host redirects and GitHub Pages bridges.
 - `src/data/retrieval/query-matrix-policy.json`: explicit intent-to-answer mappings, languages, scopes and evidence bounds.
-- `src/data/evidence-registry.json` and `src/data/volatile-facts.json`: canonical evidence and current Google Places observation; the release snapshot is generated directly from them.
+- `src/data/evidence-registry.json`: canonical evidence source for the generated release snapshot.
 - `src/data/render-calibration.json`: measured chunk geometry used to derive responsive calibration CSS.
 - `public/media/`, `src/data/media-metadata.json` and `src/data/media-dimensions.tsv`: canonical media, standards-based authored metadata and intrinsic dimensions.
 
@@ -25,7 +25,7 @@ The physician uses one canonical ID with `Person` and `IndividualPhysician` type
 
 `npm run prepare:site` creates only the content, graph, and CSS assets Astro needs for local development and type checking. `npm run prepare:distribution` recreates the complete machine-readable distribution for builds and releases. Astro renders native static HTML directly, the registered static resources are materialized into `dist/`, and the deployment-header step derives CSP and response headers while validating the finished descriptor hashes. Generated files are not committed.
 
-CSS delivery is derived directly from `global.css` and `render-calibration.json`: critical rules remain inline and the rest is emitted as one fingerprinted stylesheet. HTML content stays readable in `page.md`; canonical assembly compacts only structural whitespace and binds release, site, language, reputation, image and semantic tokens.
+CSS delivery is derived directly from `global.css` and `render-calibration.json`: critical rules remain inline and the rest is emitted as one fingerprinted stylesheet. HTML content stays readable in `page.md`; canonical assembly compacts only structural whitespace and binds release, site, language, image and semantic tokens.
 
 ```bash
 npm ci

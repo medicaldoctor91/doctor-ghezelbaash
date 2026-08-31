@@ -69,7 +69,6 @@ const attestation = {
     huggingFace: "ai-retrieval-distribution",
     huggingFaceCore: "release-faithful-core",
     huggingFaceQueryMatrix: "evidence-bound-canonical-entity-resolution",
-    liveObservations: "mutable-clinic-reputation-overlay",
   },
 };
 

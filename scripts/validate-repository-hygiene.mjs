@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 const root = process.cwd();
-const tracked = execFileSync("git", ["ls-files", "-z"], {
+const indexed = execFileSync("git", ["ls-files", "-z"], {
   cwd: root,
   encoding: "buffer",
 })
@@ -11,6 +11,16 @@ const tracked = execFileSync("git", ["ls-files", "-z"], {
   .split("\0")
   .filter(Boolean)
   .sort();
+const deletedInWorktree = new Set(
+  execFileSync("git", ["diff", "--name-only", "--diff-filter=D", "-z"], {
+    cwd: root,
+    encoding: "buffer",
+  })
+    .toString("utf8")
+    .split("\0")
+    .filter(Boolean),
+);
+const tracked = indexed.filter((name) => !deletedInWorktree.has(name));
 if (!tracked.length) throw new Error("Tracked-source inventory is empty");
 
 const forbiddenGeneratedPrefixes = [
@@ -155,7 +165,6 @@ const allowedWorkflows = [
   ".github/workflows/cloudflare-pages-deploy.yml",
   ".github/workflows/github-pages-bridge.yml",
   ".github/workflows/hugging-face-authority.yml",
-  ".github/workflows/reputation-refresh.yml",
   ".github/workflows/stack-monitor.yml",
 ];
 if (
@@ -235,15 +244,6 @@ for (const workflow of workflows) {
   }
 }
 
-const deletedInWorktree = new Set(
-  execFileSync("git", ["diff", "--name-only", "--diff-filter=D", "-z"], {
-    cwd: root,
-    encoding: "buffer",
-  })
-    .toString("utf8")
-    .split("\0")
-    .filter(Boolean),
-);
 const authoredSemanticSets = [];
 for (const name of tracked.filter(
   (item) =>

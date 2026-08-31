@@ -132,10 +132,6 @@ const linkset = {
           type: "application/xml",
         },
         {
-          href: `${release.canonicalUrl}live-observations.jsonld`,
-          type: "application/ld+json",
-        },
-        {
           href: `${release.canonicalUrl}datapackage.json`,
           type: "application/json",
         },

@@ -50,3 +50,54 @@ export function analyzeGraphClosure(graph, { baseUrl } = {}) {
       duplicateIds.length === 0 && danglingSameSiteIds.length === 0,
   };
 }
+
+// Only a top-level Schema.org `url` is a page locator; abstract RDF `@id`
+// values remain graph identifiers and intentionally do not require DOM targets.
+export function assertSameDocumentGraphUrlTargets(
+  graph,
+  { canonicalUrl, htmlIds },
+) {
+  const canonicalDocument = new URL(canonicalUrl);
+  canonicalDocument.hash = "";
+  const ids = htmlIds instanceof Set ? htmlIds : new Set(htmlIds || []);
+  const checked = [];
+  const missing = [];
+  for (const node of asArray(graph?.["@graph"])) {
+    if (typeof node?.url !== "string") continue;
+    let target;
+    try {
+      target = new URL(node.url);
+    } catch {
+      throw new Error(
+        `Canonical graph node has an invalid direct URL: ${node?.["@id"] || "(missing ID)"}`,
+      );
+    }
+    const targetDocument = new URL(target);
+    targetDocument.hash = "";
+    if (!target.hash || targetDocument.href !== canonicalDocument.href) continue;
+    let fragment;
+    try {
+      fragment = decodeURIComponent(target.hash.slice(1));
+    } catch {
+      throw new Error(`Canonical graph URL has an invalid fragment: ${node.url}`);
+    }
+    const item = {
+      id: node?.["@id"] || null,
+      url: node.url,
+      fragment,
+    };
+    checked.push(item);
+    if (!fragment || !ids.has(fragment)) missing.push(item);
+  }
+  if (missing.length)
+    throw new Error(
+      `Same-document graph URL targets are absent: ${missing
+        .map((item) => `${item.id || "(missing ID)"} -> #${item.fragment}`)
+        .join(", ")}`,
+    );
+  return {
+    checked: checked.length,
+    resolved: checked.length,
+    missing: 0,
+  };
+}

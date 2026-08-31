@@ -150,14 +150,6 @@
       }
     },
     {
-      "path": "live-observations.jsonld",
-      "source": ".generated/projections/live-observations.jsonld",
-      "mediaType": "application/ld+json",
-      "targets": ["website"],
-      "materialize": true,
-      "mutable": true
-    },
-    {
       "path": "doctor.vcf",
       "source": ".generated/public/doctor.vcf",
       "mediaType": "text/vcard",

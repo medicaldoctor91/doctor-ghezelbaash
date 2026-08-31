@@ -12,6 +12,7 @@ export default defineConfig({
   },
   vite: {
     build: {
+      emptyOutDir: true,
       sourcemap: false,
     },
   },

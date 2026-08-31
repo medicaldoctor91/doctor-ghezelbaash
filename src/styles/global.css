@@ -589,17 +589,6 @@ blockquote {
   color: #36584e;
   font-weight: 760;
 }
-.hero-caption-reputation {
-  padding-top: 0.32rem;
-  border-top: 1px solid rgb(10 107 88/0.11);
-  color: #315b50;
-  font-size: 0.82rem;
-  line-height: 1.6;
-  font-variant-numeric: tabular-nums;
-}
-.hero-caption-reputation strong {
-  color: #1f5145;
-}
 @media (max-width: 720px) {
   .entity-hero .hero-action.hero-search-launch {
     width: 100%;
@@ -621,18 +610,10 @@ blockquote {
   .hero-caption-facts > span:not(:last-child)::after {
     content: "";
   }
-  .hero-caption-reputation {
-    font-size: 0.8rem;
-    min-block-size: 3.8rem;
-  }
 }
 @media (max-width: 430px) {
   .hero-caption-facts {
     font-size: 0.78rem;
-  }
-  .hero-caption-reputation {
-    font-size: 0.78rem;
-    min-block-size: 4rem;
   }
 }
 @media (max-width: 720px) {

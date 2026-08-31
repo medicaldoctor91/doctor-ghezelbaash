@@ -118,11 +118,6 @@
     "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership",
     "https://www.ghezelbaash.ir/index.md#download",
     "https://www.ghezelbaash.ir/llms-full.txt#download",
-    "https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway",
-    "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-1",
-    "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-2",
-    "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-3",
-    "https://www.ghezelbaash.ir/#clinical-aesthetic-decision-pathway-step-4",
     "https://www.ghezelbaash.ir/#biomedical-concept-alopecia",
     "https://www.ghezelbaash.ir/#biomedical-concept-androgenetic-alopecia",
     "https://www.ghezelbaash.ir/#biomedical-concept-acne-vulgaris",
@@ -222,30 +217,6 @@
         "identifier",
         "sameAs",
         "url"
-      ]
-    },
-    "HowTo": {
-      "include": [
-        "@id",
-        "@type",
-        "name",
-        "description",
-        "url",
-        "inLanguage",
-        "author",
-        "about",
-        "step"
-      ]
-    },
-    "HowToStep": {
-      "include": [
-        "@id",
-        "@type",
-        "position",
-        "name",
-        "text",
-        "url",
-        "isPartOf"
       ]
     },
     "Question": {

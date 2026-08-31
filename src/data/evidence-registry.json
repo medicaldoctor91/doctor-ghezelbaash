@@ -106,8 +106,6 @@
         "place-id",
         "cid",
         "phone",
-        "rating",
-        "review-count",
         "opening-hours"
       ],
       "url": "https://www.google.com/maps?cid=12350483144643112463",
@@ -115,9 +113,7 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
-        "12350483144643112463",
-        "164",
-        "5.0"
+        "12350483144643112463"
       ]
     },
     {

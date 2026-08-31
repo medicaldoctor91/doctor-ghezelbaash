@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed Zenodo preservation lifecycle: reserve -> stage -> publish -> verify-public."""
+"""Fail-closed Zenodo preservation lifecycle and local release auxiliaries."""
 from __future__ import annotations
 import argparse, hashlib, json, os, time
 from pathlib import Path
@@ -129,7 +129,7 @@ def canonical_metadata(version,date,doi,concept):
         {'term':person['name'],'identifier':f'https://www.wikidata.org/entity/{person_q}','scheme':'url'},
         {'term':dataset['name'],'identifier':dataset['id'],'scheme':'url'},
         {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':f'https://www.wikidata.org/entity/{clinic_q}','scheme':'url'}],
-      'notes':f'Canonical Dataset IRI: {dataset["id"]}. Concept DOI: {concept}.'+(f' Exact Version DOI: {doi}.' if doi else '')+f' Current live observations: {dataset["liveObservations"]}.',
+      'notes':f'Canonical Dataset IRI: {dataset["id"]}. Concept DOI: {concept}.'+(f' Exact Version DOI: {doi}.' if doi else ''),
       'related_identifiers':[
         {'identifier':dataset['id'],'relation':'isDerivedFrom','resource_type':'dataset'},
         {'identifier':release['canonicalUrl'],'relation':'isDescribedBy','resource_type':'other'},
@@ -226,6 +226,12 @@ def exact_sources(source_commit):
     sources['release-attestation.json']=att
     sources['dist-sha256.json']=hashes
     return sources
+
+def prepare_auxiliaries():
+    source_commit=os.environ.get('SOURCE_COMMIT','').strip()
+    if len(source_commit)!=40 or any(c not in '0123456789abcdef' for c in source_commit): raise RuntimeError('SOURCE_COMMIT must bind release auxiliaries to an exact commit')
+    sources=exact_sources(source_commit)
+    print(json.dumps({'stage':'RELEASE_AUXILIARIES_PREPARED','sourceCommit':source_commit,'files':sorted(sources),'integrity':'PASS'},separators=(',',':')))
 
 def synchronize_exact_files(token,draft_url,bucket,sources):
     expected_hashes={name:sha256(file) for name,file in sources.items()}
@@ -345,6 +351,7 @@ def main():
 
     stage_parser = sub.add_parser("stage")
     stage_parser.add_argument("--version", required=True)
+    sub.add_parser("prepare-auxiliaries")
     sub.add_parser("publish")
 
     verify_parser = sub.add_parser("verify-public")
@@ -354,6 +361,9 @@ def main():
     verify_parser.add_argument("--version", required=True)
 
     args = parser.parse_args()
+    if args.action == "prepare-auxiliaries":
+        prepare_auxiliaries()
+        return
     token = os.environ.get("ZENODO_TOKEN", "")
     if not token:
         raise SystemExit("ZENODO_TOKEN is required")

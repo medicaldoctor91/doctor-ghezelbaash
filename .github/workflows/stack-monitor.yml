@@ -97,7 +97,7 @@ jobs:
             sleep "$((attempt * 5))"
           done
           node scripts/huggingface.mjs prepare dist .release/huggingface-monitor
-          git -C .release/huggingface-monitor config user.name ghezelbaash-reputation-bot
+          git -C .release/huggingface-monitor config user.name ghezelbaash-authority-bot
           git -C .release/huggingface-monitor config user.email actions@users.noreply.github.com
           git -C .release/huggingface-monitor add -A
           git -C .release/huggingface-monitor diff --cached --quiet || git -C .release/huggingface-monitor commit -m "Reconcile complete current authority distribution"

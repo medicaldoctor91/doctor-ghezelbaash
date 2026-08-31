@@ -189,17 +189,6 @@ assert(
   ).length === 1,
   "Hero search grid-area has duplicate critical authority",
 );
-const mobileCaptionReputation = selectorRules(
-  criticalRules,
-  ".hero-caption-reputation",
-).filter((rule) => isMaxWidthRule(rule, 430));
-assert(
-  mobileCaptionReputation.length === 1 &&
-    "font-size" in mobileCaptionReputation[0].declarations &&
-    "min-block-size" in mobileCaptionReputation[0].declarations,
-  "Hero caption reputation mobile geometry is split across authorities",
-);
-
 for (const rules of [criticalRules, deferredRules]) {
   for (const rule of selectorRules(rules, "main").filter((rule) =>
     mediaRuleAppliesAtWidth(rule, 720),
@@ -492,23 +481,6 @@ for (const remPx of geometryRemCases) {
     geometryChecks++;
   }
 }
-
-const reputationBlocks =
-  content.match(
-    /<div\b(?=[^>]*\bid=["']google-maps-clinic-reputation-current["'])[^>]*>[\s\S]*?<\/div>/gi,
-  ) || [];
-assert(
-  reputationBlocks.length === 1,
-  "Expected one assembled reputation block",
-);
-assert(
-  reputationBlocks[0].includes("آخرین تغییر ثبت‌شده در Google:"),
-  "Current reputation observation semantics missing",
-);
-assert(
-  !reputationBlocks[0].includes("آخرین دریافت از Google:"),
-  "Stale reputation observation semantics remain",
-);
 
 assert(
   Buffer.byteLength(delivery.criticalCss) <= invariants.maxCriticalCssBytes,

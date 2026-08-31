@@ -8,13 +8,10 @@ const readJson = async (p) =>
 const release = await readJson("release.json"),
   inv = await readJson("release-invariants.json"),
   registry = await readJson("evidence-registry.json"),
-  volatile = await readJson("volatile-facts.json"),
   snapshot = deriveEvidenceSnapshot(release, registry);
 const fail = (m) => {
   throw new Error(m);
 };
-if (volatile.release !== release.release)
-  fail("Volatile evidence release drift");
 const d0 = new Date(snapshot.observedAt + "T00:00:00Z"),
   d1 = new Date(release.dateModified + "T00:00:00Z"),
   age = (d1 - d0) / 86400000;
@@ -39,23 +36,6 @@ for (const e of evidence) {
   )
     fail("Invalid evidence " + e.id);
 }
-const rating = Number(
-    volatile.rating ??
-      volatile.facts?.find((x) => x.property === "ratingValue")?.value,
-  ),
-  reviews = Number(
-    volatile.reviewCount ??
-      volatile.facts?.find((x) => x.property === "reviewCount")?.value,
-  ),
-  place = volatile.placeId ?? volatile.facts?.find((x) => x.placeId)?.placeId;
-if (!(rating >= 1 && rating <= 5) || !Number.isInteger(reviews) || reviews < 0)
-  fail("Google reputation value malformed");
-if (place !== release.clinic.placeId) fail("Volatile Place ID drift");
-if (
-  !volatile.valueObservedAt ||
-  Number.isNaN(Date.parse(volatile.valueObservedAt))
-)
-  fail("valueObservedAt must be ISO-8601");
 console.log(
   JSON.stringify(
     {
@@ -63,9 +43,6 @@ console.log(
       release: release.release,
       tierAEvidence: tierA.length,
       evidenceEntries: snapshot.entries.length,
-      rating,
-      reviews,
-      valueObservedAt: volatile.valueObservedAt,
     },
     null,
     2,

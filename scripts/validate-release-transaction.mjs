@@ -34,7 +34,83 @@ assert.match(
   workflow,
   /push --atomic origin HEAD:main "refs\/tags\/v\$RELEASE_TARGET"/,
 );
+assert.match(
+  workflow,
+  /Create or verify immutable GitHub Release[\s\S]*?gh release create "\$TAG" "\$ATTESTATION" "\$MANIFEST"[\s\S]*?--verify-tag/,
+);
+const immutablePolicyGate = workflow.indexOf(
+  "Prove GitHub immutable releases policy before publication",
+);
+const zenodoPublish = workflow.indexOf("Publish immutable Zenodo release");
+assert.ok(
+  immutablePolicyGate >= 0 &&
+    zenodoPublish >= 0 &&
+    immutablePolicyGate < zenodoPublish,
+  "GitHub immutable-release policy must be proven before Zenodo publication",
+);
+const immutablePolicyBlock = workflow.slice(immutablePolicyGate, zenodoPublish);
+for (const required of [
+  "secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN || github.token",
+  'X-GitHub-Api-Version: 2026-03-10',
+  'repos/$GITHUB_REPOSITORY/immutable-releases',
+  "state.enabled !== true",
+])
+  assert.ok(
+    immutablePolicyBlock.includes(required),
+    `Immutable-release preflight misses ${required}`,
+  );
+assert.doesNotMatch(
+  immutablePolicyBlock,
+  /(?:--method|-X)\s+PUT/,
+  "Release workflow must never enable immutable releases implicitly",
+);
+assert.match(
+  workflow,
+  /Build exact current release distribution[\s\S]*?FROZEN_SOURCE_AT_HEAD[\s\S]*?zenodo_release\.py prepare-auxiliaries/,
+);
+assert.match(
+  workflow,
+  /Create or verify immutable GitHub Release[\s\S]*?steps\.release\.outputs\.mode == 'new' \|\| env\.FROZEN_SOURCE_AT_HEAD == 'true'/,
+);
+assert.match(
+  workflow,
+  /gh release download "\$TAG"[\s\S]*?cmp "\$ASSET" "\$TMP\/final-download\/\$NAME"/,
+);
+for (const required of [
+  "assets,body,isDraft,isImmutable,isPrerelease,name,tagName,targetCommitish",
+  "Existing published GitHub Release is not immutable",
+  "Existing published GitHub Release asset inventory drift",
+  "Draft GitHub Release is not exact before publication",
+  "Published GitHub Release postcondition drift",
+  "release.isDraft !== false",
+  "release.isPrerelease !== false",
+  "release.isImmutable !== true",
+  "release.tagName !== tag",
+  "release.name !== title",
+  "release.body !== body",
+  "JSON.stringify(actual) !== JSON.stringify(expected)",
+])
+  assert.ok(
+    workflow.includes(required),
+    `GitHub Release exact postcondition misses ${required}`,
+  );
+assert.match(
+  workflow,
+  /elif \[ "\$EXISTS" = true \]; then[\s\S]*?test "\$IS_DRAFT" = true[\s\S]*?gh release upload/,
+  "Only a validated draft may receive a recovery asset upload",
+);
+assert.match(
+  workflow,
+  /if \[ "\$IS_DRAFT" = true \]; then[\s\S]*?gh release edit "\$TAG"[^\n]*--draft=false/,
+  "Only an exact validated draft may be published during recovery",
+);
+assert.doesNotMatch(workflow, /gh release upload[^\n]*--clobber/);
 assert.doesNotMatch(workflow, /push origin HEAD:main\s*\n\s*if git ls-remote/);
+assert.match(
+  workflow,
+  /Reconcile or verify current Cloudflare deployment contract[\s\S]*?FROZEN_SOURCE_AT_HEAD[\s\S]*?CF_EXPECTED_COMMIT="\$BASE_SHA"[\s\S]*?cloudflare-pages\.mjs ensure --configure[\s\S]*?cloudflare-pages\.mjs ensure\n/,
+  "Frozen current-release recovery must converge the exact Cloudflare commit",
+);
 assert.equal(
   (cloudflare.match(/python scripts\/configure-cloudflare-edge\.py/g) || [])
     .length,
@@ -166,6 +242,10 @@ console.log(
     integrationKeepsBothParents: true,
     frozenTagExact: true,
     frozenTagRecovery: true,
+    githubReleaseIdempotent: true,
+    githubImmutablePolicyPreflight: true,
+    githubReleaseExactPostcondition: true,
+    cloudflareFrozenRecovery: true,
     cloudflareFullApplyCanonical: true,
     cloudflareTimeoutCoversConvergence: true,
     githubPagesBridgeDependencies: "COMPLETE",

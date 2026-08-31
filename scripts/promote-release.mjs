@@ -56,12 +56,11 @@ const replaceExactly = (source, pattern, replacement, label) => {
 };
 const dryRun = args["dry-run"] === "true" || args["dry-run"] === "1";
 
-const [release, pkg, lock, volatile, graph, citationSource, codemeta] =
+const [release, pkg, lock, graph, citationSource, codemeta] =
   await Promise.all([
     readJson("src/data/release.json"),
     readJson("package.json"),
     readJson("package-lock.json"),
-    readJson("src/data/volatile-facts.json"),
     readJson("src/data/semantic/knowledge-graph.jsonld"),
     readFile("CITATION.cff", "utf8"),
     readJson("codemeta.json"),
@@ -138,7 +137,6 @@ release.dateModified = next.date;
 pkg.version = next.release;
 lock.version = next.release;
 if (lock.packages?.[""]) lock.packages[""].version = next.release;
-volatile.release = next.release;
 
 const nodes = graph["@graph"];
 must(Array.isArray(nodes), "Canonical graph lacks @graph");
@@ -174,11 +172,11 @@ const projectDescription = (version) =>
 const githubDescription = (version) =>
   `Version-controlled GitHub source for Version ${version} of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.`;
 const hfDescription = (version) =>
-  `AI and retrieval distribution of Version ${version} of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core, an evidence-bound canonical-entity resolution matrix and a separately governed live-observation layer.`;
+  `AI and retrieval distribution of Version ${version} of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.`;
 const zenodoDescription = (version) =>
   `Immutable DOI-preserved Version ${version} distribution of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph Dataset.`;
 const catalogDescription =
-  "First-party machine-readable catalog for the Dr. Saeed Ghezelbash Public Knowledge Graph, preserving physician-first identity and explicit source, preservation, AI/retrieval and live-observation roles.";
+  "First-party machine-readable catalog for the Dr. Saeed Ghezelbash Public Knowledge Graph, preserving physician-first identity and explicit source, preservation and AI/retrieval roles.";
 const encodings = [
   "application/ld+json",
   "text/turtle",
@@ -395,7 +393,6 @@ const writes = [
   { file: "src/data/release.json", content: json(release) },
   { file: "package.json", content: json(pkg) },
   { file: "package-lock.json", content: json(lock) },
-  { file: "src/data/volatile-facts.json", content: json(volatile) },
   { file: "src/data/semantic/knowledge-graph.jsonld", content: json(graph) },
   { file: "CITATION.cff", content: citation },
   { file: "codemeta.json", content: json(codemeta) },

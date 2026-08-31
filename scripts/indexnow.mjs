@@ -17,7 +17,7 @@ if (action === "prepare") {
 } else if (action === "submit") {
   const endpoint =
     process.env.INDEXNOW_ENDPOINT || "https://api.indexnow.org/indexnow";
-  const urls = [`https://${HOST}/`, `https://${HOST}/live-observations.jsonld`];
+  const urls = [`https://${HOST}/`];
   const keyReadback = await fetch(`${KEY_LOCATION}?verify=${Date.now()}`, {
     headers: { "user-agent": "ghezelbaash-indexnow-release-notifier/1.0" },
     signal: AbortSignal.timeout(30000),

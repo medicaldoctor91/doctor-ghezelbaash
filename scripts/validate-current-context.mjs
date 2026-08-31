@@ -101,11 +101,6 @@ for (const file of ["answers.txt", "llms.txt", "llms-full.txt", "index.md"]) {
     fail(`Current release marker missing from ${file}`);
 }
 
-const volatile = JSON.parse(
-  await readFile(path.join(root, "src/data/volatile-facts.json"), "utf8"),
-);
-if (volatile.placeId !== release.clinic.placeId) fail("Current Place ID drift");
-
 console.log(
   JSON.stringify({
     currentContextScanner: "PASS",

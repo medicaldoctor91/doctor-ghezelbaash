@@ -22,9 +22,7 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </picture>
 <figcaption class="hero-figure-caption" id="caption-saeed-ghezelbash-portrait-master">
 <div class="hero-caption-title">دکتر سعید قزلباش، پزشک زیبایی</div>
-<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> {{CLINIC_HOURS_COMPACT_FA}}</span><span><strong>بازبینی پزشکی:</strong> <time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span>
-</div>
-<div class="hero-caption-reputation" id="google-maps-clinic-reputation-current" data-live-reputation-slot>
+<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> {{CLINIC_HOURS_COMPACT_FA}}</span><span><strong>بازبینی پزشکی:</strong> <time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span><span><a href="{{CLINIC_MAPS_URL}}" rel="external noopener">نظرها و امتیازهای عمومی در Google Maps</a></span>
 </div>
 </figcaption>
 </figure>

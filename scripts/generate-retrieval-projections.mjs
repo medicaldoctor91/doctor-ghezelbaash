@@ -2,7 +2,6 @@ import path from "node:path";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { generatedWorkspace } from "./generated-workspace.mjs";
-import { buildLiveReputationArtifacts } from "./lib/live-reputation-artifacts.mjs";
 import {
   canonicalSemanticSource,
   deriveCanonicalSemanticSets,
@@ -22,7 +21,6 @@ const arr = (v) => (Array.isArray(v) ? v : v == null ? [] : [v]);
 const id = (v) => (typeof v === "string" ? v : v?.["@id"]);
 
 const release = await readJson("src/data/release.json");
-const volatile = await readJson("src/data/volatile-facts.json");
 const policy = await readJson("src/data/retrieval/query-matrix-policy.json");
 const graph = await readJson(canonicalSemanticSource(policy));
 const evidenceRegistry = await readJson("src/data/evidence-registry.json");
@@ -47,13 +45,6 @@ const practiceLocation = `${exactLanguageLiteral(
   "en",
   "Canonical clinic country",
 )}`;
-
-const { rating, reviewCount, observedAt, liveObservationId, jsonLdJson } =
-  buildLiveReputationArtifacts(release, volatile);
-await write(
-  path.join(generated.projections, "live-observations.jsonld"),
-  jsonLdJson,
-);
 
 const evidenceEntries = evidenceRegistry.evidence || [];
 const evidenceById = new Map(evidenceEntries.map((x) => [x.id, x]));
@@ -253,7 +244,6 @@ const commonRow = (language, scope, stable) => ({
   retrieval_policy: policy.retrievalPolicy,
   resolution_mode: policy.resolutionMode,
   stable_evidence_refs: boundedEvidence(stable),
-  volatile_signal_refs: [liveObservationId],
 });
 const rows = [];
 for (const lang of policy.languages) {
@@ -370,12 +360,6 @@ for (const row of rows) {
       preferIntent.stable_evidence_refs,
       other.stable_evidence_refs,
     ),
-    volatile_signal_refs: [
-      ...new Set([
-        ...arr(preferIntent.volatile_signal_refs),
-        ...arr(other.volatile_signal_refs),
-      ]),
-    ],
   });
 }
 const dedup = [...mergedRows.values()];
@@ -418,11 +402,6 @@ const matrix = {
     .size,
   serviceCount: serviceIds.size,
   medicalReviewedAt: reviewedAt,
-  reputation: {
-    rating,
-    reviewCount,
-    observedAt,
-  },
 };
 await write(
   path.join(generated.projections, "current-release-matrix.json"),
@@ -438,8 +417,6 @@ console.log(
       servicesWithAliasCoverage: matrix.servicesWithAliasCoverage,
       sourceServiceAliases: serviceAliases,
       services: serviceIds.size,
-      rating,
-      reviewCount,
       baselineStableEvidenceRefs: baselineEvidence.length,
       maximumStableEvidenceRefs: Math.max(
         ...dedup.map((row) => row.stable_evidence_refs.length),

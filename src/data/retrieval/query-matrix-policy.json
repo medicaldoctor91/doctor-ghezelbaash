@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.4",
+  "schemaVersion": "2.5",
   "identitySource": "src/data/release.json",
   "semanticSource": "src/data/semantic/knowledge-graph.jsonld",
   "evidenceRegistry": "src/data/evidence-registry.json",
@@ -53,9 +53,7 @@
       "canonical-name",
       "clinic-identity"
     ],
-    "maxStableEvidenceRefsPerRow": 8,
-    "volatileReputationSeparated": true
+    "maxStableEvidenceRefsPerRow": 8
   },
-  "stableEvidenceField": "stable_evidence_refs",
-  "volatileSignalField": "volatile_signal_refs"
+  "stableEvidenceField": "stable_evidence_refs"
 }

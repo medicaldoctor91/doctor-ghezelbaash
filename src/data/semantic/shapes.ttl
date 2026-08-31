@@ -65,13 +65,6 @@ ex:GitHubSourceRoleShape a sh:NodeShape ;
   sh:property [ sh:path schema:contentUrl ; sh:maxCount 0 ] ;
   sh:not [ sh:property [ sh:path rdf:type ; sh:hasValue schema:DataDownload ] ] .
 
-ex:PhysicianDecisionHowToShape a sh:NodeShape ;
-  sh:targetNode ex:howto-clinical-aesthetic-decision-pathway ;
-  sh:property [ sh:path rdf:type ; sh:hasValue schema:HowTo ] ;
-  sh:property [ sh:path schema:author ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
-  sh:property [ sh:path schema:reviewedBy ; sh:maxCount 0 ] ;
-  sh:property [ sh:path schema:step ; sh:minCount 4 ; sh:maxCount 4 ] .
-
 ex:MedicalConditionTreatmentShape a sh:NodeShape ;
   sh:targetClass schema:MedicalCondition ;
   sh:property [ sh:path schema:possibleTreatment ; sh:class schema:MedicalTherapy ; sh:minCount 1 ] .

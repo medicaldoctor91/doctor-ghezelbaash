@@ -435,7 +435,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       about: [
         {
           "@id": evidence.supports.some((value) =>
-            /clinic|place-id|cid|rating|review-count|opening-hours|local-identity|local-corroboration/.test(
+            /clinic|place-id|cid|opening-hours|local-identity|local-corroboration/.test(
               value,
             ),
           )

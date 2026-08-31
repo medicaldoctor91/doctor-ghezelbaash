@@ -36,6 +36,19 @@ const visibleText = (anchor) =>
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+const heroFacts = source.match(
+  /<div\b[^>]*class=["'][^"']*\bhero-caption-facts\b[^"']*["'][^>]*>[\s\S]*?<\/div>/i,
+)?.[0];
+if (!heroFacts) fail("Hero trust facts container is missing");
+const heroMapsLinks = [
+  ...heroFacts.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>[\s\S]*?<\/a>/gi),
+].filter((match) => match[1] === site.mapsUrl);
+if (heroMapsLinks.length !== 1)
+  fail(`Hero Maps evidence link drift: ${heroMapsLinks.length} != 1`);
+if (!visibleText(heroMapsLinks[0][0]))
+  fail("Hero Maps evidence link has no accessible text");
+
 for (const contract of heroContract) {
   const hits = hero.filter(
     (anchor) =>
@@ -130,6 +143,7 @@ console.log(
       floating: ["تماس", "چت با دکتر قزلباش", "مسیریابی"],
       backToTop: "HIDDEN_UNTIL_HERO_EXIT",
       directionsPlaceId: release.clinic.placeId,
+      heroMapsEvidence: "CANONICAL_LINK",
       contactAuthority: "release+canonical-graph",
       validationSurface: "assembled-canonical-content",
       destinationsLocked: true,

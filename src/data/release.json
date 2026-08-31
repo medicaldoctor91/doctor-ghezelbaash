@@ -147,8 +147,7 @@
       "role": "ai-distribution",
       "dataset": "https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data",
       "distributionMode": "ai-retrieval"
-    },
-    "liveObservations": "https://www.ghezelbaash.ir/live-observations.jsonld"
+    }
   },
   "medicalReviewedAt": "2026-08-13"
 }

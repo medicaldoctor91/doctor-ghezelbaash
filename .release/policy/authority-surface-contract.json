@@ -41,11 +41,6 @@
           "name": "query_matrix",
           "path": "query-matrix.jsonl",
           "default": false
-        },
-        {
-          "name": "live_observations",
-          "path": "live_observations.csv",
-          "default": false
         }
       ]
     }

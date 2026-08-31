@@ -291,7 +291,6 @@ async function command_verify() {
       HF_TOKEN: "",
       HUGGINGFACE_TOKEN: "",
       HUGGING_FACE_TOKEN: "",
-      GOOGLE_PLACES_API_KEY: "",
     };
     execFileSync("npm", ["run", "build"], {
       cwd: root,

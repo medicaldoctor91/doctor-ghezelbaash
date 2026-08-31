@@ -106,7 +106,6 @@ for (const [intent, answerId] of Object.entries(intentAnswerIds))
   if (!answerIds.has(answerId))
     fail(`Intent answer mapping is unresolved: ${intent}`);
 const serviceIds = new Set(services.map((service) => service.id));
-const liveObservationId = `${release.canonicalUrl}live-observations.jsonld#clinic-google-reputation`;
 const uniqueRows = new Set();
 const commonFields = [
   "answer_strategy",
@@ -127,7 +126,6 @@ const commonFields = [
   "service_ids",
   "stable_evidence_refs",
   "version_doi",
-  "volatile_signal_refs",
 ];
 const exactFieldSet = (row, expected, key) => {
   const actual = Object.keys(row).sort();
@@ -187,10 +185,6 @@ for (const row of rows) {
   for (const evidenceId of stableEvidence)
     if (!evidenceIds.has(evidenceId))
       fail(`Unresolved stable evidence ${evidenceId} in ${key}`);
-
-  const volatileSignals = arr(row.volatile_signal_refs);
-  if (volatileSignals.length !== 1 || volatileSignals[0] !== liveObservationId)
-    fail(`Volatile signal topology drift ${key}`);
 
   const targets = arr(row.service_ids);
   if (new Set(targets).size !== targets.length)
@@ -274,11 +268,6 @@ if (policy.serviceAliasCoverage?.enabled) {
         fail(`Exact service retrieval label missing ${service.id}: ${alias}`);
   }
 }
-
-if (
-  rows.some((row) => arr(row.stable_evidence_refs).includes(liveObservationId))
-)
-  fail("Mutable live observation leaked into stable evidence lane");
 
 const coveredServices = new Set(rows.flatMap((row) => arr(row.service_ids)));
 if (

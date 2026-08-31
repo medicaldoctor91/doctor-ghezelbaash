@@ -6,6 +6,8 @@ import {
 } from "../src/lib/google-page-microdata.mjs";
 import { CONTENT_LANGUAGES } from "../src/lib/language-contract.mjs";
 import { projectNode } from "../src/lib/semantic-projection.mjs";
+import { assertSameDocumentGraphUrlTargets } from "./lib/graph-integrity.mjs";
+import { inspectHtml } from "./lib/html-contract.mjs";
 
 const fail = (message) => {
   throw new Error(message);
@@ -104,9 +106,7 @@ for (let index = 1; index < headings.length; index++)
       `Heading hierarchy jumps from H${headings[index - 1].level} to H${headings[index].level}`,
     );
 
-const idMatches = [...body.matchAll(/\bid=["']([^"']+)["']/gi)].map(
-  (match) => match[1],
-);
+const idMatches = inspectHtml(body, { wrapMain: true }).ids;
 const duplicateIds = [
   ...new Set(idMatches.filter((id, index) => idMatches.indexOf(id) !== index)),
 ];
@@ -121,6 +121,13 @@ const missingFragments = [
 ];
 if (missingFragments.length)
   fail(`Missing authored fragment targets: ${missingFragments.join(", ")}`);
+const graphUrlTargets = assertSameDocumentGraphUrlTargets(
+  knowledgeGraphDocument,
+  {
+    canonicalUrl: release.canonicalUrl,
+    htmlIds: idSet,
+  },
+);
 
 const mediaBridges = [
   {
@@ -510,27 +517,6 @@ for (const tag of projectedMainContentTags) {
     );
 }
 
-const howToId =
-  "https://www.ghezelbaash.ir/#howto-clinical-aesthetic-decision-pathway";
-const howTo = graphNode(howToId);
-const expectedStepIds = (howTo?.step || []).map(graphRef).filter(Boolean);
-const howToTarget = String(howTo?.url || "").split("#")[1] || "";
-const graphHowToValid =
-  graphTypes(howTo).includes("HowTo") &&
-  expectedStepIds.length === 4 &&
-  howToTarget &&
-  idSet.has(howToTarget) &&
-  expectedStepIds.every((stepId, index) => {
-    const step = graphNode(stepId);
-    return (
-      graphTypes(step).includes("HowToStep") &&
-      step?.position === index + 1 &&
-      String(step?.name || "").trim() &&
-      String(step?.text || "").trim()
-    );
-  });
-if (!graphHowToValid)
-  fail("HowTo graph-to-visible-diagnostic-content contract drift");
 const headerLandmark =
     /<header\b[^>]*\baria-labelledby=["']saeed-ghezelbash["']/i.test(body),
   navigationLandmark =
@@ -567,8 +553,7 @@ console.log(
       medicalReviewParity: "PASS",
       articleLandmark: "PASS",
       mainContentProjections: projectedMainContentIds.size,
-      howToSteps: expectedStepIds.length,
-      howToGraphProjection: "PASS",
+      sameDocumentGraphUrls: graphUrlTargets,
       mediaGraphBridges: mediaBridges.length,
       mediaCaptionBindings: mediaBridges.filter((item) => item.caption).length,
       searchLandmark: "PASS",

@@ -22,7 +22,7 @@ https://:version.:project.pages.dev/*
   Cloudflare-CDN-Cache-Control: public, max-age=86400, stale-while-revalidate=604800, stale-if-error=2592000
   Content-Security-Policy: {{MAIN_CSP}}
   Repr-Digest: sha-256=:{{DIGEST:index.html}}:
-  Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/linkset.json>; rel="linkset"; type="application/linkset+json", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/provenance.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/live-observations.jsonld>; rel="describedby"; type="application/ld+json"
+  Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/linkset.json>; rel="linkset"; type="application/linkset+json", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/provenance.jsonld>; rel="describedby"; type="application/ld+json"
   Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="author", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="about"
   Link: <{{HERO_EARLY_HINT_HREF}}>; rel=preload; as=image; type="image/avif"; media="screen and (max-width: 540px) and (min-resolution: 1.25dppx) and (max-resolution: 2.5dppx)"; fetchpriority=high
 
@@ -325,14 +325,3 @@ https://:version.:project.pages.dev/*
 /apple-touch-icon.png
   Cache-Control: public, max-age=604800, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
-
-/live-observations.jsonld
-  Content-Type: application/ld+json; charset=utf-8
-  X-Robots-Tag: index, follow, max-snippet:-1
-  X-Robots-Tag: googlebot: noindex, follow
-  Cache-Control: public, no-cache
-  Link: <https://www.ghezelbaash.ir/live-observations.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="describedby", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:live-observations.jsonld}}:
-  Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
-  Cross-Origin-Resource-Policy: cross-origin

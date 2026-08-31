@@ -62,7 +62,6 @@ const requiredFiles = [
   "src/data/semantic/support-profile.json",
   "src/data/semantic/shapes.ttl",
   "src/data/evidence-registry.json",
-  "src/data/volatile-facts.json",
   "src/data/render-calibration.json",
   "src/data/retrieval/query-matrix-policy.json",
   "src/data/machine-resources.json",
@@ -73,7 +72,7 @@ const requiredFiles = [
   "scripts/lib/graph-integrity.mjs",
   "scripts/lib/release-graph.mjs",
   "scripts/lib/projection-context.mjs",
-  "scripts/lib/live-reputation-artifacts.mjs",
+  "scripts/lib/hugging-face-distribution.mjs",
   "scripts/lib/core-entity-identity.mjs",
   "scripts/lib/projections/page-assets.mjs",
   "scripts/lib/projections/graph-projections.mjs",
@@ -114,7 +113,6 @@ const [
   contactCompiler,
   platformContractScript,
   hfAuthorityWorkflow,
-  reputationRefreshWorkflow,
   stackMonitorWorkflow,
 ] = await Promise.all([
   readJson("package.json"),
@@ -125,7 +123,7 @@ const [
   readSource("scripts/validate-media-references.mjs"),
   readSource("scripts/update-render-calibration.mjs"),
   readSource("scripts/huggingface.mjs"),
-  readSource("scripts/lib/live-reputation-artifacts.mjs"),
+  readSource("scripts/lib/hugging-face-distribution.mjs"),
   readSource("src/layouts/BaseLayout.astro"),
   readSource("scripts/lib/projections/page-assets.mjs"),
   readSource("scripts/lib/projections/graph-projections.mjs"),
@@ -134,7 +132,6 @@ const [
   readSource("scripts/lib/projections/contact-discovery.mjs"),
   readSource("scripts/platform-contract.mjs"),
   readSource(".github/workflows/hugging-face-authority.yml"),
-  readSource(".github/workflows/reputation-refresh.yml"),
   readSource(".github/workflows/stack-monitor.yml"),
 ]);
 const projectionCompilers = [
@@ -267,16 +264,6 @@ const hfMutationWorkflows = [
     ]),
   ],
   [
-    "reputation-refresh.yml",
-    reputationRefreshWorkflow,
-    new Map([
-      [
-        "node scripts/huggingface.mjs push .release/huggingface-live HEAD:main",
-        1,
-      ],
-    ]),
-  ],
-  [
     "stack-monitor.yml",
     stackMonitorWorkflow,
     new Map([
@@ -397,11 +384,6 @@ for (const [resourcePath, source, targets] of [
     ".generated/projections/current-release-matrix.json",
     ["huggingFace", "zenodo"],
   ],
-  [
-    "live-observations.jsonld",
-    ".generated/projections/live-observations.jsonld",
-    ["website"],
-  ],
 ]) {
   const resource = machineResourcesByPath.get(resourcePath);
   if (
@@ -413,7 +395,6 @@ for (const [resourcePath, source, targets] of [
 for (const artifact of [
   "query-matrix.jsonl",
   "current-release-matrix.json",
-  "live-observations.jsonld",
 ])
   if (
     !new RegExp(
@@ -806,9 +787,6 @@ if (
   )
 )
   fail("Accessible Hero search launcher contract drift");
-if (!source.includes("google-maps-clinic-reputation-current"))
-  fail("Current reputation slot missing");
-
 const robots = await readFile(path.join(root, "public/robots.txt"), "utf8");
 if (
   !robots.includes(

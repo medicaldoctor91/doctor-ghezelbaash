@@ -112,7 +112,6 @@ export const canonicalSemanticSource = (policy) => {
       "serviceAliasCoverage",
       "evidencePolicy",
       "stableEvidenceField",
-      "volatileSignalField",
     ],
     "Retrieval policy",
   );
@@ -128,7 +127,7 @@ export const canonicalSemanticSource = (policy) => {
     "Service alias policy",
   );
   if (
-    policy.schemaVersion !== "2.4" ||
+    policy.schemaVersion !== "2.5" ||
     policy.semanticSource !== "src/data/semantic/knowledge-graph.jsonld" ||
     policy.serviceAliasCoverage.coverage !== "all-offered-services"
   )

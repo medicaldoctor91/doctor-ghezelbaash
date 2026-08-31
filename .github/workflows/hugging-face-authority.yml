@@ -111,8 +111,13 @@ jobs:
         run: |
           set -euo pipefail
           C="$(git rev-parse HEAD)"
-          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$C")" CF_PAGES_COMMIT_SHA="$C"
-          npm run build
+          export SOURCE_COMMIT="$C" SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$C")" CF_PAGES_COMMIT_SHA="$C"
+          if [ "$FROZEN_SOURCE_AT_HEAD" = true ]; then
+            npm run release
+            python scripts/zenodo_release.py prepare-auxiliaries
+          else
+            npm run build
+          fi
       - name: Verify current Zenodo surface
         if: steps.release.outputs.mode == 'current'
         env:
@@ -175,7 +180,7 @@ jobs:
             test "$attempt" -lt 18
             sleep 10
           done
-      - name: Verify current Cloudflare deployment contract
+      - name: Reconcile or verify current Cloudflare deployment contract
         if: steps.release.outputs.mode == 'current'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -183,7 +188,13 @@ jobs:
         run: |
           set -euo pipefail
           test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
-          node scripts/cloudflare-pages.mjs ensure --verify-config
+          if [ "$FROZEN_SOURCE_AT_HEAD" = true ]; then
+            export CF_PAGES_COMMIT_SHA="$BASE_SHA" CF_EXPECTED_COMMIT="$BASE_SHA"
+            node scripts/cloudflare-pages.mjs ensure --configure
+            node scripts/cloudflare-pages.mjs ensure
+          else
+            node scripts/cloudflare-pages.mjs ensure --verify-config
+          fi
       - name: Verify current website after reconciliation
         if: steps.release.outputs.mode == 'current'
         shell: bash
@@ -223,7 +234,7 @@ jobs:
             DOI="$(node -p "require('./.release/runtime/zenodo-reservation.json').versionDoi")"
             node scripts/promote-release.mjs \
               --version="$RELEASE_TARGET" --date="$RELEASE_DATE" --zenodo-record="$RECORD" --zenodo-doi="$DOI"
-            EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json'
+            EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/semantic/knowledge-graph.jsonld'
             ACTUAL="$(git diff --name-only | sort | tr '\n' ' ' | sed 's/ $//')"
             test "$ACTUAL" = "$EXPECTED"
             CANDIDATE_NEEDS_COMMIT=true
@@ -241,7 +252,7 @@ jobs:
             git config user.name ghezelbaash-release-bot
             git config user.email actions@users.noreply.github.com
             git checkout -b "$RELEASE_BRANCH"
-            git add CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/semantic/knowledge-graph.jsonld src/data/volatile-facts.json
+            git add CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/semantic/knowledge-graph.jsonld
             git commit -m "release: prepare v$RELEASE_TARGET authority snapshot"
           fi
           CANDIDATE_SHA="$(git rev-parse HEAD)"
@@ -320,6 +331,24 @@ jobs:
           test "$(git ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$CANDIDATE_SHA"
           test "$(git -C .release/huggingface ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$HF_CANDIDATE_SHA"
           node -e "const s=require('./.release/runtime/zenodo-stage.json');if(s.release!==process.env.RELEASE_TARGET||s.recordId!==process.env.ZENODO_RECORD||s.versionDoi!==process.env.ZENODO_DOI||s.sourceCommit!==process.env.CANDIDATE_SHA)throw new Error('Zenodo stage ledger drift')"
+      - name: Prove GitHub immutable releases policy before publication
+        if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN || github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GH_TOKEN:-}"; echo "::add-mask::$GH_TOKEN"
+          STATE="$(mktemp)"
+          trap 'rm -f "$STATE"' EXIT
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            "repos/$GITHUB_REPOSITORY/immutable-releases" > "$STATE"
+          node - "$STATE" <<'NODE'
+          const state = JSON.parse(require("node:fs").readFileSync(process.argv[2], "utf8"));
+          if (state.enabled !== true) throw new Error("GitHub immutable releases policy is not enabled");
+          NODE
       - name: Publish immutable Zenodo release
         if: steps.release.outputs.mode == 'new'
         env:
@@ -348,6 +377,122 @@ jobs:
             git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push --atomic origin HEAD:main "refs/tags/v$RELEASE_TARGET"
           fi
           unset GITHUB_AUTH
+      - name: Create or verify immutable GitHub Release
+        if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GH_TOKEN:-}"; echo "::add-mask::$GH_TOKEN"
+          if [ "$RELEASE_MODE" = new ]; then
+            VERSION="$RELEASE_TARGET"
+            VERSION_DOI="$ZENODO_DOI"
+            RELEASE_SHA="$CANDIDATE_SHA"
+          else
+            VERSION="$CURRENT_VERSION"
+            VERSION_DOI="$CURRENT_DOI"
+            RELEASE_SHA="$BASE_SHA"
+          fi
+          TAG="v$VERSION"
+          TMP="$(mktemp -d)"
+          trap 'rm -rf "$TMP"' EXIT
+          ATTESTATION="$TMP/release-attestation-v$VERSION.json"
+          MANIFEST="$TMP/dist-sha256-v$VERSION.json"
+          cp .release/runtime/release-attestation.json "$ATTESTATION"
+          cp .release/runtime/dist-sha256.json "$MANIFEST"
+          TITLE="Dr. Saeed Ghezelbash Public Knowledge Graph $TAG"
+          BODY="Immutable release metadata for $TAG. Zenodo Version DOI: $VERSION_DOI"
+          STATE="$TMP/release.json"
+          JSON_FIELDS="assets,body,isDraft,isImmutable,isPrerelease,name,tagName,targetCommitish"
+          EXISTS=false
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json "$JSON_FIELDS" > "$STATE" 2>/dev/null; then
+            EXISTS=true
+          fi
+          if [ "$EXISTS" = false ]; then
+            gh release create "$TAG" "$ATTESTATION" "$MANIFEST" \
+              --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --target "$RELEASE_SHA" \
+              --title "$TITLE" \
+              --notes "$BODY"
+          else
+            node - "$STATE" "$TAG" "$TITLE" "$BODY" \
+              "$(basename "$ATTESTATION")" "$(basename "$MANIFEST")" <<'NODE'
+          const fs = require("node:fs");
+          const [file, tag, title, body, attestation, manifest] = process.argv.slice(2);
+          const release = JSON.parse(fs.readFileSync(file, "utf8"));
+          const expected = [attestation, manifest].sort();
+          const actual = (release.assets || []).map(({ name }) => name).sort();
+          if (release.tagName !== tag || release.name !== title || release.body !== body || release.isPrerelease !== false)
+            throw new Error("Existing GitHub Release metadata drift");
+          if (new Set(actual).size !== actual.length || actual.some((name) => !expected.includes(name)))
+            throw new Error("Existing GitHub Release asset inventory is not safely recoverable");
+          if (release.isDraft !== true && release.isDraft !== false)
+            throw new Error("Existing GitHub Release draft state is invalid");
+          if (release.isDraft === false && release.isImmutable !== true)
+            throw new Error("Existing published GitHub Release is not immutable");
+          if (release.isDraft === false && JSON.stringify(actual) !== JSON.stringify(expected))
+            throw new Error("Existing published GitHub Release asset inventory drift");
+          NODE
+          fi
+          IS_DRAFT=false
+          if [ "$EXISTS" = true ]; then
+            IS_DRAFT="$(node -p "JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).isDraft" "$STATE")"
+          fi
+          mkdir "$TMP/prepublish-download"
+          for ASSET in "$ATTESTATION" "$MANIFEST"; do
+            NAME="$(basename "$ASSET")"
+            if [ "$EXISTS" = true ] && gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -Fxq "$NAME"; then
+              gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$NAME" --dir "$TMP/prepublish-download"
+              cmp "$ASSET" "$TMP/prepublish-download/$NAME"
+            elif [ "$EXISTS" = true ]; then
+              test "$IS_DRAFT" = true
+              gh release upload "$TAG" "$ASSET" --repo "$GITHUB_REPOSITORY"
+            fi
+          done
+          if [ "$IS_DRAFT" = true ]; then
+            gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json "$JSON_FIELDS" > "$STATE"
+            node - "$STATE" "$(basename "$ATTESTATION")" "$(basename "$MANIFEST")" <<'NODE'
+          const fs = require("node:fs");
+          const [file, attestation, manifest] = process.argv.slice(2);
+          const release = JSON.parse(fs.readFileSync(file, "utf8"));
+          const expected = [attestation, manifest].sort();
+          const actual = (release.assets || []).map(({ name }) => name).sort();
+          if (release.isDraft !== true || JSON.stringify(actual) !== JSON.stringify(expected))
+            throw new Error("Draft GitHub Release is not exact before publication");
+          NODE
+            mkdir "$TMP/draft-download"
+            for ASSET in "$ATTESTATION" "$MANIFEST"; do
+              NAME="$(basename "$ASSET")"
+              gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$NAME" --dir "$TMP/draft-download"
+              cmp "$ASSET" "$TMP/draft-download/$NAME"
+            done
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+          fi
+          mkdir "$TMP/final-download"
+          for ASSET in "$ATTESTATION" "$MANIFEST"; do
+            NAME="$(basename "$ASSET")"
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$NAME" --dir "$TMP/final-download"
+            cmp "$ASSET" "$TMP/final-download/$NAME"
+          done
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json "$JSON_FIELDS" > "$STATE"
+          node - "$STATE" "$TAG" "$TITLE" "$BODY" \
+            "$(basename "$ATTESTATION")" "$(basename "$MANIFEST")" <<'NODE'
+          const fs = require("node:fs");
+          const [file, tag, title, body, attestation, manifest] = process.argv.slice(2);
+          const release = JSON.parse(fs.readFileSync(file, "utf8"));
+          const expected = [attestation, manifest].sort();
+          const actual = (release.assets || []).map(({ name }) => name).sort();
+          if (release.tagName !== tag || release.name !== title || release.body !== body ||
+              release.isDraft !== false || release.isPrerelease !== false || release.isImmutable !== true ||
+              new Set(actual).size !== actual.length || JSON.stringify(actual) !== JSON.stringify(expected))
+            throw new Error("Published GitHub Release postcondition drift");
+          NODE
+          REMOTE_TAG_SHA="$(git ls-remote origin "refs/tags/$TAG^{}" | awk '{print $1}')"
+          if [ -z "$REMOTE_TAG_SHA" ]; then
+            REMOTE_TAG_SHA="$(git ls-remote origin "refs/tags/$TAG" | awk '{print $1}')"
+          fi
+          test "$REMOTE_TAG_SHA" = "$RELEASE_SHA"
       - name: Promote exact candidate to Hugging Face main and frozen tag
         if: steps.release.outputs.mode == 'new'
         env:
