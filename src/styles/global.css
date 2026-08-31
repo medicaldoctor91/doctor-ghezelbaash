@@ -589,6 +589,17 @@ blockquote {
   color: #36584e;
   font-weight: 760;
 }
+.google-maps-attribution {
+  color: #5e5e5e;
+  font-family: Arial, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+.google-maps-provider-attributions {
+  margin-inline-start: 0.15rem;
+}
 @media (max-width: 720px) {
   .entity-hero .hero-action.hero-search-launch {
     width: 100%;

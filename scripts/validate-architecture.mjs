@@ -15,6 +15,7 @@ const readJson = (relative) => read(relative).then(JSON.parse);
 
 const required = [
   "astro.config.mjs",
+  "functions/api/google-maps-reputation.js",
   "src/content-source/page.md",
   "src/data/document-head.json",
   "src/data/machine-resources.json",
@@ -54,6 +55,24 @@ assert(
   JSON.stringify(routes) ===
     JSON.stringify(["404.astro", "favicon.png.ts", "index.astro"]),
   `Astro route surface drift: ${routes.join(", ")}`,
+);
+const listFiles = async (directory, prefix = "") => {
+  const files = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const relative = path.posix.join(prefix, entry.name);
+    if (entry.isDirectory())
+      files.push(
+        ...(await listFiles(path.join(directory, entry.name), relative)),
+      );
+    else if (entry.isFile()) files.push(relative);
+  }
+  return files.sort();
+};
+const edgeFunctions = await listFiles(path.join(root, "functions"));
+assert(
+  JSON.stringify(edgeFunctions) ===
+    JSON.stringify(["api/google-maps-reputation.js"]),
+  `Cloudflare function surface drift: ${edgeFunctions.join(", ")}`,
 );
 const contentSources = (
   await readdir(path.join(root, "src/content-source"), { withFileTypes: true })
@@ -100,6 +119,7 @@ const [
   contactCompiler,
   documentHead,
   baseLayout,
+  googleMapsReputationFunction,
   indexPage,
   knowledgeGraph,
   googlePageMicrodata,
@@ -124,6 +144,7 @@ const [
   read("scripts/lib/projections/contact-discovery.mjs"),
   read("src/components/DocumentHead.astro"),
   read("src/layouts/BaseLayout.astro"),
+  read("functions/api/google-maps-reputation.js"),
   read("src/pages/index.astro"),
   read("src/lib/knowledge-graph.ts"),
   read("src/lib/google-page-microdata.mjs"),
@@ -249,6 +270,35 @@ assert(
     baseLayout.includes("../lib/css-delivery.mjs") &&
     !baseLayout.includes("../lib/css-source.mjs"),
   "Layout must assemble the single stylesheet directly",
+);
+assert(
+  /import\s+release\s+from\s+["']\.\.\/\.\.\/src\/data\/release\.json["']/.test(
+    googleMapsReputationFunction,
+  ) &&
+    /export\s+async\s+function\s+onRequestGet/.test(
+      googleMapsReputationFunction,
+    ) &&
+    googleMapsReputationFunction.includes("GOOGLE_PLACES_API_KEY") &&
+    googleMapsReputationFunction.includes('"userRatingCount"') &&
+    googleMapsReputationFunction.includes('"attributions"') &&
+    googleMapsReputationFunction.includes(
+      '"Cache-Control": "private, no-store, max-age=0"',
+    ) &&
+    googleMapsReputationFunction.includes(
+      '"Cloudflare-CDN-Cache-Control": "no-store"',
+    ) &&
+    googleMapsReputationFunction.includes('cache: "no-store"') &&
+    googleMapsReputationFunction.includes(
+      "requestUrl.origin === canonicalOrigin",
+    ) &&
+    googleMapsReputationFunction.includes(
+      "referrer.origin === canonicalOrigin",
+    ) &&
+    !googleMapsReputationFunction.includes('"googleMapsUri"') &&
+    !/\b(?:caches|localStorage|sessionStorage|KV|R2)\b/.test(
+      googleMapsReputationFunction,
+    ),
+  "Live Google Maps reputation function must be direct, transient, and fail-closed",
 );
 assert(
   !projectionContext.includes("graphByUrl") &&
@@ -520,6 +570,7 @@ console.log(
     {
       stage: "ARCHITECTURE",
       astroRoutes: routes.length,
+      cloudflareFunctions: edgeFunctions.length,
       contentSources: contentSources.length,
       stylesheetSources: styles.length,
       projectionCompilers: 5,

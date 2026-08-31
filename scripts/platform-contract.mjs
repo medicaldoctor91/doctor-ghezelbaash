@@ -10,6 +10,8 @@ async function exportContract() {
     CLOUDFLARE_ACCOUNT_ID: cf.accountId,
     CF_PRODUCTION_BRANCH: cf.productionBranch,
     CF_EXPECTED_ENVIRONMENT: cf.expectedEnvironment,
+    CF_FUNCTION_COMPATIBILITY_DATE: cf.function.compatibilityDate,
+    CF_WRANGLER_VERSION: cf.function.wranglerVersion,
     ZONE_NAME: contract.zoneName,
     CANONICAL_HOST: contract.canonicalHost,
   };
@@ -58,6 +60,21 @@ async function validateContract() {
     cf.build?.rootDir !== ""
   )
     fail("Platform build contract drift");
+  if (
+    cf.function?.route !== "/api/google-maps-reputation" ||
+    cf.function?.source !== "functions/api/google-maps-reputation.js" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(cf.function?.compatibilityDate || "") ||
+    !/^\d+\.\d+\.\d+$/.test(cf.function?.wranglerVersion || "") ||
+    JSON.stringify(cf.function?.requiredProductionSecrets) !==
+      JSON.stringify(["GOOGLE_PLACES_API_KEY"])
+  )
+    fail("Platform Function contract drift");
+  const functionSource = await readFile(cf.function.source, "utf8");
+  if (
+    !functionSource.includes("export async function onRequestGet") ||
+    !functionSource.includes("GOOGLE_PLACES_API_KEY")
+  )
+    fail("Platform Function source or binding drift");
   if (cf.planTier !== "free") fail("Cloudflare plan contract drift");
   if (
     !Array.isArray(cf.requiredCustomDomains) ||
@@ -119,6 +136,7 @@ async function validateContract() {
         pagesProject: cf.pagesProject,
         canonicalHost: contract.canonicalHost,
         planTier: cf.planTier,
+        function: cf.function,
         runtime,
         approvedInstallScripts: approvedScripts,
         codemetaRuntime: codemeta.runtimePlatform,

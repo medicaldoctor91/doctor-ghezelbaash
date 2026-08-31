@@ -1,6 +1,6 @@
 # Dr. Saeed Ghezelbash — production source
 
-Pure-static Astro source for the canonical physician entity home at `https://www.ghezelbaash.ir/`. The build renders one public HTML page, a real 404 page and synchronized machine-readable representations of the same physician, clinic, medical content and provenance data.
+Static-first Astro source for the canonical physician entity home at `https://www.ghezelbaash.ir/`. The build renders one public HTML page, a real 404 page and synchronized machine-readable representations of the same physician, clinic, medical content and provenance data. One isolated Cloudflare Pages Function supplies transient Google Maps reputation data without changing or caching the static root document.
 
 ## Direct source ownership
 
@@ -49,6 +49,6 @@ npm run verify:production -- https://www.ghezelbaash.ir/
 npm run release
 ```
 
-The website deploys as static output on Cloudflare Pages from `main`. Runtime and deployment settings are defined by `.release/policy/platform-contract.json` and validated against `.nvmrc`, `package.json` and CodeMeta.
+The website deploys a static root plus the isolated `/api/google-maps-reputation` Function on Cloudflare Pages from `main`. Runtime and deployment settings are defined by `.release/policy/platform-contract.json` and validated against `.nvmrc`, `package.json` and CodeMeta.
 
 The canonical Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`. GitHub is its version-controlled source, Zenodo is its immutable DOI distribution, Hugging Face `main` is its current AI/retrieval distribution, and versioned Hugging Face tags preserve frozen release snapshots. Release promotion updates the release record, graph, package metadata and citation metadata as one transaction; the public evidence snapshot is derived from the evidence registry during generation, and external publication remains an explicit release operation.

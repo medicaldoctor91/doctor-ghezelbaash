@@ -3,9 +3,10 @@ import { deriveSiteData } from "../src/lib/site-data.mjs";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
 import { loadRedirectRegistry } from "./lib/redirect-registry.mjs";
 
-const [quick, runtime] = await Promise.all([
+const [quick, runtime, reputationFunction] = await Promise.all([
   readFile("src/components/FloatingActionDock.astro", "utf8"),
   readFile("src/components/GuideNavigator.astro", "utf8"),
+  readFile("functions/api/google-maps-reputation.js", "utf8"),
 ]);
 const release = JSON.parse(await readFile("src/data/release.json", "utf8"));
 const graph = JSON.parse(
@@ -48,6 +49,40 @@ if (heroMapsLinks.length !== 1)
   fail(`Hero Maps evidence link drift: ${heroMapsLinks.length} != 1`);
 if (!visibleText(heroMapsLinks[0][0]))
   fail("Hero Maps evidence link has no accessible text");
+if (
+  !/\bdata-google-maps-reputation\b/i.test(heroMapsLinks[0][0]) ||
+  !/<span\b(?=[^>]*\bclass=["']google-maps-attribution["'])(?=[^>]*\btranslate=["']no["'])[^>]*>Google Maps<\/span>/i.test(
+    heroMapsLinks[0][0],
+  )
+)
+  fail("Live Maps reputation target or attribution drift");
+if (
+  !runtime.includes('fetch("/api/google-maps-reputation"') ||
+  !runtime.includes('cache: "no-store"') ||
+  !runtime.includes('credentials: "omit"') ||
+  !runtime.includes('referrerPolicy: "same-origin"') ||
+  !runtime.includes('addEventListener("load", queueReputation') ||
+  !runtime.includes("requestIdleCallback") ||
+  /\b(?:localStorage|sessionStorage)\b/.test(runtime)
+)
+  fail("Live Maps reputation progressive-enhancement contract drift");
+if (
+  !reputationFunction.includes("GOOGLE_PLACES_API_KEY") ||
+  !reputationFunction.includes('"userRatingCount"') ||
+  !reputationFunction.includes('"attributions"') ||
+  !reputationFunction.includes(
+    '"Cache-Control": "private, no-store, max-age=0"',
+  ) ||
+  !reputationFunction.includes(
+    '"Cloudflare-CDN-Cache-Control": "no-store"',
+  ) ||
+  !reputationFunction.includes('cache: "no-store"') ||
+  !reputationFunction.includes("requestUrl.origin === canonicalOrigin") ||
+  !reputationFunction.includes("referrer.origin === canonicalOrigin") ||
+  reputationFunction.includes('"googleMapsUri"') ||
+  /\b(?:caches|KV|R2)\b/.test(reputationFunction)
+)
+  fail("Transient Places request contract drift");
 
 for (const contract of heroContract) {
   const hits = hero.filter(
@@ -143,7 +178,7 @@ console.log(
       floating: ["تماس", "چت با دکتر قزلباش", "مسیریابی"],
       backToTop: "HIDDEN_UNTIL_HERO_EXIT",
       directionsPlaceId: release.clinic.placeId,
-      heroMapsEvidence: "CANONICAL_LINK",
+      heroMapsEvidence: "LIVE_FAIL_OPEN_CANONICAL_LINK",
       contactAuthority: "release+canonical-graph",
       validationSurface: "assembled-canonical-content",
       destinationsLocked: true,

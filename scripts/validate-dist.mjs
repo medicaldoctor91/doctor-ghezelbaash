@@ -297,6 +297,11 @@ if (
   )
 )
   fail("Maximum Content-Signal policy missing");
+if (
+  !headers.includes("connect-src 'self'") ||
+  headers.includes("connect-src 'none'")
+)
+  fail("Same-origin live reputation connection policy drift");
 const scripts = [
     ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi),
   ].map((m) => ({ attrs: m[1], body: m[2] })),

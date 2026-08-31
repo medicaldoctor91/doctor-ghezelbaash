@@ -225,6 +225,75 @@ const entityAliases = [
     };
   addEventListener("hashchange", syncTarget, { passive: true });
   syncTarget();
+  const reputation = d.querySelector("[data-google-maps-reputation]"),
+    loadReputation = async () => {
+      try {
+        const response = await fetch("/api/google-maps-reputation", {
+          cache: "no-store",
+          credentials: "omit",
+          headers: { Accept: "application/json" },
+          referrerPolicy: "same-origin",
+        });
+        if (response.status === 204 || !response.ok) return;
+        const data = await response.json(),
+          rating = Number(data.rating),
+          count = Number(data.userRatingCount);
+        if (
+          !Number.isFinite(rating) ||
+          rating < 1 ||
+          rating > 5 ||
+          !Number.isSafeInteger(count) ||
+          count < 1
+        )
+          return;
+        const googleMaps = d.createElement("span"),
+          faRating = new Intl.NumberFormat("fa-IR", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+          }).format(rating),
+          faCount = new Intl.NumberFormat("fa-IR").format(count);
+        googleMaps.className = "google-maps-attribution";
+        googleMaps.setAttribute("translate", "no");
+        googleMaps.textContent = "Google Maps";
+        reputation.replaceChildren(
+          `${faRating} از ۵ · بر پایهٔ ${faCount} نظر در `,
+          googleMaps,
+        );
+        const attributions = (Array.isArray(data.attributions)
+          ? data.attributions
+          : []
+        ).filter((item) => typeof item?.provider === "string");
+        if (attributions.length) {
+          const group = d.createElement("span");
+          group.className = "google-maps-provider-attributions";
+          group.dataset.googleMapsProviderAttributions = "";
+          for (const [index, item] of attributions.entries()) {
+            group.append(index ? "، " : " · ");
+            let providerUrl;
+            try {
+              providerUrl = new URL(item.providerUri);
+            } catch {}
+            if (providerUrl?.protocol === "https:") {
+              const link = d.createElement("a");
+              link.href = providerUrl.href;
+              link.rel = "external noopener";
+              link.referrerPolicy = "no-referrer";
+              link.textContent = item.provider;
+              group.append(link);
+            } else group.append(item.provider);
+          }
+          reputation.after(group);
+        }
+      } catch {}
+    },
+    queueReputation = () => {
+      const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
+      idle(loadReputation, { timeout: 4000 });
+    };
+  if (reputation)
+    document.readyState === "complete"
+      ? queueReputation()
+      : addEventListener("load", queueReputation, { once: true });
   const revealPoster = (video) => {
       if (!video.poster && video.dataset.poster)
         video.poster = video.dataset.poster;

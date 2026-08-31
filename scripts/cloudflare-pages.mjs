@@ -17,31 +17,49 @@ async function command_ensure() {
       build_command: cf.build.command,
       destination_dir: cf.build.destinationDir,
       root_dir: cf.build.rootDir,
+    },
+    EXPECTED_FUNCTION = {
+      compatibility_date: cf.function.compatibilityDate,
+      compatibility_flags: [],
+      always_use_latest_compatibility_date: false,
     };
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
     statusOf = (d) =>
       d?.latest_stage?.status ?? d?.stages?.at(-1)?.status ?? "unknown";
   const productionBranch = () =>
     process.env.CF_PRODUCTION_BRANCH?.trim() || cf.productionBranch;
-  const projectPatch = (sourceType = "github") => ({
-    production_branch: productionBranch(),
-    build_config: { ...EXPECTED_BUILD },
-    source: {
-      type: sourceType,
-      config: {
-        deployments_enabled: true,
-        production_branch: productionBranch(),
-        production_deployments_enabled: true,
-        preview_deployment_setting: cf.preview.deploymentSetting,
-        preview_branch_includes: [...cf.preview.branchIncludes],
-        preview_branch_excludes: [...cf.preview.branchExcludes],
+  const projectPatch = (sourceType = "github", current = {}) => {
+    const wranglerConfigHash =
+      current?.deployment_configs?.production?.wrangler_config_hash;
+    return {
+      production_branch: productionBranch(),
+      build_config: { ...EXPECTED_BUILD },
+      deployment_configs: {
+        production: {
+          ...EXPECTED_FUNCTION,
+          ...(wranglerConfigHash
+            ? { wrangler_config_hash: wranglerConfigHash }
+            : {}),
+        },
       },
-    },
-  });
+      source: {
+        type: sourceType,
+        config: {
+          deployments_enabled: true,
+          production_branch: productionBranch(),
+          production_deployments_enabled: true,
+          preview_deployment_setting: cf.preview.deploymentSetting,
+          preview_branch_includes: [...cf.preview.branchIncludes],
+          preview_branch_excludes: [...cf.preview.branchExcludes],
+        },
+      },
+    };
+  };
   const safeProjectState = (p) => {
     const s = p?.source ?? {},
       c = s.config ?? {},
-      b = p?.build_config ?? {};
+      b = p?.build_config ?? {},
+      production = p?.deployment_configs?.production ?? {};
     return {
       name: p?.name ?? null,
       productionBranch: p?.production_branch ?? null,
@@ -55,6 +73,14 @@ async function command_ensure() {
       buildCommand: b.build_command ?? null,
       destinationDir: b.destination_dir ?? null,
       rootDir: b.root_dir ?? null,
+      functionCompatibilityDate: production.compatibility_date ?? null,
+      functionCompatibilityFlags: production.compatibility_flags ?? [],
+      functionAlwaysLatest:
+        production.always_use_latest_compatibility_date ?? null,
+      productionSecretBindings: Object.entries(production.env_vars ?? {})
+        .filter(([, binding]) => binding?.type === "secret_text")
+        .map(([name]) => name)
+        .sort(),
     };
   };
   const projectIsExact = (p, repo = EXPECTED_REPO) => {
@@ -71,7 +97,10 @@ async function command_ensure() {
       s.previewBranchExcludes.length === 0 &&
       s.buildCommand === EXPECTED_BUILD.build_command &&
       s.destinationDir === EXPECTED_BUILD.destination_dir &&
-      (s.rootDir === "" || s.rootDir === "/")
+      (s.rootDir === "" || s.rootDir === "/") &&
+      s.functionCompatibilityDate === EXPECTED_FUNCTION.compatibility_date &&
+      s.functionAlwaysLatest === false &&
+      s.functionCompatibilityFlags.length === 0
     );
   };
   const matchDeployment = (items, commitHash, environment) =>
@@ -113,6 +142,7 @@ async function command_ensure() {
         config: { owner, repo_name, ...patch.source.config },
       },
       build_config: patch.build_config,
+      deployment_configs: patch.deployment_configs,
     };
     assert(projectIsExact(p));
     console.log("CLOUDFLARE_PAGES_MAIN_ONLY_CONTRACT_SELF_TEST_OK");
@@ -160,11 +190,13 @@ async function command_ensure() {
     let p = await req(base);
     console.log("CF_PROJECT_BEFORE", JSON.stringify(safeProjectState(p)));
     if (process.argv.includes("--configure")) {
+      let configurationChanged = false;
       if (!projectIsExact(p)) {
         p = await req(base, {
           method: "PATCH",
-          body: projectPatch(p?.source?.type || "github"),
+          body: projectPatch(p?.source?.type || "github", p),
         });
+        configurationChanged = true;
       }
       p = await req(base);
       assert(
@@ -172,6 +204,7 @@ async function command_ensure() {
         "Cloudflare main-only deployment settings failed to converge",
       );
       console.log("CF_PROJECT_CONFIGURED", JSON.stringify(safeProjectState(p)));
+      await writeGithubOutput({ configuration_changed: configurationChanged });
       if (!process.argv.includes("--wait")) return;
     }
     if (process.argv.includes("--verify-config")) {
@@ -204,9 +237,15 @@ async function command_ensure() {
       }
     }
     assert(d, `No ${expectedEnv} github:push deployment for ${commitHash}`);
-    if (d.is_skipped || ["failure", "canceled"].includes(statusOf(d))) {
+    const configurationChanged =
+      process.env.CF_CONFIGURATION_CHANGED?.trim() === "true";
+    if (
+      configurationChanged ||
+      d.is_skipped ||
+      ["failure", "canceled"].includes(statusOf(d))
+    ) {
       console.log(
-        `CF_DEPLOYMENT_RETRY_REQUEST id=${d.id} env=${expectedEnv} commit=${commitHash} prior=${d.is_skipped ? "skipped:" + String(d.skip_reason || "unknown") : statusOf(d)}`,
+        `CF_DEPLOYMENT_RETRY_REQUEST id=${d.id} env=${expectedEnv} commit=${commitHash} prior=${configurationChanged ? "platform-config-changed" : d.is_skipped ? "skipped:" + String(d.skip_reason || "unknown") : statusOf(d)}`,
       );
       d = await req(`${base}/deployments/${encodeURIComponent(d.id)}/retry`, {
         method: "POST",
@@ -233,6 +272,11 @@ async function command_ensure() {
       "Deployment commit drift",
     );
     assert.equal(statusOf(d), "success");
+    assert.equal(
+      d.uses_functions,
+      true,
+      "Production deployment lost Pages Functions",
+    );
     const deploymentUrl = String(d.url || "").replace(/\/+$/, "") + "/";
     assert(
       /^https:\/\//.test(deploymentUrl),
