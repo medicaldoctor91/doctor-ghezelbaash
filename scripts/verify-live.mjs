@@ -376,12 +376,28 @@ async function command_release() {
     localDistManifest = {};
   for (const file of distFiles)
     localDistManifest[file] = sha(await readFile(path.join(distRoot, file)));
-  const manifestFiles = Object.keys(distManifest).sort();
-  if (
-    JSON.stringify(manifestFiles) !== JSON.stringify(distFiles) ||
-    manifestFiles.some((file) => distManifest[file] !== localDistManifest[file])
-  )
-    throw new Error("Zenodo DIST hash manifest drift");
+  const manifestFiles = Object.keys(distManifest),
+    manifestFileSet = new Set(manifestFiles),
+    localFileSet = new Set(distFiles),
+    missingLocal = manifestFiles.filter((file) => !localFileSet.has(file)),
+    extraLocal = distFiles.filter((file) => !manifestFileSet.has(file)),
+    hashDrift = manifestFiles.filter(
+      (file) =>
+        localFileSet.has(file) &&
+        distManifest[file] !== localDistManifest[file],
+    );
+  if (missingLocal.length || extraLocal.length || hashDrift.length)
+    throw new Error(
+      `Zenodo DIST hash manifest drift ${JSON.stringify({
+        missingLocal,
+        extraLocal,
+        hashDrift: hashDrift.map((file) => ({
+          file,
+          zenodo: distManifest[file],
+          local: localDistManifest[file],
+        })),
+      })}`,
+    );
   const expectedAttestation = {
     schema: "https://www.ghezelbaash.ir/release-attestation/v3",
     release: release.release,
