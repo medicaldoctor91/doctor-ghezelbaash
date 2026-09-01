@@ -141,6 +141,8 @@ jobs:
         run: |
           set -euo pipefail
           TAG="v${{ steps.release.outputs.release }}"
+          CURRENT_VERIFIER="$RUNNER_TEMP/verify-live-current.mjs"
+          cp scripts/verify-live.mjs "$CURRENT_VERIFIER"
           git reset --hard HEAD
           git clean -fdx
           git checkout --detach "$TAG"
@@ -148,4 +150,5 @@ jobs:
           npm audit --audit=true --audit-level=high
           C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
+          cp "$CURRENT_VERIFIER" scripts/verify-live.mjs
           node scripts/verify-live.mjs release
