@@ -145,7 +145,30 @@
     "https://www.ghezelbaash.ir/#topic-hair-transplant-boundary",
     "https://www.ghezelbaash.ir/#topic-orthognathic-boundary",
     "https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction",
-    "https://www.ghezelbaash.ir/#clinic-consultation-treatment-and-follow-up-path"
+    "https://www.ghezelbaash.ir/#clinic-consultation-treatment-and-follow-up-path",
+    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
+    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
+    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
+    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
+    "https://www.ghezelbaash.ir/#evidence-irimc",
+    "https://www.ghezelbaash.ir/#evidence-orcid",
+    "https://www.ghezelbaash.ir/#evidence-openalex-author",
+    "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
+    "https://www.ghezelbaash.ir/#evidence-magiran-author",
+    "https://www.ghezelbaash.ir/#procedure-rhinoplasty",
+    "https://www.ghezelbaash.ir/#procedure-facelift",
+    "https://www.ghezelbaash.ir/#procedure-neck-lift",
+    "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery",
+    "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints",
+    "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017",
+    "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions",
+    "https://www.ghezelbaash.ir/#evidence-khabaronline",
+    "https://www.ghezelbaash.ir/#evidence-rokna",
+    "https://www.ghezelbaash.ir/#evidence-gadgetnews",
+    "https://www.ghezelbaash.ir/#evidence-namnak",
+    "https://www.ghezelbaash.ir/#evidence-niniban",
+    "https://www.ghezelbaash.ir/#evidence-ninisite-18112",
+    "https://www.ghezelbaash.ir/#evidence-ninisite-19700"
   ],
   "maxBytes": 110000,
   "typeProfiles": {
@@ -310,7 +333,9 @@
         "url",
         "about",
         "isPartOf",
-        "inLanguage"
+        "inLanguage",
+        "mentions",
+        "citation"
       ]
     },
     "DataDownload": {
@@ -366,9 +391,13 @@
         "sameAs",
         "author",
         "datePublished",
+        "dateCreated",
         "isPartOf",
         "identifier",
-        "about"
+        "about",
+        "creativeWorkStatus",
+        "license",
+        "learningResourceType"
       ]
     },
     "Periodical": {
@@ -548,6 +577,28 @@
         "identifier",
         "url"
       ]
+    },
+    "Article": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "headline",
+        "url",
+        "sameAs",
+        "author",
+        "datePublished",
+        "dateCreated",
+        "about",
+        "mainEntity",
+        "inLanguage",
+        "mentions",
+        "isAccessibleForFree",
+        "creativeWorkStatus",
+        "license",
+        "learningResourceType",
+        "isPartOf"
+      ]
     }
   },
   "idProfiles": {
@@ -582,6 +633,18 @@
         "url",
         "isPartOf",
         "endOffset"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "sameAs",
+        "url",
+        "startDate",
+        "endDate",
+        "description"
       ]
     }
   },

@@ -30,7 +30,10 @@
     "https://www.ghezelbaash.ir/#identifier-clinic-google-maps-cid",
     "https://www.ghezelbaash.ir/#identifier-clinic-osm-node",
     "https://www.ghezelbaash.ir/#identifier-clinic-wikidata",
-    "https://www.ghezelbaash.ir/#speakable-primary-content"
+    "https://www.ghezelbaash.ir/#speakable-primary-content",
+    "https://www.ghezelbaash.ir/#identifier-person-openalex",
+    "https://www.ghezelbaash.ir/#identifier-person-semantic-scholar",
+    "https://www.ghezelbaash.ir/#identifier-person-google-scholar"
   ],
   "maxBytes": 35000,
   "nodes": {
@@ -49,6 +52,7 @@
         "alternateName",
         "jobTitle",
         "url",
+        "mainEntityOfPage",
         "priceRange",
         "hasCredential",
         "practicesAt",
@@ -60,6 +64,7 @@
         "image",
         "identifier",
         "sameAs",
+        "subjectOf",
         "description",
         "disambiguatingDescription",
         "telephone",
@@ -67,7 +72,10 @@
         "knowsAbout",
         "hasOccupation",
         "medicalSpecialty",
+        "availableService",
+        "makesOffer",
         "alumniOf",
+        "performerIn",
         "honorificPrefix",
         "knowsLanguage",
         "address",
@@ -111,7 +119,10 @@
           "https://www.ghezelbaash.ir/#identifier-person-google-kgid",
           "https://www.ghezelbaash.ir/#identifier-person-wikidata",
           "https://www.ghezelbaash.ir/#identifier-person-irimc",
-          "https://www.ghezelbaash.ir/#identifier-person-orcid"
+          "https://www.ghezelbaash.ir/#identifier-person-orcid",
+          "https://www.ghezelbaash.ir/#identifier-person-openalex",
+          "https://www.ghezelbaash.ir/#identifier-person-semantic-scholar",
+          "https://www.ghezelbaash.ir/#identifier-person-google-scholar"
         ],
         "memberOf": [
           "https://www.ghezelbaash.ir/#organization-iran-medical-council",
@@ -122,6 +133,59 @@
           "https://www.ghezelbaash.ir/#action-online-initial-consultation",
           "https://www.ghezelbaash.ir/#action-view-clinic-map",
           "https://www.ghezelbaash.ir/#action-follow-instagram"
+        ],
+        "availableService": [
+          "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment",
+          "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler",
+          "https://www.ghezelbaash.ir/#procedure-body-dermal-filler",
+          "https://www.ghezelbaash.ir/#procedure-hyaluronidase-and-filler-revision",
+          "https://www.ghezelbaash.ir/#procedure-thread-lift",
+          "https://www.ghezelbaash.ir/#procedure-subcision",
+          "https://www.ghezelbaash.ir/#procedure-microneedling",
+          "https://www.ghezelbaash.ir/#procedure-chemical-peel",
+          "https://www.ghezelbaash.ir/#procedure-energy-based-skin-treatment",
+          "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-skin-treatment",
+          "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-hair-treatment",
+          "https://www.ghezelbaash.ir/#procedure-skin-mesotherapy",
+          "https://www.ghezelbaash.ir/#procedure-hair-mesotherapy",
+          "https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment",
+          "https://www.ghezelbaash.ir/#procedure-profhilo-injectable-skin-treatment",
+          "https://www.ghezelbaash.ir/#procedure-injectable-skin-booster",
+          "https://www.ghezelbaash.ir/#procedure-injectable-biostimulator",
+          "https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment",
+          "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion",
+          "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-result-correction",
+          "https://www.ghezelbaash.ir/#procedure-thread-lift-result-correction",
+          "https://www.ghezelbaash.ir/#procedure-blepharoplasty",
+          "https://www.ghezelbaash.ir/#procedure-central-lip-lift",
+          "https://www.ghezelbaash.ir/#procedure-buccal-fat-removal",
+          "https://www.ghezelbaash.ir/#procedure-submental-liposuction",
+          "https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting",
+          "https://www.ghezelbaash.ir/#procedure-rhinoplasty",
+          "https://www.ghezelbaash.ir/#procedure-facelift",
+          "https://www.ghezelbaash.ir/#procedure-neck-lift",
+          "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery"
+        ],
+        "makesOffer": [
+          "https://www.ghezelbaash.ir/#free-online-aesthetic-initial-consultation-offer",
+          "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion-offer"
+        ],
+        "subjectOf": [
+          "https://www.ghezelbaash.ir/#evidence-irimc",
+          "https://www.ghezelbaash.ir/#evidence-wikidata-doctor",
+          "https://www.ghezelbaash.ir/#evidence-orcid",
+          "https://www.ghezelbaash.ir/#evidence-ncbi-bibliography",
+          "https://www.ghezelbaash.ir/#evidence-openalex-author",
+          "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
+          "https://www.ghezelbaash.ir/#evidence-magiran-author",
+          "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview"
+        ],
+        "mainEntityOfPage": [
+          "https://www.ghezelbaash.ir/#webpage"
+        ],
+        "performerIn": [
+          "https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11",
+          "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017"
         ]
       },
       "valueAllow": {
@@ -193,6 +257,7 @@
         "areaServed",
         "identifier",
         "sameAs",
+        "subjectOf",
         "image",
         "alternateName",
         "description",
@@ -200,6 +265,7 @@
         "openingHoursSpecification",
         "hasMap",
         "medicalSpecialty",
+        "availableService",
         "containedInPlace",
         "logo",
         "priceRange",
@@ -239,6 +305,43 @@
           "https://www.ghezelbaash.ir/#action-contact-clinic",
           "https://www.ghezelbaash.ir/#action-online-initial-consultation",
           "https://www.ghezelbaash.ir/#action-view-clinic-map"
+        ],
+        "availableService": [
+          "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment",
+          "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler",
+          "https://www.ghezelbaash.ir/#procedure-body-dermal-filler",
+          "https://www.ghezelbaash.ir/#procedure-hyaluronidase-and-filler-revision",
+          "https://www.ghezelbaash.ir/#procedure-thread-lift",
+          "https://www.ghezelbaash.ir/#procedure-subcision",
+          "https://www.ghezelbaash.ir/#procedure-microneedling",
+          "https://www.ghezelbaash.ir/#procedure-chemical-peel",
+          "https://www.ghezelbaash.ir/#procedure-energy-based-skin-treatment",
+          "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-skin-treatment",
+          "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-hair-treatment",
+          "https://www.ghezelbaash.ir/#procedure-skin-mesotherapy",
+          "https://www.ghezelbaash.ir/#procedure-hair-mesotherapy",
+          "https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment",
+          "https://www.ghezelbaash.ir/#procedure-profhilo-injectable-skin-treatment",
+          "https://www.ghezelbaash.ir/#procedure-injectable-skin-booster",
+          "https://www.ghezelbaash.ir/#procedure-injectable-biostimulator",
+          "https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment",
+          "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion",
+          "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-result-correction",
+          "https://www.ghezelbaash.ir/#procedure-thread-lift-result-correction",
+          "https://www.ghezelbaash.ir/#procedure-blepharoplasty",
+          "https://www.ghezelbaash.ir/#procedure-central-lip-lift",
+          "https://www.ghezelbaash.ir/#procedure-buccal-fat-removal",
+          "https://www.ghezelbaash.ir/#procedure-submental-liposuction",
+          "https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting",
+          "https://www.ghezelbaash.ir/#procedure-rhinoplasty",
+          "https://www.ghezelbaash.ir/#procedure-facelift",
+          "https://www.ghezelbaash.ir/#procedure-neck-lift",
+          "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery"
+        ],
+        "subjectOf": [
+          "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
+          "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
+          "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership"
         ]
       },
       "valueAllow": {

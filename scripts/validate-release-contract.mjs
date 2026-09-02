@@ -234,8 +234,10 @@ if (
 const datasetSameAs = arr(dataset.sameAs).map(id);
 if (datasetSameAs.length)
   fail("Dataset must not assert an external identity-equivalence target");
+const website = byId.get(`${release.canonicalUrl}#website`);
 const page = byId.get(`${release.canonicalUrl}#webpage`);
 if (
+  !website ||
   !page ||
   !arr(page["@type"]).includes("ProfilePage") ||
   !arr(page["@type"]).includes("MedicalWebPage") ||
@@ -243,6 +245,12 @@ if (
   id(person.mainEntityOfPage) !== page["@id"]
 )
   fail("Physician entity-home ProfilePage topology drift");
+if (
+  website.dateModified !== release.dateModified ||
+  page.dateModified !== release.dateModified ||
+  page.lastReviewed !== release.medicalReviewedAt
+)
+  fail("Website/ProfilePage modification and medical-review date separation drift");
 for (const machineId of [
   `${release.canonicalUrl}#doctor-ghezelbaash-structured-data-project`,
   `${release.canonicalUrl}#data-catalog`,

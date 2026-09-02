@@ -15,6 +15,70 @@ const UNIVERSITY =
   "https://www.ghezelbaash.ir/#kermanshah-university-of-medical-sciences";
 const WPA_EVENT =
   "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017";
+const WIKIJOURNAL_PREPRINTS =
+  "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints";
+const RESEARCH_SECTION =
+  "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions";
+const CORE_HEAD_SERVICES = [
+  "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment",
+  "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler",
+  "https://www.ghezelbaash.ir/#procedure-body-dermal-filler",
+  "https://www.ghezelbaash.ir/#procedure-hyaluronidase-and-filler-revision",
+  "https://www.ghezelbaash.ir/#procedure-thread-lift",
+  "https://www.ghezelbaash.ir/#procedure-subcision",
+  "https://www.ghezelbaash.ir/#procedure-microneedling",
+  "https://www.ghezelbaash.ir/#procedure-chemical-peel",
+  "https://www.ghezelbaash.ir/#procedure-energy-based-skin-treatment",
+  "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-skin-treatment",
+  "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-hair-treatment",
+  "https://www.ghezelbaash.ir/#procedure-skin-mesotherapy",
+  "https://www.ghezelbaash.ir/#procedure-hair-mesotherapy",
+  "https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment",
+  "https://www.ghezelbaash.ir/#procedure-profhilo-injectable-skin-treatment",
+  "https://www.ghezelbaash.ir/#procedure-injectable-skin-booster",
+  "https://www.ghezelbaash.ir/#procedure-injectable-biostimulator",
+  "https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment",
+  "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion",
+  "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-result-correction",
+  "https://www.ghezelbaash.ir/#procedure-thread-lift-result-correction",
+  "https://www.ghezelbaash.ir/#procedure-blepharoplasty",
+  "https://www.ghezelbaash.ir/#procedure-central-lip-lift",
+  "https://www.ghezelbaash.ir/#procedure-buccal-fat-removal",
+  "https://www.ghezelbaash.ir/#procedure-submental-liposuction",
+  "https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting",
+  "https://www.ghezelbaash.ir/#procedure-rhinoplasty",
+  "https://www.ghezelbaash.ir/#procedure-facelift",
+  "https://www.ghezelbaash.ir/#procedure-neck-lift",
+  "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery",
+];
+const CORE_PERFORMER_EVENTS = [
+  "https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11",
+  "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017",
+];
+const CORE_RESEARCH_IDENTIFIERS = [
+  "https://www.ghezelbaash.ir/#identifier-person-openalex",
+  "https://www.ghezelbaash.ir/#identifier-person-semantic-scholar",
+  "https://www.ghezelbaash.ir/#identifier-person-google-scholar",
+];
+const CORE_HEAD_OFFERS = [
+  "https://www.ghezelbaash.ir/#free-online-aesthetic-initial-consultation-offer",
+  "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion-offer",
+];
+const CORE_PERSON_AUTHORITY_SUBJECTS = [
+  "https://www.ghezelbaash.ir/#evidence-irimc",
+  "https://www.ghezelbaash.ir/#evidence-wikidata-doctor",
+  "https://www.ghezelbaash.ir/#evidence-orcid",
+  "https://www.ghezelbaash.ir/#evidence-ncbi-bibliography",
+  "https://www.ghezelbaash.ir/#evidence-openalex-author",
+  "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
+  "https://www.ghezelbaash.ir/#evidence-magiran-author",
+  "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
+];
+const CORE_CLINIC_AUTHORITY_SUBJECTS = [
+  "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
+  "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
+  "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership",
+];
 const EXPECTED_AREAS = [IRAN, IRAQ];
 const WIKIDATA_FIELDS = [
   "Q3332453",
@@ -60,9 +124,6 @@ const WIKIDATA_PERSON_SUBJECTS = [
   "https://www.ghezelbaash.ir/#evidence-wikimedia-commons-creator",
   "https://www.ghezelbaash.ir/#evidence-wikisource-author",
   "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo",
-  "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
-  "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
-  "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
 ];
 
 const asArray = (value) =>
@@ -79,9 +140,12 @@ const requireNode = (byId, id, label) => {
   return node;
 };
 
-const [graphDocument, headProfile] = await Promise.all([
+const [graphDocument, headProfile, supportProfile, llmsTemplate, pageSource] = await Promise.all([
   readFile("src/data/semantic/knowledge-graph.jsonld", "utf8").then(JSON.parse),
   readFile("src/data/semantic/head-profile.json", "utf8").then(JSON.parse),
+  readFile("src/data/semantic/support-profile.json", "utf8").then(JSON.parse),
+  readFile("src/data/templates/llms.template.txt", "utf8"),
+  readFile("src/content-source/page.md", "utf8"),
 ]);
 const headIds = headProfile.ids;
 const graph = graphDocument["@graph"];
@@ -201,6 +265,131 @@ for (const subject of WIKIDATA_PERSON_SUBJECTS)
     `Wikidata evidence/work missing from Person: ${subject}`,
   );
 
+for (const subjectId of refs(physician.subjectOf)) {
+  const subject = requireNode(byId, subjectId, "Person subjectOf target");
+  const subjectAbout = [...refs(subject.about), ...refs(subject.mainEntity)];
+  assert.ok(
+    subjectAbout.includes(PHYSICIAN),
+    `Person subjectOf must resolve to a work/profile actually about the physician: ${subjectId}`,
+  );
+}
+
+const aestheticWorks = [
+  [
+    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
+    "https://www.wikidata.org/entity/Q141099455",
+    "2026-08-14",
+    "LearningResource",
+    "datePublished",
+  ],
+  [
+    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
+    "https://www.wikidata.org/entity/Q141129555",
+    "2026-08-18",
+    "ScholarlyArticle",
+    "dateCreated",
+  ],
+  [
+    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
+    "https://www.wikidata.org/entity/Q141131757",
+    "2026-08-19",
+    "LearningResource",
+    "datePublished",
+  ],
+]
+for (const [id, wikidata, dateValue, preciseType, dateProperty] of aestheticWorks) {
+  const work = requireNode(byId, id, "Aesthetic-medicine authored work");
+  assert.ok(types(work).includes("Article"), `Aesthetic work lost Article type: ${id}`);
+  assert.ok(
+    types(work).includes(preciseType),
+    `Aesthetic work lost precise semantic type ${preciseType}: ${id}`,
+  );
+  assertExact(refs(work.author), [PHYSICIAN], `Aesthetic work author drift: ${id}`);
+  assert.equal(work.sameAs, wikidata, `Aesthetic work Wikidata reconciliation drift: ${id}`);
+  assert.equal(work[dateProperty], dateValue, `Aesthetic work ${dateProperty} drift: ${id}`);
+  const otherDateProperty = dateProperty === "datePublished" ? "dateCreated" : "datePublished";
+  assert.equal(
+    work[otherDateProperty],
+    undefined,
+    `Aesthetic work carries conflicting ${otherDateProperty}: ${id}`,
+  );
+  if (preciseType === "LearningResource") {
+    assert.equal(
+      work.learningResourceType,
+      "Open educational resource",
+      `Aesthetic OER learningResourceType drift: ${id}`,
+    );
+    assert.equal(
+      work.license,
+      "https://creativecommons.org/licenses/by-sa/4.0/",
+      `Aesthetic OER license drift: ${id}`,
+    );
+  } else {
+    assert.equal(
+      work.creativeWorkStatus,
+      "Preprint under public peer review",
+      `Aesthetic preprint status drift: ${id}`,
+    );
+    assert.equal(
+      work.license,
+      "https://creativecommons.org/licenses/by/4.0/",
+      `Aesthetic preprint license drift: ${id}`,
+    );
+    assertExact(refs(work.isPartOf), [WIKIJOURNAL_PREPRINTS], `Aesthetic preprint container drift: ${id}`);
+  }
+  assert.ok(refs(work.about).includes(SPECIALTY), `Aesthetic work lost aesthetic-medicine topic: ${id}`);
+  assert.ok(
+    refs(work.about).includes("https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"),
+    `Aesthetic work lost botulinum-toxin topic: ${id}`,
+  );
+  assert.ok(
+    supportProfile.ids.includes(id),
+    `Aesthetic authored work is not projected into inline support JSON-LD: ${id}`,
+  );
+}
+for (const [id] of aestheticWorks) {
+  assert.ok(
+    refs(webpage.mentions).includes(id),
+    `Canonical WebPage lost visible aesthetic-authorship mention: ${id}`,
+  );
+}
+
+const researchSection = requireNode(byId, RESEARCH_SECTION, "Research/education WebPageElement");
+for (const id of [PHYSICIAN, SPECIALTY, "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"]) {
+  assert.ok(refs(researchSection.about).includes(id), `Research section lost about edge: ${id}`);
+}
+for (const [id] of aestheticWorks) {
+  assert.ok(refs(researchSection.mentions).includes(id), `Research section lost authored-work mention: ${id}`);
+}
+assert.ok(
+  supportProfile.ids.includes(RESEARCH_SECTION),
+  "Research/education WebPageElement is not projected into inline support JSON-LD",
+);
+
+const wikiJournal = requireNode(byId, WIKIJOURNAL_PREPRINTS, "WikiJournal Preprints container");
+assert.ok(types(wikiJournal).includes("Periodical"), "WikiJournal Preprints lost Periodical type");
+assert.equal(wikiJournal.url, "https://en.wikiversity.org/wiki/WikiJournal_Preprints");
+assert.ok(
+  supportProfile.ids.includes(WIKIJOURNAL_PREPRINTS),
+  "WikiJournal Preprints container is not projected into inline support JSON-LD",
+);
+
+assert.ok(
+  supportProfile.ids.includes("https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview"),
+  "External aesthetic-medicine interview is not projected into inline support JSON-LD",
+);
+for (const [, wikidata] of aestheticWorks) {
+  const qid = wikidata.split("/").pop();
+  assert.ok(
+    llmsTemplate.includes(qid),
+    `LLM retrieval guide lost aesthetic authorship identifier ${qid}`,
+  );
+}
+assert.ok(
+  llmsTemplate.includes("not treated as independent evidence of treatment efficacy"),
+  "LLM retrieval guide lost the authored-work evidence-role boundary",
+);
+
 assert.ok(
   types(clinic).includes("MedicalClinic"),
   "Clinic lost MedicalClinic type",
@@ -252,6 +441,18 @@ assertExact(
   [PHYSICIAN],
   "ProfilePage mainEntity must remain the canonical physician",
 );
+assertExact(
+  refs(physician.mainEntityOfPage),
+  [WEBPAGE],
+  "Physician mainEntityOfPage must remain the canonical ProfilePage",
+);
+
+assert.ok(
+  refs(physician.knowsAbout).includes(
+    "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a",
+  ),
+  "Physician lost direct botulinum-toxin topical knowledge edge",
+);
 
 const physicianSpec = headProfile.nodes?.[PHYSICIAN];
 const clinicSpec = headProfile.nodes?.[CLINIC];
@@ -259,6 +460,100 @@ assert.ok(
   physicianSpec && clinicSpec,
   "Head projection profiles for physician/clinic are missing",
 );
+assert.ok(
+  physicianSpec.include?.includes("performerIn"),
+  "Physician head projection lost performerIn",
+);
+assert.deepEqual(
+  physicianSpec.refAllow?.performerIn,
+  CORE_PERFORMER_EVENTS,
+  "Physician head projection performerIn drift",
+);
+for (const id of CORE_PERFORMER_EVENTS) {
+  assert.ok(
+    supportProfile.ids.includes(id),
+    `Physician performer event is not projected into inline support JSON-LD: ${id}`,
+  );
+}
+for (const visibleResearchUrl of [
+  "https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/",
+  "https://openalex.org/A5064828898",
+  "https://scholar.google.com/citations?user=BcWBirUAAAAJ",
+]) {
+  assert.ok(
+    pageSource.includes(visibleResearchUrl),
+    `Visible physician authority core lost research identity link: ${visibleResearchUrl}`,
+  );
+}
+for (const id of CORE_RESEARCH_IDENTIFIERS) {
+  assert.ok(headIds.includes(id), `Research identifier is not a head node: ${id}`);
+  assert.ok(
+    physicianSpec.refAllow?.identifier?.includes(id),
+    `Physician head projection lost research identifier: ${id}`,
+  );
+}
+assert.ok(
+  physicianSpec.include?.includes("mainEntityOfPage"),
+  "Physician head projection lost mainEntityOfPage",
+);
+assert.deepEqual(
+  physicianSpec.refAllow?.mainEntityOfPage,
+  [WEBPAGE],
+  "Physician head projection mainEntityOfPage drift",
+);
+for (const id of CORE_HEAD_SERVICES) {
+  assert.ok(
+    supportProfile.ids.includes(id),
+    `Core head service is not projected into inline support JSON-LD: ${id}`,
+  );
+}
+for (const [label, spec] of [
+  ["physician", physicianSpec],
+  ["clinic", clinicSpec],
+]) {
+  assert.ok(
+    spec.include?.includes("availableService"),
+    `${label} head projection lost availableService`,
+  );
+  assert.deepEqual(
+    spec.refAllow?.availableService,
+    CORE_HEAD_SERVICES,
+    `${label} head projection core service set drift`,
+  );
+}
+assert.ok(
+  physicianSpec.include?.includes("makesOffer"),
+  "Physician head projection lost makesOffer",
+);
+assert.deepEqual(
+  physicianSpec.refAllow?.makesOffer,
+  CORE_HEAD_OFFERS,
+  "Physician head projection core offer set drift",
+);
+assert.ok(
+  physicianSpec.include?.includes("subjectOf"),
+  "Physician head projection lost selected external subjectOf evidence",
+);
+assert.deepEqual(
+  physicianSpec.refAllow?.subjectOf,
+  CORE_PERSON_AUTHORITY_SUBJECTS,
+  "Physician head projection external subjectOf evidence drift",
+);
+assert.ok(
+  clinicSpec.include?.includes("subjectOf"),
+  "Clinic head projection lost selected external subjectOf evidence",
+);
+assert.deepEqual(
+  clinicSpec.refAllow?.subjectOf,
+  CORE_CLINIC_AUTHORITY_SUBJECTS,
+  "Clinic head projection external subjectOf evidence drift",
+);
+for (const id of [...CORE_PERSON_AUTHORITY_SUBJECTS, ...CORE_CLINIC_AUTHORITY_SUBJECTS]) {
+  assert.ok(
+    supportProfile.ids.includes(id),
+    `Selected authority subject is not projected into inline support JSON-LD: ${id}`,
+  );
+}
 for (const property of ["practicesAt", "medicalSpecialty", "areaServed"]) {
   assert.ok(
     physicianSpec.include?.includes(property),

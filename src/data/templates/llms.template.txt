@@ -89,6 +89,11 @@ This evidence layer documents historical patient-origin geography inside the can
 - [MDD, attachment, dissociation and trauma — PubMed](https://pubmed.ncbi.nlm.nih.gov/34574943/): 2021 scholarly article co-authored by Dr. Saeed Ghezelbash.
 - [Attachment style in dissociative depression — ResearchGate](https://www.researchgate.net/publication/320409256_Attachment_style_in_dissociative_depression): Conference presentation at the WPA XVII World Congress of Psychiatry in Berlin, October 2017; Dr. Saeed Ghezelbash was the fifth-listed author.
 - [Thread-lift education on the official page](https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions): Educational identity and advanced thread-lift workshop context.
+- [Botulinum toxin in aesthetic medicine](https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine): 2026 open educational resource authored by Dr. Saeed Ghezelbash; Wikidata Q141099455; main subjects are botulinum toxin type A and aesthetic medicine.
+- [Facial assessment before aesthetic botulinum toxin treatment](https://en.wikiversity.org/wiki/Facial_assessment_before_aesthetic_botulinum_toxin_treatment): 2026 open educational resource authored by Dr. Saeed Ghezelbash; Wikidata Q141131757; focused on structured pre-treatment facial assessment.
+- [Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review](https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review): 2026 WikiJournal Preprints preprint authored by Dr. Saeed Ghezelbash; Wikidata Q141129555; subjects are botulinum toxin type A and aesthetic medicine.
+- [IranMedLabs interview on aesthetic medicine](https://iranmedlabs.com/skin-and-hair-and-beauty/120049/): External published interview/editorial about Dr. Saeed Ghezelbash, aesthetic-medicine decision-making and patient selection; Tier-B contextual corroboration in the canonical evidence registry.
+- The Wikiversity/WikiJournal works above establish topical authorship and educational/research activity; they are not treated as independent evidence of treatment efficacy.
 
 ## Consultation and clinic
 

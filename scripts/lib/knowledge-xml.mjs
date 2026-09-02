@@ -142,6 +142,62 @@ function canonicalMediaInventory(nodes, byId) {
   return `  <mediaInventory videoCount="${videos.length}" imageCount="${images.length}">${videoXml}${imageXml}</mediaInventory>`;
 }
 
+
+function canonicalAestheticAuthoredWorks(nodes, personId) {
+  const specialtyId =
+    "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine";
+  const refIds = (value) =>
+    (Array.isArray(value) ? value : value == null ? [] : [value])
+      .map(refId)
+      .filter(Boolean);
+  const works = nodes
+    .filter((node) => {
+      const nodeTypes = types(node);
+      return (
+        node["@id"] !== personId &&
+        (nodeTypes.includes("LearningResource") ||
+          nodeTypes.includes("ScholarlyArticle")) &&
+        refIds(node.author).includes(personId) &&
+        refIds(node.about).includes(specialtyId)
+      );
+    })
+    .sort((left, right) => {
+      const leftDate = left.datePublished || left.dateCreated;
+      const rightDate = right.datePublished || right.dateCreated;
+      return requiredText(leftDate, `${left["@id"]} authored-work date`).localeCompare(
+        requiredText(rightDate, `${right["@id"]} authored-work date`),
+      );
+    });
+  if (works.length < 3)
+    throw new Error(
+      `knowledge.xml: expected at least 3 canonical aesthetic-medicine authored works, found ${works.length}`,
+    );
+  const workXml = works
+    .map((work) => {
+      const id = requiredId(work, "Aesthetic authored work");
+      const name = requiredText(work.name, `${id} name`);
+      const url = requiredText(work.url, `${id} url`);
+      const sameAs = requiredText(work.sameAs, `${id} sameAs`);
+      const dateProperty = work.datePublished
+        ? "datePublished"
+        : work.dateCreated
+          ? "dateCreated"
+          : null;
+      if (!dateProperty)
+        throw new Error(`knowledge.xml: ${id} requires datePublished or dateCreated`);
+      const dateValue = requiredText(work[dateProperty], `${id} ${dateProperty}`);
+      const workTypes = types(work).filter((type) => type !== "Article");
+      if (workTypes.length !== 1)
+        throw new Error(`knowledge.xml: ${id} requires one precise authored-work type`);
+      const topics = refIds(work.about);
+      if (!topics.includes(specialtyId))
+        throw new Error(`knowledge.xml: ${id} lost aesthetic-medicine topic`);
+      return `<work id="${xml(id)}" type="${xml(workTypes[0])}" url="${xml(url)}" sameAs="${xml(sameAs)}" ${dateProperty}="${xml(dateValue)}"><name>${xml(name)}</name>${topics.map((topic) => `<about ref="${xml(topic)}"/>`).join("")}</work>`;
+    })
+    .join("");
+  return `  <aestheticMedicineAuthorship count="${works.length}" author="${xml(personId)}">${workXml}</aestheticMedicineAuthorship>`;
+}
+
 function canonicalQuestionFacts(questions, byId) {
   return questions.map((question) => {
     const id = requiredId(question, "Question");
@@ -260,6 +316,7 @@ export function compileKnowledgeXml({
     `  <answers count="${questions.length}">${questionXml}</answers>`,
     canonicalIntentClusters(intentSource),
     canonicalEvidence(evidenceRegistry),
+    canonicalAestheticAuthoredWorks(nodes, person["@id"]),
     canonicalMediaInventory(nodes, byId),
     canonicalAnswerResources(questionFacts, release.canonicalUrl),
     "</knowledge>",

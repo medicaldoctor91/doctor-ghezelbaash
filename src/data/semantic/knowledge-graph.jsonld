@@ -1083,7 +1083,7 @@
         "Official website of Dr. Saeed Ghezelbaash",
         "Official website of Dr. Saeed Ghezelbash"
       ],
-      "dateModified": "2026-08-13",
+      "dateModified": "2026-08-31",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf#document"
@@ -1258,6 +1258,15 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#observation-clinic-balad-rating-2026-07-25"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
         }
       ],
       "citation": [
@@ -1765,7 +1774,7 @@
       "specialty": {
         "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
       },
-      "dateModified": "2026-08-13",
+      "dateModified": "2026-08-31",
       "subjectOf": [
         {
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
@@ -4854,12 +4863,6 @@
       ],
       "subjectOf": [
         {
-          "@id": "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#webpage"
         },
         {
@@ -4924,12 +4927,6 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-where-aesthetic-treatment-selection-begins"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#question-active-acne-and-acne-scar-treatment-sequencing"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#question-combination-treatment-vs-single-modality"
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-clinic-before-visit-information"
@@ -5022,9 +5019,6 @@
           "@id": "https://www.ghezelbaash.ir/#evidence-neshan-clinic"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#presentation-attachment-style-dissociative-depression-2017"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#data-catalog"
         },
         {
@@ -5070,12 +5064,6 @@
           "@id": "https://www.ghezelbaash.ir/llms-full.txt#download"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#project-github-source"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#project-zenodo-release"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#evidence-threads"
         },
         {
@@ -5092,24 +5080,15 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
         }
       ],
       "description": [
         {
-          "@value": "دکتر سعید قزلباش، پزشک دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی ۱۶۷۴۳۰ در کرمانشاه، ارائه‌دهنده مستقیم طیف گسترده خدمات پزشکی زیبایی جراحی و غیرجراحی در کلینیک متعلق به خود؛ با تمرکز بر تشخیص پیش از مداخله، انتخاب بیمار، اصلاح نتایج قبلی و نظر دوم، و پذیرش مراجعان از سراسر ایران و عراق. مشاوره آنلاین اولیه رایگان با دسترسی جهانی ارائه می‌شود و اقدامات حضوری در کلینیک کرمانشاه انجام می‌شوند.",
+          "@value": "دکتر سعید قزلباش، پزشک دارای دکترای حرفه‌ای پزشکی و شماره نظام پزشکی ۱۶۷۴۳۰ در کرمانشاه، ارائه‌دهنده مستقیم طیف گسترده خدمات پزشکی زیبایی جراحی و غیرجراحی در کلینیک متعلق به خود؛ با تمرکز بر تشخیص پیش از مداخله، انتخاب بیمار، اصلاح نتایج قبلی و نظر دوم، و پذیرش مراجعان از سراسر ایران و عراق. مشاوره آنلاین اولیه رایگان با دسترسی جهانی ارائه می‌شود و اقدامات حضوری در کلینیک کرمانشاه انجام می‌شوند؛ همچنین نویسنده منابع آموزشی باز و یک مرور متمرکز پیش‌انتشار در حوزه ارزیابی درمان زیبایی با بوتولینوم توکسین نوع A است.",
           "@language": "fa"
         },
         {
-          "@value": "Dr. Saeed Ghezelbash is an MD and IRIMC-registered aesthetic physician in Kermanshah who personally provides a broad range of surgical and nonsurgical aesthetic medical services at his owned clinic, with an emphasis on diagnosis before intervention, patient selection, revision/second opinion, and in-person care for patients traveling from across Iran and Iraq. Free initial online consultation is available worldwide; in-person procedures are performed in Kermanshah.",
+          "@value": "Dr. Saeed Ghezelbash is an MD and IRIMC-registered aesthetic physician in Kermanshah who personally provides a broad range of surgical and nonsurgical aesthetic medical services at his owned clinic, with an emphasis on diagnosis before intervention, patient selection, revision/second opinion, and in-person care for patients traveling from across Iran and Iraq. Free initial online consultation is available worldwide; in-person procedures are performed in Kermanshah. He is also the author of open educational resources and a focused preprint review on assessment and outcome interpretation in aesthetic botulinum toxin type A treatment.",
           "@language": "en"
         }
       ],
@@ -5144,6 +5123,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"
         },
         {
           "@id": "https://www.wikidata.org/entity/Q3332453"
@@ -6033,12 +6015,41 @@
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"
         }
       ],
       "position": 991,
       "citation": [
         {
           "@id": "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview"
+        }
+      ],
+      "mentions": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017"
         }
       ]
     },
@@ -21681,32 +21692,72 @@
       "inLanguage": "en"
     },
     {
-      "@id": "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
-      "@type": "Article",
-      "name": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
-      "url": "https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review",
-      "sameAs": "https://www.wikidata.org/entity/Q141099455",
-      "author": {
-        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      },
-      "inLanguage": "en",
-      "isAccessibleForFree": true
+      "@id": "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints",
+      "@type": "Periodical",
+      "name": "WikiJournal Preprints",
+      "url": "https://en.wikiversity.org/wiki/WikiJournal_Preprints"
     },
     {
-      "@id": "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
-      "@type": "Article",
-      "name": "Botulinum toxin in aesthetic medicine",
-      "url": "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine",
+      "@id": "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
+      "@type": [
+        "Article",
+        "ScholarlyArticle"
+      ],
+      "name": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+      "url": "https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review",
       "sameAs": "https://www.wikidata.org/entity/Q141129555",
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "inLanguage": "en",
-      "isAccessibleForFree": true
+      "isAccessibleForFree": true,
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
+        }
+      ],
+      "dateCreated": "2026-08-18",
+      "creativeWorkStatus": "Preprint under public peer review",
+      "license": "https://creativecommons.org/licenses/by/4.0/",
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
+      "@type": [
+        "Article",
+        "LearningResource"
+      ],
+      "name": "Botulinum toxin in aesthetic medicine",
+      "url": "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine",
+      "sameAs": "https://www.wikidata.org/entity/Q141099455",
+      "author": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "inLanguage": "en",
+      "isAccessibleForFree": true,
+      "datePublished": "2026-08-14",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
+        }
+      ],
+      "learningResourceType": "Open educational resource",
+      "license": "https://creativecommons.org/licenses/by-sa/4.0/"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
-      "@type": "Article",
+      "@type": [
+        "Article",
+        "LearningResource"
+      ],
       "name": "Facial assessment before aesthetic botulinum toxin treatment",
       "url": "https://en.wikiversity.org/wiki/Facial_assessment_before_aesthetic_botulinum_toxin_treatment",
       "sameAs": "https://www.wikidata.org/entity/Q141131757",
@@ -21714,7 +21765,18 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "inLanguage": "en",
-      "isAccessibleForFree": true
+      "isAccessibleForFree": true,
+      "datePublished": "2026-08-19",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
+        }
+      ],
+      "learningResourceType": "Open educational resource",
+      "license": "https://creativecommons.org/licenses/by-sa/4.0/"
     },
     {
       "@id": "https://www.ghezelbaash.ir/graph.jsonld#release-1-2-5",

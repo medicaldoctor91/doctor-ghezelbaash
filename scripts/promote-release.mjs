@@ -152,7 +152,9 @@ const dataset = byId.get(release.dataset.id),
   github = byId.get(`${release.canonicalUrl}#project-github-source`),
   hf = byId.get(`${release.canonicalUrl}#project-huggingface-dataset`),
   zenodo = byId.get(`${release.canonicalUrl}#project-zenodo-release`),
-  catalog = byId.get(`${release.canonicalUrl}#data-catalog`);
+  catalog = byId.get(`${release.canonicalUrl}#data-catalog`),
+  website = byId.get(`${release.canonicalUrl}#website`),
+  webpage = byId.get(`${release.canonicalUrl}#webpage`);
 for (const [name, node] of Object.entries({
   dataset,
   project,
@@ -160,6 +162,8 @@ for (const [name, node] of Object.entries({
   hf,
   zenodo,
   catalog,
+  website,
+  webpage,
 }))
   must(node, `Canonical graph node missing: ${name}`);
 
@@ -188,6 +192,12 @@ const encodings = [
 ];
 
 // Static topology is source truth. Promotion rejects drift and advances release-bound values only.
+must(
+  website.dateModified === old.date &&
+    webpage.dateModified === old.date &&
+    webpage.lastReviewed === release.medicalReviewedAt,
+  "Website/ProfilePage modification and medical-review date separation drift",
+);
 must(
   dataset["@type"] === "Dataset" &&
     dataset.version === old.release &&
@@ -333,6 +343,8 @@ for (const node of [project, github, catalog]) {
   node.version = next.release;
   node.dateModified = next.date;
 }
+website.dateModified = next.date;
+webpage.dateModified = next.date;
 for (const node of releaseBound) {
   node.version = next.release;
   node.dateModified = next.date;
