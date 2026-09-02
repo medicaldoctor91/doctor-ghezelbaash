@@ -112,9 +112,31 @@
     "https://www.ghezelbaash.ir/#procedure-facelift",
     "https://www.ghezelbaash.ir/#procedure-neck-lift",
     "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery",
-    "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017"
+    "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017",
+    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
+    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
+    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
+    "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions",
+    "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints"
   ],
   "maxBytes": 76000,
+  "idProfiles": {
+    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine": {
+      "include": ["@id", "@type", "name", "headline", "description", "url", "sameAs", "author", "about", "datePublished", "learningResourceType", "license", "inLanguage"]
+    },
+    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review": {
+      "include": ["@id", "@type", "name", "headline", "description", "url", "sameAs", "author", "about", "dateCreated", "creativeWorkStatus", "license", "isPartOf", "inLanguage"]
+    },
+    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin": {
+      "include": ["@id", "@type", "name", "headline", "description", "url", "sameAs", "author", "about", "datePublished", "learningResourceType", "license", "inLanguage"]
+    },
+    "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions": {
+      "include": ["@id", "@type", "name", "description", "url", "about", "mentions", "isPartOf", "inLanguage"]
+    },
+    "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints": {
+      "include": ["@id", "@type", "name", "url", "sameAs", "publisher", "issn"]
+    }
+  },
   "typeProfiles": {
     "MedicalProcedure": {
       "include": ["@id", "@type", "name", "alternateName", "description", "procedureType", "url", "provider", "performer", "about", "isPartOf"]
