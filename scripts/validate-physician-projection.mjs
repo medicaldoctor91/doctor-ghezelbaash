@@ -74,6 +74,13 @@ const CORE_PERSON_AUTHORITY_SUBJECTS = [
   "https://www.ghezelbaash.ir/#evidence-magiran-author",
   "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
 ];
+const PROFILE_EVIDENCE_WEBPAGES = [
+  "https://www.ghezelbaash.ir/#evidence-irimc",
+  "https://www.ghezelbaash.ir/#evidence-orcid",
+  "https://www.ghezelbaash.ir/#evidence-openalex-author",
+  "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
+  "https://www.ghezelbaash.ir/#evidence-magiran-author",
+];
 const CORE_CLINIC_AUTHORITY_SUBJECTS = [
   "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
   "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
@@ -446,6 +453,13 @@ assertExact(
   [WEBPAGE],
   "Physician mainEntityOfPage must remain the canonical ProfilePage",
 );
+for (const id of PROFILE_EVIDENCE_WEBPAGES) {
+  assertExact(
+    types(requireNode(byId, id, "Authority evidence page")),
+    ["WebPage"],
+    `Authority evidence must not compete with the canonical ProfilePage: ${id}`,
+  );
+}
 
 assert.ok(
   refs(physician.knowsAbout).includes(
@@ -493,13 +507,13 @@ for (const id of CORE_RESEARCH_IDENTIFIERS) {
   );
 }
 assert.ok(
-  physicianSpec.include?.includes("mainEntityOfPage"),
-  "Physician head projection lost mainEntityOfPage",
+  !physicianSpec.include?.includes("mainEntityOfPage"),
+  "Google Head must keep ProfilePage top-level by omitting Person.mainEntityOfPage",
 );
-assert.deepEqual(
+assert.equal(
   physicianSpec.refAllow?.mainEntityOfPage,
-  [WEBPAGE],
-  "Physician head projection mainEntityOfPage drift",
+  undefined,
+  "Google Head must not carry a reverse mainEntityOfPage allowlist",
 );
 for (const id of CORE_HEAD_SERVICES) {
   assert.ok(
@@ -650,6 +664,11 @@ assertExact(
   refs(projectedPhysician.areaServed),
   EXPECTED_AREAS,
   "Projected physician areas drift",
+);
+assert.equal(
+  projectedPhysician.mainEntityOfPage,
+  undefined,
+  "Projected physician must not compete with the top-level ProfilePage",
 );
 assertExact(
   refs(projectedClinic.medicalSpecialty),
