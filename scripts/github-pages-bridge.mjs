@@ -18,6 +18,51 @@ const graph = JSON.parse(
     "utf8",
   ),
 );
+const release = JSON.parse(
+    await readFile(path.join(root, "src/data/release.json"), "utf8"),
+  ),
+  canonicalEntity = release.primaryEntity?.id;
+assert.equal(
+  release.canonicalUrl,
+  canonical,
+  "GitHub Pages bridge canonical URL drift",
+);
+assert.equal(
+  typeof canonicalEntity,
+  "string",
+  "Release primary entity ID must be a string",
+);
+const canonicalUrl = new URL(canonical),
+  canonicalEntityUrl = new URL(canonicalEntity),
+  canonicalEntityNodes = graph["@graph"].filter(
+    (node) => node?.["@id"] === canonicalEntity,
+  );
+assert.equal(
+  canonicalEntityUrl.origin,
+  canonicalUrl.origin,
+  "Release primary entity must use the canonical origin",
+);
+assert.equal(
+  canonicalEntityUrl.pathname,
+  canonicalUrl.pathname,
+  "Release primary entity must identify the canonical page",
+);
+assert.ok(
+  canonicalEntityUrl.hash,
+  "Release primary entity must use a stable fragment ID",
+);
+assert.equal(
+  canonicalEntityNodes.length,
+  1,
+  "Release primary entity must resolve to exactly one graph node",
+);
+const canonicalEntityTypes = Array.isArray(canonicalEntityNodes[0]["@type"])
+  ? canonicalEntityNodes[0]["@type"]
+  : [canonicalEntityNodes[0]["@type"]];
+assert.ok(
+  canonicalEntityTypes.includes("Person"),
+  "Release primary entity graph node must be a Person",
+);
 const { content: sourceHtml } = await assembleCanonicalContent({ root, graph });
 assert.ok(sourceHtml.length > 0, "Canonical assembled page is empty");
 const escapeHtml = (value) =>
@@ -85,7 +130,7 @@ async function build(outDir) {
     await write(
       outDir,
       relative,
-      `${JSON.stringify({ schemaVersion: 1, status: "moved-permanently", deprecated: true, canonicalEntity: `${canonical}#dr-saeed-ghezelbash`, canonicalSite: canonical, movedTo: target }, null, 2)}\n`,
+      `${JSON.stringify({ schemaVersion: 1, status: "moved-permanently", deprecated: true, canonicalEntity, canonicalSite: canonical, movedTo: target }, null, 2)}\n`,
     );
   await write(
     outDir,
@@ -120,6 +165,7 @@ async function build(outDir) {
     assert.equal(payload.deprecated, true);
     assert.equal(payload.movedTo, target);
     assert.equal(payload.canonicalSite, canonical);
+    assert.equal(payload.canonicalEntity, canonicalEntity);
   }
   console.log(
     JSON.stringify(
@@ -162,7 +208,7 @@ function verifyMachinePayload(text, target) {
   assert.equal(payload.status, "moved-permanently");
   assert.equal(payload.deprecated, true);
   assert.equal(payload.canonicalSite, canonical);
-  assert.equal(payload.canonicalEntity, `${canonical}#dr-saeed-ghezelbash`);
+  assert.equal(payload.canonicalEntity, canonicalEntity);
   assert.equal(payload.movedTo, target);
 }
 async function request(relative, attempt) {
@@ -306,7 +352,7 @@ async function selfTest() {
       schemaVersion: 1,
       status: "moved-permanently",
       deprecated: true,
-      canonicalEntity: `${canonical}#dr-saeed-ghezelbash`,
+      canonicalEntity,
       canonicalSite: canonical,
       movedTo: `${canonical}graph.jsonld`,
     }),
