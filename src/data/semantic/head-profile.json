@@ -52,7 +52,6 @@
         "alternateName",
         "jobTitle",
         "url",
-        "mainEntityOfPage",
         "priceRange",
         "hasCredential",
         "practicesAt",
@@ -179,9 +178,6 @@
           "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
           "https://www.ghezelbaash.ir/#evidence-magiran-author",
           "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview"
-        ],
-        "mainEntityOfPage": [
-          "https://www.ghezelbaash.ir/#webpage"
         ],
         "performerIn": [
           "https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11",

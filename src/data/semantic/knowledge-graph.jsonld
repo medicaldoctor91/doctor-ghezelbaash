@@ -8387,7 +8387,7 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-irimc",
-      "@type": "ProfilePage",
+      "@type": "WebPage",
       "name": "Iran Medical Council profile for Dr. Mohammad Saeed Ghezelbash",
       "url": "https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e",
       "inLanguage": "fa-IR",
@@ -8401,7 +8401,7 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-orcid",
-      "@type": "ProfilePage",
+      "@type": "WebPage",
       "name": "ORCID profile for Saeed Ghezelbash",
       "url": "https://orcid.org/0009-0001-9346-8475",
       "mainEntity": {
@@ -18714,7 +18714,7 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-openalex-author",
-      "@type": "ProfilePage",
+      "@type": "WebPage",
       "name": "OpenAlex author profile — Saeed Ghezelbash",
       "url": "https://openalex.org/A5064828898",
       "mainEntity": {
@@ -20863,7 +20863,7 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
-      "@type": "ProfilePage",
+      "@type": "WebPage",
       "name": "Semantic Scholar author profile for Mohammad Saeed Ghezelbash",
       "url": "https://www.semanticscholar.org/author/-/3786699",
       "about": {
@@ -21652,7 +21652,7 @@
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-magiran-author",
-      "@type": "ProfilePage",
+      "@type": "WebPage",
       "name": "Magiran author profile — Mohammad Saeed Ghezelbash",
       "url": "https://www.magiran.com/author/mohammad-saeed-ghezelbash",
       "mainEntity": {
