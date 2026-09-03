@@ -48,6 +48,31 @@ const mergeProjectionProfiles = (profiles) => {
   return merged;
 };
 
+const homepageEventTypeExceptions = new Set([
+  "CourseInstance",
+  "EventSeries",
+  "Festival",
+  "Hackathon",
+]);
+const isHomepageEventType = (type) =>
+  typeof type === "string" &&
+  (type === "Event" ||
+    type.endsWith("Event") ||
+    homepageEventTypeExceptions.has(type));
+const isHomepageEventNode = (node) =>
+  nodeTypes(node).some(isHomepageEventType);
+const assertNoHomepageEventNodes = (nodes, label) => {
+  const offenders = nodes.flatMap((node) =>
+    nodeTypes(node)
+      .filter(isHomepageEventType)
+      .map((type) => `${node["@id"] || "(anonymous)"} [${type}]`),
+  );
+  if (offenders.length)
+    throw new Error(
+      `${label} homepage projection must not expose Event-rich-result nodes: ${offenders.join(", ")}`,
+    );
+};
+
 export async function compileGraphProjections(context) {
   const { semantic, generatedSemantic, graph, byId } = context;
   const [headProfile, supportProfile] = await Promise.all([
@@ -70,24 +95,28 @@ export async function compileGraphProjections(context) {
     throw new Error(
       `Head/support projection IDs must be disjoint: ${overlap.join(", ")}`,
     );
+
+  // The canonical graph retains historical participation and workshop facts. The
+  // homepage inline JSON-LD is an entity/profile projection, not an event landing
+  // page, so Event-family nodes are deliberately excluded from that projection.
+  const homepageEventIds = new Set(
+    (graph["@graph"] || [])
+      .filter(isHomepageEventNode)
+      .map((node) => node["@id"])
+      .filter((id) => typeof id === "string"),
+  );
+  const headEventIds = headIds.filter((id) => homepageEventIds.has(id));
+  if (headEventIds.length)
+    throw new Error(
+      `Head homepage projection cannot select Event-family nodes: ${headEventIds.join(", ")}`,
+    );
+  const projectedSupportIds = supportIds.filter(
+    (id) => !homepageEventIds.has(id),
+  );
+
   await mkdir(generatedSemantic, { recursive: true });
   const projectionContext = projectSchemaContext(graph["@context"]);
-
-  const headNodes = [];
-  for (const id of headIds) {
-    const node = byId.get(id);
-    if (!node) throw new Error(`Head selection missing ${id}`);
-    headNodes.push(projectNode(node, headProfile.nodes?.[id]));
-  }
-  const headDoc = { "@context": projectionContext, "@graph": headNodes };
-  const headRaw = `${JSON.stringify(headDoc)}\n`;
-  if (Buffer.byteLength(headRaw) > headProfile.maxBytes)
-    throw new Error(
-      `Head graph ${Buffer.byteLength(headRaw)} exceeds ${headProfile.maxBytes}`,
-    );
-  await writeFile(path.join(generatedSemantic, "head-graph.json"), headRaw);
-
-  const supportSelected = new Set([...supportIds, ...headIds]);
+  const supportSelected = new Set([...projectedSupportIds, ...headIds]);
   const graphIds = new Set(byId.keys());
   const profileFor = (node) =>
     supportProfile.idProfiles?.[node["@id"]] ??
@@ -106,6 +135,7 @@ export async function compileGraphProjections(context) {
         return undefined;
       const out = {};
       for (const [key, nested] of Object.entries(value)) {
+        if (key === "performerIn") continue;
         const next = pruneInlineRefs(nested);
         if (next !== undefined && (!Array.isArray(next) || next.length))
           out[key] = next;
@@ -114,16 +144,33 @@ export async function compileGraphProjections(context) {
     }
     return value;
   };
+
+  const headNodes = [];
+  for (const id of headIds) {
+    const node = byId.get(id);
+    if (!node) throw new Error(`Head selection missing ${id}`);
+    headNodes.push(pruneInlineRefs(projectNode(node, headProfile.nodes?.[id])));
+  }
+  assertNoHomepageEventNodes(headNodes, "Head");
+  const headDoc = { "@context": projectionContext, "@graph": headNodes };
+  const headRaw = `${JSON.stringify(headDoc)}\n`;
+  if (Buffer.byteLength(headRaw) > headProfile.maxBytes)
+    throw new Error(
+      `Head graph ${Buffer.byteLength(headRaw)} exceeds ${headProfile.maxBytes}`,
+    );
+  await writeFile(path.join(generatedSemantic, "head-graph.json"), headRaw);
+
   const supportNodes = [];
-  for (const id of supportIds) {
+  for (const id of projectedSupportIds) {
     const node = byId.get(id);
     if (!node) throw new Error(`Support selection missing ${id}`);
     supportNodes.push(
       supportProfile.mode === "full"
-        ? structuredClone(node)
+        ? pruneInlineRefs(structuredClone(node))
         : pruneInlineRefs(projectNode(node, profileFor(node) || {})),
     );
   }
+  assertNoHomepageEventNodes(supportNodes, "Support");
   const supportDoc = { "@context": projectionContext, "@graph": supportNodes };
   const supportRaw = `${JSON.stringify(supportDoc)}\n`;
   if (Buffer.byteLength(supportRaw) > supportProfile.maxBytes)
@@ -135,5 +182,10 @@ export async function compileGraphProjections(context) {
     supportRaw,
   );
 
-  return { headIds, supportIds, headRaw, supportRaw };
+  return {
+    headIds,
+    supportIds: projectedSupportIds,
+    headRaw,
+    supportRaw,
+  };
 }
