@@ -26,6 +26,7 @@
     "validate:architecture": "node scripts/validate-architecture.mjs",
     "validate:semantic-html": "node scripts/validate-semantic-html.mjs",
     "validate:google-structured-data": "node scripts/validate-google-structured-data.mjs",
+    "validate:schemaorg-vocabulary": "node scripts/validate-schemaorg-vocabulary.mjs",
     "validate:physician-projection": "node scripts/validate-physician-projection.mjs",
     "validate:language-contract": "node scripts/validate-language-contract.mjs",
     "validate:media-manifest": "node scripts/enrich-image-metadata-manifest.mjs --preflight-only",
