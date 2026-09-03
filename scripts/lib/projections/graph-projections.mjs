@@ -96,9 +96,9 @@ export async function compileGraphProjections(context) {
       `Head/support projection IDs must be disjoint: ${overlap.join(", ")}`,
     );
 
-  // The canonical graph retains historical participation and workshop facts. The
-  // homepage inline JSON-LD is an entity/profile projection, not an event landing
-  // page, so Event-family nodes are deliberately excluded from that projection.
+  // Historical event/workshop facts remain in the canonical knowledge graph.
+  // The homepage is an entity/profile projection, not a dedicated event page,
+  // so Event-family nodes are excluded only from its inline Google projection.
   const homepageEventIds = new Set(
     (graph["@graph"] || [])
       .filter(isHomepageEventNode)
@@ -149,10 +149,14 @@ export async function compileGraphProjections(context) {
   for (const id of headIds) {
     const node = byId.get(id);
     if (!node) throw new Error(`Head selection missing ${id}`);
-    headNodes.push(pruneInlineRefs(projectNode(node, headProfile.nodes?.[id])));
+    headNodes.push(projectNode(node, headProfile.nodes?.[id]));
   }
-  assertNoHomepageEventNodes(headNodes, "Head");
-  const headDoc = { "@context": projectionContext, "@graph": headNodes };
+  const homepageHeadNodes = headNodes.map(pruneInlineRefs);
+  assertNoHomepageEventNodes(homepageHeadNodes, "Head");
+  const headDoc = {
+    "@context": projectionContext,
+    "@graph": homepageHeadNodes,
+  };
   const headRaw = `${JSON.stringify(headDoc)}\n`;
   if (Buffer.byteLength(headRaw) > headProfile.maxBytes)
     throw new Error(
