@@ -1,0 +1,195 @@
+name: Finalize static reputation architecture
+
+on:
+  push:
+    branches:
+      - feat/static-reputation-authority-20260903
+    paths:
+      - .github/workflows/finalize-static-reputation-architecture.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: apply-static-reputation-architecture
+  cancel-in-progress: false
+
+jobs:
+  finalize-validate-commit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/static-reputation-authority-20260903
+          fetch-depth: 0
+
+      - name: Apply the migration idempotently and remove all temporary scaffolding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path.cwd()
+          primary = root / ".github/workflows/apply-static-reputation-architecture.yml"
+          production_component = root / "src/components/StaticClinicReputation.astro"
+
+          if primary.exists() and not production_component.exists():
+              text = primary.read_text(encoding="utf-8")
+              start_marker = "          python3 - <<'PY'\n"
+              end_marker = "\n          PY\n"
+              start = text.index(start_marker) + len(start_marker)
+              end = text.index(end_marker, start)
+              lines = text[start:end].splitlines()
+              code = "\n".join(
+                  line[10:] if line.startswith("          ") else line
+                  for line in lines
+              ) + "\n"
+              code = code.replace(
+                  'Path(".github/workflows/apply-static-reputation-architecture.yml").unlink()',
+                  'pass',
+              )
+              # The workflow files are removed before the full-tree source scan.
+              for path in (
+                  primary,
+                  root / ".github/workflows/retry-static-reputation-architecture.yml",
+                  root / ".github/workflows/finalize-static-reputation-architecture.yml",
+              ):
+                  path.unlink(missing_ok=True)
+              exec(compile(code, "/tmp/static-reputation-migration.py", "exec"), {})
+          elif production_component.exists():
+              for path in (
+                  primary,
+                  root / ".github/workflows/retry-static-reputation-architecture.yml",
+                  root / ".github/workflows/finalize-static-reputation-architecture.yml",
+              ):
+                  path.unlink(missing_ok=True)
+          else:
+              raise SystemExit("Neither the reviewed migration nor its production result exists")
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          component = Path("src/components/StaticClinicReputation.astro")
+          text = component.read_text(encoding="utf-8")
+          # Keep the restored reputation signal non-interactive so the existing CTA/link
+          # contract and visual hierarchy do not regress.
+          if "const mapsHref" in text:
+              lines = [line for line in text.splitlines() if "const mapsHref" not in line]
+              text = "\n".join(lines) + "\n"
+          text = text.replace(
+              '''              <p
+                class="clinic-google-reputation"
+                data-clinic-reputation
+                data-clinic-reputation-place-id={observation.placeId}
+                data-clinic-reputation-rating={String(observation.rating)}
+                data-clinic-reputation-review-count={String(observation.userRatingCount)}
+                data-clinic-reputation-observed-at={observation.observedAt}
+                data-clinic-reputation-tuple-sha256={observation.tupleSha256}
+              >
+                <a
+                  href={mapsHref}
+                  rel="external noopener noreferrer"
+                  aria-label={ratingLabel}
+                >
+                  <span>امتیاز در Google Maps: </span>
+                  <data value={String(observation.rating)}>
+                    {ratingFormat.format(observation.rating)}
+                  </data>
+                  <span aria-hidden="true"> ★ </span>
+                  <span>از ۵، بر پایه </span>
+                  <data value={String(observation.userRatingCount)}>
+                    {countFormat.format(observation.userRatingCount)}
+                  </data>
+                  <span> نظر</span>
+                </a>
+              </p>''',
+              '''              <p
+                class="clinic-google-reputation"
+                data-clinic-reputation
+                data-clinic-reputation-place-id={observation.placeId}
+                data-clinic-reputation-rating={String(observation.rating)}
+                data-clinic-reputation-review-count={String(observation.userRatingCount)}
+                data-clinic-reputation-observed-at={observation.observedAt}
+                data-clinic-reputation-tuple-sha256={observation.tupleSha256}
+                aria-label={ratingLabel}
+              >
+                <span>امتیاز در Google Maps: </span>
+                <data value={String(observation.rating)}>
+                  {ratingFormat.format(observation.rating)}
+                </data>
+                <span aria-hidden="true"> ★ </span>
+                <span>از ۵، بر پایه </span>
+                <data value={String(observation.userRatingCount)}>
+                  {countFormat.format(observation.userRatingCount)}
+                </data>
+                <span> نظر</span>
+              </p>''',
+          )
+          if "href={mapsHref}" in text or "<a" in text:
+              raise SystemExit("Static reputation component still changes the actionable-link surface")
+          component.write_text(text, encoding="utf-8")
+          PY
+
+          git diff --check
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+
+      - name: Provision media validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          ffprobe -version
+
+      - run: npm ci
+
+      - name: Capture one current validated clinic observation
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        run: node scripts/fetch-google-places-reputation.mjs --write-fallback --github-env
+
+      - name: Lock source mutation surface
+        run: git diff --name-only | LC_ALL=C sort > /tmp/intended-source-files.txt
+
+      - name: Run the complete canonical release pipeline
+        run: npm run release
+
+      - name: Validate HTML with Nu HTML Checker 26.8.30
+        run: npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+
+      - name: Validate Schema.org 30.0 vocabulary
+        run: npm run validate:schemaorg-vocabulary
+
+      - name: Enforce static-only source and deterministic generated output
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only | LC_ALL=C sort > /tmp/final-source-files.txt
+          diff -u /tmp/intended-source-files.txt /tmp/final-source-files.txt
+          test ! -e functions
+          test ! -e dist/_routes.json
+          ! git grep -n --fixed-strings '/api/google-maps-reputation'
+          ! git grep -n --fixed-strings 'wrangler pages secret'
+          ! git grep -n --fixed-strings 'platformContract.cloudflare.function'
+          git diff --check
+
+      - name: Commit and publish the validated candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: materialize clinic reputation in the static dist"
+          test -z "$(git status --porcelain)"
+          git push origin HEAD:feat/static-reputation-authority-20260903
