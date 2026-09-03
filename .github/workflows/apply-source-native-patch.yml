@@ -88,7 +88,8 @@ jobs:
       - run: npm ci
       - run: npm run security:dependencies
       - name: Run the complete release pipeline on the clean candidate commit
-        run: npm run release
+        shell: bash
+        run: SOURCE_COMMIT="$(git rev-parse HEAD)" npm run release
       - name: Validate rendered HTML
         run: npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
       - name: Validate rendered Schema.org 30.0 vocabulary
