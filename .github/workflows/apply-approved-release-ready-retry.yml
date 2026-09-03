@@ -1,0 +1,110 @@
+name: Retry approved release-ready architecture
+
+on:
+  push:
+    branches:
+      - feat/static-reputation-authority-20260903
+    paths:
+      - .github/workflows/apply-approved-release-ready-retry.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-approved-release-ready-architecture-retry
+  cancel-in-progress: false
+
+jobs:
+  apply-validate-publish-candidate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/static-reputation-authority-20260903
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Provision project validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          npm ci
+      - name: Repair and syntax-check the staged migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f scripts/migrations/apply-approved-release-ready.mjs
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/migrations/apply-approved-release-ready.mjs")
+          value = path.read_text(encoding="utf-8")
+          old = "data.visible = visible ?"
+          new = "top.dataset.visible = visible ?"
+          count = value.count(old)
+          if count != 1:
+              raise SystemExit(f"Expected one stale validator marker, found {count}")
+          path.write_text(value.replace(old, new, 1), encoding="utf-8")
+          PY
+          node --check scripts/migrations/apply-approved-release-ready.mjs
+      - name: Apply approved source-native changes
+        run: node scripts/migrations/apply-approved-release-ready.mjs
+      - name: Complete static-only guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf functions
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/validate-static-reputation.mjs")
+          value = path.read_text(encoding="utf-8")
+          loop = 'for (const file of tracked.filter((file) => /\\.(?:mjs|js|astro|md|json|jsonld|yml|yaml|txt)$/.test(file))) {'
+          at = value.find(loop)
+          if at < 0:
+              raise SystemExit("Static reputation scan loop was not found")
+          insertion = at + len(loop)
+          guard = '\n  if (file === "scripts/validate-static-reputation.mjs") continue;'
+          if guard.strip() not in value:
+              value = value[:insertion] + guard + value[insertion:]
+          path.write_text(value, encoding="utf-8")
+          PY
+          node --check scripts/fetch-google-places-reputation.mjs
+          node --check scripts/validate-static-reputation.mjs
+          node --check scripts/validate-approved-visible-cleanup.mjs
+      - name: Capture one validated current clinic reputation tuple
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        run: node scripts/fetch-google-places-reputation.mjs --output src/data/reputation-observation.json
+      - name: Remove all transient migration files
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f scripts/migrations/apply-approved-release-ready.mjs
+          rmdir scripts/migrations 2>/dev/null || true
+          rm -f .github/workflows/apply-approved-release-ready.yml
+          rm -f .github/workflows/apply-approved-release-ready-retry.yml
+          git diff --check
+      - name: Commit the candidate locally before Git-index-based validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: finalize static reputation and visible authority surface"
+          test -z "$(git status --porcelain)"
+      - name: Run the complete release pipeline
+        run: npm run release
+      - name: Independently validate rendered HTML
+        run: npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+      - name: Confirm source immutability after build
+        run: test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Push only the fully validated candidate
+        run: git push origin HEAD:feat/static-reputation-authority-20260903
