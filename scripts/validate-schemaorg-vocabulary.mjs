@@ -231,7 +231,9 @@ const graphById = new Map(
 const jsonErrors = [];
 let jsonTypedObjects = 0,
   jsonPropertyUses = 0,
-  checkedRanges = 0;
+  checkedRanges = 0,
+  standardDatatypeLiterals = 0,
+  languageTaggedLiterals = 0;
 
 const validateRange = (property, value, path, context) => {
   const allowed = rangeFor(property);
@@ -243,6 +245,11 @@ const validateRange = (property, value, path, context) => {
           typeof item["@type"] === "string" ? item["@type"] : null;
         const literalTypes = literalTypeIri ? literalTypesFor(literalTypeIri) : [];
         if (literalTypeIri) {
+          if (
+            literalTypeIri.startsWith(XSD_ORIGIN) ||
+            literalTypeIri.startsWith("xsd:")
+          )
+            standardDatatypeLiterals++;
           if (!literalTypes.length)
             jsonErrors.push(`${path}: unsupported literal datatype ${literalTypeIri}`);
           else {
@@ -257,6 +264,7 @@ const validateRange = (property, value, path, context) => {
               );
           }
         } else if (typeof item["@language"] === "string") {
+          languageTaggedLiterals++;
           if (!rangeAcceptsTextLexicalValue(allowed))
             jsonErrors.push(
               `${path}: language-tagged literal outside ${[...allowed].join("|")}`,
@@ -441,6 +449,8 @@ console.log(
       jsonLdTypedObjects: jsonTypedObjects,
       jsonLdPropertyUses: jsonPropertyUses,
       jsonLdCheckedRanges: checkedRanges,
+      standardDatatypeLiterals,
+      languageTaggedLiterals,
       microdataScopes,
       microdataPropertyUses,
       supersededTermsAccepted: false,
