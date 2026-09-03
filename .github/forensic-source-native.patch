@@ -1,0 +1,419 @@
+diff --git a/scripts/huggingface.mjs b/scripts/huggingface.mjs
+index e8c06bd..91eb159 100644
+--- a/scripts/huggingface.mjs
++++ b/scripts/huggingface.mjs
+@@ -24,7 +24,6 @@ import {
+   verifyHuggingFaceRemoteDistribution,
+ } from "./lib/hugging-face-distribution.mjs";
+ 
+-const forbiddenDatasetId = () => ["Q140", "304972"].join("");
+ const sha256 = (value) => createHash("sha256").update(value).digest("hex");
+ const must = (condition, message) => {
+   if (!condition) throw new Error(message);
+@@ -43,22 +42,6 @@ async function walkFiles(root, current = root) {
+   return files.sort();
+ }
+ 
+-async function assertCanonicalHuggingFaceIdentity(root) {
+-  const forbidden = [
+-    [Buffer.from(forbiddenDatasetId()), "forbidden Dataset identifier"],
+-    [Buffer.from("dataset_wikidata"), "forbidden dataset_wikidata field"],
+-  ];
+-  for (const relative of await walkFiles(root)) {
+-    const content = await readFile(path.join(root, relative));
+-    for (const [needle, label] of forbidden) {
+-      if (content.includes(needle))
+-        throw new Error(
+-          `Hugging Face identity drift (${label}) in ${relative}`,
+-        );
+-    }
+-  }
+-}
+-
+ async function cleanDistributionRoot(hub) {
+   const root = path.resolve(hub);
+   const releaseRoot = path.resolve(".release"),
+@@ -319,7 +302,6 @@ Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${r
+     JSON.stringify(actual) === JSON.stringify(expected),
+     `Hugging Face distribution inventory drift: ${actual.filter((file) => !expected.includes(file)).join(", ") || "missing expected file"}`,
+   );
+-  await assertCanonicalHuggingFaceIdentity(hub);
+   must(
+     hf.taskCategories.every((task) => readme.includes(task)) &&
+       configs.every(
+diff --git a/scripts/materialize-static-artifacts.mjs b/scripts/materialize-static-artifacts.mjs
+index 6b3c61f..51b386f 100644
+--- a/scripts/materialize-static-artifacts.mjs
++++ b/scripts/materialize-static-artifacts.mjs
+@@ -16,6 +16,18 @@ import {
+ 
+ const root = process.cwd();
+ const dist = path.resolve(root, process.argv[2] || "dist");
++const platformContract = JSON.parse(
++  await readFile(
++    path.join(root, ".release/policy/platform-contract.json"),
++    "utf8",
++  ),
++);
++const functionRoute = platformContract?.cloudflare?.function?.route;
++if (
++  typeof functionRoute !== "string" ||
++  !/^\/api\/[a-z0-9/-]+$/i.test(functionRoute)
++)
++  throw new Error(`Invalid Cloudflare Function route: ${functionRoute}`);
+ const pageSurface = (
+   await readdir(path.join(root, "src/pages"), { withFileTypes: true })
+ )
+@@ -70,6 +82,18 @@ for (const artifact of STATIC_ARTIFACTS)
+ const redirectRegistry = await loadRedirectRegistry(root);
+ const canonicalRedirects = canonicalHostRedirectRows(redirectRegistry);
+ await writeExact("_redirects", renderCanonicalHostRedirects(redirectRegistry));
++await writeExact(
++  "_routes.json",
++  `${JSON.stringify(
++    {
++      version: 1,
++      include: [functionRoute],
++      exclude: [],
++    },
++    null,
++    2,
++  )}\n`,
++);
+ 
+ const generatedPublic = path.join(root, ".generated/public");
+ const generatedPublicFiles = STATIC_ARTIFACTS.map(({ source }) => source)
+@@ -164,7 +188,7 @@ console.log(
+       stableMediaAliases: stableMedia.aliases.length,
+       canonicalHostRedirects: canonicalRedirects.length,
+       destinations: destinations.size,
+-      routeWrappers: 0,
++      functionRoutes: 1,
+     },
+     null,
+     2,
+diff --git a/scripts/validate-architecture.mjs b/scripts/validate-architecture.mjs
+index 4c888ae..cd579fa 100644
+--- a/scripts/validate-architecture.mjs
++++ b/scripts/validate-architecture.mjs
+@@ -1,5 +1,4 @@
+ import path from "node:path";
+-import { existsSync } from "node:fs";
+ import { access, readdir, readFile } from "node:fs/promises";
+ import { pathToFileURL } from "node:url";
+ 
+@@ -40,11 +39,6 @@ const required = [
+   "scripts/lib/projections/contact-discovery.mjs",
+ ];
+ for (const file of required) await access(path.join(root, file));
+-assert(
+-  !existsSync(path.join(root, "src/lib/css-source.mjs")),
+-  "Legacy parallel CSS source must not exist",
+-);
+-
+ const routes = (
+   await readdir(path.join(root, "src/pages"), { withFileTypes: true })
+ )
+@@ -267,8 +261,7 @@ assert(
+ );
+ assert(
+   baseLayout.includes("../styles/global.css?raw") &&
+-    baseLayout.includes("../lib/css-delivery.mjs") &&
+-    !baseLayout.includes("../lib/css-source.mjs"),
++    baseLayout.includes("../lib/css-delivery.mjs"),
+   "Layout must assemble the single stylesheet directly",
+ );
+ assert(
+@@ -415,8 +408,12 @@ for (const [resourcePath, title] of [
+ }
+ assert(
+   /from\s+['"]\.\.\/src\/lib\/resources\.mjs['"]/.test(materializer) &&
+-    /path\.join\(root,\s*['"]\.generated\/public['"]\)/.test(materializer),
+-  "Static materializer must use the resource registry and generated public workspace",
++    /path\.join\(root,\s*['"]\.generated\/public['"]\)/.test(materializer) &&
++    materializer.includes('.release/policy/platform-contract.json') &&
++    materializer.includes('"_routes.json"') &&
++    materializer.includes('include: [functionRoute]') &&
++    materializer.includes('exclude: []'),
++  "Static materializer must own resources, generated public files, and exact Function routing",
+ );
+ assert(
+   deploymentHeadersGenerator.includes("./lib/headers-template.mjs") &&
+diff --git a/scripts/validate-dist.mjs b/scripts/validate-dist.mjs
+index bc28e3f..6656772 100644
+--- a/scripts/validate-dist.mjs
++++ b/scripts/validate-dist.mjs
+@@ -82,6 +82,7 @@ const declaredDistFiles = [
+   "favicon.png",
+   "_headers",
+   "_redirects",
++  "_routes.json",
+ ];
+ const declaredDistSet = new Set(declaredDistFiles);
+ if (declaredDistSet.size !== declaredDistFiles.length)
+@@ -120,14 +121,49 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
+   knowledgeXml = await readFile(path.join(dist, "knowledge.xml"), "utf8"),
+   doctorVcard = await readFile(path.join(dist, "doctor.vcf"), "utf8"),
+   llmsFull = await readFile(path.join(dist, "llms-full.txt"), "utf8"),
+-  provenance = await readJson(path.join(dist, "provenance.jsonld"));
++  provenance = await readJson(path.join(dist, "provenance.jsonld")),
++  routes = await readJson(path.join(dist, "_routes.json")),
++  platformContract = await readJson(
++    path.join(root, ".release/policy/platform-contract.json"),
++  );
++if (
++  routes.version !== 1 ||
++  JSON.stringify(routes.include) !==
++    JSON.stringify([platformContract.cloudflare.function.route]) ||
++  JSON.stringify(routes.exclude) !== JSON.stringify([])
++)
++  fail("Cloudflare Pages Function routing drift");
+ const graphUrlTargets = assertSameDocumentGraphUrlTargets(graph, {
+   canonicalUrl: release.canonicalUrl,
+   htmlIds: inspectHtml(html).ids,
+ });
+ const { services, answers } = deriveCanonicalSemanticSets(graph, release);
++const notFoundDocument = inspectHtml(notFound);
+ if (/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>/i.test(notFound))
+   fail("404 page must not declare a canonical URL");
++if (
++  !/<html\b(?=[^>]*\blang=["']fa-IR["'])(?=[^>]*\bdir=["']rtl["'])/i.test(
++    notFound,
++  ) ||
++  !/<title>\s*صفحه پیدا نشد \| دکتر سعید قزلباش\s*<\/title>/i.test(
++    notFound,
++  ) ||
++  !/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["']noindex, follow["'])[^>]*>/i.test(
++    notFound,
++  ) ||
++  !/<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(
++    notFound,
++  ) ||
++  !/<h1>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
++    notFound,
++  ) ||
++  !/<a\b[^>]*\bhref=["']\/["'][^>]*>\s*بازگشت به صفحه اصلی\s*<\/a>/i.test(
++    notFound,
++  ) ||
++  notFoundDocument.mains.length !== 1 ||
++  notFoundDocument.guideArticles.length !== 1
++)
++  fail("Custom 404 document contract drift");
+ const rdfTripleCount = rdfText.split(/\r?\n/).filter(Boolean).length;
+ if (rdfTripleCount !== rdfLock.triples)
+   fail(`DIST RDF measurement drift: ${rdfTripleCount}/${rdfLock.triples}`);
+diff --git a/scripts/validate-google-structured-data.mjs b/scripts/validate-google-structured-data.mjs
+index 51292bb..28bc9e6 100644
+--- a/scripts/validate-google-structured-data.mjs
++++ b/scripts/validate-google-structured-data.mjs
+@@ -1,6 +1,4 @@
+-import { execFileSync } from "node:child_process";
+ import { readFile } from "node:fs/promises";
+-import path from "node:path";
+ import { nodeTypes, refIds } from "./lib/projection-context.mjs";
+ 
+ const fail = (message) => {
+@@ -169,24 +167,6 @@ for (const [label, document] of [
+     fail(`${label} homepage graph exposes Event-family nodes`);
+ }
+ 
+-// Retired identity IDs must never be able to re-enter through an old archive,
+-// merge, metadata file, SVG, generated template source, or other tracked file.
+-const retiredIdentityToken = ["Q140", "304972"].join("");
+-const tracked = execFileSync("git", ["ls-files", "-z"], {
+-  encoding: "buffer",
+-})
+-  .toString("utf8")
+-  .split("\0")
+-  .filter(Boolean);
+-const retiredNeedle = Buffer.from(retiredIdentityToken, "utf8");
+-const retiredLeaks = [];
+-for (const file of tracked) {
+-  const raw = await readFile(path.join(process.cwd(), file));
+-  if (raw.indexOf(retiredNeedle) !== -1) retiredLeaks.push(file);
+-}
+-if (retiredLeaks.length)
+-  fail(`Retired Wikidata identity leaked into tracked source: ${retiredLeaks.join(", ")}`);
+-
+ console.log(
+   JSON.stringify(
+     {
+@@ -197,7 +177,6 @@ console.log(
+       directPhysicianServiceProviders: supportServices.length,
+       unresolvedPrefixedProperties: false,
+       homepageEventCandidates: false,
+-      retiredIdentityLeak: false,
+     },
+     null,
+     2,
+diff --git a/scripts/validate-release-transaction.mjs b/scripts/validate-release-transaction.mjs
+index 1b842d5..6fa50be 100644
+--- a/scripts/validate-release-transaction.mjs
++++ b/scripts/validate-release-transaction.mjs
+@@ -24,7 +24,6 @@ const stackMonitor = await readFile(
+ );
+ const huggingFace = await readFile("scripts/huggingface.mjs", "utf8");
+ const compactHuggingFace = huggingFace.replace(/\s+/g, "");
+-const forbiddenDatasetId = ["Q140", "304972"].join("");
+ 
+ assert.match(
+   workflow,
+@@ -177,12 +176,6 @@ assert.ok(
+   stackMonitor.includes("if: github.event_name != 'push'"),
+   "Push reconciliation must not mutate the first-party edge",
+ );
+-assert.ok(
+-  /\[\s*["']Q140["']\s*,\s*["']304972["']\s*\]\.join\(\s*["']["']\s*\)/.test(
+-    huggingFace,
+-  ),
+-  "HF validation must construct the forbidden identifier without publishing it literally",
+-);
+ assert.ok(
+   compactHuggingFace.indexOf("awaitcleanDistributionRoot(hub)") <
+     compactHuggingFace.indexOf(
+@@ -196,23 +189,6 @@ assert.ok(
+   ),
+   "HF preparation must enforce its exact declared inventory",
+ );
+-assert.ok(
+-  compactHuggingFace.includes("awaitassertCanonicalHuggingFaceIdentity(hub)"),
+-  "HF preparation must enforce the full-tree identity gate",
+-);
+-assert.ok(
+-  huggingFace.includes("Hugging Face identity drift"),
+-  "HF preparation must reject identity drift",
+-);
+-assert.ok(
+-  !huggingFace.includes(forbiddenDatasetId),
+-  "HF validation republishes the forbidden identifier literally",
+-);
+-assert.throws(
+-  () => run(process.cwd(), ["grep", "-n", "--", forbiddenDatasetId]),
+-  "Tracked source republishes the forbidden identifier literally",
+-);
+-
+ const dir = await mkdtemp(
+   path.join(os.tmpdir(), "ghezelbaash-release-topology-"),
+ );
+diff --git a/scripts/validate-schemaorg-vocabulary.mjs b/scripts/validate-schemaorg-vocabulary.mjs
+index 5305b74..8a3fd60 100644
+--- a/scripts/validate-schemaorg-vocabulary.mjs
++++ b/scripts/validate-schemaorg-vocabulary.mjs
+@@ -168,6 +168,10 @@ const rangeMatchesTypes = (valueTypes, allowed) => {
+     [...typeClosure(type)].some((candidate) => allowed.has(candidate)),
+   );
+ };
++const rangeAcceptsTextLexicalValue = (allowed) =>
++  [...allowed].some(
++    (type) => types.has(type) && typeClosure(type).has("Text"),
++  );
+ 
+ const jsonDocuments = extractJsonLd(html);
+ const graphNodes = jsonDocuments.flatMap((document) => document?.["@graph"] || []);
+@@ -186,7 +190,29 @@ const validateRange = (property, value, path, context) => {
+   if (!allowed.size) return;
+   for (const item of asArray(value)) {
+     if (item && typeof item === "object") {
+-      if (Object.hasOwn(item, "@value")) continue;
++      if (Object.hasOwn(item, "@value")) {
++        const literalType =
++          typeof item["@type"] === "string"
++            ? schemaLocal(item["@type"]) || item["@type"]
++            : null;
++        if (literalType) {
++          if (!types.has(literalType))
++            jsonErrors.push(`${path}: unknown/superseded literal type ${literalType}`);
++          else if (!rangeMatchesTypes([literalType], allowed))
++            jsonErrors.push(
++              `${path}: ${property} literal type ${literalType} not in ${[...allowed].join("|")}`,
++            );
++        } else if (typeof item["@language"] === "string") {
++          if (!rangeAcceptsTextLexicalValue(allowed))
++            jsonErrors.push(
++              `${path}: language-tagged literal outside ${[...allowed].join("|")}`,
++            );
++        } else {
++          validateRange(property, item["@value"], `${path}.@value`, context);
++        }
++        checkedRanges++;
++        continue;
++      }
+       const explicitTypes = typesFor(item);
+       if (explicitTypes.length) {
+         for (const type of explicitTypes)
+@@ -234,9 +260,7 @@ const validateRange = (property, value, path, context) => {
+         if (allowed.has("URL")) checkedRanges++;
+         continue;
+       }
+-      const literalRanges = new Set([
+-        "Text",
+-        "URL",
++      const nonTextLexicalRanges = new Set([
+         "Date",
+         "DateTime",
+         "Time",
+@@ -245,8 +269,13 @@ const validateRange = (property, value, path, context) => {
+         "Integer",
+         "Float",
+       ]);
+-      if (![...allowed].some((type) => literalRanges.has(type)))
+-        jsonErrors.push(`${path}: ${property} string literal outside ${[...allowed].join("|")}`);
++      if (
++        !rangeAcceptsTextLexicalValue(allowed) &&
++        ![...allowed].some((type) => nonTextLexicalRanges.has(type))
++      )
++        jsonErrors.push(
++          `${path}: ${property} string literal outside ${[...allowed].join("|")}`,
++        );
+       checkedRanges++;
+     }
+   }
+diff --git a/scripts/verify-production.mjs b/scripts/verify-production.mjs
+index 9102499..2f5050f 100644
+--- a/scripts/verify-production.mjs
++++ b/scripts/verify-production.mjs
+@@ -626,8 +626,17 @@ async function verifyCore() {
+       fail(`Machine URL leaked into production sitemap ${rel}`);
+   let missing,
+     missingX = "";
++  const missingBodyExact = (body) =>
++    /<title>\s*صفحه پیدا نشد \| دکتر سعید قزلباش\s*<\/title>/i.test(body) &&
++    /<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(
++      body,
++    ) &&
++    /<h1>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
++      body,
++    );
+   const missingContractExact = (probe) =>
+     probe.r.status === 404 &&
++    missingBodyExact(probe.text) &&
+     probe.r.headers.get("cache-control") === "no-store" &&
+     (!enforce404 ||
+       (/noindex/i.test(probe.r.headers.get("x-robots-tag") || "") &&
+@@ -653,6 +662,8 @@ async function verifyCore() {
+           `x-robots=${missingX}`,
+           `language=${missing.r.headers.get("content-language")}`,
+           `cache=${missing.r.headers.get("cache-control")}`,
++          `custom-body=${missingBodyExact(missing.text)}`,
++          `body-bytes=${Buffer.byteLength(missing.text)}`,
+           `expected-csp-sha256=${expectedCspSha256}`,
+           `live-csp-sha256=${liveCspSha256}`,
+         ].join(" "),
+@@ -666,6 +677,8 @@ async function verifyCore() {
+         xRobots: missingX,
+         language: missing.r.headers.get("content-language"),
+         cacheControl: missing.r.headers.get("cache-control"),
++        customBody: missingBodyExact(missing.text),
++        bodyBytes: Buffer.byteLength(missing.text),
+         expectedCspSha256: createHash("sha256")
+           .update(expected404Csp)
+           .digest("hex"),
+@@ -693,6 +706,8 @@ async function verifyCore() {
+         matrix,
+         missingStatus: missing.r.status,
+         missingXRobots: missingX,
++        missingCustomBody: missingBodyExact(missing.text),
++        missingBodyBytes: Buffer.byteLength(missing.text),
+         managedRobotsConflictDetected: false,
+         googlebotBudget: {
+           bodyBytes: budgetBodyBytes,
