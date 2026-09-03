@@ -1,0 +1,142 @@
+name: Gate static reputation candidate
+
+on:
+  push:
+    branches:
+      - feat/static-reputation-authority-20260903
+    paths:
+      - .github/workflows/gate-static-reputation-candidate.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: apply-static-reputation-architecture
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/static-reputation-authority-20260903
+          fetch-depth: 0
+
+      - name: Converge to the reviewed production tree and remove one-shot workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path.cwd()
+          component = root / "src/components/StaticClinicReputation.astro"
+          primary = root / ".github/workflows/apply-static-reputation-architecture.yml"
+
+          if not component.exists():
+              if not primary.exists():
+                  raise SystemExit("Static reputation migration source is unavailable")
+              text = primary.read_text(encoding="utf-8")
+              start_marker = "          python3 - <<'PY'\n"
+              end_marker = "\n          PY\n"
+              start = text.index(start_marker) + len(start_marker)
+              end = text.index(end_marker, start)
+              lines = text[start:end].splitlines()
+              code = "\n".join(
+                  line[10:] if line.startswith("          ") else line
+                  for line in lines
+              ) + "\n"
+              code = code.replace(
+                  'Path(".github/workflows/apply-static-reputation-architecture.yml").unlink()',
+                  'pass',
+              )
+              for path in (root / ".github/workflows").glob(
+                  "*static-reputation-architecture.yml"
+              ):
+                  path.unlink(missing_ok=True)
+              (root / ".github/workflows/gate-static-reputation-candidate.yml").unlink(
+                  missing_ok=True
+              )
+              exec(compile(code, "/tmp/static-reputation-migration.py", "exec"), {})
+          else:
+              for name in (
+                  "apply-static-reputation-architecture.yml",
+                  "retry-static-reputation-architecture.yml",
+                  "finalize-static-reputation-architecture.yml",
+                  "gate-static-reputation-candidate.yml",
+              ):
+                  (root / ".github/workflows" / name).unlink(missing_ok=True)
+          PY
+          git diff --check
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+
+      - name: Provision media validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          ffprobe -version
+
+      - run: npm ci
+
+      - name: Resolve one current clinic observation for the static candidate
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        run: node scripts/fetch-google-places-reputation.mjs --write-fallback --github-env
+
+      - name: Run canonical release and external validators
+        run: |
+          npm run security:dependencies
+          npm run release
+          npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+          npm run validate:schemaorg-vocabulary
+
+      - name: Enforce the final static-only architecture
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e functions
+          test ! -e dist/_routes.json
+          ! git grep -n --fixed-strings '/api/google-maps-reputation'
+          ! git grep -n --fixed-strings 'wrangler pages secret'
+          ! git grep -n --fixed-strings 'platformContract.cloudflare.function'
+          test "$(git grep -l --fixed-strings 'GOOGLE_PLACES_API_KEY' | LC_ALL=C sort | tr '\n' ' ')" = ".github/workflows/cloudflare-pages-deploy.yml scripts/fetch-google-places-reputation.mjs "
+          git diff --check
+
+      - name: Commit the release-ready source candidate without releasing it
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet || test -n "$(git ls-files --others --exclude-standard)"; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "feat: finalize static clinic reputation delivery"
+            git push origin HEAD:feat/static-reputation-authority-20260903
+          fi
+
+      - name: Open or update the non-release candidate pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          existing="$(gh pr list --head feat/static-reputation-authority-20260903 --base main --state open --json number --jq '.[0].number // empty')"
+          if test -z "$existing"; then
+            gh pr create \
+              --base main \
+              --head feat/static-reputation-authority-20260903 \
+              --title "Materialize Google Maps reputation in the static mega-landing" \
+              --body $'## Purpose\n\nReplace the per-visit Cloudflare Pages Function with one bounded six-hour Google Places observation during production build/deploy, and render clinic rating/review count in the initial HTML.\n\n## Invariants\n\n- One canonical user-facing HTML mega-landing remains.\n- The physician and clinic entities remain separate.\n- Reputation is clinic-scoped.\n- No runtime Function, browser fetch, Function secret provisioning, or `_routes.json`.\n- No visible-content change except the authorized rating/review-count restoration.\n- Release/tag/Zenodo/Hugging Face publication remains on hold for the owner’s final small changes.\n\n## Validation\n\nThe branch is opened only after the complete release pipeline, dependency gate, Nu HTML Checker, Schema.org 30.0 vocabulary validation, static-dist reputation checks, and static-only architecture assertions pass.'
+          fi
