@@ -54,6 +54,11 @@ const homepageEventTypeExceptions = new Set([
   "Festival",
   "Hackathon",
 ]);
+const homepageArticleRichResultTypes = new Set([
+  "Article",
+  "NewsArticle",
+  "BlogPosting",
+]);
 const isHomepageEventType = (type) =>
   typeof type === "string" &&
   (type === "Event" ||
@@ -61,6 +66,22 @@ const isHomepageEventType = (type) =>
     homepageEventTypeExceptions.has(type));
 const isHomepageEventNode = (node) =>
   nodeTypes(node).some(isHomepageEventType);
+const isExternalUrl = (value, canonicalOrigin) => {
+  if (typeof value !== "string") return false;
+  try {
+    return new URL(value).origin !== canonicalOrigin;
+  } catch {
+    return false;
+  }
+};
+const isHomepageExternalRichResultNode = (node, canonicalOrigin) => {
+  if (!isExternalUrl(node?.url, canonicalOrigin)) return false;
+  const types = nodeTypes(node);
+  return (
+    types.some((type) => homepageArticleRichResultTypes.has(type)) ||
+    types.includes("Organization")
+  );
+};
 const assertNoHomepageEventNodes = (nodes, label) => {
   const offenders = nodes.flatMap((node) =>
     nodeTypes(node)
@@ -72,9 +93,25 @@ const assertNoHomepageEventNodes = (nodes, label) => {
       `${label} homepage projection must not expose Event-rich-result nodes: ${offenders.join(", ")}`,
     );
 };
+const assertNoHomepageExternalRichResultNodes = (
+  nodes,
+  label,
+  canonicalOrigin,
+) => {
+  const offenders = nodes
+    .filter((node) => isHomepageExternalRichResultNode(node, canonicalOrigin))
+    .map(
+      (node) =>
+        `${node["@id"] || "(anonymous)"} [${nodeTypes(node).join(", ")}]`,
+    );
+  if (offenders.length)
+    throw new Error(
+      `${label} homepage projection must not expand external Article/Organization rich-result candidates: ${offenders.join(", ")}`,
+    );
+};
 
 export async function compileGraphProjections(context) {
-  const { semantic, generatedSemantic, graph, byId } = context;
+  const { semantic, generatedSemantic, graph, byId, release } = context;
   const [headProfile, supportProfile] = await Promise.all([
     readFile(path.join(semantic, "head-profile.json"), "utf8").then(JSON.parse),
     readFile(path.join(semantic, "support-profile.json"), "utf8").then(
@@ -96,6 +133,8 @@ export async function compileGraphProjections(context) {
       `Head/support projection IDs must be disjoint: ${overlap.join(", ")}`,
     );
 
+  const canonicalOrigin = new URL(release.canonicalUrl).origin;
+
   // Historical event/workshop facts remain in the canonical knowledge graph.
   // The homepage is an entity/profile projection, not a dedicated event page,
   // so Event-family nodes are excluded only from its inline Google projection.
@@ -105,19 +144,47 @@ export async function compileGraphProjections(context) {
       .map((node) => node["@id"])
       .filter((id) => typeof id === "string"),
   );
+
+  // External articles and external organizations remain first-class canonical
+  // graph evidence, but the physician homepage is not the canonical page for
+  // their Article/Organization rich-result markup. Keep the relationships by
+  // collapsing references to each source's own canonical URL instead.
+  const homepageExternalRichResultIds = new Set(
+    (graph["@graph"] || [])
+      .filter((node) =>
+        isHomepageExternalRichResultNode(node, canonicalOrigin),
+      )
+      .map((node) => node["@id"])
+      .filter((id) => typeof id === "string"),
+  );
+  const homepageExcludedIds = new Set([
+    ...homepageEventIds,
+    ...homepageExternalRichResultIds,
+  ]);
   const headEventIds = headIds.filter((id) => homepageEventIds.has(id));
   if (headEventIds.length)
     throw new Error(
       `Head homepage projection cannot select Event-family nodes: ${headEventIds.join(", ")}`,
     );
+  const projectedHeadIds = headIds.filter(
+    (id) => !homepageExcludedIds.has(id),
+  );
   const projectedSupportIds = supportIds.filter(
-    (id) => !homepageEventIds.has(id),
+    (id) => !homepageExcludedIds.has(id),
   );
 
   await mkdir(generatedSemantic, { recursive: true });
   const projectionContext = projectSchemaContext(graph["@context"]);
-  const supportSelected = new Set([...projectedSupportIds, ...headIds]);
+  const homepageSelected = new Set([
+    ...projectedSupportIds,
+    ...projectedHeadIds,
+  ]);
   const graphIds = new Set(byId.keys());
+  const homepageReferenceAliases = new Map(
+    [...homepageExternalRichResultIds]
+      .map((id) => [id, byId.get(id)?.url])
+      .filter(([, url]) => isExternalUrl(url, canonicalOrigin)),
+  );
   const profileFor = (node) =>
     supportProfile.idProfiles?.[node["@id"]] ??
     mergeProjectionProfiles(
@@ -130,9 +197,11 @@ export async function compileGraphProjections(context) {
       if (
         value["@id"] &&
         graphIds.has(value["@id"]) &&
-        !supportSelected.has(value["@id"])
-      )
-        return undefined;
+        !homepageSelected.has(value["@id"])
+      ) {
+        const alias = homepageReferenceAliases.get(value["@id"]);
+        return alias ? { "@id": alias } : undefined;
+      }
       const out = {};
       for (const [key, nested] of Object.entries(value)) {
         if (key === "performerIn") continue;
@@ -151,8 +220,15 @@ export async function compileGraphProjections(context) {
     if (!node) throw new Error(`Head selection missing ${id}`);
     headNodes.push(projectNode(node, headProfile.nodes?.[id]));
   }
-  const homepageHeadNodes = headNodes.map(pruneInlineRefs);
+  const homepageHeadNodes = headNodes
+    .filter((node) => !homepageExcludedIds.has(node["@id"]))
+    .map(pruneInlineRefs);
   assertNoHomepageEventNodes(homepageHeadNodes, "Head");
+  assertNoHomepageExternalRichResultNodes(
+    homepageHeadNodes,
+    "Head",
+    canonicalOrigin,
+  );
   const headDoc = {
     "@context": projectionContext,
     "@graph": homepageHeadNodes,
@@ -175,6 +251,11 @@ export async function compileGraphProjections(context) {
     );
   }
   assertNoHomepageEventNodes(supportNodes, "Support");
+  assertNoHomepageExternalRichResultNodes(
+    supportNodes,
+    "Support",
+    canonicalOrigin,
+  );
   const supportDoc = { "@context": projectionContext, "@graph": supportNodes };
   const supportRaw = `${JSON.stringify(supportDoc)}\n`;
   if (Buffer.byteLength(supportRaw) > supportProfile.maxBytes)
@@ -187,7 +268,7 @@ export async function compileGraphProjections(context) {
   );
 
   return {
-    headIds,
+    headIds: projectedHeadIds,
     supportIds: projectedSupportIds,
     headRaw,
     supportRaw,
