@@ -32,8 +32,8 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
 
-          path = Path("scripts/validate-dist.mjs")
-          lines = path.read_text(encoding="utf-8").splitlines()
+          dist_validator = Path("scripts/validate-dist.mjs")
+          lines = dist_validator.read_text(encoding="utf-8").splitlines()
           replacement = r'''  !/<a\b[^>]*\bhref=["']\/["'][^>]*>\s*بازگشت به صفحه اصلی\s*<\/a>/i.test('''
           matches = [
               index
@@ -43,11 +43,107 @@ jobs:
           if len(matches) != 1:
               raise SystemExit(f"Unexpected 404-link validator match count: {len(matches)}")
           lines[matches[0]] = replacement
-          path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          dist_validator.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+          schema_validator = Path("scripts/validate-schemaorg-vocabulary.mjs")
+          source = schema_validator.read_text(encoding="utf-8")
+          datatype_anchor = '''const rangeAcceptsTextLexicalValue = (allowed) =>
+            [...allowed].some(
+              (type) => types.has(type) && typeClosure(type).has("Text"),
+            );
+          '''
+          datatype_support = datatype_anchor + '''const XSD_ORIGIN = "http://www.w3.org/2001/XMLSchema#";
+          const XSD_TO_SCHEMA_TYPES = new Map([
+            ["string", ["Text"]],
+            ["normalizedString", ["Text"]],
+            ["token", ["Text"]],
+            ["language", ["Text"]],
+            ["boolean", ["Boolean"]],
+            ["decimal", ["Number"]],
+            ["float", ["Float"]],
+            ["double", ["Float"]],
+            ["integer", ["Integer"]],
+            ["nonPositiveInteger", ["Integer"]],
+            ["negativeInteger", ["Integer"]],
+            ["long", ["Integer"]],
+            ["int", ["Integer"]],
+            ["short", ["Integer"]],
+            ["byte", ["Integer"]],
+            ["nonNegativeInteger", ["Integer"]],
+            ["unsignedLong", ["Integer"]],
+            ["unsignedInt", ["Integer"]],
+            ["unsignedShort", ["Integer"]],
+            ["unsignedByte", ["Integer"]],
+            ["positiveInteger", ["Integer"]],
+            ["date", ["Date"]],
+            ["dateTime", ["DateTime"]],
+            ["dateTimeStamp", ["DateTime"]],
+            ["time", ["Time"]],
+            ["duration", ["Duration"]],
+            ["dayTimeDuration", ["Duration"]],
+            ["yearMonthDuration", ["Duration"]],
+            ["anyURI", ["URL"]],
+            ["gYearMonth", ["Text"]],
+            ["gYear", ["Text"]],
+            ["gMonthDay", ["Text"]],
+            ["gMonth", ["Text"]],
+            ["gDay", ["Text"]],
+          ]);
+          const literalTypesFor = (value) => {
+            const schemaType = schemaLocal(value);
+            if (schemaType) return [schemaType];
+            const xsdType = value.startsWith(XSD_ORIGIN)
+              ? value.slice(XSD_ORIGIN.length)
+              : value.startsWith("xsd:")
+                ? value.slice(4)
+                : null;
+            if (xsdType) return XSD_TO_SCHEMA_TYPES.get(xsdType) || [];
+            return [value];
+          };
+          '''
+          if source.count(datatype_anchor) != 1:
+              raise SystemExit("Schema datatype anchor drift")
+          source = source.replace(datatype_anchor, datatype_support)
+
+          old_literal = '''        const literalType =
+                    typeof item["@type"] === "string"
+                      ? schemaLocal(item["@type"]) || item["@type"]
+                      : null;
+                  if (literalType) {
+                    if (!types.has(literalType))
+                      jsonErrors.push(`${path}: unknown/superseded literal type ${literalType}`);
+                    else if (!rangeMatchesTypes([literalType], allowed))
+                      jsonErrors.push(
+                        `${path}: ${property} literal type ${literalType} not in ${[...allowed].join("|")}`,
+                      );
+          '''
+          new_literal = '''        const literalTypeIri =
+                    typeof item["@type"] === "string" ? item["@type"] : null;
+                  const literalTypes = literalTypeIri ? literalTypesFor(literalTypeIri) : [];
+                  if (literalTypeIri) {
+                    if (!literalTypes.length)
+                      jsonErrors.push(`${path}: unsupported literal datatype ${literalTypeIri}`);
+                    else {
+                      const unknownTypes = literalTypes.filter((type) => !types.has(type));
+                      if (unknownTypes.length)
+                        jsonErrors.push(
+                          `${path}: unknown/superseded literal type ${unknownTypes.join("+")}`,
+                        );
+                      else if (!rangeMatchesTypes(literalTypes, allowed))
+                        jsonErrors.push(
+                          `${path}: ${property} literal datatype ${literalTypeIri} maps to ${literalTypes.join("+")} outside ${[...allowed].join("|")}`,
+                        );
+                    }
+          '''
+          if source.count(old_literal) != 1:
+              raise SystemExit("Schema typed-literal block drift")
+          source = source.replace(old_literal, new_literal)
+          schema_validator.write_text(source, encoding="utf-8")
           PY
           rm .github/forensic-source-native.patch
           rm .github/workflows/apply-source-native-patch.yml
           git diff --check
+          node --check scripts/validate-schemaorg-vocabulary.mjs
           actual="$(git diff --name-only HEAD | LC_ALL=C sort)"
           expected="$(cat <<'EOF' | LC_ALL=C sort
           .github/forensic-source-native.patch
