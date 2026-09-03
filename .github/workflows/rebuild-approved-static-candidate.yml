@@ -1,0 +1,192 @@
+name: Rebuild approved static candidate transactionally
+
+on:
+  push:
+    branches:
+      - feat/static-reputation-authority-20260903
+    paths:
+      - .github/workflows/rebuild-approved-static-candidate.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rebuild-approved-static-candidate
+  cancel-in-progress: false
+
+jobs:
+  rebuild-validate-force-with-lease:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/static-reputation-authority-20260903
+          fetch-depth: 0
+      - name: Preserve migration program and reset to the validated Schema.org base
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "EXPECTED_REMOTE_HEAD=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git show 7d5b615551867a6184de9799154bf3ec5d68382e:scripts/migrations/apply-approved-release-ready.mjs > /tmp/apply-approved-release-ready.mjs
+          git reset --hard dd18d9380a592ecd0e1bf2ef69fe68899d761a49
+          git clean -ffd
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('/tmp/apply-approved-release-ready.mjs')
+          value = path.read_text(encoding='utf-8')
+          old = '"data.visible = visible ? \\"true\\" : \\"false\\""'
+          if old in value:
+              value = value.replace(old, '"top.dataset.visible = visible ? \\"true\\" : \\"false\\""', 1)
+          old_assert = 'assert(!existsSync(path.join(root, "functions")) || trackedFiles().every((file) => !file.startsWith("functions/")), "Tracked Cloudflare Function surface remains");'
+          new_assert = 'assert(!trackedFiles().some((file) => file.startsWith("functions/") && existsSync(path.join(root, file))), "Tracked Cloudflare Function surface remains");'
+          if old_assert not in value:
+              raise SystemExit('Function-removal final assertion was not found')
+          value = value.replace(old_assert, new_assert, 1)
+          path.write_text(value, encoding='utf-8')
+          PY
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Provision exact project dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          npm ci
+          node --check /tmp/apply-approved-release-ready.mjs
+      - name: Apply all user-approved source-native changes
+        run: node /tmp/apply-approved-release-ready.mjs
+      - name: Normalize final static-only guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf functions
+          python3 - <<'PY'
+          from pathlib import Path
+
+          validator = Path('scripts/validate-static-reputation.mjs')
+          value = validator.read_text(encoding='utf-8')
+          loop = 'for (const file of tracked.filter((file) => /\\.(?:mjs|js|astro|md|json|jsonld|yml|yaml|txt)$/.test(file))) {'
+          at = value.find(loop)
+          if at < 0:
+              raise SystemExit('Static reputation scan loop was not found')
+          insertion = at + len(loop)
+          guard = '\n  if (file === "scripts/validate-static-reputation.mjs") continue;'
+          if guard.strip() not in value:
+              value = value[:insertion] + guard + value[insertion:]
+          validator.write_text(value, encoding='utf-8')
+
+          library = Path('src/lib/reputation-observation.mjs')
+          value = library.read_text(encoding='utf-8')
+          value = value.replace('import { fileURLToPath } from "node:url";', 'import { fileURLToPath } from "node:url";\nimport path from "node:path";')
+          old = '''export function resolveReputationObservation() {
+  const configured = process.env.REPUTATION_OBSERVATION_PATH?.trim();
+  const location = configured ? fileURLToPath(new URL(`file://${pathResolve(configured)}`)) : fileURLToPath(FALLBACK_URL);
+  try { return normalizeReputationObservation(readJson(location)); } catch { return null; }
+}
+
+function pathResolve(value) {
+  if (value.startsWith("/")) return value;
+  return new URL(value, `file://${process.cwd()}/`).pathname;
+}'''
+          new = '''export function resolveReputationObservation() {
+  const configured = process.env.REPUTATION_OBSERVATION_PATH?.trim();
+  const location = configured ? path.resolve(configured) : fileURLToPath(FALLBACK_URL);
+  try { return normalizeReputationObservation(readJson(location)); } catch { return null; }
+}'''
+          if old not in value:
+              raise SystemExit('Reputation observation path resolver was not found')
+          library.write_text(value.replace(old, new, 1), encoding='utf-8')
+          PY
+          node --check scripts/fetch-google-places-reputation.mjs
+          node --check scripts/validate-static-reputation.mjs
+          node --check scripts/validate-approved-visible-cleanup.mjs
+          node --check src/lib/reputation-observation.mjs
+      - name: Capture exactly one current validated Google Places observation
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        run: node scripts/fetch-google-places-reputation.mjs --output src/data/reputation-observation.json
+      - name: Add a data-only guard to external authority publication workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          observation = 'src/data/reputation-observation.json'
+          for name in ['hugging-face-authority.yml']:
+              path = Path('.github/workflows') / name
+              if not path.exists():
+                  continue
+              value = path.read_text(encoding='utf-8')
+              if observation in value:
+                  continue
+              # Only add paths-ignore when the workflow actually has a push mapping.
+              match = re.search(r'(?m)^  push:\s*\n', value)
+              if not match:
+                  continue
+              insertion = match.end()
+              value = value[:insertion] + f'    paths-ignore:\n      - "{observation}"\n' + value[insertion:]
+              path.write_text(value, encoding='utf-8')
+          PY
+      - name: Remove all transient migration machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf scripts/migrations
+          rm -f .github/workflows/apply-approved-release-ready.yml
+          rm -f .github/workflows/apply-approved-release-ready-retry.yml
+          rm -f .github/workflows/rebuild-approved-static-candidate.yml
+          git diff --check
+      - name: Commit the exact candidate before Git-index-based validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: finalize static reputation and visible authority surface"
+          test -z "$(git status --porcelain)"
+      - name: Run complete release validation
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run release 2>&1 | tee /tmp/release.log
+      - name: Independently validate rendered HTML
+        run: npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+      - name: Enforce final approved invariants directly
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+          test ! -d functions
+          test ! -e dist/_routes.json
+          ! git grep -n -- '/api/google-maps-reputation' -- ':!scripts/validate-static-reputation.mjs'
+          ! git grep -n -- 'data-google-maps-reputation' -- ':!scripts/validate-static-reputation.mjs'
+          ! git grep -n -- '#video-library'
+          ! git grep -n -- 'مسیر سریع در این راهنمای جامع'
+          test "$(grep -o '<details[^>]*caption-disclosure' dist/index.html | wc -l)" -eq 2
+          test "$(grep -o '<video\b' dist/index.html | wc -l)" -ge 4
+          test "$(grep -o 'data-clinic-reputation\b' dist/index.html | wc -l)" -eq 1
+          grep -q 'cron: "17 \*/6 \* \* \*"' .github/workflows/refresh-clinic-reputation.yml
+          grep -q 'static-assets-only' .release/policy/platform-contract.json
+      - name: Upload candidate artifacts for independent forensic review
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: approved-static-candidate-${{ github.sha }}
+          path: |
+            dist
+            release
+            /tmp/release.log
+          if-no-files-found: error
+          retention-days: 7
+      - name: Publish only after every validation passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push --force-with-lease=refs/heads/feat/static-reputation-authority-20260903:${EXPECTED_REMOTE_HEAD} origin HEAD:feat/static-reputation-authority-20260903
