@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  apply-validate-commit:
+  apply-validate-push:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -23,7 +23,7 @@ jobs:
         with:
           ref: fix/schemaorg-v30-conformance-20260903
           fetch-depth: 0
-      - name: Apply the reviewed source-native correction set
+      - name: Apply and locally commit the reviewed source-native correction set
         shell: bash
         run: |
           set -euo pipefail
@@ -66,6 +66,13 @@ jobs:
             printf 'Unexpected patch surface.\nExpected:\n%s\nActual:\n%s\n' "$expected" "$actual"
             exit 1
           }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: absorb routing and validation corrections natively"
+          test -z "$(git status --porcelain)"
+          committed="$(git diff-tree --no-commit-id --name-only -r HEAD | LC_ALL=C sort)"
+          test "$committed" = "$expected"
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: .nvmrc
@@ -80,33 +87,15 @@ jobs:
           ffprobe -version
       - run: npm ci
       - run: npm run security:dependencies
-      - name: Run the complete release pipeline
+      - name: Run the complete release pipeline on the clean candidate commit
         run: npm run release
       - name: Validate rendered HTML
         run: npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
       - name: Validate rendered Schema.org 30.0 vocabulary
         run: npm run validate:schemaorg-vocabulary
-      - name: Commit only the validated native sources
+      - name: Publish the fully validated candidate commit
         shell: bash
         run: |
           set -euo pipefail
-          actual="$(git diff --name-only HEAD | LC_ALL=C sort)"
-          expected="$(cat <<'EOF' | LC_ALL=C sort
-          .github/forensic-source-native.patch
-          .github/workflows/apply-source-native-patch.yml
-          scripts/huggingface.mjs
-          scripts/materialize-static-artifacts.mjs
-          scripts/validate-architecture.mjs
-          scripts/validate-dist.mjs
-          scripts/validate-google-structured-data.mjs
-          scripts/validate-release-transaction.mjs
-          scripts/validate-schemaorg-vocabulary.mjs
-          scripts/verify-production.mjs
-          EOF
-          )"
-          test "$actual" = "$expected"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "fix: absorb routing and validation corrections natively"
+          test -z "$(git status --porcelain --untracked-files=no)"
           git push origin HEAD:fix/schemaorg-v30-conformance-20260903
