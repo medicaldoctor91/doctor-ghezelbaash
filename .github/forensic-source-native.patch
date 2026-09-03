@@ -140,7 +140,7 @@ index 4c888ae..cd579fa 100644
  assert(
    deploymentHeadersGenerator.includes("./lib/headers-template.mjs") &&
 diff --git a/scripts/validate-dist.mjs b/scripts/validate-dist.mjs
-index bc28e3f..6656772 100644
+index bc28e3f..46cd021 100644
 --- a/scripts/validate-dist.mjs
 +++ b/scripts/validate-dist.mjs
 @@ -82,6 +82,7 @@ const declaredDistFiles = [
@@ -189,10 +189,10 @@ index bc28e3f..6656772 100644
 +  !/<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(
 +    notFound,
 +  ) ||
-+  !/<h1>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
++  !/<h1\b[^>]*>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
 +    notFound,
 +  ) ||
-+  !/<a\b[^>]*\bhref=["']\/["'][^>]*>\s*بازگشت به صفحه اصلی\s*<\/a>/i.test(
++  !/<a\b[^>]*\bhref=["']\/[["'][^>]*>\s*بازگشت به صفحه اصلی\s*<\/a>/i.test(
 +    notFound,
 +  ) ||
 +  notFoundDocument.mains.length !== 1 ||
@@ -369,7 +369,7 @@ index 5305b74..8a3fd60 100644
      }
    }
 diff --git a/scripts/verify-production.mjs b/scripts/verify-production.mjs
-index 9102499..2f5050f 100644
+index 9102499..407d914 100644
 --- a/scripts/verify-production.mjs
 +++ b/scripts/verify-production.mjs
 @@ -626,8 +626,17 @@ async function verifyCore() {
@@ -381,7 +381,7 @@ index 9102499..2f5050f 100644
 +    /<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(
 +      body,
 +    ) &&
-+    /<h1>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
++    /<h1\b[^>]*>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
 +      body,
 +    );
    const missingContractExact = (probe) =>
