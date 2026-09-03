@@ -1,0 +1,114 @@
+name: Retry static reputation architecture
+
+on:
+  push:
+    branches:
+      - feat/static-reputation-authority-20260903
+    paths:
+      - .github/workflows/retry-static-reputation-architecture.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-static-reputation-architecture
+  cancel-in-progress: false
+
+jobs:
+  migrate-validate-commit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/static-reputation-authority-20260903
+          fetch-depth: 0
+
+      - name: Extract the reviewed migration and remove one-shot scaffolding first
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source = Path(".github/workflows/apply-static-reputation-architecture.yml")
+          text = source.read_text(encoding="utf-8")
+          start_marker = "          python3 - <<'PY'\n"
+          end_marker = "\n          PY\n"
+          start = text.index(start_marker) + len(start_marker)
+          end = text.index(end_marker, start)
+          lines = text[start:end].splitlines()
+          # YAML removes the ten-space scalar indentation before execution.
+          code = "\n".join(
+              line[10:] if line.startswith("          ") else line for line in lines
+          ) + "\n"
+          code = code.replace(
+              'Path(".github/workflows/apply-static-reputation-architecture.yml").unlink()',
+              'pass',
+          )
+          Path("/tmp/static-reputation-migration.py").write_text(
+              code,
+              encoding="utf-8",
+          )
+          PY
+          rm .github/workflows/apply-static-reputation-architecture.yml
+          rm .github/workflows/retry-static-reputation-architecture.yml
+          python3 /tmp/static-reputation-migration.py
+          git diff --check
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+
+      - name: Provision media validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          ffprobe -version
+
+      - run: npm ci
+
+      - name: Capture a current validated clinic reputation fallback with one API call
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        run: node scripts/fetch-google-places-reputation.mjs --write-fallback --github-env
+
+      - name: Lock intended mutation surface
+        run: git diff --name-only | LC_ALL=C sort > /tmp/intended-source-files.txt
+
+      - name: Run complete release pipeline
+        run: npm run release
+
+      - name: Validate rendered HTML
+        run: npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+
+      - name: Re-run pinned Schema.org vocabulary gate
+        run: npm run validate:schemaorg-vocabulary
+
+      - name: Verify source stability and static-only delivery
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only | LC_ALL=C sort > /tmp/final-source-files.txt
+          diff -u /tmp/intended-source-files.txt /tmp/final-source-files.txt
+          test ! -e functions/api/google-maps-reputation.js
+          test ! -e dist/_routes.json
+          ! git grep -n --fixed-strings '/api/google-maps-reputation' -- ':!scripts/fetch-google-places-reputation.mjs'
+          ! git grep -n --fixed-strings 'wrangler pages secret'
+          git diff --check
+
+      - name: Commit and publish the fully validated candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: materialize clinic reputation in the static dist"
+          test -z "$(git status --porcelain)"
+          git push origin HEAD:feat/static-reputation-authority-20260903
