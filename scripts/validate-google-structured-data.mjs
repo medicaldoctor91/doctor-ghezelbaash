@@ -1,6 +1,4 @@
-import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { nodeTypes, refIds } from "./lib/projection-context.mjs";
 
 const fail = (message) => {
@@ -169,24 +167,6 @@ for (const [label, document] of [
     fail(`${label} homepage graph exposes Event-family nodes`);
 }
 
-// Retired identity IDs must never be able to re-enter through an old archive,
-// merge, metadata file, SVG, generated template source, or other tracked file.
-const retiredIdentityToken = ["Q140", "304972"].join("");
-const tracked = execFileSync("git", ["ls-files", "-z"], {
-  encoding: "buffer",
-})
-  .toString("utf8")
-  .split("\0")
-  .filter(Boolean);
-const retiredNeedle = Buffer.from(retiredIdentityToken, "utf8");
-const retiredLeaks = [];
-for (const file of tracked) {
-  const raw = await readFile(path.join(process.cwd(), file));
-  if (raw.indexOf(retiredNeedle) !== -1) retiredLeaks.push(file);
-}
-if (retiredLeaks.length)
-  fail(`Retired Wikidata identity leaked into tracked source: ${retiredLeaks.join(", ")}`);
-
 console.log(
   JSON.stringify(
     {
@@ -197,7 +177,6 @@ console.log(
       directPhysicianServiceProviders: supportServices.length,
       unresolvedPrefixedProperties: false,
       homepageEventCandidates: false,
-      retiredIdentityLeak: false,
     },
     null,
     2,

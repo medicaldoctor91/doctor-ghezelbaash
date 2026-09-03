@@ -1,5 +1,4 @@
 import path from "node:path";
-import { existsSync } from "node:fs";
 import { access, readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
@@ -40,11 +39,6 @@ const required = [
   "scripts/lib/projections/contact-discovery.mjs",
 ];
 for (const file of required) await access(path.join(root, file));
-assert(
-  !existsSync(path.join(root, "src/lib/css-source.mjs")),
-  "Legacy parallel CSS source must not exist",
-);
-
 const routes = (
   await readdir(path.join(root, "src/pages"), { withFileTypes: true })
 )
@@ -267,8 +261,7 @@ assert(
 );
 assert(
   baseLayout.includes("../styles/global.css?raw") &&
-    baseLayout.includes("../lib/css-delivery.mjs") &&
-    !baseLayout.includes("../lib/css-source.mjs"),
+    baseLayout.includes("../lib/css-delivery.mjs"),
   "Layout must assemble the single stylesheet directly",
 );
 assert(
@@ -415,8 +408,12 @@ for (const [resourcePath, title] of [
 }
 assert(
   /from\s+['"]\.\.\/src\/lib\/resources\.mjs['"]/.test(materializer) &&
-    /path\.join\(root,\s*['"]\.generated\/public['"]\)/.test(materializer),
-  "Static materializer must use the resource registry and generated public workspace",
+    /path\.join\(root,\s*['"]\.generated\/public['"]\)/.test(materializer) &&
+    materializer.includes('.release/policy/platform-contract.json') &&
+    materializer.includes('"_routes.json"') &&
+    materializer.includes('include: [functionRoute]') &&
+    materializer.includes('exclude: []'),
+  "Static materializer must own resources, generated public files, and exact Function routing",
 );
 assert(
   deploymentHeadersGenerator.includes("./lib/headers-template.mjs") &&

@@ -82,6 +82,7 @@ const declaredDistFiles = [
   "favicon.png",
   "_headers",
   "_redirects",
+  "_routes.json",
 ];
 const declaredDistSet = new Set(declaredDistFiles);
 if (declaredDistSet.size !== declaredDistFiles.length)
@@ -120,14 +121,49 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
   knowledgeXml = await readFile(path.join(dist, "knowledge.xml"), "utf8"),
   doctorVcard = await readFile(path.join(dist, "doctor.vcf"), "utf8"),
   llmsFull = await readFile(path.join(dist, "llms-full.txt"), "utf8"),
-  provenance = await readJson(path.join(dist, "provenance.jsonld"));
+  provenance = await readJson(path.join(dist, "provenance.jsonld")),
+  routes = await readJson(path.join(dist, "_routes.json")),
+  platformContract = await readJson(
+    path.join(root, ".release/policy/platform-contract.json"),
+  );
+if (
+  routes.version !== 1 ||
+  JSON.stringify(routes.include) !==
+    JSON.stringify([platformContract.cloudflare.function.route]) ||
+  JSON.stringify(routes.exclude) !== JSON.stringify([])
+)
+  fail("Cloudflare Pages Function routing drift");
 const graphUrlTargets = assertSameDocumentGraphUrlTargets(graph, {
   canonicalUrl: release.canonicalUrl,
   htmlIds: inspectHtml(html).ids,
 });
 const { services, answers } = deriveCanonicalSemanticSets(graph, release);
+const notFoundDocument = inspectHtml(notFound);
 if (/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>/i.test(notFound))
   fail("404 page must not declare a canonical URL");
+if (
+  !/<html\b(?=[^>]*\blang=["']fa-IR["'])(?=[^>]*\bdir=["']rtl["'])/i.test(
+    notFound,
+  ) ||
+  !/<title>\s*صفحه پیدا نشد \| دکتر سعید قزلباش\s*<\/title>/i.test(
+    notFound,
+  ) ||
+  !/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["']noindex, follow["'])[^>]*>/i.test(
+    notFound,
+  ) ||
+  !/<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(
+    notFound,
+  ) ||
+  !/<h1\b[^>]*>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
+    notFound,
+  ) ||
+  !/<a\b[^>]*\bhref=["']\/["'][^>]*>\s*بازگشت به صفحه اصلی\s*<\/a>/i.test(
+    notFound,
+  ) ||
+  notFoundDocument.mains.length !== 1 ||
+  notFoundDocument.guideArticles.length !== 1
+)
+  fail("Custom 404 document contract drift");
 const rdfTripleCount = rdfText.split(/\r?\n/).filter(Boolean).length;
 if (rdfTripleCount !== rdfLock.triples)
   fail(`DIST RDF measurement drift: ${rdfTripleCount}/${rdfLock.triples}`);

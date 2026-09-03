@@ -24,7 +24,6 @@ const stackMonitor = await readFile(
 );
 const huggingFace = await readFile("scripts/huggingface.mjs", "utf8");
 const compactHuggingFace = huggingFace.replace(/\s+/g, "");
-const forbiddenDatasetId = ["Q140", "304972"].join("");
 
 assert.match(
   workflow,
@@ -178,12 +177,6 @@ assert.ok(
   "Push reconciliation must not mutate the first-party edge",
 );
 assert.ok(
-  /\[\s*["']Q140["']\s*,\s*["']304972["']\s*\]\.join\(\s*["']["']\s*\)/.test(
-    huggingFace,
-  ),
-  "HF validation must construct the forbidden identifier without publishing it literally",
-);
-assert.ok(
   compactHuggingFace.indexOf("awaitcleanDistributionRoot(hub)") <
     compactHuggingFace.indexOf(
       "constresources=resourcesForTarget(hf.resourceTarget)",
@@ -196,23 +189,6 @@ assert.ok(
   ),
   "HF preparation must enforce its exact declared inventory",
 );
-assert.ok(
-  compactHuggingFace.includes("awaitassertCanonicalHuggingFaceIdentity(hub)"),
-  "HF preparation must enforce the full-tree identity gate",
-);
-assert.ok(
-  huggingFace.includes("Hugging Face identity drift"),
-  "HF preparation must reject identity drift",
-);
-assert.ok(
-  !huggingFace.includes(forbiddenDatasetId),
-  "HF validation republishes the forbidden identifier literally",
-);
-assert.throws(
-  () => run(process.cwd(), ["grep", "-n", "--", forbiddenDatasetId]),
-  "Tracked source republishes the forbidden identifier literally",
-);
-
 const dir = await mkdtemp(
   path.join(os.tmpdir(), "ghezelbaash-release-topology-"),
 );

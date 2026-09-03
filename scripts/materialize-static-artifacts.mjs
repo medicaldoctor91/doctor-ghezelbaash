@@ -16,6 +16,18 @@ import {
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
+const platformContract = JSON.parse(
+  await readFile(
+    path.join(root, ".release/policy/platform-contract.json"),
+    "utf8",
+  ),
+);
+const functionRoute = platformContract?.cloudflare?.function?.route;
+if (
+  typeof functionRoute !== "string" ||
+  !/^\/api\/[a-z0-9/-]+$/i.test(functionRoute)
+)
+  throw new Error(`Invalid Cloudflare Function route: ${functionRoute}`);
 const pageSurface = (
   await readdir(path.join(root, "src/pages"), { withFileTypes: true })
 )
@@ -70,6 +82,18 @@ for (const artifact of STATIC_ARTIFACTS)
 const redirectRegistry = await loadRedirectRegistry(root);
 const canonicalRedirects = canonicalHostRedirectRows(redirectRegistry);
 await writeExact("_redirects", renderCanonicalHostRedirects(redirectRegistry));
+await writeExact(
+  "_routes.json",
+  `${JSON.stringify(
+    {
+      version: 1,
+      include: [functionRoute],
+      exclude: [],
+    },
+    null,
+    2,
+  )}\n`,
+);
 
 const generatedPublic = path.join(root, ".generated/public");
 const generatedPublicFiles = STATIC_ARTIFACTS.map(({ source }) => source)
@@ -164,7 +188,7 @@ console.log(
       stableMediaAliases: stableMedia.aliases.length,
       canonicalHostRedirects: canonicalRedirects.length,
       destinations: destinations.size,
-      routeWrappers: 0,
+      functionRoutes: 1,
     },
     null,
     2,

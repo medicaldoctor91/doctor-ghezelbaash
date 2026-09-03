@@ -168,6 +168,58 @@ const rangeMatchesTypes = (valueTypes, allowed) => {
     [...typeClosure(type)].some((candidate) => allowed.has(candidate)),
   );
 };
+const rangeAcceptsTextLexicalValue = (allowed) =>
+  [...allowed].some(
+    (type) => types.has(type) && typeClosure(type).has("Text"),
+  );
+const XSD_ORIGIN = "http://www.w3.org/2001/XMLSchema#";
+const XSD_TO_SCHEMA_TYPES = new Map([
+  ["string", ["Text"]],
+  ["normalizedString", ["Text"]],
+  ["token", ["Text"]],
+  ["language", ["Text"]],
+  ["boolean", ["Boolean"]],
+  ["decimal", ["Number"]],
+  ["float", ["Float"]],
+  ["double", ["Float"]],
+  ["integer", ["Integer"]],
+  ["nonPositiveInteger", ["Integer"]],
+  ["negativeInteger", ["Integer"]],
+  ["long", ["Integer"]],
+  ["int", ["Integer"]],
+  ["short", ["Integer"]],
+  ["byte", ["Integer"]],
+  ["nonNegativeInteger", ["Integer"]],
+  ["unsignedLong", ["Integer"]],
+  ["unsignedInt", ["Integer"]],
+  ["unsignedShort", ["Integer"]],
+  ["unsignedByte", ["Integer"]],
+  ["positiveInteger", ["Integer"]],
+  ["date", ["Date"]],
+  ["dateTime", ["DateTime"]],
+  ["dateTimeStamp", ["DateTime"]],
+  ["time", ["Time"]],
+  ["duration", ["Duration"]],
+  ["dayTimeDuration", ["Duration"]],
+  ["yearMonthDuration", ["Duration"]],
+  ["anyURI", ["URL"]],
+  ["gYearMonth", ["Text"]],
+  ["gYear", ["Text"]],
+  ["gMonthDay", ["Text"]],
+  ["gMonth", ["Text"]],
+  ["gDay", ["Text"]],
+]);
+const literalTypesFor = (value) => {
+  const schemaType = schemaLocal(value);
+  if (schemaType) return [schemaType];
+  const xsdType = value.startsWith(XSD_ORIGIN)
+    ? value.slice(XSD_ORIGIN.length)
+    : value.startsWith("xsd:")
+      ? value.slice(4)
+      : null;
+  if (xsdType) return XSD_TO_SCHEMA_TYPES.get(xsdType) || [];
+  return [value];
+};
 
 const jsonDocuments = extractJsonLd(html);
 const graphNodes = jsonDocuments.flatMap((document) => document?.["@graph"] || []);
@@ -186,7 +238,35 @@ const validateRange = (property, value, path, context) => {
   if (!allowed.size) return;
   for (const item of asArray(value)) {
     if (item && typeof item === "object") {
-      if (Object.hasOwn(item, "@value")) continue;
+      if (Object.hasOwn(item, "@value")) {
+        const literalTypeIri =
+          typeof item["@type"] === "string" ? item["@type"] : null;
+        const literalTypes = literalTypeIri ? literalTypesFor(literalTypeIri) : [];
+        if (literalTypeIri) {
+          if (!literalTypes.length)
+            jsonErrors.push(`${path}: unsupported literal datatype ${literalTypeIri}`);
+          else {
+            const unknownTypes = literalTypes.filter((type) => !types.has(type));
+            if (unknownTypes.length)
+              jsonErrors.push(
+                `${path}: unknown/superseded literal type ${unknownTypes.join("+")}`,
+              );
+            else if (!rangeMatchesTypes(literalTypes, allowed))
+              jsonErrors.push(
+                `${path}: ${property} literal datatype ${literalTypeIri} maps to ${literalTypes.join("+")} outside ${[...allowed].join("|")}`,
+              );
+          }
+        } else if (typeof item["@language"] === "string") {
+          if (!rangeAcceptsTextLexicalValue(allowed))
+            jsonErrors.push(
+              `${path}: language-tagged literal outside ${[...allowed].join("|")}`,
+            );
+        } else {
+          validateRange(property, item["@value"], `${path}.@value`, context);
+        }
+        checkedRanges++;
+        continue;
+      }
       const explicitTypes = typesFor(item);
       if (explicitTypes.length) {
         for (const type of explicitTypes)
@@ -234,9 +314,7 @@ const validateRange = (property, value, path, context) => {
         if (allowed.has("URL")) checkedRanges++;
         continue;
       }
-      const literalRanges = new Set([
-        "Text",
-        "URL",
+      const nonTextLexicalRanges = new Set([
         "Date",
         "DateTime",
         "Time",
@@ -245,8 +323,13 @@ const validateRange = (property, value, path, context) => {
         "Integer",
         "Float",
       ]);
-      if (![...allowed].some((type) => literalRanges.has(type)))
-        jsonErrors.push(`${path}: ${property} string literal outside ${[...allowed].join("|")}`);
+      if (
+        !rangeAcceptsTextLexicalValue(allowed) &&
+        ![...allowed].some((type) => nonTextLexicalRanges.has(type))
+      )
+        jsonErrors.push(
+          `${path}: ${property} string literal outside ${[...allowed].join("|")}`,
+        );
       checkedRanges++;
     }
   }
