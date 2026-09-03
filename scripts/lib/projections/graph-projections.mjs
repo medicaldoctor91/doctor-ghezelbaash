@@ -59,6 +59,13 @@ const homepageArticleRichResultTypes = new Set([
   "NewsArticle",
   "BlogPosting",
 ]);
+const homepagePersonProviderOnlyProperties = new Set([
+  "areaServed",
+  "availableService",
+  "medicalSpecialty",
+  "practicesAt",
+  "priceRange",
+]);
 const isHomepageEventType = (type) =>
   typeof type === "string" &&
   (type === "Event" ||
@@ -81,6 +88,66 @@ const isHomepageExternalRichResultNode = (node, canonicalOrigin) => {
     types.some((type) => homepageArticleRichResultTypes.has(type)) ||
     types.includes("Organization")
   );
+};
+const stripNonSchemaHomepageProperties = (value) => {
+  if (Array.isArray(value)) return value.map(stripNonSchemaHomepageProperties);
+  if (!value || typeof value !== "object") return value;
+  const out = {};
+  for (const [key, nested] of Object.entries(value)) {
+    if (!key.startsWith("@") && key.includes(":")) continue;
+    out[key] = stripNonSchemaHomepageProperties(nested);
+  }
+  return out;
+};
+const normalizeHomepagePhysician = (node, physicianId) => {
+  if (node?.["@id"] !== physicianId) return node;
+  const out = structuredClone(node);
+  // Google ProfilePage expects an individual mainEntity to be a Person. The
+  // canonical graph can retain the richer IndividualPhysician typing, but that
+  // Schema.org type inherits Organization/LocalBusiness/Place and therefore
+  // would conflate the physician person with a business in homepage markup.
+  out["@type"] = "Person";
+  for (const property of homepagePersonProviderOnlyProperties)
+    delete out[property];
+  return out;
+};
+const collectPrefixedPropertyKeys = (value, path = "$") => {
+  if (Array.isArray(value))
+    return value.flatMap((item, index) =>
+      collectPrefixedPropertyKeys(item, `${path}[${index}]`),
+    );
+  if (!value || typeof value !== "object") return [];
+  const offenders = [];
+  for (const [key, nested] of Object.entries(value)) {
+    const nextPath = `${path}.${key}`;
+    if (!key.startsWith("@") && key.includes(":")) offenders.push(nextPath);
+    offenders.push(...collectPrefixedPropertyKeys(nested, nextPath));
+  }
+  return offenders;
+};
+const assertPureSchemaHomepageNodes = (nodes, label) => {
+  const offenders = collectPrefixedPropertyKeys(nodes);
+  if (offenders.length)
+    throw new Error(
+      `${label} homepage projection contains non-Schema prefixed properties without an inline context mapping: ${offenders.join(", ")}`,
+    );
+};
+const assertHomepagePhysicianPerson = (nodes, physicianId) => {
+  const physician = nodes.find((node) => node?.["@id"] === physicianId);
+  if (!physician)
+    throw new Error(`Head homepage projection is missing physician ${physicianId}`);
+  const types = nodeTypes(physician);
+  if (types.length !== 1 || types[0] !== "Person")
+    throw new Error(
+      `Homepage physician must be exactly Person, received ${types.join(", ") || "none"}`,
+    );
+  const providerOnly = [...homepagePersonProviderOnlyProperties].filter(
+    (property) => Object.hasOwn(physician, property),
+  );
+  if (providerOnly.length)
+    throw new Error(
+      `Homepage Person carries provider-only properties: ${providerOnly.join(", ")}`,
+    );
 };
 const assertNoHomepageEventNodes = (nodes, label) => {
   const offenders = nodes.flatMap((node) =>
@@ -213,6 +280,11 @@ export async function compileGraphProjections(context) {
     }
     return value;
   };
+  const finalizeHomepageNode = (node) =>
+    normalizeHomepagePhysician(
+      stripNonSchemaHomepageProperties(pruneInlineRefs(node)),
+      release.primaryEntity.id,
+    );
 
   const headNodes = [];
   for (const id of headIds) {
@@ -222,13 +294,15 @@ export async function compileGraphProjections(context) {
   }
   const homepageHeadNodes = headNodes
     .filter((node) => !homepageExcludedIds.has(node["@id"]))
-    .map(pruneInlineRefs);
+    .map(finalizeHomepageNode);
   assertNoHomepageEventNodes(homepageHeadNodes, "Head");
   assertNoHomepageExternalRichResultNodes(
     homepageHeadNodes,
     "Head",
     canonicalOrigin,
   );
+  assertPureSchemaHomepageNodes(homepageHeadNodes, "Head");
+  assertHomepagePhysicianPerson(homepageHeadNodes, release.primaryEntity.id);
   const headDoc = {
     "@context": projectionContext,
     "@graph": homepageHeadNodes,
@@ -246,8 +320,8 @@ export async function compileGraphProjections(context) {
     if (!node) throw new Error(`Support selection missing ${id}`);
     supportNodes.push(
       supportProfile.mode === "full"
-        ? pruneInlineRefs(structuredClone(node))
-        : pruneInlineRefs(projectNode(node, profileFor(node) || {})),
+        ? finalizeHomepageNode(structuredClone(node))
+        : finalizeHomepageNode(projectNode(node, profileFor(node) || {})),
     );
   }
   assertNoHomepageEventNodes(supportNodes, "Support");
@@ -256,6 +330,7 @@ export async function compileGraphProjections(context) {
     "Support",
     canonicalOrigin,
   );
+  assertPureSchemaHomepageNodes(supportNodes, "Support");
   const supportDoc = { "@context": projectionContext, "@graph": supportNodes };
   const supportRaw = `${JSON.stringify(supportDoc)}\n`;
   if (Buffer.byteLength(supportRaw) > supportProfile.maxBytes)
