@@ -29,6 +29,22 @@ jobs:
           set -euo pipefail
           git apply --check .github/forensic-source-native.patch
           git apply .github/forensic-source-native.patch
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/validate-dist.mjs")
+          lines = path.read_text(encoding="utf-8").splitlines()
+          replacement = r'''  !/<a\b[^>]*\bhref=["']\/["'][^>]*>\s*بازگشت به صفحه اصلی\s*<\/a>/i.test('''
+          matches = [
+              index
+              for index, line in enumerate(lines)
+              if "بازگشت به صفحه اصلی" in line and "href=" in line
+          ]
+          if len(matches) != 1:
+              raise SystemExit(f"Unexpected 404-link validator match count: {len(matches)}")
+          lines[matches[0]] = replacement
+          path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
           rm .github/forensic-source-native.patch
           rm .github/workflows/apply-source-native-patch.yml
           git diff --check
