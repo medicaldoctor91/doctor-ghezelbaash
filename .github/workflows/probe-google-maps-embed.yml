@@ -1,0 +1,49 @@
+name: Probe no-key Google Maps embed
+
+on:
+  push:
+    branches:
+      - feat/static-reputation-authority-20260903
+    paths:
+      - .github/workflows/probe-google-maps-embed.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Render a no-key place embed
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/embed.html <<'HTML'
+          <!doctype html>
+          <html lang="fa" dir="rtl"><meta charset="utf-8"><title>Google Maps embed probe</title>
+          <style>html,body{margin:0;width:100%;height:100%}iframe{border:0;width:100%;height:100vh}</style>
+          <iframe title="کلینیک زیبایی دکتر سعید قزلباش در Google Maps" src="https://maps.google.com/maps?q=place_id:ChIJBT0YDOTt-j8RD-7mAPy6Zas&z=17&hl=fa&output=embed"></iframe>
+          </html>
+          HTML
+          python3 -m http.server 8765 --directory /tmp >/tmp/http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          sleep 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          "$chrome" --headless --no-sandbox --disable-gpu --hide-scrollbars \
+            --window-size=1200,900 --virtual-time-budget=12000 \
+            --screenshot=/tmp/google-maps-embed.png \
+            http://127.0.0.1:8765/embed.html
+          test -s /tmp/google-maps-embed.png
+          python3 - <<'PY'
+          from pathlib import Path
+          print({"screenshotBytes": Path('/tmp/google-maps-embed.png').stat().st_size})
+          PY
+      - name: Upload visual probe
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: google-maps-embed-probe
+          path: /tmp/google-maps-embed.png
+          if-no-files-found: error
+          retention-days: 1
