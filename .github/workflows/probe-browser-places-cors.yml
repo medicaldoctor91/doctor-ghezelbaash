@@ -1,0 +1,68 @@
+name: Probe browser Places CORS safely
+
+on:
+  push:
+    branches:
+      - feat/static-reputation-authority-20260903
+    paths:
+      - .github/workflows/probe-browser-places-cors.yml
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Execute one Place Details request from a real browser context
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          PLACE_ID: ChIJBT0YDOTt-j8RD-7mAPy6Zas
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GOOGLE_PLACES_API_KEY:-}"
+          echo '::add-mask::'"$GOOGLE_PLACES_API_KEY"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          key = json.dumps(os.environ['GOOGLE_PLACES_API_KEY'])
+          place_id = json.dumps(os.environ['PLACE_ID'])
+          html = f'''<!doctype html><html><meta charset="utf-8"><title>probe</title><body data-state="pending"><output id="result"></output><script>
+          (async()=>{{
+            const key={key}, placeId={place_id};
+            const url=new URL(`https://places.googleapis.com/v1/places/${{encodeURIComponent(placeId)}}`);
+            url.searchParams.set('languageCode','fa');
+            url.searchParams.set('regionCode','IR');
+            url.searchParams.set('fields','id,rating,userRatingCount,businessStatus,movedPlace,movedPlaceId');
+            try {{
+              const response=await fetch(url,{{headers:{{Accept:'application/json','X-Goog-Api-Key':key}},cache:'no-store',referrerPolicy:'strict-origin-when-cross-origin'}});
+              const body=await response.json();
+              const valid=response.status===200 && body.id===placeId && body.businessStatus==='OPERATIONAL' && Number.isFinite(body.rating) && Number.isSafeInteger(body.userRatingCount);
+              document.body.dataset.state=valid?'success':'failure';
+              document.getElementById('result').textContent=JSON.stringify({{status:response.status,valid,rating:body.rating,userRatingCount:body.userRatingCount,error:body?.error?.status||null}});
+            }} catch (error) {{
+              document.body.dataset.state='exception';
+              document.getElementById('result').textContent=JSON.stringify({{name:error?.name||'Error',message:String(error?.message||error).slice(0,160)}});
+            }}
+          }})();
+          </script></html>'''
+          Path('/tmp/probe.html').write_text(html, encoding='utf-8')
+          PY
+          python3 -m http.server 8765 --directory /tmp >/tmp/http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          sleep 1
+          chrome="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          "$chrome" --headless --no-sandbox --disable-gpu \
+            --virtual-time-budget=10000 --dump-dom \
+            http://127.0.0.1:8765/probe.html > /tmp/dom.html
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          const dom=await readFile('/tmp/dom.html','utf8');
+          const state=dom.match(/<body[^>]*data-state="([^"]+)"/)?.[1];
+          const text=dom.match(/<output id="result">([\s\S]*?)<\/output>/)?.[1] || '';
+          console.log(JSON.stringify({browserCorsState:state,result:text.replace(/&quot;/g,'"').replace(/&amp;/g,'&')},null,2));
+          if(state!=='success') process.exit(1);
+          NODE
