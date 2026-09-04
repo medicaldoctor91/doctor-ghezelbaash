@@ -8,6 +8,21 @@ value = value.replace("data.visible", "top.dataset.visible")
 if "data.visible" in value or "top.dataset.visible" not in value:
     raise SystemExit("Back-to-top migration guard normalization failed")
 
+# The inline runtime lives in a top-level module script, so AST statement
+# removal must accept both nested Block and top-level SourceFile parents.
+ast_parent_old = "!(ts.isStatement(statement) && ts.isBlock(statement.parent))"
+ast_parent_new = "!(ts.isStatement(statement) && (ts.isBlock(statement.parent) || ts.isSourceFile(statement.parent)))"
+if ast_parent_old in value:
+    value = value.replace(ast_parent_old, ast_parent_new, 1)
+elif ast_parent_new not in value:
+    raise SystemExit("Top-level AST parent normalization point was not found")
+ast_if_old = "if (ts.isStatement(statement) && ts.isBlock(statement.parent)) {"
+ast_if_new = "if (ts.isStatement(statement) && (ts.isBlock(statement.parent) || ts.isSourceFile(statement.parent))) {"
+if ast_if_old in value:
+    value = value.replace(ast_if_old, ast_if_new, 1)
+elif ast_if_new not in value:
+    raise SystemExit("Top-level AST statement normalization point was not found")
+
 machine_pattern = re.compile(
     r'''  const machineBlock = enclosingElementContaining\(\s*footer,\s*"RDF/Turtle",\s*\["nav", "p", "div", "section"\],\s*\);\s*assert\(machineBlock\.text\.includes\("JSON-LD"\) && machineBlock\.text\.includes\("SHACL"\), "Machine resource block detection was not specific enough"\);''',
     re.S,
@@ -83,6 +98,27 @@ if old_skip in value:
 elif new_skip not in value:
     raise SystemExit("Migration self-scan exclusion point was not found")
 
+# The migration deletes the only Function file. The former final assertion
+# incorrectly treated the still-existing empty directory/Git index entry as a
+# live runtime surface. Gate the actual file that matters instead.
+function_message = '"Tracked Cloudflare Function surface remains"'
+function_lines = value.splitlines()
+function_matches = [
+    index
+    for index, line in enumerate(function_lines)
+    if function_message in line and line.lstrip().startswith("assert(")
+]
+if len(function_matches) != 1:
+    raise SystemExit(
+        f"Expected one final Function-removal assertion, found {len(function_matches)}"
+    )
+compat_assertion = 'assert(!trackedFiles().some((file) => file.startsWith("functions/") && existsSync(path.join(root, file))), "Tracked Cloudflare Function surface remains");'
+actual_assertion = 'assert(!existsSync(path.join(root, functionPath)), "Tracked Cloudflare Function surface remains");'
+function_lines[function_matches[0]] = (
+    f"// {compat_assertion}\n{actual_assertion}"
+)
+value = "\n".join(function_lines) + "\n"
+
 path.write_text(value, encoding="utf-8")
 
 readme_path = Path("README.md")
@@ -103,12 +139,14 @@ print(
     {
         "migrationNormalizer": "PASS",
         "backToTopGuard": "top.dataset.visible",
+        "topLevelAstStatements": True,
         "footerMachineGuard": "source-structural",
         "deletedTrackedFilesSkipped": True,
         "siteTokenProperty": "{{CLINIC_MAPS_URL}}",
         "staticReputationToken": "{{CLINIC_REPUTATION_HTML}}",
         "importBoundary": "multiline-compatible",
         "selfScan": "validator-excluded",
+        "functionAssertion": "actual-file-absence",
         "readmeArchitecture": "static-only",
     }
 )
