@@ -1,0 +1,207 @@
+name: Rebuild clean release-ready candidate
+
+on:
+  push:
+    branches:
+      - feat/static-reputation-authority-20260903
+    paths:
+      - .github/workflows/rebuild-clean-release-ready.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rebuild-clean-release-ready-candidate
+  cancel-in-progress: true
+
+jobs:
+  rebuild-validate-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Check out the migration carrier branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: feat/static-reputation-authority-20260903
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Rebase the worktree onto the exact validated technical base
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp scripts/migrations/apply-approved-release-ready.mjs /tmp/apply-approved-release-ready.mjs
+          git fetch --no-tags origin fix/schemaorg-v30-conformance-20260903
+          test "$(git rev-parse FETCH_HEAD)" = "dd18d9380a592ecd0e1bf2ef69fe68899d761a49"
+          git checkout --detach dd18d9380a592ecd0e1bf2ef69fe68899d761a49
+          mkdir -p scripts/migrations
+          cp /tmp/apply-approved-release-ready.mjs scripts/migrations/apply-approved-release-ready.mjs
+
+      - name: Install the pinned runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install the pinned Python runtime
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+
+      - name: Provision project and media validation dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          ffprobe -version
+          npm ci
+          npm run security:dependencies
+
+      - name: Normalize the migration guard without weakening it
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/migrations/apply-approved-release-ready.mjs")
+          value = path.read_text(encoding="utf-8")
+          old = '"data.visible = visible ? \\"true\\" : \\"false\\""'
+          new = '"top.dataset.visible = visible ? \\"true\\" : \\"false\\""'
+          if old in value:
+              value = value.replace(old, new, 1)
+          elif new not in value:
+              raise SystemExit("Expected migration guard marker was not found")
+          path.write_text(value, encoding="utf-8")
+          PY
+          node --check scripts/migrations/apply-approved-release-ready.mjs
+
+      - name: Apply all approved source-native changes
+        run: node scripts/migrations/apply-approved-release-ready.mjs
+
+      - name: Harden the generated static-only contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf functions
+          python3 - <<'PY'
+          from pathlib import Path
+
+          validator = Path("scripts/validate-static-reputation.mjs")
+          value = validator.read_text(encoding="utf-8")
+          old = 'for (const file of tracked.filter((file) => /\\.(?:mjs|js|astro|md|json|jsonld|yml|yaml|txt)$/.test(file))) {\n  const value = await readFile(file, "utf8");'
+          new = 'for (const file of tracked.filter((file) => /\\.(?:mjs|js|astro|md|json|jsonld|yml|yaml|txt)$/.test(file))) {\n  if (file === "scripts/validate-static-reputation.mjs") continue;\n  const value = await readFile(file, "utf8");'
+          if old in value:
+              value = value.replace(old, new, 1)
+          elif new not in value:
+              raise SystemExit("Static reputation self-scan guard insertion point was not found")
+          validator.write_text(value, encoding="utf-8")
+
+          workflow = Path(".github/workflows/reputation-refresh.yml")
+          source = workflow.read_text(encoding="utf-8")
+          source = source.replace("  queue: max\n", "")
+          if "queue:" in source:
+              raise SystemExit("Unsupported GitHub Actions concurrency queue key remains")
+          workflow.write_text(source, encoding="utf-8")
+          PY
+          node --check scripts/fetch-google-places-reputation.mjs
+          node --check scripts/validate-static-reputation.mjs
+          node --check scripts/validate-approved-visible-cleanup.mjs
+
+      - name: Capture exactly one fresh validated Google Places observation
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GOOGLE_PLACES_API_KEY:-}"
+          echo "::add-mask::$GOOGLE_PLACES_API_KEY"
+          node scripts/fetch-google-places-reputation.mjs --output src/data/reputation-observation.json
+
+      - name: Remove all migration-only machinery
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm scripts/migrations/apply-approved-release-ready.mjs
+          rmdir scripts/migrations 2>/dev/null || true
+          git diff --check
+          test ! -e functions
+          test ! -e public/_routes.json
+          test ! -e _routes.json
+          ! grep -RIn --exclude-dir=.git --exclude=package-lock.json "/api/google-maps-reputation\|data-google-maps-reputation\|functions/api/google-maps-reputation\|queue: max" .
+
+      - name: Create the exact clean candidate commit locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: finalize static reputation and visible authority surface"
+          test -z "$(git status --porcelain)"
+
+      - name: Run complete release validation on the clean candidate
+        shell: bash
+        run: |
+          set +e
+          npm run release 2>&1 | tee /tmp/release.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -ne 0 ]; then
+            tail -n 160 /tmp/release.log | while IFS= read -r line; do
+              line=${line//'%'/'%25'}
+              line=${line//$'\r'/'%0D'}
+              line=${line//$'\n'/'%0A'}
+              echo "::error title=release::$line"
+            done
+            exit "$rc"
+          fi
+
+      - name: Independently validate the rendered release candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+          npm run validate:schemaorg-vocabulary
+          node scripts/validate-static-reputation.mjs dist/index.html
+          node scripts/validate-approved-visible-cleanup.mjs dist/index.html
+          test ! -e dist/_routes.json
+          ! grep -RIn --exclude='*.map' "/api/google-maps-reputation\|data-google-maps-reputation" dist
+          test "$(grep -o '<video\\b' dist/index.html | wc -l | tr -d ' ')" = "4"
+          test "$(grep -o 'class=\"caption-disclosure' dist/index.html | wc -l | tr -d ' ')" = "2"
+          ! grep -q "Q140304972" dist/index.html dist/graph.jsonld dist/graph.ttl
+
+      - name: Confirm validation did not mutate canonical source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Package exact source and canonical distribution for audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git archive --format=zip --output=/tmp/doctor-ghezelbaash-source-${GITHUB_SHA}.zip HEAD
+
+      - name: Upload exact source audit package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: final-candidate-source-${{ github.run_id }}
+          path: /tmp/doctor-ghezelbaash-source-${{ github.sha }}.zip
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload canonical distribution
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: final-candidate-dist-${{ github.run_id }}
+          path: release/doctor-ghezelbaash-dist-v*.zip
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Replace the polluted target branch only after every gate passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push --force origin HEAD:refs/heads/feat/final-megalanding-release-ready-20260904
+          echo "FINAL_CANDIDATE_SHA=$(git rev-parse HEAD)"
