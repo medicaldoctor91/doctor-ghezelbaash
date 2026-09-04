@@ -92,9 +92,17 @@ if (!/^audit=true$/m.test(npmrc) || /^audit=false$/m.test(npmrc))
   throw new Error("npm advisory reporting must remain enabled");
 if (
   packageJson.scripts?.["security:dependencies"] !==
-  "npm audit --audit-level=high"
+  "node scripts/dependency-advisory-gate.mjs"
 )
   throw new Error("High-severity dependency advisory gate drift");
+if (
+  packageJson.scripts?.["test:security-gate"] !==
+  "node scripts/dependency-advisory-gate.mjs --self-test" ||
+  !packageJson.scripts?.["validate:source"]?.includes(
+    "npm run test:security-gate",
+  )
+)
+  throw new Error("Dependency advisory gate self-test drift");
 
 for (const name of tracked) {
   const normalized = name.replaceAll("\\", "/");
@@ -224,11 +232,12 @@ for (const workflow of workflows) {
   )
     throw new Error(`Credential-bearing remote URL is forbidden: ${workflow}`);
   const installCount = (content.match(/\bnpm ci\b/g) || []).length;
-  const securityCount = (
-    content.match(
-      /\bnpm (?:run security:dependencies|audit --audit=true --audit-level=high)\b/g,
-    ) || []
-  ).length;
+  const securityCount =
+    (content.match(/\bnpm run security:dependencies\b/g) || []).length;
+  if (/\bnpm audit\b/.test(content))
+    throw new Error(
+      `Canonical workflows must use the bounded fail-closed advisory gate: ${workflow}`,
+    );
   if (installCount !== securityCount)
     throw new Error(
       `Every npm ci must be followed by the explicit dependency advisory gate: ${workflow} (${installCount}/${securityCount})`,
