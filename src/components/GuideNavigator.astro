@@ -188,16 +188,37 @@ const entityAliases = [
   dialog?.addEventListener("click", (e) => {
     if (e.target === dialog) dialog.close();
   });
-  const syncTop = () => {
-      if (top) top.hidden = scrollY < 800;
+  let topFrame = 0,
+    topHideTimer;
+  const setTopVisible = (visible) => {
+      if (!top) return;
+      clearTimeout(topHideTimer);
+      if (visible) {
+        top.hidden = false;
+        top.removeAttribute("aria-hidden");
+        top.removeAttribute("tabindex");
+        requestAnimationFrame(() => {
+          top.dataset.visible = "true";
+        });
+        return;
+      }
+      top.dataset.visible = "false";
+      top.setAttribute("aria-hidden", "true");
+      top.tabIndex = -1;
+      topHideTimer = setTimeout(() => {
+        if (top.dataset.visible !== "true") top.hidden = true;
+      }, 180);
     },
-    hero = d.querySelector(".entity-hero");
-  if ("IntersectionObserver" in window && top && hero) {
-    const topObserver = new IntersectionObserver(([entry]) => {
-      top.hidden = entry.isIntersecting;
-    });
-    topObserver.observe(hero);
-  } else addEventListener("scroll", syncTop, { passive: true });
+    syncTop = () => {
+      if (topFrame) return;
+      topFrame = requestAnimationFrame(() => {
+        topFrame = 0;
+        setTopVisible(scrollY > Math.max(960, innerHeight * 1.2));
+      });
+    };
+  addEventListener("scroll", syncTop, { passive: true });
+  addEventListener("resize", syncTop, { passive: true });
+  syncTop();
   const tocLinks = [
       ...d.querySelectorAll(
         '#aesthetic-medicine-table-of-contents a[href^=\"#\"]',
@@ -225,75 +246,6 @@ const entityAliases = [
     };
   addEventListener("hashchange", syncTarget, { passive: true });
   syncTarget();
-  const reputation = d.querySelector("[data-google-maps-reputation]"),
-    loadReputation = async () => {
-      try {
-        const response = await fetch("/api/google-maps-reputation", {
-          cache: "no-store",
-          credentials: "omit",
-          headers: { Accept: "application/json" },
-          referrerPolicy: "same-origin",
-        });
-        if (response.status === 204 || !response.ok) return;
-        const data = await response.json(),
-          rating = Number(data.rating),
-          count = Number(data.userRatingCount);
-        if (
-          !Number.isFinite(rating) ||
-          rating < 1 ||
-          rating > 5 ||
-          !Number.isSafeInteger(count) ||
-          count < 1
-        )
-          return;
-        const googleMaps = d.createElement("span"),
-          faRating = new Intl.NumberFormat("fa-IR", {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-          }).format(rating),
-          faCount = new Intl.NumberFormat("fa-IR").format(count);
-        googleMaps.className = "google-maps-attribution";
-        googleMaps.setAttribute("translate", "no");
-        googleMaps.textContent = "Google Maps";
-        reputation.replaceChildren(
-          `${faRating} از ۵ · بر پایهٔ ${faCount} نظر در `,
-          googleMaps,
-        );
-        const attributions = (Array.isArray(data.attributions)
-          ? data.attributions
-          : []
-        ).filter((item) => typeof item?.provider === "string");
-        if (attributions.length) {
-          const group = d.createElement("span");
-          group.className = "google-maps-provider-attributions";
-          group.dataset.googleMapsProviderAttributions = "";
-          for (const [index, item] of attributions.entries()) {
-            group.append(index ? "، " : " · ");
-            let providerUrl;
-            try {
-              providerUrl = new URL(item.providerUri);
-            } catch {}
-            if (providerUrl?.protocol === "https:") {
-              const link = d.createElement("a");
-              link.href = providerUrl.href;
-              link.rel = "external noopener";
-              link.referrerPolicy = "no-referrer";
-              link.textContent = item.provider;
-              group.append(link);
-            } else group.append(item.provider);
-          }
-          reputation.after(group);
-        }
-      } catch {}
-    },
-    queueReputation = () => {
-      const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1));
-      idle(loadReputation, { timeout: 4000 });
-    };
-  if (reputation)
-    document.readyState === "complete"
-      ? queueReputation()
-      : addEventListener("load", queueReputation, { once: true });
   const revealPoster = (video) => {
       if (!video.poster && video.dataset.poster)
         video.poster = video.dataset.poster;

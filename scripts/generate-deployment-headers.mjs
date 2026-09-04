@@ -88,7 +88,7 @@ const mainCsp = joinCsp([
   "media-src 'self'",
   "font-src 'self'",
   "manifest-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'none'",
   "object-src 'none'",
   "frame-src 'none'",
   "frame-ancestors 'none'",

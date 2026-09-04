@@ -71,16 +71,6 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
           npm run build
-      - name: Compile the isolated Pages Function
-        if: steps.tip.outputs.current == 'true'
-        shell: bash
-        run: |
-          set -euo pipefail
-          functions_out="$(mktemp -d)"
-          npm exec --yes --package="wrangler@$CF_WRANGLER_VERSION" -- \
-            wrangler pages functions build \
-            --compatibility-date="$CF_FUNCTION_COMPATIBILITY_DATE" \
-            --outdir="$functions_out"
       - name: Converge Cloudflare Pages to canonical Git deployment
         if: steps.tip.outputs.current == 'true'
         id: pages-config

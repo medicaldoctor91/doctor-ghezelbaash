@@ -12,66 +12,42 @@ const footerLinks = FOOTER_RESOURCES.map((resource, index) => ({
 }));
 ---
 
-<footer aria-label="هویت رسمی، تماس و داده‌های ماشینی" class="site-footer">
-  <p>
-    <strong>موجودیت اصلی این وب‌سایت دکتر سعید قزلباش است</strong>؛ کلینیک
-    زیبایی و مخزن دادهٔ ساختاریافته، دارایی‌های تحت مالکیت و انتشار پزشک هستند.
-    شناسهٔ Google Knowledge Graph پزشک: <code
-      >{release.primaryEntity.googleKnowledgeGraphId}</code
-    >.
-  </p>
-  <p class="entity-fingerprint">
-    <strong>اثر انگشت هویتی:</strong> Saeed Ghezelbash · Wikidata <code
-      >{release.primaryEntity.wikidata}</code
-    > · IRIMC <code>{release.primaryEntity.irimc}</code> · ORCID <code
-      >{release.primaryEntity.orcid}</code
-    > · Clinic KG <code>{release.clinic.googleLocalKgmid}</code> · Place ID <code
-      >{release.clinic.placeId}</code
-    >.
-  </p>
+<footer aria-label="تماس، حریم خصوصی و داده‌های رسمی" class="site-footer">
   <address>
-    {site.clinicName}، {site.locality}، {site.street}، کدپستی
-    {site.postalCode}، {site.hoursDisplay} — <a href={site.telHref}
+    <strong>{site.clinicName}</strong>، {site.locality} — <a href={site.telHref}
       >{site.phoneDisplay}</a
     > — <a href={site.mapsUrl} rel="external">Google Maps</a>
   </address>
-  <nav aria-label="نسخه‌های ماشینی رسمی">
-    {
-      footerLinks.map((link) => (
-        <Fragment>
-          <a href={`/${link.path}`}>{link.label}</a>
-          {link.separator}
-        </Fragment>
-      ))
-    }
-  </nav>
   <details class="editorial-governance" id="privacy-and-terms">
     <summary>بازبینی پزشکی، حریم خصوصی و شرایط استفاده</summary>
     <p>
-      محتوای پزشکی این صفحه توسط خود دکتر سعید قزلباش بازبینی می‌شود و منابع
-      علمی در بخش‌های مرتبط پیوند داده شده‌اند. ارزیابی اولیه آنلاین جایگزین
-      معاینه و تصمیم درمانی حضوری نیست. برای حفاظت از حریم اطلاعات، جزئیات حساس
-      پزشکی را در پیام عمومی شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های
-      اورژانسی پس از اقدام پزشکی، ارزیابی حضوری فوری اولویت دارد.
+      محتوای پزشکی این صفحه توسط دکتر سعید قزلباش بازبینی می‌شود و جایگزین
+      معاینه و تصمیم درمانی حضوری نیست. جزئیات حساس پزشکی را در پیام عمومی
+      شبکه‌های اجتماعی ارسال نکنید؛ در صورت نشانه‌های اورژانسی پس از اقدام
+      پزشکی، ارزیابی حضوری فوری اولویت دارد.
     </p>
     <p>
-      این بخش، خط‌مشی عمومی حریم خصوصی و شرایط استفادهٔ این وب‌سایت است. امتیاز
-      و تعداد نظر عمومی، در صورت نمایش، همان لحظه از Google Maps دریافت می‌شود
-      و در سورس یا انتشارهای این وب‌سایت ذخیره نمی‌شود. این داده در همان خط با
-      نام منبع و پیوند مستقیم نمایش داده می‌شود. شرایط استفاده و خط‌مشی حریم
-      خصوصی این وب‌سایت،
+      امتیاز و تعداد نظر کلینیک یک مشاهدهٔ زمان‌دار از Google Maps است که هر شش
+      ساعت بررسی می‌شود. متن نظرها و اطلاعات شخصی کاربران دریافت یا ذخیره
+      نمی‌شود و منبع داده با پیوند مستقیم مشخص است. استفاده از این داده تابع
       <a href="https://www.google.com/help/terms_maps/" rel="external noopener"
-        >شرایط استفاده Google Maps</a
+        >شرایط Google Maps</a
       > و <a href="https://policies.google.com/privacy" rel="external noopener"
         >خط‌مشی حریم خصوصی Google</a
-      > را در خود ادغام می‌کند و استفاده از داده‌های Google تابع آن‌هاست.
+      > است.
     </p>
   </details>
-  <p>
-    <small>
-      آخرین بازبینی پزشکی ثبت‌شده: <time datetime={site.medicalReviewedAt}
-        >{site.medicalReviewedPersian} / {site.medicalReviewedGregorian}</time
-      >.
-    </small>
-  </p>
+  <details class="footer-machine-resources">
+    <summary>داده‌های ساختاریافته و منابع ماشینی</summary>
+    <nav aria-label="نسخه‌های ماشینی رسمی">
+      {
+        footerLinks.map((link) => (
+          <Fragment>
+            <a href={`/${link.path}`}>{link.label}</a>
+            {link.separator}
+          </Fragment>
+        ))
+      }
+    </nav>
+  </details>
 </footer>

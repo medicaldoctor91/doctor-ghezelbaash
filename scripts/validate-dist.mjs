@@ -13,6 +13,11 @@ import {
   indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
+import { deriveSiteData } from "../src/lib/site-data.mjs";
+import {
+  assertRenderedClinicReputation,
+  validateReputationObservation,
+} from "../src/lib/reputation-observation.mjs";
 import {
   analyzeGraphClosure,
   assertSameDocumentGraphUrlTargets,
@@ -62,6 +67,10 @@ const release = await readJson(path.join(data, "release.json")),
     path.join(data, "semantic/support-profile.json"),
   ),
   stableMedia = await readJson(path.join(data, "stable-media-aliases.json")),
+  reputationObservation = validateReputationObservation(
+    await readJson(path.join(data, "reputation-observation.json")),
+    release,
+  ),
   rdfLock = await readJson(
     path.join(root, ".generated/semantic/rdf-lock.json"),
   );
@@ -82,7 +91,6 @@ const declaredDistFiles = [
   "favicon.png",
   "_headers",
   "_redirects",
-  "_routes.json",
 ];
 const declaredDistSet = new Set(declaredDistFiles);
 if (declaredDistSet.size !== declaredDistFiles.length)
@@ -121,21 +129,16 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
   knowledgeXml = await readFile(path.join(dist, "knowledge.xml"), "utf8"),
   doctorVcard = await readFile(path.join(dist, "doctor.vcf"), "utf8"),
   llmsFull = await readFile(path.join(dist, "llms-full.txt"), "utf8"),
-  provenance = await readJson(path.join(dist, "provenance.jsonld")),
-  routes = await readJson(path.join(dist, "_routes.json")),
-  platformContract = await readJson(
-    path.join(root, ".release/policy/platform-contract.json"),
-  );
-if (
-  routes.version !== 1 ||
-  JSON.stringify(routes.include) !==
-    JSON.stringify([platformContract.cloudflare.function.route]) ||
-  JSON.stringify(routes.exclude) !== JSON.stringify([])
-)
-  fail("Cloudflare Pages Function routing drift");
+  provenance = await readJson(path.join(dist, "provenance.jsonld"));
 const graphUrlTargets = assertSameDocumentGraphUrlTargets(graph, {
   canonicalUrl: release.canonicalUrl,
   htmlIds: inspectHtml(html).ids,
+});
+const siteData = deriveSiteData(release, graph);
+assertRenderedClinicReputation(html, {
+  observation: reputationObservation,
+  release,
+  mapsUrl: siteData.mapsUrl,
 });
 const { services, answers } = deriveCanonicalSemanticSets(graph, release);
 const notFoundDocument = inspectHtml(notFound);
@@ -334,10 +337,10 @@ if (
 )
   fail("Maximum Content-Signal policy missing");
 if (
-  !headers.includes("connect-src 'self'") ||
-  headers.includes("connect-src 'none'")
+  !headers.includes("connect-src 'none'") ||
+  headers.includes("connect-src 'self'")
 )
-  fail("Same-origin live reputation connection policy drift");
+  fail("Static-only connection policy drift");
 const scripts = [
     ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi),
   ].map((m) => ({ attrs: m[1], body: m[2] })),
