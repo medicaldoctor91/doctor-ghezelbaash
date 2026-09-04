@@ -81,6 +81,7 @@ function conciseReason({ stdout, stderr, timedOut }) {
 function runAuditAttempt() {
   const args = [
     "audit",
+    "--audit=true",
     "--audit-level=high",
     "--json",
     "--fetch-retries=0",
