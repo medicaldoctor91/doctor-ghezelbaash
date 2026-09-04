@@ -1,0 +1,61 @@
+name: Stage direct candidate objects
+
+on:
+  push:
+    branches:
+      - ops/direct-final-patch-v2-20260904
+    paths:
+      - .github/workflows/stage-direct-candidate-objects.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stage-direct-candidate-objects-20260904
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      BASE_SHA: dd18d9380a592ecd0e1bf2ef69fe68899d761a49
+      STAGING_BRANCH: staging/final-candidate-objects-20260904
+      PATCH_SHA256: 52a0db9a747d2904396b3cea4ec93dabe235db101d0c5b251e0720ed8ab762c6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ops/direct-final-patch-v2-20260904
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply exact candidate, stage non-workflow objects, and publish staging ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/transport/direct-final.patch.gz.b64.part{00..09} > /tmp/direct-final.patch.gz.b64
+          test "$(wc -c < /tmp/direct-final.patch.gz.b64)" = "36536"
+          base64 --decode /tmp/direct-final.patch.gz.b64 | gzip --decompress > /tmp/direct-final.patch
+          echo "$PATCH_SHA256  /tmp/direct-final.patch" | sha256sum --check --strict
+          test "$(wc -c < /tmp/direct-final.patch)" = "96538"
+
+          git fetch --no-tags origin fix/schemaorg-v30-conformance-20260903
+          test "$(git rev-parse FETCH_HEAD)" = "$BASE_SHA"
+          git checkout --detach "$BASE_SHA"
+          git apply --check /tmp/direct-final.patch
+          git apply /tmp/direct-final.patch
+
+          git checkout "$BASE_SHA" -- .github/workflows/cloudflare-pages-deploy.yml
+          rm -f .github/workflows/reputation-refresh.yml
+          git add -A
+          test -z "$(git diff --cached --name-only | grep '^.github/workflows/' || true)"
+          test ! -e functions/api/google-maps-reputation.js
+          test ! -e public/_routes.json
+          ! git grep -n -E '/api/google-maps-reputation|data-google-maps-reputation|Q140304972' -- ':!package-lock.json'
+
+          git config user.name "Dr. Saeed Ghezelbaash | دکتر سعید قزلباش"
+          git config user.email "medicaldoctor91@gmail.com"
+          git commit -m "chore: stage validated non-workflow candidate objects"
+          test "$(git show -s --format=%P HEAD)" = "$BASE_SHA"
+          git push --force origin "HEAD:refs/heads/$STAGING_BRANCH"
+          echo "STAGING_SHA=$(git rev-parse HEAD)"
