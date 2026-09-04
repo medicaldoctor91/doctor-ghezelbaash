@@ -51,6 +51,7 @@ jobs:
           git apply --check /tmp/direct-final.patch
           git apply --index /tmp/direct-final.patch
           git diff --cached --check
+          rmdir functions/api functions
 
           cat > /tmp/expected-paths <<'EOF'
           .github/workflows/cloudflare-pages-deploy.yml
