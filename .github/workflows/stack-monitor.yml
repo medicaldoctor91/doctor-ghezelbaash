@@ -142,12 +142,14 @@ jobs:
           set -euo pipefail
           TAG="v${{ steps.release.outputs.release }}"
           CURRENT_VERIFIER="$RUNNER_TEMP/verify-live-current.mjs"
+          CURRENT_AUDIT_GATE="$RUNNER_TEMP/dependency-advisory-gate.mjs"
           cp scripts/verify-live.mjs "$CURRENT_VERIFIER"
+          cp scripts/dependency-advisory-gate.mjs "$CURRENT_AUDIT_GATE"
           git reset --hard HEAD
           git clean -fdx
           git checkout --detach "$TAG"
           npm ci
-          npm run security:dependencies
+          node "$CURRENT_AUDIT_GATE"
           C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
           cp "$CURRENT_VERIFIER" scripts/verify-live.mjs
