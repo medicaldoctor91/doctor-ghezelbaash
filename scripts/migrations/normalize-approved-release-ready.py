@@ -47,46 +47,42 @@ if old_filter in value:
 elif new_filter not in value:
     raise SystemExit("Deleted tracked-file filter insertion point was not found")
 
-lines = value.splitlines()
-property_lines = [
-    index
-    for index, line in enumerate(lines)
-    if line.strip().startswith("const propertyPattern =") and "CLINIC_MAPS_URL" in line
-]
-if len(property_lines) != 1:
-    raise SystemExit(f"Expected one CLINIC_MAPS_URL property-pattern line, found {len(property_lines)}")
-property_index = property_lines[0]
-property_line = lines[property_index]
-property_line = property_line.replace('(["\']?)', '(["\'])')
-property_line = property_line.replace(
-    "CLINIC_MAPS_URL\\2",
-    "\\{\\{CLINIC_MAPS_URL\\}\\}\\2",
-)
-if "\\{\\{CLINIC_MAPS_URL\\}\\}" not in property_line:
-    raise SystemExit("Canonical CLINIC_MAPS_URL token property guard normalization failed")
-lines[property_index] = property_line
-value = "\n".join(lines) + ("\n" if value.endswith("\n") else "")
-
-old_key = 'const key = quote ? `${quote}CLINIC_REPUTATION_HTML${quote}` : "CLINIC_REPUTATION_HTML";'
-new_key = 'const key = `${quote}{{CLINIC_REPUTATION_HTML}}${quote}`;'
-if old_key in value:
-    value = value.replace(old_key, new_key, 1)
-elif new_key not in value:
-    raise SystemExit("Static reputation token key guard was not found")
-
-import_start_marker = "if (!registryText.includes(importLine)) {"
-import_end_marker = "const indent = propertyMatch[1];"
-import_start = value.find(import_start_marker)
-import_end = value.find(import_end_marker, import_start)
-if import_start < 0 or import_end < 0:
-    raise SystemExit("Canonical registry import block was not found")
-import_replacement = '''if (!registryText.includes(importLine)) {
+# Replace the former heuristic token-registry discovery with one exact edit of
+# the known canonical owner. This avoids generating malformed JavaScript and
+# preserves the source architecture as if the token had existed from day one.
+token_start_marker = "// Inject the static HTML token into the existing canonical content-token registry."
+token_end_marker = "// 8. Remove Function-specific routing introduced on the conformance branch."
+token_start = value.find(token_start_marker)
+token_end = value.find(token_end_marker, token_start)
+if token_start < 0 or token_end < 0:
+    raise SystemExit("Canonical reputation-token migration block was not found")
+token_replacement = '''// Inject the static reputation HTML into the exact canonical site-token owner.
+const registryFile = "src/lib/site-data.mjs";
+let registryText = read(registryFile);
+const importLine = 'import { renderClinicReputationHtml } from "./reputation-observation.mjs";';
+if (!registryText.includes(importLine)) {
   const importBoundary = registryText.indexOf("\\n\\nconst ");
-  assert(importBoundary > 0, `${registry.file} has no canonical import boundary`);
+  assert(importBoundary > 0, `${registryFile} has no canonical import boundary`);
   registryText = `${registryText.slice(0, importBoundary)}\\n${importLine}${registryText.slice(importBoundary)}`;
 }
+const mapsTokenLine = '    "{{CLINIC_MAPS_URL}}": site.mapsUrl,';
+const reputationTokenLine = '    "{{CLINIC_REPUTATION_HTML}}": renderClinicReputationHtml(),';
+assert(
+  registryText.split(mapsTokenLine).length - 1 === 1,
+  `${registryFile} must contain one exact canonical Maps token property`,
+);
+assert(
+  !registryText.includes(reputationTokenLine),
+  `${registryFile} already contains the reputation token property`,
+);
+registryText = registryText.replace(
+  mapsTokenLine,
+  `${mapsTokenLine}\\n${reputationTokenLine}`,
+);
+write(registryFile, registryText);
+
 '''
-value = value[:import_start] + import_replacement + value[import_end:]
+value = value[:token_start] + token_replacement + value[token_end:]
 
 old_skip = 'if (file === "scripts/migrations/apply-approved-release-ready.mjs") continue;'
 new_skip = '''if (
@@ -108,9 +104,8 @@ if architecture_write_old in value:
 elif architecture_write_new not in value:
     raise SystemExit("Architecture write normalization point was not found")
 
-# The migration deletes the only Function file. The former final assertion
-# incorrectly treated the still-existing empty directory/Git index entry as a
-# live runtime surface. Gate the actual file that matters instead.
+# The migration deletes the only Function file. Gate actual remaining Function
+# files, not the Git index before the later git-add step.
 function_message = '"Tracked Cloudflare Function surface remains"'
 function_lines = value.splitlines()
 function_matches = [
@@ -124,9 +119,7 @@ if len(function_matches) != 1:
     )
 compat_assertion = 'assert(!trackedFiles().some((file) => file.startsWith("functions/") && existsSync(path.join(root, file))), "Tracked Cloudflare Function surface remains");'
 actual_assertion = 'assert(!existsSync(path.join(root, functionPath)), "Tracked Cloudflare Function surface remains");'
-function_lines[function_matches[0]] = (
-    f"// {compat_assertion}\n{actual_assertion}"
-)
+function_lines[function_matches[0]] = f"// {compat_assertion}\n{actual_assertion}"
 value = "\n".join(function_lines) + "\n"
 
 path.write_text(value, encoding="utf-8")
@@ -152,9 +145,9 @@ print(
         "topLevelAstStatements": True,
         "footerMachineGuard": "source-structural",
         "deletedTrackedFilesSkipped": True,
-        "siteTokenProperty": "{{CLINIC_MAPS_URL}}",
+        "siteTokenOwner": "src/lib/site-data.mjs",
+        "siteTokenInsertion": "exact-direct-edit",
         "staticReputationToken": "{{CLINIC_REPUTATION_HTML}}",
-        "importBoundary": "multiline-compatible",
         "selfScan": "validator-excluded",
         "architectureWhitespace": "normalized-at-write",
         "functionAssertion": "actual-file-absence",
