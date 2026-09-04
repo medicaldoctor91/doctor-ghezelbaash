@@ -129,6 +129,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          export SOURCE_COMMIT="$(git rev-parse HEAD)"
           npm run release
 
       - name: Independently prove the final architecture and output
