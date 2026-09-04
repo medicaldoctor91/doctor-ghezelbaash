@@ -15,7 +15,7 @@ const TRANSIENT_PATTERNS = [
   /\b(?:429|502|503|504)\b[\s\S]{0,80}\b(?:rate limit|bad gateway|service unavailable|gateway timeout|too many requests)\b/i,
   /\b(?:bad gateway|service unavailable|gateway timeout|too many requests)\b/i,
   /\b(?:network timeout|socket hang up|fetch failed|temporary failure)\b/i,
-  /\baudit endpoint returned an error\b/i,
+  /invalid json response body at [^\n]*\/security\/advisories\/bulk/i,
 ];
 
 const npmExecutable = () => (process.platform === "win32" ? "npm.cmd" : "npm");
@@ -199,7 +199,13 @@ async function selfTest() {
   const terminal = {
     code: 1,
     stdout: "",
-    stderr: "401 Unauthorized",
+    stderr: "401 Unauthorized\nnpm error audit endpoint returned an error",
+    timedOut: false,
+  };
+  const ambiguousEndpointFailure = {
+    code: 1,
+    stdout: "",
+    stderr: "npm error audit endpoint returned an error",
     timedOut: false,
   };
 
@@ -211,6 +217,15 @@ async function selfTest() {
     ["transient", { ...transient, stderr: "network timeout" }],
     ["transient", { ...transient, stderr: "", timedOut: true }],
     ["terminal", terminal],
+    ["terminal", ambiguousEndpointFailure],
+    [
+      "transient",
+      {
+        ...transient,
+        stderr:
+          "invalid json response body at https://registry.npmjs.org/-/npm/v1/security/advisories/bulk",
+      },
+    ],
     ["terminal", { ...clean, stdout: "not-json" }],
   ])
     assert.equal(classifyAuditResult(result).kind, expected);
