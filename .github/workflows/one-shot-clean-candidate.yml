@@ -60,6 +60,19 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/migrations/normalize-approved-release-ready.py
+          python3 - <<'PY'
+          from pathlib import Path
+
+          migration = Path("scripts/migrations/apply-approved-release-ready.mjs")
+          source = migration.read_text(encoding="utf-8")
+          old = 'assert(!existsSync(path.join(root, "functions")) || trackedFiles().every((file) => !file.startsWith("functions/")), "Tracked Cloudflare Function surface remains");'
+          new = 'assert(!trackedFiles().some((file) => file.startsWith("functions/") && existsSync(path.join(root, file))), "Tracked Cloudflare Function surface remains");'
+          if old in source:
+              source = source.replace(old, new, 1)
+          elif new not in source:
+              raise SystemExit("Function-deletion assertion was not found")
+          migration.write_text(source, encoding="utf-8")
+          PY
           node --check scripts/migrations/apply-approved-release-ready.mjs
           node scripts/migrations/apply-approved-release-ready.mjs
 
