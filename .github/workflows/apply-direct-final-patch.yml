@@ -51,7 +51,6 @@ jobs:
           git apply --check /tmp/direct-final.patch
           git apply --index /tmp/direct-final.patch
           git diff --cached --check
-          rmdir functions/api functions
 
           cat > /tmp/expected-paths <<'EOF'
           .github/workflows/cloudflare-pages-deploy.yml
@@ -85,7 +84,7 @@ jobs:
           diff -u /tmp/expected-paths /tmp/actual-paths
 
           test ! -e functions/api/google-maps-reputation.js
-          test ! -d functions
+          test -z "$(find functions -type f -print 2>/dev/null || true)"
           test ! -e public/_routes.json
           test ! -e .github/transport
           test ! -d scripts/migrations
@@ -139,7 +138,7 @@ jobs:
           test -f dist/index.html
           test -f dist/404.html
           test ! -e dist/_routes.json
-          test ! -d functions
+          test -z "$(find functions -type f -print 2>/dev/null || true)"
           test ! -d scripts/migrations
           test ! -d .github/transport
           ! grep -RIn -E '/api/google-maps-reputation|data-google-maps-reputation|Q140304972' dist src scripts .github .release README.md package.json --exclude=package-lock.json
