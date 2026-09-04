@@ -17,44 +17,27 @@ async function command_ensure() {
       build_command: cf.build.command,
       destination_dir: cf.build.destinationDir,
       root_dir: cf.build.rootDir,
-    },
-    EXPECTED_FUNCTION = {
-      compatibility_date: cf.function.compatibilityDate,
-      compatibility_flags: [],
-      always_use_latest_compatibility_date: false,
     };
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms)),
     statusOf = (d) =>
       d?.latest_stage?.status ?? d?.stages?.at(-1)?.status ?? "unknown";
   const productionBranch = () =>
     process.env.CF_PRODUCTION_BRANCH?.trim() || cf.productionBranch;
-  const projectPatch = (sourceType = "github", current = {}) => {
-    const wranglerConfigHash =
-      current?.deployment_configs?.production?.wrangler_config_hash;
-    return {
-      production_branch: productionBranch(),
-      build_config: { ...EXPECTED_BUILD },
-      deployment_configs: {
-        production: {
-          ...EXPECTED_FUNCTION,
-          ...(wranglerConfigHash
-            ? { wrangler_config_hash: wranglerConfigHash }
-            : {}),
-        },
+  const projectPatch = (sourceType = "github") => ({
+    production_branch: productionBranch(),
+    build_config: { ...EXPECTED_BUILD },
+    source: {
+      type: sourceType,
+      config: {
+        deployments_enabled: true,
+        production_branch: productionBranch(),
+        production_deployments_enabled: true,
+        preview_deployment_setting: cf.preview.deploymentSetting,
+        preview_branch_includes: [...cf.preview.branchIncludes],
+        preview_branch_excludes: [...cf.preview.branchExcludes],
       },
-      source: {
-        type: sourceType,
-        config: {
-          deployments_enabled: true,
-          production_branch: productionBranch(),
-          production_deployments_enabled: true,
-          preview_deployment_setting: cf.preview.deploymentSetting,
-          preview_branch_includes: [...cf.preview.branchIncludes],
-          preview_branch_excludes: [...cf.preview.branchExcludes],
-        },
-      },
-    };
-  };
+    },
+  });
   const safeProjectState = (p) => {
     const s = p?.source ?? {},
       c = s.config ?? {},
@@ -73,10 +56,7 @@ async function command_ensure() {
       buildCommand: b.build_command ?? null,
       destinationDir: b.destination_dir ?? null,
       rootDir: b.root_dir ?? null,
-      functionCompatibilityDate: production.compatibility_date ?? null,
-      functionCompatibilityFlags: production.compatibility_flags ?? [],
-      functionAlwaysLatest:
-        production.always_use_latest_compatibility_date ?? null,
+      deliveryMode: cf.delivery.mode,
       productionSecretBindings: Object.entries(production.env_vars ?? {})
         .filter(([, binding]) => binding?.type === "secret_text")
         .map(([name]) => name)
@@ -98,9 +78,7 @@ async function command_ensure() {
       s.buildCommand === EXPECTED_BUILD.build_command &&
       s.destinationDir === EXPECTED_BUILD.destination_dir &&
       (s.rootDir === "" || s.rootDir === "/") &&
-      s.functionCompatibilityDate === EXPECTED_FUNCTION.compatibility_date &&
-      s.functionAlwaysLatest === false &&
-      s.functionCompatibilityFlags.length === 0
+      s.deliveryMode === "static-assets"
     );
   };
   const matchDeployment = (items, commitHash, environment) =>
@@ -142,7 +120,6 @@ async function command_ensure() {
         config: { owner, repo_name, ...patch.source.config },
       },
       build_config: patch.build_config,
-      deployment_configs: patch.deployment_configs,
     };
     assert(projectIsExact(p));
     console.log("CLOUDFLARE_PAGES_MAIN_ONLY_CONTRACT_SELF_TEST_OK");
@@ -255,7 +232,7 @@ async function command_ensure() {
       if (!projectIsExact(p)) {
         p = await req(base, {
           method: "PATCH",
-          body: projectPatch(p?.source?.type || "github", p),
+          body: projectPatch(p?.source?.type || "github"),
         });
         configurationChanged = true;
       }
@@ -331,8 +308,8 @@ async function command_ensure() {
     assert.equal(statusOf(d), "success");
     assert.equal(
       d.uses_functions,
-      true,
-      "Production deployment lost Pages Functions",
+      false,
+      "Production deployment unexpectedly includes Pages Functions",
     );
     const deploymentUrl = String(d.url || "").replace(/\/+$/, "") + "/";
     assert(

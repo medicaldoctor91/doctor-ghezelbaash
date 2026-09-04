@@ -128,12 +128,11 @@ def cache_rule(host: str) -> dict[str, Any]:
         "expression": (
             f'(http.host eq "{host}" and '
             'http.request.method in {"GET" "HEAD"} and '
-            'not starts_with(http.request.uri.path, "/cdn-cgi/") and '
-            'not starts_with(http.request.uri.path, "/api/"))'
+            'not starts_with(http.request.uri.path, "/cdn-cgi/"))'
         ),
         "description": (
             "Cache canonical static DIST routes while excluding Cloudflare "
-            "system and request-time API paths"
+            "system paths"
         ),
         "action": "set_cache_settings",
         "action_parameters": {
@@ -1846,11 +1845,8 @@ def self_test(dist_dir: Path) -> None:
         "cache_deception_armor": True
     }:
         raise CloudflareError("Canonical cache deception armor contract drift")
-    if (
-        'not starts_with(http.request.uri.path, "/api/")'
-        not in cache["expression"]
-    ):
-        raise CloudflareError("Request-time API path is not excluded from edge caching")
+    if '/api/' in cache["expression"]:
+        raise CloudflareError("Static cache rule still carries a request-time API exclusion")
     for setting_id, desired in {
         "ssl": "strict",
         "min_tls_version": "1.2",

@@ -3,6 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { bindHeroPictureSizes } from "../../src/lib/hero-image-contract.mjs";
 import { bindReleaseTokens } from "../../src/lib/release-tokens.mjs";
 import { bindSiteTokens, deriveSiteData } from "../../src/lib/site-data.mjs";
+import { bindClinicReputation } from "../../src/lib/reputation-observation.mjs";
 
 const compactAuthoredHtmlLayout = (source) =>
   String(source).replace(/>\s*\r?\n\s*</g, "><");
@@ -28,9 +29,13 @@ export async function assembleCanonicalContent({
       "assembleCanonicalContent requires the loaded canonical knowledge graph",
     );
   const names = await canonicalSourceNames(root);
-  const release = JSON.parse(
-    await readFile(path.join(root, "src/data/release.json"), "utf8"),
-  );
+  const [release, reputationObservation] = await Promise.all([
+    readFile(path.join(root, "src/data/release.json"), "utf8").then(JSON.parse),
+    readFile(
+      path.join(root, "src/data/reputation-observation.json"),
+      "utf8",
+    ).then(JSON.parse),
+  ]);
   const site = deriveSiteData(release, graph);
   let content = await readFile(
     path.join(root, "src/content-source/page.md"),
@@ -40,5 +45,10 @@ export async function assembleCanonicalContent({
   content = bindHeroPictureSizes(content);
   content = bindReleaseTokens(content, release);
   content = bindSiteTokens(content, site);
+  content = bindClinicReputation(content, {
+    observation: reputationObservation,
+    release,
+    mapsUrl: site.mapsUrl,
+  });
   return { content, names };
 }

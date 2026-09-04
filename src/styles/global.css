@@ -435,8 +435,22 @@ blockquote {
   background: #fff;
   color: #315148;
   box-shadow: 0 6px 18px rgb(17 39 31/0.1);
-  transform: translateX(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-50%) translateY(0.45rem) scale(0.96);
   text-decoration: none;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    visibility 160ms ease,
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 160ms ease;
+}
+.quick-actions__top[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0) scale(1);
   pointer-events: auto;
 }
 .quick-actions__top::before {
@@ -572,6 +586,38 @@ blockquote {
 .figure-caption-title {
   color: #263b35;
   font-weight: 780;
+}
+.caption-disclosure {
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.caption-disclosure[open] {
+  background: transparent;
+}
+.caption-disclosure > summary {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  list-style: none;
+  cursor: pointer;
+}
+.caption-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.caption-disclosure > summary::marker {
+  content: "";
+}
+.caption-disclosure > summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 0.25rem;
+  border-radius: 0.2rem;
+}
+.caption-disclosure > :not(summary) {
+  margin-block-start: 0.35rem;
 }
 .hero-caption-facts {
   display: flex;
@@ -899,16 +945,13 @@ address {
   width: 1.12rem;
   height: 1.12rem;
 }
-.quick-actions__top {
-  transition:
-    background-color 140ms ease,
-    color 140ms ease,
-    transform 140ms ease;
-}
-.quick-actions__top:hover {
-  transform: translateX(-50%) translateY(-1px);
+.quick-actions__top[data-visible="true"]:hover {
+  transform: translateX(-50%) translateY(-1px) scale(1);
   background: #fff;
   color: #075244;
+}
+.quick-actions__top[data-visible="true"]:active {
+  transform: translateX(-50%) translateY(0) scale(0.96);
 }
 @media (prefers-reduced-motion: reduce) {
   .quick-actions__item,
@@ -983,71 +1026,6 @@ html {
   }
   .quick-actions__bar {
     border: 1px solid CanvasText;
-  }
-}
-.quick-start {
-  margin: 1.2rem 0 1.5rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--accent-soft), var(--surface));
-}
-.quick-start--end {
-  margin-block: 4.5rem 0;
-  background: linear-gradient(135deg, #f7fbf9, #eef7f3);
-}
-.quick-start h2 {
-  font-size: clamp(1.15rem, 2vw, 1.45rem);
-  margin: 0.1rem 0 0.5rem;
-}
-.quick-start p {
-  max-width: var(--reading-measure);
-  margin: 0.35rem 0 0.75rem;
-}
-.quick-start nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-.quick-start nav a {
-  display: inline-flex;
-  min-height: 42px;
-  align-items: center;
-  padding: 0.52rem 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: 0.7rem;
-  background: var(--surface);
-  text-decoration: none;
-  font-weight: 650;
-}
-.clinic-facts {
-  padding: 0.75rem 0.9rem;
-  border-inline-start: 4px solid var(--accent);
-  background: var(--accent-soft);
-  border-radius: 0.55rem;
-}
-.content-section {
-  scroll-margin-block-start: 1rem;
-}
-.content-section > h2 {
-  scroll-margin-block-start: 1rem;
-}
-@media (max-width: 720px) {
-  .quick-start nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-  .quick-start nav a {
-    justify-content: center;
-    text-align: center;
-  }
-  .quick-start--end {
-    margin-block-start: 3.5rem;
-  }
-}
-@media (max-width: 430px) {
-  .quick-start nav {
-    grid-template-columns: 1fr;
   }
 }
 .render-chunk.is-target-chunk {
