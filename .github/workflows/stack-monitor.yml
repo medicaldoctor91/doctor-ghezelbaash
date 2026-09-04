@@ -147,7 +147,7 @@ jobs:
           git clean -fdx
           git checkout --detach "$TAG"
           npm ci
-          npm audit --audit=true --audit-level=high
+          npm run security:dependencies
           C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
           npm run build
           cp "$CURRENT_VERIFIER" scripts/verify-live.mjs
