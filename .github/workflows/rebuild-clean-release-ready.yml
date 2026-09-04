@@ -67,12 +67,9 @@ jobs:
 
           path = Path("scripts/migrations/apply-approved-release-ready.mjs")
           value = path.read_text(encoding="utf-8")
-          old = '"data.visible = visible ? \\"true\\" : \\"false\\""'
-          new = '"top.dataset.visible = visible ? \\"true\\" : \\"false\\""'
-          if old in value:
-              value = value.replace(old, new, 1)
-          elif new not in value:
-              raise SystemExit("Expected migration guard marker was not found")
+          value = value.replace("data.visible", "top.dataset.visible")
+          if "data.visible" in value or "top.dataset.visible" not in value:
+              raise SystemExit("Back-to-top migration guard normalization failed")
           path.write_text(value, encoding="utf-8")
           PY
           node --check scripts/migrations/apply-approved-release-ready.mjs
