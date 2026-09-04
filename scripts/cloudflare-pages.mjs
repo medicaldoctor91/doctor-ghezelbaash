@@ -23,7 +23,7 @@ async function command_ensure() {
       d?.latest_stage?.status ?? d?.stages?.at(-1)?.status ?? "unknown";
   const productionBranch = () =>
     process.env.CF_PRODUCTION_BRANCH?.trim() || cf.productionBranch;
-  const projectPatch = (sourceType = "github") => ({
+  const desiredProjectConfiguration = (sourceType = "github") => ({
     production_branch: productionBranch(),
     build_config: { ...EXPECTED_BUILD },
     source: {
@@ -103,23 +103,23 @@ async function command_ensure() {
   };
   async function selfTest() {
     process.env.CF_PRODUCTION_BRANCH = cf.productionBranch;
-    const patch = projectPatch();
-    assert.equal(patch.production_branch, cf.productionBranch);
+    const desired = desiredProjectConfiguration();
+    assert.equal(desired.production_branch, cf.productionBranch);
     assert.equal(
-      patch.source.config.preview_deployment_setting,
+      desired.source.config.preview_deployment_setting,
       cf.preview.deploymentSetting,
     );
-    assert.deepEqual(patch.source.config.preview_branch_includes, []);
-    assert.deepEqual(patch.source.config.preview_branch_excludes, []);
+    assert.deepEqual(desired.source.config.preview_branch_includes, []);
+    assert.deepEqual(desired.source.config.preview_branch_excludes, []);
     const [owner, repo_name] = EXPECTED_REPO.split("/");
     const p = {
       name: EXPECTED_PROJECT,
       production_branch: cf.productionBranch,
       source: {
         type: "github",
-        config: { owner, repo_name, ...patch.source.config },
+        config: { owner, repo_name, ...desired.source.config },
       },
-      build_config: patch.build_config,
+      build_config: desired.build_config,
     };
     assert(projectIsExact(p));
     console.log("CLOUDFLARE_PAGES_MAIN_ONLY_CONTRACT_SELF_TEST_OK");
@@ -232,7 +232,7 @@ async function command_ensure() {
       if (!projectIsExact(p)) {
         p = await req(base, {
           method: "PATCH",
-          body: projectPatch(p?.source?.type || "github"),
+          body: desiredProjectConfiguration(p?.source?.type || "github"),
         });
         configurationChanged = true;
       }

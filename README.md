@@ -4,8 +4,10 @@ Static-only Astro source for the canonical physician entity home at `https://www
 
 ## Direct source ownership
 
+The repository structure itself is authoritative; it is not reconstructed from a second topology manifest or from corrective overlays.
+
 - `src/content-source/page.md`: canonical visible content and page metadata.
-- `src/styles/global.css`: the only authored stylesheet.
+- `src/styles/global.css`: the only shared authored stylesheet for the canonical page; the genuine 404 may keep route-scoped component styling.
 - `src/data/semantic/knowledge-graph.jsonld`: canonical knowledge graph and the direct source of offered services and answers.
 - `src/data/semantic/head-profile.json`: Google head projection selection, policies and byte limit.
 - `src/data/semantic/support-profile.json`: Google support projection selection, policies and byte limit.
@@ -28,8 +30,10 @@ The physician uses one canonical ID with `Person` and `IndividualPhysician` type
 
 CSS delivery is derived directly from `global.css` and `render-calibration.json`: critical rules remain inline and the rest is emitted as one fingerprinted stylesheet. HTML content stays readable in `page.md`; canonical assembly compacts only structural whitespace and binds release, site, language, image, semantic and clinic-reputation tokens. `.github/workflows/reputation-refresh.yml` performs exactly one minimal-field Google Places request every six hours, preserves the last-known-good observation on failure and publishes only a validated value change.
 
+Dependency restoration and dependency advisory review are separate first-class stages. `dependencies:install` restores the exact lockfile without an implicit advisory request; `security:dependencies` performs the single explicit fail-closed high-severity audit.
+
 ```bash
-npm ci
+npm run dependencies:install
 npm run security:dependencies
 npm run build
 ```
@@ -52,5 +56,3 @@ npm run release
 ```
 
 The website deploys a static-only `dist/` on Cloudflare Pages from `main`. The production contract requires `uses_functions === false`, no dynamic routes and no runtime bindings. Runtime, automation and deployment settings are defined by `.release/policy/platform-contract.json` and validated against `.nvmrc`, `package.json`, CodeMeta and the scheduled reputation workflow.
-
-The canonical Dataset is `https://www.ghezelbaash.ir/graph.jsonld#dataset`. GitHub is its version-controlled source, Zenodo is its immutable DOI distribution, Hugging Face `main` is its current AI/retrieval distribution, and versioned Hugging Face tags preserve frozen release snapshots. Release promotion updates the release record, graph, package metadata and citation metadata as one transaction; the public evidence snapshot is derived from the evidence registry during generation, and external publication remains an explicit release operation.

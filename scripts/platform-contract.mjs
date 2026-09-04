@@ -34,6 +34,7 @@ async function validateContract() {
   const cf = contract.cloudflare;
   const runtime = contract.runtime;
   const refresh = contract.automation?.reputationRefresh;
+  const source = contract.source;
   const fail = (message) => {
     throw new Error(message);
   };
@@ -73,6 +74,22 @@ async function validateContract() {
   )
     fail("Cloudflare static-delivery contract drift");
   if (cf.planTier !== "free") fail("Cloudflare plan contract drift");
+  if (
+    source?.canonicalContent !== "src/content-source/page.md" ||
+    source?.canonicalStylesheet !== "src/styles/global.css" ||
+    JSON.stringify(source?.routes) !==
+      JSON.stringify(["404.astro", "favicon.png.ts", "index.astro"]) ||
+    JSON.stringify(source?.workflows) !==
+      JSON.stringify([
+        ".github/workflows/ci.yml",
+        ".github/workflows/cloudflare-pages-deploy.yml",
+        ".github/workflows/github-pages-bridge.yml",
+        ".github/workflows/hugging-face-authority.yml",
+        ".github/workflows/reputation-refresh.yml",
+        ".github/workflows/stack-monitor.yml",
+      ])
+  )
+    fail("Canonical source topology contract drift");
   if (
     !Array.isArray(cf.requiredCustomDomains) ||
     !cf.requiredCustomDomains.includes(contract.canonicalHost)
@@ -174,6 +191,7 @@ async function validateContract() {
         canonicalHost: contract.canonicalHost,
         planTier: cf.planTier,
         delivery: cf.delivery,
+        source,
         reputationRefresh: {
           schedule: refresh.schedule,
           upstreamCallsPerRun: refresh.upstreamCallsPerRun,
