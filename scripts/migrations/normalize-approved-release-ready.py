@@ -98,6 +98,16 @@ if old_skip in value:
 elif new_skip not in value:
     raise SystemExit("Migration self-scan exclusion point was not found")
 
+# Removal helpers can leave indentation-only lines after deleting obsolete
+# Function/routing validator statements. Normalize that one generated file at
+# the source write site so git-diff validation remains deterministic.
+architecture_write_old = 'write(architecturePath, architecture);'
+architecture_write_new = 'write(architecturePath, architecture.replace(/[ \\t]+$/gm, ""));'
+if architecture_write_old in value:
+    value = value.replace(architecture_write_old, architecture_write_new, 1)
+elif architecture_write_new not in value:
+    raise SystemExit("Architecture write normalization point was not found")
+
 # The migration deletes the only Function file. The former final assertion
 # incorrectly treated the still-existing empty directory/Git index entry as a
 # live runtime surface. Gate the actual file that matters instead.
@@ -146,6 +156,7 @@ print(
         "staticReputationToken": "{{CLINIC_REPUTATION_HTML}}",
         "importBoundary": "multiline-compatible",
         "selfScan": "validator-excluded",
+        "architectureWhitespace": "normalized-at-write",
         "functionAssertion": "actual-file-absence",
         "readmeArchitecture": "static-only",
     }
