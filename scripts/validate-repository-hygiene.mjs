@@ -84,12 +84,20 @@ const textExtensions = new Set([
 ]);
 const textExactNames = new Set([".gitignore", ".npmrc", ".nvmrc", "LICENSE"]);
 const devMarker = /\b(?:TODO|FIXME|HACK)\b/g;
-const [npmrc, packageJson] = await Promise.all([
+const [npmrc, packageJson, dependencyAuditGate] = await Promise.all([
   readFile(path.join(root, ".npmrc"), "utf8"),
   readFile(path.join(root, "package.json"), "utf8").then(JSON.parse),
+  readFile(
+    path.join(root, "scripts/dependency-advisory-gate.mjs"),
+    "utf8",
+  ),
 ]);
-if (!/^audit=true$/m.test(npmrc) || /^audit=false$/m.test(npmrc))
-  throw new Error("npm advisory reporting must remain enabled");
+if (!/^audit=false$/m.test(npmrc) || /^audit=true$/m.test(npmrc))
+  throw new Error(
+    "Implicit install-time audit must remain disabled; the explicit bounded gate is canonical",
+  );
+if (!/["']--audit=true["']/.test(dependencyAuditGate))
+  throw new Error("Explicit dependency advisory gate must force npm audit on");
 if (
   packageJson.scripts?.["security:dependencies"] !==
   "node scripts/dependency-advisory-gate.mjs"
@@ -335,7 +343,9 @@ console.log(
       persistentCheckoutCredentials: false,
       jobLevelSecrets: false,
       credentialBearingRemoteUrls: false,
+      implicitInstallTimeAudit: false,
       dependencyAdvisoryGate: "high",
+      explicitDependencyAuditForcedOn: true,
       authoredAnswerServiceSets: false,
       developmentMarkers: false,
       forbiddenAsciiControlBytes: false,
