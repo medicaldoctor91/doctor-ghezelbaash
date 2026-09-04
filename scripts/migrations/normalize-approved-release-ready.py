@@ -8,20 +8,23 @@ value = value.replace("data.visible", "top.dataset.visible")
 if "data.visible" in value or "top.dataset.visible" not in value:
     raise SystemExit("Back-to-top migration guard normalization failed")
 
-# The inline runtime lives in a top-level module script, so AST statement
-# removal must accept both nested Block and top-level SourceFile parents.
-ast_parent_old = "!(ts.isStatement(statement) && ts.isBlock(statement.parent))"
-ast_parent_new = "!(ts.isStatement(statement) && (ts.isBlock(statement.parent) || ts.isSourceFile(statement.parent)))"
-if ast_parent_old in value:
-    value = value.replace(ast_parent_old, ast_parent_new, 1)
-elif ast_parent_new not in value:
-    raise SystemExit("Top-level AST parent normalization point was not found")
-ast_if_old = "if (ts.isStatement(statement) && ts.isBlock(statement.parent)) {"
-ast_if_new = "if (ts.isStatement(statement) && (ts.isBlock(statement.parent) || ts.isSourceFile(statement.parent))) {"
-if ast_if_old in value:
-    value = value.replace(ast_if_old, ast_if_new, 1)
-elif ast_if_new not in value:
-    raise SystemExit("Top-level AST statement normalization point was not found")
+# Replace the former AST-based removal call with an exact boundary edit. The
+# site runtime is one top-level IIFE, so climbing to a SourceFile statement
+# would otherwise select unrelated search/navigation code as well.
+runtime_call_old = '''navigator = removeJsStatementsContaining(navigator, [
+  "/api/google-maps-reputation",
+  "data-google-maps-reputation",
+]);'''
+runtime_call_new = '''const reputationRuntime = /  const reputation = d\\.querySelector\\("\\[data-google-maps-reputation\\]"\\),[\\s\\S]*?(?=  const revealPoster = \\(video\\) => \\{)/;
+assert(
+  reputationRuntime.test(navigator),
+  "Could not locate the exact request-time reputation runtime block",
+);
+navigator = navigator.replace(reputationRuntime, "");'''
+if runtime_call_old in value:
+    value = value.replace(runtime_call_old, runtime_call_new, 1)
+elif runtime_call_new not in value:
+    raise SystemExit("Exact reputation runtime-removal insertion point was not found")
 
 machine_pattern = re.compile(
     r'''  const machineBlock = enclosingElementContaining\(\s*footer,\s*"RDF/Turtle",\s*\["nav", "p", "div", "section"\],\s*\);\s*assert\(machineBlock\.text\.includes\("JSON-LD"\) && machineBlock\.text\.includes\("SHACL"\), "Machine resource block detection was not specific enough"\);''',
@@ -47,9 +50,8 @@ if old_filter in value:
 elif new_filter not in value:
     raise SystemExit("Deleted tracked-file filter insertion point was not found")
 
-# Replace the former heuristic token-registry discovery with one exact edit of
-# the known canonical owner. This avoids generating malformed JavaScript and
-# preserves the source architecture as if the token had existed from day one.
+# Replace heuristic token-registry discovery with one exact edit of the known
+# canonical owner. This preserves valid JavaScript and direct source ownership.
 token_start_marker = "// Inject the static HTML token into the existing canonical content-token registry."
 token_end_marker = "// 8. Remove Function-specific routing introduced on the conformance branch."
 token_start = value.find(token_start_marker)
@@ -94,9 +96,6 @@ if old_skip in value:
 elif new_skip not in value:
     raise SystemExit("Migration self-scan exclusion point was not found")
 
-# Removal helpers can leave indentation-only lines after deleting obsolete
-# Function/routing validator statements. Normalize that one generated file at
-# the source write site so git-diff validation remains deterministic.
 architecture_write_old = 'write(architecturePath, architecture);'
 architecture_write_new = 'write(architecturePath, architecture.replace(/[ \\t]+$/gm, ""));'
 if architecture_write_old in value:
@@ -104,8 +103,6 @@ if architecture_write_old in value:
 elif architecture_write_new not in value:
     raise SystemExit("Architecture write normalization point was not found")
 
-# The migration deletes the only Function file. Gate actual remaining Function
-# files, not the Git index before the later git-add step.
 function_message = '"Tracked Cloudflare Function surface remains"'
 function_lines = value.splitlines()
 function_matches = [
@@ -142,7 +139,7 @@ print(
     {
         "migrationNormalizer": "PASS",
         "backToTopGuard": "top.dataset.visible",
-        "topLevelAstStatements": True,
+        "reputationRuntimeRemoval": "exact-source-boundary",
         "footerMachineGuard": "source-structural",
         "deletedTrackedFilesSkipped": True,
         "siteTokenOwner": "src/lib/site-data.mjs",
