@@ -233,10 +233,20 @@ for (const workflow of workflows) {
     throw new Error(`Credential-bearing remote URL is forbidden: ${workflow}`);
   const installCount = (content.match(/\bnpm ci\b/g) || []).length;
   const securityCount =
-    (content.match(/\bnpm run security:dependencies\b/g) || []).length;
+    (content.match(/\bnpm run security:dependencies\b/g) || []).length +
+    (content.match(/node "\$CURRENT_AUDIT_GATE"/g) || []).length;
   if (/\bnpm audit\b/.test(content))
     throw new Error(
       `Canonical workflows must use the bounded fail-closed advisory gate: ${workflow}`,
+    );
+  if (
+    content.includes('node "$CURRENT_AUDIT_GATE"') &&
+    !content.includes(
+      'cp scripts/dependency-advisory-gate.mjs "$CURRENT_AUDIT_GATE"',
+    )
+  )
+    throw new Error(
+      `Frozen-source audit gate must be copied from current canonical source before checkout: ${workflow}`,
     );
   if (installCount !== securityCount)
     throw new Error(
