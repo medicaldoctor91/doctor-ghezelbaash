@@ -1,0 +1,192 @@
+name: Apply direct final candidate
+
+on:
+  push:
+    branches:
+      - ops/direct-final-patch-v2-20260904
+    paths:
+      - .github/workflows/apply-direct-final-patch.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: direct-final-candidate-20260904
+  cancel-in-progress: false
+
+jobs:
+  build-validate-publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      BASE_SHA: dd18d9380a592ecd0e1bf2ef69fe68899d761a49
+      TARGET_BRANCH: feat/final-megalanding-clean-20260904
+      PATCH_SHA256: 52a0db9a747d2904396b3cea4ec93dabe235db101d0c5b251e0720ed8ab762c6
+    steps:
+      - name: Check out transport carrier
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ops/direct-final-patch-v2-20260904
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify and decode exact direct-source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/transport/direct-final.patch.gz.b64.part{00..09} > /tmp/direct-final.patch.gz.b64
+          test "$(wc -c < /tmp/direct-final.patch.gz.b64)" = "36536"
+          base64 --decode /tmp/direct-final.patch.gz.b64 | gzip --decompress > /tmp/direct-final.patch
+          echo "$PATCH_SHA256  /tmp/direct-final.patch" | sha256sum --check --strict
+          test "$(wc -c < /tmp/direct-final.patch)" = "96538"
+          git apply --stat /tmp/direct-final.patch
+
+      - name: Apply once to the exact validated 1.2.5 technical base
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin fix/schemaorg-v30-conformance-20260903
+          test "$(git rev-parse FETCH_HEAD)" = "$BASE_SHA"
+          git checkout --detach "$BASE_SHA"
+          git apply --check /tmp/direct-final.patch
+          git apply --index /tmp/direct-final.patch
+          git diff --cached --check
+
+          cat > /tmp/expected-paths <<'EOF'
+          .github/workflows/cloudflare-pages-deploy.yml
+          .github/workflows/reputation-refresh.yml
+          .release/policy/platform-contract.json
+          README.md
+          functions/api/google-maps-reputation.js
+          package.json
+          scripts/cloudflare-pages.mjs
+          scripts/configure-cloudflare-edge.py
+          scripts/generate-deployment-headers.mjs
+          scripts/lib/assemble-content.mjs
+          scripts/materialize-static-artifacts.mjs
+          scripts/platform-contract.mjs
+          scripts/reputation.mjs
+          scripts/test-contracts.mjs
+          scripts/validate-architecture.mjs
+          scripts/validate-critical-ctas.mjs
+          scripts/validate-dist.mjs
+          scripts/validate-repository-hygiene.mjs
+          src/components/GuideNavigator.astro
+          src/components/SiteFooter.astro
+          src/content-source/page.md
+          src/data/redirects.json
+          src/data/reputation-observation.json
+          src/lib/reputation-observation.mjs
+          src/styles/global.css
+          EOF
+          git diff --cached --name-only | LC_ALL=C sort > /tmp/actual-paths
+          LC_ALL=C sort -o /tmp/expected-paths /tmp/expected-paths
+          diff -u /tmp/expected-paths /tmp/actual-paths
+
+          test ! -e functions/api/google-maps-reputation.js
+          test ! -d functions
+          test ! -e public/_routes.json
+          test ! -e .github/transport
+          test ! -d scripts/migrations
+          ! git grep -n -E '/api/google-maps-reputation|data-google-maps-reputation|Q140304972' -- ':!package-lock.json'
+          test "$(git grep -o 'data-caption-disclosure' -- src/content-source/page.md | wc -l)" = "2"
+          ! git grep -n 'id="video-library"' -- src/content-source/page.md
+          ! git grep -n 'id="quick-start-title"' -- src/content-source/page.md
+          test "$(git grep -o '<video' -- src/content-source/page.md | wc -l)" = "4"
+          test "$(node -e "const g=require('./src/data/semantic/knowledge-graph.jsonld'); const n=g['@graph']; console.log(n.filter(x=>(Array.isArray(x['@type'])?x['@type']:[x['@type']]).includes('VideoObject')).length)")" = "4"
+          test "$(node -e "const g=require('./src/data/semantic/knowledge-graph.jsonld'); const n=g['@graph']; console.log(n.filter(x=>(Array.isArray(x['@type'])?x['@type']:[x['@type']]).includes('Clip')).length)")" = "16"
+          git diff --quiet "$BASE_SHA" -- src/data/semantic/knowledge-graph.jsonld src/data/semantic/head-profile.json src/data/semantic/support-profile.json src/data/retrieval/query-matrix-policy.json src/data/evidence-registry.json
+
+          git config user.name "Dr. Saeed Ghezelbaash | دکتر سعید قزلباش"
+          git config user.email "medicaldoctor91@gmail.com"
+          git commit -m "feat: finalize static authority mega-landing"
+          test -z "$(git status --porcelain)"
+
+      - name: Set up exact Node runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Set up exact Python runtime
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+
+      - name: Install exact dependencies and media validator
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          node --version
+          npm --version
+          python --version
+          ffprobe -version | head -n 1
+
+      - name: Run complete release validation from native final source
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run release
+
+      - name: Independently prove the final architecture and output
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          test -f dist/404.html
+          test ! -e dist/_routes.json
+          test ! -d functions
+          test ! -d scripts/migrations
+          test ! -d .github/transport
+          ! grep -RIn -E '/api/google-maps-reputation|data-google-maps-reputation|Q140304972' dist src scripts .github .release README.md package.json --exclude=package-lock.json
+          test "$(grep -o 'class="caption-disclosure"' dist/index.html | wc -l)" = "2"
+          test "$(grep -o '<video' dist/index.html | wc -l)" = "4"
+          ! grep -q 'id="video-library"' dist/index.html
+          ! grep -q 'id="quick-start-title"' dist/index.html
+          grep -q 'id="google-maps-clinic-reputation-current"' dist/index.html
+          grep -q 'data-clinic-rating' dist/index.html
+          grep -q 'data-clinic-review-count' dist/index.html
+          grep -q "connect-src 'none'" dist/_headers
+          node scripts/reputation.mjs validate dist/index.html
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          html = Path('dist/index.html').read_text('utf-8')
+          graph = json.loads(Path('dist/graph.jsonld').read_text('utf-8'))
+          nodes = graph['@graph']
+          def has_type(node, name):
+              value = node.get('@type', [])
+              return name in (value if isinstance(value, list) else [value])
+          assert sum(has_type(n, 'VideoObject') for n in nodes) == 4
+          assert sum(has_type(n, 'Clip') for n in nodes) == 16
+          assert '/g/11nqdfk76c' in html
+          assert '/g/11r3rzdtb3' in html
+          assert 'Q140287622' in html
+          assert 'Q140288589' in html
+          assert 'Q140304972' not in html
+          print({'independentArchitecture': 'PASS', 'graphNodes': len(nodes)})
+          PY
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Upload exact validated candidate artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: direct-final-candidate
+          path: |
+            dist
+            release
+          if-no-files-found: error
+          compression-level: 9
+          retention-days: 14
+
+      - name: Publish only the clean validated candidate branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          clean_sha="$(git rev-parse HEAD)"
+          test "$(git show -s --format=%P HEAD)" = "$BASE_SHA"
+          git push --force-with-lease="refs/heads/$TARGET_BRANCH:$BASE_SHA" origin "HEAD:refs/heads/$TARGET_BRANCH"
+          echo "CLEAN_CANDIDATE_SHA=$clean_sha"
