@@ -20,10 +20,12 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <link href="https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master" itemprop="image">
 <picture id="image-saeed-ghezelbash-portrait-master-webp"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.a2b0a5e1ab4d.avif 640w, /media/images/physician/saeed-ghezelbash-portrait-960.b752a836dd26.avif 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.586a1aef120c.avif 1600w" type="image/avif"><source sizes="{{HERO_IMAGE_SIZES}}" srcset="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.71f1debc6c43.webp 640w, /media/images/physician/saeed-ghezelbash-portrait-960.c0b10114861b.webp 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.4ebec925186c.webp 1600w" type="image/webp"><img alt="دکتر سعید قزلباش، پزشک ایرانی با روپوش سفید و گوشی پزشکی در محیط بالینی کرمانشاه" fetchpriority="high" height="427" loading="eager" src="/media/images/physician/saeed-ghezelbash-portrait-delivery-640.71f1debc6c43.webp" width="640">
 </picture>
-<figcaption class="hero-figure-caption" id="caption-saeed-ghezelbash-portrait-master">
-<div class="hero-caption-title">دکتر سعید قزلباش، پزشک زیبایی</div>
-<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> {{CLINIC_HOURS_COMPACT_FA}}</span><span><strong>بازبینی پزشکی:</strong> <time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span><span aria-atomic="true" aria-live="polite"><a data-google-maps-reputation href="{{CLINIC_MAPS_URL}}" rel="external noopener">نظرها و امتیازهای عمومی در <span class="google-maps-attribution" translate="no">Google Maps</span></a></span>
+<figcaption class="hero-figure-caption">
+<details class="caption-disclosure">
+<summary class="hero-caption-title" id="caption-saeed-ghezelbash-portrait-master">دکتر سعید قزلباش، پزشک زیبایی</summary>
+<div aria-label="اطلاعات اعتماد و دسترسی" class="hero-caption-facts" role="group"><span><strong>نظام پزشکی:</strong> ۱۶۷۴۳۰</span><span><strong>مراجعه:</strong> {{CLINIC_HOURS_COMPACT_FA}}</span><span><strong>بازبینی پزشکی:</strong> <time datetime="{{MEDICAL_REVIEW_DATE_ISO}}">{{MEDICAL_REVIEW_DATE_FA}}</time></span><span data-clinic-reputation-slot></span>
 </div>
+</details>
 </figcaption>
 </figure>
 </header>
@@ -32,9 +34,11 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <link href="https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master" itemprop="image">
 <picture id="image-saeed-ghezelbash-clinical-office-master-webp"><source sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px" srcset="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.c020523036b5.avif 640w, /media/images/physician/saeed-ghezelbash-clinical-examination-960.f0a5176eb40f.avif 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.a73a0af2c669.avif 1600w" type="image/avif"><source sizes="(max-width: 720px) calc(100vw - 4rem), (max-width: 960px) calc(100vw - 5rem), 960px" srcset="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.58a5d851a417.webp 640w, /media/images/physician/saeed-ghezelbash-clinical-examination-960.8a5905cf0654.webp 960w, /media/images/physician/saeed-ghezelbash-clinical-examination-1600.83c432ed4951.webp 1600w" type="image/webp"><img alt="دکتر سعید قزلباش با روپوش سفید و گوشی پزشکی، نشسته پشت میز در محیط بالینی خود در کرمانشاه" decoding="async" height="427" loading="lazy" src="/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.58a5d851a417.webp" width="640">
 </picture>
-<figcaption class="clinical-figure-caption" id="caption-saeed-ghezelbash-clinical-office-master">
-<div class="figure-caption-title">دکتر سعید قزلباش در محیط بالینی</div>
+<figcaption class="clinical-figure-caption">
+<details class="caption-disclosure">
+<summary class="figure-caption-title" id="caption-saeed-ghezelbash-clinical-office-master">دکتر سعید قزلباش در محیط بالینی</summary>
 <div aria-label="هویت تأییدشده پزشک" class="verified-identity-core figure-identity-core" id="verified-physician-identity-core" role="group"><strong>هویت تأییدشده دکتر سعید قزلباش:</strong> <a href="https://www.wikidata.org/wiki/Q140287622" rel="me external noopener">Wikidata Q140287622</a> · <a href="https://membersearch.irimc.org/member/profile?id=9efaaf28-52ff-49ad-8d45-be6e48c4fa3e" rel="me external noopener">نظام پزشکی ۱۶۷۴۳۰</a> · <a href="https://orcid.org/0009-0001-9346-8475" rel="me external noopener">ORCID 0009-0001-9346-8475</a> · <a href="{{OFFICIAL_INSTAGRAM_URL}}" rel="me external noopener">اینستاگرام رسمی @doctor.ghezelbaash</a> · Google KG <code>/g/11nqdfk76c</code> · مالک و بنیان‌گذار <a href="#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه</a>. <span>· پژوهش: <a href="https://www.ncbi.nlm.nih.gov/myncbi/saeed.ghezelbash.1/bibliography/public/" rel="external noopener">NCBI Bibliography</a> · <a href="https://openalex.org/A5064828898" rel="me external noopener">OpenAlex A5064828898</a> · <a href="https://scholar.google.com/citations?user=BcWBirUAAAAJ" rel="me external noopener">Google Scholar</a></span></div>
+</details>
 </figcaption>
 </figure>
 <p>«صورتم را بهتر کن» درخواست ساده‌ای نیست. بهتر یعنی چه؟ جوان‌تر؟ باریک‌تر؟ شبیه عکس فیلترشده؟ یا فقط کمتر خسته؟ گاهی یک تغییر آناتومیک روشن وجود دارد و درمان می‌تواند منطقی باشد. گاهی بیمار دارد با صورتی می‌جنگد که مشکل اصلی‌اش مقایسه بی‌وقفه با تصاویر غیرواقعی است. پزشک قرار نیست هر نارضایتی را به تعداد سرنگ ترجمه کند. بعضی صورت‌ها به درمان نیاز دارند. بعضی خواسته‌ها به اصلاح. اشتباه گرفتن این دو، همان جایی است که چهره کم‌کم از صاحبش جدا می‌شود.</p>
@@ -76,16 +80,6 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 </li>
 </ol>
 </nav>
-<aside aria-labelledby="video-library-title" class="quick-start" id="video-library">
-<p id="video-library-title"><strong>ویدئوهای آموزشی و تجربه مراجع دکتر سعید قزلباش در همین راهنما</strong></p>
-<p>هر ویدئو کنار متن و زمینه بالینی مرتبط خودش قرار گرفته است؛ برای رفتن مستقیم به ویدئو، موضوع را انتخاب کنید.</p>
-<nav aria-label="دسترسی مستقیم به ویدئوهای دکتر سعید قزلباش">
-<a href="#video-saeed-ghezelbash-subcision-technique">تکنیک صحیح سابسیژن</a>
-<a href="#video-saeed-ghezelbash-jalupro-vs-profhilo">جالپرو یا پروفایلو</a>
-<a href="#video-saeed-ghezelbash-thread-lift-workshop">ورکشاپ لیفت نخ</a>
-<a href="#video-saeed-ghezelbash-kurdish-patient-review">تجربه مراجع کُرد</a>
-</nav>
-</aside>
 <section aria-labelledby="diagnosis-before-aesthetic-treatment-selection-heading" class="content-section" id="diagnosis-before-aesthetic-treatment-selection" itemid="https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection" itemscope itemtype="https://schema.org/WebPageElement">
 <link href="https://www.ghezelbaash.ir/#diagnosis-before-aesthetic-treatment-selection" itemprop="url">
 <meta content="fa-IR" itemprop="inLanguage">
@@ -5999,9 +5993,3 @@ robots: "index, follow, max-image-preview:large, max-snippet:-1, max-video-previ
 <p>پەیوەندیی ڕاستەوخۆ: ناردنی وێنە و داواکردنی هەڵسەنگاندنی سەرەتایی پێش گەشت</p>
 </section>
 </details>
-<aside aria-labelledby="quick-start-title" class="quick-start quick-start--end">
-<h2 id="quick-start-title">مسیر سریع در این راهنمای جامع</h2>
-<p>برای پاسخ کوتاه از مسیر مناسب شروع کنید؛ متن کامل هر بخش برای تصمیم پزشکی، مقایسه روش‌ها و پیگیری عوارض در همان صفحه باقی مانده است.</p>
-<nav aria-label="مسیرهای سریع محتوای پزشکی زیبایی"><a href="#diagnosis-before-aesthetic-treatment-selection">انتخاب درمان از تشخیص</a><a href="#aesthetic-treatment-selection">مقایسه روش‌ها</a><a href="#complications-aftercare-and-follow-up">عوارض و پیگیری</a><a href="#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah">اطلاعات کلینیک</a>
-</nav>
-</aside>

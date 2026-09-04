@@ -70,7 +70,6 @@ for (const artifact of STATIC_ARTIFACTS)
 const redirectRegistry = await loadRedirectRegistry(root);
 const canonicalRedirects = canonicalHostRedirectRows(redirectRegistry);
 await writeExact("_redirects", renderCanonicalHostRedirects(redirectRegistry));
-
 const generatedPublic = path.join(root, ".generated/public");
 const generatedPublicFiles = STATIC_ARTIFACTS.map(({ source }) => source)
   .filter((source) => path.posix.dirname(source) === ".generated/public")
@@ -164,7 +163,7 @@ console.log(
       stableMediaAliases: stableMedia.aliases.length,
       canonicalHostRedirects: canonicalRedirects.length,
       destinations: destinations.size,
-      routeWrappers: 0,
+      deliveryMode: "static-assets",
     },
     null,
     2,

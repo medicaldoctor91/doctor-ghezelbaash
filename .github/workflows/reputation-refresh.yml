@@ -1,0 +1,100 @@
+name: Refresh static Google Maps reputation
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: doctor-ghezelbaash-external-mutation
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Validate current observation and read Google Places exactly once
+        id: places
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GOOGLE_PLACES_API_KEY:-}"
+          echo "::add-mask::$GOOGLE_PLACES_API_KEY"
+          node scripts/platform-contract.mjs validate
+          node scripts/reputation.mjs validate
+          PLACE_ID="$(node -p "require('./src/data/release.json').clinic.placeId")"
+          FIELD_MASK="$(node -p "require('./.release/policy/platform-contract.json').automation.reputationRefresh.fieldMask.join(',')")"
+          curl --fail --silent --show-error --connect-timeout 10 --max-time 25 \
+            -H "X-Goog-Api-Key: $GOOGLE_PLACES_API_KEY" \
+            -H "X-Goog-FieldMask: $FIELD_MASK" \
+            "https://places.googleapis.com/v1/places/$PLACE_ID?languageCode=fa&regionCode=IR" \
+            > /tmp/google-place.json
+          export GOOGLE_CHECKED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          node scripts/reputation.mjs google /tmp/google-place.json
+      - name: Prove an unchanged check made no source mutation
+        if: steps.places.outputs.changed != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain)"
+          echo STATIC_REPUTATION_NOOP_PASS
+      - name: Commit and rebase the changed observation locally
+        if: steps.places.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/reputation.mjs validate
+          changed="$(git status --porcelain=v1 --untracked-files=all | cut -c4- | LC_ALL=C sort)"
+          test "$changed" = "src/data/reputation-observation.json"
+          git add src/data/reputation-observation.json
+          git diff --cached --quiet && {
+            echo "::error::changed=true but no observation diff was staged"
+            exit 1
+          }
+          git config user.name ghezelbaash-reputation-bot
+          git config user.email actions@users.noreply.github.com
+          git commit -m "chore: refresh clinic Google Maps reputation"
+          test "$(git diff-tree --no-commit-id --name-only -r HEAD)" = "src/data/reputation-observation.json"
+          git fetch --no-tags origin main
+          git rebase origin/main
+      - name: Install exact dependencies for a changed observation
+        if: steps.places.outputs.changed == 'true'
+        run: npm ci
+      - name: Audit dependencies for a changed observation
+        if: steps.places.outputs.changed == 'true'
+        run: npm run security:dependencies
+      - name: Build and validate the exact rebased candidate
+        if: steps.places.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run build
+          node scripts/reputation.mjs validate
+          test -z "$(git status --porcelain --untracked-files=no)"
+      - name: Publish only the validated observation commit
+        if: steps.places.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GITHUB_TOKEN:-}"
+          echo "::add-mask::$GITHUB_TOKEN"
+          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
+          unset GITHUB_AUTH

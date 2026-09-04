@@ -626,8 +626,17 @@ async function verifyCore() {
       fail(`Machine URL leaked into production sitemap ${rel}`);
   let missing,
     missingX = "";
+  const missingBodyExact = (body) =>
+    /<title>\s*صفحه پیدا نشد \| دکتر سعید قزلباش\s*<\/title>/i.test(body) &&
+    /<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(
+      body,
+    ) &&
+    /<h1\b[^>]*>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
+      body,
+    );
   const missingContractExact = (probe) =>
     probe.r.status === 404 &&
+    missingBodyExact(probe.text) &&
     probe.r.headers.get("cache-control") === "no-store" &&
     (!enforce404 ||
       (/noindex/i.test(probe.r.headers.get("x-robots-tag") || "") &&
@@ -653,6 +662,8 @@ async function verifyCore() {
           `x-robots=${missingX}`,
           `language=${missing.r.headers.get("content-language")}`,
           `cache=${missing.r.headers.get("cache-control")}`,
+          `custom-body=${missingBodyExact(missing.text)}`,
+          `body-bytes=${Buffer.byteLength(missing.text)}`,
           `expected-csp-sha256=${expectedCspSha256}`,
           `live-csp-sha256=${liveCspSha256}`,
         ].join(" "),
@@ -666,6 +677,8 @@ async function verifyCore() {
         xRobots: missingX,
         language: missing.r.headers.get("content-language"),
         cacheControl: missing.r.headers.get("cache-control"),
+        customBody: missingBodyExact(missing.text),
+        bodyBytes: Buffer.byteLength(missing.text),
         expectedCspSha256: createHash("sha256")
           .update(expected404Csp)
           .digest("hex"),
@@ -693,6 +706,8 @@ async function verifyCore() {
         matrix,
         missingStatus: missing.r.status,
         missingXRobots: missingX,
+        missingCustomBody: missingBodyExact(missing.text),
+        missingBodyBytes: Buffer.byteLength(missing.text),
         managedRobotsConflictDetected: false,
         googlebotBudget: {
           bodyBytes: budgetBodyBytes,

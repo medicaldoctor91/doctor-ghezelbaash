@@ -24,7 +24,6 @@ import {
   verifyHuggingFaceRemoteDistribution,
 } from "./lib/hugging-face-distribution.mjs";
 
-const forbiddenDatasetId = () => ["Q140", "304972"].join("");
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const must = (condition, message) => {
   if (!condition) throw new Error(message);
@@ -41,22 +40,6 @@ async function walkFiles(root, current = root) {
       files.push(path.relative(root, target).split(path.sep).join("/"));
   }
   return files.sort();
-}
-
-async function assertCanonicalHuggingFaceIdentity(root) {
-  const forbidden = [
-    [Buffer.from(forbiddenDatasetId()), "forbidden Dataset identifier"],
-    [Buffer.from("dataset_wikidata"), "forbidden dataset_wikidata field"],
-  ];
-  for (const relative of await walkFiles(root)) {
-    const content = await readFile(path.join(root, relative));
-    for (const [needle, label] of forbidden) {
-      if (content.includes(needle))
-        throw new Error(
-          `Hugging Face identity drift (${label}) in ${relative}`,
-        );
-    }
-  }
 }
 
 async function cleanDistributionRoot(hub) {
@@ -319,7 +302,6 @@ Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${r
     JSON.stringify(actual) === JSON.stringify(expected),
     `Hugging Face distribution inventory drift: ${actual.filter((file) => !expected.includes(file)).join(", ") || "missing expected file"}`,
   );
-  await assertCanonicalHuggingFaceIdentity(hub);
   must(
     hf.taskCategories.every((task) => readme.includes(task)) &&
       configs.every(

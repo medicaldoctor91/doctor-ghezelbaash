@@ -14,6 +14,13 @@ import {
   exactLanguageLiteral,
   indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
+import {
+  bindClinicReputation,
+  composeReputationObservation,
+  evaluateGoogleReputation,
+  renderClinicReputationHtml,
+  validateReputationObservation,
+} from "../src/lib/reputation-observation.mjs";
 async function file_transaction() {
   const must = (condition, message) => {
       if (!condition) throw new Error(message);
@@ -475,156 +482,131 @@ async function canonical_semantic_derivation_contract() {
     ),
   );
 }
-async function google_maps_reputation_contract() {
-  const release = JSON.parse(await readFile("src/data/release.json", "utf8")),
-    functionSource = await readFile(
-      "functions/api/google-maps-reputation.js",
-      "utf8",
-    ),
-    importPattern =
-      /^import release from "\.\.\/\.\.\/src\/data\/release\.json";$/m;
-  assert.match(functionSource, importPattern);
-  const functionModule = await import(
-      `data:text/javascript;base64,${Buffer.from(
-        functionSource.replace(
-          importPattern,
-          `const release = ${JSON.stringify(release)};`,
-        ),
-      ).toString("base64")}`
-    ),
-    {
-      normalizeGoogleMapsReputation,
-      onRequestGet: googleMapsReputation,
-    } = functionModule,
-    valid = {
-      id: release.clinic.placeId,
-      rating: 5,
-      userRatingCount: 166,
-      attributions: [
-        {
-          provider: "Example Provider",
-          providerUri: "https://example.com/source",
-        },
-      ],
-      businessStatus: "OPERATIONAL",
+async function static_google_maps_reputation_contract() {
+  const release = JSON.parse(await readFile("src/data/release.json", "utf8"));
+  const current = JSON.parse(
+    await readFile("src/data/reputation-observation.json", "utf8"),
+  );
+  const canonical = validateReputationObservation(current, release);
+  assert.equal(canonical.entity, release.clinic.id);
+  assert.equal(canonical.placeId, release.clinic.placeId);
+  assert.equal(canonical.rating, Number(current.rating));
+  assert.equal(canonical.reviewCount, Number(current.reviewCount));
+
+  const unchangedPlace = {
+    id: release.clinic.placeId,
+    rating: canonical.rating,
+    userRatingCount: canonical.reviewCount,
+    businessStatus: "OPERATIONAL",
+  };
+  const unchanged = evaluateGoogleReputation({
+    place: unchangedPlace,
+    current,
+    release,
+  });
+  assert.equal(unchanged.changed, false);
+
+  assert.throws(
+    () =>
+      evaluateGoogleReputation({
+        place: { ...unchangedPlace, id: "wrong" },
+        current,
+        release,
+      }),
+    /invalid/,
+  );
+  assert.throws(
+    () =>
+      evaluateGoogleReputation({
+        place: { ...unchangedPlace, businessStatus: "CLOSED_PERMANENTLY" },
+        current,
+        release,
+      }),
+    /invalid/,
+  );
+  assert.throws(
+    () =>
+      evaluateGoogleReputation({
+        place: { ...unchangedPlace, userRatingCount: 1.5 },
+        current,
+        release,
+      }),
+    /invalid/,
+  );
+  assert.throws(
+    () =>
+      evaluateGoogleReputation({
+        place: { ...unchangedPlace, movedPlaceId: "replacement" },
+        current,
+        release,
+      }),
+    /invalid/,
+  );
+
+  const nextRating =
+    canonical.rating === 5 ? 4.9 : Math.min(5, canonical.rating + 0.1);
+  const nextReviewCount = canonical.reviewCount + 1;
+  const changed = evaluateGoogleReputation({
+    place: {
+      ...unchangedPlace,
+      rating: nextRating,
+      userRatingCount: nextReviewCount,
     },
-    normalized = normalizeGoogleMapsReputation(valid);
-  assert.equal(normalized.rating, 5);
-  assert.equal(normalized.userRatingCount, 166);
-  assert.equal(normalized.attributions.length, 1);
-  assert.equal(
-    normalizeGoogleMapsReputation({ ...valid, id: "wrong" }),
-    null,
-  );
-  assert.equal(
-    normalizeGoogleMapsReputation({
-      ...valid,
-      businessStatus: "CLOSED_PERMANENTLY",
-    }),
-    null,
-  );
-  assert.equal(
-    normalizeGoogleMapsReputation({ ...valid, userRatingCount: 1.5 }),
-    null,
-  );
+    current,
+    release,
+  });
+  assert.equal(changed.changed, true);
+  const next = composeReputationObservation({
+    evaluation: changed,
+    release,
+    observedAt: "2026-09-04T03:00:00Z",
+  });
+  assert.equal(next.rating, nextRating);
+  assert.equal(next.reviewCount, nextReviewCount);
+  assert.equal(next.entity, release.clinic.id);
+  assert.equal(next.placeId, release.clinic.placeId);
 
-  const request = new Request(
-      "https://www.ghezelbaash.ir/api/google-maps-reputation",
-      {
-        headers: {
-          Accept: "application/json",
-          Referer: "https://www.ghezelbaash.ir/",
-          "Sec-Fetch-Dest": "empty",
-          "Sec-Fetch-Mode": "cors",
-          "Sec-Fetch-Site": "same-origin",
-        },
-      },
+  const mapsUrl = `https://www.google.com/maps?cid=${release.clinic.cid}`;
+  const html = renderClinicReputationHtml({
+    observation: current,
+    release,
+    mapsUrl,
+  });
+  assert.match(html, /id="google-maps-clinic-reputation-current"/);
+  assert.ok(
+    html.includes(`data-clinic-rating value="${canonical.rating}"`),
+  );
+  assert.ok(
+    html.includes(
+      `data-clinic-review-count value="${canonical.reviewCount}"`,
     ),
-    disabled = await googleMapsReputation({ env: {}, request });
-  assert.equal(disabled.status, 204);
-  assert.match(disabled.headers.get("cache-control"), /no-store/);
+  );
+  assert.match(html, /translate="no">Google Maps<\/span>/);
+  assert.doesNotMatch(html, /\/api\/google-maps-reputation/);
+  const bound = bindClinicReputation(
+    '<section><span data-clinic-reputation-slot></span></section>',
+    { observation: current, release, mapsUrl },
+  );
+  assert.equal(bound, `<section>${html}</section>`);
+  assert.throws(
+    () =>
+      bindClinicReputation("<section></section>", {
+        observation: current,
+        release,
+        mapsUrl,
+      }),
+    /Expected one clinic reputation slot/,
+  );
 
-  const originalFetch = globalThis.fetch;
-  let upstreamRequest;
-  try {
-    globalThis.fetch = async (input, init) => {
-      upstreamRequest = { url: String(input), init };
-      return Response.json(valid);
-    };
-    const response = await googleMapsReputation({
-      env: { GOOGLE_PLACES_API_KEY: "test-key" },
-      request,
-    });
-    assert.equal(response.status, 200);
-    assert.match(response.headers.get("cache-control"), /no-store/);
-    assert.equal(
-      response.headers.get("cloudflare-cdn-cache-control"),
-      "no-store",
-    );
-    assert.equal(
-      response.headers.get("x-robots-tag"),
-      "noindex, nofollow, noarchive",
-    );
-    assert.deepEqual(await response.json(), normalized);
-    assert.match(upstreamRequest.url, /places\.googleapis\.com\/v1\/places\//);
-    assert.match(
-      upstreamRequest.init.headers["X-Goog-FieldMask"],
-      /rating,userRatingCount/,
-    );
-    assert.equal(upstreamRequest.init.cache, "no-store");
-
-    globalThis.fetch = async () => Response.json({ ...valid, id: "wrong" });
-    const invalid = await googleMapsReputation({
-      env: { GOOGLE_PLACES_API_KEY: "test-key" },
-      request,
-    });
-    assert.equal(invalid.status, 503);
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
-
-  const crossSite = await googleMapsReputation({
-    env: { GOOGLE_PLACES_API_KEY: "unused" },
-    request: new Request(request.url, {
-      headers: {
-        ...Object.fromEntries(request.headers),
-        "Sec-Fetch-Site": "cross-site",
-      },
-    }),
-  });
-  assert.equal(crossSite.status, 404);
-  const direct = await googleMapsReputation({
-    env: { GOOGLE_PLACES_API_KEY: "unused" },
-    request: new Request(request.url, {
-      headers: { Accept: "application/json" },
-    }),
-  });
-  assert.equal(direct.status, 404);
-  const alias = await googleMapsReputation({
-    env: { GOOGLE_PLACES_API_KEY: "unused" },
-    request: new Request(
-      "https://doctor-ghezelbaash.pages.dev/api/google-maps-reputation",
-      {
-        headers: {
-          ...Object.fromEntries(request.headers),
-          Referer: "https://doctor-ghezelbaash.pages.dev/",
-        },
-      },
-    ),
-  });
-  assert.equal(alias.status, 404);
   console.log(
     JSON.stringify(
       {
-        stage: "GOOGLE_MAPS_REPUTATION_CONTRACT",
+        stage: "STATIC_GOOGLE_MAPS_REPUTATION_CONTRACT",
+        canonicalClinicScope: "PASS",
         canonicalPlaceId: "PASS",
-        liveFetch: "PASS",
-        noStore: "PASS",
-        failOpenWithoutSecret: "PASS",
-        invalidUpstreamRejection: "PASS",
-        crossSiteRejection: "PASS",
-        directRequestRejection: "PASS",
-        nonCanonicalHostRejection: "PASS",
+        responseValidation: "PASS",
+        initialHtmlBinding: "PASS",
+        requestTimeRuntime: false,
         integrity: "PASS",
       },
       null,
@@ -632,12 +614,13 @@ async function google_maps_reputation_contract() {
     ),
   );
 }
+
 await file_transaction();
 graph_url_target_contract();
 await release_promotion();
 semantic_article_contract();
 await canonical_semantic_derivation_contract();
-await google_maps_reputation_contract();
+await static_google_maps_reputation_contract();
 console.log(
   JSON.stringify({
     stage: "CONTRACT_TEST_SUITE",

@@ -25,19 +25,37 @@
       "destinationDir": "dist",
       "rootDir": ""
     },
-    "function": {
-      "route": "/api/google-maps-reputation",
-      "source": "functions/api/google-maps-reputation.js",
-      "compatibilityDate": "2026-08-31",
-      "wranglerVersion": "4.127.1",
-      "requiredProductionSecrets": [
-        "GOOGLE_PLACES_API_KEY"
-      ]
-    },
     "preview": {
       "deploymentSetting": "none",
       "branchIncludes": [],
       "branchExcludes": []
+    },
+    "delivery": {
+      "mode": "static-assets",
+      "serverRuntime": "none",
+      "dynamicRoutes": [],
+      "requiredProductionBindings": []
+    }
+  },
+  "automation": {
+    "reputationRefresh": {
+      "workflow": ".github/workflows/reputation-refresh.yml",
+      "schedule": "23 */6 * * *",
+      "sourceFile": "src/data/reputation-observation.json",
+      "source": "Google Places API (New)",
+      "fieldMask": [
+        "id",
+        "rating",
+        "userRatingCount",
+        "businessStatus",
+        "movedPlace",
+        "movedPlaceId"
+      ],
+      "requiredGitHubSecrets": [
+        "GOOGLE_PLACES_API_KEY"
+      ],
+      "upstreamCallsPerRun": 1,
+      "publishOnChangeOnly": true
     }
   }
 }

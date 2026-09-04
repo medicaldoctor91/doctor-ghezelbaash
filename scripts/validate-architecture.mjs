@@ -1,5 +1,4 @@
 import path from "node:path";
-import { existsSync } from "node:fs";
 import { access, readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
@@ -15,7 +14,10 @@ const readJson = (relative) => read(relative).then(JSON.parse);
 
 const required = [
   "astro.config.mjs",
-  "functions/api/google-maps-reputation.js",
+  ".github/workflows/reputation-refresh.yml",
+  "src/data/reputation-observation.json",
+  "src/lib/reputation-observation.mjs",
+  "scripts/reputation.mjs",
   "src/content-source/page.md",
   "src/data/document-head.json",
   "src/data/machine-resources.json",
@@ -40,11 +42,6 @@ const required = [
   "scripts/lib/projections/contact-discovery.mjs",
 ];
 for (const file of required) await access(path.join(root, file));
-assert(
-  !existsSync(path.join(root, "src/lib/css-source.mjs")),
-  "Legacy parallel CSS source must not exist",
-);
-
 const routes = (
   await readdir(path.join(root, "src/pages"), { withFileTypes: true })
 )
@@ -56,23 +53,12 @@ assert(
     JSON.stringify(["404.astro", "favicon.png.ts", "index.astro"]),
   `Astro route surface drift: ${routes.join(", ")}`,
 );
-const listFiles = async (directory, prefix = "") => {
-  const files = [];
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const relative = path.posix.join(prefix, entry.name);
-    if (entry.isDirectory())
-      files.push(
-        ...(await listFiles(path.join(directory, entry.name), relative)),
-      );
-    else if (entry.isFile()) files.push(relative);
-  }
-  return files.sort();
-};
-const edgeFunctions = await listFiles(path.join(root, "functions"));
+const rootEntries = (
+  await readdir(root, { withFileTypes: true })
+).map((entry) => entry.name);
 assert(
-  JSON.stringify(edgeFunctions) ===
-    JSON.stringify(["api/google-maps-reputation.js"]),
-  `Cloudflare function surface drift: ${edgeFunctions.join(", ")}`,
+  !rootEntries.includes("functions"),
+  "Static Cloudflare Pages source must not declare a server-runtime surface",
 );
 const contentSources = (
   await readdir(path.join(root, "src/content-source"), { withFileTypes: true })
@@ -119,7 +105,13 @@ const [
   contactCompiler,
   documentHead,
   baseLayout,
-  googleMapsReputationFunction,
+  guideNavigator,
+  contentAssembler,
+  reputationModule,
+  reputationScript,
+  reputationWorkflow,
+  reputationObservation,
+  platformContract,
   indexPage,
   knowledgeGraph,
   googlePageMicrodata,
@@ -144,7 +136,13 @@ const [
   read("scripts/lib/projections/contact-discovery.mjs"),
   read("src/components/DocumentHead.astro"),
   read("src/layouts/BaseLayout.astro"),
-  read("functions/api/google-maps-reputation.js"),
+  read("src/components/GuideNavigator.astro"),
+  read("scripts/lib/assemble-content.mjs"),
+  read("src/lib/reputation-observation.mjs"),
+  read("scripts/reputation.mjs"),
+  read(".github/workflows/reputation-refresh.yml"),
+  readJson("src/data/reputation-observation.json"),
+  readJson(".release/policy/platform-contract.json"),
   read("src/pages/index.astro"),
   read("src/lib/knowledge-graph.ts"),
   read("src/lib/google-page-microdata.mjs"),
@@ -267,38 +265,46 @@ assert(
 );
 assert(
   baseLayout.includes("../styles/global.css?raw") &&
-    baseLayout.includes("../lib/css-delivery.mjs") &&
-    !baseLayout.includes("../lib/css-source.mjs"),
+    baseLayout.includes("../lib/css-delivery.mjs"),
   "Layout must assemble the single stylesheet directly",
 );
 assert(
-  /import\s+release\s+from\s+["']\.\.\/\.\.\/src\/data\/release\.json["']/.test(
-    googleMapsReputationFunction,
-  ) &&
-    /export\s+async\s+function\s+onRequestGet/.test(
-      googleMapsReputationFunction,
-    ) &&
-    googleMapsReputationFunction.includes("GOOGLE_PLACES_API_KEY") &&
-    googleMapsReputationFunction.includes('"userRatingCount"') &&
-    googleMapsReputationFunction.includes('"attributions"') &&
-    googleMapsReputationFunction.includes(
-      '"Cache-Control": "private, no-store, max-age=0"',
-    ) &&
-    googleMapsReputationFunction.includes(
-      '"Cloudflare-CDN-Cache-Control": "no-store"',
-    ) &&
-    googleMapsReputationFunction.includes('cache: "no-store"') &&
-    googleMapsReputationFunction.includes(
-      "requestUrl.origin === canonicalOrigin",
-    ) &&
-    googleMapsReputationFunction.includes(
-      "referrer.origin === canonicalOrigin",
-    ) &&
-    !googleMapsReputationFunction.includes('"googleMapsUri"') &&
-    !/\b(?:caches|localStorage|sessionStorage|KV|R2)\b/.test(
-      googleMapsReputationFunction,
-    ),
-  "Live Google Maps reputation function must be direct, transient, and fail-closed",
+  pageSource.split('<span data-clinic-reputation-slot></span>').length - 1 === 1 &&
+    contentAssembler.includes("bindClinicReputation") &&
+    contentAssembler.includes("src/data/reputation-observation.json") &&
+    contentAssembler.includes("content = bindClinicReputation(content"),
+  "Static clinic reputation must be bound exactly once by the canonical content assembler",
+);
+assert(
+  reputationObservation.entity === release.clinic.id &&
+    reputationObservation.placeId === release.clinic.placeId &&
+    reputationObservation.source === "Google Places API (New)" &&
+    reputationModule.includes("validateReputationObservation") &&
+    reputationModule.includes("evaluateGoogleReputation") &&
+    reputationModule.includes("renderClinicReputationHtml") &&
+    reputationScript.includes("composeReputationObservation") &&
+    reputationScript.includes("writeAtomic") &&
+    reputationWorkflow.includes('cron: "23 */6 * * *"') &&
+    reputationWorkflow.includes("GOOGLE_PLACES_API_KEY") &&
+    reputationWorkflow.includes("node scripts/reputation.mjs google") &&
+    reputationWorkflow.includes("src/data/reputation-observation.json") &&
+    reputationWorkflow.split("places.googleapis.com/v1/places/").length - 1 === 1 &&
+    !reputationWorkflow.includes("--retry") &&
+    !reputationWorkflow.includes("huggingface") &&
+    !reputationWorkflow.includes("zenodo") &&
+    !reputationWorkflow.includes("cloudflare-pages.mjs"),
+  "Six-hour bounded static clinic reputation pipeline drift",
+);
+assert(
+  platformContract.cloudflare?.delivery?.mode === "static-assets" &&
+    platformContract.cloudflare?.delivery?.serverRuntime === "none" &&
+    JSON.stringify(platformContract.cloudflare?.delivery?.dynamicRoutes) ===
+      JSON.stringify([]) &&
+    JSON.stringify(
+      platformContract.cloudflare?.delivery?.requiredProductionBindings,
+    ) === JSON.stringify([]) &&
+    !/fetch\s*\(/.test(guideNavigator),
+  "Static-only Cloudflare delivery or client reputation runtime contract drift",
 );
 assert(
   !projectionContext.includes("graphByUrl") &&
@@ -416,7 +422,7 @@ for (const [resourcePath, title] of [
 assert(
   /from\s+['"]\.\.\/src\/lib\/resources\.mjs['"]/.test(materializer) &&
     /path\.join\(root,\s*['"]\.generated\/public['"]\)/.test(materializer),
-  "Static materializer must use the resource registry and generated public workspace",
+  "Static materializer must own resources and generated public files",
 );
 assert(
   deploymentHeadersGenerator.includes("./lib/headers-template.mjs") &&
@@ -473,6 +479,16 @@ assert(
   pkg.scripts?.["render:calibration:update"] ===
     "node scripts/update-render-calibration.mjs",
   "Render calibration command drift",
+);
+assert(
+  pkg.scripts?.["validate:reputation"] ===
+    "node scripts/reputation.mjs validate" &&
+    pkg.scripts?.["reputation:update"] ===
+      "node scripts/reputation.mjs google" &&
+    String(pkg.scripts?.["validate:source"] || "").includes(
+      "npm run validate:reputation",
+    ),
+  "Static reputation validation/update command drift",
 );
 const scriptSteps = (name) =>
   String(pkg.scripts?.[name] || "")
@@ -570,7 +586,7 @@ console.log(
     {
       stage: "ARCHITECTURE",
       astroRoutes: routes.length,
-      cloudflareFunctions: edgeFunctions.length,
+      cloudflareFunctions: 0,
       contentSources: contentSources.length,
       stylesheetSources: styles.length,
       projectionCompilers: 5,

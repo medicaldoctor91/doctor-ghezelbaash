@@ -13,6 +13,11 @@ import {
   indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
+import { deriveSiteData } from "../src/lib/site-data.mjs";
+import {
+  assertRenderedClinicReputation,
+  validateReputationObservation,
+} from "../src/lib/reputation-observation.mjs";
 import {
   analyzeGraphClosure,
   assertSameDocumentGraphUrlTargets,
@@ -62,6 +67,10 @@ const release = await readJson(path.join(data, "release.json")),
     path.join(data, "semantic/support-profile.json"),
   ),
   stableMedia = await readJson(path.join(data, "stable-media-aliases.json")),
+  reputationObservation = validateReputationObservation(
+    await readJson(path.join(data, "reputation-observation.json")),
+    release,
+  ),
   rdfLock = await readJson(
     path.join(root, ".generated/semantic/rdf-lock.json"),
   );
@@ -125,9 +134,39 @@ const graphUrlTargets = assertSameDocumentGraphUrlTargets(graph, {
   canonicalUrl: release.canonicalUrl,
   htmlIds: inspectHtml(html).ids,
 });
+const siteData = deriveSiteData(release, graph);
+assertRenderedClinicReputation(html, {
+  observation: reputationObservation,
+  release,
+  mapsUrl: siteData.mapsUrl,
+});
 const { services, answers } = deriveCanonicalSemanticSets(graph, release);
+const notFoundDocument = inspectHtml(notFound);
 if (/<link\b(?=[^>]*\brel=["']canonical["'])[^>]*>/i.test(notFound))
   fail("404 page must not declare a canonical URL");
+if (
+  !/<html\b(?=[^>]*\blang=["']fa-IR["'])(?=[^>]*\bdir=["']rtl["'])/i.test(
+    notFound,
+  ) ||
+  !/<title>\s*صفحه پیدا نشد \| دکتر سعید قزلباش\s*<\/title>/i.test(
+    notFound,
+  ) ||
+  !/<meta\b(?=[^>]*\bname=["']robots["'])(?=[^>]*\bcontent=["']noindex, follow["'])[^>]*>/i.test(
+    notFound,
+  ) ||
+  !/<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(
+    notFound,
+  ) ||
+  !/<h1\b[^>]*>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
+    notFound,
+  ) ||
+  !/<a\b[^>]*\bhref=["']\/["'][^>]*>\s*بازگشت به صفحه اصلی\s*<\/a>/i.test(
+    notFound,
+  ) ||
+  notFoundDocument.mains.length !== 1 ||
+  notFoundDocument.guideArticles.length !== 1
+)
+  fail("Custom 404 document contract drift");
 const rdfTripleCount = rdfText.split(/\r?\n/).filter(Boolean).length;
 if (rdfTripleCount !== rdfLock.triples)
   fail(`DIST RDF measurement drift: ${rdfTripleCount}/${rdfLock.triples}`);
@@ -298,10 +337,10 @@ if (
 )
   fail("Maximum Content-Signal policy missing");
 if (
-  !headers.includes("connect-src 'self'") ||
-  headers.includes("connect-src 'none'")
+  !headers.includes("connect-src 'none'") ||
+  headers.includes("connect-src 'self'")
 )
-  fail("Same-origin live reputation connection policy drift");
+  fail("Static-only connection policy drift");
 const scripts = [
     ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi),
   ].map((m) => ({ attrs: m[1], body: m[2] })),

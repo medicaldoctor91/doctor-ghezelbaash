@@ -45,8 +45,21 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Export exact checked-out source for branch audit
+        shell: bash
+        run: |
+          git archive --format=zip --output=/tmp/doctor-ghezelbaash-source-${GITHUB_SHA}.zip HEAD
+      - name: Upload branch source audit package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: doctor-ghezelbaash-source-${{ github.sha }}
+          path: /tmp/doctor-ghezelbaash-source-${{ github.sha }}.zip
+          if-no-files-found: error
+          retention-days: 1
       - name: Validate HTML with Nu HTML Checker 26.8.30
         run: npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+      - name: Validate JSON-LD and Microdata against pinned Schema.org 30.0
+        run: npm run validate:schemaorg-vocabulary
       - name: Upload canonical distribution
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:

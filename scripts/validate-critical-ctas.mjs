@@ -2,19 +2,32 @@ import { readFile } from "node:fs/promises";
 import { deriveSiteData } from "../src/lib/site-data.mjs";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
 import { loadRedirectRegistry } from "./lib/redirect-registry.mjs";
+import {
+  assertRenderedClinicReputation,
+  validateReputationObservation,
+} from "../src/lib/reputation-observation.mjs";
 
-const [quick, runtime, reputationFunction] = await Promise.all([
+const [quick, runtime, observationSource] = await Promise.all([
   readFile("src/components/FloatingActionDock.astro", "utf8"),
   readFile("src/components/GuideNavigator.astro", "utf8"),
-  readFile("functions/api/google-maps-reputation.js", "utf8"),
+  readFile("src/data/reputation-observation.json", "utf8"),
 ]);
 const release = JSON.parse(await readFile("src/data/release.json", "utf8"));
 const graph = JSON.parse(
   await readFile("src/data/semantic/knowledge-graph.jsonld", "utf8"),
 );
+const observation = validateReputationObservation(
+  JSON.parse(observationSource),
+  release,
+);
 const redirectRegistry = await loadRedirectRegistry();
 const site = deriveSiteData(release, graph);
 const { content: source } = await assembleCanonicalContent({ graph });
+assertRenderedClinicReputation(source, {
+  observation,
+  release,
+  mapsUrl: site.mapsUrl,
+});
 
 const fail = (message) => {
   throw new Error(message);
@@ -50,39 +63,19 @@ if (heroMapsLinks.length !== 1)
 if (!visibleText(heroMapsLinks[0][0]))
   fail("Hero Maps evidence link has no accessible text");
 if (
-  !/\bdata-google-maps-reputation\b/i.test(heroMapsLinks[0][0]) ||
+  !/<data\b(?=[^>]*\bdata-clinic-rating\b)(?=[^>]*\bvalue=["'][^"']+["'])[^>]*>[\s\S]*?<\/data>/i.test(
+    heroFacts,
+  ) ||
+  !/<data\b(?=[^>]*\bdata-clinic-review-count\b)(?=[^>]*\bvalue=["'][^"']+["'])[^>]*>[\s\S]*?<\/data>/i.test(
+    heroFacts,
+  ) ||
   !/<span\b(?=[^>]*\bclass=["']google-maps-attribution["'])(?=[^>]*\btranslate=["']no["'])[^>]*>Google Maps<\/span>/i.test(
     heroMapsLinks[0][0],
   )
 )
-  fail("Live Maps reputation target or attribution drift");
-if (
-  !runtime.includes('fetch("/api/google-maps-reputation"') ||
-  !runtime.includes('cache: "no-store"') ||
-  !runtime.includes('credentials: "omit"') ||
-  !runtime.includes('referrerPolicy: "same-origin"') ||
-  !runtime.includes('addEventListener("load", queueReputation') ||
-  !runtime.includes("requestIdleCallback") ||
-  /\b(?:localStorage|sessionStorage)\b/.test(runtime)
-)
-  fail("Live Maps reputation progressive-enhancement contract drift");
-if (
-  !reputationFunction.includes("GOOGLE_PLACES_API_KEY") ||
-  !reputationFunction.includes('"userRatingCount"') ||
-  !reputationFunction.includes('"attributions"') ||
-  !reputationFunction.includes(
-    '"Cache-Control": "private, no-store, max-age=0"',
-  ) ||
-  !reputationFunction.includes(
-    '"Cloudflare-CDN-Cache-Control": "no-store"',
-  ) ||
-  !reputationFunction.includes('cache: "no-store"') ||
-  !reputationFunction.includes("requestUrl.origin === canonicalOrigin") ||
-  !reputationFunction.includes("referrer.origin === canonicalOrigin") ||
-  reputationFunction.includes('"googleMapsUri"') ||
-  /\b(?:caches|KV|R2)\b/.test(reputationFunction)
-)
-  fail("Transient Places request contract drift");
+  fail("Static Maps reputation values or attribution drift");
+if (/fetch\s*\(/.test(runtime))
+  fail("Request-time network retrieval re-entered the page runtime");
 
 for (const contract of heroContract) {
   const hits = hero.filter(
@@ -119,18 +112,24 @@ if (
 )
   fail("Deferred back-to-top control drift");
 if (
-  !/top\.hidden\s*=\s*scrollY\s*<\s*800/.test(runtime) ||
-  !/hero\s*=\s*d\.querySelector\(["']\.entity-hero["']\)/.test(runtime) ||
-  !/const\s+topObserver\s*=\s*new\s+IntersectionObserver/.test(runtime) ||
-  !/top\.hidden\s*=\s*entry\.isIntersecting/.test(runtime) ||
-  !/topObserver\.observe\(hero\)/.test(runtime) ||
-  !/else\s+addEventListener\(["']scroll["']\s*,\s*syncTop\s*,\s*\{\s*passive:\s*true\s*\}\)/.test(
+  !/let\s+topFrame\s*=\s*0/.test(runtime) ||
+  !/const\s+setTopVisible\s*=\s*\(visible\)\s*=>/.test(runtime) ||
+  !/top\.dataset\.visible\s*=\s*["']true["']/.test(runtime) ||
+  !/top\.dataset\.visible\s*=\s*["']false["']/.test(runtime) ||
+  !/setTopVisible\(scrollY\s*>\s*Math\.max\(960,\s*innerHeight\s*\*\s*1\.2\)\)/.test(
     runtime,
   ) ||
-  /addEventListener\(["']load["']\s*,\s*syncTop/.test(runtime) ||
-  /\bsyncTop\(\);/.test(runtime)
+  !/requestAnimationFrame\(\(\)\s*=>/.test(runtime) ||
+  !/addEventListener\(["']scroll["']\s*,\s*syncTop\s*,\s*\{\s*passive:\s*true\s*\}\)/.test(
+    runtime,
+  ) ||
+  !/addEventListener\(["']resize["']\s*,\s*syncTop\s*,\s*\{\s*passive:\s*true\s*\}\)/.test(
+    runtime,
+  ) ||
+  !/top\.hidden\s*=\s*true/.test(runtime) ||
+  !/top\.hidden\s*=\s*false/.test(runtime)
 )
-  fail("Observer-driven back-to-top visibility contract drift");
+  fail("Modern threshold-driven back-to-top visibility contract drift");
 for (const [binding, label] of [
   ["href={site.telHref}", "تماس"],
   ["href={site.chatUrl}", "چت با دکتر قزلباش"],
@@ -176,9 +175,16 @@ console.log(
       criticalCtas: "PASS",
       hero: heroContract.map((item) => item.label),
       floating: ["تماس", "چت با دکتر قزلباش", "مسیریابی"],
-      backToTop: "HIDDEN_UNTIL_HERO_EXIT",
+      reputation: {
+        delivery: "INITIAL_HTML",
+        entity: observation.entity,
+        placeId: observation.placeId,
+        rating: observation.rating,
+        reviewCount: observation.reviewCount,
+      },
+      backToTop: "HIDDEN_UNTIL_SCROLL_THRESHOLD",
       directionsPlaceId: release.clinic.placeId,
-      heroMapsEvidence: "LIVE_FAIL_OPEN_CANONICAL_LINK",
+      heroMapsEvidence: "STATIC_VALIDATED_GOOGLE_MAPS_OBSERVATION",
       contactAuthority: "release+canonical-graph",
       validationSurface: "assembled-canonical-content",
       destinationsLocked: true,
