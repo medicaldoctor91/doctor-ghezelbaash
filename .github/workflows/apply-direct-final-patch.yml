@@ -89,12 +89,12 @@ jobs:
           test ! -e .github/transport
           test ! -d scripts/migrations
           ! git grep -n -E '/api/google-maps-reputation|data-google-maps-reputation|Q140304972' -- ':!package-lock.json'
-          test "$(git grep -o 'data-caption-disclosure' -- src/content-source/page.md | wc -l)" = "2"
+          test "$(git grep -o 'class="caption-disclosure"' -- src/content-source/page.md | wc -l)" = "2"
           ! git grep -n 'id="video-library"' -- src/content-source/page.md
           ! git grep -n 'id="quick-start-title"' -- src/content-source/page.md
           test "$(git grep -o '<video' -- src/content-source/page.md | wc -l)" = "4"
-          test "$(node -e "const g=require('./src/data/semantic/knowledge-graph.jsonld'); const n=g['@graph']; console.log(n.filter(x=>(Array.isArray(x['@type'])?x['@type']:[x['@type']]).includes('VideoObject')).length)")" = "4"
-          test "$(node -e "const g=require('./src/data/semantic/knowledge-graph.jsonld'); const n=g['@graph']; console.log(n.filter(x=>(Array.isArray(x['@type'])?x['@type']:[x['@type']]).includes('Clip')).length)")" = "16"
+          test "$(node -e "const fs=require('node:fs'); const g=JSON.parse(fs.readFileSync('./src/data/semantic/knowledge-graph.jsonld','utf8')); const n=g['@graph']; console.log(n.filter(x=>(Array.isArray(x['@type'])?x['@type']:[x['@type']]).includes('VideoObject')).length)")" = "4"
+          test "$(node -e "const fs=require('node:fs'); const g=JSON.parse(fs.readFileSync('./src/data/semantic/knowledge-graph.jsonld','utf8')); const n=g['@graph']; console.log(n.filter(x=>(Array.isArray(x['@type'])?x['@type']:[x['@type']]).includes('Clip')).length)")" = "16"
           git diff --quiet "$BASE_SHA" -- src/data/semantic/knowledge-graph.jsonld src/data/semantic/head-profile.json src/data/semantic/support-profile.json src/data/retrieval/query-matrix-policy.json src/data/evidence-registry.json
 
           git config user.name "Dr. Saeed Ghezelbaash | دکتر سعید قزلباش"
