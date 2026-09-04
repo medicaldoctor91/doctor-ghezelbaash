@@ -30,6 +30,7 @@ CSS delivery is derived directly from `global.css` and `render-calibration.json`
 
 ```bash
 npm ci
+npm run security:dependencies
 npm run build
 ```
 
