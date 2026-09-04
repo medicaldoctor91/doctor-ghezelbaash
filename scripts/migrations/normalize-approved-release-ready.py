@@ -73,7 +73,32 @@ import_replacement = '''if (!registryText.includes(importLine)) {
 '''
 value = value[:import_start] + import_replacement + value[import_end:]
 
+old_skip = 'if (file === "scripts/migrations/apply-approved-release-ready.mjs") continue;'
+new_skip = '''if (
+    file === "scripts/migrations/apply-approved-release-ready.mjs" ||
+    file === "scripts/validate-static-reputation.mjs"
+  ) continue;'''
+if old_skip in value:
+    value = value.replace(old_skip, new_skip, 1)
+elif new_skip not in value:
+    raise SystemExit("Migration self-scan exclusion point was not found")
+
 path.write_text(value, encoding="utf-8")
+
+readme_path = Path("README.md")
+readme = readme_path.read_text(encoding="utf-8")
+readme = readme.replace(
+    "One isolated Cloudflare Pages Function supplies transient Google Maps reputation data without changing or caching the static root document.",
+    "A bounded six-hour Google Places observation supplies the clinic rating and public review count to the initial static HTML without any request-time server function or browser fetch.",
+)
+readme = readme.replace(
+    "The website deploys a static root plus the isolated `/api/google-maps-reputation` Function on Cloudflare Pages from `main`. Runtime and deployment settings are defined by `.release/policy/platform-contract.json` and validated against `.nvmrc`, `package.json` and CodeMeta.",
+    "The website deploys a static-only `dist/` on Cloudflare Pages from `main`; production must contain no Pages Functions or runtime reputation endpoint. The clinic reputation tuple is checked at most once every six hours and a changed, validated tuple follows the same canonical build path. Runtime and deployment settings are defined by `.release/policy/platform-contract.json` and validated against `.nvmrc`, `package.json` and CodeMeta.",
+)
+if "/api/google-maps-reputation" in readme or "Cloudflare Pages Function" in readme:
+    raise SystemExit("README still describes the retired request-time architecture")
+readme_path.write_text(readme, encoding="utf-8")
+
 print(
     {
         "migrationNormalizer": "PASS",
@@ -83,5 +108,7 @@ print(
         "siteTokenProperty": "{{CLINIC_MAPS_URL}}",
         "staticReputationToken": "{{CLINIC_REPUTATION_HTML}}",
         "importBoundary": "multiline-compatible",
+        "selfScan": "validator-excluded",
+        "readmeArchitecture": "static-only",
     }
 )
