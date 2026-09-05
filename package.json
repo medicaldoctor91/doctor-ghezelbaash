@@ -62,7 +62,7 @@
     "test:entity-facts": "node --test scripts/test-entity-facts.mjs",
     "test:physician-evidence": "node --test scripts/test-physician-evidence.mjs",
     "test:http-representation": "node --test scripts/test-http-representation.mjs && node scripts/verify-live.mjs test-transport && node scripts/verify-live.mjs test-release-context",
-    "test:machine-resources": "node --test scripts/test-machine-resources.mjs",
+    "test:machine-resources": "npm run rdf:deps && node --test scripts/test-machine-resources.mjs",
     "test:retrieval-corpus": "node --test scripts/test-retrieval-corpus.mjs"
   },
   "devDependencies": {
