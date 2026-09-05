@@ -1,4 +1,5 @@
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import {
   indexCanonicalGraph,
@@ -10,27 +11,59 @@ const appendUnique = (target, values) => {
   for (const value of values || [])
     if (!target.includes(value)) target.push(value);
 };
-const projectSchemaContext = (context) => {
-  const projected = Object.fromEntries(
-    Object.entries(context || {}).filter(([key, value]) => {
-      if (key === "@version" || key === "@vocab" || key === "schema")
-        return true;
-      return (
-        value &&
-        typeof value === "object" &&
-        typeof value["@id"] === "string" &&
-        value["@id"].startsWith("https://schema.org/")
-      );
-    }),
-  );
+/** Retains only context terms used by this projection and their dependencies. */
+export function projectSchemaContext(context, nodes) {
   if (
-    projected["@version"] !== 1.1 ||
-    projected["@vocab"] !== "https://schema.org/" ||
-    projected.schema !== "https://schema.org/"
+    context?.["@version"] !== 1.1 ||
+    context?.["@vocab"] !== "https://schema.org/" ||
+    context?.schema !== "https://schema.org/"
   )
     throw new Error("Canonical graph lacks the Schema.org projection context");
-  return projected;
-};
+  const required = new Set([
+    ...Object.keys(context).filter((key) => key.startsWith("@")),
+    "schema",
+  ]);
+  const includeTerm = (term) => {
+    if (typeof term !== "string") return;
+    if (Object.hasOwn(context, term)) required.add(term);
+    const colon = term.indexOf(":");
+    if (colon > 0 && Object.hasOwn(context, term.slice(0, colon)))
+      required.add(term.slice(0, colon));
+  };
+  const visit = (value, termValue = false) => {
+    if (Array.isArray(value)) {
+      for (const item of value) visit(item, termValue);
+    } else if (typeof value === "string") {
+      if (termValue || value.includes(":")) includeTerm(value);
+    } else if (value && typeof value === "object") {
+      for (const [key, nested] of Object.entries(value)) {
+        includeTerm(key);
+        visit(nested, key === "@type" || context[key]?.["@type"] === "@vocab");
+      }
+    }
+  };
+  visit(nodes);
+  // A term definition can itself use another term, prefix, or scoped context.
+  // Iterate to closure so datatype/prefix dependencies never disappear.
+  const visited = new Set();
+  const visitDefinition = (value) => {
+    if (typeof value === "string") includeTerm(value);
+    else if (Array.isArray(value)) value.forEach(visitDefinition);
+    else if (value && typeof value === "object")
+      for (const [key, nested] of Object.entries(value)) {
+        includeTerm(key);
+        visitDefinition(nested);
+      }
+  };
+  for (const term of required) {
+    if (visited.has(term)) continue;
+    visited.add(term);
+    visitDefinition(context[term]);
+  }
+  return Object.fromEntries(
+    Object.entries(context).filter(([key]) => required.has(key)),
+  );
+}
 const mergeProjectionProfiles = (profiles) => {
   const active = (profiles || []).filter(
     (profile) => profile && typeof profile === "object",
@@ -142,27 +175,141 @@ const assertNoHomepageEventNodes = (nodes, label) => {
       `${label} homepage projection must not expose Event-rich-result nodes: ${offenders.join(", ")}`,
     );
 };
-const assertNoHomepageExternalRichResultNodes = (
+const referenceIds = (value) =>
+  [value].flat().map((item) => item?.["@id"]).filter(Boolean);
+const sameField = (node, source, field) =>
+  isDeepStrictEqual(node?.[field], source?.[field]);
+
+/** One role contract shared by generation and validation of the delivered HTML. */
+export function assertHomepageAuthorityRoles({
   nodes,
-  label,
+  canonicalNodes,
+  profiles,
+  physicianId,
   canonicalOrigin,
-  citedScholarlyWorkIds = new Set(),
-) => {
-  const offenders = nodes
-    .filter(
-      (node) =>
-        isHomepageExternalRichResultNode(node, canonicalOrigin) &&
-        !citedScholarlyWorkIds.has(node["@id"]),
+}) {
+  const selected = new Map(nodes.map((node) => [node["@id"], node]));
+  const canonical = new Map(canonicalNodes.map((node) => [node["@id"], node]));
+  const physician = canonical.get(physicianId);
+  const projectedPhysician = selected.get(physicianId);
+  const policies = new Map();
+  const roleNames = new Set([
+    "credentialIssuer",
+    "physicianCoverage",
+    "physicianAuthoredWork",
+  ]);
+  for (const profile of profiles)
+    for (const [id, policy] of Object.entries(profile.idProfiles || {})) {
+      if (!policy.authorityRole) continue;
+      if (
+        !roleNames.has(policy.authorityRole) ||
+        !profile.ids.includes(id) ||
+        !selected.has(id) ||
+        policies.has(id)
+      )
+        throw new Error(`Invalid or unselected homepage authority role: ${id}`);
+      policies.set(id, policy);
+    }
+  for (const node of nodes)
+    if (
+      isHomepageExternalRichResultNode(node, canonicalOrigin) &&
+      !policies.has(node["@id"])
     )
-    .map(
-      (node) =>
-        `${node["@id"] || "(anonymous)"} [${nodeTypes(node).join(", ")}]`,
-    );
-  if (offenders.length)
-    throw new Error(
-      `${label} homepage projection must not expand external Article/Organization rich-result candidates: ${offenders.join(", ")}`,
-    );
-};
+      throw new Error(
+        `External homepage authority node requires a supported relationship role: ${node["@id"]}`,
+      );
+  const portraitIds = new Set(referenceIds(physician?.image));
+  const portraitUrls = new Set(
+    [...portraitIds].flatMap((id) => {
+      const image = canonical.get(id);
+      return [image?.url, image?.contentUrl].filter(Boolean);
+    }),
+  );
+  const usesPhysicianPortrait = (value) => {
+    if (Array.isArray(value)) return value.some(usesPhysicianPortrait);
+    if (typeof value === "string")
+      return portraitIds.has(value) || portraitUrls.has(value);
+    return value && typeof value === "object"
+      ? Object.values(value).some(usesPhysicianPortrait)
+      : false;
+  };
+  const hasVisibleSection = (id) => nodes.some((section) =>
+    nodeTypes(section).includes("WebPageElement") &&
+    ["citation", "mentions"].some((property) =>
+      referenceIds(section[property]).includes(id) &&
+      referenceIds(canonical.get(section["@id"])?.[property]).includes(id),
+    ),
+  );
+  for (const [id, policy] of policies) {
+    const node = selected.get(id);
+    const source = canonical.get(id);
+    const role = policy.authorityRole;
+    if (
+      !source ||
+      !sameField(node, source, "@type") ||
+      !sameField(node, source, "name") ||
+      !sameField(node, source, "url") ||
+      !isExternalUrl(node.url, canonicalOrigin)
+    )
+      throw new Error(`Homepage authority identity differs from its canonical source: ${id}`);
+    if (role === "credentialIssuer") {
+      const memberOf = referenceIds(physician?.memberOf).includes(id) &&
+        referenceIds(projectedPhysician?.memberOf).includes(id);
+      const recognizedBy = referenceIds(physician?.hasCredential).some((credentialId) =>
+        referenceIds(canonical.get(credentialId)?.recognizedBy).includes(id) &&
+        referenceIds(selected.get(credentialId)?.recognizedBy).includes(id),
+      );
+      if (!nodeTypes(node).includes("Organization") || (!memberOf && !recognizedBy))
+        throw new Error(`Credential issuer lacks a physician membership or credential relationship: ${id}`);
+      continue;
+    }
+    if (!nodeTypes(node).some((type) => homepageArticleRichResultTypes.has(type)))
+      throw new Error(`Physician work role requires an Article: ${id}`);
+    if (
+      usesPhysicianPortrait(node.image) ||
+      usesPhysicianPortrait(source.image) ||
+      (node.mainEntityOfPage && !sameField(node, source, "mainEntityOfPage"))
+    )
+      throw new Error(`Physician work cannot borrow portrait imagery or page identity: ${id}`);
+    if (role === "physicianCoverage") {
+      if (
+        !referenceIds(physician?.subjectOf).includes(id) ||
+        !referenceIds(projectedPhysician?.subjectOf).includes(id) ||
+        !referenceIds(node.about).includes(physicianId) ||
+        !referenceIds(node.mainEntity).includes(physicianId) ||
+        !sameField(node, source, "about") ||
+        !sameField(node, source, "mainEntity") ||
+        referenceIds(source.author).includes(physicianId) ||
+        referenceIds(node.author).includes(physicianId)
+      )
+        throw new Error(`Physician coverage must preserve its subject without inventing authorship: ${id}`);
+    } else {
+      if (
+        !referenceIds(source.author).includes(physicianId) ||
+        !sameField(node, source, "author") ||
+        !hasVisibleSection(id)
+      )
+        throw new Error(`Physician-authored work lacks its author or visible-section relationship: ${id}`);
+      const doi = node.url.startsWith("https://doi.org/")
+        ? node.url.slice("https://doi.org/".length)
+        : null;
+      if (
+        doi &&
+        (![source.identifier].flat().includes(`DOI:${doi}`) ||
+          !sameField(node, source, "identifier"))
+      )
+        throw new Error(`Physician-authored DOI work lost its canonical DOI identifier: ${id}`);
+      if (
+        !sameField(node, source, "creativeWorkStatus") ||
+        (source.creativeWorkStatus &&
+          (!sameField(node, source, "isPartOf") ||
+            !sameField(node, source, "dateCreated") ||
+            !sameField(node, source, "datePublished")))
+      )
+        throw new Error(`Physician-authored work lost its publication status: ${id}`);
+    }
+  }
+}
 
 /** Builds exactly the two final HTML graphs. No filesystem mutation or fallback projection. */
 export function deriveGraphProjections({
@@ -188,91 +335,8 @@ export function deriveGraphProjections({
     );
 
   const canonicalOrigin = new URL(release.canonicalUrl).origin;
-  const citedScholarlyWorkIds = new Set(
-    supportProfile.citedScholarlyWorkIds || [],
-  );
-  if (
-    citedScholarlyWorkIds.size !== supportProfile.citedScholarlyWorkIds?.length
-  )
-    throw new Error(
-      "Cited scholarly work allowlist must be explicit and unique",
-    );
-  for (const id of citedScholarlyWorkIds) {
-    const work = byId.get(id);
-    const authorIds = [work?.author].flat().map((author) => author?.["@id"]);
-    const citingSections = graph["@graph"].filter(
-      (node) =>
-        nodeTypes(node).includes("WebPageElement") &&
-        [node.citation].flat().some((citation) => citation?.["@id"] === id),
-    );
-    if (
-      !supportIds.includes(id) ||
-      nodeTypes(work).length !== 1 ||
-      nodeTypes(work)[0] !== "ScholarlyArticle" ||
-      !authorIds.includes(release.primaryEntity.id) ||
-      !isExternalUrl(work?.url, canonicalOrigin) ||
-      !work.url.startsWith("https://doi.org/") ||
-      ![work.identifier]
-        .flat()
-        .includes(`DOI:${work.url.slice("https://doi.org/".length)}`) ||
-      !citingSections.some(
-        (section) =>
-          supportIds.includes(section["@id"]) &&
-          supportProfile.idProfiles?.[section["@id"]]?.include?.includes(
-            "citation",
-          ),
-      )
-    )
-      throw new Error(
-        `Cited scholarly work lacks its physician, DOI or visible-section relationship: ${id}`,
-      );
-    const profile = supportProfile.idProfiles?.[id];
-    const fields = [
-      "@id",
-      "@type",
-      "name",
-      "headline",
-      "url",
-      "identifier",
-      "datePublished",
-      "author",
-    ];
-    if (
-      !profile?.include ||
-      profile.include.length !== fields.length ||
-      fields.some((field) => !profile.include.includes(field))
-    )
-      throw new Error(
-        `Cited scholarly work must use the minimal authorship projection: ${id}`,
-      );
-  }
-
-  const projectionContext = projectSchemaContext(graph["@context"]);
   const homepageSelected = new Set([...headIds, ...supportIds]);
-  const externalReferencesFor = (profile, label) => {
-    const ids = profile.externalReferenceIds;
-    if (!Array.isArray(ids) || new Set(ids).size !== ids.length)
-      throw new Error(
-        `${label} external reference IDs must be explicit and unique`,
-      );
-    return new Map(
-      ids.map((id) => {
-        const target = byId.get(id);
-        if (
-          !target ||
-          homepageSelected.has(id) ||
-          !isExternalUrl(target.url, canonicalOrigin)
-        )
-          throw new Error(
-            `${label} external reference must resolve to an unselected source with its own canonical URL: ${id}`,
-          );
-        return [id, target.url];
-      }),
-    );
-  };
   const projectLane = (profile, label) => {
-    const aliases = externalReferencesFor(profile, label);
-    const usedAliases = new Set();
     const specificProfiles = profile.nodes ?? profile.idProfiles ?? {};
     for (const id of Object.keys(specificProfiles))
       if (!profile.ids.includes(id))
@@ -287,14 +351,6 @@ export function deriveGraphProjections({
       if (!value || typeof value !== "object") return value;
       const id = value["@id"];
       if (id && !homepageSelected.has(id)) {
-        if (aliases.has(id)) {
-          if (Object.keys(value).length !== 1)
-            throw new Error(
-              `${trail} cannot replace an embedded source with an external reference`,
-            );
-          usedAliases.add(id);
-          return { "@id": aliases.get(id) };
-        }
         if (byId.has(id) || id.startsWith(release.canonicalUrl))
           throw new Error(
             `${trail} has an unresolved required inline reference: ${id}`,
@@ -334,33 +390,24 @@ export function deriveGraphProjections({
             );
       return resolveReferences(projectNode(node, spec), id);
     });
-    for (const id of aliases.keys())
-      if (!usedAliases.has(id))
-        throw new Error(
-          `${label} declares an unused external reference policy: ${id}`,
-        );
     return nodes;
   };
   const homepageHeadNodes = projectLane(headProfile, "Head");
   const supportNodes = projectLane(supportProfile, "Support");
   assertNoHomepageEventNodes(homepageHeadNodes, "Head");
   assertNoHomepageEventNodes(supportNodes, "Support");
-  assertNoHomepageExternalRichResultNodes(
-    homepageHeadNodes,
-    "Head",
+  assertHomepageAuthorityRoles({
+    nodes: [...homepageHeadNodes, ...supportNodes],
+    canonicalNodes: graph["@graph"],
+    profiles: [headProfile, supportProfile],
+    physicianId: release.primaryEntity.id,
     canonicalOrigin,
-  );
-  assertNoHomepageExternalRichResultNodes(
-    supportNodes,
-    "Support",
-    canonicalOrigin,
-    citedScholarlyWorkIds,
-  );
+  });
   assertPureSchemaHomepageNodes(homepageHeadNodes, "Head");
   assertPureSchemaHomepageNodes(supportNodes, "Support");
   assertHomepagePhysicianPerson(homepageHeadNodes, release.primaryEntity.id);
   const headDoc = {
-    "@context": projectionContext,
+    "@context": projectSchemaContext(graph["@context"], homepageHeadNodes),
     "@graph": homepageHeadNodes,
   };
   const headRaw = `${JSON.stringify(headDoc)}\n`;
@@ -368,7 +415,10 @@ export function deriveGraphProjections({
     throw new Error(
       `Head graph ${Buffer.byteLength(headRaw)} exceeds ${headProfile.maxBytes}`,
     );
-  const supportDoc = { "@context": projectionContext, "@graph": supportNodes };
+  const supportDoc = {
+    "@context": projectSchemaContext(graph["@context"], supportNodes),
+    "@graph": supportNodes,
+  };
   const supportRaw = `${JSON.stringify(supportDoc)}\n`;
   if (Buffer.byteLength(supportRaw) > supportProfile.maxBytes)
     throw new Error(

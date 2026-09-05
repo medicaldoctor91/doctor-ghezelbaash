@@ -8312,6 +8312,7 @@
     {
       "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
       "@type": "Dataset",
+      "url": "https://www.ghezelbaash.ir/",
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"

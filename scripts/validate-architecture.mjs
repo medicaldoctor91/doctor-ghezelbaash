@@ -196,8 +196,9 @@ assert(
     ),
   "Graph compiler must consume the two projection profiles directly",
 );
+const canonicalGraph = await readJson("src/data/semantic/knowledge-graph.jsonld");
 const finalProjection = deriveGraphProjections({
-  graph: await readJson("src/data/semantic/knowledge-graph.jsonld"),
+  graph: canonicalGraph,
   release,
   headProfile,
   supportProfile,
@@ -205,18 +206,24 @@ const finalProjection = deriveGraphProjections({
 for (const [label, profile, document] of [
   ["Head", headProfile, finalProjection.headDoc],
   ["Support", supportProfile, finalProjection.supportDoc],
-])
+]) {
   assert(
     JSON.stringify(profile.ids) ===
       JSON.stringify(document["@graph"].map((node) => node["@id"])),
     `${label} final selection differs from its declarative profile`,
   );
-assert(
-  /const\s+projectionContext\s*=\s*projectSchemaContext\(graph\[['"]@context['"]\]\)/.test(
-    graphCompiler,
-  ) && /['"]@context['"]\s*:\s*projectionContext/.test(graphCompiler),
-  "Graph compiler must emit the final Schema.org context directly",
-);
+  const context = document["@context"];
+  assert(
+    context?.["@version"] === 1.1 &&
+      context["@vocab"] === "https://schema.org/" &&
+      context.schema === "https://schema.org/" &&
+      Object.entries(context).every(([term, definition]) =>
+        Object.hasOwn(canonicalGraph["@context"], term) &&
+        JSON.stringify(definition) === JSON.stringify(canonicalGraph["@context"][term]),
+      ),
+    `${label} final context must preserve its canonical Schema.org definitions`,
+  );
+}
 assert(
   /path\.join\(generatedSemantic,\s*['"]head-graph\.json['"]\)/.test(
     graphCompiler,

@@ -22,7 +22,11 @@ const readDistJson = async (file) =>
   JSON.parse(await readFile(path.join(dist, file), "utf8"));
 const Z = release.dataset.zenodo;
 const history = Z.releaseHistory;
-const datasetLandingPage = `https://doi.org/${Z.versionDoi}`;
+const dataset = graph["@graph"].find((node) => node["@id"] === release.dataset.id);
+const datasetLandingPage = dataset?.url;
+const versionDoiUrl = `https://doi.org/${Z.versionDoi}`;
+if (datasetLandingPage !== release.canonicalUrl)
+  fail("Canonical Dataset landing page must be the canonical human document");
 
 if (
   !Array.isArray(history) ||
@@ -65,7 +69,7 @@ const evidenceSnapshot = await readDistJson("evidence-snapshot.json");
 const currentEvidence = evidenceSnapshot.entries.find((item) => item.id === currentEvidenceId);
 if (
   !expectedEvidence || !currentEvidence ||
-  currentEvidence.url !== datasetLandingPage ||
+  currentEvidence.url !== versionDoiUrl ||
   currentEvidence.role !== "first-party-release-preservation" ||
   currentEvidence.verifiedAt !== expectedEvidence.verifiedAt ||
   currentEvidence.status !== expectedEvidence.liveStatus
@@ -78,7 +82,7 @@ const assessment = provenance["@graph"].find((item) => item["@id"] === assessmen
 const observationDate = assessment?.additionalProperty?.find(
   (item) => item.propertyID === "Evidence observation date",
 )?.value;
-if (provenanceEvidence?.url !== datasetLandingPage ||
+if (provenanceEvidence?.url !== versionDoiUrl ||
     currentEvidence.assessmentId !== assessmentId ||
     assessment?.isBasedOn?.["@id"] !== currentEvidenceId ||
     assessment?.about?.["@id"] !== currentEvidenceId ||
@@ -87,7 +91,7 @@ if (provenanceEvidence?.url !== datasetLandingPage ||
     "dateModified" in (provenanceEvidence || {}))
   fail("Current release provenance identity or observation drift");
 const knowledge = await readFile(path.join(dist, "knowledge.xml"), "utf8");
-if (!knowledge.includes(`id="${currentEvidenceId}" tier="P" url="${datasetLandingPage}"`))
+if (!knowledge.includes(`id="${currentEvidenceId}" tier="P" url="${versionDoiUrl}"`))
   fail("Current release knowledge.xml evidence drift");
 
 const expectedMatrix = {
@@ -112,20 +116,26 @@ if (
 
 if (
   dataPackage.version !== release.release ||
-  !String(dataPackage.title || "").startsWith(release.dataset.name) ||
+  dataPackage.title !== `${dataset.name} — Data Package` ||
+  dataPackage.description !== dataset.description ||
+  dataPackage.lastUpdated !== dataset.dateModified ||
   dataPackage.homepage !== datasetLandingPage
 )
   fail("Data Package current identity/landing-page drift");
 if (
   croissant.version !== release.release ||
-  croissant.name !== release.dataset.name ||
+  croissant.name !== dataset.name ||
+  croissant.description !== dataset.description ||
+  croissant.datePublished !== dataset.datePublished ||
+  croissant.dateModified !== dataset.dateModified ||
+  croissant.dateCreated !== dataset.dateCreated ||
   croissant.url !== datasetLandingPage
 )
   fail("Croissant current identity/landing-page drift");
 
 const dcat = await readFile(path.join(dist, "dcat.ttl"), "utf8");
 if (
-  !dcat.includes(release.dataset.name) ||
+  !dcat.includes(dataset.name) ||
   !dcat.includes(release.release) ||
   !dcat.includes(`dcat:landingPage <${datasetLandingPage}>`)
 )

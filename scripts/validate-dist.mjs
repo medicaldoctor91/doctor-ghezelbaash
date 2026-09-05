@@ -132,6 +132,14 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
   doctorVcard = await readFile(path.join(dist, "doctor.vcf"), "utf8"),
   llmsFull = await readFile(path.join(dist, "llms-full.txt"), "utf8"),
   provenance = await readJson(path.join(dist, "provenance.jsonld"));
+const { nodes, byId, sourceNodesForUrl } = indexCanonicalGraph(graph);
+const person = byId.get(release.primaryEntity.id),
+  clinic = byId.get(release.clinic.id),
+  dataset = byId.get(release.dataset.id),
+  page = byId.get(`${release.canonicalUrl}#webpage`),
+  site = byId.get(`${release.canonicalUrl}#website`);
+if (!person || !clinic || !dataset || !page || !site)
+  fail("Core graph entity missing");
 const graphUrlTargets = assertSameDocumentGraphUrlTargets(graph, {
   canonicalUrl: release.canonicalUrl,
   htmlIds: inspectHtml(html).ids,
@@ -177,20 +185,8 @@ const dp = await readJson(path.join(dist, "datapackage.json")),
   answersText = await readFile(path.join(dist, "answers.txt"), "utf8"),
   dcatText = await readFile(path.join(dist, "dcat.ttl"), "utf8"),
   voidText = await readFile(path.join(dist, "void.ttl"), "utf8"),
-  releaseHistory = release.dataset.zenodo.releaseHistory,
-  datasetLandingPage = `https://doi.org/${release.dataset.zenodo.versionDoi}`;
-if (
-  !Array.isArray(releaseHistory) ||
-  !releaseHistory.length ||
-  releaseHistory.some(
-    (entry) =>
-      typeof entry?.publicationDate !== "string" || !entry.publicationDate,
-  )
-)
-  fail("Zenodo release history lacks a publication date");
-const createdAt = releaseHistory
-  .map((entry) => entry.publicationDate)
-  .sort()[0];
+  datasetLandingPage = dataset.url;
+const createdAt = dataset.dateCreated;
 for (const file of [
   "linkset.json",
   "void.ttl",
@@ -234,19 +230,21 @@ for (const name of resourceNames)
     fail(`Invalid Data Package resource name ${name}`);
 if (
   dp.name !== "dr-saeed-ghezelbash-public-knowledge-graph" ||
-  dp.title !== `${release.dataset.name} — Data Package` ||
+  dp.title !== `${dataset.name} — Data Package` ||
+  dp.description !== dataset.description ||
   dp.version !== release.release ||
-  dp.created !== (createdAt.includes("T") ? createdAt : undefined) ||
-  dp.lastUpdated !== release.dateModified ||
+  dp.created !== (createdAt?.includes("T") ? createdAt : undefined) ||
+  dp.lastUpdated !== dataset.dateModified ||
   dp.homepage !== datasetLandingPage
 )
   fail("Data Package canonical identity/date/landing-page drift");
 if (
-  cr.name !== release.dataset.name ||
+  cr.name !== dataset.name ||
+  cr.description !== dataset.description ||
   cr.version !== release.release ||
   cr.dateCreated !== createdAt ||
-  cr.datePublished !== release.dateModified ||
-  cr.dateModified !== release.dateModified ||
+  cr.datePublished !== dataset.datePublished ||
+  cr.dateModified !== dataset.dateModified ||
   cr.url !== datasetLandingPage
 )
   fail("Croissant canonical identity/date/landing-page drift");
@@ -265,7 +263,7 @@ const entityFacts = await buildEntityFacts(await loadProjectionContext({ root })
 if (await readFile(path.join(dist, "entity-facts.csv"), "utf8") !== serializeEntityFacts(entityFacts))
   fail("Entity facts CSV differs from canonical RDF term projection");
 if (
-  !dcatText.includes(`dct:title "${release.dataset.name} — Data Catalog"@en`) ||
+  !dcatText.includes(`dct:title "${dataset.name} — Data Catalog"@en`) ||
   !dcatText.includes(`dcat:landingPage <${datasetLandingPage}>`)
 )
   fail("DCAT canonical Dataset catalog/landing-page drift");
@@ -489,14 +487,6 @@ if (
   )
 )
   fail("Rendered root Microdata is not an exact Google page projection");
-const { nodes, byId, sourceNodesForUrl } = indexCanonicalGraph(graph);
-const person = byId.get(release.primaryEntity.id),
-  clinic = byId.get(release.clinic.id),
-  dataset = byId.get(release.dataset.id),
-  page = byId.get(`${release.canonicalUrl}#webpage`),
-  site = byId.get(`${release.canonicalUrl}#website`);
-if (!person || !clinic || !dataset || !page || !site)
-  fail("Core graph entity missing");
 const vcardName = exactLanguageLiteral(
     person.name,
     "fa",
@@ -720,7 +710,7 @@ const catalog = byId.get(`${release.canonicalUrl}#data-catalog`),
   datasetSources = new Set(refs(dataset.isBasedOn));
 if (
   catalog?.url !== `${release.canonicalUrl}dcat.ttl` ||
-  Object.hasOwn(dataset, "url") ||
+  dataset.url !== release.canonicalUrl ||
   graphDownload?.contentUrl !== `${release.canonicalUrl}graph.jsonld` ||
   !datasetDistributions.has(graphDownload?.["@id"]) ||
   github?.["@type"] !== "SoftwareSourceCode" ||

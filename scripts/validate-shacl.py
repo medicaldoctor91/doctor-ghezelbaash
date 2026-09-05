@@ -11,7 +11,7 @@ from importlib.metadata import version
 from pathlib import Path
 
 from pyshacl import validate
-from rdflib import Graph, Literal, Namespace
+from rdflib import Graph, Literal, Namespace, URIRef
 from rdflib.namespace import RDF, XSD
 
 
@@ -23,23 +23,108 @@ DCAT = Namespace("http://www.w3.org/ns/dcat#")
 SPDX = Namespace("http://spdx.org/rdf/terms#")
 PROV = Namespace("http://www.w3.org/ns/prov#")
 DCT = Namespace("http://purl.org/dc/terms/")
+VOID = Namespace("http://rdfs.org/ns/void#")
+CR = Namespace("http://mlcommons.org/croissant/")
 ASSESSMENT_PREFIX = "https://www.ghezelbaash.ir/provenance.jsonld#assessment-"
+DATA_ROLES = frozenset({"canonical", "dcat", "provenance", "void", "croissant"})
+RDF_MEDIA_FORMATS = {"application/ld+json": "json-ld", "text/turtle": "turtle"}
 
 
-def load_graph(path: Path) -> tuple[Graph, str]:
+def rdf_resources(registry_path: Path) -> list[dict]:
+    """The publication registry owns RDF roles and parser selection, not suffixes."""
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    resources = []
+    for resource in registry["resources"]:
+        rdf = resource.get("rdf")
+        expected_format = RDF_MEDIA_FORMATS.get(resource["mediaType"])
+        if expected_format and not rdf:
+            raise ValueError(f"RDF resource lacks its validation role: {resource['path']}")
+        if not rdf:
+            continue
+        if rdf.get("role") not in DATA_ROLES | {"serialization", "shapes"}:
+            raise ValueError(f"Unknown RDF validation role: {resource['path']}")
+        if not expected_format or rdf.get("format") != expected_format:
+            raise ValueError(f"RDF parser disagrees with media type: {resource['path']}")
+        resources.append(resource)
+    for role in DATA_ROLES | {"shapes"}:
+        if sum(resource["rdf"]["role"] == role for resource in resources) != 1:
+            raise ValueError(f"SHACL registry requires exactly one {role} resource")
+    by_path = {resource["path"]: resource for resource in resources}
+    for resource in resources:
+        if resource["rdf"]["role"] == "serialization":
+            canonical = by_path.get(resource["rdf"].get("isomorphicWith"))
+            if not canonical or canonical["rdf"]["role"] != "canonical":
+                raise ValueError(f"RDF serialization lacks its canonical counterpart: {resource['path']}")
+    return resources
+
+
+def resource_path(resource: dict, dist_dir: Path | None) -> Path:
+    return dist_dir / resource["path"] if dist_dir else ROOT / resource["source"]
+
+
+def data_inputs(resources: list[dict], paths: list[Path] | None,
+                dist_dir: Path | None, require_projections: bool) -> list[tuple[Path, dict]]:
+    """An explicit CLI subset cannot silently weaken complete projection coverage."""
+    available = {
+        resource_path(resource, dist_dir).resolve(): resource
+        for resource in resources if resource["rdf"]["role"] in DATA_ROLES
+    }
+    selected_paths = paths or [
+        path for path, resource in available.items()
+        if require_projections or resource["rdf"]["role"] == "canonical"
+    ]
+    if len(set(path.resolve() for path in selected_paths)) != len(selected_paths):
+        raise ValueError("SHACL data inputs must not repeat a graph")
+    selected = []
+    for path in selected_paths:
+        resource = available.get(path.resolve())
+        if not resource:
+            raise ValueError(f"SHACL input is not a registered RDF data resource: {path}")
+        selected.append((path, resource))
+    roles = {resource["rdf"]["role"] for _, resource in selected}
+    if require_projections and roles != DATA_ROLES:
+        raise ValueError(f"SHACL data coverage is missing: {', '.join(sorted(DATA_ROLES - roles))}")
+    return selected
+
+
+def load_graph(path: Path, rdf_format: str) -> tuple[Graph, str]:
     """Read local inputs; no ontology downloads or inferred type repair."""
     if not path.is_file():
         raise ValueError(f"SHACL input is not a local file: {path}")
-    formats = {".jsonld": "json-ld", ".ttl": "turtle"}
-    if path.suffix not in formats:
-        raise ValueError(f"Unsupported SHACL input format: {path.suffix}")
+    if rdf_format not in RDF_MEDIA_FORMATS.values():
+        raise ValueError(f"Unsupported SHACL parser: {rdf_format}")
     payload = path.read_bytes()
     graph = Graph().parse(
-        data=payload, format=formats[path.suffix], publicID=path.resolve().as_uri()
+        data=payload, format=rdf_format, publicID=path.resolve().as_uri()
     )
     if not graph:
         raise ValueError(f"SHACL input graph is empty: {path}")
     return graph, hashlib.sha256(payload).hexdigest()
+
+
+def validate_projection_presence(graph: Graph, resource: dict) -> None:
+    """Check each input carries its own semantic role before combining the graphs."""
+    role = resource["rdf"]["role"]
+    if role == "canonical":
+        present = any(graph.subjects(RDF.type, SCHEMA.Dataset))
+    elif role == "dcat":
+        present = any(graph.subjects(RDF.type, DCAT.Distribution))
+    elif role == "provenance":
+        present = any(str(node).startswith(ASSESSMENT_PREFIX)
+                      for node in graph.subjects(RDF.type, PROV.Entity))
+    elif role == "void":
+        present = any(any(graph.objects(node, VOID.dataDump))
+                      for node in graph.subjects(RDF.type, VOID.Dataset))
+    elif role == "croissant":
+        present = any(graph.subjects(RDF.type, CR.RecordSet)) and any(
+            str(profile) == resource["profileIri"]
+            for node in graph.subjects(RDF.type, SCHEMA.Dataset)
+            for profile in graph.objects(node, DCT.conformsTo)
+        )
+    else:
+        raise ValueError(f"SHACL non-data role cannot enter the union: {role}")
+    if not present:
+        raise ValueError(f"SHACL resource does not contain its {role} projection: {resource['path']}")
 
 
 def validate_graph(data: Graph, shapes: Graph) -> tuple[bool, Graph, str]:
@@ -95,6 +180,38 @@ def mutation_tests(data: Graph, shapes: Graph) -> list[dict[str, str]]:
             False,
         ),
     ]
+    # Release-history entries are Datasets too. Mutate the exact target of
+    # the canonical contract rather than whichever Dataset RDF iteration yields.
+    dataset = shapes.value(SITE.CanonicalDatasetRoleShape, SH.targetNode)
+    if (
+        not isinstance(dataset, URIRef)
+        or (dataset, RDF.type, SCHEMA.Dataset) not in data
+        or not any(data.objects(dataset, SCHEMA.url))
+    ):
+        raise AssertionError("Dataset landing-page mutation fixture is missing")
+    cases.extend([
+        (
+            "Dataset landing pages require a URL in the full graph union",
+            dataset,
+            SH.MinCountConstraintComponent,
+            (dataset, SCHEMA.url, None),
+            False,
+        ),
+        (
+            "Dataset landing pages reject another destination",
+            dataset,
+            SH.InConstraintComponent,
+            (dataset, SCHEMA.url, URIRef("https://example.test/unrelated-dataset")),
+            True,
+        ),
+        (
+            "Dataset landing pages reject language-tagged URL strings",
+            dataset,
+            SH.InConstraintComponent,
+            (dataset, SCHEMA.url, Literal("https://www.ghezelbaash.ir/", lang="en")),
+            True,
+        ),
+    ])
     birth_date = data.value(SITE["saeed-ghezelbash"], SCHEMA.birthDate)
     if not isinstance(birth_date, Literal) or birth_date.datatype != XSD.date:
         raise AssertionError("Typed physician birth-date mutation fixture is missing")
@@ -236,9 +353,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--data", type=Path, action="append",
-        help="Local data graph; repeat to validate the union of canonical and descriptor graphs",
+        help="Registered local data graph; an explicit subset must still satisfy required coverage",
     )
-    parser.add_argument("--shapes", type=Path, default=ROOT / "src/data/semantic/shapes.ttl")
+    parser.add_argument("--registry", type=Path, default=ROOT / "src/data/machine-resources.json")
+    parser.add_argument("--dist-dir", type=Path, help="Read registered artifacts from this Dist directory")
+    parser.add_argument("--shapes", type=Path, help="Local SHACL shapes; defaults to the registered source or Dist artifact")
     parser.add_argument(
         "--report-dir", type=Path,
         help="Write report.ttl, report.txt and summary.json as private validation artifacts",
@@ -246,20 +365,23 @@ def main() -> int:
     parser.add_argument("--self-test", action="store_true", help="Also run semantic mutation tests")
     parser.add_argument(
         "--require-projections", action="store_true",
-        help="Require actual DCAT distributions and provenance assessments in the data union",
+        help="Require canonical, DCAT, provenance, VoID and Croissant data from the registry",
     )
     args = parser.parse_args()
 
-    paths = args.data or [ROOT / "src/data/semantic/knowledge-graph.jsonld"]
-    if len(set(path.resolve() for path in paths)) != len(paths):
-        raise ValueError("SHACL data inputs must not repeat a graph")
+    resources = rdf_resources(args.registry)
+    selected = data_inputs(resources, args.data, args.dist_dir, args.require_projections)
     data = Graph()
     inputs = []
-    for input_path in paths:
-        current, input_sha256 = load_graph(input_path)
+    for input_path, resource in selected:
+        current, input_sha256 = load_graph(input_path, resource["rdf"]["format"])
+        validate_projection_presence(current, resource)
         data += current
         inputs.append({
             "path": str(input_path),
+            "resource": resource["path"],
+            "role": resource["rdf"]["role"],
+            "format": resource["rdf"]["format"],
             "sha256": input_sha256,
             "triples": len(current),
         })
@@ -268,9 +390,9 @@ def main() -> int:
         node for node in data.subjects(RDF.type, PROV.Entity)
         if str(node).startswith(ASSESSMENT_PREFIX)
     })
-    if args.require_projections and (not distribution_count or not assessment_count):
-        raise ValueError("SHACL requires both DCAT distributions and provenance assessments")
-    shapes, shapes_sha256 = load_graph(args.shapes)
+    shapes_resource = next(resource for resource in resources if resource["rdf"]["role"] == "shapes")
+    shapes_path = args.shapes or resource_path(shapes_resource, args.dist_dir)
+    shapes, shapes_sha256 = load_graph(shapes_path, shapes_resource["rdf"]["format"])
     if not any(shapes.subjects(RDF.type, SH.NodeShape)):
         raise ValueError("SHACL shapes contain no NodeShape")
     conforms, report, report_text = validate_graph(data, shapes)

@@ -9,6 +9,7 @@
     },
     {
       "path": "graph.jsonld",
+      "rdf": {"role": "canonical", "format": "json-ld"},
       "distributionIri": "https://www.ghezelbaash.ir/graph.jsonld#download",
       "descriptorRoles": ["dcat", "data-package", "croissant"],
       "publishInHttpHeader": true,
@@ -25,6 +26,7 @@
     },
     {
       "path": "graph.ttl",
+      "rdf": {"role": "serialization", "format": "turtle", "isomorphicWith": "graph.jsonld"},
       "distributionIri": "https://www.ghezelbaash.ir/graph.ttl#download",
       "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/semantic/knowledge-graph.ttl",
@@ -40,6 +42,7 @@
     },
     {
       "path": "shapes.ttl",
+      "rdf": {"role": "shapes", "format": "turtle"},
       "distributionIri": "https://www.ghezelbaash.ir/shapes.ttl#distribution",
       "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": "src/data/semantic/shapes.ttl",
@@ -134,6 +137,7 @@
     },
     {
       "path": "provenance.jsonld",
+      "rdf": {"role": "provenance", "format": "json-ld"},
       "distributionIri": "https://www.ghezelbaash.ir/provenance.jsonld#distribution",
       "descriptorRoles": ["dcat", "data-package", "croissant"],
       "publishInHttpHeader": true,
@@ -216,6 +220,7 @@
     },
     {
       "path": "void.ttl",
+      "rdf": {"role": "void", "format": "turtle"},
       "distributionIri": "https://www.ghezelbaash.ir/void.ttl#download",
       "descriptorRoles": ["data-package", "croissant"],
       "source": ".generated/projections/void.ttl",
@@ -228,6 +233,7 @@
     },
     {
       "path": "dcat.ttl",
+      "rdf": {"role": "dcat", "format": "turtle"},
       "distributionIri": "https://www.ghezelbaash.ir/dcat.ttl#download",
       "descriptorRoles": ["data-package", "croissant"],
       "source": ".generated/projections/dcat.ttl",
@@ -240,6 +246,7 @@
     },
     {
       "path": "croissant.json",
+      "rdf": {"role": "croissant", "format": "json-ld"},
       "distributionIri": "https://www.ghezelbaash.ir/croissant.json#download",
       "profileIri": "http://mlcommons.org/croissant/1.1",
       "source": ".generated/projections/croissant.json",

@@ -202,10 +202,11 @@ must(
   dataset["@type"] === "Dataset" &&
     dataset.version === old.release &&
     dataset.dateModified === old.date &&
-    dataset.description === datasetDescription,
+    dataset.description === datasetDescription &&
+    dataset.url === release.canonicalUrl,
   "Canonical Dataset shape/release drift",
 );
-absent(dataset, ["sameAs", "url"], "Canonical Dataset");
+absent(dataset, ["sameAs"], "Canonical Dataset");
 const expectedIdentifiers = [
   release.dataset.id,
   {

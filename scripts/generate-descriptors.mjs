@@ -51,12 +51,6 @@ const personName = exactLanguageLiteral(
   "en",
   "Canonical Person name",
 );
-const personHonorific = exactLanguageLiteral(
-  person.honorificPrefix,
-  "en",
-  "Canonical Person honorific prefix",
-);
-const personDisplayName = `${personHonorific} ${personName}`;
 const practiceCity = byId.get(id(clinic.location));
 if (!practiceCity)
   throw new Error("Descriptor generator missing canonical clinic city");
@@ -65,20 +59,17 @@ const practiceCityName = exactLanguageLiteral(
   "en",
   "Canonical clinic city",
 );
-const releaseHistory = release.dataset.zenodo.releaseHistory;
-if (
-  !Array.isArray(releaseHistory) ||
-  !releaseHistory.length ||
-  releaseHistory.some(
-    (entry) =>
-      typeof entry?.publicationDate !== "string" || !entry.publicationDate,
-  )
-)
-  throw new Error("Zenodo release history lacks a publication date");
-const createdAt = releaseHistory
-  .map((entry) => entry.publicationDate)
-  .sort()[0];
-const datasetLandingPage = `https://doi.org/${release.dataset.zenodo.versionDoi}`;
+const datasetLandingPage = dataset.url;
+if (datasetLandingPage !== release.canonicalUrl)
+  throw new Error("Canonical Dataset landing page must be the canonical human document");
+const createdAt = dataset.dateCreated;
+const datasetPublishedAt = dataset.datePublished;
+const datasetModifiedAt = dataset.dateModified;
+if (!datasetPublishedAt || !datasetModifiedAt)
+  throw new Error("Canonical Dataset publication and modification dates are missing");
+const datasetLicense = id(dataset.license);
+if (!datasetLicense)
+  throw new Error("Canonical Dataset license is missing");
 const shaHex = (b) => createHash("sha256").update(b).digest("hex");
 const ttlString = (s) =>
   `"${String(s).replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("\n", "\\n")}"`;
@@ -153,8 +144,8 @@ const voidTtl = `${[
   `<${release.canonicalUrl}graph.jsonld#dataset> a void:Dataset ;`,
   `  dct:title ${ttlString(datasetName)}@en ;`,
   `  dct:publisher <${release.primaryEntity.id}> ;`,
-  `  dct:modified ${ttlString(release.dateModified)}^^xsd:date ;`,
-  "  dct:license <https://creativecommons.org/licenses/by/4.0/> ;",
+  `  dct:modified ${ttlString(datasetModifiedAt)}^^xsd:date ;`,
+  `  dct:license <${datasetLicense}> ;`,
   `  foaf:homepage <${datasetLandingPage}> ;`,
   `  foaf:primaryTopic <${release.primaryEntity.id}> ;`,
   `  void:uriSpace ${ttlString(release.canonicalUrl)} ;`,
@@ -173,7 +164,7 @@ const catalogTriple = [
   `<${release.canonicalUrl}#data-catalog> a dcat:Catalog ;`,
   `dct:title "${datasetName} — Data Catalog"@en ;`,
   `dct:publisher <${release.primaryEntity.id}> ;`,
-  `dct:modified "${release.dateModified}"^^xsd:date ;`,
+  `dct:modified "${datasetModifiedAt}"^^xsd:date ;`,
   `dcat:dataset <${release.canonicalUrl}graph.jsonld#dataset> .`,
 ].join(" ");
 const datasetTriple = [
@@ -182,8 +173,8 @@ const datasetTriple = [
   `dct:description ${ttlString(datasetDescription)}@en ;`,
   `dct:creator <${release.primaryEntity.id}> ;`,
   `dct:publisher <${release.primaryEntity.id}> ;`,
-  `dct:modified "${release.dateModified}"^^xsd:date ;`,
-  "dct:license <https://creativecommons.org/licenses/by/4.0/> ;",
+  `dct:modified "${datasetModifiedAt}"^^xsd:date ;`,
+  `dct:license <${datasetLicense}> ;`,
   `dcat:landingPage <${datasetLandingPage}> ;`,
   `schema:version "${release.release}" ;`,
   `dcat:distribution ${distributionIris} .`,
@@ -203,7 +194,7 @@ for (const m of dcatMeta) {
   const distributionTriple = [
     `<${m.distributionIri}> a dcat:Distribution ;`,
     `dct:title ${ttlString(m.title)}@en ;`,
-    "dct:license <https://creativecommons.org/licenses/by/4.0/> ;",
+    `dct:license <${datasetLicense}> ;`,
     `dcat:accessURL <${release.canonicalUrl}${m.rel}> ;`,
     `dcat:downloadURL <${release.canonicalUrl}${m.rel}> ;`,
     `dcat:mediaType <https://www.iana.org/assignments/media-types/${m.mediaType}> ;`,
@@ -313,18 +304,17 @@ const dataPackage = {
   profile: "data-package",
   name: "dr-saeed-ghezelbash-public-knowledge-graph",
   title: `${datasetName} — Data Package`,
-  description: `Physician-owned first-party knowledge graph, direct-answer, evidence, provenance and retrieval resources for ${personDisplayName} and the supporting clinic.`,
+  description: datasetDescription,
   homepage: datasetLandingPage,
   id: `${release.canonicalUrl}datapackage.json`,
   version: release.release,
-  // Data Package requires a timestamp here. A release publication date alone
-  // cannot establish an exact creation time; Croissant supports the date below.
-  ...(createdAt.includes("T") ? { created: createdAt } : {}),
-  lastUpdated: release.dateModified,
+  // Data Package requires a timestamp; preserve a recorded creation time only.
+  ...(createdAt?.includes("T") ? { created: createdAt } : {}),
+  lastUpdated: datasetModifiedAt,
   licenses: [
     {
       name: "CC-BY-4.0",
-      path: "https://creativecommons.org/licenses/by/4.0/",
+      path: datasetLicense,
       title: "Creative Commons Attribution 4.0",
     },
   ],
@@ -353,6 +343,15 @@ const croissant = {
     sc: "https://schema.org/",
     cr: "http://mlcommons.org/croissant/",
     dct: "http://purl.org/dc/terms/",
+    xsd: "http://www.w3.org/2001/XMLSchema#",
+    // Croissant consumers expect scalar URLs. anyURI preserves their RDF
+    // datatype without converting the JSON values into nested node objects.
+    url: { "@id": "sc:url", "@type": "xsd:anyURI" },
+    license: { "@id": "sc:license", "@type": "xsd:anyURI" },
+    contentUrl: { "@id": "sc:contentUrl", "@type": "xsd:anyURI" },
+    datePublished: { "@id": "sc:datePublished", "@type": "xsd:date" },
+    dateCreated: { "@id": "sc:dateCreated", "@type": "xsd:date" },
+    dateModified: { "@id": "sc:dateModified", "@type": "xsd:date" },
     conformsTo: "dct:conformsTo",
     column: "cr:column",
     dataType: { "@id": "cr:dataType", "@type": "@vocab" },
@@ -368,13 +367,13 @@ const croissant = {
   "@type": "sc:Dataset",
   conformsTo: resourceByPath.get("croissant.json").profileIri,
   name: datasetName,
-  description: `Physician-owned first-party knowledge graph Dataset for ${personDisplayName}, the supporting clinic, services, answers, provenance and machine retrieval.`,
+  description: datasetDescription,
   url: datasetLandingPage,
-  license: "https://creativecommons.org/licenses/by/4.0/",
+  license: datasetLicense,
   version: release.release,
-  datePublished: release.dateModified,
-  dateCreated: createdAt,
-  dateModified: release.dateModified,
+  datePublished: datasetPublishedAt,
+  ...(createdAt ? { dateCreated: createdAt } : {}),
+  dateModified: datasetModifiedAt,
   creator: {
     "@id": release.primaryEntity.id,
     "@type": "sc:Person",
