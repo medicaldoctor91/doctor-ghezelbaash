@@ -84,12 +84,14 @@ const entityAliases = [
     status = d.getElementById("guide-search-status"),
     top = d.querySelector("[data-quick-actions-top]");
   let index;
-  const aliasKeys = (dialog?.dataset.entityAliases || "")
+  const build = () => {
+    if (index) return index;
+    const aliasKey = (dialog?.dataset.entityAliases || "")
       .split("|")
       .map(norm)
-      .filter(Boolean),
-    build = () =>
-      (index ??= [...d.querySelectorAll("main h2[id],main h3[id],main h4[id]")]
+      .filter(Boolean)
+      .join(" ");
+    return (index = [...d.querySelectorAll("main h2[id],main h3[id],main h4[id]")]
         .filter((x) => !x.closest(".guide-search"))
         .map((x) => {
           const text = x.textContent.trim(),
@@ -104,9 +106,10 @@ const entityAliases = [
             level,
             key:
               norm(text + " " + headingAlias) +
-              (entity ? " " + aliasKeys.join(" ") : ""),
+              (entity ? " " + aliasKey : ""),
           };
         }));
+  };
   const score = (x, q) => {
     const key = x.key,
       base =
@@ -138,24 +141,6 @@ const entityAliases = [
         a = d.createElement("a");
       a.href = "#" + hit.id;
       a.textContent = hit.text;
-      a.addEventListener(
-        "click",
-        () => {
-          dialog.close();
-          const target = d.getElementById(hit.id),
-            restoreTabIndex = target && !target.hasAttribute("tabindex");
-          if (!target) return;
-          if (restoreTabIndex) target.tabIndex = -1;
-          requestAnimationFrame(() => target.focus({ preventScroll: true }));
-          if (restoreTabIndex)
-            target.addEventListener(
-              "blur",
-              () => target.removeAttribute("tabindex"),
-              { once: true },
-            );
-        },
-        { once: true },
-      );
       li.append(a);
       results.append(li);
     }
@@ -163,17 +148,40 @@ const entityAliases = [
       ? `${hits.length} نتیجه از عنوان‌های صفحه پیدا شد.`
       : "نتیجه‌ای پیدا نشد؛ واژه کوتاه‌تر یا مترادف را امتحان کنید.";
   };
+  const searchReady =
+      dialog && input && results && status &&
+      typeof dialog.showModal === "function" &&
+      typeof dialog.close === "function",
+    plainClick = (e) =>
+      e.button === 0 && !e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey,
+    targetFromHash = (hash) => {
+      if (!hash) return null;
+      let id;
+      try {
+        id = decodeURIComponent(hash.slice(1));
+      } catch {
+        id = hash.slice(1);
+      }
+      return d.getElementById(id);
+    };
   const open = () => {
+    if (!searchReady) return false;
     if (!dialog.open) dialog.showModal();
     requestAnimationFrame(() => input.focus());
+    return true;
   };
   d.addEventListener("click", (e) => {
-    if (e.target.closest("[data-guide-search-open]")) open();
-    if (e.target.closest("[data-guide-search-close]")) dialog.close();
+    if (!plainClick(e) || e.defaultPrevented) return;
+    if (e.target.closest?.("[data-guide-search-open]") && open())
+      e.preventDefault();
+    if (searchReady && e.target.closest?.("[data-guide-search-close]"))
+      dialog.close();
   });
   d.addEventListener("keydown", (e) => {
     if (
       e.key === "/" &&
+      searchReady &&
+      !e.defaultPrevented &&
       !e.metaKey &&
       !e.ctrlKey &&
       !e.altKey &&
@@ -184,21 +192,42 @@ const entityAliases = [
       open();
     }
   });
-  input?.addEventListener("input", render);
+  if (searchReady) {
+    input.addEventListener("input", render);
+    results.addEventListener("click", (e) => {
+      if (!plainClick(e) || e.defaultPrevented) return;
+      const link = e.target.closest?.('a[href^="#"]');
+      if (!link || !results.contains(link)) return;
+      const target = targetFromHash(link.hash),
+        restoreTabIndex = target && !target.hasAttribute("tabindex");
+      dialog.close();
+      if (!target) return;
+      if (restoreTabIndex) target.tabIndex = -1;
+      requestAnimationFrame(() => target.focus({ preventScroll: true }));
+      if (restoreTabIndex)
+        target.addEventListener(
+          "blur",
+          () => target.removeAttribute("tabindex"),
+          { once: true },
+        );
+    });
+  }
   dialog?.addEventListener("click", (e) => {
-    if (e.target === dialog) dialog.close();
+    if (searchReady && e.target === dialog) dialog.close();
   });
   let topFrame = 0,
-    topHideTimer;
+    topHideTimer,
+    topVisible;
   const setTopVisible = (visible) => {
-      if (!top) return;
+      if (!top || visible === topVisible) return;
+      topVisible = visible;
       clearTimeout(topHideTimer);
       if (visible) {
         top.hidden = false;
         top.removeAttribute("aria-hidden");
         top.removeAttribute("tabindex");
         requestAnimationFrame(() => {
-          top.dataset.visible = "true";
+          if (topVisible) top.dataset.visible = "true";
         });
         return;
       }
@@ -206,7 +235,7 @@ const entityAliases = [
       top.setAttribute("aria-hidden", "true");
       top.tabIndex = -1;
       topHideTimer = setTimeout(() => {
-        if (top.dataset.visible !== "true") top.hidden = true;
+        if (!topVisible) top.hidden = true;
       }, 180);
     },
     syncTop = () => {
@@ -218,33 +247,32 @@ const entityAliases = [
     };
   addEventListener("scroll", syncTop, { passive: true });
   addEventListener("resize", syncTop, { passive: true });
+  addEventListener("pageshow", syncTop);
   syncTop();
-  const tocLinks = [
-      ...d.querySelectorAll(
-        '#aesthetic-medicine-table-of-contents a[href^=\"#\"]',
-      ),
-    ],
-    syncTarget = () => {
-      d.querySelector(".render-chunk.is-target-chunk")?.classList.remove(
-        "is-target-chunk",
-      );
-      for (const link of tocLinks) link.removeAttribute("aria-current");
-      if (!location.hash) return;
-      let id;
-      try {
-        id = decodeURIComponent(location.hash.slice(1));
-      } catch {
-        id = location.hash.slice(1);
-      }
-      const target = d.getElementById(id);
-      target?.closest(".render-chunk")?.classList.add("is-target-chunk");
-      const section = target?.closest(".content-section"),
-        current = tocLinks.find(
+  let tocLinks, targetChunk, currentTocLink;
+  const syncTarget = () => {
+    const target = targetFromHash(location.hash),
+      chunk = target?.closest(".render-chunk");
+    if (targetChunk !== chunk) {
+      targetChunk?.classList.remove("is-target-chunk");
+      chunk?.classList.add("is-target-chunk");
+      targetChunk = chunk;
+    }
+    const section = target?.closest(".content-section"),
+      current = target &&
+        (tocLinks ??= [...d.querySelectorAll(
+          '#aesthetic-medicine-table-of-contents a[href^="#"]',
+        )]).find(
           (link) => link.hash === "#" + (section?.id || target?.id),
         );
+    if (currentTocLink !== current) {
+      currentTocLink?.removeAttribute("aria-current");
       current?.setAttribute("aria-current", "location");
-    };
+      currentTocLink = current;
+    }
+  };
   addEventListener("hashchange", syncTarget, { passive: true });
+  addEventListener("pageshow", syncTarget);
   syncTarget();
   const revealPoster = (video) => {
       if (!video.poster && video.dataset.poster)

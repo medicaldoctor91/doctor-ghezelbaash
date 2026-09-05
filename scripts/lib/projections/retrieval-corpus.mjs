@@ -423,7 +423,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         propertyID: "Evidence tier",
         value: evidence.tier,
       },
-      dateModified: evidenceRegistry.verifiedAt,
+      dateModified: evidence.verifiedAt,
       keywords: evidence.supports,
       additionalProperty: [
         {
@@ -552,7 +552,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       throw new Error(
         `llms.txt: evidence tier ${tier} definition missing from evidence registry`,
       );
-  const evidenceTierLine = `- Evidence tiers: Tier A = ${tiers.A}; Tier B = ${tiers.B}; Tier C = ${tiers.C}.`;
+  const evidenceTierLine = `- Evidence tiers: ${Object.keys(tiers).sort().map((tier) => `Tier ${tier} = ${tiers[tier]}`).join("; ")}.`;
   const llms = bindLlmsTemplate(template, {
     "{{RELEASE}}": release.release,
     "{{REVIEW_DATE}}": release.dateModified,

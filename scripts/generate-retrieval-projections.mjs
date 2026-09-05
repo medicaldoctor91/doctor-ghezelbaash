@@ -2,6 +2,7 @@ import path from "node:path";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { generatedWorkspace } from "./generated-workspace.mjs";
+import { deriveEvidenceRegistry } from "./lib/projection-context.mjs";
 import {
   canonicalSemanticSource,
   deriveCanonicalSemanticSets,
@@ -23,7 +24,10 @@ const id = (v) => (typeof v === "string" ? v : v?.["@id"]);
 const release = await readJson("src/data/release.json");
 const policy = await readJson("src/data/retrieval/query-matrix-policy.json");
 const graph = await readJson(canonicalSemanticSource(policy));
-const evidenceRegistry = await readJson("src/data/evidence-registry.json");
+const evidenceRegistry = deriveEvidenceRegistry(
+  release,
+  await readJson("src/data/evidence-registry.json"),
+);
 const { answers, services } = deriveCanonicalSemanticSets(graph, release);
 
 const { nodes, byId, sourceNodesForUrl } = indexCanonicalGraph(graph);

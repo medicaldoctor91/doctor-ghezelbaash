@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { generatedWorkspace } from "./generated-workspace.mjs";
 import { MACHINE_RESOURCES } from "../src/lib/resources.mjs";
+import { entityFactsTableSchema, entityFactsRecordSet } from "./lib/entity-facts.mjs";
 import {
   exactLanguageLiteral,
   indexCanonicalGraph,
@@ -113,6 +114,20 @@ const coreResources = MACHINE_RESOURCES.filter(
 ).map((resource) => resource.path);
 const out = (rel) => path.join(outputDir, rel);
 
+// The registry supplies the same relation semantics as HTML discovery. HTTP
+// publishes a deliberately smaller subset, while the linkset records them all.
+const resourceRelations = {};
+for (const resource of MACHINE_RESOURCES) {
+  if (!resource.head?.rel || !resource.targets.includes("website")) continue;
+  for (const relation of resource.head.rel.split(/\s+/).filter(Boolean)) {
+    resourceRelations[relation] ??= [];
+    resourceRelations[relation].push({
+      href: `${release.canonicalUrl}${resource.path}`,
+      type: resource.mediaType,
+    });
+  }
+}
+
 const linkset = {
   linkset: [
     {
@@ -120,44 +135,8 @@ const linkset = {
       canonical: [{ href: release.canonicalUrl }],
       author: [{ href: release.primaryEntity.id }],
       about: [{ href: release.primaryEntity.id }, { href: release.clinic.id }],
-      describedby: [
-        {
-          href: `${release.canonicalUrl}graph.jsonld`,
-          type: "application/ld+json",
-        },
-        { href: `${release.canonicalUrl}graph.ttl`, type: "text/turtle" },
-        { href: `${release.canonicalUrl}entity-facts.csv`, type: "text/csv" },
-        {
-          href: `${release.canonicalUrl}knowledge.xml`,
-          type: "application/xml",
-        },
-        {
-          href: `${release.canonicalUrl}datapackage.json`,
-          type: "application/json",
-        },
-        { href: `${release.canonicalUrl}void.ttl`, type: "text/turtle" },
-        { href: `${release.canonicalUrl}dcat.ttl`, type: "text/turtle" },
-        {
-          href: `${release.canonicalUrl}croissant.json`,
-          type: "application/ld+json",
-        },
-        {
-          href: `${release.canonicalUrl}provenance.jsonld`,
-          type: "application/ld+json",
-        },
-        {
-          href: `${release.canonicalUrl}evidence-snapshot.json`,
-          type: "application/json",
-        },
-        { href: `${release.canonicalUrl}shapes.ttl`, type: "text/turtle" },
-      ],
+      ...resourceRelations,
       license: [{ href: "https://creativecommons.org/licenses/by/4.0/" }],
-      alternate: [
-        { href: `${release.canonicalUrl}answers.txt`, type: "text/plain" },
-        { href: `${release.canonicalUrl}llms.txt`, type: "text/plain" },
-        { href: `${release.canonicalUrl}index.md`, type: "text/markdown" },
-        { href: `${release.canonicalUrl}llms-full.txt`, type: "text/plain" },
-      ],
       me: identityMe,
     },
   ],
@@ -178,7 +157,7 @@ const voidTtl = `${[
   `  foaf:primaryTopic <${release.primaryEntity.id}> ;`,
   `  void:uriSpace ${ttlString(release.canonicalUrl)} ;`,
   `  void:triples ${rdfLock.triples} ;`,
-  `  void:dataDump <${release.canonicalUrl}graph.jsonld>, <${release.canonicalUrl}graph.ttl>, <${release.canonicalUrl}entity-facts.csv> ;`,
+  `  void:dataDump <${release.canonicalUrl}graph.jsonld>, <${release.canonicalUrl}graph.ttl> ;`,
   "  void:vocabulary <https://schema.org/>, <http://purl.org/dc/terms/>, <http://www.w3.org/ns/prov#> .",
   `<${release.primaryEntity.id}> a foaf:Person ; foaf:name ${ttlString(personName)}@en .`,
 ].join("\n")}\n`;
@@ -300,6 +279,14 @@ const dataPackageResources = resources
     bytes: m.bytes,
     hash: `sha256:${m.sha256}`,
     description: m.rel.endsWith(".vtt") ? m.title : undefined,
+    ...(m.rel === "entity-facts.csv" ? {
+      profile: "tabular-data-resource",
+      type: "table",
+      format: "csv",
+      encoding: "utf-8",
+      dialect: { delimiter: ",", quoteChar: "\"", doubleQuote: true, header: true },
+      schema: entityFactsTableSchema(),
+    } : {}),
   }))
   .map((o) =>
     Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)),
@@ -314,6 +301,7 @@ for (const name of resourceNames)
   if (!/^[a-z0-9][a-z0-9._-]*$/.test(name))
     throw new Error(`Invalid Data Package resource name: ${name}`);
 const dataPackage = {
+  $schema: "https://datapackage.org/profiles/2.0/datapackage.json",
   profile: "data-package",
   name: "dr-saeed-ghezelbash-public-knowledge-graph",
   title: `${datasetName} — Data Package`,
@@ -321,7 +309,9 @@ const dataPackage = {
   homepage: datasetLandingPage,
   id: `${release.canonicalUrl}datapackage.json`,
   version: release.release,
-  created: createdAt,
+  // Data Package requires a timestamp here. A release publication date alone
+  // cannot establish an exact creation time; Croissant supports the date below.
+  ...(createdAt.includes("T") ? { created: createdAt } : {}),
   lastUpdated: release.dateModified,
   licenses: [
     {
@@ -352,6 +342,15 @@ const croissant = {
     cr: "http://mlcommons.org/croissant/",
     dct: "http://purl.org/dc/terms/",
     conformsTo: "dct:conformsTo",
+    column: "cr:column",
+    dataType: { "@id": "cr:dataType", "@type": "@vocab" },
+    extract: "cr:extract",
+    field: "cr:field",
+    fileObject: "cr:fileObject",
+    isLiveDataset: "cr:isLiveDataset",
+    key: "cr:key",
+    recordSet: "cr:recordSet",
+    source: "cr:source",
   },
   "@id": `${release.canonicalUrl}graph.jsonld#dataset`,
   "@type": "sc:Dataset",
@@ -387,6 +386,7 @@ const croissant = {
   ],
   inLanguage: retrievalPolicy.languages,
   isLiveDataset: false,
+  recordSet: [entityFactsRecordSet(release.canonicalUrl)],
   distribution: resources
     .map((m) => ({
       "@type": "cr:FileObject",

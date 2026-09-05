@@ -67,3 +67,11 @@ jobs:
           path: release/doctor-ghezelbaash-dist-v*.zip
           if-no-files-found: error
           retention-days: 7
+      - name: Upload source and distribution SHACL evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: shacl-evidence-${{ github.sha }}
+          path: .generated/validation/shacl*/
+          if-no-files-found: warn
+          retention-days: 7

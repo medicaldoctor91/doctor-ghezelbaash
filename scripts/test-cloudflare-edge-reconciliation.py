@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import tempfile
 import urllib.parse
 from pathlib import Path
 from typing import Any
@@ -476,6 +477,105 @@ if edge.cache_directives("public, max-age=60") != edge.cache_directives(
 ):
     raise AssertionError("Cache directive normalization is order-sensitive")
 
+class FakeCompressionApi:
+    def __init__(self, rules: list[dict[str, Any]] | None = None) -> None:
+        self.ruleset = None if rules is None else {
+            "id": "compression-set", "kind": "zone", "phase": edge.COMPRESSION_PHASE,
+            "rules": copy.deepcopy(rules),
+        }
+        self.mutations = 0
+        self.serial = len(rules or [])
+
+    def expect(self, method: str, path: str, body: Any = None, ok: tuple[int, ...] = (200,)) -> dict[str, Any]:
+        del ok
+        base = "/zones/test-zone/rulesets"
+        if method == "GET" and path == base:
+            return {"result": [] if self.ruleset is None else [copy.deepcopy(self.ruleset)]}
+        if method == "GET" and path == base + "/compression-set":
+            return {"result": copy.deepcopy(self.ruleset)}
+        if method == "POST" and path == base:
+            assert self.ruleset is None
+            self.mutations += 1
+            self.ruleset = {"id": "compression-set", **copy.deepcopy(body)}
+            self.ruleset["rules"] = [{"id": "rule-1", **row} for row in self.ruleset["rules"]]
+            self.serial = len(self.ruleset["rules"])
+            return {"result": copy.deepcopy(self.ruleset)}
+        assert self.ruleset is not None
+        rule_base = base + "/compression-set/rules"
+        if method == "POST" and path == rule_base:
+            self.serial += 1
+            self.mutations += 1
+            rule = {"id": f"rule-{self.serial}", **copy.deepcopy(body)}
+            self.ruleset["rules"].append(rule)
+            return {"result": copy.deepcopy(rule)}
+        if method == "PATCH" and path.startswith(rule_base + "/"):
+            rule_id = path.rsplit("/", 1)[1]
+            previous_index = next(i for i, row in enumerate(self.ruleset["rules"]) if row["id"] == rule_id)
+            rule = {"id": rule_id, **copy.deepcopy(body)}
+            position = rule.pop("position", None)
+            self.ruleset["rules"].pop(previous_index)
+            index = previous_index
+            if position:
+                index = position.get("index", 1) - 1
+                if "after" in position:
+                    index = next(i for i, row in enumerate(self.ruleset["rules"]) if row["id"] == position["after"]) + 1
+            self.ruleset["rules"].insert(index, rule)
+            self.mutations += 1
+            return {"result": copy.deepcopy(rule)}
+        if method == "DELETE" and path.startswith(rule_base + "/"):
+            rule_id = path.rsplit("/", 1)[1]
+            self.ruleset["rules"] = [row for row in self.ruleset["rules"] if row["id"] != rule_id]
+            self.mutations += 1
+            return {"result": None}
+        if method == "DELETE" and path == base + "/compression-set":
+            self.ruleset = None
+            self.mutations += 1
+            return {"result": None}
+        raise AssertionError((method, path, body))
+
+
+def test_machine_compression() -> None:
+    host = "www.ghezelbaash.ir"
+    desired = edge.machine_compression_rule(host)
+    assert desired["action_parameters"] == {"algorithms": [{"name": "auto"}]}
+    assert 'http.response.code eq 200' in desired["expression"]
+    assert '{"csv" "ttl"}' in desired["expression"]
+    foreign = {"id": "foreign-1", "ref": "unrelated_compression", "action": "compress_response"}
+    prior_owned = {"id": "owned-1", **copy.deepcopy(desired)}
+    prior_owned["enabled"] = False
+    with tempfile.TemporaryDirectory() as tmp:
+        for index, original in enumerate([None, [foreign], [prior_owned, foreign], [{"id": "owned-1", **desired}, foreign]]):
+            fake = FakeCompressionApi(original)
+            snapshot = Path(tmp) / f"before-{index}.json"
+            edge.reconcile_machine_compression(fake, "test-zone", host, snapshot)
+            assert snapshot.exists()
+            assert len([row for row in fake.ruleset["rules"] if row["ref"] == edge.COMPRESSION_RULE_REF]) == 1
+            initial_mutations = fake.mutations
+            edge.reconcile_machine_compression(fake, "test-zone", host, Path(tmp) / f"repeat-{index}.json")
+            assert fake.mutations == initial_mutations, "Compression reconciliation must be idempotent"
+            try:
+                edge.reconcile_machine_compression(fake, "test-zone", host, snapshot)
+                raise AssertionError("Rollback snapshot was overwritten")
+            except FileExistsError:
+                assert fake.mutations == initial_mutations
+            edge.rollback_machine_compression(fake, "test-zone", host, snapshot)
+            assert (fake.ruleset or {}).get("rules") == original
+            after_rollback = fake.mutations
+            edge.rollback_machine_compression(fake, "test-zone", host, snapshot)
+            assert fake.mutations == after_rollback
+        fake = FakeCompressionApi([foreign])
+        snapshot = Path(tmp) / "concurrent.json"
+        edge.reconcile_machine_compression(fake, "test-zone", host, snapshot)
+        fake.ruleset["rules"][-1]["action_parameters"] = {"algorithms": [{"name": "gzip"}]}
+        before_refusal = fake.mutations
+        try:
+            edge.rollback_machine_compression(fake, "test-zone", host, snapshot)
+            raise AssertionError("Rollback overwrote a concurrent change")
+        except edge.CloudflareError:
+            assert fake.mutations == before_refusal
+
+
+test_machine_compression()
 contract = edge.load_redirect_registry(ROOT)
 api = FakeCloudflareApi()
 token_authority = FakeTokenAuthority()
@@ -581,6 +681,8 @@ print(
             "pagesAndDnsInventory": True,
             "blogPagesFallbackBinding": True,
             "idempotent": True,
+            "machineCompressionTransaction": True,
+            "machineCompressionRollback": True,
         },
         sort_keys=True,
     )

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
+import { deriveEvidenceRegistry } from "./lib/projection-context.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
@@ -54,6 +55,30 @@ const matrix = JSON.parse(
 );
 const dataPackage = await readDistJson("datapackage.json");
 const croissant = await readDistJson("croissant.json");
+const evidenceRegistry = deriveEvidenceRegistry(
+  release,
+  JSON.parse(await readFile(path.join(root, "src/data/evidence-registry.json"), "utf8")),
+);
+const currentEvidenceId = `${release.canonicalUrl}#evidence-zenodo-current-release`;
+const expectedEvidence = evidenceRegistry.evidence.find((item) => item.id === currentEvidenceId);
+const evidenceSnapshot = await readDistJson("evidence-snapshot.json");
+const currentEvidence = evidenceSnapshot.entries.find((item) => item.id === currentEvidenceId);
+if (
+  !expectedEvidence || !currentEvidence ||
+  currentEvidence.url !== datasetLandingPage ||
+  currentEvidence.role !== "first-party-release-preservation" ||
+  currentEvidence.verifiedAt !== expectedEvidence.verifiedAt ||
+  currentEvidence.status !== expectedEvidence.liveStatus
+)
+  fail("Current release evidence identity, role or verification drift");
+const provenance = await readDistJson("provenance.jsonld");
+const provenanceEvidence = provenance["@graph"].find((item) => item["@id"] === currentEvidenceId);
+if (provenanceEvidence?.url !== datasetLandingPage ||
+    provenanceEvidence?.dateModified !== expectedEvidence.verifiedAt)
+  fail("Current release provenance identity or observation drift");
+const knowledge = await readFile(path.join(dist, "knowledge.xml"), "utf8");
+if (!knowledge.includes(`id="${currentEvidenceId}" tier="P" url="${datasetLandingPage}"`))
+  fail("Current release knowledge.xml evidence drift");
 
 const expectedMatrix = {
   release: release.release,

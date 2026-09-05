@@ -58,6 +58,7 @@ const homepageArticleRichResultTypes = new Set([
   "Article",
   "NewsArticle",
   "BlogPosting",
+  "ScholarlyArticle",
 ]);
 const homepagePersonProviderOnlyProperties = new Set([
   "areaServed",
@@ -164,9 +165,13 @@ const assertNoHomepageExternalRichResultNodes = (
   nodes,
   label,
   canonicalOrigin,
+  citedScholarlyWorkIds = new Set(),
 ) => {
   const offenders = nodes
-    .filter((node) => isHomepageExternalRichResultNode(node, canonicalOrigin))
+    .filter((node) =>
+      isHomepageExternalRichResultNode(node, canonicalOrigin) &&
+      !citedScholarlyWorkIds.has(node["@id"]),
+    )
     .map(
       (node) =>
         `${node["@id"] || "(anonymous)"} [${nodeTypes(node).join(", ")}]`,
@@ -201,6 +206,35 @@ export async function compileGraphProjections(context) {
     );
 
   const canonicalOrigin = new URL(release.canonicalUrl).origin;
+  const citedScholarlyWorkIds = new Set(supportProfile.citedScholarlyWorkIds || []);
+  if (citedScholarlyWorkIds.size !== supportProfile.citedScholarlyWorkIds?.length)
+    throw new Error("Cited scholarly work allowlist must be explicit and unique");
+  for (const id of citedScholarlyWorkIds) {
+    const work = byId.get(id);
+    const authorIds = [work?.author].flat().map((author) => author?.["@id"]);
+    const citingSections = graph["@graph"].filter((node) =>
+      nodeTypes(node).includes("WebPageElement") &&
+      [node.citation].flat().some((citation) => citation?.["@id"] === id),
+    );
+    if (
+      !supportIds.includes(id) ||
+      nodeTypes(work).length !== 1 || nodeTypes(work)[0] !== "ScholarlyArticle" ||
+      !authorIds.includes(release.primaryEntity.id) ||
+      !isExternalUrl(work?.url, canonicalOrigin) ||
+      !work.url.startsWith("https://doi.org/") ||
+      ![work.identifier].flat().includes(`DOI:${work.url.slice("https://doi.org/".length)}`) ||
+      !citingSections.some((section) =>
+        supportIds.includes(section["@id"]) &&
+        supportProfile.idProfiles?.[section["@id"]]?.include?.includes("citation"),
+      )
+    )
+      throw new Error(`Cited scholarly work lacks its physician, DOI or visible-section relationship: ${id}`);
+    const profile = supportProfile.idProfiles?.[id];
+    const fields = ["@id", "@type", "name", "headline", "url", "identifier", "datePublished", "author"];
+    if (!profile?.include || profile.include.length !== fields.length ||
+      fields.some((field) => !profile.include.includes(field)))
+      throw new Error(`Cited scholarly work must use the minimal authorship projection: ${id}`);
+  }
 
   // Historical event/workshop facts remain in the canonical knowledge graph.
   // The homepage is an entity/profile projection, not a dedicated event page,
@@ -212,14 +246,14 @@ export async function compileGraphProjections(context) {
       .filter((id) => typeof id === "string"),
   );
 
-  // External articles and external organizations remain first-class canonical
-  // graph evidence, but the physician homepage is not the canonical page for
-  // their Article/Organization rich-result markup. Keep the relationships by
-  // collapsing references to each source's own canonical URL instead.
+  // Only explicitly selected, DOI-identified coauthored scholarly works receive
+  // a minimal citation projection. Other external articles and organizations
+  // keep their relationships through their own canonical URLs.
   const homepageExternalRichResultIds = new Set(
     (graph["@graph"] || [])
       .filter((node) =>
-        isHomepageExternalRichResultNode(node, canonicalOrigin),
+        isHomepageExternalRichResultNode(node, canonicalOrigin) &&
+        !citedScholarlyWorkIds.has(node["@id"]),
       )
       .map((node) => node["@id"])
       .filter((id) => typeof id === "string"),
@@ -329,6 +363,7 @@ export async function compileGraphProjections(context) {
     supportNodes,
     "Support",
     canonicalOrigin,
+    citedScholarlyWorkIds,
   );
   assertPureSchemaHomepageNodes(supportNodes, "Support");
   const supportDoc = { "@context": projectionContext, "@graph": supportNodes };

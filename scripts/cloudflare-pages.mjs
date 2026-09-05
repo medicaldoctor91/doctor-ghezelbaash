@@ -1,3 +1,4 @@
+import { fetchRepresentation } from "./lib/http-representation.mjs";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -281,9 +282,7 @@ async function command_ensure() {
       d = await waitForDeployment(d, { allowTerminalFailure: true });
     const retryReason = [
       configurationChanged ? "platform-config-changed" : null,
-      d.is_skipped
-        ? `skipped:${String(d.skip_reason || "unknown")}`
-        : null,
+      d.is_skipped ? `skipped:${String(d.skip_reason || "unknown")}` : null,
       ["failure", "canceled"].includes(statusOf(d)) ? statusOf(d) : null,
     ]
       .filter(Boolean)
@@ -392,15 +391,13 @@ async function command_verify() {
   for (const rel of files)
     expected.set(rel, await readFile(path.join(root, "dist", rel)));
   const fetchBytes = async (url) => {
-    const response = await fetch(url, {
+    const { r, b, reprDigestVerified } = await fetchRepresentation(url, {
       headers: {
-        "user-agent": "ghezelbaash-pages-byte-verifier/3.0",
+        "user-agent": "ghezelbaash-pages-byte-verifier/4.0",
         accept: "*/*",
       },
-      redirect: "follow",
-      signal: AbortSignal.timeout(45000),
     });
-    return { response, bytes: Buffer.from(await response.arrayBuffer()) };
+    return { response: r, bytes: b, reprDigestVerified };
   };
   const verifyOne = async (rel) => {
     const wanted = expected.get(rel),
@@ -452,6 +449,7 @@ async function command_verify() {
             etag: ordinary.response.headers.get("etag"),
             cfCacheStatus: ordinary.response.headers.get("cf-cache-status"),
             reprDigest: ordinary.response.headers.get("repr-digest"),
+            reprDigestVerified: ordinary.reprDigestVerified,
           };
         if (attempt === 24)
           throw new Error(

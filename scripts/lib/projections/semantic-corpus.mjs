@@ -2,13 +2,13 @@ import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 import { compileKnowledgeXml } from "../knowledge-xml.mjs";
 import {
-  csvCell,
   nodeTypes,
   refIds,
   sha256,
   valueText,
 } from "../projection-context.mjs";
 import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
+import { buildEntityFacts, serializeEntityFacts } from "../entity-facts.mjs";
 
 export async function compileSemanticCorpus(context) {
   const {
@@ -21,60 +21,10 @@ export async function compileSemanticCorpus(context) {
     evidenceRefsForNode,
   } = context;
 
-  const rows = [
-    [
-      "subject",
-      "type",
-      "name",
-      "predicate",
-      "value",
-      "object",
-      "object_name",
-      "language",
-      "datatype",
-      "provenance",
-      "dataset",
-      "version",
-      "modified",
-    ],
-  ];
-  const add = (node, predicate, value) => {
-    for (const item of Array.isArray(value) ? value : [value]) {
-      let literal = "",
-        object = "",
-        language = "",
-        datatype = "";
-      if (item && typeof item === "object") {
-        if (item["@id"]) object = item["@id"];
-        else if (item["@value"] != null) {
-          literal = String(item["@value"]);
-          language = item["@language"] || "";
-          datatype = item["@type"] || "";
-        } else literal = JSON.stringify(item);
-      } else literal = String(item ?? "");
-      rows.push([
-        node["@id"] || "",
-        nodeTypes(node).join("|"),
-        context.nodeName(node),
-        predicate,
-        literal,
-        object,
-        context.nodeName(byId.get(object)),
-        language,
-        datatype,
-        node["@id"] || "",
-        `${release.canonicalUrl}graph.jsonld#dataset`,
-        release.release,
-        release.dateModified,
-      ]);
-    }
-  };
-  for (const node of graph["@graph"])
-    for (const [predicate, value] of Object.entries(node))
-      if (predicate !== "@id") add(node, predicate, value);
+  const factRecords = await buildEntityFacts(context);
   await writeFile(
     path.join(projections, "entity-facts.csv"),
-    rows.map((row) => row.map(csvCell).join(",")).join("\n") + "\n",
+    serializeEntityFacts(factRecords),
   );
 
   const answerRecords = [];
@@ -214,7 +164,7 @@ ${answers.join("\n---\n\n")}`,
   await writeFile(path.join(projections, "knowledge.xml"), knowledge);
 
   return {
-    rowsCount: rows.length - 1,
+    rowsCount: factRecords.length,
     answersCount: answers.length,
     answerRecords,
   };

@@ -32,8 +32,12 @@ assertRenderedClinicReputation(source, {
 const fail = (message) => {
   throw new Error(message);
 };
+const heroActions = source.match(
+  /<div\b[^>]*class=["'][^"']*\bhero-actions\b[^"']*["'][^>]*>[\s\S]*?<\/div>/i,
+)?.[0];
+if (!heroActions) fail("Critical hero CTA container is missing");
 const hero = [
-  ...source.matchAll(
+  ...heroActions.matchAll(
     /<a\b[^>]*class=["'][^"']*\bhero-action\b[^"']*["'][^>]*>[\s\S]*?<\/a>/gi,
   ),
 ].map((m) => m[0]);

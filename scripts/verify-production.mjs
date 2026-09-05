@@ -1,3 +1,4 @@
+import { fetchRepresentation } from "./lib/http-representation.mjs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -388,13 +389,15 @@ async function verifyCore() {
     ["Cloudflare-AI-Search", "Cloudflare-AI-Search"],
   ];
   const request = async (path, ua, { redirect = "follow" } = {}) => {
-    const r = await fetch(new URL(path, base), {
+    const representation = await fetchRepresentation(new URL(path, base), {
       redirect,
-      cache: "no-store",
       headers: { ...cacheBypass, "user-agent": ua },
     });
-    return { r, text: await r.text() };
+    return { ...representation, text: representation.b.toString("utf8") };
   };
+  const expectedRootSha = createHash("sha256")
+    .update(await readFile(path.join(root, "dist/index.html")))
+    .digest("hex");
   let budgetProbe;
   const productionPropagationAttempts = 46;
   for (let attempt = 1; attempt <= productionPropagationAttempts; attempt++) {
@@ -402,16 +405,17 @@ async function verifyCore() {
       "/",
       "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
     );
-    const liveDigest = `sha-256=:${createHash("sha256").update(Buffer.from(budgetProbe.text)).digest("base64")}:`;
+    const liveSha = createHash("sha256").update(budgetProbe.b).digest("hex");
     if (
       budgetProbe.r.headers.get("content-security-policy") ===
         expectedRootCsp &&
-      budgetProbe.r.headers.get("repr-digest") === liveDigest
+      budgetProbe.r.status === 200 &&
+      liveSha === expectedRootSha
     )
       break;
     if (attempt === productionPropagationAttempts)
       fail(
-        `Production root did not converge to generated CSP/digest after ${attempt} attempts`,
+        `Production root did not converge to generated CSP/artifact bytes after ${attempt} attempts`,
       );
     console.warn(
       JSON.stringify({
@@ -423,8 +427,9 @@ async function verifyCore() {
         liveCspSha256: createHash("sha256")
           .update(budgetProbe.r.headers.get("content-security-policy") || "")
           .digest("hex"),
-        expectedDigest: liveDigest,
-        liveDigest: budgetProbe.r.headers.get("repr-digest"),
+        expectedIndexSha256: expectedRootSha,
+        liveIndexSha256: liveSha,
+        reprDigestVerified: budgetProbe.reprDigestVerified,
         etag: budgetProbe.r.headers.get("etag"),
         cfCacheStatus: budgetProbe.r.headers.get("cf-cache-status"),
         age: budgetProbe.r.headers.get("age"),
@@ -457,9 +462,10 @@ async function verifyCore() {
   )
     fail(`Production HSTS differs from generated DIST header intent: ${hsts}`);
   if (!enforceHsts) console.warn(`HSTS_SCOPE_GAP live=${hsts}`);
-  const expectedRootDigest = `sha-256=:${createHash("sha256").update(Buffer.from(budgetProbe.text)).digest("base64")}:`;
-  if (budgetProbe.r.headers.get("repr-digest") !== expectedRootDigest)
-    fail("Production root Repr-Digest/body drift");
+  if (
+    createHash("sha256").update(budgetProbe.b).digest("hex") !== expectedRootSha
+  )
+    fail("Production root artifact byte drift");
   const linkTags = [...budgetProbe.text.matchAll(/<link\b[^>]*>/gi)].map(
     (m) => m[0],
   );
@@ -628,9 +634,7 @@ async function verifyCore() {
     missingX = "";
   const missingBodyExact = (body) =>
     /<title>\s*صفحه پیدا نشد \| دکتر سعید قزلباش\s*<\/title>/i.test(body) &&
-    /<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(
-      body,
-    ) &&
+    /<div\b[^>]*\bclass=["'][^"']*\bnot-found-page\b[^"']*["']/i.test(body) &&
     /<h1\b[^>]*>\s*این صفحه پیدا نشد؛ مسیر اصلی همچنان در دسترس است\s*<\/h1>/i.test(
       body,
     );

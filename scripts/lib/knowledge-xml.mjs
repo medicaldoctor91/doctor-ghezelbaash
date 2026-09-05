@@ -87,7 +87,7 @@ function canonicalEvidence(evidenceRegistry) {
     : [];
   if (!evidence.length)
     throw new Error("knowledge.xml: evidence registry is empty");
-  const tierXml = ["A", "B", "C"]
+  const tierXml = Object.keys(tiers).sort()
     .map((tier) => `<tier id="${tier}">${xml(tiers[tier])}</tier>`)
     .join("");
   const itemXml = evidence
@@ -95,7 +95,7 @@ function canonicalEvidence(evidenceRegistry) {
       const supports = Array.isArray(item.supports)
         ? item.supports.map(text).filter(Boolean)
         : [];
-      return `<item id="${xml(item.id)}" tier="${xml(item.tier)}" url="${xml(item.url)}" liveStatus="${xml(item.liveStatus)}" verifiedAt="${xml(item.verifiedAt)}">${supports.map((value) => `<supports>${xml(value)}</supports>`).join("")}</item>`;
+      return `<item id="${xml(item.id)}" tier="${xml(item.tier)}" url="${xml(item.url)}" liveStatus="${xml(item.liveStatus)}"${item.verifiedAt ? ` verifiedAt="${xml(item.verifiedAt)}"` : ""}${item.role ? ` role="${xml(item.role)}"` : ""}>${supports.map((value) => `<supports>${xml(value)}</supports>`).join("")}</item>`;
     })
     .join("");
   return `  <evidence count="${evidence.length}"><tiers>${tierXml}</tiers>${itemXml}</evidence>`;

@@ -1,12 +1,12 @@
 const TOKEN_PATTERN =
-  /{{(?:MAIN_CSP|404_CSP|HERO_EARLY_HINT_HREF|DIGEST:[^{}\s]+)}}/g;
+  /{{(?:MAIN_CSP|404_CSP|HERO_EARLY_HINT_HREF|HTTP_RESOURCE_LINKS)}}/g;
 const ANY_TOKEN_PATTERN = /{{[^{}]+}}/g;
 
 const countToken = (source, token) => source.split(token).length - 1;
 
 export function compileHeadersTemplate(
   template,
-  { mainCsp, csp404, heroEarlyHintHref, digests } = {},
+  { mainCsp, csp404, heroEarlyHintHref, httpResourceLinks } = {},
 ) {
   const source = String(template);
   if (typeof mainCsp !== "string" || !mainCsp)
@@ -18,17 +18,14 @@ export function compileHeadersTemplate(
     !heroEarlyHintHref.startsWith("/")
   )
     throw new Error("_headers compiler: Hero Early Hint path missing");
-  if (!digests || typeof digests !== "object" || Array.isArray(digests))
-    throw new Error("_headers compiler: digest map missing");
+  if (typeof httpResourceLinks !== "string" || !httpResourceLinks)
+    throw new Error("_headers compiler: HTTP resource links missing");
 
   const bindings = new Map([
     ["{{MAIN_CSP}}", mainCsp],
     ["{{404_CSP}}", csp404],
     ["{{HERO_EARLY_HINT_HREF}}", heroEarlyHintHref],
-    ...Object.entries(digests).map(([file, digest]) => [
-      `{{DIGEST:${file}}}`,
-      String(digest),
-    ]),
+    ["{{HTTP_RESOURCE_LINKS}}", httpResourceLinks],
   ]);
   const discovered = source.match(ANY_TOKEN_PATTERN) || [];
   const unknown = [

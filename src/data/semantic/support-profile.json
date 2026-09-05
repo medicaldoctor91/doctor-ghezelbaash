@@ -123,10 +123,19 @@
     "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
     "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
     "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions",
-    "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints"
+    "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints",
+    "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016",
+    "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"
   ],
+  "citedScholarlyWorkIds": ["https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016", "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"],
   "maxBytes": 76000,
   "idProfiles": {
+    "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016": {
+      "include": ["@id", "@type", "name", "headline", "url", "identifier", "datePublished", "author"]
+    },
+    "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021": {
+      "include": ["@id", "@type", "name", "headline", "url", "identifier", "datePublished", "author"]
+    },
     "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine": {
       "include": ["@id", "@type", "name", "headline", "description", "url", "sameAs", "author", "about", "datePublished", "learningResourceType", "license", "inLanguage"]
     },
@@ -137,7 +146,7 @@
       "include": ["@id", "@type", "name", "headline", "description", "url", "sameAs", "author", "about", "datePublished", "learningResourceType", "license", "inLanguage"]
     },
     "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions": {
-      "include": ["@id", "@type", "name", "description", "url", "about", "mentions", "isPartOf", "inLanguage"]
+      "include": ["@id", "@type", "name", "description", "url", "about", "mentions", "citation", "isPartOf", "inLanguage"]
     },
     "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints": {
       "include": ["@id", "@type", "name", "url", "sameAs", "publisher", "issn"]
