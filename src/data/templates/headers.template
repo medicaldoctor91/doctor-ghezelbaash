@@ -16,6 +16,7 @@ https://:version.:project.pages.dev/*
 
 /
   Content-Type: text/html; charset=utf-8
+  Vary: Accept-Encoding
   Content-Language: fa-IR
   X-Robots-Tag: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
   Cache-Control: public, no-cache

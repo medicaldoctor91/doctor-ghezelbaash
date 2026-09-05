@@ -285,7 +285,7 @@ async function command_discovery() {
           );
         if (
           encoding !== "identity" &&
-          x.contentEncoding !== "identity" &&
+          (rel === "index.html" || x.contentEncoding !== "identity") &&
           x.contentEncoding !== encoding
         )
           throw new Error(
@@ -298,7 +298,7 @@ async function command_discovery() {
             .some((v) => v.trim().toLowerCase() === "accept-encoding")
         )
           throw new Error(
-            `${rel} ${lane} compressed response lacks Vary: Accept-Encoding`,
+            `${rel} ${lane} negotiated response lacks Vary: Accept-Encoding`,
           );
         assertRequiredCompression(rel, encoding, x.contentEncoding, requireMachineCompression);
         rows.push({
