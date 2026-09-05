@@ -426,7 +426,7 @@ assert(
 );
 assert(
   deploymentHeadersGenerator.includes("./lib/headers-template.mjs") &&
-    /compileHeadersTemplate\(\s*headersTemplate,\s*\{[\s\S]*?mainCsp[\s\S]*?csp404[\s\S]*?heroEarlyHintHref\s*:\s*HERO_EARLY_HINT_HREF[\s\S]*?digests[\s\S]*?\}\s*\)/.test(
+    /compileHeadersTemplate\(\s*headersTemplate,\s*\{[\s\S]*?mainCsp[\s\S]*?csp404[\s\S]*?heroEarlyHintHref\s*:\s*HERO_EARLY_HINT_HREF[\s\S]*?httpResourceLinks[\s\S]*?\}\s*\)/.test(
       deploymentHeadersGenerator,
     ),
   "Deployment headers must be generated in one pass",

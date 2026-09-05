@@ -7,6 +7,8 @@ import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { commitTextFiles } from "./lib/file-transaction.mjs";
 import { assertDocumentContract } from "./lib/html-contract.mjs";
 import { assertSameDocumentGraphUrlTargets } from "./lib/graph-integrity.mjs";
+import { deriveEvidenceRegistry, deriveEvidenceSnapshot } from "./lib/projection-context.mjs";
+import { guideNavigatorContract } from "./test-guide-navigator.mjs";
 import {
   canonicalSemanticSource,
   deriveCanonicalSemanticSets,
@@ -615,16 +617,48 @@ async function static_google_maps_reputation_contract() {
   );
 }
 
+async function current_release_evidence_contract() {
+  const release = JSON.parse(await readFile("src/data/release.json", "utf8"));
+  const registry = JSON.parse(await readFile("src/data/evidence-registry.json", "utf8"));
+  const id = `${release.canonicalUrl}#evidence-zenodo-current-release`;
+  const derived = deriveEvidenceRegistry(release, registry);
+  const entry = derived.evidence.find((item) => item.id === id);
+  assert.equal(entry.url, `https://doi.org/${release.dataset.zenodo.versionDoi}`);
+  assert.equal(entry.role, "first-party-release-preservation");
+  assert.equal(entry.tier, "P");
+  const source = registry.evidence.find((item) => item.id === id);
+  assert.equal(entry.verifiedAt, source.verifiedRelease === release.release ? source.verifiedAt : undefined);
+  assert.equal(registry.evidence.find((item) => item.id === id).url, undefined);
+
+  const next = structuredClone(release);
+  next.release = "future-test-release";
+  next.dataset.zenodo.versionDoi = "10.5281/zenodo.1";
+  const future = deriveEvidenceRegistry(next, registry);
+  const futureEntry = deriveEvidenceSnapshot(next, future).entries.find((item) => item.id === id);
+  assert.equal(futureEntry.url, "https://doi.org/10.5281/zenodo.1");
+  assert.equal(futureEntry.verifiedAt, undefined);
+  assert.equal(futureEntry.status, "not-verified-for-current-release");
+  const drift = structuredClone(registry);
+  drift.evidence.find((item) => item.id === id).url = "https://doi.org/stale";
+  assert.throws(() => deriveEvidenceRegistry(release, drift), /must be derived/);
+  const falseCorroboration = structuredClone(registry);
+  falseCorroboration.evidence.find((item) => item.id === id).tier = "B";
+  assert.throws(() => deriveEvidenceRegistry(release, falseCorroboration), /independent corroboration/);
+  console.log("CURRENT_RELEASE_EVIDENCE_CONTRACT_PASS");
+}
+
 await file_transaction();
 graph_url_target_contract();
 await release_promotion();
 semantic_article_contract();
 await canonical_semantic_derivation_contract();
 await static_google_maps_reputation_contract();
+await current_release_evidence_contract();
+await guideNavigatorContract();
 console.log(
   JSON.stringify({
     stage: "CONTRACT_TEST_SUITE",
-    contracts: 6,
+    contracts: 8,
     integrity: "PASS",
   }),
 );

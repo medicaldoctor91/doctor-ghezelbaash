@@ -1,9 +1,10 @@
 {
-  "verifiedAt": "2026-08-07",
+  "verifiedAt": "2026-09-05",
   "tiers": {
     "A": "official/authority-control or first-order scholarly/local identity evidence",
     "B": "major scholarly/professional corroboration",
-    "C": "secondary directory/media/local corroboration"
+    "C": "secondary directory/media/local corroboration",
+    "P": "first-party publication or preservation; not independent corroboration"
   },
   "evidence": [
     {
@@ -542,14 +543,16 @@
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-zenodo-current-release",
-      "tier": "B",
+      "tier": "P",
       "supports": [
-        "medical-claim-context",
-        "canonical-visible-citation"
+        "first-party-release-preservation",
+        "dataset-release-identity"
       ],
-      "url": "https://doi.org/10.5281/zenodo.21930954",
-      "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "liveStatus": "published-record-metadata-verified",
+      "verifiedAt": "2026-09-05",
+      "role": "first-party-release-preservation",
+      "releaseBinding": "zenodo-version",
+      "verifiedRelease": "1.2.5"
     }
   ]
 }

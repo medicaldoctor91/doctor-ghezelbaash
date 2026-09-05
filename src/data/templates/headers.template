@@ -21,8 +21,7 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, no-cache
   Cloudflare-CDN-Cache-Control: public, max-age=86400, stale-while-revalidate=604800, stale-if-error=2592000
   Content-Security-Policy: {{MAIN_CSP}}
-  Repr-Digest: sha-256=:{{DIGEST:index.html}}:
-  Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/linkset.json>; rel="linkset"; type="application/linkset+json", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/provenance.jsonld>; rel="describedby"; type="application/ld+json"
+  Link: <https://www.ghezelbaash.ir/>; rel="canonical", {{HTTP_RESOURCE_LINKS}}
   Link: <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="author", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about", <https://www.ghezelbaash.ir/graph.jsonld#dataset>; rel="about"
   Link: <{{HERO_EARLY_HINT_HREF}}>; rel=preload; as=image; type="image/avif"; media="screen and (max-width: 540px) and (min-resolution: 1.25dppx) and (max-resolution: 2.5dppx)"; fetchpriority=high
 
@@ -53,9 +52,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/graph.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:graph.jsonld}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /graph.ttl
@@ -65,9 +63,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/graph.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:graph.ttl}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /entity-facts.csv
@@ -77,9 +74,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/entity-facts.csv>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:entity-facts.csv}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /answers.txt
@@ -89,9 +85,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/answers.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:answers.txt}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /knowledge.xml
@@ -101,9 +96,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/knowledge.xml>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:knowledge.xml}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /llms.txt
@@ -113,9 +107,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/llms.txt>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:llms.txt}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /index.md
@@ -125,9 +118,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:index.md}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /llms-full.txt
@@ -137,9 +129,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:llms-full.txt}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /datapackage.json
@@ -149,9 +140,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/datapackage.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:datapackage.json}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /linkset.json
@@ -161,9 +151,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/linkset.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:linkset.json}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /void.ttl
@@ -173,9 +162,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/void.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:void.ttl}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /dcat.ttl
@@ -185,9 +173,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/dcat.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:dcat.ttl}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /croissant.json
@@ -197,9 +184,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/croissant.json>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:croissant.json}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 
@@ -210,9 +196,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/provenance.jsonld>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:provenance.jsonld}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /evidence-snapshot.json
@@ -222,9 +207,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/evidence-snapshot.json>; rel="canonical", <https://www.ghezelbaash.ir/provenance.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:evidence-snapshot.json}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /shapes.ttl
@@ -234,9 +218,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/shapes.ttl>; rel="canonical", <https://www.ghezelbaash.ir/graph.ttl>; rel="describedby"; type="text/turtle", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:shapes.ttl}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /doctor.vcf
@@ -245,9 +228,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/doctor.vcf>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#saeed-ghezelbash>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:doctor.vcf}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /clinic.vcf
@@ -256,9 +238,8 @@ https://:version.:project.pages.dev/*
   Cache-Control: public, max-age=3600, must-revalidate
   Cloudflare-CDN-Cache-Control: public, max-age=3600, stale-if-error=86400
   Link: <https://www.ghezelbaash.ir/clinic.vcf>; rel="canonical", <https://www.ghezelbaash.ir/graph.jsonld>; rel="describedby"; type="application/ld+json", <https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah>; rel="about"
-  Repr-Digest: sha-256=:{{DIGEST:clinic.vcf}}:
   Access-Control-Allow-Origin: *
-  Access-Control-Expose-Headers: Link, Repr-Digest, Content-Signal
+  Access-Control-Expose-Headers: Link, Content-Signal
   Cross-Origin-Resource-Policy: cross-origin
 
 /site.webmanifest

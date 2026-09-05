@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
+import { assembleCanonicalContent, physicianImageUrls } from "./lib/assemble-content.mjs";
 import {
   deriveGooglePageMicrodata,
   deriveGooglePageNode,
@@ -135,6 +135,7 @@ const mediaBridges = [
     property: "image",
     type: "ImageObject",
     caption: "caption-saeed-ghezelbash-portrait-master",
+    directContentUrl: true,
   },
   {
     fragment: "image-saeed-ghezelbash-clinical-office-master",
@@ -191,8 +192,9 @@ for (const bridge of mediaBridges) {
     fail(
       `Visible media anchor has no matching ${bridge.type} graph node: ${iri}`,
     );
+  const linkTarget = bridge.directContentUrl ? graphNode(iri).contentUrl : iri;
   const linkPattern = new RegExp(
-    `<link\\b(?=[^>]*\\bhref=["']${escapeRegExp(iri)}["'])(?=[^>]*\\bitemprop=["']${bridge.property}["'])[^>]*>`,
+    `<link\\b(?=[^>]*\\bhref=["']${escapeRegExp(linkTarget)}["'])(?=[^>]*\\bitemprop=["']${bridge.property}["'])[^>]*>`,
     "i",
   );
   if (!linkPattern.test(body))
@@ -406,7 +408,7 @@ const personMicrodata =
     .every((tag) => /^<a\b/i.test(tag)) &&
   exactSet(
     new Set(personValues("image")),
-    new Set([graphRef(projectedPerson.image?.[0] ?? projectedPerson.image)]),
+    new Set(physicianImageUrls(knowledgeGraphDocument, release)),
   ) &&
   personValues("description").length === 0 &&
   !/<img\b(?=[^>]*\bitemprop=["'][^"']*\bimage\b[^"']*["'])[^>]*>/i.test(

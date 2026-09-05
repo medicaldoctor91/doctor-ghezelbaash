@@ -1,6 +1,8 @@
 import path from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
 import { nodeTypes, valueText } from "../projection-context.mjs";
+import { assembleCanonicalContent, physicianImageUrls } from "../assemble-content.mjs";
+import { inspectHtml } from "../html-contract.mjs";
 import {
   directLanguageLiterals,
   exactLanguageLiteral,
@@ -55,6 +57,54 @@ const requiredNode = (byId, id, label) => {
 };
 const requiredReferenceId = (value, label) =>
   requiredText(value?.["@id"], `${label} reference`);
+
+export function deriveSitemapImageUrls({ content, graph, byId, release }) {
+  const canonicalImageUrl = (value, label) => {
+    const url = new URL(requiredText(value, label), release.canonicalUrl);
+    if (url.origin !== new URL(release.canonicalUrl).origin || url.hash)
+      throw new Error(`Contact discovery: ${label} must be a canonical image resource: ${url}`);
+    return url.href;
+  };
+  const attr = (node, name) => node.attrs?.find((item) => item.name === name)?.value;
+  const visibleImageUrls = inspectHtml(content, { wrapMain: true }).elements
+    .filter((node) => node.tagName === "img")
+    .map((node) => {
+      const fallback = canonicalImageUrl(attr(node, "src"), "visible image src");
+      const extension = path.extname(new URL(fallback).pathname);
+      const candidates = [{ url: fallback, width: Number(attr(node, "width")) || 0 }];
+      const sources = node.parentNode?.tagName === "picture"
+        ? node.parentNode.childNodes.filter((child) => child.tagName === "source")
+        : [node];
+      for (const source of sources)
+        for (const candidate of (attr(source, "srcset") || "").split(",")) {
+          const match = candidate.trim().match(/^(\S+)\s+(\d+)w$/);
+          if (!match) continue;
+          const url = canonicalImageUrl(match[1], "visible responsive image");
+          if (path.extname(new URL(url).pathname) === extension)
+            candidates.push({ url, width: Number(match[2]) });
+        }
+      // Publish one high-resolution representation of each visible picture,
+      // preserving its fallback format instead of listing every delivery size.
+      return candidates.sort((left, right) => right.width - left.width)[0].url;
+    });
+  if (!visibleImageUrls.length)
+    throw new Error("Contact discovery: visible images are required");
+  const clinic = requiredNode(byId, release.clinic.id, "owned clinic");
+  const logoIds = new Set([clinic.logo].flat().map((value) => value?.["@id"]).filter(Boolean));
+  const clinicImageUrls = clinic.image.filter((value) => !logoIds.has(value?.["@id"])).map((value) =>
+    canonicalImageUrl(
+      typeof value === "string" ? value : requiredNode(
+        byId, requiredReferenceId(value, "clinic image"), "clinic image",
+      ).contentUrl,
+      "clinic image contentUrl",
+    ),
+  );
+  return [...new Set([
+    ...visibleImageUrls,
+    ...physicianImageUrls(graph, release),
+    ...clinicImageUrls,
+  ])];
+}
 
 export async function compileContactDiscovery(context) {
   const { generatedPublic, projections, release, graph, byId } = context;
@@ -214,38 +264,8 @@ export async function compileContactDiscovery(context) {
   await writeFile(path.join(generatedPublic, "doctor.vcf"), doctorVcf);
   await writeFile(path.join(generatedPublic, "clinic.vcf"), clinicVcf);
 
-  const imageIds = [
-    `${release.canonicalUrl}#image-saeed-ghezelbash-portrait`,
-    `${release.canonicalUrl}#image-saeed-ghezelbash-clinical-examination`,
-    `${release.canonicalUrl}#image-saeed-ghezelbash-clinic-team`,
-  ];
-  const graphImageUrls = imageIds.map((id) =>
-    requiredText(
-      requiredNode(byId, id, "sitemap image").contentUrl,
-      `sitemap image ${id} contentUrl`,
-    ),
-  );
-  const clinicImageUrls = clinic.image.filter(
-    (value) => typeof value === "string",
-  );
-  if (!clinicImageUrls.length)
-    throw new Error("Contact discovery: clinic sitemap image URLs are required");
-  for (const [index, url] of clinicImageUrls.entries())
-    if (
-      !requiredText(url, `clinic sitemap image URL ${index + 1}`).startsWith(
-        release.canonicalUrl,
-      )
-    )
-      throw new Error(
-        `Contact discovery: clinic sitemap image URL must be canonical: ${url}`,
-      );
-  if (clinicImageIds.length + clinicImageUrls.length !== clinic.image.length)
-    throw new Error(
-      "Contact discovery: clinic image facts must be canonical references or direct URLs",
-    );
-  const imageLocs = [
-    ...new Set([...graphImageUrls, ...clinicImageUrls]),
-  ];
+  const { content } = await assembleCanonicalContent({ root: context.root, graph });
+  const imageLocs = deriveSitemapImageUrls({ content, graph, byId, release });
   const videos = graph["@graph"].filter((node) =>
     nodeTypes(node).includes("VideoObject"),
   );

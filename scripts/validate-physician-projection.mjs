@@ -362,6 +362,29 @@ for (const [id] of aestheticWorks) {
 }
 
 const researchSection = requireNode(byId, RESEARCH_SECTION, "Research/education WebPageElement");
+const citedScholarlyWorks = [
+  ["https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016", "10.4103/2008-7802.182734"],
+  ["https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021", "10.3390/healthcare9091169"],
+];
+assertExact(
+  supportProfile.citedScholarlyWorkIds,
+  citedScholarlyWorks.map(([id]) => id),
+  "Inline scholarly citation allowlist drift",
+);
+const projectedResearchSection = projectNode(researchSection, supportProfile.idProfiles?.[RESEARCH_SECTION]);
+for (const [id, doi] of citedScholarlyWorks) {
+  const work = requireNode(byId, id, "Physician-coauthored scholarly work");
+  const projectedWork = projectNode(work, supportProfile.idProfiles?.[id]);
+  assertExact(types(work), ["ScholarlyArticle"], `Scholarly citation type drift: ${id}`);
+  assert.ok(supportProfile.ids.includes(id), `Cited scholarly work is not selected: ${id}`);
+  assert.ok(refs(projectedResearchSection.citation).includes(id), `Projected section lost its scholarly citation: ${id}`);
+  assert.ok(refs(projectedWork.author).includes(PHYSICIAN), `Projected scholarly work lost physician coauthorship: ${id}`);
+  assert.equal(projectedWork.url, `https://doi.org/${doi}`, `Scholarly citation DOI destination drift: ${id}`);
+  assert.ok(projectedWork.identifier.includes(`DOI:${doi}`), `Scholarly citation DOI identifier drift: ${id}`);
+  assert.equal(projectedWork.image, undefined, `A physician portrait must not represent the cited scholarly article: ${id}`);
+  assert.equal(projectedWork.mainEntityOfPage, undefined, `The homepage must not become an external article's canonical page: ${id}`);
+  assert.ok(!refs(physician.subjectOf).includes(id), `An authored work must not become a work about the physician: ${id}`);
+}
 for (const id of [PHYSICIAN, SPECIALTY, "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"]) {
   assert.ok(refs(researchSection.about).includes(id), `Research section lost about edge: ${id}`);
 }
@@ -470,6 +493,26 @@ assert.ok(
 
 const physicianSpec = headProfile.nodes?.[PHYSICIAN];
 const clinicSpec = headProfile.nodes?.[CLINIC];
+const physicianImages = refs(physician.image);
+assert.equal(physicianImages.length, 4, "Physician must retain four canonical portrait images");
+assertExact(
+  refs(projectNode(physician, physicianSpec).image),
+  physicianImages,
+  "Physician head projection must preserve every canonical portrait reference",
+);
+for (const id of physicianImages) {
+  const image = requireNode(byId, id, "Physician portrait image");
+  assert.ok(types(image).includes("ImageObject"), `Physician image has the wrong type: ${id}`);
+  assert.ok(refs(image.about).includes(PHYSICIAN), `Physician image must depict the physician: ${id}`);
+  assert.ok(supportProfile.ids.includes(id), `Physician image is missing from inline support: ${id}`);
+  assert.ok(typeof image.contentUrl === "string" && !new URL(image.contentUrl).hash,
+    `Physician portrait contentUrl must resolve directly to an image: ${id}`);
+}
+for (const [suffix, width, height] of [["square-1200", 1200, 1200], ["4x3-1200", 1200, 900], ["16x9-1200", 1200, 675]]) {
+  const image = requireNode(byId, `https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-${suffix}`, "Physician portrait crop");
+  assert.equal(image.width?.value, width, `Physician crop width drift: ${suffix}`);
+  assert.equal(image.height?.value, height, `Physician crop height drift: ${suffix}`);
+}
 assert.ok(
   physicianSpec && clinicSpec,
   "Head projection profiles for physician/clinic are missing",

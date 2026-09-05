@@ -782,7 +782,7 @@ const identitySurfaceTokens = [
 if (identitySurfaceTokens.some((token) => !source.includes(token)))
   fail("Verified physician identity surface contract drift");
 if (
-  !/<button\b(?=[^>]*\bhero-search-launch\b)(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*aria-label="باز کردن جست‌وجوی راهنمای جامع")[^>]*>/i.test(
+  !/<a\b(?=[^>]*\bhero-search-launch\b)(?=[^>]*\bdata-guide-search-open\b)(?=[^>]*href="#aesthetic-medicine-table-of-contents")(?=[^>]*aria-label="باز کردن جست‌وجوی راهنمای جامع")[^>]*>/i.test(
     source,
   )
 )

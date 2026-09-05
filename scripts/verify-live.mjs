@@ -1,3 +1,4 @@
+import { fetchRepresentation } from "./lib/http-representation.mjs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
@@ -48,9 +49,13 @@ async function command_current() {
       "User-Agent": "ghezelbaash-current-serving-verifier/2.0",
     };
     if (noCache) headers["Cache-Control"] = "no-cache";
-    const r = await fetch(url, { headers, signal: AbortSignal.timeout(60000) });
-    if (!r.ok) throw new Error(`HTTP ${r.status} ${url}`);
-    return { r, b: Buffer.from(await r.arrayBuffer()) };
+    const representation = await fetchRepresentation(url, {
+      headers,
+      timeoutMs: 60000,
+    });
+    if (!representation.r.ok)
+      throw new Error(`HTTP ${representation.r.status} ${url}`);
+    return representation;
   };
   const results = [];
 
@@ -147,7 +152,10 @@ async function command_current() {
 
 async function command_discovery() {
   const root = process.cwd(),
-    dist = path.resolve(root, process.argv[2] || "dist"),
+    dist = path.resolve(
+      root,
+      process.argv.slice(2).find((value) => !value.startsWith("--")) || "dist",
+    ),
     base = process.env.VERIFY_BASE_URL || "https://www.ghezelbaash.ir/";
   const release = JSON.parse(
       await readFile(path.join(root, "src/data/release.json"), "utf8"),
@@ -180,73 +188,118 @@ async function command_discovery() {
   const mutable = websiteResources
     .filter((resource) => resource.mutable)
     .map((resource) => resource.path);
-  const endpoints = [...semantic, ...mutable],
-    sha = (b) => createHash("sha256").update(b).digest("hex"),
-    b64 = (b) => createHash("sha256").update(b).digest("base64");
+  const endpoints = [...new Set(["index.html", ...semantic, ...mutable])],
+    sha = (b) => createHash("sha256").update(b).digest("hex");
   const parseMaxAge = (v) => {
     const m = String(v || "").match(/(?:^|,)\s*max-age=(\d+)/i);
     return m ? Number(m[1]) : null;
   };
-  const fetchBytes = async (url) => {
-    const r = await fetch(url, {
+  const fetchBytes = (url, encoding = "identity") =>
+    fetchRepresentation(url, {
       headers: {
-        "user-agent": "ghezelbaash-public-discovery-freshness/1.0",
+        "user-agent": "ghezelbaash-public-discovery-freshness/2.0",
         accept: "*/*",
+        "accept-encoding": encoding,
       },
-      redirect: "follow",
-      signal: AbortSignal.timeout(45000),
     });
-    return { r, b: Buffer.from(await r.arrayBuffer()) };
-  };
+  const compressionResources = new Set([
+    "index.html",
+    "graph.jsonld",
+    "graph.ttl",
+    "entity-facts.csv",
+    "answers.txt",
+  ]);
+  const requireMachineCompression = process.argv.includes(
+    "--require-machine-compression",
+  );
+  const probeZstd = process.argv.includes("--probe-zstd");
   const rows = [];
   for (const rel of endpoints) {
     const expected = Buffer.from(await readFile(path.join(dist, rel))),
       expectedSha = sha(expected),
-      url = new URL(rel, base),
-      ordinary = await fetchBytes(url),
-      bust = new URL(url);
-    bust.searchParams.set(
-      "__discovery_freshness",
-      `${Date.now()}-${Math.random()}`,
-    );
-    const fresh = await fetchBytes(bust);
-    for (const [lane, x] of [
-      ["ordinary", ordinary],
-      ["cacheBusted", fresh],
-    ]) {
-      if (x.r.status !== 200 || sha(x.b) !== expectedSha)
-        throw new Error(
-          `${rel} ${lane} byte drift status=${x.r.status} got=${sha(x.b)} expected=${expectedSha}`,
-        );
-      const cc = x.r.headers.get("cache-control") || "",
-        maxAge = parseMaxAge(cc);
-      if (mutable.includes(rel)) {
-        if (!/\bno-cache\b/i.test(cc))
-          throw new Error(`${rel} ${lane} mutable no-cache drift: ${cc}`);
-      } else if (
-        !/must-revalidate/i.test(cc) ||
-        maxAge === null ||
-        maxAge > 3600
-      )
-        throw new Error(`${rel} ${lane} semantic max-age drift: ${cc}`);
-      const rd = x.r.headers.get("repr-digest"),
-        wanted = `sha-256=:${b64(expected)}:`;
-      if (rd !== wanted)
-        throw new Error(`${rel} ${lane} Repr-Digest drift ${rd} != ${wanted}`);
-      rows.push({
-        resource: rel,
-        lane,
-        status: x.r.status,
-        sha256: expectedSha,
-        cacheControl: cc,
-        age: x.r.headers.get("age"),
-        etag: x.r.headers.get("etag"),
-        cfCacheStatus: x.r.headers.get("cf-cache-status"),
-        reprDigest: rd,
-        release: matrix.release,
-        conceptDoi: matrix.conceptDoi,
-        versionDoi: matrix.versionDoi,
-      });
+      url = new URL(rel === "index.html" ? "" : rel, base);
+    const encodings = compressionResources.has(rel)
+      ? ["identity", "br", "gzip", ...(probeZstd ? ["zstd"] : [])]
+      : ["identity"];
+    for (const encoding of encodings) {
+      const ordinary = await fetchBytes(url, encoding),
+        bust = new URL(url);
+      bust.searchParams.set(
+        "__discovery_freshness",
+        `${Date.now()}-${Math.random()}`,
+      );
+      const fresh = await fetchBytes(bust, encoding);
+      for (const [cacheLane, x] of [
+        ["ordinary", ordinary],
+        ["cacheBusted", fresh],
+      ]) {
+        const lane = `${cacheLane}/${encoding}`;
+        if (x.r.status !== 200 || sha(x.b) !== expectedSha)
+          throw new Error(
+            `${rel} ${lane} byte drift status=${x.r.status} got=${sha(x.b)} expected=${expectedSha}`,
+          );
+        const cc = x.r.headers.get("cache-control") || "",
+          maxAge = parseMaxAge(cc);
+        if (rel === "index.html" || mutable.includes(rel)) {
+          if (!/\bno-cache\b/i.test(cc))
+            throw new Error(`${rel} ${lane} mutable no-cache drift: ${cc}`);
+        } else if (
+          !/must-revalidate/i.test(cc) ||
+          maxAge === null ||
+          maxAge > 3600
+        )
+          throw new Error(`${rel} ${lane} semantic max-age drift: ${cc}`);
+        const rd = x.r.headers.get("repr-digest");
+        if (encoding === "identity" && x.contentEncoding !== "identity")
+          throw new Error(
+            `${rel} ${lane} identity negotiation drift: ${x.contentEncoding}`,
+          );
+        if (
+          encoding !== "identity" &&
+          x.contentEncoding !== "identity" &&
+          x.contentEncoding !== encoding
+        )
+          throw new Error(
+            `${rel} ${lane} Content-Encoding was not offered: ${x.contentEncoding}`,
+          );
+        if (
+          x.contentEncoding !== "identity" &&
+          !(x.r.headers.get("vary") || "")
+            .split(",")
+            .some((v) => v.trim().toLowerCase() === "accept-encoding")
+        )
+          throw new Error(
+            `${rel} ${lane} compressed response lacks Vary: Accept-Encoding`,
+          );
+        if (
+          requireMachineCompression &&
+          /\.(csv|ttl)$/.test(rel) &&
+          ["br", "gzip"].includes(encoding) &&
+          x.contentEncoding !== encoding
+        )
+          throw new Error(
+            `${rel} ${lane} machine compression rule is not effective`,
+          );
+        rows.push({
+          resource: rel,
+          lane,
+          status: x.r.status,
+          sha256: expectedSha,
+          cacheControl: cc,
+          age: x.r.headers.get("age"),
+          etag: x.r.headers.get("etag"),
+          cfCacheStatus: x.r.headers.get("cf-cache-status"),
+          reprDigest: rd,
+          reprDigestVerified: x.reprDigestVerified,
+          requestedEncoding: encoding,
+          contentEncoding: x.contentEncoding,
+          encodedBytes: x.encodedBytes.length,
+          decodedBytes: x.b.length,
+          release: matrix.release,
+          conceptDoi: matrix.conceptDoi,
+          versionDoi: matrix.versionDoi,
+        });
+      }
     }
   }
   console.log(

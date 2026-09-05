@@ -9,6 +9,7 @@
     },
     {
       "path": "graph.jsonld",
+      "publishInHttpHeader": true,
       "source": "src/data/semantic/knowledge-graph.jsonld",
       "mediaType": "application/ld+json",
       "targets": ["website", "huggingFace", "zenodo"],
@@ -124,6 +125,7 @@
     },
     {
       "path": "provenance.jsonld",
+      "publishInHttpHeader": true,
       "source": ".generated/projections/provenance.jsonld",
       "mediaType": "application/ld+json",
       "targets": ["website", "huggingFace", "zenodo"],
@@ -180,6 +182,7 @@
     },
     {
       "path": "linkset.json",
+      "publishInHttpHeader": true,
       "source": ".generated/projections/linkset.json",
       "mediaType": "application/linkset+json",
       "targets": ["website", "huggingFace", "zenodo"],
