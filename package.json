@@ -61,7 +61,7 @@
     "validate:shacl-dist": "npm run rdf:deps && PYTHONPATH=.python-deps python scripts/validate-shacl.py --data dist/graph.ttl --shapes dist/shapes.ttl --report-dir .generated/validation/shacl-dist",
     "test:entity-facts": "node --test scripts/test-entity-facts.mjs",
     "test:physician-evidence": "node --test scripts/test-physician-evidence.mjs",
-    "test:http-representation": "node --test scripts/test-http-representation.mjs"
+    "test:http-representation": "node --test scripts/test-http-representation.mjs && node scripts/verify-live.mjs test-transport"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",

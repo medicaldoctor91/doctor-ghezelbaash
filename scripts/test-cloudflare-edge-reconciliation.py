@@ -576,6 +576,13 @@ def test_machine_compression() -> None:
 
 
 test_machine_compression()
+cache_contract = edge.cache_rule("www.ghezelbaash.ir")
+assert cache_contract["action_parameters"]["respect_strong_etags"] is False
+identity_locked_cache = copy.deepcopy(cache_contract)
+identity_locked_cache["action_parameters"]["respect_strong_etags"] = True
+assert not edge.rule_matches(identity_locked_cache, cache_contract), (
+    "The reconciler must detect a cache policy that prevents compression of identity origin bytes"
+)
 contract = edge.load_redirect_registry(ROOT)
 api = FakeCloudflareApi()
 token_authority = FakeTokenAuthority()
