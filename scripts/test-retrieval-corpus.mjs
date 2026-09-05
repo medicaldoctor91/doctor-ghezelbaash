@@ -258,7 +258,8 @@ test("source identities remain distinct from first-party assessments in the RDF 
       assert.doesNotMatch(provenanceText, /EvidenceTier|hadPrimarySource/);
       const canonicalize = (base) =>
         jsonld.canonize(provenance, {
-          algorithm: "URDNA2015",
+        algorithm: "RDFC-1.0",
+        rejectURDNA2015: true,
           format: "application/n-quads",
           base,
         });

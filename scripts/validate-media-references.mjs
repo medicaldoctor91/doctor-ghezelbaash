@@ -1,5 +1,10 @@
 import path from "node:path";
 import { readFile, readdir } from "node:fs/promises";
+import {
+  assertRasterInventory,
+  inspectSourceMedia,
+  loadRasterDimensions,
+} from "./lib/media-inventory.mjs";
 
 const root = process.cwd();
 const mediaRoot = path.join(root, "public/media");
@@ -26,10 +31,8 @@ async function walk(directory, { skip = [] } = {}) {
 const rasters = (await walk(mediaRoot))
   .filter((file) => rasterPattern.test(file))
   .sort();
-if (rasters.length !== 49)
-  throw new Error(
-    `Expected 49 canonical raster assets, found ${rasters.length}`,
-  );
+assertRasterInventory(rasters, await loadRasterDimensions(root), root);
+const mediaUsage = await inspectSourceMedia(root);
 const canonical = [];
 for (const file of rasters) {
   const basename = path.basename(file),
@@ -121,6 +124,10 @@ console.log(
       canonicalRasterAssets: canonical.length,
       canonicalPublishedMediaAssets: canonicalPublished.length,
       textFilesScanned: textual.length,
+      sourceMediaAssets: mediaUsage.physicalPaths.size,
+      productionConsumerFiles: mediaUsage.sourceFiles.length,
+      reachableGraphNodes: mediaUsage.reachableGraphNodes,
+      orphanAssets: 0,
       missingReferences: 0,
       staleReferences: 0,
       sourceMutation: false,

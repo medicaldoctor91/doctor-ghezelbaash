@@ -12,6 +12,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { assertRasterInventory, loadRasterDimensions } from "./lib/media-inventory.mjs";
 import {
   imageMetadataFor,
   matchImageProfile,
@@ -121,9 +122,7 @@ const assignment = (key, value) => {
 const images = (await walk(mediaRoot))
   .filter((file) => imagePattern.test(file))
   .sort();
-if (images.length !== 49) {
-  throw new Error(`Expected exactly 49 raster images, found ${images.length}`);
-}
+assertRasterInventory(images, await loadRasterDimensions(root), root);
 
 const stagingRoot = await mkdtemp(path.join(tmpdir(), "ghezel-media-enrich-"));
 const generated = [];

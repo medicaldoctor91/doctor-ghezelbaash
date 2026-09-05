@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { MIMEType } from "node:util";
 import { spawnSync } from "node:child_process";
-import { readFile, mkdir, mkdtemp, copyFile, cp, rm } from "node:fs/promises";
+import { readFile, writeFile, mkdir, mkdtemp, copyFile, cp, rm } from "node:fs/promises";
 import {
   MACHINE_RESOURCES, HEAD_RESOURCES, machineResourceForPath,
   resourceContentType, quoteHttpParameter,
@@ -101,12 +101,22 @@ test("descriptor generator emits joinable RDF, correct typed hashes and usable C
   const dataPackage = JSON.parse(await readFile(path.join(output, "datapackage.json"), "utf8"));
   const linkset = JSON.parse(await readFile(path.join(output, "linkset.json"), "utf8"));
   const files = new Map(croissant.distribution.map((item) => [item.contentUrl, item]));
+  assert.equal(dataPackage.$schema, "https://datapackage.org/profiles/2.0/datapackage.json");
+  const contributor = dataPackage.contributors.find((item) => item.path === release.primaryEntity.id);
+  assert.deepEqual(contributor.roles, ["author", "creator", "publisher", "rightsHolder"]);
+  assert.ok(!Object.hasOwn(contributor, "role"));
   for (const resource of dataPackage.resources) {
+    assert.equal(resource.$schema, "https://datapackage.org/profiles/2.0/dataresource.json");
     const file = files.get(new URL(resource.path, release.canonicalUrl).href);
     assert.equal(resource.id, file["@id"]);
     assert.equal(resource.hash, `sha256:${file.sha256}`);
     assert.equal(resource.bytes, Number(file.contentSize));
   }
+  const csv = dataPackage.resources.find((resource) => resource.path === "entity-facts.csv");
+  assert.equal(csv.schema.$schema, "https://datapackage.org/profiles/2.0/tableschema.json");
+  assert.equal(csv.dialect.$schema, "https://datapackage.org/profiles/2.0/tabledialect.json");
+  assert.deepEqual(csv.dialect.headerRows, [1]);
+  assert.equal(csv.dialect.lineTerminator, "\n");
   for (const field of croissant.recordSet[0].field)
     assert.equal(field.source.fileObject["@id"], files.get(`${release.canonicalUrl}entity-facts.csv`)["@id"]);
   assert.equal(linkset.linkset[0].describedby.find((item) => item.href.endsWith("croissant.json")).type, machineResourceForPath("croissant.json").contentType);
@@ -131,4 +141,15 @@ print('DCAT_RDF_CONSUMER_PASS')
 `, workspace], { encoding: "utf8", env: { ...process.env, PYTHONPATH: path.join(root, ".python-deps") } });
   assert.equal(rdf.status, 0, rdf.stderr || rdf.stdout);
   assert.match(rdf.stdout, /DCAT_RDF_CONSUMER_PASS/);
+  // Roles follow canonical attribution, rather than retaining claims after
+  // a Dataset ownership or publication relationship changes.
+  const otherPublisherGraph = structuredClone(graph);
+  const dataset = otherPublisherGraph["@graph"].find((node) => node["@id"] === release.dataset.id);
+  dataset.publisher = { "@id": "https://example.test/#publisher" };
+  delete dataset.copyrightHolder;
+  await writeFile(path.join(workspace, "src/data/semantic/knowledge-graph.jsonld"), JSON.stringify(otherPublisherGraph));
+  const changed = spawnSync(process.execPath, [path.join(root, "scripts/generate-descriptors.mjs")], { cwd: workspace, encoding: "utf8" });
+  assert.equal(changed.status, 0, changed.stderr || changed.stdout);
+  const changedPackage = JSON.parse(await readFile(path.join(output, "datapackage.json"), "utf8"));
+  assert.deepEqual(changedPackage.contributors.find((item) => item.path === release.primaryEntity.id).roles, ["author", "creator"]);
 });

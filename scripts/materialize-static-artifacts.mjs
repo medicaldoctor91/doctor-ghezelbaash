@@ -8,6 +8,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
+import { validateStableAliases } from "./lib/media-inventory.mjs";
 import {
   canonicalHostRedirectRows,
   loadRedirectRegistry,
@@ -122,17 +123,7 @@ if (
 const stableMedia = JSON.parse(
   await readFile(path.join(root, "src/data/stable-media-aliases.json"), "utf8"),
 );
-if (!Array.isArray(stableMedia.aliases) || stableMedia.aliases.length !== 6)
-  throw new Error(
-    `Stable media alias inventory drift: ${stableMedia.aliases?.length ?? "invalid"}`,
-  );
-for (const alias of stableMedia.aliases) {
-  if (
-    !alias ||
-    typeof alias.path !== "string" ||
-    typeof alias.target !== "string"
-  )
-    throw new Error("Invalid stable media alias entry");
+for (const alias of validateStableAliases(stableMedia.aliases)) {
   const source = resolveInside(
     path.join(root, "public"),
     alias.target,

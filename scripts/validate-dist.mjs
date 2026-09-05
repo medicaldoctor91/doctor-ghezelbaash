@@ -26,7 +26,7 @@ import {
 import { inspectHtml } from "./lib/html-contract.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
 import { loadProjectionContext } from "./lib/projection-context.mjs";
-import { buildEntityFacts, serializeEntityFacts, entityFactsTableSchema, entityFactsRecordSet } from "./lib/entity-facts.mjs";
+import { buildEntityFacts, serializeEntityFacts, entityFactsTableSchema, entityFactsTableDialect, entityFactsRecordSet } from "./lib/entity-facts.mjs";
 import {
   currentReleaseMetadataMismatches,
   selectCurrentReleaseBoundNodes,
@@ -251,8 +251,12 @@ if (
 )
   fail("Croissant canonical identity/date/landing-page drift");
 const csvResource = dp.resources.find((resource) => resource.path === "entity-facts.csv");
+if (dp.resources.some((resource) => resource.$schema !== "https://datapackage.org/profiles/2.0/dataresource.json"))
+  fail("Data Package resource standard version drift");
 if (JSON.stringify(csvResource?.schema) !== JSON.stringify(entityFactsTableSchema()))
   fail("Data Package entity-facts schema drift");
+if (JSON.stringify(csvResource?.dialect) !== JSON.stringify(entityFactsTableDialect()))
+  fail("Data Package entity-facts dialect drift");
 const csvDistributionId = machineResourceForPath("entity-facts.csv").distributionIri;
 if (csvResource?.id !== csvDistributionId ||
     JSON.stringify(cr.recordSet) !== JSON.stringify([entityFactsRecordSet(release.canonicalUrl, csvDistributionId)]))
