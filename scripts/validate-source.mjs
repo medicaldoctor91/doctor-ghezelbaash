@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readFile, readdir, access } from "node:fs/promises";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
+import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
 import { analyzeGraphClosure } from "./lib/graph-integrity.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
 import {
@@ -644,7 +645,6 @@ const headIds = headProfile.ids,
   personHeadProfile = headProfile.nodes?.[release.primaryEntity.id],
   clinicHeadProfile = headProfile.nodes?.[release.clinic.id],
   allowedHeadMemberships = new Set(personHeadProfile?.refAllow?.memberOf || []);
-const semanticProjection = await readSource("src/lib/semantic-projection.mjs");
 if (
   !Array.isArray(personHeadProfile?.include) ||
   !personHeadProfile.include.includes("memberOf") ||
@@ -680,6 +680,10 @@ if (
 )
   fail("Canonical multilingual Clinic name/image richness drift");
 const googleProjectionProfiles = [
+  ...Object.entries(headProfile.typeProfiles || {}).map(([key, profile]) => [
+    `head:type:${key}`,
+    profile,
+  ]),
   ...Object.entries(headProfile.nodes || {}).map(([key, profile]) => [
     `head:${key}`,
     profile,
@@ -696,22 +700,14 @@ const googleProjectionProfiles = [
 const reversePageProjectionPolicies = googleProjectionProfiles
   .filter(([, profile]) => arr(profile?.include).includes("mainEntityOfPage"))
   .map(([key]) => key);
-if (supportProfile.mode !== "projected" || reversePageProjectionPolicies.length)
+if (reversePageProjectionPolicies.length)
   fail(
-    `Google projection must keep ProfilePage top-level; mode=${supportProfile.mode}, reverse mainEntityOfPage policy=${reversePageProjectionPolicies.join(", ") || "none"}`,
+    `Google projection must keep ProfilePage top-level; reverse mainEntityOfPage policy=${reversePageProjectionPolicies.join(", ") || "none"}`,
   );
-if (
-  !/import\s+\{\s*projectNode\s*\}\s+from\s+["']\.\.\/\.\.\/\.\.\/src\/lib\/semantic-projection\.mjs["']/.test(
-    graphCompiler,
-  ) ||
-  !/headNodes\.push\(\s*projectNode\(\s*node\s*,\s*headProfile\.nodes\?\.\[id\]\s*\)\s*\)/.test(
-    graphCompiler,
-  ) ||
-  !/allow\.includes\(\s*id\s*\)/.test(semanticProjection)
-)
-  fail(
-    "Head graph compiler no longer enforces the shared declarative Head profile",
-  );
+const finalProjection = deriveGraphProjections({ graph, release, headProfile, supportProfile });
+if (JSON.stringify(finalProjection.headIds) !== JSON.stringify(headIds) ||
+    JSON.stringify(finalProjection.supportIds) !== JSON.stringify(supportProfile.ids))
+  fail("Final graph compiler selection differs from the declarative profiles");
 for (const [organizationId] of fullGraphOnlyMemberships)
   if (
     headIds.includes(organizationId) ||
@@ -721,7 +717,7 @@ for (const [organizationId] of fullGraphOnlyMemberships)
       `Full-graph-only membership admitted by Head source policy ${organizationId}`,
     );
 
-const headNodes = headIds.map((ref) => byId.get(ref)).filter(Boolean),
+const headNodes = finalProjection.headDoc["@graph"],
   headRefs = new Set();
 const collectHeadRefs = (value) => {
   if (Array.isArray(value)) return value.forEach(collectHeadRefs);

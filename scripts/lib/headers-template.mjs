@@ -1,5 +1,5 @@
-const TOKEN_PATTERN =
-  /{{(?:MAIN_CSP|404_CSP|HERO_EARLY_HINT_HREF|HTTP_RESOURCE_LINKS)}}/g;
+import { machineResourceForPath } from "../../src/lib/resources.mjs";
+
 const ANY_TOKEN_PATTERN = /{{[^{}]+}}/g;
 
 const countToken = (source, token) => source.split(token).length - 1;
@@ -28,6 +28,11 @@ export function compileHeadersTemplate(
     ["{{HTTP_RESOURCE_LINKS}}", httpResourceLinks],
   ]);
   const discovered = source.match(ANY_TOKEN_PATTERN) || [];
+  for (const token of discovered) {
+    const resourceToken = /^{{CONTENT_TYPE:([^{}]+)}}$/.exec(token);
+    if (resourceToken)
+      bindings.set(token, machineResourceForPath(resourceToken[1]).contentType);
+  }
   const unknown = [
     ...new Set(discovered.filter((token) => !bindings.has(token))),
   ];
@@ -46,7 +51,7 @@ export function compileHeadersTemplate(
       );
   }
   const expectedCount = bindings.size;
-  const recognized = source.match(TOKEN_PATTERN) || [];
+  const recognized = discovered.filter((token) => bindings.has(token));
   if (recognized.length !== expectedCount)
     throw new Error(
       `_headers compiler: token inventory mismatch; expected ${expectedCount}, found ${recognized.length}`,

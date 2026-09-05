@@ -1,57 +1,181 @@
 import path from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
-import { parseFragment, serialize } from "parse5";
-import { sha256, valueText } from "../projection-context.mjs";
+import { parseFragment } from "parse5";
+import {
+  evidenceAssessmentId,
+  sha256,
+  valueText,
+} from "../projection-context.mjs";
 import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
 
-const entityMap = {
-  amp: "&",
-  lt: "<",
-  gt: ">",
-  quot: '"',
-  apos: "'",
-  "#39": "'",
-  nbsp: " ",
-  zwnj: "‌",
+const attribute = (node, name) =>
+  node.attrs?.find((candidate) => candidate.name === name)?.value;
+const absoluteLink = (href, canonicalUrl) => {
+  const url = new URL(href, canonicalUrl);
+  if (!["https:", "http:", "mailto:", "tel:"].includes(url.protocol))
+    throw new Error(`Retrieval link has an unsupported scheme: ${href}`);
+  return url.href.replaceAll("(", "%28").replaceAll(")", "%29");
 };
-const decode = (value) =>
-  String(value).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, key) => {
-    if (key[0] === "#") {
-      const number =
-        key[1].toLowerCase() === "x"
-          ? parseInt(key.slice(2), 16)
-          : parseInt(key.slice(1), 10);
-      return Number.isFinite(number) ? String.fromCodePoint(number) : match;
+const inlineText = (node, canonicalUrl) => {
+  if (node.nodeName === "#text") return node.value;
+  if (["script", "style", "template"].includes(node.tagName)) return "";
+  if (node.tagName === "br") return "\n";
+  const text = (node.childNodes ?? [])
+    .map((child) => inlineText(child, canonicalUrl))
+    .join("");
+  if (node.tagName === "a" && attribute(node, "href"))
+    return `[${text.trim()}](${absoluteLink(attribute(node, "href"), canonicalUrl)})`;
+  if (["strong", "b"].includes(node.tagName)) return `**${text}**`;
+  if (["em", "i"].includes(node.tagName)) return `*${text}*`;
+  if (node.tagName === "code") return `\`${text}\``;
+  // List items inside a block keep their boundaries even when nested.
+  if (node.tagName === "li") return `\n- ${text}\n`;
+  if (["p", "div"].includes(node.tagName)) return `\n${text}\n`;
+  return text;
+};
+const blockText = (node, canonicalUrl) =>
+  inlineText(node, canonicalUrl)
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .trim();
+
+// Both text distributions consume this single structural representation of HTML.
+// Unsupported structural shapes fail here instead of silently losing content.
+export function buildRetrievalBlocks(html, { canonicalUrl, language }) {
+  const blocks = [];
+  const blockTags = new Set([
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "li",
+    "figcaption",
+    "summary",
+    "address",
+  ]);
+  const visit = (node, inheritedLanguage) => {
+    const ownLanguage = attribute(node, "lang");
+    const lang = ownLanguage === undefined ? inheritedLanguage : ownLanguage;
+    const tag = node.tagName;
+    if (["script", "style", "template"].includes(tag)) return;
+    const base = {
+      tag,
+      id: attribute(node, "id"),
+      retrievalAlias: attribute(node, "data-retrieval-alias"),
+      lang,
+    };
+    if (tag === "table") {
+      const captions = [],
+        rows = [];
+      const scan = (child) => {
+        if (child !== node && child.tagName === "table")
+          throw new Error("Retrieval does not accept nested tables");
+        if (child.tagName === "caption")
+          captions.push(blockText(child, canonicalUrl));
+        else if (child.tagName === "tr") {
+          const cells = (child.childNodes ?? []).filter((cell) =>
+            ["th", "td"].includes(cell.tagName),
+          );
+          if (
+            cells.some((cell) =>
+              ["colspan", "rowspan"].some(
+                (key) => Number(attribute(cell, key) ?? 1) !== 1,
+              ),
+            )
+          )
+            throw new Error(
+              "Retrieval table spans require explicit header-to-cell mapping",
+            );
+          rows.push(
+            cells.map((cell) => ({
+              header: cell.tagName === "th",
+              text: blockText(cell, canonicalUrl),
+            })),
+          );
+        } else for (const nested of child.childNodes ?? []) scan(nested);
+      };
+      scan(node);
+      if (
+        captions.length > 1 ||
+        !rows.length ||
+        !rows[0].length ||
+        rows.some((row) => row.length !== rows[0].length) ||
+        !rows[0].every((cell) => cell.header)
+      )
+        throw new Error("Retrieval table requires one rectangular header grid");
+      blocks.push({ ...base, caption: captions[0] ?? "", rows });
+      return;
     }
-    return entityMap[key.toLowerCase()] ?? match;
-  });
-const strip = (value) =>
-  decode(
-    String(value)
-      .replace(/<!--[^]*?-->/g, " ")
-      .replace(/<br\s*\/?\s*>/gi, "\n")
-      .replace(/<[^>]+>/g, " "),
-  )
-    .replace(/[ \t]+/g, " ")
-    .replace(/\s*\n\s*/g, "\n")
-    .trim();
-const inline = (value) => {
-  let source = String(value);
-  source = source.replace(
-    /<a\b[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
-    (_, href, text) => `[${strip(text)}](${decode(href)})`,
-  );
-  source = source
-    .replace(/<(strong|b)\b[^>]*>([\s\S]*?)<\/\1>/gi, "**$2**")
-    .replace(/<(em|i)\b[^>]*>([\s\S]*?)<\/\1>/gi, "*$2*")
-    .replace(/<code\b[^>]*>([\s\S]*?)<\/code>/gi, "`$1`");
-  return decode(
-    source.replace(/<br\s*\/?\s*>/gi, "\n").replace(/<[^>]+>/g, " "),
-  )
-    .replace(/[ \t]+/g, " ")
-    .replace(/\s*\n\s*/g, "\n")
-    .trim();
-};
+    if (tag === "dl") {
+      let terms = [],
+        definitions = [];
+      const flush = () => {
+        if (!terms.length || !definitions.length)
+          throw new Error(
+            "Retrieval definition list has an unpaired term or definition",
+          );
+        blocks.push({ ...base, tag: "definition", terms, definitions });
+        terms = [];
+        definitions = [];
+      };
+      for (const child of node.childNodes ?? []) {
+        if (child.nodeName === "#text" && !child.value.trim()) continue;
+        if (child.tagName === "dt") {
+          if (definitions.length) flush();
+          terms.push(blockText(child, canonicalUrl));
+        } else if (child.tagName === "dd")
+          definitions.push(blockText(child, canonicalUrl));
+        else if (child.nodeName !== "#comment")
+          throw new Error(
+            "Retrieval definition list contains unsupported structure",
+          );
+      }
+      if (terms.length || definitions.length) flush();
+      return;
+    }
+    if (blockTags.has(tag)) {
+      let text = blockText(node, canonicalUrl);
+      if (tag === "li") text = text.replace(/^- /, "");
+      if (text) blocks.push({ ...base, text });
+      return;
+    }
+    for (const child of node.childNodes ?? []) visit(child, lang);
+  };
+  visit(parseFragment(html), language);
+  for (const block of blocks)
+    if (typeof block.lang !== "string" || !block.lang)
+      throw new Error(`Retrieval block lacks a direct language: ${block.tag}`);
+  return blocks;
+}
+
+const bold = (text) =>
+  text.startsWith("**") && text.endsWith("**") ? text : `**${text}**`;
+
+export function renderRetrievalBlock(block) {
+  if (block.tag === "table") {
+    const row = (cells) =>
+      `| ${cells.map((cell) => cell.text.replaceAll("|", "\\|").replaceAll("\n", "<br>")).join(" | ")} |`;
+    return [
+      block.caption,
+      "",
+      row(block.rows[0]),
+      row(block.rows[0].map(() => ({ text: "---" }))),
+      ...block.rows.slice(1).map(row),
+    ]
+      .join("\n")
+      .trim();
+  }
+  if (block.tag === "definition")
+    return [...block.terms.map(bold), ...block.definitions].join("\n");
+  if (/^h[1-6]$/.test(block.tag))
+    return `${"#".repeat(Number(block.tag[1]))} ${block.text}`;
+  if (block.tag === "li") return `- ${block.text}`;
+  if (block.tag === "summary") return bold(block.text);
+  return block.text;
+}
 const sentenceChunks = (text, max) => {
   const units = String(text)
     .split(/(?<=[.!؟!?])\s+|\n+/u)
@@ -144,49 +268,11 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   };
   const pageTitle = frontmatterValue("title");
   const pageLanguage = frontmatterValue("lang");
-  const body = home
-    .slice(frontmatter[0].length)
-    .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style\b[\s\S]*?<\/style>/gi, " ");
-  const blocks = [];
-  const blockTags = new Set([
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "p",
-    "li",
-    "figcaption",
-    "summary",
-    "dt",
-    "dd",
-  ]);
-  const attribute = (node, name) =>
-    node.attrs?.find((candidate) => candidate.name === name)?.value;
-  const visit = (node, inheritedLanguage) => {
-    const ownLanguage = attribute(node, "lang");
-    const language = ownLanguage === undefined ? inheritedLanguage : ownLanguage;
-    const tag = node.tagName?.toLowerCase();
-    if (blockTags.has(tag)) {
-      const text = inline(serialize(node));
-      if (text) {
-        if (typeof language !== "string" || !language)
-          throw new Error(`Retrieval block lacks a direct language: ${tag}`);
-        blocks.push({
-          tag,
-          id: attribute(node, "id"),
-          text,
-          retrievalAlias: attribute(node, "data-retrieval-alias"),
-          lang: language,
-        });
-      }
-      return;
-    }
-    for (const child of node.childNodes ?? []) visit(child, language);
-  };
-  visit(parseFragment(body), pageLanguage);
+  const body = home.slice(frontmatter[0].length);
+  const blocks = buildRetrievalBlocks(body, {
+    canonicalUrl: release.canonicalUrl,
+    language: pageLanguage,
+  });
 
   let markdown = [
     `# ${pageTitle}`,
@@ -198,18 +284,14 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     "",
   ].join("\n");
   for (const block of blocks) {
+    markdown += `${renderRetrievalBlock(block)}\n`;
     if (/^h[1-6]$/.test(block.tag)) {
-      const level = Number(block.tag[1]);
-      markdown += `${"#".repeat(level)} ${block.text}\n`;
       if (block.id)
         markdown += `<!-- anchor: ${release.canonicalUrl}#${block.id} -->\n`;
       if (block.retrievalAlias)
         markdown += `<!-- retrieval-alias: ${block.retrievalAlias} -->\n`;
-      markdown += "\n";
-    } else if (block.tag === "li") markdown += `- ${block.text}\n`;
-    else if (block.tag === "dt" || block.tag === "summary")
-      markdown += `**${block.text}**\n\n`;
-    else markdown += `${block.text}\n\n`;
+    }
+    markdown += "\n";
   }
   markdown = markdown.replace(/\n{3,}/g, "\n\n");
   await writeFile(path.join(projections, "index.md"), markdown);
@@ -232,7 +314,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         lang: block.lang,
         parts: [],
       };
-    } else if (["p", "li", "figcaption", "summary", "dd"].includes(block.tag)) {
+    } else {
       if (!current)
         throw new Error(`Retrieval content precedes its heading: ${block.tag}`);
       if (block.lang !== current.lang) {
@@ -250,7 +332,10 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
           parts: [],
         };
       }
-      current.parts.push(block.text);
+      current.parts.push({
+        text: renderRetrievalBlock(block),
+        atomic: ["table", "definition"].includes(block.tag),
+      });
     }
   }
   flush();
@@ -260,12 +345,25 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     throw new Error("Release invariants lack a valid maxRagPassageChars value");
   const emitted = [];
   for (const section of sections) {
-    const joined = section.parts
-      .join("\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-    if (!joined) continue;
-    const chunks = sentenceChunks(joined, maxPassage);
+    const chunks = [];
+    let pending = "";
+    for (const part of section.parts) {
+      const units = part.atomic
+        ? [part.text]
+        : sentenceChunks(part.text, maxPassage);
+      for (const text of units) {
+        if (text.length > maxPassage)
+          throw new Error(
+            `Retrieval atomic structure exceeds passage budget: ${section.id}`,
+          );
+        const candidate = pending ? `${pending}\n${text}` : text;
+        if (candidate.length > maxPassage) {
+          chunks.push(pending);
+          pending = text;
+        } else pending = candidate;
+      }
+    }
+    if (pending) chunks.push(pending);
     chunks.forEach((text, index) => {
       const anchor = `${release.canonicalUrl}#${section.id}`;
       const hash = sha256(Buffer.from(`${anchor}|${index}|${text}`)).slice(
@@ -410,38 +508,65 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     },
   ];
   for (const evidence of evidenceRegistry.evidence) {
-    if (!Array.isArray(evidence.supports))
-      throw new Error(`Evidence supports[] missing: ${evidence.id}`);
+    if (!Array.isArray(evidence.supports) || !evidence.role)
+      throw new Error(`Evidence supports[] or role missing: ${evidence.id}`);
+    const source = byId.get(evidence.id);
+    const sourceTypes = [source?.["@type"] ?? "CreativeWork"].flat();
+    const sourceSubjects =
+      source?.about ?? evidence.subjectIds?.map((id) => ({ "@id": id }));
+    // This stable IRI already denotes the cited source in the canonical graph.
+    // Its publisher, modification date, and subject must not become our assessment metadata.
     provenanceGraph.push({
       "@id": evidence.id,
-      "@type": ["CreativeWork", "prov:Entity"],
-      name: evidence.id,
+      "@type": [...new Set([...sourceTypes, "prov:Entity"])],
+      ...(source?.name ? { name: source.name } : {}),
       url: evidence.url,
-      additionalType: `EvidenceTier${evidence.tier}`,
+      ...(sourceSubjects?.length || sourceSubjects?.["@id"]
+        ? { about: sourceSubjects }
+        : {}),
+    });
+    provenanceGraph.push({
+      "@id": evidenceAssessmentId(release, evidence.id),
+      "@type": ["CreativeWork", "prov:Entity"],
+      name: `First-party evidence assessment — ${evidence.id.split("#").at(-1)}`,
+      creator: { "@id": release.primaryEntity.id },
+      publisher: { "@id": release.primaryEntity.id },
+      about: { "@id": evidence.id },
+      isBasedOn: { "@id": evidence.id },
+      isPartOf: { "@id": `${release.canonicalUrl}provenance.jsonld#dataset` },
       identifier: {
         "@type": "PropertyValue",
         propertyID: "Evidence tier",
         value: evidence.tier,
       },
-      dateModified: evidence.verifiedAt,
-      keywords: evidence.supports,
       additionalProperty: [
+        {
+          "@type": "PropertyValue",
+          propertyID: "Evidence role",
+          value: evidence.role,
+        },
         {
           "@type": "PropertyValue",
           propertyID: "Evidence supports",
           value: evidence.supports.join(" | "),
         },
-      ],
-      about: [
         {
-          "@id": evidence.supports.some((value) =>
-            /clinic|place-id|cid|opening-hours|local-identity|local-corroboration/.test(
-              value,
-            ),
-          )
-            ? release.clinic.id
-            : release.primaryEntity.id,
+          "@type": "PropertyValue",
+          propertyID: "Evidence observation status",
+          value: evidence.liveStatus,
         },
+        ...(evidence.verifiedAt
+          ? [
+              {
+                "@type": "PropertyValue",
+                propertyID: "Evidence observation date",
+                value: {
+                  "@value": evidence.verifiedAt,
+                  "@type": "http://www.w3.org/2001/XMLSchema#date",
+                },
+              },
+            ]
+          : []),
       ],
     });
   }
@@ -467,7 +592,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       "prov:wasDerivedFrom": [{ "@id": passage.anchor }],
       ...(passage.claimEvidenceIds.length
         ? {
-            "prov:hadPrimarySource": passage.claimEvidenceIds.map((id) => ({
+            citation: passage.claimEvidenceIds.map((id) => ({
               "@id": id,
             })),
           }
@@ -507,7 +632,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       "prov:wasDerivedFrom": [{ "@id": sourceUrl }],
       ...(claimEvidenceIds.length
         ? {
-            "prov:hadPrimarySource": claimEvidenceIds.map((id) => ({
+            citation: claimEvidenceIds.map((id) => ({
               "@id": id,
             })),
           }
@@ -552,7 +677,10 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
       throw new Error(
         `llms.txt: evidence tier ${tier} definition missing from evidence registry`,
       );
-  const evidenceTierLine = `- Evidence tiers: ${Object.keys(tiers).sort().map((tier) => `Tier ${tier} = ${tiers[tier]}`).join("; ")}.`;
+  const evidenceTierLine = `- Evidence tiers: ${Object.keys(tiers)
+    .sort()
+    .map((tier) => `Tier ${tier} = ${tiers[tier]}`)
+    .join("; ")}.`;
   const llms = bindLlmsTemplate(template, {
     "{{RELEASE}}": release.release,
     "{{REVIEW_DATE}}": release.dateModified,

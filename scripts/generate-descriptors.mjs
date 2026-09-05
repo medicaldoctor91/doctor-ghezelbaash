@@ -106,11 +106,12 @@ const fileMeta = async (rel) => {
     bytes: bytes.length,
     sha256: shaHex(bytes),
     mediaType: resource.mediaType,
+    distributionIri: resource.distributionIri,
     title: resource.descriptorTitle,
   };
 };
 const coreResources = MACHINE_RESOURCES.filter(
-  (resource) => resource.descriptorCore,
+  (resource) => resource.descriptorRoles.includes("dcat"),
 ).map((resource) => resource.path);
 const out = (rel) => path.join(outputDir, rel);
 
@@ -123,7 +124,7 @@ for (const resource of MACHINE_RESOURCES) {
     resourceRelations[relation] ??= [];
     resourceRelations[relation].push({
       href: `${release.canonicalUrl}${resource.path}`,
-      type: resource.mediaType,
+      type: resource.contentType,
     });
   }
 }
@@ -148,10 +149,11 @@ const voidTtl = `${[
   "@prefix dct: <http://purl.org/dc/terms/> .",
   "@prefix foaf: <http://xmlns.com/foaf/0.1/> .",
   "@prefix schema: <https://schema.org/> .",
+  "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
   `<${release.canonicalUrl}graph.jsonld#dataset> a void:Dataset ;`,
   `  dct:title ${ttlString(datasetName)}@en ;`,
   `  dct:publisher <${release.primaryEntity.id}> ;`,
-  `  dct:modified ${ttlString(release.dateModified)} ;`,
+  `  dct:modified ${ttlString(release.dateModified)}^^xsd:date ;`,
   "  dct:license <https://creativecommons.org/licenses/by/4.0/> ;",
   `  foaf:homepage <${datasetLandingPage}> ;`,
   `  foaf:primaryTopic <${release.primaryEntity.id}> ;`,
@@ -165,7 +167,7 @@ await writeFile(out("void.ttl"), voidTtl);
 
 const dcatMeta = await Promise.all(coreResources.map(fileMeta));
 const distributionIris = dcatMeta
-  .map((m) => `<${release.canonicalUrl}${m.rel}#distribution>`)
+  .map((m) => `<${m.distributionIri}>`)
   .join(", ");
 const catalogTriple = [
   `<${release.canonicalUrl}#data-catalog> a dcat:Catalog ;`,
@@ -199,23 +201,23 @@ let dcat = `${[
 ].join("\n")}\n`;
 for (const m of dcatMeta) {
   const distributionTriple = [
-    `<${release.canonicalUrl}${m.rel}#distribution> a dcat:Distribution ;`,
+    `<${m.distributionIri}> a dcat:Distribution ;`,
     `dct:title ${ttlString(m.title)}@en ;`,
     "dct:license <https://creativecommons.org/licenses/by/4.0/> ;",
     `dcat:accessURL <${release.canonicalUrl}${m.rel}> ;`,
     `dcat:downloadURL <${release.canonicalUrl}${m.rel}> ;`,
-    `dcat:mediaType ${ttlString(m.mediaType)} ;`,
+    `dcat:mediaType <https://www.iana.org/assignments/media-types/${m.mediaType}> ;`,
     `dcat:byteSize "${m.bytes}"^^xsd:decimal ;`,
     "spdx:checksum [ a spdx:Checksum ;",
     "spdx:algorithm spdx:checksumAlgorithm_sha256 ;",
-    `spdx:checksumValue "${m.sha256}" ] .`,
+    `spdx:checksumValue "${m.sha256}"^^xsd:hexBinary ] .`,
   ].join(" ");
   dcat += `${distributionTriple}\n\n`;
 }
 await writeFile(out("dcat.ttl"), dcat);
 
 const descriptorResources = MACHINE_RESOURCES.filter(
-  (resource) => resource.descriptorTitle,
+  (resource) => resource.descriptorRoles.some((role) => ["data-package", "croissant"].includes(role)),
 ).map((resource) => resource.path);
 const descriptorMeta = await Promise.all(descriptorResources.map(fileMeta));
 async function walkFiles(dir, prefix = "") {
@@ -242,6 +244,7 @@ for (const f of (await walkFiles(vttBase)).filter((x) =>
     bytes: b.length,
     sha256: shaHex(b),
     mediaType: "text/vtt",
+    distributionIri: `${release.canonicalUrl}${f.rel}#croissant-file`,
     title:
       kind === "caption"
         ? "Persian WebVTT caption track for a self-hosted physician video."
@@ -249,6 +252,9 @@ for (const f of (await walkFiles(vttBase)).filter((x) =>
   });
 }
 const resources = [...descriptorMeta, ...vttMeta];
+const resourcesForDescriptor = (role) => resources.filter((resource) =>
+  resource.rel.endsWith(".vtt") || resourceByPath.get(resource.rel).descriptorRoles.includes(role),
+);
 const slug = (s) =>
   s
     .replace(/\.[^.]+$/, "")
@@ -269,8 +275,9 @@ const resourceName = (rel) => {
   const base = slug(rel);
   return baseNameCounts.get(base) > 1 ? fullSlug(rel) : base;
 };
-const dataPackageResources = resources
+const dataPackageResources = resourcesForDescriptor("data-package")
   .map((m) => ({
+    id: m.distributionIri,
     name: resourceName(m.rel),
     path: m.rel,
     title: m.title,
@@ -354,7 +361,7 @@ const croissant = {
   },
   "@id": `${release.canonicalUrl}graph.jsonld#dataset`,
   "@type": "sc:Dataset",
-  conformsTo: "http://mlcommons.org/croissant/1.1",
+  conformsTo: resourceByPath.get("croissant.json").profileIri,
   name: datasetName,
   description: `Physician-owned first-party knowledge graph Dataset for ${personDisplayName}, the supporting clinic, services, answers, provenance and machine retrieval.`,
   url: datasetLandingPage,
@@ -386,11 +393,11 @@ const croissant = {
   ],
   inLanguage: retrievalPolicy.languages,
   isLiveDataset: false,
-  recordSet: [entityFactsRecordSet(release.canonicalUrl)],
-  distribution: resources
+  recordSet: [entityFactsRecordSet(release.canonicalUrl, resourceByPath.get("entity-facts.csv").distributionIri)],
+  distribution: resourcesForDescriptor("croissant")
     .map((m) => ({
       "@type": "cr:FileObject",
-      "@id": `${release.canonicalUrl}${m.rel}#croissant-file`,
+      "@id": m.distributionIri,
       name: path.basename(m.rel),
       contentUrl: `${release.canonicalUrl}${m.rel}`,
       contentSize: String(m.bytes),

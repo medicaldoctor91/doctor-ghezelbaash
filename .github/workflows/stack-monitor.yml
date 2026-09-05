@@ -141,19 +141,14 @@ jobs:
         run: |
           set -euo pipefail
           TAG="v${{ steps.release.outputs.release }}"
-          CURRENT_VERIFIER="$RUNNER_TEMP/verify-live-current.mjs"
-          CURRENT_HTTP_HELPER="$RUNNER_TEMP/http-representation-current.mjs"
-          CURRENT_AUDIT_GATE="$RUNNER_TEMP/dependency-advisory-gate.mjs"
-          cp scripts/verify-live.mjs "$CURRENT_VERIFIER"
-          cp scripts/lib/http-representation.mjs "$CURRENT_HTTP_HELPER"
-          cp scripts/dependency-advisory-gate.mjs "$CURRENT_AUDIT_GATE"
-          git reset --hard HEAD
-          git clean -fdx
-          git checkout --detach "$TAG"
-          npm ci
-          node "$CURRENT_AUDIT_GATE"
-          C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
-          npm run build
-          cp "$CURRENT_VERIFIER" scripts/verify-live.mjs
-          cp "$CURRENT_HTTP_HELPER" scripts/lib/http-representation.mjs
-          node scripts/verify-live.mjs release
+          SNAPSHOT_SOURCE="$RUNNER_TEMP/frozen-release-source-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git worktree add --detach "$SNAPSHOT_SOURCE" "$TAG"
+          trap 'git worktree remove --force "$SNAPSHOT_SOURCE"' EXIT
+          (
+            cd "$SNAPSHOT_SOURCE"
+            npm ci
+            node "$GITHUB_WORKSPACE/scripts/dependency-advisory-gate.mjs"
+            C=$(git rev-parse HEAD); export SOURCE_COMMIT="$C" CF_PAGES_COMMIT_SHA="$C" SOURCE_DATE_EPOCH=$(git show -s --format=%ct "$C")
+            npm run build
+          )
+          node scripts/verify-live.mjs release --source-root "$SNAPSHOT_SOURCE" --dist-root "$SNAPSHOT_SOURCE/dist"

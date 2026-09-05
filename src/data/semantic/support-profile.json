@@ -32,7 +32,6 @@
     "https://www.ghezelbaash.ir/#video-subcision-technique",
     "https://www.ghezelbaash.ir/#video-thread-lift-workshop",
     "https://www.ghezelbaash.ir/#video-kurdish-patient-experience",
-    "https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11",
     "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-master",
     "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-team-master",
     "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-office-master",
@@ -108,7 +107,6 @@
     "https://www.ghezelbaash.ir/#topic-orthognathic-boundary",
     "https://www.ghezelbaash.ir/#procedure-cryolipolysis-localized-fat-reduction",
     "https://www.ghezelbaash.ir/#clinic-consultation-treatment-and-follow-up-path",
-    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
     "https://www.ghezelbaash.ir/#evidence-irimc",
     "https://www.ghezelbaash.ir/#evidence-orcid",
     "https://www.ghezelbaash.ir/#evidence-openalex-author",
@@ -118,68 +116,359 @@
     "https://www.ghezelbaash.ir/#procedure-facelift",
     "https://www.ghezelbaash.ir/#procedure-neck-lift",
     "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery",
-    "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017",
-    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
-    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
-    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
     "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions",
     "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints",
     "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016",
+    "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021",
+    "https://www.ghezelbaash.ir/#biomedical-concept-lip-augmentation",
+    "https://www.ghezelbaash.ir/#biomedical-concept-suture-techniques",
+    "https://www.ghezelbaash.ir/#biomedical-concept-microneedling",
+    "https://www.ghezelbaash.ir/#biomedical-concept-chemical-peel",
+    "https://www.ghezelbaash.ir/#biomedical-concept-prp-injection",
+    "https://www.ghezelbaash.ir/#biomedical-concept-mesotherapy",
+    "https://www.ghezelbaash.ir/#biomedical-concept-intradermal-injection",
+    "https://www.ghezelbaash.ir/#biomedical-concept-subcutaneous-injection",
+    "https://www.ghezelbaash.ir/#biomedical-concept-blepharoplasty",
+    "https://www.ghezelbaash.ir/#biomedical-concept-liposuction",
+    "https://www.ghezelbaash.ir/#biomedical-concept-body-contouring",
+    "https://www.ghezelbaash.ir/#biomedical-concept-fat-grafting",
+    "https://www.ghezelbaash.ir/#biomedical-concept-androgenetic-alopecia",
+    "https://www.ghezelbaash.ir/#biomedical-concept-melasma",
+    "https://www.ghezelbaash.ir/#biomedical-concept-rhinoplasty",
+    "https://www.ghezelbaash.ir/#biomedical-concept-rhytidoplasty",
+    "https://www.ghezelbaash.ir/#biomedical-concept-registry"
+  ],
+  "citedScholarlyWorkIds": [
+    "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016",
     "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"
   ],
-  "citedScholarlyWorkIds": ["https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016", "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"],
-  "maxBytes": 76000,
+  "maxBytes": 85000,
   "idProfiles": {
     "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016": {
-      "include": ["@id", "@type", "name", "headline", "url", "identifier", "datePublished", "author"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "headline",
+        "url",
+        "identifier",
+        "datePublished",
+        "author"
+      ]
     },
     "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021": {
-      "include": ["@id", "@type", "name", "headline", "url", "identifier", "datePublished", "author"]
-    },
-    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine": {
-      "include": ["@id", "@type", "name", "headline", "description", "url", "sameAs", "author", "about", "datePublished", "learningResourceType", "license", "inLanguage"]
-    },
-    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review": {
-      "include": ["@id", "@type", "name", "headline", "description", "url", "sameAs", "author", "about", "dateCreated", "creativeWorkStatus", "license", "isPartOf", "inLanguage"]
-    },
-    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin": {
-      "include": ["@id", "@type", "name", "headline", "description", "url", "sameAs", "author", "about", "datePublished", "learningResourceType", "license", "inLanguage"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "headline",
+        "url",
+        "identifier",
+        "datePublished",
+        "author"
+      ]
     },
     "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions": {
-      "include": ["@id", "@type", "name", "description", "url", "about", "mentions", "citation", "isPartOf", "inLanguage"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "url",
+        "about",
+        "mentions",
+        "citation",
+        "isPartOf",
+        "inLanguage"
+      ],
+      "refAllow": {
+        "mentions": [
+          "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
+          "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
+          "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
+        ]
+      }
     },
     "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints": {
-      "include": ["@id", "@type", "name", "url", "sameAs", "publisher", "issn"]
+      "include": ["@id", "@type", "name", "url"]
+    },
+    "https://www.ghezelbaash.ir/#video-kurdish-patient-experience": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "contentUrl",
+        "thumbnailUrl",
+        "uploadDate",
+        "duration",
+        "inLanguage",
+        "about",
+        "creator",
+        "publisher",
+        "url"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "caption",
+        "contentUrl",
+        "sameAs",
+        "url",
+        "thumbnailUrl",
+        "encodingFormat",
+        "about",
+        "creator",
+        "representativeOfPage",
+        "license",
+        "acquireLicensePage",
+        "creditText",
+        "copyrightNotice"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "caption",
+        "contentUrl",
+        "sameAs",
+        "url",
+        "thumbnailUrl",
+        "encodingFormat",
+        "about",
+        "creator",
+        "representativeOfPage",
+        "license",
+        "acquireLicensePage",
+        "creditText",
+        "copyrightNotice"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "caption",
+        "contentUrl",
+        "sameAs",
+        "url",
+        "thumbnailUrl",
+        "encodingFormat",
+        "about",
+        "creator",
+        "representativeOfPage",
+        "license",
+        "acquireLicensePage",
+        "creditText",
+        "copyrightNotice"
+      ]
+    },
+    "https://www.ghezelbaash.ir/#topic-botox-migraine-context": {
+      "include": ["@id", "@type", "termCode", "name", "url"]
+    },
+    "https://www.ghezelbaash.ir/#topic-botox-neurology-context": {
+      "include": ["@id", "@type", "termCode", "name", "url"]
+    },
+    "https://www.ghezelbaash.ir/#topic-hair-transplant-boundary": {
+      "include": ["@id", "@type", "termCode", "name", "url"]
+    },
+    "https://www.ghezelbaash.ir/#topic-orthognathic-boundary": {
+      "include": ["@id", "@type", "termCode", "name", "url"]
+    },
+    "https://www.ghezelbaash.ir/#biomedical-concept-registry": {
+      "include": ["@id", "@type", "name", "description", "about"]
     }
   },
   "typeProfiles": {
     "MedicalProcedure": {
-      "include": ["@id", "@type", "name", "alternateName", "description", "procedureType", "url", "provider", "performer", "about", "isPartOf"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "description",
+        "procedureType",
+        "url",
+        "provider",
+        "performer",
+        "about",
+        "isPartOf"
+      ]
     },
     "MedicalTherapy": {
-      "include": ["@id", "@type", "name", "alternateName", "description", "url", "about", "provider", "isPartOf"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "description",
+        "url",
+        "about",
+        "provider",
+        "isPartOf"
+      ]
     },
     "DiagnosticProcedure": {
-      "include": ["@id", "@type", "name", "alternateName", "description", "url", "about", "provider", "isPartOf"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "description",
+        "url",
+        "about",
+        "provider",
+        "isPartOf"
+      ]
     },
     "Service": {
-      "include": ["@id", "@type", "name", "alternateName", "description", "provider", "areaServed", "serviceType", "url"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "description",
+        "provider",
+        "areaServed",
+        "serviceType",
+        "url",
+        "category"
+      ]
     },
     "Offer": {
-      "include": ["@id", "@type", "name", "description", "url", "itemOffered", "offeredBy", "availability"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "url",
+        "itemOffered",
+        "offeredBy",
+        "availability"
+      ]
     },
     "VideoObject": {
-      "include": ["@id", "@type", "name", "description", "contentUrl", "thumbnailUrl", "uploadDate", "duration", "inLanguage", "about", "creator", "publisher", "url", "hasPart"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "contentUrl",
+        "thumbnailUrl",
+        "uploadDate",
+        "duration",
+        "inLanguage",
+        "about",
+        "creator",
+        "publisher",
+        "url",
+        "hasPart"
+      ]
     },
     "Clip": {
-      "include": ["@id", "@type", "name", "startOffset", "endOffset", "url", "isPartOf"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "startOffset",
+        "endOffset",
+        "url",
+        "isPartOf"
+      ]
     },
     "ImageObject": {
-      "include": ["@id", "@type", "name", "caption", "contentUrl", "sameAs", "url", "thumbnailUrl", "encodingFormat", "width", "height", "about", "creator", "representativeOfPage", "license", "acquireLicensePage", "creditText", "copyrightNotice"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "caption",
+        "contentUrl",
+        "sameAs",
+        "url",
+        "thumbnailUrl",
+        "encodingFormat",
+        "width",
+        "height",
+        "about",
+        "creator",
+        "representativeOfPage",
+        "license",
+        "acquireLicensePage",
+        "creditText",
+        "copyrightNotice"
+      ]
     },
     "WebPageElement": {
-      "include": ["@id", "@type", "name", "description", "url", "about", "isPartOf", "inLanguage"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "url",
+        "about",
+        "isPartOf",
+        "inLanguage"
+      ]
+    },
+    "DefinedTerm": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "termCode",
+        "identifier",
+        "sameAs",
+        "inDefinedTermSet",
+        "url"
+      ]
+    },
+    "MedicalCondition": {
+      "include": ["@id", "@type", "possibleTreatment"]
+    },
+    "WebPage": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "url",
+        "mainEntity",
+        "about",
+        "identifier",
+        "inLanguage"
+      ]
+    },
+    "CollectionPage": {
+      "include": ["@id", "@type", "name", "url", "about", "mainEntity"]
+    },
+    "City": {
+      "include": ["@id", "@type", "name", "containedInPlace", "sameAs"]
+    },
+    "AdministrativeArea": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "containedInPlace",
+        "sameAs"
+      ]
+    },
+    "Occupation": {
+      "include": ["@id", "@type", "name", "sameAs"]
+    },
+    "CollegeOrUniversity": {
+      "include": ["@id", "@type", "name", "sameAs"]
     }
   },
-  "mode": "projected"
+  "externalReferenceIds": [
+    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
+    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
+    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
+    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
+  ]
 }

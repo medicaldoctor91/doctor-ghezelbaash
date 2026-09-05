@@ -15,11 +15,19 @@ import {
 const localDistributionFile = (resource, dist = "dist") =>
   sourceForDistribution(resource, dist);
 
-function assertRequiredCompression(rel, offered, received, requireMachineCompression = false) {
-  const required = rel === "index.html" ||
+function assertRequiredCompression(
+  rel,
+  offered,
+  received,
+  requireMachineCompression = false,
+) {
+  const required =
+    rel === "index.html" ||
     (requireMachineCompression && /\.(csv|ttl)$/.test(rel));
   if (required && ["br", "gzip"].includes(offered) && received !== offered)
-    throw new Error(`${rel} ${offered} required compression is not effective: ${received}`);
+    throw new Error(
+      `${rel} ${offered} required compression is not effective: ${received}`,
+    );
 }
 
 function assertEncodingVary(rel, lane, value) {
@@ -82,6 +90,208 @@ const walkRelative = async (directory, prefix = "") => {
   }
   return files;
 };
+
+function releaseLocations(args, cwd = process.cwd()) {
+  const values = new Map();
+  for (let index = 0; index < args.length; index += 2) {
+    const name = args[index],
+      value = args[index + 1];
+    if (!["--source-root", "--dist-root"].includes(name))
+      throw new Error(`Unknown release verifier option: ${name}`);
+    if (!value || value.startsWith("--") || values.has(name))
+      throw new Error(`Missing or duplicate release verifier option: ${name}`);
+    values.set(name, value);
+  }
+  const sourceRoot = path.resolve(cwd, values.get("--source-root") || ".");
+  return {
+    sourceRoot,
+    distRoot: path.resolve(sourceRoot, values.get("--dist-root") || "dist"),
+  };
+}
+
+async function releaseContext(locations) {
+  const { sourceRoot, distRoot } = locations,
+    git = (...args) =>
+      execFileSync("git", args, {
+        cwd: sourceRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      }).trim(),
+    release = JSON.parse(
+      await readFile(path.join(sourceRoot, "src/data/release.json"), "utf8"),
+    ),
+    tag = `v${release.release}`;
+  let tagSha;
+  try {
+    tagSha = git("rev-parse", "--verify", `refs/tags/${tag}^{commit}`);
+  } catch {
+    throw new Error(
+      `Snapshot verifier requires the finalized release tag: ${tag}`,
+    );
+  }
+  const head = git("rev-parse", "HEAD");
+  if (tagSha !== head)
+    throw new Error(
+      `Snapshot verifier must read release tag source: tag=${tagSha} HEAD=${head}`,
+    );
+  if (git("diff", "HEAD", "--name-only"))
+    throw new Error(
+      "Snapshot verifier requires an unchanged tracked release source",
+    );
+  const registry = JSON.parse(
+    await readFile(
+      path.join(sourceRoot, "src/data/machine-resources.json"),
+      "utf8",
+    ),
+  );
+  if (!Array.isArray(registry.resources) || !registry.resources.length)
+    throw new Error("Snapshot machine resource registry is empty");
+  const paths = new Set();
+  for (const resource of registry.resources) {
+    if (
+      !resource.path ||
+      !resource.source ||
+      !resource.mediaType ||
+      !Array.isArray(resource.targets) ||
+      !resource.targets.length ||
+      paths.has(resource.path)
+    )
+      throw new Error(`Invalid snapshot machine resource: ${resource.path}`);
+    for (const value of [resource.path, resource.source])
+      if (path.isAbsolute(value) || value.split(/[\\/]/).includes(".."))
+        throw new Error(`Snapshot resource escapes its source: ${value}`);
+    paths.add(resource.path);
+  }
+  const core = registry.resources.filter((resource) =>
+    resource.targets.includes("zenodo"),
+  );
+  if (!core.length) throw new Error("Snapshot Zenodo distribution is empty");
+  await readdir(distRoot);
+  return {
+    ...locations,
+    release,
+    tag,
+    head,
+    core,
+    localFile: (resource) =>
+      resource.targets.includes("website")
+        ? path.join(distRoot, resource.path)
+        : path.join(sourceRoot, resource.source),
+  };
+}
+
+async function command_test_release_context() {
+  const { default: assert } = await import("node:assert/strict"),
+    { mkdtemp, mkdir, writeFile, rm } = await import("node:fs/promises"),
+    { tmpdir } = await import("node:os"),
+    fixture = await mkdtemp(path.join(tmpdir(), "release-context-"));
+  try {
+    const sourceRoot = path.join(fixture, "historical source"),
+      distRoot = path.join(fixture, "historical output"),
+      git = (...args) =>
+        execFileSync("git", args, {
+          cwd: sourceRoot,
+          encoding: "utf8",
+          stdio: ["ignore", "pipe", "pipe"],
+        }).trim();
+    await mkdir(path.join(sourceRoot, "src/data"), { recursive: true });
+    await mkdir(distRoot);
+    const releasePath = path.join(sourceRoot, "src/data/release.json"),
+      releaseBytes = JSON.stringify({ release: "9.8.7" }),
+      resource = {
+        path: "historical.json",
+        source: ".generated/historical.json",
+        mediaType: "application/json",
+        targets: ["website", "zenodo"],
+      };
+    await writeFile(releasePath, releaseBytes);
+    await writeFile(
+      path.join(sourceRoot, "src/data/machine-resources.json"),
+      JSON.stringify({
+        resources: [
+          resource,
+          {
+            path: "historical-only.json",
+            source: ".generated/historical-only.json",
+            mediaType: "application/json",
+            targets: ["zenodo"],
+          },
+        ],
+      }),
+    );
+    git("init", "--quiet");
+    git("add", ".");
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "commit",
+      "--quiet",
+      "-m",
+      "Frozen source fixture",
+    );
+    const args = ["--source-root", sourceRoot, "--dist-root", distRoot],
+      locations = releaseLocations(args, fixture);
+    assert.deepEqual(locations, { sourceRoot, distRoot });
+    await assert.rejects(
+      releaseContext(locations),
+      /requires the finalized release tag/,
+    );
+    git("tag", "v9.8.7");
+    const context = await releaseContext(locations);
+    assert.equal(context.release.release, "9.8.7");
+    assert.deepEqual(
+      context.core.map(({ path: file }) => file),
+      ["historical.json", "historical-only.json"],
+    );
+    assert.equal(
+      context.localFile(context.core[0]),
+      path.join(distRoot, "historical.json"),
+    );
+    assert.equal(
+      context.localFile(context.core[1]),
+      path.join(sourceRoot, ".generated/historical-only.json"),
+    );
+    assert.deepEqual(releaseLocations([], sourceRoot), {
+      sourceRoot,
+      distRoot: path.join(sourceRoot, "dist"),
+    });
+    for (const invalid of [
+      ["--other", sourceRoot],
+      ["--source-root"],
+      ["--source-root", sourceRoot, "--source-root", sourceRoot],
+    ])
+      assert.throws(() => releaseLocations(invalid), /release verifier option/);
+    await writeFile(releasePath, `${releaseBytes}\n`);
+    await assert.rejects(
+      releaseContext(locations),
+      /unchanged tracked release source/,
+    );
+    git("add", ".");
+    await assert.rejects(
+      releaseContext(locations),
+      /unchanged tracked release source/,
+    );
+    git(
+      "-c",
+      "user.name=Fixture",
+      "-c",
+      "user.email=fixture@example.invalid",
+      "commit",
+      "--quiet",
+      "-m",
+      "A newer source is not the snapshot",
+    );
+    await assert.rejects(
+      releaseContext(locations),
+      /must read release tag source/,
+    );
+    console.log("RELEASE_CONTEXT_ISOLATION_PASS");
+  } finally {
+    await rm(fixture, { recursive: true, force: true });
+  }
+}
 
 async function command_current() {
   const [release, authority] = await Promise.all([
@@ -317,7 +527,12 @@ async function command_discovery() {
             `${rel} ${lane} Content-Encoding was not offered: ${x.contentEncoding}`,
           );
         assertEncodingVary(rel, lane, x.r.headers.get("vary"));
-        assertRequiredCompression(rel, encoding, x.contentEncoding, requireMachineCompression);
+        assertRequiredCompression(
+          rel,
+          encoding,
+          x.contentEncoding,
+          requireMachineCompression,
+        );
         rows.push({
           resource: rel,
           lane,
@@ -362,10 +577,9 @@ async function command_discovery() {
 }
 
 async function command_release() {
-  const release = JSON.parse(await readFile("src/data/release.json", "utf8")),
-    z = release.dataset.zenodo,
-    tag = `v${release.release}`;
-  const core = resourcesForTarget("zenodo");
+  const { release, tag, head, core, distRoot, localFile } =
+      await releaseContext(releaseLocations(process.argv.slice(2))),
+    z = release.dataset.zenodo;
   const sha = (b) => createHash("sha256").update(b).digest("hex"),
     fetchBytes = async (url) => {
       const r = await fetch(url, {
@@ -378,19 +592,6 @@ async function command_release() {
       if (!r.ok) throw new Error(`HTTP ${r.status} ${url}`);
       return Buffer.from(await r.arrayBuffer());
     };
-  let tagSha = "";
-  try {
-    tagSha = execFileSync("git", ["rev-list", "-n", "1", tag], {
-      encoding: "utf8",
-    }).trim();
-  } catch {}
-  const head = execFileSync("git", ["rev-parse", "HEAD"], {
-    encoding: "utf8",
-  }).trim();
-  if (tagSha && tagSha !== head)
-    throw new Error(
-      `Snapshot verifier must run at release tag source: tag=${tagSha} HEAD=${head}`,
-    );
   const zenodoResponse = await fetch(
     `https://zenodo.org/api/records/${z.recordId}?_=${Date.now()}`,
     {
@@ -436,7 +637,7 @@ async function command_release() {
     results = [];
   for (const resource of core) {
     const file = resource.path,
-      local = await readFile(localDistributionFile(resource)),
+      local = await readFile(localFile(resource)),
       wanted = sha(local),
       zenodoBlob = await zenodoBytes(file),
       zenodoHash = sha(zenodoBlob);
@@ -462,8 +663,7 @@ async function command_release() {
   } catch {
     throw new Error("Zenodo release auxiliary JSON is invalid");
   }
-  const distRoot = path.resolve("dist"),
-    distFiles = await walkRelative(distRoot),
+  const distFiles = await walkRelative(distRoot),
     localDistManifest = {};
   for (const file of distFiles)
     localDistManifest[file] = sha(await readFile(path.join(distRoot, file)));
@@ -516,7 +716,7 @@ async function command_release() {
       throw new Error(`Zenodo release attestation drift ${field}`);
   const hfReadme = (
     await fetchBytes(
-      `https://huggingface.co/datasets/doctor-ghezelbaash/dr-saeid-ghezelbaash-entity-data/resolve/${encodeURIComponent(tag)}/README.md?download=true&_=${Date.now()}`,
+      `${release.dataset.huggingFace.dataset}/resolve/${encodeURIComponent(tag)}/README.md?download=true&_=${Date.now()}`,
     )
   ).toString();
   for (const token of [
@@ -555,12 +755,15 @@ async function command_release() {
 const command = process.argv[2];
 if (!command)
   throw new Error(
-    "Usage: node scripts/verify-live.mjs <current|discovery|release|test-transport> [options]",
+    "Usage: node scripts/verify-live.mjs <current|discovery|release|test-transport|test-release-context> [options]; release accepts --source-root and --dist-root",
   );
 process.argv.splice(2, 1);
 switch (command) {
   case "test-transport":
     await command_test_transport();
+    break;
+  case "test-release-context":
+    await command_test_release_context();
     break;
   case "current":
     await command_current();
@@ -573,6 +776,6 @@ switch (command) {
     break;
   default:
     throw new Error(
-      "Usage: node scripts/verify-live.mjs <current|discovery|release|test-transport> [options]",
+      "Usage: node scripts/verify-live.mjs <current|discovery|release|test-transport|test-release-context> [options]; release accepts --source-root and --dist-root",
     );
 }

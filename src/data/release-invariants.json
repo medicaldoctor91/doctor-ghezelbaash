@@ -5,6 +5,5 @@
   "googlebotFetchBudgetBytes": 2000000,
   "googlebotReservedResponseHeaderBytes": 20000,
   "googlebotSafetyMarginBytes": 80000,
-  "maxCriticalCssBytes": 12000,
-  "minExternalCssBytes": 42000
+  "maxCriticalCssBytes": 12000
 }

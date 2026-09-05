@@ -47,8 +47,10 @@ export function entityFactsTableSchema() {
   };
 }
 
-export function entityFactsRecordSet(canonicalUrl) {
+export function entityFactsRecordSet(canonicalUrl, fileObjectId) {
   const recordId = `${canonicalUrl}entity-facts.csv#records`;
+  if (typeof fileObjectId !== "string" || !URL.canParse(fileObjectId))
+    throw new Error("Croissant record set requires the registered distribution IRI");
   return {
     "@id": recordId,
     "@type": "cr:RecordSet",
@@ -62,7 +64,7 @@ export function entityFactsRecordSet(canonicalUrl) {
       description: descriptions[name],
       dataType: "sc:Text",
       source: {
-        fileObject: { "@id": `${canonicalUrl}entity-facts.csv#croissant-file` },
+        fileObject: { "@id": fileObjectId },
         extract: { column: name },
       },
     })),

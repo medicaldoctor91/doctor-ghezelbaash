@@ -1,6 +1,9 @@
 import path from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { projectNode } from "../../../src/lib/semantic-projection.mjs";
+import {
+  indexCanonicalGraph,
+  projectNode,
+} from "../../../src/lib/semantic-projection.mjs";
 import { nodeTypes } from "../projection-context.mjs";
 
 const appendUnique = (target, values) => {
@@ -72,8 +75,6 @@ const isHomepageEventType = (type) =>
   (type === "Event" ||
     type.endsWith("Event") ||
     homepageEventTypeExceptions.has(type));
-const isHomepageEventNode = (node) =>
-  nodeTypes(node).some(isHomepageEventType);
 const isExternalUrl = (value, canonicalOrigin) => {
   if (typeof value !== "string") return false;
   try {
@@ -89,28 +90,6 @@ const isHomepageExternalRichResultNode = (node, canonicalOrigin) => {
     types.some((type) => homepageArticleRichResultTypes.has(type)) ||
     types.includes("Organization")
   );
-};
-const stripNonSchemaHomepageProperties = (value) => {
-  if (Array.isArray(value)) return value.map(stripNonSchemaHomepageProperties);
-  if (!value || typeof value !== "object") return value;
-  const out = {};
-  for (const [key, nested] of Object.entries(value)) {
-    if (!key.startsWith("@") && key.includes(":")) continue;
-    out[key] = stripNonSchemaHomepageProperties(nested);
-  }
-  return out;
-};
-const normalizeHomepagePhysician = (node, physicianId) => {
-  if (node?.["@id"] !== physicianId) return node;
-  const out = structuredClone(node);
-  // Google ProfilePage expects an individual mainEntity to be a Person. The
-  // canonical graph can retain the richer IndividualPhysician typing, but that
-  // Schema.org type inherits Organization/LocalBusiness/Place and therefore
-  // would conflate the physician person with a business in homepage markup.
-  out["@type"] = "Person";
-  for (const property of homepagePersonProviderOnlyProperties)
-    delete out[property];
-  return out;
 };
 const collectPrefixedPropertyKeys = (value, path = "$") => {
   if (Array.isArray(value))
@@ -136,7 +115,9 @@ const assertPureSchemaHomepageNodes = (nodes, label) => {
 const assertHomepagePhysicianPerson = (nodes, physicianId) => {
   const physician = nodes.find((node) => node?.["@id"] === physicianId);
   if (!physician)
-    throw new Error(`Head homepage projection is missing physician ${physicianId}`);
+    throw new Error(
+      `Head homepage projection is missing physician ${physicianId}`,
+    );
   const types = nodeTypes(physician);
   if (types.length !== 1 || types[0] !== "Person")
     throw new Error(
@@ -168,9 +149,10 @@ const assertNoHomepageExternalRichResultNodes = (
   citedScholarlyWorkIds = new Set(),
 ) => {
   const offenders = nodes
-    .filter((node) =>
-      isHomepageExternalRichResultNode(node, canonicalOrigin) &&
-      !citedScholarlyWorkIds.has(node["@id"]),
+    .filter(
+      (node) =>
+        isHomepageExternalRichResultNode(node, canonicalOrigin) &&
+        !citedScholarlyWorkIds.has(node["@id"]),
     )
     .map(
       (node) =>
@@ -182,14 +164,14 @@ const assertNoHomepageExternalRichResultNodes = (
     );
 };
 
-export async function compileGraphProjections(context) {
-  const { semantic, generatedSemantic, graph, byId, release } = context;
-  const [headProfile, supportProfile] = await Promise.all([
-    readFile(path.join(semantic, "head-profile.json"), "utf8").then(JSON.parse),
-    readFile(path.join(semantic, "support-profile.json"), "utf8").then(
-      JSON.parse,
-    ),
-  ]);
+/** Builds exactly the two final HTML graphs. No filesystem mutation or fallback projection. */
+export function deriveGraphProjections({
+  graph,
+  release,
+  headProfile,
+  supportProfile,
+}) {
+  const { byId } = indexCanonicalGraph(graph);
   const headIds = headProfile.ids;
   const supportIds = supportProfile.ids;
   if (!Array.isArray(headIds) || !Array.isArray(supportIds))
@@ -206,136 +188,176 @@ export async function compileGraphProjections(context) {
     );
 
   const canonicalOrigin = new URL(release.canonicalUrl).origin;
-  const citedScholarlyWorkIds = new Set(supportProfile.citedScholarlyWorkIds || []);
-  if (citedScholarlyWorkIds.size !== supportProfile.citedScholarlyWorkIds?.length)
-    throw new Error("Cited scholarly work allowlist must be explicit and unique");
+  const citedScholarlyWorkIds = new Set(
+    supportProfile.citedScholarlyWorkIds || [],
+  );
+  if (
+    citedScholarlyWorkIds.size !== supportProfile.citedScholarlyWorkIds?.length
+  )
+    throw new Error(
+      "Cited scholarly work allowlist must be explicit and unique",
+    );
   for (const id of citedScholarlyWorkIds) {
     const work = byId.get(id);
     const authorIds = [work?.author].flat().map((author) => author?.["@id"]);
-    const citingSections = graph["@graph"].filter((node) =>
-      nodeTypes(node).includes("WebPageElement") &&
-      [node.citation].flat().some((citation) => citation?.["@id"] === id),
+    const citingSections = graph["@graph"].filter(
+      (node) =>
+        nodeTypes(node).includes("WebPageElement") &&
+        [node.citation].flat().some((citation) => citation?.["@id"] === id),
     );
     if (
       !supportIds.includes(id) ||
-      nodeTypes(work).length !== 1 || nodeTypes(work)[0] !== "ScholarlyArticle" ||
+      nodeTypes(work).length !== 1 ||
+      nodeTypes(work)[0] !== "ScholarlyArticle" ||
       !authorIds.includes(release.primaryEntity.id) ||
       !isExternalUrl(work?.url, canonicalOrigin) ||
       !work.url.startsWith("https://doi.org/") ||
-      ![work.identifier].flat().includes(`DOI:${work.url.slice("https://doi.org/".length)}`) ||
-      !citingSections.some((section) =>
-        supportIds.includes(section["@id"]) &&
-        supportProfile.idProfiles?.[section["@id"]]?.include?.includes("citation"),
+      ![work.identifier]
+        .flat()
+        .includes(`DOI:${work.url.slice("https://doi.org/".length)}`) ||
+      !citingSections.some(
+        (section) =>
+          supportIds.includes(section["@id"]) &&
+          supportProfile.idProfiles?.[section["@id"]]?.include?.includes(
+            "citation",
+          ),
       )
     )
-      throw new Error(`Cited scholarly work lacks its physician, DOI or visible-section relationship: ${id}`);
+      throw new Error(
+        `Cited scholarly work lacks its physician, DOI or visible-section relationship: ${id}`,
+      );
     const profile = supportProfile.idProfiles?.[id];
-    const fields = ["@id", "@type", "name", "headline", "url", "identifier", "datePublished", "author"];
-    if (!profile?.include || profile.include.length !== fields.length ||
-      fields.some((field) => !profile.include.includes(field)))
-      throw new Error(`Cited scholarly work must use the minimal authorship projection: ${id}`);
+    const fields = [
+      "@id",
+      "@type",
+      "name",
+      "headline",
+      "url",
+      "identifier",
+      "datePublished",
+      "author",
+    ];
+    if (
+      !profile?.include ||
+      profile.include.length !== fields.length ||
+      fields.some((field) => !profile.include.includes(field))
+    )
+      throw new Error(
+        `Cited scholarly work must use the minimal authorship projection: ${id}`,
+      );
   }
 
-  // Historical event/workshop facts remain in the canonical knowledge graph.
-  // The homepage is an entity/profile projection, not a dedicated event page,
-  // so Event-family nodes are excluded only from its inline Google projection.
-  const homepageEventIds = new Set(
-    (graph["@graph"] || [])
-      .filter(isHomepageEventNode)
-      .map((node) => node["@id"])
-      .filter((id) => typeof id === "string"),
-  );
-
-  // Only explicitly selected, DOI-identified coauthored scholarly works receive
-  // a minimal citation projection. Other external articles and organizations
-  // keep their relationships through their own canonical URLs.
-  const homepageExternalRichResultIds = new Set(
-    (graph["@graph"] || [])
-      .filter((node) =>
-        isHomepageExternalRichResultNode(node, canonicalOrigin) &&
-        !citedScholarlyWorkIds.has(node["@id"]),
-      )
-      .map((node) => node["@id"])
-      .filter((id) => typeof id === "string"),
-  );
-  const homepageExcludedIds = new Set([
-    ...homepageEventIds,
-    ...homepageExternalRichResultIds,
-  ]);
-  const headEventIds = headIds.filter((id) => homepageEventIds.has(id));
-  if (headEventIds.length)
-    throw new Error(
-      `Head homepage projection cannot select Event-family nodes: ${headEventIds.join(", ")}`,
-    );
-  const projectedHeadIds = headIds.filter(
-    (id) => !homepageExcludedIds.has(id),
-  );
-  const projectedSupportIds = supportIds.filter(
-    (id) => !homepageExcludedIds.has(id),
-  );
-
-  await mkdir(generatedSemantic, { recursive: true });
   const projectionContext = projectSchemaContext(graph["@context"]);
-  const homepageSelected = new Set([
-    ...projectedSupportIds,
-    ...projectedHeadIds,
-  ]);
-  const graphIds = new Set(byId.keys());
-  const homepageReferenceAliases = new Map(
-    [...homepageExternalRichResultIds]
-      .map((id) => [id, byId.get(id)?.url])
-      .filter(([, url]) => isExternalUrl(url, canonicalOrigin)),
-  );
-  const profileFor = (node) =>
-    supportProfile.idProfiles?.[node["@id"]] ??
-    mergeProjectionProfiles(
-      nodeTypes(node).map((type) => supportProfile.typeProfiles?.[type]),
+  const homepageSelected = new Set([...headIds, ...supportIds]);
+  const externalReferencesFor = (profile, label) => {
+    const ids = profile.externalReferenceIds;
+    if (!Array.isArray(ids) || new Set(ids).size !== ids.length)
+      throw new Error(
+        `${label} external reference IDs must be explicit and unique`,
+      );
+    return new Map(
+      ids.map((id) => {
+        const target = byId.get(id);
+        if (
+          !target ||
+          homepageSelected.has(id) ||
+          !isExternalUrl(target.url, canonicalOrigin)
+        )
+          throw new Error(
+            `${label} external reference must resolve to an unselected source with its own canonical URL: ${id}`,
+          );
+        return [id, target.url];
+      }),
     );
-  const pruneInlineRefs = (value) => {
-    if (Array.isArray(value))
-      return value.map(pruneInlineRefs).filter((item) => item !== undefined);
-    if (value && typeof value === "object") {
-      if (
-        value["@id"] &&
-        graphIds.has(value["@id"]) &&
-        !homepageSelected.has(value["@id"])
-      ) {
-        const alias = homepageReferenceAliases.get(value["@id"]);
-        return alias ? { "@id": alias } : undefined;
-      }
-      const out = {};
-      for (const [key, nested] of Object.entries(value)) {
-        if (key === "performerIn") continue;
-        const next = pruneInlineRefs(nested);
-        if (next !== undefined && (!Array.isArray(next) || next.length))
-          out[key] = next;
-      }
-      return out;
-    }
-    return value;
   };
-  const finalizeHomepageNode = (node) =>
-    normalizeHomepagePhysician(
-      stripNonSchemaHomepageProperties(pruneInlineRefs(node)),
-      release.primaryEntity.id,
-    );
-
-  const headNodes = [];
-  for (const id of headIds) {
-    const node = byId.get(id);
-    if (!node) throw new Error(`Head selection missing ${id}`);
-    headNodes.push(projectNode(node, headProfile.nodes?.[id]));
-  }
-  const homepageHeadNodes = headNodes
-    .filter((node) => !homepageExcludedIds.has(node["@id"]))
-    .map(finalizeHomepageNode);
+  const projectLane = (profile, label) => {
+    const aliases = externalReferencesFor(profile, label);
+    const usedAliases = new Set();
+    const specificProfiles = profile.nodes ?? profile.idProfiles ?? {};
+    for (const id of Object.keys(specificProfiles))
+      if (!profile.ids.includes(id))
+        throw new Error(
+          `${label} has a field policy for an unselected node: ${id}`,
+        );
+    const resolveReferences = (value, trail) => {
+      if (Array.isArray(value))
+        return value.map((item, index) =>
+          resolveReferences(item, `${trail}[${index}]`),
+        );
+      if (!value || typeof value !== "object") return value;
+      const id = value["@id"];
+      if (id && !homepageSelected.has(id)) {
+        if (aliases.has(id)) {
+          if (Object.keys(value).length !== 1)
+            throw new Error(
+              `${trail} cannot replace an embedded source with an external reference`,
+            );
+          usedAliases.add(id);
+          return { "@id": aliases.get(id) };
+        }
+        if (byId.has(id) || id.startsWith(release.canonicalUrl))
+          throw new Error(
+            `${trail} has an unresolved required inline reference: ${id}`,
+          );
+      }
+      return Object.fromEntries(
+        Object.entries(value).map(([key, nested]) => [
+          key,
+          resolveReferences(nested, `${trail}.${key}`),
+        ]),
+      );
+    };
+    const nodes = profile.ids.map((id) => {
+      const node = byId.get(id);
+      if (!node) throw new Error(`${label} selection missing ${id}`);
+      const spec =
+        profile.nodes?.[id] ??
+        profile.idProfiles?.[id] ??
+        mergeProjectionProfiles(
+          nodeTypes(node).map((type) => profile.typeProfiles?.[type]),
+        );
+      if (
+        !Array.isArray(spec?.include) ||
+        !spec.include.includes("@id") ||
+        !spec.include.includes("@type")
+      )
+        throw new Error(
+          `${label} selection requires an explicit field profile: ${id}`,
+        );
+      if (new Set(spec.include).size !== spec.include.length)
+        throw new Error(`${label} profile fields must be unique: ${id}`);
+      for (const policy of ["refAllow", "valueAllow"])
+        for (const property of Object.keys(spec[policy] || {}))
+          if (!spec.include.includes(property))
+            throw new Error(
+              `${label} ${policy} cannot configure an excluded field: ${id}.${property}`,
+            );
+      return resolveReferences(projectNode(node, spec), id);
+    });
+    for (const id of aliases.keys())
+      if (!usedAliases.has(id))
+        throw new Error(
+          `${label} declares an unused external reference policy: ${id}`,
+        );
+    return nodes;
+  };
+  const homepageHeadNodes = projectLane(headProfile, "Head");
+  const supportNodes = projectLane(supportProfile, "Support");
   assertNoHomepageEventNodes(homepageHeadNodes, "Head");
+  assertNoHomepageEventNodes(supportNodes, "Support");
   assertNoHomepageExternalRichResultNodes(
     homepageHeadNodes,
     "Head",
     canonicalOrigin,
   );
+  assertNoHomepageExternalRichResultNodes(
+    supportNodes,
+    "Support",
+    canonicalOrigin,
+    citedScholarlyWorkIds,
+  );
   assertPureSchemaHomepageNodes(homepageHeadNodes, "Head");
+  assertPureSchemaHomepageNodes(supportNodes, "Support");
   assertHomepagePhysicianPerson(homepageHeadNodes, release.primaryEntity.id);
   const headDoc = {
     "@context": projectionContext,
@@ -346,41 +368,44 @@ export async function compileGraphProjections(context) {
     throw new Error(
       `Head graph ${Buffer.byteLength(headRaw)} exceeds ${headProfile.maxBytes}`,
     );
-  await writeFile(path.join(generatedSemantic, "head-graph.json"), headRaw);
-
-  const supportNodes = [];
-  for (const id of projectedSupportIds) {
-    const node = byId.get(id);
-    if (!node) throw new Error(`Support selection missing ${id}`);
-    supportNodes.push(
-      supportProfile.mode === "full"
-        ? finalizeHomepageNode(structuredClone(node))
-        : finalizeHomepageNode(projectNode(node, profileFor(node) || {})),
-    );
-  }
-  assertNoHomepageEventNodes(supportNodes, "Support");
-  assertNoHomepageExternalRichResultNodes(
-    supportNodes,
-    "Support",
-    canonicalOrigin,
-    citedScholarlyWorkIds,
-  );
-  assertPureSchemaHomepageNodes(supportNodes, "Support");
   const supportDoc = { "@context": projectionContext, "@graph": supportNodes };
   const supportRaw = `${JSON.stringify(supportDoc)}\n`;
   if (Buffer.byteLength(supportRaw) > supportProfile.maxBytes)
     throw new Error(
       `Support graph ${Buffer.byteLength(supportRaw)} exceeds ${supportProfile.maxBytes}`,
     );
-  await writeFile(
-    path.join(generatedSemantic, "support-graph.json"),
-    supportRaw,
-  );
-
   return {
-    headIds: projectedHeadIds,
-    supportIds: projectedSupportIds,
+    headIds: [...headIds],
+    supportIds: [...supportIds],
+    headDoc,
+    supportDoc,
     headRaw,
     supportRaw,
   };
+}
+
+export async function compileGraphProjections(context) {
+  const { semantic, generatedSemantic, graph, release } = context;
+  const [headProfile, supportProfile] = await Promise.all([
+    readFile(path.join(semantic, "head-profile.json"), "utf8").then(JSON.parse),
+    readFile(path.join(semantic, "support-profile.json"), "utf8").then(
+      JSON.parse,
+    ),
+  ]);
+  const result = deriveGraphProjections({
+    graph,
+    release,
+    headProfile,
+    supportProfile,
+  });
+  await mkdir(generatedSemantic, { recursive: true });
+  await writeFile(
+    path.join(generatedSemantic, "head-graph.json"),
+    result.headRaw,
+  );
+  await writeFile(
+    path.join(generatedSemantic, "support-graph.json"),
+    result.supportRaw,
+  );
+  return result;
 }

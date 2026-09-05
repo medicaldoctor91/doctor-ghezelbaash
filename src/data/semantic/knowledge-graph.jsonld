@@ -81,6 +81,42 @@
     "relatedLink": {
       "@id": "https://schema.org/relatedLink",
       "@type": "@id"
+    },
+    "birthDate": {
+      "@id": "https://schema.org/birthDate",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "dateCreated": {
+      "@id": "https://schema.org/dateCreated",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "dateModified": {
+      "@id": "https://schema.org/dateModified",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "datePublished": {
+      "@id": "https://schema.org/datePublished",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "lastReviewed": {
+      "@id": "https://schema.org/lastReviewed",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "startDate": {
+      "@id": "https://schema.org/startDate",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "endDate": {
+      "@id": "https://schema.org/endDate",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "observationDate": {
+      "@id": "https://schema.org/observationDate",
+      "@type": "http://www.w3.org/2001/XMLSchema#date"
+    },
+    "uploadDate": {
+      "@id": "https://schema.org/uploadDate",
+      "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
     }
   },
   "@graph": [
@@ -2114,7 +2150,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler",
@@ -2305,7 +2346,15 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-lip-augmentation"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-body-dermal-filler",
@@ -2346,7 +2395,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-hyaluronidase-and-filler-revision",
@@ -2516,7 +2570,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-suture-techniques"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-subcision",
@@ -2556,7 +2615,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-microneedling",
@@ -2591,7 +2655,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-microneedling"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-chemical-peel",
@@ -2626,7 +2695,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-chemical-peel"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-energy-based-skin-treatment",
@@ -2672,7 +2746,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-skin-treatment",
@@ -2721,7 +2800,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-prp-injection"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-hair-treatment",
@@ -2759,7 +2843,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-prp-injection"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-skin-mesotherapy",
@@ -2804,7 +2893,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-mesotherapy"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-hair-mesotherapy",
@@ -2838,7 +2932,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-mesotherapy"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment",
@@ -2875,7 +2974,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-intradermal-injection"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-profhilo-injectable-skin-treatment",
@@ -2912,7 +3016,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-intradermal-injection"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-injectable-skin-booster",
@@ -2978,7 +3087,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-intradermal-injection"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-injectable-biostimulator",
@@ -3015,7 +3129,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-subcutaneous-injection"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment",
@@ -3081,7 +3200,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-alopecia"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion",
@@ -3165,7 +3289,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-thread-lift-result-correction",
@@ -3202,7 +3331,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-blepharoplasty",
@@ -3237,7 +3371,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-blepharoplasty"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-central-lip-lift",
@@ -3272,7 +3411,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-lip-augmentation"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-buccal-fat-removal",
@@ -3312,7 +3456,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-cosmetic-techniques"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-submental-liposuction",
@@ -3370,7 +3519,15 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-liposuction"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-body-contouring"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting",
@@ -3413,7 +3570,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-fat-grafting"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-rhinoplasty",
@@ -3448,7 +3610,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-rhinoplasty"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-facelift",
@@ -3486,7 +3653,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-rhytidoplasty"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-neck-lift",
@@ -3524,7 +3696,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-rhytidoplasty"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery",
@@ -3596,7 +3773,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-body-contouring"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion-offer",
@@ -7159,7 +7341,10 @@
       "@id": "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016",
       "@type": "ScholarlyArticle",
       "name": "Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder",
-      "datePublished": "2016-05-19T00:00:00Z",
+      "datePublished": {
+        "@value": "2016-05-19T00:00:00Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -7190,7 +7375,10 @@
         "medical research"
       ],
       "headline": "Effects of Omega-3 Supplement in the Treatment of Patients with Bipolar I Disorder",
-      "dateModified": "2016-05-19T00:00:00Z",
+      "dateModified": {
+        "@value": "2016-05-19T00:00:00Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
       "url": "https://doi.org/10.4103/2008-7802.182734"
     },
     {
@@ -7202,7 +7390,10 @@
       "@id": "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021",
       "@type": "ScholarlyArticle",
       "name": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events",
-      "datePublished": "2021-09-06T00:00:00Z",
+      "datePublished": {
+        "@value": "2021-09-06T00:00:00Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -7240,7 +7431,10 @@
         "adult traumatic events"
       ],
       "headline": "Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events",
-      "dateModified": "2021-09-06T00:00:00Z",
+      "dateModified": {
+        "@value": "2021-09-06T00:00:00Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
       "url": "https://doi.org/10.3390/healthcare9091169"
     },
     {
@@ -10311,7 +10505,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-melasma"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-post-inflammatory-hyperpigmentation-treatment",
@@ -10347,7 +10546,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-hyperpigmentation"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-sun-induced-pigmentation-treatment",
@@ -10687,7 +10891,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-prp-injection"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-mesotherapy-under-eye",
@@ -12236,7 +12445,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "about": {
-        "@id": "https://www.ghezelbaash.ir/#procedure-acne-scar-evaluation"
+        "@id": "https://www.ghezelbaash.ir/#procedure-melasma-treatment"
       }
     },
     {
@@ -12252,7 +12461,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "about": {
-        "@id": "https://www.ghezelbaash.ir/#procedure-acne-scar-evaluation"
+        "@id": "https://www.ghezelbaash.ir/#procedure-melasma-treatment"
       },
       "description": "ملاسما معمولاً فقط یک رنگدانه منفرد نیست و می‌تواند با نور، گرما، هورمون، التهاب، ژنتیک و تحریک پوستی درگیر باشد. به همین دلیل درمان پایدار بر کنترل محرک، محافظت نوری و انتخاب مداخله‌ای تکیه دارد که التهاب اضافی نسازد، نه یک جلسه یا محصول واحد."
     },
@@ -16593,7 +16802,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-acne-vulgaris"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-pigmentation",
@@ -16627,7 +16841,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-hyperpigmentation"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-acne-scar-evaluation",
@@ -16664,7 +16883,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-scar"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-tca-cross",
@@ -16883,7 +17107,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-androgenetic-alopecia"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-telogen-effluvium",
@@ -17126,7 +17355,12 @@
       ],
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      }
+      },
+      "category": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#biomedical-concept-acne-vulgaris"
+        }
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#procedure-acne-mesotherapy",

@@ -33,6 +33,17 @@ export const csvCell = (value) => {
 };
 export const sha256 = (value) =>
   createHash("sha256").update(value).digest("hex");
+export const evidenceAssessmentId = (release, evidenceId) => {
+  const source = new URL(evidenceId);
+  if (
+    !evidenceId.startsWith(`${release.canonicalUrl}#evidence-`) ||
+    !source.hash
+  )
+    throw new Error(
+      `Evidence assessment requires a canonical source IRI: ${evidenceId}`,
+    );
+  return `${release.canonicalUrl}provenance.jsonld#assessment-${source.hash.slice(1)}`;
+};
 export const deriveEvidenceRegistry = (release, registry) => {
   const currentId = `${release.canonicalUrl}#evidence-zenodo-current-release`;
   return {
@@ -41,9 +52,16 @@ export const deriveEvidenceRegistry = (release, registry) => {
       if (source.id !== currentId) return { ...source };
       const { releaseBinding, verifiedRelease, ...entry } = source;
       if (releaseBinding !== "zenodo-version" || "url" in source)
-        throw new Error("Current release evidence URL must be derived from release metadata");
-      if (entry.tier !== "P" || entry.role !== "first-party-release-preservation")
-        throw new Error("Release preservation must not claim independent corroboration");
+        throw new Error(
+          "Current release evidence URL must be derived from release metadata",
+        );
+      if (
+        entry.tier !== "P" ||
+        entry.role !== "first-party-release-preservation"
+      )
+        throw new Error(
+          "Release preservation must not claim independent corroboration",
+        );
       entry.url = `https://doi.org/${release.dataset.zenodo.versionDoi}`;
       if (verifiedRelease !== release.release) {
         delete entry.verifiedAt;
@@ -75,7 +93,8 @@ export const deriveEvidenceSnapshot = (release, registry) => {
       url: entry.url,
       status: entry.liveStatus,
       verifiedAt: entry.verifiedAt,
-      ...(entry.role ? { role: entry.role } : {}),
+      role: entry.role,
+      assessmentId: evidenceAssessmentId(release, entry.id),
       expectedMarkers: entry.expectedMarkers ?? [],
     })),
   };
@@ -120,16 +139,12 @@ export async function loadProjectionContext({ root = process.cwd() } = {}) {
   const evidenceSnapshot = deriveEvidenceSnapshot(release, evidenceRegistry);
 
   const { byId, sourceNodesForUrl } = indexCanonicalGraph(graph);
-  const evidenceById = new Map(
-    evidenceEntries.map((item) => [item.id, item]),
-  );
+  const evidenceById = new Map(evidenceEntries.map((item) => [item.id, item]));
   const evidenceByUrl = new Map(
     evidenceEntries.map((item) => [item.url, item.id]),
   );
   const tierAEvidenceIds = new Set(
-    evidenceEntries
-      .filter((item) => item.tier === "A")
-      .map((item) => item.id),
+    evidenceEntries.filter((item) => item.tier === "A").map((item) => item.id),
   );
   const refsFromNode = (node) => {
     if (!node || typeof node !== "object") return [];

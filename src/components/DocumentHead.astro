@@ -110,7 +110,7 @@ const machineLinks: DiscoveryLink[] = HEAD_RESOURCES.map((resource) => {
   return {
     href: `${canonical}${resource.path}`,
     rel: resource.headRel,
-    type: resource.mediaType,
+    type: resource.contentType,
     title:
       'headTitle' in resource && typeof resource.headTitle === 'string'
         ? resource.headTitle

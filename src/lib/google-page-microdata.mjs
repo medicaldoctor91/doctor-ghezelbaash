@@ -24,8 +24,8 @@ export function deriveGooglePageNode(graphDocument, headProfile, pageId) {
 /**
  * Builds the deliberately small DOM-bound Microdata view of the canonical
  * Google JSON-LD page node. The JSON-LD projection remains authoritative and
- * may preserve the canonical IndividualPhysician provider type; this DOM view
- * deliberately emits only Person to bind the ProfilePage to visible identity.
+ * emits exactly Person for the physician, as does this DOM view. The richer
+ * IndividualPhysician type belongs only to the canonical machine graph.
  */
 export function deriveGooglePageMicrodata(graphDocument, pageId) {
   const nodes = Array.isArray(graphDocument)
@@ -55,17 +55,10 @@ export function deriveGooglePageMicrodata(graphDocument, pageId) {
       `Google page projection is missing mainEntity node ${mainEntityId}`,
     );
   const mainEntityTypes = asArray(mainEntity["@type"]);
-  const uniqueMainEntityTypes = new Set(mainEntityTypes);
-  const allowedMainEntityTypes = new Set(["Person", "IndividualPhysician"]);
-  if (
-    !uniqueMainEntityTypes.has("Person") ||
-    uniqueMainEntityTypes.size !== mainEntityTypes.length ||
-    [...uniqueMainEntityTypes].some((type) => !allowedMainEntityTypes.has(type))
-  ) {
+  if (mainEntityTypes.length !== 1 || mainEntityTypes[0] !== "Person")
     throw new Error(
-      `Google ProfilePage mainEntity must include Person and may additionally include IndividualPhysician, received ${mainEntityTypes.join(", ") || "none"}`,
+      `Google ProfilePage mainEntity must be exactly Person, received ${mainEntityTypes.join(", ") || "none"}`,
     );
-  }
   const mainEntityProperties = [
     "mainEntity",
     "author",

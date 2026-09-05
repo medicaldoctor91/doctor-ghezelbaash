@@ -122,8 +122,8 @@ test("tabular descriptors expose the physical schema, primary key and real Crois
   assert.deepEqual(schema.fields.map((field) => field.name), ENTITY_FACT_COLUMNS);
   assert.deepEqual(schema.primaryKey, ["row_id"]);
   assert.ok(schema.fields.every((field) => field.type === "string"));
-  const recordSet = entityFactsRecordSet(release.canonicalUrl);
+  const recordSet = entityFactsRecordSet(release.canonicalUrl, `${release.canonicalUrl}entity-facts.csv#download`);
   assert.equal(recordSet.key[0]["@id"], `${recordSet["@id"]}/row_id`);
   assert.deepEqual(recordSet.field.map((field) => field.source.extract.column), ENTITY_FACT_COLUMNS);
-  assert.ok(recordSet.field.every((field) => field.source.fileObject["@id"] === `${release.canonicalUrl}entity-facts.csv#croissant-file`));
+  assert.ok(recordSet.field.every((field) => field.source.fileObject["@id"] === `${release.canonicalUrl}entity-facts.csv#download`));
 });

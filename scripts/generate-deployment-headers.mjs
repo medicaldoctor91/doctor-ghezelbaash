@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import { assertDocumentContract, inspectHtml } from "./lib/html-contract.mjs";
 import { compileHeadersTemplate } from "./lib/headers-template.mjs";
-import { STATIC_ARTIFACTS, resourcesForTarget } from "../src/lib/resources.mjs";
+import { STATIC_ARTIFACTS, resourcesForTarget, quoteHttpParameter } from "../src/lib/resources.mjs";
 import { HERO_EARLY_HINT_HREF } from "../src/lib/hero-image-contract.mjs";
 
 const root = process.cwd();
@@ -121,7 +121,7 @@ const httpResourceLinks = resourcesForTarget("website")
   .map((resource) => {
     if (!resource.head?.rel || !resource.mediaType)
       throw new Error(`HTTP discovery metadata missing: ${resource.path}`);
-    return `<https://www.ghezelbaash.ir/${resource.path}>; rel="${resource.head.rel}"; type="${resource.mediaType}"`;
+    return `<https://www.ghezelbaash.ir/${resource.path}>; rel=${quoteHttpParameter(resource.head.rel)}; type=${quoteHttpParameter(resource.contentType)}`;
   })
   .join(", ");
 const headers = compileHeadersTemplate(headersTemplate, {
