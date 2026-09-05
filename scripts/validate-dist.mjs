@@ -345,6 +345,10 @@ if (
   )
 )
   fail("Maximum Content-Signal policy missing");
+const canonicalHeaders = headers.match(/^\/\r?\n((?:[ \t]+[^\r\n]*\r?\n)*)/m)?.[1] || "";
+const canonicalVary = canonicalHeaders.match(/^[ \t]+Vary:[ \t]*([^\r\n]*)/im)?.[1] || "";
+if (!canonicalVary.split(",").some((value) => value.trim().toLowerCase() === "accept-encoding"))
+  fail("Canonical response must explicitly vary by Accept-Encoding");
 if (
   !headers.includes("connect-src 'none'") ||
   headers.includes("connect-src 'self'")
