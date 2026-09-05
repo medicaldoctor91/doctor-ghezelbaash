@@ -19,6 +19,10 @@ const WIKIJOURNAL_PREPRINTS =
   "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints";
 const RESEARCH_SECTION =
   "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions";
+const CREDENTIAL_ISSUER =
+  "https://www.ghezelbaash.ir/#organization-iran-medical-council";
+const MEDICAL_CREDENTIAL =
+  "https://www.ghezelbaash.ir/#irimc-credential-167430";
 const CORE_HEAD_SERVICES = [
   "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment",
   "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler",
@@ -396,10 +400,26 @@ for (const [
     ),
     `Aesthetic work lost botulinum-toxin topic: ${id}`,
   );
-  assert.ok(
-    supportProfile.externalReferenceIds.includes(id),
-    `Aesthetic authored work must use its external canonical reference: ${id}`,
+  assert.equal(
+    supportProfile.idProfiles[id]?.authorityRole,
+    "physicianAuthoredWork",
+    `Aesthetic authored work lacks its documented authority role: ${id}`,
   );
+  const projectedWork = requireNode(inlineById, id, "Final aesthetic authored work");
+  for (const property of ["@type", "author", "sameAs", "url", "about", dateProperty])
+    assert.deepEqual(
+      projectedWork[property],
+      work[property],
+      `Projected aesthetic work changed canonical ${property}: ${id}`,
+    );
+  for (const property of preciseType === "LearningResource"
+    ? ["learningResourceType"]
+    : ["creativeWorkStatus", "isPartOf"])
+    assert.deepEqual(
+      projectedWork[property],
+      work[property],
+      `Projected aesthetic work lost its evidence-role boundary ${property}: ${id}`,
+    );
 }
 for (const [id] of aestheticWorks) {
   assert.ok(
@@ -423,11 +443,6 @@ const citedScholarlyWorks = [
     "10.3390/healthcare9091169",
   ],
 ];
-assertExact(
-  supportProfile.citedScholarlyWorkIds,
-  citedScholarlyWorks.map(([id]) => id),
-  "Inline scholarly citation allowlist drift",
-);
 const projectedResearchSection = requireNode(
   inlineById,
   RESEARCH_SECTION,
@@ -444,6 +459,11 @@ for (const [id, doi] of citedScholarlyWorks) {
   assert.ok(
     supportProfile.ids.includes(id),
     `Cited scholarly work is not selected: ${id}`,
+  );
+  assert.equal(
+    supportProfile.idProfiles[id]?.authorityRole,
+    "physicianAuthoredWork",
+    `Cited scholarly work lacks its documented authorship role: ${id}`,
   );
   assert.ok(
     refs(projectedResearchSection.citation).includes(id),
@@ -492,6 +512,10 @@ for (const [id] of aestheticWorks) {
     refs(researchSection.mentions).includes(id),
     `Research section lost authored-work mention: ${id}`,
   );
+  assert.ok(
+    refs(projectedResearchSection.mentions).includes(id),
+    `Projected research section lost canonical authored-work mention: ${id}`,
+  );
 }
 assert.ok(
   supportProfile.ids.includes(RESEARCH_SECTION),
@@ -516,12 +540,36 @@ assert.ok(
   "WikiJournal Preprints container is not projected into inline support JSON-LD",
 );
 
-assert.ok(
-  supportProfile.externalReferenceIds.includes(
-    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
-  ),
-  "External aesthetic-medicine interview must use its canonical URL reference",
+const interviewId = "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview";
+assert.equal(
+  supportProfile.idProfiles[interviewId]?.authorityRole,
+  "physicianCoverage",
+  "The interview must document physician coverage rather than authorship",
 );
+const projectedInterview = requireNode(inlineById, interviewId, "Final physician interview");
+for (const property of ["@type", "url", "about", "mainEntity", "datePublished"])
+  assert.deepEqual(
+    projectedInterview[property],
+    byId.get(interviewId)[property],
+    `Projected interview changed canonical ${property}`,
+  );
+assert.equal(projectedInterview.author, undefined, "Interview coverage must not invent physician authorship");
+assert.ok(
+  refs(projectedResearchSection.citation).includes(interviewId),
+  "Projected research section lost the interview's canonical citation",
+);
+assert.equal(
+  supportProfile.idProfiles[CREDENTIAL_ISSUER]?.authorityRole,
+  "credentialIssuer",
+  "Medical Council must preserve its credential-issuer role",
+);
+const projectedIssuer = requireNode(inlineById, CREDENTIAL_ISSUER, "Final credential issuer");
+for (const property of ["@type", "name", "url"])
+  assert.deepEqual(
+    projectedIssuer[property],
+    byId.get(CREDENTIAL_ISSUER)[property],
+    `Projected credential issuer changed canonical ${property}`,
+  );
 for (const [, wikidata] of aestheticWorks) {
   const qid = wikidata.split("/").pop();
   assert.ok(
@@ -758,9 +806,8 @@ for (const id of [
   ...CORE_CLINIC_AUTHORITY_SUBJECTS,
 ])
   assert.ok(
-    supportProfile.ids.includes(id) ||
-      headProfile.externalReferenceIds.includes(id),
-    `Authority source is neither selected nor an explicit external reference: ${id}`,
+    supportProfile.ids.includes(id) || headProfile.ids.includes(id),
+    `Authority source is absent from the inline canonical graph: ${id}`,
   );
 assertExact(
   physicianSpec.valueAllow?.["@type"],
@@ -830,6 +877,15 @@ const assertFinalProjection = ({ headDoc, supportDoc }) => {
     "Final physician",
   );
   const projectedClinic = requireNode(projectedById, CLINIC, "Final clinic");
+  assert.ok(
+    refs(projectedPhysician.memberOf).includes(CREDENTIAL_ISSUER),
+    "Final physician membership must reference the named canonical Medical Council",
+  );
+  assertExact(
+    refs(requireNode(projectedById, MEDICAL_CREDENTIAL, "Final medical credential").recognizedBy),
+    refs(byId.get(MEDICAL_CREDENTIAL).recognizedBy),
+    "Final credential lost its canonical recognizedBy relation",
+  );
   assertExact(
     types(projectedPhysician),
     ["Person"],
@@ -880,18 +936,14 @@ const assertFinalProjection = ({ headDoc, supportDoc }) => {
       [PHYSICIAN],
       `Final clinic physician relationship drift: ${property}`,
     );
-  const expectedAuthority = (ids) =>
-    ids.map((id) =>
-      headProfile.externalReferenceIds.includes(id) ? byId.get(id).url : id,
-    );
   assertExact(
     refs(projectedPhysician.subjectOf),
-    expectedAuthority(CORE_PERSON_AUTHORITY_SUBJECTS),
+    CORE_PERSON_AUTHORITY_SUBJECTS,
     "Final physician authority references drift",
   );
   assertExact(
     refs(projectedClinic.subjectOf),
-    expectedAuthority(CORE_CLINIC_AUTHORITY_SUBJECTS),
+    CORE_CLINIC_AUTHORITY_SUBJECTS,
     "Final clinic authority references drift",
   );
   const services = [...projectedById.values()].filter((node) =>

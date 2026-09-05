@@ -136,14 +136,35 @@
     "https://www.ghezelbaash.ir/#biomedical-concept-melasma",
     "https://www.ghezelbaash.ir/#biomedical-concept-rhinoplasty",
     "https://www.ghezelbaash.ir/#biomedical-concept-rhytidoplasty",
-    "https://www.ghezelbaash.ir/#biomedical-concept-registry"
-  ],
-  "citedScholarlyWorkIds": [
-    "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016",
-    "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021"
+    "https://www.ghezelbaash.ir/#biomedical-concept-registry",
+    "https://www.ghezelbaash.ir/#organization-iran-medical-council",
+    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
+    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
+    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
+    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
   ],
   "maxBytes": 85000,
   "idProfiles": {
+    "https://www.ghezelbaash.ir/#organization-iran-medical-council": {
+      "include": ["@id", "@type", "name", "url"],
+      "authorityRole": "credentialIssuer"
+    },
+    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview": {
+      "include": ["@id", "@type", "name", "url", "datePublished", "about", "mainEntity", "inLanguage"],
+      "authorityRole": "physicianCoverage"
+    },
+    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine": {
+      "include": ["@id", "@type", "name", "url", "sameAs", "author", "about", "inLanguage", "datePublished", "learningResourceType"],
+      "authorityRole": "physicianAuthoredWork"
+    },
+    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review": {
+      "include": ["@id", "@type", "name", "url", "sameAs", "author", "about", "inLanguage", "dateCreated", "creativeWorkStatus", "isPartOf"],
+      "authorityRole": "physicianAuthoredWork"
+    },
+    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin": {
+      "include": ["@id", "@type", "name", "url", "sameAs", "author", "about", "inLanguage", "datePublished", "learningResourceType"],
+      "authorityRole": "physicianAuthoredWork"
+    },
     "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016": {
       "include": [
         "@id",
@@ -154,7 +175,8 @@
         "identifier",
         "datePublished",
         "author"
-      ]
+      ],
+      "authorityRole": "physicianAuthoredWork"
     },
     "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021": {
       "include": [
@@ -166,7 +188,8 @@
         "identifier",
         "datePublished",
         "author"
-      ]
+      ],
+      "authorityRole": "physicianAuthoredWork"
     },
     "https://www.ghezelbaash.ir/#saeed-ghezelbash-research-education-and-clinical-decisions": {
       "include": [
@@ -464,11 +487,5 @@
     "CollegeOrUniversity": {
       "include": ["@id", "@type", "name", "sameAs"]
     }
-  },
-  "externalReferenceIds": [
-    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
-    "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
-    "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review",
-    "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin"
-  ]
+  }
 }

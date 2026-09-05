@@ -390,10 +390,6 @@
       ]
     }
   },
-  "externalReferenceIds": [
-    "https://www.ghezelbaash.ir/#organization-iran-medical-council",
-    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview"
-  ],
   "typeProfiles": {
     "PostalAddress": {
       "include": [

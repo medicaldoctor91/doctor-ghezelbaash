@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { nodeTypes, refIds } from "./lib/projection-context.mjs";
+import { assertHomepageAuthorityRoles } from "./lib/projections/graph-projections.mjs";
 
 const fail = (message) => {
   throw new Error(message);
@@ -58,11 +59,12 @@ const assertSchemaContext = (document, label) => {
 const byId = (document) =>
   new Map((document?.["@graph"] || []).map((node) => [node?.["@id"], node]));
 
-const [release, canonical, head, support, supportProfile] = await Promise.all([
+const [release, canonical, head, support, headProfile, supportProfile] = await Promise.all([
   readFile("src/data/release.json", "utf8").then(JSON.parse),
   readFile("src/data/semantic/knowledge-graph.jsonld", "utf8").then(JSON.parse),
   readFile(".generated/semantic/head-graph.json", "utf8").then(JSON.parse),
   readFile(".generated/semantic/support-graph.json", "utf8").then(JSON.parse),
+  readFile("src/data/semantic/head-profile.json", "utf8").then(JSON.parse),
   readFile("src/data/semantic/support-profile.json", "utf8").then(JSON.parse),
 ]);
 
@@ -136,22 +138,13 @@ for (const id of canonicalImageIds) {
     image.contentUrl !== canonicalById.get(id)?.contentUrl)
     fail(`Google-facing physician image is missing or has a different contentUrl: ${id}`);
 }
-const citedWorkIds = new Set(supportProfile.citedScholarlyWorkIds);
-const scholarlyWorks = [...supportById.values()].filter((node) => nodeTypes(node).includes("ScholarlyArticle"));
-if (scholarlyWorks.length !== citedWorkIds.size || scholarlyWorks.some((work) => !citedWorkIds.has(work["@id"])))
-  fail("Inline scholarly works differ from the explicit citation allowlist");
-for (const id of citedWorkIds) {
-  const work = supportById.get(id), original = canonicalById.get(id);
-  if (!work || !exactTypes(work, ["ScholarlyArticle"]) ||
-    !includesRef(work.author, physicianId) || work.url !== original?.url ||
-    !work.url.startsWith("https://doi.org/") ||
-    ![...supportById.values()].some((section) =>
-      nodeTypes(section).includes("WebPageElement") && includesRef(section.citation, id)))
-    fail(`Inline scholarly work lost its DOI, physician author or citing section: ${id}`);
-  for (const property of ["image", "mainEntityOfPage", "mainEntity", "publisher", "dateModified"])
-    if (Object.hasOwn(work, property))
-      fail(`Minimal cited scholarly work must not project ${property}: ${id}`);
-}
+assertHomepageAuthorityRoles({
+  nodes: [...headById.values(), ...supportById.values()],
+  canonicalNodes: canonical["@graph"],
+  profiles: [headProfile, supportProfile],
+  physicianId,
+  canonicalOrigin: new URL(release.canonicalUrl).origin,
+});
 
 const requiredPersonIdentifiers = [
   "https://www.ghezelbaash.ir/#identifier-person-google-kgid",
