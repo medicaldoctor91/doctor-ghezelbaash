@@ -30,6 +30,7 @@ const descriptions = {
 
 export function entityFactsTableSchema() {
   return {
+    $schema: "https://datapackage.org/profiles/2.0/tableschema.json",
     fields: ENTITY_FACT_COLUMNS.map((name) => ({
       name,
       type: "string",
@@ -44,6 +45,17 @@ export function entityFactsTableSchema() {
     })),
     primaryKey: ["row_id"],
     missingValues: [""],
+  };
+}
+
+export function entityFactsTableDialect() {
+  return {
+    $schema: "https://datapackage.org/profiles/2.0/tabledialect.json",
+    delimiter: ",",
+    quoteChar: "\"",
+    doubleQuote: true,
+    headerRows: [1],
+    lineTerminator: "\n",
   };
 }
 
@@ -78,9 +90,11 @@ export function canonicalJson(value) {
   return JSON.stringify(value);
 }
 
-export const serializeEntityFacts = (records) =>
-  [ENTITY_FACT_COLUMNS, ...records.map((record) => ENTITY_FACT_COLUMNS.map((key) => record[key]))]
-    .map((row) => row.map(csvCell).join(",")).join("\n") + "\n";
+export const serializeEntityFacts = (records) => {
+  const { delimiter, lineTerminator } = entityFactsTableDialect();
+  return [ENTITY_FACT_COLUMNS, ...records.map((record) => ENTITY_FACT_COLUMNS.map((key) => record[key]))]
+    .map((row) => row.map(csvCell).join(delimiter)).join(lineTerminator) + lineTerminator;
+};
 
 export async function buildEntityFacts({ graph, release, byId, nodeName }) {
   const sourceUrl = `${release.canonicalUrl}graph.jsonld`;
@@ -133,7 +147,7 @@ export async function buildEntityFacts({ graph, release, byId, nodeName }) {
       const embeddedGraph = structuredClone(expandedById.get(id));
       embeddedGraph["@id"] = node["@id"];
       identity = await jsonld.canonize([embeddedGraph], {
-        algorithm: "URDNA2015", format: "application/n-quads",
+        algorithm: "RDFC-1.0", rejectURDNA2015: true, format: "application/n-quads",
       });
     } else if (quad.object.termType === "NamedNode") {
       valueKind = "iri";

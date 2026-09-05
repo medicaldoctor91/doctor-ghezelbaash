@@ -222,6 +222,35 @@ const bindLlmsTemplate = (template, bindings) => {
   return output;
 };
 
+// llms.txt is an on-demand file guide; full content remains in the other projections.
+export function renderLlmsGuide(template, { release, evidenceRegistry }) {
+  const tiers = evidenceRegistry.tiers;
+  if (!tiers || typeof tiers !== "object" || Array.isArray(tiers))
+    throw new Error("llms.txt: evidence tiers are required");
+  for (const tier of ["A", "B", "C", "P"])
+    if (typeof tiers[tier] !== "string" || !tiers[tier])
+      throw new Error(
+        `llms.txt: evidence tier ${tier} definition missing from evidence registry`,
+      );
+  const evidenceTierLine = `- Evidence tiers: ${Object.keys(tiers)
+    .sort()
+    .map((tier) => `Tier ${tier} = ${tiers[tier]}`)
+    .join("; ")}.`;
+  return bindLlmsTemplate(template, {
+    "{{RELEASE}}": release.release,
+    "{{OFFICIAL_ALIASES}}": release.primaryEntity.officialAliases.join(" | "),
+    "{{RECONCILIATION_ALIASES}}":
+      release.primaryEntity.reconciliationAliases.join(" | "),
+    "{{RETRIEVAL_VARIANTS}}":
+      release.primaryEntity.retrievalVariants.join(" | "),
+    "{{ZENODO_CONCEPT_DOI_URL}}": `https://doi.org/${release.dataset.zenodo.conceptDoi}`,
+    "{{ZENODO_VERSION_DOI_URL}}": `https://doi.org/${release.dataset.zenodo.versionDoi}`,
+    "{{ZENODO_RECORD_ID}}": String(release.dataset.zenodo.recordId),
+    "{{HUGGING_FACE_DATASET}}": release.dataset.huggingFace.dataset,
+    "{{EVIDENCE_TIER_LINE}}": evidenceTierLine,
+  });
+}
+
 export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
   const {
     data,
@@ -669,34 +698,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     path.join(data, "templates/llms.template.txt"),
     "utf8",
   );
-  const tiers = evidenceRegistry.tiers;
-  if (!tiers || typeof tiers !== "object" || Array.isArray(tiers))
-    throw new Error("llms.txt: evidence tiers are required");
-  for (const tier of ["A", "B", "C"])
-    if (typeof tiers[tier] !== "string" || !tiers[tier])
-      throw new Error(
-        `llms.txt: evidence tier ${tier} definition missing from evidence registry`,
-      );
-  const evidenceTierLine = `- Evidence tiers: ${Object.keys(tiers)
-    .sort()
-    .map((tier) => `Tier ${tier} = ${tiers[tier]}`)
-    .join("; ")}.`;
-  const llms = bindLlmsTemplate(template, {
-    "{{RELEASE}}": release.release,
-    "{{REVIEW_DATE}}": release.dateModified,
-    "{{OFFICIAL_ALIASES}}": release.primaryEntity.officialAliases.join(" | "),
-    "{{RECONCILIATION_ALIASES}}":
-      release.primaryEntity.reconciliationAliases.join(" | "),
-    "{{RETRIEVAL_VARIANTS}}":
-      release.primaryEntity.retrievalVariants.join(" | "),
-    "{{ZENODO_CONCEPT_DOI}}": release.dataset.zenodo.conceptDoi,
-    "{{ZENODO_CONCEPT_DOI_URL}}": `https://doi.org/${release.dataset.zenodo.conceptDoi}`,
-    "{{ZENODO_VERSION_DOI}}": release.dataset.zenodo.versionDoi,
-    "{{ZENODO_VERSION_DOI_URL}}": `https://doi.org/${release.dataset.zenodo.versionDoi}`,
-    "{{ZENODO_RECORD_ID}}": String(release.dataset.zenodo.recordId),
-    "{{HUGGING_FACE_DATASET}}": release.dataset.huggingFace.dataset,
-    "{{EVIDENCE_TIER_LINE}}": evidenceTierLine,
-  });
+  const llms = renderLlmsGuide(template, { release, evidenceRegistry });
   await writeFile(path.join(projections, "llms.txt"), llms);
 
   return {

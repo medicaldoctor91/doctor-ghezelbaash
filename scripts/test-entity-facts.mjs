@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import jsonld from "jsonld";
 import {
   buildEntityFacts, ENTITY_FACT_COLUMNS, entityFactsRecordSet,
-  entityFactsTableSchema, serializeEntityFacts,
+  entityFactsTableSchema, entityFactsTableDialect, serializeEntityFacts,
 } from "./lib/entity-facts.mjs";
 
 const XSD = "http://www.w3.org/2001/XMLSchema#";
@@ -33,7 +33,7 @@ function reconstruct(records, sourceContext) {
     })),
   };
 }
-const canon = (value) => jsonld.canonize(value, { algorithm: "URDNA2015", format: "application/n-quads" });
+const canon = (value) => jsonld.canonize(value, { algorithm: "RDFC-1.0", rejectURDNA2015: true, format: "application/n-quads" });
 
 test("JSON-LD context and RDF terms determine the value kind and datatype", async () => {
   const graph = {
@@ -119,6 +119,7 @@ test("canonical graph round-trips through all CSV facts, including embedded stru
 
 test("tabular descriptors expose the physical schema, primary key and real Croissant CSV extraction", () => {
   const schema = entityFactsTableSchema();
+  assert.equal(schema.$schema, "https://datapackage.org/profiles/2.0/tableschema.json");
   assert.deepEqual(schema.fields.map((field) => field.name), ENTITY_FACT_COLUMNS);
   assert.deepEqual(schema.primaryKey, ["row_id"]);
   assert.ok(schema.fields.every((field) => field.type === "string"));
@@ -126,4 +127,24 @@ test("tabular descriptors expose the physical schema, primary key and real Crois
   assert.equal(recordSet.key[0]["@id"], `${recordSet["@id"]}/row_id`);
   assert.deepEqual(recordSet.field.map((field) => field.source.extract.column), ENTITY_FACT_COLUMNS);
   assert.ok(recordSet.field.every((field) => field.source.fileObject["@id"] === `${release.canonicalUrl}entity-facts.csv#download`));
+});
+
+test("declared CSV dialect round-trips lexical values and quoted line breaks without inference", () => {
+  const dialect = entityFactsTableDialect();
+  assert.equal(dialect.$schema, "https://datapackage.org/profiles/2.0/tabledialect.json");
+  assert.deepEqual(dialect.headerRows, [1]);
+  const record = Object.fromEntries(ENTITY_FACT_COLUMNS.map((name) => [name, ""]));
+  Object.assign(record, { name: "دکتر، نمونه", value: 'A,"B"\nC', row_id: "0".repeat(64) });
+  const csv = serializeEntityFacts([record]);
+  const python = spawnSync("python", ["-c", `
+import csv,io,json,sys
+payload=json.load(sys.stdin);d=payload['dialect'];stream=io.StringIO(payload['csv'],newline='')
+reader=csv.reader(stream,delimiter=d['delimiter'],quotechar=d['quoteChar'],doublequote=d['doubleQuote'])
+rows=list(reader);assert d['headerRows']==[1]
+output=io.StringIO(newline='');writer=csv.writer(output,delimiter=d['delimiter'],quotechar=d['quoteChar'],doublequote=d['doubleQuote'],lineterminator=d['lineTerminator'])
+writer.writerows(rows);assert output.getvalue()==payload['csv']
+print(json.dumps(dict(zip(rows[0],rows[1])),ensure_ascii=False))
+`], { input: JSON.stringify({ dialect, csv }), encoding: "utf8" });
+  assert.equal(python.status, 0, python.stderr);
+  assert.deepEqual(JSON.parse(python.stdout), record);
 });

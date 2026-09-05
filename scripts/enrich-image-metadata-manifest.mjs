@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { loadRasterDimensions } from "./lib/media-inventory.mjs";
 import {
   cp,
   mkdtemp,
@@ -13,7 +14,6 @@ import {
 
 const root = process.cwd();
 const mediaRoot = path.join(root, "public/media");
-const inventoryPath = path.join(root, "src/data/media-dimensions.tsv");
 const preflightOnly = process.argv.includes("--preflight-only");
 const rasterPattern = /\.(?:avif|webp|jpe?g|png)$/i;
 const textPattern =
@@ -52,37 +52,12 @@ async function walk(directory, { bounded = false } = {}) {
   return output;
 }
 
-const inventoryRows = (await readFile(inventoryPath, "utf8"))
-  .trim()
-  .split(/\r?\n/)
-  .filter(Boolean)
-  .map((line, index) => {
-    const [logical, widthRaw, heightRaw, ...rest] = line.split("|");
-    const width = Number(widthRaw),
-      height = Number(heightRaw);
-    if (
-      rest.length ||
-      !logical ||
-      !Number.isInteger(width) ||
-      width <= 0 ||
-      !Number.isInteger(height) ||
-      height <= 0
-    )
-      throw new Error(`Invalid media manifest row ${index + 1}: ${line}`);
-    if (!logical.startsWith("public/media/") || !rasterPattern.test(logical))
-      throw new Error(
-        `Invalid logical raster path in media manifest: ${logical}`,
-      );
-    return { logical, width, height };
-  });
+const inventoryRows = [...await loadRasterDimensions(root)]
+  .map(([logical, dimensions]) => ({ logical, ...dimensions }));
 const manifestPaths = inventoryRows.map((row) => row.logical);
 const manifestSet = new Set(manifestPaths);
 if (manifestSet.size !== manifestPaths.length)
   throw new Error("Duplicate logical raster path in media manifest");
-if (manifestSet.size !== 49)
-  throw new Error(
-    `Canonical media manifest must contain exactly 49 raster assets; found ${manifestSet.size}`,
-  );
 
 async function inspectPhysicalInventory(stage) {
   const rasters = (await walk(mediaRoot))

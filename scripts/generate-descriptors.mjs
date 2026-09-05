@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile, readdir, mkdir } from "node:fs/promises";
 import { generatedWorkspace } from "./generated-workspace.mjs";
 import { MACHINE_RESOURCES } from "../src/lib/resources.mjs";
-import { entityFactsTableSchema, entityFactsRecordSet } from "./lib/entity-facts.mjs";
+import { entityFactsTableSchema, entityFactsTableDialect, entityFactsRecordSet } from "./lib/entity-facts.mjs";
 import {
   exactLanguageLiteral,
   indexCanonicalGraph,
@@ -277,6 +277,7 @@ const resourceName = (rel) => {
 };
 const dataPackageResources = resourcesForDescriptor("data-package")
   .map((m) => ({
+    $schema: "https://datapackage.org/profiles/2.0/dataresource.json",
     id: m.distributionIri,
     name: resourceName(m.rel),
     path: m.rel,
@@ -291,7 +292,7 @@ const dataPackageResources = resourcesForDescriptor("data-package")
       type: "table",
       format: "csv",
       encoding: "utf-8",
-      dialect: { delimiter: ",", quoteChar: "\"", doubleQuote: true, header: true },
+      dialect: entityFactsTableDialect(),
       schema: entityFactsTableSchema(),
     } : {}),
   }))
@@ -331,7 +332,11 @@ const dataPackage = {
     {
       title: personName,
       path: release.primaryEntity.id,
-      role: "author, creator, publisher, owner",
+      roles: [
+        ["author", "author"], ["creator", "creator"],
+        ["publisher", "publisher"], ["copyrightHolder", "rightsHolder"],
+      ].filter(([property]) => arr(dataset[property]).some((value) => id(value) === release.primaryEntity.id))
+        .map(([, role]) => role),
     },
   ],
   resources: dataPackageResources,
