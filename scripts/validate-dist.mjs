@@ -1,3 +1,4 @@
+import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
@@ -12,7 +13,7 @@ import {
   exactLanguageLiteral,
   indexCanonicalGraph,
 } from "../src/lib/semantic-projection.mjs";
-import { STATIC_ARTIFACTS } from "../src/lib/resources.mjs";
+import { STATIC_ARTIFACTS, machineResourceForPath } from "../src/lib/resources.mjs";
 import { deriveSiteData } from "../src/lib/site-data.mjs";
 import {
   assertRenderedClinicReputation,
@@ -252,7 +253,9 @@ if (
 const csvResource = dp.resources.find((resource) => resource.path === "entity-facts.csv");
 if (JSON.stringify(csvResource?.schema) !== JSON.stringify(entityFactsTableSchema()))
   fail("Data Package entity-facts schema drift");
-if (JSON.stringify(cr.recordSet) !== JSON.stringify([entityFactsRecordSet(release.canonicalUrl)]))
+const csvDistributionId = machineResourceForPath("entity-facts.csv").distributionIri;
+if (csvResource?.id !== csvDistributionId ||
+    JSON.stringify(cr.recordSet) !== JSON.stringify([entityFactsRecordSet(release.canonicalUrl, csvDistributionId)]))
   fail("Croissant entity-facts record extraction drift");
 const entityFacts = await buildEntityFacts(await loadProjectionContext({ root }));
 if (await readFile(path.join(dist, "entity-facts.csv"), "utf8") !== serializeEntityFacts(entityFacts))
@@ -392,6 +395,15 @@ if (
   fail(`Inline script contract drift ld=${ld.length} exec=${exec.length}`);
 const core = JSON.parse(coreScript.body),
   support = JSON.parse(supportScript.body);
+const finalInlineProjection = deriveGraphProjections({
+  graph: await readJson(path.join(data, "semantic/knowledge-graph.jsonld")),
+  release,
+  headProfile,
+  supportProfile,
+});
+if (JSON.stringify(core) !== JSON.stringify(finalInlineProjection.headDoc) ||
+    JSON.stringify(support) !== JSON.stringify(finalInlineProjection.supportDoc))
+  fail("Rendered JSON-LD differs from the final source projection compiler");
 if (
   Buffer.byteLength(coreScript.body) > headProfile.maxBytes ||
   Buffer.byteLength(supportScript.body) > supportProfile.maxBytes

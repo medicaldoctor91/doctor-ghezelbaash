@@ -486,10 +486,76 @@ assert(
   Buffer.byteLength(delivery.criticalCss) <= invariants.maxCriticalCssBytes,
   "Critical CSS exceeds release budget",
 );
-assert(
-  Buffer.byteLength(delivery.externalCss) >= invariants.minExternalCssBytes,
-  "Deferred CSS fell below release floor",
-);
+const functionalCssRequirements = [
+  {
+    selector: "table",
+    purpose: "Wide tables must remain horizontally accessible on mobile",
+    accepts: (rule) =>
+      isMaxWidthRule(rule, 720) &&
+      /^(auto|scroll)$/.test(normalized(rule.declarations["overflow-x"] || "")),
+  },
+  {
+    selector: ":focus-visible",
+    purpose: "Keyboard focus must retain an explicit visible outline",
+    accepts: (rule) =>
+      !rule.conditions.length &&
+      /\b(solid|dashed|dotted|double|auto)\b/.test(
+        rule.declarations.outline || "",
+      ),
+  },
+  {
+    selector: ".render-chunk.is-target-chunk",
+    purpose: "Deep links must reveal the selected render chunk",
+    accepts: (rule) =>
+      normalized(rule.declarations["content-visibility"] || "") === "visible" &&
+      normalized(rule.declarations["contain-intrinsic-size"] || "") === "none",
+  },
+  {
+    selector: ".guide-search__results",
+    purpose: "Search results must scroll within a bounded result region",
+    accepts: (rule) =>
+      !rule.conditions.length &&
+      /^(auto|scroll)$/.test(normalized(rule.declarations.overflow || "")) &&
+      Boolean(rule.declarations["max-height"]) &&
+      normalized(rule.declarations["max-height"]) !== "none",
+  },
+  {
+    selector: ".guide-search",
+    purpose: "The search dialog must not obscure printed medical content",
+    accepts: (rule) =>
+      rule.conditions.some((condition) =>
+        /^@media\s+print\b/i.test(condition),
+      ) &&
+      normalized(rule.declarations.display || "").replace(/!important$/, "") ===
+        "none",
+  },
+];
+const validateFunctionalCssCoverage = (rules) => {
+  for (const requirement of functionalCssRequirements)
+    assert(
+      selectorRules(rules, requirement.selector).some(requirement.accepts),
+      `CSS functional coverage: ${requirement.purpose}`,
+    );
+};
+validateFunctionalCssCoverage(allRules);
+for (const requirement of functionalCssRequirements) {
+  let rejected = false;
+  try {
+    validateFunctionalCssCoverage(
+      allRules.filter(
+        (rule) =>
+          compactCssValue(rule.selector) !==
+          compactCssValue(requirement.selector),
+      ),
+    );
+  } catch (error) {
+    rejected = String(error.message).includes(requirement.purpose);
+  }
+  assert(
+    rejected,
+    `Missing CSS behavior was not rejected: ${requirement.purpose}`,
+  );
+}
 const deferredBytes = Buffer.byteLength(delivery.externalCss);
 const deferredBrotliBytes = brotliCompressSync(
   Buffer.from(delivery.externalCss),
@@ -517,6 +583,8 @@ console.log(
       deferredBrotliBytes,
       deferredRawBudget: 69000,
       deferredBrotliBudget: 13900,
+      functionalCssCoverageChecks: functionalCssRequirements.length,
+      functionalCssOmissionMutationsRejected: functionalCssRequirements.length,
       backdropFilterCount,
       imageFilterCount,
       crossBoundaryDuplicateDeclarations: 0,

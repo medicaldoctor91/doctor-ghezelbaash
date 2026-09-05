@@ -23,7 +23,8 @@
         "167430",
         "دکترای حرفه‌ای پزشکی",
         "کرمانشاه"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-wikidata-doctor",
@@ -42,7 +43,8 @@
       "expectedMarkers": [
         "Saeed Ghezelbash",
         "Q140287622"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-orcid",
@@ -56,7 +58,8 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "0009-0001-9346-8475"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-ncbi-bibliography",
@@ -71,7 +74,8 @@
       "expectedMarkers": [
         "Saeed Ghezelbash's Bibliography",
         "Ghezelbash MS"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-openalex-author",
@@ -84,7 +88,8 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "A5064828898"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
@@ -97,7 +102,8 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "3786699"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
@@ -115,7 +121,8 @@
       "expectedMarkers": [
         "ChIJBT0YDOTt-j8RD-7mAPy6Zas",
         "12350483144643112463"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
@@ -132,7 +139,8 @@
       "expectedMarkers": [
         "Q140288589",
         "/g/11r3rzdtb3"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership",
@@ -145,7 +153,8 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "19949827"
-      ]
+      ],
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-linkedin",
@@ -156,7 +165,8 @@
       ],
       "url": "https://www.linkedin.com/in/saeed-ghezelbash-93310a96",
       "liveStatus": "declared-in-canonical-graph",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
@@ -167,7 +177,8 @@
       ],
       "url": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
       "liveStatus": "declared-in-canonical-graph",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-openstreetmap-clinic",
@@ -177,7 +188,8 @@
       ],
       "url": "https://www.openstreetmap.org/node/13530287096",
       "liveStatus": "known-external-conflict-on-postal-code-owner-truth-prevails",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "identity-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-linktr-ee-doctor-ghezelbaash",
@@ -192,6 +204,10 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "Doctor.ghezelbaash"
+      ],
+      "role": "identity-reference",
+      "subjectIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       ]
     },
     {
@@ -206,6 +222,10 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "doctor.ghezelbaash"
+      ],
+      "role": "identity-reference",
+      "subjectIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       ]
     },
     {
@@ -220,6 +240,10 @@
       "verifiedAt": "2026-08-07",
       "expectedMarkers": [
         "ghezelbaash"
+      ],
+      "role": "identity-reference",
+      "subjectIds": [
+        "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       ]
     },
     {
@@ -231,7 +255,8 @@
       ],
       "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/103000s5316s5319s5323s5326s5331lbl.pdf",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-medical-devices-aesthetic-cosmetic-devices-dermal-fillers-soft-tissu",
@@ -242,7 +267,8 @@
       ],
       "url": "https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/dermal-fillers-soft-tissue-fillers",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-consumers-consumer-updates-dermal-filler-dos-and-donts-wrinkles-lips",
@@ -253,7 +279,8 @@
       ],
       "url": "https://www.fda.gov/consumers/consumer-updates/dermal-filler-dos-and-donts-wrinkles-lips-and-more",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-41988336",
@@ -264,7 +291,8 @@
       ],
       "url": "https://pubmed.ncbi.nlm.nih.gov/41988336/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-plasticsurgery-org-cosmetic-procedures-thread-lift-safety",
@@ -275,7 +303,8 @@
       ],
       "url": "https://www.plasticsurgery.org/cosmetic-procedures/thread-lift/safety",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-a-z-melasma-treatment",
@@ -286,7 +315,8 @@
       ],
       "url": "https://www.aad.org/public/diseases/a-z/melasma-treatment",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-rosacea-treatment-diagnosis-treat",
@@ -297,7 +327,8 @@
       ],
       "url": "https://www.aad.org/public/diseases/rosacea/treatment/diagnosis-treat",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-rosacea-treatment-lasers-lights",
@@ -308,7 +339,8 @@
       ],
       "url": "https://www.aad.org/public/diseases/rosacea/treatment/lasers-lights",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-acne-derm-treat-scars-treatment",
@@ -319,7 +351,8 @@
       ],
       "url": "https://www.aad.org/public/diseases/acne/derm-treat/scars/treatment",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-36315903",
@@ -330,7 +363,8 @@
       ],
       "url": "https://pubmed.ncbi.nlm.nih.gov/36315903/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-30856634",
@@ -341,7 +375,8 @@
       ],
       "url": "https://pubmed.ncbi.nlm.nih.gov/30856634/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-cosmetic-scars-stretch-marks-microneedling-fade-scars",
@@ -352,7 +387,8 @@
       ],
       "url": "https://www.aad.org/public/cosmetic/scars-stretch-marks/microneedling-fade-scars",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-medical-devices-recently-approved-devices-sculptra-p030050s039",
@@ -363,7 +399,8 @@
       ],
       "url": "https://www.fda.gov/medical-devices/recently-approved-devices/sculptra-p030050s039",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-40118148",
@@ -374,7 +411,8 @@
       ],
       "url": "https://pubmed.ncbi.nlm.nih.gov/40118148/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-hair-loss-causes-18-causes",
@@ -385,7 +423,8 @@
       ],
       "url": "https://www.aad.org/public/diseases/hair-loss/causes/18-causes",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-hair-loss-types-ccca",
@@ -396,7 +435,8 @@
       ],
       "url": "https://www.aad.org/public/diseases/hair-loss/types/ccca",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-diseases-hair-loss-treatment-diagnosis-treat",
@@ -407,7 +447,8 @@
       ],
       "url": "https://www.aad.org/public/diseases/hair-loss/treatment/diagnosis-treat",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-38284294",
@@ -418,7 +459,8 @@
       ],
       "url": "https://pubmed.ncbi.nlm.nih.gov/38284294/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-plasticsurgery-org-cosmetic-procedures-chin-surgery",
@@ -429,7 +471,8 @@
       ],
       "url": "https://www.plasticsurgery.org/cosmetic-procedures/chin-surgery",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-accessdata-fda-gov-drugsatfda-docs-label-2020-206333s002s003lbl-pdf",
@@ -440,7 +483,8 @@
       ],
       "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2020/206333s002s003lbl.pdf",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-drugs-buying-using-medicine-safely-using-fat-dissolving-injections-a",
@@ -451,7 +495,8 @@
       ],
       "url": "https://www.fda.gov/drugs/buying-using-medicine-safely/using-fat-dissolving-injections-are-not-fda-approved-can-be-harmful",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-dailymed-nlm-nih-gov-dailymed-fda-fdadrugxsl-cfm-setid-33d066a9-34ff-4a1a-b38b-d",
@@ -462,7 +507,8 @@
       ],
       "url": "https://dailymed.nlm.nih.gov/dailymed/fda/fdaDrugXsl.cfm?setid=33d066a9-34ff-4a1a-b38b-d10983df3300",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-fda-gov-medical-devices-aesthetic-cosmetic-devices-fda-approved-dermal-fille",
@@ -473,7 +519,8 @@
       ],
       "url": "https://www.fda.gov/medical-devices/aesthetic-cosmetic-devices/fda-approved-dermal-fillers",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-aad-org-public-cosmetic-wrinkles-botulinum-toxin-faqs",
@@ -484,7 +531,8 @@
       ],
       "url": "https://www.aad.org/public/cosmetic/wrinkles/botulinum-toxin-faqs",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-41517528",
@@ -495,7 +543,8 @@
       ],
       "url": "https://pubmed.ncbi.nlm.nih.gov/41517528/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-34840662",
@@ -506,7 +555,8 @@
       ],
       "url": "https://pubmed.ncbi.nlm.nih.gov/34840662/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pmc-ncbi-nlm-nih-gov-articles-pmc11702150",
@@ -517,7 +567,8 @@
       ],
       "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11702150/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-pubmed-ncbi-nlm-nih-gov-27280013",
@@ -528,7 +579,8 @@
       ],
       "url": "https://pubmed.ncbi.nlm.nih.gov/27280013/",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-www-mdpi-com-2227-9032-9-9-1169",
@@ -539,7 +591,8 @@
       ],
       "url": "https://www.mdpi.com/2227-9032/9/9/1169",
       "liveStatus": "source-cited-in-canonical-content",
-      "verifiedAt": "2026-08-07"
+      "verifiedAt": "2026-08-07",
+      "role": "medical-reference"
     },
     {
       "id": "https://www.ghezelbaash.ir/#evidence-zenodo-current-release",

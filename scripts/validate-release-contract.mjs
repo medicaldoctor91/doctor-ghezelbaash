@@ -66,7 +66,6 @@ const invariantKeys = [
   "maxCriticalCssBytes",
   "maxHtmlBytes",
   "maxRagPassageChars",
-  "minExternalCssBytes",
 ];
 exactKeys(invariants, invariantKeys, "release-invariants");
 const redirectsBytes = Buffer.from(

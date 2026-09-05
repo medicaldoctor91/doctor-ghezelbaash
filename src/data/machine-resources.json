@@ -9,13 +9,14 @@
     },
     {
       "path": "graph.jsonld",
+      "distributionIri": "https://www.ghezelbaash.ir/graph.jsonld#download",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "publishInHttpHeader": true,
       "source": "src/data/semantic/knowledge-graph.jsonld",
       "mediaType": "application/ld+json",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Canonical JSON-LD entity knowledge graph",
-      "descriptorCore": true,
       "head": {
         "rel": "describedby",
         "title": "Canonical full knowledge graph — JSON-LD"
@@ -24,12 +25,13 @@
     },
     {
       "path": "graph.ttl",
+      "distributionIri": "https://www.ghezelbaash.ir/graph.ttl#download",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/semantic/knowledge-graph.ttl",
       "mediaType": "text/turtle",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "RDF Turtle serialization isomorphic with JSON-LD",
-      "descriptorCore": true,
       "head": {
         "rel": "describedby",
         "title": "Canonical full knowledge graph — Turtle"
@@ -38,12 +40,13 @@
     },
     {
       "path": "shapes.ttl",
+      "distributionIri": "https://www.ghezelbaash.ir/shapes.ttl#distribution",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": "src/data/semantic/shapes.ttl",
       "mediaType": "text/turtle",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "SHACL entity constitution",
-      "descriptorCore": true,
       "head": {
         "rel": "describedby",
         "title": "SHACL entity constitution"
@@ -52,45 +55,49 @@
     },
     {
       "path": "entity-facts.csv",
+      "distributionIri": "https://www.ghezelbaash.ir/entity-facts.csv#download",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/projections/entity-facts.csv",
       "mediaType": "text/csv",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Flat fact projection of canonical graph",
-      "descriptorCore": true,
       "head": {"rel": "describedby"},
       "footerLabel": "CSV facts"
     },
     {
       "path": "answers.txt",
+      "distributionIri": "https://www.ghezelbaash.ir/answers.txt#download",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/projections/answers.txt",
       "mediaType": "text/plain",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Canonical direct-answer corpus",
-      "descriptorCore": true,
       "head": {"rel": "alternate"},
       "footerLabel": "Answer corpus"
     },
     {
       "path": "knowledge.xml",
+      "distributionIri": "https://www.ghezelbaash.ir/knowledge.xml#download",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/projections/knowledge.xml",
       "mediaType": "application/xml",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Hierarchical semantic knowledge projection",
-      "descriptorCore": true,
       "head": {"rel": "alternate"},
       "footerLabel": "XML"
     },
     {
       "path": "llms.txt",
+      "distributionIri": "https://www.ghezelbaash.ir/llms.txt#download",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/projections/llms.txt",
       "mediaType": "text/plain",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Machine discovery and retrieval guide",
-      "descriptorCore": true,
       "head": {
         "rel": "describedby",
         "title": "Machine-readable entity guide"
@@ -99,12 +106,13 @@
     },
     {
       "path": "index.md",
+      "distributionIri": "https://www.ghezelbaash.ir/index.md#download",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/projections/index.md",
       "mediaType": "text/markdown",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Full canonical content projection",
-      "descriptorCore": true,
       "head": {
         "rel": "alternate",
         "title": "Markdown projection"
@@ -112,12 +120,13 @@
     },
     {
       "path": "llms-full.txt",
+      "distributionIri": "https://www.ghezelbaash.ir/llms-full.txt#download",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/projections/llms-full.txt",
       "mediaType": "text/plain",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Passage-oriented full content projection",
-      "descriptorCore": true,
       "head": {
         "rel": "alternate",
         "title": "Full text projection"
@@ -125,13 +134,14 @@
     },
     {
       "path": "provenance.jsonld",
+      "distributionIri": "https://www.ghezelbaash.ir/provenance.jsonld#distribution",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "publishInHttpHeader": true,
       "source": ".generated/projections/provenance.jsonld",
       "mediaType": "application/ld+json",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Claim and passage provenance graph",
-      "descriptorCore": true,
       "head": {
         "rel": "describedby",
         "title": "Claim and passage provenance graph"
@@ -140,12 +150,13 @@
     },
     {
       "path": "evidence-snapshot.json",
+      "distributionIri": "https://www.ghezelbaash.ir/evidence-snapshot.json#distribution",
+      "descriptorRoles": ["dcat", "data-package", "croissant"],
       "source": ".generated/projections/evidence-snapshot.json",
       "mediaType": "application/json",
       "targets": ["website", "huggingFace", "zenodo"],
       "materialize": true,
       "descriptorTitle": "Evidence registry projection",
-      "descriptorCore": true,
       "head": {
         "rel": "describedby",
         "title": "Evidence registry projection"
@@ -182,6 +193,8 @@
     },
     {
       "path": "linkset.json",
+      "distributionIri": "https://www.ghezelbaash.ir/linkset.json#download",
+      "descriptorRoles": ["data-package", "croissant"],
       "publishInHttpHeader": true,
       "source": ".generated/projections/linkset.json",
       "mediaType": "application/linkset+json",
@@ -193,6 +206,7 @@
     },
     {
       "path": "datapackage.json",
+      "distributionIri": "https://www.ghezelbaash.ir/datapackage.json#download",
       "source": ".generated/projections/datapackage.json",
       "mediaType": "application/json",
       "targets": ["website", "huggingFace", "zenodo"],
@@ -202,6 +216,8 @@
     },
     {
       "path": "void.ttl",
+      "distributionIri": "https://www.ghezelbaash.ir/void.ttl#download",
+      "descriptorRoles": ["data-package", "croissant"],
       "source": ".generated/projections/void.ttl",
       "mediaType": "text/turtle",
       "targets": ["website", "huggingFace", "zenodo"],
@@ -212,6 +228,8 @@
     },
     {
       "path": "dcat.ttl",
+      "distributionIri": "https://www.ghezelbaash.ir/dcat.ttl#download",
+      "descriptorRoles": ["data-package", "croissant"],
       "source": ".generated/projections/dcat.ttl",
       "mediaType": "text/turtle",
       "targets": ["website", "huggingFace", "zenodo"],
@@ -222,6 +240,8 @@
     },
     {
       "path": "croissant.json",
+      "distributionIri": "https://www.ghezelbaash.ir/croissant.json#download",
+      "profileIri": "http://mlcommons.org/croissant/1.1",
       "source": ".generated/projections/croissant.json",
       "mediaType": "application/ld+json",
       "targets": ["website", "huggingFace", "zenodo"],

@@ -87,10 +87,7 @@ const devMarker = /\b(?:TODO|FIXME|HACK)\b/g;
 const [npmrc, packageJson, dependencyAuditGate] = await Promise.all([
   readFile(path.join(root, ".npmrc"), "utf8"),
   readFile(path.join(root, "package.json"), "utf8").then(JSON.parse),
-  readFile(
-    path.join(root, "scripts/dependency-advisory-gate.mjs"),
-    "utf8",
-  ),
+  readFile(path.join(root, "scripts/dependency-advisory-gate.mjs"), "utf8"),
 ]);
 if (!/^audit=false$/m.test(npmrc) || /^audit=true$/m.test(npmrc))
   throw new Error(
@@ -105,7 +102,7 @@ if (
   throw new Error("High-severity dependency advisory gate drift");
 if (
   packageJson.scripts?.["test:security-gate"] !==
-  "node scripts/dependency-advisory-gate.mjs --self-test" ||
+    "node scripts/dependency-advisory-gate.mjs --self-test" ||
   !packageJson.scripts?.["validate:source"]?.includes(
     "npm run test:security-gate",
   )
@@ -190,6 +187,61 @@ if (
 )
   throw new Error(`Workflow topology drift: ${workflows.join(", ")}`);
 
+const validateWorkflowDependencyGates = (content, workflow) => {
+  const installs = [...content.matchAll(/\bnpm ci\b/g)];
+  const gates = [
+    ...content.matchAll(
+      /^\s*(?:run:\s*)?(?:npm run security:dependencies|node "\$GITHUB_WORKSPACE\/scripts\/dependency-advisory-gate\.mjs")\s*$/gm,
+    ),
+  ];
+  if (/\bnpm audit\b/.test(content))
+    throw new Error(
+      `Canonical workflows must use the bounded fail-closed advisory gate: ${workflow}`,
+    );
+  if (
+    installs.length !== gates.length ||
+    installs.some(
+      (install, index) =>
+        gates[index].index <= install.index ||
+        (installs[index + 1] &&
+          gates[index].index >= installs[index + 1].index),
+    )
+  )
+    throw new Error(
+      `Every npm ci must be followed by the explicit dependency advisory gate: ${workflow} (${installs.length}/${gates.length})`,
+    );
+  if (
+    content.includes(
+      'node "$GITHUB_WORKSPACE/scripts/dependency-advisory-gate.mjs"',
+    ) &&
+    (!content.includes('git worktree add --detach "$SNAPSHOT_SOURCE" "$TAG"') ||
+      !/set -euo pipefail[\s\S]*?\(\s*\n\s*cd "\$SNAPSHOT_SOURCE"\s*\n\s*npm ci\s*\n\s*node "\$GITHUB_WORKSPACE\/scripts\/dependency-advisory-gate\.mjs"\s*\n/.test(
+        content,
+      ))
+  )
+    throw new Error(
+      `Historical dependency audit must run from the isolated snapshot using the current canonical gate: ${workflow}`,
+    );
+};
+const dependencyGateFixture = "npm ci\nrun: npm run security:dependencies\n";
+validateWorkflowDependencyGates(dependencyGateFixture, "advisory gate fixture");
+for (const mutation of [
+  "npm ci\n",
+  "run: npm run security:dependencies\nnpm ci\n",
+  "npm ci\nrun: npm run security:dependencies || true\n",
+  'npm ci\nnode "$GITHUB_WORKSPACE/scripts/dependency-advisory-gate.mjs"\n',
+  'npm ci\nnode "$CURRENT_AUDIT_GATE"\n',
+]) {
+  let rejected = false;
+  try {
+    validateWorkflowDependencyGates(mutation, "advisory gate mutation");
+  } catch {
+    rejected = true;
+  }
+  if (!rejected)
+    throw new Error("Dependency workflow gate failed to reject a bypass");
+}
+
 for (const workflow of workflows) {
   const content = await readFile(path.join(root, workflow), "utf8");
   if (/^\s*pull_request_target\s*:/m.test(content))
@@ -239,27 +291,7 @@ for (const workflow of workflows) {
     )
   )
     throw new Error(`Credential-bearing remote URL is forbidden: ${workflow}`);
-  const installCount = (content.match(/\bnpm ci\b/g) || []).length;
-  const securityCount =
-    (content.match(/\bnpm run security:dependencies\b/g) || []).length +
-    (content.match(/node "\$CURRENT_AUDIT_GATE"/g) || []).length;
-  if (/\bnpm audit\b/.test(content))
-    throw new Error(
-      `Canonical workflows must use the bounded fail-closed advisory gate: ${workflow}`,
-    );
-  if (
-    content.includes('node "$CURRENT_AUDIT_GATE"') &&
-    !content.includes(
-      'cp scripts/dependency-advisory-gate.mjs "$CURRENT_AUDIT_GATE"',
-    )
-  )
-    throw new Error(
-      `Frozen-source audit gate must be copied from current canonical source before checkout: ${workflow}`,
-    );
-  if (installCount !== securityCount)
-    throw new Error(
-      `Every npm ci must be followed by the explicit dependency advisory gate: ${workflow} (${installCount}/${securityCount})`,
-    );
+  validateWorkflowDependencyGates(content, workflow);
   for (const match of content.matchAll(/^\s*branches:\s*\[([^\]]*)\]\s*$/gm)) {
     const branches = match[1]
       .split(",")

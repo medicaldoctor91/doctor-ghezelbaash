@@ -13,7 +13,6 @@
     "https://www.ghezelbaash.ir/#webpage",
     "https://www.ghezelbaash.ir/#credential-doctor-of-medicine",
     "https://www.ghezelbaash.ir/#irimc-credential-167430",
-    "https://www.ghezelbaash.ir/#organization-iran-medical-council",
     "https://www.ghezelbaash.ir/#online-consultation-contact-point",
     "https://www.ghezelbaash.ir/#online-consultation-channel",
     "https://www.ghezelbaash.ir/#free-online-aesthetic-initial-consultation",
@@ -52,14 +51,11 @@
         "alternateName",
         "jobTitle",
         "url",
-        "priceRange",
         "hasCredential",
-        "practicesAt",
         "worksFor",
         "affiliation",
         "workLocation",
         "owns",
-        "areaServed",
         "image",
         "identifier",
         "sameAs",
@@ -70,11 +66,8 @@
         "memberOf",
         "knowsAbout",
         "hasOccupation",
-        "medicalSpecialty",
-        "availableService",
         "makesOffer",
         "alumniOf",
-        "performerIn",
         "honorificPrefix",
         "knowsLanguage",
         "address",
@@ -86,19 +79,7 @@
           "https://www.ghezelbaash.ir/#credential-doctor-of-medicine",
           "https://www.ghezelbaash.ir/#irimc-credential-167430"
         ],
-        "practicesAt": [
-          "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-        ],
-        "medicalSpecialty": [
-          "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
-        ],
-        "areaServed": [
-          "https://www.ghezelbaash.ir/#country-iran",
-          "https://www.ghezelbaash.ir/#country-iraq"
-        ],
-        "nationality": [
-          "https://www.ghezelbaash.ir/#country-iran"
-        ],
+        "nationality": ["https://www.ghezelbaash.ir/#country-iran"],
         "workLocation": [
           "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
         ],
@@ -136,38 +117,6 @@
           "https://www.ghezelbaash.ir/#action-view-clinic-map",
           "https://www.ghezelbaash.ir/#action-follow-instagram"
         ],
-        "availableService": [
-          "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-aesthetic-treatment",
-          "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler",
-          "https://www.ghezelbaash.ir/#procedure-body-dermal-filler",
-          "https://www.ghezelbaash.ir/#procedure-hyaluronidase-and-filler-revision",
-          "https://www.ghezelbaash.ir/#procedure-thread-lift",
-          "https://www.ghezelbaash.ir/#procedure-subcision",
-          "https://www.ghezelbaash.ir/#procedure-microneedling",
-          "https://www.ghezelbaash.ir/#procedure-chemical-peel",
-          "https://www.ghezelbaash.ir/#procedure-energy-based-skin-treatment",
-          "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-skin-treatment",
-          "https://www.ghezelbaash.ir/#procedure-platelet-rich-plasma-hair-treatment",
-          "https://www.ghezelbaash.ir/#procedure-skin-mesotherapy",
-          "https://www.ghezelbaash.ir/#procedure-hair-mesotherapy",
-          "https://www.ghezelbaash.ir/#procedure-jalupro-injectable-skin-treatment",
-          "https://www.ghezelbaash.ir/#procedure-profhilo-injectable-skin-treatment",
-          "https://www.ghezelbaash.ir/#procedure-injectable-skin-booster",
-          "https://www.ghezelbaash.ir/#procedure-injectable-biostimulator",
-          "https://www.ghezelbaash.ir/#procedure-hair-loss-evaluation-and-treatment",
-          "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion",
-          "https://www.ghezelbaash.ir/#procedure-botulinum-toxin-result-correction",
-          "https://www.ghezelbaash.ir/#procedure-thread-lift-result-correction",
-          "https://www.ghezelbaash.ir/#procedure-blepharoplasty",
-          "https://www.ghezelbaash.ir/#procedure-central-lip-lift",
-          "https://www.ghezelbaash.ir/#procedure-buccal-fat-removal",
-          "https://www.ghezelbaash.ir/#procedure-submental-liposuction",
-          "https://www.ghezelbaash.ir/#procedure-autologous-fat-grafting",
-          "https://www.ghezelbaash.ir/#procedure-rhinoplasty",
-          "https://www.ghezelbaash.ir/#procedure-facelift",
-          "https://www.ghezelbaash.ir/#procedure-neck-lift",
-          "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery"
-        ],
         "makesOffer": [
           "https://www.ghezelbaash.ir/#free-online-aesthetic-initial-consultation-offer",
           "https://www.ghezelbaash.ir/#aesthetic-revision-and-second-opinion-offer"
@@ -181,17 +130,10 @@
           "https://www.ghezelbaash.ir/#evidence-semantic-scholar-author",
           "https://www.ghezelbaash.ir/#evidence-magiran-author",
           "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview"
-        ],
-        "performerIn": [
-          "https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11",
-          "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017"
         ]
       },
       "valueAllow": {
-        "@type": [
-          "Person",
-          "IndividualPhysician"
-        ],
+        "@type": ["Person"],
         "sameAs": [
           "https://www.wikidata.org/entity/Q140287622",
           "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash",
@@ -237,9 +179,7 @@
           "MohammadSaeed Ghezelbash",
           "Mohamadsaeed Ghezelbash"
         ],
-        "name": [
-          "دکتر سعید قزلباش"
-        ]
+        "name": ["دکتر سعید قزلباش"]
       }
     },
     "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah": {
@@ -270,7 +210,6 @@
         "priceRange",
         "employee",
         "openingHours",
-        "additionalProperty",
         "contactPoint",
         "potentialAction"
       ],
@@ -289,17 +228,9 @@
           "https://www.ghezelbaash.ir/#country-iran",
           "https://www.ghezelbaash.ir/#country-iraq"
         ],
-        "owner": [
-          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-        ],
-        "founder": [
-          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-        ],
-        "employee": [
-          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-        ],
-        "image": [],
-        "hasMap": [],
+        "owner": ["https://www.ghezelbaash.ir/#saeed-ghezelbash"],
+        "founder": ["https://www.ghezelbaash.ir/#saeed-ghezelbash"],
+        "employee": ["https://www.ghezelbaash.ir/#saeed-ghezelbash"],
         "potentialAction": [
           "https://www.ghezelbaash.ir/#action-contact-clinic",
           "https://www.ghezelbaash.ir/#action-online-initial-consultation",
@@ -341,56 +272,30 @@
           "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
           "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
           "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership"
-        ]
+        ],
+        "image": [],
+        "hasMap": []
       },
       "valueAllow": {
-        "name": [
-          "کلینیک زیبایی دکتر سعید قزلباش"
-        ]
+        "name": ["کلینیک زیبایی دکتر سعید قزلباش"]
       }
     },
     "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine": {
-      "include": [
-        "@id",
-        "@type",
-        "name",
-        "alternateName",
-        "sameAs"
-      ],
+      "include": ["@id", "@type", "name", "alternateName", "sameAs"],
       "valueAllow": {
-        "@type": [
-          "MedicalSpecialty"
-        ]
+        "@type": ["MedicalSpecialty"]
       }
     },
     "https://www.ghezelbaash.ir/#country-iran": {
-      "include": [
-        "@id",
-        "@type",
-        "name",
-        "sameAs",
-        "identifier"
-      ],
+      "include": ["@id", "@type", "name", "sameAs", "identifier"],
       "valueAllow": {
-        "@type": [
-          "Country",
-          "Place"
-        ]
+        "@type": ["Country", "Place"]
       }
     },
     "https://www.ghezelbaash.ir/#country-iraq": {
-      "include": [
-        "@id",
-        "@type",
-        "name",
-        "sameAs",
-        "identifier"
-      ],
+      "include": ["@id", "@type", "name", "sameAs", "identifier"],
       "valueAllow": {
-        "@type": [
-          "Country",
-          "Place"
-        ]
+        "@type": ["Country", "Place"]
       }
     },
     "https://www.ghezelbaash.ir/#webpage": {
@@ -438,9 +343,7 @@
         ]
       },
       "valueAllow": {
-        "@type": [
-          "ProfilePage"
-        ]
+        "@type": ["ProfilePage"]
       }
     },
     "https://www.ghezelbaash.ir/#website": {
@@ -459,16 +362,7 @@
       ]
     },
     "https://www.ghezelbaash.ir/#credential-doctor-of-medicine": {
-      "include": [
-        "@id",
-        "@type",
-        "name",
-        "credentialCategory",
-        "identifier",
-        "recognizedBy",
-        "url",
-        "validIn"
-      ]
+      "include": ["@id", "@type", "name", "credentialCategory"]
     },
     "https://www.ghezelbaash.ir/#irimc-credential-167430": {
       "include": [
@@ -481,6 +375,76 @@
         "url",
         "validIn"
       ]
+    },
+    "https://www.ghezelbaash.ir/#free-online-aesthetic-initial-consultation": {
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "serviceType",
+        "provider",
+        "areaServed",
+        "availableChannel",
+        "subjectOf"
+      ]
+    }
+  },
+  "externalReferenceIds": [
+    "https://www.ghezelbaash.ir/#organization-iran-medical-council",
+    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview"
+  ],
+  "typeProfiles": {
+    "PostalAddress": {
+      "include": [
+        "@id",
+        "@type",
+        "streetAddress",
+        "addressLocality",
+        "addressCountry",
+        "postalCode",
+        "addressRegion"
+      ]
+    },
+    "GeoCoordinates": {
+      "include": ["@id", "@type", "latitude", "longitude"]
+    },
+    "OpeningHoursSpecification": {
+      "include": ["@id", "@type", "dayOfWeek", "opens", "closes", "description"]
+    },
+    "ContactPoint": {
+      "include": [
+        "@id",
+        "@type",
+        "telephone",
+        "contactType",
+        "availableLanguage"
+      ]
+    },
+    "ServiceChannel": {
+      "include": [
+        "@id",
+        "@type",
+        "serviceUrl",
+        "servicePhone",
+        "providesService",
+        "availableLanguage"
+      ]
+    },
+    "CommunicateAction": {
+      "include": ["@id", "@type", "name", "target", "recipient", "object"]
+    },
+    "ViewAction": {
+      "include": ["@id", "@type", "name", "target", "object"]
+    },
+    "FollowAction": {
+      "include": ["@id", "@type", "name", "target", "object"]
+    },
+    "PropertyValue": {
+      "include": ["@id", "@type", "propertyID", "value", "url", "name"]
+    },
+    "SpeakableSpecification": {
+      "include": ["@id", "@type", "cssSelector"]
     }
   }
 }

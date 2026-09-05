@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { deriveGooglePageMicrodata } from "../src/lib/google-page-microdata.mjs";
-import { projectNode } from "../src/lib/semantic-projection.mjs";
+import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
 
 const PHYSICIAN = "https://www.ghezelbaash.ir/#saeed-ghezelbash";
 const CLINIC =
@@ -50,10 +50,6 @@ const CORE_HEAD_SERVICES = [
   "https://www.ghezelbaash.ir/#procedure-facelift",
   "https://www.ghezelbaash.ir/#procedure-neck-lift",
   "https://www.ghezelbaash.ir/#procedure-body-aesthetic-surgery",
-];
-const CORE_PERFORMER_EVENTS = [
-  "https://www.ghezelbaash.ir/#advanced-thread-lift-workshop-tehran-1403-11",
-  "https://www.ghezelbaash.ir/#event-wpa-xvii-world-congress-psychiatry-2017",
 ];
 const CORE_RESEARCH_IDENTIFIERS = [
   "https://www.ghezelbaash.ir/#identifier-person-openalex",
@@ -147,14 +143,34 @@ const requireNode = (byId, id, label) => {
   return node;
 };
 
-const [graphDocument, headProfile, supportProfile, llmsTemplate, pageSource] = await Promise.all([
+const [
+  graphDocument,
+  headProfile,
+  supportProfile,
+  llmsTemplate,
+  pageSource,
+  release,
+] = await Promise.all([
   readFile("src/data/semantic/knowledge-graph.jsonld", "utf8").then(JSON.parse),
   readFile("src/data/semantic/head-profile.json", "utf8").then(JSON.parse),
   readFile("src/data/semantic/support-profile.json", "utf8").then(JSON.parse),
   readFile("src/data/templates/llms.template.txt", "utf8"),
   readFile("src/content-source/page.md", "utf8"),
+  readFile("src/data/release.json", "utf8").then(JSON.parse),
 ]);
 const headIds = headProfile.ids;
+const finalProjection = deriveGraphProjections({
+  graph: graphDocument,
+  release,
+  headProfile,
+  supportProfile,
+});
+const inlineById = new Map(
+  [
+    ...finalProjection.headDoc["@graph"],
+    ...finalProjection.supportDoc["@graph"],
+  ].map((node) => [node["@id"], node]),
+);
 const graph = graphDocument["@graph"];
 assert.ok(Array.isArray(graph), "Canonical graph lacks @graph");
 const byId = new Map(
@@ -303,18 +319,40 @@ const aestheticWorks = [
     "LearningResource",
     "datePublished",
   ],
-]
-for (const [id, wikidata, dateValue, preciseType, dateProperty] of aestheticWorks) {
+];
+for (const [
+  id,
+  wikidata,
+  dateValue,
+  preciseType,
+  dateProperty,
+] of aestheticWorks) {
   const work = requireNode(byId, id, "Aesthetic-medicine authored work");
-  assert.ok(types(work).includes("Article"), `Aesthetic work lost Article type: ${id}`);
+  assert.ok(
+    types(work).includes("Article"),
+    `Aesthetic work lost Article type: ${id}`,
+  );
   assert.ok(
     types(work).includes(preciseType),
     `Aesthetic work lost precise semantic type ${preciseType}: ${id}`,
   );
-  assertExact(refs(work.author), [PHYSICIAN], `Aesthetic work author drift: ${id}`);
-  assert.equal(work.sameAs, wikidata, `Aesthetic work Wikidata reconciliation drift: ${id}`);
-  assert.equal(work[dateProperty], dateValue, `Aesthetic work ${dateProperty} drift: ${id}`);
-  const otherDateProperty = dateProperty === "datePublished" ? "dateCreated" : "datePublished";
+  assertExact(
+    refs(work.author),
+    [PHYSICIAN],
+    `Aesthetic work author drift: ${id}`,
+  );
+  assert.equal(
+    work.sameAs,
+    wikidata,
+    `Aesthetic work Wikidata reconciliation drift: ${id}`,
+  );
+  assert.equal(
+    work[dateProperty],
+    dateValue,
+    `Aesthetic work ${dateProperty} drift: ${id}`,
+  );
+  const otherDateProperty =
+    dateProperty === "datePublished" ? "dateCreated" : "datePublished";
   assert.equal(
     work[otherDateProperty],
     undefined,
@@ -342,16 +380,25 @@ for (const [id, wikidata, dateValue, preciseType, dateProperty] of aestheticWork
       "https://creativecommons.org/licenses/by/4.0/",
       `Aesthetic preprint license drift: ${id}`,
     );
-    assertExact(refs(work.isPartOf), [WIKIJOURNAL_PREPRINTS], `Aesthetic preprint container drift: ${id}`);
+    assertExact(
+      refs(work.isPartOf),
+      [WIKIJOURNAL_PREPRINTS],
+      `Aesthetic preprint container drift: ${id}`,
+    );
   }
-  assert.ok(refs(work.about).includes(SPECIALTY), `Aesthetic work lost aesthetic-medicine topic: ${id}`);
   assert.ok(
-    refs(work.about).includes("https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"),
+    refs(work.about).includes(SPECIALTY),
+    `Aesthetic work lost aesthetic-medicine topic: ${id}`,
+  );
+  assert.ok(
+    refs(work.about).includes(
+      "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a",
+    ),
     `Aesthetic work lost botulinum-toxin topic: ${id}`,
   );
   assert.ok(
-    supportProfile.ids.includes(id),
-    `Aesthetic authored work is not projected into inline support JSON-LD: ${id}`,
+    supportProfile.externalReferenceIds.includes(id),
+    `Aesthetic authored work must use its external canonical reference: ${id}`,
   );
 }
 for (const [id] of aestheticWorks) {
@@ -361,52 +408,119 @@ for (const [id] of aestheticWorks) {
   );
 }
 
-const researchSection = requireNode(byId, RESEARCH_SECTION, "Research/education WebPageElement");
+const researchSection = requireNode(
+  byId,
+  RESEARCH_SECTION,
+  "Research/education WebPageElement",
+);
 const citedScholarlyWorks = [
-  ["https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016", "10.4103/2008-7802.182734"],
-  ["https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021", "10.3390/healthcare9091169"],
+  [
+    "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016",
+    "10.4103/2008-7802.182734",
+  ],
+  [
+    "https://www.ghezelbaash.ir/#article-mdd-attachment-dissociation-trauma-2021",
+    "10.3390/healthcare9091169",
+  ],
 ];
 assertExact(
   supportProfile.citedScholarlyWorkIds,
   citedScholarlyWorks.map(([id]) => id),
   "Inline scholarly citation allowlist drift",
 );
-const projectedResearchSection = projectNode(researchSection, supportProfile.idProfiles?.[RESEARCH_SECTION]);
+const projectedResearchSection = requireNode(
+  inlineById,
+  RESEARCH_SECTION,
+  "Final research section",
+);
 for (const [id, doi] of citedScholarlyWorks) {
   const work = requireNode(byId, id, "Physician-coauthored scholarly work");
-  const projectedWork = projectNode(work, supportProfile.idProfiles?.[id]);
-  assertExact(types(work), ["ScholarlyArticle"], `Scholarly citation type drift: ${id}`);
-  assert.ok(supportProfile.ids.includes(id), `Cited scholarly work is not selected: ${id}`);
-  assert.ok(refs(projectedResearchSection.citation).includes(id), `Projected section lost its scholarly citation: ${id}`);
-  assert.ok(refs(projectedWork.author).includes(PHYSICIAN), `Projected scholarly work lost physician coauthorship: ${id}`);
-  assert.equal(projectedWork.url, `https://doi.org/${doi}`, `Scholarly citation DOI destination drift: ${id}`);
-  assert.ok(projectedWork.identifier.includes(`DOI:${doi}`), `Scholarly citation DOI identifier drift: ${id}`);
-  assert.equal(projectedWork.image, undefined, `A physician portrait must not represent the cited scholarly article: ${id}`);
-  assert.equal(projectedWork.mainEntityOfPage, undefined, `The homepage must not become an external article's canonical page: ${id}`);
-  assert.ok(!refs(physician.subjectOf).includes(id), `An authored work must not become a work about the physician: ${id}`);
+  const projectedWork = requireNode(inlineById, id, "Final scholarly citation");
+  assertExact(
+    types(work),
+    ["ScholarlyArticle"],
+    `Scholarly citation type drift: ${id}`,
+  );
+  assert.ok(
+    supportProfile.ids.includes(id),
+    `Cited scholarly work is not selected: ${id}`,
+  );
+  assert.ok(
+    refs(projectedResearchSection.citation).includes(id),
+    `Projected section lost its scholarly citation: ${id}`,
+  );
+  assert.ok(
+    refs(projectedWork.author).includes(PHYSICIAN),
+    `Projected scholarly work lost physician coauthorship: ${id}`,
+  );
+  assert.equal(
+    projectedWork.url,
+    `https://doi.org/${doi}`,
+    `Scholarly citation DOI destination drift: ${id}`,
+  );
+  assert.ok(
+    projectedWork.identifier.includes(`DOI:${doi}`),
+    `Scholarly citation DOI identifier drift: ${id}`,
+  );
+  assert.equal(
+    projectedWork.image,
+    undefined,
+    `A physician portrait must not represent the cited scholarly article: ${id}`,
+  );
+  assert.equal(
+    projectedWork.mainEntityOfPage,
+    undefined,
+    `The homepage must not become an external article's canonical page: ${id}`,
+  );
+  assert.ok(
+    !refs(physician.subjectOf).includes(id),
+    `An authored work must not become a work about the physician: ${id}`,
+  );
 }
-for (const id of [PHYSICIAN, SPECIALTY, "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"]) {
-  assert.ok(refs(researchSection.about).includes(id), `Research section lost about edge: ${id}`);
+for (const id of [
+  PHYSICIAN,
+  SPECIALTY,
+  "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a",
+]) {
+  assert.ok(
+    refs(researchSection.about).includes(id),
+    `Research section lost about edge: ${id}`,
+  );
 }
 for (const [id] of aestheticWorks) {
-  assert.ok(refs(researchSection.mentions).includes(id), `Research section lost authored-work mention: ${id}`);
+  assert.ok(
+    refs(researchSection.mentions).includes(id),
+    `Research section lost authored-work mention: ${id}`,
+  );
 }
 assert.ok(
   supportProfile.ids.includes(RESEARCH_SECTION),
   "Research/education WebPageElement is not projected into inline support JSON-LD",
 );
 
-const wikiJournal = requireNode(byId, WIKIJOURNAL_PREPRINTS, "WikiJournal Preprints container");
-assert.ok(types(wikiJournal).includes("Periodical"), "WikiJournal Preprints lost Periodical type");
-assert.equal(wikiJournal.url, "https://en.wikiversity.org/wiki/WikiJournal_Preprints");
+const wikiJournal = requireNode(
+  byId,
+  WIKIJOURNAL_PREPRINTS,
+  "WikiJournal Preprints container",
+);
+assert.ok(
+  types(wikiJournal).includes("Periodical"),
+  "WikiJournal Preprints lost Periodical type",
+);
+assert.equal(
+  wikiJournal.url,
+  "https://en.wikiversity.org/wiki/WikiJournal_Preprints",
+);
 assert.ok(
   supportProfile.ids.includes(WIKIJOURNAL_PREPRINTS),
   "WikiJournal Preprints container is not projected into inline support JSON-LD",
 );
 
 assert.ok(
-  supportProfile.ids.includes("https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview"),
-  "External aesthetic-medicine interview is not projected into inline support JSON-LD",
+  supportProfile.externalReferenceIds.includes(
+    "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
+  ),
+  "External aesthetic-medicine interview must use its canonical URL reference",
 );
 for (const [, wikidata] of aestheticWorks) {
   const qid = wikidata.split("/").pop();
@@ -416,7 +530,9 @@ for (const [, wikidata] of aestheticWorks) {
   );
 }
 assert.ok(
-  llmsTemplate.includes("not treated as independent evidence of treatment efficacy"),
+  llmsTemplate.includes(
+    "not treated as independent evidence of treatment efficacy",
+  ),
   "LLM retrieval guide lost the authored-work evidence-role boundary",
 );
 
@@ -494,42 +610,76 @@ assert.ok(
 const physicianSpec = headProfile.nodes?.[PHYSICIAN];
 const clinicSpec = headProfile.nodes?.[CLINIC];
 const physicianImages = refs(physician.image);
-assert.equal(physicianImages.length, 4, "Physician must retain four canonical portrait images");
+assert.equal(
+  physicianImages.length,
+  4,
+  "Physician must retain four canonical portrait images",
+);
 assertExact(
-  refs(projectNode(physician, physicianSpec).image),
+  refs(requireNode(inlineById, PHYSICIAN, "Final physician").image),
   physicianImages,
   "Physician head projection must preserve every canonical portrait reference",
 );
 for (const id of physicianImages) {
   const image = requireNode(byId, id, "Physician portrait image");
-  assert.ok(types(image).includes("ImageObject"), `Physician image has the wrong type: ${id}`);
-  assert.ok(refs(image.about).includes(PHYSICIAN), `Physician image must depict the physician: ${id}`);
-  assert.ok(supportProfile.ids.includes(id), `Physician image is missing from inline support: ${id}`);
-  assert.ok(typeof image.contentUrl === "string" && !new URL(image.contentUrl).hash,
-    `Physician portrait contentUrl must resolve directly to an image: ${id}`);
+  assert.ok(
+    types(image).includes("ImageObject"),
+    `Physician image has the wrong type: ${id}`,
+  );
+  assert.ok(
+    refs(image.about).includes(PHYSICIAN),
+    `Physician image must depict the physician: ${id}`,
+  );
+  assert.ok(
+    supportProfile.ids.includes(id),
+    `Physician image is missing from inline support: ${id}`,
+  );
+  assert.ok(
+    typeof image.contentUrl === "string" && !new URL(image.contentUrl).hash,
+    `Physician portrait contentUrl must resolve directly to an image: ${id}`,
+  );
 }
-for (const [suffix, width, height] of [["square-1200", 1200, 1200], ["4x3-1200", 1200, 900], ["16x9-1200", 1200, 675]]) {
-  const image = requireNode(byId, `https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-${suffix}`, "Physician portrait crop");
-  assert.equal(image.width?.value, width, `Physician crop width drift: ${suffix}`);
-  assert.equal(image.height?.value, height, `Physician crop height drift: ${suffix}`);
+for (const [suffix, width, height] of [
+  ["square-1200", 1200, 1200],
+  ["4x3-1200", 1200, 900],
+  ["16x9-1200", 1200, 675],
+]) {
+  const image = requireNode(
+    byId,
+    `https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-${suffix}`,
+    "Physician portrait crop",
+  );
+  assert.equal(
+    image.width?.value,
+    width,
+    `Physician crop width drift: ${suffix}`,
+  );
+  assert.equal(
+    image.height?.value,
+    height,
+    `Physician crop height drift: ${suffix}`,
+  );
 }
 assert.ok(
   physicianSpec && clinicSpec,
-  "Head projection profiles for physician/clinic are missing",
+  "Final physician and clinic profiles are missing",
 );
-assert.ok(
-  physicianSpec.include?.includes("performerIn"),
-  "Physician head projection lost performerIn",
-);
-assert.deepEqual(
-  physicianSpec.refAllow?.performerIn,
-  CORE_PERFORMER_EVENTS,
-  "Physician head projection performerIn drift",
-);
-for (const id of CORE_PERFORMER_EVENTS) {
+for (const property of [
+  "practicesAt",
+  "medicalSpecialty",
+  "areaServed",
+  "availableService",
+  "priceRange",
+  "performerIn",
+]) {
   assert.ok(
-    supportProfile.ids.includes(id),
-    `Physician performer event is not projected into inline support JSON-LD: ${id}`,
+    !physicianSpec.include.includes(property),
+    `Person profile must not select provider/event field ${property}`,
+  );
+  assert.equal(
+    physicianSpec.refAllow?.[property],
+    undefined,
+    `Excluded Person field has a stale reference policy: ${property}`,
   );
 }
 for (const visibleResearchUrl of [
@@ -543,7 +693,10 @@ for (const visibleResearchUrl of [
   );
 }
 for (const id of CORE_RESEARCH_IDENTIFIERS) {
-  assert.ok(headIds.includes(id), `Research identifier is not a head node: ${id}`);
+  assert.ok(
+    headIds.includes(id),
+    `Research identifier is not a head node: ${id}`,
+  );
   assert.ok(
     physicianSpec.refAllow?.identifier?.includes(id),
     `Physician head projection lost research identifier: ${id}`,
@@ -564,20 +717,15 @@ for (const id of CORE_HEAD_SERVICES) {
     `Core head service is not projected into inline support JSON-LD: ${id}`,
   );
 }
-for (const [label, spec] of [
-  ["physician", physicianSpec],
-  ["clinic", clinicSpec],
-]) {
-  assert.ok(
-    spec.include?.includes("availableService"),
-    `${label} head projection lost availableService`,
-  );
-  assert.deepEqual(
-    spec.refAllow?.availableService,
-    CORE_HEAD_SERVICES,
-    `${label} head projection core service set drift`,
-  );
-}
+assert.ok(
+  clinicSpec.include.includes("availableService"),
+  "Clinic projection lost its offered service inventory",
+);
+assert.deepEqual(
+  clinicSpec.refAllow.availableService,
+  CORE_HEAD_SERVICES,
+  "Clinic service selection drift",
+);
 assert.ok(
   physicianSpec.include?.includes("makesOffer"),
   "Physician head projection lost makesOffer",
@@ -605,37 +753,19 @@ assert.deepEqual(
   CORE_CLINIC_AUTHORITY_SUBJECTS,
   "Clinic head projection external subjectOf evidence drift",
 );
-for (const id of [...CORE_PERSON_AUTHORITY_SUBJECTS, ...CORE_CLINIC_AUTHORITY_SUBJECTS]) {
+for (const id of [
+  ...CORE_PERSON_AUTHORITY_SUBJECTS,
+  ...CORE_CLINIC_AUTHORITY_SUBJECTS,
+])
   assert.ok(
-    supportProfile.ids.includes(id),
-    `Selected authority subject is not projected into inline support JSON-LD: ${id}`,
+    supportProfile.ids.includes(id) ||
+      headProfile.externalReferenceIds.includes(id),
+    `Authority source is neither selected nor an explicit external reference: ${id}`,
   );
-}
-for (const property of ["practicesAt", "medicalSpecialty", "areaServed"]) {
-  assert.ok(
-    physicianSpec.include?.includes(property),
-    `Physician Head projection dropped ${property}`,
-  );
-}
 assertExact(
   physicianSpec.valueAllow?.["@type"],
-  ["Person", "IndividualPhysician"],
-  "Head physician types must preserve Person + IndividualPhysician",
-);
-assertExact(
-  physicianSpec.refAllow?.practicesAt,
-  [CLINIC],
-  "Head practicesAt allowlist drift",
-);
-assertExact(
-  physicianSpec.refAllow?.medicalSpecialty,
-  [SPECIALTY],
-  "Head physician specialty allowlist drift",
-);
-assertExact(
-  physicianSpec.refAllow?.areaServed,
-  EXPECTED_AREAS,
-  "Head physician area allowlist drift",
+  ["Person"],
+  "HTML physician type policy must select only Person",
 );
 assertExact(
   clinicSpec.refAllow?.medicalSpecialty,
@@ -673,122 +803,276 @@ for (const id of [PHYSICIAN, CLINIC, SPECIALTY, IRAN, IRAQ, WEBPAGE]) {
   );
 }
 
-const projectedNodes = headIds.map((id) =>
-  projectNode(
-    requireNode(byId, id, "Head-selected canonical node"),
-    headProfile.nodes?.[id],
-  ),
-);
-const projectedById = new Map(
-  projectedNodes.map((node) => [node["@id"], node]),
-);
-const projectedPhysician = requireNode(
-  projectedById,
-  PHYSICIAN,
-  "Projected physician",
-);
-const projectedClinic = requireNode(projectedById, CLINIC, "Projected clinic");
-assertExact(
-  types(projectedPhysician),
-  ["Person", "IndividualPhysician"],
-  "Projected physician types drift",
-);
-assertExact(
-  refs(projectedPhysician.practicesAt),
-  [CLINIC],
-  "Projected practicesAt drift",
-);
-assertExact(
-  refs(projectedPhysician.medicalSpecialty),
-  [SPECIALTY],
-  "Projected physician specialty drift",
-);
-assertExact(
-  refs(projectedPhysician.areaServed),
-  EXPECTED_AREAS,
-  "Projected physician areas drift",
-);
-assert.equal(
-  projectedPhysician.mainEntityOfPage,
-  undefined,
-  "Projected physician must not compete with the top-level ProfilePage",
-);
-assertExact(
-  refs(projectedClinic.medicalSpecialty),
-  [SPECIALTY],
-  "Projected clinic specialty drift",
-);
-assertExact(
-  refs(projectedClinic.areaServed),
-  EXPECTED_AREAS,
-  "Projected clinic areas drift",
-);
-for (const node of [projectedPhysician, projectedClinic]) {
-  for (const property of ["medicalSpecialty", "areaServed"]) {
-    for (const id of refs(node[property]))
-      assert.ok(
-        projectedById.has(id),
-        `Projected ${property} target is dangling: ${id}`,
-      );
-  }
-}
-for (const id of refs(projectedPhysician.practicesAt))
-  assert.ok(
-    projectedById.has(id),
-    `Projected practicesAt target is dangling: ${id}`,
+const assertFinalProjection = ({ headDoc, supportDoc }) => {
+  const headNodes = headDoc["@graph"];
+  const supportNodes = supportDoc["@graph"];
+  assert.deepEqual(
+    headNodes.map((node) => node["@id"]),
+    headProfile.ids,
+    "Final head selection differs from its profile",
   );
-
-const projectedPage = requireNode(
-  projectedById,
-  WEBPAGE,
-  "Projected ProfilePage",
-);
-const microdata = deriveGooglePageMicrodata(
-  { "@graph": [projectedPage, projectedPhysician] },
-  WEBPAGE,
-);
-assert.equal(
-  microdata.itemType,
-  "https://schema.org/ProfilePage",
-  "DOM page Microdata type drift",
-);
-assert.equal(
-  microdata.mainEntityItemType,
-  "https://schema.org/Person",
-  "DOM physician Microdata must remain the minimal Person view",
-);
-assert.equal(
-  microdata.mainEntityId,
-  PHYSICIAN,
-  "DOM physician Microdata identity drift",
-);
-
-const headDocument = {
-  "@context": graphDocument["@context"],
-  "@graph": projectedNodes,
+  assert.deepEqual(
+    supportNodes.map((node) => node["@id"]),
+    supportProfile.ids,
+    "Final support selection differs from its profile",
+  );
+  const projectedById = new Map(
+    [...headNodes, ...supportNodes].map((node) => [node["@id"], node]),
+  );
+  assert.equal(
+    projectedById.size,
+    headNodes.length + supportNodes.length,
+    "Final inline graph contains duplicate IDs",
+  );
+  const projectedPhysician = requireNode(
+    projectedById,
+    PHYSICIAN,
+    "Final physician",
+  );
+  const projectedClinic = requireNode(projectedById, CLINIC, "Final clinic");
+  assertExact(
+    types(projectedPhysician),
+    ["Person"],
+    "Final physician must be exactly Person",
+  );
+  for (const property of [
+    "practicesAt",
+    "medicalSpecialty",
+    "areaServed",
+    "availableService",
+    "priceRange",
+    "performerIn",
+    "mainEntityOfPage",
+  ])
+    assert.equal(
+      projectedPhysician[property],
+      undefined,
+      `Final Person carries excluded field ${property}`,
+    );
+  for (const property of ["worksFor", "affiliation", "workLocation"])
+    assert.ok(
+      refs(projectedPhysician[property]).includes(CLINIC),
+      `Final physician lost clinic relationship ${property}`,
+    );
+  assertExact(
+    refs(projectedPhysician.image),
+    physicianImages,
+    "Final physician lost a portrait reference",
+  );
+  assertExact(
+    refs(projectedPhysician.makesOffer),
+    CORE_HEAD_OFFERS,
+    "Final physician offer set drift",
+  );
+  assertExact(
+    refs(projectedClinic.medicalSpecialty),
+    [SPECIALTY],
+    "Final clinic specialty drift",
+  );
+  assertExact(
+    refs(projectedClinic.areaServed),
+    EXPECTED_AREAS,
+    "Final clinic catchment drift",
+  );
+  for (const property of ["owner", "founder", "employee"])
+    assertExact(
+      refs(projectedClinic[property]),
+      [PHYSICIAN],
+      `Final clinic physician relationship drift: ${property}`,
+    );
+  const expectedAuthority = (ids) =>
+    ids.map((id) =>
+      headProfile.externalReferenceIds.includes(id) ? byId.get(id).url : id,
+    );
+  assertExact(
+    refs(projectedPhysician.subjectOf),
+    expectedAuthority(CORE_PERSON_AUTHORITY_SUBJECTS),
+    "Final physician authority references drift",
+  );
+  assertExact(
+    refs(projectedClinic.subjectOf),
+    expectedAuthority(CORE_CLINIC_AUTHORITY_SUBJECTS),
+    "Final clinic authority references drift",
+  );
+  const services = [...projectedById.values()].filter((node) =>
+    types(node).includes("Service"),
+  );
+  assert.equal(services.length, 39, "Final inline service inventory drift");
+  const categoryTerms = new Set();
+  let categorizedServices = 0;
+  for (const service of services) {
+    assert.ok(
+      refs(service.provider).includes(PHYSICIAN),
+      `Final service lost physician provider: ${service["@id"]}`,
+    );
+    const canonicalCategories = refs(byId.get(service["@id"]).category);
+    assertExact(
+      refs(service.category),
+      canonicalCategories,
+      `Final service classification drift: ${service["@id"]}`,
+    );
+    if (canonicalCategories.length) categorizedServices++;
+    for (const id of canonicalCategories) {
+      categoryTerms.add(id);
+      const term = requireNode(projectedById, id, "Service category");
+      const canonicalTerm = byId.get(id);
+      assert.ok(
+        types(term).includes("DefinedTerm"),
+        `Service classification must reference a DefinedTerm: ${id}`,
+      );
+      assert.equal(
+        term.name,
+        canonicalTerm.name,
+        `Service category name drift: ${id}`,
+      );
+      assert.equal(
+        term.termCode,
+        canonicalTerm.termCode,
+        `Service category code drift: ${id}`,
+      );
+      assert.deepEqual(
+        term.identifier,
+        canonicalTerm.identifier,
+        `Service category identifier drift: ${id}`,
+      );
+      assert.deepEqual(
+        term.sameAs,
+        canonicalTerm.sameAs,
+        `Service category authority mapping drift: ${id}`,
+      );
+      for (const setId of refs(canonicalTerm.inDefinedTermSet)) {
+        assert.ok(
+          refs(term.inDefinedTermSet).includes(setId),
+          `Service category vocabulary link lost: ${id}`,
+        );
+        assert.ok(
+          types(
+            requireNode(projectedById, setId, "Service vocabulary"),
+          ).includes("DefinedTermSet"),
+        );
+      }
+    }
+  }
+  assert.equal(
+    categorizedServices,
+    36,
+    "Curated service category inventory drift",
+  );
+  assert.equal(
+    categoryTerms.size,
+    21,
+    "Curated service concept inventory drift",
+  );
+  const microdata = deriveGooglePageMicrodata(headDoc, WEBPAGE);
+  assert.equal(
+    microdata.itemType,
+    "https://schema.org/ProfilePage",
+    "DOM page type drift",
+  );
+  assert.equal(
+    microdata.mainEntityItemType,
+    "https://schema.org/Person",
+    "DOM physician type drift",
+  );
+  assert.equal(
+    microdata.mainEntityId,
+    PHYSICIAN,
+    "DOM physician identity drift",
+  );
+  return {
+    services: services.length,
+    categorizedServices,
+    categoryTerms: categoryTerms.size,
+    microdata,
+  };
 };
-const headBytes = Buffer.byteLength(`${JSON.stringify(headDocument)}\n`);
-assert.ok(
-  headBytes <= headProfile.maxBytes,
-  `Head graph ${headBytes} exceeds ${headProfile.maxBytes}`,
+const verified = assertFinalProjection(finalProjection);
+const mutations = [
+  [
+    "person type",
+    (nodes) => {
+      nodes.get(PHYSICIAN)["@type"] = ["Person", "IndividualPhysician"];
+    },
+  ],
+  [
+    "portrait relationship",
+    (nodes) => {
+      nodes.get(PHYSICIAN).image.pop();
+    },
+  ],
+  [
+    "service provider",
+    (nodes) => {
+      delete nodes.get(CORE_HEAD_SERVICES[0]).provider;
+    },
+  ],
+  [
+    "service category",
+    (nodes) => {
+      delete nodes.get(CORE_HEAD_SERVICES[0]).category;
+    },
+  ],
+];
+for (const [label, mutate] of mutations) {
+  const changed = structuredClone(finalProjection);
+  const nodes = new Map(
+    [...changed.headDoc["@graph"], ...changed.supportDoc["@graph"]].map(
+      (node) => [node["@id"], node],
+    ),
+  );
+  mutate(nodes);
+  assert.throws(
+    () => assertFinalProjection(changed),
+    assert.AssertionError,
+    `Final artifact mutation was not rejected: ${label}`,
+  );
+}
+const unresolvedProfile = structuredClone(headProfile);
+unresolvedProfile.nodes[PHYSICIAN].include.push("performerIn");
+assert.throws(
+  () =>
+    deriveGraphProjections({
+      graph: graphDocument,
+      release,
+      headProfile: unresolvedProfile,
+      supportProfile,
+    }),
+  /unresolved required inline reference/,
+  "Required references must not disappear silently",
+);
+const missingProfile = structuredClone(headProfile);
+delete missingProfile.nodes[PHYSICIAN];
+assert.throws(
+  () =>
+    deriveGraphProjections({
+      graph: graphDocument,
+      release,
+      headProfile: missingProfile,
+      supportProfile,
+    }),
+  /requires an explicit field profile/,
+  "A missing policy must not fall back to the full canonical node",
 );
 
 console.log(
   JSON.stringify(
     {
-      stage: "PHYSICIAN_SEMANTIC_PROJECTION",
+      stage: "PHYSICIAN_FINAL_HTML_PROJECTION",
       identityModel: "ONE_CANONICAL_ID",
-      jsonLdTypes: ["Person", "IndividualPhysician"],
+      canonicalTypes: types(physician),
+      jsonLdTypes: types(inlineById.get(PHYSICIAN)),
       domMicrodataType: "Person",
-      practicesAt: "INDIVIDUAL_PHYSICIAN_TO_MEDICAL_CLINIC",
-      medicalSpecialty: "PHYSICIAN_AND_CLINIC_TO_DEFINED_MEDICAL_SPECIALTY",
-      areaServed: "PHYSICIAN_AND_CLINIC_TO_DEFINED_COUNTRIES",
-      keyReferenceClosure: "PASS",
-      headNodes: projectedNodes.length,
-      headBytes,
+      headNodes: finalProjection.headIds.length,
+      supportNodes: finalProjection.supportIds.length,
+      headBytes: Buffer.byteLength(finalProjection.headRaw),
+      supportBytes: Buffer.byteLength(finalProjection.supportRaw),
       headBudget: headProfile.maxBytes,
-      dataLoss: false,
-      entityFragmentation: false,
+      supportBudget: supportProfile.maxBytes,
+      physicianProviderServices: verified.services,
+      categorizedServices: verified.categorizedServices,
+      categoryTerms: verified.categoryTerms,
+      projectionPolicy: "EXPLICIT_FINAL_SELECTION",
+      negativeMutations: mutations.length + 2,
       integrity: "PASS",
     },
     null,

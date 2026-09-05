@@ -194,7 +194,7 @@ https://:version.:project.pages.dev/*
   Cross-Origin-Resource-Policy: cross-origin
 
 /croissant.json
-  Content-Type: application/ld+json; charset=utf-8
+  Content-Type: {{CONTENT_TYPE:croissant.json}}; charset=utf-8
   Vary: Accept-Encoding
   X-Robots-Tag: index, follow, max-snippet:-1
   X-Robots-Tag: googlebot: noindex, follow

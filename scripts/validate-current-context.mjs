@@ -1,7 +1,7 @@
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
-import { deriveEvidenceRegistry } from "./lib/projection-context.mjs";
+import { deriveEvidenceRegistry, evidenceAssessmentId } from "./lib/projection-context.mjs";
 
 const root = process.cwd();
 const dist = path.resolve(root, process.argv[2] || "dist");
@@ -73,8 +73,18 @@ if (
   fail("Current release evidence identity, role or verification drift");
 const provenance = await readDistJson("provenance.jsonld");
 const provenanceEvidence = provenance["@graph"].find((item) => item["@id"] === currentEvidenceId);
+const assessmentId = evidenceAssessmentId(release, currentEvidenceId);
+const assessment = provenance["@graph"].find((item) => item["@id"] === assessmentId);
+const observationDate = assessment?.additionalProperty?.find(
+  (item) => item.propertyID === "Evidence observation date",
+)?.value;
 if (provenanceEvidence?.url !== datasetLandingPage ||
-    provenanceEvidence?.dateModified !== expectedEvidence.verifiedAt)
+    currentEvidence.assessmentId !== assessmentId ||
+    assessment?.isBasedOn?.["@id"] !== currentEvidenceId ||
+    assessment?.about?.["@id"] !== currentEvidenceId ||
+    observationDate?.["@value"] !== expectedEvidence.verifiedAt ||
+    (expectedEvidence.verifiedAt && observationDate?.["@type"] !== "http://www.w3.org/2001/XMLSchema#date") ||
+    "dateModified" in (provenanceEvidence || {}))
   fail("Current release provenance identity or observation drift");
 const knowledge = await readFile(path.join(dist, "knowledge.xml"), "utf8");
 if (!knowledge.includes(`id="${currentEvidenceId}" tier="P" url="${datasetLandingPage}"`))

@@ -1,6 +1,7 @@
 import path from "node:path";
 import { access, readdir, readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
+import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
 
 const root = process.cwd();
 const fail = (message) => {
@@ -53,9 +54,9 @@ assert(
     JSON.stringify(["404.astro", "favicon.png.ts", "index.astro"]),
   `Astro route surface drift: ${routes.join(", ")}`,
 );
-const rootEntries = (
-  await readdir(root, { withFileTypes: true })
-).map((entry) => entry.name);
+const rootEntries = (await readdir(root, { withFileTypes: true })).map(
+  (entry) => entry.name,
+);
 assert(
   !rootEntries.includes("functions"),
   "Static Cloudflare Pages source must not declare a server-runtime surface",
@@ -195,11 +196,21 @@ assert(
     ),
   "Graph compiler must consume the two projection profiles directly",
 );
-assert(
-  /const\s+headIds\s*=\s*headProfile\.ids/.test(graphCompiler) &&
-    /const\s+supportIds\s*=\s*supportProfile\.ids/.test(graphCompiler),
-  "Projection selection must live inside its profile",
-);
+const finalProjection = deriveGraphProjections({
+  graph: await readJson("src/data/semantic/knowledge-graph.jsonld"),
+  release,
+  headProfile,
+  supportProfile,
+});
+for (const [label, profile, document] of [
+  ["Head", headProfile, finalProjection.headDoc],
+  ["Support", supportProfile, finalProjection.supportDoc],
+])
+  assert(
+    JSON.stringify(profile.ids) ===
+      JSON.stringify(document["@graph"].map((node) => node["@id"])),
+    `${label} final selection differs from its declarative profile`,
+  );
 assert(
   /const\s+projectionContext\s*=\s*projectSchemaContext\(graph\[['"]@context['"]\]\)/.test(
     graphCompiler,
@@ -269,7 +280,8 @@ assert(
   "Layout must assemble the single stylesheet directly",
 );
 assert(
-  pageSource.split('<span data-clinic-reputation-slot></span>').length - 1 === 1 &&
+  pageSource.split("<span data-clinic-reputation-slot></span>").length - 1 ===
+    1 &&
     contentAssembler.includes("bindClinicReputation") &&
     contentAssembler.includes("src/data/reputation-observation.json") &&
     contentAssembler.includes("content = bindClinicReputation(content"),
@@ -288,7 +300,8 @@ assert(
     reputationWorkflow.includes("GOOGLE_PLACES_API_KEY") &&
     reputationWorkflow.includes("node scripts/reputation.mjs google") &&
     reputationWorkflow.includes("src/data/reputation-observation.json") &&
-    reputationWorkflow.split("places.googleapis.com/v1/places/").length - 1 === 1 &&
+    reputationWorkflow.split("places.googleapis.com/v1/places/").length - 1 ===
+      1 &&
     !reputationWorkflow.includes("--retry") &&
     !reputationWorkflow.includes("huggingface") &&
     !reputationWorkflow.includes("zenodo") &&

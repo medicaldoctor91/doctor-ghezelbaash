@@ -3,6 +3,10 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix ex: <https://www.ghezelbaash.ir/#> .
+@prefix dcat: <http://www.w3.org/ns/dcat#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix spdx: <http://spdx.org/rdf/terms#> .
 
 ex:PhysicianEntityShape a sh:NodeShape ;
   sh:targetNode ex:saeed-ghezelbash ;
@@ -85,3 +89,84 @@ ex:ImageLicenseShape a sh:NodeShape ;
   sh:property [ sh:path schema:copyrightNotice ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:acquireLicensePage ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:creditText ; sh:minCount 1 ] .
+
+# Dates retain their recorded precision. A date-only source never requires an
+# invented time, while an existing timestamp must remain a real dateTime.
+ex:CalendarValueShape a sh:NodeShape ;
+  sh:targetObjectsOf schema:birthDate, schema:dateCreated, schema:dateModified,
+    schema:datePublished, schema:lastReviewed, schema:startDate, schema:endDate,
+    schema:observationDate, dct:issued, dct:modified ;
+  sh:or ( [ sh:datatype xsd:date ] [ sh:datatype xsd:dateTime ] [ sh:datatype xsd:gYearMonth ] ) .
+
+ex:UploadTimestampShape a sh:NodeShape ;
+  sh:targetObjectsOf schema:uploadDate ;
+  sh:datatype xsd:dateTime .
+
+ex:ServiceCategoryShape a sh:NodeShape ;
+  sh:targetSubjectsOf schema:category ;
+  sh:class schema:Service ;
+  sh:property [ sh:path schema:category ; sh:nodeKind sh:IRI ; sh:class schema:DefinedTerm ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:provider ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:sparql [
+    sh:message "A curated service category must also be a documented subject of that service." ;
+    sh:select """
+      PREFIX schema: <https://schema.org/>
+      PREFIX dct: <http://purl.org/dc/terms/>
+      SELECT $this ?value WHERE {
+        $this schema:category ?value .
+        FILTER NOT EXISTS { $this dct:subject ?value . }
+      }
+    """
+  ] .
+
+# This pair has one specific subject; pairwise equality alone would also pass
+# when both questions and answers point to the same unrelated procedure.
+ex:MelasmaAnswerSubjectShape a sh:NodeShape ;
+  sh:targetNode ex:question-melasma-recurrence-and-multimodal-treatment,
+    ex:answer-melasma-recurrence-and-multimodal-treatment ;
+  sh:property [ sh:path schema:about ; sh:hasValue ex:procedure-melasma-treatment ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:DcatDistributionShape a sh:NodeShape ;
+  sh:targetClass dcat:Distribution ;
+  sh:nodeKind sh:IRI ;
+  sh:property [ sh:path dcat:downloadURL ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path dcat:mediaType ; sh:nodeKind sh:IRI ; sh:pattern "^https://www[.]iana[.]org/assignments/media-types/[^/]+/[^/]+$" ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path dcat:byteSize ; sh:datatype xsd:decimal ; sh:minInclusive 0 ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path spdx:checksum ; sh:class spdx:Checksum ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:DistributionChecksumShape a sh:NodeShape ;
+  sh:targetObjectsOf spdx:checksum ;
+  sh:property [ sh:path spdx:algorithm ; sh:hasValue spdx:checksumAlgorithm_sha256 ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path spdx:checksumValue ; sh:datatype xsd:hexBinary ; sh:pattern "^[0-9a-fA-F]{64}$" ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+# An evidence assessment is our record about a source, not the source itself.
+# Ordinary source nodes remain unconstrained by this first-party assessment
+# contract even when both have the standard prov:Entity type.
+ex:EvidenceAssessmentShape a sh:NodeShape ;
+  sh:targetClass prov:Entity ;
+  sh:or (
+    [ sh:not [ sh:pattern "^https://www[.]ghezelbaash[.]ir/provenance[.]jsonld#assessment-" ] ]
+    [
+      sh:class schema:CreativeWork ;
+      sh:property [ sh:path schema:creator ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+      sh:property [ sh:path schema:isBasedOn ; sh:nodeKind sh:IRI ; sh:minCount 1 ; sh:maxCount 1 ] ;
+      sh:property [ sh:path schema:about ; sh:equals schema:isBasedOn ; sh:minCount 1 ; sh:maxCount 1 ] ;
+      sh:property [ sh:path schema:dateModified ; sh:maxCount 0 ] ;
+      sh:property [ sh:path schema:additionalType ; sh:maxCount 0 ] ;
+      sh:property [
+        sh:path schema:additionalProperty ;
+        sh:qualifiedValueShape [
+          sh:property [ sh:path schema:propertyID ; sh:hasValue "Evidence role" ] ;
+          sh:property [ sh:path schema:value ; sh:in ( "identity-reference" "medical-reference" "first-party-release-preservation" ) ; sh:minCount 1 ; sh:maxCount 1 ]
+        ] ;
+        sh:qualifiedMinCount 1 ; sh:qualifiedMaxCount 1
+      ]
+    ]
+  ) .
+
+ex:EvidenceObservationDateShape a sh:NodeShape ;
+  sh:targetClass schema:PropertyValue ;
+  sh:or (
+    [ sh:not [ sh:property [ sh:path schema:propertyID ; sh:hasValue "Evidence observation date" ] ] ]
+    [ sh:property [ sh:path schema:value ; sh:datatype xsd:date ; sh:minCount 1 ; sh:maxCount 1 ] ]
+  ) .

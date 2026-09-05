@@ -28,6 +28,14 @@ const foldVCard = (line) => {
   return out.join("\r\n");
 };
 const vCard = (lines) => lines.map(foldVCard).join("\r\n") + "\r\n";
+export const vCardEntityKind = (node) => {
+  const types = nodeTypes(node);
+  const individual = types.some((type) => ["Person", "IndividualPhysician"].includes(type));
+  const organization = types.some((type) => ["Organization", "LocalBusiness", "MedicalClinic", "PhysiciansOffice"].includes(type));
+  if (individual === organization)
+    throw new Error(`Contact discovery: vCard entity kind is ambiguous or unsupported: ${node?.["@id"]}`);
+  return individual ? "individual" : "org";
+};
 const xmlEsc = (value) =>
   String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -216,6 +224,7 @@ export async function compileContactDiscovery(context) {
     [
       "BEGIN:VCARD",
       "VERSION:4.0",
+      `KIND:${vCardEntityKind(person)}`,
       `PRODID:-//ghezelbaash.ir//Entity Contact Projection ${release.release}//FA`,
       `UID:${release.primaryEntity.id}`,
       `FN:${doctorName}`,
@@ -240,6 +249,7 @@ export async function compileContactDiscovery(context) {
     [
       "BEGIN:VCARD",
       "VERSION:4.0",
+      `KIND:${vCardEntityKind(clinic)}`,
       `PRODID:-//ghezelbaash.ir//Entity Contact Projection ${release.release}//FA`,
       `UID:${release.clinic.id}`,
       `FN:${clinicName}`,
