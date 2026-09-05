@@ -304,10 +304,8 @@ if (catalog?.url !== `${release.canonicalUrl}dcat.ttl`)
   fail(
     "DataCatalog semantic destination must resolve to the DCAT catalog representation",
   );
-if (Object.hasOwn(dataset, "url"))
-  fail(
-    "Canonical Dataset must not misuse a downloadable file as its landing-page URL",
-  );
+if (dataset.url !== release.canonicalUrl)
+  fail("Canonical Dataset landing page must be the canonical human document");
 if (
   graphDownload?.contentUrl !== `${release.canonicalUrl}graph.jsonld` ||
   !datasetDistributions.has(graphDownload?.["@id"])

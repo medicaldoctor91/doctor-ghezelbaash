@@ -53,7 +53,11 @@ ex:CanonicalDatasetRoleShape a sh:NodeShape ;
   sh:property [ sh:path schema:publisher ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
   sh:property [ sh:path schema:distribution ; sh:minCount 1 ] ;
   sh:property [ sh:path schema:isBasedOn ; sh:hasValue ex:project-github-source ; sh:minCount 1 ] ;
-  sh:property [ sh:path schema:url ; sh:maxCount 0 ] ;
+  # Each serialization may encode the same destination as an IRI or anyURI.
+  # This exact value set permits one semantic target, without accepting a
+  # language-tagged URL or forcing unlike RDF terms to share maxCount 1.
+  sh:property [ sh:path schema:url ; sh:minCount 1 ;
+    sh:in ( <https://www.ghezelbaash.ir/> "https://www.ghezelbaash.ir/"^^xsd:anyURI ) ] ;
   sh:property [ sh:path schema:sameAs ; sh:maxCount 0 ] .
 
 ex:DataCatalogRoleShape a sh:NodeShape ;

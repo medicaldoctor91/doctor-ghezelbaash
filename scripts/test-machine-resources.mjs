@@ -37,6 +37,71 @@ test("registry preserves existing graph distribution identities and distinct des
   assert.equal(machineResourceForPath("croissant.json").descriptorRoles.length, 0);
 });
 
+test("SHACL derives every RDF data input from registry roles and rejects incomplete coverage", async (t) => {
+  const dataRoles = new Set(["canonical", "dcat", "provenance", "void", "croissant"]);
+  const dataResources = MACHINE_RESOURCES.filter((resource) => dataRoles.has(resource.rdf?.role));
+  assert.deepEqual(new Set(dataResources.map((resource) => resource.rdf.role)), dataRoles);
+  const serialization = machineResourceForPath("graph.ttl");
+  assert.equal(serialization.rdf.role, "serialization");
+  assert.equal(serialization.rdf.isomorphicWith, machineResourceForPath("graph.jsonld").path);
+  assert.equal(machineResourceForPath("shapes.ttl").rdf.role, "shapes");
+  assert.equal(machineResourceForPath("croissant.json").rdf.format, "json-ld");
+  assert.ok(!machineResourceForPath("evidence-snapshot.json").rdf);
+  assert.ok(!machineResourceForPath("datapackage.json").rdf);
+  const validator = path.join(root, "scripts/validate-shacl.py");
+  const environment = { ...process.env, PYTHONPATH: path.join(root, ".python-deps") };
+  for (const omittedRole of ["croissant", "void"]) {
+    const partial = dataResources.filter((resource) => resource.rdf.role !== omittedRole);
+    const result = spawnSync("python", [validator, "--require-projections",
+      ...partial.flatMap((resource) => ["--data", resource.source])], { encoding: "utf8", env: environment });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, new RegExp(`SHACL data coverage is missing: ${omittedRole}`));
+  }
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "ghezelbaash-shacl-registry-"));
+  t.after(() => rm(workspace, { recursive: true, force: true }));
+  const registry = JSON.parse(await readFile(path.join(root, "src/data/machine-resources.json"), "utf8"));
+  for (const omittedRole of ["croissant", "void"]) {
+    const partial = structuredClone(registry);
+    partial.resources = partial.resources.filter((resource) => resource.rdf?.role !== omittedRole);
+    const registryPath = path.join(workspace, `${omittedRole}-missing.json`);
+    await writeFile(registryPath, JSON.stringify(partial));
+    const result = spawnSync("python", [validator, "--registry", registryPath, "--require-projections"], {
+      encoding: "utf8", env: environment,
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, new RegExp(`SHACL registry requires exactly one ${omittedRole} resource`));
+  }
+});
+
+test("SHACL parses Croissant JSON as registered JSON-LD and checks each projection before union", () => {
+  const result = spawnSync("python", ["-c", `
+import importlib.util,sys
+from pathlib import Path
+root=Path(sys.argv[1])
+spec=importlib.util.spec_from_file_location('shacl_contract',root/'scripts/validate-shacl.py')
+module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+resources=module.rdf_resources(root/'src/data/machine-resources.json')
+selected=module.data_inputs(resources,None,None,True)
+graphs={}
+for input_path,resource in selected:
+ graph,_=module.load_graph(input_path,resource['rdf']['format'])
+ module.validate_projection_presence(graph,resource)
+ graphs[resource['rdf']['role']]=graph
+assert set(graphs)==module.DATA_ROLES
+for role in ('croissant','void'):
+ resource=next(resource for _,resource in selected if resource['rdf']['role']==role)
+ try:
+  module.validate_projection_presence(graphs['canonical'],resource)
+ except ValueError as error:
+  assert 'does not contain its '+role+' projection' in str(error)
+ else:
+  raise AssertionError('Canonical data incorrectly substituted for '+role)
+print('SHACL_RDF_COVERAGE_PASS')
+`, root], { encoding: "utf8", env: { ...process.env, PYTHONPATH: path.join(root, ".python-deps") } });
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /SHACL_RDF_COVERAGE_PASS/);
+});
+
 test("profiled media type survives Content-Type, HTML discovery and nested HTTP quoting", async () => {
   const resource = machineResourceForPath("croissant.json");
   assert.equal(resource.mediaType, "application/ld+json");

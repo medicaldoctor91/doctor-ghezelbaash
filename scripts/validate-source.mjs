@@ -447,18 +447,8 @@ for (const name of [
   )
     fail(`Descriptor generator missing canonical writer for ${name}`);
 }
-for (const [label, pattern] of [
-  [
-    "DOI source",
-    /const\s+datasetLandingPage\s*=\s*`https:\/\/doi\.org\/\$\{release\.dataset\.zenodo\.versionDoi\}`/,
-  ],
-  ["VoID landing page", /foaf:homepage <\$\{datasetLandingPage\}>/],
-  ["DCAT landing page", /dcat:landingPage <\$\{datasetLandingPage\}>/],
-  ["Croissant landing page", /homepage\s*:\s*datasetLandingPage/],
-  ["Data package landing page", /url\s*:\s*datasetLandingPage/],
-])
-  if (!pattern.test(descriptorGenerator))
-    fail(`Dataset landing-page role drift in descriptor generator: ${label}`);
+// Descriptor values are checked against canonical Dataset data by the DIST
+// and current-context validators, rather than by matching generator source text.
 
 if (
   authority.identitySource !== "src/data/release.json" ||
@@ -557,7 +547,7 @@ const catalog = byId.get(`${release.canonicalUrl}#data-catalog`),
   sourceIds = new Set(arr(dataset.isBasedOn).map(id));
 if (
   catalog?.url !== `${release.canonicalUrl}dcat.ttl` ||
-  Object.hasOwn(dataset, "url") ||
+  dataset.url !== release.canonicalUrl ||
   graphDownload?.contentUrl !== `${release.canonicalUrl}graph.jsonld` ||
   !distributionIds.has(graphDownload?.["@id"])
 )
