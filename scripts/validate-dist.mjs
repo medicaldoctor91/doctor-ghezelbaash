@@ -345,10 +345,30 @@ if (
   )
 )
   fail("Maximum Content-Signal policy missing");
-const canonicalHeaders = headers.match(/^\/\r?\n((?:[ \t]+[^\r\n]*\r?\n)*)/m)?.[1] || "";
-const canonicalVary = canonicalHeaders.match(/^[ \t]+Vary:[ \t]*([^\r\n]*)/im)?.[1] || "";
-if (!canonicalVary.split(",").some((value) => value.trim().toLowerCase() === "accept-encoding"))
-  fail("Canonical response must explicitly vary by Accept-Encoding");
+const negotiatedHeaderRoutes = new Set();
+for (const [, route, block] of headers.matchAll(
+  /^(\S[^\r\n]*)\r?\n((?:[ \t]+[^\r\n]*\r?\n)*)/gm,
+)) {
+  const mediaType = (
+    block.match(/^[ \t]+Content-Type:[ \t]*([^;\s]+)/im)?.[1] || ""
+  ).toLowerCase();
+  const negotiated =
+    mediaType.startsWith("text/") ||
+    /^application\/(?:[^;\s]+\+)?(?:json|xml)$/.test(mediaType) ||
+    ["/assets/*", "/media/video-tracks/*"].includes(route);
+  if (!negotiated) continue;
+  negotiatedHeaderRoutes.add(route);
+  const vary = block.match(/^[ \t]+Vary:[ \t]*([^\r\n]*)/im)?.[1] || "";
+  if (
+    !vary
+      .split(",")
+      .some((value) => value.trim().toLowerCase() === "accept-encoding")
+  )
+    fail(`${route} must explicitly vary by Accept-Encoding`);
+}
+for (const route of ["/", "/assets/*", "/media/video-tracks/*"])
+  if (!negotiatedHeaderRoutes.has(route))
+    fail(`Negotiated response header block missing: ${route}`);
 if (
   !headers.includes("connect-src 'none'") ||
   headers.includes("connect-src 'self'")

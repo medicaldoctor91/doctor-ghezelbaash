@@ -22,6 +22,17 @@ function assertRequiredCompression(rel, offered, received, requireMachineCompres
     throw new Error(`${rel} ${offered} required compression is not effective: ${received}`);
 }
 
+function assertEncodingVary(rel, lane, value) {
+  if (
+    !String(value || "")
+      .split(",")
+      .some((part) => part.trim().toLowerCase() === "accept-encoding")
+  )
+    throw new Error(
+      `${rel} ${lane} negotiated response lacks Vary: Accept-Encoding`,
+    );
+}
+
 async function command_test_transport() {
   const { default: assert } = await import("node:assert/strict");
   for (const encoding of ["br", "gzip"]) {
@@ -41,6 +52,20 @@ async function command_test_transport() {
   }
   assertRequiredCompression("index.html", "identity", "identity");
   assertRequiredCompression("index.html", "zstd", "identity");
+  for (const file of ["index.html", "graph.jsonld", "entity-facts.csv"])
+    for (const lane of [
+      "ordinary/identity",
+      "ordinary/br",
+      "cacheBusted/gzip",
+    ]) {
+      assertEncodingVary(file, lane, "Origin, Accept-Encoding");
+      assertEncodingVary(file, lane, "accept-encoding");
+      assert.throws(() => assertEncodingVary(file, lane, null), /lacks Vary/);
+      assert.throws(
+        () => assertEncodingVary(file, lane, "Accept"),
+        /lacks Vary/,
+      );
+    }
   console.log("REQUIRED_COMPRESSION_CONTRACT_PASS");
 }
 const walkRelative = async (directory, prefix = "") => {
@@ -285,21 +310,13 @@ async function command_discovery() {
           );
         if (
           encoding !== "identity" &&
-          (rel === "index.html" || x.contentEncoding !== "identity") &&
+          x.contentEncoding !== "identity" &&
           x.contentEncoding !== encoding
         )
           throw new Error(
             `${rel} ${lane} Content-Encoding was not offered: ${x.contentEncoding}`,
           );
-        if (
-          x.contentEncoding !== "identity" &&
-          !(x.r.headers.get("vary") || "")
-            .split(",")
-            .some((v) => v.trim().toLowerCase() === "accept-encoding")
-        )
-          throw new Error(
-            `${rel} ${lane} negotiated response lacks Vary: Accept-Encoding`,
-          );
+        assertEncodingVary(rel, lane, x.r.headers.get("vary"));
         assertRequiredCompression(rel, encoding, x.contentEncoding, requireMachineCompression);
         rows.push({
           resource: rel,
