@@ -143,7 +143,9 @@ def cache_rule(host: str) -> dict[str, Any]:
             "edge_ttl": {"mode": "respect_origin"},
             "browser_ttl": {"mode": "respect_origin"},
             "serve_stale": {"disable_stale_while_updating": False},
-            "respect_strong_etags": True,
+            # Pages can fill a cold cache with identity bytes. Permit the edge to
+            # compress that representation and weaken its ETag when appropriate.
+            "respect_strong_etags": False,
         },
         "enabled": True,
     }
@@ -1993,6 +1995,8 @@ def self_test(dist_dir: Path) -> None:
     if "{{" in csp or "unsafe-inline" in csp or "unsafe-eval" in csp:
         raise CloudflareError("Final 404 CSP is unresolved or weakened")
     cache = cache_rule("www.ghezelbaash.ir")
+    if cache["action_parameters"].get("respect_strong_etags") is not False:
+        raise CloudflareError("Canonical cache must permit negotiated representation compression")
     if (cache.get("action_parameters") or {}).get("cache_key") != {
         "cache_deception_armor": True
     }:
@@ -2227,6 +2231,9 @@ def apply(dist_dir: Path) -> dict[str, Any]:
             "ref": cache_readback.get("ref"),
             "expression": cache_readback.get("expression"),
             "enabled": cache_readback.get("enabled"),
+            "respectStrongEtags": (
+                cache_readback.get("action_parameters") or {}
+            ).get("respect_strong_etags"),
             "cacheDeceptionArmor": (
                 (cache_readback.get("action_parameters") or {})
                 .get("cache_key", {})

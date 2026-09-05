@@ -14,6 +14,35 @@ import {
 
 const localDistributionFile = (resource, dist = "dist") =>
   sourceForDistribution(resource, dist);
+
+function assertRequiredCompression(rel, offered, received, requireMachineCompression = false) {
+  const required = rel === "index.html" ||
+    (requireMachineCompression && /\.(csv|ttl)$/.test(rel));
+  if (required && ["br", "gzip"].includes(offered) && received !== offered)
+    throw new Error(`${rel} ${offered} required compression is not effective: ${received}`);
+}
+
+async function command_test_transport() {
+  const { default: assert } = await import("node:assert/strict");
+  for (const encoding of ["br", "gzip"]) {
+    assertRequiredCompression("index.html", encoding, encoding);
+    assert.throws(
+      () => assertRequiredCompression("index.html", encoding, "identity"),
+      /required compression is not effective/,
+    );
+    for (const file of ["entity-facts.csv", "graph.ttl"]) {
+      assertRequiredCompression(file, encoding, "identity");
+      assert.throws(
+        () => assertRequiredCompression(file, encoding, "identity", true),
+        /required compression is not effective/,
+      );
+      assertRequiredCompression(file, encoding, encoding, true);
+    }
+  }
+  assertRequiredCompression("index.html", "identity", "identity");
+  assertRequiredCompression("index.html", "zstd", "identity");
+  console.log("REQUIRED_COMPRESSION_CONTRACT_PASS");
+}
 const walkRelative = async (directory, prefix = "") => {
   const files = [];
   for (const entry of (await readdir(directory, { withFileTypes: true })).sort(
@@ -271,15 +300,7 @@ async function command_discovery() {
           throw new Error(
             `${rel} ${lane} compressed response lacks Vary: Accept-Encoding`,
           );
-        if (
-          requireMachineCompression &&
-          /\.(csv|ttl)$/.test(rel) &&
-          ["br", "gzip"].includes(encoding) &&
-          x.contentEncoding !== encoding
-        )
-          throw new Error(
-            `${rel} ${lane} machine compression rule is not effective`,
-          );
+        assertRequiredCompression(rel, encoding, x.contentEncoding, requireMachineCompression);
         rows.push({
           resource: rel,
           lane,
@@ -517,10 +538,13 @@ async function command_release() {
 const command = process.argv[2];
 if (!command)
   throw new Error(
-    "Usage: node scripts/verify-live.mjs <current|discovery|release> [options]",
+    "Usage: node scripts/verify-live.mjs <current|discovery|release|test-transport> [options]",
   );
 process.argv.splice(2, 1);
 switch (command) {
+  case "test-transport":
+    await command_test_transport();
+    break;
   case "current":
     await command_current();
     break;
@@ -532,6 +556,6 @@ switch (command) {
     break;
   default:
     throw new Error(
-      "Usage: node scripts/verify-live.mjs <current|discovery|release> [options]",
+      "Usage: node scripts/verify-live.mjs <current|discovery|release|test-transport> [options]",
     );
 }
