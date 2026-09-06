@@ -128,6 +128,7 @@ if (
   croissant.description !== dataset.description ||
   croissant.datePublished !== dataset.datePublished ||
   croissant.dateModified !== dataset.dateModified ||
+  croissant.isLiveDataset !== true ||
   croissant.dateCreated !== dataset.dateCreated ||
   croissant.url !== datasetLandingPage
 )

@@ -286,7 +286,7 @@ export async function compileContactDiscovery(context) {
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">',
     "  <url>",
     `    <loc>${release.canonicalUrl}</loc>`,
-    `    <lastmod>${release.dateModified}</lastmod>`,
+    `    <lastmod>${requiredNode(byId, `${release.canonicalUrl}#webpage`, "canonical WebPage").dateModified}</lastmod>`,
     "",
   ].join("\n");
   for (const url of imageLocs)

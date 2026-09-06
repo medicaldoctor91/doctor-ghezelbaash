@@ -29,6 +29,7 @@ import { loadProjectionContext } from "./lib/projection-context.mjs";
 import { buildEntityFacts, serializeEntityFacts, entityFactsTableSchema, entityFactsTableDialect, entityFactsRecordSet } from "./lib/entity-facts.mjs";
 import {
   currentReleaseMetadataMismatches,
+  datasetRevisionDate,
   selectCurrentReleaseBoundNodes,
 } from "./lib/release-graph.mjs";
 import {
@@ -208,11 +209,14 @@ if (graphClosure.duplicateIds.length || graphClosure.danglingSameSiteCount)
   fail(
     `DIST graph closure drift: duplicates=${graphClosure.duplicateIds.length}, dangling=${graphClosure.danglingSameSiteCount}`,
   );
+const currentDatasetDate = datasetRevisionDate(graph, release);
 const releaseBound = selectCurrentReleaseBoundNodes(graph, release.dataset.id),
   releaseBoundMismatches = currentReleaseMetadataMismatches(releaseBound, {
     datasetId: release.dataset.id,
     release: release.release,
     dateModified: release.dateModified,
+    datasetDateModified: currentDatasetDate,
+    frozenVersionDoi: release.dataset.zenodo.versionDoi,
   });
 if (!releaseBound.length || releaseBoundMismatches.length)
   fail(
@@ -245,6 +249,7 @@ if (
   cr.dateCreated !== createdAt ||
   cr.datePublished !== dataset.datePublished ||
   cr.dateModified !== dataset.dateModified ||
+  cr.isLiveDataset !== true ||
   cr.url !== datasetLandingPage
 )
   fail("Croissant canonical identity/date/landing-page drift");
@@ -527,7 +532,7 @@ if (
 if (/\bformat=["']{2}/.test(knowledgeXml))
   fail("knowledge.xml contains an empty format fallback");
 if (
-  !llmsFull.includes(`MODIFIED: ${release.dateModified}`) ||
+  !llmsFull.includes(`MODIFIED: ${currentDatasetDate}`) ||
   !llmsFull.includes(`MEDICALLY_REVIEWED: ${release.medicalReviewedAt}`) ||
   /^GRAPH_NODE_ID:/m.test(llmsFull) ||
   /GRAPH_NODE_IDS:\s*(?:\r?\n|$)/.test(llmsFull)

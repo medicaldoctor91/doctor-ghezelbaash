@@ -1,4 +1,5 @@
 import jsonld from "jsonld";
+import { datasetRevisionDate } from "./release-graph.mjs";
 import { csvCell, nodeTypes, sha256 } from "./projection-context.mjs";
 
 // Keep the original physical columns in order. RDF types describe the value,
@@ -22,7 +23,7 @@ const descriptions = {
   provenance: "First-party source document from which the row was projected; not independent corroboration.",
   dataset: "IRI of the Dataset containing the canonical source graph.",
   version: "Release label attached to this projection, independent of the stable fact identity.",
-  modified: "Release modification date as declared by the source metadata.",
+  modified: "Recorded revision date of the source Dataset; not the modification date of an individual fact.",
   row_id: "SHA-256 of the subject, expanded predicate and RDF term or canonical embedded subgraph.",
   value_kind: "Object representation: iri, literal, or embedded-json.",
   value_media_type: "application/json for embedded-json; otherwise empty.",
@@ -98,6 +99,7 @@ export const serializeEntityFacts = (records) => {
 
 export async function buildEntityFacts({ graph, release, byId, nodeName }) {
   const sourceUrl = `${release.canonicalUrl}graph.jsonld`;
+  const modified = datasetRevisionDate(graph, release);
   const sourceRows = [];
   const rowPrefix = "urn:entity-fact-projection:row:";
   for (const node of graph["@graph"]) {
@@ -169,7 +171,7 @@ export async function buildEntityFacts({ graph, release, byId, nodeName }) {
       subject: node["@id"], type: nodeTypes(node).join("|"), name: nodeName(node),
       predicate, value: literal, object, object_name: nodeName(byId.get(object)),
       language, datatype, provenance: sourceUrl, dataset: `${sourceUrl}#dataset`,
-      version: release.release, modified: release.dateModified, row_id: rowId,
+      version: release.release, modified, row_id: rowId,
       value_kind: valueKind, value_media_type: embedded ? "application/json" : "",
     });
   }

@@ -5,6 +5,8 @@ import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
 import { assertIdentityFingerprintSource } from "./lib/release-identity.mjs";
 import {
   currentReleaseMetadataMismatches,
+  datasetRevisionDate,
+  revisionDateInRange,
   releaseHistoryNodeId,
   selectCurrentReleaseBoundNodes,
   nodeTypes,
@@ -132,7 +134,6 @@ if (
 
 if (
   codemeta.softwareVersion !== R ||
-  codemeta.dateModified !== release.dateModified ||
   codemeta.subjectOf?.version !== R ||
   codemeta.subjectOf?.identifier !== `https://doi.org/${Z.versionDoi}` ||
   codemeta.subjectOf?.name !== release.dataset.name
@@ -211,12 +212,13 @@ const person = byId.get(release.primaryEntity.id),
   dataset = byId.get(release.dataset.id);
 if (!person || !clinic || !dataset)
   fail("Core Person/Clinic/Dataset topology is incomplete");
+const currentDatasetDate = datasetRevisionDate(graph, release);
 const { services, answers } = deriveCanonicalSemanticSets(graph, release);
 validateCoreEntityIdentity({ release, nodes });
 if (
   dataset.name !== release.dataset.name ||
   dataset.version !== R ||
-  dataset.dateModified !== release.dateModified
+  dataset.dateModified !== currentDatasetDate
 )
   fail("Dataset identity/release projection drift");
 if (
@@ -245,8 +247,8 @@ if (
 )
   fail("Physician entity-home ProfilePage topology drift");
 if (
-  website.dateModified !== release.dateModified ||
-  page.dateModified !== release.dateModified ||
+  !revisionDateInRange(website.dateModified, release.dateModified, currentDatasetDate) ||
+  !revisionDateInRange(page.dateModified, release.dateModified, currentDatasetDate) ||
   page.lastReviewed !== release.medicalReviewedAt
 )
   fail("Website/ProfilePage modification and medical-review date separation drift");
@@ -284,6 +286,8 @@ const releaseBoundMismatches = currentReleaseMetadataMismatches(nodes, {
   datasetId: release.dataset.id,
   release: R,
   dateModified: release.dateModified,
+  datasetDateModified: currentDatasetDate,
+  frozenVersionDoi: Z.versionDoi,
 });
 if (releaseBoundMismatches.length)
   fail(
@@ -291,6 +295,11 @@ if (releaseBoundMismatches.length)
   );
 
 const github = byId.get(`${release.canonicalUrl}#project-github-source`);
+if (
+  codemeta.dateModified !== github?.dateModified ||
+  !revisionDateInRange(codemeta.dateModified, release.dateModified, currentDatasetDate)
+)
+  fail("CodeMeta must retain the recorded current source revision date");
 const hf = byId.get(`${release.canonicalUrl}#project-huggingface-dataset`);
 const zenodo = byId.get(`${release.canonicalUrl}#project-zenodo-release`);
 const project = byId.get(

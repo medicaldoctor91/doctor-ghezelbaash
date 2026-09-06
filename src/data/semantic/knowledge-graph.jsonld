@@ -2244,9 +2244,6 @@
           "@id": "https://www.ghezelbaash.ir/#question-needle-free-filler-device-risk"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#question-botox-vs-filler-treatment-selection"
         },
         {
@@ -2269,6 +2266,12 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-central-lip-lift-versus-lip-filler-ckb-iq"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-facial-contouring-beyond-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-filler-vs-surgery-detailed-boundary"
         }
       ],
       "dcterms:hasPart": [
@@ -2372,6 +2375,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-calf-filler-for-asymmetry"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift"
         }
       ],
       "dcterms:hasPart": [
@@ -2496,6 +2502,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-thread-lift-laxity-pattern-candidacy"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-facial-contouring-beyond-filler"
         }
       ],
       "dcterms:hasPart": [
@@ -3496,6 +3505,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-submental-liposuction-candidacy-by-cause"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-facial-contouring-beyond-filler"
         }
       ],
       "dcterms:hasPart": [
@@ -3547,9 +3559,14 @@
           "@language": "en"
         }
       ],
-      "subjectOf": {
-        "@id": "https://www.ghezelbaash.ir/#autologous-fat-grafting-vs-dermal-filler"
-      },
+      "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#autologous-fat-grafting-vs-dermal-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift"
+        }
+      ],
       "dcterms:hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/#procedure-facial-fat-grafting"
@@ -3595,9 +3612,14 @@
           "@language": "en"
         }
       ],
-      "subjectOf": {
-        "@id": "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-vs-rhinoplasty"
-      },
+      "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#nonsurgical-rhinoplasty-filler-vs-rhinoplasty"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-filler-vs-surgery-detailed-boundary"
+        }
+      ],
       "alternateName": [
         "رینوپلاستی",
         "جراحی زیبایی بینی"
@@ -3729,28 +3751,10 @@
           "@id": "https://www.ghezelbaash.ir/#question-revision-decision-wait-correct-dissolve-refer"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ar-iq"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-ar-iq"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-en"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-en"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-en"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ckb-iq"
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-can-surgical-and-non-surgical-treatments-be-combined-ckb-iq"
@@ -5264,6 +5268,24 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ar-iq"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ar-iq"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-en"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-en"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-which-facial-cosmetic-surgery-procedures-are-assessed-ckb-iq"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-which-non-surgical-aesthetic-treatments-are-available-ckb-iq"
         }
       ],
       "description": [
@@ -8138,7 +8160,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "description": "Version-controlled source project for Version 1.2.5 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable DOI preservation, and Hugging Face is AI/retrieval distribution.",
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -8174,7 +8196,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "version": "1.2.5",
       "hasPart": [
         {
@@ -8233,7 +8255,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "description": "Version-controlled GitHub source for Version 1.2.5 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
-      "dateModified": "2026-08-31"
+      "dateModified": "2026-09-06"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset",
@@ -8272,7 +8294,7 @@
         "application/jsonl"
       ],
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "version": "1.2.5"
     },
     {
@@ -8417,7 +8439,7 @@
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
         }
       ],
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld#dataset",
         {
@@ -8548,7 +8570,7 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — JSON-LD distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "version": "1.2.5",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -10317,9 +10339,14 @@
         "لیفت نخ بدن توسط دکتر سعید قزلباش"
       ],
       "url": "https://www.ghezelbaash.ir/#body-thread-lift-candidacy-and-boundaries",
-      "subjectOf": {
-        "@id": "https://www.ghezelbaash.ir/#webpage"
-      },
+      "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#webpage"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift"
+        }
+      ],
       "bodyLocation": "body",
       "procedureType": "https://schema.org/PercutaneousProcedure",
       "dcterms:isPartOf": {
@@ -12920,7 +12947,19 @@
       "answerCount": 1,
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
-      }
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-submental-liposuction"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-thread-lift"
+        }
+      ],
+      "dateModified": "2026-09-06"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#answer-facial-contouring-beyond-filler",
@@ -12934,7 +12973,19 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "description": "کانتورینگ صورت فقط تزریق فیلر نیست؛ هدف اصلاح نسبت‌هاست. بسته به علت، فیلر، درمان غبغب، نخ انتخابی، جوان‌سازی، مدیریت افتادگی یا حتی خودداری از زاویه‌سازی می‌تواند منطقی‌تر باشد و در بعضی چهره‌ها حجم بیشتر نتیجه را سنگین‌تر می‌کند."
+      "description": "کانتورینگ صورت فقط تزریق فیلر نیست؛ هدف اصلاح نسبت‌هاست. بسته به علت، فیلر، درمان غبغب، نخ انتخابی، جوان‌سازی، مدیریت افتادگی یا حتی خودداری از زاویه‌سازی می‌تواند منطقی‌تر باشد و در بعضی چهره‌ها حجم بیشتر نتیجه را سنگین‌تر می‌کند.",
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-submental-liposuction"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-thread-lift"
+        }
+      ],
+      "dateModified": "2026-09-06"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#question-fat-grafting-vs-filler-for-facial-contouring",
@@ -13057,7 +13108,19 @@
       "answerCount": 1,
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
-      }
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-filler-nose"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-rhinoplasty"
+        }
+      ],
+      "dateModified": "2026-09-06"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#answer-filler-vs-surgery-detailed-boundary",
@@ -13070,7 +13133,19 @@
       },
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
-      }
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-filler-nose"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#procedure-rhinoplasty"
+        }
+      ],
+      "dateModified": "2026-09-06"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#question-thread-lift-laxity-pattern-candidacy",
@@ -16341,9 +16416,14 @@
         "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
       },
       "url": "https://www.ghezelbaash.ir/#filler",
-      "subjectOf": {
-        "@id": "https://www.ghezelbaash.ir/#filler"
-      },
+      "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-filler-vs-surgery-detailed-boundary"
+        }
+      ],
       "dcterms:subject": [
         {
           "@id": "https://www.ghezelbaash.ir/#biomedical-concept-dermal-fillers"
@@ -20220,7 +20300,7 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Turtle distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "version": "1.2.5",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -21156,7 +21236,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21181,7 +21261,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21206,7 +21286,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21279,7 +21359,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "version": "1.2.5"
     },
     {
@@ -21330,7 +21410,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21380,7 +21460,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21405,7 +21485,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21430,7 +21510,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-06",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
