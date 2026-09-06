@@ -1,4 +1,5 @@
 import path from "node:path";
+import { datasetRevisionDate } from "./lib/release-graph.mjs";
 import { readFile } from "node:fs/promises";
 import {
   deriveEvidenceRegistry,
@@ -20,7 +21,7 @@ const fail = (m) => {
   throw new Error(m);
 };
 const d0 = new Date(snapshot.observedAt + "T00:00:00Z"),
-  d1 = new Date(release.dateModified + "T00:00:00Z"),
+  d1 = new Date(datasetRevisionDate(graph, release) + "T00:00:00Z"),
   age = Math.max(0, (d1 - d0) / 86400000);
 if (!Number.isFinite(age) || age > inv.evidenceSnapshotMaxAgeDays)
   fail(

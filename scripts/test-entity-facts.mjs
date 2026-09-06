@@ -10,8 +10,10 @@ import {
 
 const XSD = "http://www.w3.org/2001/XMLSchema#";
 const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-const release = { canonicalUrl: "https://example.org/", release: "1.0.0", dateModified: "2026-08-31" };
+const release = { canonicalUrl: "https://example.org/", release: "1.0.0", dateModified: "2026-08-31", dataset: { id: "https://example.org/graph.jsonld#dataset" } };
 function context(graph, version = release) {
+  if (!graph["@graph"].some((node) => node["@id"] === version.dataset.id))
+    graph["@graph"].push({ "@id": version.dataset.id, "@type": "Dataset", dateModified: version.dateModified });
   return {
     graph, release: version,
     byId: new Map(graph["@graph"].map((node) => [node["@id"], node])),
@@ -84,8 +86,9 @@ test("fact identity survives labels, release metadata and embedded RDF serializa
   changed["@graph"][0].name = "Name after";
   changed["@graph"][1].name = "Other after";
   changed["@graph"][0].identifier = { value: ["B", "A"], propertyID: "local", "@type": "PropertyValue" };
+  changed["@graph"].find((node) => node["@id"] === release.dataset.id).dateModified = "2026-09-05";
   const after = await buildEntityFacts(context(changed, { ...release, release: "2.0.0", dateModified: "2026-09-05" }));
-  for (const record of before.filter((entry) => entry.predicate !== "name")) {
+  for (const record of before.filter((entry) => entry.predicate !== "name" && entry.predicate !== "dateModified")) {
     const corresponding = after.find((entry) => entry.subject === record.subject && entry.predicate === record.predicate);
     assert.equal(corresponding.row_id, record.row_id);
     assert.equal(corresponding.version, "2.0.0");
@@ -106,6 +109,8 @@ test("canonical graph round-trips through all CSV facts, including embedded stru
   assert.equal(records.length, inputRows.length);
   assert.equal(new Set(records.map((record) => record.row_id)).size, records.length);
   assert.ok(records.every((record) => record.provenance === `${sourceRelease.canonicalUrl}graph.jsonld`));
+  const datasetDate = graph["@graph"].find((node) => node["@id"] === sourceRelease.dataset.id).dateModified;
+  assert.ok(records.every((record) => record.modified === datasetDate));
   assert.ok(records.every((record) => record.value_kind === "literal" ? record.datatype.length > 0 : !record.datatype));
   assert.equal(await canon(reconstruct(records, graph["@context"])), await canon(graph));
   // An independent standards CSV reader exercises quoting, Persian text, embedded
@@ -115,6 +120,23 @@ test("canonical graph round-trips through all CSV facts, including embedded stru
   });
   assert.equal(python.status, 0, python.stderr);
   assert.deepEqual(JSON.parse(python.stdout), records);
+});
+
+test("Dataset revision changes projection metadata without relabeling an unchanged fact", async () => {
+  const graph = {
+    "@context": { "@vocab": "https://schema.org/" },
+    "@graph": [{ "@id": "https://example.org/#person", "@type": "Person", name: "Recorded name" }],
+  };
+  const before = await buildEntityFacts(context(graph));
+  graph["@graph"].find((node) => node["@id"] === release.dataset.id).dateModified = "2026-09-06";
+  const after = await buildEntityFacts(context(graph));
+  const oldName = before.find((row) => row.predicate === "name");
+  const newName = after.find((row) => row.predicate === "name");
+  assert.equal(newName.row_id, oldName.row_id);
+  assert.equal(newName.version, oldName.version);
+  assert.equal(oldName.modified, "2026-08-31");
+  assert.equal(newName.modified, "2026-09-06");
+  assert.equal(release.dateModified, "2026-08-31");
 });
 
 test("tabular descriptors expose the physical schema, primary key and real Croissant CSV extraction", () => {

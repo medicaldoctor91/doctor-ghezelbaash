@@ -309,7 +309,7 @@ export function compileKnowledgeXml({
   ].join("");
   const document = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    `<knowledge release="${xml(release.release)}" modified="${xml(release.dateModified)}" canonical="${xml(release.canonicalUrl)}">`,
+    `<knowledge release="${xml(release.release)}" modified="${xml(dataset.dateModified)}" canonical="${xml(release.canonicalUrl)}">`,
     `  <primaryEntity id="${xml(person["@id"])}" googleKg="${xml(release.primaryEntity.googleKnowledgeGraphId)}" wikidata="${xml(release.primaryEntity.wikidata)}"><name>${xml(release.primaryEntity.name)}</name>${aliasXml}</primaryEntity>`,
     ownedClinicXml,
     `  <dataset id="${xml(dataset["@id"])}" version="${xml(release.release)}" creator="${xml(release.primaryEntity.id)}" publisher="${xml(release.primaryEntity.id)}">${distributionXml}</dataset>`,

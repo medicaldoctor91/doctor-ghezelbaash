@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { currentReleaseMetadataMismatches, datasetRevisionDate } from "./lib/release-graph.mjs";
 import path from "node:path";
 import os from "node:os";
+
 import { MIMEType } from "node:util";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -29,6 +31,38 @@ const bindings = {
   httpResourceLinks: '<https://example.test/graph.jsonld>; rel="describedby"',
 };
 
+test("current resource revisions and immutable DOI dates have independent bounds", () => {
+  const base = {
+    release: "1.2.5", dateModified: "2026-08-31",
+    dataset: { id: "https://example.org/graph.jsonld#dataset" },
+  };
+  const frozenVersionDoi = "10.5281/zenodo.22216583";
+  const nodes = [
+    { "@id": base.dataset.id, "@type": "Dataset", dateModified: "2026-09-06" },
+    { "@id": "https://example.org/current", "@type": "DataDownload", isPartOf: { "@id": base.dataset.id }, version: base.release, dateModified: "2026-09-06" },
+    { "@id": "https://example.org/unchanged", "@type": "DigitalDocument", isBasedOn: { "@id": base.dataset.id }, version: base.release, dateModified: base.dateModified },
+    { "@id": "https://example.org/archive", "@type": "DataDownload", isPartOf: { "@id": base.dataset.id }, url: `https://doi.org/${frozenVersionDoi}`, version: base.release, dateModified: base.dateModified },
+  ];
+  const options = {
+    datasetId: base.dataset.id, release: base.release, dateModified: base.dateModified,
+    datasetDateModified: datasetRevisionDate(nodes, base), frozenVersionDoi,
+  };
+  assert.deepEqual(currentReleaseMetadataMismatches(nodes, options), []);
+  for (const [index, field, value] of [
+    [1, "dateModified", "2026-09-07"], [1, "dateModified", "2026-08-30"],
+    [1, "dateModified", "2026-02-30"], [1, "dateModified", undefined],
+    [1, "version", "1.2.6"], [3, "dateModified", "2026-09-06"],
+  ]) {
+    const changed = structuredClone(nodes);
+    changed[index][field] = value;
+    assert.deepEqual(currentReleaseMetadataMismatches(changed, options).map((node) => node.id), [changed[index]["@id"]]);
+  }
+  for (const invalid of ["2026-02-30", "2026-08-30", undefined]) {
+    const changed = structuredClone(nodes);
+    changed[0].dateModified = invalid;
+    assert.throws(() => datasetRevisionDate(changed, base), /revision date/);
+  }
+});
 test("registry preserves existing graph distribution identities and distinct descriptor inventories", () => {
   const downloads = graph["@graph"].filter((node) => node["@id"].endsWith("#download"));
   assert.equal(downloads.length, 13);

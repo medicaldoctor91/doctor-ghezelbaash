@@ -2,6 +2,9 @@ import { readFile } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
 import {
   currentReleaseMetadataMismatches,
+  datasetRevisionDate,
+  revisionDateInRange,
+  validRevisionDate,
   releaseHistoryNodeId,
   selectCurrentReleaseBoundNodes,
 } from "./lib/release-graph.mjs";
@@ -75,6 +78,7 @@ const previousHistory = structuredClone(z.releaseHistory);
 const old = {
   release: release.release,
   date: release.dateModified,
+  datasetDate: datasetRevisionDate(graph, release),
   recordId: String(z.recordId),
   versionDoi: z.versionDoi,
 };
@@ -85,7 +89,7 @@ const next = {
   versionDoi: args["zenodo-doi"],
 };
 must(/^\d+\.\d+\.\d+$/.test(next.release || ""), "Invalid --version");
-must(/^\d{4}-\d{2}-\d{2}$/.test(next.date || ""), "Invalid --date");
+must(validRevisionDate(next.date), "Invalid --date");
 must(/^\d+$/.test(next.recordId), "Invalid --zenodo-record");
 must(
   /^10\.5281\/zenodo\.\d+$/.test(next.versionDoi || ""),
@@ -108,6 +112,8 @@ if (next.release === old.release) {
   );
   process.exit(0);
 }
+
+must(next.date >= old.datasetDate, "New release cannot predate the recorded current Dataset revision");
 
 const existing = z.releaseHistory.find((x) => x.release === next.release);
 if (existing)
@@ -193,15 +199,15 @@ const encodings = [
 
 // Static topology is source truth. Promotion rejects drift and advances release-bound values only.
 must(
-  website.dateModified === old.date &&
-    webpage.dateModified === old.date &&
+  revisionDateInRange(website.dateModified, old.date, old.datasetDate) &&
+    revisionDateInRange(webpage.dateModified, old.date, old.datasetDate) &&
     webpage.lastReviewed === release.medicalReviewedAt,
   "Website/ProfilePage modification and medical-review date separation drift",
 );
 must(
   dataset["@type"] === "Dataset" &&
     dataset.version === old.release &&
-    dataset.dateModified === old.date &&
+    dataset.dateModified === old.datasetDate &&
     dataset.description === datasetDescription &&
     dataset.url === release.canonicalUrl,
   "Canonical Dataset shape/release drift",
@@ -231,14 +237,14 @@ must(
 must(
   project["@type"] === "CreativeWork" &&
     project.version === old.release &&
-    project.dateModified === old.date &&
+    revisionDateInRange(project.dateModified, old.date, old.datasetDate) &&
     project.description === projectDescription(old.release),
   "Canonical project shape/release drift",
 );
 must(
   github["@type"] === "SoftwareSourceCode" &&
     github.version === old.release &&
-    github.dateModified === old.date &&
+    revisionDateInRange(github.dateModified, old.date, old.datasetDate) &&
     github.url === release.dataset.github.repository &&
     github.codeRepository === release.dataset.github.repository &&
     refId(github.isPartOf) === project["@id"] &&
@@ -249,7 +255,7 @@ absent(github, ["contentUrl"], "Canonical GitHub source");
 must(
   hf["@type"] === "DataDownload" &&
     hf.version === old.release &&
-    hf.dateModified === old.date &&
+    revisionDateInRange(hf.dateModified, old.date, old.datasetDate) &&
     hf.url === release.dataset.huggingFace.dataset &&
     isDeepStrictEqual(hf.encodingFormat, encodings) &&
     hf.description === hfDescription(old.release),
@@ -281,7 +287,7 @@ absent(
 must(
   catalog["@type"] === "DataCatalog" &&
     catalog.version === old.release &&
-    catalog.dateModified === old.date &&
+    revisionDateInRange(catalog.dateModified, old.date, old.datasetDate) &&
     catalog.name ===
       "Dr. Saeed Ghezelbash Public Knowledge Graph — Data Catalog" &&
     catalog.description === catalogDescription &&
@@ -298,6 +304,8 @@ const releaseBoundDrift = currentReleaseMetadataMismatches(nodes, {
   datasetId: release.dataset.id,
   release: old.release,
   dateModified: old.date,
+  datasetDateModified: old.datasetDate,
+  frozenVersionDoi: old.versionDoi,
 });
 must(
   !releaseBoundDrift.length,

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { datasetRevisionDate, validRevisionDate } from "../release-graph.mjs";
 import { readFile, writeFile } from "node:fs/promises";
 import { parseFragment } from "parse5";
 import {
@@ -268,6 +269,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     evidenceRefsForNode,
     identityFingerprintSha256,
   } = context;
+  const currentDatasetDate = datasetRevisionDate(graph, release);
   if (!Array.isArray(answerRecords))
     throw new Error(
       "Retrieval compiler requires answerRecords[] from semantic compiler",
@@ -474,7 +476,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     `PRICE_RANGE: ${release.clinic.priceRange}`,
     `CANONICAL: ${release.canonicalUrl}`,
     `RELEASE: ${release.release}`,
-    `MODIFIED: ${release.dateModified}`,
+    `MODIFIED: ${currentDatasetDate}`,
     `MEDICALLY_REVIEWED: ${release.medicalReviewedAt}`,
     `IDENTITY_FINGERPRINT_SHA256: ${identityFingerprintSha256}`,
     `PASSAGE_COUNT: ${emitted.length}`,
@@ -527,7 +529,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
         { "@id": release.clinic.id },
       ],
       version: release.release,
-      dateModified: release.dateModified,
+      dateModified: currentDatasetDate,
       isBasedOn: { "@id": `${release.canonicalUrl}graph.jsonld#dataset` },
       identifier: {
         "@type": "PropertyValue",
@@ -645,6 +647,11 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
     sourceHash,
     executiveSummaryHash,
   } of answerRecords) {
+    // A recorded Q/A metadata revision is distinct from both medical review and
+    // the revision of the entire Dataset. Unchanged records keep their date.
+    const answerModifiedAt = q.dateModified ?? release.dateModified;
+    if (!validRevisionDate(answerModifiedAt) || answerModifiedAt > currentDatasetDate)
+      throw new Error(`Invalid answer provenance revision date: ${q["@id"]}`);
     provenanceGraph.push({
       "@id": `${release.canonicalUrl}provenance.jsonld#answer-${sourceHash.slice(0, 16)}`,
       "@type": ["CreativeWork", "prov:Entity"],
@@ -682,7 +689,7 @@ export async function compileRetrievalCorpus(context, { answerRecords } = {}) {
             ]
           : []),
       ],
-      dateModified: release.dateModified,
+      dateModified: answerModifiedAt,
     });
   }
   await writeFile(

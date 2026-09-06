@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { datasetRevisionDate } from "./lib/release-graph.mjs";
 import { generatedWorkspace } from "./generated-workspace.mjs";
 import {
   canonicalizeRdfDocument,
@@ -27,7 +28,7 @@ const lock = {
   ttlSha256: sha(fs.readFileSync(target)),
   canonicalizedBlankNodes: true,
   ...RDF_MEASUREMENT_CONTRACT,
-  generated: release.dateModified,
+  generated: datasetRevisionDate(doc, release),
 };
 fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + "\n");
 console.log(JSON.stringify(lock, null, 2));

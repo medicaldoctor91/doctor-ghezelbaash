@@ -396,7 +396,7 @@ const croissant = {
     "multilingual retrieval",
   ],
   inLanguage: retrievalPolicy.languages,
-  isLiveDataset: false,
+  isLiveDataset: true,
   recordSet: [entityFactsRecordSet(release.canonicalUrl, resourceByPath.get("entity-facts.csv").distributionIri)],
   distribution: resourcesForDescriptor("croissant")
     .map((m) => ({

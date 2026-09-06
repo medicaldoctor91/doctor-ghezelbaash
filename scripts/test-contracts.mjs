@@ -417,6 +417,41 @@ async function canonical_semantic_derivation_contract() {
     ],
     ["submental-liposuction-candidacy-by-cause", "procedure-submental-liposuction"],
     ["thread-lift-laxity-pattern-candidacy", "procedure-thread-lift"],
+    ...["ar-iq", "en", "ckb-iq"].flatMap((language) =>
+      [
+        "which-facial-cosmetic-surgery-procedures-are-assessed",
+        "which-non-surgical-aesthetic-treatments-are-available",
+      ].map((fragment) => [
+        `${fragment}-${language}`,
+        "saeed-ghezelbash",
+        "procedure-body-aesthetic-surgery",
+      ]),
+    ),
+    [
+      "body-filler-vs-fat-grafting-vs-thread-lift",
+      [
+        "procedure-body-dermal-filler",
+        "procedure-autologous-fat-grafting",
+        "procedure-body-thread-lift",
+      ],
+      "procedure-facial-and-lip-dermal-filler",
+    ],
+    [
+      "facial-contouring-beyond-filler",
+      [
+        "procedure-facial-and-lip-dermal-filler",
+        "procedure-submental-liposuction",
+        "procedure-thread-lift",
+      ],
+    ],
+    [
+      "filler-vs-surgery-detailed-boundary",
+      [
+        "procedure-facial-and-lip-dermal-filler",
+        "procedure-filler-nose",
+        "procedure-rhinoplasty",
+      ],
+    ],
   ];
   const ids = (value) =>
     (Array.isArray(value) ? value : value == null ? [] : [value]).map(
@@ -427,18 +462,21 @@ async function canonical_semantic_derivation_contract() {
     for (const [fragment, correct, previous] of correctedTopics) {
       const questionId = `${release.canonicalUrl}#question-${fragment}`;
       const answerId = `${release.canonicalUrl}#answer-${fragment}`;
-      const correctId = `${release.canonicalUrl}#${correct}`;
+      const correctIds = [].concat(correct).map(
+        (fragment) => `${release.canonicalUrl}#${fragment}`,
+      );
       const previousId = `${release.canonicalUrl}#${previous}`;
       for (const nodeId of [questionId, answerId])
         assert.deepEqual(
           ids(byId.get(nodeId)?.about),
-          [correctId],
+          correctIds,
           `Canonical topic assignment regressed: ${nodeId}`,
         );
-      assert.ok(
-        ids(byId.get(correctId)?.subjectOf).includes(questionId),
-        `Correct topic lacks inverse subjectOf: ${questionId}`,
-      );
+      for (const correctId of correctIds)
+        assert.ok(
+          ids(byId.get(correctId)?.subjectOf).includes(questionId),
+          `Correct topic lacks inverse subjectOf: ${questionId}`,
+        );
       if (previous)
         assert.ok(
           !ids(byId.get(previousId)?.subjectOf).includes(questionId),
