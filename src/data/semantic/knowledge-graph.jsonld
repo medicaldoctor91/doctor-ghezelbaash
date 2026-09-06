@@ -2493,6 +2493,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-botox-vs-thread-lift"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-thread-lift-laxity-pattern-candidacy"
         }
       ],
       "dcterms:hasPart": [
@@ -3172,9 +3175,6 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-hair-prp-and-mesotherapy-doctor-selection-criteria"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq"
         }
       ],
       "dcterms:hasPart": [
@@ -3442,6 +3442,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-en"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq"
         }
       ],
       "alternateName": [
@@ -3483,9 +3486,6 @@
           "@id": "https://www.ghezelbaash.ir/#submental-liposuction-for-fat-dominant-fullness"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#question-body-filler-hip-dip-buttock-doctor-selection"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#question-submental-thread-lift-vs-liposuction-vs-injectable-lipolysis"
         },
         {
@@ -3493,6 +3493,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-jawline-and-submental-doctor-selection-criteria-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-submental-liposuction-candidacy-by-cause"
         }
       ],
       "dcterms:hasPart": [
@@ -10041,6 +10044,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#question-hip-dip-normal-anatomy-vs-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-body-filler-hip-dip-buttock-doctor-selection"
         }
       ],
       "bodyLocation": "body / buttocks",
@@ -12985,6 +12991,9 @@
       "answerCount": 1,
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#procedure-submental-liposuction"
       }
     },
     {
@@ -12998,6 +13007,9 @@
       },
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#procedure-submental-liposuction"
       }
     },
     {
@@ -13072,6 +13084,9 @@
       "answerCount": 1,
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#procedure-thread-lift"
       }
     },
     {
@@ -13085,6 +13100,9 @@
       },
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
+      },
+      "about": {
+        "@id": "https://www.ghezelbaash.ir/#procedure-thread-lift"
       }
     },
     {
