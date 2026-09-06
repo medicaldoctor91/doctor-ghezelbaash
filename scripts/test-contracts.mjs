@@ -405,6 +405,18 @@ async function canonical_semantic_derivation_contract() {
       "procedure-body-dermal-filler",
       "procedure-facial-and-lip-dermal-filler",
     ],
+    [
+      "is-buccal-fat-removal-suitable-for-every-full-face-ckb-iq",
+      "procedure-buccal-fat-removal",
+      "procedure-hair-loss-evaluation-and-treatment",
+    ],
+    [
+      "body-filler-hip-dip-buttock-doctor-selection",
+      "procedure-gluteal-body-filler",
+      "procedure-submental-liposuction",
+    ],
+    ["submental-liposuction-candidacy-by-cause", "procedure-submental-liposuction"],
+    ["thread-lift-laxity-pattern-candidacy", "procedure-thread-lift"],
   ];
   const ids = (value) =>
     (Array.isArray(value) ? value : value == null ? [] : [value]).map(
@@ -427,35 +439,42 @@ async function canonical_semantic_derivation_contract() {
         ids(byId.get(correctId)?.subjectOf).includes(questionId),
         `Correct topic lacks inverse subjectOf: ${questionId}`,
       );
-      assert.ok(
-        !ids(byId.get(previousId)?.subjectOf).includes(questionId),
-        `Previous topic retains a contradictory inverse: ${questionId}`,
-      );
+      if (previous)
+        assert.ok(
+          !ids(byId.get(previousId)?.subjectOf).includes(questionId),
+          `Previous topic retains a contradictory inverse: ${questionId}`,
+        );
     }
   };
   assertCorrectedTopics(graph);
   for (const [fragment, , previous] of correctedTopics) {
     const wrongTopic = structuredClone(graph);
-    for (const prefix of ["question-", "answer-"])
-      wrongTopic["@graph"].find(
+    for (const prefix of ["question-", "answer-"]) {
+      const node = wrongTopic["@graph"].find(
         (node) => node["@id"] === `${release.canonicalUrl}#${prefix}${fragment}`,
-      ).about = { "@id": `${release.canonicalUrl}#${previous}` };
+      );
+      if (previous) node.about = { "@id": `${release.canonicalUrl}#${previous}` };
+      else delete node.about;
+    }
     assert.throws(
       () => assertCorrectedTopics(wrongTopic),
       /Canonical topic assignment regressed/,
     );
   }
-  const staleInverse = structuredClone(graph);
-  staleInverse["@graph"].find(
-    (node) =>
-      node["@id"] === `${release.canonicalUrl}#procedure-facial-and-lip-dermal-filler`,
-  ).subjectOf.push({
-    "@id": `${release.canonicalUrl}#question-hip-dip-normal-anatomy-vs-filler`,
-  });
-  assert.throws(
-    () => assertCorrectedTopics(staleInverse),
-    /Previous topic retains a contradictory inverse/,
-  );
+  for (const [fragment, , previous] of correctedTopics) {
+    if (!previous) continue;
+    const staleInverse = structuredClone(graph);
+    const previousNode = staleInverse["@graph"].find(
+      (node) => node["@id"] === `${release.canonicalUrl}#${previous}`,
+    );
+    previousNode.subjectOf = [].concat(previousNode.subjectOf ?? [], {
+      "@id": `${release.canonicalUrl}#question-${fragment}`,
+    });
+    assert.throws(
+      () => assertCorrectedTopics(staleInverse),
+      /Previous topic retains a contradictory inverse/,
+    );
+  }
 
   // The UI text is discovered from actual video fallback nodes instead of
   // duplicating a translation in a production blacklist. Visible fallbacks stay.
