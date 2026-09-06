@@ -104,7 +104,7 @@
       }
     },
     {
-      "includes": ["clinical-team", "clinic-team", "social-1200x630"],
+      "includes": ["clinical-team", "clinic-team"],
       "title": "Saeed Ghezelbash with the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic",
       "description": "دکتر سعید قزلباش همراه تیم بالینی کلینیک زیبایی در کرمانشاه | Saeed Ghezelbash with his clinical team in Kermanshah, Iran.",
       "role": "Physician with clinical team",
@@ -136,7 +136,7 @@
       "clinicLocation": true
     },
     {
-      "includes": ["portrait"],
+      "includes": ["portrait", "social-1200x630"],
       "title": "Saeed Ghezelbash — canonical physician portrait",
       "description": "Canonical portrait of Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine in Kermanshah, Iran.",
       "role": "Canonical physician portrait",

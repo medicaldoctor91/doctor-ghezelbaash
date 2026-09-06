@@ -2244,12 +2244,6 @@
           "@id": "https://www.ghezelbaash.ir/#question-needle-free-filler-device-risk"
         },
         {
-          "@id": "https://www.ghezelbaash.ir/#question-hip-dip-normal-anatomy-vs-filler"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#question-calf-filler-for-asymmetry"
-        },
-        {
           "@id": "https://www.ghezelbaash.ir/#question-body-filler-vs-fat-grafting-vs-thread-lift"
         },
         {
@@ -2372,9 +2366,14 @@
           "@language": "en"
         }
       ],
-      "subjectOf": {
-        "@id": "https://www.ghezelbaash.ir/#body-filler"
-      },
+      "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#body-filler"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-calf-filler-for-asymmetry"
+        }
+      ],
       "dcterms:hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/#procedure-gluteal-body-filler"
@@ -10036,9 +10035,14 @@
         "فیلر بادی و فرم‌دهی باسن توسط دکتر سعید قزلباش"
       ],
       "url": "https://www.ghezelbaash.ir/#body-filler",
-      "subjectOf": {
-        "@id": "https://www.ghezelbaash.ir/#webpage"
-      },
+      "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#webpage"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-hip-dip-normal-anatomy-vs-filler"
+        }
+      ],
       "bodyLocation": "body / buttocks",
       "procedureType": "https://schema.org/PercutaneousProcedure",
       "dcterms:isPartOf": {
@@ -13756,7 +13760,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "about": {
-        "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
+        "@id": "https://www.ghezelbaash.ir/#procedure-gluteal-body-filler"
       }
     },
     {
@@ -13772,7 +13776,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "about": {
-        "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
+        "@id": "https://www.ghezelbaash.ir/#procedure-gluteal-body-filler"
       }
     },
     {
@@ -13789,7 +13793,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "about": {
-        "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
+        "@id": "https://www.ghezelbaash.ir/#procedure-body-dermal-filler"
       }
     },
     {
@@ -13805,7 +13809,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "about": {
-        "@id": "https://www.ghezelbaash.ir/#procedure-facial-and-lip-dermal-filler"
+        "@id": "https://www.ghezelbaash.ir/#procedure-body-dermal-filler"
       }
     },
     {
@@ -13956,7 +13960,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "about": {
-        "@id": "https://www.ghezelbaash.ir/#procedure-acne-scar-evaluation"
+        "@id": "https://www.ghezelbaash.ir/#procedure-pigmentation"
       }
     },
     {
@@ -13972,7 +13976,7 @@
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "about": {
-        "@id": "https://www.ghezelbaash.ir/#procedure-acne-scar-evaluation"
+        "@id": "https://www.ghezelbaash.ir/#procedure-pigmentation"
       },
       "description": "برای انتخاب بهترین دکتر درمان لک در کرمانشاه، ابتدا باید نوع تیرگی درست تفکیک شود. دکتر سعید قزلباش ملاسما، لک آفتاب، تیرگی پس از التهاب، قرمزی عروقی و ناهماهنگی رنگ را با تیپ پوست، عمق، محرک و احتمال عود می‌سنجد تا درمان به علت واقعی نزدیک شود."
     },
@@ -14029,7 +14033,7 @@
     {
       "@id": "https://www.ghezelbaash.ir/#answer-jalupro-vs-profhilo-selection",
       "@type": "Answer",
-      "text": "جالپرو و پروفایلو هر دو در حوزه کیفیت پوست مطرح می‌شوند، اما جای فیلر کلاسیک را نمی‌گیرند. هدف آن‌ها تغییر واضح فرم صورت نیست؛ انتخاب میان آن‌ها به وضعیت پوست، ناحیه درمان، سابقه تزریق و انتظار بیمار بستگی دارد. مرورگر شما از پخش ویدئو پشتیبانی نمی‌کند. توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.",
+      "text": "جالپرو و پروفایلو هر دو در حوزه کیفیت پوست مطرح می‌شوند، اما جای فیلر کلاسیک را نمی‌گیرند. هدف آن‌ها تغییر واضح فرم صورت نیست؛ انتخاب میان آن‌ها به وضعیت پوست، ناحیه درمان، سابقه تزریق و انتظار بیمار بستگی دارد. توضیحات دکتر سعید قزلباش درباره پروفایلو، جالپرو و تفاوت جوانسازهای تزریقی.",
       "url": "https://www.ghezelbaash.ir/#jalupro-vs-profhilo-selection",
       "inLanguage": "fa-IR",
       "author": {
@@ -16832,9 +16836,14 @@
       ],
       "bodyLocation": "skin",
       "url": "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars",
-      "subjectOf": {
-        "@id": "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
-      },
+      "subjectOf": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#acne-pigmentation-and-scars"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#question-pigmentation-doctor-selection-criteria-kermanshah"
+        }
+      ],
       "dcterms:subject": [
         {
           "@id": "https://www.ghezelbaash.ir/#biomedical-concept-hyperpigmentation"
@@ -20338,7 +20347,7 @@
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-social-1200x630",
       "@type": "ImageObject",
       "name": "Social preview portrait of Dr. Saeed Ghezelbash",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.1f3aa6ee9d26.jpg",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.3cb1e1b34599.jpg",
       "encodingFormat": "image/jpeg",
       "width": {
         "@type": "QuantitativeValue",
@@ -20373,7 +20382,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.1f3aa6ee9d26.jpg",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.3cb1e1b34599.jpg",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },

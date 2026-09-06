@@ -4,6 +4,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { parseFragment } from "parse5";
 import { commitTextFiles } from "./lib/file-transaction.mjs";
 import { assertDocumentContract } from "./lib/html-contract.mjs";
 import { assertSameDocumentGraphUrlTargets } from "./lib/graph-integrity.mjs";
@@ -373,6 +374,127 @@ async function canonical_semantic_derivation_contract() {
     /Question\/Answer topology is not one-to-one/,
   );
 
+  const subjectDrift = structuredClone(graph);
+  const driftQuestion = subjectDrift["@graph"].find((node) =>
+    [node["@type"]].flat().includes("Question"),
+  );
+  const driftAnswer = subjectDrift["@graph"].find(
+    (node) => node["@id"] === driftQuestion.acceptedAnswer["@id"],
+  );
+  driftAnswer.about = { "@id": release.clinic.id };
+  assert.throws(
+    () => deriveCanonicalSemanticSets(subjectDrift, release),
+    /Question\/Answer subject drift/,
+  );
+
+  // These regressions preserve independently checked topic assignments, even
+  // when both Question and Answer are changed to the same wrong subject.
+  const correctedTopics = [
+    [
+      "pigmentation-doctor-selection-criteria-kermanshah",
+      "procedure-pigmentation",
+      "procedure-acne-scar-evaluation",
+    ],
+    [
+      "hip-dip-normal-anatomy-vs-filler",
+      "procedure-gluteal-body-filler",
+      "procedure-facial-and-lip-dermal-filler",
+    ],
+    [
+      "calf-filler-for-asymmetry",
+      "procedure-body-dermal-filler",
+      "procedure-facial-and-lip-dermal-filler",
+    ],
+  ];
+  const ids = (value) =>
+    (Array.isArray(value) ? value : value == null ? [] : [value]).map(
+      (item) => item["@id"],
+    );
+  const assertCorrectedTopics = (candidate) => {
+    const { byId } = indexCanonicalGraph(candidate);
+    for (const [fragment, correct, previous] of correctedTopics) {
+      const questionId = `${release.canonicalUrl}#question-${fragment}`;
+      const answerId = `${release.canonicalUrl}#answer-${fragment}`;
+      const correctId = `${release.canonicalUrl}#${correct}`;
+      const previousId = `${release.canonicalUrl}#${previous}`;
+      for (const nodeId of [questionId, answerId])
+        assert.deepEqual(
+          ids(byId.get(nodeId)?.about),
+          [correctId],
+          `Canonical topic assignment regressed: ${nodeId}`,
+        );
+      assert.ok(
+        ids(byId.get(correctId)?.subjectOf).includes(questionId),
+        `Correct topic lacks inverse subjectOf: ${questionId}`,
+      );
+      assert.ok(
+        !ids(byId.get(previousId)?.subjectOf).includes(questionId),
+        `Previous topic retains a contradictory inverse: ${questionId}`,
+      );
+    }
+  };
+  assertCorrectedTopics(graph);
+  for (const [fragment, , previous] of correctedTopics) {
+    const wrongTopic = structuredClone(graph);
+    for (const prefix of ["question-", "answer-"])
+      wrongTopic["@graph"].find(
+        (node) => node["@id"] === `${release.canonicalUrl}#${prefix}${fragment}`,
+      ).about = { "@id": `${release.canonicalUrl}#${previous}` };
+    assert.throws(
+      () => assertCorrectedTopics(wrongTopic),
+      /Canonical topic assignment regressed/,
+    );
+  }
+  const staleInverse = structuredClone(graph);
+  staleInverse["@graph"].find(
+    (node) =>
+      node["@id"] === `${release.canonicalUrl}#procedure-facial-and-lip-dermal-filler`,
+  ).subjectOf.push({
+    "@id": `${release.canonicalUrl}#question-hip-dip-normal-anatomy-vs-filler`,
+  });
+  assert.throws(
+    () => assertCorrectedTopics(staleInverse),
+    /Previous topic retains a contradictory inverse/,
+  );
+
+  // The UI text is discovered from actual video fallback nodes instead of
+  // duplicating a translation in a production blacklist. Visible fallbacks stay.
+  const page = parseFragment(await readFile("src/content-source/page.md", "utf8"));
+  const fallbackTexts = new Set();
+  const textContent = (node) =>
+    node.nodeName === "#text"
+      ? node.value
+      : (node.childNodes ?? []).map(textContent).join("");
+  const collectFallbacks = (node) => {
+    if (node.tagName === "video") {
+      const text = textContent(node).replace(/\s+/gu, " ").trim();
+      if (text) fallbackTexts.add(text);
+    }
+    for (const child of node.childNodes ?? []) collectFallbacks(child);
+  };
+  collectFallbacks(page);
+  assert.ok(fallbackTexts.size > 0, "Visible video fallbacks must be preserved");
+  const assertNoAnswerFallbacks = (candidate) => {
+    for (const answer of candidate["@graph"].filter((node) =>
+      [node["@type"]].flat().includes("Answer"),
+    ))
+      for (const text of fallbackTexts)
+        assert.ok(
+          !answer.text.replace(/\s+/gu, " ").includes(text),
+          `Browser video fallback leaked into Answer.text: ${answer["@id"]}`,
+        );
+  };
+  assertNoAnswerFallbacks(graph);
+  const pollutedAnswer = structuredClone(graph);
+  pollutedAnswer["@graph"].find(
+    (node) =>
+      node["@id"] === `${release.canonicalUrl}#answer-jalupro-vs-profhilo-selection`,
+  ).text += ` ${[...fallbackTexts][0]}`;
+  assert.throws(
+    () => assertNoAnswerFallbacks(pollutedAnswer),
+    /Browser video fallback leaked into Answer.text/,
+  );
+
   const providerDrift = structuredClone(graph),
     service = providerDrift["@graph"].find((node) =>
       [node["@type"]].flat().includes("Service"),
@@ -469,6 +591,10 @@ async function canonical_semantic_derivation_contract() {
         answers: derived.answers.length,
         services: derived.services.length,
         sharedAnswerRejection: "PASS",
+        questionAnswerSubjectDriftRejection: "PASS",
+        correctedTopicAssignments: correctedTopics.length,
+        wrongTopicAndStaleInverseRejection: "PASS",
+        browserVideoFallbackRejection: "PASS",
         providerDriftRejection: "PASS",
         missingDirectServiceAliasRejection: "PASS",
         ambiguousLanguageLiteralRejection: "PASS",

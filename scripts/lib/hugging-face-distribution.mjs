@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
-import { resourcesForTarget } from "../../src/lib/resources.mjs";
+import path from "node:path";
+import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
+import { resourcesForTarget, sourceForDistribution } from "../../src/lib/resources.mjs";
 
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const must = (condition, message) => {
@@ -9,6 +11,74 @@ const must = (condition, message) => {
 export const HUGGING_FACE_MANIFEST_FILE = "dist-sha256.json";
 const HUGGING_FACE_AUXILIARY_FILES = Object.freeze(["README.md"]);
 const HUGGING_FACE_REPOSITORY_METADATA = Object.freeze([".gitattributes"]);
+const HUGGING_FACE_PACKAGE_FILE = "datapackage.json";
+
+// A portable package resolves paths next to its descriptor. The registry owns
+// core outputs; the descriptor also owns generated resources such as VTT tracks.
+export const huggingFacePackageResources = (descriptor) => {
+  must(
+    descriptor && Array.isArray(descriptor.resources) && descriptor.resources.length > 0,
+    "HF Data Package resources are missing",
+  );
+  const paths = new Set();
+  return Object.freeze(descriptor.resources.map((resource) => {
+    const file = resource?.path;
+    must(
+      typeof file === "string" && /^[a-z0-9][a-z0-9._/-]*$/i.test(file) &&
+        file.split("/").every((segment) => segment && !segment.startsWith(".")) &&
+        ![HUGGING_FACE_MANIFEST_FILE, HUGGING_FACE_PACKAGE_FILE,
+          ...HUGGING_FACE_AUXILIARY_FILES, ...HUGGING_FACE_REPOSITORY_METADATA].includes(file),
+      `HF Data Package requires a safe relative resource path: ${file}`,
+    );
+    must(!paths.has(file), `HF Data Package duplicate resource path: ${file}`);
+    must(
+      Number.isSafeInteger(resource.bytes) && resource.bytes >= 0 &&
+        /^sha256:[0-9a-f]{64}$/.test(resource.hash),
+      `HF Data Package resource requires bytes and SHA-256: ${file}`,
+    );
+    paths.add(file);
+    return Object.freeze({ path: file, bytes: resource.bytes, sha256: resource.hash.slice(7) });
+  }));
+};
+
+const verifyPackageResource = (resource, bytes) => {
+  must(bytes.length === resource.bytes,
+    `HF Data Package byte-count drift ${resource.path}: actual=${bytes.length} expected=${resource.bytes}`);
+  must(sha256(bytes) === resource.sha256,
+    `HF Data Package SHA-256 drift ${resource.path}`);
+};
+
+export const stageHuggingFaceDistributionResources = async ({
+  hf, dist, hub, root = process.cwd(),
+}) => {
+  const registry = resourcesForTarget(hf.resourceTarget);
+  const descriptorResource = registry.find((resource) => resource.path === HUGGING_FACE_PACKAGE_FILE);
+  must(descriptorResource, "HF registry must include the Data Package descriptor");
+  const sources = new Map(registry.map((resource) => [
+    resource.path, path.resolve(root, sourceForDistribution(resource, dist)),
+  ]));
+  const descriptorBytes = await readFile(sources.get(HUGGING_FACE_PACKAGE_FILE));
+  const descriptor = JSON.parse(descriptorBytes.toString("utf8"));
+  const packageResources = huggingFacePackageResources(descriptor);
+  const distRoot = await realpath(path.resolve(root, dist));
+  for (const resource of packageResources) {
+    if (sources.has(resource.path)) continue;
+    const source = await realpath(path.join(distRoot, resource.path));
+    const relative = path.relative(distRoot, source);
+    must(relative && !relative.startsWith("..") && !path.isAbsolute(relative),
+      `HF Data Package resource escapes dist: ${resource.path}`);
+    sources.set(resource.path, source);
+  }
+  const packageByPath = new Map(packageResources.map((resource) => [resource.path, resource]));
+  for (const [file, source] of sources) {
+    const bytes = file === HUGGING_FACE_PACKAGE_FILE ? descriptorBytes : await readFile(source);
+    if (packageByPath.has(file)) verifyPackageResource(packageByPath.get(file), bytes);
+    const target = path.resolve(root, hub, file);
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, bytes);
+  }
+  return descriptor;
+};
 
 export const huggingFaceConfigs = (hf) => {
   must(
@@ -66,23 +136,27 @@ export const huggingFaceConfigs = (hf) => {
   return Object.freeze(configs);
 };
 
-export const huggingFaceManifestFiles = (hf) => {
-  const files = [
+export const huggingFaceManifestFiles = (hf, descriptor) => {
+  const registeredFiles = [
     ...resourcesForTarget(hf.resourceTarget).map((resource) => resource.path),
     ...HUGGING_FACE_AUXILIARY_FILES,
-  ].sort();
+  ];
   must(
-    new Set(files).size === files.length,
+    new Set(registeredFiles).size === registeredFiles.length,
     "Duplicate Hugging Face distribution file",
   );
+  const files = [...new Set([
+    ...registeredFiles,
+    ...huggingFacePackageResources(descriptor).map((resource) => resource.path),
+  ])].sort();
   return Object.freeze(files);
 };
 
-const huggingFaceRepositoryFiles = (hf) =>
+const huggingFaceRepositoryFiles = (hf, descriptor) =>
   Object.freeze(
     [
       ...HUGGING_FACE_REPOSITORY_METADATA,
-      ...huggingFaceManifestFiles(hf),
+      ...huggingFaceManifestFiles(hf, descriptor),
       HUGGING_FACE_MANIFEST_FILE,
     ].sort(),
   );
@@ -97,7 +171,7 @@ const inventoryError = (label, actual, expected) => {
   return `${label}: missing=${missing.join(", ") || "none"} unexpected=${unexpected.join(", ") || "none"}`;
 };
 
-const validateHuggingFaceManifest = ({ manifest, release, hf }) => {
+const validateHuggingFaceManifest = ({ manifest, release, hf, descriptor }) => {
   must(
     manifest && typeof manifest === "object" && !Array.isArray(manifest),
     "HF dist-sha256 manifest is not an object",
@@ -121,7 +195,7 @@ const validateHuggingFaceManifest = ({ manifest, release, hf }) => {
       !Array.isArray(manifest.files),
     "HF dist-sha256 files map is missing",
   );
-  const expected = huggingFaceManifestFiles(hf),
+  const expected = huggingFaceManifestFiles(hf, descriptor),
     actual = Object.keys(manifest.files);
   must(
     sameStrings(actual, expected),
@@ -147,7 +221,15 @@ export const verifyHuggingFaceRemoteDistribution = async ({
   fetchBytes,
 }) => {
   must(typeof fetchBytes === "function", "HF remote byte fetcher is missing");
-  const expectedRepository = huggingFaceRepositoryFiles(hf);
+  const descriptorBytes = await fetchBytes(HUGGING_FACE_PACKAGE_FILE);
+  let descriptor;
+  try {
+    descriptor = JSON.parse(descriptorBytes.toString("utf8"));
+  } catch {
+    throw new Error("HF Data Package descriptor is not valid JSON");
+  }
+  const packageResources = huggingFacePackageResources(descriptor);
+  const expectedRepository = huggingFaceRepositoryFiles(hf, descriptor);
   const siblings = (metadata?.siblings || []).map((row) => row?.rfilename);
   must(
     siblings.length > 0 &&
@@ -174,10 +256,10 @@ export const verifyHuggingFaceRemoteDistribution = async ({
   } catch {
     throw new Error("HF dist-sha256 manifest is not valid JSON");
   }
-  const manifestFiles = validateHuggingFaceManifest({ manifest, release, hf });
+  const manifestFiles = validateHuggingFaceManifest({ manifest, release, hf, descriptor });
   const files = new Map();
   for (const file of manifestFiles) {
-    const bytes = await fetchBytes(file),
+    const bytes = file === HUGGING_FACE_PACKAGE_FILE ? descriptorBytes : await fetchBytes(file),
       row = manifest.files[file],
       actualSha256 = sha256(bytes);
     must(
@@ -190,6 +272,8 @@ export const verifyHuggingFaceRemoteDistribution = async ({
     );
     files.set(file, bytes);
   }
+  for (const resource of packageResources)
+    verifyPackageResource(resource, files.get(resource.path));
   return Object.freeze({
     manifest,
     manifestBytes,
