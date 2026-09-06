@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { imageMetadataFor, matchImageProfile } from "./lib/media-metadata-contract.mjs";
 import {
   assertRasterInventory,
   htmlGraphReferences,
@@ -13,6 +15,25 @@ import {
 const canonicalUrl = "https://example.test/";
 const media = (name) => "/" + "media/" + name;
 const iri = (name) => `${canonicalUrl}#${name}`;
+
+test("the social portrait carries the portrait source and description, not the clinical-team profile", async () => {
+  const release = JSON.parse(await readFile(new URL("../src/data/release.json", import.meta.url), "utf8"));
+  const graph = JSON.parse(await readFile(new URL("../src/data/semantic/knowledge-graph.jsonld", import.meta.url), "utf8"));
+  const social = graph["@graph"].find((node) => node["@id"] === `${release.canonicalUrl}#image-saeed-ghezelbash-portrait-social-1200x630`);
+  assert.ok(social, "the canonical social ImageObject must exist");
+  const socialProfile = matchImageProfile(new URL(social.contentUrl).pathname.split("/").at(-1));
+  const portraitProfile = matchImageProfile("saeed-ghezelbaash-physician-portrait.jpg");
+  assert.equal(socialProfile, portraitProfile, "a crop of the solo portrait must retain its source profile");
+  const metadata = imageMetadataFor(release, socialProfile);
+  assert.equal(metadata["XMP-xmpRights:WebStatement"], social.acquireLicensePage);
+  assert.equal(metadata["XMP-plus:LicensorURL"], social.acquireLicensePage);
+  assert.equal(metadata["XMP-dc:Title"], portraitProfile.title);
+  assert.equal(metadata["XMP-dc:Description"], portraitProfile.description);
+  assert.equal(metadata["XMP-iptcCore:AltTextAccessibility"], portraitProfile.alt[portraitProfile.primaryAltLanguage]);
+  assert.equal(metadata["XMP-iptcExt:PersonInImage"], "Saeed Ghezelbash");
+  assert.ok(!Object.hasOwn(metadata, "XMP-iptcExt:OrganisationInImageName"), "the solo portrait must not inherit the team depiction");
+});
+
 const fixture = () => {
   const jpg = media("portrait.111111111111.jpg");
   const webp = media("portrait.222222222222.webp");

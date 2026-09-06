@@ -203,6 +203,23 @@ export const deriveCanonicalSemanticSets = (graph, release) => {
   )
     throw new Error("Canonical Question/Answer topology is not one-to-one");
 
+  // Both projections describe the same answer subject. Missing about is
+  // permitted, but it must not route a Question and its Answer differently.
+  for (const { questionId, answerId } of answers) {
+    const subjects = (node) => values(node.about).map(refId).sort();
+    const questionSubjects = subjects(byId.get(questionId));
+    const answerSubjects = subjects(byId.get(answerId));
+    if (
+      questionSubjects.includes(null) ||
+      answerSubjects.includes(null) ||
+      new Set(questionSubjects).size !== questionSubjects.length ||
+      new Set(answerSubjects).size !== answerSubjects.length ||
+      questionSubjects.length !== answerSubjects.length ||
+      questionSubjects.some((subject, index) => subject !== answerSubjects[index])
+    )
+      throw new Error(`Question/Answer subject drift: ${questionId}`);
+  }
+
   const personServiceIds = values(person.availableService).map(refId);
   const clinicServiceIds = values(clinic.availableService).map(refId);
   if (personServiceIds.includes(null) || clinicServiceIds.includes(null))

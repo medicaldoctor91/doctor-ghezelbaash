@@ -4,8 +4,6 @@ import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 import {
   chmod,
-  cp,
-  mkdir,
   mkdtemp,
   readFile,
   readdir,
@@ -13,14 +11,12 @@ import {
   rm,
   writeFile,
 } from "node:fs/promises";
-import {
-  resourcesForTarget,
-  sourceForDistribution,
-} from "../src/lib/resources.mjs";
+import { resourcesForTarget } from "../src/lib/resources.mjs";
 import {
   HUGGING_FACE_MANIFEST_FILE,
   huggingFaceConfigs,
   huggingFaceManifestFiles,
+  stageHuggingFaceDistributionResources,
   verifyHuggingFaceRemoteDistribution,
 } from "./lib/hugging-face-distribution.mjs";
 
@@ -182,13 +178,7 @@ async function commandPrepare() {
   await cleanDistributionRoot(hub);
 
   const resources = resourcesForTarget(hf.resourceTarget);
-  for (const resource of resources) {
-    const source = sourceForDistribution(resource, dist);
-    await mkdir(path.dirname(path.join(hub, resource.path)), {
-      recursive: true,
-    });
-    await cp(source, path.join(hub, resource.path));
-  }
+  const descriptor = await stageHuggingFaceDistributionResources({ hf, dist, hub });
 
   const tags = [
     "saeed-ghezelbash",
@@ -279,7 +269,7 @@ Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${r
 `;
   await writeFile(path.join(hub, "README.md"), readme);
 
-  const manifestFiles = huggingFaceManifestFiles(hf);
+  const manifestFiles = huggingFaceManifestFiles(hf, descriptor);
   const hashes = {
     release: release.release,
     canonicalDatasetIri: release.dataset.id,

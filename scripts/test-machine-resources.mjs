@@ -4,14 +4,19 @@ import path from "node:path";
 import os from "node:os";
 import { MIMEType } from "node:util";
 import { spawnSync } from "node:child_process";
-import { readFile, writeFile, mkdir, mkdtemp, copyFile, cp, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { readFile, writeFile, mkdir, mkdtemp, copyFile, cp, rm, symlink } from "node:fs/promises";
 import {
   MACHINE_RESOURCES, HEAD_RESOURCES, machineResourceForPath,
-  resourceContentType, quoteHttpParameter,
+  resourceContentType, quoteHttpParameter, resourcesForTarget, sourceForDistribution,
 } from "../src/lib/resources.mjs";
 import { compileHeadersTemplate } from "./lib/headers-template.mjs";
 import { compileContactDiscovery, vCardEntityKind } from "./lib/projections/contact-discovery.mjs";
 import { indexCanonicalGraph } from "../src/lib/semantic-projection.mjs";
+import {
+  huggingFacePackageResources, huggingFaceManifestFiles,
+  stageHuggingFaceDistributionResources, verifyHuggingFaceRemoteDistribution,
+} from "./lib/hugging-face-distribution.mjs";
 
 const root = process.cwd();
 const release = JSON.parse(await readFile(path.join(root, "src/data/release.json"), "utf8"));
@@ -35,6 +40,113 @@ test("registry preserves existing graph distribution identities and distinct des
   for (const resource of MACHINE_RESOURCES.filter((item) => item.descriptorRoles.length))
     assert.ok(resource.distributionIri && resource.descriptorTitle);
   assert.equal(machineResourceForPath("croissant.json").descriptorRoles.length, 0);
+});
+
+const hf = JSON.parse(await readFile(path.join(root, ".release/policy/authority-surface-contract.json"), "utf8")).surfaces.huggingFace;
+const hashBytes = (bytes) => createHash("sha256").update(bytes).digest("hex");
+async function hfPackageFixture(t) {
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "ghezelbaash-hf-package-"));
+  t.after(() => rm(workspace, { recursive: true, force: true }));
+  const bytes = new Map();
+  for (const resource of resourcesForTarget(hf.resourceTarget)) {
+    const content = Buffer.from(`Fixture for ${resource.path}\n`);
+    bytes.set(resource.path, content);
+    const source = path.resolve(workspace, sourceForDistribution(resource, "dist"));
+    await mkdir(path.dirname(source), { recursive: true });
+    await writeFile(source, content);
+  }
+  // These paths are deliberately absent from the registry: closure must follow
+  // future descriptors, rather than a fixed list of today's six caption tracks.
+  const extraPaths = ["media/video-tracks/future.captions.fa.vtt", "supporting/new-resource.txt"];
+  for (const file of extraPaths) {
+    const content = Buffer.from(`Generated content for ${file}\n`);
+    bytes.set(file, content);
+    await mkdir(path.dirname(path.join(workspace, "dist", file)), { recursive: true });
+    await writeFile(path.join(workspace, "dist", file), content);
+  }
+  const descriptor = { resources: ["graph.jsonld", ...extraPaths].map((file) => ({
+    path: file, bytes: bytes.get(file).length, hash: `sha256:${hashBytes(bytes.get(file))}`,
+  })) };
+  const saveDescriptor = async () => {
+    const content = Buffer.from(JSON.stringify(descriptor, null, 2) + "\n");
+    bytes.set("datapackage.json", content);
+    await writeFile(path.join(workspace, "dist/datapackage.json"), content);
+  };
+  await saveDescriptor();
+  bytes.set("README.md", Buffer.from("Fixture data card\n"));
+  const remote = () => {
+    const manifest = {
+      release: release.release, canonicalDatasetIri: release.dataset.id,
+      conceptDoi: release.dataset.zenodo.conceptDoi,
+      zenodoVersionDoi: release.dataset.zenodo.versionDoi,
+      files: Object.fromEntries([...bytes].map(([file, content]) => [file, {
+        bytes: content.length, sha256: hashBytes(content),
+      }])),
+    };
+    const fetchBytes = async (file) => file === "dist-sha256.json"
+      ? Buffer.from(JSON.stringify(manifest)) : bytes.get(file);
+    const metadata = { siblings: [".gitattributes", "dist-sha256.json", ...bytes.keys()]
+      .map((rfilename) => ({ rfilename })) };
+    return { release, hf, metadata, fetchBytes, manifest };
+  };
+  return { workspace, descriptor, saveDescriptor, bytes, extraPaths, remote };
+}
+
+test("HF staging preserves the descriptor and closes all declared resource paths", async (t) => {
+  const fixture = await hfPackageFixture(t);
+  const descriptor = await stageHuggingFaceDistributionResources({
+    hf, root: fixture.workspace, dist: "dist", hub: "hub",
+  });
+  assert.deepEqual(descriptor, fixture.descriptor);
+  for (const [file, content] of fixture.bytes) {
+    if (file === "README.md") continue;
+    assert.deepEqual(await readFile(path.join(fixture.workspace, "hub", file)), content);
+  }
+  assert.deepEqual(huggingFaceManifestFiles(hf, descriptor), [...fixture.bytes.keys()].sort());
+  const verified = await verifyHuggingFaceRemoteDistribution(fixture.remote());
+  for (const file of fixture.extraPaths) assert.deepEqual(verified.files.get(file), fixture.bytes.get(file));
+});
+
+test("HF staging rejects missing resources, stale descriptor hashes and dist symlink escapes", async (t) => {
+  const fixture = await hfPackageFixture(t);
+  const file = fixture.extraPaths[0], source = path.join(fixture.workspace, "dist", file);
+  const stage = () => stageHuggingFaceDistributionResources({
+    hf, root: fixture.workspace, dist: "dist", hub: "hub",
+  });
+  await rm(source);
+  await assert.rejects(stage, /ENOENT/);
+  await writeFile(source, Buffer.alloc(fixture.bytes.get(file).length, "x"));
+  await assert.rejects(stage, /HF Data Package SHA-256 drift/);
+  await writeFile(source, "short");
+  await assert.rejects(stage, /HF Data Package byte-count drift/);
+  await rm(source);
+  const outside = path.join(fixture.workspace, "outside.txt");
+  await writeFile(outside, fixture.bytes.get(file));
+  await symlink(outside, source);
+  await assert.rejects(stage, /HF Data Package resource escapes dist/);
+});
+
+test("HF package paths cannot escape or overwrite repository metadata", () => {
+  const valid = { path: "data/new.txt", bytes: 1, hash: `sha256:${"a".repeat(64)}` };
+  for (const file of ["../outside", "/absolute", "https://example.test/file", "data/../../outside",
+    "data//file", "data/./file", "data/%2e%2e/file", "data\\file", ".git/config", "README.md", "dist-sha256.json"]) {
+    assert.throws(() => huggingFacePackageResources({ resources: [{ ...valid, path: file }] }), /safe relative resource path/);
+  }
+  assert.throws(() => huggingFacePackageResources({ resources: [valid, valid] }), /duplicate resource path/);
+  assert.throws(() => huggingFacePackageResources({ resources: [{ ...valid, hash: undefined }] }), /requires bytes and SHA-256/);
+});
+
+test("HF remote verification rejects descriptor resources omitted from an otherwise consistent inventory", async (t) => {
+  const fixture = await hfPackageFixture(t);
+  fixture.bytes.delete(fixture.extraPaths[0]);
+  await assert.rejects(() => verifyHuggingFaceRemoteDistribution(fixture.remote()), /HF remote repository inventory drift/);
+});
+
+test("HF remote verification checks descriptor hashes independently of a self-consistent manifest", async (t) => {
+  const fixture = await hfPackageFixture(t);
+  const file = fixture.extraPaths[0];
+  fixture.bytes.set(file, Buffer.alloc(fixture.bytes.get(file).length, "x"));
+  await assert.rejects(() => verifyHuggingFaceRemoteDistribution(fixture.remote()), /HF Data Package SHA-256 drift/);
 });
 
 test("SHACL derives every RDF data input from registry roles and rejects incomplete coverage", async (t) => {
