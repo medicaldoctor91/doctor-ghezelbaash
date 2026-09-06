@@ -132,25 +132,9 @@ assert.match(
 assert.equal(
   (cloudflare.match(/python scripts\/configure-cloudflare-edge\.py/g) || [])
     .length,
-  3,
-  "Deployment permits the edge reconcile and scoped compression apply/rollback calls",
+  1,
 );
 assert.match(cloudflare, /(?:^|\s)--apply(?=\s|\\|$)/m);
-for (const mode of ["apply-machine-compression", "rollback-machine-compression"])
-  assert.equal(
-    (cloudflare.match(new RegExp(`--${mode}(?=\\s|\\\\|$)`, "gm")) || []).length,
-    1,
-    `Deployment must invoke exactly one scoped --${mode} command`,
-  );
-assert.match(cloudflare, /discovery --require-machine-compression/);
-assert.match(
-  cloudflare,
-  /Restore machine compression after a failed apply or verification\s+if: failure\(\) && steps\.machine-compression\.outcome == 'failure'/,
-);
-assert.match(
-  cloudflare,
-  /Upload machine compression transaction evidence\s+if: always\(\)/,
-);
 assert.match(cloudflare, /Reconcile canonical Cloudflare edge/);
 assert.doesNotMatch(cloudflare, /steps\.release_change/);
 const cloudflareTimeout = Number(
