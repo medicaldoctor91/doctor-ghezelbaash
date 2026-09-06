@@ -130,6 +130,69 @@ jobs:
           npm run verify:public-discovery
           node scripts/verify-live.mjs current --website-only
           echo 'PUBLIC_DISCOVERY_T5_HARD_PASS'
+      - name: Reconcile and verify canonical machine compression
+        if: steps.tip.outputs.current == 'true'
+        id: machine-compression
+        timeout-minutes: 10
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          COMPRESSION_EVIDENCE_DIR: ${{ runner.temp }}/machine-compression-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir "$COMPRESSION_EVIDENCE_DIR"
+          python scripts/configure-cloudflare-edge.py \
+            --apply-machine-compression \
+            --rollback-snapshot "$COMPRESSION_EVIDENCE_DIR/rollback-snapshot.json" \
+            --outcome "$COMPRESSION_EVIDENCE_DIR/apply-outcome.json" \
+            2>&1 | tee "$COMPRESSION_EVIDENCE_DIR/apply.log"
+          for attempt in 1 2 3; do
+            if node scripts/verify-live.mjs discovery --require-machine-compression \
+              > "$COMPRESSION_EVIDENCE_DIR/verification-$attempt.json" \
+              2> "$COMPRESSION_EVIDENCE_DIR/verification-$attempt.log"; then
+              echo "MACHINE_COMPRESSION_VERIFIED_ATTEMPT_$attempt"
+              exit 0
+            fi
+            cat "$COMPRESSION_EVIDENCE_DIR/verification-$attempt.log" >&2
+            if [ "$attempt" -lt 3 ]; then
+              echo "::warning::Machine compression verification attempt $attempt failed; retrying in 15 seconds."
+              sleep 15
+            fi
+          done
+          echo '::error::Machine compression failed all three live verification attempts; restoring the captured rule state.'
+          exit 1
+      - name: Restore machine compression after a failed apply or verification
+        if: failure() && steps.machine-compression.outcome == 'failure'
+        timeout-minutes: 5
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          COMPRESSION_EVIDENCE_DIR: ${{ runner.temp }}/machine-compression-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          if [ ! -f "$COMPRESSION_EVIDENCE_DIR/rollback-snapshot.json" ]; then
+            echo 'MACHINE_COMPRESSION_NO_SNAPSHOT_NO_MUTATION'
+            exit 0
+          fi
+          if python scripts/configure-cloudflare-edge.py \
+            --rollback-machine-compression \
+            --rollback-snapshot "$COMPRESSION_EVIDENCE_DIR/rollback-snapshot.json" \
+            --outcome "$COMPRESSION_EVIDENCE_DIR/rollback-outcome.json" \
+            2>&1 | tee "$COMPRESSION_EVIDENCE_DIR/rollback.log"; then
+            echo 'MACHINE_COMPRESSION_ROLLBACK_VERIFIED'
+          else
+            echo '::error::Machine compression rollback failed. The captured snapshot and rollback log require review before another edge mutation.'
+            exit 1
+          fi
+      - name: Upload machine compression transaction evidence
+        if: always() && steps.machine-compression.outcome != '' && steps.machine-compression.outcome != 'skipped'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: machine-compression-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/machine-compression-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Notify IndexNow after verified production convergence
         if: steps.tip.outputs.current == 'true'
         run: |
