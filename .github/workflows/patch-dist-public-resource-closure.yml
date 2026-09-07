@@ -20,11 +20,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node scripts/patch-dist-public-resource-closure.mjs
-      - name: Rebuild distribution and exercise DIST closure
+      - name: Rebuild projections and exercise Google/DIST media contracts
         shell: bash
         run: |
           set -euo pipefail
           npm run prepare:distribution
+          npm run validate:google-structured-data
+          npm run validate:physician-projection
           npm run compile:dist
           node --test scripts/test-canonical-media-semantics.mjs scripts/test-media-inventory.mjs
       - name: Require exact patch scope
@@ -33,13 +35,14 @@ jobs:
           set -euo pipefail
           git diff --check
           changed=$(git diff --name-only)
-          test "$changed" = "scripts/validate-dist.mjs"
-      - name: Commit DIST closure integration
+          expected=$'scripts/validate-dist.mjs\nsrc/data/semantic/head-profile.json'
+          test "$changed" = "$expected"
+      - name: Commit exact Google clinic media IRI integration
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/validate-dist.mjs
-          git commit -m "Recognize materialized resource IRIs in DIST closure"
+          git add scripts/validate-dist.mjs src/data/semantic/head-profile.json
+          git commit -m "Project exact clinic media IRIs in Google graph"
           git push origin "HEAD:${GITHUB_REF_NAME}"
