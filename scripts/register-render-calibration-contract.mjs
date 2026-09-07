@@ -11,7 +11,7 @@ for (const name of ["validate:render-calibration", "render:calibration:measure"]
 pkg.scripts["validate:render-calibration"] =
   "node scripts/validate-render-calibration.mjs";
 pkg.scripts["render:calibration:measure"] =
-  "npm run prepare:site && ASTRO_TELEMETRY_DISABLED=1 astro build && npm run materialize:static && node scripts/measure-render-calibration.mjs --write && npm run validate:render-calibration";
+  "npm run prepare:site && ASTRO_TELEMETRY_DISABLED=1 astro build && node scripts/measure-render-calibration.mjs --write && npm run validate:render-calibration";
 
 const anchor =
   "npm run validate:hygiene && npm run test:security-gate && npm run validate:architecture && npm run validate:media-manifest";

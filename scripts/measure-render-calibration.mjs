@@ -1,11 +1,16 @@
 import { spawn, spawnSync } from "node:child_process";
 import { createServer } from "node:http";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { computeRenderCalibrationFingerprint } from "./lib/render-calibration-fingerprint.mjs";
-import { RENDER_CALIBRATION_WIDTHS, renderCalibrationCss } from "../src/lib/css-delivery.mjs";
+import {
+  assembleCssSource,
+  deriveCssDelivery,
+  RENDER_CALIBRATION_WIDTHS,
+  renderCalibrationCss,
+} from "../src/lib/css-delivery.mjs";
 
 const root = process.cwd();
 const canonicalPath = path.join(root, "src/data/render-calibration.json");
@@ -26,6 +31,13 @@ const fail = (message) => {
 };
 
 const baselineRaw = await readFile(canonicalPath, "utf8");
+const authoredCss = await readFile(path.join(root, "src/styles/global.css"), "utf8");
+const { cssSource } = assembleCssSource(authoredCss, baselineRaw);
+const delivery = deriveCssDelivery(cssSource);
+const generatedCss = path.join(root, ".generated/public/assets", delivery.assetName);
+const distCss = path.join(distDir, "assets", delivery.assetName);
+await mkdir(path.dirname(distCss), { recursive: true });
+await copyFile(generatedCss, distCss);
 const baselineValidation = renderCalibrationCss(baselineRaw);
 const baseline = baselineValidation.data;
 const expectedIdentity = baseline["360"].chunks.map(({ i, id, key }) => ({ i, id, key }));
