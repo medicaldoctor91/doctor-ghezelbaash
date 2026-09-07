@@ -305,7 +305,10 @@ const aestheticWorks = [
   [
     "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine",
     "https://www.wikidata.org/entity/Q141099455",
-    "2026-08-14",
+    {
+      "@value": "2026-08-14T23:52:56Z",
+      "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+    },
     "LearningResource",
     "datePublished",
   ],
@@ -319,7 +322,10 @@ const aestheticWorks = [
   [
     "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin",
     "https://www.wikidata.org/entity/Q141131757",
-    "2026-08-19",
+    {
+      "@value": "2026-08-19T23:39:01Z",
+      "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+    },
     "LearningResource",
     "datePublished",
   ],
@@ -350,7 +356,7 @@ for (const [
     wikidata,
     `Aesthetic work Wikidata reconciliation drift: ${id}`,
   );
-  assert.equal(
+  assert.deepEqual(
     work[dateProperty],
     dateValue,
     `Aesthetic work ${dateProperty} drift: ${id}`,
@@ -547,13 +553,24 @@ assert.equal(
   "The interview must document physician coverage rather than authorship",
 );
 const projectedInterview = requireNode(inlineById, interviewId, "Final physician interview");
-for (const property of ["@type", "url", "about", "mainEntity", "datePublished"])
+for (const property of ["@type", "url", "about", "mainEntity", "datePublished", "author", "image"])
   assert.deepEqual(
     projectedInterview[property],
     byId.get(interviewId)[property],
     `Projected interview changed canonical ${property}`,
   );
-assert.equal(projectedInterview.author, undefined, "Interview coverage must not invent physician authorship");
+assert.deepEqual(projectedInterview.datePublished, {
+  "@value": "2026-06-27T09:14:43+03:30",
+  "@type": "http://www.w3.org/2001/XMLSchema#dateTime",
+}, "Interview publication time must match the publisher's HTML and WordPress record");
+assert.deepEqual(projectedInterview.author, {
+  "@type": "Organization",
+  name: "تحریریه ایران‌مدلبز",
+  url: "https://iranmedlabs.com/",
+}, "Interview authorship must preserve the editorial byline, not the uploader or physician");
+assert.deepEqual(projectedInterview.image, {
+  "@id": "https://iranmedlabs.com/wp-content/uploads/2026/06/Portrait-of-Dr.-Saeed-Qezlbash-a-cosmetic-doctor-in-Kermanshah.jpg",
+}, "Interview image must reference the publisher's actual article image");
 assert.ok(
   refs(projectedResearchSection.citation).includes(interviewId),
   "Projected research section lost the interview's canonical citation",
