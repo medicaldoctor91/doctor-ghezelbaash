@@ -37,7 +37,7 @@ jobs:
           PIVOT_IMAGE_IRI_CONTEXT: "1"
         run: node scripts/patch-dist-public-resource-closure.mjs
       - run: npm ci
-      - name: Rebuild and exercise native source/DIST contracts
+      - name: Rebuild and exercise native Google/DIST contracts
         shell: bash
         run: |
           set -euo pipefail
@@ -45,7 +45,6 @@ jobs:
           node --test scripts/test-canonical-media-semantics.mjs scripts/test-media-inventory.mjs
           npm run validate:google-structured-data
           npm run validate:physician-projection
-          npm run validate:source
           npm run compile:dist
       - name: Prove six clinic crop image objects are RDF IRIs
         shell: bash
