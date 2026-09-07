@@ -48,3 +48,4 @@ jobs:
           path: .generated/validation/render-calibration-candidate.json
           if-no-files-found: error
           retention-days: 7
+# Repeatability run: workflow-only commit; DOM/CSS/font fingerprint must remain identical.
