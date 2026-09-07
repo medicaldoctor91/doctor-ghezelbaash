@@ -279,9 +279,23 @@ try {
     await cdp.send("Target.closeTarget", { targetId });
   } catch {}
   cdp.close();
+  const browserExited = new Promise((resolve) => {
+    if (chrome.exitCode !== null || chrome.signalCode !== null) resolve();
+    else chrome.once("exit", resolve);
+  });
   chrome.kill("SIGTERM");
-  server.close();
-  await rm(profileDir, { recursive: true, force: true });
+  await Promise.race([browserExited, sleep(3000)]);
+  if (chrome.exitCode === null && chrome.signalCode === null) {
+    chrome.kill("SIGKILL");
+    await Promise.race([browserExited, sleep(2000)]);
+  }
+  await new Promise((resolve) => server.close(resolve));
+  await rm(profileDir, {
+    recursive: true,
+    force: true,
+    maxRetries: 10,
+    retryDelay: 100,
+  });
 }
 
 const percentile = (values, p) => {
