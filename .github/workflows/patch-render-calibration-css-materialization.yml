@@ -28,7 +28,7 @@ jobs:
           set -euo pipefail
           git diff --check
           changed=$(git diff --name-only)
-          expected=$'.github/workflows/finalize-render-calibration-contract.yml\nscripts/measure-render-calibration.mjs\nscripts/register-render-calibration-contract.mjs'
+          expected=$'scripts/measure-render-calibration.mjs\nscripts/register-render-calibration-contract.mjs'
           test "$changed" = "$expected"
       - name: Commit exact CSS materialization path
         shell: bash
@@ -36,6 +36,6 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/workflows/finalize-render-calibration-contract.yml scripts/measure-render-calibration.mjs scripts/register-render-calibration-contract.mjs
+          git add scripts/measure-render-calibration.mjs scripts/register-render-calibration-contract.mjs
           git commit -m "Materialize only calibration CSS for browser measurement"
           git push origin "HEAD:${GITHUB_REF_NAME}"
