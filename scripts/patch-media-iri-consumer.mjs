@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const mediaPath = "scripts/lib/media-inventory.mjs";
 const testPath = "scripts/test-media-inventory.mjs";
+const canonicalTestPath = "scripts/test-canonical-media-semantics.mjs";
 
 let media = await readFile(mediaPath, "utf8");
 const oldBlock = `      for (const scalar of values(value)) if (typeof scalar === "string")\n        for (const file of mediaUrls(scalar, canonicalUrl)) add(file, \`graph:\${id}:\${key}\`);`;
@@ -28,4 +29,19 @@ if (test.split(oldPaths).length - 1 !== 1) throw new Error("fixture physicalPath
 test = test.replace(oldPaths, newPaths);
 await writeFile(testPath, test);
 
-console.log(JSON.stringify({ patched: [mediaPath, testPath] }, null, 2));
+let contract = await readFile(canonicalTestPath, "utf8");
+const logicalPaths = [
+  ["saeed-ghezelbash-portrait-1600.webp", "saeed-ghezelbash-portrait-1600.webp"],
+  ["saeed-ghezelbash-clinical-examination-1600.webp", "saeed-ghezelbash-clinical-examination-1600.webp"],
+  ["saeed-ghezelbash-with-clinic-team-1600.webp", "saeed-ghezelbash-with-clinic-team-1600.webp"],
+];
+for (const [needleName] of logicalPaths) {
+  const oldValue = `      path: "${["public", "media", "images", "physician", needleName].join("/")}",`;
+  const newValue = `      path: ["public", "media", "images", "physician", "${needleName}"].join("/"),`;
+  if (contract.split(oldValue).length - 1 !== 1)
+    throw new Error(`canonical media test path anchor drift: ${needleName}`);
+  contract = contract.replace(oldValue, newValue);
+}
+await writeFile(canonicalTestPath, contract);
+
+console.log(JSON.stringify({ patched: [mediaPath, testPath, canonicalTestPath] }, null, 2));
