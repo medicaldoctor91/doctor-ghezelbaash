@@ -150,7 +150,7 @@
       "authorityRole": "credentialIssuer"
     },
     "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview": {
-      "include": ["@id", "@type", "name", "headline", "url", "datePublished", "about", "mainEntity", "inLanguage"],
+      "include": ["@id", "@type", "name", "headline", "url", "datePublished", "author", "image", "about", "mainEntity", "inLanguage"],
       "authorityRole": "physicianCoverage"
     },
     "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine": {

@@ -271,6 +271,8 @@ export function assertHomepageAuthorityRoles({
       (node.mainEntityOfPage && !sameField(node, source, "mainEntityOfPage"))
     )
       throw new Error(`Physician work cannot borrow portrait imagery or page identity: ${id}`);
+    if (["datePublished", "image"].some((property) => !sameField(node, source, property)))
+      throw new Error(`Physician work lost its verified publication metadata: ${id}`);
     if (role === "physicianCoverage") {
       if (
         !referenceIds(physician?.subjectOf).includes(id) ||
@@ -283,6 +285,8 @@ export function assertHomepageAuthorityRoles({
         referenceIds(node.author).includes(physicianId)
       )
         throw new Error(`Physician coverage must preserve its subject without inventing authorship: ${id}`);
+      if (!sameField(node, source, "author"))
+        throw new Error(`Physician coverage lost its verified publication metadata: ${id}`);
     } else {
       if (
         !referenceIds(source.author).includes(physicianId) ||

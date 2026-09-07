@@ -144,7 +144,7 @@ test("each compact inline context preserves its full canonical RDF meaning", asy
     assert.ok(JSON.stringify(document["@context"]).length < JSON.stringify(context.graph["@context"]).length);
   }
   const invalid = structuredClone(projection.supportDoc);
-  delete invalid["@context"].datePublished;
+  delete invalid["@context"].dateCreated;
   assert.notEqual(await canonicalize(invalid), await canonicalize(projection.supportDoc),
     "RDF comparison must detect losing a used date coercion");
 });
@@ -198,7 +198,10 @@ test("authority projection preserves seven canonical edges and honest work roles
     assert.deepEqual(inline.get(id).about, context.byId.get(id).about);
   }
   const interview = inline.get(interviewId);
-  assert.equal(interview.author, undefined);
+  assert.deepEqual(interview.author, context.byId.get(interviewId).author);
+  assert.equal(interview.author["@type"], "Organization");
+  assert.equal(interview.author.url, "https://iranmedlabs.com/");
+  assert.ok(!refs(interview.author).includes(context.release.primaryEntity.id));
   assert.deepEqual(interview.mainEntity, { "@id": context.release.primaryEntity.id });
   assert.equal(inline.get(iri("wikiversity-individualized-botulinum-toxin-focused-review")).creativeWorkStatus,
     "Preprint under public peer review");
@@ -220,6 +223,18 @@ test("an interview cannot be reassigned to the physician as its author", async (
   context.byId.get(id).author = { "@id": context.release.primaryEntity.id };
   await assert.rejects(() => compileGraphProjections(context), /without inventing authorship/);
 });
+
+for (const field of ["datePublished", "author", "image"]) {
+  test(`coverage projection cannot omit verified ${field}`, async (t) => {
+    const context = await isolatedContext(t);
+    const profilePath = path.join(context.semantic, "support-profile.json");
+    const profile = JSON.parse(await readFile(profilePath, "utf8"));
+    const id = `${context.release.canonicalUrl}#evidence-iranmedlabs-interview`;
+    profile.idProfiles[id].include = profile.idProfiles[id].include.filter((property) => property !== field);
+    await writeFile(profilePath, JSON.stringify(profile));
+    await assert.rejects(() => compileGraphProjections(context), /lost its verified publication metadata/);
+  });
+}
 
 test("an external work with a role still needs its canonical DOI and visible citation", async (t) => {
   const context = await isolatedContext(t);

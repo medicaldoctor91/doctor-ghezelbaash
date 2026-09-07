@@ -9035,7 +9035,18 @@
       "name": "دکتر سعید قزلباش؛ دروغ بزرگ جوانسازی و فریب زیباجویان",
       "headline": "دکتر سعید قزلباش؛ دروغ بزرگ جوانسازی و فریب زیباجویان",
       "url": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
-      "datePublished": "2026-06-27",
+      "datePublished": {
+        "@value": "2026-06-27T09:14:43+03:30",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "تحریریه ایران‌مدلبز",
+        "url": "https://iranmedlabs.com/"
+      },
+      "image": {
+        "@id": "https://iranmedlabs.com/wp-content/uploads/2026/06/Portrait-of-Dr.-Saeed-Qezlbash-a-cosmetic-doctor-in-Kermanshah.jpg"
+      },
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -22063,7 +22074,10 @@
       },
       "inLanguage": "en",
       "isAccessibleForFree": true,
-      "datePublished": "2026-08-14",
+      "datePublished": {
+        "@value": "2026-08-14T23:52:56Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"
@@ -22090,7 +22104,10 @@
       },
       "inLanguage": "en",
       "isAccessibleForFree": true,
-      "datePublished": "2026-08-19",
+      "datePublished": {
+        "@value": "2026-08-19T23:39:01Z",
+        "@type": "http://www.w3.org/2001/XMLSchema#dateTime"
+      },
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#biomedical-concept-botulinum-toxin-a"
