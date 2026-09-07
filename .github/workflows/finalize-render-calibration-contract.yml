@@ -27,7 +27,6 @@ jobs:
           set -euo pipefail
           npm run prepare:site
           ASTRO_TELEMETRY_DISABLED=1 ./node_modules/.bin/astro build
-          npm run materialize:static
       - name: Measure and persist canonical calibration
         run: node scripts/measure-render-calibration.mjs --write
       - name: Validate fresh calibration
