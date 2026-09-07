@@ -99,14 +99,20 @@ export function deriveSitemapImageUrls({ content, graph, byId, release }) {
     throw new Error("Contact discovery: visible images are required");
   const clinic = requiredNode(byId, release.clinic.id, "owned clinic");
   const logoIds = new Set([clinic.logo].flat().map((value) => value?.["@id"]).filter(Boolean));
-  const clinicImageUrls = clinic.image.filter((value) => !logoIds.has(value?.["@id"])).map((value) =>
-    canonicalImageUrl(
-      typeof value === "string" ? value : requiredNode(
-        byId, requiredReferenceId(value, "clinic image"), "clinic image",
-      ).contentUrl,
-      "clinic image contentUrl",
-    ),
-  );
+  const clinicImageUrls = clinic.image
+    .filter((value) => !logoIds.has(value?.["@id"]))
+    .map((value) => {
+      if (typeof value === "string")
+        return canonicalImageUrl(value, "clinic image resource");
+      const id = requiredReferenceId(value, "clinic image");
+      const node = byId.get(id);
+      return canonicalImageUrl(
+        node
+          ? requiredText(node.contentUrl, "clinic image node contentUrl")
+          : id,
+        node ? "clinic image node contentUrl" : "clinic image resource IRI",
+      );
+    });
   return [...new Set([
     ...visibleImageUrls,
     ...physicianImageUrls(graph, release),
@@ -138,13 +144,23 @@ export async function compileContactDiscovery(context) {
   );
   if (!Array.isArray(clinic.image) || !clinic.image.length)
     throw new Error("Contact discovery: owned clinic image facts are required");
-  const clinicImageIds = clinic.image
-    .filter((value) => value && typeof value === "object")
-    .map((value, index) =>
-      requiredReferenceId(value, `owned clinic image ${index + 1}`),
-    );
-  for (const id of clinicImageIds)
-    requiredNode(byId, id, "owned clinic image");
+  const clinicImageIds = clinic.image.map((value, index) =>
+    typeof value === "string"
+      ? requiredText(value, `owned clinic image ${index + 1}`)
+      : requiredReferenceId(value, `owned clinic image ${index + 1}`),
+  );
+  const canonicalOrigin = new URL(release.canonicalUrl).origin;
+  for (const id of clinicImageIds) {
+    if (byId.has(id)) {
+      requiredNode(byId, id, "owned clinic image");
+      continue;
+    }
+    const resource = new URL(id, release.canonicalUrl);
+    if (resource.origin !== canonicalOrigin || resource.hash)
+      throw new Error(
+        `Contact discovery: owned clinic image resource must be a first-party non-fragment IRI: ${id}`,
+      );
+  }
   const clinicPhoto = requiredNode(
     byId,
     `${release.canonicalUrl}#image-ghezelbaash-clinic-interior`,
