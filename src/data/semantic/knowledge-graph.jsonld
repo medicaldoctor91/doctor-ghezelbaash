@@ -8160,7 +8160,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "description": "Version-controlled source project for Version 1.2.5 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable DOI preservation, and Hugging Face is AI/retrieval distribution.",
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -8196,7 +8196,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "version": "1.2.5",
       "hasPart": [
         {
@@ -8255,7 +8255,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "description": "Version-controlled GitHub source for Version 1.2.5 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
-      "dateModified": "2026-09-06"
+      "dateModified": "2026-09-07"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset",
@@ -8294,7 +8294,7 @@
         "application/jsonl"
       ],
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "version": "1.2.5"
     },
     {
@@ -8439,7 +8439,7 @@
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
         }
       ],
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld#dataset",
         {
@@ -8570,7 +8570,7 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — JSON-LD distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "version": "1.2.5",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -9033,6 +9033,7 @@
       "@id": "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview",
       "@type": "Article",
       "name": "دکتر سعید قزلباش؛ دروغ بزرگ جوانسازی و فریب زیباجویان",
+      "headline": "دکتر سعید قزلباش؛ دروغ بزرگ جوانسازی و فریب زیباجویان",
       "url": "https://iranmedlabs.com/skin-and-hair-and-beauty/120049/",
       "datePublished": "2026-06-27",
       "about": [
@@ -20300,7 +20301,7 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Turtle distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "version": "1.2.5",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -21236,7 +21237,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21286,7 +21287,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21359,7 +21360,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "version": "1.2.5"
     },
     {
@@ -21410,7 +21411,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21460,7 +21461,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21485,7 +21486,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21510,7 +21511,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-07",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -22024,6 +22025,7 @@
         "ScholarlyArticle"
       ],
       "name": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
+      "headline": "Individualized clinical assessment and outcome interpretation in aesthetic botulinum neurotoxin type A treatment: a focused review",
       "url": "https://en.wikiversity.org/wiki/WikiJournal_Preprints/Individualized_clinical_assessment_and_outcome_interpretation_in_aesthetic_botulinum_neurotoxin_type_A_treatment:_a_focused_review",
       "sameAs": "https://www.wikidata.org/entity/Q141129555",
       "author": {
@@ -22053,6 +22055,7 @@
         "LearningResource"
       ],
       "name": "Botulinum toxin in aesthetic medicine",
+      "headline": "Botulinum toxin in aesthetic medicine",
       "url": "https://en.wikiversity.org/wiki/Botulinum_toxin_in_aesthetic_medicine",
       "sameAs": "https://www.wikidata.org/entity/Q141099455",
       "author": {
@@ -22079,6 +22082,7 @@
         "LearningResource"
       ],
       "name": "Facial assessment before aesthetic botulinum toxin treatment",
+      "headline": "Facial assessment before aesthetic botulinum toxin treatment",
       "url": "https://en.wikiversity.org/wiki/Facial_assessment_before_aesthetic_botulinum_toxin_treatment",
       "sameAs": "https://www.wikidata.org/entity/Q141131757",
       "author": {
