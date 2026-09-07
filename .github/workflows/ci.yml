@@ -77,6 +77,39 @@ jobs:
             done
             exit "$rc"
           fi
+      - name: Prove release-request promotion before DOI reservation
+        shell: bash
+        run: |
+          set -euo pipefail
+          subject="$(git log -1 --format=%s)"
+          if [[ ! "$subject" =~ ^release-request:\ v([0-9]+\.[0-9]+\.[0-9]+)\ medical-review=([0-9]{4}-[0-9]{2}-[0-9]{2})$ ]]; then
+            echo RELEASE_REQUEST_PROMOTION_NOT_APPLICABLE
+            exit 0
+          fi
+          target="${BASH_REMATCH[1]}"
+          review_date="${BASH_REMATCH[2]}"
+          test -z "$(git status --porcelain --untracked-files=no)"
+          node scripts/promote-release.mjs \
+            --version="$target" \
+            --date="$(date -u +%F)" \
+            --zenodo-record=999999999 \
+            --zenodo-doi=10.5281/zenodo.999999999 \
+            --dry-run=true > /tmp/promotion-dry-run.json
+          test -z "$(git status --porcelain --untracked-files=no)"
+          node - /tmp/promotion-dry-run.json "$target" "$review_date" <<'NODE'
+          const fs = require('node:fs');
+          const [file,target,review] = process.argv.slice(2);
+          const state = JSON.parse(fs.readFileSync(file,'utf8'));
+          if (state.promoted !== false || state.dryRun !== true || state.prepared !== true)
+            throw new Error('Promotion dry-run did not remain non-mutating');
+          if (state.to?.release !== target || state.to?.medicalReviewedAt !== review)
+            throw new Error('Promotion dry-run release or medical-review binding drift');
+          if (state.to?.date < review)
+            throw new Error('Promotion dry-run release date predates medical review');
+          if (state.to?.versionDoi !== '10.5281/zenodo.999999999' || state.to?.recordId !== '999999999')
+            throw new Error('Promotion dry-run DOI/record binding drift');
+          NODE
+          echo RELEASE_REQUEST_PROMOTION_DRY_RUN_PASS
       - name: Install pinned Chromium for media verification
         run: npx playwright install --with-deps --only-shell chromium
       - name: Verify video deep links and rejection of unseekable transport
