@@ -97,12 +97,12 @@ const releaseRequestMatch = headSubject.match(
   /^release-request: v(\d+\.\d+\.\d+) medical-review=(\d{4}-\d{2}-\d{2})$/,
 );
 let requestedMedicalReviewAt = old.medicalReviewedAt;
-if (args.version !== old.release && releaseRequestMatch) {
-  const [, requestedVersion, requestedReviewDate] = releaseRequestMatch;
-  must(
-    requestedVersion === args.version,
-    `Release-request version mismatch: ${requestedVersion} != ${args.version}`,
-  );
+if (
+  args.version !== old.release &&
+  releaseRequestMatch &&
+  releaseRequestMatch[1] === args.version
+) {
+  const requestedReviewDate = releaseRequestMatch[2];
   must(
     validRevisionDate(requestedReviewDate),
     `Invalid release-request medical review date: ${requestedReviewDate}`,
