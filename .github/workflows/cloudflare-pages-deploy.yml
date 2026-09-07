@@ -102,6 +102,29 @@ jobs:
           python scripts/configure-cloudflare-edge.py \
             --apply \
             --outcome edge-reconciliation.json
+      - name: Canonicalize exact Pages.dev root URL
+        if: steps.tip.outputs.current == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/configure-pages-dev-redirect.py
+          for attempt in $(seq 1 30); do
+            headers="$(mktemp)"
+            status="$(curl --silent --show-error --max-time 15 --max-redirs 0 --output /dev/null --dump-header "$headers" --write-out '%{http_code}' 'https://doctor-ghezelbaash.pages.dev/')"
+            location="$(awk 'BEGIN{IGNORECASE=1} /^location:/ {sub(/^[^:]*:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit}' "$headers")"
+            rm -f "$headers"
+            if [ "$status" = '301' ] && [ "$location" = 'https://www.ghezelbaash.ir/' ]; then
+              echo 'PAGES_DEV_ROOT_REDIRECT_PUBLIC_PASS'
+              break
+            fi
+            if [ "$attempt" = '30' ]; then
+              echo "Pages.dev redirect did not converge: status=$status location=$location" >&2
+              exit 1
+            fi
+            sleep 2
+          done
       - name: Verify exact production serving and sample T+0 discovery
         if: steps.tip.outputs.current == 'true'
         env:
