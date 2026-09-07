@@ -150,19 +150,19 @@
       "authorityRole": "credentialIssuer"
     },
     "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview": {
-      "include": ["@id", "@type", "name", "url", "datePublished", "about", "mainEntity", "inLanguage"],
+      "include": ["@id", "@type", "name", "headline", "url", "datePublished", "about", "mainEntity", "inLanguage"],
       "authorityRole": "physicianCoverage"
     },
     "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine": {
-      "include": ["@id", "@type", "name", "url", "sameAs", "author", "about", "inLanguage", "datePublished", "learningResourceType"],
+      "include": ["@id", "@type", "name", "headline", "url", "sameAs", "author", "about", "inLanguage", "datePublished", "learningResourceType"],
       "authorityRole": "physicianAuthoredWork"
     },
     "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review": {
-      "include": ["@id", "@type", "name", "url", "sameAs", "author", "about", "inLanguage", "dateCreated", "creativeWorkStatus", "isPartOf"],
+      "include": ["@id", "@type", "name", "headline", "url", "sameAs", "author", "about", "inLanguage", "dateCreated", "creativeWorkStatus", "isPartOf"],
       "authorityRole": "physicianAuthoredWork"
     },
     "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin": {
-      "include": ["@id", "@type", "name", "url", "sameAs", "author", "about", "inLanguage", "datePublished", "learningResourceType"],
+      "include": ["@id", "@type", "name", "headline", "url", "sameAs", "author", "about", "inLanguage", "datePublished", "learningResourceType"],
       "authorityRole": "physicianAuthoredWork"
     },
     "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016": {
