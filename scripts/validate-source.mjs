@@ -2,7 +2,10 @@ import path from "node:path";
 import { readFile, readdir, access } from "node:fs/promises";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
 import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
-import { analyzeGraphClosure } from "./lib/graph-integrity.mjs";
+import {
+  analyzeGraphClosure,
+  collectPublicResourceIris,
+} from "./lib/graph-integrity.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
 import {
   loadRedirectRegistry,
@@ -589,8 +592,13 @@ for (const [organizationId, wikidataId] of fullGraphOnlyMemberships) {
   )
     fail(`Full-graph membership drift ${organizationId}`);
 }
+const publicResourceIris = await collectPublicResourceIris({
+  root,
+  baseUrl: release.canonicalUrl,
+});
 const graphClosure = analyzeGraphClosure(graph, {
   baseUrl: release.canonicalUrl,
+  allowedSameSiteIds: publicResourceIris,
 });
 if (graphClosure.duplicateIds.length || graphClosure.danglingSameSiteCount > 0)
   fail(

@@ -11,7 +11,10 @@ import {
   selectCurrentReleaseBoundNodes,
   nodeTypes,
 } from "./lib/release-graph.mjs";
-import { analyzeGraphClosure } from "./lib/graph-integrity.mjs";
+import {
+  analyzeGraphClosure,
+  collectPublicResourceIris,
+} from "./lib/graph-integrity.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
 import {
   loadRedirectRegistry,
@@ -196,8 +199,13 @@ if (!Array.isArray(nodes)) fail("Canonical graph must contain @graph");
 const byId = new Map(
   nodes.filter((node) => node?.["@id"]).map((node) => [node["@id"], node]),
 );
+const publicResourceIris = await collectPublicResourceIris({
+  root,
+  baseUrl: release.canonicalUrl,
+});
 const graphClosure = analyzeGraphClosure(graph, {
   baseUrl: release.canonicalUrl,
+  allowedSameSiteIds: publicResourceIris,
 });
 if (graphClosure.duplicateIds.length)
   fail(
