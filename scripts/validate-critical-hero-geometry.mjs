@@ -508,7 +508,7 @@ const functionalCssRequirements = [
     purpose: "Deep links must reveal the selected render chunk",
     accepts: (rule) =>
       normalized(rule.declarations["content-visibility"] || "") === "visible" &&
-      normalized(rule.declarations["contain-intrinsic-size"] || "") === "none",
+      !("contain-intrinsic-size" in rule.declarations),
   },
   {
     selector: ".guide-search__results",

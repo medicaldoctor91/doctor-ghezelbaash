@@ -13,8 +13,8 @@ const fail = (message) => {
   throw new Error(message);
 };
 const finite = (value) =>
-  Number.isFinite(Number(value))
-    ? Number(value)
+  Number.isFinite(value)
+    ? value
     : fail(`Non-finite calibration value: ${value}`);
 const format = (value) => String(Number(finite(value).toFixed(2)));
 const count = (source, needle) => String(source).split(needle).length - 1;
@@ -68,6 +68,9 @@ export function renderCalibrationCss(calibrationRaw) {
       )
         fail(`Calibration identity/height drift ${width}:${index}`);
     }
+    const sum = entry.chunks.reduce((height, chunk) => height + chunk.h, 0);
+    if (sum > entry.total + 2)
+      fail(`Calibration chunk heights exceed document height ${width}: ${sum}/${entry.total}`);
   }
   const rulesFor = (values, render) =>
     values
