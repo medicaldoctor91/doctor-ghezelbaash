@@ -2,7 +2,6 @@ import { readFile, writeFile } from "node:fs/promises";
 
 const measurePath = "scripts/measure-render-calibration.mjs";
 const registerPath = "scripts/register-render-calibration-contract.mjs";
-const workflowPath = ".github/workflows/finalize-render-calibration-contract.yml";
 
 let measure = await readFile(measurePath, "utf8");
 const oldFs = `import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";`;
@@ -26,11 +25,4 @@ if (register.split(oldCommand).length - 1 !== 1) throw new Error("register measu
 register = register.replace(oldCommand, newCommand);
 await writeFile(registerPath, register);
 
-let workflow = await readFile(workflowPath, "utf8");
-const oldBuild = `          npm run prepare:site\n          ASTRO_TELEMETRY_DISABLED=1 ./node_modules/.bin/astro build\n          npm run materialize:static`;
-const newBuild = `          npm run prepare:site\n          ASTRO_TELEMETRY_DISABLED=1 ./node_modules/.bin/astro build`;
-if (workflow.split(oldBuild).length - 1 !== 1) throw new Error("finalization build anchor drift");
-workflow = workflow.replace(oldBuild, newBuild);
-await writeFile(workflowPath, workflow);
-
-console.log(JSON.stringify({ patched: [measurePath, registerPath, workflowPath], cssMaterialization: "exact-generated-site-asset" }, null, 2));
+console.log(JSON.stringify({ patched: [measurePath, registerPath], cssMaterialization: "exact-generated-site-asset" }, null, 2));
