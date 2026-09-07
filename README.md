@@ -14,7 +14,7 @@ Static-only Astro source for the canonical physician entity home at `https://www
 - `src/data/release-invariants.json`: explicit delivery and validation limits.
 - `src/data/reputation-observation.json`: the clinic-scoped, last-known-good Google Places observation rendered into initial HTML.
 - `src/data/machine-resources.json`: one registry for website, Hugging Face, Zenodo, head and footer projections.
-- `src/data/redirects.json`: one registry for canonical aliases, Cloudflare host redirects and GitHub Pages bridges.
+- `src/data/redirects.json`: one registry for canonical aliases, Cloudflare host redirects and GitHub Pages bridges. The compiler emits both slash forms of each registered canonical directory alias with the same direct destination, rejects conflicting pairs and leaves unknown paths as 404.
 - `src/data/retrieval/query-matrix-policy.json`: explicit intent-to-answer mappings, languages, scopes and evidence bounds.
 - `src/data/evidence-registry.json`: canonical evidence source for the generated release snapshot.
 - `src/data/render-calibration.json`: measured chunk geometry used to derive responsive calibration CSS.

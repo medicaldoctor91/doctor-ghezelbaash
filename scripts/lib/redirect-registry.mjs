@@ -108,7 +108,7 @@ export function canonicalHostRedirectRows(registry) {
   )
     throw new Error("Canonical-host redirect surface is missing");
   const seen = new Set();
-  return surface.rules.map((rule, index) => {
+  const rows = surface.rules.map((rule, index) => {
     if (
       !rule ||
       typeof rule.source !== "string" ||
@@ -145,6 +145,36 @@ export function canonicalHostRedirectRows(registry) {
       target: rule.target,
       statusCode: rule.statusCode,
     };
+  });
+
+  // Pages matches exact paths; registered directory aliases need both forms.
+  // Keep explicit destinations and rule order, and never create a catchall.
+  const bySource = new Map(rows.map((row) => [row.source, row]));
+  return rows.flatMap((row) => {
+    if (
+      row.source === "/" ||
+      !row.source.endsWith("/") ||
+      /[*:]/u.test(row.source)
+    )
+      return [row];
+    const source = row.source.slice(0, -1);
+    if (
+      normalizedRedirectPath(source, registry.canonicalOrigin) ===
+      normalizedRedirectPath(row.target, registry.canonicalOrigin)
+    )
+      return [row];
+    const existing = bySource.get(source);
+    if (existing) {
+      if (
+        existing.target !== row.target ||
+        existing.statusCode !== row.statusCode
+      )
+        throw new Error(
+          `Canonical-host trailing-slash aliases disagree: ${source} and ${row.source}`,
+        );
+      return [row];
+    }
+    return [row, { ...row, source }];
   });
 }
 
