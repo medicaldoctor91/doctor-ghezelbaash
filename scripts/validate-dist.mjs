@@ -302,12 +302,12 @@ const h1Text = (html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || "")
   .replace(/\s+/g, " ")
   .trim();
 if (
-  !/<title>\s*دکتر سعید قزلباش \| پزشک زیبایی در کرمانشاه\s*<\/title>/i.test(
+  !/<title>\s*بوتاکس، فیلر، لیفت نخ، کانتورینگ صورت و جوان‌سازی پوست \| دکتر سعید قزلباش\s*<\/title>/i.test(
     html,
   ) ||
   !h1Text.includes("دکتر سعید قزلباش؛ پزشک زیبایی در کرمانشاه")
 )
-  fail("Entity-first title/H1 regressed");
+  fail("Homepage title/H1 regressed");
 if (!html.includes("جمعه تعطیل"))
   fail("Owner-confirmed Friday closure missing");
 const [authoredCss, renderCalibrationRaw] = await Promise.all([
