@@ -38,10 +38,15 @@ export async function computeRenderCalibrationFingerprint({ root = process.cwd()
   );
   const assembled = await assembleCanonicalContent({ root, graph });
 
+  // Calibration belongs only to the canonical homepage. Hash every shared
+  // component/layout currently capable of contributing to that page, plus the
+  // homepage route itself, but deliberately exclude unrelated routes such as 404.
+  // A future component import changes an already-hashed parent file; once added
+  // under src/components it is automatically included on subsequent fingerprints.
   const astroPaths = [
     ...(await collectFiles(root, "src/components", (file) => file.endsWith(".astro"))),
     ...(await collectFiles(root, "src/layouts", (file) => file.endsWith(".astro"))),
-    ...(await collectFiles(root, "src/pages", (file) => file.endsWith(".astro"))),
+    path.join(root, "src/pages/index.astro"),
   ].sort();
   const cssPaths = (await collectFiles(root, "src/styles", (file) => file.endsWith(".css"))).sort();
   const fontPaths = (await collectFiles(root, "public/fonts", () => true)).sort();
