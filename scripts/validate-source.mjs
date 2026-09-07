@@ -664,12 +664,18 @@ if (
 const canonicalClinicNames = arr(clinic.name).map(
     (value) => value?.["@value"] ?? value,
   ),
-  canonicalClinicImages = arr(clinic.image);
+  canonicalClinicImages = arr(clinic.image),
+  canonicalClinicResourceImageRefs = canonicalClinicImages.filter(
+    (value) =>
+      value &&
+      typeof value === "object" &&
+      typeof value["@id"] === "string" &&
+      publicResourceIris.has(value["@id"]),
+  );
 if (
   !canonicalClinicNames.includes(primaryClinicName) ||
   !canonicalClinicNames.includes("Dr. Saeed Ghezelbash Aesthetic Clinic") ||
-  canonicalClinicImages.filter((value) => typeof value === "string").length <
-    6 ||
+  canonicalClinicResourceImageRefs.length < 6 ||
   !canonicalClinicImages.some(
     (value) =>
       id(value) ===
