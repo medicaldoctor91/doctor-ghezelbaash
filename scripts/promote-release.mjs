@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { isDeepStrictEqual } from "node:util";
 import {
@@ -79,26 +80,57 @@ const old = {
   release: release.release,
   date: release.dateModified,
   datasetDate: datasetRevisionDate(graph, release),
+  medicalReviewedAt: release.medicalReviewedAt,
   recordId: String(z.recordId),
   versionDoi: z.versionDoi,
 };
 must(validRevisionDate(args.date), "Invalid --date");
 must(
-  validRevisionDate(release.medicalReviewedAt),
+  validRevisionDate(old.medicalReviewedAt),
   "Invalid medicalReviewedAt",
 );
+
+const headSubject = execFileSync("git", ["log", "-1", "--format=%s"], {
+  encoding: "utf8",
+}).trim();
+const releaseRequestMatch = headSubject.match(
+  /^release-request: v(\d+\.\d+\.\d+) medical-review=(\d{4}-\d{2}-\d{2})$/,
+);
+let requestedMedicalReviewAt = old.medicalReviewedAt;
+if (args.version !== old.release && releaseRequestMatch) {
+  const [, requestedVersion, requestedReviewDate] = releaseRequestMatch;
+  must(
+    requestedVersion === args.version,
+    `Release-request version mismatch: ${requestedVersion} != ${args.version}`,
+  );
+  must(
+    validRevisionDate(requestedReviewDate),
+    `Invalid release-request medical review date: ${requestedReviewDate}`,
+  );
+  must(
+    requestedReviewDate >= old.medicalReviewedAt,
+    `Medical review date must be monotonic: ${old.medicalReviewedAt} -> ${requestedReviewDate}`,
+  );
+  requestedMedicalReviewAt = requestedReviewDate;
+}
 const effectiveDate =
   args.version === old.release
     ? args.date
-    : [args.date, release.medicalReviewedAt].sort().at(-1);
+    : [args.date, requestedMedicalReviewAt].sort().at(-1);
 const next = {
   release: args.version,
   date: effectiveDate,
+  medicalReviewedAt: requestedMedicalReviewAt,
   recordId: String(args["zenodo-record"] || ""),
   versionDoi: args["zenodo-doi"],
 };
 must(/^\d+\.\d+\.\d+$/.test(next.release || ""), "Invalid --version");
 must(validRevisionDate(next.date), "Invalid effective release date");
+must(validRevisionDate(next.medicalReviewedAt), "Invalid effective medical review date");
+must(
+  next.date >= next.medicalReviewedAt,
+  "Release date cannot predate medical review date",
+);
 must(/^\d+$/.test(next.recordId), "Invalid --zenodo-record");
 must(
   /^10\.5281\/zenodo\.\d+$/.test(next.versionDoi || ""),
@@ -109,7 +141,8 @@ if (next.release === old.release) {
   must(
     next.versionDoi === old.versionDoi &&
       next.recordId === old.recordId &&
-      next.date === old.date,
+      next.date === old.date &&
+      next.medicalReviewedAt === old.medicalReviewedAt,
     "Idempotent promotion request drifted from current release",
   );
   console.log(
@@ -210,7 +243,7 @@ const encodings = [
 must(
   revisionDateInRange(website.dateModified, old.date, old.datasetDate) &&
     revisionDateInRange(webpage.dateModified, old.date, old.datasetDate) &&
-    webpage.lastReviewed === release.medicalReviewedAt,
+    webpage.lastReviewed === old.medicalReviewedAt,
   "Website/ProfilePage modification and medical-review date separation drift",
 );
 must(
@@ -335,6 +368,8 @@ must(
   "Dataset release-history citations drift",
 );
 
+release.medicalReviewedAt = next.medicalReviewedAt;
+webpage.lastReviewed = next.medicalReviewedAt;
 dataset.version = next.release;
 dataset.dateModified = next.date;
 dataset.identifier = [
