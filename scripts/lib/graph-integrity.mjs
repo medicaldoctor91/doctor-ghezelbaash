@@ -1,7 +1,43 @@
+import path from "node:path";
+import { readdir } from "node:fs/promises";
+
 const asArray = (value) =>
   Array.isArray(value) ? value : value == null ? [] : [value];
 
-export function analyzeGraphClosure(graph, { baseUrl } = {}) {
+export async function collectPublicResourceIris({
+  root = process.cwd(),
+  baseUrl,
+} = {}) {
+  if (typeof baseUrl !== "string" || !baseUrl)
+    throw new Error("Public resource IRI collection requires a baseUrl");
+  const canonical = new URL(baseUrl);
+  canonical.hash = "";
+  canonical.search = "";
+  const publicRoot = path.join(root, "public");
+  const files = [];
+  const walk = async (directory) => {
+    const entries = await readdir(directory, { withFileTypes: true });
+    entries.sort((left, right) => left.name.localeCompare(right.name, "en"));
+    for (const entry of entries) {
+      const target = path.join(directory, entry.name);
+      if (entry.isDirectory()) await walk(target);
+      else if (entry.isFile()) files.push(target);
+    }
+  };
+  await walk(publicRoot);
+  return new Set(
+    files.map((file) => {
+      const relative = path.relative(publicRoot, file).split(path.sep).join("/");
+      const iri = new URL(relative, canonical).href;
+      return iri;
+    }),
+  );
+}
+
+export function analyzeGraphClosure(
+  graph,
+  { baseUrl, allowedSameSiteIds = [] } = {},
+) {
   const nodes = asArray(graph?.["@graph"]);
   const ids = nodes
     .map((node) => node?.["@id"])
@@ -12,6 +48,10 @@ export function analyzeGraphClosure(graph, { baseUrl } = {}) {
     .filter(([, count]) => count > 1)
     .map(([id, count]) => ({ id, count }));
   const defined = new Set(ids);
+  const allowed =
+    allowedSameSiteIds instanceof Set
+      ? allowedSameSiteIds
+      : new Set(allowedSameSiteIds || []);
   const references = [];
   const walk = (value, owner, path) => {
     if (Array.isArray(value))
@@ -35,7 +75,7 @@ export function analyzeGraphClosure(graph, { baseUrl } = {}) {
   const danglingSameSiteIds = [
     ...new Set(
       sameSiteReferences
-        .filter((ref) => !defined.has(ref.id))
+        .filter((ref) => !defined.has(ref.id) && !allowed.has(ref.id))
         .map((ref) => ref.id),
     ),
   ].sort();
