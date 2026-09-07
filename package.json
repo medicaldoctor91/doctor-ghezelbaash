@@ -50,6 +50,7 @@
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "verify:subdomains": "node scripts/verify-production.mjs subdomains",
     "verify:production": "node scripts/verify-production.mjs full",
+    "verify:video-production": "node scripts/verify-video-production.mjs",
     "validate:release-contract": "node scripts/validate-release-contract.mjs",
     "validate:release-transaction": "node scripts/validate-release-transaction.mjs",
     "validate:rdf-reproducibility": "node scripts/validate-rdf-byte-repro.mjs",
@@ -62,13 +63,14 @@
     "test:redirect-registry": "node --test scripts/test-redirect-registry.mjs",
     "test:entity-facts": "node --test scripts/test-entity-facts.mjs",
     "test:physician-evidence": "node --test scripts/test-physician-evidence.mjs",
-    "test:http-representation": "node --test scripts/test-http-representation.mjs && node scripts/verify-live.mjs test-transport && node scripts/verify-live.mjs test-release-context",
+    "test:http-representation": "node --test scripts/test-http-representation.mjs scripts/test-video-transport.mjs && node scripts/verify-live.mjs test-transport && node scripts/verify-live.mjs test-release-context",
     "test:machine-resources": "npm run rdf:deps && node --test scripts/test-machine-resources.mjs",
     "test:retrieval-corpus": "node --test scripts/test-retrieval-corpus.mjs scripts/test-llms-guide.mjs",
     "test:media-inventory": "node --test scripts/test-media-inventory.mjs",
     "validate:render-calibration": "node scripts/validate-render-calibration.mjs",
     "test:render-calibration": "node --test scripts/test-render-calibration.mjs",
-    "test:render-navigation": "node scripts/test-render-navigation.mjs"
+    "test:render-navigation": "node scripts/test-render-navigation.mjs",
+    "test:video-deeplinks": "node scripts/test-video-deeplinks.mjs"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
