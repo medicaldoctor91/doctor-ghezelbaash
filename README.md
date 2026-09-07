@@ -41,9 +41,15 @@ npm run check
 npm run security:dependencies
 npm run validate:source
 npm run validate:media
-npm run render:calibration:update -- path/to/chromium-measurements.json
+npm run render:calibration:update
 npm run verify:production -- https://www.ghezelbaash.ir/
 ```
+
+After changing layout, fonts or rendered chunk content, install the pinned browser with `npx playwright install --with-deps chromium`, then run `npm run render:calibration:update`. It builds an isolated candidate, loads its CSS and fonts, disables chunk skipping only for measurement, and measures every chunk at 360, 390, 430, 768, 1024 and 1440 CSS pixels. The JSON records actual content-box heights, document heights, final DOM identity/order, source fingerprints and the Chromium/font environment. Measurements describe that reference environment; other devices' system fonts can produce different heights.
+
+Normal builds do not launch a browser. Source and final-DIST gates reject missing provenance, stale geometry inputs, wrong chunk identities/order or impossible heights. Generated calibration bytes are excluded from the source fingerprint to avoid a circular dependency. `npm run render:calibration:update -- path/to/chromium-measurements.json` imports only a measured artifact that passes the same source and compiled-DOM checks. The canonical JSON is replaced atomically after validation; an unsuccessful measurement preserves the previous artifact.
+
+CI measures independently on Ubuntu 24.04 with the pinned Playwright Chromium, tests anchor navigation and remembered chunk geometry, and compares measured chunk heights with the committed artifact (1 CSS pixel tolerance). Its measured JSON is available as the `render-calibration-*` artifact when a geometry update is needed. The separate release job validates the committed JSON and never substitutes the CI measurement automatically. Run `npm run test:render-calibration` for invalid/stale-data regression tests and `npm run test:render-navigation` after a full build for browser navigation tests.
 
 ## Release and deployment
 

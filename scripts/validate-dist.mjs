@@ -24,6 +24,7 @@ import {
   assertSameDocumentGraphUrlTargets,
 } from "./lib/graph-integrity.mjs";
 import { inspectHtml } from "./lib/html-contract.mjs";
+import { validateRenderCalibration } from "./lib/render-calibration.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
 import { loadProjectionContext } from "./lib/projection-context.mjs";
 import { buildEntityFacts, serializeEntityFacts, entityFactsTableSchema, entityFactsTableDialect, entityFactsRecordSet } from "./lib/entity-facts.mjs";
@@ -134,6 +135,7 @@ const html = await readFile(path.join(dist, "index.html"), "utf8"),
   llmsFull = await readFile(path.join(dist, "llms-full.txt"), "utf8"),
   provenance = await readJson(path.join(dist, "provenance.jsonld"));
 const { nodes, byId, sourceNodesForUrl } = indexCanonicalGraph(graph);
+await validateRenderCalibration({ root, html });
 const person = byId.get(release.primaryEntity.id),
   clinic = byId.get(release.clinic.id),
   dataset = byId.get(release.dataset.id),

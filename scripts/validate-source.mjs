@@ -1,6 +1,7 @@
 import path from "node:path";
 import { readFile, readdir, access } from "node:fs/promises";
 import { assembleCanonicalContent } from "./lib/assemble-content.mjs";
+import { validateRenderCalibration } from "./lib/render-calibration.mjs";
 import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
 import { analyzeGraphClosure } from "./lib/graph-integrity.mjs";
 import { validateCoreEntityIdentity } from "./lib/core-entity-identity.mjs";
@@ -42,6 +43,7 @@ const release = await readJson("src/data/release.json"),
   supportProfile = await readJson("src/data/semantic/support-profile.json"),
   hf = authority.surfaces.huggingFace;
 const { services, answers } = deriveCanonicalSemanticSets(graph, release);
+await validateRenderCalibration({ root });
 const machineResourcesByPath = new Map(
   machineResourceRegistry.resources.map((resource) => [
     resource.path,

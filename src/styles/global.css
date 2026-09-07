@@ -1030,7 +1030,6 @@ html {
 }
 .render-chunk.is-target-chunk {
   content-visibility: visible;
-  contain-intrinsic-size: none;
 }
 .render-chunk
   > :where(
