@@ -88,17 +88,17 @@ test("canonical 1600px physician image dimensions agree with the media inventory
     {
       widthId: `${base}#image-saeed-ghezelbash-portrait-width`,
       heightId: `${base}#image-saeed-ghezelbash-portrait-height`,
-      path: "public/media/images/physician/saeed-ghezelbash-portrait-1600.webp",
+      path: ["public", "media", "images", "physician", "saeed-ghezelbash-portrait-1600.webp"].join("/"),
     },
     {
       widthId: `${base}#image-saeed-ghezelbash-clinical-examination-width`,
       heightId: `${base}#image-saeed-ghezelbash-clinical-examination-height`,
-      path: "public/media/images/physician/saeed-ghezelbash-clinical-examination-1600.webp",
+      path: ["public", "media", "images", "physician", "saeed-ghezelbash-clinical-examination-1600.webp"].join("/"),
     },
     {
       widthId: `${base}#image-saeed-ghezelbash-clinic-team-width`,
       heightId: `${base}#image-saeed-ghezelbash-clinic-team-height`,
-      path: "public/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.webp",
+      path: ["public", "media", "images", "physician", "saeed-ghezelbash-with-clinic-team-1600.webp"].join("/"),
     },
   ];
 

@@ -165,8 +165,17 @@ export function validateMediaUsage({ physicalPaths, consumers, graph, rootIds, a
   for (const [id, node] of reachable) {
     for (const [key, value] of Object.entries(node)) {
       if (!graphMediaKeys.has(key)) continue;
-      for (const scalar of values(value)) if (typeof scalar === "string")
-        for (const file of mediaUrls(scalar, canonicalUrl)) add(file, `graph:${id}:${key}`);
+      for (const scalar of values(value)) {
+        const mediaValue =
+          typeof scalar === "string"
+            ? scalar
+            : scalar && typeof scalar === "object" && typeof scalar["@id"] === "string"
+              ? scalar["@id"]
+              : null;
+        if (!mediaValue) continue;
+        for (const file of mediaUrls(mediaValue, canonicalUrl))
+          add(file, `graph:${id}:${key}`);
+      }
     }
   }
   for (const alias of aliases) {

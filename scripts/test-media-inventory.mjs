@@ -40,6 +40,7 @@ const fixture = () => {
   const fallback = media("portrait-small.333333333333.webp");
   const responsive = media("portrait-small.444444444444.avif");
   const poster = media("poster.555555555555.webp");
+  const directGraphImage = media("clinic-crop.121212121212.webp");
   const video = media("clip.666666666666.mp4");
   const track = media("clip.777777777777.vtt");
   const sourceInput = media("symbol.888888888888.png");
@@ -47,13 +48,13 @@ const fixture = () => {
   const markup = `<picture id="image-portrait-webp"><source srcset="${responsive} 640w"><img src="${fallback}"></picture><video data-src="${video}" data-poster="${poster}"><track src="${track}"></video>`;
   const graph = { "@graph": [
     { "@id": iri("webpage"), "@type": "ProfilePage", mainEntity: { "@id": iri("person") } },
-    { "@id": iri("person"), "@type": "Person", image: { "@id": iri("image-portrait") } },
+    { "@id": iri("person"), "@type": "Person", image: [{ "@id": iri("image-portrait") }, { "@id": new URL(directGraphImage, canonicalUrl).href }] },
     { "@id": iri("image-portrait"), "@type": "ImageObject", contentUrl: new URL(media("portrait.jpg"), canonicalUrl).href, encoding: { "@id": iri("image-portrait-webp") } },
     { "@id": iri("image-portrait-webp"), "@type": "ImageObject", contentUrl: new URL(media("portrait.webp"), canonicalUrl).href, about: { "@id": iri("person") } },
   ] };
   return {
     canonicalUrl,
-    physicalPaths: new Set([jpg, webp, fallback, responsive, poster, video, track, sourceInput, font]),
+    physicalPaths: new Set([jpg, webp, fallback, responsive, poster, directGraphImage, video, track, sourceInput, font]),
     rootIds: [iri("webpage")],
     graph,
     aliases: [
