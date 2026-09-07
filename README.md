@@ -51,6 +51,10 @@ Normal builds do not launch a browser. Source and final-DIST gates reject missin
 
 CI measures independently on Ubuntu 24.04 with the pinned Playwright Chromium, tests anchor navigation and remembered chunk geometry, and compares measured chunk heights with the committed artifact (1 CSS pixel tolerance). Its measured JSON is available as the `render-calibration-*` artifact when a geometry update is needed. The separate release job validates the committed JSON and never substitutes the CI measurement automatically. Run `npm run test:render-calibration` for invalid/stale-data regression tests and `npm run test:render-navigation` after a full build for browser navigation tests.
 
+After a full build, `npm run test:video-deeplinks` checks the published Clip links at 7, 25 and 46 seconds against the actual `dist/` HTML and media. Its dedicated server provides correct 206 responses and a gated, gradual full-body 200 response that ignores Range. The 206 cases must reach a stable, paused destination and deliver its decoded frame; the 200 cases prove that the verifier rejects an unseekable player even when it reports ready data. In the pinned Chromium, this finite HTTP stream exposes only time zero as seekable, so retrying `currentTime` or increasing preload cannot repair that transport. These negative cases do not claim 200 compatibility or a reproduced production outage. The shipped runtime and the geometry server remain unchanged.
+
+`npm run verify:video-production` requires the exact deployment's `dist/` locally. It checks a real 1024-byte Range from every published MP4/WebM against the local artifact, including 206 status, Content-Range and strong ETag, then verifies all three Clip links in Chromium against the exact deployed HTML. It runs after production convergence and fails on transport or browser drift. It performs no Cloudflare mutation; the existing full-representation digest verifier continues to reject partial responses. Neither verification command is included in the site's browser runtime.
+
 ## Release and deployment
 
 ```bash
