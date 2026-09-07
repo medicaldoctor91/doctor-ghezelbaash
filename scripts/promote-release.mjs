@@ -82,14 +82,23 @@ const old = {
   recordId: String(z.recordId),
   versionDoi: z.versionDoi,
 };
+must(validRevisionDate(args.date), "Invalid --date");
+must(
+  validRevisionDate(release.medicalReviewedAt),
+  "Invalid medicalReviewedAt",
+);
+const effectiveDate =
+  args.version === old.release
+    ? args.date
+    : [args.date, release.medicalReviewedAt].sort().at(-1);
 const next = {
   release: args.version,
-  date: args.date,
+  date: effectiveDate,
   recordId: String(args["zenodo-record"] || ""),
   versionDoi: args["zenodo-doi"],
 };
 must(/^\d+\.\d+\.\d+$/.test(next.release || ""), "Invalid --version");
-must(validRevisionDate(next.date), "Invalid --date");
+must(validRevisionDate(next.date), "Invalid effective release date");
 must(/^\d+$/.test(next.recordId), "Invalid --zenodo-record");
 must(
   /^10\.5281\/zenodo\.\d+$/.test(next.versionDoi || ""),
