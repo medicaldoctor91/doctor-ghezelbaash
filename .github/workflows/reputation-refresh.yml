@@ -90,11 +90,37 @@ jobs:
         if: steps.places.outputs.changed == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_ADMIN_TOKEN: ${{ secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
           test -n "${GITHUB_TOKEN:-}"
           echo "::add-mask::$GITHUB_TOKEN"
-          GITHUB_AUTH="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64 -w0)"
+          rulesets="$(mktemp)"
+          trap 'rm -f "$rulesets"' EXIT
+          status="$(curl --silent --show-error --output "$rulesets" --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GITHUB_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            --header 'X-GitHub-Api-Version: 2026-03-10' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/rulesets")"
+          test "$status" = '200' || { cat "$rulesets" >&2; echo "Ruleset inventory HTTP $status" >&2; exit 1; }
+          lock_active="$(node - "$rulesets" <<'NODE'
+          const fs=require('node:fs');
+          const rows=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+          const match=rows.filter(x=>x.name==='ghezelbaash_canonical_source_lock_v1'&&x.enforcement==='active');
+          if(match.length>1)throw new Error('Duplicate canonical source lock rulesets');
+          process.stdout.write(match.length===1?'true':'false');
+          NODE
+          )"
+          AUTH_TOKEN="$GITHUB_TOKEN"
+          if [ "$lock_active" = 'true' ]; then
+            test -n "${RELEASE_ADMIN_TOKEN:-}" || { echo 'Active source lock requires RELEASE_ADMIN_TOKEN' >&2; exit 1; }
+            echo "::add-mask::$RELEASE_ADMIN_TOKEN"
+            AUTH_TOKEN="$RELEASE_ADMIN_TOKEN"
+            echo REPUTATION_PUSH_USING_SOURCE_LOCK_BYPASS
+          else
+            echo REPUTATION_PUSH_USING_GITHUB_TOKEN
+          fi
+          GITHUB_AUTH="$(printf 'x-access-token:%s' "$AUTH_TOKEN" | base64 -w0)"
           git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $GITHUB_AUTH" push origin HEAD:main
-          unset GITHUB_AUTH
+          unset GITHUB_AUTH AUTH_TOKEN
