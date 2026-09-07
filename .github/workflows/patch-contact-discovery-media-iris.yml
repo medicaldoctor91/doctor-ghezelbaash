@@ -1,0 +1,42 @@
+name: Temporary contact discovery media IRI patch
+
+on:
+  push:
+    branches: [fix/semantic-calibration-recovery-20260907]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: node scripts/patch-contact-discovery-media-iris.mjs
+      - name: Exercise distribution contact discovery
+        run: |
+          node --check scripts/lib/projections/contact-discovery.mjs
+          npm run prepare:distribution
+      - name: Require exact patch scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          changed=$(git diff --name-only)
+          test "$changed" = "scripts/lib/projections/contact-discovery.mjs"
+      - name: Commit contact discovery resource-IRI support
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/lib/projections/contact-discovery.mjs
+          git commit -m "Support direct clinic media IRIs in contact discovery"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
