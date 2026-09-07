@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { mkdir, rm } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
@@ -27,6 +28,10 @@ if (invokedDirectly) {
   if (command !== "reset")
     throw new Error("Usage: node scripts/generated-workspace.mjs reset");
   await resetGeneratedWorkspace();
+  execFileSync(process.execPath, ["scripts/rebind-release-calibration.mjs"], {
+    cwd: process.cwd(),
+    stdio: "inherit",
+  });
   console.log(
     JSON.stringify({
       stage: "GENERATED_WORKSPACE_RESET",
