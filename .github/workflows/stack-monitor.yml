@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
+  workflow_run:
+    workflows: ["External authority release contract"]
+    types: [completed]
 
 permissions:
   contents: read
@@ -152,3 +155,177 @@ jobs:
             npm run build
           )
           node scripts/verify-live.mjs release --source-root "$SNAPSHOT_SOURCE" --dist-root "$SNAPSHOT_SOURCE/dist"
+
+  seal:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success'
+    needs: monitor
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Delete every stale non-main branch after verified release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, urllib.error, urllib.parse, urllib.request
+
+          token = os.environ['GITHUB_TOKEN']
+          repo = os.environ['GITHUB_REPOSITORY']
+          base = f'https://api.github.com/repos/{repo}'
+          headers = {
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2026-03-10',
+              'User-Agent': 'ghezelbaash-repository-seal/1.0',
+          }
+
+          def call(method, url):
+              req = urllib.request.Request(url, method=method, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as response:
+                      raw = response.read()
+                      return response.status, json.loads(raw.decode()) if raw else None
+              except urllib.error.HTTPError as exc:
+                  detail = exc.read().decode('utf-8', 'replace')[:1200]
+                  raise RuntimeError(f'{method} {url} failed HTTP {exc.code}: {detail}') from None
+
+          branches = []
+          page = 1
+          while True:
+              status, rows = call('GET', f'{base}/branches?per_page=100&page={page}')
+              if status != 200 or not isinstance(rows, list):
+                  raise RuntimeError('Branch inventory readback failed')
+              branches.extend(str(row.get('name') or '') for row in rows)
+              if len(rows) < 100:
+                  break
+              page += 1
+          targets = sorted(name for name in set(branches) if name and name != 'main')
+          for name in targets:
+              ref = urllib.parse.quote(f'heads/{name}', safe='/')
+              status, _ = call('DELETE', f'{base}/git/refs/{ref}')
+              if status != 204:
+                  raise RuntimeError(f'Unexpected delete status for {name}: {status}')
+              print('STALE_BRANCH_DELETED', name)
+
+          status, rows = call('GET', f'{base}/branches?per_page=100&page=1')
+          names = sorted(str(row.get('name') or '') for row in rows)
+          if names != ['main']:
+              raise RuntimeError(f'Post-cleanup branch inventory drift: {names}')
+          print('REPOSITORY_BRANCH_CLEANUP_PASS deleted=', len(targets))
+          PY
+      - name: Restrict canonical main updates to the verified owner credential
+        env:
+          RELEASE_ADMIN_TOKEN: ${{ secrets.GH_RELEASE_ADMIN_TOKEN || secrets.RELEASE_ADMIN_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${RELEASE_ADMIN_TOKEN:-}" ]; then
+            echo 'REPOSITORY_SOURCE_LOCK_SKIPPED_NO_ADMIN_TOKEN'
+            exit 0
+          fi
+          echo "::add-mask::$RELEASE_ADMIN_TOKEN"
+          python3 - <<'PY'
+          import json, os, urllib.error, urllib.request
+
+          token = os.environ['RELEASE_ADMIN_TOKEN']
+          repo = os.environ['GITHUB_REPOSITORY']
+          owner = repo.split('/', 1)[0]
+          base = f'https://api.github.com/repos/{repo}'
+          headers = {
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/vnd.github+json',
+              'Content-Type': 'application/json',
+              'X-GitHub-Api-Version': '2026-03-10',
+              'User-Agent': 'ghezelbaash-canonical-source-lock/1.0',
+          }
+
+          def call(method, url, body=None, ok=(200,)):
+              data = None if body is None else json.dumps(body, separators=(',', ':')).encode()
+              req = urllib.request.Request(url, data=data, method=method, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as response:
+                      raw = response.read()
+                      payload = json.loads(raw.decode()) if raw else None
+                      if response.status not in ok:
+                          raise RuntimeError(f'{method} {url} returned HTTP {response.status}')
+                      return payload
+              except urllib.error.HTTPError as exc:
+                  detail = exc.read().decode('utf-8', 'replace')[:1600]
+                  raise RuntimeError(f'{method} {url} failed HTTP {exc.code}: {detail}') from None
+
+          user = call('GET', 'https://api.github.com/user')
+          if user.get('login') != owner or not isinstance(user.get('id'), int):
+              raise RuntimeError(f'Release admin token is not authenticated as repository owner: {user.get("login")}')
+          repository = call('GET', base)
+          permissions = repository.get('permissions') or {}
+          if permissions.get('admin') is not True or permissions.get('push') is not True:
+              raise RuntimeError(f'Release admin token lacks repository admin/push authority: {permissions}')
+
+          desired = {
+              'name': 'ghezelbaash_canonical_source_lock_v1',
+              'target': 'branch',
+              'enforcement': 'active',
+              'bypass_actors': [
+                  {
+                      'actor_id': user['id'],
+                      'actor_type': 'User',
+                      'bypass_mode': 'always',
+                  }
+              ],
+              'conditions': {
+                  'ref_name': {
+                      'include': ['~DEFAULT_BRANCH'],
+                      'exclude': [],
+                  }
+              },
+              'rules': [
+                  {
+                      'type': 'update',
+                      'parameters': {'update_allows_fetch_and_merge': False},
+                  },
+                  {'type': 'deletion'},
+                  {'type': 'non_fast_forward'},
+              ],
+          }
+          rulesets = call('GET', f'{base}/rulesets')
+          matches = [row for row in rulesets if row.get('name') == desired['name']]
+          if len(matches) > 1:
+              raise RuntimeError('Duplicate canonical source lock rulesets')
+          if matches:
+              ruleset_id = matches[0]['id']
+              call('PUT', f'{base}/rulesets/{ruleset_id}', desired)
+              state = 'REPOSITORY_SOURCE_LOCK_UPDATED'
+          else:
+              created = call('POST', f'{base}/rulesets', desired, ok=(201,))
+              ruleset_id = created['id']
+              state = 'REPOSITORY_SOURCE_LOCK_CREATED'
+
+          readback = call('GET', f'{base}/rulesets/{ruleset_id}')
+          if readback.get('name') != desired['name'] or readback.get('target') != 'branch' or readback.get('enforcement') != 'active':
+              raise RuntimeError('Canonical source lock identity/readback drift')
+          if readback.get('conditions') != desired['conditions']:
+              raise RuntimeError(f'Canonical source lock condition drift: {readback.get("conditions")}')
+          actual_bypass = [
+              {k: row.get(k) for k in ('actor_id', 'actor_type', 'bypass_mode')}
+              for row in (readback.get('bypass_actors') or [])
+          ]
+          if actual_bypass != desired['bypass_actors']:
+              raise RuntimeError(f'Canonical source lock bypass drift: {actual_bypass}')
+          actual_rules = [
+              {
+                  'type': row.get('type'),
+                  **({'parameters': row.get('parameters')} if row.get('parameters') is not None else {}),
+              }
+              for row in (readback.get('rules') or [])
+          ]
+          if actual_rules != desired['rules']:
+              raise RuntimeError(f'Canonical source lock rule drift: {actual_rules}')
+          print(state, ruleset_id, 'owner=', user['login'])
+          print('REPOSITORY_SOURCE_LOCK_READBACK_PASS')
+          PY
