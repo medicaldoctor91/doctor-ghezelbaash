@@ -4251,12 +4251,24 @@
         {
           "@id": "https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo"
         },
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.38fa87daaf54.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.cf191f37bcdb.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1d9285d1dfd7.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-1x1.adef35b75d97.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-4x3.fdbc375592c3.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.a49f74e53c0e.webp"
+        {
+          "@id": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.38fa87daaf54.webp"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.cf191f37bcdb.webp"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1d9285d1dfd7.webp"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-1x1.adef35b75d97.webp"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-4x3.fdbc375592c3.webp"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.a49f74e53c0e.webp"
+        }
       ],
       "subjectOf": [
         {
@@ -6873,7 +6885,7 @@
       "copyrightHolder": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "mainEntityOfPage": {
+      "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "inLanguage": "fa-IR",
@@ -6982,7 +6994,7 @@
       "copyrightHolder": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "mainEntityOfPage": {
+      "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "inLanguage": "fa-IR",
@@ -7085,7 +7097,7 @@
       "copyrightHolder": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "mainEntityOfPage": {
+      "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "inLanguage": "fa-IR",
@@ -7186,7 +7198,7 @@
       "copyrightHolder": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "mainEntityOfPage": {
+      "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
       "inLanguage": "ckb-IQ",
@@ -18793,7 +18805,7 @@
     {
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-height",
       "@type": "QuantitativeValue",
-      "value": 1068,
+      "value": 1067,
       "unitText": "px"
     },
     {
@@ -18817,7 +18829,7 @@
     {
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-height",
       "@type": "QuantitativeValue",
-      "value": 1068,
+      "value": 1067,
       "unitText": "px"
     },
     {
@@ -18841,7 +18853,7 @@
     {
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-height",
       "@type": "QuantitativeValue",
-      "value": 1068,
+      "value": 1067,
       "unitText": "px"
     },
     {
