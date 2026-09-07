@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
+import {
+  analyzeGraphClosure,
+  collectPublicResourceIris,
+} from "./lib/graph-integrity.mjs";
 
 const graphUrl = new URL("../src/data/semantic/knowledge-graph.jsonld", import.meta.url);
 const releaseUrl = new URL("../src/data/release.json", import.meta.url);
@@ -27,6 +31,14 @@ const load = async () => {
 };
 
 const types = (node) => (Array.isArray(node?.["@type"]) ? node["@type"] : [node?.["@type"]].filter(Boolean));
+const clinicCropUrls = (base) => [
+  `${base}media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.38fa87daaf54.webp`,
+  `${base}media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.cf191f37bcdb.webp`,
+  `${base}media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1d9285d1dfd7.webp`,
+  `${base}media/images/clinic/ghezelbash-clinic-reception-kermanshah-1x1.adef35b75d97.webp`,
+  `${base}media/images/clinic/ghezelbash-clinic-reception-kermanshah-4x3.fdbc375592c3.webp`,
+  `${base}media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.a49f74e53c0e.webp`,
+];
 
 test("clinic crop images remain JSON-LD IRI references to real first-party media", async () => {
   const { release, byId } = await load();
@@ -34,21 +46,39 @@ test("clinic crop images remain JSON-LD IRI references to real first-party media
   const clinic = byId.get(`${base}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`);
   assert.ok(clinic && Array.isArray(clinic.image), "canonical clinic image array is required");
 
-  const expected = [
-    `${base}media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.38fa87daaf54.webp`,
-    `${base}media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.cf191f37bcdb.webp`,
-    `${base}media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1d9285d1dfd7.webp`,
-    `${base}media/images/clinic/ghezelbash-clinic-reception-kermanshah-1x1.adef35b75d97.webp`,
-    `${base}media/images/clinic/ghezelbash-clinic-reception-kermanshah-4x3.fdbc375592c3.webp`,
-    `${base}media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.a49f74e53c0e.webp`,
-  ];
-
-  for (const url of expected) {
+  for (const url of clinicCropUrls(base)) {
     assert.equal(clinic.image.filter((value) => value === url).length, 0, `image URL must not regress to a JSON-LD literal: ${url}`);
     assert.equal(clinic.image.filter((value) => value?.["@id"] === url).length, 1, `image URL must occur exactly once as @id: ${url}`);
     const pathname = new URL(url).pathname;
     await access(new URL(`../public${pathname}`, import.meta.url));
   }
+});
+
+test("graph closure permits only materialized first-party resource IRIs", async () => {
+  const { graph, release } = await load();
+  const allowedSameSiteIds = await collectPublicResourceIris({
+    baseUrl: release.canonicalUrl,
+  });
+  for (const url of clinicCropUrls(release.canonicalUrl))
+    assert.ok(allowedSameSiteIds.has(url), `public resource IRI must be materialized: ${url}`);
+
+  const current = analyzeGraphClosure(graph, {
+    baseUrl: release.canonicalUrl,
+    allowedSameSiteIds,
+  });
+  assert.equal(current.danglingSameSiteCount, 0, `canonical graph must close over graph nodes and real public resources: ${current.danglingSameSiteIds.join(", ")}`);
+
+  const broken = structuredClone(graph);
+  const missing = `${release.canonicalUrl}media/images/clinic/nonexistent-regression-sentinel.webp`;
+  const clinic = broken["@graph"].find((node) => node?.["@id"] === release.clinic.id);
+  assert.ok(clinic, "clinic node required for closure regression fixture");
+  clinic.image = [...clinic.image, { "@id": missing }];
+  const rejected = analyzeGraphClosure(broken, {
+    baseUrl: release.canonicalUrl,
+    allowedSameSiteIds,
+  });
+  assert.equal(rejected.danglingSameSiteCount, 1, "nonexistent same-site resource IRI must remain dangling");
+  assert.deepEqual(rejected.danglingSameSiteIds, [missing]);
 });
 
 test("canonical 1600px physician image dimensions agree with the media inventory", async () => {
