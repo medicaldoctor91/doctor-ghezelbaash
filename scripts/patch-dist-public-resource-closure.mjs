@@ -1,5 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 
+if (process.env.PIVOT_IMAGE_IRI_CONTEXT !== "1")
+  throw new Error("This one-shot pivot helper requires PIVOT_IMAGE_IRI_CONTEXT=1");
+
+const graphPath = "src/data/semantic/knowledge-graph.jsonld";
+const testPath = "scripts/test-canonical-media-semantics.mjs";
 const canonicalUrl = "https://www.ghezelbaash.ir/";
 const clinicId = `${canonicalUrl}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`;
 const cropImageUrls = [
@@ -11,43 +16,54 @@ const cropImageUrls = [
   `${canonicalUrl}media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.a49f74e53c0e.webp`,
 ];
 
-const profilePath = "src/data/semantic/head-profile.json";
-const profile = JSON.parse(await readFile(profilePath, "utf8"));
-const clinicProfile = profile?.nodes?.[clinicId];
-if (!clinicProfile || !clinicProfile.refAllow || !Array.isArray(clinicProfile.refAllow.image))
-  throw new Error("Head-profile clinic image policy is missing");
-if (clinicProfile.refAllow.image.length !== 0)
-  throw new Error(`Head-profile clinic image policy baseline drift: ${JSON.stringify(clinicProfile.refAllow.image)}`);
-clinicProfile.refAllow.image = [...cropImageUrls];
-await writeFile(profilePath, `${JSON.stringify(profile, null, 2)}\n`);
+const graph = JSON.parse(await readFile(graphPath, "utf8"));
+if (!graph?.["@context"] || !Array.isArray(graph?.["@graph"]))
+  throw new Error("Canonical graph/context missing");
+if (Object.hasOwn(graph["@context"], "image"))
+  throw new Error(`Canonical image context baseline drift: ${JSON.stringify(graph["@context"].image)}`);
+const clinic = graph["@graph"].find((node) => node?.["@id"] === clinicId);
+if (!clinic || !Array.isArray(clinic.image))
+  throw new Error("Canonical clinic image array missing");
+for (const url of cropImageUrls) {
+  const iriIndexes = clinic.image
+    .map((value, index) => (value?.["@id"] === url ? index : -1))
+    .filter((index) => index >= 0);
+  const literalCount = clinic.image.filter((value) => value === url).length;
+  if (iriIndexes.length !== 1 || literalCount !== 0)
+    throw new Error(`Clinic crop baseline drift: ${url}; refs=${iriIndexes.length}; literals=${literalCount}`);
+  clinic.image[iriIndexes[0]] = url;
+}
+graph["@context"].image = {
+  "@id": "https://schema.org/image",
+  "@type": "@id",
+};
+await writeFile(graphPath, `${JSON.stringify(graph, null, 2)}\n`);
 
-const distPath = "scripts/validate-dist.mjs";
-let source = await readFile(distPath, "utf8");
-const oldImport = `import {\n  analyzeGraphClosure,\n  assertSameDocumentGraphUrlTargets,\n} from "./lib/graph-integrity.mjs";`;
-const newImport = `import {\n  analyzeGraphClosure,\n  assertSameDocumentGraphUrlTargets,\n  collectPublicResourceIris,\n} from "./lib/graph-integrity.mjs";`;
-if (source.split(oldImport).length - 1 !== 1)
-  throw new Error("validate-dist graph-integrity import anchor drift");
-source = source.replace(oldImport, newImport);
+let test = await readFile(testPath, "utf8");
+const oldImport = `import {\n  analyzeGraphClosure,\n  collectPublicResourceIris,\n} from "./lib/graph-integrity.mjs";\n`;
+if (test.split(oldImport).length - 1 !== 1)
+  throw new Error("Canonical media test graph-integrity import anchor drift");
+test = test.replace(oldImport, "");
+const firstStart = `test("clinic crop images remain JSON-LD IRI references to real first-party media", async () => {`;
+const secondStart = `test("graph closure permits only materialized first-party resource IRIs", async () => {`;
+const thirdStart = `test("canonical 1600px physician image dimensions agree with the media inventory", async () => {`;
+const firstIndex = test.indexOf(firstStart);
+const secondIndex = test.indexOf(secondStart);
+const thirdIndex = test.indexOf(thirdStart);
+if (!(firstIndex >= 0 && secondIndex > firstIndex && thirdIndex > secondIndex))
+  throw new Error("Canonical media test E001 block anchors drift");
+const replacement = `test("clinic crop image URLs remain Google-compatible strings with JSON-LD IRI coercion", async () => {\n  const { graph, release, byId } = await load();\n  const base = release.canonicalUrl;\n  assert.deepEqual(\n    graph["@context"]?.image,\n    { "@id": "https://schema.org/image", "@type": "@id" },\n    "Schema.org image values must be JSON-LD IRI-coerced",\n  );\n  const clinic = byId.get(\`${base}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah\`);\n  assert.ok(clinic && Array.isArray(clinic.image), "canonical clinic image array is required");\n\n  for (const url of clinicCropUrls(base)) {\n    assert.equal(clinic.image.filter((value) => value === url).length, 1, \`image URL must occur exactly once as an IRI-coerced string: \${url}\`);\n    assert.equal(clinic.image.filter((value) => value?.["@id"] === url).length, 0, \`direct media URL must not masquerade as an unresolved graph-node reference: \${url}\`);\n    const pathname = new URL(url).pathname;\n    await access(new URL(\`../public\${pathname}\`, import.meta.url));\n  }\n});\n\n`;
+test = `${test.slice(0, firstIndex)}${replacement}${test.slice(thirdIndex)}`;
+await writeFile(testPath, test);
 
-const oldClosure = `const graphClosure = analyzeGraphClosure(graph, {\n  baseUrl: release.canonicalUrl,\n});`;
-const newClosure = `const publicResourceIris = await collectPublicResourceIris({\n  root,\n  baseUrl: release.canonicalUrl,\n});\nconst graphClosure = analyzeGraphClosure(graph, {\n  baseUrl: release.canonicalUrl,\n  allowedSameSiteIds: publicResourceIris,\n});`;
-if (source.split(oldClosure).length - 1 !== 1)
-  throw new Error("validate-dist graph closure anchor drift");
-source = source.replace(oldClosure, newClosure);
-
-const oldProjectionGate = `const coreClinic = inlineById.get(release.clinic.id),\n  coreClinicNames = arr(coreClinic?.name),\n  coreClinicImages = arr(coreClinic?.image);\nif (\n  coreClinicNames.length !== 1 ||\n  coreClinicNames[0]?.["@language"] !== "fa" ||\n  coreClinicNames[0]?.["@value"] !== "کلینیک زیبایی دکتر سعید قزلباش" ||\n  coreClinicImages.length < 6 ||\n  coreClinicImages.some(\n    (value) => typeof value !== "string" || !/^https:\\/\\//.test(value),\n  )\n)\n  fail("Google Organization/LocalBusiness name/image projection drift");`;
-const newProjectionGate = `const coreClinic = inlineById.get(release.clinic.id),\n  coreClinicNames = arr(coreClinic?.name),\n  coreClinicImages = arr(coreClinic?.image),\n  expectedCoreClinicImageIds = [\n    \`${canonicalUrl}media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.38fa87daaf54.webp\`,\n    \`${canonicalUrl}media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.cf191f37bcdb.webp\`,\n    \`${canonicalUrl}media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1d9285d1dfd7.webp\`,\n    \`${canonicalUrl}media/images/clinic/ghezelbash-clinic-reception-kermanshah-1x1.adef35b75d97.webp\`,\n    \`${canonicalUrl}media/images/clinic/ghezelbash-clinic-reception-kermanshah-4x3.fdbc375592c3.webp\`,\n    \`${canonicalUrl}media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.a49f74e53c0e.webp\`,\n  ],\n  coreClinicImageIds = coreClinicImages.map((value) =>\n    value && typeof value === "object" && typeof value["@id"] === "string"\n      ? value["@id"]\n      : null,\n  );\nif (\n  coreClinicNames.length !== 1 ||\n  coreClinicNames[0]?.["@language"] !== "fa" ||\n  coreClinicNames[0]?.["@value"] !== "کلینیک زیبایی دکتر سعید قزلباش" ||\n  coreClinicImageIds.length !== expectedCoreClinicImageIds.length ||\n  coreClinicImageIds.some((imageId, index) =>\n    imageId !== expectedCoreClinicImageIds[index] ||\n    !publicResourceIris.has(imageId),\n  )\n)\n  fail("Google Organization/LocalBusiness name/image projection drift");`;
-if (source.split(oldProjectionGate).length - 1 !== 1)
-  throw new Error("validate-dist Google clinic image projection anchor drift");
-source = source.replace(oldProjectionGate, newProjectionGate);
-
-await writeFile(distPath, source);
 console.log(
   JSON.stringify(
     {
-      patched: [profilePath, distPath],
-      googleClinicImages: cropImageUrls.length,
-      closure: "graph-node-or-materialized-public-resource",
+      pivoted: true,
+      graphPath,
+      testPath,
+      imageTerm: graph["@context"].image,
+      iriCoercedStrings: cropImageUrls.length,
     },
     null,
     2,
