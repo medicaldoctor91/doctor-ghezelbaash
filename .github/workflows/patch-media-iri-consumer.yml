@@ -23,7 +23,7 @@ jobs:
       - name: Run targeted media regression tests
         run: |
           node --check scripts/lib/media-inventory.mjs
-          node --test scripts/test-media-inventory.mjs
+          node --test scripts/test-media-inventory.mjs scripts/test-canonical-media-semantics.mjs
           node scripts/validate-media-references.mjs
       - name: Require exact integration scope
         shell: bash
@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           git diff --check
           changed=$(git diff --name-only)
-          expected=$'scripts/lib/media-inventory.mjs\nscripts/test-media-inventory.mjs'
+          expected=$'scripts/lib/media-inventory.mjs\nscripts/test-canonical-media-semantics.mjs\nscripts/test-media-inventory.mjs'
           test "$changed" = "$expected"
       - name: Commit media IRI consumer support
         shell: bash
@@ -39,6 +39,6 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add scripts/lib/media-inventory.mjs scripts/test-media-inventory.mjs
+          git add scripts/lib/media-inventory.mjs scripts/test-media-inventory.mjs scripts/test-canonical-media-semantics.mjs
           git commit -m "Recognize media resource IRI references in inventory"
           git push origin "HEAD:${GITHUB_REF_NAME}"
