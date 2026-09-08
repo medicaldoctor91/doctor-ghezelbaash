@@ -247,7 +247,7 @@ const hfMutationWorkflows = [
     "hugging-face-authority.yml",
     hfAuthorityWorkflow,
     new Map([
-      ["node scripts/huggingface.mjs push .release/huggingface HEAD:main", 2],
+      ["node scripts/huggingface.mjs push .release/huggingface HEAD:main", 3],
       [
         'node scripts/huggingface.mjs push .release/huggingface "HEAD:$HF_BRANCH"',
         1,
