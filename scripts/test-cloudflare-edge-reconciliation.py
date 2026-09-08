@@ -644,6 +644,107 @@ def test_public_machine_request_trace() -> None:
         assert not authority.events
 
 
+def test_origin_response_diagnostic() -> None:
+    zone = "0123456789abcdef0123456789abcdef"
+    host, path = "www.ghezelbaash.ir", "/graph.jsonld"
+    dataset = "httpRequestsAdaptiveGroups"
+    secret = "private-header-material-must-never-appear"
+    status_fields = ["edgeResponseStatus", "originResponseStatus", "cacheStatus"]
+
+    def response(data):
+        return 200, {"data": data, "headers": {"Authorization": secret}}
+
+    def zone_response(data):
+        return response({"viewer": {"zones": [data]}})
+
+    def type_ref(name):
+        return {"kind": "NON_NULL", "name": None, "ofType": {"kind": "LIST", "name": None,
+                "ofType": {"kind": "NON_NULL", "name": None, "ofType": {"kind": "OBJECT", "name": name}}}}
+
+    # Deliberately different type names prove discovery follows the returned
+    # schema rather than guessing a Cloudflare naming convention.
+    discovery = zone_response({"__typename": "LiveZoneType", "settings": {dataset: {
+        "enabled": True, "availableFields": ["count", *("dimensions_" + name for name in status_fields), "dimensions_clientIP"],
+        "maxDuration": 600, "notOlderThan": 86400, "maxPageSize": 10, "maxNumberOfFields": 30,
+    }}})
+    zone_schema = response({"zoneType": {"fields": [{"name": dataset, "type": type_ref("LiveGroupType"), "args": [
+        {"name": "filter", "type": {"kind": "INPUT_OBJECT", "name": "LiveFilterType"}},
+        {"name": "limit", "type": {"kind": "SCALAR", "name": "int"}},
+    ]}]}})
+    group_schema = response({"groupType": {"fields": [
+        {"name": "count", "type": {"kind": "SCALAR", "name": "int"}},
+        {"name": "dimensions", "type": {"kind": "OBJECT", "name": "LiveDimensionType"}},
+    ]}, "filterType": {"inputFields": [{"name": name} for name in (
+        "datetime_geq", "datetime_lt", "clientRequestHTTPHost", "clientRequestPath", "requestSource", "rayName",
+    )]}})
+    dimension_schema = response({"dimensionType": {"fields": [{"name": name} for name in [*status_fields, "clientIP"]]}})
+    row = {"count": 3, "dimensions": {"edgeResponseStatus": 403, "originResponseStatus": 403, "cacheStatus": "BYPASS", "clientIP": "192.0.2.10", "headers": secret}}
+    stages = [discovery, zone_schema, group_schema, dimension_schema]
+
+    class Api:
+        def __init__(self, responses):
+            self.responses, self.calls = copy.deepcopy(responses), []
+
+        def raw(self, method, endpoint, body):
+            assert (method, endpoint) == ("POST", "/graphql")
+            self.calls.append(body["query"])
+            result = self.responses.pop(0)
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+    fake = Api([*stages, zone_response({dataset: [row]})])
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        result = edge.diagnose_origin_response(fake, zone)
+    assert result["status"] == "correlated_groups" and result["exactRayMatch"] is False
+    assert result["sampled"] is True and result["truncated"] is False
+    assert result["host"] == host and result["path"] == path
+    assert result["windowSeconds"] == 600
+    assert result["groups"] == [{"count": 3, "edgeResponseStatus": 403, "originResponseStatus": 403, "cacheStatus": "bypass"}]
+    assert secret not in stdout.getvalue() and "192.0.2.10" not in stdout.getvalue()
+    assert not fake.responses and len(fake.calls) == 5
+    assert '__type(name: "LiveZoneType")' in fake.calls[1]
+    assert '__type(name: "LiveGroupType")' in fake.calls[2] and '__type(name: "LiveFilterType")' in fake.calls[2]
+    assert '__type(name: "LiveDimensionType")' in fake.calls[3]
+    actual = fake.calls[-1]
+    for expected in (f'zoneTag: "{zone}"', f'clientRequestHTTPHost: "{host}"', f'clientRequestPath: "{path}"', 'requestSource: "eyeball"', 'limit: 10'):
+        assert expected in actual
+    assert all(value not in actual for value in ("clientIP", "headers", "cookies", "rayName"))
+    from_time = edge.dt.datetime.fromisoformat(result["fromTime"].replace("Z", "+00:00"))
+    to_time = edge.dt.datetime.fromisoformat(result["toTime"].replace("Z", "+00:00"))
+    assert (to_time - from_time).total_seconds() == 600
+
+    unavailable_fields = copy.deepcopy(discovery)
+    unavailable_fields[1]["data"]["viewer"]["zones"][0]["settings"][dataset]["availableFields"].remove("dimensions_originResponseStatus")
+    unsafe_filter = copy.deepcopy(group_schema)
+    unsafe_filter[1]["data"]["filterType"]["inputFields"] = [{"name": "datetime_geq"}]
+    no_schema = response({"zoneType": None})
+    invalid_result = zone_response({dataset: [{**row, "dimensions": {**row["dimensions"], "cacheStatus": secret}}]})
+    for responses, reason in (
+        ([unavailable_fields], "status_or_cache_fields_not_available"),
+        ([discovery, no_schema], "schema_unavailable"),
+        ([discovery, zone_schema, unsafe_filter], "exact_host_path_time_filters_unsupported"),
+        ([*stages, invalid_result], "invalid_aggregate_response"),
+        ([(403, {"errors": [{"message": secret}]})], "access_denied"),
+        ([*stages, (200, {"errors": [{"message": "permission denied " + secret}]})], "access_denied"),
+    ):
+        fake = Api(responses)
+        with contextlib.redirect_stdout(io.StringIO()) as stdout:
+            result = edge.diagnose_origin_response(fake, zone)
+        assert result["status"] == "unavailable" and result["reason"] == reason
+        assert result["groups"] == [] and not fake.responses
+        assert secret not in stdout.getvalue()
+
+    fake = Api([*stages, zone_response({dataset: []})])
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = edge.diagnose_origin_response(fake, zone)
+    assert result["status"] == "inconclusive" and result["reason"] == "no_http_groups_in_sampled_window"
+    fake = Api([])
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        result = edge.diagnose_origin_response(fake, "invalid-zone " + secret)
+    assert result["reason"] == "invalid_zone" and not fake.calls and secret not in stdout.getvalue()
+
+
 def test_security_event_diagnostic() -> None:
     ray = "a37fac9bdd6ec071"
     zone = "exact-diagnostic-zone"
@@ -897,6 +998,7 @@ def test_machine_compression() -> None:
 test_machine_compression()
 test_public_browser_integrity()
 test_public_machine_request_trace()
+test_origin_response_diagnostic()
 test_security_event_diagnostic()
 cache_contract = edge.cache_rule("www.ghezelbaash.ir")
 assert cache_contract["action_parameters"]["respect_strong_etags"] is False

@@ -862,6 +862,168 @@ def issue_ephemeral_zone_api(
     return CloudflareApi(token_value), lambda: revoke(strict=True)
 
 
+def diagnose_origin_response(api: CloudflareApi, zone: str) -> dict[str, Any]:
+    """Read bounded HTTP status aggregates after verifying the live schema.
+
+    Cloudflare documents the all-plan grouped dataset and per-zone discovery:
+    https://developers.cloudflare.com/analytics/graphql-api/features/discovery/settings/
+    Dataset, filter and dimension type names are resolved from introspection;
+    no analytics type name or Free-plan field entitlement is assumed.
+    """
+    host, path = PLATFORM_CONTRACT["canonicalHost"], "/graph.jsonld"
+    dataset = "httpRequestsAdaptiveGroups"
+
+    class Unavailable(Exception):
+        def __init__(self, reason, http_status=None):
+            self.reason, self.http_status = reason, http_status
+
+    def report(status, reason, groups=None, **details):
+        summary = {
+            "status": status, "reason": reason, "host": host, "path": path,
+            "sampled": True, "exactRayMatch": False, "groups": groups or [],
+            **details,
+        }
+        print("CLOUDFLARE_PUBLIC_MACHINE_ORIGIN_RESPONSE", json.dumps(summary, sort_keys=True))
+        return summary
+
+    def query(text):
+        try:
+            status, payload = api.raw("POST", "/graphql", {"query": text})
+        except (CloudflareError, OSError, ValueError, KeyError, TypeError):
+            raise Unavailable("transport_error") from None
+        if not isinstance(payload, dict):
+            raise Unavailable("invalid_response", status)
+        errors = payload.get("errors")
+        if status != 200 or errors:
+            error_text = json.dumps(errors, default=str).lower() if errors else ""
+            denied = status in (401, 403) or any(word in error_text for word in (
+                "permission", "unauthorized", "not authorized", "forbidden",
+                "access denied", "does not have access", "authentication",
+            ))
+            raise Unavailable("access_denied" if denied else "query_failed", status)
+        if not isinstance(payload.get("data"), dict):
+            raise Unavailable("invalid_response", status)
+        return payload["data"]
+
+    def one_zone(data):
+        viewer = data.get("viewer")
+        zones = viewer.get("zones") if isinstance(viewer, dict) else None
+        if not isinstance(zones, list) or len(zones) != 1 or not isinstance(zones[0], dict):
+            raise Unavailable("zone_dataset_unavailable")
+        return zones[0]
+
+    def name(value):
+        if not isinstance(value, str) or not re.fullmatch(r"[_A-Za-z][_0-9A-Za-z]*", value):
+            raise Unavailable("schema_unavailable")
+        return value
+
+    def named_type(value):
+        for _ in range(6):
+            if not isinstance(value, dict):
+                break
+            if value.get("name"):
+                return name(value["name"])
+            value = value.get("ofType")
+        raise Unavailable("schema_unavailable")
+
+    def fields(value, key="fields"):
+        if not isinstance(value, dict) or not isinstance(value.get(key), list):
+            raise Unavailable("schema_unavailable")
+        return {row["name"]: row for row in value[key] if isinstance(row, dict) and isinstance(row.get("name"), str)}
+
+    # Enough wrappers for NON_NULL -> LIST -> NON_NULL -> object, while keeping
+    # introspection bounded to the specific types needed by this diagnostic.
+    type_ref = "kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name } } } }"
+    try:
+        if not isinstance(zone, str) or not re.fullmatch(r"[0-9a-fA-F]{32}", zone):
+            raise Unavailable("invalid_zone")
+        zone_filter = "zones(filter: {zoneTag: " + json.dumps(zone) + "})"
+        discovered = one_zone(query("{ viewer { " + zone_filter + """ {
+          __typename settings { httpRequestsAdaptiveGroups {
+            enabled availableFields maxDuration notOlderThan maxPageSize maxNumberOfFields
+          } }
+        } } }"""))
+        zone_settings = discovered.get("settings")
+        settings = zone_settings.get(dataset) if isinstance(zone_settings, dict) else None
+        if not isinstance(settings, dict) or settings.get("enabled") is not True:
+            raise Unavailable("dataset_not_enabled")
+        available = settings.get("availableFields")
+        if not isinstance(available, list) or not all(isinstance(item, str) for item in available):
+            raise Unavailable("field_entitlements_unavailable")
+        wanted = ("edgeResponseStatus", "originResponseStatus", "cacheStatus")
+        # Settings encodes nested fields with underscores (for example,
+        # sum_requests). A field's existence alone does not establish access.
+        required = {"count", *("dimensions_" + field for field in wanted)}
+        if not required.issubset(set(available)):
+            return report("unavailable", "status_or_cache_fields_not_available", availableStatusFields=sorted(required & set(available)))
+        limits = [settings.get(key) for key in ("maxDuration", "notOlderThan", "maxPageSize", "maxNumberOfFields")]
+        if any(isinstance(value, bool) or not isinstance(value, int) or value <= 0 for value in limits):
+            raise Unavailable("dataset_limits_unavailable")
+        max_duration, retention, page_size, max_fields = limits
+        if max_fields < 4:
+            raise Unavailable("dataset_field_limit_too_small")
+
+        zone_type = name(discovered.get("__typename"))
+        root_schema = query("{ zoneType: __type(name: " + json.dumps(zone_type) + ") { fields { name type { " + type_ref + " } args { name type { " + type_ref + " } } } } }")
+        dataset_field = fields(root_schema.get("zoneType")).get(dataset)
+        if not isinstance(dataset_field, dict):
+            raise Unavailable("dataset_schema_unavailable")
+        arguments = fields({"fields": dataset_field.get("args")})
+        if "filter" not in arguments or "limit" not in arguments:
+            raise Unavailable("bounded_query_arguments_unsupported")
+        group_type = named_type(dataset_field.get("type"))
+        filter_type = named_type(arguments["filter"].get("type"))
+        schema = query("{ groupType: __type(name: " + json.dumps(group_type) + ") { fields { name type { " + type_ref + " } } } filterType: __type(name: " + json.dumps(filter_type) + ") { inputFields { name } } }")
+        group_fields = fields(schema.get("groupType"))
+        filter_fields = fields(schema.get("filterType"), "inputFields")
+        required_filters = {"datetime_geq", "datetime_lt", "clientRequestHTTPHost", "clientRequestPath", "requestSource"}
+        if not required_filters.issubset(filter_fields):
+            raise Unavailable("exact_host_path_time_filters_unsupported")
+        if "count" not in group_fields or "dimensions" not in group_fields:
+            raise Unavailable("group_fields_unsupported")
+        dimension_type = named_type(group_fields["dimensions"].get("type"))
+        dimensions = query("{ dimensionType: __type(name: " + json.dumps(dimension_type) + ") { fields { name } } }")
+        if not set(wanted).issubset(fields(dimensions.get("dimensionType"))):
+            raise Unavailable("status_or_cache_schema_unsupported")
+
+        now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
+        window = min(900, max_duration, retention)
+        timestamp = lambda value: value.isoformat().replace("+00:00", "Z")
+        filters = {
+            "datetime_geq": timestamp(now - dt.timedelta(seconds=window)),
+            "datetime_lt": timestamp(now), "clientRequestHTTPHost": host,
+            "clientRequestPath": path, "requestSource": "eyeball",
+        }
+        filter_text = "{" + ", ".join(key + ": " + json.dumps(value) for key, value in filters.items()) + "}"
+        limit = min(25, page_size)
+        response = one_zone(query("{ viewer { " + zone_filter + " { " + dataset + "(limit: " + str(limit) + ", filter: " + filter_text + ") { count dimensions { " + " ".join(wanted) + " } } } } }"))
+        rows = response.get(dataset)
+        if not isinstance(rows, list) or len(rows) > limit:
+            raise Unavailable("invalid_aggregate_response")
+        cache_values = {"unknown", "none", "miss", "expired", "updating", "stale", "hit", "ignored", "bypass", "revalidated", "dynamic", "stream_hit", "deferred"}
+        groups = []
+        for row in rows:
+            values = row.get("dimensions") if isinstance(row, dict) else None
+            count = row.get("count") if isinstance(row, dict) else None
+            if not isinstance(values, dict) or isinstance(count, bool) or not isinstance(count, int) or count < 0:
+                raise Unavailable("invalid_aggregate_response")
+            statuses = [values.get(key) for key in wanted[:2]]
+            if any(isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= 599 for value in statuses):
+                raise Unavailable("invalid_aggregate_response")
+            cache = values.get("cacheStatus")
+            if not isinstance(cache, str) or cache.lower() not in cache_values:
+                raise Unavailable("invalid_aggregate_response")
+            groups.append({"count": count, "edgeResponseStatus": statuses[0], "originResponseStatus": statuses[1], "cacheStatus": cache.lower()})
+        return report(
+            "correlated_groups" if groups else "inconclusive",
+            "same_host_path_only" if groups else "no_http_groups_in_sampled_window",
+            groups, windowSeconds=window, fromTime=filters["datetime_geq"],
+            toTime=filters["datetime_lt"], truncated=len(rows) == limit,
+        )
+    except Unavailable as exc:
+        return report("unavailable", exc.reason, httpStatus=exc.http_status)
+
+
 def diagnose_security_event(
     api: CloudflareApi, zone: str, ray_name: str
 ) -> dict[str, Any]:

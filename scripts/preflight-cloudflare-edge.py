@@ -269,6 +269,35 @@ def diagnose_available_python_patch(urls: list[str]) -> None:
         print("CLOUDFLARE_INSTALLED_PATCH_COMPARISON_UNAVAILABLE probe_failed")
 
 
+def diagnose_serving_zone(api, zone: str, account: str) -> None:
+    """Compare the configured zone with public DNS delegation, without changing it."""
+    try:
+        metadata = api.expect("GET", f"/zones/{zone}").get("result") or {}
+        assigned = sorted(str(name).rstrip(".").lower() for name in metadata.get("name_servers", []))
+        zone_name = edge.PLATFORM_CONTRACT["zoneName"]
+        query = urllib.parse.urlencode({"name": zone_name, "type": "NS"})
+        request = urllib.request.Request(
+            "https://cloudflare-dns.com/dns-query?" + query,
+            headers={"Accept": "application/dns-json"},
+        )
+        with urllib.request.urlopen(request, timeout=20) as response:
+            dns = json.load(response)
+        delegated = sorted({
+            str(row["data"]).rstrip(".").lower()
+            for row in dns.get("Answer", []) if row.get("type") == 2
+        })
+        print("CLOUDFLARE_SERVING_ZONE_DIAGNOSTIC", json.dumps({
+            "zoneName": metadata.get("name"), "status": metadata.get("status"),
+            "zoneType": metadata.get("type"),
+            "accountMatchesContract": (metadata.get("account") or {}).get("id") == account,
+            "assignedNameservers": assigned, "publicNameservers": delegated,
+            "delegationMatches": bool(assigned) and assigned == delegated,
+            "dnsStatus": dns.get("Status"),
+        }, sort_keys=True))
+    except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
+        print("CLOUDFLARE_SERVING_ZONE_DIAGNOSTIC_UNAVAILABLE", type(exc).__name__)
+
+
 def diagnose_public_machine_response(parent_api, account: str, host: str, *, zone_api=None, zone=None) -> None:
     """Trace a real public denial without changing the mandatory publication gate."""
     try:
@@ -278,6 +307,8 @@ def diagnose_public_machine_response(parent_api, account: str, host: str, *, zon
             **observed, "python": sys.version.split()[0], "tlsLibrary": ssl.OPENSSL_VERSION,
         }, sort_keys=True))
         if observed["httpStatus"] == 403:
+            if zone_api is not None and zone is not None:
+                diagnose_serving_zone(zone_api, zone, account)
             pages_url = f"https://{edge.PAGES_ORIGIN_HOST}/graph.jsonld"
             try:
                 print("CLOUDFLARE_PAGES_ORIGIN_DIAGNOSTIC", json.dumps(probe_public_machine_url(pages_url), sort_keys=True))
@@ -295,7 +326,9 @@ def diagnose_public_machine_response(parent_api, account: str, host: str, *, zon
                     # Give the observed request some ingestion time. Sampled empty
                     # results still remain inconclusive after this bounded delay.
                     time.sleep(15)
-                    edge.diagnose_security_event(zone_api, zone, observed.get("cfRay") or "")
+                    security_event = edge.diagnose_security_event(zone_api, zone, observed.get("cfRay") or "")
+                    if security_event.get("status") != "events":
+                        edge.diagnose_origin_response(zone_api, zone)
                 except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
                     print("CLOUDFLARE_SECURITY_EVENT_DIAGNOSTIC_UNAVAILABLE", json.dumps({
                         "errorType": type(exc).__name__, "httpStatus": getattr(exc, "status", None)
