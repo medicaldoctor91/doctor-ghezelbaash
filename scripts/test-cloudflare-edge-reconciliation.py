@@ -4,13 +4,16 @@
 from __future__ import annotations
 
 import copy
+import contextlib
 import importlib.util
+import io
 import json
 import re
 import tempfile
 import urllib.parse
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -552,6 +555,94 @@ class FakeCompressionApi:
         raise AssertionError((method, path, body))
 
 
+def test_public_machine_request_trace() -> None:
+    account = edge.PLATFORM_CF["accountId"]
+    host = edge.PLATFORM_CONTRACT["canonicalHost"]
+    secret = "trace-secret-must-not-be-logged"
+
+    class Authority:
+        def __init__(self):
+            self.events = []
+
+        def expect(self, method, path, body=None, ok=(200,)):
+            self.events.append((method, path))
+            if method == "GET":
+                assert path == f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account"
+                return {"result": [
+                    {"id": "wrong-zone", "name": "Allow Request Tracer Read", "scopes": ["com.cloudflare.api.account.zone"]},
+                    {"id": "trace-read", "name": "Allow Request Tracer Read", "scopes": ["com.cloudflare.api.account"]},
+                ]}
+            assert method == "POST" and path == f"/accounts/{account}/tokens"
+            assert body["policies"] == [{
+                "effect": "allow", "resources": {f"com.cloudflare.api.account.{account}": "*"},
+                "permission_groups": [{"id": "trace-read"}],
+            }]
+            expiry = edge.dt.datetime.fromisoformat(body["expires_on"].replace("Z", "+00:00"))
+            assert 14 * 60 < (expiry - edge.dt.datetime.now(edge.dt.timezone.utc)).total_seconds() <= 15 * 60
+            return {"result": {"id": "trace-token-id", "value": secret}}
+
+        def raw(self, method, path, body=None):
+            self.events.append((method, path))
+            assert method == "DELETE" and path == f"/accounts/{account}/tokens/trace-token-id"
+            assert body is None
+            return 200, {"success": True}
+
+    for trace_fails, activation_failures in ((False, 0), (True, 0), (False, 2)):
+        authority = Authority()
+
+        class TraceApi:
+            def __init__(self):
+                self.calls = 0
+
+            def expect(self, method, path, body=None, ok=(200,)):
+                self.calls += 1
+                assert method == "POST" and path == f"/accounts/{account}/request-tracer/trace"
+                headers = dict(edge.urllib.request.build_opener().addheaders)
+                headers["Accept-Encoding"] = "identity"
+                assert body == {"method": "GET", "url": f"https://{host}/graph.jsonld", "protocol": "HTTP/1.1", "headers": headers}
+                if self.calls <= activation_failures:
+                    raise edge.CloudflareError(secret, status=401)
+                if trace_fails:
+                    raise edge.CloudflareError(secret, status=403, payload={"raw": secret})
+                return {"result": {"status_code": 403, "response": secret, "headers": secret, "trace": [
+                    {"kind": "zone", "step_name": "configuration", "matched": True,
+                     "expression": secret, "cookies": secret,
+                     "trace": [{"id": "rule-1", "type": "rule", "action": "set_config", "matched": True,
+                                "action_parameters": {"bic": False, "headers": secret}}]},
+                ]}}
+
+        trace_api = TraceApi()
+        with patch.object(edge, "CloudflareApi", return_value=trace_api) as create_api, \
+             patch.object(edge.time, "sleep") as sleep, \
+             contextlib.redirect_stdout(io.StringIO()) as stdout, \
+             contextlib.redirect_stderr(io.StringIO()) as stderr:
+            try:
+                summary = edge.trace_public_machine_request(authority, account, host)
+                assert not trace_fails, "Trace failure did not propagate"
+                assert summary == {"status_code": 403, "trace": [
+                    {"kind": "zone", "step_name": "configuration", "matched": True,
+                     "trace": [{"id": "rule-1", "type": "rule", "action": "set_config", "matched": True,
+                                "action_parameters": {"bic": False}}]},
+                ]}
+            except edge.CloudflareError as exc:
+                assert trace_fails
+                assert exc.status == 403 and secret not in str(exc)
+        create_api.assert_called_once_with(secret)
+        assert trace_api.calls == activation_failures + 1
+        assert sleep.call_count == activation_failures
+        assert all(call.args == (2,) for call in sleep.call_args_list)
+        assert authority.events[-1] == ("DELETE", f"/accounts/{account}/tokens/trace-token-id")
+        assert sum(method == "DELETE" for method, path in authority.events) == 1
+        assert secret not in stdout.getvalue() + stderr.getvalue()
+
+    authority = Authority()
+    try:
+        edge.trace_public_machine_request(authority, "wrong-account", host)
+        raise AssertionError("Request Trace accepted an unrelated account")
+    except edge.CloudflareError:
+        assert not authority.events
+
+
 def test_public_browser_integrity() -> None:
     host = edge.PLATFORM_CONTRACT["canonicalHost"]
     desired = edge.public_browser_integrity_rule(host)
@@ -641,6 +732,7 @@ def test_machine_compression() -> None:
 
 test_machine_compression()
 test_public_browser_integrity()
+test_public_machine_request_trace()
 cache_contract = edge.cache_rule("www.ghezelbaash.ir")
 assert cache_contract["action_parameters"]["respect_strong_etags"] is False
 identity_locked_cache = copy.deepcopy(cache_contract)
@@ -800,6 +892,7 @@ print(
             "ephemeralBotAccessToken": True,
             "ephemeralRequestIntegrityToken": True,
             "publicBrowserIntegrityRule": True,
+            "publicMachineRequestTrace": True,
             "pagesAndDnsInventory": True,
             "blogPagesFallbackBinding": True,
             "idempotent": True,

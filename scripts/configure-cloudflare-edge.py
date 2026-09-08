@@ -861,6 +861,122 @@ def issue_ephemeral_zone_api(
     return CloudflareApi(token_value), lambda: revoke(strict=True)
 
 
+def trace_public_machine_request(
+    parent_api: CloudflareApi, account: str, host: str
+) -> dict[str, Any]:
+    """Simulate the ordinary public graph request without changing edge settings."""
+    if account != PLATFORM_CF["accountId"] or host != PLATFORM_CONTRACT["canonicalHost"]:
+        raise CloudflareError("Request Trace account/host differs from the platform contract")
+
+    def expect_safe(api, method, path, body=None, *, ok=(200,)):
+        try:
+            return api.expect(method, path, body, ok=ok)
+        except CloudflareError as exc:
+            raise CloudflareError(
+                f"Cloudflare Request Trace API failed HTTP {exc.status}", status=exc.status
+            ) from None
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            raise CloudflareError(f"Cloudflare Request Trace API failed: {type(exc).__name__}") from None
+
+    permissions = expect_safe(
+        parent_api, "GET",
+        f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account",
+    ).get("result") or []
+    matches = [
+        row for row in permissions
+        if row.get("name") == "Allow Request Tracer Read" and row.get("id")
+        and "com.cloudflare.api.account" in (row.get("scopes") or [])
+    ]
+    if len(matches) != 1:
+        raise CloudflareError(f"Required Allow Request Tracer Read permission group count: {len(matches)}")
+    expires_on = (
+        dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)
+    ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    created = expect_safe(
+        parent_api, "POST", f"/accounts/{account}/tokens",
+        {
+            "name": "Ephemeral Ghezelbaash Request Trace Reader",
+            "expires_on": expires_on,
+            "policies": [{
+                "effect": "allow",
+                "resources": {f"com.cloudflare.api.account.{account}": "*"},
+                "permission_groups": [{"id": str(matches[0]["id"])}],
+            }],
+        }, ok=(200, 201),
+    ).get("result") or {}
+    token_id = str(created.get("id") or "")
+    token_value = str(created.get("value") or "")
+    if not token_id:
+        raise CloudflareError("Ephemeral Request Trace token creation returned no token ID")
+    revoked = False
+
+    def revoke(*, strict: bool = False) -> None:
+        nonlocal revoked
+        if revoked:
+            return
+        status = None
+        try:
+            status, payload = parent_api.raw("DELETE", f"/accounts/{account}/tokens/{token_id}")
+            if status in (200, 204) and payload.get("success") is True:
+                revoked = True
+                print("EPHEMERAL_REQUEST_TRACE_TOKEN_REVOKED", token_id)
+                return
+        except (CloudflareError, OSError, ValueError, KeyError, TypeError):
+            pass
+        message = f"Ephemeral Request Trace token revoke failed HTTP {status}"
+        if strict:
+            raise CloudflareError(message, status=status)
+        print("EPHEMERAL_REQUEST_TRACE_TOKEN_REVOKE_WARNING", message, file=sys.stderr)
+
+    def safe_rows(rows):
+        if not isinstance(rows, list):
+            raise CloudflareError("Cloudflare Request Trace rows must be a list")
+        result = []
+        for row in rows:
+            if not isinstance(row, dict):
+                raise CloudflareError("Cloudflare Request Trace row is invalid")
+            safe = {
+                key: row[key] for key in ("matched", "kind", "step_name", "type", "action", "id")
+                if key in row and isinstance(row[key], (str, int, float, bool))
+            }
+            parameters = row.get("action_parameters") or {}
+            if isinstance(parameters, dict) and isinstance(parameters.get("bic"), bool):
+                safe["action_parameters"] = {"bic": parameters["bic"]}
+            if "trace" in row:
+                safe["trace"] = safe_rows(row["trace"] or [])
+            result.append(safe)
+        return result
+
+    atexit.register(revoke)
+    try:
+        if not token_value:
+            raise CloudflareError("Ephemeral Request Trace token creation returned no token value")
+        headers = dict(urllib.request.build_opener().addheaders)
+        headers["Accept-Encoding"] = "identity"
+        trace_api = CloudflareApi(token_value)
+        for attempt in range(3):
+            try:
+                traced = expect_safe(
+                    trace_api, "POST", f"/accounts/{account}/request-tracer/trace",
+                    {"method": "GET", "url": f"https://{host}/graph.jsonld", "protocol": "HTTP/1.1", "headers": headers},
+                ).get("result") or {}
+                break
+            except CloudflareError as exc:
+                # A newly issued token can need a moment to propagate. Retry
+                # only its initial unauthorized response, never permission 403.
+                if exc.status != 401 or attempt == 2:
+                    raise
+                time.sleep(2)
+        status_code = traced.get("status_code")
+        if status_code is not None and not isinstance(status_code, (int, float)):
+            raise CloudflareError("Cloudflare Request Trace status code is invalid")
+        summary = {"status_code": status_code, "trace": safe_rows(traced.get("trace") or [])}
+        print("CLOUDFLARE_PUBLIC_MACHINE_REQUEST_TRACE", json.dumps(summary, sort_keys=True))
+        return summary
+    finally:
+        revoke(strict=True)
+
+
 def read_dns_contract(
     api: CloudflareApi,
     zone: str,

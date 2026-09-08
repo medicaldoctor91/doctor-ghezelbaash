@@ -199,6 +199,30 @@ def ensure_public_browser_integrity(api, zone: str, host: str, overrides: dict) 
         edge.reconcile_public_browser_integrity(api, zone, host)
 
 
+def diagnose_public_machine_response(parent_api, account: str, host: str) -> None:
+    """Trace a real public denial without changing the mandatory publication gate."""
+    try:
+        try:
+            with urllib.request.urlopen(f"https://{host}/graph.jsonld", timeout=30) as response:
+                status = response.status
+                headers = response.headers
+                body = b""
+        except urllib.error.HTTPError as exc:
+            status, headers, body = exc.code, exc.headers, exc.read(512).strip()
+        print("CLOUDFLARE_PUBLIC_MACHINE_DIAGNOSTIC", json.dumps({
+            "httpStatus": status,
+            "cfRay": headers.get("CF-Ray"),
+            "contentType": headers.get("Content-Type"),
+            "browserSignatureBlock": status == 403 and body == b"error code: 1010",
+        }, sort_keys=True))
+        if status == 403:
+            edge.trace_public_machine_request(parent_api, account, host)
+    except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
+        print("CLOUDFLARE_PUBLIC_MACHINE_TRACE_UNAVAILABLE", json.dumps({
+            "errorType": type(exc).__name__, "httpStatus": getattr(exc, "status", None)
+        }, sort_keys=True))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--if-configured", action="store_true")
@@ -254,6 +278,7 @@ def main() -> int:
                 bot_readback.get("stale_zone_configuration"), sort_keys=True
             ))
             ensure_public_browser_integrity(zone_api, zone, host, overrides)
+            diagnose_public_machine_response(parent_api, account, host)
         finally:
             revoke()
 
