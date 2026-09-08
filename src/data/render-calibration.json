@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-07T07:52:09.262Z",
-    "sourceSha256": "35eff32844c4eedf56ddd229e0c8e7c24a253516b711a52ad2d986b3c3d00176",
+    "measuredAt": "2026-09-08T22:29:10.448Z",
+    "sourceSha256": "401371367da34e1b4c3d04c9e131311253260f2fa100da646e7a97c0f8ff784f",
     "domSha256": "8df830164b405cc3083c3398654385e5d0df3b7aa8948eab390849244d346c97",
     "inputs": [
       [
@@ -4865,7 +4865,7 @@
       ],
       [
         "package-lock.json",
-        "33f6a0e54735d9bc4e071ac09fefccc02223a4e65cd73daff5ed889843ea88b6"
+        "f75d3218c8684a97c0193cd38f1edc4af8275cff50b1839dd56405f48f122bb9"
       ],
       [
         "public/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2",
@@ -4913,7 +4913,7 @@
       ],
       [
         "src/styles/global.css",
-        "be1d677480f6bed5b684688d76839e37990d4132451c1a2f66f4be611fa4eee7"
+        "c3f196cfe50e359ec8dced344c8f0d00f76a480264f5fc7263719b6771b10f73"
       ],
       [
         "assembled-render-chunk-content",
@@ -4924,7 +4924,7 @@
       "engine": "chromium",
       "browserVersion": "153.0.8010.12",
       "playwrightVersion": "1.63.0",
-      "platform": "linux 6.18.35 x64",
+      "platform": "linux 6.17.0-1022-azure x64",
       "viewportHeight": 936,
       "deviceScaleFactor": 1,
       "locale": "fa-IR",

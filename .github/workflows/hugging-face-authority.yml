@@ -9,13 +9,18 @@ on:
         description: "Optional X.Y.Z release target; leave empty to verify current external authority surfaces"
         required: false
         type: string
+      sync_huggingface_only:
+        description: "Update Hugging Face main from this source without publishing Zenodo or frozen tags"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    if: github.event_name != 'workflow_dispatch' || inputs.version == ''
+    if: github.event_name != 'workflow_dispatch' || (inputs.version == '' && inputs.sync_huggingface_only != true)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -30,8 +35,86 @@ jobs:
       - name: Verify physician-first Hugging Face authority topology and viewer contracts
         run: node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer
 
+  sync-huggingface:
+    if: github.event_name == 'workflow_dispatch' && inputs.sync_huggingface_only == true
+    concurrency:
+      group: doctor-ghezelbaash-external-mutation
+      cancel-in-progress: false
+      queue: max
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      SOURCE_COMMIT: ${{ github.sha }}
+      CF_PAGES_COMMIT_SHA: ${{ github.sha }}
+      REQUESTED_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Bind Hugging Face sync to exact dispatched source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const release = JSON.parse(fs.readFileSync('src/data/release.json', 'utf8'));
+          if (process.env.REQUESTED_VERSION && process.env.REQUESTED_VERSION !== release.release) {
+            throw new Error('Requested Hugging Face version does not match dispatched source');
+          }
+          const url = release.dataset.huggingFace.dataset;
+          if (!/^https:\/\/huggingface\.co\/datasets\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(url)) {
+            throw new Error('Invalid canonical Hugging Face dataset URL');
+          }
+          fs.appendFileSync(process.env.GITHUB_ENV, `HF_URL=${url}\nRELEASE_TARGET=${release.release}\n`);
+          NODE
+          printf 'SOURCE_DATE_EPOCH=%s\n' "$(git show -s --format=%ct "$SOURCE_COMMIT")" >> "$GITHUB_ENV"
+      - run: npm ci
+      - name: Enforce high-severity dependency advisory gate
+        run: npm run security:dependencies
+      - name: Build and attest exact Hugging Face source
+        run: npm run build && npm run release:attest
+      - name: Prepare current Hugging Face distribution with Zenodo publication pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --branch main "$HF_URL" .release/huggingface
+          node scripts/huggingface.mjs prepare dist .release/huggingface --zenodo-pending
+          git -C .release/huggingface config user.name ghezelbaash-release-bot
+          git -C .release/huggingface config user.email actions@users.noreply.github.com
+          git -C .release/huggingface add -A
+          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Sync source $SOURCE_COMMIT for $RELEASE_TARGET; Zenodo publication pending"
+      - name: Publish current Hugging Face distribution
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          node scripts/huggingface.mjs push .release/huggingface HEAD:main
+          test "$(git -C .release/huggingface ls-remote origin refs/heads/main | awk '{print $1}')" = "$(git -C .release/huggingface rev-parse HEAD)"
+      - name: Verify Hugging Face bytes, authority profile and viewer
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if node scripts/verify-live.mjs current --hf-only && node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then break; fi
+            test "$attempt" -lt 12
+            sleep 10
+          done
+
   release:
-    if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+    if: github.event_name == 'workflow_dispatch' && inputs.version != '' && inputs.sync_huggingface_only != true
     permissions:
       contents: write
     concurrency:
@@ -47,9 +130,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: main
+          ref: ${{ github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Establish release Git identity
+        run: |
+          git config user.name ghezelbaash-release-bot
+          git config user.email actions@users.noreply.github.com
+          git var GIT_COMMITTER_IDENT
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: .nvmrc
@@ -66,6 +154,8 @@ jobs:
       - run: npm ci
       - name: Enforce high-severity dependency advisory gate
         run: npm run security:dependencies
+      - name: Provision pinned render measurement browser
+        run: npx playwright install --with-deps chromium
       - name: Load canonical platform contract
         run: node scripts/platform-contract.mjs export >> "$GITHUB_ENV"
       - name: Resolve release transaction
@@ -74,16 +164,21 @@ jobs:
         run: |
           set -euo pipefail
           [[ "$RELEASE_TARGET" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          BASE_SHA="$(git rev-parse HEAD)"
-          CURRENT_VERSION="$(node -p "require('./src/data/release.json').release")"
-          CURRENT_RECORD="$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")"
-          CURRENT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")"
-          CONCEPT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.conceptDoi")"
+          BASE_SHA="$(git rev-parse refs/remotes/origin/main)"
+          SOURCE_SHA="$(git rev-parse HEAD)"
+          git merge-base --is-ancestor "$BASE_SHA" "$SOURCE_SHA"
+          mkdir -p .release/runtime
+          git show "$BASE_SHA:src/data/release.json" > .release/runtime/base-release.json
+          CURRENT_VERSION="$(node -p "require('./.release/runtime/base-release.json').release")"
+          CURRENT_RECORD="$(node -p "require('./.release/runtime/base-release.json').dataset.zenodo.recordId")"
+          CURRENT_DOI="$(node -p "require('./.release/runtime/base-release.json').dataset.zenodo.versionDoi")"
+          CONCEPT_DOI="$(node -p "require('./.release/runtime/base-release.json').dataset.zenodo.conceptDoi")"
           HF_URL="$(node -p "require('./src/data/release.json').dataset.huggingFace.dataset")"
           HF_REPO="${HF_URL#https://huggingface.co/datasets/}"
           RELEASE_DATE="$(date -u +%F)"
           MODE=new
           if [ "$RELEASE_TARGET" = "$CURRENT_VERSION" ]; then
+            test "$SOURCE_SHA" = "$BASE_SHA"
             MODE=current
           else
             node - "$CURRENT_VERSION" "$RELEASE_TARGET" <<'NODE'
@@ -102,8 +197,8 @@ jobs:
             test -n "$FROZEN_SOURCE_SHA"
             if [ "$BASE_SHA" = "$FROZEN_SOURCE_SHA" ]; then FROZEN_SOURCE_AT_HEAD=true; fi
           fi
-          printf 'BASE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
-            "$BASE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
+          printf 'BASE_SHA=%s\nSOURCE_SHA=%s\nCURRENT_VERSION=%s\nCURRENT_RECORD=%s\nCURRENT_DOI=%s\nCONCEPT_DOI=%s\nHF_REPO=%s\nRELEASE_DATE=%s\nRELEASE_MODE=%s\nFROZEN_SOURCE_AT_HEAD=%s\n' \
+            "$BASE_SHA" "$SOURCE_SHA" "$CURRENT_VERSION" "$CURRENT_RECORD" "$CURRENT_DOI" "$CONCEPT_DOI" "$HF_REPO" "$RELEASE_DATE" "$MODE" "$FROZEN_SOURCE_AT_HEAD" >> "$GITHUB_ENV"
           echo "mode=$MODE" >> "$GITHUB_OUTPUT"
       - name: Detect GitHub immutable releases capability
         if: steps.release.outputs.mode == 'new' || env.FROZEN_SOURCE_AT_HEAD == 'true'
@@ -247,6 +342,7 @@ jobs:
           BRANCH="release/v$RELEASE_TARGET"
           git fetch origin "+refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" || true
           if git rev-parse -q --verify "refs/remotes/origin/$BRANCH" >/dev/null; then
+            git merge-base --is-ancestor "$SOURCE_SHA" "refs/remotes/origin/$BRANCH"
             git checkout -B "$BRANCH" "refs/remotes/origin/$BRANCH"
             test "$(node -p "require('./src/data/release.json').release")" = "$RELEASE_TARGET"
             CANDIDATE_NEEDS_COMMIT=false
@@ -259,7 +355,8 @@ jobs:
             DOI="$(node -p "require('./.release/runtime/zenodo-reservation.json').versionDoi")"
             node scripts/promote-release.mjs \
               --version="$RELEASE_TARGET" --date="$RELEASE_DATE" --zenodo-record="$RECORD" --zenodo-doi="$DOI"
-            EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/semantic/knowledge-graph.jsonld'
+            npm run render:calibration:update
+            EXPECTED='CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/render-calibration.json src/data/semantic/knowledge-graph.jsonld'
             ACTUAL="$(git diff --name-only | sort | tr '\n' ' ' | sed 's/ $//')"
             test "$ACTUAL" = "$EXPECTED"
             CANDIDATE_NEEDS_COMMIT=true
@@ -274,10 +371,8 @@ jobs:
             npm run validate:release-contract
             npm run prepare:distribution
             npm run validate:source
-            git config user.name ghezelbaash-release-bot
-            git config user.email actions@users.noreply.github.com
             git checkout -b "$RELEASE_BRANCH"
-            git add CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/semantic/knowledge-graph.jsonld
+            git add CITATION.cff codemeta.json package-lock.json package.json src/data/release.json src/data/render-calibration.json src/data/semantic/knowledge-graph.jsonld
             git commit -m "release: prepare v$RELEASE_TARGET authority snapshot"
           fi
           CANDIDATE_SHA="$(git rev-parse HEAD)"
@@ -335,6 +430,41 @@ jobs:
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
           node scripts/huggingface.mjs push .release/huggingface "HEAD:$HF_BRANCH"
+      - name: Reconcile Cloudflare zone settings before publication
+        if: steps.release.outputs.mode == 'new'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          python scripts/preflight-cloudflare-edge.py
+          python - <<'PY'
+          import json, os, time
+          from urllib import request, error
+          url = f"https://{os.environ['CANONICAL_HOST']}/graph.jsonld"
+          public_graph = request.Request(url, headers={
+              'User-Agent': 'doctor-ghezelbaash-release/3.0',
+              'Accept': 'application/ld+json',
+              'Cache-Control': 'no-cache',
+          })
+          for attempt in range(10):
+              try:
+                  # Identify the release client honestly, as for the artifact APIs.
+                  with request.urlopen(public_graph, timeout=30) as response:
+                      if response.status != 200 or response.geturl() != url:
+                          raise ValueError('Public graph must respond directly at its canonical URL with HTTP 200')
+                      graph = json.load(response)
+                  if not isinstance(graph, dict) or not isinstance(graph.get('@graph'), list):
+                      raise ValueError('Public graph response is not the canonical JSON-LD document')
+                  print('CLOUDFLARE_STANDARD_MACHINE_CLIENT_ACCESS_PASS', flush=True)
+                  break
+              except (error.URLError, TimeoutError, ValueError) as exc:
+                  print(f'CLOUDFLARE_MACHINE_ACCESS_RETRY {attempt + 1}/10 {type(exc).__name__}', flush=True)
+                  if attempt == 9:
+                      raise
+                  time.sleep(5)
+          PY
       - name: Stage immutable Zenodo candidate
         if: steps.release.outputs.mode == 'new'
         env:
@@ -350,9 +480,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          git var GIT_COMMITTER_IDENT
+          git -C .release/huggingface var GIT_COMMITTER_IDENT
           git fetch origin main
           test "$(git rev-parse refs/remotes/origin/main)" = "$BASE_SHA"
           git merge-base --is-ancestor "$BASE_SHA" "$CANDIDATE_SHA"
+          git merge-base --is-ancestor "$SOURCE_SHA" "$CANDIDATE_SHA"
           test "$(git ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$CANDIDATE_SHA"
           test "$(git -C .release/huggingface ls-remote origin "refs/heads/release/v$RELEASE_TARGET" | awk '{print $1}')" = "$HF_CANDIDATE_SHA"
           node -e "const s=require('./.release/runtime/zenodo-stage.json');if(s.release!==process.env.RELEASE_TARGET||s.recordId!==process.env.ZENODO_RECORD||s.versionDoi!==process.env.ZENODO_DOI||s.sourceCommit!==process.env.CANDIDATE_SHA)throw new Error('Zenodo stage ledger drift')"

@@ -10,16 +10,23 @@ from __future__ import annotations
 
 import argparse
 import atexit
+import concurrent.futures
 import datetime as dt
+import gzip
 import hashlib
+import io
 import json
 import os
 import re
+import ssl
+import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import zlib
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +39,8 @@ PLATFORM_CF = PLATFORM_CONTRACT["cloudflare"]
 CACHE_RULE_REF = "ghezelbaash_canonical_dist_cache_v1"
 COMPRESSION_RULE_REF = "ghezelbaash_machine_text_compression_v1"
 COMPRESSION_PHASE = "http_response_compression"
+REQUEST_INTEGRITY_RULE_REF = "ghezelbaash_public_browser_integrity_v1"
+REQUEST_INTEGRITY_PHASE = "http_config_settings"
 HSTS_RULE_REF = "ghezelbaash_canonical_hsts_v1"
 NOT_FOUND_RULE_REF_PREFIX = "ghezelbaash_real_404_headers_"
 HSTS_VALUE = "max-age=63072000; includeSubDomains; preload"
@@ -55,15 +64,28 @@ SINGLE_REDIRECT_PERMISSION_ALIASES = (
         "Single Redirect Write",
     ),
 )
+BOT_ACCESS_REQUIRED_PERMISSION_ALIASES = (
+    ("Bot Management Edit", "Bot Management Write"),
+)
+BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES = (
+    ("Bot Management Read",),
+)
+REQUEST_INTEGRITY_REQUIRED_PERMISSION_ALIASES = (
+    ("Config Settings Write", "Config Settings Edit", "Select Configuration Write", "Select Configuration Edit"),
+)
+REQUEST_INTEGRITY_OPTIONAL_PERMISSION_ALIASES = (
+    ("Config Settings Read", "Select Configuration Read"),
+    ("Firewall Services Read",),
+)
 ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES = (
     ("DNS Read",),
     ("DNS Write", "DNS Edit"),
     ("Cache Rules Edit", "Cache Rules Write", "Cache Settings Write"),
-    ("Bot Management Edit", "Bot Management Write"),
+    *BOT_ACCESS_REQUIRED_PERMISSION_ALIASES,
 )
 ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES = (
     ("Cache Rules Read", "Cache Settings Read"),
-    ("Bot Management Read",),
+    *BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES,
 )
 class CloudflareError(RuntimeError):
     def __init__(
@@ -211,7 +233,7 @@ def machine_compression_rule(host: str) -> dict[str, Any]:
     return {
         "ref": COMPRESSION_RULE_REF,
         "expression": (
-            f'(http.host eq "{host}" and http.response.code eq 200 and '
+            f'(http.host eq "{host}" and '
             'http.request.uri.path.extension in {"csv" "ttl"})'
         ),
         "description": "Compress canonical CSV and Turtle representations using negotiated encoding",
@@ -221,6 +243,61 @@ def machine_compression_rule(host: str) -> dict[str, Any]:
         "action_parameters": {"algorithms": [{"name": "auto"}]},
         "enabled": True,
     }
+
+
+def public_browser_integrity_rule(host: str) -> dict[str, Any]:
+    if host != PLATFORM_CONTRACT["canonicalHost"]:
+        raise CloudflareError("Public Browser Integrity rule must use the canonical host")
+    registry_path = Path(__file__).resolve().parents[1] / "src/data/machine-resources.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    resources = registry.get("resources")
+    if registry.get("schemaVersion") != "1.0" or not isinstance(resources, list):
+        raise CloudflareError("Invalid public machine resource registry")
+    paths = []
+    for resource in resources:
+        if not isinstance(resource, dict) or not isinstance(resource.get("targets"), list):
+            raise CloudflareError("Invalid public machine resource target")
+        if "website" not in resource["targets"]:
+            continue
+        path = resource.get("path")
+        if (
+            not isinstance(path, str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]*", path)
+            or any(part in ("", ".", "..") for part in path.split("/"))
+        ):
+            raise CloudflareError("Public Browser Integrity paths must be exact resource paths")
+        paths.append(path)
+    if "index.html" not in paths or len(paths) != len(set(paths)):
+        raise CloudflareError("Public Browser Integrity resource inventory drift")
+    public_paths = {"/" if path == "index.html" else f"/{path}" for path in paths}
+    public_paths.add("/robots.txt")
+    expression_paths = " ".join(json.dumps(path) for path in sorted(public_paths))
+    return {
+        "ref": REQUEST_INTEGRITY_RULE_REF,
+        "expression": (
+            f'(http.host eq "{host}" and http.request.method in {{"GET" "HEAD"}} '
+            f'and http.request.uri.path in {{{expression_paths}}})'
+        ),
+        "description": "Honor browser_check off for exact canonical public documents",
+        "action": "set_config",
+        "action_parameters": {"bic": False},
+        "enabled": True,
+    }
+
+
+def reconcile_public_browser_integrity(
+    api: CloudflareApi, zone: str, host: str
+) -> dict[str, Any]:
+    desired = public_browser_integrity_rule(host)
+    result = reconcile_phase_rule(
+        api, zone, REQUEST_INTEGRITY_PHASE,
+        "Canonical public document request settings",
+        "Git-managed Browser Integrity setting for exact public document routes",
+        desired, must_be_last=True,
+    )
+    if result.get("action_parameters") != {"bic": False}:
+        raise CloudflareError("Public Browser Integrity rule contains unrelated settings")
+    return result
 
 
 def read_compression_ruleset(api: CloudflareApi, zone: str) -> dict[str, Any] | None:
@@ -496,6 +573,8 @@ ZONE_SETTINGS: dict[str, Any] = {
     "always_use_https": "on",
     "ssl": "strict",
     "min_tls_version": "1.2",
+    # Keep public machine-readable resources accessible without browser-signature 1010 blocks.
+    "browser_check": "off",
     "always_online": "off",
     "cache_level": "aggressive",
     "ech": "on",
@@ -625,6 +704,10 @@ def issue_ephemeral_zone_api(
     zone: str,
     *,
     include_control_plane: bool = False,
+    include_bot_access: bool = False,
+    include_request_integrity: bool = False,
+    include_delivery_rules: bool = False,
+    read_only_delivery: bool = False,
 ) -> tuple[CloudflareApi, Any]:
     permissions = parent_api.expect(
         "GET",
@@ -667,9 +750,30 @@ def issue_ephemeral_zone_api(
         if permission_id not in {str(row["id"]) for row in groups}:
             groups.append({"id": permission_id})
 
-    resolved_permissions: list[str] = []
+    required_aliases = ()
+    optional_aliases = ()
     if include_control_plane:
-        for aliases in ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES:
+        required_aliases = ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES
+        optional_aliases = ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES
+    elif include_bot_access:
+        required_aliases = BOT_ACCESS_REQUIRED_PERMISSION_ALIASES
+        optional_aliases = BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES
+    if include_request_integrity:
+        required_aliases += REQUEST_INTEGRITY_REQUIRED_PERMISSION_ALIASES
+        optional_aliases += REQUEST_INTEGRITY_OPTIONAL_PERMISSION_ALIASES
+    if include_delivery_rules:
+        required_aliases += (
+            ("Response Compression Write", "Compression Rules Write", "Compression Rules Edit"),
+            ("Zone WAF Write", "Zone WAF Edit"),
+        )
+        optional_aliases += (
+            ("Response Compression Read", "Compression Rules Read"),
+            ("Zone WAF Read",),
+        )
+
+    resolved_permissions: list[str] = []
+    if required_aliases:
+        for aliases in required_aliases:
             match = next(
                 (
                     row
@@ -686,7 +790,7 @@ def issue_ephemeral_zone_api(
                     for row in permissions
                     if any(
                         token in str(row.get("name") or "").lower()
-                        for token in ("cache", "bot", "dns")
+                        for token in ("cache", "bot", "dns", "config", "firewall", "compression", "waf")
                     )
                 )
                 raise CloudflareError(
@@ -700,7 +804,7 @@ def issue_ephemeral_zone_api(
                 groups.append({"id": permission_id})
             resolved_permissions.append(str(match["name"]))
 
-        for aliases in ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES:
+        for aliases in optional_aliases:
             match = next(
                 (
                     row
@@ -718,6 +822,32 @@ def issue_ephemeral_zone_api(
                 groups.append({"id": permission_id})
             resolved_permissions.append(str(match["name"]))
 
+    extra_policies = []
+    if read_only_delivery:
+        # Delivery diagnostics use read permissions only, including analytics.
+        read_names = {
+            "Zone Settings Read", "Zone Read", "Bot Management Read",
+            "Config Settings Read", "Select Configuration Read", "Firewall Services Read",
+            "Response Compression Read", "Compression Rules Read", "Zone WAF Read",
+            "Analytics Read", "Zone Analytics Read",
+        }
+        selected = [row for row in permissions if row.get("name") in read_names]
+        groups = [{"id": str(row["id"])} for row in selected]
+        resolved_permissions = [str(row["name"]) for row in selected]
+        account_permissions = parent_api.expect(
+            "GET", f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account"
+        ).get("result") or []
+        analytics = [row for row in account_permissions if row.get("name") == "Account Analytics Read"]
+        if len(analytics) == 1:
+            extra_policies.append({
+                "effect": "allow",
+                "resources": {f"com.cloudflare.api.account.{account}": "*"},
+                "permission_groups": [{"id": str(analytics[0]["id"])}],
+            })
+            resolved_permissions.append("Account Analytics Read")
+        if not groups:
+            raise CloudflareError("No read-only delivery permission groups available")
+
     expires_on = (
         dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)
     ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -733,7 +863,7 @@ def issue_ephemeral_zone_api(
                     "resources": {f"com.cloudflare.api.account.zone.{zone}": "*"},
                     "permission_groups": groups,
                 }
-            ],
+            ] + extra_policies,
         },
         ok=(200, 201),
     ).get("result") or {}
@@ -2398,6 +2528,303 @@ def purge_cache_only() -> dict[str, Any]:
     return outcome
 
 
+def probe_delivery_clients(host: str) -> dict[str, Any]:
+    """Compare real HTTP clients without credentials, redirects, or unbounded bodies."""
+    if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?", host):
+        raise CloudflareError("Invalid public delivery host")
+    limit = 8 * 1024 * 1024
+    python_ua = f"Python-urllib/{sys.version_info.major}.{sys.version_info.minor}"
+    audit_ua = "ghezelbaash-delivery-audit/1.0"
+    # Keep the runner's transport configuration, but never pass platform tokens to curl.
+    curl_env = {key: value for key, value in os.environ.items() if key in {
+        "PATH", "SYSTEMROOT", "SSL_CERT_FILE", "SSL_CERT_DIR", "CURL_CA_BUNDLE",
+        "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
+        "http_proxy", "https_proxy", "all_proxy", "no_proxy",
+    }}
+    try:
+        version = subprocess.run(["curl", "-q", "--version"], capture_output=True,
+                                 text=True, timeout=5, env=curl_env, check=True)
+        curl_version = version.stdout.splitlines()[0]
+    except (OSError, subprocess.SubprocessError, IndexError):
+        curl_version = None
+
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+
+    def probe(case: tuple[str, str, str | None, str]) -> dict[str, Any]:
+        client, path, user_agent, accept_encoding = case
+        row: dict[str, Any] = {"client": client, "path": path, "userAgent": user_agent or "default",
+                               "acceptEncoding": accept_encoding}
+        url = f"https://{host}{path}"
+        try:
+            if client == "urllib":
+                headers = {"Accept-Encoding": accept_encoding}
+                if user_agent:
+                    headers["User-Agent"] = user_agent
+                opener = urllib.request.build_opener(NoRedirect())
+                try:
+                    response = opener.open(urllib.request.Request(url, headers=headers), timeout=20)
+                except urllib.error.HTTPError as exc:
+                    response = exc
+                with response:
+                    status, headers = response.status, dict(response.headers.items())
+                    body = response.read(limit + 1)
+            else:
+                with tempfile.TemporaryDirectory(prefix="delivery-client-") as directory:
+                    body_path, header_path = Path(directory) / "body", Path(directory) / "headers"
+                    argv = ["curl", "-q", "--silent", "--show-error", "--proto", "=https",
+                            "--max-time", "20", "--max-filesize", str(limit), "--max-redirs", "0",
+                            "--dump-header", str(header_path), "--output", str(body_path),
+                            "--write-out", "%{http_code}", "--header", f"Accept-Encoding: {accept_encoding}"]
+                    if user_agent:
+                        argv += ["--user-agent", user_agent]
+                    completed = subprocess.run(argv + [url], capture_output=True, text=True,
+                                               timeout=23, env=curl_env)
+                    row["curlExitCode"] = completed.returncode
+                    if completed.returncode:
+                        raise CloudflareError("curl request failed")
+                    status = int(completed.stdout)
+                    with body_path.open("rb") as stream:
+                        body = stream.read(limit + 1)
+                    with header_path.open("rb") as stream:
+                        raw_headers = stream.read(256 * 1024 + 1)
+                    if len(raw_headers) > 256 * 1024:
+                        raise CloudflareError("Response headers exceeded their size bound")
+                    headers = {}
+                    for line in raw_headers.decode("latin-1").splitlines():
+                        if line.startswith("HTTP/"):
+                            headers = {}
+                        elif ":" in line:
+                            name, value = line.split(":", 1)
+                            headers[name] = value.strip()
+            headers = {key.lower(): value for key, value in headers.items()}
+            row.update({"status": status, "ray": headers.get("cf-ray"), "server": headers.get("server"),
+                        "encoding": headers.get("content-encoding", "identity"),
+                        "cache": headers.get("cf-cache-status"), "type": headers.get("content-type"),
+                        "location": headers.get("location"), "wireBytes": len(body),
+                        "browserSignatureBlock": status == 403 and body.strip() == b"error code: 1010"})
+            if len(body) > limit:
+                raise CloudflareError("Response body exceeded its size bound")
+            if status == 200:
+                if row["encoding"] == "gzip":
+                    with gzip.GzipFile(fileobj=io.BytesIO(body)) as stream:
+                        decoded = stream.read(limit + 1)
+                elif row["encoding"] == "identity":
+                    decoded = body
+                else:
+                    raise CloudflareError("Unexpected response encoding")
+                if len(decoded) > limit:
+                    raise CloudflareError("Decoded body exceeded its size bound")
+                row.update({"decodedBytes": len(decoded), "sha256": hashlib.sha256(decoded).hexdigest()})
+        except (OSError, ValueError, EOFError, zlib.error, subprocess.SubprocessError, CloudflareError) as exc:
+            row["error"] = type(exc).__name__
+        return row
+
+    cases = [(client, path, ua, "identity") for path in ("/robots.txt", "/entity-facts.csv")
+             for client, ua in (("urllib", None), ("urllib", audit_ua), ("curl", None),
+                                ("curl", python_ua), ("curl", audit_ua))]
+    cases.append(("curl", "/entity-facts.csv", None, "gzip"))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        rows = list(pool.map(probe, cases))
+    gzip_row = rows[-1]
+    comparisons = [{"urllibUserAgent": row["userAgent"], "sha256Matches": row["sha256"] == gzip_row["sha256"]}
+                   for row in rows if row["client"] == "urllib" and row["path"] == "/entity-facts.csv"
+                   and "sha256" in row and "sha256" in gzip_row]
+    return {"runtime": {"python": sys.version.split()[0], "openssl": ssl.OPENSSL_VERSION,
+                        "curl": curl_version}, "probes": rows, "curlGzipVsUrllib": comparisons}
+
+
+DELIVERY_PATHS = ("/", "/robots.txt", "/sitemap.xml", "/graph.jsonld", "/entity-facts.csv", "/graph.ttl")
+PUBLIC_BIC_SKIP_REF = "ghezelbaash_public_bic_skip_v1"
+
+
+def probe_public_delivery(host: str) -> list[dict[str, Any]]:
+    """Check ordinary Python access and compare negotiated gzip with identity bytes."""
+    def probe(case: tuple[str, str]) -> dict[str, Any]:
+        resource, encoding = case
+        url = f"https://{host}{resource}"
+        result: dict[str, Any] = {"path": resource, "acceptEncoding": encoding}
+        request = urllib.request.Request(url, headers={"Accept-Encoding": encoding})
+        try:
+            try:
+                response = urllib.request.urlopen(request, timeout=25)
+            except urllib.error.HTTPError as exc:
+                response = exc
+            with response:
+                body = response.read(8 * 1024 * 1024 + 1)
+                result.update({
+                    "status": response.status,
+                    "direct": response.geturl() == url,
+                    "encoding": response.headers.get("Content-Encoding", "identity"),
+                    "type": response.headers.get("Content-Type"),
+                    "cache": response.headers.get("CF-Cache-Status"),
+                    "ray": response.headers.get("CF-Ray"),
+                    "wireBytes": len(body),
+                })
+                if len(body) > 8 * 1024 * 1024:
+                    raise CloudflareError("Public delivery probe exceeded its size bound")
+                result["browserSignatureBlock"] = response.status == 403 and body.strip() == b"error code: 1010"
+                if response.status == 200:
+                    decoded = gzip.decompress(body) if result["encoding"] == "gzip" else body
+                    if result["encoding"] not in ("identity", "gzip"):
+                        raise CloudflareError("Unexpected content encoding for bounded gzip probe")
+                    result["sha256"] = hashlib.sha256(decoded).hexdigest()
+                    result["decodedBytes"] = len(decoded)
+        except (OSError, ValueError, CloudflareError) as exc:
+            result["error"] = type(exc).__name__
+        return result
+
+    cases = [(resource, "identity") for resource in DELIVERY_PATHS]
+    cases += [(resource, "gzip") for resource in ("/entity-facts.csv", "/graph.ttl")]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        return list(pool.map(probe, cases))
+
+
+def delivery_control_readback(api: CloudflareApi, zone: str) -> dict[str, Any]:
+    endpoints = {
+        "settings": f"/zones/{zone}/settings",
+        "bots": f"/zones/{zone}/bot_management",
+        "compression": f"/zones/{zone}/rulesets/phases/{COMPRESSION_PHASE}/entrypoint",
+        "configuration": f"/zones/{zone}/rulesets/phases/{REQUEST_INTEGRITY_PHASE}/entrypoint",
+        "customFirewall": f"/zones/{zone}/rulesets/phases/http_request_firewall_custom/entrypoint",
+    }
+    observed = {}
+    for family, endpoint in endpoints.items():
+        status, payload = api.raw("GET", endpoint)
+        record: dict[str, Any] = {"httpStatus": status}
+        if status == 200 and payload.get("success") is True:
+            value = payload.get("result")
+            if family == "settings":
+                record["values"] = {row["id"]: row.get("value") for row in value if row.get("id") in ZONE_SETTINGS}
+            elif family == "bots":
+                record["values"] = {
+                    key: val for key, val in value.items()
+                    if key in {*BOT_ACCESS_SETTINGS, *OPTIONAL_BOT_ACCESS_SETTINGS, "stale_zone_configuration"}
+                    or any(word in key for word in ("ai_", "crawler", "training", "agent", "search"))
+                }
+            else:
+                rules = []
+                for rule in (value or {}).get("rules", []):
+                    safe = {key: rule[key] for key in ("ref", "enabled", "action") if key in rule}
+                    expression = str(rule.get("expression") or "")
+                    safe["expressionSha256"] = hashlib.sha256(expression.encode()).hexdigest()
+                    if rule.get("ref") in (COMPRESSION_RULE_REF, REQUEST_INTEGRITY_RULE_REF, PUBLIC_BIC_SKIP_REF):
+                        safe["expression"] = expression
+                        safe["action_parameters"] = rule.get("action_parameters")
+                    rules.append(safe)
+                record["rules"] = rules
+        else:
+            record["errorCodes"] = [row.get("code") for row in payload.get("errors", [])]
+        observed[family] = record
+    return observed
+
+
+def delivery_action(snapshot_path: Path | None, *, strengthen: bool) -> dict[str, Any]:
+    values = {name: os.environ.get(name, "").strip() for name in (
+        "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "ZONE_NAME", "CANONICAL_HOST"
+    )}
+    if not all(values.values()):
+        raise CloudflareError("Delivery inspection requires the existing Cloudflare environment")
+    account, host, zone_name = values["CLOUDFLARE_ACCOUNT_ID"], values["CANONICAL_HOST"], values["ZONE_NAME"]
+    if (account, host, zone_name) != (PLATFORM_CF["accountId"], PLATFORM_CONTRACT["canonicalHost"], PLATFORM_CONTRACT["zoneName"]):
+        raise CloudflareError("Delivery inspection must target the canonical account and zone")
+    parent = CloudflareApi(values["CLOUDFLARE_API_TOKEN"])
+    zone = zone_id(parent, account, zone_name)
+    api, revoke = issue_ephemeral_zone_api(
+        parent, account, zone, include_bot_access=True,
+        include_request_integrity=True, include_delivery_rules=strengthen,
+        read_only_delivery=not strengthen,
+    )
+    result: dict[str, Any] = {"mode": "strengthen" if strengthen else "audit", "host": host, "observedAt": dt.datetime.now(dt.timezone.utc).isoformat()}
+    try:
+        result["before"] = delivery_control_readback(api, zone)
+        result["publicBefore"] = probe_public_delivery(host)
+        print("CLOUDFLARE_DELIVERY_BEFORE", json.dumps(result, sort_keys=True), flush=True)
+        if strengthen:
+            if snapshot_path is None:
+                raise CloudflareError("Delivery strengthening requires a compression rollback snapshot")
+            snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+            result["compressionChange"] = reconcile_machine_compression(api, zone, host, snapshot_path)
+            # A skip applies only to BIC, on the existing exact public GET/HEAD
+            # registry. It does not skip WAF rules, rate limits or bot protections.
+            if any(row.get("browserSignatureBlock") for row in result["publicBefore"]):
+                desired = {
+                    "ref": PUBLIC_BIC_SKIP_REF,
+                    "expression": public_browser_integrity_rule(host)["expression"],
+                    "description": "Keep canonical public documents accessible to ordinary data clients",
+                    "action": "skip", "action_parameters": {"products": ["bic"]},
+                    "logging": {"enabled": True}, "enabled": True,
+                }
+                result["publicAccessChange"] = reconcile_phase_rule(
+                    api, zone, "http_request_firewall_custom", "Canonical public document access",
+                    "Narrow Browser Integrity exception for public data retrieval", desired,
+                )
+            result["after"] = delivery_control_readback(api, zone)
+            for attempt in range(4):
+                public = probe_public_delivery(host)
+                identity = {row["path"]: row for row in public if row["acceptEncoding"] == "identity"}
+                accessible = all(row.get("status") == 200 and row.get("direct") and not row.get("error") for row in public)
+                compressed = all(
+                    row.get("encoding") == "gzip" and row.get("sha256") == identity[row["path"]].get("sha256")
+                    for row in public if row["acceptEncoding"] == "gzip"
+                )
+                result["publicAfter"] = public
+                result["publicAccessExact"] = accessible
+                result["compressionBytesExact"] = compressed
+                if accessible and compressed:
+                    break
+                if attempt < 3:
+                    time.sleep(5)
+            result["integrity"] = "PASS" if result["publicAccessExact"] and result["compressionBytesExact"] else "FAIL"
+        else:
+            result["clientComparison"] = probe_delivery_clients(host)
+            result["securityEvents"] = delivery_security_events(api, zone, host)
+            print("CLOUDFLARE_DELIVERY_DIAGNOSTICS", json.dumps({
+                "clientComparison": result["clientComparison"],
+                "securityEvents": result["securityEvents"],
+            }, sort_keys=True), flush=True)
+            result["integrity"] = "OBSERVED"
+    finally:
+        revoke()
+    return result
+
+
+def delivery_security_events(api: CloudflareApi, zone: str, host: str) -> dict[str, Any]:
+    """Read sampled blocking events; an empty sample does not prove no blocks."""
+    now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
+    query = """query DeliveryEvents($zoneTag: string, $filter: FirewallEventsAdaptiveFilter_InputObject) {
+      viewer { zones(filter: {zoneTag: $zoneTag}) {
+        firewallEventsAdaptive(filter: $filter, limit: 100, orderBy: [datetime_DESC]) {
+          action source ruleId rayName datetime clientRequestHTTPHost clientRequestPath userAgent
+        }
+      } }
+    }"""
+    filters = {
+        "datetime_geq": (now - dt.timedelta(minutes=90)).isoformat().replace("+00:00", "Z"),
+        "datetime_leq": now.isoformat().replace("+00:00", "Z"),
+        "clientRequestHTTPHost": host,
+        "action": "block",
+    }
+    status, payload = api.raw("POST", "/graphql", {
+        "query": query, "variables": {"zoneTag": zone, "filter": filters},
+    })
+    result: dict[str, Any] = {"httpStatus": status, "sampled": True, "filter": filters}
+    errors = payload.get("errors") or []
+    if errors:
+        result["errors"] = [{key: row[key] for key in ("message", "code") if key in row} for row in errors]
+    zones = ((payload.get("data") or {}).get("viewer") or {}).get("zones") or []
+    fields = ("action", "source", "ruleId", "rayName", "datetime", "clientRequestHTTPHost", "clientRequestPath", "userAgent")
+    events = [row for value in zones for row in value.get("firewallEventsAdaptive", [])]
+    result["returnedEvents"] = len(events)
+    # Retain public document paths only, with no client IP, cookies or query strings.
+    result["publicDocumentEvents"] = [
+        {key: row[key] for key in fields if key in row}
+        for row in events if row.get("clientRequestPath") in DELIVERY_PATHS
+    ]
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -2407,6 +2834,8 @@ def main() -> int:
     mode.add_argument("--plan-machine-compression", action="store_true")
     mode.add_argument("--apply-machine-compression", action="store_true")
     mode.add_argument("--rollback-machine-compression", action="store_true")
+    mode.add_argument("--audit-delivery", action="store_true")
+    mode.add_argument("--strengthen-delivery", action="store_true")
     parser.add_argument("--dist", default="dist")
     parser.add_argument("--outcome", default="edge-reconciliation.json")
     parser.add_argument("--rollback-snapshot")
@@ -2419,7 +2848,12 @@ def main() -> int:
         if args.plan_machine_compression:
             print(json.dumps(machine_compression_rule("www.ghezelbaash.ir"), indent=2))
             return 0
-        if args.apply_machine_compression or args.rollback_machine_compression:
+        if args.audit_delivery or args.strengthen_delivery:
+            outcome = delivery_action(
+                Path(args.rollback_snapshot).resolve() if args.rollback_snapshot else None,
+                strengthen=args.strengthen_delivery,
+            )
+        elif args.apply_machine_compression or args.rollback_machine_compression:
             if not args.rollback_snapshot:
                 raise CloudflareError("Machine compression actions require --rollback-snapshot")
             outcome = machine_compression_action(
@@ -2429,11 +2863,14 @@ def main() -> int:
         else:
             outcome = purge_cache_only() if args.purge_cache_only else apply(dist_dir)
         outcome_path = Path(args.outcome).resolve()
+        outcome_path.parent.mkdir(parents=True, exist_ok=True)
         outcome_path.write_text(
             json.dumps(outcome, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         print("EDGE_OUTCOME_WRITTEN", outcome_path)
+        if outcome.get("integrity") == "FAIL":
+            raise CloudflareError("Public delivery verification failed; inspect the saved outcome")
         return 0
     except (CloudflareError, OSError, ValueError, KeyError) as exc:
         print(f"CLOUDFLARE_EDGE_ERROR: {exc}", file=sys.stderr)

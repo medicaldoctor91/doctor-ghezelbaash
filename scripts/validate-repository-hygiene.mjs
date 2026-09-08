@@ -24,6 +24,9 @@ const tracked = indexed.filter((name) => !deletedInWorktree.has(name));
 if (!tracked.length) throw new Error("Tracked-source inventory is empty");
 
 const forbiddenGeneratedPrefixes = [
+  ".generated/",
+  ".astro/",
+  "package/",
   "dist/",
   "release/",
   "node_modules/",

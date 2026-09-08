@@ -1,6 +1,6 @@
 {
   "name": "doctor-ghezelbaash",
-  "version": "1.2.5",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "packageManager": "npm@11.9.0",
@@ -21,7 +21,7 @@
     "materialize:static": "node scripts/materialize-static-artifacts.mjs",
     "rdf:generate": "node scripts/generate-rdf.mjs",
     "indexnow:prepare": "node scripts/indexnow.mjs prepare",
-    "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test && python scripts/test-cloudflare-edge-reconciliation.py",
+    "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test && python scripts/test-cloudflare-edge-reconciliation.py && python scripts/test-cloudflare-preflight.py",
     "preflight:cloudflare": "python scripts/preflight-cloudflare-edge.py --if-configured",
     "validate:hygiene": "node scripts/validate-repository-hygiene.mjs",
     "validate:architecture": "node scripts/validate-architecture.mjs",
@@ -75,7 +75,7 @@
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@types/node": "24.13.3",
-    "astro": "7.2.4",
+    "astro": "7.2.8",
     "csso": "5.0.5",
     "exiftool-vendored": "37.1.0",
     "jsonld": "9.0.0",
