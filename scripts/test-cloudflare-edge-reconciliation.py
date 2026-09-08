@@ -684,8 +684,10 @@ def test_security_event_diagnostic() -> None:
     assert secret not in stdout.getvalue() and "192.0.2.1" not in stdout.getvalue()
     assert len(api.calls) == 2
     assert 'name: "FirewallEventsAdaptiveFilter_InputObject"' in api.calls[0]["query"]
+    assert 'name: "ZoneFirewallEventsAdaptiveFilter_InputObject"' in api.calls[0]["query"]
     assert 'name: "ZoneFirewallEventsAdaptive"' in api.calls[0]["query"]
     query = api.calls[1]
+    assert "$filter: FirewallEventsAdaptiveFilter_InputObject" in query["query"]
     assert "zones(filter: { zoneTag: $zoneTag })" in query["query"]
     assert "limit: 10" in query["query"] and "orderBy: [datetime_DESC]" in query["query"]
     assert all(field not in query["query"] for field in ("clientIP", "cookies", "headers", "clientRequestQuery"))
@@ -697,13 +699,34 @@ def test_security_event_diagnostic() -> None:
     assert (upper - lower).total_seconds() == 15 * 60
     assert 0 <= (edge.dt.datetime.now(edge.dt.timezone.utc) - upper).total_seconds() < 5
 
+    # Support either documented name, including when the first exists but
+    # cannot express the exact Ray and bounded time query.
+    for old_fields in (None, [], [{"name": "rayName"}]):
+        alternate = copy.deepcopy(schema)
+        alternate["data"]["zoneFilterType"] = alternate["data"]["filterType"]
+        alternate["data"]["filterType"] = None if old_fields is None else {"inputFields": old_fields}
+        fake = Api([(200, alternate), events_response([event])])
+        with contextlib.redirect_stdout(io.StringIO()) as stdout:
+            result = edge.diagnose_security_event(fake, zone, ray)
+        assert result["status"] == "events" and result["events"] == [expected]
+        assert "$filter: ZoneFirewallEventsAdaptiveFilter_InputObject" in fake.calls[1]["query"]
+        assert fake.calls[1]["variables"]["filter"]["rayName"] == ray
+        assert len(fake.calls) == 2 and not fake.responses and secret not in stdout.getvalue()
+
     unsupported = copy.deepcopy(schema)
     unsupported["data"]["filterType"]["inputFields"] = [{"name": "datetime_geq"}, {"name": "datetime_leq"}]
+    no_types = copy.deepcopy(schema)
+    no_types["data"]["filterType"] = None
+    no_types["data"]["zoneFilterType"] = None
+    unbounded = copy.deepcopy(schema)
+    unbounded["data"]["filterType"]["inputFields"] = [{"name": "rayName"}]
     for responses, status, reason in (
         ([(200, schema), events_response([])], "inconclusive", "no_event_in_sampled_window"),
         ([(403, {"errors": [{"message": secret}], "headers": secret})], "unavailable", "access_denied"),
         ([(200, schema), (200, {"errors": [{"message": "access denied " + secret}]})], "unavailable", "access_denied"),
         ([(200, unsupported)], "unavailable", "ray_filter_or_field_unsupported"),
+        ([(200, no_types)], "unavailable", "schema_unavailable"),
+        ([(200, unbounded)], "unavailable", "bounded_time_filter_unsupported"),
         ([(200, schema), (200, {"data": {"viewer": {"zones": []}}})], "unavailable", "zone_dataset_unavailable"),
         ([(200, schema), events_response([{**event, "rayName": "b37fac9bdd6ec071"}])], "unavailable", "event_scope_mismatch"),
         ([edge.CloudflareError(secret, payload={"headers": secret})], "unavailable", "transport_error"),

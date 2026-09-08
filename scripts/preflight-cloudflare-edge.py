@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -206,12 +207,20 @@ def diagnose_public_machine_response(parent_api, account: str, host: str, *, zon
             with urllib.request.urlopen(f"https://{host}/graph.jsonld", timeout=30) as response:
                 status = response.status
                 headers = response.headers
+                response_url = response.geturl()
                 body = b""
         except urllib.error.HTTPError as exc:
             status, headers, body = exc.code, exc.headers, exc.read(512).strip()
+            response_url = exc.geturl()
+        target = urllib.parse.urlsplit(response_url)
         print("CLOUDFLARE_PUBLIC_MACHINE_DIAGNOSTIC", json.dumps({
             "httpStatus": status,
             "cfRay": headers.get("CF-Ray"),
+            "cfErrorType": headers.get("CF-Error-Type"),
+            "cfErrorOrigin": headers.get("CF-Error-Origin"),
+            "cfCacheStatus": headers.get("CF-Cache-Status"),
+            "responseHost": target.hostname,
+            "responsePath": target.path,
             "contentType": headers.get("Content-Type"),
             "browserSignatureBlock": status == 403 and body == b"error code: 1010",
         }, sort_keys=True))

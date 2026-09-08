@@ -905,26 +905,43 @@ def diagnose_security_event(
           filterType: __type(name: "FirewallEventsAdaptiveFilter_InputObject") {
             inputFields { name }
           }
+          zoneFilterType: __type(name: "ZoneFirewallEventsAdaptiveFilter_InputObject") {
+            inputFields { name }
+          }
           eventType: __type(name: "ZoneFirewallEventsAdaptive") { fields { name } }
         }
     """})
     if failure:
         return report("unavailable", failure, httpStatus=http_status)
-    filter_type = schema.get("filterType")
     event_type = schema.get("eventType")
-    if not isinstance(filter_type, dict) or not isinstance(event_type, dict):
+    # Cloudflare's query tutorial and schema explorer document different input
+    # names. Use only a documented name whose live schema supports this query.
+    filter_candidates = []
+    for key, name in (
+        ("filterType", "FirewallEventsAdaptiveFilter_InputObject"),
+        ("zoneFilterType", "ZoneFirewallEventsAdaptiveFilter_InputObject"),
+    ):
+        filter_type = schema.get(key)
+        if isinstance(filter_type, dict):
+            fields = {
+                field.get("name") for field in (filter_type.get("inputFields") or [])
+                if isinstance(field, dict)
+            }
+            filter_candidates.append((name, fields))
+    if not filter_candidates or not isinstance(event_type, dict):
         return report("unavailable", "schema_unavailable")
-    filter_fields = {
-        field.get("name") for field in (filter_type.get("inputFields") or [])
-        if isinstance(field, dict)
-    }
     event_fields = {
         field.get("name") for field in (event_type.get("fields") or [])
         if isinstance(field, dict)
     }
-    if "rayName" not in filter_fields or "rayName" not in event_fields:
+    ray_filters = [(name, fields) for name, fields in filter_candidates if "rayName" in fields]
+    if not ray_filters or "rayName" not in event_fields:
         return report("unavailable", "ray_filter_or_field_unsupported")
-    if not {"datetime_geq", "datetime_leq"}.issubset(filter_fields):
+    filter_type_name = next((
+        name for name, fields in ray_filters
+        if {"datetime_geq", "datetime_leq"}.issubset(fields)
+    ), None)
+    if filter_type_name is None:
         return report("unavailable", "bounded_time_filter_unsupported")
     selected = [field for field in (
         "rayName", "action", "source", "ruleId", "datetime",
@@ -935,7 +952,7 @@ def diagnose_security_event(
     data, failure, http_status = query_safe({
         "query": """
             query SecurityEventForObservedRay(
-              $zoneTag: string, $filter: FirewallEventsAdaptiveFilter_InputObject
+              $zoneTag: string, $filter: """ + filter_type_name + """
             ) {
               viewer { zones(filter: { zoneTag: $zoneTag }) {
                 firewallEventsAdaptive(filter: $filter, limit: 10, orderBy: [datetime_DESC]) {
