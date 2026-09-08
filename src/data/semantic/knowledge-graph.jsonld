@@ -1123,7 +1123,7 @@
         "Official website of Dr. Saeed Ghezelbaash",
         "Official website of Dr. Saeed Ghezelbash"
       ],
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-08",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf#document"
@@ -1814,7 +1814,7 @@
       "specialty": {
         "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
       },
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-08",
       "subjectOf": [
         {
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
@@ -8147,7 +8147,7 @@
         "https://www.wikidata.org/entity/Q593744",
         "https://www.wikidata.org/entity/Q33002955"
       ],
-      "version": "1.2.5",
+      "version": "1.3.0",
       "datePublished": "2026-02-25",
       "identifier": [
         {
@@ -8164,8 +8164,8 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
-      "description": "Version-controlled source project for Version 1.2.5 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable DOI preservation, and Hugging Face is AI/retrieval distribution.",
+      "dateModified": "2026-09-08",
+      "description": "Version-controlled source project for Version 1.3.0 of the Dr. Saeed Ghezelbash Public Knowledge Graph. GitHub is source, Zenodo is immutable DOI preservation, and Hugging Face is AI/retrieval distribution.",
       "author": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -8200,8 +8200,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
-      "version": "1.2.5",
+      "dateModified": "2026-09-08",
+      "version": "1.3.0",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
@@ -8242,7 +8242,7 @@
       "name": "Doctor Ghezelbaash structured data repository — GitHub source",
       "codeRepository": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
       "url": "https://github.com/medicaldoctor91/doctor-ghezelbaash",
-      "version": "1.2.5",
+      "version": "1.3.0",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -8258,8 +8258,8 @@
       "publisher": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "description": "Version-controlled GitHub source for Version 1.2.5 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
-      "dateModified": "2026-09-07"
+      "description": "Version-controlled GitHub source for Version 1.3.0 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
+      "dateModified": "2026-09-08"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset",
@@ -8287,7 +8287,7 @@
       "provider": {
         "@id": "https://www.ghezelbaash.ir/#distribution-platform-hugging-face"
       },
-      "description": "AI and retrieval distribution of Version 1.2.5 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
+      "description": "AI and retrieval distribution of Version 1.3.0 of the physician-owned Dr. Saeed Ghezelbash Public Knowledge Graph, with a release-faithful Core and an evidence-bound canonical-entity resolution matrix.",
       "encodingFormat": [
         "application/ld+json",
         "text/turtle",
@@ -8298,17 +8298,17 @@
         "application/jsonl"
       ],
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
-      "version": "1.2.5"
+      "dateModified": "2026-09-08",
+      "version": "1.3.0"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-zenodo-release",
       "@type": "DataDownload",
-      "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Zenodo preservation distribution 1.2.5",
-      "url": "https://doi.org/10.5281/zenodo.22216583",
-      "identifier": "DOI:10.5281/zenodo.22216583",
-      "version": "1.2.5",
-      "datePublished": "2026-08-31",
+      "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Zenodo preservation distribution 1.3.0",
+      "url": "https://doi.org/10.5281/zenodo.22663811",
+      "identifier": "DOI:10.5281/zenodo.22663811",
+      "version": "1.3.0",
+      "datePublished": "2026-09-08",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -8318,7 +8318,7 @@
       "about": {
         "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
       },
-      "sameAs": "https://zenodo.org/records/22216583",
+      "sameAs": "https://zenodo.org/records/22663811",
       "subjectOf": [
         {
           "@id": "https://www.ghezelbaash.ir/#evidence-openaire-project"
@@ -8334,8 +8334,8 @@
       "publisher": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "description": "Immutable DOI-preserved Version 1.2.5 distribution of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph Dataset.",
-      "dateModified": "2026-08-31"
+      "description": "Immutable DOI-preserved Version 1.3.0 distribution of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph Dataset.",
+      "dateModified": "2026-09-08"
     },
     {
       "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset",
@@ -8407,7 +8407,7 @@
         }
       ],
       "license": "https://creativecommons.org/licenses/by/4.0/",
-      "version": "1.2.5",
+      "version": "1.3.0",
       "datePublished": "2026-07-25",
       "isBasedOn": [
         {
@@ -8443,7 +8443,7 @@
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
         }
       ],
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-08",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld#dataset",
         {
@@ -8456,9 +8456,9 @@
         {
           "@type": "PropertyValue",
           "propertyID": "Zenodo Version DOI",
-          "name": "Zenodo Version DOI 1.2.5",
-          "value": "10.5281/zenodo.22216583",
-          "url": "https://doi.org/10.5281/zenodo.22216583"
+          "name": "Zenodo Version DOI 1.3.0",
+          "value": "10.5281/zenodo.22663811",
+          "url": "https://doi.org/10.5281/zenodo.22663811"
         }
       ],
       "isAccessibleForFree": true,
@@ -8563,6 +8563,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld#release-1-2-6"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld#release-1-3-0"
         }
       ]
     },
@@ -8577,8 +8580,8 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — JSON-LD distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
-      "version": "1.2.5",
+      "dateModified": "2026-09-08",
+      "version": "1.3.0",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -20319,8 +20322,8 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Turtle distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
-      "version": "1.2.5",
+      "dateModified": "2026-09-08",
+      "version": "1.3.0",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -21084,8 +21087,8 @@
       "url": "https://www.ghezelbaash.ir/doctor.vcf",
       "contentUrl": "https://www.ghezelbaash.ir/doctor.vcf",
       "encodingFormat": "text/vcard",
-      "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "mainEntity": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
@@ -21126,8 +21129,8 @@
       "url": "https://www.ghezelbaash.ir/clinic.vcf",
       "contentUrl": "https://www.ghezelbaash.ir/clinic.vcf",
       "encodingFormat": "text/vcard",
-      "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "mainEntity": {
         "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
       },
@@ -21254,8 +21257,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21279,8 +21282,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-09-06",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21304,8 +21307,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21329,8 +21332,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21355,8 +21358,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-31",
-      "version": "1.2.5"
+      "dateModified": "2026-09-08",
+      "version": "1.3.0"
     },
     {
       "@id": "https://www.ghezelbaash.ir/llms-full.txt#download",
@@ -21378,8 +21381,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
-      "version": "1.2.5"
+      "dateModified": "2026-09-08",
+      "version": "1.3.0"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#speakable-primary-content",
@@ -21428,8 +21431,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21453,8 +21456,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21478,8 +21481,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21503,8 +21506,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21528,8 +21531,8 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "version": "1.3.0",
+      "dateModified": "2026-09-08",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -22173,6 +22176,30 @@
         "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
       },
       "url": "https://doi.org/10.5281/zenodo.22651268"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/graph.jsonld#release-1-3-0",
+      "@type": "Dataset",
+      "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Version 1.3.0",
+      "version": "1.3.0",
+      "datePublished": "2026-09-08",
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Zenodo Version DOI",
+          "value": "10.5281/zenodo.22663811",
+          "url": "https://doi.org/10.5281/zenodo.22663811"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Zenodo Record ID",
+          "value": "22663811"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
+      },
+      "url": "https://doi.org/10.5281/zenodo.22663811"
     }
   ]
 }
