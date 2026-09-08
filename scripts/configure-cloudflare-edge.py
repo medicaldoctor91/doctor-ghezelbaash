@@ -32,6 +32,8 @@ PLATFORM_CF = PLATFORM_CONTRACT["cloudflare"]
 CACHE_RULE_REF = "ghezelbaash_canonical_dist_cache_v1"
 COMPRESSION_RULE_REF = "ghezelbaash_machine_text_compression_v1"
 COMPRESSION_PHASE = "http_response_compression"
+REQUEST_INTEGRITY_RULE_REF = "ghezelbaash_public_browser_integrity_v1"
+REQUEST_INTEGRITY_PHASE = "http_config_settings"
 HSTS_RULE_REF = "ghezelbaash_canonical_hsts_v1"
 NOT_FOUND_RULE_REF_PREFIX = "ghezelbaash_real_404_headers_"
 HSTS_VALUE = "max-age=63072000; includeSubDomains; preload"
@@ -60,6 +62,13 @@ BOT_ACCESS_REQUIRED_PERMISSION_ALIASES = (
 )
 BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES = (
     ("Bot Management Read",),
+)
+REQUEST_INTEGRITY_REQUIRED_PERMISSION_ALIASES = (
+    ("Select Configuration Write", "Select Configuration Edit"),
+)
+REQUEST_INTEGRITY_OPTIONAL_PERMISSION_ALIASES = (
+    ("Select Configuration Read",),
+    ("Firewall Services Read",),
 )
 ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES = (
     ("DNS Read",),
@@ -227,6 +236,61 @@ def machine_compression_rule(host: str) -> dict[str, Any]:
         "action_parameters": {"algorithms": [{"name": "auto"}]},
         "enabled": True,
     }
+
+
+def public_browser_integrity_rule(host: str) -> dict[str, Any]:
+    if host != PLATFORM_CONTRACT["canonicalHost"]:
+        raise CloudflareError("Public Browser Integrity rule must use the canonical host")
+    registry_path = Path(__file__).resolve().parents[1] / "src/data/machine-resources.json"
+    registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    resources = registry.get("resources")
+    if registry.get("schemaVersion") != "1.0" or not isinstance(resources, list):
+        raise CloudflareError("Invalid public machine resource registry")
+    paths = []
+    for resource in resources:
+        if not isinstance(resource, dict) or not isinstance(resource.get("targets"), list):
+            raise CloudflareError("Invalid public machine resource target")
+        if "website" not in resource["targets"]:
+            continue
+        path = resource.get("path")
+        if (
+            not isinstance(path, str)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]*", path)
+            or any(part in ("", ".", "..") for part in path.split("/"))
+        ):
+            raise CloudflareError("Public Browser Integrity paths must be exact resource paths")
+        paths.append(path)
+    if "index.html" not in paths or len(paths) != len(set(paths)):
+        raise CloudflareError("Public Browser Integrity resource inventory drift")
+    public_paths = {"/" if path == "index.html" else f"/{path}" for path in paths}
+    public_paths.add("/robots.txt")
+    expression_paths = " ".join(json.dumps(path) for path in sorted(public_paths))
+    return {
+        "ref": REQUEST_INTEGRITY_RULE_REF,
+        "expression": (
+            f'(http.host eq "{host}" and http.request.method in {{"GET" "HEAD"}} '
+            f'and http.request.uri.path in {{{expression_paths}}})'
+        ),
+        "description": "Honor browser_check off for exact canonical public documents",
+        "action": "set_config",
+        "action_parameters": {"bic": False},
+        "enabled": True,
+    }
+
+
+def reconcile_public_browser_integrity(
+    api: CloudflareApi, zone: str, host: str
+) -> dict[str, Any]:
+    desired = public_browser_integrity_rule(host)
+    result = reconcile_phase_rule(
+        api, zone, REQUEST_INTEGRITY_PHASE,
+        "Canonical public document request settings",
+        "Git-managed Browser Integrity setting for exact public document routes",
+        desired, must_be_last=True,
+    )
+    if result.get("action_parameters") != {"bic": False}:
+        raise CloudflareError("Public Browser Integrity rule contains unrelated settings")
+    return result
 
 
 def read_compression_ruleset(api: CloudflareApi, zone: str) -> dict[str, Any] | None:
@@ -634,6 +698,7 @@ def issue_ephemeral_zone_api(
     *,
     include_control_plane: bool = False,
     include_bot_access: bool = False,
+    include_request_integrity: bool = False,
 ) -> tuple[CloudflareApi, Any]:
     permissions = parent_api.expect(
         "GET",
@@ -684,6 +749,9 @@ def issue_ephemeral_zone_api(
     elif include_bot_access:
         required_aliases = BOT_ACCESS_REQUIRED_PERMISSION_ALIASES
         optional_aliases = BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES
+    if include_request_integrity:
+        required_aliases += REQUEST_INTEGRITY_REQUIRED_PERMISSION_ALIASES
+        optional_aliases += REQUEST_INTEGRITY_OPTIONAL_PERMISSION_ALIASES
 
     resolved_permissions: list[str] = []
     if required_aliases:
@@ -704,7 +772,7 @@ def issue_ephemeral_zone_api(
                     for row in permissions
                     if any(
                         token in str(row.get("name") or "").lower()
-                        for token in ("cache", "bot", "dns")
+                        for token in ("cache", "bot", "dns", "configuration", "firewall")
                     )
                 )
                 raise CloudflareError(

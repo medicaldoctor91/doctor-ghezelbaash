@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import re
 import tempfile
 import urllib.parse
 from pathlib import Path
@@ -256,6 +257,8 @@ class FakeZoneTokenAuthority:
         *,
         bot_write_name: str = "Bot Management Write",
         include_bot_read: bool = True,
+        configuration_write_name: str = "Select Configuration Write",
+        include_integrity_reads: bool = True,
     ) -> None:
         self.revoked = False
         self.revocations = 0
@@ -266,6 +269,8 @@ class FakeZoneTokenAuthority:
         }
         self.bot_write_name = bot_write_name
         self.include_bot_read = include_bot_read
+        self.configuration_write_name = configuration_write_name
+        self.include_integrity_reads = include_integrity_reads
 
     def expect(
         self,
@@ -299,8 +304,13 @@ class FakeZoneTokenAuthority:
                 ("cache-read", "Cache Settings Read"),
                 ("bot-write", self.bot_write_name),
                 ("bot-read", "Bot Management Read"),
+                ("configuration-write", self.configuration_write_name),
+                ("configuration-read", "Select Configuration Read"),
+                ("firewall-read", "Firewall Services Read"),
             ]:
                 if permission_id == "bot-read" and not self.include_bot_read:
+                    continue
+                if permission_id in ("configuration-read", "firewall-read") and not self.include_integrity_reads:
                     continue
                 rows.append(
                     {
@@ -484,9 +494,9 @@ if edge.cache_directives("public, max-age=60") != edge.cache_directives(
     raise AssertionError("Cache directive normalization is order-sensitive")
 
 class FakeCompressionApi:
-    def __init__(self, rules: list[dict[str, Any]] | None = None) -> None:
+    def __init__(self, rules: list[dict[str, Any]] | None = None, *, phase: str = edge.COMPRESSION_PHASE) -> None:
         self.ruleset = None if rules is None else {
-            "id": "compression-set", "kind": "zone", "phase": edge.COMPRESSION_PHASE,
+            "id": "compression-set", "kind": "zone", "phase": phase,
             "rules": copy.deepcopy(rules),
         }
         self.mutations = 0
@@ -540,6 +550,52 @@ class FakeCompressionApi:
         raise AssertionError((method, path, body))
 
 
+def test_public_browser_integrity() -> None:
+    host = edge.PLATFORM_CONTRACT["canonicalHost"]
+    desired = edge.public_browser_integrity_rule(host)
+    assert desired["action"] == "set_config"
+    assert desired["action_parameters"] == {"bic": False}
+    assert desired["enabled"] is True
+    assert f'http.host eq "{host}"' in desired["expression"]
+    assert 'http.request.method in {"GET" "HEAD"}' in desired["expression"]
+    path_expression = desired["expression"].split("http.request.uri.path in {", 1)[1]
+    actual_paths = set(re.findall(r'"([^"]*)"', path_expression))
+    registry = json.loads((ROOT / "src/data/machine-resources.json").read_text())
+    expected_paths = {
+        "/" if row["path"] == "index.html" else "/" + row["path"]
+        for row in registry["resources"] if "website" in row["targets"]
+    } | {"/robots.txt"}
+    assert actual_paths == expected_paths
+    assert not any("*" in path for path in actual_paths)
+    assert "/index.html" not in actual_paths
+    assert "/query-matrix.jsonl" not in actual_paths
+    try:
+        edge.public_browser_integrity_rule("unrelated.example")
+        raise AssertionError("Request integrity rule accepted a noncanonical host")
+    except edge.CloudflareError:
+        pass
+
+    foreign = [
+        {"id": f"foreign-{index}", "ref": f"unrelated-{index}",
+         "expression": f'(http.host eq "other-{index}.example")',
+         "action": "set_config", "action_parameters": {"bic": True}, "enabled": True}
+        for index in range(2)
+    ]
+    owned = {"id": "owned-1", **desired}
+    outdated = copy.deepcopy(owned)
+    outdated["action_parameters"]["bic"] = True
+    for original in (None, foreign, [outdated, *foreign], [foreign[0], owned, foreign[1]]):
+        api = FakeCompressionApi(original, phase=edge.REQUEST_INTEGRITY_PHASE)
+        result = edge.reconcile_public_browser_integrity(api, "test-zone", host)
+        assert api.ruleset["phase"] == edge.REQUEST_INTEGRITY_PHASE
+        assert api.ruleset["rules"][-1] == result
+        remaining = [row for row in api.ruleset["rules"] if row.get("ref") != desired["ref"]]
+        assert remaining == ([] if original is None else foreign), "Unrelated rules or their order changed"
+        mutations = api.mutations
+        edge.reconcile_public_browser_integrity(api, "test-zone", host)
+        assert api.mutations == mutations, "Request integrity reconciliation must be idempotent"
+
+
 def test_machine_compression() -> None:
     host = "www.ghezelbaash.ir"
     desired = edge.machine_compression_rule(host)
@@ -582,6 +638,7 @@ def test_machine_compression() -> None:
 
 
 test_machine_compression()
+test_public_browser_integrity()
 cache_contract = edge.cache_rule("www.ghezelbaash.ir")
 assert cache_contract["action_parameters"]["respect_strong_etags"] is False
 identity_locked_cache = copy.deepcopy(cache_contract)
@@ -636,6 +693,27 @@ for bot_write_name, include_bot_read in (
     revoke_bot_child_api()
     if not bot_token_authority.revoked or bot_token_authority.revocations != 1:
         raise AssertionError("Ephemeral bot-access child token revocation must be idempotent")
+
+integrity_base = {*edge.ZONE_SETTINGS_PERMISSION_IDS, "zone-read", "cache-purge", "configuration-write"}
+for options, extra_permissions, write_name, include_reads in (
+    ({}, set(), "Select Configuration Write", True),
+    ({"include_bot_access": True}, {"bot-write", "bot-read"}, "Select Configuration Edit", False),
+    ({"include_control_plane": True}, {"dns-read", "dns-write", "cache-write", "cache-read", "bot-write", "bot-read"}, "Select Configuration Write", True),
+):
+    expected_permissions = integrity_base | extra_permissions
+    if include_reads:
+        expected_permissions |= {"configuration-read", "firewall-read"}
+    authority = FakeZoneTokenAuthority(
+        expected_permissions,
+        configuration_write_name=write_name,
+        include_integrity_reads=include_reads,
+    )
+    child, revoke = edge.issue_ephemeral_zone_api(
+        authority, "test-account", "test-zone", include_request_integrity=True, **options,
+    )
+    assert child.token == "zone-child-secret"
+    revoke()
+    assert authority.revocations == 1
 
 blog_host = contract["bulkRedirects"]["host"]
 inventory_api = FakeInventoryApi(blog_host)
@@ -715,6 +793,8 @@ print(
             "ephemeralSingleRedirectToken": True,
             "ephemeralControlPlaneToken": True,
             "ephemeralBotAccessToken": True,
+            "ephemeralRequestIntegrityToken": True,
+            "publicBrowserIntegrityRule": True,
             "pagesAndDnsInventory": True,
             "blogPagesFallbackBinding": True,
             "idempotent": True,

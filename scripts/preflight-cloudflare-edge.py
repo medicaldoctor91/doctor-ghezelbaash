@@ -90,7 +90,7 @@ def check_live_apex_hsts(zone_name: str) -> None:
     print("APEX_HSTS_EXACT", status, hsts)
 
 
-def diagnose_request_overrides(api, zone: str) -> None:
+def diagnose_request_overrides(api, zone: str) -> dict:
     """Read per-request overrides without modifying rules or logging request secrets.
 
     A zone-level browser_check=off does not prove that a Configuration Rule or
@@ -102,6 +102,7 @@ def diagnose_request_overrides(api, zone: str) -> None:
         "page_rules": f"/zones/{zone}/pagerules?status=active&order=priority&direction=desc",
         "user_agent_rules": f"/zones/{zone}/firewall/ua_rules?paused=false&per_page=1000&page=1",
     }
+    observed = {}
     for kind, path in endpoints.items():
         try:
             status, payload = api.raw("GET", path)
@@ -112,6 +113,7 @@ def diagnose_request_overrides(api, zone: str) -> None:
                 ]
             else:
                 result = payload.get("result") or []
+                observed[kind] = result
                 rows = result.get("rules", []) if isinstance(result, dict) else result
                 safe_rows = []
                 for position, row in enumerate(rows):
@@ -160,6 +162,41 @@ def diagnose_request_overrides(api, zone: str) -> None:
             # Diagnostic access may be narrower than settings access. Do not expose
             # raw API payloads or change the mandatory publication gates.
             print("CLOUDFLARE_REQUEST_OVERRIDE_DIAGNOSTIC_UNAVAILABLE", kind, type(exc).__name__)
+    return observed
+
+
+def ensure_public_browser_integrity(api, zone: str, host: str, overrides: dict) -> None:
+    """Maintain the owned public BIC rule, or repair a proven browser-signature block.
+
+    The release workflow still verifies an ordinary Python client after this
+    function, allowing the edge rule time to propagate before publication.
+    """
+    configuration = overrides.get("configuration_rules") or {}
+    rules = configuration.get("rules", []) if isinstance(configuration, dict) else []
+    if any(row.get("ref") == edge.REQUEST_INTEGRITY_RULE_REF for row in rules):
+        edge.reconcile_public_browser_integrity(api, zone, host)
+        return
+
+    url = f"https://{host}/graph.jsonld"
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            if response.status != 200 or response.geturl() != url:
+                fail("Public graph must return directly at the canonical URL with HTTP 200")
+            graph = json.load(response)
+            if not isinstance(graph, dict) or not isinstance(graph.get("@graph"), list):
+                fail("Public graph response is not the canonical JSON-LD document")
+        print("CLOUDFLARE_PUBLIC_BROWSER_INTEGRITY_ALREADY_ACCESSIBLE")
+    except urllib.error.HTTPError as exc:
+        body = exc.read(512).strip()
+        print("CLOUDFLARE_PUBLIC_MACHINE_RESPONSE", json.dumps({
+            "httpStatus": exc.code,
+            "cfRay": exc.headers.get("CF-Ray"),
+            "contentType": exc.headers.get("Content-Type"),
+            "browserSignatureBlock": exc.code == 403 and body == b"error code: 1010",
+        }, sort_keys=True))
+        if exc.code != 403 or body != b"error code: 1010":
+            fail(f"Public graph HTTP {exc.code} is not an identified Browser Integrity Check block")
+        edge.reconcile_public_browser_integrity(api, zone, host)
 
 
 def main() -> int:
@@ -202,12 +239,12 @@ def main() -> int:
         validate_static_contract()
         parent_api = edge.CloudflareApi(token)
         zone = edge.zone_id(parent_api, account, zone_name)
-        diagnose_request_overrides(parent_api, zone)
         zone_api, revoke = edge.issue_ephemeral_zone_api(
-            parent_api, account, zone, include_bot_access=True
+            parent_api, account, zone, include_bot_access=True, include_request_integrity=True
         )
         readback: dict[str, object] = {}
         try:
+            overrides = diagnose_request_overrides(zone_api, zone)
             for setting_id, desired in edge.ZONE_SETTINGS.items():
                 readback[setting_id] = edge.reconcile_zone_setting(
                     zone_api, zone, setting_id, desired
@@ -216,6 +253,7 @@ def main() -> int:
             print("CLOUDFLARE_BOT_STALE_CONFIGURATION", json.dumps(
                 bot_readback.get("stale_zone_configuration"), sort_keys=True
             ))
+            ensure_public_browser_integrity(zone_api, zone, host, overrides)
         finally:
             revoke()
 
