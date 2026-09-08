@@ -99,7 +99,7 @@ def diagnose_request_overrides(api, zone: str) -> dict:
     """
     endpoints = {
         "configuration_rules": f"/zones/{zone}/rulesets/phases/http_config_settings/entrypoint",
-        "page_rules": f"/zones/{zone}/pagerules?status=active&order=priority&direction=desc",
+        "page_rules": f"/zones/{zone}/pagerules",
         "user_agent_rules": f"/zones/{zone}/firewall/ua_rules?paused=false&per_page=1000&page=1",
     }
     observed = {}
