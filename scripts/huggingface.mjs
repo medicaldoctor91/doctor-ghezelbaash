@@ -157,7 +157,15 @@ esac
 }
 
 async function commandPrepare() {
-  const [dist = "dist", hub = ".release/huggingface"] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const zenodoPending = args.includes("--zenodo-pending");
+  must(
+    args.filter((arg) => arg.startsWith("--")).every((arg) => arg === "--zenodo-pending"),
+    "Unknown Hugging Face prepare option",
+  );
+  const paths = args.filter((arg) => arg !== "--zenodo-pending");
+  must(paths.length <= 2, "Usage: node scripts/huggingface.mjs prepare [dist] [hub] [--zenodo-pending]");
+  const [dist = "dist", hub = ".release/huggingface"] = paths;
   const [release, authority, retrievalPolicy] = await Promise.all([
     readJson("src/data/release.json"),
     readJson(".release/policy/authority-surface-contract.json"),
@@ -237,8 +245,12 @@ async function commandPrepare() {
     "---",
   ].join("\n");
   const retrievalArchitecture = [
-    "**main** is rebuilt from the current canonical source and checked byte-for-byte against this repository's exact distribution manifest.",
-    `It is not claimed to be byte-identical to the frozen Zenodo version or the immutable Hugging Face tag \`v${release.release}\`.`,
+    zenodoPending
+      ? "**main** is built from the selected source revision and checked byte-for-byte against this repository's exact distribution manifest."
+      : "**main** is rebuilt from the current canonical source and checked byte-for-byte against this repository's exact distribution manifest.",
+    zenodoPending
+      ? `Zenodo publication and the frozen Hugging Face tag \`v${release.release}\` are pending. The reserved DOI is already embedded in the data for the later coordinated publication.`
+      : `It is not claimed to be byte-identical to the frozen Zenodo version or the immutable Hugging Face tag \`v${release.release}\`.`,
     "**Query Matrix 2.0** maps Persian, English, Arabic and Central Kurdish queries across unspecified, Kermanshah and Iran scopes to canonical answer atoms and their evidence references.",
   ].join(" ");
   const readme = `${frontmatter}
@@ -259,7 +271,7 @@ AI/retrieval distribution of the canonical physician-owned Dataset at \`${releas
 - Source: \`${release.dataset.github.repository}\`
 - Base release lineage: \`${release.release}\`
 - Zenodo Concept DOI: \`${zenodo.conceptDoi}\`
-- Frozen Zenodo Version DOI: \`${zenodo.versionDoi}\`
+- ${zenodoPending ? "Reserved Zenodo Version DOI (publication pending)" : "Frozen Zenodo Version DOI"}: \`${zenodo.versionDoi}\`
 
 ## Retrieval architecture
 

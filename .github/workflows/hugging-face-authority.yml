@@ -9,13 +9,18 @@ on:
         description: "Optional X.Y.Z release target; leave empty to verify current external authority surfaces"
         required: false
         type: string
+      sync_huggingface_only:
+        description: "Update Hugging Face main from this source without publishing Zenodo or frozen tags"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    if: github.event_name != 'workflow_dispatch' || inputs.version == ''
+    if: github.event_name != 'workflow_dispatch' || (inputs.version == '' && inputs.sync_huggingface_only != true)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -30,8 +35,86 @@ jobs:
       - name: Verify physician-first Hugging Face authority topology and viewer contracts
         run: node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer
 
+  sync-huggingface:
+    if: github.event_name == 'workflow_dispatch' && inputs.sync_huggingface_only == true
+    concurrency:
+      group: doctor-ghezelbaash-external-mutation
+      cancel-in-progress: false
+      queue: max
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+      SOURCE_COMMIT: ${{ github.sha }}
+      CF_PAGES_COMMIT_SHA: ${{ github.sha }}
+      REQUESTED_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Bind Hugging Face sync to exact dispatched source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$SOURCE_COMMIT"
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const release = JSON.parse(fs.readFileSync('src/data/release.json', 'utf8'));
+          if (process.env.REQUESTED_VERSION && process.env.REQUESTED_VERSION !== release.release) {
+            throw new Error('Requested Hugging Face version does not match dispatched source');
+          }
+          const url = release.dataset.huggingFace.dataset;
+          if (!/^https:\/\/huggingface\.co\/datasets\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(url)) {
+            throw new Error('Invalid canonical Hugging Face dataset URL');
+          }
+          fs.appendFileSync(process.env.GITHUB_ENV, `HF_URL=${url}\nRELEASE_TARGET=${release.release}\n`);
+          NODE
+          printf 'SOURCE_DATE_EPOCH=%s\n' "$(git show -s --format=%ct "$SOURCE_COMMIT")" >> "$GITHUB_ENV"
+      - run: npm ci
+      - name: Enforce high-severity dependency advisory gate
+        run: npm run security:dependencies
+      - name: Build and attest exact Hugging Face source
+        run: npm run build && npm run release:attest
+      - name: Prepare current Hugging Face distribution with Zenodo publication pending
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --branch main "$HF_URL" .release/huggingface
+          node scripts/huggingface.mjs prepare dist .release/huggingface --zenodo-pending
+          git -C .release/huggingface config user.name ghezelbaash-release-bot
+          git -C .release/huggingface config user.email actions@users.noreply.github.com
+          git -C .release/huggingface add -A
+          git -C .release/huggingface diff --cached --quiet || git -C .release/huggingface commit -m "Sync source $SOURCE_COMMIT for $RELEASE_TARGET; Zenodo publication pending"
+      - name: Publish current Hugging Face distribution
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN || secrets.HUGGINGFACE_TOKEN || secrets.HUGGING_FACE_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
+          node scripts/huggingface.mjs push .release/huggingface HEAD:main
+          test "$(git -C .release/huggingface ls-remote origin refs/heads/main | awk '{print $1}')" = "$(git -C .release/huggingface rev-parse HEAD)"
+      - name: Verify Hugging Face bytes, authority profile and viewer
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 12); do
+            if node scripts/verify-live.mjs current --hf-only && node scripts/huggingface.mjs verify --profile && node scripts/huggingface.mjs verify --viewer; then break; fi
+            test "$attempt" -lt 12
+            sleep 10
+          done
+
   release:
-    if: github.event_name == 'workflow_dispatch' && inputs.version != ''
+    if: github.event_name == 'workflow_dispatch' && inputs.version != '' && inputs.sync_huggingface_only != true
     permissions:
       contents: write
     concurrency:
