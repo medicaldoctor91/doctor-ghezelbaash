@@ -65,9 +65,10 @@ class PreflightLifecycle(unittest.TestCase):
             self.assertIs(observed, overrides)
             events.append(("integrity",))
 
-        def diagnose_machine(api, account_id, canonical_host):
+        def diagnose_machine(api, account_id, canonical_host, *, zone_api=None, zone=None):
             self.assertIs(api, parent_api)
             self.assertEqual((account_id, canonical_host), (account, host))
+            self.assertEqual(zone, "test-zone")
             events.append(("machine_diagnostic",))
 
         revoke = Mock(side_effect=lambda: events.append(("revoke",)))
@@ -97,7 +98,7 @@ class PreflightLifecycle(unittest.TestCase):
             machine.assert_not_called()
         else:
             integrity.assert_called_once_with(zone_api, "test-zone", host, overrides)
-            machine.assert_called_once_with(parent_api, account, host)
+            machine.assert_called_once_with(parent_api, account, host, zone_api=zone_api, zone="test-zone")
         revoke.assert_called_once_with()
         self.assertNotIn("test-parent-token", stdout.getvalue() + stderr.getvalue())
         return result, events, live, stdout.getvalue(), stderr.getvalue()

@@ -69,6 +69,7 @@ REQUEST_INTEGRITY_REQUIRED_PERMISSION_ALIASES = (
 REQUEST_INTEGRITY_OPTIONAL_PERMISSION_ALIASES = (
     ("Config Settings Read", "Select Configuration Read"),
     ("Firewall Services Read",),
+    ("Analytics Read",),
 )
 ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES = (
     ("DNS Read",),
@@ -859,6 +860,120 @@ def issue_ephemeral_zone_api(
         ",".join(resolved_permissions),
     )
     return CloudflareApi(token_value), lambda: revoke(strict=True)
+
+
+def diagnose_security_event(
+    api: CloudflareApi, zone: str, ray_name: str
+) -> dict[str, Any]:
+    """Read sampled firewall events for one observed request; never change rules."""
+    match = re.fullmatch(r"([0-9a-fA-F]{16})(?:-[A-Za-z]{3})?", str(ray_name).strip())
+    ray = match.group(1).lower() if match else None
+
+    def report(status, reason, events=None, **details):
+        summary = {
+            "status": status, "reason": reason, "rayName": ray,
+            "events": events or [], **details,
+        }
+        print("CLOUDFLARE_PUBLIC_MACHINE_SECURITY_EVENT", json.dumps(summary, sort_keys=True))
+        return summary
+
+    if ray is None or not isinstance(zone, str) or not zone.strip():
+        return report("unavailable", "invalid_zone_or_ray")
+
+    def query_safe(body):
+        try:
+            status, payload = api.raw("POST", "/graphql", body)
+        except (CloudflareError, OSError, ValueError, KeyError, TypeError):
+            return None, "transport_error", None
+        if not isinstance(payload, dict):
+            return None, "invalid_response", status
+        errors = payload.get("errors")
+        if status != 200 or errors:
+            # Classify errors without returning API messages, extensions, or
+            # request headers, any of which could contain credential material.
+            error_text = json.dumps(errors, default=str).lower() if errors else ""
+            denied = status in (401, 403) or any(word in error_text for word in (
+                "permission", "unauthorized", "not authorized", "forbidden",
+                "access denied", "does not have access", "authentication",
+            ))
+            return None, "access_denied" if denied else "query_failed", status
+        data = payload.get("data")
+        return (data, None, status) if isinstance(data, dict) else (None, "invalid_response", status)
+
+    schema, failure, http_status = query_safe({"query": """
+        query SecurityEventDiagnosticSchema {
+          filterType: __type(name: "FirewallEventsAdaptiveFilter_InputObject") {
+            inputFields { name }
+          }
+          eventType: __type(name: "ZoneFirewallEventsAdaptive") { fields { name } }
+        }
+    """})
+    if failure:
+        return report("unavailable", failure, httpStatus=http_status)
+    filter_type = schema.get("filterType")
+    event_type = schema.get("eventType")
+    if not isinstance(filter_type, dict) or not isinstance(event_type, dict):
+        return report("unavailable", "schema_unavailable")
+    filter_fields = {
+        field.get("name") for field in (filter_type.get("inputFields") or [])
+        if isinstance(field, dict)
+    }
+    event_fields = {
+        field.get("name") for field in (event_type.get("fields") or [])
+        if isinstance(field, dict)
+    }
+    if "rayName" not in filter_fields or "rayName" not in event_fields:
+        return report("unavailable", "ray_filter_or_field_unsupported")
+    if not {"datetime_geq", "datetime_leq"}.issubset(filter_fields):
+        return report("unavailable", "bounded_time_filter_unsupported")
+    selected = [field for field in (
+        "rayName", "action", "source", "ruleId", "datetime",
+        "clientRequestHTTPHost", "clientRequestPath",
+    ) if field in event_fields]
+    now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
+    timestamp = lambda value: value.isoformat().replace("+00:00", "Z")
+    data, failure, http_status = query_safe({
+        "query": """
+            query SecurityEventForObservedRay(
+              $zoneTag: string, $filter: FirewallEventsAdaptiveFilter_InputObject
+            ) {
+              viewer { zones(filter: { zoneTag: $zoneTag }) {
+                firewallEventsAdaptive(filter: $filter, limit: 10, orderBy: [datetime_DESC]) {
+                  """ + " ".join(selected) + """
+                }
+              } }
+            }
+        """,
+        "variables": {"zoneTag": zone, "filter": {
+            "rayName": ray,
+            "datetime_geq": timestamp(now - dt.timedelta(minutes=15)),
+            "datetime_leq": timestamp(now),
+        }},
+    })
+    if failure:
+        return report("unavailable", failure, httpStatus=http_status)
+    viewer = data.get("viewer")
+    zones = viewer.get("zones") if isinstance(viewer, dict) else None
+    if not isinstance(zones, list) or len(zones) != 1 or not isinstance(zones[0], dict):
+        return report("unavailable", "zone_dataset_unavailable")
+    rows = zones[0].get("firewallEventsAdaptive")
+    if not isinstance(rows, list):
+        return report("unavailable", "zone_dataset_unavailable")
+    events = []
+    for row in rows[:10]:
+        if not isinstance(row, dict) or str(row.get("rayName", "")).lower() != ray:
+            return report("unavailable", "event_scope_mismatch")
+        safe = {}
+        for field in selected:
+            value = row.get(field)
+            if isinstance(value, str):
+                if field == "clientRequestPath":
+                    value = value.split("?", 1)[0].split("#", 1)[0]
+                safe[field] = value[:512]
+        events.append(safe)
+    if not events:
+        return report("inconclusive", "no_event_in_sampled_window", sampled=True)
+    return report("events", "matching_sampled_events", events, sampled=True)
 
 
 def trace_public_machine_request(

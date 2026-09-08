@@ -312,10 +312,11 @@ class FakeZoneTokenAuthority:
                 ("configuration-write", self.configuration_write_name),
                 ("configuration-read", self.configuration_read_name),
                 ("firewall-read", "Firewall Services Read"),
+                ("analytics-read", "Analytics Read"),
             ]:
                 if permission_id == "bot-read" and not self.include_bot_read:
                     continue
-                if permission_id in ("configuration-read", "firewall-read") and not self.include_integrity_reads:
+                if permission_id in ("configuration-read", "firewall-read", "analytics-read") and not self.include_integrity_reads:
                     continue
                 rows.append(
                     {
@@ -643,6 +644,83 @@ def test_public_machine_request_trace() -> None:
         assert not authority.events
 
 
+def test_security_event_diagnostic() -> None:
+    ray = "a37fac9bdd6ec071"
+    zone = "exact-diagnostic-zone"
+    secret = "header-secret-must-not-be-logged"
+    fields = ["rayName", "action", "source", "ruleId", "datetime", "clientRequestHTTPHost", "clientRequestPath"]
+    schema = {"data": {
+        "filterType": {"inputFields": [{"name": name} for name in ("rayName", "datetime_geq", "datetime_leq")]},
+        "eventType": {"fields": [{"name": name} for name in fields]},
+    }, "headers": secret}
+    event = {"rayName": ray, "action": "block", "source": "bic", "ruleId": "rule-1",
+             "datetime": "2026-09-08T17:00:00Z", "clientRequestHTTPHost": "www.ghezelbaash.ir",
+             "clientRequestPath": "/graph.jsonld?token=" + secret,
+             "clientIP": "192.0.2.1", "cookies": secret, "headers": {"Authorization": secret}}
+
+    class Api:
+        def __init__(self, responses):
+            self.responses = list(responses)
+            self.calls = []
+
+        def raw(self, method, path, body=None):
+            assert (method, path) == ("POST", "/graphql")
+            self.calls.append(copy.deepcopy(body))
+            response = self.responses.pop(0)
+            if isinstance(response, Exception):
+                raise response
+            return response
+
+    def events_response(events):
+        return 200, {"data": {"viewer": {"zones": [{"firewallEventsAdaptive": events}]}}, "headers": secret}
+
+    api = Api([(200, schema), events_response([event])])
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        summary = edge.diagnose_security_event(api, zone, ray.upper() + "-ORD")
+    assert summary["status"] == "events" and summary["sampled"] is True
+    expected = {field: event[field] for field in fields}
+    expected["clientRequestPath"] = "/graph.jsonld"
+    assert summary["events"] == [expected]
+    assert secret not in stdout.getvalue() and "192.0.2.1" not in stdout.getvalue()
+    assert len(api.calls) == 2
+    assert 'name: "FirewallEventsAdaptiveFilter_InputObject"' in api.calls[0]["query"]
+    assert 'name: "ZoneFirewallEventsAdaptive"' in api.calls[0]["query"]
+    query = api.calls[1]
+    assert "zones(filter: { zoneTag: $zoneTag })" in query["query"]
+    assert "limit: 10" in query["query"] and "orderBy: [datetime_DESC]" in query["query"]
+    assert all(field not in query["query"] for field in ("clientIP", "cookies", "headers", "clientRequestQuery"))
+    assert query["variables"]["zoneTag"] == zone
+    filters = query["variables"]["filter"]
+    assert set(filters) == {"rayName", "datetime_geq", "datetime_leq"} and filters["rayName"] == ray
+    lower = edge.dt.datetime.fromisoformat(filters["datetime_geq"].replace("Z", "+00:00"))
+    upper = edge.dt.datetime.fromisoformat(filters["datetime_leq"].replace("Z", "+00:00"))
+    assert (upper - lower).total_seconds() == 15 * 60
+    assert 0 <= (edge.dt.datetime.now(edge.dt.timezone.utc) - upper).total_seconds() < 5
+
+    unsupported = copy.deepcopy(schema)
+    unsupported["data"]["filterType"]["inputFields"] = [{"name": "datetime_geq"}, {"name": "datetime_leq"}]
+    for responses, status, reason in (
+        ([(200, schema), events_response([])], "inconclusive", "no_event_in_sampled_window"),
+        ([(403, {"errors": [{"message": secret}], "headers": secret})], "unavailable", "access_denied"),
+        ([(200, schema), (200, {"errors": [{"message": "access denied " + secret}]})], "unavailable", "access_denied"),
+        ([(200, unsupported)], "unavailable", "ray_filter_or_field_unsupported"),
+        ([(200, schema), (200, {"data": {"viewer": {"zones": []}}})], "unavailable", "zone_dataset_unavailable"),
+        ([(200, schema), events_response([{**event, "rayName": "b37fac9bdd6ec071"}])], "unavailable", "event_scope_mismatch"),
+        ([edge.CloudflareError(secret, payload={"headers": secret})], "unavailable", "transport_error"),
+    ):
+        fake = Api(responses)
+        with contextlib.redirect_stdout(io.StringIO()) as stdout:
+            result = edge.diagnose_security_event(fake, zone, ray)
+        assert (result["status"], result["reason"]) == (status, reason)
+        assert result["events"] == [] and secret not in stdout.getvalue()
+        assert not fake.responses
+    fake = Api([])
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        result = edge.diagnose_security_event(fake, zone, "invalid-ray " + secret)
+    assert result["reason"] == "invalid_zone_or_ray" and not fake.calls
+    assert secret not in stdout.getvalue()
+
+
 def test_public_browser_integrity() -> None:
     host = edge.PLATFORM_CONTRACT["canonicalHost"]
     desired = edge.public_browser_integrity_rule(host)
@@ -733,6 +811,7 @@ def test_machine_compression() -> None:
 test_machine_compression()
 test_public_browser_integrity()
 test_public_machine_request_trace()
+test_security_event_diagnostic()
 cache_contract = edge.cache_rule("www.ghezelbaash.ir")
 assert cache_contract["action_parameters"]["respect_strong_etags"] is False
 identity_locked_cache = copy.deepcopy(cache_contract)
@@ -798,7 +877,7 @@ for options, extra_permissions, write_name, include_reads in (
 ):
     expected_permissions = integrity_base | extra_permissions
     if include_reads:
-        expected_permissions |= {"configuration-read", "firewall-read"}
+        expected_permissions |= {"configuration-read", "firewall-read", "analytics-read"}
     authority = FakeZoneTokenAuthority(
         expected_permissions,
         configuration_write_name=write_name,
@@ -893,6 +972,7 @@ print(
             "ephemeralRequestIntegrityToken": True,
             "publicBrowserIntegrityRule": True,
             "publicMachineRequestTrace": True,
+            "publicMachineSecurityEvent": True,
             "pagesAndDnsInventory": True,
             "blogPagesFallbackBinding": True,
             "idempotent": True,

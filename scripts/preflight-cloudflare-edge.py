@@ -199,7 +199,7 @@ def ensure_public_browser_integrity(api, zone: str, host: str, overrides: dict) 
         edge.reconcile_public_browser_integrity(api, zone, host)
 
 
-def diagnose_public_machine_response(parent_api, account: str, host: str) -> None:
+def diagnose_public_machine_response(parent_api, account: str, host: str, *, zone_api=None, zone=None) -> None:
     """Trace a real public denial without changing the mandatory publication gate."""
     try:
         try:
@@ -216,6 +216,13 @@ def diagnose_public_machine_response(parent_api, account: str, host: str) -> Non
             "browserSignatureBlock": status == 403 and body == b"error code: 1010",
         }, sort_keys=True))
         if status == 403:
+            if zone_api is not None and zone is not None:
+                try:
+                    edge.diagnose_security_event(zone_api, zone, headers.get("CF-Ray") or "")
+                except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
+                    print("CLOUDFLARE_SECURITY_EVENT_DIAGNOSTIC_UNAVAILABLE", json.dumps({
+                        "errorType": type(exc).__name__, "httpStatus": getattr(exc, "status", None)
+                    }, sort_keys=True))
             edge.trace_public_machine_request(parent_api, account, host)
     except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
         print("CLOUDFLARE_PUBLIC_MACHINE_TRACE_UNAVAILABLE", json.dumps({
@@ -278,7 +285,7 @@ def main() -> int:
                 bot_readback.get("stale_zone_configuration"), sort_keys=True
             ))
             ensure_public_browser_integrity(zone_api, zone, host, overrides)
-            diagnose_public_machine_response(parent_api, account, host)
+            diagnose_public_machine_response(parent_api, account, host, zone_api=zone_api, zone=zone)
         finally:
             revoke()
 
