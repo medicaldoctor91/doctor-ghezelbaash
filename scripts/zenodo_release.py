@@ -8,19 +8,41 @@ from urllib import error, parse, request
 BASE='https://zenodo.org/api'
 RUNTIME=Path('.release/runtime')
 RUNTIME.mkdir(parents=True,exist_ok=True)
+TRANSIENT_HTTP={429,502,503,504}
+GET_RETRY_DELAYS=(2,4,8,16,32)
 
 def call(token,method,url,body=None,content_type='application/json',ok=(200,201,202,204),binary=False):
+    method=method.upper()
     headers={'Authorization':f'Bearer {token}','Accept':'application/json','User-Agent':'doctor-ghezelbaash-release/3.0'}
     if body is not None: headers['Content-Type']=content_type
-    req=request.Request(url,data=body,headers=headers,method=method)
-    try:
-        with request.urlopen(req,timeout=180) as response:
-            raw=response.read()
-            if response.status not in ok: raise RuntimeError(f'HTTP {response.status} {method} {url}')
-            return raw if binary else (json.loads(raw.decode()) if raw else {})
-    except error.HTTPError as exc:
-        detail=exc.read().decode('utf-8','replace')[:4000]
-        raise RuntimeError(f'Zenodo HTTP {exc.code} {method} {url}: {detail}') from None
+    attempts=1+len(GET_RETRY_DELAYS) if method in ('GET','HEAD') else 1
+    for attempt in range(attempts):
+        req=request.Request(url,data=body,headers=headers,method=method)
+        try:
+            with request.urlopen(req,timeout=180) as response:
+                raw=response.read()
+                if response.status not in ok: raise RuntimeError(f'HTTP {response.status} {method} {url}')
+                return raw if binary else (json.loads(raw.decode()) if raw else {})
+        except error.HTTPError as exc:
+            detail=exc.read().decode('utf-8','replace')[:4000]
+            if method in ('GET','HEAD') and exc.code in TRANSIENT_HTTP and attempt<len(GET_RETRY_DELAYS):
+                delay=GET_RETRY_DELAYS[attempt]
+                retry_after=(exc.headers or {}).get('Retry-After') if exc.headers else None
+                if retry_after:
+                    try: delay=max(delay,min(float(retry_after),60.0))
+                    except (TypeError,ValueError): pass
+                print(json.dumps({'stage':'ZENODO_HTTP_RETRY','method':method,'status':exc.code,'attempt':attempt+1,'nextDelaySeconds':delay},separators=(',',':')))
+                time.sleep(delay)
+                continue
+            raise RuntimeError(f'Zenodo HTTP {exc.code} {method} {url}: {detail}') from None
+        except (error.URLError,TimeoutError) as exc:
+            if method in ('GET','HEAD') and attempt<len(GET_RETRY_DELAYS):
+                delay=GET_RETRY_DELAYS[attempt]
+                print(json.dumps({'stage':'ZENODO_TRANSPORT_RETRY','method':method,'attempt':attempt+1,'nextDelaySeconds':delay},separators=(',',':')))
+                time.sleep(delay)
+                continue
+            raise RuntimeError(f'Zenodo transport error {method} {url}: {exc}') from None
+    raise RuntimeError(f'Zenodo retry loop exhausted unexpectedly: {method} {url}')
 
 def load_release(): return json.loads(Path('src/data/release.json').read_text())
 def load_resource_registry(): return json.loads(Path('src/data/machine-resources.json').read_text())
