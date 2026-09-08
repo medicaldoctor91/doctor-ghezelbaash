@@ -84,10 +84,12 @@ jobs:
           BASE_SHA="$(git rev-parse refs/remotes/origin/main)"
           SOURCE_SHA="$(git rev-parse HEAD)"
           git merge-base --is-ancestor "$BASE_SHA" "$SOURCE_SHA"
-          CURRENT_VERSION="$(node -p "require('./src/data/release.json').release")"
-          CURRENT_RECORD="$(node -p "require('./src/data/release.json').dataset.zenodo.recordId")"
-          CURRENT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.versionDoi")"
-          CONCEPT_DOI="$(node -p "require('./src/data/release.json').dataset.zenodo.conceptDoi")"
+          mkdir -p .release/runtime
+          git show "$BASE_SHA:src/data/release.json" > .release/runtime/base-release.json
+          CURRENT_VERSION="$(node -p "require('./.release/runtime/base-release.json').release")"
+          CURRENT_RECORD="$(node -p "require('./.release/runtime/base-release.json').dataset.zenodo.recordId")"
+          CURRENT_DOI="$(node -p "require('./.release/runtime/base-release.json').dataset.zenodo.versionDoi")"
+          CONCEPT_DOI="$(node -p "require('./.release/runtime/base-release.json').dataset.zenodo.conceptDoi")"
           HF_URL="$(node -p "require('./src/data/release.json').dataset.huggingFace.dataset")"
           HF_REPO="${HF_URL#https://huggingface.co/datasets/}"
           RELEASE_DATE="$(date -u +%F)"
@@ -345,6 +347,36 @@ jobs:
           set -euo pipefail
           test -n "${HF_TOKEN:-}"; echo "::add-mask::$HF_TOKEN"
           node scripts/huggingface.mjs push .release/huggingface "HEAD:$HF_BRANCH"
+      - name: Reconcile Cloudflare zone settings before publication
+        if: steps.release.outputs.mode == 'new'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"; echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          python scripts/preflight-cloudflare-edge.py
+          python - <<'PY'
+          import json, os, time
+          from urllib import request, error
+          url = f"https://{os.environ['CANONICAL_HOST']}/graph.jsonld"
+          for attempt in range(10):
+              try:
+                  # Exercise a normal machine client, including its standard Python user agent.
+                  with request.urlopen(url, timeout=30) as response:
+                      if response.status != 200 or response.geturl() != url:
+                          raise ValueError('Public graph must respond directly at its canonical URL with HTTP 200')
+                      graph = json.load(response)
+                  if not isinstance(graph, dict) or not isinstance(graph.get('@graph'), list):
+                      raise ValueError('Public graph response is not the canonical JSON-LD document')
+                  print('CLOUDFLARE_STANDARD_MACHINE_CLIENT_ACCESS_PASS', flush=True)
+                  break
+              except (error.URLError, TimeoutError, ValueError) as exc:
+                  print(f'CLOUDFLARE_MACHINE_ACCESS_RETRY {attempt + 1}/10 {type(exc).__name__}', flush=True)
+                  if attempt == 9:
+                      raise
+                  time.sleep(5)
+          PY
       - name: Stage immutable Zenodo candidate
         if: steps.release.outputs.mode == 'new'
         env:

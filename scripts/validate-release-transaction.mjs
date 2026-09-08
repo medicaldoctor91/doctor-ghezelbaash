@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 
 const run = (cwd, args) =>
   execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
@@ -51,6 +51,10 @@ assert.match(workflow, /Final pre-publication transaction gate[\s\S]*?git var GI
 assert.match(workflow, /git merge-base --is-ancestor "\$SOURCE_SHA" "refs\/remotes\/origin\/\$BRANCH"/);
 assert.match(workflow, /git merge-base --is-ancestor "\$SOURCE_SHA" "\$CANDIDATE_SHA"/);
 assert.match(workflow, /promote-release\.mjs[\s\S]*?npm run render:calibration:update[\s\S]*?src\/data\/render-calibration\.json/);
+const machineAccessGate = workflow.indexOf("Reconcile Cloudflare zone settings before publication");
+assert.ok(machineAccessGate > candidateMutation && machineAccessGate < zenodoPublish);
+assert.match(workflow.slice(machineAccessGate, zenodoPublish), /python scripts\/preflight-cloudflare-edge\.py/);
+assert.match(workflow.slice(machineAccessGate, zenodoPublish), /CLOUDFLARE_STANDARD_MACHINE_CLIENT_ACCESS_PASS/);
 
 assert.ok(
   immutableCapabilityGate >= 0 &&
@@ -238,6 +242,70 @@ try {
   await rm(dir, { recursive: true, force: true });
 }
 
+// Execute the actual resolution block against local Git fixtures. An unpublished
+// candidate may already carry the target version; canonical main defines current.
+const resolveSection = workflow.split("      - name: Resolve release transaction\n")[1]
+  .split("      - name: Detect GitHub immutable releases capability\n")[0];
+const resolveScript = resolveSection.split("        run: |\n")[1]
+  .split("\n").map((line) => line.startsWith("          ") ? line.slice(10) : line).join("\n");
+const resolveDir = await mkdtemp(path.join(os.tmpdir(), "ghezelbaash-release-resolution-"));
+try {
+  const work = path.join(resolveDir, "work"), origin = path.join(resolveDir, "origin.git");
+  await mkdir(path.join(work, "src/data"), { recursive: true });
+  run(resolveDir, ["init", "--bare", "-q", origin]);
+  run(work, ["init", "-q"]);
+  run(work, ["config", "user.name", "release-test"]);
+  run(work, ["config", "user.email", "release-test@example.invalid"]);
+  run(work, ["remote", "add", "origin", origin]);
+  const state = (version, record) => JSON.stringify({
+    release: version,
+    dataset: {
+      zenodo: { recordId: record, versionDoi: `10.5281/zenodo.${record}`, conceptDoi: "10.5281/zenodo.100" },
+      huggingFace: { dataset: "https://huggingface.co/datasets/example/fixture" },
+    },
+  });
+  await writeFile(path.join(work, "src/data/release.json"), state("1.2.5", "125"));
+  run(work, ["add", "src/data/release.json"]);
+  run(work, ["commit", "-qm", "canonical base"]);
+  run(work, ["tag", "v1.2.5"]);
+  run(work, ["push", "-q", "origin", "HEAD:main", "--tags"]);
+  await writeFile(path.join(work, "src/data/release.json"), state("1.3.0", "130"));
+  run(work, ["commit", "-qam", "unpublished candidate"]);
+  const candidate = run(work, ["rev-parse", "HEAD"]);
+  const resolve = async (target) => {
+    const envFile = path.join(resolveDir, "environment"), outputFile = path.join(resolveDir, "output");
+    await writeFile(envFile, "");
+    await writeFile(outputFile, "");
+    execFileSync("bash", ["-c", resolveScript], {
+      cwd: work,
+      env: { ...process.env, RELEASE_TARGET: target, GITHUB_ENV: envFile, GITHUB_OUTPUT: outputFile },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    return Object.fromEntries((await readFile(envFile, "utf8")).trim().split("\n").map((line) => {
+      const offset = line.indexOf("=");
+      return [line.slice(0, offset), line.slice(offset + 1)];
+    }));
+  };
+  const resumed = await resolve("1.3.0");
+  assert.equal(resumed.RELEASE_MODE, "new");
+  assert.equal(resumed.CURRENT_VERSION, "1.2.5");
+  assert.equal(resumed.CURRENT_RECORD, "125");
+  assert.equal(resumed.SOURCE_SHA, candidate);
+  run(work, ["tag", "v1.3.0"]);
+  run(work, ["push", "-q", "origin", "HEAD:main", "--tags"]);
+  const current = await resolve("1.3.0");
+  assert.equal(current.RELEASE_MODE, "current");
+  assert.equal(current.CURRENT_RECORD, "130");
+  assert.equal(current.FROZEN_SOURCE_AT_HEAD, "true");
+  await writeFile(path.join(work, "source.txt"), "unpublished edits\n");
+  run(work, ["add", "source.txt"]);
+  run(work, ["commit", "-qm", "unpublished edits after current release"]);
+  await assert.rejects(resolve("1.3.0"));
+  await assert.rejects(resolve("1.2.4"));
+} finally {
+  await rm(resolveDir, { recursive: true, force: true });
+}
+
 console.log(
   JSON.stringify({
     releaseTransaction: "PASS",
@@ -252,5 +320,7 @@ console.log(
     cloudflareFullApplyCanonical: true,
     cloudflareTimeoutCoversConvergence: true,
     githubPagesBridgeDependencies: "COMPLETE",
+    unpublishedCandidateResolution: true,
+    standardMachineAccessBeforePublish: true,
   }),
 );

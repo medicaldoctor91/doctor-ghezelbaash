@@ -9,6 +9,11 @@ from urllib import error, parse, request
 BASE='https://zenodo.org/api'
 RUNTIME=Path('.release/runtime')
 RUNTIME.mkdir(parents=True,exist_ok=True)
+STAGE_MAX_ATTEMPTS=4
+STAGE_RECOVERY_SECONDS=900
+
+def progress(event,**fields):
+    print(json.dumps({'stage':event,**fields},separators=(',',':')),flush=True)
 
 class ZenodoRequestError(RuntimeError):
     def __init__(self, message, transient=False):
@@ -41,12 +46,16 @@ def call(token,method,url,body=None,content_type='application/json',ok=(200,201,
         except error.HTTPError as exc:
             transient=exc.code in (429,502,503,504)
             if transient and attempt+1<attempts:
-                time.sleep(retry_delay(exc.headers.get('Retry-After'),attempt+1)); continue
+                delay=retry_delay(exc.headers.get('Retry-After'),attempt+1)
+                progress('ZENODO_READ_RETRY',attempt=attempt+1,nextAttempt=attempt+2,status=exc.code,delaySeconds=delay)
+                time.sleep(delay); continue
             detail=exc.read().decode('utf-8','replace')[:4000]
             raise ZenodoRequestError(f'Zenodo HTTP {exc.code} {method} {url}: {detail}',transient) from None
         except (error.URLError,TimeoutError,ConnectionError) as exc:
             if attempt+1<attempts:
-                time.sleep(retry_delay(None,attempt+1)); continue
+                delay=retry_delay(None,attempt+1)
+                progress('ZENODO_READ_RETRY',attempt=attempt+1,nextAttempt=attempt+2,reason='transport_error',delaySeconds=delay)
+                time.sleep(delay); continue
             raise ZenodoRequestError(f'Zenodo transport error {method} {url}: {exc}',True) from None
 
 def deposition_rows(response):
@@ -319,23 +328,74 @@ def prepare_auxiliaries():
     sources=exact_sources(source_commit)
     print(json.dumps({'stage':'RELEASE_AUXILIARIES_PREPARED','sourceCommit':source_commit,'files':sorted(sources),'integrity':'PASS'},separators=(',',':')))
 
-def synchronize_exact_files(token,draft_url,bucket,sources):
-    expected_hashes={name:sha256(file) for name,file in sources.items()}
+def stage_file_inventory(token,draft_url,bucket):
+    # A write whose response was lost is resolved from fresh server state, never
+    # by replaying the DELETE/PUT against an inventory captured before the write.
+    release=load_release(); z=release['dataset']['zenodo']
+    draft=get_deposition(token,str(z['recordId']))
+    metadata=draft.get('metadata') or {}; prere=metadata.get('prereserve_doi') or {}
+    if draft.get('submitted') is True or prere.get('doi')!=z['versionDoi'] or metadata.get('version')!=release['release'] or metadata.get('publication_date')!=release['dateModified']:
+        raise RuntimeError('Zenodo draft identity/state drift during staging reconciliation')
+    if (draft.get('links') or {}).get('bucket')!=bucket or draft_url!=f"{BASE}/deposit/depositions/{z['recordId']}":
+        raise RuntimeError('Zenodo draft location drift during staging reconciliation')
     remote=call(token,'GET',f'{draft_url}/files')
+    if not isinstance(remote,list) or any(not isinstance(item,dict) or not item.get('filename') or not item.get('id') for item in remote):
+        raise RuntimeError('Invalid Zenodo draft file inventory')
     remote_by_name={item.get('filename'):item for item in remote}
     if len(remote_by_name)!=len(remote): raise RuntimeError('Duplicate Zenodo draft filenames')
-    for name,item in remote_by_name.items():
-        if name not in sources: call(token,'DELETE',f"{draft_url}/files/{item['id']}",ok=(204,))
-    for name,file in sources.items():
-        item=remote_by_name.get(name); current=False
-        if item:
-            url=(item.get('links') or {}).get('download')
-            if url:
+    return remote_by_name
+
+def synchronize_exact_files(token,draft_url,bucket,sources):
+    expected_hashes={name:sha256(file) for name,file in sources.items()}
+    deadline=time.monotonic()+STAGE_RECOVERY_SECONDS
+    active={}
+    def report(event,attempt,**fields):
+        active.clear(); active.update(fields)
+        progress(event,attempt=attempt,totalFiles=len(sources),**fields)
+    for attempt in range(1,STAGE_MAX_ATTEMPTS+1):
+        try:
+            report('ZENODO_STAGE_INVENTORY',attempt,operation='read_inventory')
+            remote_by_name=stage_file_inventory(token,draft_url,bucket)
+            for name,item in remote_by_name.items():
+                if name not in sources:
+                    report('ZENODO_STAGE_FILE',attempt,filename=name,operation='delete_extra')
+                    call(token,'DELETE',f"{draft_url}/files/{item['id']}",ok=(204,))
+            for index,(name,file) in enumerate(sources.items(),1):
+                item=remote_by_name.get(name); current=False
+                if item:
+                    report('ZENODO_STAGE_FILE',attempt,filename=name,fileIndex=index,operation='compare_bytes')
+                    url=(item.get('links') or {}).get('download')
+                    if url:
+                        blob=call(token,'GET',url,ok=(200,),binary=True)
+                        current=hashlib.sha256(blob).hexdigest()==expected_hashes[name]
+                    if not current:
+                        report('ZENODO_STAGE_FILE',attempt,filename=name,fileIndex=index,operation='delete_mismatch')
+                        call(token,'DELETE',f"{draft_url}/files/{item['id']}",ok=(204,))
+                if not current:
+                    report('ZENODO_STAGE_FILE',attempt,filename=name,fileIndex=index,operation='upload')
+                    call(token,'PUT',f'{bucket}/{parse.quote(name)}',file.read_bytes(),'application/octet-stream')
+                report('ZENODO_STAGE_FILE_READY',attempt,filename=name,fileIndex=index,operation='hash_matched' if current else 'uploaded')
+            report('ZENODO_STAGE_INVENTORY',attempt,operation='verify_inventory')
+            remote_by_name=stage_file_inventory(token,draft_url,bucket)
+            if set(remote_by_name)!=set(sources): raise RuntimeError('Zenodo staged file inventory mismatch')
+            remote_hashes={}
+            for index,(name,item) in enumerate(remote_by_name.items(),1):
+                report('ZENODO_STAGE_FILE',attempt,filename=name,fileIndex=index,operation='verify_bytes')
+                url=(item.get('links') or {}).get('download')
+                if not url: raise RuntimeError(f'Zenodo staged download URL missing: {name}')
                 blob=call(token,'GET',url,ok=(200,),binary=True)
-                current=hashlib.sha256(blob).hexdigest()==expected_hashes[name]
-            if not current: call(token,'DELETE',f"{draft_url}/files/{item['id']}",ok=(204,))
-        if not current: call(token,'PUT',f'{bucket}/{parse.quote(name)}',file.read_bytes(),'application/octet-stream')
-    return expected_hashes
+                got=hashlib.sha256(blob).hexdigest(); remote_hashes[name]=got
+                if got!=expected_hashes[name]: raise RuntimeError(f'Zenodo staged SHA-256 mismatch: {name}')
+                report('ZENODO_STAGE_FILE_VERIFIED',attempt,filename=name,fileIndex=index,sha256=got)
+            return expected_hashes,remote_hashes
+        except ZenodoRequestError as exc:
+            if not exc.transient: raise
+            delay=min(5*2**(attempt-1),30)
+            if attempt==STAGE_MAX_ATTEMPTS or time.monotonic()+delay>=deadline:
+                progress('ZENODO_STAGE_STOPPED',attempt=attempt,reason='reconciliation_budget_exhausted',**active)
+                raise RuntimeError('Zenodo staging recovery budget exhausted; draft preserved and no publication performed by this stage') from exc
+            progress('ZENODO_STAGE_RETRY',attempt=attempt,nextAttempt=attempt+1,delaySeconds=delay,reason='transient_request_failure',**active)
+            time.sleep(delay)
 
 def stage(args,token):
     release=load_release(); z=release['dataset']['zenodo']; record=str(z['recordId']); doi=z['versionDoi']; source_commit=os.environ.get('SOURCE_COMMIT','').strip()
@@ -353,13 +413,7 @@ def stage(args,token):
     draft=get_deposition(token,record); bucket=(draft.get('links') or {}).get('bucket')
     if not bucket: raise RuntimeError('Zenodo draft bucket missing at stage')
     sources=exact_sources(source_commit)
-    hashes=synchronize_exact_files(token,draft_url,bucket,sources)
-    remote=call(token,'GET',f'{draft_url}/files')
-    if {x.get('filename') for x in remote}!=set(sources): raise RuntimeError('Zenodo staged file inventory mismatch')
-    remote_hashes={}
-    for item in remote:
-        name=item['filename']; url=(item.get('links') or {}).get('download'); blob=call(token,'GET',url,ok=(200,),binary=True); got=hashlib.sha256(blob).hexdigest(); remote_hashes[name]=got
-        if got!=hashes[name]: raise RuntimeError(f'Zenodo staged SHA-256 mismatch: {name}')
+    hashes,remote_hashes=synchronize_exact_files(token,draft_url,bucket,sources)
     readback=get_deposition(token,record); rmd=readback.get('metadata') or {}; prere=rmd.get('prereserve_doi') or {}
     if readback.get('submitted') is True or prere.get('doi')!=doi or rmd.get('version')!=release['release'] or rmd.get('publication_date')!=release['dateModified']:
         raise RuntimeError('Zenodo staged metadata readback drift')
