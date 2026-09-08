@@ -120,15 +120,13 @@ class StagingRecovery(unittest.TestCase):
         z = self.release["dataset"]["zenodo"]
         self.draft_url = f"{zenodo.BASE}/deposit/depositions/{z['recordId']}"
         self.bucket = "https://zenodo.org/api/files/test-bucket"
+        self.canonical_metadata = zenodo.canonical_metadata(self.release["release"], self.release["dateModified"], z["versionDoi"], z["conceptDoi"])
         self.draft = {
             "submitted": False,
-            "metadata": {
-                "version": self.release["release"],
-                "publication_date": self.release["dateModified"],
-                "prereserve_doi": {"doi": z["versionDoi"]},
-            },
+            "metadata": copy.deepcopy(self.canonical_metadata),
             "links": {"bucket": self.bucket},
         }
+        self.draft["metadata"]["prereserve_doi"] = {"doi": z["versionDoi"]}
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         source = Path(directory.name) / "graph.jsonld"
@@ -152,13 +150,130 @@ class StagingRecovery(unittest.TestCase):
                 remote[url.rsplit("/", 1)[-1]] = body
                 return {}
             if method == "PUT" and url == self.draft_url:
+                self.draft["metadata"] = json.loads(body)["metadata"]
+                self.draft["metadata"]["prereserve_doi"] = {"doi": self.release["dataset"]["zenodo"]["versionDoi"]}
                 return self.draft
             raise AssertionError(f"Unexpected request: {method} {url}")
         return remote, events, send
 
     def run_sync(self, send):
         with patch.object(zenodo, "call", side_effect=send), patch.object(zenodo, "get_deposition", return_value=self.draft), patch.object(zenodo.time, "sleep"), patch("builtins.print"):
-            return zenodo.synchronize_exact_files("secret-must-not-be-logged", self.draft_url, self.bucket, self.sources)
+            return zenodo.recover_stage(lambda report: zenodo.synchronize_exact_files("secret-must-not-be-logged", self.draft_url, self.bucket, self.sources, report), len(self.sources))
+
+    def run_stage(self, send, read=None):
+        with patch.object(zenodo, "call", side_effect=send), patch.object(zenodo, "get_deposition", side_effect=read or (lambda *args: self.draft)), patch.object(zenodo, "exact_sources", return_value=self.sources), patch.dict(zenodo.os.environ, {"SOURCE_COMMIT": "a" * 40}), patch.object(zenodo, "write_state") as ledger, patch.object(zenodo.time, "sleep"), patch("builtins.print"):
+            zenodo.stage(SimpleNamespace(version=self.release["release"]), "secret-must-not-be-logged")
+        return ledger.call_args.args[1]
+
+    def test_initial_metadata_timeout_recovers_and_skips_already_canonical_put(self):
+        remote, events, backend = self.backend({"graph.jsonld": self.sources["graph.jsonld"].read_bytes()})
+        reads = 0
+        def read(*args):
+            nonlocal reads
+            reads += 1
+            if reads == 1:
+                raise zenodo.ZenodoRequestError("detail and collection timed out", True)
+            return self.draft
+        state = self.run_stage(backend, read)
+        self.assertEqual(state["sha256"], self.expected)
+        self.assertEqual(state["remoteSha256"], self.expected)
+        self.assertEqual(reads, 4)
+        self.assertTrue(all(method == "GET" for method, url in events))
+
+    def test_lost_metadata_put_response_is_resolved_by_fresh_readback(self):
+        self.draft["metadata"]["description"] = "outdated description"
+        remote, events, backend = self.backend({"graph.jsonld": self.sources["graph.jsonld"].read_bytes()})
+        def read(*args):
+            events.append(("READ_DRAFT", self.draft_url))
+            return self.draft
+        def send(token, method, url, *args, **kwargs):
+            result = backend(token, method, url, *args, **kwargs)
+            if method == "PUT" and url == self.draft_url:
+                raise zenodo.ZenodoRequestError("response lost after metadata committed", True)
+            return result
+        state = self.run_stage(send, read)
+        self.assertEqual(state["remoteSha256"], self.expected)
+        self.assertEqual([event for event in events if event[0] == "PUT"], [("PUT", self.draft_url)])
+        put_index = events.index(("PUT", self.draft_url))
+        self.assertEqual(events[put_index - 1], ("GET", self.draft_url + "/files"))
+        self.assertEqual(events[put_index + 1:put_index + 3], [("READ_DRAFT", self.draft_url), ("GET", self.draft_url + "/files")])
+
+    def test_uncommitted_metadata_put_is_repeated_only_after_fresh_state_reads(self):
+        self.draft["metadata"]["description"] = "outdated description"
+        remote, events, backend = self.backend({"graph.jsonld": self.sources["graph.jsonld"].read_bytes()})
+        failed = False
+        def read(*args):
+            events.append(("READ_DRAFT", self.draft_url))
+            return self.draft
+        def send(token, method, url, *args, **kwargs):
+            nonlocal failed
+            if method == "PUT" and url == self.draft_url and not failed:
+                failed = True
+                events.append((method, url))
+                raise zenodo.ZenodoRequestError("metadata request did not commit", True)
+            return backend(token, method, url, *args, **kwargs)
+        self.assertEqual(self.run_stage(send, read)["remoteSha256"], self.expected)
+        puts = [index for index, event in enumerate(events) if event == ("PUT", self.draft_url)]
+        self.assertEqual(len(puts), 2)
+        self.assertEqual(events[puts[0] + 1:puts[1]], [("READ_DRAFT", self.draft_url), ("GET", self.draft_url + "/files")])
+
+    def test_final_metadata_readback_timeout_recovers_without_rewriting(self):
+        remote, events, backend = self.backend({"graph.jsonld": self.sources["graph.jsonld"].read_bytes()})
+        reads = 0
+        def read(*args):
+            nonlocal reads
+            reads += 1
+            if reads == 3:
+                raise zenodo.ZenodoRequestError("final readback timeout", True)
+            return self.draft
+        self.assertEqual(self.run_stage(backend, read)["remoteSha256"], self.expected)
+        self.assertEqual(reads, 6)
+        self.assertTrue(all(method == "GET" for method, url in events))
+
+    def test_persistent_initial_metadata_failure_has_one_bounded_budget(self):
+        with patch.object(zenodo, "get_deposition", side_effect=zenodo.ZenodoRequestError("persistent metadata outage", True)) as read, patch.object(zenodo, "call") as send, patch.object(zenodo, "exact_sources", return_value=self.sources), patch.dict(zenodo.os.environ, {"SOURCE_COMMIT": "a" * 40}), patch.object(zenodo, "write_state") as ledger, patch.object(zenodo.time, "sleep") as sleep, patch("builtins.print") as log:
+            with self.assertRaisesRegex(RuntimeError, "recovery budget exhausted"):
+                zenodo.stage(SimpleNamespace(version=self.release["release"]), "test")
+        self.assertEqual(read.call_count, zenodo.STAGE_MAX_ATTEMPTS)
+        self.assertEqual(sleep.call_count, zenodo.STAGE_MAX_ATTEMPTS - 1)
+        send.assert_not_called()
+        ledger.assert_not_called()
+        self.assertEqual(json.loads(log.call_args.args[0])["operation"], "read_draft")
+
+    def test_metadata_and_file_failures_share_the_same_attempt_budget(self):
+        remote, events, backend = self.backend({"graph.jsonld": b"stale"})
+        reads = 0
+        def read(*args):
+            nonlocal reads
+            reads += 1
+            if reads == 1:
+                raise zenodo.ZenodoRequestError("metadata outage", True)
+            return self.draft
+        def send(token, method, url, *args, **kwargs):
+            result = backend(token, method, url, *args, **kwargs)
+            if url == self.bucket + "/graph.jsonld":
+                raise zenodo.ZenodoRequestError("file outage", True)
+            return result
+        with self.assertRaisesRegex(RuntimeError, "recovery budget exhausted"):
+            self.run_stage(send, read)
+        self.assertEqual(reads, zenodo.STAGE_MAX_ATTEMPTS)
+        self.assertEqual(sum(url == self.draft_url + "/files" for method, url in events), zenodo.STAGE_MAX_ATTEMPTS - 1)
+        self.assertTrue(all(method == "GET" for method, url in events))
+
+    def test_canonical_metadata_comparison_preserves_authored_nested_values(self):
+        doi = self.release["dataset"]["zenodo"]["versionDoi"]
+        actual = copy.deepcopy(self.draft["metadata"])
+        actual["creators"][0]["affiliation"] = None
+        actual["related_identifiers"][0]["scheme"] = "url"
+        self.assertTrue(zenodo.canonical_metadata_matches(actual, self.canonical_metadata, doi))
+        for field, value in (("license", {"id": "cc-by-4.0"}), ("prereserve_doi", True), ("keywords", list(reversed(actual["keywords"]))), ("creators", [])):
+            wrong = copy.deepcopy(actual)
+            wrong[field] = value
+            self.assertFalse(zenodo.canonical_metadata_matches(wrong, self.canonical_metadata, doi))
+        wrong = copy.deepcopy(actual)
+        wrong["related_identifiers"][0]["relation"] = "isIdenticalTo"
+        self.assertFalse(zenodo.canonical_metadata_matches(wrong, self.canonical_metadata, doi))
+        self.assertFalse(zenodo.canonical_metadata_matches(actual, self.canonical_metadata, "10.5281/zenodo.1"))
 
     def test_lost_delete_response_reconciles_absence_before_upload(self):
         remote, events, backend = self.backend({"graph.jsonld": b"stale"})
@@ -254,7 +369,7 @@ class StagingRecovery(unittest.TestCase):
     def test_recovery_deadline_stops_before_another_inventory_or_write(self):
         with patch.object(zenodo, "get_deposition", side_effect=zenodo.ZenodoRequestError("timeout", True)) as read, patch.object(zenodo.time, "monotonic", side_effect=[0, zenodo.STAGE_RECOVERY_SECONDS]), patch.object(zenodo.time, "sleep") as sleep, patch.object(zenodo, "call") as send, patch("builtins.print"):
             with self.assertRaisesRegex(RuntimeError, "recovery budget exhausted"):
-                zenodo.synchronize_exact_files("test", self.draft_url, self.bucket, self.sources)
+                zenodo.recover_stage(lambda report: zenodo.synchronize_exact_files("test", self.draft_url, self.bucket, self.sources, report), len(self.sources))
         self.assertEqual(read.call_count, 1)
         send.assert_not_called()
         sleep.assert_not_called()
@@ -263,7 +378,7 @@ class StagingRecovery(unittest.TestCase):
         self.draft["submitted"] = True
         with patch.object(zenodo, "get_deposition", return_value=self.draft), patch.object(zenodo, "call") as send, patch("builtins.print"):
             with self.assertRaisesRegex(RuntimeError, "identity/state drift"):
-                zenodo.synchronize_exact_files("test", self.draft_url, self.bucket, self.sources)
+                zenodo.recover_stage(lambda report: zenodo.synchronize_exact_files("test", self.draft_url, self.bucket, self.sources, report), len(self.sources))
         send.assert_not_called()
 
 
