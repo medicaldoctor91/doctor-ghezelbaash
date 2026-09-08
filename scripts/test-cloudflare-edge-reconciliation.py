@@ -602,7 +602,8 @@ def test_machine_compression() -> None:
     host = "www.ghezelbaash.ir"
     desired = edge.machine_compression_rule(host)
     assert desired["action_parameters"] == {"algorithms": [{"name": "auto"}]}
-    assert 'http.response.code eq 200' in desired["expression"]
+    assert 'http.response.' not in desired["expression"], "Compression phase must use supported request fields"
+    assert f'http.host eq "{host}"' in desired["expression"]
     assert '{"csv" "ttl"}' in desired["expression"]
     foreign = {"id": "foreign-1", "ref": "unrelated_compression", "action": "compress_response"}
     prior_owned = {"id": "owned-1", **copy.deepcopy(desired)}

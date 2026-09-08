@@ -228,7 +228,7 @@ def machine_compression_rule(host: str) -> dict[str, Any]:
     return {
         "ref": COMPRESSION_RULE_REF,
         "expression": (
-            f'(http.host eq "{host}" and http.response.code eq 200 and '
+            f'(http.host eq "{host}" and '
             'http.request.uri.path.extension in {"csv" "ttl"})'
         ),
         "description": "Compress canonical CSV and Turtle representations using negotiated encoding",
