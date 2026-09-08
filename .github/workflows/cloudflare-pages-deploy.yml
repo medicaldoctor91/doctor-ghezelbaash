@@ -4,6 +4,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      action:
+        description: Cloudflare operation
+        type: choice
+        required: true
+        default: deployment
+        options:
+          - deployment
+          - audit
+          - strengthen
 
 permissions:
   contents: read
@@ -15,6 +25,7 @@ concurrency:
 
 jobs:
   verify:
+    if: github.event_name != 'workflow_dispatch' || inputs.action == 'deployment'
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     env:
@@ -164,3 +175,70 @@ jobs:
         run: |
           set -euo pipefail
           npm run indexnow:submit
+
+  delivery:
+    if: github.event_name == 'workflow_dispatch' && (inputs.action == 'audit' || inputs.action == 'strengthen')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Load public Cloudflare delivery scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          contract = json.loads(Path('.release/policy/platform-contract.json').read_text())
+          cloudflare = contract['cloudflare']
+          values = {
+              'CLOUDFLARE_ACCOUNT_ID': cloudflare['accountId'],
+              'CF_PROJECT': cloudflare['pagesProject'],
+              'CF_PRODUCTION_BRANCH': cloudflare['productionBranch'],
+              'CF_EXPECTED_ENVIRONMENT': cloudflare['expectedEnvironment'],
+              'ZONE_NAME': contract['zoneName'],
+              'CANONICAL_HOST': contract['canonicalHost'],
+          }
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as output:
+              for key, value in values.items():
+                  if not isinstance(value, str) or not value.strip() or '\n' in value or '\r' in value:
+                      raise SystemExit(f'Invalid public platform value: {key}')
+                  output.write(f'{key}={value}\n')
+          Path('.release').mkdir(exist_ok=True)
+          PY
+      - name: Audit or strengthen current public delivery
+        shell: bash
+        env:
+          DELIVERY_ACTION: ${{ inputs.action }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          case "$DELIVERY_ACTION" in
+            audit) arguments=(--audit-delivery) ;;
+            strengthen) arguments=(--strengthen-delivery --rollback-snapshot .release/cloudflare-compression-before.json) ;;
+            *) echo 'Unsupported Cloudflare delivery action' >&2; exit 1 ;;
+          esac
+          python scripts/configure-cloudflare-edge.py "${arguments[@]}" \
+            --outcome .release/cloudflare-delivery-audit.json
+      - name: Preserve delivery audit and compression rollback state
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: cloudflare-delivery-${{ inputs.action }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .release/cloudflare-delivery-audit.json
+            .release/cloudflare-compression-before.json
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7

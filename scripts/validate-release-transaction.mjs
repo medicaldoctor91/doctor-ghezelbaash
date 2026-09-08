@@ -141,16 +141,38 @@ assert.match(
   /Reconcile or verify current Cloudflare deployment contract[\s\S]*?FROZEN_SOURCE_AT_HEAD[\s\S]*?CF_EXPECTED_COMMIT="\$BASE_SHA"[\s\S]*?cloudflare-pages\.mjs ensure --configure[\s\S]*?cloudflare-pages\.mjs ensure\n/,
   "Frozen current-release recovery must converge the exact Cloudflare commit",
 );
-assert.equal(
-  (cloudflare.match(/python scripts\/configure-cloudflare-edge\.py/g) || [])
-    .length,
-  1,
+const cloudflareJobs = cloudflare.split("\njobs:\n")[1];
+assert.ok(cloudflareJobs, "Cloudflare workflow jobs are missing");
+const [cloudflareDeployment, cloudflareDelivery] = cloudflareJobs.split("\n  delivery:\n");
+assert.ok(cloudflareDelivery, "Cloudflare delivery controls require an isolated job");
+const cloudflareDispatch = cloudflare.split("  workflow_dispatch:\n")[1]?.split("\npermissions:")[0];
+assert.match(cloudflareDispatch, /action:[\s\S]*?type: choice\n\s+required: true\n\s+default: deployment\n/);
+assert.deepEqual(
+  [...cloudflareDispatch.matchAll(/^          - ([a-z]+)$/gm)].map((match) => match[1]),
+  ["deployment", "audit", "strengthen"],
+  "Cloudflare manual actions must remain explicit and default to deployment",
 );
-assert.match(cloudflare, /(?:^|\s)--apply(?=\s|\\|$)/m);
-assert.match(cloudflare, /Reconcile canonical Cloudflare edge/);
+assert.match(cloudflareDeployment, /^  verify:\n    if: github\.event_name != 'workflow_dispatch' \|\| inputs\.action == 'deployment'\n/);
+assert.match(cloudflareDeployment, /Reconcile canonical Cloudflare edge[\s\S]*?python scripts\/configure-cloudflare-edge\.py \\\n\s+--apply\s/);
+assert.match(cloudflareDelivery, /^    if: github\.event_name == 'workflow_dispatch' && \(inputs\.action == 'audit' \|\| inputs\.action == 'strengthen'\)\n/);
+assert.match(cloudflareDelivery, /ref: \$\{\{ github\.sha \}\}\n\s+persist-credentials: false/);
+assert.match(cloudflareDelivery, /test "\$\(git rev-parse HEAD\)" = "\$GITHUB_SHA"/);
+assert.match(cloudflareDelivery, /DELIVERY_ACTION: \$\{\{ inputs\.action \}\}/);
+assert.match(cloudflareDelivery, /audit\) arguments=\(--audit-delivery\) ;;/);
+assert.match(cloudflareDelivery, /strengthen\) arguments=\(--strengthen-delivery --rollback-snapshot \.release\/cloudflare-compression-before\.json\) ;;/);
+assert.match(cloudflareDelivery, /\*\) echo 'Unsupported Cloudflare delivery action' >&2; exit 1 ;;/);
+assert.match(cloudflareDelivery, /python scripts\/configure-cloudflare-edge\.py "\$\{arguments\[@\]\}"/);
+assert.match(cloudflareDelivery, /--outcome \.release\/cloudflare-delivery-audit\.json/);
+assert.match(cloudflareDelivery, /CLOUDFLARE_API_TOKEN: \$\{\{ secrets\.CLOUDFLARE_API_TOKEN \}\}/);
+assert.doesNotMatch(
+  cloudflareDelivery,
+  /\b(?:npm|npx|wrangler|zenodo|huggingface)\b|cloudflare-pages\.mjs|(?:^|\s)--apply(?:\s|$)|git\s+(?:push|tag|merge|checkout)\b/m,
+  "Delivery-only actions must not build, deploy or publish a release",
+);
+assert.match(cloudflare, /concurrency:\n  group: doctor-ghezelbaash-external-mutation\n  cancel-in-progress: false\n  queue: max/);
 assert.doesNotMatch(cloudflare, /steps\.release_change/);
 const cloudflareTimeout = Number(
-  cloudflare.match(/^\s+timeout-minutes:\s*(\d+)\s*$/m)?.[1],
+  cloudflareDeployment.match(/^\s+timeout-minutes:\s*(\d+)\s*$/m)?.[1],
 );
 assert.ok(
   cloudflareTimeout >= 60,

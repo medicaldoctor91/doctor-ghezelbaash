@@ -10,7 +10,9 @@ from __future__ import annotations
 
 import argparse
 import atexit
+import concurrent.futures
 import datetime as dt
+import gzip
 import hashlib
 import json
 import os
@@ -699,6 +701,7 @@ def issue_ephemeral_zone_api(
     include_control_plane: bool = False,
     include_bot_access: bool = False,
     include_request_integrity: bool = False,
+    include_delivery_rules: bool = False,
 ) -> tuple[CloudflareApi, Any]:
     permissions = parent_api.expect(
         "GET",
@@ -752,6 +755,15 @@ def issue_ephemeral_zone_api(
     if include_request_integrity:
         required_aliases += REQUEST_INTEGRITY_REQUIRED_PERMISSION_ALIASES
         optional_aliases += REQUEST_INTEGRITY_OPTIONAL_PERMISSION_ALIASES
+    if include_delivery_rules:
+        required_aliases += (
+            ("Response Compression Write", "Compression Rules Write", "Compression Rules Edit"),
+            ("Zone WAF Write", "Zone WAF Edit"),
+        )
+        optional_aliases += (
+            ("Response Compression Read", "Compression Rules Read"),
+            ("Zone WAF Read",),
+        )
 
     resolved_permissions: list[str] = []
     if required_aliases:
@@ -772,7 +784,7 @@ def issue_ephemeral_zone_api(
                     for row in permissions
                     if any(
                         token in str(row.get("name") or "").lower()
-                        for token in ("cache", "bot", "dns", "config", "firewall")
+                        for token in ("cache", "bot", "dns", "config", "firewall", "compression", "waf")
                     )
                 )
                 raise CloudflareError(
@@ -2484,6 +2496,154 @@ def purge_cache_only() -> dict[str, Any]:
     return outcome
 
 
+DELIVERY_PATHS = ("/", "/robots.txt", "/sitemap.xml", "/graph.jsonld", "/entity-facts.csv", "/graph.ttl")
+PUBLIC_BIC_SKIP_REF = "ghezelbaash_public_bic_skip_v1"
+
+
+def probe_public_delivery(host: str) -> list[dict[str, Any]]:
+    """Check ordinary Python access and compare negotiated gzip with identity bytes."""
+    def probe(case: tuple[str, str]) -> dict[str, Any]:
+        resource, encoding = case
+        url = f"https://{host}{resource}"
+        result: dict[str, Any] = {"path": resource, "acceptEncoding": encoding}
+        request = urllib.request.Request(url, headers={"Accept-Encoding": encoding})
+        try:
+            try:
+                response = urllib.request.urlopen(request, timeout=25)
+            except urllib.error.HTTPError as exc:
+                response = exc
+            with response:
+                body = response.read(8 * 1024 * 1024 + 1)
+                result.update({
+                    "status": response.status,
+                    "direct": response.geturl() == url,
+                    "encoding": response.headers.get("Content-Encoding", "identity"),
+                    "type": response.headers.get("Content-Type"),
+                    "cache": response.headers.get("CF-Cache-Status"),
+                    "ray": response.headers.get("CF-Ray"),
+                    "wireBytes": len(body),
+                })
+                if len(body) > 8 * 1024 * 1024:
+                    raise CloudflareError("Public delivery probe exceeded its size bound")
+                result["browserSignatureBlock"] = response.status == 403 and body.strip() == b"error code: 1010"
+                if response.status == 200:
+                    decoded = gzip.decompress(body) if result["encoding"] == "gzip" else body
+                    if result["encoding"] not in ("identity", "gzip"):
+                        raise CloudflareError("Unexpected content encoding for bounded gzip probe")
+                    result["sha256"] = hashlib.sha256(decoded).hexdigest()
+                    result["decodedBytes"] = len(decoded)
+        except (OSError, ValueError, CloudflareError) as exc:
+            result["error"] = type(exc).__name__
+        return result
+
+    cases = [(resource, "identity") for resource in DELIVERY_PATHS]
+    cases += [(resource, "gzip") for resource in ("/entity-facts.csv", "/graph.ttl")]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        return list(pool.map(probe, cases))
+
+
+def delivery_control_readback(api: CloudflareApi, zone: str) -> dict[str, Any]:
+    endpoints = {
+        "settings": f"/zones/{zone}/settings",
+        "bots": f"/zones/{zone}/bot_management",
+        "compression": f"/zones/{zone}/rulesets/phases/{COMPRESSION_PHASE}/entrypoint",
+        "configuration": f"/zones/{zone}/rulesets/phases/{REQUEST_INTEGRITY_PHASE}/entrypoint",
+        "customFirewall": f"/zones/{zone}/rulesets/phases/http_request_firewall_custom/entrypoint",
+    }
+    observed = {}
+    for family, endpoint in endpoints.items():
+        status, payload = api.raw("GET", endpoint)
+        record: dict[str, Any] = {"httpStatus": status}
+        if status == 200 and payload.get("success") is True:
+            value = payload.get("result")
+            if family == "settings":
+                record["values"] = {row["id"]: row.get("value") for row in value if row.get("id") in ZONE_SETTINGS}
+            elif family == "bots":
+                record["values"] = {
+                    key: val for key, val in value.items()
+                    if key in {*BOT_ACCESS_SETTINGS, *OPTIONAL_BOT_ACCESS_SETTINGS, "stale_zone_configuration"}
+                    or any(word in key for word in ("ai_", "crawler", "training", "agent", "search"))
+                }
+            else:
+                rules = []
+                for rule in (value or {}).get("rules", []):
+                    safe = {key: rule[key] for key in ("ref", "enabled", "action") if key in rule}
+                    expression = str(rule.get("expression") or "")
+                    safe["expressionSha256"] = hashlib.sha256(expression.encode()).hexdigest()
+                    if rule.get("ref") in (COMPRESSION_RULE_REF, REQUEST_INTEGRITY_RULE_REF, PUBLIC_BIC_SKIP_REF):
+                        safe["expression"] = expression
+                        safe["action_parameters"] = rule.get("action_parameters")
+                    rules.append(safe)
+                record["rules"] = rules
+        else:
+            record["errorCodes"] = [row.get("code") for row in payload.get("errors", [])]
+        observed[family] = record
+    return observed
+
+
+def delivery_action(snapshot_path: Path | None, *, strengthen: bool) -> dict[str, Any]:
+    values = {name: os.environ.get(name, "").strip() for name in (
+        "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "ZONE_NAME", "CANONICAL_HOST"
+    )}
+    if not all(values.values()):
+        raise CloudflareError("Delivery inspection requires the existing Cloudflare environment")
+    account, host, zone_name = values["CLOUDFLARE_ACCOUNT_ID"], values["CANONICAL_HOST"], values["ZONE_NAME"]
+    if (account, host, zone_name) != (PLATFORM_CF["accountId"], PLATFORM_CONTRACT["canonicalHost"], PLATFORM_CONTRACT["zoneName"]):
+        raise CloudflareError("Delivery inspection must target the canonical account and zone")
+    parent = CloudflareApi(values["CLOUDFLARE_API_TOKEN"])
+    zone = zone_id(parent, account, zone_name)
+    api, revoke = issue_ephemeral_zone_api(
+        parent, account, zone, include_bot_access=True,
+        include_request_integrity=True, include_delivery_rules=strengthen,
+    )
+    result: dict[str, Any] = {"mode": "strengthen" if strengthen else "audit", "host": host, "observedAt": dt.datetime.now(dt.timezone.utc).isoformat()}
+    try:
+        result["before"] = delivery_control_readback(api, zone)
+        result["publicBefore"] = probe_public_delivery(host)
+        print("CLOUDFLARE_DELIVERY_BEFORE", json.dumps(result, sort_keys=True), flush=True)
+        if strengthen:
+            if snapshot_path is None:
+                raise CloudflareError("Delivery strengthening requires a compression rollback snapshot")
+            snapshot_path.parent.mkdir(parents=True, exist_ok=True)
+            result["compressionChange"] = reconcile_machine_compression(api, zone, host, snapshot_path)
+            # A skip applies only to BIC, on the existing exact public GET/HEAD
+            # registry. It does not skip WAF rules, rate limits or bot protections.
+            if any(row.get("browserSignatureBlock") for row in result["publicBefore"]):
+                desired = {
+                    "ref": PUBLIC_BIC_SKIP_REF,
+                    "expression": public_browser_integrity_rule(host)["expression"],
+                    "description": "Keep canonical public documents accessible to ordinary data clients",
+                    "action": "skip", "action_parameters": {"products": ["bic"]},
+                    "logging": {"enabled": True}, "enabled": True,
+                }
+                result["publicAccessChange"] = reconcile_phase_rule(
+                    api, zone, "http_request_firewall_custom", "Canonical public document access",
+                    "Narrow Browser Integrity exception for public data retrieval", desired,
+                )
+            result["after"] = delivery_control_readback(api, zone)
+            for attempt in range(4):
+                public = probe_public_delivery(host)
+                identity = {row["path"]: row for row in public if row["acceptEncoding"] == "identity"}
+                accessible = all(row.get("status") == 200 and row.get("direct") and not row.get("error") for row in public)
+                compressed = all(
+                    row.get("encoding") == "gzip" and row.get("sha256") == identity[row["path"]].get("sha256")
+                    for row in public if row["acceptEncoding"] == "gzip"
+                )
+                result["publicAfter"] = public
+                result["publicAccessExact"] = accessible
+                result["compressionBytesExact"] = compressed
+                if accessible and compressed:
+                    break
+                if attempt < 3:
+                    time.sleep(5)
+            result["integrity"] = "PASS" if result["publicAccessExact"] and result["compressionBytesExact"] else "FAIL"
+        else:
+            result["integrity"] = "OBSERVED"
+    finally:
+        revoke()
+    return result
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -2493,6 +2653,8 @@ def main() -> int:
     mode.add_argument("--plan-machine-compression", action="store_true")
     mode.add_argument("--apply-machine-compression", action="store_true")
     mode.add_argument("--rollback-machine-compression", action="store_true")
+    mode.add_argument("--audit-delivery", action="store_true")
+    mode.add_argument("--strengthen-delivery", action="store_true")
     parser.add_argument("--dist", default="dist")
     parser.add_argument("--outcome", default="edge-reconciliation.json")
     parser.add_argument("--rollback-snapshot")
@@ -2505,7 +2667,12 @@ def main() -> int:
         if args.plan_machine_compression:
             print(json.dumps(machine_compression_rule("www.ghezelbaash.ir"), indent=2))
             return 0
-        if args.apply_machine_compression or args.rollback_machine_compression:
+        if args.audit_delivery or args.strengthen_delivery:
+            outcome = delivery_action(
+                Path(args.rollback_snapshot).resolve() if args.rollback_snapshot else None,
+                strengthen=args.strengthen_delivery,
+            )
+        elif args.apply_machine_compression or args.rollback_machine_compression:
             if not args.rollback_snapshot:
                 raise CloudflareError("Machine compression actions require --rollback-snapshot")
             outcome = machine_compression_action(
@@ -2515,11 +2682,14 @@ def main() -> int:
         else:
             outcome = purge_cache_only() if args.purge_cache_only else apply(dist_dir)
         outcome_path = Path(args.outcome).resolve()
+        outcome_path.parent.mkdir(parents=True, exist_ok=True)
         outcome_path.write_text(
             json.dumps(outcome, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         print("EDGE_OUTCOME_WRITTEN", outcome_path)
+        if outcome.get("integrity") == "FAIL":
+            raise CloudflareError("Public delivery verification failed; inspect the saved outcome")
         return 0
     except (CloudflareError, OSError, ValueError, KeyError) as exc:
         print(f"CLOUDFLARE_EDGE_ERROR: {exc}", file=sys.stderr)
