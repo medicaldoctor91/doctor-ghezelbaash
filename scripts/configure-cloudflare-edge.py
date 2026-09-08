@@ -949,24 +949,38 @@ def diagnose_security_event(
     ) if field in event_fields]
     now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
     timestamp = lambda value: value.isoformat().replace("+00:00", "Z")
-    data, failure, http_status = query_safe({
-        "query": """
-            query SecurityEventForObservedRay(
-              $zoneTag: string, $filter: """ + filter_type_name + """
-            ) {
-              viewer { zones(filter: { zoneTag: $zoneTag }) {
-                firewallEventsAdaptive(filter: $filter, limit: 10, orderBy: [datetime_DESC]) {
-                  """ + " ".join(selected) + """
+    time_bounds = {
+        "datetime_geq": timestamp(now - dt.timedelta(minutes=15)),
+        "datetime_leq": timestamp(now),
+    }
+
+    def event_query(type_name, filters, limit):
+        return query_safe({
+            "query": """
+                query SecurityEventDiagnostic(
+                  $zoneTag: string, $filter: """ + type_name + """
+                ) {
+                  viewer { zones(filter: { zoneTag: $zoneTag }) {
+                    firewallEventsAdaptive(filter: $filter, limit: """ + str(limit) + """, orderBy: [datetime_DESC]) {
+                      """ + " ".join(selected) + """
+                    }
+                  } }
                 }
-              } }
-            }
-        """,
-        "variables": {"zoneTag": zone, "filter": {
-            "rayName": ray,
-            "datetime_geq": timestamp(now - dt.timedelta(minutes=15)),
-            "datetime_leq": timestamp(now),
-        }},
-    })
+            """,
+            "variables": {"zoneTag": zone, "filter": {**time_bounds, **filters}},
+        })
+
+    def safe_event(row):
+        safe = {}
+        for field in selected:
+            value = row.get(field)
+            if isinstance(value, str):
+                if field == "clientRequestPath":
+                    value = value.split("?", 1)[0].split("#", 1)[0]
+                safe[field] = value[:512]
+        return safe
+
+    data, failure, http_status = event_query(filter_type_name, {"rayName": ray}, 10)
     if failure:
         return report("unavailable", failure, httpStatus=http_status)
     viewer = data.get("viewer")
@@ -980,16 +994,55 @@ def diagnose_security_event(
     for row in rows[:10]:
         if not isinstance(row, dict) or str(row.get("rayName", "")).lower() != ray:
             return report("unavailable", "event_scope_mismatch")
-        safe = {}
-        for field in selected:
-            value = row.get(field)
-            if isinstance(value, str):
-                if field == "clientRequestPath":
-                    value = value.split("?", 1)[0].split("#", 1)[0]
-                safe[field] = value[:512]
-        events.append(safe)
+        events.append(safe_event(row))
     if not events:
-        return report("inconclusive", "no_event_in_sampled_window", sampled=True)
+        host, path = PLATFORM_CONTRACT["canonicalHost"], "/graph.jsonld"
+
+        def correlated(status, reason, rows=None, **details):
+            return report("inconclusive", "no_event_in_sampled_window", sampled=True, correlation={
+                "status": status, "reason": reason, "exactRayMatch": False,
+                "host": host, "path": path, "events": rows or [], **details,
+            })
+
+        scoped_fields = {"clientRequestHTTPHost", "clientRequestPath"}
+        correlated_type = next((
+            name for name, fields in filter_candidates
+            if (scoped_fields | set(time_bounds)).issubset(fields)
+        ), None)
+        if correlated_type is None or not scoped_fields.issubset(event_fields):
+            return correlated("unavailable", "host_path_filters_or_fields_unsupported")
+        # One bounded contextual query can reveal the responsible service even
+        # when sampling omitted this Ray. It cannot establish this Ray's cause.
+        nearby, failure, http_status = event_query(correlated_type, {
+            "clientRequestHTTPHost": host, "clientRequestPath": path,
+        }, 25)
+        if failure:
+            return correlated("unavailable", failure, httpStatus=http_status)
+        viewer = nearby.get("viewer")
+        zones = viewer.get("zones") if isinstance(viewer, dict) else None
+        if not isinstance(zones, list) or len(zones) != 1 or not isinstance(zones[0], dict):
+            return correlated("unavailable", "zone_dataset_unavailable")
+        rows = zones[0].get("firewallEventsAdaptive")
+        if not isinstance(rows, list):
+            return correlated("unavailable", "zone_dataset_unavailable")
+        nearby_events = []
+        for row in rows[:25]:
+            if (
+                not isinstance(row, dict)
+                or row.get("clientRequestHTTPHost") != host
+                or row.get("clientRequestPath") != path
+                or not re.fullmatch(r"[0-9a-fA-F]{16}", str(row.get("rayName", "")))
+            ):
+                return correlated("unavailable", "event_scope_mismatch")
+            nearby_events.append(safe_event(row))
+        # Ingestion can advance between queries. A now-visible matching Ray is
+        # exact evidence even though the second query used host/path filters.
+        exact_events = [row for row in nearby_events if row.get("rayName", "").lower() == ray]
+        if exact_events:
+            return report("events", "matching_sampled_events", exact_events, sampled=True)
+        if not nearby_events:
+            return correlated("inconclusive", "no_recent_host_path_events")
+        return correlated("correlated_events", "same_host_path_only", nearby_events)
     return report("events", "matching_sampled_events", events, sampled=True)
 
 

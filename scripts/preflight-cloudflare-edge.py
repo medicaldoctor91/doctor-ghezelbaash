@@ -9,7 +9,10 @@ import importlib.util
 import json
 import os
 import re
+import ssl
+import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -200,39 +203,103 @@ def ensure_public_browser_integrity(api, zone: str, host: str, overrides: dict) 
         edge.reconcile_public_browser_integrity(api, zone, host)
 
 
+def probe_public_machine_url(url: str) -> dict:
+    """Observe a public URL with the unmodified standard-library client."""
+    try:
+        with urllib.request.urlopen(url, timeout=30) as response:
+            status, headers, response_url, body = response.status, response.headers, response.geturl(), b""
+    except urllib.error.HTTPError as exc:
+        status, headers, response_url, body = exc.code, exc.headers, exc.geturl(), exc.read(512).strip()
+    target = urllib.parse.urlsplit(response_url)
+    return {
+        "httpStatus": status,
+        "cfRay": headers.get("CF-Ray"),
+        "cfErrorType": headers.get("CF-Error-Type"),
+        "cfErrorOrigin": headers.get("CF-Error-Origin"),
+        "cfCacheStatus": headers.get("CF-Cache-Status"),
+        "responseDate": headers.get("Date"),
+        "responseAge": headers.get("Age"),
+        "responseHost": target.hostname,
+        "responsePath": target.path,
+        "contentType": headers.get("Content-Type"),
+        "browserSignatureBlock": status == 403 and body == b"error code: 1010",
+    }
+
+
+def diagnose_available_python_patch(urls: list[str]) -> None:
+    """Compare an already installed newer patch; never install or change the gate runtime."""
+    cache = os.environ.get("RUNNER_TOOL_CACHE")
+    if not cache:
+        return
+    candidates = []
+    for directory in (Path(cache) / "Python").glob("*"):
+        if not re.fullmatch(r"\d+\.\d+\.\d+", directory.name):
+            continue
+        version = tuple(map(int, directory.name.split(".")))
+        executable = directory / "x64" / "bin" / "python"
+        if version[:2] == sys.version_info[:2] and version > sys.version_info[:3] and executable.is_file():
+            candidates.append((version, executable))
+    if not candidates:
+        print("CLOUDFLARE_INSTALLED_PATCH_COMPARISON_UNAVAILABLE no_newer_installed_patch")
+        return
+    version, executable = max(candidates)
+    prefix = executable.parent.parent
+    child_env = os.environ.copy()
+    child_env["LD_LIBRARY_PATH"] = str(prefix / "lib") + (
+        ":" + child_env["LD_LIBRARY_PATH"] if child_env.get("LD_LIBRARY_PATH") else ""
+    )
+    child_env["PYTHONHOME"] = str(prefix)
+    child_env.pop("PYTHONPATH", None)
+    program = (
+        "import json,runpy,ssl,sys; "
+        "ns=runpy.run_path(sys.argv[1]); "
+        "print(json.dumps({'python':sys.version.split()[0],'tlsLibrary':ssl.OPENSSL_VERSION,"
+        "'responses':[ns['probe_public_machine_url'](url) for url in sys.argv[2:]]},sort_keys=True))"
+    )
+    try:
+        result = subprocess.run(
+            [str(executable), "-c", program, str(Path(__file__).resolve()), *urls],
+            capture_output=True, text=True, timeout=75, check=True, env=child_env,
+        )
+        comparison = json.loads(result.stdout)
+        if comparison.get("python") != ".".join(map(str, version)):
+            raise ValueError("Installed patch runtime identity mismatch")
+        print("CLOUDFLARE_INSTALLED_PATCH_COMPARISON", json.dumps(comparison, sort_keys=True))
+    except (OSError, subprocess.SubprocessError, ValueError):
+        print("CLOUDFLARE_INSTALLED_PATCH_COMPARISON_UNAVAILABLE probe_failed")
+
+
 def diagnose_public_machine_response(parent_api, account: str, host: str, *, zone_api=None, zone=None) -> None:
     """Trace a real public denial without changing the mandatory publication gate."""
     try:
-        try:
-            with urllib.request.urlopen(f"https://{host}/graph.jsonld", timeout=30) as response:
-                status = response.status
-                headers = response.headers
-                response_url = response.geturl()
-                body = b""
-        except urllib.error.HTTPError as exc:
-            status, headers, body = exc.code, exc.headers, exc.read(512).strip()
-            response_url = exc.geturl()
-        target = urllib.parse.urlsplit(response_url)
+        url = f"https://{host}/graph.jsonld"
+        observed = probe_public_machine_url(url)
         print("CLOUDFLARE_PUBLIC_MACHINE_DIAGNOSTIC", json.dumps({
-            "httpStatus": status,
-            "cfRay": headers.get("CF-Ray"),
-            "cfErrorType": headers.get("CF-Error-Type"),
-            "cfErrorOrigin": headers.get("CF-Error-Origin"),
-            "cfCacheStatus": headers.get("CF-Cache-Status"),
-            "responseHost": target.hostname,
-            "responsePath": target.path,
-            "contentType": headers.get("Content-Type"),
-            "browserSignatureBlock": status == 403 and body == b"error code: 1010",
+            **observed, "python": sys.version.split()[0], "tlsLibrary": ssl.OPENSSL_VERSION,
         }, sort_keys=True))
-        if status == 403:
+        if observed["httpStatus"] == 403:
+            pages_url = f"https://{edge.PAGES_ORIGIN_HOST}/graph.jsonld"
+            try:
+                print("CLOUDFLARE_PAGES_ORIGIN_DIAGNOSTIC", json.dumps(probe_public_machine_url(pages_url), sort_keys=True))
+            except (OSError, ValueError) as exc:
+                print("CLOUDFLARE_PAGES_ORIGIN_DIAGNOSTIC_UNAVAILABLE", type(exc).__name__)
+            diagnose_available_python_patch([url, pages_url])
+            try:
+                edge.trace_public_machine_request(parent_api, account, host)
+            except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
+                print("CLOUDFLARE_PUBLIC_MACHINE_TRACE_UNAVAILABLE", json.dumps({
+                    "errorType": type(exc).__name__, "httpStatus": getattr(exc, "status", None)
+                }, sort_keys=True))
             if zone_api is not None and zone is not None:
                 try:
-                    edge.diagnose_security_event(zone_api, zone, headers.get("CF-Ray") or "")
+                    # Give the observed request some ingestion time. Sampled empty
+                    # results still remain inconclusive after this bounded delay.
+                    time.sleep(15)
+                    edge.diagnose_security_event(zone_api, zone, observed.get("cfRay") or "")
                 except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
                     print("CLOUDFLARE_SECURITY_EVENT_DIAGNOSTIC_UNAVAILABLE", json.dumps({
                         "errorType": type(exc).__name__, "httpStatus": getattr(exc, "status", None)
                     }, sort_keys=True))
-            edge.trace_public_machine_request(parent_api, account, host)
     except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
         print("CLOUDFLARE_PUBLIC_MACHINE_TRACE_UNAVAILABLE", json.dumps({
             "errorType": type(exc).__name__, "httpStatus": getattr(exc, "status", None)

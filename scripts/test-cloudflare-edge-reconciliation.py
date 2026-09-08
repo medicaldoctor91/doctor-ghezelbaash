@@ -737,6 +737,69 @@ def test_security_event_diagnostic() -> None:
         assert (result["status"], result["reason"]) == (status, reason)
         assert result["events"] == [] and secret not in stdout.getvalue()
         assert not fake.responses
+
+    correlation_schema = copy.deepcopy(schema)
+    correlation_schema["data"]["filterType"]["inputFields"] += [
+        {"name": "clientRequestHTTPHost"}, {"name": "clientRequestPath"},
+    ]
+    related = {**event, "rayName": "b37fac9bdd6ec071", "clientRequestPath": "/graph.jsonld"}
+    fake = Api([(200, correlation_schema), events_response([]), events_response([related])])
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        result = edge.diagnose_security_event(fake, zone, ray)
+    assert result["status"] == "inconclusive" and result["events"] == []
+    correlation = result["correlation"]
+    assert correlation["status"] == "correlated_events" and correlation["exactRayMatch"] is False
+    assert correlation["reason"] == "same_host_path_only"
+    assert correlation["events"] == [{**expected, "rayName": related["rayName"]}]
+    assert len(fake.calls) == 3 and not fake.responses
+    exact_query, related_query = fake.calls[1:]
+    assert related_query["variables"]["zoneTag"] == zone
+    assert related_query["variables"]["filter"] == {
+        "datetime_geq": exact_query["variables"]["filter"]["datetime_geq"],
+        "datetime_leq": exact_query["variables"]["filter"]["datetime_leq"],
+        "clientRequestHTTPHost": "www.ghezelbaash.ir", "clientRequestPath": "/graph.jsonld",
+    }
+    assert "limit: 25" in related_query["query"]
+    assert "zones(filter: { zoneTag: $zoneTag })" in related_query["query"]
+    assert all(field not in related_query["query"] for field in ("clientIP", "cookies", "headers", "clientRequestQuery"))
+    assert secret not in stdout.getvalue() and "192.0.2.1" not in stdout.getvalue()
+
+    # The captured Ray may appear after ingestion advances between queries.
+    newly_ingested = {**event, "rayName": ray.upper(), "clientRequestPath": "/graph.jsonld"}
+    fake = Api([(200, correlation_schema), events_response([]), events_response([related, newly_ingested])])
+    with contextlib.redirect_stdout(io.StringIO()) as stdout:
+        result = edge.diagnose_security_event(fake, zone, ray)
+    assert result["status"] == "events" and result["reason"] == "matching_sampled_events"
+    assert result["events"] == [{**expected, "rayName": ray.upper()}]
+    assert "correlation" not in result and len(fake.calls) == 3
+    assert secret not in stdout.getvalue() and "192.0.2.1" not in stdout.getvalue()
+
+    # Correlation is never a substitute for a successful exact-Ray lookup.
+    fake = Api([(200, correlation_schema), events_response([event])])
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = edge.diagnose_security_event(fake, zone, ray)
+    assert result["status"] == "events" and "correlation" not in result and len(fake.calls) == 2
+
+    for final_response, status, reason in (
+        (events_response([]), "inconclusive", "no_recent_host_path_events"),
+        ((403, {"errors": [{"message": secret}]}), "unavailable", "access_denied"),
+        (events_response([{**related, "clientRequestHTTPHost": "unrelated.example"}]), "unavailable", "event_scope_mismatch"),
+        (events_response([{**related, "clientRequestPath": "/private"}]), "unavailable", "event_scope_mismatch"),
+    ):
+        fake = Api([(200, correlation_schema), events_response([]), final_response])
+        with contextlib.redirect_stdout(io.StringIO()) as stdout:
+            result = edge.diagnose_security_event(fake, zone, ray)
+        assert result["status"] == "inconclusive" and result["events"] == []
+        assert (result["correlation"]["status"], result["correlation"]["reason"]) == (status, reason)
+        assert result["correlation"]["events"] == [] and result["correlation"]["exactRayMatch"] is False
+        assert len(fake.calls) == 3 and not fake.responses and secret not in stdout.getvalue()
+
+    fake = Api([(200, schema), events_response([])])
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = edge.diagnose_security_event(fake, zone, ray)
+    assert result["status"] == "inconclusive" and len(fake.calls) == 2
+    assert result["correlation"]["reason"] == "host_path_filters_or_fields_unsupported"
+
     fake = Api([])
     with contextlib.redirect_stdout(io.StringIO()) as stdout:
         result = edge.diagnose_security_event(fake, zone, "invalid-ray " + secret)

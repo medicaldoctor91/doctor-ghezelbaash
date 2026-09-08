@@ -13,7 +13,7 @@ import sys
 import unittest
 import urllib.error
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 
 PREFLIGHT_PATH = Path(__file__).resolve().with_name("preflight-cloudflare-edge.py")
@@ -296,7 +296,10 @@ class PublicMachineDiagnostics(unittest.TestCase):
              contextlib.redirect_stdout(io.StringIO()) as stdout, \
              contextlib.redirect_stderr(io.StringIO()) as stderr:
             preflight.diagnose_public_machine_response(self.api, self.account, self.host)
-        probe.assert_called_once_with(self.url, timeout=30)
+        self.assertEqual(probe.call_args_list, [
+            call(self.url, timeout=30),
+            call(f"https://{preflight.edge.PAGES_ORIGIN_HOST}/graph.jsonld", timeout=30),
+        ])
         trace.assert_called_once_with(self.api, self.account, self.host)
         self.assertNotIn(self.secret, stdout.getvalue() + stderr.getvalue())
 
