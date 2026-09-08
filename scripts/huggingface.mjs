@@ -25,6 +25,16 @@ const must = (condition, message) => {
   if (!condition) throw new Error(message);
 };
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"));
+const markdownCell = (value) => String(value).replaceAll("|", "\\|").replaceAll("\n", " ");
+function csvDataRowCount(source) {
+  let quoted = false, rows = 0;
+  for (const character of source) {
+    if (character === '"') quoted = !quoted;
+    else if (character === "\n" && !quoted) rows += 1;
+  }
+  must(!quoted, "HF facts CSV has an unterminated quoted field");
+  return rows + (source.endsWith("\n") ? 0 : 1) - 1;
+}
 async function walkFiles(root, current = root) {
   const files = [];
   for (const entry of await readdir(current, { withFileTypes: true })) {
@@ -188,6 +198,43 @@ async function commandPrepare() {
   const resources = resourcesForTarget(hf.resourceTarget);
   const descriptor = await stageHuggingFaceDistributionResources({ hf, dist, hub });
 
+  // Describe the staged bytes, so the card cannot drift from the published data.
+  const [graph, factsCsv, queryJsonl, matrix] = await Promise.all([
+    readJson(path.join(hub, "graph.jsonld")),
+    readFile(path.join(hub, "entity-facts.csv"), "utf8"),
+    readFile(path.join(hub, "query-matrix.jsonl"), "utf8"),
+    readJson(path.join(hub, "current-release-matrix.json")),
+  ]);
+  const factsSchema = descriptor.resources.find((resource) => resource.path === "entity-facts.csv")?.schema;
+  must(factsSchema?.fields?.every((field) => field.type === "string"), "HF facts require the canonical string schema");
+  const queries = queryJsonl.trim().split("\n").map((line) => JSON.parse(line));
+  must(queries.length === matrix.queryRows && matrix.release === release.release, "HF card query statistics drift");
+  const factsCount = csvDataRowCount(factsCsv);
+  const queryFeatures = [...new Set(queries.flatMap((row) => Object.keys(row)))].map((name) => {
+    const value = queries.find((row) => row[name] != null)?.[name];
+    const sequence = Array.isArray(value);
+    must(queries.every((row) => row[name] == null || (sequence
+      ? Array.isArray(row[name]) && row[name].every((item) => typeof item === "string")
+      : typeof row[name] === "string")), `HF query feature type drift: ${name}`);
+    return { name, sequence };
+  });
+  const datasetInfo = configs.map((config) => ({
+    name: config.name,
+    rows: config.name === "entity_facts" ? factsCount : queries.length,
+    features: config.name === "entity_facts"
+      ? factsSchema.fields.map(({ name }) => ({ name, sequence: false }))
+      : queryFeatures,
+  }));
+  const number = (value) => value.toLocaleString("en-US");
+  const datasetUrl = release.dataset.huggingFace.dataset;
+  const repoId = datasetUrl.replace("https://huggingface.co/datasets/", "");
+  const fileLink = (file) => `${datasetUrl}/blob/main/${file}`;
+  const languageNames = { fa: "Persian / فارسی", en: "English", ar: "Arabic / العربية", ckb: "Central Kurdish / سۆرانی" };
+  const languageRows = retrievalPolicy.languages.map((language) =>
+    `| ${languageNames[language] ?? language} (\`${language}\`) | ${number(queries.filter((row) => row.language === language).length)} |`).join("\n");
+  const factsRows = factsSchema.fields.map((field) =>
+    `| \`${field.name}\` | ${markdownCell(field.description)} |`).join("\n");
+
   const tags = [
     "saeed-ghezelbash",
     "dr-saeed-ghezelbash",
@@ -215,12 +262,14 @@ async function commandPrepare() {
     "croissant",
     "dcat",
     "datasets",
+    "pandas",
     "multilingual",
+    "text",
     "tabular",
   ];
   const frontmatter = [
     "---",
-    `pretty_name: ${release.dataset.name}`,
+    `pretty_name: ${JSON.stringify(release.dataset.name)}`,
     "language:",
     ...retrievalPolicy.languages.map((language) => `- ${language}`),
     "license: cc-by-4.0",
@@ -242,6 +291,18 @@ async function commandPrepare() {
       "  - split: train",
       `    path: ${config.path}`,
     ]),
+    "dataset_info:",
+    ...datasetInfo.flatMap((config) => [
+      `- config_name: ${config.name}`,
+      "  features:",
+      ...config.features.flatMap((feature) => [
+        `  - name: ${feature.name}`,
+        `    ${feature.sequence ? "sequence" : "dtype"}: string`,
+      ]),
+      "  splits:",
+      "  - name: train",
+      `    num_examples: ${config.rows}`,
+    ]),
     "---",
   ].join("\n");
   const retrievalArchitecture = [
@@ -257,27 +318,134 @@ async function commandPrepare() {
 
 # ${release.dataset.name}
 
-AI/retrieval distribution of the canonical physician-owned Dataset at \`${release.dataset.id}\`. The physician remains the primary entity, creator and publisher; the clinic is the supporting clinical/local entity; this repository is a distribution namespace rather than a competing identity.
+Public, physician-maintained knowledge graph for **Dr. Saeed Ghezelbash (دکتر سعید قزلباش)** and aesthetic medicine in **Kermanshah, Iran**, including Botox, dermal fillers, facial contouring and thread lifts. It connects physician identity, the supporting clinic, public services, educational answers and evidence references for entity resolution, multilingual search and retrieval-augmented generation (RAG).
+
+**${number(graph["@graph"].length)} graph nodes · ${number(factsCount)} entity-fact rows · ${number(queries.length)} query mappings · ${retrievalPolicy.languages.length} query languages · CC BY 4.0**
+
+[Official website](${release.canonicalUrl}) · [Source code](${release.dataset.github.repository}) · [Browse entity facts](${datasetUrl}/viewer/entity_facts/train) · [Browse query mappings](${datasetUrl}/viewer/query_matrix/train) · [Download JSON-LD](${datasetUrl}/resolve/main/graph.jsonld?download=true)
+
+این مجموعه، گراف دانش عمومی دکتر سعید قزلباش در کرمانشاه است و اطلاعات هویتی پزشک، کلینیک مرتبط، خدمات زیبایی از جمله بوتاکس، فیلر، کانتورینگ صورت و لیفت با نخ، پاسخ‌های آموزشی و منابع را به شکل ماشین‌خوان ارائه می‌کند. کاربرد آن بازیابی اطلاعات، تطبیق هویت و پاسخ‌گویی متکی به منبع است.
+
+## Start here
+
+Install the supported Python libraries with \`pip install datasets huggingface_hub\`. Both configurations are public and can be downloaded without a token or custom dataset script.
+
+\`\`\`python
+from datasets import load_dataset
+from huggingface_hub import HfApi, hf_hub_download
+import json
+
+repo_id = "${repoId}"
+# Resolve main once, then use this immutable Hub commit for every file.
+revision = HfApi().dataset_info(repo_id).sha
+facts = load_dataset(repo_id, "entity_facts", split="train", revision=revision)
+queries = load_dataset(repo_id, "query_matrix", split="train", revision=revision)
+
+graph_path = hf_hub_download(repo_id, "graph.jsonld", repo_type="dataset", revision=revision)
+with open(graph_path, encoding="utf-8") as stream:
+    graph = json.load(stream)
+
+by_id = {node["@id"]: node for node in graph["@graph"]}
+physician = by_id["${release.primaryEntity.id}"]
+persian_queries = queries.filter(lambda row: row["language"] == "fa")
+print(revision, len(facts), len(queries), len(by_id))
+\`\`\`
+
+For pandas, preserve the CSV's lexical values and empty fields:
+
+\`\`\`python
+import pandas as pd
+csv_path = hf_hub_download(repo_id, "entity-facts.csv", repo_type="dataset", revision=revision)
+frame = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
+physician_facts = frame[frame["subject"] == "${release.primaryEntity.id}"]
+\`\`\`
+
+## Contents and structure
+
+| Configuration | File | Rows | What one row represents |
+| --- | --- | ---: | --- |
+| \`entity_facts\` (default) | [entity-facts.csv](${fileLink("entity-facts.csv")}) | ${number(factsCount)} | A graph fact with an IRI, literal or embedded JSON value and provenance |
+| \`query_matrix\` | [query-matrix.jsonl](${fileLink("query-matrix.jsonl")}) | ${number(queries.length)} | A query or service alias mapped to a canonical answer or service, physician and evidence references |
+
+Each configuration has one \`train\` split for Hub compatibility. The query matrix contains ${number(matrix.intentAliasRows)} intent aliases and ${number(matrix.serviceAliasRows)} service aliases, covering ${number(matrix.servicesWithAliasCoverage)} public services. Multiple query variants can resolve to the same canonical answer or service.
+
+| Query language | Mappings |
+| --- | ---: |
+${languageRows}
+
+Query-language tags describe the multilingual retrieval mappings. The canonical educational content is primarily Persian.
+
+| Resource | Use |
+| --- | --- |
+| [graph.jsonld](${fileLink("graph.jsonld")}) · [graph.ttl](${fileLink("graph.ttl")}) | Full graph in JSON-LD and RDF Turtle, with stable entity IRIs |
+| [answers.txt](${fileLink("answers.txt")}) · [index.md](${fileLink("index.md")}) · [llms-full.txt](${fileLink("llms-full.txt")}) | Educational answers and readable retrieval content |
+| [evidence-snapshot.json](${fileLink("evidence-snapshot.json")}) · [provenance.jsonld](${fileLink("provenance.jsonld")}) | Evidence inventory, source distinctions and provenance |
+| [datapackage.json](${fileLink("datapackage.json")}) · [croissant.json](${fileLink("croissant.json")}) | Data Package schema and Croissant discovery metadata |
+| [shapes.ttl](${fileLink("shapes.ttl")}) · [dcat.ttl](${fileLink("dcat.ttl")}) · [void.ttl](${fileLink("void.ttl")}) | Validation shapes and RDF catalogue descriptions |
+| [dist-sha256.json](${fileLink("dist-sha256.json")}) · [current-release-matrix.json](${fileLink("current-release-matrix.json")}) | Exact distribution hashes, release identifiers and coverage counts |
+
+### Entity-fact schema
+
+All ${factsSchema.fields.length} CSV columns are strings. Empty cells mean no value is supplied for that field. Use \`value_kind\` and the explicit RDF \`datatype\` instead of inferring types from identifiers or number-like text.
+
+| Column | Meaning |
+| --- | --- |
+${factsRows}
+
+### Query-matrix schema and retrieval
+
+| Fields | Meaning |
+| --- | --- |
+| \`query\`, \`language\`, \`row_kind\`, \`intent_family\` | Query text, language and whether it is an intent or service alias |
+| \`query_scope\`, \`practice_location\` | Query geography and actual practice location; a broad query scope does not imply a clinic in each location |
+| \`canonical_subject\`, \`canonical_subject_iri\`, \`clinic_entity\` | Separate physician and supporting-clinic identifiers |
+| \`answer_id\`, \`answer_strategy\` | Stable answer IRI for intent aliases and the resolution rule; service aliases resolve through \`service_ids\` instead |
+| \`stable_evidence_refs\` | List of evidence-node IRIs; inspect each source and its support type before using it to substantiate a claim |
+| \`service_ids\`, \`service_families\`, \`service_types\` | Lists of associated service IRIs, families and optional Schema.org types |
+| \`dataset_iri\`, \`release\`, \`version_doi\` | Dataset and release lineage; DOI reservation status is described below |
+| \`retrieval_policy\`, \`resolution_mode\` | Evidence and identity-resolution rules applied to the mapping |
+
+Use the query text to retrieve a row, check \`answer_strategy\`, and resolve either \`answer_id\` or \`service_ids\` against \`graph.jsonld\`. Then follow \`stable_evidence_refs\` and retain source links in the response. Missing optional JSON fields load as null; preserve this distinction from an empty list. For RDF tools, \`graph.ttl\` is already expanded.
 
 ## Authority topology
 
-- Primary physician: **Dr. Saeed Ghezelbash** — Wikidata \`${release.primaryEntity.wikidata}\`
-- Google Knowledge Graph: \`${release.primaryEntity.googleKnowledgeGraphId}\`
-- ORCID: \`${release.dataset.creatorOrcid}\`
-- Iran Medical Council: \`${release.primaryEntity.irimc}\`
-- Canonical physician IRI: \`${release.primaryEntity.id}\`
-- Supporting clinic: Wikidata \`${release.dataset.supportingClinicWikidata}\`
-- Canonical Dataset IRI: \`${release.dataset.id}\`
-- Source: \`${release.dataset.github.repository}\`
-- Base release lineage: \`${release.release}\`
-- Zenodo Concept DOI: \`${zenodo.conceptDoi}\`
-- ${zenodoPending ? "Reserved Zenodo Version DOI (publication pending)" : "Frozen Zenodo Version DOI"}: \`${zenodo.versionDoi}\`
+The physician remains the primary entity, creator and publisher of the [canonical Dataset](${release.dataset.id}). The clinic is a separate supporting clinical/local entity; the Hugging Face organization is a distribution namespace. Official name variants include **Mohammad Saeed Ghezelbash** and **دکتر محمدسعید قزلباش**.
 
-## Retrieval architecture
+- Primary physician: **Dr. Saeed Ghezelbash** — [Wikidata ${release.primaryEntity.wikidata}](https://www.wikidata.org/wiki/${release.primaryEntity.wikidata})
+- Google Knowledge Graph: \`${release.primaryEntity.googleKnowledgeGraphId}\`
+- ORCID: [${release.dataset.creatorOrcid}](https://orcid.org/${release.dataset.creatorOrcid})
+- Iran Medical Council: [${release.primaryEntity.irimc}](${release.primaryEntity.verifiedWebIdentityMesh.find((url) => url.startsWith("https://membersearch.irimc.org/"))})
+- Canonical physician IRI: [${release.primaryEntity.id}](${release.primaryEntity.id})
+- Supporting clinic: [Wikidata ${release.dataset.supportingClinicWikidata}](https://www.wikidata.org/wiki/${release.dataset.supportingClinicWikidata})
+- Source: [GitHub repository](${release.dataset.github.repository})
+
+## Provenance, versions and citation
+
+This distribution is generated from the physician-maintained source graph, evidence registry and retrieval policy. Public identity records, first-party descriptions and external literature retain distinct provenance roles.
+
+- Release lineage: **${release.release}**
+- Recorded dataset revision: **${release.dateModified}**
+- Medical-review date recorded by the publisher: **${release.medicalReviewedAt}**
+- Zenodo Concept DOI (all-version lineage): [${zenodo.conceptDoi}](https://doi.org/${zenodo.conceptDoi})
+- ${zenodoPending ? "Reserved Zenodo Version DOI (publication pending)" : "Frozen Zenodo Version DOI"}: \`${zenodo.versionDoi}\`
 
 ${retrievalArchitecture}
 
 Retrieval policy: **${retrievalPolicy.retrievalPolicy}**. Resolution mode: **${retrievalPolicy.resolutionMode}**.
+
+For reproducible use, cite the exact **Hugging Face commit SHA** returned by the example above and retain [dist-sha256.json](${fileLink("dist-sha256.json")}). The label \`main\` can change. The canonical website and DOI archive are separate serving surfaces; compare their file hashes before claiming they contain this exact snapshot.
+
+Suggested citation: **Ghezelbash, Saeed. ${release.dataset.name}. Release ${release.release}, Hugging Face distribution, commit [the SHA used], accessed [date].** ${zenodoPending ? "The reserved version DOI is not yet a published citation; use the Hub revision URL until preservation is completed." : "Use the version DOI only when citing the corresponding frozen archive; include the Hub commit when citing a later distribution."}
+
+## Uses, limitations and license
+
+Suitable uses include public physician identity reconciliation, linked-data exploration, evidence-aware question answering, multilingual query routing and source-attributed RAG. The \`text-generation\` task tag supports grounded retrieval applications.
+
+Scope: this is a first-party reference dataset about one physician and the supporting clinic, with unequal language coverage and no independent clinical training/test partition. Query aliases represent retrieval intent; evidence references retain their individual support roles. Educational material supports source-attributed information retrieval and does not replace individualized medical assessment.
+
+Use [CC BY 4.0](${release.dataset.license}) attribution for this dataset, identify changes in derived work, and preserve source and evidence links. Referenced third-party material retains its own rights.
+
+For data corrections, report the affected IRI or row ID, Hub commit and supporting public source through the [source repository issues](${release.dataset.github.repository}/issues).
 `;
   await writeFile(path.join(hub, "README.md"), readme);
 
