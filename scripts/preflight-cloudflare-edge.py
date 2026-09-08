@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Fail closed unless the required Cloudflare Zone Settings contract is exact."""
+"""Reconcile required Cloudflare settings and bot access before publication."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -88,6 +90,78 @@ def check_live_apex_hsts(zone_name: str) -> None:
     print("APEX_HSTS_EXACT", status, hsts)
 
 
+def diagnose_request_overrides(api, zone: str) -> None:
+    """Read per-request overrides without modifying rules or logging request secrets.
+
+    A zone-level browser_check=off does not prove that a Configuration Rule or
+    Page Rule cannot enable BIC again. These optional diagnostics do not replace
+    the required settings read-back or the workflow's ordinary machine probe.
+    """
+    endpoints = {
+        "configuration_rules": f"/zones/{zone}/rulesets/phases/http_config_settings/entrypoint",
+        "page_rules": f"/zones/{zone}/pagerules?status=active&order=priority&direction=desc",
+        "user_agent_rules": f"/zones/{zone}/firewall/ua_rules?paused=false&per_page=1000&page=1",
+    }
+    for kind, path in endpoints.items():
+        try:
+            status, payload = api.raw("GET", path)
+            summary = {"kind": kind, "httpStatus": status}
+            if status != 200 or payload.get("success") is not True:
+                summary["errorCodes"] = [
+                    row.get("code") for row in payload.get("errors", [])
+                ]
+            else:
+                result = payload.get("result") or []
+                rows = result.get("rules", []) if isinstance(result, dict) else result
+                safe_rows = []
+                for position, row in enumerate(rows):
+                    safe = {
+                        key: row[key] for key in
+                        ("id", "ref", "enabled", "status", "action", "mode", "priority", "paused")
+                        if key in row
+                    }
+                    safe["position"] = position
+                    expression = str(row.get("expression") or "")
+                    if expression:
+                        safe["expressionSha256"] = hashlib.sha256(expression.encode()).hexdigest()
+                        # Host/path expressions are useful diagnostic context; redact
+                        # anything inspecting headers, cookies, query strings or bodies.
+                        fields = set(re.findall(r"\b(?:http|cf|ip)\.[A-Za-z0-9_.]+", expression))
+                        if fields <= {"http.host", "http.request.uri.path", "http.request.method", "cf.client.bot", "ip.src"}:
+                            safe["expression"] = expression
+                    parameters = row.get("action_parameters") or {}
+                    safe["settings"] = {
+                        key: parameters[key] for key in ("bic", "security_level")
+                        if key in parameters
+                    }
+                    safe["pageSettings"] = [
+                        {"id": action["id"], "value": action.get("value")}
+                        for action in row.get("actions", [])
+                        if action.get("id") in ("browser_check", "security_level", "disable_security")
+                    ]
+                    safe["targets"] = []
+                    for target in row.get("targets", []):
+                        constraint = target.get("constraint") or {}
+                        value = str(constraint.get("value") or "")
+                        safe["targets"].append({
+                            "target": target.get("target"),
+                            "operator": constraint.get("operator"),
+                            "value": value if "?" not in value else "[query redacted]",
+                            "valueSha256": hashlib.sha256(value.encode()).hexdigest(),
+                        })
+                    configuration = row.get("configuration") or {}
+                    if configuration.get("target") == "ua":
+                        safe["userAgent"] = configuration.get("value")
+                    safe_rows.append(safe)
+                summary["rules"] = safe_rows
+                summary["resultInfo"] = payload.get("result_info") or {}
+            print("CLOUDFLARE_REQUEST_OVERRIDE_DIAGNOSTIC", json.dumps(summary, sort_keys=True))
+        except (edge.CloudflareError, OSError, ValueError, KeyError, TypeError) as exc:
+            # Diagnostic access may be narrower than settings access. Do not expose
+            # raw API payloads or change the mandatory publication gates.
+            print("CLOUDFLARE_REQUEST_OVERRIDE_DIAGNOSTIC_UNAVAILABLE", kind, type(exc).__name__)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--if-configured", action="store_true")
@@ -128,13 +202,20 @@ def main() -> int:
         validate_static_contract()
         parent_api = edge.CloudflareApi(token)
         zone = edge.zone_id(parent_api, account, zone_name)
-        zone_api, revoke = edge.issue_ephemeral_zone_api(parent_api, account, zone)
+        diagnose_request_overrides(parent_api, zone)
+        zone_api, revoke = edge.issue_ephemeral_zone_api(
+            parent_api, account, zone, include_bot_access=True
+        )
         readback: dict[str, object] = {}
         try:
             for setting_id, desired in edge.ZONE_SETTINGS.items():
                 readback[setting_id] = edge.reconcile_zone_setting(
                     zone_api, zone, setting_id, desired
                 )
+            bot_readback = edge.reconcile_bot_access(zone_api, zone)
+            print("CLOUDFLARE_BOT_STALE_CONFIGURATION", json.dumps(
+                bot_readback.get("stale_zone_configuration"), sort_keys=True
+            ))
         finally:
             revoke()
 

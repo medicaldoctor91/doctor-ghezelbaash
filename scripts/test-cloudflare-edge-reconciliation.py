@@ -250,8 +250,22 @@ class FakeTokenAuthority:
 
 
 class FakeZoneTokenAuthority:
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        expected_permissions: set[str] | None = None,
+        *,
+        bot_write_name: str = "Bot Management Write",
+        include_bot_read: bool = True,
+    ) -> None:
         self.revoked = False
+        self.revocations = 0
+        self.expected_permissions = expected_permissions if expected_permissions is not None else {
+            *edge.ZONE_SETTINGS_PERMISSION_IDS,
+            "zone-read", "cache-purge", "dns-read", "dns-write",
+            "cache-write", "cache-read", "bot-write", "bot-read",
+        }
+        self.bot_write_name = bot_write_name
+        self.include_bot_read = include_bot_read
 
     def expect(
         self,
@@ -283,9 +297,11 @@ class FakeZoneTokenAuthority:
                 ("dns-write", "DNS Write"),
                 ("cache-write", "Cache Settings Write"),
                 ("cache-read", "Cache Settings Read"),
-                ("bot-write", "Bot Management Write"),
+                ("bot-write", self.bot_write_name),
                 ("bot-read", "Bot Management Read"),
             ]:
+                if permission_id == "bot-read" and not self.include_bot_read:
+                    continue
                 rows.append(
                     {
                         "id": permission_id,
@@ -297,21 +313,10 @@ class FakeZoneTokenAuthority:
         if method == "POST" and path == "/accounts/test-account/tokens":
             assert isinstance(body, dict)
             if len(body["policies"]) != 1:
-                raise AssertionError("Control-plane token must be zone-scoped")
+                raise AssertionError("Ephemeral token must be zone-scoped")
             zone_policy = body["policies"][0]
             zone_ids = {row["id"] for row in zone_policy["permission_groups"]}
-            required_zone = {
-                *edge.ZONE_SETTINGS_PERMISSION_IDS,
-                "zone-read",
-                "cache-purge",
-                "dns-read",
-                "dns-write",
-                "cache-write",
-                "cache-read",
-                "bot-write",
-                "bot-read",
-            }
-            if zone_ids != required_zone:
+            if zone_ids != self.expected_permissions:
                 raise AssertionError(zone_ids)
             if zone_policy["resources"] != {
                 "com.cloudflare.api.account.zone.test-zone": "*"
@@ -333,6 +338,7 @@ class FakeZoneTokenAuthority:
         ):
             raise AssertionError((method, path))
         self.revoked = True
+        self.revocations += 1
         return 200, {"success": True}
 
 
@@ -608,6 +614,29 @@ revoke_zone_child_api()
 if not zone_token_authority.revoked:
     raise AssertionError("Ephemeral control-plane child token was not revoked")
 
+bot_permissions = {
+    *edge.ZONE_SETTINGS_PERMISSION_IDS,
+    "zone-read", "cache-purge", "bot-write",
+}
+for bot_write_name, include_bot_read in (
+    ("Bot Management Write", True),
+    ("Bot Management Edit", False),
+):
+    bot_token_authority = FakeZoneTokenAuthority(
+        bot_permissions | ({"bot-read"} if include_bot_read else set()),
+        bot_write_name=bot_write_name,
+        include_bot_read=include_bot_read,
+    )
+    bot_child_api, revoke_bot_child_api = edge.issue_ephemeral_zone_api(
+        bot_token_authority, "test-account", "test-zone", include_bot_access=True,
+    )
+    if bot_child_api.token != "zone-child-secret":
+        raise AssertionError("Ephemeral bot-access child token was not returned")
+    revoke_bot_child_api()
+    revoke_bot_child_api()
+    if not bot_token_authority.revoked or bot_token_authority.revocations != 1:
+        raise AssertionError("Ephemeral bot-access child token revocation must be idempotent")
+
 blog_host = contract["bulkRedirects"]["host"]
 inventory_api = FakeInventoryApi(blog_host)
 edge.ensure_pages_custom_domains(inventory_api, "test-account")
@@ -685,6 +714,7 @@ print(
             "bulkBeforeSingleRemoval": True,
             "ephemeralSingleRedirectToken": True,
             "ephemeralControlPlaneToken": True,
+            "ephemeralBotAccessToken": True,
             "pagesAndDnsInventory": True,
             "blogPagesFallbackBinding": True,
             "idempotent": True,

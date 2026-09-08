@@ -55,15 +55,21 @@ SINGLE_REDIRECT_PERMISSION_ALIASES = (
         "Single Redirect Write",
     ),
 )
+BOT_ACCESS_REQUIRED_PERMISSION_ALIASES = (
+    ("Bot Management Edit", "Bot Management Write"),
+)
+BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES = (
+    ("Bot Management Read",),
+)
 ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES = (
     ("DNS Read",),
     ("DNS Write", "DNS Edit"),
     ("Cache Rules Edit", "Cache Rules Write", "Cache Settings Write"),
-    ("Bot Management Edit", "Bot Management Write"),
+    *BOT_ACCESS_REQUIRED_PERMISSION_ALIASES,
 )
 ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES = (
     ("Cache Rules Read", "Cache Settings Read"),
-    ("Bot Management Read",),
+    *BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES,
 )
 class CloudflareError(RuntimeError):
     def __init__(
@@ -627,6 +633,7 @@ def issue_ephemeral_zone_api(
     zone: str,
     *,
     include_control_plane: bool = False,
+    include_bot_access: bool = False,
 ) -> tuple[CloudflareApi, Any]:
     permissions = parent_api.expect(
         "GET",
@@ -669,9 +676,18 @@ def issue_ephemeral_zone_api(
         if permission_id not in {str(row["id"]) for row in groups}:
             groups.append({"id": permission_id})
 
-    resolved_permissions: list[str] = []
+    required_aliases = ()
+    optional_aliases = ()
     if include_control_plane:
-        for aliases in ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES:
+        required_aliases = ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES
+        optional_aliases = ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES
+    elif include_bot_access:
+        required_aliases = BOT_ACCESS_REQUIRED_PERMISSION_ALIASES
+        optional_aliases = BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES
+
+    resolved_permissions: list[str] = []
+    if required_aliases:
+        for aliases in required_aliases:
             match = next(
                 (
                     row
@@ -702,7 +718,7 @@ def issue_ephemeral_zone_api(
                 groups.append({"id": permission_id})
             resolved_permissions.append(str(match["name"]))
 
-        for aliases in ZONE_RECONCILER_OPTIONAL_PERMISSION_ALIASES:
+        for aliases in optional_aliases:
             match = next(
                 (
                     row

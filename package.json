@@ -21,7 +21,7 @@
     "materialize:static": "node scripts/materialize-static-artifacts.mjs",
     "rdf:generate": "node scripts/generate-rdf.mjs",
     "indexnow:prepare": "node scripts/indexnow.mjs prepare",
-    "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test && python scripts/test-cloudflare-edge-reconciliation.py",
+    "validate:cloudflare": "python scripts/configure-cloudflare-edge.py --self-test && python scripts/test-cloudflare-edge-reconciliation.py && python scripts/test-cloudflare-preflight.py",
     "preflight:cloudflare": "python scripts/preflight-cloudflare-edge.py --if-configured",
     "validate:hygiene": "node scripts/validate-repository-hygiene.mjs",
     "validate:architecture": "node scripts/validate-architecture.mjs",
