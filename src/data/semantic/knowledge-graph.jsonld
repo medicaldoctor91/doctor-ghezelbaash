@@ -1892,7 +1892,7 @@
         }
       ],
       "schemaVersion": "https://schema.org/version/30.0/",
-      "lastReviewed": "2026-08-13",
+      "lastReviewed": "2026-09-08",
       "potentialAction": [
         {
           "@id": "https://www.ghezelbaash.ir/#action-contact-clinic"
@@ -8560,6 +8560,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/graph.jsonld#release-1-2-5"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/graph.jsonld#release-1-2-6"
         }
       ]
     },
@@ -22146,6 +22149,30 @@
         "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
       },
       "url": "https://doi.org/10.5281/zenodo.22216583"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/graph.jsonld#release-1-2-6",
+      "@type": "Dataset",
+      "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Version 1.2.6",
+      "version": "1.2.6",
+      "datePublished": "2026-09-08",
+      "identifier": [
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Zenodo Version DOI",
+          "value": "10.5281/zenodo.22651268",
+          "url": "https://doi.org/10.5281/zenodo.22651268"
+        },
+        {
+          "@type": "PropertyValue",
+          "propertyID": "Zenodo Record ID",
+          "value": "22651268"
+        }
+      ],
+      "isPartOf": {
+        "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
+      },
+      "url": "https://doi.org/10.5281/zenodo.22651268"
     }
   ]
 }

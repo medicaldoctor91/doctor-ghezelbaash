@@ -27,7 +27,6 @@
   --accent: #0a6b58;
   --accent-strong: #075244;
   --accent-soft: #e8f4f0;
-  --shadow: 0 20px 60px rgb(17 39 31 / 0.08);
   --radius: 1rem;
   --reading-measure: 76ch;
   --glass-line: rgb(255 255 255 / 0.78);
@@ -642,9 +641,6 @@ blockquote {
   font-weight: 400;
   letter-spacing: normal;
   white-space: nowrap;
-}
-.google-maps-provider-attributions {
-  margin-inline-start: 0.15rem;
 }
 @media (max-width: 720px) {
   .entity-hero .hero-action.hero-search-launch {

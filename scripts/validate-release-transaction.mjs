@@ -6,6 +6,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 
 const run = (cwd, args) =>
   execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
+execFileSync("python", ["scripts/test-zenodo-release.py"], { stdio: "inherit" });
 const workflow = await readFile(
   ".github/workflows/hugging-face-authority.yml",
   "utf8",
@@ -44,6 +45,13 @@ const candidateMutation = workflow.indexOf(
   "Create or resume release candidate source",
 );
 const zenodoPublish = workflow.indexOf("Publish immutable Zenodo release");
+const gitIdentity = workflow.indexOf("Establish release Git identity");
+assert.ok(gitIdentity >= 0 && gitIdentity < candidateMutation);
+assert.match(workflow, /Final pre-publication transaction gate[\s\S]*?git var GIT_COMMITTER_IDENT/);
+assert.match(workflow, /git merge-base --is-ancestor "\$SOURCE_SHA" "refs\/remotes\/origin\/\$BRANCH"/);
+assert.match(workflow, /git merge-base --is-ancestor "\$SOURCE_SHA" "\$CANDIDATE_SHA"/);
+assert.match(workflow, /promote-release\.mjs[\s\S]*?npm run render:calibration:update[\s\S]*?src\/data\/render-calibration\.json/);
+
 assert.ok(
   immutableCapabilityGate >= 0 &&
     candidateMutation >= 0 &&
