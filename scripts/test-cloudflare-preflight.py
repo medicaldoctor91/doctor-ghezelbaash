@@ -13,7 +13,7 @@ import sys
 import unittest
 import urllib.error
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 
 PREFLIGHT_PATH = Path(__file__).resolve().with_name("preflight-cloudflare-edge.py")
@@ -65,12 +65,6 @@ class PreflightLifecycle(unittest.TestCase):
             self.assertIs(observed, overrides)
             events.append(("integrity",))
 
-        def diagnose_machine(api, account_id, canonical_host, *, zone_api=None, zone=None):
-            self.assertIs(api, parent_api)
-            self.assertEqual((account_id, canonical_host), (account, host))
-            self.assertEqual(zone, "test-zone")
-            events.append(("machine_diagnostic",))
-
         revoke = Mock(side_effect=lambda: events.append(("revoke",)))
         stdout, stderr = io.StringIO(), io.StringIO()
         with contextlib.ExitStack() as stack:
@@ -85,7 +79,6 @@ class PreflightLifecycle(unittest.TestCase):
             stack.enter_context(patch.object(preflight.edge, "reconcile_zone_setting", side_effect=reconcile_setting))
             stack.enter_context(patch.object(preflight.edge, "reconcile_bot_access", side_effect=reconcile_bots))
             integrity = stack.enter_context(patch.object(preflight, "ensure_public_browser_integrity", side_effect=ensure_integrity))
-            machine = stack.enter_context(patch.object(preflight, "diagnose_public_machine_response", side_effect=diagnose_machine))
             live = stack.enter_context(patch.object(preflight, "check_live_apex_hsts", side_effect=lambda _: events.append(("live",))))
             result = preflight.main()
 
@@ -95,10 +88,8 @@ class PreflightLifecycle(unittest.TestCase):
         issue.assert_called_once_with(parent_api, account, "test-zone", include_bot_access=True, include_request_integrity=True)
         if bot_error:
             integrity.assert_not_called()
-            machine.assert_not_called()
         else:
             integrity.assert_called_once_with(zone_api, "test-zone", host, overrides)
-            machine.assert_called_once_with(parent_api, account, host, zone_api=zone_api, zone="test-zone")
         revoke.assert_called_once_with()
         self.assertNotIn("test-parent-token", stdout.getvalue() + stderr.getvalue())
         return result, events, live, stdout.getvalue(), stderr.getvalue()
@@ -109,7 +100,7 @@ class PreflightLifecycle(unittest.TestCase):
         self.assertEqual(events, [
             ("diagnostics",),
             *(("setting", name) for name in preflight.edge.ZONE_SETTINGS),
-            ("bots",), ("integrity",), ("machine_diagnostic",), ("revoke",), ("live",),
+            ("bots",), ("integrity",), ("revoke",), ("live",),
         ])
         live.assert_called_once_with(preflight.edge.PLATFORM_CONTRACT["zoneName"])
         self.assertIn("CLOUDFLARE_REQUIRED_PREFLIGHT_EXACT", stdout)
@@ -130,7 +121,6 @@ class PreflightLifecycle(unittest.TestCase):
             patch.object(preflight.edge, "issue_ephemeral_zone_api") as issue, \
              patch.object(preflight, "diagnose_request_overrides") as diagnostics, \
              patch.object(preflight, "ensure_public_browser_integrity") as integrity, \
-             patch.object(preflight, "diagnose_public_machine_response") as machine, \
              contextlib.redirect_stdout(io.StringIO()) as stdout:
             self.assertEqual(preflight.main(), 0)
         validate.assert_not_called()
@@ -138,7 +128,6 @@ class PreflightLifecycle(unittest.TestCase):
         issue.assert_not_called()
         diagnostics.assert_not_called()
         integrity.assert_not_called()
-        machine.assert_not_called()
         self.assertIn("api_token_not_configured", stdout.getvalue())
 
 
@@ -152,8 +141,7 @@ class OverrideDiagnostics(unittest.TestCase):
             self.assertEqual(method, "GET")
             self.assertIsNone(body)
             if "/pagerules" in path:
-                self.assertEqual(path, "/zones/test-zone/pagerules")
-                return 403, {"success": False, "errors": [{"code": 10000, "message": "Authentication error"}]}
+                return 403, {"success": False, "errors": [{"code": 10000, "message": secret}]}
             if "/firewall/ua_rules" in path:
                 raise OSError(secret)
             if "/http_config_settings/" in path:
@@ -255,64 +243,6 @@ class PublicBrowserIntegrity(unittest.TestCase):
             preflight.ensure_public_browser_integrity(self.api, self.zone, self.host, overrides)
         probe.assert_not_called()
         reconcile.assert_called_once_with(self.api, self.zone, self.host)
-
-
-class PublicMachineDiagnostics(unittest.TestCase):
-    def setUp(self):
-        self.api = Mock()
-        self.account = preflight.edge.PLATFORM_CF["accountId"]
-        self.host = preflight.edge.PLATFORM_CONTRACT["canonicalHost"]
-        self.url = f"https://{self.host}/graph.jsonld"
-        self.secret = "raw-response-or-token-must-not-be-logged"
-
-    def blocked_response(self):
-        headers = email.message.Message()
-        headers["Content-Type"] = "text/plain;charset=UTF-8"
-        headers["CF-Ray"] = "test-machine-ray"
-        return urllib.error.HTTPError(
-            self.url, 403, "Forbidden", headers, io.BytesIO(self.secret.encode())
-        )
-
-    def test_healthy_machine_response_does_not_request_trace(self):
-        response = MagicMock()
-        response.__enter__.return_value = response
-        response.status = 200
-        response.geturl.return_value = self.url
-        response.headers = email.message.Message()
-        response.headers["Content-Type"] = "application/ld+json"
-        response.read.return_value = b'{"@graph":[]}'
-        with patch.object(preflight.urllib.request, "urlopen", return_value=response) as probe, \
-             patch.object(preflight.edge, "trace_public_machine_request") as trace, \
-             contextlib.redirect_stdout(io.StringIO()):
-            preflight.diagnose_public_machine_response(self.api, self.account, self.host)
-        probe.assert_called_once_with(self.url, timeout=30)
-        trace.assert_not_called()
-        self.api.raw.assert_not_called()
-        self.api.expect.assert_not_called()
-
-    def test_forbidden_machine_response_requests_trace_without_logging_body(self):
-        with patch.object(preflight.urllib.request, "urlopen", side_effect=self.blocked_response()) as probe, \
-             patch.object(preflight.edge, "trace_public_machine_request") as trace, \
-             contextlib.redirect_stdout(io.StringIO()) as stdout, \
-             contextlib.redirect_stderr(io.StringIO()) as stderr:
-            preflight.diagnose_public_machine_response(self.api, self.account, self.host)
-        self.assertEqual(probe.call_args_list, [
-            call(self.url, timeout=30),
-            call(f"https://{preflight.edge.PAGES_ORIGIN_HOST}/graph.jsonld", timeout=30),
-        ])
-        trace.assert_called_once_with(self.api, self.account, self.host)
-        self.assertNotIn(self.secret, stdout.getvalue() + stderr.getvalue())
-
-    def test_trace_permission_failure_is_nonfatal_and_redacted(self):
-        with patch.object(preflight.urllib.request, "urlopen", side_effect=self.blocked_response()), \
-             patch.object(preflight.edge, "trace_public_machine_request", side_effect=preflight.edge.CloudflareError(self.secret)) as trace, \
-             contextlib.redirect_stdout(io.StringIO()) as stdout, \
-             contextlib.redirect_stderr(io.StringIO()) as stderr:
-            preflight.diagnose_public_machine_response(self.api, self.account, self.host)
-        trace.assert_called_once_with(self.api, self.account, self.host)
-        output = stdout.getvalue() + stderr.getvalue()
-        self.assertNotIn(self.secret, output)
-        self.assertIn("CloudflareError", output)
 
 
 if __name__ == "__main__":

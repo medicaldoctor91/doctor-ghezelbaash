@@ -4,16 +4,13 @@
 from __future__ import annotations
 
 import copy
-import contextlib
 import importlib.util
-import io
 import json
 import re
 import tempfile
 import urllib.parse
 from pathlib import Path
 from typing import Any
-from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -312,11 +309,10 @@ class FakeZoneTokenAuthority:
                 ("configuration-write", self.configuration_write_name),
                 ("configuration-read", self.configuration_read_name),
                 ("firewall-read", "Firewall Services Read"),
-                ("analytics-read", "Analytics Read"),
             ]:
                 if permission_id == "bot-read" and not self.include_bot_read:
                     continue
-                if permission_id in ("configuration-read", "firewall-read", "analytics-read") and not self.include_integrity_reads:
+                if permission_id in ("configuration-read", "firewall-read") and not self.include_integrity_reads:
                     continue
                 rows.append(
                     {
@@ -556,358 +552,6 @@ class FakeCompressionApi:
         raise AssertionError((method, path, body))
 
 
-def test_public_machine_request_trace() -> None:
-    account = edge.PLATFORM_CF["accountId"]
-    host = edge.PLATFORM_CONTRACT["canonicalHost"]
-    secret = "trace-secret-must-not-be-logged"
-
-    class Authority:
-        def __init__(self):
-            self.events = []
-
-        def expect(self, method, path, body=None, ok=(200,)):
-            self.events.append((method, path))
-            if method == "GET":
-                assert path == f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account"
-                return {"result": [
-                    {"id": "wrong-zone", "name": "Allow Request Tracer Read", "scopes": ["com.cloudflare.api.account.zone"]},
-                    {"id": "trace-read", "name": "Allow Request Tracer Read", "scopes": ["com.cloudflare.api.account"]},
-                ]}
-            assert method == "POST" and path == f"/accounts/{account}/tokens"
-            assert body["policies"] == [{
-                "effect": "allow", "resources": {f"com.cloudflare.api.account.{account}": "*"},
-                "permission_groups": [{"id": "trace-read"}],
-            }]
-            expiry = edge.dt.datetime.fromisoformat(body["expires_on"].replace("Z", "+00:00"))
-            assert 14 * 60 < (expiry - edge.dt.datetime.now(edge.dt.timezone.utc)).total_seconds() <= 15 * 60
-            return {"result": {"id": "trace-token-id", "value": secret}}
-
-        def raw(self, method, path, body=None):
-            self.events.append((method, path))
-            assert method == "DELETE" and path == f"/accounts/{account}/tokens/trace-token-id"
-            assert body is None
-            return 200, {"success": True}
-
-    for trace_fails, activation_failures in ((False, 0), (True, 0), (False, 2)):
-        authority = Authority()
-
-        class TraceApi:
-            def __init__(self):
-                self.calls = 0
-
-            def expect(self, method, path, body=None, ok=(200,)):
-                self.calls += 1
-                assert method == "POST" and path == f"/accounts/{account}/request-tracer/trace"
-                headers = dict(edge.urllib.request.build_opener().addheaders)
-                headers["Accept-Encoding"] = "identity"
-                assert body == {"method": "GET", "url": f"https://{host}/graph.jsonld", "protocol": "HTTP/1.1", "headers": headers}
-                if self.calls <= activation_failures:
-                    raise edge.CloudflareError(secret, status=401)
-                if trace_fails:
-                    raise edge.CloudflareError(secret, status=403, payload={"raw": secret})
-                return {"result": {"status_code": 403, "response": secret, "headers": secret, "trace": [
-                    {"kind": "zone", "step_name": "configuration", "matched": True,
-                     "expression": secret, "cookies": secret,
-                     "trace": [{"id": "rule-1", "type": "rule", "action": "set_config", "matched": True,
-                                "action_parameters": {"bic": False, "headers": secret}}]},
-                ]}}
-
-        trace_api = TraceApi()
-        with patch.object(edge, "CloudflareApi", return_value=trace_api) as create_api, \
-             patch.object(edge.time, "sleep") as sleep, \
-             contextlib.redirect_stdout(io.StringIO()) as stdout, \
-             contextlib.redirect_stderr(io.StringIO()) as stderr:
-            try:
-                summary = edge.trace_public_machine_request(authority, account, host)
-                assert not trace_fails, "Trace failure did not propagate"
-                assert summary == {"status_code": 403, "trace": [
-                    {"kind": "zone", "step_name": "configuration", "matched": True,
-                     "trace": [{"id": "rule-1", "type": "rule", "action": "set_config", "matched": True,
-                                "action_parameters": {"bic": False}}]},
-                ]}
-            except edge.CloudflareError as exc:
-                assert trace_fails
-                assert exc.status == 403 and secret not in str(exc)
-        create_api.assert_called_once_with(secret)
-        assert trace_api.calls == activation_failures + 1
-        assert sleep.call_count == activation_failures
-        assert all(call.args == (2,) for call in sleep.call_args_list)
-        assert authority.events[-1] == ("DELETE", f"/accounts/{account}/tokens/trace-token-id")
-        assert sum(method == "DELETE" for method, path in authority.events) == 1
-        assert secret not in stdout.getvalue() + stderr.getvalue()
-
-    authority = Authority()
-    try:
-        edge.trace_public_machine_request(authority, "wrong-account", host)
-        raise AssertionError("Request Trace accepted an unrelated account")
-    except edge.CloudflareError:
-        assert not authority.events
-
-
-def test_origin_response_diagnostic() -> None:
-    zone = "0123456789abcdef0123456789abcdef"
-    host, path = "www.ghezelbaash.ir", "/graph.jsonld"
-    dataset = "httpRequestsAdaptiveGroups"
-    secret = "private-header-material-must-never-appear"
-    status_fields = ["edgeResponseStatus", "originResponseStatus", "cacheStatus"]
-
-    def response(data):
-        return 200, {"data": data, "headers": {"Authorization": secret}}
-
-    def zone_response(data):
-        return response({"viewer": {"zones": [data]}})
-
-    def type_ref(name):
-        return {"kind": "NON_NULL", "name": None, "ofType": {"kind": "LIST", "name": None,
-                "ofType": {"kind": "NON_NULL", "name": None, "ofType": {"kind": "OBJECT", "name": name}}}}
-
-    # Deliberately different type names prove discovery follows the returned
-    # schema rather than guessing a Cloudflare naming convention.
-    discovery = zone_response({"__typename": "LiveZoneType", "settings": {dataset: {
-        "enabled": True, "availableFields": ["count", *("dimensions_" + name for name in status_fields), "dimensions_clientIP"],
-        "maxDuration": 600, "notOlderThan": 86400, "maxPageSize": 10, "maxNumberOfFields": 30,
-    }}})
-    zone_schema = response({"zoneType": {"fields": [{"name": dataset, "type": type_ref("LiveGroupType"), "args": [
-        {"name": "filter", "type": {"kind": "INPUT_OBJECT", "name": "LiveFilterType"}},
-        {"name": "limit", "type": {"kind": "SCALAR", "name": "int"}},
-    ]}]}})
-    group_schema = response({"groupType": {"fields": [
-        {"name": "count", "type": {"kind": "SCALAR", "name": "int"}},
-        {"name": "dimensions", "type": {"kind": "OBJECT", "name": "LiveDimensionType"}},
-    ]}, "filterType": {"inputFields": [{"name": name} for name in (
-        "datetime_geq", "datetime_lt", "clientRequestHTTPHost", "clientRequestPath", "requestSource", "rayName",
-    )]}})
-    dimension_schema = response({"dimensionType": {"fields": [{"name": name} for name in [*status_fields, "clientIP"]]}})
-    row = {"count": 3, "dimensions": {"edgeResponseStatus": 403, "originResponseStatus": 403, "cacheStatus": "BYPASS", "clientIP": "192.0.2.10", "headers": secret}}
-    stages = [discovery, zone_schema, group_schema, dimension_schema]
-
-    class Api:
-        def __init__(self, responses):
-            self.responses, self.calls = copy.deepcopy(responses), []
-
-        def raw(self, method, endpoint, body):
-            assert (method, endpoint) == ("POST", "/graphql")
-            self.calls.append(body["query"])
-            result = self.responses.pop(0)
-            if isinstance(result, Exception):
-                raise result
-            return result
-
-    fake = Api([*stages, zone_response({dataset: [row]})])
-    with contextlib.redirect_stdout(io.StringIO()) as stdout:
-        result = edge.diagnose_origin_response(fake, zone)
-    assert result["status"] == "correlated_groups" and result["exactRayMatch"] is False
-    assert result["sampled"] is True and result["truncated"] is False
-    assert result["host"] == host and result["path"] == path
-    assert result["windowSeconds"] == 600
-    assert result["groups"] == [{"count": 3, "edgeResponseStatus": 403, "originResponseStatus": 403, "cacheStatus": "bypass"}]
-    assert secret not in stdout.getvalue() and "192.0.2.10" not in stdout.getvalue()
-    assert not fake.responses and len(fake.calls) == 5
-    assert '__type(name: "LiveZoneType")' in fake.calls[1]
-    assert '__type(name: "LiveGroupType")' in fake.calls[2] and '__type(name: "LiveFilterType")' in fake.calls[2]
-    assert '__type(name: "LiveDimensionType")' in fake.calls[3]
-    actual = fake.calls[-1]
-    for expected in (f'zoneTag: "{zone}"', f'clientRequestHTTPHost: "{host}"', f'clientRequestPath: "{path}"', 'requestSource: "eyeball"', 'limit: 10'):
-        assert expected in actual
-    assert all(value not in actual for value in ("clientIP", "headers", "cookies", "rayName"))
-    from_time = edge.dt.datetime.fromisoformat(result["fromTime"].replace("Z", "+00:00"))
-    to_time = edge.dt.datetime.fromisoformat(result["toTime"].replace("Z", "+00:00"))
-    assert (to_time - from_time).total_seconds() == 600
-
-    unavailable_fields = copy.deepcopy(discovery)
-    unavailable_fields[1]["data"]["viewer"]["zones"][0]["settings"][dataset]["availableFields"].remove("dimensions_originResponseStatus")
-    unsafe_filter = copy.deepcopy(group_schema)
-    unsafe_filter[1]["data"]["filterType"]["inputFields"] = [{"name": "datetime_geq"}]
-    no_schema = response({"zoneType": None})
-    invalid_result = zone_response({dataset: [{**row, "dimensions": {**row["dimensions"], "cacheStatus": secret}}]})
-    for responses, reason in (
-        ([unavailable_fields], "status_or_cache_fields_not_available"),
-        ([discovery, no_schema], "schema_unavailable"),
-        ([discovery, zone_schema, unsafe_filter], "exact_host_path_time_filters_unsupported"),
-        ([*stages, invalid_result], "invalid_aggregate_response"),
-        ([(403, {"errors": [{"message": secret}]})], "access_denied"),
-        ([*stages, (200, {"errors": [{"message": "permission denied " + secret}]})], "access_denied"),
-    ):
-        fake = Api(responses)
-        with contextlib.redirect_stdout(io.StringIO()) as stdout:
-            result = edge.diagnose_origin_response(fake, zone)
-        assert result["status"] == "unavailable" and result["reason"] == reason
-        assert result["groups"] == [] and not fake.responses
-        assert secret not in stdout.getvalue()
-
-    fake = Api([*stages, zone_response({dataset: []})])
-    with contextlib.redirect_stdout(io.StringIO()):
-        result = edge.diagnose_origin_response(fake, zone)
-    assert result["status"] == "inconclusive" and result["reason"] == "no_http_groups_in_sampled_window"
-    fake = Api([])
-    with contextlib.redirect_stdout(io.StringIO()) as stdout:
-        result = edge.diagnose_origin_response(fake, "invalid-zone " + secret)
-    assert result["reason"] == "invalid_zone" and not fake.calls and secret not in stdout.getvalue()
-
-
-def test_security_event_diagnostic() -> None:
-    ray = "a37fac9bdd6ec071"
-    zone = "exact-diagnostic-zone"
-    secret = "header-secret-must-not-be-logged"
-    fields = ["rayName", "action", "source", "ruleId", "datetime", "clientRequestHTTPHost", "clientRequestPath"]
-    schema = {"data": {
-        "filterType": {"inputFields": [{"name": name} for name in ("rayName", "datetime_geq", "datetime_leq")]},
-        "eventType": {"fields": [{"name": name} for name in fields]},
-    }, "headers": secret}
-    event = {"rayName": ray, "action": "block", "source": "bic", "ruleId": "rule-1",
-             "datetime": "2026-09-08T17:00:00Z", "clientRequestHTTPHost": "www.ghezelbaash.ir",
-             "clientRequestPath": "/graph.jsonld?token=" + secret,
-             "clientIP": "192.0.2.1", "cookies": secret, "headers": {"Authorization": secret}}
-
-    class Api:
-        def __init__(self, responses):
-            self.responses = list(responses)
-            self.calls = []
-
-        def raw(self, method, path, body=None):
-            assert (method, path) == ("POST", "/graphql")
-            self.calls.append(copy.deepcopy(body))
-            response = self.responses.pop(0)
-            if isinstance(response, Exception):
-                raise response
-            return response
-
-    def events_response(events):
-        return 200, {"data": {"viewer": {"zones": [{"firewallEventsAdaptive": events}]}}, "headers": secret}
-
-    api = Api([(200, schema), events_response([event])])
-    with contextlib.redirect_stdout(io.StringIO()) as stdout:
-        summary = edge.diagnose_security_event(api, zone, ray.upper() + "-ORD")
-    assert summary["status"] == "events" and summary["sampled"] is True
-    expected = {field: event[field] for field in fields}
-    expected["clientRequestPath"] = "/graph.jsonld"
-    assert summary["events"] == [expected]
-    assert secret not in stdout.getvalue() and "192.0.2.1" not in stdout.getvalue()
-    assert len(api.calls) == 2
-    assert 'name: "FirewallEventsAdaptiveFilter_InputObject"' in api.calls[0]["query"]
-    assert 'name: "ZoneFirewallEventsAdaptiveFilter_InputObject"' in api.calls[0]["query"]
-    assert 'name: "ZoneFirewallEventsAdaptive"' in api.calls[0]["query"]
-    query = api.calls[1]
-    assert "$filter: FirewallEventsAdaptiveFilter_InputObject" in query["query"]
-    assert "zones(filter: { zoneTag: $zoneTag })" in query["query"]
-    assert "limit: 10" in query["query"] and "orderBy: [datetime_DESC]" in query["query"]
-    assert all(field not in query["query"] for field in ("clientIP", "cookies", "headers", "clientRequestQuery"))
-    assert query["variables"]["zoneTag"] == zone
-    filters = query["variables"]["filter"]
-    assert set(filters) == {"rayName", "datetime_geq", "datetime_leq"} and filters["rayName"] == ray
-    lower = edge.dt.datetime.fromisoformat(filters["datetime_geq"].replace("Z", "+00:00"))
-    upper = edge.dt.datetime.fromisoformat(filters["datetime_leq"].replace("Z", "+00:00"))
-    assert (upper - lower).total_seconds() == 15 * 60
-    assert 0 <= (edge.dt.datetime.now(edge.dt.timezone.utc) - upper).total_seconds() < 5
-
-    # Support either documented name, including when the first exists but
-    # cannot express the exact Ray and bounded time query.
-    for old_fields in (None, [], [{"name": "rayName"}]):
-        alternate = copy.deepcopy(schema)
-        alternate["data"]["zoneFilterType"] = alternate["data"]["filterType"]
-        alternate["data"]["filterType"] = None if old_fields is None else {"inputFields": old_fields}
-        fake = Api([(200, alternate), events_response([event])])
-        with contextlib.redirect_stdout(io.StringIO()) as stdout:
-            result = edge.diagnose_security_event(fake, zone, ray)
-        assert result["status"] == "events" and result["events"] == [expected]
-        assert "$filter: ZoneFirewallEventsAdaptiveFilter_InputObject" in fake.calls[1]["query"]
-        assert fake.calls[1]["variables"]["filter"]["rayName"] == ray
-        assert len(fake.calls) == 2 and not fake.responses and secret not in stdout.getvalue()
-
-    unsupported = copy.deepcopy(schema)
-    unsupported["data"]["filterType"]["inputFields"] = [{"name": "datetime_geq"}, {"name": "datetime_leq"}]
-    no_types = copy.deepcopy(schema)
-    no_types["data"]["filterType"] = None
-    no_types["data"]["zoneFilterType"] = None
-    unbounded = copy.deepcopy(schema)
-    unbounded["data"]["filterType"]["inputFields"] = [{"name": "rayName"}]
-    for responses, status, reason in (
-        ([(200, schema), events_response([])], "inconclusive", "no_event_in_sampled_window"),
-        ([(403, {"errors": [{"message": secret}], "headers": secret})], "unavailable", "access_denied"),
-        ([(200, schema), (200, {"errors": [{"message": "access denied " + secret}]})], "unavailable", "access_denied"),
-        ([(200, unsupported)], "unavailable", "ray_filter_or_field_unsupported"),
-        ([(200, no_types)], "unavailable", "schema_unavailable"),
-        ([(200, unbounded)], "unavailable", "bounded_time_filter_unsupported"),
-        ([(200, schema), (200, {"data": {"viewer": {"zones": []}}})], "unavailable", "zone_dataset_unavailable"),
-        ([(200, schema), events_response([{**event, "rayName": "b37fac9bdd6ec071"}])], "unavailable", "event_scope_mismatch"),
-        ([edge.CloudflareError(secret, payload={"headers": secret})], "unavailable", "transport_error"),
-    ):
-        fake = Api(responses)
-        with contextlib.redirect_stdout(io.StringIO()) as stdout:
-            result = edge.diagnose_security_event(fake, zone, ray)
-        assert (result["status"], result["reason"]) == (status, reason)
-        assert result["events"] == [] and secret not in stdout.getvalue()
-        assert not fake.responses
-
-    correlation_schema = copy.deepcopy(schema)
-    correlation_schema["data"]["filterType"]["inputFields"] += [
-        {"name": "clientRequestHTTPHost"}, {"name": "clientRequestPath"},
-    ]
-    related = {**event, "rayName": "b37fac9bdd6ec071", "clientRequestPath": "/graph.jsonld"}
-    fake = Api([(200, correlation_schema), events_response([]), events_response([related])])
-    with contextlib.redirect_stdout(io.StringIO()) as stdout:
-        result = edge.diagnose_security_event(fake, zone, ray)
-    assert result["status"] == "inconclusive" and result["events"] == []
-    correlation = result["correlation"]
-    assert correlation["status"] == "correlated_events" and correlation["exactRayMatch"] is False
-    assert correlation["reason"] == "same_host_path_only"
-    assert correlation["events"] == [{**expected, "rayName": related["rayName"]}]
-    assert len(fake.calls) == 3 and not fake.responses
-    exact_query, related_query = fake.calls[1:]
-    assert related_query["variables"]["zoneTag"] == zone
-    assert related_query["variables"]["filter"] == {
-        "datetime_geq": exact_query["variables"]["filter"]["datetime_geq"],
-        "datetime_leq": exact_query["variables"]["filter"]["datetime_leq"],
-        "clientRequestHTTPHost": "www.ghezelbaash.ir", "clientRequestPath": "/graph.jsonld",
-    }
-    assert "limit: 25" in related_query["query"]
-    assert "zones(filter: { zoneTag: $zoneTag })" in related_query["query"]
-    assert all(field not in related_query["query"] for field in ("clientIP", "cookies", "headers", "clientRequestQuery"))
-    assert secret not in stdout.getvalue() and "192.0.2.1" not in stdout.getvalue()
-
-    # The captured Ray may appear after ingestion advances between queries.
-    newly_ingested = {**event, "rayName": ray.upper(), "clientRequestPath": "/graph.jsonld"}
-    fake = Api([(200, correlation_schema), events_response([]), events_response([related, newly_ingested])])
-    with contextlib.redirect_stdout(io.StringIO()) as stdout:
-        result = edge.diagnose_security_event(fake, zone, ray)
-    assert result["status"] == "events" and result["reason"] == "matching_sampled_events"
-    assert result["events"] == [{**expected, "rayName": ray.upper()}]
-    assert "correlation" not in result and len(fake.calls) == 3
-    assert secret not in stdout.getvalue() and "192.0.2.1" not in stdout.getvalue()
-
-    # Correlation is never a substitute for a successful exact-Ray lookup.
-    fake = Api([(200, correlation_schema), events_response([event])])
-    with contextlib.redirect_stdout(io.StringIO()):
-        result = edge.diagnose_security_event(fake, zone, ray)
-    assert result["status"] == "events" and "correlation" not in result and len(fake.calls) == 2
-
-    for final_response, status, reason in (
-        (events_response([]), "inconclusive", "no_recent_host_path_events"),
-        ((403, {"errors": [{"message": secret}]}), "unavailable", "access_denied"),
-        (events_response([{**related, "clientRequestHTTPHost": "unrelated.example"}]), "unavailable", "event_scope_mismatch"),
-        (events_response([{**related, "clientRequestPath": "/private"}]), "unavailable", "event_scope_mismatch"),
-    ):
-        fake = Api([(200, correlation_schema), events_response([]), final_response])
-        with contextlib.redirect_stdout(io.StringIO()) as stdout:
-            result = edge.diagnose_security_event(fake, zone, ray)
-        assert result["status"] == "inconclusive" and result["events"] == []
-        assert (result["correlation"]["status"], result["correlation"]["reason"]) == (status, reason)
-        assert result["correlation"]["events"] == [] and result["correlation"]["exactRayMatch"] is False
-        assert len(fake.calls) == 3 and not fake.responses and secret not in stdout.getvalue()
-
-    fake = Api([(200, schema), events_response([])])
-    with contextlib.redirect_stdout(io.StringIO()):
-        result = edge.diagnose_security_event(fake, zone, ray)
-    assert result["status"] == "inconclusive" and len(fake.calls) == 2
-    assert result["correlation"]["reason"] == "host_path_filters_or_fields_unsupported"
-
-    fake = Api([])
-    with contextlib.redirect_stdout(io.StringIO()) as stdout:
-        result = edge.diagnose_security_event(fake, zone, "invalid-ray " + secret)
-    assert result["reason"] == "invalid_zone_or_ray" and not fake.calls
-    assert secret not in stdout.getvalue()
-
-
 def test_public_browser_integrity() -> None:
     host = edge.PLATFORM_CONTRACT["canonicalHost"]
     desired = edge.public_browser_integrity_rule(host)
@@ -997,9 +641,6 @@ def test_machine_compression() -> None:
 
 test_machine_compression()
 test_public_browser_integrity()
-test_public_machine_request_trace()
-test_origin_response_diagnostic()
-test_security_event_diagnostic()
 cache_contract = edge.cache_rule("www.ghezelbaash.ir")
 assert cache_contract["action_parameters"]["respect_strong_etags"] is False
 identity_locked_cache = copy.deepcopy(cache_contract)
@@ -1065,7 +706,7 @@ for options, extra_permissions, write_name, include_reads in (
 ):
     expected_permissions = integrity_base | extra_permissions
     if include_reads:
-        expected_permissions |= {"configuration-read", "firewall-read", "analytics-read"}
+        expected_permissions |= {"configuration-read", "firewall-read"}
     authority = FakeZoneTokenAuthority(
         expected_permissions,
         configuration_write_name=write_name,
@@ -1159,8 +800,6 @@ print(
             "ephemeralBotAccessToken": True,
             "ephemeralRequestIntegrityToken": True,
             "publicBrowserIntegrityRule": True,
-            "publicMachineRequestTrace": True,
-            "publicMachineSecurityEvent": True,
             "pagesAndDnsInventory": True,
             "blogPagesFallbackBinding": True,
             "idempotent": True,

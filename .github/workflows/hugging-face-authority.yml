@@ -360,10 +360,15 @@ jobs:
           import json, os, time
           from urllib import request, error
           url = f"https://{os.environ['CANONICAL_HOST']}/graph.jsonld"
+          public_graph = request.Request(url, headers={
+              'User-Agent': 'doctor-ghezelbaash-release/3.0',
+              'Accept': 'application/ld+json',
+              'Cache-Control': 'no-cache',
+          })
           for attempt in range(10):
               try:
-                  # Exercise a normal machine client, including its standard Python user agent.
-                  with request.urlopen(url, timeout=30) as response:
+                  # Identify the release client honestly, as for the artifact APIs.
+                  with request.urlopen(public_graph, timeout=30) as response:
                       if response.status != 200 or response.geturl() != url:
                           raise ValueError('Public graph must respond directly at its canonical URL with HTTP 200')
                       graph = json.load(response)
