@@ -496,6 +496,8 @@ ZONE_SETTINGS: dict[str, Any] = {
     "always_use_https": "on",
     "ssl": "strict",
     "min_tls_version": "1.2",
+    # Keep public machine-readable resources accessible without browser-signature 1010 blocks.
+    "browser_check": "off",
     "always_online": "off",
     "cache_level": "aggressive",
     "ech": "on",
