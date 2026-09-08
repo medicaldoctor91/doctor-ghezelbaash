@@ -14,14 +14,19 @@ import concurrent.futures
 import datetime as dt
 import gzip
 import hashlib
+import io
 import json
 import os
 import re
+import ssl
+import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import zlib
 from pathlib import Path
 from typing import Any
 
@@ -702,6 +707,7 @@ def issue_ephemeral_zone_api(
     include_bot_access: bool = False,
     include_request_integrity: bool = False,
     include_delivery_rules: bool = False,
+    read_only_delivery: bool = False,
 ) -> tuple[CloudflareApi, Any]:
     permissions = parent_api.expect(
         "GET",
@@ -816,6 +822,32 @@ def issue_ephemeral_zone_api(
                 groups.append({"id": permission_id})
             resolved_permissions.append(str(match["name"]))
 
+    extra_policies = []
+    if read_only_delivery:
+        # Delivery diagnostics use read permissions only, including analytics.
+        read_names = {
+            "Zone Settings Read", "Zone Read", "Bot Management Read",
+            "Config Settings Read", "Select Configuration Read", "Firewall Services Read",
+            "Response Compression Read", "Compression Rules Read", "Zone WAF Read",
+            "Analytics Read", "Zone Analytics Read",
+        }
+        selected = [row for row in permissions if row.get("name") in read_names]
+        groups = [{"id": str(row["id"])} for row in selected]
+        resolved_permissions = [str(row["name"]) for row in selected]
+        account_permissions = parent_api.expect(
+            "GET", f"/accounts/{account}/tokens/permission_groups?scope=com.cloudflare.api.account"
+        ).get("result") or []
+        analytics = [row for row in account_permissions if row.get("name") == "Account Analytics Read"]
+        if len(analytics) == 1:
+            extra_policies.append({
+                "effect": "allow",
+                "resources": {f"com.cloudflare.api.account.{account}": "*"},
+                "permission_groups": [{"id": str(analytics[0]["id"])}],
+            })
+            resolved_permissions.append("Account Analytics Read")
+        if not groups:
+            raise CloudflareError("No read-only delivery permission groups available")
+
     expires_on = (
         dt.datetime.now(dt.timezone.utc) + dt.timedelta(minutes=15)
     ).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -831,7 +863,7 @@ def issue_ephemeral_zone_api(
                     "resources": {f"com.cloudflare.api.account.zone.{zone}": "*"},
                     "permission_groups": groups,
                 }
-            ],
+            ] + extra_policies,
         },
         ok=(200, 201),
     ).get("result") or {}
@@ -2496,6 +2528,113 @@ def purge_cache_only() -> dict[str, Any]:
     return outcome
 
 
+def probe_delivery_clients(host: str) -> dict[str, Any]:
+    """Compare real HTTP clients without credentials, redirects, or unbounded bodies."""
+    if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?", host):
+        raise CloudflareError("Invalid public delivery host")
+    limit = 8 * 1024 * 1024
+    python_ua = f"Python-urllib/{sys.version_info.major}.{sys.version_info.minor}"
+    audit_ua = "ghezelbaash-delivery-audit/1.0"
+    # Keep the runner's transport configuration, but never pass platform tokens to curl.
+    curl_env = {key: value for key, value in os.environ.items() if key in {
+        "PATH", "SYSTEMROOT", "SSL_CERT_FILE", "SSL_CERT_DIR", "CURL_CA_BUNDLE",
+        "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
+        "http_proxy", "https_proxy", "all_proxy", "no_proxy",
+    }}
+    try:
+        version = subprocess.run(["curl", "-q", "--version"], capture_output=True,
+                                 text=True, timeout=5, env=curl_env, check=True)
+        curl_version = version.stdout.splitlines()[0]
+    except (OSError, subprocess.SubprocessError, IndexError):
+        curl_version = None
+
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, req, fp, code, msg, headers, newurl):
+            return None
+
+    def probe(case: tuple[str, str, str | None, str]) -> dict[str, Any]:
+        client, path, user_agent, accept_encoding = case
+        row: dict[str, Any] = {"client": client, "path": path, "userAgent": user_agent or "default",
+                               "acceptEncoding": accept_encoding}
+        url = f"https://{host}{path}"
+        try:
+            if client == "urllib":
+                headers = {"Accept-Encoding": accept_encoding}
+                if user_agent:
+                    headers["User-Agent"] = user_agent
+                opener = urllib.request.build_opener(NoRedirect())
+                try:
+                    response = opener.open(urllib.request.Request(url, headers=headers), timeout=20)
+                except urllib.error.HTTPError as exc:
+                    response = exc
+                with response:
+                    status, headers = response.status, dict(response.headers.items())
+                    body = response.read(limit + 1)
+            else:
+                with tempfile.TemporaryDirectory(prefix="delivery-client-") as directory:
+                    body_path, header_path = Path(directory) / "body", Path(directory) / "headers"
+                    argv = ["curl", "-q", "--silent", "--show-error", "--proto", "=https",
+                            "--max-time", "20", "--max-filesize", str(limit), "--max-redirs", "0",
+                            "--dump-header", str(header_path), "--output", str(body_path),
+                            "--write-out", "%{http_code}", "--header", f"Accept-Encoding: {accept_encoding}"]
+                    if user_agent:
+                        argv += ["--user-agent", user_agent]
+                    completed = subprocess.run(argv + [url], capture_output=True, text=True,
+                                               timeout=23, env=curl_env)
+                    row["curlExitCode"] = completed.returncode
+                    if completed.returncode:
+                        raise CloudflareError("curl request failed")
+                    status = int(completed.stdout)
+                    with body_path.open("rb") as stream:
+                        body = stream.read(limit + 1)
+                    with header_path.open("rb") as stream:
+                        raw_headers = stream.read(256 * 1024 + 1)
+                    if len(raw_headers) > 256 * 1024:
+                        raise CloudflareError("Response headers exceeded their size bound")
+                    headers = {}
+                    for line in raw_headers.decode("latin-1").splitlines():
+                        if line.startswith("HTTP/"):
+                            headers = {}
+                        elif ":" in line:
+                            name, value = line.split(":", 1)
+                            headers[name] = value.strip()
+            headers = {key.lower(): value for key, value in headers.items()}
+            row.update({"status": status, "ray": headers.get("cf-ray"), "server": headers.get("server"),
+                        "encoding": headers.get("content-encoding", "identity"),
+                        "cache": headers.get("cf-cache-status"), "type": headers.get("content-type"),
+                        "location": headers.get("location"), "wireBytes": len(body),
+                        "browserSignatureBlock": status == 403 and body.strip() == b"error code: 1010"})
+            if len(body) > limit:
+                raise CloudflareError("Response body exceeded its size bound")
+            if status == 200:
+                if row["encoding"] == "gzip":
+                    with gzip.GzipFile(fileobj=io.BytesIO(body)) as stream:
+                        decoded = stream.read(limit + 1)
+                elif row["encoding"] == "identity":
+                    decoded = body
+                else:
+                    raise CloudflareError("Unexpected response encoding")
+                if len(decoded) > limit:
+                    raise CloudflareError("Decoded body exceeded its size bound")
+                row.update({"decodedBytes": len(decoded), "sha256": hashlib.sha256(decoded).hexdigest()})
+        except (OSError, ValueError, EOFError, zlib.error, subprocess.SubprocessError, CloudflareError) as exc:
+            row["error"] = type(exc).__name__
+        return row
+
+    cases = [(client, path, ua, "identity") for path in ("/robots.txt", "/entity-facts.csv")
+             for client, ua in (("urllib", None), ("urllib", audit_ua), ("curl", None),
+                                ("curl", python_ua), ("curl", audit_ua))]
+    cases.append(("curl", "/entity-facts.csv", None, "gzip"))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        rows = list(pool.map(probe, cases))
+    gzip_row = rows[-1]
+    comparisons = [{"urllibUserAgent": row["userAgent"], "sha256Matches": row["sha256"] == gzip_row["sha256"]}
+                   for row in rows if row["client"] == "urllib" and row["path"] == "/entity-facts.csv"
+                   and "sha256" in row and "sha256" in gzip_row]
+    return {"runtime": {"python": sys.version.split()[0], "openssl": ssl.OPENSSL_VERSION,
+                        "curl": curl_version}, "probes": rows, "curlGzipVsUrllib": comparisons}
+
+
 DELIVERY_PATHS = ("/", "/robots.txt", "/sitemap.xml", "/graph.jsonld", "/entity-facts.csv", "/graph.ttl")
 PUBLIC_BIC_SKIP_REF = "ghezelbaash_public_bic_skip_v1"
 
@@ -2595,6 +2734,7 @@ def delivery_action(snapshot_path: Path | None, *, strengthen: bool) -> dict[str
     api, revoke = issue_ephemeral_zone_api(
         parent, account, zone, include_bot_access=True,
         include_request_integrity=True, include_delivery_rules=strengthen,
+        read_only_delivery=not strengthen,
     )
     result: dict[str, Any] = {"mode": "strengthen" if strengthen else "audit", "host": host, "observedAt": dt.datetime.now(dt.timezone.utc).isoformat()}
     try:
@@ -2638,9 +2778,50 @@ def delivery_action(snapshot_path: Path | None, *, strengthen: bool) -> dict[str
                     time.sleep(5)
             result["integrity"] = "PASS" if result["publicAccessExact"] and result["compressionBytesExact"] else "FAIL"
         else:
+            result["clientComparison"] = probe_delivery_clients(host)
+            result["securityEvents"] = delivery_security_events(api, zone, host)
+            print("CLOUDFLARE_DELIVERY_DIAGNOSTICS", json.dumps({
+                "clientComparison": result["clientComparison"],
+                "securityEvents": result["securityEvents"],
+            }, sort_keys=True), flush=True)
             result["integrity"] = "OBSERVED"
     finally:
         revoke()
+    return result
+
+
+def delivery_security_events(api: CloudflareApi, zone: str, host: str) -> dict[str, Any]:
+    """Read sampled blocking events; an empty sample does not prove no blocks."""
+    now = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
+    query = """query DeliveryEvents($zoneTag: string, $filter: FirewallEventsAdaptiveFilter_InputObject) {
+      viewer { zones(filter: {zoneTag: $zoneTag}) {
+        firewallEventsAdaptive(filter: $filter, limit: 100, orderBy: [datetime_DESC]) {
+          action source ruleId rayName datetime clientRequestHTTPHost clientRequestPath userAgent
+        }
+      } }
+    }"""
+    filters = {
+        "datetime_geq": (now - dt.timedelta(minutes=90)).isoformat().replace("+00:00", "Z"),
+        "datetime_leq": now.isoformat().replace("+00:00", "Z"),
+        "clientRequestHTTPHost": host,
+        "action": "block",
+    }
+    status, payload = api.raw("POST", "/graphql", {
+        "query": query, "variables": {"zoneTag": zone, "filter": filters},
+    })
+    result: dict[str, Any] = {"httpStatus": status, "sampled": True, "filter": filters}
+    errors = payload.get("errors") or []
+    if errors:
+        result["errors"] = [{key: row[key] for key in ("message", "code") if key in row} for row in errors]
+    zones = ((payload.get("data") or {}).get("viewer") or {}).get("zones") or []
+    fields = ("action", "source", "ruleId", "rayName", "datetime", "clientRequestHTTPHost", "clientRequestPath", "userAgent")
+    events = [row for value in zones for row in value.get("firewallEventsAdaptive", [])]
+    result["returnedEvents"] = len(events)
+    # Retain public document paths only, with no client IP, cookies or query strings.
+    result["publicDocumentEvents"] = [
+        {key: row[key] for key in fields if key in row}
+        for row in events if row.get("clientRequestPath") in DELIVERY_PATHS
+    ]
     return result
 
 
