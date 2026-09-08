@@ -1,0 +1,79 @@
+name: Cloudflare machine preflight
+
+on:
+  push:
+    branches: ['release/**']
+    paths:
+      - '.github/workflows/cloudflare-machine-preflight.yml'
+      - 'scripts/configure-cloudflare-edge.py'
+      - 'scripts/preflight-cloudflare-edge.py'
+      - 'src/data/machine-resources.json'
+      - '.release/policy/platform-contract.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-machine-preflight-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.x'
+      - name: Load canonical platform identity
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          contract = json.loads(Path('.release/policy/platform-contract.json').read_text())
+          values = {
+              'CLOUDFLARE_ACCOUNT_ID': contract['cloudflare']['accountId'],
+              'ZONE_NAME': contract['zoneName'],
+              'CANONICAL_HOST': contract['canonicalHost'],
+          }
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              for name, value in values.items():
+                  if not isinstance(value, str) or any(c in value for c in '\r\n'):
+                      raise ValueError('Invalid platform identity')
+                  output.write(f'{name}={value}\n')
+          PY
+      - name: Reconcile public machine access
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          echo "::add-mask::$CLOUDFLARE_API_TOKEN"
+          python scripts/preflight-cloudflare-edge.py
+      - name: Verify ordinary machine client after propagation
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, time
+          from urllib import request, error
+          url = f"https://{os.environ['CANONICAL_HOST']}/graph.jsonld"
+          for attempt in range(10):
+              try:
+                  with request.urlopen(url, timeout=30) as response:
+                      if response.status != 200 or response.geturl() != url:
+                          raise ValueError('Expected direct canonical HTTP 200')
+                      graph = json.load(response)
+                  if not isinstance(graph, dict) or not isinstance(graph.get('@graph'), list):
+                      raise ValueError('Expected canonical JSON-LD document')
+                  print('CLOUDFLARE_STANDARD_MACHINE_CLIENT_ACCESS_PASS', flush=True)
+                  break
+              except (error.URLError, TimeoutError, ValueError) as exc:
+                  print(f'CLOUDFLARE_MACHINE_ACCESS_RETRY {attempt + 1}/10 {type(exc).__name__}', flush=True)
+                  if attempt == 9:
+                      raise
+                  time.sleep(5)
+          PY

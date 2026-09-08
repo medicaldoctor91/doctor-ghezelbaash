@@ -257,7 +257,8 @@ class FakeZoneTokenAuthority:
         *,
         bot_write_name: str = "Bot Management Write",
         include_bot_read: bool = True,
-        configuration_write_name: str = "Select Configuration Write",
+        configuration_write_name: str = "Config Settings Write",
+        configuration_read_name: str = "Config Settings Read",
         include_integrity_reads: bool = True,
     ) -> None:
         self.revoked = False
@@ -270,6 +271,7 @@ class FakeZoneTokenAuthority:
         self.bot_write_name = bot_write_name
         self.include_bot_read = include_bot_read
         self.configuration_write_name = configuration_write_name
+        self.configuration_read_name = configuration_read_name
         self.include_integrity_reads = include_integrity_reads
 
     def expect(
@@ -305,7 +307,7 @@ class FakeZoneTokenAuthority:
                 ("bot-write", self.bot_write_name),
                 ("bot-read", "Bot Management Read"),
                 ("configuration-write", self.configuration_write_name),
-                ("configuration-read", "Select Configuration Read"),
+                ("configuration-read", self.configuration_read_name),
                 ("firewall-read", "Firewall Services Read"),
             ]:
                 if permission_id == "bot-read" and not self.include_bot_read:
@@ -696,9 +698,11 @@ for bot_write_name, include_bot_read in (
 
 integrity_base = {*edge.ZONE_SETTINGS_PERMISSION_IDS, "zone-read", "cache-purge", "configuration-write"}
 for options, extra_permissions, write_name, include_reads in (
+    ({}, set(), "Config Settings Write", True),
+    ({"include_bot_access": True}, {"bot-write", "bot-read"}, "Config Settings Edit", False),
     ({}, set(), "Select Configuration Write", True),
     ({"include_bot_access": True}, {"bot-write", "bot-read"}, "Select Configuration Edit", False),
-    ({"include_control_plane": True}, {"dns-read", "dns-write", "cache-write", "cache-read", "bot-write", "bot-read"}, "Select Configuration Write", True),
+    ({"include_control_plane": True}, {"dns-read", "dns-write", "cache-write", "cache-read", "bot-write", "bot-read"}, "Config Settings Write", True),
 ):
     expected_permissions = integrity_base | extra_permissions
     if include_reads:
@@ -706,6 +710,7 @@ for options, extra_permissions, write_name, include_reads in (
     authority = FakeZoneTokenAuthority(
         expected_permissions,
         configuration_write_name=write_name,
+        configuration_read_name="Select Configuration Read" if write_name.startswith("Select") else "Config Settings Read",
         include_integrity_reads=include_reads,
     )
     child, revoke = edge.issue_ephemeral_zone_api(

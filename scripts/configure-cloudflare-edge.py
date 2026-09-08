@@ -64,10 +64,10 @@ BOT_ACCESS_OPTIONAL_PERMISSION_ALIASES = (
     ("Bot Management Read",),
 )
 REQUEST_INTEGRITY_REQUIRED_PERMISSION_ALIASES = (
-    ("Select Configuration Write", "Select Configuration Edit"),
+    ("Config Settings Write", "Config Settings Edit", "Select Configuration Write", "Select Configuration Edit"),
 )
 REQUEST_INTEGRITY_OPTIONAL_PERMISSION_ALIASES = (
-    ("Select Configuration Read",),
+    ("Config Settings Read", "Select Configuration Read"),
     ("Firewall Services Read",),
 )
 ZONE_RECONCILER_REQUIRED_PERMISSION_ALIASES = (
@@ -772,7 +772,7 @@ def issue_ephemeral_zone_api(
                     for row in permissions
                     if any(
                         token in str(row.get("name") or "").lower()
-                        for token in ("cache", "bot", "dns", "configuration", "firewall")
+                        for token in ("cache", "bot", "dns", "config", "firewall")
                     )
                 )
                 raise CloudflareError(
