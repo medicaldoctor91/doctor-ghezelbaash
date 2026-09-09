@@ -33,14 +33,13 @@ jobs:
           import urllib.request
 
           API = "https://commons.wikimedia.org/w/api.php"
-          USER_AGENT = "doctor-ghezelbaash-commons-preflight/1.1 (GitHub Actions; read-only credential verification)"
+          USER_AGENT = "doctor-ghezelbaash-commons-preflight/1.2 (GitHub Actions; read-only credential verification)"
           username = os.environ["WIKIMEDIA_USERNAME"]
           password = os.environ["WIKIMEDIA_BOT_PASSWORD"]
-
           jar = http.cookiejar.CookieJar()
           opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
 
-          def api(params, *, post=False):
+          def api(params, post=False):
               payload = urllib.parse.urlencode(params).encode("utf-8")
               if post:
                   req = urllib.request.Request(API, data=payload, headers={"User-Agent": USER_AGENT})
@@ -49,74 +48,33 @@ jobs:
               with opener.open(req, timeout=30) as response:
                   return json.load(response)
 
-          login_token = api({
-              "action": "query",
-              "meta": "tokens",
-              "type": "login",
-              "format": "json",
-              "formatversion": "2",
-          })["query"]["tokens"]["logintoken"]
-
-          login = api({
-              "action": "login",
-              "lgname": username,
-              "lgpassword": password,
-              "lgtoken": login_token,
-              "format": "json",
-              "formatversion": "2",
-          }, post=True)
-          result = login.get("login", {}).get("result")
+          login_token = api({"action":"query","meta":"tokens","type":"login","format":"json","formatversion":"2"})["query"]["tokens"]["logintoken"]
+          login = api({"action":"login","lgname":username,"lgpassword":password,"lgtoken":login_token,"format":"json","formatversion":"2"}, True)
+          result = login.get("login",{}).get("result")
           if result != "Success":
               raise SystemExit(f"COMMONS_AUTH_FAIL result={result!r}")
 
-          userinfo = api({
-              "action": "query",
-              "meta": "userinfo",
-              "uiprop": "rights|groups|blockinfo",
-              "format": "json",
-              "formatversion": "2",
-          })["query"]["userinfo"]
-
-          if userinfo.get("id", 0) == 0 or "anon" in userinfo:
+          userinfo = api({"action":"query","meta":"userinfo","uiprop":"rights|groups|blockinfo","format":"json","formatversion":"2"})["query"]["userinfo"]
+          if userinfo.get("id",0) == 0 or "anon" in userinfo:
               raise SystemExit("COMMONS_AUTH_FAIL authenticated session is anonymous")
+
+          block_keys = ["blockid","blockedby","blockedbyid","blockreason","blockedtimestamp","blockexpiry","blockpartial"]
+          block = {k:userinfo.get(k) for k in block_keys if k in userinfo}
+          print("COMMONS_BLOCK_STATUS=" + json.dumps(block, ensure_ascii=False, sort_keys=True))
+          print("COMMONS_HAS_EDIT_RIGHT=" + ("true" if "edit" in set(userinfo.get("rights",[])) else "false"))
+          print("COMMONS_GROUPS=" + json.dumps(userinfo.get("groups",[]), ensure_ascii=False))
           if userinfo.get("blockid") or userinfo.get("blockedby"):
-              raise SystemExit("COMMONS_AUTH_FAIL account is blocked on Commons")
+              raise SystemExit("COMMONS_AUTH_BLOCKED")
 
-          rights = set(userinfo.get("rights", []))
-          if "edit" not in rights:
-              raise SystemExit("COMMONS_AUTH_FAIL missing edit right")
-
-          entity = api({
-              "action": "wbgetentities",
-              "ids": "M196320105",
-              "props": "claims|info",
-              "format": "json",
-              "formatversion": "2",
-          })
-          if "M196320105" not in entity.get("entities", {}) or "missing" in entity["entities"]["M196320105"]:
+          entity = api({"action":"wbgetentities","ids":"M196320105","props":"claims|info","format":"json","formatversion":"2"})
+          if "M196320105" not in entity.get("entities",{}) or "missing" in entity["entities"]["M196320105"]:
               raise SystemExit("COMMONS_READ_FAIL MediaInfo M196320105 unavailable")
-
-          pages = api({
-              "action": "query",
-              "prop": "revisions",
-              "titles": "Category:Saeed Ghezelbash|Category:Dr. Saeed Ghezelbash Aesthetic Clinic",
-              "rvprop": "ids|timestamp",
-              "format": "json",
-              "formatversion": "2",
-          })["query"]["pages"]
+          pages = api({"action":"query","prop":"revisions","titles":"Category:Saeed Ghezelbash|Category:Dr. Saeed Ghezelbash Aesthetic Clinic","rvprop":"ids|timestamp","format":"json","formatversion":"2"})["query"]["pages"]
           if len(pages) != 2 or any("missing" in p for p in pages):
               raise SystemExit("COMMONS_READ_FAIL expected category pages unavailable")
-
-          csrf = api({
-              "action": "query",
-              "meta": "tokens",
-              "type": "csrf",
-              "format": "json",
-              "formatversion": "2",
-          })["query"]["tokens"]["csrftoken"]
+          csrf = api({"action":"query","meta":"tokens","type":"csrf","format":"json","formatversion":"2"})["query"]["tokens"]["csrftoken"]
           if not csrf or csrf == "+\\":
               raise SystemExit("COMMONS_AUTH_FAIL CSRF token unavailable")
-
           print("COMMONS_AUTH_PASS")
           print("COMMONS_EDIT_RIGHT_PASS")
           print("COMMONS_MEDIAINFO_READ_PASS")
