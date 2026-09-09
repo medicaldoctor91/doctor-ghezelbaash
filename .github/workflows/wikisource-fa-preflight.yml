@@ -60,6 +60,7 @@ jobs:
                   if login.get('result') != 'Success':
                       raise RuntimeError('Login result: ' + login.get('result', 'unknown'))
                   info = api({'action': 'query', 'meta': 'userinfo', 'uiprop': 'rights|blockinfo|groups'})['query']['userinfo']
+                  print(json.dumps({'host': host, 'account': info.get('name'), 'block_fields': {key: value for key, value in info.items() if key.startswith('block')}, 'can_skip_captcha': 'skipcaptcha' in info.get('rights', []), 'ipblock_exempt': 'ipblock-exempt' in info.get('rights', [])}, ensure_ascii=False))
                   if info.get('name') != 'Medicaldoctor91' or 'anon' in info:
                       raise RuntimeError('Authenticated account does not match the intended publisher.')
                   if any(key.startswith('block') for key in info):
