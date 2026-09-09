@@ -1,0 +1,42 @@
+{
+  "status": "prepared_not_published",
+  "personal_item": "Q140287622",
+  "account": "Medicaldoctor91",
+  "repository_branch": "ops/persian-wikisource-20260909",
+  "translation": {
+    "complete": true,
+    "original_doi": "10.3390/healthcare9091169",
+    "references": 50,
+    "citation_occurrences": 95,
+    "tables": 3
+  },
+  "authentication": {
+    "secrets_valid": true,
+    "username_secret": "WIKIVERSITY_USERNAME",
+    "password_secret": "WIKIVERSITY_BOT_PASSWORD"
+  },
+  "blocker": {
+    "type": "wikimedia_ip_range_block",
+    "block_id": 3399529,
+    "reason": "Open proxy/Webhost: Microsoft Azure",
+    "account_itself_blocked": false,
+    "ipblock_exemption": false,
+    "affected_projects": [
+      "fa.wikisource.org",
+      "www.wikidata.org"
+    ],
+    "diagnostic_run": 34345425536
+  },
+  "wiki_edits_made": 0,
+  "existing_sitelinks": [
+    "commonswiki",
+    "enwikisource"
+  ],
+  "main_restoration": {
+    "commit": "e81bbf018c0a321423331a7732fb4a88a913a4bd",
+    "restored_tree": "ddf387aaa55ceaa529992d4d054f7068eb3d06ff",
+    "identical_to_before_accidental_staging": true,
+    "source_validation": "success"
+  },
+  "official_block_help": "https://meta.wikimedia.org/wiki/Global_IP_block_exemptions"
+}
