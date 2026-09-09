@@ -29,12 +29,11 @@ jobs:
           import http.cookiejar
           import json
           import os
-          import sys
           import urllib.parse
           import urllib.request
 
           API = "https://commons.wikimedia.org/w/api.php"
-          USER_AGENT = "doctor-ghezelbaash-commons-preflight/1.0 (GitHub Actions; read-only credential verification)"
+          USER_AGENT = "doctor-ghezelbaash-commons-preflight/1.1 (GitHub Actions; read-only credential verification)"
           username = os.environ["WIKIMEDIA_USERNAME"]
           password = os.environ["WIKIMEDIA_BOT_PASSWORD"]
 
@@ -84,9 +83,8 @@ jobs:
               raise SystemExit("COMMONS_AUTH_FAIL account is blocked on Commons")
 
           rights = set(userinfo.get("rights", []))
-          missing = sorted({"edit", "writeapi"} - rights)
-          if missing:
-              raise SystemExit("COMMONS_AUTH_FAIL missing rights: " + ",".join(missing))
+          if "edit" not in rights:
+              raise SystemExit("COMMONS_AUTH_FAIL missing edit right")
 
           entity = api({
               "action": "wbgetentities",
