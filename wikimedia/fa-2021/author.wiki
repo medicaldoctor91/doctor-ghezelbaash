@@ -1,0 +1,12 @@
+{{author
+ | firstname = محمدسعید
+ | lastname = قزلباش
+ | last_initial = ق
+ | description = پزشک و نویسندهٔ مشترک مقاله‌ای پژوهشی در حوزهٔ روان‌پزشکی؛ نام در انتشار انگلیسی: Mohammad Saeed Ghezelbash.
+}}
+
+== آثار ==
+* [[ترجمه:سبک‌های دلبستگی، گسستگی و رویدادهای آسیب‌زا در افسردگی اساسی|افراد مبتلا به اختلال افسردگی اساسی، نمرات بالایی در سبک‌های دلبستگی ناایمنِ اجتنابی و ناایمنِ اضطرابی، نشانه‌های گسست هویت و رویدادهای آسیب‌زای بزرگسالی گزارش می‌کنند]] (2021)، با همکاری Sanobar Golshani، Ali Najafpour، Seyed Sepehr Hashemian، Nasser Goudarzi، Ali Firoozabadi، Sara Hookari، Kimia Firoozabadi، Kenneth M. Dürsteler، Annette Beatrix Brühl، Mostafa Alikhani، Dena Sadeghi-Bahmani و Serge Brand؛ ترجمهٔ [[ویکی‌نبشته:ترجمه‌ها|مشارکت‌کنندگان ویکی‌نبشته]]. اصل مقاله در ''Healthcare''، جلد 9، شمارهٔ 9، مقالهٔ 1169، با مجوز CC BY 4.0 منتشر شده است.<ref>[https://pubmed.ncbi.nlm.nih.gov/34574943/ مشخصات کتاب‌شناختی و فهرست نویسندگان در PubMed]؛ [https://doi.org/10.3390/healthcare9091169 مقالهٔ اصلی، DOI: 10.3390/healthcare9091169].</ref>
+
+== منابع ==
+<references />
