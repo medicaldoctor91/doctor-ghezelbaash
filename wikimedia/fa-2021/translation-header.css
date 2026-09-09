@@ -1,5 +1,0 @@
-/* Scoped styling for the stylesheet referenced by the local Translation header module. */
-.mw-parser-output .wst-translation-header .wst-header-mainblock {
-	border-color: var(--border-color-notice, #a0a0a0);
-	background-color: var(--background-color-neutral-subtle, #f8f9fa);
-}
