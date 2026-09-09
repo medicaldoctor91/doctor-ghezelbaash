@@ -1,0 +1,45 @@
+name: Cancel obsolete Wikisource staging runs
+
+on:
+  push:
+    branches: [ops/persian-wikisource-20260909]
+    paths: [.github/workflows/wikisource-staging-cleanup.yml]
+
+permissions:
+  actions: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Cancel only workflow runs from the exact reverted staging commits
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.error, urllib.request
+          obsolete = set(["144ab1f31d800c5072b6e8b75291999a297deac1","f53e0ab2bb15466c03d4f0f704c816b19a468ac6","0b9391c6820aade9c0a128670f2ceb5cd0471e1f","5b9bc600de6dcc95491e170106ed575dc4e15964","510f429c504daf32ace5d7a197ca56cd4073386f","f65a5f20047fba1f8eb653db409387afe23a9d81","7cb5c7c0a6d8d82d634140d64fd95ef02841d452","00f90c0ea72f99302171a2c276a48c85c4ddd7a8","aed4719906dd75c99f838f63f67372f19f432a80","36ee876380f340dae7872aed0a27cb085040f1fc","c8cc148b84e6f514443c1edccefa31e452af505f","5bf8f9d220c96781b9fd383ec38ae82d53f6ccf6","ca5a2edef3a0624ecd9adfaee73a0145752d0087","2b8539efd1fc2147dec5cb08ef59e28e04caae96","2308410e45eb6b7477179f474f06a82a80a2f74a"])
+          base = 'https://api.github.com/repos/medicaldoctor91/doctor-ghezelbaash'
+          def request(path, post=False):
+              req = urllib.request.Request(base + path, data=b'' if post else None,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                           'Accept': 'application/vnd.github+json',
+                           'X-GitHub-Api-Version': '2022-11-28',
+                           'User-Agent': 'GhezelbashWikisourceCleanup/1.0'})
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  body = response.read()
+                  return json.loads(body) if body else {}
+          runs = request('/actions/runs?per_page=100')['workflow_runs']
+          cancelled = []
+          for run in runs:
+              if run['head_sha'] not in obsolete or run['head_branch'] != 'main' or run['status'] == 'completed':
+                  continue
+              try:
+                  request('/actions/runs/' + str(run['id']) + '/cancel', post=True)
+                  cancelled.append(run['id'])
+              except urllib.error.HTTPError as exc:
+                  if exc.code != 409:
+                      raise RuntimeError('Cancellation HTTP error ' + str(exc.code)) from None
+          print(json.dumps({'cancelled_obsolete_runs': cancelled, 'scope': '15 exact reverted staging commits; current main excluded'}))
+          PY
