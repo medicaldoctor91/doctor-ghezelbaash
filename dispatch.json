@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "endpoint": "https://ghezelbaash-commons.toolforge.org",
+  "action": "commons-cleanup-deleted-clinic-q140288589-v1",
+  "dry_run": true
+}

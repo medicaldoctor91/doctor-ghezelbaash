@@ -1,0 +1,64 @@
+name: Wikimedia Commons via Toolforge
+
+on:
+  push:
+    branches: [commons-dispatch]
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: wikimedia-commons-toolforge-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Validate dispatch contract
+        id: contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          jq -e '.enabled | type == "boolean"' dispatch.json >/dev/null
+          jq -e '.dry_run | type == "boolean"' dispatch.json >/dev/null
+          jq -e '.action == "commons-cleanup-deleted-clinic-q140288589-v1"' dispatch.json >/dev/null
+          jq -e '.endpoint | type == "string" and startswith("https://") and endswith(".toolforge.org")' dispatch.json >/dev/null
+          echo "enabled=$(jq -r .enabled dispatch.json)" >> "$GITHUB_OUTPUT"
+      - name: Disabled by default
+        if: steps.contract.outputs.enabled != 'true'
+        run: echo "Toolforge dispatch is disabled; no external request was made."
+      - name: Obtain short-lived GitHub OIDC token
+        if: steps.contract.outputs.enabled == 'true'
+        id: oidc
+        shell: bash
+        run: |
+          set -euo pipefail
+          audience='ghezelbaash-commons-toolforge'
+          response="$(curl --fail --silent --show-error \
+            -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${audience}")"
+          token="$(jq -er .value <<<"$response")"
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - name: Dispatch allowlisted action to Toolforge
+        if: steps.contract.outputs.enabled == 'true'
+        env:
+          OIDC_TOKEN: ${{ steps.oidc.outputs.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          endpoint="$(jq -r .endpoint dispatch.json)/dispatch"
+          payload="$(jq -c '{action, dry_run}' dispatch.json)"
+          response="$(curl --fail-with-body --silent --show-error \
+            --connect-timeout 10 --max-time 180 \
+            -H "Authorization: Bearer ${OIDC_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            --data "$payload" "$endpoint")"
+          jq -e '.ok == true' <<<"$response" >/dev/null
+          printf '%s\n' "$response" | jq .

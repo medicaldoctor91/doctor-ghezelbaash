@@ -1,6 +1,0 @@
-User-agent: *
-Content-Signal: search=yes, ai-input=yes, ai-train=yes, use=full
-Allow: /
-Disallow: /cdn-cgi/
-
-Sitemap: https://www.ghezelbaash.ir/sitemap.xml

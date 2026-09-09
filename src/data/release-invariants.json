@@ -1,9 +1,0 @@
-{
-  "maxHtmlBytes": 1900000,
-  "maxRagPassageChars": 4200,
-  "evidenceSnapshotMaxAgeDays": 45,
-  "googlebotFetchBudgetBytes": 2000000,
-  "googlebotReservedResponseHeaderBytes": 20000,
-  "googlebotSafetyMarginBytes": 80000,
-  "maxCriticalCssBytes": 12000
-}
