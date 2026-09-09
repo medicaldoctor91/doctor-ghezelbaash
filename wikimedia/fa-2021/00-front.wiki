@@ -1,0 +1,37 @@
+{{Translation header
+ | title = افراد مبتلا به اختلال افسردگی اساسی، نمرات بالایی در سبک‌های دلبستگی ناایمنِ اجتنابی و ناایمنِ اضطرابی، نشانه‌های گسست هویت و رویدادهای آسیب‌زای بزرگسالی گزارش می‌کنند
+ | override_author = Sanobar Golshani؛ Ali Najafpour؛ Seyed Sepehr Hashemian؛ Nasser Goudarzi؛ Ali Firoozabadi؛ [[پدیدآورنده:محمدسعید قزلباش|Mohammad Saeed Ghezelbash]]؛ Sara Hookari؛ Kimia Firoozabadi؛ Kenneth M. Dürsteler؛ Annette Beatrix Brühl؛ Mostafa Alikhani؛ Dena Sadeghi-Bahmani؛ Serge Brand
+ | override_translator = [[ویکی‌نبشته:ترجمه‌ها|مشارکت‌کنندگان ویکی‌نبشته]]
+ | year = 2021
+ | nocat = yes
+ | original = Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events
+ | interwiki-prefix = en
+ | notes = ترجمهٔ فارسیِ مشارکت‌کنندگان ویکی‌نبشته از مقالهٔ منتشرشده در ''Healthcare''، جلد 9، شمارهٔ 9، مقالهٔ 1169 (2021)، با شناسهٔ [https://doi.org/10.3390/healthcare9091169 10.3390/healthcare9091169]. این ترجمه با کمک هوش مصنوعی تهیه شده است و ترجمه‌ای منتشرشده یا تأییدشده از سوی ناشر محسوب نمی‌شود. متن مبدأ: [[:en:Individuals with Major Depressive Disorder Report High Scores of Insecure-Avoidant and Insecure-Anxious Attachment Styles, Dissociative Identity Symptoms, and Adult Traumatic Events|نسخهٔ انگلیسی ویکی‌نبشته]]؛ [[:commons:File:Healthcare 2021 9 1169 - Golshani et al.pdf|PDF مقالهٔ اصلی، 13 صفحه]]. مجوز متن اصلی [https://creativecommons.org/licenses/by/4.0/ CC BY 4.0] است. نام همهٔ نویسندگان، اعداد، منابع و ناسازگاری‌های موجود در اصل حفظ شده‌اند؛ از جمله اختلاف بعضی درصدها میان چکیده و نتایج، چینش نامنطبقِ اعداد جدول 1، ارجاع جدول در بخش بحث و شماره‌گذاری تکراری در متن. این یادداشت از مترجم است و جزو مقالهٔ اصلی نیست.
+}}
+
+'''مقالهٔ اصلی:''' ''Healthcare''، 2021، 9، 1169. شناسهٔ دیجیتال: [https://doi.org/10.3390/healthcare9091169 10.3390/healthcare9091169].
+
+'''نویسندگان و وابستگی‌های سازمانی در زمان انتشار:'''<br />
+<span dir="ltr">Sanobar Golshani<sup>1</sup>; Ali Najafpour<sup>2</sup>; Seyed Sepehr Hashemian<sup>3</sup>; Nasser Goudarzi<sup>4</sup>; Ali Firoozabadi<sup>5</sup>; Mohammad Saeed Ghezelbash<sup>1</sup>; Sara Hookari<sup>6</sup>; Kimia Firoozabadi<sup>7</sup>; Kenneth M. Dürsteler<sup>8,9</sup>; Annette Beatrix Brühl<sup>10</sup>; Mostafa Alikhani<sup>1</sup>; Dena Sadeghi-Bahmani<sup>6,10,11,12</sup>; Serge Brand<sup>6,10,12,13,14,*</sup></span>
+
+# دانشگاه علوم پزشکی کرمانشاه، کرمانشاه 6719851115، ایران؛ <span dir="ltr">snb.gln@gmail.com (S.G.); medicaldoctor91@gmail.com (M.S.G.); mostafaalikhani18@gmail.com (M.A.)</span>
+# کمیتهٔ تحقیقات دانشجویی، دانشکدهٔ پزشکی، دانشگاه علوم پزشکی کرمانشاه، کرمانشاه 6714869914، ایران؛ <span dir="ltr">ali98aaa@yahoo.com</span>
+# گروه روان‌شناسی، دانشگاه علامه طباطبایی، تهران 1489684511، ایران؛ <span dir="ltr">sepehr.hashemian@gmail.com</span>
+# گروه روان‌پزشکی، دانشگاه علوم پزشکی آجا، تهران 1411718541، ایران؛ <span dir="ltr">nassergoodarzi@yahoo.com</span>
+# مرکز تحقیقات روان‌پزشکی و علوم رفتاری، گروه روان‌پزشکی، بیمارستان حافظ، دانشگاه علوم پزشکی شیراز، شیراز 7134814336، ایران؛ <span dir="ltr">a_psych@hotmail.com</span>
+# مرکز تحقیقات پیشگیری از سوءمصرف مواد، دانشگاه علوم پزشکی کرمانشاه، کرمانشاه 6714869914، ایران؛ <span dir="ltr">sara_hoo64@yahoo.com (S.H.); dena.sadeghibahmani@upk.ch (D.S.-B.)</span>
+# دانشکدهٔ علوم پزشکی، مدرسهٔ پزشکی UCL، یونیورسیتی کالج لندن، لندن <span dir="ltr">WC1E 6BT</span>، بریتانیا؛ <span dir="ltr">Kimiafiroozabadi65@gmail.com</span>
+# بخش اختلالات مصرف مواد، کلینیک‌های روان‌پزشکی، دانشگاه بازل، بازل 4002، سوئیس؛ <span dir="ltr">Kenneth.Duersteler@upk.ch</span>
+# مرکز اختلالات اعتیادی، گروه روان‌پزشکی، روان‌درمانی و روان‌تنی، بیمارستان روان‌پزشکی، دانشگاه زوریخ، زوریخ 8001، سوئیس.
+# مرکز اختلالات خلقی، استرس و خواب (ZASS)، کلینیک‌های روان‌پزشکی (UPK)، دانشگاه بازل، بازل 4002، سوئیس؛ <span dir="ltr">annette.bruehl@upk.ch</span>
+# دانشکدهٔ روان‌شناسی، دانشگاه استنفورد، استنفورد، کالیفرنیا 94305، ایالات متحدهٔ آمریکا.
+# مرکز تحقیقات اختلالات خواب، دانشگاه علوم پزشکی کرمانشاه، کرمانشاه 6719851115، ایران.
+# گروه ورزش، تمرین و سلامت، بخش علوم ورزشی و سلامت روانی‌اجتماعی، دانشگاه بازل، بازل 4052، سوئیس.
+# گروه روان‌پزشکی، دانشکدهٔ پزشکی، دانشگاه علوم پزشکی تهران، تهران 1417466191، ایران.
+
+'''نویسندهٔ مسئول (*):''' <span dir="ltr">serge.brand@unibas.ch</span> یا <span dir="ltr">Serge.Brand@upk.ch</span>.
+
+'''ویراستار علمی:''' Connie Veazey.<br />
+'''دریافت:''' 25 ژوئن 2021؛ '''پذیرش:''' 25 اوت 2021؛ '''انتشار:''' 6 سپتامبر 2021.
+
+'''حق نشر مقالهٔ اصلی:''' © 2021 نویسندگان. دارندهٔ مجوز: MDPI، بازل، سوئیس. مقاله با دسترسی آزاد و تحت شرایط مجوز [https://creativecommons.org/licenses/by/4.0/ Creative Commons Attribution 4.0 (CC BY)] منتشر شده است.
