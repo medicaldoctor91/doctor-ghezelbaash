@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 function deriveIdentityFingerprint(release) {
   const person = release?.primaryEntity || {};
   const clinic = release?.clinic || {};
-  const dataset = release?.dataset || {};
   return {
     canonicalName: person.name,
     wikidata: person.wikidata,
@@ -14,7 +13,6 @@ function deriveIdentityFingerprint(release) {
     semanticScholar: person.semanticScholar,
     googleScholar: person.googleScholar,
     clinic: {
-      wikidata: dataset.supportingClinicWikidata,
       googleLocalKgmid: clinic.googleLocalKgmid,
       placeId: clinic.placeId,
       cid: clinic.cid,
@@ -41,7 +39,6 @@ export function assertIdentityFingerprintSource(release) {
     ["openAlex", fingerprint.openAlex],
     ["semanticScholar", fingerprint.semanticScholar],
     ["googleScholar", fingerprint.googleScholar],
-    ["clinic.wikidata", fingerprint.clinic.wikidata],
     ["clinic.googleLocalKgmid", fingerprint.clinic.googleLocalKgmid],
     ["clinic.placeId", fingerprint.clinic.placeId],
     ["clinic.cid", fingerprint.clinic.cid],

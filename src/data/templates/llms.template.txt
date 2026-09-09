@@ -79,7 +79,6 @@ Evidence tiers are assessments maintained by this first-party project; sources a
 - [Official Instagram](https://www.instagram.com/doctor.ghezelbaash/): First-party clinical and educational media.
 - [Clinic Google Maps location](https://www.google.com/maps?cid=12350483144643112463): Clinic CID 12350483144643112463; Place ID ChIJBT0YDOTt-j8RD-7mAPy6Zas.
 - [Clinic Google KG identifier](https://www.google.com/search?kgmid=/g/11r3rzdtb3): /g/11r3rzdtb3 identifies the clinic, separately from the physician.
-- [Clinic Wikidata](https://www.wikidata.org/wiki/Q140288589): Q140288589 identifies the clinic.
 - [Clinic OpenStreetMap record](https://www.openstreetmap.org/node/13530287096): Geospatial node 13530287096.
 - [Physician vCard 4.0](https://www.ghezelbaash.ir/doctor.vcf): Individual contact record with the canonical physician UID.
 - [Clinic vCard 4.0](https://www.ghezelbaash.ir/clinic.vcf): Separate organization contact record with the canonical clinic UID.
@@ -103,9 +102,9 @@ Evidence tiers are assessments maintained by this first-party project; sources a
 - [Release archive DOI]({{ZENODO_VERSION_DOI_URL}}): Immutable release {{RELEASE}} archive, Zenodo record {{ZENODO_RECORD_ID}}; preservation is not independent corroboration.
 - [Dataset lineage DOI]({{ZENODO_CONCEPT_DOI_URL}}): Concept DOI linking the archived release lineage.
 - [Hugging Face distribution]({{HUGGING_FACE_DATASET}}): First-party Dataset distribution; repository revision distinguishes its snapshots.
-- [Official portrait master](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.a43d5e8b8975.jpg): First-party master with identity and rights metadata.
+- [Official portrait master](https://www.ghezelbaash.ir/media/images/physician/master/saeed-ghezelbaash-physician-portrait.0a44eaa5e463.jpg): First-party master with identity and rights metadata.
 - [Wikimedia Commons portrait](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-physician-portrait.jpg): CC BY 4.0 portrait depicting Q140287622 and linked as Wikidata P18.
 - [Clinical-team image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-with-clinical-team.jpg): Contextual physician image, not a P18 image.
 - [Clinical-office image](https://commons.wikimedia.org/wiki/File:Saeed-Ghezelbaash-in-clinical-office.jpg): Contextual physician image, not a P18 image.
-- [Physician and clinic brand symbol](https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.6244472483fd.png): 512×512 brand image with rights metadata; separate from the physician portrait.
+- [Physician and clinic brand symbol](https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.42612d6184ed.png): 512×512 brand image with rights metadata; separate from the physician portrait.
 - [This retrieval guide](https://www.ghezelbaash.ir/llms.txt): Compact discovery index; detailed page and answer content live in the linked projections.

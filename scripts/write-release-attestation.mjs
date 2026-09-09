@@ -46,7 +46,6 @@ const attestation = {
   medicalReviewedAt: release.medicalReviewedAt,
   canonicalDatasetIri: release.dataset.id,
   primaryEntity: release.primaryEntity.wikidata,
-  clinicEntity: release.dataset.supportingClinicWikidata,
   sourceRepository: release.dataset.github.repository,
   sourceCommit: headCommit,
   zenodoConceptDoi: zenodo.conceptDoi,

@@ -28,7 +28,6 @@
     "https://www.ghezelbaash.ir/#identifier-clinic-google-place-id",
     "https://www.ghezelbaash.ir/#identifier-clinic-google-maps-cid",
     "https://www.ghezelbaash.ir/#identifier-clinic-osm-node",
-    "https://www.ghezelbaash.ir/#identifier-clinic-wikidata",
     "https://www.ghezelbaash.ir/#speakable-primary-content",
     "https://www.ghezelbaash.ir/#identifier-person-openalex",
     "https://www.ghezelbaash.ir/#identifier-person-semantic-scholar",
@@ -218,8 +217,7 @@
           "https://www.ghezelbaash.ir/#identifier-clinic-google-kgid",
           "https://www.ghezelbaash.ir/#identifier-clinic-google-place-id",
           "https://www.ghezelbaash.ir/#identifier-clinic-google-maps-cid",
-          "https://www.ghezelbaash.ir/#identifier-clinic-osm-node",
-          "https://www.ghezelbaash.ir/#identifier-clinic-wikidata"
+          "https://www.ghezelbaash.ir/#identifier-clinic-osm-node"
         ],
         "medicalSpecialty": [
           "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
@@ -270,7 +268,6 @@
         ],
         "subjectOf": [
           "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
-          "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
           "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership"
         ],
         "image": [],

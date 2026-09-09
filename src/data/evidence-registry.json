@@ -125,24 +125,6 @@
       "role": "identity-reference"
     },
     {
-      "id": "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
-      "tier": "A",
-      "supports": [
-        "clinic-identity",
-        "clinic-ownership",
-        "clinic-founder",
-        "clinic-local-kg"
-      ],
-      "url": "https://www.wikidata.org/wiki/Q140288589",
-      "liveStatus": "verified",
-      "verifiedAt": "2026-08-07",
-      "expectedMarkers": [
-        "Q140288589",
-        "/g/11r3rzdtb3"
-      ],
-      "role": "identity-reference"
-    },
-    {
       "id": "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership",
       "tier": "A",
       "supports": [

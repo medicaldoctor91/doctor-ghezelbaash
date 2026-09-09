@@ -4855,9 +4855,9 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-07T07:52:09.262Z",
-    "sourceSha256": "35eff32844c4eedf56ddd229e0c8e7c24a253516b711a52ad2d986b3c3d00176",
-    "domSha256": "8df830164b405cc3083c3398654385e5d0df3b7aa8948eab390849244d346c97",
+    "measuredAt": "2026-09-09T01:29:28.932Z",
+    "sourceSha256": "050b2965195c7e4662a79a2309b07369e7e719b42a24d84c789eac563ca936e8",
+    "domSha256": "409012031ffb9a00e438179b7ef5a8cce8b5cb3706a0821d18b723a15a471ae2",
     "inputs": [
       [
         "astro.config.mjs",
@@ -4865,7 +4865,7 @@
       ],
       [
         "package-lock.json",
-        "33f6a0e54735d9bc4e071ac09fefccc02223a4e65cd73daff5ed889843ea88b6"
+        "60335e6d7dd077e21ae6777d4fd3532c88b16c6abd3611e6d3ca9b5e18f37d1e"
       ],
       [
         "public/fonts/vazirmatn-nl-wght.cdef5578ea58.woff2",
@@ -4881,7 +4881,7 @@
       ],
       [
         "src/components/DocumentHead.astro",
-        "f04451c23730f9bef44e075edfa7883e7b07f89dda9ed6648a32fa02e8428729"
+        "cdf5d6300389059e340c5b06def0b95e2e5f4e025e4eb45f0a4826fcd7989552"
       ],
       [
         "src/components/FloatingActionDock.astro",
@@ -4905,7 +4905,7 @@
       ],
       [
         "src/lib/hero-image-contract.mjs",
-        "fc13fdaa9976801dc423578d978efc709f5af86d1b7218d8e2b0050154ca8622"
+        "ce0ca702f525ad77940bb5d7606005ae61c1a233596c4409b4db916d974e7afa"
       ],
       [
         "src/pages/index.astro",
@@ -4917,7 +4917,7 @@
       ],
       [
         "assembled-render-chunk-content",
-        "8df830164b405cc3083c3398654385e5d0df3b7aa8948eab390849244d346c97"
+        "409012031ffb9a00e438179b7ef5a8cce8b5cb3706a0821d18b723a15a471ae2"
       ]
     ],
     "measurement": {

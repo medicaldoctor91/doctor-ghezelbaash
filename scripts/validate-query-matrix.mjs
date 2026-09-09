@@ -111,7 +111,6 @@ const commonFields = [
   "answer_strategy",
   "canonical_subject",
   "canonical_subject_iri",
-  "clinic_entity",
   "dataset_iri",
   "intent_family",
   "language",
@@ -153,7 +152,6 @@ for (const row of rows) {
   if (
     row.canonical_subject !== release.primaryEntity.wikidata ||
     row.canonical_subject_iri !== release.primaryEntity.id ||
-    row.clinic_entity !== release.dataset.supportingClinicWikidata ||
     row.dataset_iri !== release.dataset.id
   )
     fail(`Canonical entity authority drift ${key}`);

@@ -101,7 +101,6 @@ const expectedMatrix = {
   recordId: String(Z.recordId),
   datasetIri: release.dataset.id,
   personWikidata: release.primaryEntity.wikidata,
-  clinicWikidata: release.dataset.supportingClinicWikidata,
 };
 for (const [key, value] of Object.entries(expectedMatrix))
   if (String(matrix[key]) !== String(value))

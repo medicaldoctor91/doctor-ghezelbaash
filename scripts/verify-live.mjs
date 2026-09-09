@@ -436,7 +436,6 @@ async function command_discovery() {
     versionDoi: release.dataset.zenodo.versionDoi,
     recordId: String(release.dataset.zenodo.recordId),
     personWikidata: release.primaryEntity.wikidata,
-    clinicWikidata: release.dataset.supportingClinicWikidata,
   }))
     if (String(matrix[k]) !== String(v))
       throw new Error(`Current release matrix ${k} drift ${matrix[k]} != ${v}`);
@@ -696,7 +695,6 @@ async function command_release() {
     medicalReviewedAt: release.medicalReviewedAt,
     canonicalDatasetIri: release.dataset.id,
     primaryEntity: release.primaryEntity.wikidata,
-    clinicEntity: release.dataset.supportingClinicWikidata,
     sourceRepository: release.dataset.github.repository,
     sourceCommit: head,
     zenodoConceptDoi: z.conceptDoi,

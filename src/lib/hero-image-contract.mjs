@@ -3,10 +3,10 @@ export const HERO_IMAGE_SIZES =
 export const HERO_FIGURE_TOTAL_BORDER_PX = 2;
 const HERO_IMAGE_SIZES_TOKEN = "{{HERO_IMAGE_SIZES}}";
 export const HERO_PRELOAD_HREF =
-  "/media/images/physician/saeed-ghezelbash-portrait-delivery-640.a2b0a5e1ab4d.avif";
+  "/media/images/physician/saeed-ghezelbash-portrait-delivery-640.f41e5aa1c0dd.avif";
 export const HERO_EARLY_HINT_HREF =
-  "/media/images/physician/saeed-ghezelbash-portrait-960.b752a836dd26.avif";
-export const HERO_PRELOAD_SRCSET = `${HERO_PRELOAD_HREF} 640w, ${HERO_EARLY_HINT_HREF} 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.586a1aef120c.avif 1600w`;
+  "/media/images/physician/saeed-ghezelbash-portrait-960.abde9c5ed375.avif";
+export const HERO_PRELOAD_SRCSET = `${HERO_PRELOAD_HREF} 640w, ${HERO_EARLY_HINT_HREF} 960w, /media/images/physician/saeed-ghezelbash-portrait-1600.75fc75537a3b.avif 1600w`;
 
 const tokenCount = (value) =>
   String(value).split(HERO_IMAGE_SIZES_TOKEN).length - 1;

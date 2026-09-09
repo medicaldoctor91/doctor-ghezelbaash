@@ -83,7 +83,6 @@ const PROFILE_EVIDENCE_WEBPAGES = [
 ];
 const CORE_CLINIC_AUTHORITY_SUBJECTS = [
   "https://www.ghezelbaash.ir/#evidence-google-maps-clinic",
-  "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
   "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership",
 ];
 const EXPECTED_AREAS = [IRAN, IRAQ];

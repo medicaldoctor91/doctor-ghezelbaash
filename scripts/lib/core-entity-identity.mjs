@@ -9,22 +9,16 @@ const exactValues = (actual, expected) =>
   actual.every((value, index) => value === expected[index]);
 
 /**
- * Enforces unambiguous ownership of the two public Wikidata identifiers used
- * by the core physician/clinic topology. This is deliberately data-driven:
- * release.json owns the identifiers, while the graph may only project them
- * onto the matching entity and matching PropertyValue node.
+ * Enforces ownership of the physician's public Wikidata identifier.
+ * release.json owns the identifier, while the graph projects it onto the
+ * physician and matching PropertyValue node.
  */
 export function validateCoreEntityIdentity({ release, nodes }) {
   if (!Array.isArray(nodes))
     fail("Core entity identity validation requires graph nodes");
   const personQ = String(release?.primaryEntity?.wikidata || "");
-  const clinicQ = String(release?.dataset?.supportingClinicWikidata || "");
-  if (
-    !/^Q[1-9]\d*$/.test(personQ) ||
-    !/^Q[1-9]\d*$/.test(clinicQ) ||
-    personQ === clinicQ
-  )
-    fail("Core Wikidata identifiers are invalid or collapsed");
+  if (!/^Q[1-9]\d*$/.test(personQ))
+    fail("Physician Wikidata identifier is invalid");
 
   const byId = new Map(
     nodes
@@ -36,7 +30,6 @@ export function validateCoreEntityIdentity({ release, nodes }) {
   if (!person || !clinic) fail("Core Person/Clinic identity nodes are missing");
 
   const personIri = `https://www.wikidata.org/entity/${personQ}`;
-  const clinicIri = `https://www.wikidata.org/entity/${clinicQ}`;
   const wikidataIris = (node) =>
     asArray(node.sameAs)
       .map(refId)
@@ -46,8 +39,6 @@ export function validateCoreEntityIdentity({ release, nodes }) {
       .sort();
   if (!exactValues(wikidataIris(person), [personIri]))
     fail("Physician Wikidata sameAs ownership drift");
-  if (!exactValues(wikidataIris(clinic), [clinicIri]))
-    fail("Clinic Wikidata sameAs ownership drift");
 
   const verifyIdentifier = (entity, nodeId, value, url, label) => {
     if (!asArray(entity.identifier).map(refId).includes(nodeId))
@@ -68,13 +59,6 @@ export function validateCoreEntityIdentity({ release, nodes }) {
     personIri,
     "Physician",
   );
-  verifyIdentifier(
-    clinic,
-    `${release.canonicalUrl}#identifier-clinic-wikidata`,
-    clinicQ,
-    clinicIri,
-    "Clinic",
-  );
 
   const releaseMesh = asArray(release.primaryEntity.verifiedWebIdentityMesh)
     .filter((value) =>
@@ -83,5 +67,5 @@ export function validateCoreEntityIdentity({ release, nodes }) {
     .sort();
   if (!exactValues(releaseMesh, [personIri]))
     fail("Release physician identity mesh Wikidata ownership drift");
-  return Object.freeze({ personQ, personIri, clinicQ, clinicIri });
+  return Object.freeze({ personQ, personIri });
 }

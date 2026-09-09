@@ -50,8 +50,7 @@
     "stableIdentityEvidenceFromTierA": true,
     "identityBaselineSupportKinds": [
       "medical-license",
-      "canonical-name",
-      "clinic-identity"
+      "canonical-name"
     ],
     "maxStableEvidenceRefsPerRow": 8
   },

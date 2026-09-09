@@ -46,7 +46,6 @@ def validate_release_attestation(attestation,source_commit,full_inventory):
       'medicalReviewedAt':release['medicalReviewedAt'],
       'canonicalDatasetIri':release['dataset']['id'],
       'primaryEntity':release['primaryEntity']['wikidata'],
-      'clinicEntity':release['dataset']['supportingClinicWikidata'],
       'sourceRepository':release['dataset']['github']['repository'],
       'sourceCommit':source_commit,
       'zenodoConceptDoi':z['conceptDoi'],
@@ -78,7 +77,6 @@ def validate_remote_release_auxiliaries(blobs,record,doi,concept):
       'medicalReviewedAt':release['medicalReviewedAt'],
       'canonicalDatasetIri':release['dataset']['id'],
       'primaryEntity':release['primaryEntity']['wikidata'],
-      'clinicEntity':release['dataset']['supportingClinicWikidata'],
       'sourceRepository':release['dataset']['github']['repository'],
       'zenodoConceptDoi':concept,
       'zenodoVersionDoi':doi,
@@ -106,7 +104,7 @@ def validate_remote_release_auxiliaries(blobs,record,doi,concept):
 
 def canonical_metadata(version,date,doi,concept):
     release=load_release(); person=release["primaryEntity"]; dataset=release["dataset"]
-    person_q=person["wikidata"]; clinic_q=dataset["supportingClinicWikidata"]; orcid=person["orcid"]
+    person_q=person["wikidata"]; orcid=person["orcid"]
     return {
       'upload_type':'dataset','publication_date':date,'title':dataset['name'],
       'creators':[{'name':'Ghezelbash, Saeed','orcid':orcid}],
@@ -115,7 +113,7 @@ def canonical_metadata(version,date,doi,concept):
         f'of the physician-owned first-party Dataset whose canonical IRI is <a href="{dataset["id"]}">{dataset["id"]}</a>.</p>'
         f'<p>The primary entity, creator and publisher is <strong>Dr. {person["name"]}</strong> '
         f'(Wikidata {person_q}; ORCID {orcid}; Iran Medical Council {person["irimc"]}). '
-        f'The supporting clinic is {clinic_q}; the continuing Dataset is identified by its canonical first-party IRI and DOI lineage.</p>'
+        'The continuing Dataset is identified by its canonical first-party IRI and DOI lineage.</p>'
         '<p>GitHub is the version-controlled source, Zenodo is immutable DOI preservation, and Hugging Face is the AI/retrieval distribution. '
         'These roles are linked without collapsing the physician, clinic, Dataset, source repository or distribution records into one identity.</p>'
       ),
@@ -127,16 +125,14 @@ def canonical_metadata(version,date,doi,concept):
         'JSON-LD','RDF','Schema.org','Wikidata','FAIR data','machine-readable data','question answering','text retrieval','AI retrieval','RAG','Croissant','DCAT','provenance'],
       'subjects':[
         {'term':person['name'],'identifier':f'https://www.wikidata.org/entity/{person_q}','scheme':'url'},
-        {'term':dataset['name'],'identifier':dataset['id'],'scheme':'url'},
-        {'term':'Dr. Saeed Ghezelbash Aesthetic Clinic','identifier':f'https://www.wikidata.org/entity/{clinic_q}','scheme':'url'}],
+        {'term':dataset['name'],'identifier':dataset['id'],'scheme':'url'}],
       'notes':f'Canonical Dataset IRI: {dataset["id"]}. Concept DOI: {concept}.'+(f' Exact Version DOI: {doi}.' if doi else ''),
       'related_identifiers':[
         {'identifier':dataset['id'],'relation':'isDerivedFrom','resource_type':'dataset'},
         {'identifier':release['canonicalUrl'],'relation':'isDescribedBy','resource_type':'other'},
         {'identifier':dataset['github']['repository'],'relation':'isDerivedFrom','resource_type':'software'},
         {'identifier':dataset['huggingFace']['dataset'],'relation':'isReferencedBy','resource_type':'dataset'},
-        {'identifier':f'https://www.wikidata.org/entity/{person_q}','relation':'references','resource_type':'other'},
-        {'identifier':f'https://www.wikidata.org/entity/{clinic_q}','relation':'references','resource_type':'other'}],
+        {'identifier':f'https://www.wikidata.org/entity/{person_q}','relation':'references','resource_type':'other'}],
       'prereserve_doi':True
     }
 

@@ -31,7 +31,6 @@ export function matchImageProfile(filename) {
 
 function universalImageSubjects(release) {
   const personWikidataIri = `https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`;
-  const clinicWikidataIri = `https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`;
   return [
     "Saeed Ghezelbash",
     "Dr. Saeed Ghezelbash",
@@ -44,7 +43,6 @@ function universalImageSubjects(release) {
     release.primaryEntity.id,
     personWikidataIri,
     release.clinic.id,
-    clinicWikidataIri,
     `IRIMC ${release.primaryEntity.irimc}`,
     `Google KG ${release.primaryEntity.googleKnowledgeGraphId}`,
     `Google Place ${release.clinic.placeId}`,
@@ -69,7 +67,6 @@ export function imageMetadataFor(release, profile) {
       `Image metadata profile ${profile.title} lacks its explicit primary alt text`,
     );
   const personWikidataIri = `https://www.wikidata.org/entity/${release.primaryEntity.wikidata}`;
-  const clinicWikidataIri = `https://www.wikidata.org/entity/${release.dataset.supportingClinicWikidata}`;
   const subjects = [
     ...new Set([...profile.subjects, ...universalImageSubjects(release)]),
   ];
@@ -101,18 +98,15 @@ export function imageMetadataFor(release, profile) {
       release.canonicalUrl,
       "https://www.wikidata.org/",
       release.canonicalUrl,
-      "https://www.wikidata.org/",
     ],
     "XMP-iptcExt:AboutCvTermId": [
       release.primaryEntity.id,
       personWikidataIri,
       release.clinic.id,
-      clinicWikidataIri,
     ],
     "XMP-iptcExt:AboutCvTermName": [
       "Saeed Ghezelbash",
       "Saeed Ghezelbash",
-      "Dr. Saeed Ghezelbash Aesthetic Clinic",
       "Dr. Saeed Ghezelbash Aesthetic Clinic",
     ],
   };
@@ -133,7 +127,6 @@ export function imageMetadataFor(release, profile) {
       "Dr. Saeed Ghezelbash Aesthetic Clinic";
     metadata["XMP-iptcExt:OrganisationInImageCode"] = [
       release.clinic.id,
-      clinicWikidataIri,
     ];
   }
   if (profile.clinicLocation) {

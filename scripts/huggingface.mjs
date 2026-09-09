@@ -254,7 +254,6 @@ AI/retrieval distribution of the canonical physician-owned Dataset at \`${releas
 - ORCID: \`${release.dataset.creatorOrcid}\`
 - Iran Medical Council: \`${release.primaryEntity.irimc}\`
 - Canonical physician IRI: \`${release.primaryEntity.id}\`
-- Supporting clinic: Wikidata \`${release.dataset.supportingClinicWikidata}\`
 - Canonical Dataset IRI: \`${release.dataset.id}\`
 - Source: \`${release.dataset.github.repository}\`
 - Base release lineage: \`${release.release}\`
@@ -386,7 +385,6 @@ async function commandVerify() {
     release.primaryEntity.googleKnowledgeGraphId,
     release.primaryEntity.orcid,
     release.primaryEntity.irimc,
-    release.dataset.supportingClinicWikidata,
     release.dataset.id,
     release.dataset.zenodo.conceptDoi,
     release.dataset.zenodo.versionDoi,

@@ -262,7 +262,6 @@ export async function compileContactDiscovery(context) {
       `X-GOOGLE-KG-ID:${release.clinic.googleLocalKgmid}`,
       `X-GOOGLE-PLACE-ID:${release.clinic.placeId}`,
       `X-GOOGLE-MAPS-CID:${release.clinic.cid}`,
-      `X-WIKIDATA:${release.dataset.supportingClinicWikidata}`,
       `X-OWNER:${release.primaryEntity.id}`,
       `X-PRICE-RANGE:${release.clinic.priceRange}`,
       `X-HOURS:${release.clinic.hours}`,

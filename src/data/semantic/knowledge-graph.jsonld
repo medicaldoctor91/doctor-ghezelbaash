@@ -233,7 +233,7 @@
     {
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-thumbnail",
       "@type": "ImageObject",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.c0b10114861b.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-thumbnail-width"
@@ -324,7 +324,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -336,7 +335,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.c0b10114861b.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-960.637a6fbe30a3.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -363,7 +362,7 @@
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-1600.4ebec925186c.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-1600.4a98e8621f1d.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-width"
@@ -441,7 +440,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -449,14 +447,14 @@
         "M196320105",
         "https://commons.wikimedia.org/entity/M196320105"
       ],
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-1600.4ebec925186c.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-1600.4a98e8621f1d.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-thumbnail",
       "@type": "ImageObject",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-960.8a5905cf0654.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-960.ee71f67f4fa9.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-thumbnail-width"
@@ -550,7 +548,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -562,7 +559,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-960.8a5905cf0654.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-960.ee71f67f4fa9.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -589,7 +586,7 @@
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-1600.83c432ed4951.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-1600.e31a4e7db538.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinical-examination-width"
@@ -670,7 +667,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -678,14 +674,14 @@
         "M196320110",
         "https://commons.wikimedia.org/entity/M196320110"
       ],
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-1600.83c432ed4951.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-clinical-examination-1600.e31a4e7db538.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail",
       "@type": "ImageObject",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.1fe4b95e5523.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.0701380faf77.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail-width"
@@ -779,7 +775,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -791,7 +786,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.1fe4b95e5523.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.0701380faf77.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -818,7 +813,7 @@
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.dd2d25c23a41.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.f6a5adb17648.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-width"
@@ -899,7 +894,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -907,14 +901,14 @@
         "M196320111",
         "https://commons.wikimedia.org/entity/M196320111"
       ],
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.dd2d25c23a41.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.f6a5adb17648.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior-thumbnail",
       "@type": "ImageObject",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.d904d3e3af1c.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.c26f7db4982a.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior-thumbnail-width"
@@ -922,7 +916,7 @@
       "height": {
         "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior-thumbnail-height"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.d904d3e3af1c.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-640.c26f7db4982a.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07",
       "license": "https://creativecommons.org/licenses/by/4.0/",
@@ -945,8 +939,7 @@
         "Dr. Saeed Ghezelbash",
         "کلینیک زیبایی کرمانشاه",
         "aesthetic clinic Kermanshah",
-        "Q140287622",
-        "Q140288589"
+        "Q140287622"
       ]
     },
     {
@@ -954,7 +947,7 @@
       "@type": "ImageObject",
       "name": "فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه",
       "caption": "فضای داخلی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.3fc0fe75b5df.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.63d4010576cb.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-interior-width"
@@ -980,7 +973,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.3fc0fe75b5df.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-960.63d4010576cb.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07",
       "license": "https://creativecommons.org/licenses/by/4.0/",
@@ -997,14 +990,13 @@
         "Dr. Saeed Ghezelbash",
         "کلینیک زیبایی کرمانشاه",
         "aesthetic clinic Kermanshah",
-        "Q140287622",
-        "Q140288589"
+        "Q140287622"
       ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception-thumbnail",
       "@type": "ImageObject",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.bc186107c539.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.57c8ffe2f77b.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception-thumbnail-width"
@@ -1012,7 +1004,7 @@
       "height": {
         "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception-thumbnail-height"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.bc186107c539.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-640.57c8ffe2f77b.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07",
       "license": "https://creativecommons.org/licenses/by/4.0/",
@@ -1035,8 +1027,7 @@
         "Dr. Saeed Ghezelbash",
         "کلینیک زیبایی کرمانشاه",
         "aesthetic clinic Kermanshah",
-        "Q140287622",
-        "Q140288589"
+        "Q140287622"
       ]
     },
     {
@@ -1044,7 +1035,7 @@
       "@type": "ImageObject",
       "name": "بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه",
       "caption": "بخش پذیرش کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.4dfc3e2ebf1f.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.b50f67c70e14.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-ghezelbaash-clinic-reception-width"
@@ -1070,7 +1061,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.4dfc3e2ebf1f.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-864.b50f67c70e14.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07",
       "license": "https://creativecommons.org/licenses/by/4.0/",
@@ -1087,8 +1078,7 @@
         "Dr. Saeed Ghezelbash",
         "کلینیک زیبایی کرمانشاه",
         "aesthetic clinic Kermanshah",
-        "Q140287622",
-        "Q140288589"
+        "Q140287622"
       ]
     },
     {
@@ -4235,13 +4225,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#identifier-clinic-balad"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#identifier-clinic-wikidata"
         }
       ],
       "sameAs": [
-        "https://www.wikidata.org/entity/Q140288589",
         "https://www.google.com/maps?cid=12350483144643112463",
         "https://www.openstreetmap.org/node/13530287096"
       ],
@@ -4255,12 +4241,12 @@
         {
           "@id": "https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo"
         },
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.38fa87daaf54.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.cf191f37bcdb.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1d9285d1dfd7.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-1x1.adef35b75d97.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-4x3.fdbc375592c3.webp",
-        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.a49f74e53c0e.webp"
+        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-1x1.3bf7a3083ee9.webp",
+        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-4x3.a73e2b1cde35.webp",
+        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-interior-kermanshah-16x9.1c8cf4717021.webp",
+        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-1x1.04ad33d2000c.webp",
+        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-4x3.6d8a4a4189af.webp",
+        "https://www.ghezelbaash.ir/media/images/clinic/ghezelbash-clinic-reception-kermanshah-16x9.1ee123845ab5.webp"
       ],
       "subjectOf": [
         {
@@ -4268,9 +4254,6 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-clinic"
         },
         {
           "@id": "https://www.ghezelbaash.ir/#evidence-openstreetmap-clinic"
@@ -6856,7 +6839,7 @@
           "@id": "https://www.ghezelbaash.ir/#video-jalupro-vs-profhilo-webm-encoding"
         }
       ],
-      "thumbnailUrl": "https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.41859ef03676.webp",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-jalupro-vs-profhilo.1d1c99aa1bf1.webp",
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -6968,7 +6951,7 @@
           "@id": "https://www.ghezelbaash.ir/#video-subcision-technique-webm-encoding"
         }
       ],
-      "thumbnailUrl": "https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-subcision-technique.153172d3111b.webp",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-subcision-technique.9cb6520c1ca2.webp",
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -7071,7 +7054,7 @@
           "@id": "https://www.ghezelbaash.ir/#video-thread-lift-workshop-webm-encoding"
         }
       ],
-      "thumbnailUrl": "https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-thread-lift-workshop.640c2294975a.webp",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/media/posters/education/saeed-ghezelbash-thread-lift-workshop.eff4e3b822ff.webp",
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -7172,7 +7155,7 @@
           "@id": "https://www.ghezelbaash.ir/#video-kurdish-patient-experience-webm-encoding"
         }
       ],
-      "thumbnailUrl": "https://www.ghezelbaash.ir/media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.847e69e52371.webp",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/media/posters/testimonials/saeed-ghezelbash-kurdish-patient-review.ac9353dcde13.webp",
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -8808,19 +8791,6 @@
       "identifier": "Google Maps CID:12350483144643112463"
     },
     {
-      "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-clinic",
-      "@type": "WebPage",
-      "name": "Wikidata entity for Dr. Saeed Ghezelbash Aesthetic Clinic",
-      "url": "https://www.wikidata.org/wiki/Q140288589",
-      "mainEntity": {
-        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-      },
-      "about": {
-        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-      },
-      "identifier": "Wikidata:Q140288589"
-    },
-    {
       "@id": "https://www.ghezelbaash.ir/#evidence-openstreetmap-clinic",
       "@type": "WebPage",
       "name": "OpenStreetMap node for Dr. Saeed Ghezelbash Aesthetic Clinic",
@@ -8922,9 +8892,6 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#evidence-google-maps-clinic"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#evidence-wikidata-clinic"
         },
         {
           "@id": "https://www.ghezelbaash.ir/#evidence-openstreetmap-clinic"
@@ -19911,7 +19878,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -20036,7 +20002,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -20161,7 +20126,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -20206,9 +20170,9 @@
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.6244472483fd.png",
-      "url": "https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.6244472483fd.png",
-      "thumbnailUrl": "https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-192.3bc4c7b08442.png",
+      "contentUrl": "https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.42612d6184ed.png",
+      "url": "https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.42612d6184ed.png",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-192.3b55e07d34de.png",
       "encodingFormat": "image/png",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-doctor-ghezelbaash-clinic-logo-width"
@@ -20246,7 +20210,6 @@
         "Dr. Saeed Ghezelbaash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش",
         "Q140287622",
-        "Q140288589",
         "Kermanshah",
         "Iran"
       ],
@@ -20332,7 +20295,7 @@
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-square-1200",
       "@type": "ImageObject",
       "name": "Square portrait of Dr. Saeed Ghezelbash",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x1200.b52fe1724299.jpg",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x1200.91df19269f18.jpg",
       "encodingFormat": "image/jpeg",
       "width": {
         "@type": "QuantitativeValue",
@@ -20367,7 +20330,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x1200.b52fe1724299.jpg",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x1200.91df19269f18.jpg",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -20375,7 +20338,7 @@
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-4x3-1200",
       "@type": "ImageObject",
       "name": "4:3 portrait of Dr. Saeed Ghezelbash",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x900.aac2df770e41.jpg",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x900.f3fd3a31e46c.jpg",
       "encodingFormat": "image/jpeg",
       "width": {
         "@type": "QuantitativeValue",
@@ -20410,7 +20373,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x900.aac2df770e41.jpg",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x900.f3fd3a31e46c.jpg",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -20418,7 +20381,7 @@
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-16x9-1200",
       "@type": "ImageObject",
       "name": "16:9 portrait of Dr. Saeed Ghezelbash",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x675.dc7078f7b7d5.jpg",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x675.a3f28a24eeb6.jpg",
       "encodingFormat": "image/jpeg",
       "width": {
         "@type": "QuantitativeValue",
@@ -20453,7 +20416,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x675.dc7078f7b7d5.jpg",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-portrait-1200x675.a3f28a24eeb6.jpg",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -20461,7 +20424,7 @@
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-portrait-social-1200x630",
       "@type": "ImageObject",
       "name": "Social preview portrait of Dr. Saeed Ghezelbash",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.3cb1e1b34599.jpg",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.f2de734ff4f6.jpg",
       "encodingFormat": "image/jpeg",
       "width": {
         "@type": "QuantitativeValue",
@@ -20496,7 +20459,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.3cb1e1b34599.jpg",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/derived/saeed-ghezelbaash-social-1200x630.f2de734ff4f6.jpg",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -20533,7 +20496,7 @@
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.71f1debc6c43.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.5c350c081420.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@type": "QuantitativeValue",
@@ -20568,7 +20531,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.71f1debc6c43.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-portrait-delivery-640.5c350c081420.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -20605,7 +20568,7 @@
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.ef08a85d3207.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.71a34e2dfa9f.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@type": "QuantitativeValue",
@@ -20643,7 +20606,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.ef08a85d3207.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.71a34e2dfa9f.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -20680,7 +20643,7 @@
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.58a5d851a417.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.3ef75ad1b84f.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@type": "QuantitativeValue",
@@ -20718,7 +20681,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.58a5d851a417.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-in-clinical-office-delivery-640.3ef75ad1b84f.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -20807,7 +20770,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -20924,7 +20886,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -21041,7 +21002,6 @@
         "Kermanshah",
         "Iran",
         "Q140287622",
-        "Q140288589",
         "Dr. Saeed Ghezelbash Aesthetic Clinic",
         "کلینیک زیبایی دکتر سعید قزلباش"
       ],
@@ -21143,7 +21103,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#website"
       },
-      "thumbnailUrl": "https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.6244472483fd.png",
+      "thumbnailUrl": "https://www.ghezelbaash.ir/media/brand/doctor-ghezelbaash-symbol-512.42612d6184ed.png",
       "identifier": [
         "https://www.ghezelbaash.ir/clinic.vcf#document"
       ],
@@ -21174,13 +21134,6 @@
       "propertyID": "Semantic Scholar author ID",
       "value": "3786699",
       "url": "https://www.semanticscholar.org/author/-/3786699"
-    },
-    {
-      "@id": "https://www.ghezelbaash.ir/#identifier-clinic-wikidata",
-      "@type": "PropertyValue",
-      "propertyID": "Wikidata item ID",
-      "value": "Q140288589",
-      "url": "https://www.wikidata.org/entity/Q140288589"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-wikimedia-commons-category",

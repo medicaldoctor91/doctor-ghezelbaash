@@ -3,7 +3,7 @@ import path from "node:path";
 
 const icon = path.join(
   process.cwd(),
-  "public/media/brand/doctor-ghezelbaash-symbol-192.3bc4c7b08442.png",
+  "public/media/brand/doctor-ghezelbaash-symbol-192.3b55e07d34de.png",
 );
 
 export async function GET() {
