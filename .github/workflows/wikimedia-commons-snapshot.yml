@@ -1,0 +1,77 @@
+name: Wikimedia Commons cleanup snapshot
+
+on:
+  push:
+    branches:
+      - audit/wikimedia-commons-auth-2026-09-10
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - name: Capture exact live Commons state without writing
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${WIKIMEDIA_USERNAME:-}"
+          test -n "${WIKIMEDIA_BOT_PASSWORD:-}"
+          echo "::add-mask::$WIKIMEDIA_USERNAME"
+          echo "::add-mask::$WIKIMEDIA_BOT_PASSWORD"
+          python - <<'PY'
+          import http.cookiejar, json, os, urllib.parse, urllib.request
+          API = "https://commons.wikimedia.org/w/api.php"
+          UA = "doctor-ghezelbaash-commons-snapshot/1.0 (GitHub Actions; read-only)"
+          jar = http.cookiejar.CookieJar()
+          opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+          def api(params, post=False):
+              data = urllib.parse.urlencode(params).encode()
+              req = urllib.request.Request(API, data=data if post else None,
+                  headers={"User-Agent": UA},
+                  method="POST" if post else "GET")
+              if not post:
+                  req.full_url = API + "?" + data.decode()
+              with opener.open(req, timeout=30) as r:
+                  return json.load(r)
+          token = api({"action":"query","meta":"tokens","type":"login","format":"json","formatversion":"2"})["query"]["tokens"]["logintoken"]
+          login = api({"action":"login","lgname":os.environ["WIKIMEDIA_USERNAME"],"lgpassword":os.environ["WIKIMEDIA_BOT_PASSWORD"],"lgtoken":token,"format":"json","formatversion":"2"}, True)
+          if login.get("login",{}).get("result") != "Success":
+              raise SystemExit("COMMONS_AUTH_FAIL")
+          media_ids = ["M196320105","M196320110","M196320111","M197490366"]
+          entities = api({"action":"wbgetentities","ids":"|".join(media_ids),"props":"claims|labels|descriptions|info","format":"json","formatversion":"2"})
+          titles = [
+              "Category:Saeed Ghezelbash",
+              "Category:Dr. Saeed Ghezelbash Aesthetic Clinic",
+              "File:Saeed-Ghezelbaash-physician-portrait.jpg",
+              "File:Saeed-Ghezelbaash-in-clinical-office.jpg",
+              "File:Saeed-Ghezelbaash-with-clinical-team.jpg",
+              "File:دکتر سعید قزلباش درباره جالپرو و پروفایلو.webm",
+          ]
+          pages = api({"action":"query","prop":"revisions","titles":"|".join(titles),"rvprop":"ids|timestamp|content","rvslots":"main","format":"json","formatversion":"2"})["query"]["pages"]
+          snap = {"entities": entities["entities"], "pages": pages}
+          with open("/tmp/commons-cleanup-snapshot.json","w",encoding="utf-8") as f:
+              json.dump(snap,f,ensure_ascii=False,indent=2,sort_keys=True)
+          qid = "Q140288589"
+          for mid in media_ids:
+              raw = json.dumps(entities["entities"].get(mid,{}), ensure_ascii=False)
+              print(f"ENTITY {mid} DEAD_QID_OCCURRENCES={raw.count(qid)}")
+          for p in pages:
+              revs = p.get("revisions",[])
+              text = revs[0].get("slots",{}).get("main",{}).get("content","") if revs else ""
+              print(f"PAGE {p.get('title')} REVID={revs[0].get('revid') if revs else 'NONE'} DEAD_QID_OCCURRENCES={text.count(qid)}")
+          print("COMMONS_SNAPSHOT_PASS")
+          PY
+      - name: Upload rollback snapshot
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: commons-cleanup-snapshot-${{ github.sha }}
+          path: /tmp/commons-cleanup-snapshot.json
+          if-no-files-found: error
+          retention-days: 7
