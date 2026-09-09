@@ -1,0 +1,127 @@
+name: Wikimedia Commons credential preflight
+
+on:
+  push:
+    branches:
+      - audit/wikimedia-commons-auth-2026-09-10
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  commons-auth-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+      WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+    steps:
+      - name: Authenticate to Commons without writing
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${WIKIMEDIA_USERNAME:-}"
+          test -n "${WIKIMEDIA_BOT_PASSWORD:-}"
+          echo "::add-mask::$WIKIMEDIA_USERNAME"
+          echo "::add-mask::$WIKIMEDIA_BOT_PASSWORD"
+          python - <<'PY'
+          import http.cookiejar
+          import json
+          import os
+          import sys
+          import urllib.parse
+          import urllib.request
+
+          API = "https://commons.wikimedia.org/w/api.php"
+          USER_AGENT = "doctor-ghezelbaash-commons-preflight/1.0 (GitHub Actions; read-only credential verification)"
+          username = os.environ["WIKIMEDIA_USERNAME"]
+          password = os.environ["WIKIMEDIA_BOT_PASSWORD"]
+
+          jar = http.cookiejar.CookieJar()
+          opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+
+          def api(params, *, post=False):
+              payload = urllib.parse.urlencode(params).encode("utf-8")
+              if post:
+                  req = urllib.request.Request(API, data=payload, headers={"User-Agent": USER_AGENT})
+              else:
+                  req = urllib.request.Request(f"{API}?{payload.decode('utf-8')}", headers={"User-Agent": USER_AGENT})
+              with opener.open(req, timeout=30) as response:
+                  return json.load(response)
+
+          login_token = api({
+              "action": "query",
+              "meta": "tokens",
+              "type": "login",
+              "format": "json",
+              "formatversion": "2",
+          })["query"]["tokens"]["logintoken"]
+
+          login = api({
+              "action": "login",
+              "lgname": username,
+              "lgpassword": password,
+              "lgtoken": login_token,
+              "format": "json",
+              "formatversion": "2",
+          }, post=True)
+          result = login.get("login", {}).get("result")
+          if result != "Success":
+              raise SystemExit(f"COMMONS_AUTH_FAIL result={result!r}")
+
+          userinfo = api({
+              "action": "query",
+              "meta": "userinfo",
+              "uiprop": "rights|groups|blockinfo",
+              "format": "json",
+              "formatversion": "2",
+          })["query"]["userinfo"]
+
+          if userinfo.get("id", 0) == 0 or "anon" in userinfo:
+              raise SystemExit("COMMONS_AUTH_FAIL authenticated session is anonymous")
+          if userinfo.get("blockid") or userinfo.get("blockedby"):
+              raise SystemExit("COMMONS_AUTH_FAIL account is blocked on Commons")
+
+          rights = set(userinfo.get("rights", []))
+          missing = sorted({"edit", "writeapi"} - rights)
+          if missing:
+              raise SystemExit("COMMONS_AUTH_FAIL missing rights: " + ",".join(missing))
+
+          entity = api({
+              "action": "wbgetentities",
+              "ids": "M196320105",
+              "props": "claims|info",
+              "format": "json",
+              "formatversion": "2",
+          })
+          if "M196320105" not in entity.get("entities", {}) or "missing" in entity["entities"]["M196320105"]:
+              raise SystemExit("COMMONS_READ_FAIL MediaInfo M196320105 unavailable")
+
+          pages = api({
+              "action": "query",
+              "prop": "revisions",
+              "titles": "Category:Saeed Ghezelbash|Category:Dr. Saeed Ghezelbash Aesthetic Clinic",
+              "rvprop": "ids|timestamp",
+              "format": "json",
+              "formatversion": "2",
+          })["query"]["pages"]
+          if len(pages) != 2 or any("missing" in p for p in pages):
+              raise SystemExit("COMMONS_READ_FAIL expected category pages unavailable")
+
+          csrf = api({
+              "action": "query",
+              "meta": "tokens",
+              "type": "csrf",
+              "format": "json",
+              "formatversion": "2",
+          })["query"]["tokens"]["csrftoken"]
+          if not csrf or csrf == "+\\":
+              raise SystemExit("COMMONS_AUTH_FAIL CSRF token unavailable")
+
+          print("COMMONS_AUTH_PASS")
+          print("COMMONS_EDIT_RIGHT_PASS")
+          print("COMMONS_MEDIAINFO_READ_PASS")
+          print("COMMONS_CATEGORY_READ_PASS")
+          print("COMMONS_CSRF_READY_PASS")
+          PY
