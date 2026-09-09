@@ -1,0 +1,77 @@
+name: Verify Persian Wikisource credentials
+
+on:
+  push:
+    branches: [ops/persian-wikisource-20260909]
+    paths: [.github/workflows/wikisource-fa-preflight.yml]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: persian-wikisource-credentials
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Verify login and editing rights without publishing
+        env:
+          WIKISOURCE_USERNAME: ${{ secrets.WIKISOURCE_USERNAME }}
+          WIKISOURCE_BOT_PASSWORD: ${{ secrets.WIKISOURCE_BOT_PASSWORD }}
+          WIKISOURCE_PASSWORD: ${{ secrets.WIKISOURCE_PASSWORD }}
+          WIKIMEDIA_USERNAME: ${{ secrets.WIKIMEDIA_USERNAME }}
+          WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIMEDIA_BOT_PASSWORD }}
+          WIKIVERSITY_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
+          WIKIVERSITY_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
+          HAS_WIKISOURCE_SECRET: ${{ secrets.WIKISOURCE != '' }}
+        run: |
+          python3 - <<'PY'
+          import http.cookiejar, json, os, urllib.parse, urllib.request
+
+          user_keys = ['WIKISOURCE_USERNAME', 'WIKIMEDIA_USERNAME', 'WIKIVERSITY_USERNAME']
+          pass_keys = ['WIKISOURCE_BOT_PASSWORD', 'WIKISOURCE_PASSWORD', 'WIKIMEDIA_BOT_PASSWORD', 'WIKIVERSITY_BOT_PASSWORD']
+          present = [key for key in user_keys + pass_keys if os.environ.get(key)]
+          print(json.dumps({'available_secret_names': present, 'standalone_wikisource_secret_present': os.environ.get('HAS_WIKISOURCE_SECRET') == 'true'}))
+          user_key = next((key for key in user_keys if os.environ.get(key)), None)
+          pass_key = next((key for key in pass_keys if os.environ.get(key)), None)
+          if not user_key or not pass_key:
+              raise SystemExit('A complete Wikimedia bot username/password pair was not available.')
+          username, password = os.environ[user_key], os.environ[pass_key]
+          results = []
+          for host in ['fa.wikisource.org', 'www.wikidata.org']:
+              api_url = 'https://' + host + '/w/api.php'
+              opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+              def api(params, post=False):
+                  params = dict(params, format='json', formatversion='2', maxlag='5')
+                  data = urllib.parse.urlencode(params).encode()
+                  url = api_url if post else api_url + '?' + data.decode()
+                  request = urllib.request.Request(url, data=data if post else None, headers={'User-Agent': 'GhezelbashPersianWikisource/1.0 (https://github.com/medicaldoctor91/doctor-ghezelbaash)', 'Cache-Control': 'no-cache, no-store'})
+                  with opener.open(request, timeout=45) as response:
+                      result = json.load(response)
+                  if 'error' in result:
+                      raise RuntimeError('MediaWiki API error: ' + result['error'].get('code', 'unknown'))
+                  return result
+              try:
+                  token = api({'action': 'query', 'meta': 'tokens', 'type': 'login'})['query']['tokens']['logintoken']
+                  login = api({'action': 'login', 'lgname': username, 'lgpassword': password, 'lgtoken': token}, post=True)['login']
+                  if login.get('result') != 'Success':
+                      raise RuntimeError('Login result: ' + login.get('result', 'unknown'))
+                  info = api({'action': 'query', 'meta': 'userinfo', 'uiprop': 'rights|blockinfo|groups'})['query']['userinfo']
+                  if info.get('name') != 'Medicaldoctor91' or 'anon' in info:
+                      raise RuntimeError('Authenticated account does not match the intended publisher.')
+                  if any(key.startswith('block') for key in info):
+                      raise RuntimeError('Account has an editing restriction; no writes attempted.')
+                  rights = info.get('rights', [])
+                  if 'edit' not in rights or (host == 'fa.wikisource.org' and 'createpage' not in rights):
+                      raise RuntimeError('Required editing rights are unavailable.')
+                  results.append({'host': host, 'login': 'success', 'account': info['name'], 'can_edit': 'edit' in rights, 'can_create_pages': 'createpage' in rights})
+              except Exception as exc:
+                  message = str(exc).replace(username, '[account]').replace(password, '[redacted]')
+                  results.append({'host': host, 'login': 'failed', 'reason': message})
+          print(json.dumps({'mode': 'read-only preflight', 'username_secret': user_key, 'password_secret': pass_key, 'results': results}, ensure_ascii=False, indent=2))
+          if any(row['login'] != 'success' for row in results):
+              raise SystemExit(1)
+          PY
