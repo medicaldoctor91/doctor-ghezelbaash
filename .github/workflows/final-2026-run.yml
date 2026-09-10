@@ -1,0 +1,209 @@
+name: Isolated 2026 native standards finalization
+
+on:
+  push:
+    branches: [automation/final-2026-native-20260910]
+    paths:
+      - .github/workflows/final-2026-run.yml
+      - .github/final-2026-source.diff.b64
+
+permissions:
+  contents: read
+
+concurrency:
+  group: final-2026-native-20260910
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: worktree
+        shell: bash
+    steps:
+      - name: Read isolated source-transport inputs
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          path: transport
+          persist-credentials: false
+      - name: Check out exact audited main baseline
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 58e7cef0217eafa3c2befbb33108b41e71f063bd
+          path: worktree
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Apply reviewed native source edits to the exact baseline
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = 58e7cef0217eafa3c2befbb33108b41e71f063bd
+          test "$(git rev-parse HEAD^{tree})" = 6eb5a768932f58595f569795cf247c80cd5c5b2d
+          base64 -d ../transport/.github/final-2026-source.diff.b64 | gzip -d > "$RUNNER_TEMP/final-2026-source.diff"
+          test "$(sha256sum "$RUNNER_TEMP/final-2026-source.diff" | cut -d' ' -f1)" = 806399ffc463698a4755d59c7b2f2b850e468d8031961ad0a8f79751fdb86880
+          git apply --check "$RUNNER_TEMP/final-2026-source.diff"
+          git apply "$RUNNER_TEMP/final-2026-source.diff"
+          git diff --check
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: worktree/.nvmrc
+          cache: npm
+          cache-dependency-path: worktree/package-lock.json
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Install pinned dependencies and dependency security gate
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run security:dependencies
+      - name: Regenerate embedded image metadata through the existing native media compiler
+        run: |
+          set -euo pipefail
+          npm run media:enrich
+          npm run validate:media
+      - name: Install pinned browser dependencies and regenerate measured calibration
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          npx playwright install --with-deps chromium
+          npm run render:calibration:update
+          npm run test:render-navigation -- .generated/calibration-candidate
+      - name: Reject transport files and commit only the resulting native repository state
+        run: |
+          set -euo pipefail
+          git diff --check
+          test -z "$(git ls-files --others --exclude-standard)"
+          python - <<'PY'
+          import subprocess
+          changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          required={
+            '.github/workflows/stack-monitor.yml','codemeta.json',
+            'scripts/generate-descriptors.mjs','scripts/generate-retrieval-projections.mjs',
+            'scripts/lib/entity-facts.mjs','scripts/lib/projections/contact-discovery.mjs',
+            'scripts/promote-release.mjs','scripts/test-machine-resources.mjs',
+            'scripts/validate-evidence.mjs','scripts/validate-physician-projection.mjs',
+            'scripts/validate-query-matrix.mjs','scripts/validate-source.mjs',
+            'src/content-source/page.md','src/data/evidence-registry.json',
+            'src/data/machine-resources.json','src/data/media-metadata.json',
+            'src/data/semantic/head-profile.json','src/data/semantic/knowledge-graph.jsonld',
+            'src/data/semantic/support-profile.json','src/data/templates/headers.template',
+            'src/data/templates/llms.template.txt','src/lib/resources.mjs',
+            'src/data/render-calibration.json',
+          }
+          missing=required-changed
+          assert not missing, f'missing required native changes: {sorted(missing)}'
+          allowed_extra_prefixes=('public/media/images/',)
+          allowed_extra_exact={'scripts/validate-critical-path.mjs'}
+          unexpected={p for p in changed-required if p not in allowed_extra_exact and not p.startswith(allowed_extra_prefixes)}
+          assert not unexpected, f'unexpected generated change: {sorted(unexpected)}'
+          print('NATIVE_CHANGED_FILES',len(changed))
+          for p in sorted(changed): print(p)
+          PY
+          git add -A
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'fix: finalize 2026 entity and machine-readable standards contracts'
+          echo "SOURCE_COMMIT=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          echo "SOURCE_DATE_EPOCH=$(git show -s --format=%ct HEAD)" >> "$GITHUB_ENV"
+      - name: Run complete existing release validation and build without external publication
+        run: |
+          set -euo pipefail
+          npm run release 2>&1 | tee "$RUNNER_TEMP/final-2026-release.log"
+          npx --yes --package=vnu-jar@26.8.30 vnu --errors-only dist/index.html dist/404.html
+          npm run validate:schemaorg-vocabulary
+          npm run test:video-deeplinks
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+      - name: Assert final semantic and standards cleanup in built outputs
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('.')
+          g=json.load(open(root/'src/data/semantic/knowledge-graph.jsonld'))
+          by={n['@id']:n for n in g['@graph']}
+          assert by['https://www.ghezelbaash.ir/#place-messe-berlin-citycube']['sameAs']=='https://www.wikidata.org/entity/Q15108815'
+          assert by['https://www.ghezelbaash.ir/#organization-iran-medical-council']['sameAs']=='https://www.wikidata.org/entity/Q5944740'
+          P='https://www.ghezelbaash.ir/#saeed-ghezelbash'
+          assert {'https://www.ghezelbaash.ir/#profile-facebook-ghezelbaash','https://www.ghezelbaash.ir/#profile-facebook-doctor-ghezelbaash'} <= {x['@id'] for x in by[P]['owns']}
+          assert by['https://www.ghezelbaash.ir/#profile-facebook-ghezelbaash']['owner']['@id']==P
+          assert by['https://www.ghezelbaash.ir/#profile-facebook-doctor-ghezelbaash']['owner']['@id']==P
+          assert by['https://www.ghezelbaash.ir/#profile-facebook-doctor-ghezelbaash']['mainEntity']['@id']=='https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah'
+          assert 'https://www.facebook.com/doctor.ghezelbaash' not in by[P]['sameAs']
+          for file in ['dist/index.html','dist/graph.jsonld','dist/graph.ttl','dist/entity-facts.csv']:
+            text=(root/file).read_text(errors='ignore')
+            assert 'Q140288589' not in text and 'Q140304972' not in text
+          headers=(root/'dist/_headers').read_text()
+          assert 'Content-Type: application/csvm+json' in headers
+          assert 'Content-Type: text/csv; charset=utf-8; header=present' in headers
+          assert 'Content-Type: text/markdown; charset=utf-8; variant=GFM' in headers
+          assert (root/'dist/entity-facts.csv-metadata.json').exists()
+          seq=(root/'.generated/projections/query-matrix.json-seq').read_bytes()
+          assert seq.startswith(b'\x1e') and seq.endswith(b'\n')
+          print('FINAL_2026_NATIVE_ACCEPTANCE_PASS')
+          PY
+      - name: Package the verified source commit for branch publication
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/final-2026-candidate"
+          git bundle create "$RUNNER_TEMP/final-2026-candidate/candidate.bundle" 58e7cef0217eafa3c2befbb33108b41e71f063bd..HEAD
+          git diff --stat 58e7cef0217eafa3c2befbb33108b41e71f063bd HEAD > "$RUNNER_TEMP/final-2026-candidate/diff-stat.txt"
+          git diff --name-status 58e7cef0217eafa3c2befbb33108b41e71f063bd HEAD > "$RUNNER_TEMP/final-2026-candidate/name-status.txt"
+          cp .release/runtime/release-attestation.json "$RUNNER_TEMP/final-2026-candidate/"
+          git rev-parse HEAD > "$RUNNER_TEMP/final-2026-candidate/commit.txt"
+          (cd "$RUNNER_TEMP/final-2026-candidate" && sha256sum candidate.bundle > candidate.bundle.sha256)
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: final-2026-native-candidate
+          path: ${{ runner.temp }}/final-2026-candidate/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Preserve validation log
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: final-2026-native-validation
+          path: |
+            ${{ runner.temp }}/final-2026-release.log
+            worktree/.generated/validation/shacl*/
+          if-no-files-found: warn
+          retention-days: 7
+
+  publish-branch:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 58e7cef0217eafa3c2befbb33108b41e71f063bd
+          persist-credentials: true
+      - name: Download exact successful candidate artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name final-2026-native-candidate --dir "$RUNNER_TEMP/final-2026-candidate"
+      - name: Verify and publish only the finalization branch
+        env:
+          TARGET_BRANCH: fix/final-2026-native-standards
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = refs/heads/automation/final-2026-native-20260910
+          (cd "$RUNNER_TEMP/final-2026-candidate" && sha256sum -c candidate.bundle.sha256)
+          CANDIDATE="$(cat "$RUNNER_TEMP/final-2026-candidate/commit.txt")"
+          [[ "$CANDIDATE" =~ ^[0-9a-f]{40}$ ]]
+          git bundle verify "$RUNNER_TEMP/final-2026-candidate/candidate.bundle"
+          git bundle unbundle "$RUNNER_TEMP/final-2026-candidate/candidate.bundle"
+          test "$(git rev-parse "$CANDIDATE^")" = 58e7cef0217eafa3c2befbb33108b41e71f063bd
+          git fetch --no-tags origin main
+          test "$(git rev-parse FETCH_HEAD)" = 58e7cef0217eafa3c2befbb33108b41e71f063bd
+          REMOTE="$(git ls-remote origin "refs/heads/$TARGET_BRANCH" | cut -f1)"
+          if [ -n "$REMOTE" ]; then
+            test "$REMOTE" = "$CANDIDATE"
+          else
+            git push origin "$CANDIDATE:refs/heads/$TARGET_BRANCH"
+          fi
+          test "$(git ls-remote origin "refs/heads/$TARGET_BRANCH" | cut -f1)" = "$CANDIDATE"
+          printf 'Candidate branch: %s\nCandidate commit: %s\nMain unchanged. No Cloudflare/Hugging Face/Zenodo publication.\n' "$TARGET_BRANCH" "$CANDIDATE" >> "$GITHUB_STEP_SUMMARY"
