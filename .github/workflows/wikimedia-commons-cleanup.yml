@@ -1,23 +1,33 @@
-name: Wikimedia Commons deleted-clinic cleanup
+name: Wikimedia Commons deleted-clinic cleanup (self-hosted)
 
 on:
   push:
     branches:
-      - audit/wikimedia-commons-auth-2026-09-10
+      - commons-selfhosted-cleanup-2026-09-10
+    paths:
+      - '.github/workflows/wikimedia-commons-cleanup.yml'
+      - '.github/scripts/wikimedia_commons_cleanup.py'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: wikimedia-commons-deleted-clinic-cleanup
+  cancel-in-progress: false
+
 jobs:
   cleanup:
-    runs-on: ubuntu-24.04
+    if: github.repository == 'medicaldoctor91/doctor-ghezelbaash' && github.ref == 'refs/heads/commons-selfhosted-cleanup-2026-09-10'
+    runs-on: [self-hosted]
     timeout-minutes: 15
     env:
       WIKIMEDIA_USERNAME: ${{ secrets.WIKIVERSITY_USERNAME }}
       WIKIMEDIA_BOT_PASSWORD: ${{ secrets.WIKIVERSITY_BOT_PASSWORD }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
       - name: Execute transactional Commons cleanup
         shell: bash
         run: |
@@ -26,7 +36,7 @@ jobs:
           test -n "${WIKIMEDIA_BOT_PASSWORD:-}"
           echo "::add-mask::$WIKIMEDIA_USERNAME"
           echo "::add-mask::$WIKIMEDIA_BOT_PASSWORD"
-          python .github/scripts/wikimedia_commons_cleanup.py
+          python3 .github/scripts/wikimedia_commons_cleanup.py
       - name: Upload cleanup transaction result
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
