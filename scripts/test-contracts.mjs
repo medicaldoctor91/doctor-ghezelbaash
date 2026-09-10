@@ -562,6 +562,23 @@ async function canonical_semantic_derivation_contract() {
     /canonical physician provider/,
   );
 
+  for (const [label, providers] of [
+    ["additional", [release.primaryEntity.id, release.clinic.id]],
+    ["duplicate", [release.primaryEntity.id, release.primaryEntity.id]],
+    ["missing", []],
+  ]) {
+    const changedProviders = structuredClone(graph);
+    const changedService = changedProviders["@graph"].find((node) =>
+      [node["@type"]].flat().includes("Service"),
+    );
+    changedService.provider = providers.map((id) => ({ "@id": id }));
+    assert.throws(
+      () => deriveCanonicalSemanticSets(changedProviders, release),
+      /exactly one canonical physician provider/,
+      `Canonical services must reject ${label} providers`,
+    );
+  }
+
   const aliasDrift = structuredClone(graph),
     aliaslessService = aliasDrift["@graph"].find((node) =>
       [node["@type"]].flat().includes("Service"),
@@ -653,6 +670,9 @@ async function canonical_semantic_derivation_contract() {
         wrongTopicAndStaleInverseRejection: "PASS",
         browserVideoFallbackRejection: "PASS",
         providerDriftRejection: "PASS",
+        additionalProviderRejection: "PASS",
+        duplicateProviderRejection: "PASS",
+        missingProviderRejection: "PASS",
         missingDirectServiceAliasRejection: "PASS",
         ambiguousLanguageLiteralRejection: "PASS",
         pathDriftRejection: "PASS",

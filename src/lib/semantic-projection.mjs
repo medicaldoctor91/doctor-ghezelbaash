@@ -275,9 +275,9 @@ export const deriveCanonicalSemanticSets = (graph, release) => {
       const providers = values(service.provider).map(refId);
       if (providers.some((providerId) => !providerId))
         throw new Error(`Service provider must be an ID reference: ${serviceId}`);
-      if (!providers.includes(personId))
+      if (providers.length !== 1 || providers[0] !== personId)
         throw new Error(
-          `Offered service lacks the canonical physician provider: ${serviceId}`,
+          `Offered service must have exactly one canonical physician provider: ${serviceId}`,
         );
       return {
         id: serviceId,

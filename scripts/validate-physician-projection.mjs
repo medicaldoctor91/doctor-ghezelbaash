@@ -266,11 +266,21 @@ for (const field of WIKIDATA_FIELDS)
     refs(physician.knowsAbout).includes(field),
     `Wikidata field-of-work missing from Person: ${field}`,
   );
-assert.ok(
-  refs(physician.hasOccupation).includes(
-    "https://www.wikidata.org/entity/Q256688",
-  ),
-  "Wikidata medical-director position missing from Person",
+assert.deepEqual(
+  refs(physician.hasOccupation),
+  [
+    "https://www.ghezelbaash.ir/#occupation-physician",
+    "https://www.ghezelbaash.ir/#occupation-medical-researcher",
+  ],
+  "Physician occupations must match the supported professional roles",
+);
+assert.deepEqual(
+  physician.jobTitle,
+  [
+    { "@value": "پزشک زیبایی", "@language": "fa" },
+    { "@value": "Aesthetic physician", "@language": "en" },
+  ],
+  "Physician job titles must match the supported professional roles",
 );
 assert.ok(
   refs(physician.affiliation).includes(UNIVERSITY),
@@ -893,6 +903,17 @@ const assertFinalProjection = ({ headDoc, supportDoc }) => {
     "Final physician",
   );
   const projectedClinic = requireNode(projectedById, CLINIC, "Final clinic");
+  for (const property of ["jobTitle", "hasOccupation", "description"])
+    assert.deepEqual(
+      projectedPhysician[property],
+      physician[property],
+      `Final physician ${property} differs from its canonical source`,
+    );
+  assert.deepEqual(
+    projectedClinic.description,
+    clinic.description,
+    "Final clinic description differs from its canonical source",
+  );
   assert.ok(
     refs(projectedPhysician.memberOf).includes(CREDENTIAL_ISSUER),
     "Final physician membership must reference the named canonical Medical Council",
@@ -969,9 +990,10 @@ const assertFinalProjection = ({ headDoc, supportDoc }) => {
   const categoryTerms = new Set();
   let categorizedServices = 0;
   for (const service of services) {
-    assert.ok(
-      refs(service.provider).includes(PHYSICIAN),
-      `Final service lost physician provider: ${service["@id"]}`,
+    assert.deepEqual(
+      asArray(service.provider),
+      [{ "@id": PHYSICIAN }],
+      `Final service must have exactly one canonical physician provider: ${service["@id"]}`,
     );
     const canonicalCategories = refs(byId.get(service["@id"]).category);
     assertExact(
@@ -1078,6 +1100,53 @@ const mutations = [
     "service category",
     (nodes) => {
       delete nodes.get(CORE_HEAD_SERVICES[0]).category;
+    },
+  ],
+  [
+    "additional service provider",
+    (nodes) => {
+      nodes.get(CORE_HEAD_SERVICES[0]).provider = [
+        { "@id": PHYSICIAN },
+        { "@id": CLINIC },
+      ];
+    },
+  ],
+  [
+    "duplicate service provider",
+    (nodes) => {
+      nodes.get(CORE_HEAD_SERVICES[0]).provider = [
+        { "@id": PHYSICIAN },
+        { "@id": PHYSICIAN },
+      ];
+    },
+  ],
+  [
+    "additional physician occupation",
+    (nodes) => {
+      nodes.get(PHYSICIAN).hasOccupation.push({
+        "@id": `${PHYSICIAN}-unsupported-occupation`,
+      });
+    },
+  ],
+  [
+    "additional physician job title",
+    (nodes) => {
+      nodes.get(PHYSICIAN).jobTitle.push({
+        "@value": "Unsupported executive role",
+        "@language": "en",
+      });
+    },
+  ],
+  [
+    "physician practice description",
+    (nodes) => {
+      delete nodes.get(PHYSICIAN).description;
+    },
+  ],
+  [
+    "clinic practice description",
+    (nodes) => {
+      delete nodes.get(CLINIC).description;
     },
   ],
 ];
