@@ -145,23 +145,78 @@
   "maxBytes": 85000,
   "idProfiles": {
     "https://www.ghezelbaash.ir/#organization-iran-medical-council": {
-      "include": ["@id", "@type", "name", "url"],
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "url",
+        "sameAs"
+      ],
       "authorityRole": "credentialIssuer"
     },
     "https://www.ghezelbaash.ir/#evidence-iranmedlabs-interview": {
-      "include": ["@id", "@type", "name", "headline", "url", "datePublished", "author", "image", "about", "mainEntity", "inLanguage"],
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "headline",
+        "url",
+        "datePublished",
+        "author",
+        "image",
+        "about",
+        "mainEntity",
+        "inLanguage"
+      ],
       "authorityRole": "physicianCoverage"
     },
     "https://www.ghezelbaash.ir/#wikiversity-botulinum-toxin-aesthetic-medicine": {
-      "include": ["@id", "@type", "name", "headline", "url", "sameAs", "author", "about", "inLanguage", "datePublished", "learningResourceType"],
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "headline",
+        "url",
+        "sameAs",
+        "author",
+        "about",
+        "inLanguage",
+        "datePublished",
+        "learningResourceType"
+      ],
       "authorityRole": "physicianAuthoredWork"
     },
     "https://www.ghezelbaash.ir/#wikiversity-individualized-botulinum-toxin-focused-review": {
-      "include": ["@id", "@type", "name", "headline", "url", "sameAs", "author", "about", "inLanguage", "dateCreated", "creativeWorkStatus", "isPartOf"],
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "headline",
+        "url",
+        "sameAs",
+        "author",
+        "about",
+        "inLanguage",
+        "dateCreated",
+        "creativeWorkStatus",
+        "isPartOf"
+      ],
       "authorityRole": "physicianAuthoredWork"
     },
     "https://www.ghezelbaash.ir/#wikiversity-facial-assessment-before-aesthetic-botulinum-toxin": {
-      "include": ["@id", "@type", "name", "headline", "url", "sameAs", "author", "about", "inLanguage", "datePublished", "learningResourceType"],
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "headline",
+        "url",
+        "sameAs",
+        "author",
+        "about",
+        "inLanguage",
+        "datePublished",
+        "learningResourceType"
+      ],
       "authorityRole": "physicianAuthoredWork"
     },
     "https://www.ghezelbaash.ir/#article-omega-3-bipolar-i-2016": {
@@ -211,7 +266,12 @@
       }
     },
     "https://www.ghezelbaash.ir/#periodical-wikijournal-preprints": {
-      "include": ["@id", "@type", "name", "url"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "url"
+      ]
     },
     "https://www.ghezelbaash.ir/#video-kurdish-patient-experience": {
       "include": [
@@ -291,19 +351,49 @@
       ]
     },
     "https://www.ghezelbaash.ir/#topic-botox-migraine-context": {
-      "include": ["@id", "@type", "termCode", "name", "url"]
+      "include": [
+        "@id",
+        "@type",
+        "termCode",
+        "name",
+        "url"
+      ]
     },
     "https://www.ghezelbaash.ir/#topic-botox-neurology-context": {
-      "include": ["@id", "@type", "termCode", "name", "url"]
+      "include": [
+        "@id",
+        "@type",
+        "termCode",
+        "name",
+        "url"
+      ]
     },
     "https://www.ghezelbaash.ir/#topic-hair-transplant-boundary": {
-      "include": ["@id", "@type", "termCode", "name", "url"]
+      "include": [
+        "@id",
+        "@type",
+        "termCode",
+        "name",
+        "url"
+      ]
     },
     "https://www.ghezelbaash.ir/#topic-orthognathic-boundary": {
-      "include": ["@id", "@type", "termCode", "name", "url"]
+      "include": [
+        "@id",
+        "@type",
+        "termCode",
+        "name",
+        "url"
+      ]
     },
     "https://www.ghezelbaash.ir/#biomedical-concept-registry": {
-      "include": ["@id", "@type", "name", "description", "about"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "description",
+        "about"
+      ]
     }
   },
   "typeProfiles": {
@@ -450,7 +540,11 @@
       ]
     },
     "MedicalCondition": {
-      "include": ["@id", "@type", "possibleTreatment"]
+      "include": [
+        "@id",
+        "@type",
+        "possibleTreatment"
+      ]
     },
     "WebPage": {
       "include": [
@@ -465,10 +559,23 @@
       ]
     },
     "CollectionPage": {
-      "include": ["@id", "@type", "name", "url", "about", "mainEntity"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "url",
+        "about",
+        "mainEntity"
+      ]
     },
     "City": {
-      "include": ["@id", "@type", "name", "containedInPlace", "sameAs"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "containedInPlace",
+        "sameAs"
+      ]
     },
     "AdministrativeArea": {
       "include": [
@@ -481,10 +588,20 @@
       ]
     },
     "Occupation": {
-      "include": ["@id", "@type", "name", "sameAs"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "sameAs"
+      ]
     },
     "CollegeOrUniversity": {
-      "include": ["@id", "@type", "name", "sameAs"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "sameAs"
+      ]
     }
   }
 }

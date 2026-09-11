@@ -154,5 +154,9 @@
       "distributionMode": "ai-retrieval"
     }
   },
-  "medicalReviewedAt": "2026-08-13"
+  "medicalReviewedAt": "2026-08-13",
+  "datasetRevisionDate": "2026-09-11",
+  "currentSource": {
+    "dateModified": "2026-09-11"
+  }
 }

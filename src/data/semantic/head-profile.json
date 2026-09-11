@@ -78,7 +78,9 @@
           "https://www.ghezelbaash.ir/#credential-doctor-of-medicine",
           "https://www.ghezelbaash.ir/#irimc-credential-167430"
         ],
-        "nationality": ["https://www.ghezelbaash.ir/#country-iran"],
+        "nationality": [
+          "https://www.ghezelbaash.ir/#country-iran"
+        ],
         "workLocation": [
           "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
         ],
@@ -132,7 +134,9 @@
         ]
       },
       "valueAllow": {
-        "@type": ["Person"],
+        "@type": [
+          "Person"
+        ],
         "sameAs": [
           "https://www.wikidata.org/entity/Q140287622",
           "https://commons.wikimedia.org/wiki/Category:Saeed_Ghezelbash",
@@ -159,26 +163,9 @@
           "https://www.youtube.com/@ghezelbaash",
           "https://www.youtube.com/channel/UCAiLkR6O3k9aDU9CYSeXPWQ"
         ],
-        "alternateName": [
-          "Mohammad Saeed Ghezelbash",
-          "Dr. Mohammad Saeed Ghezelbash",
-          "Saeed Ghezelbash",
-          "Dr. Saeed Ghezelbash",
-          "محمد‌سعید قزلباش",
-          "دکتر محمد‌سعید قزلباش",
-          "محمدسعید قزلباش",
-          "دکتر محمدسعید قزلباش",
-          "محمد سعید قزلباش",
-          "دکتر محمد سعید قزلباش",
-          "سعید قزلباش",
-          "دکتر سعید قزلباش",
-          "Saeed Ghezelbaash",
-          "Dr. Saeed Ghezelbaash",
-          "Dr Saeed Ghezelbash",
-          "MohammadSaeed Ghezelbash",
-          "Mohamadsaeed Ghezelbash"
-        ],
-        "name": ["دکتر سعید قزلباش"]
+        "name": [
+          "دکتر سعید قزلباش"
+        ]
       }
     },
     "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah": {
@@ -226,9 +213,15 @@
           "https://www.ghezelbaash.ir/#country-iran",
           "https://www.ghezelbaash.ir/#country-iraq"
         ],
-        "owner": ["https://www.ghezelbaash.ir/#saeed-ghezelbash"],
-        "founder": ["https://www.ghezelbaash.ir/#saeed-ghezelbash"],
-        "employee": ["https://www.ghezelbaash.ir/#saeed-ghezelbash"],
+        "owner": [
+          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        ],
+        "founder": [
+          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        ],
+        "employee": [
+          "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        ],
         "potentialAction": [
           "https://www.ghezelbaash.ir/#action-contact-clinic",
           "https://www.ghezelbaash.ir/#action-online-initial-consultation",
@@ -274,25 +267,53 @@
         "hasMap": []
       },
       "valueAllow": {
-        "name": ["کلینیک زیبایی دکتر سعید قزلباش"]
+        "name": [
+          "کلینیک زیبایی دکتر سعید قزلباش"
+        ]
       }
     },
     "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine": {
-      "include": ["@id", "@type", "name", "alternateName", "sameAs"],
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "alternateName",
+        "sameAs"
+      ],
       "valueAllow": {
-        "@type": ["MedicalSpecialty"]
+        "@type": [
+          "MedicalSpecialty"
+        ]
       }
     },
     "https://www.ghezelbaash.ir/#country-iran": {
-      "include": ["@id", "@type", "name", "sameAs", "identifier"],
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "sameAs",
+        "identifier"
+      ],
       "valueAllow": {
-        "@type": ["Country", "Place"]
+        "@type": [
+          "Country",
+          "Place"
+        ]
       }
     },
     "https://www.ghezelbaash.ir/#country-iraq": {
-      "include": ["@id", "@type", "name", "sameAs", "identifier"],
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "sameAs",
+        "identifier"
+      ],
       "valueAllow": {
-        "@type": ["Country", "Place"]
+        "@type": [
+          "Country",
+          "Place"
+        ]
       }
     },
     "https://www.ghezelbaash.ir/#webpage": {
@@ -340,7 +361,9 @@
         ]
       },
       "valueAllow": {
-        "@type": ["ProfilePage"]
+        "@type": [
+          "ProfilePage"
+        ]
       }
     },
     "https://www.ghezelbaash.ir/#website": {
@@ -359,7 +382,12 @@
       ]
     },
     "https://www.ghezelbaash.ir/#credential-doctor-of-medicine": {
-      "include": ["@id", "@type", "name", "credentialCategory"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "credentialCategory"
+      ]
     },
     "https://www.ghezelbaash.ir/#irimc-credential-167430": {
       "include": [
@@ -400,10 +428,22 @@
       ]
     },
     "GeoCoordinates": {
-      "include": ["@id", "@type", "latitude", "longitude"]
+      "include": [
+        "@id",
+        "@type",
+        "latitude",
+        "longitude"
+      ]
     },
     "OpeningHoursSpecification": {
-      "include": ["@id", "@type", "dayOfWeek", "opens", "closes", "description"]
+      "include": [
+        "@id",
+        "@type",
+        "dayOfWeek",
+        "opens",
+        "closes",
+        "description"
+      ]
     },
     "ContactPoint": {
       "include": [
@@ -425,19 +465,49 @@
       ]
     },
     "CommunicateAction": {
-      "include": ["@id", "@type", "name", "target", "recipient", "object"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "target",
+        "recipient",
+        "object"
+      ]
     },
     "ViewAction": {
-      "include": ["@id", "@type", "name", "target", "object"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "target",
+        "object"
+      ]
     },
     "FollowAction": {
-      "include": ["@id", "@type", "name", "target", "object"]
+      "include": [
+        "@id",
+        "@type",
+        "name",
+        "target",
+        "object"
+      ]
     },
     "PropertyValue": {
-      "include": ["@id", "@type", "propertyID", "value", "url", "name"]
+      "include": [
+        "@id",
+        "@type",
+        "propertyID",
+        "value",
+        "url",
+        "name"
+      ]
     },
     "SpeakableSpecification": {
-      "include": ["@id", "@type", "cssSelector"]
+      "include": [
+        "@id",
+        "@type",
+        "cssSelector"
+      ]
     }
   }
 }
