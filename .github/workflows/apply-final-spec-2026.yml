@@ -38,6 +38,27 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Apply canonical source migration
         run: node scripts/apply-final-spec-2026.mjs
+      - name: Align mutable current-source revision metadata
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs/promises';
+          const TODAY = '2026-09-11';
+          const releasePath = 'src/data/release.json';
+          const release = JSON.parse(await fs.readFile(releasePath, 'utf8'));
+          if (release.release !== '1.2.5' || release.dateModified !== '2026-08-31' || release.dataset?.zenodo?.versionDoi !== '10.5281/zenodo.22216583') {
+            throw new Error('Frozen release identity changed unexpectedly');
+          }
+          release.datasetRevisionDate = TODAY;
+          release.currentSource ??= {};
+          release.currentSource.dateModified = TODAY;
+          await fs.writeFile(releasePath, `${JSON.stringify(release, null, 2)}\n`);
+
+          const codeMetaPath = 'codemeta.json';
+          const codeMeta = JSON.parse(await fs.readFile(codeMetaPath, 'utf8'));
+          codeMeta['@context'] = 'https://w3id.org/codemeta/3.1';
+          codeMeta.dateModified = TODAY;
+          await fs.writeFile(codeMetaPath, `${JSON.stringify(codeMeta, null, 2)}\n`);
+          NODE
       - name: Rebuild governed media metadata
         run: npm run media:enrich
       - name: Recalibrate changed visible document
