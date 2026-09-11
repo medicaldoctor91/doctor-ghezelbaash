@@ -51,6 +51,29 @@ jobs:
           sed -i 's|scripts/audit-performance.mjs|scripts/measure-performance.mjs|g' package.json .github/workflows/ci.yml
           sed -i 's/await chrome.kill();/chrome.kill();/' scripts/measure-performance.mjs
           sed -i 's/^on:$/on:\n  workflow_dispatch:/' .github/workflows/ci.yml
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/components/GuideNavigator.astro')
+          s = p.read_text()
+          old = 'dialogOpener = opener instanceof HTMLElement ? opener : null;'
+          new = 'dialogOpener = opener && typeof opener.focus === "function" ? opener : null;'
+          assert old in s
+          s = s.replace(old, new, 1)
+          old = 'if (target?.isConnected)\n      requestAnimationFrame(() => target.focus({ preventScroll: true }));'
+          new = 'if (target && target.isConnected !== false && typeof target.focus === "function")\n      requestAnimationFrame(() => target.focus({ preventScroll: true }));'
+          assert old in s
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          p = Path('scripts/test-guide-navigator.mjs')
+          s = p.read_text()
+          old = 'dialog.close = () => { dialog.open = false; };'
+          new = 'dialog.close = () => { dialog.open = false; emit(dialog, "close"); };'
+          assert old in s
+          s = s.replace(old, new, 1)
+          p.write_text(s)
+          PY
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           rm -f .pr394-upgrade.gz.b64.*
           rm -f .github/workflows/pr394-apply-upgrade.yml
