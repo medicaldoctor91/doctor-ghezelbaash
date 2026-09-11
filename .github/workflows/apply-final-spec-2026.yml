@@ -65,6 +65,13 @@ jobs:
         run: |
           npm run render:calibration:update
           npm run test:render-navigation -- .generated/calibration-candidate
+      - name: Remove temporary migration transport before repository-wide validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f scripts/apply-final-spec-2026.mjs .github/workflows/apply-final-spec-2026.yml
+          test ! -e scripts/apply-final-spec-2026.mjs
+          test ! -e .github/workflows/apply-final-spec-2026.yml
       - name: Run focused contracts
         run: |
           npm run security:dependencies
@@ -83,16 +90,17 @@ jobs:
             git status --short -- dist .generated >&2
             exit 1
           fi
-      - name: Remove migration transport and commit product changes
+      - name: Commit validated product changes and remove transport from branch
         shell: bash
         run: |
           set -euo pipefail
-          rm -f scripts/apply-final-spec-2026.mjs .github/workflows/apply-final-spec-2026.yml
+          test ! -e scripts/apply-final-spec-2026.mjs
+          test ! -e .github/workflows/apply-final-spec-2026.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          if git diff --cached --name-only | grep -E '^(dist/|\.generated/|scripts/apply-final-spec-2026\.mjs$|\.github/workflows/apply-final-spec-2026\.yml$)'; then
-            echo "Forbidden transport/generated file staged" >&2
+          if git diff --cached --name-only | grep -E '^(dist/|\.generated/)'; then
+            echo "Generated output staged" >&2
             exit 1
           fi
           git diff --cached --check
