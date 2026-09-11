@@ -1,0 +1,100 @@
+name: PR 394 HTML hotspot profiler
+
+on:
+  push:
+    branches:
+      - candidate/final-repository-plan-2026
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr394-html-hotspot-profiler
+  cancel-in-progress: false
+
+jobs:
+  profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact PR branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: candidate/final-repository-plan-2026
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pinned Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Pin npm exactly
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --global npm@11.9.0 --no-audit --no-fund
+          test "$(node --version)" = "v24.19.0"
+          test "$(npm --version)" = "11.9.0"
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+
+      - name: Provision media tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Materialize profiler candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          from pathlib import Path
+          raw = Path('.github/workflows/pr394-profile-artifact-v2.yml').read_text()
+          marker = '      - name: Materialize profiled candidate with complete temp cleanup\n'
+          assert marker in raw
+          tail = raw.split(marker, 1)[1]
+          body = tail.split('        run: |\n', 1)[1]
+          lines = []
+          for line in body.splitlines():
+              if line.startswith('      - name: '): break
+              assert line.startswith('          ') or not line, repr(line)
+              lines.append(line[10:] if line.startswith('          ') else line)
+          Path('/tmp/pr394-html-hotspot-materialize.sh').write_text('\n'.join(lines) + '\n')
+          PY
+          bash /tmp/pr394-html-hotspot-materialize.sh
+
+      - name: Show exact HTML validation hotspot source
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -n -B 15 -A 120 'const indexHtml = await readFile' scripts/validate-artifact-semantics.mjs || true
+
+      - name: Build identical dist without repeating full source and SHACL suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run prepare:distribution
+          npm run compile:dist
+
+      - name: Instrument and run artifact semantics only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('scripts/validate-artifact-semantics.mjs')
+          s = p.read_text()
+          old = 'const indexHtml = await readFile(path.join(root,"index.html"),"utf8"); const doc=parse(indexHtml);'
+          new = old + '\n__mark("html-parsed");'
+          assert old in s
+          p.write_text(s.replace(old, new, 1))
+          PY
+          /usr/bin/time -v node scripts/validate-artifact-semantics.mjs
