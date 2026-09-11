@@ -94,23 +94,20 @@ jobs:
           assert old in s
           p.write_text(s.replace(old, new, 1))
 
-          # Resource paths come from the existing machine-resource registry. Website targets
-          # resolve from final dist; non-website release resources resolve from their registered
-          # generated/source path. Do not force HF/Zenodo-only resources into website dist.
           p = Path('scripts/validate-artifact-semantics.mjs')
           s = p.read_text()
           assert 'query-matrix.jsonl' in s and 'query-matrix.json-seq' in s
           marker = 'const ndjson = await readFile('
           idx = s.find(marker)
           assert idx >= 0
-          helper = '''const machineResourceRegistry = JSON.parse(await readFile("src/data/machine-resources.json", "utf8"));
-const resolveRegisteredArtifact = (resourcePath) => {
-  const resource = machineResourceRegistry.resources.find((entry) => entry.path === resourcePath);
-  if (!resource) throw new Error(`Machine resource is not registered: ${resourcePath}`);
-  return resource.targets?.includes("website") ? path.join(distDir, resource.path) : resource.source;
-};
-
-'''
+          helper = (
+              'const machineResourceRegistry = JSON.parse(await readFile("src/data/machine-resources.json", "utf8"));\n'
+              'const resolveRegisteredArtifact = (resourcePath) => {\n'
+              '  const resource = machineResourceRegistry.resources.find((entry) => entry.path === resourcePath);\n'
+              '  if (!resource) throw new Error(`Machine resource is not registered: ${resourcePath}`);\n'
+              '  return resource.targets?.includes("website") ? path.join(distDir, resource.path) : resource.source;\n'
+              '};\n\n'
+          )
           s = s[:idx] + helper + s[idx:]
           replacements = 0
           for name in ('query-matrix.jsonl', 'query-matrix.json-seq'):
