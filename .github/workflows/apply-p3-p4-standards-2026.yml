@@ -39,6 +39,26 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Apply P3 P4 canonical migration
         run: node scripts/apply-p3-p4-standards-2026.mjs
+      - name: Normalize validator semantics and non-visual discovery
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs/promises';
+
+          const validatorPath = 'scripts/validate-machine-standards-2026.mjs';
+          let validator = await fs.readFile(validatorPath, 'utf8');
+          const before = 'assert.equal(mime.type, contract.media, `\\${path} media type drift`);';
+          const after = 'assert.equal(mime.essence, contract.media, `\\${path} media type drift`);';
+          if (!validator.includes(before)) throw new Error('MIME validator correction target missing');
+          validator = validator.replace(before, after);
+          await fs.writeFile(validatorPath, validator);
+
+          const registryPath = 'src/data/machine-resources.json';
+          const registry = JSON.parse(await fs.readFile(registryPath, 'utf8'));
+          const csvw = registry.resources.find((resource) => resource.path === 'entity-facts.csv-metadata.json');
+          if (!csvw) throw new Error('CSVW registry resource missing');
+          delete csvw.footerLabel;
+          await fs.writeFile(registryPath, `${JSON.stringify(registry, null, 2)}\n`);
+          NODE
       - name: Remove migration transport and create exact local product commit
         shell: bash
         run: |
