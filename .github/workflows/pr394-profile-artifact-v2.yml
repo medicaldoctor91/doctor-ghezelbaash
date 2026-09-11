@@ -1,0 +1,92 @@
+name: PR 394 artifact semantics profiler v2
+
+on:
+  push:
+    branches:
+      - candidate/final-repository-plan-2026
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr394-artifact-profiler-v2
+  cancel-in-progress: false
+
+jobs:
+  profile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - name: Checkout exact PR branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: candidate/final-repository-plan-2026
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pinned Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+
+      - name: Provision media tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Materialize profiled candidate with complete temp cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python - <<'PY'
+          from pathlib import Path
+          raw = Path('.github/workflows/pr394-profile-artifact-semantics.yml').read_text()
+          marker = '      - name: Materialize profiled candidate\n'
+          assert marker in raw
+          tail = raw.split(marker, 1)[1]
+          body = tail.split('        run: |\n', 1)[1]
+          lines=[]
+          for line in body.splitlines():
+              if line.startswith('      - name: '): break
+              assert line.startswith('          ') or not line, repr(line)
+              lines.append(line[10:] if line.startswith('          ') else line)
+          script='\n'.join(lines)+'\n'
+          old='rm -f .github/workflows/pr394-apply-upgrade.yml .github/workflows/pr394-finalize-upgrade.yml .github/workflows/pr394-finalize-v2.yml .github/workflows/pr394-artifact-source-diagnostic.yml .github/workflows/pr394-profile-artifact-semantics.yml'
+          new=old+' .github/workflows/pr394-finalize-v3.yml .github/workflows/pr394-profile-artifact-v2.yml'
+          assert old in script
+          script=script.replace(old,new,1)
+          Path('/tmp/pr394-profile-materialize-v2.sh').write_text(script)
+          PY
+          bash /tmp/pr394-profile-materialize-v2.sh
+
+      - name: Run full release with stage profiler
+        shell: bash
+        run: |
+          set +e
+          npm run release 2>&1 | tee /tmp/pr394-profile-v2-release.log
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "$rc" > /tmp/pr394-profile-v2-exit.txt
+          exit "$rc"
+
+      - name: Upload profiler evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pr394-artifact-profiler-v2-${{ github.sha }}
+          path: |
+            /tmp/pr394-profile-head.txt
+            /tmp/pr394-profile-v2-release.log
+            /tmp/pr394-profile-v2-exit.txt
+            .generated/validation/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
