@@ -104,7 +104,7 @@ jobs:
           replacement = (
               'const broken=[]; let checkedInternal=0; const validatedInternalUrls=new Set();\n'
               'const canonicalPrefix="https://www.ghezelbaash.ir/";\n'
-              'const isUrlTerminator=(ch)=>ch==null||/[\\s\\"\'<>`\\\\[\\]]/u.test(ch);\n'
+              'const isUrlTerminator=(ch)=>{if(ch==null||/\\s/u.test(ch))return true;const code=ch.charCodeAt(0);return code===34||code===39||code===60||code===62||code===96||code===92||code===91||code===93;};\n'
               'for (const file of files) {\n'
               '  if (!textExtensions.has(path.extname(file)) && file !== "site.webmanifest") continue;\n'
               '  const text=await readFile(path.join(root,file),"utf8");\n'
