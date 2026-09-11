@@ -69,6 +69,7 @@ jobs:
 
           python - <<'PY'
           from pathlib import Path
+          import re
 
           p = Path('scripts/validate-cloudflare-pages-limits.mjs')
           s = p.read_text()
@@ -109,14 +110,21 @@ jobs:
               '};\n\n'
           )
           s = s[:idx] + helper + s[idx:]
-          replacements = 0
+          lines = s.splitlines()
+          replaced = set()
+          for i, line in enumerate(lines):
+              for name in ('query-matrix.jsonl', 'query-matrix.json-seq'):
+                  if name not in line or 'readFile(' not in line:
+                      continue
+                  pattern = re.compile(rf'readFile\([^;\n]*{re.escape(name)}[^;\n]*\)')
+                  updated, count = pattern.subn(f'readFile(resolveRegisteredArtifact("{name}"), "utf8")', line, count=1)
+                  if count == 1:
+                      lines[i] = updated
+                      replaced.add(name)
+          assert replaced == {'query-matrix.jsonl', 'query-matrix.json-seq'}, (replaced, [line for line in lines if 'query-matrix' in line])
+          s = '\n'.join(lines) + ('\n' if s.endswith('\n') else '')
           for name in ('query-matrix.jsonl', 'query-matrix.json-seq'):
-              for old in (f'path.join(distDir, "{name}")', f"path.join(distDir, '{name}')"):
-                  if old in s:
-                      s = s.replace(old, f'resolveRegisteredArtifact("{name}")', 1)
-                      replacements += 1
-                      break
-          assert replacements == 2
+              assert f'resolveRegisteredArtifact("{name}")' in s
           p.write_text(s)
 
           Path('scripts/validate-rdf-isomorphism.mjs').write_text(Path('/tmp/validate-rdf-isomorphism.mjs').read_text())
