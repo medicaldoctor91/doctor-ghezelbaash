@@ -111,13 +111,16 @@ jobs:
           NODE
       - name: Align CodeMeta 3.1 release contract
         run: node scripts/patch-release-contract-p3-p4.mjs
+      - name: Align source validation with explicit external publication ownership
+        run: node scripts/patch-validate-source-p3-p4.mjs
       - name: Remove migration transport and create exact local product commit
         shell: bash
         run: |
           set -euo pipefail
-          rm -f scripts/apply-p3-p4-standards-2026.mjs scripts/patch-release-contract-p3-p4.mjs .github/workflows/apply-p3-p4-standards-2026.yml
+          rm -f scripts/apply-p3-p4-standards-2026.mjs scripts/patch-release-contract-p3-p4.mjs scripts/patch-validate-source-p3-p4.mjs .github/workflows/apply-p3-p4-standards-2026.yml
           test ! -e scripts/apply-p3-p4-standards-2026.mjs
           test ! -e scripts/patch-release-contract-p3-p4.mjs
+          test ! -e scripts/patch-validate-source-p3-p4.mjs
           test ! -e .github/workflows/apply-p3-p4-standards-2026.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
