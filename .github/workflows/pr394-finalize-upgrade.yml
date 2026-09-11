@@ -95,28 +95,29 @@ jobs:
           assert old in s
           p.write_text(s.replace(old, new, 1))
 
-          # Keep duplicate-key detection linear in input size: do not allocate the entire
-          # remaining JSON suffix for every primitive token. Also allow validation-only
-          # callers to avoid materializing large parse trees they never consume.
           p = Path('scripts/lib/strict-json.mjs')
           s = p.read_text()
           old_signature = 'export function parseJsonNoDuplicateKeys(text, label = "JSON") {'
           new_signature = 'export function parseJsonNoDuplicateKeys(text, label = "JSON", { materialize = true } = {}) {'
           assert old_signature in s
           s = s.replace(old_signature, new_signature, 1)
-          old_primitive = '''  const primitive = () => {
-    const rest = text.slice(i);
-    const match = rest.match(/^(?:true|false|null|-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)/u);
-    if (!match) fail("invalid value");
-    i += match[0].length;
-  };'''
-          new_primitive = '''  const primitivePattern = /(?:true|false|null|-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)/uy;
-  const primitive = () => {
-    primitivePattern.lastIndex = i;
-    const match = primitivePattern.exec(text);
-    if (!match) fail("invalid value");
-    i += match[0].length;
-  };'''
+          old_primitive = (
+              '  const primitive = () => {\n'
+              '    const rest = text.slice(i);\n'
+              '    const match = rest.match(/^(?:true|false|null|-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)/u);\n'
+              '    if (!match) fail("invalid value");\n'
+              '    i += match[0].length;\n'
+              '  };'
+          )
+          new_primitive = (
+              '  const primitivePattern = /(?:true|false|null|-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)/uy;\n'
+              '  const primitive = () => {\n'
+              '    primitivePattern.lastIndex = i;\n'
+              '    const match = primitivePattern.exec(text);\n'
+              '    if (!match) fail("invalid value");\n'
+              '    i += match[0].length;\n'
+              '  };'
+          )
           assert old_primitive in s
           s = s.replace(old_primitive, new_primitive, 1)
           old_return = '  return JSON.parse(text);'
@@ -128,16 +129,19 @@ jobs:
           p = Path('scripts/validate-artifact-semantics.mjs')
           s = p.read_text()
           assert 'query-matrix.jsonl' in s and 'query-matrix.json-seq' in s
-
-          old_json_loop = '''const parsedJson = new Map();
-for (const file of strictJsonFiles) parsedJson.set(file, parseJsonNoDuplicateKeys(await readFile(path.join(root, file), "utf8"), `dist/${file}`));'''
-          new_json_loop = '''const parsedJson = new Map();
-const retainedJsonFiles = new Set(["site.webmanifest", "linkset.json", "entity-facts.csv-metadata.json", "datapackage.json", "croissant.json"]);
-for (const file of strictJsonFiles) {
-  const keep = retainedJsonFiles.has(file);
-  const parsed = parseJsonNoDuplicateKeys(await readFile(path.join(root, file), "utf8"), `dist/${file}`, { materialize: keep });
-  if (keep) parsedJson.set(file, parsed);
-}'''
+          old_json_loop = (
+              'const parsedJson = new Map();\n'
+              'for (const file of strictJsonFiles) parsedJson.set(file, parseJsonNoDuplicateKeys(await readFile(path.join(root, file), "utf8"), `dist/${file}`));'
+          )
+          new_json_loop = (
+              'const parsedJson = new Map();\n'
+              'const retainedJsonFiles = new Set(["site.webmanifest", "linkset.json", "entity-facts.csv-metadata.json", "datapackage.json", "croissant.json"]);\n'
+              'for (const file of strictJsonFiles) {\n'
+              '  const keep = retainedJsonFiles.has(file);\n'
+              '  const parsed = parseJsonNoDuplicateKeys(await readFile(path.join(root, file), "utf8"), `dist/${file}`, { materialize: keep });\n'
+              '  if (keep) parsedJson.set(file, parsed);\n'
+              '}'
+          )
           assert old_json_loop in s
           s = s.replace(old_json_loop, new_json_loop, 1)
 
@@ -179,14 +183,12 @@ for (const file of strictJsonFiles) {
           fixed_line, rs_count = re.subn(
               r'(?<![A-Za-z0-9_])0x1[eE](?![A-Za-z0-9_])',
               lambda _match: r'"\x1e"',
-              separator_lines[0],
-              count=1,
+              separator_lines[0], count=1,
           )
           fixed_line, lf_count = re.subn(
               r'(?<![A-Za-z0-9_])0x0[aA](?![A-Za-z0-9_])',
               lambda _match: r'"\n"',
-              fixed_line,
-              count=1,
+              fixed_line, count=1,
           )
           assert rs_count == 1 and lf_count == 1 and fixed_line != separator_lines[0], (rs_count, lf_count, separator_lines[0])
           s = s.replace(separator_lines[0], fixed_line, 1)
@@ -213,8 +215,6 @@ for (const file of strictJsonFiles) {
           npm run render:calibration:update
           npm run test:render-navigation -- .generated/calibration-candidate
 
-          # Targeted regression proof for the optimized parser: valid materialization,
-          # validation-only mode, and duplicate-key rejection must all preserve behavior.
           node --input-type=module <<'EOF'
           import assert from 'node:assert/strict';
           import { parseJsonNoDuplicateKeys } from './scripts/lib/strict-json.mjs';
