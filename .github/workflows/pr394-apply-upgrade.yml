@@ -37,7 +37,7 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-      - name: Materialize, validate, commit and push exact upgrade
+      - name: Materialize, calibrate, validate, commit and push exact upgrade
         shell: bash
         run: |
           set -euo pipefail
@@ -56,6 +56,9 @@ jobs:
           rm -f .github/workflows/pr394-apply-upgrade.yml
           npm ci
           npm run security:dependencies
+          npx playwright install --with-deps chromium
+          npm run render:calibration:update
+          npm run test:render-navigation -- .generated/calibration-candidate
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
