@@ -47,6 +47,10 @@ jobs:
           git apply --check /tmp/pr394-upgrade.patch
           git apply /tmp/pr394-upgrade.patch
           sed -i 's|/media/images/physician/example.webp|/assets/image-example.webp|' scripts/validate-cloudflare-pages-limits.mjs
+          mv scripts/audit-performance.mjs scripts/measure-performance.mjs
+          sed -i 's|scripts/audit-performance.mjs|scripts/measure-performance.mjs|g' package.json .github/workflows/ci.yml
+          sed -i 's/await chrome.kill();/chrome.kill();/' scripts/measure-performance.mjs
+          sed -i 's/^on:$/on:\n  workflow_dispatch:/' .github/workflows/ci.yml
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           rm -f .pr394-upgrade.gz.b64.*
           rm -f .github/workflows/pr394-apply-upgrade.yml
