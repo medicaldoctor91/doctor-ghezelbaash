@@ -1,0 +1,182 @@
+name: PR 394 bounded final transaction
+
+on:
+  push:
+    branches:
+      - candidate/final-repository-plan-2026
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pr394-bounded-final
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    steps:
+      - name: Checkout exact PR branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: candidate/final-repository-plan-2026
+          fetch-depth: 0
+
+      - name: Set up pinned Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Set up pinned Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.14.6'
+
+      - name: Provision media validation tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Materialize current candidate and apply bounded fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          INITIAL_HEAD="$(git rev-parse HEAD)"
+          test "$INITIAL_HEAD" = "$GITHUB_SHA"
+
+          python - <<'PY'
+          from pathlib import Path
+          raw = Path('.github/workflows/pr394-finalize-upgrade.yml').read_text()
+          marker = '      - name: Materialize exact final candidate\n'
+          assert marker in raw
+          tail = raw.split(marker, 1)[1]
+          run_marker = '        run: |\n'
+          assert run_marker in tail
+          body = tail.split(run_marker, 1)[1]
+          lines = []
+          for line in body.splitlines():
+              if line.startswith('      - name: '):
+                  break
+              assert line.startswith('          ') or not line, repr(line)
+              lines.append(line[10:] if line.startswith('          ') else line)
+          script = '\n'.join(lines) + '\n'
+          assert 'git commit -m' in script and 'Prepared final candidate' in script
+          Path('/tmp/pr394-materialize.sh').write_text(script)
+          PY
+
+          bash /tmp/pr394-materialize.sh
+
+          python - <<'PY'
+          from pathlib import Path
+
+          # RFC 6350: TEL is emitted as a URI value, so declare VALUE=uri explicitly.
+          p = Path('scripts/lib/projections/contact-discovery.mjs')
+          s = p.read_text()
+          old = '`TEL;TYPE=work,voice:tel:${telephone}`,'
+          new = '`TEL;VALUE=uri;TYPE=work,voice:tel:${telephone}`,'
+          assert s.count(old) == 2, s.count(old)
+          p.write_text(s.replace(old, new))
+
+          p = Path('scripts/test-machine-resources.mjs')
+          s = p.read_text()
+          old = 'assert.match(telLines[0], /^TEL;TYPE=work,voice:tel:\\+[0-9]+$/u);'
+          new = 'assert.match(telLines[0], /^TEL;VALUE=uri;TYPE=work,voice:tel:\\+[0-9]+$/u);'
+          assert old in s
+          p.write_text(s.replace(old, new, 1))
+
+          p = Path('scripts/validate-artifact-semantics.mjs')
+          s = p.read_text()
+          old_tel = 'for (const row of properties.filter((x) => x.name === "TEL")) assert.match(row.value, /^tel:\\+?[0-9][0-9(). -]*$/u, `${file} TEL must be an RFC 6350 URI value`);'
+          new_tel = 'for (const row of properties.filter((x) => x.name === "TEL")) { const valueParams = row.params.filter((param) => /^VALUE=/iu.test(param)); assert.equal(valueParams.length, 1, `${file} TEL must declare exactly one VALUE parameter`); assert.match(valueParams[0], /^VALUE=uri$/iu, `${file} TEL VALUE parameter must be uri`); assert.match(row.value, /^tel:\\+?[0-9][0-9(). -]*$/u, `${file} TEL must be an RFC 6350 URI value`); }'
+          assert old_tel in s
+          s = s.replace(old_tel, new_tel, 1)
+
+          start_marker = 'const broken=[]; let checkedInternal=0;'
+          end_marker = 'assert.deepEqual(broken, [], `Broken canonical internal URLs/fragments: ${JSON.stringify(broken.slice(0,20),null,2)}`);'
+          start = s.find(start_marker)
+          end_start = s.find(end_marker)
+          assert start >= 0 and end_start > start
+          end = end_start + len(end_marker)
+          replacement = (
+              'const broken=[]; let checkedInternal=0; const validatedInternalUrls=new Set();\n'
+              'const canonicalPrefix="https://www.ghezelbaash.ir/";\n'
+              'const isUrlTerminator=(ch)=>ch==null||/[\\s\\"\'<>`\\\\[\\]]/u.test(ch);\n'
+              'for (const file of files) {\n'
+              '  if (!textExtensions.has(path.extname(file)) && file !== "site.webmanifest") continue;\n'
+              '  const text=await readFile(path.join(root,file),"utf8");\n'
+              '  let offset=0;\n'
+              '  for (;;) {\n'
+              '    const found=text.indexOf(canonicalPrefix,offset); if(found<0) break;\n'
+              '    let cursor=found+canonicalPrefix.length; while(cursor<text.length&&!isUrlTerminator(text[cursor])) cursor+=1;\n'
+              '    const value=text.slice(found,cursor).replace(/[),.;]+$/u,""); offset=Math.max(cursor,found+canonicalPrefix.length); checkedInternal+=1;\n'
+              '    if(validatedInternalUrls.has(value)) continue; validatedInternalUrls.add(value);\n'
+              '    let url; try{url=new URL(value);}catch{broken.push({file,url:value,reason:"invalid-url"});continue;}\n'
+              '    let relative; try{relative=decodeURIComponent(url.pathname).slice(1)||"index.html";}catch{broken.push({file,url:value,reason:"invalid-percent-encoding"});continue;}\n'
+              '    if(!exists(relative)){broken.push({file,url:value,reason:"missing-path"});continue;}\n'
+              '    if((relative==="index.html"||relative.endsWith(".html"))&&url.hash&&relative==="index.html"){let fragment; try{fragment=decodeURIComponent(url.hash.slice(1));}catch{broken.push({file,url:value,reason:"invalid-fragment-encoding"});continue;} if(fragment&&!ids.has(fragment)) broken.push({file,url:value,reason:"missing-fragment"});}\n'
+              '  }\n'
+              '}\n'
+              'assert.deepEqual(broken, [], `Broken canonical internal URLs/fragments: ${JSON.stringify(broken.slice(0,20),null,2)}`);'
+          )
+          s = s[:start] + replacement + s[end:]
+          old_evidence = 'internalLinks:{checked:checkedInternal,broken:0}'
+          new_evidence = 'internalLinks:{checked:checkedInternal,unique:validatedInternalUrls.size,broken:0}'
+          assert old_evidence in s
+          p.write_text(s.replace(old_evidence, new_evidence, 1))
+          PY
+
+          rm -f .github/workflows/pr394-finalize-v2.yml
+          git add -A
+          git diff --cached --check
+          git commit --amend --no-edit
+
+          FINAL_HEAD="$(git rev-parse HEAD)"
+          SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$FINAL_HEAD")"
+          {
+            echo "FINAL_HEAD=$FINAL_HEAD"
+            echo "SOURCE_COMMIT=$FINAL_HEAD"
+            echo "CF_PAGES_COMMIT_SHA=$FINAL_HEAD"
+            echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH"
+          } >> "$GITHUB_ENV"
+          printf '%s\n' "$FINAL_HEAD" > /tmp/pr394-final-head.txt
+          printf 'Prepared bounded final candidate %s\n' "$FINAL_HEAD"
+
+      - name: Release final candidate
+        shell: bash
+        run: |
+          set +e
+          /usr/bin/time -v npm run release 2>&1 | tee /tmp/pr394-release.log
+          rc=${PIPESTATUS[0]}
+          printf '%s\n' "$rc" > /tmp/pr394-release-exit.txt
+          exit "$rc"
+
+      - name: Capture transaction evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pr394-bounded-final-${{ github.sha }}
+          path: |
+            /tmp/pr394-final-head.txt
+            /tmp/pr394-release.log
+            /tmp/pr394-release-exit.txt
+            .generated/validation/
+            .release/runtime/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Push only fully validated candidate
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$FINAL_HEAD"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          REMOTE_HEAD="$(git ls-remote origin refs/heads/candidate/final-repository-plan-2026 | cut -f1)"
+          test "$REMOTE_HEAD" = "$GITHUB_SHA"
+          git push origin HEAD:candidate/final-repository-plan-2026
+          printf 'FINAL_HEAD=%s\n' "$FINAL_HEAD"
