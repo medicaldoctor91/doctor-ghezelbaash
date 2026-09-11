@@ -82,14 +82,147 @@ jobs:
           p.write_text(s)
           PY
 
+          cat > scripts/validate-rdf-isomorphism.mjs <<'EOF'
+          import assert from "node:assert/strict";
+          import { createHash } from "node:crypto";
+          import { spawnSync } from "node:child_process";
+          import { mkdir, readFile, writeFile } from "node:fs/promises";
+          import jsonld from "jsonld";
+          import canonize from "rdf-canonize";
+          import { distIdentity, exactSourceCommit } from "./lib/dist-identity.mjs";
+          import { parseJsonNoDuplicateKeys } from "./lib/strict-json.mjs";
+
+          const graphText = await readFile("dist/graph.jsonld", "utf8");
+          const graph = parseJsonNoDuplicateKeys(graphText, "dist/graph.jsonld");
+
+          // Layer 1 — process the final JSON-LD serialization with the pinned W3C JSON-LD 1.1 implementation.
+          const expanded = await jsonld.expand(graph);
+          assert.ok(Array.isArray(expanded) && expanded.length > 0, "JSON-LD expansion returned no nodes");
+          const jsonldNQuads = await jsonld.toRDF(graph, { format: "application/n-quads" });
+
+          // Layer 2 — independently consume both RDF representations with RDFLib. Normalizing both sides
+          // through the same RDF term implementation avoids comparing serializer-specific lexical choices.
+          // The JSON-LD processor still owns JSON-LD expansion/toRDF; RDFLib never substitutes for it.
+          const python = String.raw`
+          import json, pathlib, sys
+          from rdflib import Dataset, Graph
+
+          raw = sys.stdin.read()
+          ds = Dataset()
+          ds.parse(data=raw, format='nquads')
+          default_id = ds.default_graph.identifier
+          named_graphs = sorted(str(g.identifier) for g in ds.graphs() if g.identifier != default_id and len(g))
+
+          if named_graphs:
+              print(json.dumps({'error': 'named-graphs-not-supported-by-turtle-projection', 'namedGraphs': named_graphs}, ensure_ascii=False))
+              raise SystemExit(3)
+
+          json_graph = Graph()
+          json_graph.parse(data=raw, format='nt')
+
+          root = pathlib.Path('dist')
+          files = sorted(root.glob('*.ttl'))
+          out = {}
+          graph_ttl = None
+          for p in files:
+              g = Graph()
+              g.parse(p, format='turtle')
+              nt = g.serialize(format='nt')
+              out[p.name] = {'triples': len(g), 'nt': nt}
+              if p.name == 'graph.ttl':
+                  graph_ttl = g
+
+          if graph_ttl is None:
+              print(json.dumps({'error': 'graph.ttl-missing'}, ensure_ascii=False))
+              raise SystemExit(4)
+
+          print(json.dumps({
+              'namedGraphs': named_graphs,
+              'jsonld': {'triples': len(json_graph), 'nt': json_graph.serialize(format='nt')},
+              'turtle': out,
+          }, ensure_ascii=False))
+          `;
+
+          const parsed = spawnSync("python", ["-c", python], {
+            encoding: "utf8",
+            input: jsonldNQuads,
+            env: { ...process.env, PYTHONPATH: ".python-deps" },
+            maxBuffer: 96 * 1024 * 1024,
+          });
+          if (parsed.status !== 0) throw new Error(`RDFLib independent RDF parse failed:\n${parsed.stderr || parsed.stdout}`);
+          const independent = JSON.parse(parsed.stdout);
+          assert.deepEqual(independent.namedGraphs, [], "Canonical JSON-LD unexpectedly contains named graphs that graph.ttl cannot represent");
+          for (const required of ["graph.ttl", "shapes.ttl", "void.ttl", "dcat.ttl"])
+            assert.ok(independent.turtle[required], `Final Turtle artifact not independently parsed: ${required}`);
+          assert.equal(independent.jsonld.triples, independent.turtle["graph.ttl"].triples, "RDF triple counts differ before canonicalization");
+
+          // Layer 3 — RDFC-1.0 canonicalize the RDFLib-consumed datasets and compare RDF terms,
+          // not original serializer byte strings. N-Triples is a legal default-graph subset of N-Quads.
+          const canonicalJsonld = await canonize.canonize(independent.jsonld.nt, {
+            algorithm: "RDFC-1.0",
+            inputFormat: "application/n-quads",
+            format: "application/n-quads",
+          });
+          const canonicalTurtle = await canonize.canonize(independent.turtle["graph.ttl"].nt, {
+            algorithm: "RDFC-1.0",
+            inputFormat: "application/n-quads",
+            format: "application/n-quads",
+          });
+
+          if (canonicalTurtle !== canonicalJsonld) {
+            const turtleSet = new Set(canonicalTurtle.split("\n").filter(Boolean));
+            const jsonldSet = new Set(canonicalJsonld.split("\n").filter(Boolean));
+            const turtleOnly = [...turtleSet].filter((line) => !jsonldSet.has(line));
+            const jsonldOnly = [...jsonldSet].filter((line) => !turtleSet.has(line));
+            throw new Error(`Final graph.jsonld and graph.ttl are not RDF-isomorphic after independent parse + RDFC-1.0 canonicalization\n${JSON.stringify({ turtleOnly: turtleOnly.slice(0, 20), jsonldOnly: jsonldOnly.slice(0, 20), turtleOnlyCount: turtleOnly.length, jsonldOnlyCount: jsonldOnly.length }, null, 2)}`);
+          }
+
+          // Regression mutation: one additional RDF statement must make the canonical datasets unequal.
+          const mutatedTurtle = `${independent.turtle["graph.ttl"].nt}\n<urn:ghezelbaash:negative-rdf-mutation> <urn:ghezelbaash:test-predicate> <urn:ghezelbaash:test-object> .\n`;
+          const canonicalMutation = await canonize.canonize(mutatedTurtle, {
+            algorithm: "RDFC-1.0",
+            inputFormat: "application/n-quads",
+            format: "application/n-quads",
+          });
+          assert.notEqual(canonicalMutation, canonicalJsonld, "RDF isomorphism negative mutation was not rejected");
+
+          const lines = canonicalJsonld.split("\n").filter(Boolean);
+          const digest = createHash("sha256").update(canonicalJsonld).digest("hex");
+          const languageLiterals = lines.filter((line) => /"@[A-Za-z]/u.test(line)).length;
+          const typedLiterals = lines.filter((line) => /"\^\^<[^>]+>/u.test(line)).length;
+          const iris = new Set(lines.flatMap((line) => [...line.matchAll(/<([^>]+)>/gu)].map((match) => match[1])));
+          const identity = await distIdentity("dist");
+          const evidence = {
+            schema: "https://www.ghezelbaash.ir/rdf-isomorphism-evidence/v1",
+            sourceCommit: exactSourceCommit(),
+            distDigest: identity.digest,
+            jsonLdProcessor: "jsonld@9.0.0 / JSON-LD 1.1",
+            independentRdfParser: "RDFLib@7.6.0",
+            turtleParser: "RDFLib@7.6.0",
+            canonicalizer: "rdf-canonize@5.0.0 / RDFC-1.0",
+            parserNormalizedBothSides: true,
+            namedGraphCount: 0,
+            expandedNodes: expanded.length,
+            canonicalQuads: lines.length,
+            canonicalSha256: digest,
+            iriCount: iris.size,
+            typedLiterals,
+            languageLiterals,
+            jsonLdTriples: independent.jsonld.triples,
+            turtleArtifacts: Object.fromEntries(Object.entries(independent.turtle).map(([name, value]) => [name, { triples: value.triples }])),
+            negativeMutationRejected: true,
+            isomorphic: true,
+            result: "PASS",
+          };
+          await mkdir(".generated/validation", { recursive: true });
+          await writeFile(".generated/validation/rdf-isomorphism.json", `${JSON.stringify(evidence, null, 2)}\n`);
+          console.log(JSON.stringify(evidence, null, 2));
+          EOF
+
           mv scripts/audit-performance.mjs scripts/measure-performance.mjs
           sed -i 's|scripts/audit-performance.mjs|scripts/measure-performance.mjs|g' package.json .github/workflows/ci.yml
           sed -i 's/await chrome.kill();/chrome.kill();/' scripts/measure-performance.mjs
           sed -i 's/^on:$/on:\n  workflow_dispatch:/' .github/workflows/ci.yml
-
-          printf '%s\n' '--- staged RDF isomorphism validator ---'
-          sed -n '1,260p' scripts/validate-rdf-isomorphism.mjs
-          printf '%s\n' '--- end staged RDF isomorphism validator ---'
 
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           rm -f .pr394-upgrade.gz.b64.*
