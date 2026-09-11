@@ -71,7 +71,6 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          # Make the final HTML validator the single owner of parsed DOM fragment targets.
           p = Path('scripts/validate-html-conformance.mjs')
           s = p.read_text()
           old = '  structural.push({ file, ids: state.ids.size, fragments: state.fragments.length, canonicals: state.canonicals });'
@@ -90,24 +89,26 @@ jobs:
           s = '\n'.join(lines) + '\n'
 
           old_dom = 'const indexHtml = await readFile(path.join(root,"index.html"),"utf8"); const doc=parse(indexHtml); const ids=new Set(); const collect=(node)=>{for(const attr of node.attrs||[]) if(attr.name==="id") ids.add(attr.value); for(const child of node.childNodes||[]) collect(child);}; collect(doc);'
-          new_dom = '''const htmlEvidence = parseJsonNoDuplicateKeys(await readFile(".generated/validation/html-conformance.json", "utf8"), "HTML conformance evidence");
-const identity = await distIdentity("dist");
-const bindHtmlEvidence = (evidence, currentIdentity) => {
-  assert.equal(evidence.sourceCommit, exactSourceCommit(), "HTML evidence source commit mismatch");
-  assert.equal(evidence.distDigest, currentIdentity.digest, "HTML evidence dist digest mismatch");
-  const indexEvidence = (evidence.structural || []).find((row) => row.file === "index.html");
-  assert.ok(indexEvidence, "HTML evidence missing index.html structural record");
-  assert.ok(Array.isArray(indexEvidence.fragmentTargets), "HTML evidence missing parsed fragment targets");
-  assert.equal(indexEvidence.fragmentTargets.length, indexEvidence.ids, "HTML evidence fragment target count drift");
-  assert.equal(new Set(indexEvidence.fragmentTargets).size, indexEvidence.fragmentTargets.length, "HTML evidence contains duplicate fragment targets");
-  return new Set(indexEvidence.fragmentTargets);
-};
-const ids = bindHtmlEvidence(htmlEvidence, identity);
-assert.throws(
-  () => bindHtmlEvidence({ ...htmlEvidence, distDigest: "0".repeat(64) }, identity),
-  /HTML evidence dist digest mismatch/u,
-  "stale HTML evidence digest mutation was not rejected",
-);'''
+          new_dom = (
+              'const htmlEvidence = parseJsonNoDuplicateKeys(await readFile(".generated/validation/html-conformance.json", "utf8"), "HTML conformance evidence");\n'
+              'const identity = await distIdentity("dist");\n'
+              'const bindHtmlEvidence = (evidence, currentIdentity) => {\n'
+              '  assert.equal(evidence.sourceCommit, exactSourceCommit(), "HTML evidence source commit mismatch");\n'
+              '  assert.equal(evidence.distDigest, currentIdentity.digest, "HTML evidence dist digest mismatch");\n'
+              '  const indexEvidence = (evidence.structural || []).find((row) => row.file === "index.html");\n'
+              '  assert.ok(indexEvidence, "HTML evidence missing index.html structural record");\n'
+              '  assert.ok(Array.isArray(indexEvidence.fragmentTargets), "HTML evidence missing parsed fragment targets");\n'
+              '  assert.equal(indexEvidence.fragmentTargets.length, indexEvidence.ids, "HTML evidence fragment target count drift");\n'
+              '  assert.equal(new Set(indexEvidence.fragmentTargets).size, indexEvidence.fragmentTargets.length, "HTML evidence contains duplicate fragment targets");\n'
+              '  return new Set(indexEvidence.fragmentTargets);\n'
+              '};\n'
+              'const ids = bindHtmlEvidence(htmlEvidence, identity);\n'
+              'assert.throws(\n'
+              '  () => bindHtmlEvidence({ ...htmlEvidence, distDigest: "0".repeat(64) }, identity),\n'
+              '  /HTML evidence dist digest mismatch/u,\n'
+              '  "stale HTML evidence digest mutation was not rejected",\n'
+              ');'
+          )
           assert old_dom in s
           s = s.replace(old_dom, new_dom, 1)
           old_identity = 'const identity = await distIdentity("dist");\nconst evidence = {'
