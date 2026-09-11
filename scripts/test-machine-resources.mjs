@@ -262,8 +262,9 @@ test("profiled media type survives Content-Type, HTML discovery and nested HTTP 
   const headers = compileHeadersTemplate(template, bindings);
   const block = headers.split("\n/croissant.json\n")[1].split("\n\n")[0];
   const contentType = block.match(/Content-Type: (.+)/)[1];
+  assert.equal(contentType, resource.contentType);
   assert.equal(new MIMEType(contentType).params.get("profile"), resource.profileIri);
-  assert.equal(new MIMEType(contentType).params.get("charset"), "utf-8");
+  assert.equal(new MIMEType(contentType).params.get("charset"), null);
   assert.match(block, /X-Robots-Tag: googlebot: noindex, follow/);
   assert.throws(() => compileHeadersTemplate(template.replace("CONTENT_TYPE:croissant.json", "CONTENT_TYPE:missing.json"), bindings), /Unknown machine resource/);
   assert.throws(() => compileHeadersTemplate(`${template}{{CONTENT_TYPE:croissant.json}}`, bindings), /expected exactly one/);
