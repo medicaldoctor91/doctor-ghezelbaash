@@ -1,0 +1,96 @@
+name: Apply P3 P4 standards 2026 (temporary)
+
+on:
+  push:
+    branches:
+      - fix/p3-p4-standards-release-architecture-2026
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p3-p4-standards-2026-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrate-validate-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: fix/p3-p4-standards-release-architecture-2026
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Provision canonical validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          npm ci
+          npm run security:dependencies
+          npx playwright install --with-deps chromium
+      - name: Apply P3 P4 canonical migration
+        run: node scripts/apply-p3-p4-standards-2026.mjs
+      - name: Remove migration transport and create exact local product commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f scripts/apply-p3-p4-standards-2026.mjs .github/workflows/apply-p3-p4-standards-2026.yml
+          test ! -e scripts/apply-p3-p4-standards-2026.mjs
+          test ! -e .github/workflows/apply-p3-p4-standards-2026.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --name-only | grep -E '^(dist/|\.generated/|release/|\.release/runtime/)'; then
+            echo "Generated/runtime output staged" >&2
+            exit 1
+          fi
+          git diff --cached --check
+          git commit -m "fix: standardize machine resources and release monitoring"
+          PRODUCT_SHA="$(git rev-parse HEAD)"
+          PRODUCT_EPOCH="$(git show -s --format=%ct HEAD)"
+          printf 'SOURCE_COMMIT=%s\nCF_PAGES_COMMIT_SHA=%s\nSOURCE_DATE_EPOCH=%s\nPRODUCT_SHA=%s\n' \
+            "$PRODUCT_SHA" "$PRODUCT_SHA" "$PRODUCT_EPOCH" "$PRODUCT_SHA" >> "$GITHUB_ENV"
+      - name: Generate distribution and run focused P3 P4 contracts
+        run: |
+          npm run prepare:distribution
+          npm run validate:machine-standards
+          npm run validate:hygiene
+          npm run validate:shacl
+          npm run test:machine-resources
+      - name: Run complete canonical release validation
+        run: npm run release
+      - name: Verify exact attestation and mutation-free source
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const a = JSON.parse(fs.readFileSync('.release/runtime/release-attestation.json', 'utf8'));
+          if (a.sourceCommit !== process.env.PRODUCT_SHA) throw new Error(`Attestation source mismatch: ${a.sourceCommit} != ${process.env.PRODUCT_SHA}`);
+          if (a.validation !== 'PASS') throw new Error('Release attestation is not PASS');
+          NODE
+          if git status --porcelain --untracked-files=no | grep -q .; then
+            echo "Validation mutated tracked product source" >&2
+            git status --short >&2
+            exit 1
+          fi
+          if git status --porcelain -- dist .generated release .release/runtime | grep -q .; then
+            echo "Generated/runtime output unexpectedly tracked" >&2
+            git status --short -- dist .generated release .release/runtime >&2
+            exit 1
+          fi
+      - name: Publish validated product commit to feature branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$PRODUCT_SHA"
+          git push origin HEAD:fix/p3-p4-standards-release-architecture-2026
