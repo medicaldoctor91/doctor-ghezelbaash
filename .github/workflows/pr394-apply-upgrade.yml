@@ -1,87 +1,19 @@
-name: PR 394 standards upgrade transaction
+name: PR 394 materializer source archive
 
 on:
-  push:
-    branches:
-      - candidate/final-repository-plan-2026
+  workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: pr394-standards-upgrade
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  materialize:
+  source-only:
+    if: ${{ false }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
     steps:
-      - name: Checkout exact PR branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: candidate/final-repository-plan-2026
-          fetch-depth: 0
-
-      - name: Set up pinned Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Set up pinned Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.14.6'
-
-      - name: Provision media validation tools
+      - name: Embedded RDF isomorphism validator source
         shell: bash
         run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-
-      - name: Prepare exact final candidate
-        shell: bash
-        run: |
-          set -euo pipefail
-          INITIAL_HEAD="$(git rev-parse HEAD)"
-          test "$INITIAL_HEAD" = "${GITHUB_SHA}"
-
-          cat .pr394-upgrade.gz.b64.* | base64 --decode | gzip -dc > /tmp/pr394-upgrade.patch
-          git apply --check /tmp/pr394-upgrade.patch
-          git apply /tmp/pr394-upgrade.patch
-
-          python - <<'PY'
-          from pathlib import Path
-
-          p = Path('scripts/validate-cloudflare-pages-limits.mjs')
-          s = p.read_text()
-          old = '/' + 'media/images/physician/' + 'example.webp'
-          assert old in s
-          p.write_text(s.replace(old, '/assets/image-example.webp', 1))
-
-          p = Path('src/components/GuideNavigator.astro')
-          s = p.read_text()
-          old = 'dialogOpener = opener instanceof HTMLElement ? opener : null;'
-          new = 'dialogOpener = opener && typeof opener.focus === "function" ? opener : null;'
-          assert old in s
-          s = s.replace(old, new, 1)
-          old = 'if (target?.isConnected)\n      requestAnimationFrame(() => target.focus({ preventScroll: true }));'
-          new = 'if (target && target.isConnected !== false && typeof target.focus === "function")\n      requestAnimationFrame(() => target.focus({ preventScroll: true }));'
-          assert old in s
-          s = s.replace(old, new, 1)
-          p.write_text(s)
-
-          p = Path('scripts/test-guide-navigator.mjs')
-          s = p.read_text()
-          old = 'dialog.close = () => { dialog.open = false; };'
-          new = 'dialog.close = () => { dialog.open = false; emit(dialog, "close"); };'
-          assert old in s
-          s = s.replace(old, new, 1)
-          p.write_text(s)
-          PY
-
           cat > scripts/validate-rdf-isomorphism.mjs <<'EOF'
           import assert from "node:assert/strict";
           import { createHash } from "node:crypto";
@@ -218,70 +150,3 @@ jobs:
           await writeFile(".generated/validation/rdf-isomorphism.json", `${JSON.stringify(evidence, null, 2)}\n`);
           console.log(JSON.stringify(evidence, null, 2));
           EOF
-
-          mv scripts/audit-performance.mjs scripts/measure-performance.mjs
-          sed -i 's|scripts/audit-performance.mjs|scripts/measure-performance.mjs|g' package.json .github/workflows/ci.yml
-          sed -i 's/await chrome.kill();/chrome.kill();/' scripts/measure-performance.mjs
-          sed -i 's/^on:$/on:\n  workflow_dispatch:/' .github/workflows/ci.yml
-
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-          rm -f .pr394-upgrade.gz.b64.*
-          rm -f .github/workflows/pr394-apply-upgrade.yml
-
-          npm ci
-          npm run security:dependencies
-          npx playwright install --with-deps chromium
-          npm run render:calibration:update
-          npm run test:render-navigation -- .generated/calibration-candidate
-
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git diff --cached --check
-          git commit -m 'feat: harden 2026 dist conformance and browser evidence'
-
-          FINAL_HEAD="$(git rev-parse HEAD)"
-          SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$FINAL_HEAD")"
-          {
-            echo "FINAL_HEAD=$FINAL_HEAD"
-            echo "SOURCE_COMMIT=$FINAL_HEAD"
-            echo "CF_PAGES_COMMIT_SHA=$FINAL_HEAD"
-            echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH"
-          } >> "$GITHUB_ENV"
-          printf '%s\n' "$FINAL_HEAD" > /tmp/pr394-final-head.txt
-          printf 'Prepared final candidate %s\n' "$FINAL_HEAD"
-
-      - name: Release final candidate
-        id: release
-        shell: bash
-        run: |
-          set +e
-          npm run release 2>&1 | tee /tmp/pr394-release.log
-          rc=${PIPESTATUS[0]}
-          printf '%s\n' "$rc" > /tmp/pr394-release-exit.txt
-          exit "$rc"
-
-      - name: Capture transaction evidence
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: pr394-transaction-${{ github.sha }}
-          path: |
-            /tmp/pr394-final-head.txt
-            /tmp/pr394-release.log
-            /tmp/pr394-release-exit.txt
-            .generated/validation/
-            .release/runtime/
-          include-hidden-files: true
-          if-no-files-found: warn
-          retention-days: 7
-
-      - name: Push only fully validated candidate
-        if: success()
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$FINAL_HEAD"
-          test -z "$(git status --porcelain=v1 --untracked-files=all)"
-          git push origin HEAD:candidate/final-repository-plan-2026
-          printf 'FINAL_HEAD=%s\n' "$FINAL_HEAD"
