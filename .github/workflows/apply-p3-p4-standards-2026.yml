@@ -50,6 +50,17 @@ jobs:
           if (typeMatches.length !== 1) throw new Error(`Expected exactly one MIME type access, found ${typeMatches.length}`);
           validator = validator.replace('mime.type', 'mime.essence');
           if (validator.includes('mime.type')) throw new Error('Legacy MIME type access remains');
+
+          const jsonldImport = 'import jsonld from "jsonld";\n';
+          if (!validator.includes(jsonldImport)) throw new Error('CodeMeta JSON-LD import target missing');
+          validator = validator.replace(jsonldImport, '');
+          const expansionStart = validator.indexOf('const expandedCodeMeta = await jsonld.expand(codeMeta);');
+          const expansionEndMarker = 'assert.ok(software["https://schema.org/subjectOf"]?.length, "CodeMeta expansion lost schema:subjectOf");';
+          const expansionEnd = validator.indexOf(expansionEndMarker, expansionStart);
+          if (expansionStart < 0 || expansionEnd < expansionStart) throw new Error('Remote CodeMeta expansion block missing');
+          const structuralCodeMeta = `assert.equal(codeMeta["@type"], "SoftwareSourceCode", "CodeMeta software type drift");\nassert.ok(Array.isArray(codeMeta["schema:subjectOf"]) && codeMeta["schema:subjectOf"].length > 0, "CodeMeta schema:subjectOf must remain populated");`;
+          validator = validator.slice(0, expansionStart) + structuralCodeMeta + validator.slice(expansionEnd + expansionEndMarker.length);
+          if (/jsonld\.expand|import jsonld/.test(validator)) throw new Error('Remote CodeMeta dereference remains in canonical validator');
           await fs.writeFile(validatorPath, validator);
 
           const registryPath = 'src/data/machine-resources.json';
