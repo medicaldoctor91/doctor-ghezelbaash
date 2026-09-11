@@ -29,6 +29,14 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Pin npm exactly
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --global npm@11.9.0 --no-audit --no-fund
+          test "$(node --version)" = "v24.19.0"
+          test "$(npm --version)" = "11.9.0"
+
       - name: Set up pinned Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -38,6 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(python --version)" = "Python 3.14.6"
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
@@ -140,7 +149,24 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(node --version)" = "v24.19.0"
+          test "$(npm --version)" = "11.9.0"
+          test "$(python --version)" = "Python 3.14.6"
           npm run release 2>&1 | tee /tmp/pr394-final-release.log
+
+      - name: Bind exact final dist identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIST_DIGEST_BEFORE="$(node --input-type=module <<'NODE'
+          import { distIdentity } from './scripts/lib/dist-identity.mjs';
+          console.log((await distIdentity('dist')).digest);
+          NODE
+          )"
+          test -n "$DIST_DIGEST_BEFORE"
+          echo "DIST_DIGEST_BEFORE=$DIST_DIGEST_BEFORE" >> "$GITHUB_ENV"
+          printf '%s\n' "$DIST_DIGEST_BEFORE" > /tmp/pr394-dist-digest.txt
+          printf 'DIST_DIGEST_BEFORE=%s\n' "$DIST_DIGEST_BEFORE"
 
       - name: Install exact Playwright browser matrix
         shell: bash
@@ -167,10 +193,11 @@ jobs:
           node -e 'const p=require("./package.json"); if(!p.scripts["audit:performance"]) throw new Error("audit:performance script missing")'
           npm run audit:performance 2>&1 | tee /tmp/pr394-performance.log
 
-      - name: Write final conformance attestation
+      - name: Revalidate matrix and write final conformance attestation
         shell: bash
         run: |
           set -euo pipefail
+          npm run validate:standards-matrix
           node scripts/write-conformance-attestation.mjs
           test -f .generated/validation/conformance-attestation.json
 
@@ -180,14 +207,23 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$FINAL_HEAD"
           test -z "$(git status --porcelain=v1 --untracked-files=all)"
+          DIST_DIGEST_AFTER="$(node --input-type=module <<'NODE'
+          import { distIdentity } from './scripts/lib/dist-identity.mjs';
+          console.log((await distIdentity('dist')).digest);
+          NODE
+          )"
+          test "$DIST_DIGEST_AFTER" = "$DIST_DIGEST_BEFORE"
           node --input-type=module <<'EOF'
           import assert from 'node:assert/strict';
           import { readFile } from 'node:fs/promises';
           const evidence = JSON.parse(await readFile('.generated/validation/conformance-attestation.json','utf8'));
           assert.equal(evidence.sourceCommit, process.env.FINAL_HEAD);
-          assert.match(evidence.distDigest || evidence.distSha256 || '', /^[0-9a-f]{64}$/u);
-          console.log(JSON.stringify({ sourceCommit:evidence.sourceCommit, distDigest:evidence.distDigest || evidence.distSha256, result:evidence.result || evidence.status }, null, 2));
+          const digest = evidence.distDigest || evidence.distSha256 || '';
+          assert.match(digest, /^[0-9a-f]{64}$/u);
+          assert.equal(digest, process.env.DIST_DIGEST_BEFORE);
+          console.log(JSON.stringify({ sourceCommit:evidence.sourceCommit, distDigest:digest, result:evidence.result || evidence.status }, null, 2));
           EOF
+          printf 'DIST_DIGEST_AFTER=%s\n' "$DIST_DIGEST_AFTER"
 
       - name: Upload final transaction evidence
         if: always()
@@ -196,6 +232,7 @@ jobs:
           name: pr394-final-2026-${{ github.sha }}
           path: |
             /tmp/pr394-final-head.txt
+            /tmp/pr394-dist-digest.txt
             /tmp/pr394-final-release.log
             /tmp/pr394-browser.log
             /tmp/pr394-a11y.log
