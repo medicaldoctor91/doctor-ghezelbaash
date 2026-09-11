@@ -1,0 +1,80 @@
+name: Apply final entity spec 2026 (temporary)
+
+on:
+  push:
+    branches:
+      - fix/final-entity-machine-standards-2026
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: final-spec-2026-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate-validate-commit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: fix/final-entity-machine-standards-2026
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Provision validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Apply canonical source migration
+        run: node scripts/apply-final-spec-2026.mjs
+      - name: Rebuild governed media metadata
+        run: npm run media:enrich
+      - name: Recalibrate changed visible document
+        run: |
+          npm run render:calibration:update
+          npm run test:render-navigation -- .generated/calibration-candidate
+      - name: Run focused contracts
+        run: |
+          npm run security:dependencies
+          npm run validate:final-entity-contract
+          npm run validate:physician-projection
+          npm run validate:evidence
+          npm run validate:media
+      - name: Run complete canonical release validation
+        run: npm run release
+      - name: Guard generated-output discipline
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git status --porcelain -- dist .generated | grep -q .; then
+            echo "Tracked dist/.generated changes are forbidden" >&2
+            git status --short -- dist .generated >&2
+            exit 1
+          fi
+      - name: Remove migration transport and commit product changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f scripts/apply-final-spec-2026.mjs .github/workflows/apply-final-spec-2026.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --name-only | grep -E '^(dist/|\.generated/|scripts/apply-final-spec-2026\.mjs$|\.github/workflows/apply-final-spec-2026\.yml$)'; then
+            echo "Forbidden transport/generated file staged" >&2
+            exit 1
+          fi
+          git diff --cached --check
+          git status --short
+          git commit -m "fix: finalize entity semantics and evidence contracts"
+          git push origin HEAD:fix/final-entity-machine-standards-2026
