@@ -52,14 +52,14 @@ jobs:
           git apply --check /tmp/pr394-upgrade.patch
           git apply /tmp/pr394-upgrade.patch
 
-          sed -i 's|/media/images/physician/example.webp|/assets/image-example.webp|' scripts/validate-cloudflare-pages-limits.mjs
-          mv scripts/audit-performance.mjs scripts/measure-performance.mjs
-          sed -i 's|scripts/audit-performance.mjs|scripts/measure-performance.mjs|g' package.json .github/workflows/ci.yml
-          sed -i 's/await chrome.kill();/chrome.kill();/' scripts/measure-performance.mjs
-          sed -i 's/^on:$/on:\n  workflow_dispatch:/' .github/workflows/ci.yml
-
           python - <<'PY'
           from pathlib import Path
+
+          p = Path('scripts/validate-cloudflare-pages-limits.mjs')
+          s = p.read_text()
+          old = '/' + 'media/images/physician/' + 'example.webp'
+          assert old in s
+          p.write_text(s.replace(old, '/assets/image-example.webp', 1))
 
           p = Path('src/components/GuideNavigator.astro')
           s = p.read_text()
@@ -81,6 +81,15 @@ jobs:
           s = s.replace(old, new, 1)
           p.write_text(s)
           PY
+
+          mv scripts/audit-performance.mjs scripts/measure-performance.mjs
+          sed -i 's|scripts/audit-performance.mjs|scripts/measure-performance.mjs|g' package.json .github/workflows/ci.yml
+          sed -i 's/await chrome.kill();/chrome.kill();/' scripts/measure-performance.mjs
+          sed -i 's/^on:$/on:\n  workflow_dispatch:/' .github/workflows/ci.yml
+
+          printf '%s\n' '--- staged RDF isomorphism validator ---'
+          sed -n '1,260p' scripts/validate-rdf-isomorphism.mjs
+          printf '%s\n' '--- end staged RDF isomorphism validator ---'
 
           npm install --package-lock-only --ignore-scripts --no-audit --no-fund
           rm -f .pr394-upgrade.gz.b64.*
