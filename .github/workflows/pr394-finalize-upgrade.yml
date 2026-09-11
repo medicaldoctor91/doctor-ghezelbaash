@@ -95,9 +95,57 @@ jobs:
           assert old in s
           p.write_text(s.replace(old, new, 1))
 
+          # Keep duplicate-key detection linear in input size: do not allocate the entire
+          # remaining JSON suffix for every primitive token. Also allow validation-only
+          # callers to avoid materializing large parse trees they never consume.
+          p = Path('scripts/lib/strict-json.mjs')
+          s = p.read_text()
+          old_signature = 'export function parseJsonNoDuplicateKeys(text, label = "JSON") {'
+          new_signature = 'export function parseJsonNoDuplicateKeys(text, label = "JSON", { materialize = true } = {}) {'
+          assert old_signature in s
+          s = s.replace(old_signature, new_signature, 1)
+          old_primitive = '''  const primitive = () => {
+    const rest = text.slice(i);
+    const match = rest.match(/^(?:true|false|null|-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)/u);
+    if (!match) fail("invalid value");
+    i += match[0].length;
+  };'''
+          new_primitive = '''  const primitivePattern = /(?:true|false|null|-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)/uy;
+  const primitive = () => {
+    primitivePattern.lastIndex = i;
+    const match = primitivePattern.exec(text);
+    if (!match) fail("invalid value");
+    i += match[0].length;
+  };'''
+          assert old_primitive in s
+          s = s.replace(old_primitive, new_primitive, 1)
+          old_return = '  return JSON.parse(text);'
+          new_return = '  return materialize ? JSON.parse(text) : undefined;'
+          assert old_return in s
+          s = s.replace(old_return, new_return, 1)
+          p.write_text(s)
+
           p = Path('scripts/validate-artifact-semantics.mjs')
           s = p.read_text()
           assert 'query-matrix.jsonl' in s and 'query-matrix.json-seq' in s
+
+          old_json_loop = '''const parsedJson = new Map();
+for (const file of strictJsonFiles) parsedJson.set(file, parseJsonNoDuplicateKeys(await readFile(path.join(root, file), "utf8"), `dist/${file}`));'''
+          new_json_loop = '''const parsedJson = new Map();
+const retainedJsonFiles = new Set(["site.webmanifest", "linkset.json", "entity-facts.csv-metadata.json", "datapackage.json", "croissant.json"]);
+for (const file of strictJsonFiles) {
+  const keep = retainedJsonFiles.has(file);
+  const parsed = parseJsonNoDuplicateKeys(await readFile(path.join(root, file), "utf8"), `dist/${file}`, { materialize: keep });
+  if (keep) parsedJson.set(file, parsed);
+}'''
+          assert old_json_loop in s
+          s = s.replace(old_json_loop, new_json_loop, 1)
+
+          old_tel = 'for (const row of properties.filter((x) => x.name === "TEL")) assert.match(row.value, /^\\+?[0-9][0-9(). -]*$/u, `${file} telephone lexical form invalid`);'
+          new_tel = 'for (const row of properties.filter((x) => x.name === "TEL")) assert.match(row.value, /^tel:\\+?[0-9][0-9(). -]*$/u, `${file} TEL must be an RFC 6350 URI value`);'
+          assert old_tel in s
+          s = s.replace(old_tel, new_tel, 1)
+
           marker = 'const ndjson = await readFile('
           idx = s.find(marker)
           assert idx >= 0
@@ -106,7 +154,7 @@ jobs:
               'const resolveRegisteredArtifact = (resourcePath) => {\n'
               '  const resource = machineResourceRegistry.resources.find((entry) => entry.path === resourcePath);\n'
               '  if (!resource) throw new Error(`Machine resource is not registered: ${resourcePath}`);\n'
-              '  return resource.targets?.includes("website") ? path.join(distDir, resource.path) : resource.source;\n'
+              '  return resource.targets?.includes("website") ? path.join(root, resource.path) : resource.source;\n'
               '};\n\n'
           )
           s = s[:idx] + helper + s[idx:]
@@ -157,12 +205,23 @@ jobs:
           rm -f .pr394-upgrade.gz.b64.*
           rm -f .github/workflows/pr394-apply-upgrade.yml
           rm -f .github/workflows/pr394-finalize-upgrade.yml
+          rm -f .github/workflows/pr394-artifact-source-diagnostic.yml
 
           npm ci
           npm run security:dependencies
           npx playwright install --with-deps chromium
           npm run render:calibration:update
           npm run test:render-navigation -- .generated/calibration-candidate
+
+          # Targeted regression proof for the optimized parser: valid materialization,
+          # validation-only mode, and duplicate-key rejection must all preserve behavior.
+          node --input-type=module <<'EOF'
+          import assert from 'node:assert/strict';
+          import { parseJsonNoDuplicateKeys } from './scripts/lib/strict-json.mjs';
+          assert.deepEqual(parseJsonNoDuplicateKeys('{"a":1,"b":[true,null,-2.5e3]}'), { a: 1, b: [true, null, -2500] });
+          assert.equal(parseJsonNoDuplicateKeys('{"a":1,"b":2}', 'validation-only', { materialize: false }), undefined);
+          assert.throws(() => parseJsonNoDuplicateKeys('{"a":1,"a":2}'), /duplicate object key/u);
+          EOF
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
