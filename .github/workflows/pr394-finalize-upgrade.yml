@@ -95,6 +95,30 @@ jobs:
           assert old in s
           p.write_text(s.replace(old, new, 1))
 
+          p = Path('scripts/lib/projections/contact-discovery.mjs')
+          s = p.read_text()
+          old = '`TEL;TYPE=work,voice:${telephone}`,'
+          new = '`TEL;TYPE=work,voice:tel:${telephone}`,'
+          assert s.count(old) == 2, s.count(old)
+          p.write_text(s.replace(old, new))
+
+          p = Path('scripts/test-machine-resources.mjs')
+          s = p.read_text()
+          old = (
+              '    assert.ok(unfolded.includes("VERSION:4.0"));\n'
+              '    assert.equal(vCardEntityKind(byId.get(entity)), kind);'
+          )
+          new = (
+              '    assert.ok(unfolded.includes("VERSION:4.0"));\n'
+              '    const telLines = unfolded.filter((line) => line.startsWith("TEL;"));\n'
+              '    assert.equal(telLines.length, 1);\n'
+              '    assert.match(telLines[0], /^TEL;TYPE=work,voice:tel:\\+[0-9]+$/u);\n'
+              '    assert.doesNotMatch(card, /^TEL[^:]*:\\+[0-9]/gmu);\n'
+              '    assert.equal(vCardEntityKind(byId.get(entity)), kind);'
+          )
+          assert old in s
+          p.write_text(s.replace(old, new, 1))
+
           p = Path('scripts/lib/strict-json.mjs')
           s = p.read_text()
           old_signature = 'export function parseJsonNoDuplicateKeys(text, label = "JSON") {'
