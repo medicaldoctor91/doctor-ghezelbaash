@@ -89,6 +89,14 @@ jobs:
           if (!csvw) throw new Error('CSVW registry resource missing');
           delete csvw.footerLabel;
           await fs.writeFile(registryPath, `${JSON.stringify(registry, null, 2)}\n`);
+
+          const hygienePath = 'scripts/validate-repository-hygiene.mjs';
+          let hygiene = await fs.readFile(hygienePath, 'utf8');
+          const auditNeedle = '  if (/\\bnpm audit\\b/.test(content))\n';
+          if (!hygiene.includes(auditNeedle)) throw new Error('Dependency hygiene insertion point missing');
+          const directGateRule = `  if (content.includes('node "$GITHUB_WORKSPACE/scripts/dependency-advisory-gate.mjs"'))\n    throw new Error(\n      \`Canonical workflows must invoke the current advisory gate through npm run security:dependencies: \${workflow}\`,\n    );\n`;
+          hygiene = hygiene.replace(auditNeedle, `${directGateRule}${auditNeedle}`);
+          await fs.writeFile(hygienePath, hygiene);
           NODE
       - name: Remove migration transport and create exact local product commit
         shell: bash
