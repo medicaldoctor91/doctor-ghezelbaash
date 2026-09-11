@@ -19,7 +19,7 @@ jobs:
           ref: candidate/final-repository-plan-2026
           fetch-depth: 0
 
-      - name: Materialize validator only and print exact source
+      - name: Materialize validators and print exact source
         shell: bash
         run: |
           set -euo pipefail
@@ -66,14 +66,12 @@ jobs:
           fixed_line, rs_count = re.subn(
               r'(?<![A-Za-z0-9_])0x1[eE](?![A-Za-z0-9_])',
               lambda _match: r'"\x1e"',
-              separator_lines[0],
-              count=1,
+              separator_lines[0], count=1,
           )
           fixed_line, lf_count = re.subn(
               r'(?<![A-Za-z0-9_])0x0[aA](?![A-Za-z0-9_])',
               lambda _match: r'"\n"',
-              fixed_line,
-              count=1,
+              fixed_line, count=1,
           )
           assert rs_count == 1 and lf_count == 1
           s = s.replace(separator_lines[0], fixed_line, 1)
@@ -86,3 +84,9 @@ jobs:
           echo '=== ARTIFACT_SEMANTICS_SOURCE_BEGIN ==='
           nl -ba scripts/validate-artifact-semantics.mjs
           echo '=== ARTIFACT_SEMANTICS_SOURCE_END ==='
+          echo '=== STRICT_JSON_METADATA ==='
+          wc -lc scripts/lib/strict-json.mjs
+          sha256sum scripts/lib/strict-json.mjs
+          echo '=== STRICT_JSON_SOURCE_BEGIN ==='
+          nl -ba scripts/lib/strict-json.mjs
+          echo '=== STRICT_JSON_SOURCE_END ==='
