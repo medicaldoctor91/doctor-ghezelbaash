@@ -39,29 +39,49 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Apply P3 P4 canonical migration
         run: node scripts/apply-p3-p4-standards-2026.mjs
-      - name: Normalize validator semantics and non-visual discovery
+      - name: Normalize standards validator against pinned official CodeMeta context
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs/promises';
 
           const validatorPath = 'scripts/validate-machine-standards-2026.mjs';
           let validator = await fs.readFile(validatorPath, 'utf8');
+
           const typeMatches = validator.match(/mime\.type/g) || [];
           if (typeMatches.length !== 1) throw new Error(`Expected exactly one MIME type access, found ${typeMatches.length}`);
           validator = validator.replace('mime.type', 'mime.essence');
           if (validator.includes('mime.type')) throw new Error('Legacy MIME type access remains');
 
-          const jsonldImport = 'import jsonld from "jsonld";\n';
-          if (!validator.includes(jsonldImport)) throw new Error('CodeMeta JSON-LD import target missing');
-          validator = validator.replace(jsonldImport, '');
-          const expansionStart = validator.indexOf('const expandedCodeMeta = await jsonld.expand(codeMeta);');
-          const expansionEndMarker = 'assert.ok(software["https://schema.org/subjectOf"]?.length, "CodeMeta expansion lost schema:subjectOf");';
-          const expansionEnd = validator.indexOf(expansionEndMarker, expansionStart);
-          if (expansionStart < 0 || expansionEnd < expansionStart) throw new Error('Remote CodeMeta expansion block missing');
-          const structuralCodeMeta = `assert.equal(codeMeta["@type"], "SoftwareSourceCode", "CodeMeta software type drift");\nassert.ok(Array.isArray(codeMeta["schema:subjectOf"]) && codeMeta["schema:subjectOf"].length > 0, "CodeMeta schema:subjectOf must remain populated");`;
-          validator = validator.slice(0, expansionStart) + structuralCodeMeta + validator.slice(expansionEnd + expansionEndMarker.length);
-          if (/jsonld\.expand|import jsonld/.test(validator)) throw new Error('Remote CodeMeta dereference remains in canonical validator');
+          const codeMetaRead = 'const codeMeta = await readJson("codemeta.json");';
+          if (!validator.includes(codeMetaRead)) throw new Error('CodeMeta read target missing');
+          validator = validator.replace(
+            codeMetaRead,
+            `${codeMetaRead}\nconst codeMetaContext = await readJson("src/data/standards/codemeta-3.1-context.jsonld");`,
+          );
+
+          const contextExpectation = 'assert.equal(codeMeta["@context"].find((entry) => typeof entry === "object")?.schema, "https://schema.org/");';
+          if (!validator.includes(contextExpectation)) throw new Error('CodeMeta context expectation target missing');
+          validator = validator.replace(
+            contextExpectation,
+            'assert.equal(codeMeta["@context"].find((entry) => typeof entry === "object")?.schema, "http://schema.org/");\nassert.equal(codeMetaContext["@context"]?.schema, "http://schema.org/", "Pinned CodeMeta 3.1 context schema prefix drift");\nassert.equal(codeMetaContext["@context"]?.SoftwareSourceCode?.["@id"], "schema:SoftwareSourceCode", "Pinned CodeMeta 3.1 SoftwareSourceCode mapping drift");',
+          );
+
+          const expansion = 'const expandedCodeMeta = await jsonld.expand(codeMeta);';
+          if (!validator.includes(expansion)) throw new Error('CodeMeta expansion target missing');
+          validator = validator.replace(
+            expansion,
+            'const codeMetaForExpansion = structuredClone(codeMeta);\ncodeMetaForExpansion["@context"] = [\n  codeMetaContext["@context"],\n  ...codeMeta["@context"].slice(1),\n];\nconst expandedCodeMeta = await jsonld.expand(codeMetaForExpansion);',
+          );
+          validator = validator.replaceAll('"https://schema.org/SoftwareSourceCode"', '"http://schema.org/SoftwareSourceCode"');
+          validator = validator.replaceAll('software["https://schema.org/subjectOf"]', 'software["http://schema.org/subjectOf"]');
           await fs.writeFile(validatorPath, validator);
+
+          const codeMetaPath = 'codemeta.json';
+          const codeMeta = JSON.parse(await fs.readFile(codeMetaPath, 'utf8'));
+          const extension = codeMeta['@context']?.find((entry) => entry && typeof entry === 'object' && !Array.isArray(entry));
+          if (!extension || extension.schema !== 'https://schema.org/') throw new Error('Expected migration CodeMeta extension missing');
+          extension.schema = 'http://schema.org/';
+          await fs.writeFile(codeMetaPath, `${JSON.stringify(codeMeta, null, 2)}\n`);
 
           const registryPath = 'src/data/machine-resources.json';
           const registry = JSON.parse(await fs.readFile(registryPath, 'utf8'));
