@@ -1,4 +1,4 @@
-name: PR394 Mojavez scope alignment (temporary)
+name: PR394 correctness gates (temporary)
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     env:
       EXPECTED_HEAD: 2e4b420b7f16f1f93bdc173f38cfa5adda826d16
       TARGET_BRANCH: candidate/final-repository-plan-2026
-      VALIDATION_BRANCH: validation/pr394-mojavez-scope-20260911
+      VALIDATION_BRANCH: validation/pr394-correctness-20260911
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -48,7 +48,7 @@ jobs:
           npm run security:dependencies
           npx playwright install --with-deps chromium
 
-      - name: Narrow Mojavez evidence scope in authored sources
+      - name: Apply scoped correctness fixes in authored sources
         shell: bash
         run: |
           set -euo pipefail
@@ -59,59 +59,216 @@ jobs:
           const PERSON = `${BASE}#saeed-ghezelbash`;
           const CLINIC = `${BASE}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`;
           const MOJAVEZ = `${BASE}#evidence-mojavez-clinic-ownership`;
+          const FAQ_SLUG = 'botox-vs-filler-differences';
+          const FAQ_ID = `${BASE}#answer-${FAQ_SLUG}`;
+          const FAQ_TOKEN = `{{CANONICAL_ANSWER:${FAQ_SLUG}}}`;
 
           const registryPath = 'src/data/evidence-registry.json';
           const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
-          const evidence = registry.evidence.find((entry) => entry.id === MOJAVEZ);
-          if (!evidence) throw new Error('Missing Mojavez evidence registry entry');
-          evidence.supports = [
-            'medical-license',
-            'practice-jurisdiction',
-            'legal-professional-name'
-          ];
-          // Do not refresh verifiedAt: the endpoint was not independently re-fetched in this change.
+          const mojavezEvidence = registry.evidence.find((entry) => entry.id === MOJAVEZ);
+          if (!mojavezEvidence) throw new Error('Missing Mojavez evidence registry entry');
+          mojavezEvidence.supports = ['person-identity'];
           fs.writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`);
 
           const graphPath = 'src/data/semantic/knowledge-graph.jsonld';
           const graph = JSON.parse(fs.readFileSync(graphPath, 'utf8'));
-          const node = (graph['@graph'] || []).find((entry) => entry['@id'] === MOJAVEZ);
-          if (!node) throw new Error('Missing Mojavez evidence graph node');
-          node.name = 'Mojavez official medical-practice license record';
-          node.mainEntity = {'@id': PERSON};
-          node.about = {'@id': PERSON};
-          node.description = 'Official Mojavez medical-practice license record for Dr. Saeed Ghezelbash in Kermanshah; this evidence does not by itself establish ownership of the specific clinic premises.';
+          const nodes = graph['@graph'] || [];
+          const byId = new Map(nodes.map((node) => [node['@id'], node]));
+          const mojavezNode = byId.get(MOJAVEZ);
+          const clinic = byId.get(CLINIC);
+          const faqAnswer = byId.get(FAQ_ID);
+          if (!mojavezNode || !clinic || !faqAnswer) throw new Error('Required canonical node missing');
+          mojavezNode.name = 'Mojavez official medical-practice license record';
+          mojavezNode.mainEntity = {'@id': PERSON};
+          mojavezNode.about = {'@id': PERSON};
+          delete mojavezNode.description;
+          const asArray = (value) => Array.isArray(value) ? value : value == null ? [] : [value];
+          const refId = (value) => typeof value === 'string' ? value : value?.['@id'];
+          if ('subjectOf' in clinic) {
+            const filtered = asArray(clinic.subjectOf).filter((value) => refId(value) !== MOJAVEZ);
+            clinic.subjectOf = Array.isArray(clinic.subjectOf) ? filtered : (filtered[0] ?? undefined);
+            if (clinic.subjectOf === undefined) delete clinic.subjectOf;
+          }
           fs.writeFileSync(graphPath, `${JSON.stringify(graph, null, 2)}\n`);
 
-          const validatorPath = 'scripts/validate-final-entity-contract.mjs';
-          let validator = fs.readFileSync(validatorPath, 'utf8');
-          const marker = 'Mojavez evidence scope contract failure';
-          if (!validator.includes(marker)) {
-            const anchor = 'if (!evidence.evidence.some((e) => e.id === `${BASE}#evidence-drdr` && e.tier === "C")) throw new Error("DrDr evidence registry entry missing");';
-            if (!validator.includes(anchor)) throw new Error('Validator insertion anchor not found');
-            const block = `\nconst mojavezEvidence = evidence.evidence.find((e) => e.id === \`${BASE}#evidence-mojavez-clinic-ownership\`);\nconst mojavezSupports = mojavezEvidence?.supports || [];\nconst allowedMojavezSupports = ["medical-license", "practice-jurisdiction", "legal-professional-name"];\nif (!mojavezEvidence || mojavezSupports.includes("clinic-ownership") || JSON.stringify(mojavezSupports) !== JSON.stringify(allowedMojavezSupports)) throw new Error("Mojavez evidence scope contract failure");\nconst mojavezNode = get("#evidence-mojavez-clinic-ownership");\nif (/ownership/i.test(mojavezNode.name || "") || refs(mojavezNode.about).has(CLINIC) || id(mojavezNode.mainEntity) !== PERSON) throw new Error("Mojavez graph evidence overclaims clinic ownership");\n`;
-            validator = validator.replace(anchor, `${anchor}${block}`);
-            fs.writeFileSync(validatorPath, validator);
+          if (typeof faqAnswer.text !== 'string' || !faqAnswer.text.trim()) throw new Error('Canonical FAQ Answer.text missing');
+          const pagePath = 'src/content-source/page.md';
+          let page = fs.readFileSync(pagePath, 'utf8');
+          const literalCount = page.split(faqAnswer.text).length - 1;
+          if (literalCount !== 1) throw new Error(`Expected exactly one duplicated FAQ literal in page.md, found ${literalCount}`);
+          if (page.includes(FAQ_TOKEN)) throw new Error('FAQ token already present before migration');
+          page = page.replace(faqAnswer.text, FAQ_TOKEN);
+          fs.writeFileSync(pagePath, page);
+
+          const assemblyPath = 'scripts/lib/assemble-content.mjs';
+          let assembly = fs.readFileSync(assemblyPath, 'utf8');
+          if (!assembly.includes('bindCanonicalAnswers')) {
+            const insertionAnchor = '\nasync function canonicalSourceNames';
+            if (!assembly.includes(insertionAnchor)) throw new Error('Canonical assembly insertion anchor missing');
+            const binder = `\nconst canonicalAnswerTokenPattern = /\\{\\{CANONICAL_ANSWER:([a-z0-9][a-z0-9-]*)\\}\\}/g;\n\nexport const bindCanonicalAnswers = (content, graph, release) => {\n  const source = String(content);\n  const matches = [...source.matchAll(canonicalAnswerTokenPattern)];\n  if (!matches.length) return source;\n  const { byId } = indexCanonicalGraph(graph);\n  const seen = new Set();\n  let resolved = source;\n  for (const match of matches) {\n    const [token, slug] = match;\n    if (seen.has(token)) throw new Error(\`Canonical answer token must be unique in page source: \${token}\`);\n    seen.add(token);\n    const answerId = \`\${release.canonicalUrl}#answer-\${slug}\`;\n    const answer = byId.get(answerId);\n    const types = Array.isArray(answer?.[\"@type\"]) ? answer[\"@type\"] : [answer?.[\"@type\"]].filter(Boolean);\n    if (!types.includes(\"Answer\") || typeof answer.text !== \"string\" || !answer.text.trim())\n      throw new Error(\`Canonical answer token does not resolve to Answer.text: \${token}\`);\n    if (source.includes(answer.text))\n      throw new Error(\`Canonical answer literal duplicates graph-owned Answer.text: \${answerId}\`);\n    resolved = resolved.replace(token, answer.text);\n  }\n  if ([...resolved.matchAll(canonicalAnswerTokenPattern)].length)\n    throw new Error(\"Unresolved canonical answer token remains after assembly\");\n  return resolved;\n};\n`;
+            assembly = assembly.replace(insertionAnchor, `${binder}${insertionAnchor}`);
+            const bindAnchor = '  content = bindPhysicianImages(content, graph, release);';
+            if (!assembly.includes(bindAnchor)) throw new Error('Canonical answer binding call anchor missing');
+            assembly = assembly.replace(bindAnchor, `${bindAnchor}\n  content = bindCanonicalAnswers(content, graph, release);`);
+            fs.writeFileSync(assemblyPath, assembly);
           }
 
-          const checkRegistry = JSON.parse(fs.readFileSync(registryPath, 'utf8')).evidence.find((entry) => entry.id === MOJAVEZ);
-          if (checkRegistry.supports.includes('clinic-ownership')) throw new Error('clinic-ownership remains in Mojavez supports');
-          const checkGraph = JSON.parse(fs.readFileSync(graphPath, 'utf8'))['@graph'].find((entry) => entry['@id'] === MOJAVEZ);
-          const aboutIds = (Array.isArray(checkGraph.about) ? checkGraph.about : [checkGraph.about]).map((v) => typeof v === 'string' ? v : v?.['@id']).filter(Boolean);
-          if (aboutIds.includes(CLINIC)) throw new Error('Clinic remains in Mojavez about');
-          if (/ownership/i.test(checkGraph.name || '')) throw new Error('Mojavez graph name still asserts ownership');
+          const packagePath = 'package.json';
+          const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+          pkg.scripts['validate:active-source-identifiers'] = 'node scripts/validate-active-source-identifiers.mjs';
+          const sourceScript = pkg.scripts['validate:source'];
+          if (!sourceScript.includes('validate:active-source-identifiers')) {
+            const anchor = 'npm run validate:architecture &&';
+            if (!sourceScript.includes(anchor)) throw new Error('validate:source insertion anchor missing');
+            pkg.scripts['validate:source'] = sourceScript.replace(anchor, `${anchor} npm run validate:active-source-identifiers &&`);
+          }
+          fs.writeFileSync(packagePath, `${JSON.stringify(pkg, null, 2)}\n`);
           NODE
-          git diff --check
-          git diff -- src/data/evidence-registry.json src/data/semantic/knowledge-graph.jsonld scripts/validate-final-entity-contract.mjs
 
-      - name: Commit exact candidate tree locally
+          cat > scripts/validate-active-source-identifiers.mjs <<'JS'
+          import fs from "node:fs";
+          import path from "node:path";
+
+          const forbidden = ["Q700236", "Q256688", "Q140288589", "Q140304972"];
+          const roots = ["src/content-source", "src/data"];
+          const rootFiles = ["codemeta.json", "CITATION.cff"];
+          const textExtensions = new Set([".md", ".mdx", ".html", ".json", ".jsonld", ".ttl", ".txt", ".xml", ".csv", ".yml", ".yaml", ".toml"]);
+          const nonAssertionSources = new Map([
+            ["src/data/semantic/shapes.ttl", "SHACL negative constraints intentionally mention retired identifiers"],
+            ["src/data/standards/codemeta-3.1-context.jsonld", "Pinned external standards context, not project factual assertions"],
+          ]);
+          const historicalAllowlist = new Map();
+
+          const normalize = (value) => value.split(path.sep).join("/");
+          const files = [];
+          const walk = (entry) => {
+            if (!fs.existsSync(entry)) return;
+            const stat = fs.statSync(entry);
+            if (stat.isDirectory()) {
+              for (const name of fs.readdirSync(entry).sort()) walk(path.join(entry, name));
+              return;
+            }
+            const rel = normalize(path.relative(process.cwd(), entry));
+            if (textExtensions.has(path.extname(entry).toLowerCase())) files.push(rel);
+          };
+          for (const root of roots) walk(root);
+          for (const file of rootFiles) if (fs.existsSync(file)) files.push(file);
+
+          const violations = [];
+          for (const file of [...new Set(files)].sort()) {
+            if (nonAssertionSources.has(file)) continue;
+            const text = fs.readFileSync(file, "utf8");
+            const allowed = historicalAllowlist.get(file) || new Set();
+            for (const id of forbidden) {
+              if (!text.includes(id) || allowed.has(id)) continue;
+              const line = text.slice(0, text.indexOf(id)).split(/\r?\n/).length;
+              violations.push(`${file}:${line}:${id}`);
+            }
+          }
+          if (violations.length) {
+            throw new Error(`Forbidden identifiers found in active authored assertion sources:\n${violations.join("\n")}`);
+          }
+          console.log(JSON.stringify({ valid: true, checkedFiles: [...new Set(files)].length, forbidden, nonAssertionSources: [...nonAssertionSources.keys()], historicalAllowlist: [...historicalAllowlist.keys()] }, null, 2));
+          JS
+
+          cat > scripts/validate-final-entity-contract.mjs <<'JS'
+          import fs from "node:fs";
+
+          const BASE = "https://www.ghezelbaash.ir/";
+          const graph = JSON.parse(fs.readFileSync("src/data/semantic/knowledge-graph.jsonld", "utf8"));
+          const head = JSON.parse(fs.readFileSync("src/data/semantic/head-profile.json", "utf8"));
+          const support = JSON.parse(fs.readFileSync("src/data/semantic/support-profile.json", "utf8"));
+          const evidence = JSON.parse(fs.readFileSync("src/data/evidence-registry.json", "utf8"));
+          const media = JSON.parse(fs.readFileSync("src/data/media-metadata.json", "utf8"));
+          const pageSource = fs.readFileSync("src/content-source/page.md", "utf8");
+          const nodes = graph["@graph"] || [];
+          const ids = nodes.map((n) => n["@id"]).filter(Boolean);
+          if (new Set(ids).size !== ids.length) throw new Error("Duplicate canonical @id");
+          const byId = new Map(nodes.map((n) => [n["@id"], n]));
+          const arr = (v) => Array.isArray(v) ? v : v == null ? [] : [v];
+          const id = (v) => typeof v === "string" ? v : v?.["@id"];
+          const refs = (v) => new Set(arr(v).map(id).filter(Boolean));
+          const get = (suffix) => { const value = byId.get(`${BASE}${suffix}`); if (!value) throw new Error(`Missing node: ${suffix}`); return value; };
+          const PERSON = `${BASE}#saeed-ghezelbash`;
+          const CLINIC = `${BASE}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`;
+          const person = byId.get(PERSON), clinic = byId.get(CLINIC);
+          if (!person || !clinic || person === clinic) throw new Error("Person/Clinic separation failure");
+          const serialized = JSON.stringify(graph);
+          for (const forbidden of ["https://www.wikidata.org/entity/Q700236", "Q256688", "Q140288589", "Q140304972"]) if (serialized.includes(forbidden)) throw new Error(`Forbidden active identifier: ${forbidden}`);
+          const city = get("#place-messe-berlin-citycube");
+          if (city.name !== "CityCube Berlin" || city.sameAs !== "https://www.wikidata.org/entity/Q15108815") throw new Error("CityCube identity contract failure");
+          const irimc = get("#organization-iran-medical-council");
+          if (irimc.sameAs !== "https://www.wikidata.org/entity/Q5944740") throw new Error("Iranian Medical Council identity contract failure");
+          if (arr(person.sameAs).map(id).includes(irimc.sameAs)) throw new Error("IRIMC QID leaked into Person.sameAs");
+          for (const alias of ["Ghezelbash MS", "Doctor Ghezelbaash"]) if (!arr(person.alternateName).includes(alias)) throw new Error(`Missing alias: ${alias}`);
+          if (head.nodes?.[PERSON]?.valueAllow && Object.hasOwn(head.nodes[PERSON].valueAllow, "alternateName")) throw new Error("Duplicate alternateName truth remains in head profile");
+          const social = [
+            ["#profile-facebook-ghezelbaash", PERSON, PERSON],
+            ["#profile-facebook-doctor-ghezelbaash", PERSON, CLINIC],
+            ["#profile-instagram-doctor-ghezelbaash", PERSON, CLINIC],
+          ];
+          for (const [suffix, owner, main] of social) { const n = get(suffix); if (id(n.owner) !== owner || id(n.mainEntity) !== main) throw new Error(`Social ownership/mainEntity drift: ${suffix}`); if (!refs(person.owns).has(n["@id"])) throw new Error(`Person.owns missing: ${suffix}`); }
+          if (byId.has(`${BASE}#profile-instagram-ghezelbaash`)) throw new Error("Unverified personal Instagram asserted");
+          const drdrId = get("#identifier-person-drdr");
+          if (drdrId.value !== "92014") throw new Error("DrDr structured identifier drift");
+          const wd = evidence.evidence.find((e) => e.id === `${BASE}#evidence-wikidata-doctor`);
+          if (JSON.stringify(wd?.supports) !== JSON.stringify(["person-identity", "canonical-name", "aliases"])) throw new Error("Wikidata evidence overclaims independence");
+          if (!evidence.evidence.some((e) => e.id === `${BASE}#evidence-drdr` && e.tier === "C")) throw new Error("DrDr evidence registry entry missing");
+
+          const mojavezId = `${BASE}#evidence-mojavez-clinic-ownership`;
+          const mojavezEvidence = evidence.evidence.find((e) => e.id === mojavezId);
+          if (!mojavezEvidence) throw new Error("Mojavez evidence registry entry missing");
+          if (arr(mojavezEvidence.supports).includes("clinic-ownership")) throw new Error("Mojavez must not support clinic ownership");
+          if (JSON.stringify(arr(mojavezEvidence.supports)) !== JSON.stringify(["person-identity"])) throw new Error("Mojavez evidence scope contract failure");
+          const mojavezNode = byId.get(mojavezId);
+          if (!mojavezNode) throw new Error("Mojavez canonical graph node missing");
+          if (/ownership|owner\s+of|مالکیت|مالک\s*(?:کلینیک|مطب)/i.test(JSON.stringify(mojavezNode.name ?? ""))) throw new Error("Mojavez semantic label implies ownership");
+          if (refs(mojavezNode.about).has(CLINIC)) throw new Error("Mojavez evidence must not be about Clinic without an explicit clinic contract");
+          if (id(mojavezNode.mainEntity) !== PERSON || !refs(mojavezNode.about).has(PERSON)) throw new Error("Mojavez evidence must remain person-bound");
+          if (refs(clinic.subjectOf).has(mojavezId)) throw new Error("Clinic.subjectOf must not cite Mojavez as clinic evidence");
+
+          for (const entry of evidence.evidence.filter((e) => e.liveStatus === "declared-in-canonical-graph")) {
+            const node = byId.get(entry.id);
+            if (!node) throw new Error(`Declared evidence missing canonical graph node: ${entry.id}`);
+            if (node.url !== entry.url) throw new Error(`Evidence registry/graph URL parity failure: ${entry.id}`);
+          }
+
+          const faqToken = "{{CANONICAL_ANSWER:botox-vs-filler-differences}}";
+          const faqAnswer = get("#answer-botox-vs-filler-differences");
+          if (typeof faqAnswer.text !== "string" || !faqAnswer.text.trim()) throw new Error("Canonical FAQ Answer.text missing");
+          if (pageSource.split(faqToken).length !== 2) throw new Error("page.md must contain exactly one canonical FAQ answer token");
+          if (pageSource.includes(faqAnswer.text)) throw new Error("FAQ Answer.text is duplicated in page.md instead of graph-owned token binding");
+
+          const team = media.imageProfiles.find((p) => arr(p.includes).includes("clinical-team"));
+          const semanticText = JSON.stringify([team, ...nodes.filter((n) => /clinical-team|clinic-team/.test(n?.["@id"] || ""))]);
+          for (const claim of ["clinical team", "medical team", "تیم بالینی", "اعضای تیم درمان"]) if (semanticText.toLowerCase().includes(claim.toLowerCase())) throw new Error(`Unsupported group-photo role claim remains: ${claim}`);
+          const irimcProfile = support.idProfiles?.[`${BASE}#organization-iran-medical-council`];
+          if (!irimcProfile?.include?.includes("sameAs")) throw new Error("IRIMC sameAs not projected");
+          console.log(JSON.stringify({ valid: true, canonicalNodes: nodes.length, declaredEvidenceParity: evidence.evidence.filter((e) => e.liveStatus === "declared-in-canonical-graph").length, checked: "final-entity-contract-2026" }, null, 2));
+          JS
+
+          git diff --check
+          npm run validate:active-source-identifiers
+          npm run validate:final-entity-contract
+          npm run prepare:site
+
+      - name: Commit exact product tree locally
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "Dr. Saeed Ghezelbaash | دکتر سعید قزلباش"
           git config user.email "medicaldoctor91@gmail.com"
-          git add src/data/evidence-registry.json src/data/semantic/knowledge-graph.jsonld scripts/validate-final-entity-contract.mjs
-          git commit -m "fix: narrow Mojavez evidence scope"
+          git add \
+            src/data/evidence-registry.json \
+            src/data/semantic/knowledge-graph.jsonld \
+            src/content-source/page.md \
+            scripts/lib/assemble-content.mjs \
+            scripts/validate-final-entity-contract.mjs \
+            scripts/validate-active-source-identifiers.mjs \
+            package.json
+          git commit -m "fix: enforce evidence and authored-source authority contracts"
           echo "LOCAL_PRODUCT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+          git show --stat --oneline --decorate HEAD
 
       - name: Validate complete canonical release on exact local product commit
         shell: bash
@@ -139,4 +296,4 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git push origin "HEAD:refs/heads/$VALIDATION_BRANCH"
+          git push --force-with-lease origin "HEAD:refs/heads/$VALIDATION_BRANCH"
