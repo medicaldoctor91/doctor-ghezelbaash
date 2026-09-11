@@ -14,7 +14,6 @@ jobs:
     timeout-minutes: 45
     env:
       EXPECTED_HEAD: 2e4b420b7f16f1f93bdc173f38cfa5adda826d16
-      TARGET_BRANCH: candidate/final-repository-plan-2026
       VALIDATION_BRANCH: validation/pr394-correctness-20260911
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -102,16 +101,23 @@ jobs:
 
           const assemblyPath = 'scripts/lib/assemble-content.mjs';
           let assembly = fs.readFileSync(assemblyPath, 'utf8');
-          if (!assembly.includes('bindCanonicalAnswers')) {
-            const insertionAnchor = '\nasync function canonicalSourceNames';
-            if (!assembly.includes(insertionAnchor)) throw new Error('Canonical assembly insertion anchor missing');
-            const binder = `\nconst canonicalAnswerTokenPattern = /\\{\\{CANONICAL_ANSWER:([a-z0-9][a-z0-9-]*)\\}\\}/g;\n\nexport const bindCanonicalAnswers = (content, graph, release) => {\n  const source = String(content);\n  const matches = [...source.matchAll(canonicalAnswerTokenPattern)];\n  if (!matches.length) return source;\n  const { byId } = indexCanonicalGraph(graph);\n  const seen = new Set();\n  let resolved = source;\n  for (const match of matches) {\n    const [token, slug] = match;\n    if (seen.has(token)) throw new Error(\`Canonical answer token must be unique in page source: \${token}\`);\n    seen.add(token);\n    const answerId = \`\${release.canonicalUrl}#answer-\${slug}\`;\n    const answer = byId.get(answerId);\n    const types = Array.isArray(answer?.[\"@type\"]) ? answer[\"@type\"] : [answer?.[\"@type\"]].filter(Boolean);\n    if (!types.includes(\"Answer\") || typeof answer.text !== \"string\" || !answer.text.trim())\n      throw new Error(\`Canonical answer token does not resolve to Answer.text: \${token}\`);\n    if (source.includes(answer.text))\n      throw new Error(\`Canonical answer literal duplicates graph-owned Answer.text: \${answerId}\`);\n    resolved = resolved.replace(token, answer.text);\n  }\n  if ([...resolved.matchAll(canonicalAnswerTokenPattern)].length)\n    throw new Error(\"Unresolved canonical answer token remains after assembly\");\n  return resolved;\n};\n`;
-            assembly = assembly.replace(insertionAnchor, `${binder}${insertionAnchor}`);
-            const bindAnchor = '  content = bindPhysicianImages(content, graph, release);';
-            if (!assembly.includes(bindAnchor)) throw new Error('Canonical answer binding call anchor missing');
-            assembly = assembly.replace(bindAnchor, `${bindAnchor}\n  content = bindCanonicalAnswers(content, graph, release);`);
-            fs.writeFileSync(assemblyPath, assembly);
-          }
+          if (assembly.includes('bindCanonicalAnswers')) throw new Error('Canonical-answer binder unexpectedly exists on baseline candidate');
+          const insertionAnchor = '\nasync function canonicalSourceNames';
+          if (!assembly.includes(insertionAnchor)) throw new Error('Canonical assembly insertion anchor missing');
+          const binder = `\nconst canonicalAnswerTokenPattern = /\\{\\{CANONICAL_ANSWER:([a-z0-9][a-z0-9-]*)\\}\\}/g;\n\nexport const bindCanonicalAnswers = (content, graph, release) => {\n  const source = String(content);\n  const matches = [...source.matchAll(canonicalAnswerTokenPattern)];\n  if (!matches.length) {\n    if (source.includes(\"{{CANONICAL_ANSWER:\")) throw new Error(\"Malformed or unresolved canonical answer token in page source\");\n    return source;\n  }\n  const { byId } = indexCanonicalGraph(graph);\n  const seen = new Set();\n  let resolved = source;\n  for (const match of matches) {\n    const [token, slug] = match;\n    if (seen.has(token)) throw new Error(\`Canonical answer token must be unique in page source: \${token}\`);\n    seen.add(token);\n    const answerId = \`\${release.canonicalUrl}#answer-\${slug}\`;\n    const answer = byId.get(answerId);\n    const types = Array.isArray(answer?.[\"@type\"]) ? answer[\"@type\"] : [answer?.[\"@type\"]].filter(Boolean);\n    if (!types.includes(\"Answer\") || typeof answer.text !== \"string\" || !answer.text.trim())\n      throw new Error(\`Canonical answer token does not resolve to Answer.text: \${token}\`);\n    if (source.includes(answer.text))\n      throw new Error(\`Canonical answer literal duplicates graph-owned Answer.text: \${answerId}\`);\n    resolved = resolved.replace(token, answer.text);\n  }\n  if (resolved.includes(\"{{CANONICAL_ANSWER:\"))\n    throw new Error(\"Unresolved canonical answer token remains after assembly\");\n  return resolved;\n};\n`;
+          assembly = assembly.replace(insertionAnchor, `${binder}${insertionAnchor}`);
+          const bindAnchor = '  content = bindPhysicianImages(content, graph, release);';
+          if (!assembly.includes(bindAnchor)) throw new Error('Canonical answer binding call anchor missing');
+          assembly = assembly.replace(bindAnchor, `${bindAnchor}\n  content = bindCanonicalAnswers(content, graph, release);`);
+          fs.writeFileSync(assemblyPath, assembly);
+
+          const physicianValidatorPath = 'scripts/validate-physician-projection.mjs';
+          let physicianValidator = fs.readFileSync(physicianValidatorPath, 'utf8');
+          const oldClinicAuthority = 'const CORE_CLINIC_AUTHORITY_SUBJECTS = [\n  `${BASE}#evidence-google-maps-clinic`,\n  `${BASE}#evidence-mojavez-clinic-ownership`,\n];';
+          const newClinicAuthority = 'const CORE_CLINIC_AUTHORITY_SUBJECTS = [\n  `${BASE}#evidence-google-maps-clinic`,\n];';
+          if (!physicianValidator.includes(oldClinicAuthority)) throw new Error('Legacy clinic authority expectation not found');
+          physicianValidator = physicianValidator.replace(oldClinicAuthority, newClinicAuthority);
+          fs.writeFileSync(physicianValidatorPath, physicianValidator);
 
           const packagePath = 'package.json';
           const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
@@ -251,6 +257,7 @@ jobs:
           npm run validate:active-source-identifiers
           npm run validate:final-entity-contract
           npm run prepare:site
+          npm run validate:physician-projection
 
       - name: Commit exact product tree locally
         shell: bash
@@ -265,6 +272,7 @@ jobs:
             scripts/lib/assemble-content.mjs \
             scripts/validate-final-entity-contract.mjs \
             scripts/validate-active-source-identifiers.mjs \
+            scripts/validate-physician-projection.mjs \
             package.json
           git commit -m "fix: enforce evidence and authored-source authority contracts"
           echo "LOCAL_PRODUCT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
