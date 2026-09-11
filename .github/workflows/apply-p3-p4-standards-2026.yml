@@ -97,6 +97,17 @@ jobs:
           const directGateRule = `  if (content.includes('node "$GITHUB_WORKSPACE/scripts/dependency-advisory-gate.mjs"'))\n    throw new Error(\n      \`Canonical workflows must invoke the current advisory gate through npm run security:dependencies: \${workflow}\`,\n    );\n`;
           hygiene = hygiene.replace(auditNeedle, `${directGateRule}${auditNeedle}`);
           await fs.writeFile(hygienePath, hygiene);
+
+          const machineTestPath = 'scripts/test-machine-resources.mjs';
+          let machineTest = await fs.readFile(machineTestPath, 'utf8');
+          const oldCroissant = '  assert.equal(new MIMEType(contentType).params.get("profile"), resource.profileIri);\n  assert.equal(new MIMEType(contentType).params.get("charset"), "utf-8");';
+          const oldCount = machineTest.split(oldCroissant).length - 1;
+          if (oldCount !== 1) throw new Error(`Croissant legacy MIME test cardinality drift: ${oldCount}`);
+          machineTest = machineTest.replace(
+            oldCroissant,
+            '  assert.equal(contentType, resource.contentType);\n  assert.equal(new MIMEType(contentType).params.get("profile"), resource.profileIri);\n  assert.equal(new MIMEType(contentType).params.get("charset"), null);',
+          );
+          await fs.writeFile(machineTestPath, machineTest);
           NODE
       - name: Remove migration transport and create exact local product commit
         shell: bash
