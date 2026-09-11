@@ -1,0 +1,142 @@
+name: PR394 Mojavez scope alignment (temporary)
+
+on:
+  push:
+    branches:
+      - automation/pr394-mojavez-scope-20260911
+
+permissions:
+  contents: write
+
+jobs:
+  align-and-validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      EXPECTED_HEAD: 2e4b420b7f16f1f93bdc173f38cfa5adda826d16
+      TARGET_BRANCH: candidate/final-repository-plan-2026
+      VALIDATION_BRANCH: validation/pr394-mojavez-scope-20260911
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: candidate/final-repository-plan-2026
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Require unchanged candidate head
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+
+      - name: Provision validation dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          npm ci
+          npm run security:dependencies
+          npx playwright install --with-deps chromium
+
+      - name: Narrow Mojavez evidence scope in authored sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+
+          const BASE = 'https://www.ghezelbaash.ir/';
+          const PERSON = `${BASE}#saeed-ghezelbash`;
+          const CLINIC = `${BASE}#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah`;
+          const MOJAVEZ = `${BASE}#evidence-mojavez-clinic-ownership`;
+
+          const registryPath = 'src/data/evidence-registry.json';
+          const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+          const evidence = registry.evidence.find((entry) => entry.id === MOJAVEZ);
+          if (!evidence) throw new Error('Missing Mojavez evidence registry entry');
+          evidence.supports = [
+            'medical-license',
+            'practice-jurisdiction',
+            'legal-professional-name'
+          ];
+          // Do not refresh verifiedAt: the endpoint was not independently re-fetched in this change.
+          fs.writeFileSync(registryPath, `${JSON.stringify(registry, null, 2)}\n`);
+
+          const graphPath = 'src/data/semantic/knowledge-graph.jsonld';
+          const graph = JSON.parse(fs.readFileSync(graphPath, 'utf8'));
+          const node = (graph['@graph'] || []).find((entry) => entry['@id'] === MOJAVEZ);
+          if (!node) throw new Error('Missing Mojavez evidence graph node');
+          node.name = 'Mojavez official medical-practice license record';
+          node.mainEntity = {'@id': PERSON};
+          node.about = {'@id': PERSON};
+          node.description = 'Official Mojavez medical-practice license record for Dr. Saeed Ghezelbash in Kermanshah; this evidence does not by itself establish ownership of the specific clinic premises.';
+          fs.writeFileSync(graphPath, `${JSON.stringify(graph, null, 2)}\n`);
+
+          const validatorPath = 'scripts/validate-final-entity-contract.mjs';
+          let validator = fs.readFileSync(validatorPath, 'utf8');
+          const marker = 'Mojavez evidence scope contract failure';
+          if (!validator.includes(marker)) {
+            const anchor = 'if (!evidence.evidence.some((e) => e.id === `${BASE}#evidence-drdr` && e.tier === "C")) throw new Error("DrDr evidence registry entry missing");';
+            if (!validator.includes(anchor)) throw new Error('Validator insertion anchor not found');
+            const block = `\nconst mojavezEvidence = evidence.evidence.find((e) => e.id === \`${BASE}#evidence-mojavez-clinic-ownership\`);\nconst mojavezSupports = mojavezEvidence?.supports || [];\nconst allowedMojavezSupports = ["medical-license", "practice-jurisdiction", "legal-professional-name"];\nif (!mojavezEvidence || mojavezSupports.includes("clinic-ownership") || JSON.stringify(mojavezSupports) !== JSON.stringify(allowedMojavezSupports)) throw new Error("Mojavez evidence scope contract failure");\nconst mojavezNode = get("#evidence-mojavez-clinic-ownership");\nif (/ownership/i.test(mojavezNode.name || "") || refs(mojavezNode.about).has(CLINIC) || id(mojavezNode.mainEntity) !== PERSON) throw new Error("Mojavez graph evidence overclaims clinic ownership");\n`;
+            validator = validator.replace(anchor, `${anchor}${block}`);
+            fs.writeFileSync(validatorPath, validator);
+          }
+
+          const checkRegistry = JSON.parse(fs.readFileSync(registryPath, 'utf8')).evidence.find((entry) => entry.id === MOJAVEZ);
+          if (checkRegistry.supports.includes('clinic-ownership')) throw new Error('clinic-ownership remains in Mojavez supports');
+          const checkGraph = JSON.parse(fs.readFileSync(graphPath, 'utf8'))['@graph'].find((entry) => entry['@id'] === MOJAVEZ);
+          const aboutIds = (Array.isArray(checkGraph.about) ? checkGraph.about : [checkGraph.about]).map((v) => typeof v === 'string' ? v : v?.['@id']).filter(Boolean);
+          if (aboutIds.includes(CLINIC)) throw new Error('Clinic remains in Mojavez about');
+          if (/ownership/i.test(checkGraph.name || '')) throw new Error('Mojavez graph name still asserts ownership');
+          NODE
+          git diff --check
+          git diff -- src/data/evidence-registry.json src/data/semantic/knowledge-graph.jsonld scripts/validate-final-entity-contract.mjs
+
+      - name: Commit exact candidate tree locally
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "Dr. Saeed Ghezelbaash | دکتر سعید قزلباش"
+          git config user.email "medicaldoctor91@gmail.com"
+          git add src/data/evidence-registry.json src/data/semantic/knowledge-graph.jsonld scripts/validate-final-entity-contract.mjs
+          git commit -m "fix: narrow Mojavez evidence scope"
+          echo "LOCAL_PRODUCT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Validate complete canonical release on exact local product commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SOURCE_COMMIT="$LOCAL_PRODUCT_SHA"
+          export CF_PAGES_COMMIT_SHA="$LOCAL_PRODUCT_SHA"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$LOCAL_PRODUCT_SHA")"
+          npm run release
+
+      - name: Verify attestation and mutation-free tracked source
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const att = JSON.parse(fs.readFileSync('.release/runtime/release-attestation.json', 'utf8'));
+          if (att.sourceCommit !== process.env.LOCAL_PRODUCT_SHA) throw new Error(`Attestation sourceCommit mismatch: ${att.sourceCommit} != ${process.env.LOCAL_PRODUCT_SHA}`);
+          if (att.validation !== 'PASS') throw new Error('Release attestation is not PASS');
+          console.log(JSON.stringify({sourceCommit: att.sourceCommit, validation: att.validation}, null, 2));
+          NODE
+          test -z "$(git status --porcelain --untracked-files=no)"
+
+      - name: Push validated product commit to isolated validation branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin "HEAD:refs/heads/$VALIDATION_BRANCH"
