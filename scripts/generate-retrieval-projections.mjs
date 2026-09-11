@@ -382,10 +382,15 @@ if (uncoveredServices.length)
   throw new Error(
     `Query Matrix offered-service coverage missing ${uncoveredServices.length} services: ${uncoveredServices.join(", ")}`,
   );
-const queryMatrix = dedup.map((r) => JSON.stringify(r)).join("\n") + "\n";
+const queryMatrixLines = dedup.map((row) => JSON.stringify(row));
+const queryMatrix = queryMatrixLines.join("\n") + "\n";
 await write(
   path.join(generated.projections, "query-matrix.jsonl"),
   queryMatrix,
+);
+await write(
+  path.join(generated.projections, "query-matrix.json-seq"),
+  queryMatrixLines.map((line) => `\u001e${line}\n`).join(""),
 );
 if (typeof release.medicalReviewedAt !== "string" || !release.medicalReviewedAt)
   throw new Error("Release lacks the canonical medical review date");

@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  SOURCE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+
 jobs:
   render-calibration:
     runs-on: ubuntu-24.04
@@ -16,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ env.SOURCE_COMMIT }}
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -34,7 +38,7 @@ jobs:
       - name: Preserve measured artifact for geometry updates
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: render-calibration-${{ github.sha }}
+          name: render-calibration-${{ env.SOURCE_COMMIT }}
           path: /tmp/measured-render-calibration.json
           if-no-files-found: error
           retention-days: 7
@@ -48,6 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: ${{ env.SOURCE_COMMIT }}
           persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -84,12 +89,12 @@ jobs:
       - name: Export exact checked-out source for branch audit
         shell: bash
         run: |
-          git archive --format=zip --output=/tmp/doctor-ghezelbaash-source-${GITHUB_SHA}.zip HEAD
+          git archive --format=zip --output=/tmp/doctor-ghezelbaash-source-${SOURCE_COMMIT}.zip HEAD
       - name: Upload branch source audit package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: doctor-ghezelbaash-source-${{ github.sha }}
-          path: /tmp/doctor-ghezelbaash-source-${{ github.sha }}.zip
+          name: doctor-ghezelbaash-source-${{ env.SOURCE_COMMIT }}
+          path: /tmp/doctor-ghezelbaash-source-${{ env.SOURCE_COMMIT }}.zip
           if-no-files-found: error
           retention-days: 1
       - name: Validate HTML with Nu HTML Checker 26.8.30
@@ -99,7 +104,7 @@ jobs:
       - name: Upload canonical distribution
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: doctor-ghezelbaash-dist-${{ github.sha }}
+          name: doctor-ghezelbaash-dist-${{ env.SOURCE_COMMIT }}
           path: release/doctor-ghezelbaash-dist-v*.zip
           if-no-files-found: error
           retention-days: 7
@@ -107,7 +112,29 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: shacl-evidence-${{ github.sha }}
+          name: shacl-evidence-${{ env.SOURCE_COMMIT }}
           path: .generated/validation/shacl*/
           if-no-files-found: warn
+          retention-days: 7
+      - name: Require final source attestation and clean worktree
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+          const attestation = JSON.parse(fs.readFileSync('.release/runtime/release-attestation.json', 'utf8'));
+          assert.equal(head, process.env.SOURCE_COMMIT);
+          assert.equal(attestation.sourceCommit, head);
+          assert.equal(attestation.validation, 'PASS');
+          assert.equal(execFileSync('git', ['status', '--porcelain=v1', '--untracked-files=all'], { encoding: 'utf8' }), '');
+          console.log(JSON.stringify({ sourceCommit: head, validation: attestation.validation, clean: true }));
+          JS
+      - name: Upload exact source release attestation
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-attestation-${{ env.SOURCE_COMMIT }}
+          path: .release/runtime/release-attestation.json
+          include-hidden-files: true
+          if-no-files-found: error
           retention-days: 7

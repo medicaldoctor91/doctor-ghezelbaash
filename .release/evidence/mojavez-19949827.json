@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "evidenceId": "https://www.ghezelbaash.ir/#evidence-mojavez-clinic-ownership",
+  "url": "https://qr.mojavez.ir/track/19949827",
+  "subjectId": "https://www.ghezelbaash.ir/#saeed-ghezelbash",
+  "observedAt": "2026-09-11T11:10:28.082Z",
+  "requestHeaders": {
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache"
+  },
+  "response": {
+    "status": 200,
+    "bodySha256": "e817050f975ba5cfdd1c58611f1920262a73ac20a7bd89f7858d0ece36e8dc6b"
+  },
+  "record": {
+    "holderName": "محمدسعید قزلباش",
+    "licenseTitle": "پروانه طبابت",
+    "issuingAuthority": "سازمان نظام پزشکی ج.ا.ا - معاونت فنی و نظارت نظام پزشکی",
+    "trackingCode": "19949827",
+    "isicCode": "862101",
+    "isicTitle": "طبابت پزشکی",
+    "issuedOrRenewedOn": "1404-11-13",
+    "validUntil": "1407-12-02",
+    "province": "کرمانشاه",
+    "county": "کرمانشاه"
+  },
+  "claimFields": {
+    "medical-practice-license": [
+      "holderName",
+      "licenseTitle",
+      "issuingAuthority",
+      "trackingCode"
+    ],
+    "legal-professional-name": [
+      "holderName"
+    ],
+    "practice-jurisdiction": [
+      "province",
+      "county"
+    ]
+  },
+  "clinicOwnershipEstablished": false,
+  "review": "The rendered record identifies a medical practice license holder. It does not explicitly identify the canonical Clinic or state ownership of that Clinic. Holder identity and a business location do not establish Clinic ownership.",
+  "reproduce": "node scripts/verify-mojavez-evidence.mjs"
+}

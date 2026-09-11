@@ -132,11 +132,19 @@ if (
 )
   fail("Current release does not match its releaseHistory entry");
 
+const codemetaContexts = arr(codemeta["@context"]);
+const codemetaSchemaExtension = codemetaContexts.find(
+  (entry) => entry && typeof entry === "object" && !Array.isArray(entry),
+);
+const codemetaSubject = codemeta["schema:subjectOf"];
 if (
+  !codemetaContexts.includes("https://w3id.org/codemeta/3.1") ||
+  codemetaSchemaExtension?.schema !== "http://schema.org/" ||
+  Object.hasOwn(codemeta, "subjectOf") ||
   codemeta.softwareVersion !== R ||
-  codemeta.subjectOf?.version !== R ||
-  codemeta.subjectOf?.identifier !== `https://doi.org/${Z.versionDoi}` ||
-  codemeta.subjectOf?.name !== release.dataset.name
+  codemetaSubject?.version !== R ||
+  codemetaSubject?.identifier !== `https://doi.org/${Z.versionDoi}` ||
+  codemetaSubject?.name !== release.dataset.name
 )
   fail("CodeMeta release convergence failure");
 const citation = await readFile(path.join(root, "CITATION.cff"), "utf8");

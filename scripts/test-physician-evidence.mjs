@@ -14,6 +14,21 @@ import {
   projectSchemaContext,
 } from "./lib/projections/graph-projections.mjs";
 import { indexCanonicalGraph } from "../src/lib/semantic-projection.mjs";
+import { MOJAVEZ_ID, MOJAVEZ_NAME } from "./lib/mojavez-evidence.mjs";
+
+test("Mojavez person-license semantics survive Google and evidence projections", async (t) => {
+  const context = await isolatedContext(t);
+  const compiled = await compileGraphProjections(context);
+  const inline = new Map([...compiled.headDoc["@graph"], ...compiled.supportDoc["@graph"]]
+    .map((node) => [node["@id"], node]));
+  const evidence = inline.get(MOJAVEZ_ID);
+  assert.equal(evidence.name, MOJAVEZ_NAME);
+  assert.deepEqual(evidence.about, [{ "@id": context.release.primaryEntity.id }]);
+  assert.ok(![].concat(inline.get(context.release.clinic.id).subjectOf || [])
+    .some((ref) => ref["@id"] === MOJAVEZ_ID));
+  assert.deepEqual(context.evidenceById.get(MOJAVEZ_ID).supports,
+    ["medical-practice-license", "legal-professional-name", "practice-jurisdiction"]);
+});
 
 async function isolatedContext(t) {
   const context = await loadProjectionContext();
