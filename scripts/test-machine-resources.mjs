@@ -286,6 +286,10 @@ test("generated vCards preserve physician versus organization identity in RFC 63
     assert.ok(unfolded.includes(`KIND:${kind}`));
     assert.ok(unfolded.includes(`UID:${entity}`));
     assert.ok(unfolded.includes("VERSION:4.0"));
+    const telLines = unfolded.filter((line) => line.startsWith("TEL;"));
+    assert.equal(telLines.length, 1);
+    assert.equal(telLines[0], `TEL;VALUE=uri;TYPE=work,voice:tel:${byId.get(release.clinic.id).telephone}`);
+    assert.match(telLines[0], /^TEL;VALUE=uri;TYPE=work,voice:tel:\+[1-9][0-9]*$/u);
     assert.equal(vCardEntityKind(byId.get(entity)), kind);
   }
   assert.throws(() => vCardEntityKind({ "@type": ["Person", "MedicalClinic"] }), /ambiguous/);
