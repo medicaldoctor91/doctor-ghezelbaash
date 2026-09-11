@@ -1,3 +1,4 @@
+# Exact-head dispatch marker for PR #394 final verification.
 name: PR 394 artifact semantics source diagnostic
 
 on:
