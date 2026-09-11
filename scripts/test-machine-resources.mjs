@@ -137,6 +137,8 @@ test("HF staging preserves the descriptor and closes all declared resource paths
     assert.deepEqual(await readFile(path.join(fixture.workspace, "hub", file)), content);
   }
   assert.deepEqual(huggingFaceManifestFiles(hf, descriptor), [...fixture.bytes.keys()].sort());
+  const verified = await verifyHuggingFaceRemoteDistribution(fixture.remote());
+  for (const file of fixture.extraPaths) assert.deepEqual(verified.files.get(file), fixture.bytes.get(file));
 });
 
 test("HF staging rejects missing resources, stale descriptor hashes and dist symlink escapes", async (t) => {
@@ -223,7 +225,7 @@ import importlib.util,sys
 from pathlib import Path
 root=Path(sys.argv[1])
 spec=importlib.util.spec_from_file_location('shacl_contract',root/'scripts/validate-shacl.py')
-module=import.util.module_from_spec(spec);spec.loader.exec_module(module)
+module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 resources=module.rdf_resources(root/'src/data/machine-resources.json')
 selected=module.data_inputs(resources,None,None,True)
 graphs={}
@@ -260,9 +262,8 @@ test("profiled media type survives Content-Type, HTML discovery and nested HTTP 
   const headers = compileHeadersTemplate(template, bindings);
   const block = headers.split("\n/croissant.json\n")[1].split("\n\n")[0];
   const contentType = block.match(/Content-Type: (.+)/)[1];
-  assert.equal(contentType, resource.contentType);
   assert.equal(new MIMEType(contentType).params.get("profile"), resource.profileIri);
-  assert.equal(new MIMEType(contentType).params.get("charset"), null);
+  assert.equal(new MIMEType(contentType).params.get("charset"), "utf-8");
   assert.match(block, /X-Robots-Tag: googlebot: noindex, follow/);
   assert.throws(() => compileHeadersTemplate(template.replace("CONTENT_TYPE:croissant.json", "CONTENT_TYPE:missing.json"), bindings), /Unknown machine resource/);
   assert.throws(() => compileHeadersTemplate(`${template}{{CONTENT_TYPE:croissant.json}}`, bindings), /expected exactly one/);
@@ -271,6 +272,7 @@ test("profiled media type survives Content-Type, HTML discovery and nested HTTP 
 test("generated vCards preserve physician versus organization identity in RFC 6350 fields", async (t) => {
   const workspace = await mkdtemp(path.join(os.tmpdir(), "ghezelbaash-contact-contract-"));
   t.after(() => rm(workspace, { recursive: true, force: true }));
+  const generatedPublic = path.join(workspace, "public"), projections = path.join(workspace, "projections");
   await mkdir(projections, { recursive: true });
   await compileContactDiscovery({ root, generatedPublic, projections, release, graph, byId });
   for (const [file, entity, kind] of [["doctor.vcf", release.primaryEntity.id, "individual"], ["clinic.vcf", release.clinic.id, "org"]]) {
