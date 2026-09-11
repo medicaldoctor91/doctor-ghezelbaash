@@ -128,13 +128,19 @@ jobs:
 
           separator_lines = [line for line in s.splitlines() if 'assert.equal' in line and '0x1e' in line.lower()]
           assert len(separator_lines) == 1, separator_lines
-          fixed_line, count = re.subn(
+          fixed_line, rs_count = re.subn(
               r'(?<![A-Za-z0-9_])0x1[eE](?![A-Za-z0-9_])',
               lambda _match: r'"\x1e"',
               separator_lines[0],
               count=1,
           )
-          assert count == 1 and fixed_line != separator_lines[0]
+          fixed_line, lf_count = re.subn(
+              r'(?<![A-Za-z0-9_])0x0[aA](?![A-Za-z0-9_])',
+              lambda _match: r'"\n"',
+              fixed_line,
+              count=1,
+          )
+          assert rs_count == 1 and lf_count == 1 and fixed_line != separator_lines[0], (rs_count, lf_count, separator_lines[0])
           s = s.replace(separator_lines[0], fixed_line, 1)
           p.write_text(s)
 
