@@ -1,0 +1,62 @@
+name: Validate exact final candidate 2026 (temporary)
+
+on:
+  push:
+    branches:
+      - validation/final-repository-plan-2026
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      CANDIDATE_SHA: 2e4b420b7f16f1f93bdc173f38cfa5adda826d16
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: 2e4b420b7f16f1f93bdc173f38cfa5adda826d16
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.14.6"
+      - name: Provision validation dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+          npm ci
+          npm run security:dependencies
+          npx playwright install --with-deps chromium
+      - name: Validate exact clean candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          export SOURCE_COMMIT="$CANDIDATE_SHA"
+          export CF_PAGES_COMMIT_SHA="$CANDIDATE_SHA"
+          export SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$CANDIDATE_SHA")"
+          npm run release
+      - name: Verify exact attestation and clean source
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const att = JSON.parse(fs.readFileSync('.release/runtime/release-attestation.json', 'utf8'));
+          if (att.sourceCommit !== process.env.CANDIDATE_SHA) {
+            throw new Error(`Attestation sourceCommit mismatch: ${att.sourceCommit} != ${process.env.CANDIDATE_SHA}`);
+          }
+          if (att.validation !== 'PASS') throw new Error('Release attestation is not PASS');
+          console.log(JSON.stringify({sourceCommit: att.sourceCommit, validation: att.validation}, null, 2));
+          NODE
+          test -z "$(git status --porcelain --untracked-files=no)"
