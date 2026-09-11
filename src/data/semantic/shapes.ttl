@@ -174,3 +174,49 @@ ex:EvidenceObservationDateShape a sh:NodeShape ;
     [ sh:not [ sh:property [ sh:path schema:propertyID ; sh:hasValue "Evidence observation date" ] ] ]
     [ sh:property [ sh:path schema:value ; sh:datatype xsd:date ; sh:minCount 1 ; sh:maxCount 1 ] ]
   ) .
+
+
+# Corrected authority anchors are part of the RDF contract, not only JS tests.
+ex:CityCubeIdentityShape a sh:NodeShape ;
+  sh:targetNode ex:place-messe-berlin-citycube ;
+  sh:property [ sh:path schema:name ; sh:hasValue "CityCube Berlin" ; sh:minCount 1 ] ;
+  sh:property [ sh:path schema:sameAs ; sh:hasValue <https://www.wikidata.org/entity/Q15108815> ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:IranMedicalCouncilIdentityShape a sh:NodeShape ;
+  sh:targetNode ex:organization-iran-medical-council ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:Organization ] ;
+  sh:property [ sh:path schema:sameAs ; sh:hasValue <https://www.wikidata.org/entity/Q5944740> ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:PersonalFacebookProfileShape a sh:NodeShape ;
+  sh:targetNode ex:profile-facebook-ghezelbaash ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:ClinicFacebookProfileShape a sh:NodeShape ;
+  sh:targetNode ex:profile-facebook-doctor-ghezelbaash ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:ClinicInstagramProfileShape a sh:NodeShape ;
+  sh:targetNode ex:profile-instagram-doctor-ghezelbaash ;
+  sh:property [ sh:path rdf:type ; sh:hasValue schema:ProfilePage ] ;
+  sh:property [ sh:path schema:owner ; sh:hasValue ex:saeed-ghezelbash ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path schema:mainEntity ; sh:hasValue ex:dr-saeed-ghezelbash-aesthetic-clinic-kermanshah ; sh:minCount 1 ; sh:maxCount 1 ] .
+
+ex:RetiredIdentifierExclusionShape a sh:NodeShape ;
+  sh:targetNode <https://www.ghezelbaash.ir/graph.jsonld#dataset> ;
+  sh:sparql [
+    sh:message "Retired/deleted or superseded identifiers must not re-enter the active canonical RDF graph." ;
+    sh:select """
+      SELECT $this WHERE {
+        ?s ?p ?o .
+        FILTER(
+          CONTAINS(STR(?o), "Q140288589") ||
+          CONTAINS(STR(?o), "Q140304972") ||
+          CONTAINS(STR(?o), "Q700236")
+        )
+      }
+    """
+  ] .

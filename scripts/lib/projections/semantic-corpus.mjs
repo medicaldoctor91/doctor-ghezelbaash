@@ -8,7 +8,11 @@ import {
   valueText,
 } from "../projection-context.mjs";
 import { exactLanguageLiteral } from "../../../src/lib/semantic-projection.mjs";
-import { buildEntityFacts, serializeEntityFacts } from "../entity-facts.mjs";
+import {
+  buildEntityFacts,
+  entityFactsCsvwMetadata,
+  serializeEntityFacts,
+} from "../entity-facts.mjs";
 
 export async function compileSemanticCorpus(context) {
   const {
@@ -25,6 +29,10 @@ export async function compileSemanticCorpus(context) {
   await writeFile(
     path.join(projections, "entity-facts.csv"),
     serializeEntityFacts(factRecords),
+  );
+  await writeFile(
+    path.join(projections, "entity-facts.csv-metadata.json"),
+    `${JSON.stringify(entityFactsCsvwMetadata(), null, 2)}\n`,
   );
 
   const answerRecords = [];

@@ -681,7 +681,7 @@
     {
       "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail",
       "@type": "ImageObject",
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.0701380faf77.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.9e99a17fdc43.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-thumbnail-width"
@@ -699,11 +699,11 @@
       "dateCreated": "2023-05-29",
       "name": [
         {
-          "@value": "دکتر سعید قزلباش همراه تیم بالینی کلینیک زیبایی دکتر سعید قزلباش",
+          "@value": "دکتر سعید قزلباش همراه تصویر گروهی کلینیک زیبایی دکتر سعید قزلباش",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash with the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic",
+          "@value": "Group photograph of Dr. Saeed Ghezelbash at his private practice in Kermanshah",
           "@language": "en"
         }
       ],
@@ -721,21 +721,21 @@
       ],
       "caption": [
         {
-          "@value": "دکتر سعید قزلباش (محمدسعید قزلباش) همراه اعضای تیم بالینی",
+          "@value": "دکتر سعید قزلباش (محمدسعید قزلباش) همراه اعضای تصویر گروهی",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, with members of his clinical team",
+          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, with members of his group photograph",
           "@language": "en"
         }
       ],
       "description": [
         {
-          "@value": "دکتر سعید قزلباش، با نام کامل محمدسعید قزلباش، پزشک و پژوهشگر پزشکی فعال در پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی همراه اعضای تیم بالینی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران.",
+          "@value": "دکتر سعید قزلباش، با نام کامل محمدسعید قزلباش، پزشک و پژوهشگر پزشکی فعال در پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی همراه اعضای تصویر گروهی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران.",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine, with members of the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine, with members of the group photograph of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
           "@language": "en"
         }
       ],
@@ -786,7 +786,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.0701380faf77.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-960.9e99a17fdc43.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -795,25 +795,25 @@
       "@type": "ImageObject",
       "name": [
         {
-          "@value": "دکتر سعید قزلباش همراه تیم بالینی کلینیک زیبایی دکتر سعید قزلباش",
+          "@value": "دکتر سعید قزلباش همراه تصویر گروهی کلینیک زیبایی دکتر سعید قزلباش",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash with the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic",
+          "@value": "Group photograph of Dr. Saeed Ghezelbash at his private practice in Kermanshah",
           "@language": "en"
         }
       ],
       "caption": [
         {
-          "@value": "دکتر سعید قزلباش (محمدسعید قزلباش) همراه اعضای تیم بالینی",
+          "@value": "دکتر سعید قزلباش (محمدسعید قزلباش) همراه اعضای تصویر گروهی",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, with members of his clinical team",
+          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, with members of his group photograph",
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.f6a5adb17648.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.307433442210.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@id": "https://www.ghezelbaash.ir/#image-saeed-ghezelbash-clinic-team-width"
@@ -844,11 +844,11 @@
       },
       "description": [
         {
-          "@value": "دکتر سعید قزلباش، با نام کامل محمدسعید قزلباش، پزشک و پژوهشگر پزشکی فعال در پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی همراه اعضای تیم بالینی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران.",
+          "@value": "دکتر سعید قزلباش، با نام کامل محمدسعید قزلباش، پزشک و پژوهشگر پزشکی فعال در پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی همراه اعضای تصویر گروهی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران.",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine, with members of the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine, with members of the group photograph of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
           "@language": "en"
         }
       ],
@@ -901,7 +901,7 @@
         "M196320111",
         "https://commons.wikimedia.org/entity/M196320111"
       ],
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.f6a5adb17648.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-1600.307433442210.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -1113,7 +1113,7 @@
         "Official website of Dr. Saeed Ghezelbaash",
         "Official website of Dr. Saeed Ghezelbash"
       ],
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-11",
       "hasPart": [
         {
           "@id": "https://www.ghezelbaash.ir/doctor.vcf#document"
@@ -1804,7 +1804,7 @@
       "specialty": {
         "@id": "https://www.ghezelbaash.ir/#medical-specialty-aesthetic-medicine"
       },
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-11",
       "subjectOf": [
         {
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
@@ -1952,7 +1952,8 @@
           "@language": "en"
         }
       ],
-      "url": "https://irimc.org/"
+      "url": "https://irimc.org/",
+      "sameAs": "https://www.wikidata.org/entity/Q5944740"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#organization-american-academy-of-anti-aging-medicine",
@@ -4225,6 +4226,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#identifier-clinic-balad"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-clinic-facebook-page"
         }
       ],
       "sameAs": [
@@ -4487,7 +4491,9 @@
         "Dr. Saeed Ghezelbaash",
         "Dr Saeed Ghezelbash",
         "MohammadSaeed Ghezelbash",
-        "Mohamadsaeed Ghezelbash"
+        "Mohamadsaeed Ghezelbash",
+        "Ghezelbash MS",
+        "Doctor Ghezelbaash"
       ],
       "jobTitle": [
         {
@@ -4528,6 +4534,15 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#doctor-ghezelbaash-structured-data-project"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#profile-facebook-ghezelbaash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#profile-facebook-doctor-ghezelbaash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#profile-instagram-doctor-ghezelbaash"
         }
       ],
       "availableService": [
@@ -5000,6 +5015,9 @@
         },
         {
           "@id": "https://www.ghezelbaash.ir/#identifier-person-wikimedia-commons-creator"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#identifier-person-drdr"
         }
       ],
       "sameAs": [
@@ -8231,7 +8249,7 @@
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
       "description": "Version-controlled GitHub source for Version 1.2.5 of the canonical Dr. Saeed Ghezelbash Public Knowledge Graph; it is a source repository, not an identity-equivalent Dataset.",
-      "dateModified": "2026-09-07"
+      "dateModified": "2026-09-11"
     },
     {
       "@id": "https://www.ghezelbaash.ir/#project-huggingface-dataset",
@@ -8415,7 +8433,7 @@
           "@id": "https://www.ghezelbaash.ir/#historical-patient-origin-summary"
         }
       ],
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "identifier": [
         "https://www.ghezelbaash.ir/graph.jsonld#dataset",
         {
@@ -8546,7 +8564,7 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — JSON-LD distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "version": "1.2.5",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -8690,7 +8708,9 @@
           "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
         }
       ],
-      "identifier": "DrDr:92014"
+      "identifier": {
+        "@id": "https://www.ghezelbaash.ir/#identifier-person-drdr"
+      }
     },
     {
       "@id": "https://www.ghezelbaash.ir/#evidence-doctoreto",
@@ -18520,11 +18540,14 @@
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-        },
-        {
-          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
         }
-      ]
+      ],
+      "owner": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "identifier": {
+        "@id": "https://www.ghezelbaash.ir/#identifier-person-facebook"
+      }
     },
     {
       "@id": "https://www.ghezelbaash.ir/#profile-twitter-qezelbaash",
@@ -19883,31 +19906,31 @@
       "@type": "ImageObject",
       "name": [
         {
-          "@value": "دکتر سعید قزلباش همراه تیم بالینی کلینیک زیبایی دکتر سعید قزلباش",
+          "@value": "دکتر سعید قزلباش همراه تصویر گروهی کلینیک زیبایی دکتر سعید قزلباش",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash with the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic",
+          "@value": "Group photograph of Dr. Saeed Ghezelbash at his private practice in Kermanshah",
           "@language": "en"
         }
       ],
       "caption": [
         {
-          "@value": "دکتر سعید قزلباش (محمدسعید قزلباش) همراه اعضای تیم بالینی",
+          "@value": "دکتر سعید قزلباش (محمدسعید قزلباش) همراه اعضای تصویر گروهی",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, with members of his clinical team",
+          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, with members of his group photograph",
           "@language": "en"
         }
       ],
       "description": [
         {
-          "@value": "دکتر سعید قزلباش، با نام کامل محمدسعید قزلباش، پزشک و پژوهشگر پزشکی فعال در پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی همراه اعضای تیم بالینی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران.",
+          "@value": "دکتر سعید قزلباش، با نام کامل محمدسعید قزلباش، پزشک و پژوهشگر پزشکی فعال در پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی همراه اعضای تصویر گروهی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران.",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine, with members of the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine, with members of the group photograph of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
           "@language": "en"
         }
       ],
@@ -20244,7 +20267,7 @@
     {
       "@id": "https://www.ghezelbaash.ir/#place-messe-berlin-citycube",
       "@type": "Place",
-      "name": "Messe Berlin / CityCube Berlin",
+      "name": "CityCube Berlin",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "Jafféstraße",
@@ -20255,7 +20278,10 @@
       "containedInPlace": {
         "@id": "https://www.ghezelbaash.ir/#place-berlin-germany"
       },
-      "sameAs": "https://www.wikidata.org/entity/Q700236"
+      "sameAs": "https://www.wikidata.org/entity/Q15108815",
+      "alternateName": [
+        "Messe Berlin / CityCube Berlin"
+      ]
     },
     {
       "@id": "https://www.ghezelbaash.ir/graph.ttl#download",
@@ -20268,7 +20294,7 @@
       "name": "Dr. Saeed Ghezelbash Public Knowledge Graph — Turtle distribution",
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "version": "1.2.5",
       "creator": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -20529,35 +20555,35 @@
       "@type": "ImageObject",
       "name": [
         {
-          "@value": "سعید قزلباش همراه اعضای تیم بالینی",
+          "@value": "سعید قزلباش همراه اعضای تصویر گروهی",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash with members of his clinical team",
+          "@value": "Saeed Ghezelbash with members of his group photograph",
           "@language": "en"
         }
       ],
       "caption": [
         {
-          "@value": "سعید قزلباش همراه اعضای تیم بالینی",
+          "@value": "سعید قزلباش همراه اعضای تصویر گروهی",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash with members of his clinical team",
+          "@value": "Saeed Ghezelbash with members of his group photograph",
           "@language": "en"
         }
       ],
       "description": [
         {
-          "@value": "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تیم بالینی در یک محیط درمانی در کرمانشاه، ایران.",
+          "@value": "دکتر سعید قزلباش، پزشک ایرانی فعال در حوزه پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی، همراه با اعضای تصویر گروهی در یک محیط درمانی در کرمانشاه، ایران.",
           "@language": "fa"
         },
         {
-          "@value": "Dr. Saeed Ghezelbash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his clinical team in Kermanshah, Iran.",
+          "@value": "Dr. Saeed Ghezelbash, an Iranian physician in aesthetic medicine, wearing medical scrubs and a stethoscope with members of his group photograph in Kermanshah, Iran.",
           "@language": "en"
         }
       ],
-      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.71a34e2dfa9f.webp",
+      "contentUrl": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.85e2f8c7e5d6.webp",
       "encodingFormat": "image/webp",
       "width": {
         "@type": "QuantitativeValue",
@@ -20595,7 +20621,7 @@
       "isPartOf": {
         "@id": "https://www.ghezelbaash.ir/#webpage"
       },
-      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.71a34e2dfa9f.webp",
+      "url": "https://www.ghezelbaash.ir/media/images/physician/saeed-ghezelbash-with-clinic-team-delivery-640.85e2f8c7e5d6.webp",
       "version": "1.2.1",
       "dateModified": "2026-08-07"
     },
@@ -20908,11 +20934,11 @@
       "@type": "ImageObject",
       "name": [
         {
-          "@value": "دکتر سعید قزلباش همراه تیم بالینی کلینیک زیبایی دکتر سعید قزلباش",
+          "@value": "دکتر سعید قزلباش همراه تصویر گروهی کلینیک زیبایی دکتر سعید قزلباش",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash with the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic",
+          "@value": "Group photograph of Dr. Saeed Ghezelbash at his private practice in Kermanshah",
           "@language": "en"
         }
       ],
@@ -20930,21 +20956,21 @@
       ],
       "caption": [
         {
-          "@value": "دکتر سعید قزلباش (محمدسعید قزلباش) همراه اعضای تیم بالینی",
+          "@value": "دکتر سعید قزلباش (محمدسعید قزلباش) همراه اعضای تصویر گروهی",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, with members of his clinical team",
+          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, with members of his group photograph",
           "@language": "en"
         }
       ],
       "description": [
         {
-          "@value": "دکتر سعید قزلباش، با نام کامل محمدسعید قزلباش، پزشک و پژوهشگر پزشکی فعال در پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی همراه اعضای تیم بالینی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران.",
+          "@value": "دکتر سعید قزلباش، با نام کامل محمدسعید قزلباش، پزشک و پژوهشگر پزشکی فعال در پزشکی زیبایی، با لباس پزشکی و گوشی پزشکی همراه اعضای تصویر گروهی کلینیک زیبایی دکتر سعید قزلباش در کرمانشاه، ایران.",
           "@language": "fa"
         },
         {
-          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine, with members of the clinical team of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
+          "@value": "Saeed Ghezelbash, also known as Mohammad Saeed Ghezelbash, an Iranian physician and medical researcher working in aesthetic medicine, with members of the group photograph of Dr. Saeed Ghezelbash Aesthetic Clinic in Kermanshah, Iran.",
           "@language": "en"
         }
       ],
@@ -21194,7 +21220,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21219,7 +21245,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-06",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21244,7 +21270,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21269,7 +21295,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21294,7 +21320,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-11",
       "version": "1.2.5"
     },
     {
@@ -21317,7 +21343,7 @@
       },
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "version": "1.2.5"
     },
     {
@@ -21368,7 +21394,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21393,7 +21419,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-08-31",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21418,7 +21444,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21443,7 +21469,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -21468,7 +21494,7 @@
       "license": "https://creativecommons.org/licenses/by/4.0/",
       "isAccessibleForFree": true,
       "version": "1.2.5",
-      "dateModified": "2026-09-07",
+      "dateModified": "2026-09-11",
       "about": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       }
@@ -22088,6 +22114,66 @@
         "@id": "https://www.ghezelbaash.ir/graph.jsonld#dataset"
       },
       "url": "https://doi.org/10.5281/zenodo.22216583"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#profile-facebook-doctor-ghezelbaash",
+      "@type": "ProfilePage",
+      "name": "Official Facebook Page — Dr. Saeed Ghezelbash Aesthetic Clinic",
+      "url": "https://www.facebook.com/doctor.ghezelbaash",
+      "owner": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        }
+      ],
+      "identifier": {
+        "@id": "https://www.ghezelbaash.ir/#identifier-clinic-facebook-page"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-clinic-facebook-page",
+      "@type": "PropertyValue",
+      "propertyID": "Facebook Page username",
+      "value": "doctor.ghezelbaash",
+      "url": "https://www.facebook.com/doctor.ghezelbaash"
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#profile-instagram-doctor-ghezelbaash",
+      "@type": "ProfilePage",
+      "name": "Instagram — Dr. Saeed Ghezelbash",
+      "url": "https://www.instagram.com/doctor.ghezelbaash/",
+      "owner": {
+        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+      },
+      "mainEntity": {
+        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+      },
+      "about": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        }
+      ],
+      "identifier": {
+        "@id": "https://www.ghezelbaash.ir/#identifier-person-instagram"
+      }
+    },
+    {
+      "@id": "https://www.ghezelbaash.ir/#identifier-person-drdr",
+      "@type": "PropertyValue",
+      "propertyID": "DrDr profile ID",
+      "value": "92014",
+      "url": "https://drdr.ir/dr/92014/%D8%AF%DA%A9%D8%AA%D8%B1-%D8%B3%D8%B9%DB%8C%D8%AF-%D9%82%D8%B2%D9%84%D8%A8%D8%A7%D8%B4/"
     }
   ]
 }

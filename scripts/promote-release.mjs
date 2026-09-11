@@ -399,15 +399,27 @@ citation = replaceExactly(
   `doi: ${next.versionDoi}`,
   "CITATION DOI",
 );
+const codemetaContexts = Array.isArray(codemeta["@context"])
+  ? codemeta["@context"]
+  : [codemeta["@context"]].filter(Boolean);
+const codemetaSchemaExtension = codemetaContexts.find(
+  (entry) => entry && typeof entry === "object" && !Array.isArray(entry),
+);
+const codemetaSubject = codemeta["schema:subjectOf"];
+must(
+  codemetaContexts.includes("https://w3id.org/codemeta/3.1") &&
+    codemetaSchemaExtension?.schema === "http://schema.org/" &&
+    !Object.hasOwn(codemeta, "subjectOf") &&
+    codemetaSubject &&
+    typeof codemetaSubject === "object" &&
+    !Array.isArray(codemetaSubject),
+  "CodeMeta 3.1 schema:subjectOf contract is required for release promotion",
+);
 codemeta.softwareVersion = next.release;
 codemeta.dateModified = next.date;
-must(
-  codemeta.subjectOf && typeof codemeta.subjectOf === "object",
-  "CodeMeta subjectOf is required for release promotion",
-);
-codemeta.subjectOf.version = next.release;
-codemeta.subjectOf.identifier = `https://doi.org/${next.versionDoi}`;
-codemeta.subjectOf.name = "Dr. Saeed Ghezelbash Public Knowledge Graph";
+codemetaSubject.version = next.release;
+codemetaSubject.identifier = `https://doi.org/${next.versionDoi}`;
+codemetaSubject.name = "Dr. Saeed Ghezelbash Public Knowledge Graph";
 
 // No repository file is touched before the complete promotion candidate above has been constructed and validated.
 const writes = [

@@ -266,17 +266,18 @@ const hfMutationWorkflows = [
       ],
     ]),
   ],
-  [
-    "stack-monitor.yml",
-    stackMonitorWorkflow,
-    new Map([
-      [
-        "node scripts/huggingface.mjs push .release/huggingface-monitor HEAD:main",
-        1,
-      ],
-    ]),
-  ],
 ];
+for (const forbidden of [
+  "node scripts/huggingface.mjs push",
+  "HF_TOKEN",
+  "CLOUDFLARE_API_TOKEN",
+  "configure-cloudflare-edge.py",
+  "cloudflare-pages.mjs ensure --configure",
+])
+  if (stackMonitorWorkflow.includes(forbidden))
+    fail(`stack-monitor.yml must remain read-only: ${forbidden}`);
+if (/git\s+(?:-C\s+\S+\s+)?push\b/.test(stackMonitorWorkflow))
+  fail("stack-monitor.yml must not contain a Git push path");
 for (const [name, source, commands] of hfMutationWorkflows) {
   if (
     source.includes(forbiddenHuggingFaceAuthVariable) ||
