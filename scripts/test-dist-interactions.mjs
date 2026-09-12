@@ -55,25 +55,36 @@ await withStaticSite(directory, async (url) => {
           "modal keyboard focus must remain inside dialog",
         );
       }
-      await page.keyboard.press("Escape");
-      await expectDialogState(page, false);
+      await closeDialogAndSettle(page, () => page.keyboard.press("Escape"));
       assert.equal(await page.evaluate(() => document.activeElement?.matches("[data-guide-search-open]")), true);
 
       await opener.click();
-      await dialog.locator("[data-guide-search-close]").click();
-      await expectDialogState(page, false);
+      await closeDialogAndSettle(page, () => dialog.locator("[data-guide-search-close]").click());
       assert.equal(await page.evaluate(() => document.activeElement?.matches("[data-guide-search-open]")), true);
 
-      await opener.click();
-      await input.fill("بوتاکس");
-      const result = dialog.locator(".guide-search__results a").first();
-      await result.waitFor();
-      const targetId = await result.getAttribute("href");
-      assert.ok(targetId?.startsWith("#"), "search result must target a same-document fragment");
-      await result.click();
-      await expectDialogState(page, false);
-      const targetFragment = targetId.slice(1);
-      assert.equal(await page.evaluate((id) => document.activeElement?.id, targetFragment), targetFragment);
+      let previousTarget;
+      for (const activation of ["pointer", "keyboard"]) {
+        await opener.click();
+        await expectDialogState(page, true);
+        await page.waitForFunction(() => document.activeElement?.id === "guide-search-input");
+        if (previousTarget) {
+          assert.equal(
+            await page.evaluate((id) => document.getElementById(id)?.hasAttribute("tabindex"), previousTarget),
+            false,
+            "leaving a selected heading must remove its temporary tabindex",
+          );
+        }
+        await input.fill("بوتاکس");
+        const result = dialog.locator(".guide-search__results a").first();
+        await result.waitFor();
+        const targetId = await result.getAttribute("href");
+        assert.ok(targetId?.startsWith("#"), "search result must target a same-document fragment");
+        await closeDialogAndSettle(page, () => activation === "pointer" ? result.click() : result.press("Enter"));
+        const targetFragment = decodeURIComponent(targetId.slice(1));
+        assert.equal(await page.evaluate(() => document.activeElement?.id), targetFragment, `${activation} selection must retain heading focus after the native close event`);
+        assert.equal(decodeURIComponent(new URL(page.url()).hash), `#${targetFragment}`, "search selection must preserve native fragment navigation");
+        previousTarget = targetFragment;
+      }
       assert.deepEqual(errors, []);
     } finally {
       await context.close();
@@ -96,7 +107,7 @@ await withStaticSite(directory, async (url) => {
     } finally {
       await noJs.close();
     }
-    console.log(JSON.stringify({ stage: "DIST_INTERACTION_CONTRACT", modal: "PASS", keyboard: "PASS", screenReader: "PASS", noJavaScript: "PASS", integrity: "PASS" }, null, 2));
+    console.log(JSON.stringify({ stage: "DIST_INTERACTION_CONTRACT", modal: "PASS", keyboard: "PASS", focusAfterClose: "PASS", screenReader: "PASS", noJavaScript: "PASS", integrity: "PASS" }, null, 2));
   } finally {
     await browser.close();
   }
@@ -104,4 +115,21 @@ await withStaticSite(directory, async (url) => {
 
 async function expectDialogState(page, open) {
   await page.waitForFunction((expected) => document.getElementById("guide-search")?.open === expected, open);
+}
+
+async function closeDialogAndSettle(page, action) {
+  // Checking dialog.open alone can observe the heading's transient focus before
+  // the asynchronous native close handler incorrectly restores its opener.
+  const closed = page.evaluate(() => new Promise((resolve, reject) => {
+    const dialog = document.getElementById("guide-search");
+    const timeout = setTimeout(() => reject(new Error("Dialog close event did not settle")), 10000);
+    dialog.addEventListener("close", () => {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        clearTimeout(timeout);
+        resolve();
+      }));
+    }, { once: true });
+  }));
+  await Promise.all([closed, action()]);
+  await expectDialogState(page, false);
 }

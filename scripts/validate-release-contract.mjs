@@ -18,6 +18,7 @@ import {
   renderCanonicalHostRedirects,
 } from "./lib/redirect-registry.mjs";
 import { deriveCanonicalSemanticSets } from "../src/lib/semantic-projection.mjs";
+import { assertGooglebotBudgetContract } from "./lib/googlebot-budget.mjs";
 
 const root = process.cwd();
 const fail = (message) => {
@@ -82,6 +83,7 @@ const invariantKeys = [
   "maxCls",
 ];
 exactKeys(invariants, invariantKeys, "release-invariants");
+assertGooglebotBudgetContract(invariants);
 const redirectsBytes = Buffer.from(
   renderCanonicalHostRedirects(await loadRedirectRegistry(root)),
 );

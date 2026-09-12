@@ -172,6 +172,7 @@ if (
 if (
   JSON.stringify(scriptSteps("prepare:site")) !==
   JSON.stringify([
+    "npm run validate:visible-text-source",
     "npm run validate:media-references",
     "npm run clean:generated",
     "node scripts/generate-projections.mjs site",
@@ -181,6 +182,7 @@ if (
 if (
   JSON.stringify(scriptSteps("prepare:distribution")) !==
   JSON.stringify([
+    "npm run validate:visible-text-source",
     "npm run validate:media-references",
     "npm run clean:generated",
     "npm run rdf:generate",

@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { parse } from "parse5";
+import { createSchemaVocabulary, validateJsonLdScope } from "./lib/schemaorg-vocabulary.mjs";
+import { assertSocialIdentity } from "./lib/social-identity-contract.mjs";
 
 const fail = (message) => {
   throw new Error(message);
@@ -18,17 +20,10 @@ const OFFICIAL_FILES = Object.freeze({
     blob: "a465eb2b364e5b7eca26fe9e45aae8b175d28c71",
   }),
 });
-const asArray = (value) =>
-  Array.isArray(value) ? value : value == null ? [] : [value];
 const schemaLocal = (value) =>
   typeof value === "string" && value.startsWith(SCHEMA_ORIGIN)
     ? value.slice(SCHEMA_ORIGIN.length)
     : null;
-const splitIris = (value) =>
-  String(value || "")
-    .split(/,\s*/)
-    .map((item) => item.trim())
-    .filter(Boolean);
 
 const gitBlobSha = (buffer) =>
   createHash("sha1")
@@ -126,264 +121,20 @@ for (const required of ["id", "label", "subTypeOf"])
   if (!Object.hasOwn(typeRows[0] || {}, required))
     fail(`Schema.org type CSV missing column ${required}`);
 
-const properties = new Map(propertyRows.map((row) => [row.label, row]));
-const types = new Map(typeRows.map((row) => [row.label, row]));
-const superTypes = new Map(
-  typeRows.map((row) => [
-    row.label,
-    splitIris(row.subTypeOf).map(schemaLocal).filter(Boolean),
-  ]),
-);
-const closureMemo = new Map();
-const typeClosure = (type, trail = new Set()) => {
-  if (closureMemo.has(type)) return closureMemo.get(type);
-  if (trail.has(type)) fail(`Schema.org type inheritance cycle at ${type}`);
-  if (!types.has(type)) fail(`Unknown/superseded Schema.org type ${type}`);
-  const nextTrail = new Set(trail).add(type),
-    closure = new Set([type]);
-  for (const parent of superTypes.get(type) || [])
-    for (const inherited of typeClosure(parent, nextTrail)) closure.add(inherited);
-  closureMemo.set(type, closure);
-  return closure;
-};
-const domainFor = (property) =>
-  new Set(splitIris(properties.get(property)?.domainIncludes).map(schemaLocal).filter(Boolean));
-const rangeFor = (property) =>
-  new Set(splitIris(properties.get(property)?.rangeIncludes).map(schemaLocal).filter(Boolean));
-const typesFor = (node) =>
-  asArray(node?.["@type"])
-    .map((value) => (typeof value === "string" ? value : null))
-    .filter(Boolean)
-    .map((value) => schemaLocal(value) || value)
-    .filter((value) => !value.startsWith("http://www.w3.org/2001/XMLSchema#"));
-const domainMatches = (nodeTypes, allowed) => {
-  if (!allowed.size) return true;
-  return nodeTypes.some((type) =>
-    [...typeClosure(type)].some((candidate) => allowed.has(candidate)),
-  );
-};
-const rangeMatchesTypes = (valueTypes, allowed) => {
-  if (!allowed.size) return true;
-  return valueTypes.some((type) =>
-    [...typeClosure(type)].some((candidate) => allowed.has(candidate)),
-  );
-};
-const rangeAcceptsTextLexicalValue = (allowed) =>
-  [...allowed].some(
-    (type) => types.has(type) && typeClosure(type).has("Text"),
-  );
-const XSD_ORIGIN = "http://www.w3.org/2001/XMLSchema#";
-const XSD_TO_SCHEMA_TYPES = new Map([
-  ["string", ["Text"]],
-  ["normalizedString", ["Text"]],
-  ["token", ["Text"]],
-  ["language", ["Text"]],
-  ["boolean", ["Boolean"]],
-  ["decimal", ["Number"]],
-  ["float", ["Float"]],
-  ["double", ["Float"]],
-  ["integer", ["Integer"]],
-  ["nonPositiveInteger", ["Integer"]],
-  ["negativeInteger", ["Integer"]],
-  ["long", ["Integer"]],
-  ["int", ["Integer"]],
-  ["short", ["Integer"]],
-  ["byte", ["Integer"]],
-  ["nonNegativeInteger", ["Integer"]],
-  ["unsignedLong", ["Integer"]],
-  ["unsignedInt", ["Integer"]],
-  ["unsignedShort", ["Integer"]],
-  ["unsignedByte", ["Integer"]],
-  ["positiveInteger", ["Integer"]],
-  ["date", ["Date"]],
-  ["dateTime", ["DateTime"]],
-  ["dateTimeStamp", ["DateTime"]],
-  ["time", ["Time"]],
-  ["duration", ["Duration"]],
-  ["dayTimeDuration", ["Duration"]],
-  ["yearMonthDuration", ["Duration"]],
-  ["anyURI", ["URL"]],
-  ["gYearMonth", ["Text"]],
-  ["gYear", ["Text"]],
-  ["gMonthDay", ["Text"]],
-  ["gMonth", ["Text"]],
-  ["gDay", ["Text"]],
-]);
-const literalTypesFor = (value) => {
-  const schemaType = schemaLocal(value);
-  if (schemaType) return [schemaType];
-  const xsdType = value.startsWith(XSD_ORIGIN)
-    ? value.slice(XSD_ORIGIN.length)
-    : value.startsWith("xsd:")
-      ? value.slice(4)
-      : null;
-  if (xsdType) return XSD_TO_SCHEMA_TYPES.get(xsdType) || [];
-  return [value];
-};
-
+const vocabulary = createSchemaVocabulary(propertyRows, typeRows);
+const { properties, types, domainMatches, domainFor } = vocabulary;
 const jsonDocuments = extractJsonLd(html);
-const graphNodes = jsonDocuments.flatMap((document) => document?.["@graph"] || []);
-const graphById = new Map(
-  graphNodes
-    .filter((node) => typeof node?.["@id"] === "string")
-    .map((node) => [node["@id"], node]),
-);
-const jsonErrors = [];
-let jsonTypedObjects = 0,
-  jsonPropertyUses = 0,
-  checkedRanges = 0,
-  standardDatatypeLiterals = 0,
-  languageTaggedLiterals = 0;
-
-const validateRange = (property, value, path, context) => {
-  const allowed = rangeFor(property);
-  if (!allowed.size) return;
-  for (const item of asArray(value)) {
-    if (item && typeof item === "object") {
-      if (Object.hasOwn(item, "@value")) {
-        const literalTypeIri =
-          typeof item["@type"] === "string" ? item["@type"] : null;
-        const literalTypes = literalTypeIri ? literalTypesFor(literalTypeIri) : [];
-        if (literalTypeIri) {
-          if (
-            literalTypeIri.startsWith(XSD_ORIGIN) ||
-            literalTypeIri.startsWith("xsd:")
-          )
-            standardDatatypeLiterals++;
-          if (!literalTypes.length)
-            jsonErrors.push(`${path}: unsupported literal datatype ${literalTypeIri}`);
-          else {
-            const unknownTypes = literalTypes.filter((type) => !types.has(type));
-            if (unknownTypes.length)
-              jsonErrors.push(
-                `${path}: unknown/superseded literal type ${unknownTypes.join("+")}`,
-              );
-            else if (!rangeMatchesTypes(literalTypes, allowed))
-              jsonErrors.push(
-                `${path}: ${property} literal datatype ${literalTypeIri} maps to ${literalTypes.join("+")} outside ${[...allowed].join("|")}`,
-              );
-          }
-        } else if (typeof item["@language"] === "string") {
-          languageTaggedLiterals++;
-          if (!rangeAcceptsTextLexicalValue(allowed))
-            jsonErrors.push(
-              `${path}: language-tagged literal outside ${[...allowed].join("|")}`,
-            );
-        } else {
-          validateRange(property, item["@value"], `${path}.@value`, context);
-        }
-        checkedRanges++;
-        continue;
-      }
-      const explicitTypes = typesFor(item);
-      if (explicitTypes.length) {
-        for (const type of explicitTypes)
-          if (!types.has(type))
-            jsonErrors.push(`${path}: unknown/superseded range type ${type}`);
-        if (
-          explicitTypes.every((type) => types.has(type)) &&
-          !rangeMatchesTypes(explicitTypes, allowed)
-        )
-          jsonErrors.push(
-            `${path}: ${property} range ${explicitTypes.join("+")} not in ${[...allowed].join("|")}`,
-          );
-        checkedRanges++;
-        continue;
-      }
-      if (typeof item["@id"] === "string") {
-        if (allowed.has("URL")) {
-          checkedRanges++;
-          continue;
-        }
-        const target = graphById.get(item["@id"]),
-          targetTypes = typesFor(target);
-        if (targetTypes.length) {
-          if (!rangeMatchesTypes(targetTypes, allowed))
-            jsonErrors.push(
-              `${path}: ${property} target ${item["@id"]} has ${targetTypes.join("+")} not in ${[...allowed].join("|")}`,
-            );
-          checkedRanges++;
-        }
-      }
-      continue;
-    }
-    if (typeof item === "boolean") {
-      if (!allowed.has("Boolean"))
-        jsonErrors.push(`${path}: ${property} Boolean literal outside ${[...allowed].join("|")}`);
-      checkedRanges++;
-    } else if (typeof item === "number") {
-      if (!["Number", "Integer", "Float"].some((type) => allowed.has(type)))
-        jsonErrors.push(`${path}: ${property} numeric literal outside ${[...allowed].join("|")}`);
-      checkedRanges++;
-    } else if (typeof item === "string") {
-      const mapping = context?.[property],
-        iriCoerced = mapping && typeof mapping === "object" && mapping["@type"] === "@id";
-      if (iriCoerced) {
-        if (allowed.has("URL")) checkedRanges++;
-        continue;
-      }
-      const nonTextLexicalRanges = new Set([
-        "Date",
-        "DateTime",
-        "Time",
-        "Duration",
-        "Number",
-        "Integer",
-        "Float",
-      ]);
-      if (
-        !rangeAcceptsTextLexicalValue(allowed) &&
-        ![...allowed].some((type) => nonTextLexicalRanges.has(type))
-      )
-        jsonErrors.push(
-          `${path}: ${property} string literal outside ${[...allowed].join("|")}`,
-        );
-      checkedRanges++;
-    }
-  }
-};
-
-const validateJsonObject = (node, path, context) => {
-  if (!node || typeof node !== "object" || Array.isArray(node)) return;
-  const nodeTypes = typesFor(node);
-  if (nodeTypes.length) {
-    jsonTypedObjects++;
-    for (const type of nodeTypes)
-      if (!types.has(type)) jsonErrors.push(`${path}: unknown/superseded Schema.org type ${type}`);
-    for (const [property, value] of Object.entries(node)) {
-      if (property.startsWith("@")) continue;
-      jsonPropertyUses++;
-      const spec = properties.get(property);
-      if (!spec) {
-        jsonErrors.push(`${path}: unknown/superseded Schema.org property ${property}`);
-        continue;
-      }
-      if (
-        nodeTypes.every((type) => types.has(type)) &&
-        !domainMatches(nodeTypes, domainFor(property))
-      )
-        jsonErrors.push(
-          `${path}: ${property} is outside domain for ${nodeTypes.join("+")}`,
-        );
-      validateRange(property, value, `${path}.${property}`, context);
-    }
-  }
-  for (const [key, value] of Object.entries(node)) {
-    if (key === "@context") continue;
-    for (const item of asArray(value))
-      if (item && typeof item === "object" && !Object.hasOwn(item, "@id"))
-        validateJsonObject(item, `${path}.${key}`, context);
-  }
-};
-for (const [documentIndex, document] of jsonDocuments.entries()) {
-  const context = document?.["@context"] || {};
-  for (const [nodeIndex, node] of (document?.["@graph"] || []).entries())
-    validateJsonObject(node, `$jsonld[${documentIndex}].@graph[${nodeIndex}]`, context);
-}
-if (jsonErrors.length)
-  fail(`Schema.org v${SCHEMA_RELEASE} JSON-LD conformance failed:\n${jsonErrors.join("\n")}`);
-if (!jsonTypedObjects || !jsonPropertyUses || !checkedRanges)
-  fail("Schema.org JSON-LD validator exercised no meaningful typed objects/properties/ranges");
+const [authoredGraph, deliveredGraph] = await Promise.all([
+  readFile("src/data/semantic/knowledge-graph.jsonld", "utf8").then(JSON.parse),
+  readFile("dist/graph.jsonld", "utf8").then(JSON.parse),
+]);
+const jsonLdScopes = [
+  validateJsonLdScope(jsonDocuments, vocabulary, "dist/index.html"),
+  validateJsonLdScope([authoredGraph], vocabulary, "src/data/semantic/knowledge-graph.jsonld"),
+  validateJsonLdScope([deliveredGraph], vocabulary, "dist/graph.jsonld"),
+];
+for (const graph of [authoredGraph, deliveredGraph]) assertSocialIdentity({ graph, release });
+const total = (key) => jsonLdScopes.reduce((sum, scope) => sum + scope[key], 0);
 
 const microdataErrors = [];
 let microdataScopes = 0,
@@ -445,12 +196,14 @@ console.log(
       typeBlob: OFFICIAL_FILES.types.blob,
       officialProperties: properties.size,
       officialTypes: types.size,
-      jsonLdDocuments: jsonDocuments.length,
-      jsonLdTypedObjects: jsonTypedObjects,
-      jsonLdPropertyUses: jsonPropertyUses,
-      jsonLdCheckedRanges: checkedRanges,
-      standardDatatypeLiterals,
-      languageTaggedLiterals,
+      jsonLdDocuments: total("documents"),
+      jsonLdScopes,
+      jsonLdTypedObjects: total("jsonTypedObjects"),
+      jsonLdPropertyUses: total("jsonPropertyUses"),
+      jsonLdCheckedRanges: total("checkedRanges"),
+      standardDatatypeLiterals: total("standardDatatypeLiterals"),
+      languageTaggedLiterals: total("languageTaggedLiterals"),
+      externalPropertyUses: total("externalPropertyUses"),
       microdataScopes,
       microdataPropertyUses,
       supersededTermsAccepted: false,

@@ -67,6 +67,8 @@ const datasetPublishedAt = dataset.datePublished;
 const datasetModifiedAt = dataset.dateModified;
 if (!datasetPublishedAt || !datasetModifiedAt)
   throw new Error("Canonical Dataset publication and modification dates are missing");
+if (typeof dataset.version !== "string" || dataset.version !== release.release)
+  throw new Error("Canonical Dataset version disagrees with the existing release label");
 const datasetLicense = id(dataset.license);
 if (!datasetLicense)
   throw new Error("Canonical Dataset license is missing");
@@ -131,6 +133,22 @@ const linkset = {
       license: [{ href: "https://creativecommons.org/licenses/by/4.0/" }],
       me: identityMe,
     },
+    // CSVW describes the table. RFC 6892 defines the inverse direction;
+    // do not incorrectly claim the CSV is metadata describing its companion.
+    {
+      anchor: `${release.canonicalUrl}entity-facts.csv`,
+      describedby: [{
+        href: `${release.canonicalUrl}entity-facts.csv-metadata.json`,
+        type: resourceByPath.get("entity-facts.csv-metadata.json").contentType,
+      }],
+    },
+    {
+      anchor: `${release.canonicalUrl}entity-facts.csv-metadata.json`,
+      describes: [{
+        href: `${release.canonicalUrl}entity-facts.csv`,
+        type: resourceByPath.get("entity-facts.csv").contentType,
+      }],
+    },
   ],
 };
 await writeFile(out("linkset.json"), JSON.stringify(linkset, null, 2) + "\n");
@@ -173,10 +191,12 @@ const datasetTriple = [
   `dct:description ${ttlString(datasetDescription)}@en ;`,
   `dct:creator <${release.primaryEntity.id}> ;`,
   `dct:publisher <${release.primaryEntity.id}> ;`,
+  `dct:issued ${ttlString(datasetPublishedAt)}^^xsd:date ;`,
   `dct:modified "${datasetModifiedAt}"^^xsd:date ;`,
   `dct:license <${datasetLicense}> ;`,
   `dcat:landingPage <${datasetLandingPage}> ;`,
   `schema:version "${release.release}" ;`,
+  `dcat:version ${ttlString(dataset.version)} ;`,
   `dcat:distribution ${distributionIris} .`,
 ].join(" ");
 let dcat = `${[

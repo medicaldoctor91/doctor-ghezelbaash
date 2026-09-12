@@ -71,6 +71,14 @@ jobs:
           export SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)"
           export CF_PAGES_COMMIT_SHA="$GITHUB_SHA"
           npm run build
+      - name: Install pinned Chromium for candidate and production verification
+        if: steps.tip.outputs.current == 'true'
+        run: npx playwright install --with-deps --only-shell chromium
+      - name: Require frozen rendered text and stable search focus before reconciliation
+        if: steps.tip.outputs.current == 'true'
+        run: |
+          npm run test:visible-text-browser
+          npm run test:dist-interactions
       - name: Converge Cloudflare Pages to canonical Git deployment
         if: steps.tip.outputs.current == 'true'
         id: pages-config
@@ -153,9 +161,6 @@ jobs:
           npm run verify:public-discovery
           node scripts/verify-live.mjs current --website-only
           echo 'PUBLIC_DISCOVERY_T5_HARD_PASS'
-      - name: Install pinned Chromium for production media verification
-        if: steps.tip.outputs.current == 'true'
-        run: npx playwright install --with-deps --only-shell chromium
       - name: Require video Range integrity and exact browser seek outcomes
         if: steps.tip.outputs.current == 'true'
         run: npm run verify:video-production

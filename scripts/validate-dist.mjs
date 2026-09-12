@@ -1,4 +1,5 @@
 import { deriveGraphProjections } from "./lib/projections/graph-projections.mjs";
+import { assertGooglebotResponseBudget } from "./lib/googlebot-budget.mjs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
@@ -288,15 +289,10 @@ if (
   answersText.includes(`REVIEWED_AT: ${release.dateModified}`)
 )
   fail("Release date leaked into medical review timestamp");
-if (htmlBytes >= inv.maxHtmlBytes)
-  fail(`HTML safety ceiling exceeded ${htmlBytes}/${inv.maxHtmlBytes}`);
-if (
-  inv.maxHtmlBytes +
-    inv.googlebotReservedResponseHeaderBytes +
-    inv.googlebotSafetyMarginBytes >
-  inv.googlebotFetchBudgetBytes
-)
-  fail("Response budget contract exceeds Googlebot budget");
+assertGooglebotResponseBudget({
+  bodyBytes: htmlBytes,
+  responseHeaderBytes: inv.googlebotReservedResponseHeaderBytes,
+}, inv);
 const h1Text = (html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || "")
   .replace(/<[^>]+>/g, "")
   .replace(/\s+/g, " ")

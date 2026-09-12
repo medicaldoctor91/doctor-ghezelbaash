@@ -4,6 +4,23 @@ const ANY_TOKEN_PATTERN = /{{[^{}]+}}/g;
 
 const countToken = (source, token) => source.split(token).length - 1;
 
+// These limits apply after interpolation, not just to the short template.
+// https://developers.cloudflare.com/pages/configuration/headers/
+export function assertCloudflareHeadersContract(headers) {
+  let rules = 0;
+  let maximumLineCharacters = 0;
+  for (const [index, line] of String(headers).split(/\r?\n/).entries()) {
+    maximumLineCharacters = Math.max(maximumLineCharacters, line.length);
+    if (line.length > 2_000)
+      throw new Error(`Cloudflare _headers line ${index + 1} exceeds 2000 characters: ${line.length}`);
+    if (!line.trim() || line.trimStart().startsWith("#")) continue;
+    if (!/^\s/.test(line)) rules++;
+  }
+  if (rules > 100)
+    throw new Error(`Cloudflare _headers exceeds 100 rules: ${rules}`);
+  return { rules, maximumLineCharacters };
+}
+
 export function compileHeadersTemplate(
   template,
   { mainCsp, csp404, heroEarlyHintHref, httpResourceLinks } = {},
@@ -65,5 +82,6 @@ export function compileHeadersTemplate(
     throw new Error(
       `_headers compiler: unresolved token(s): ${[...new Set(unresolved)].join(", ")}`,
     );
+  assertCloudflareHeadersContract(output);
   return output;
 }

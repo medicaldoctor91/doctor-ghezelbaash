@@ -236,6 +236,9 @@ const entityAliases = [
       if (!link || !results.contains(link)) return;
       const target = targetFromHash(link.hash),
         restoreTabIndex = target && !target.hasAttribute("tabindex");
+      // A native close event may arrive after the heading's focus frame. A
+      // successful selection transfers focus instead of restoring the opener.
+      if (target) lastOpener = null;
       dialog.close();
       if (!target) return;
       if (restoreTabIndex) target.tabIndex = -1;

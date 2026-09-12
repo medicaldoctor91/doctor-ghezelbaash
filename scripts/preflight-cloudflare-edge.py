@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Fail closed unless the required Cloudflare Zone Settings contract is exact."""
+"""Read-only verification of the required Cloudflare Zone Settings contract.
+
+This build/release gate never creates credentials or repairs production drift.
+Authorized reconciliation remains an explicit configure-cloudflare-edge.py --apply
+operation, separate from compiling and checking the static distribution.
+"""
 
 from __future__ import annotations
 
@@ -38,6 +43,38 @@ REQUIRED_ENV = (
 
 def fail(message: str) -> None:
     raise edge.CloudflareError(message)
+
+
+class ReadOnlyCloudflareApi(edge.CloudflareApi):
+    """Reject writes before transport, including accidental reconciliation calls."""
+
+    def raw(
+        self, method: str, path: str, body: object | None = None
+    ) -> tuple[int, dict[str, object]]:
+        if method != "GET" or body is not None:
+            fail(f"Read-only Cloudflare preflight refused {method} {path}")
+        return super().raw(method, path, body)
+
+
+def verify_zone_settings(api: ReadOnlyCloudflareApi, zone: str) -> dict[str, object]:
+    readback: dict[str, object] = {}
+    for setting_id, desired in edge.ZONE_SETTINGS.items():
+        result = api.expect("GET", f"/zones/{zone}/settings/{setting_id}").get("result")
+        if (
+            not isinstance(result, dict)
+            or result.get("id") != setting_id
+            or "value" not in result
+        ):
+            fail(f"Invalid zone setting response for {setting_id}")
+        actual = result["value"]
+        if not edge.subset_equal(actual, desired):
+            fail(
+                f"Required zone setting drift: {setting_id}={actual!r}; "
+                f"expected {desired!r}. Preflight is read-only; "
+                "use the separately authorized edge reconciliation operation to repair it."
+            )
+        readback[setting_id] = actual
+    return readback
 
 
 def validate_static_contract() -> None:
@@ -96,7 +133,7 @@ def main() -> int:
     values = {name: os.environ.get(name, "").strip() for name in REQUIRED_ENV}
     # `--if-configured` is a credential-aware optional live gate. Build environments may
     # legitimately know a public account/project identifier without receiving a privileged
-    # API token; that partial public context must not be treated as an attempted live mutation.
+    # API token; that partial public context must not be treated as a live verification request.
     # Once a token is supplied, however, all companion identity fields are mandatory and the
     # check remains fail-closed.
     if args.if_configured and not values["CLOUDFLARE_API_TOKEN"]:
@@ -126,24 +163,12 @@ def main() -> int:
 
     try:
         validate_static_contract()
-        parent_api = edge.CloudflareApi(token)
-        zone = edge.zone_id(parent_api, account, zone_name)
-        zone_api, revoke = edge.issue_ephemeral_zone_api(parent_api, account, zone)
-        readback: dict[str, object] = {}
-        try:
-            for setting_id, desired in edge.ZONE_SETTINGS.items():
-                readback[setting_id] = edge.reconcile_zone_setting(
-                    zone_api, zone, setting_id, desired
-                )
-        finally:
-            revoke()
-
-        for setting_id, desired in edge.ZONE_SETTINGS.items():
-            if not edge.subset_equal(readback.get(setting_id), desired):
-                fail(
-                    f"Required zone setting did not survive read-back: "
-                    f"{setting_id}={readback.get(setting_id)!r}"
-                )
+        # Use only the existing credential. A token authority may lack direct
+        # Zone Settings Read; that is a capability failure, never permission to
+        # create a privileged child token during an otherwise ordinary build.
+        api = ReadOnlyCloudflareApi(token)
+        zone = edge.zone_id(api, account, zone_name)
+        readback = verify_zone_settings(api, zone)
 
         check_live_apex_hsts(zone_name)
         print(
@@ -153,6 +178,13 @@ def main() -> int:
         return 0
     except (edge.CloudflareError, OSError, ValueError, KeyError) as exc:
         print(f"CLOUDFLARE_PREFLIGHT_ERROR: {exc}", file=sys.stderr)
+        if isinstance(exc, edge.CloudflareError) and edge.is_permission_error(exc):
+            print(
+                "CLOUDFLARE_PREFLIGHT_SCOPE_REQUIRED: The existing credential must "
+                "allow Zone Read and Zone Settings Read for the configured zone. "
+                "No credential was created and no production repair was attempted.",
+                file=sys.stderr,
+            )
         return 1
 
 

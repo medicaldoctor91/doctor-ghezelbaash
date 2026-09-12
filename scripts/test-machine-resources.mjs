@@ -31,6 +31,16 @@ const bindings = {
   httpResourceLinks: '<https://example.test/graph.jsonld>; rel="describedby"',
 };
 
+test("CSVW HTTP links distinguish metadata discovery from the described table", async () => {
+  const headers = compileHeadersTemplate(
+    await readFile(path.join(root, "src/data/templates/headers.template"), "utf8"), bindings,
+  );
+  const block = (route) => headers.split(`\n${route}\n`)[1]?.split("\n\n")[0];
+  assert.match(block("/entity-facts.csv"), /<https:\/\/www\.ghezelbaash\.ir\/entity-facts\.csv-metadata\.json>; rel="describedby"; type="application\/csvm\+json"/);
+  assert.match(block("/entity-facts.csv-metadata.json"), /<https:\/\/www\.ghezelbaash\.ir\/entity-facts\.csv>; rel="describes"; type="text\/csv"/);
+  assert.doesNotMatch(block("/entity-facts.csv-metadata.json"), /entity-facts\.csv>; rel="describedby"/);
+});
+
 test("current resource revisions and immutable DOI dates have independent bounds", () => {
   const base = {
     release: "1.2.5", dateModified: "2026-08-31",
@@ -341,13 +351,30 @@ test("descriptor generator emits joinable RDF, correct typed hashes and usable C
   for (const field of croissant.recordSet[0].field)
     assert.equal(field.source.fileObject["@id"], files.get(`${release.canonicalUrl}entity-facts.csv`)["@id"]);
   assert.equal(linkset.linkset[0].describedby.find((item) => item.href.endsWith("croissant.json")).type, machineResourceForPath("croissant.json").contentType);
+  const csvLinks = linkset.linkset.find((item) => item.anchor === `${release.canonicalUrl}entity-facts.csv`);
+  const csvwLinks = linkset.linkset.find((item) => item.anchor === `${release.canonicalUrl}entity-facts.csv-metadata.json`);
+  assert.deepEqual(csvLinks.describedby, [{
+    href: csvwLinks.anchor, type: machineResourceForPath("entity-facts.csv-metadata.json").contentType,
+  }]);
+  assert.deepEqual(csvwLinks.describes, [{
+    href: csvLinks.anchor, type: machineResourceForPath("entity-facts.csv").contentType,
+  }]);
+  assert.ok(!csvwLinks.describedby, "CSVW must describe the CSV, not be described by it");
   const rdf = spawnSync("python", ["-c", `
 import hashlib,json,sys
 from pathlib import Path
 from rdflib import Graph,Namespace,RDF,URIRef,XSD
 root=Path(sys.argv[1]); registry=json.loads((root/'src/data/machine-resources.json').read_text())
-dcat=Namespace('http://www.w3.org/ns/dcat#');spdx=Namespace('http://spdx.org/rdf/terms#')
+dcat=Namespace('http://www.w3.org/ns/dcat#');spdx=Namespace('http://spdx.org/rdf/terms#');dct=Namespace('http://purl.org/dc/terms/')
 g=Graph().parse(root/'.generated/projections/dcat.ttl',format='turtle')
+release=json.loads((root/'src/data/release.json').read_text())
+canonical=json.loads((root/'src/data/semantic/knowledge-graph.jsonld').read_text())
+dataset=next(n for n in canonical['@graph'] if n['@id']==release['dataset']['id'])
+dataset_iri=URIRef(dataset['@id'])
+assert str(g.value(dataset_iri,dcat.version))==dataset['version']
+issued=g.value(dataset_iri,dct.issued)
+assert issued.datatype==XSD.date and str(issued)==dataset['datePublished']
+assert g.value(URIRef(release['canonicalUrl']+'#data-catalog'),dct.issued) is None
 expected=[r for r in registry['resources'] if 'dcat' in r.get('descriptorRoles',[])]
 assert len(set(g.subjects(RDF.type,dcat.Distribution)))==len(expected)==12
 for resource in expected:

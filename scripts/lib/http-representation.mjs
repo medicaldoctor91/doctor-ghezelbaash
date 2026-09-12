@@ -90,11 +90,22 @@ export async function fetchRepresentation(
             return;
           }
           const responseHeaders = new Headers();
-          for (let i = 0; i < response.rawHeaders.length; i += 2)
+          // Preserve duplicate fields and the status line in byte accounting.
+          // Headers normalizes and joins repeated fields, losing their size.
+          let responseHeaderBytes = Buffer.byteLength(
+            `HTTP/${response.httpVersion} ${response.statusCode} ${response.statusMessage || ""}\r\n`,
+            "latin1",
+          ) + 2;
+          for (let i = 0; i < response.rawHeaders.length; i += 2) {
             responseHeaders.append(
               response.rawHeaders[i],
               response.rawHeaders[i + 1],
             );
+            responseHeaderBytes += Buffer.byteLength(
+              `${response.rawHeaders[i]}: ${response.rawHeaders[i + 1]}\r\n`,
+              "latin1",
+            );
+          }
           resolve({
             r: {
               status: response.statusCode,
@@ -103,13 +114,14 @@ export async function fetchRepresentation(
               url: url.href,
             },
             encodedBytes: Buffer.concat(chunks),
+            responseHeaderBytes,
           });
         });
       },
     );
     request.on("error", reject);
   });
-  const { r, encodedBytes } = result;
+  const { r, encodedBytes, responseHeaderBytes } = result;
   if (redirect === "follow" && [301, 302, 303, 307, 308].includes(r.status)) {
     const location = r.headers.get("location");
     if (!location || maxRedirects <= 0)
@@ -143,6 +155,7 @@ export async function fetchRepresentation(
     encodedBytes,
     contentEncoding,
     reprDigestVerified,
+    responseHeaderBytes,
     b: decodeRepresentation(encodedBytes, contentEncoding),
   };
 }

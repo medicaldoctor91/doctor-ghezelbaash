@@ -8618,9 +8618,14 @@
       "@type": "ProfilePage",
       "name": "Official Instagram profile of Dr. Saeed Ghezelbash",
       "url": "https://www.instagram.com/doctor.ghezelbaash/",
-      "mainEntity": {
-        "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
-      },
+      "mainEntity": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        }
+      ],
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
@@ -22117,9 +22122,14 @@
       "owner": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "mainEntity": {
-        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-      },
+      "mainEntity": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        }
+      ],
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
@@ -22147,9 +22157,14 @@
       "owner": {
         "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
       },
-      "mainEntity": {
-        "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
-      },
+      "mainEntity": [
+        {
+          "@id": "https://www.ghezelbaash.ir/#saeed-ghezelbash"
+        },
+        {
+          "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"
+        }
+      ],
       "about": [
         {
           "@id": "https://www.ghezelbaash.ir/#dr-saeed-ghezelbash-aesthetic-clinic-kermanshah"

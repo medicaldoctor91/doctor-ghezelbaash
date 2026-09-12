@@ -8,6 +8,7 @@ import { assertActiveIdentifierText, assertActiveAuthoredIdentifiers, FORBIDDEN_
   IDENTIFIER_LITERAL_ALLOWLIST } from "./lib/active-identifier-contract.mjs";
 import { assertMojavezEvidence, extractMojavezRecord, MOJAVEZ_ID, MOJAVEZ_RECORD,
   MOJAVEZ_URL } from "./lib/mojavez-evidence.mjs";
+import { assertSocialIdentity } from "./lib/social-identity-contract.mjs";
 
 const readJson = async (file) => JSON.parse(await readFile(file, "utf8"));
 const baseline = {
@@ -20,6 +21,27 @@ const baseline = {
 const page = (c) => c.graph["@graph"].find((n) => n["@id"] === MOJAVEZ_ID);
 const clinic = (c) => c.graph["@graph"].find((n) => n["@id"] === c.release.clinic.id);
 const entry = (c) => c.registry.evidence.find((e) => e.id === MOJAVEZ_ID);
+const socialNode = (c, suffix) => c.graph["@graph"].find((n) => n["@id"] === c.release.canonicalUrl + suffix);
+test("professional social pages share physician and clinic subjects while personal Facebook stays personal", () => {
+  assert.doesNotThrow(() => assertSocialIdentity(baseline));
+  const c = structuredClone(baseline);
+  socialNode(c, "#evidence-instagram").mainEntity.reverse();
+  assert.doesNotThrow(() => assertSocialIdentity(c));
+});
+for (const [name, mutate] of [
+  ["Instagram evidence subject disagreement", (c) => socialNode(c, "#evidence-instagram").mainEntity = { "@id": c.release.primaryEntity.id }],
+  ["clinic-only professional Facebook", (c) => socialNode(c, "#profile-facebook-doctor-ghezelbaash").mainEntity = { "@id": c.release.clinic.id }],
+  ["duplicate professional subjects", (c) => socialNode(c, "#profile-instagram-doctor-ghezelbaash").mainEntity.push({ "@id": c.release.primaryEntity.id })],
+  ["personal Facebook attributed to clinic", (c) => socialNode(c, "#profile-facebook-ghezelbaash").mainEntity = { "@id": c.release.clinic.id }],
+  ["clinic owner substituted for physician", (c) => socialNode(c, "#profile-instagram-doctor-ghezelbaash").owner = { "@id": c.release.clinic.id }],
+  ["another representation of the same page contradicts its subjects", (c) => c.graph["@graph"].push({
+    "@id": c.release.canonicalUrl + "#duplicate-social-page", "@type": "WebPage",
+    url: "https://www.instagram.com/doctor.ghezelbaash", mainEntity: { "@id": c.release.primaryEntity.id },
+  })],
+]) test(`social identity rejects ${name}`, () => {
+  const c = structuredClone(baseline); mutate(c);
+  assert.throws(() => assertSocialIdentity(c));
+});
 test("reviewed Mojavez license keeps the stable ID and only evidenced person claims", () => {
   assert.doesNotThrow(() => assertMojavezEvidence(baseline));
 });

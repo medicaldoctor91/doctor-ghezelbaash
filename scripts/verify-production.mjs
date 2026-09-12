@@ -1,4 +1,5 @@
 import { fetchRepresentation } from "./lib/http-representation.mjs";
+import { assertGooglebotResponseBudget } from "./lib/googlebot-budget.mjs";
 import path from "node:path";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -438,19 +439,12 @@ async function verifyCore() {
     );
     await new Promise((resolve) => setTimeout(resolve, 4000));
   }
-  const budgetBodyBytes = Buffer.byteLength(budgetProbe.text),
-    budgetHeaderBytes = [...budgetProbe.r.headers].reduce(
-      (n, [k, v]) => n + Buffer.byteLength(`${k}: ${v}\r\n`),
-      0,
-    );
-  if (
-    budgetBodyBytes >= inv.maxHtmlBytes ||
-    budgetBodyBytes + budgetHeaderBytes + inv.googlebotSafetyMarginBytes >
-      inv.googlebotFetchBudgetBytes
-  )
-    fail(
-      `Production Googlebot response budget unsafe body=${budgetBodyBytes} headers=${budgetHeaderBytes}`,
-    );
+  const budgetBodyBytes = budgetProbe.b.length,
+    budgetHeaderBytes = budgetProbe.responseHeaderBytes;
+  assertGooglebotResponseBudget({
+    bodyBytes: budgetBodyBytes,
+    responseHeaderBytes: budgetHeaderBytes,
+  }, inv);
   if (budgetProbe.r.headers.get("content-security-policy") !== expectedRootCsp)
     fail("Production root CSP differs from generated DIST headers");
   const hsts = budgetProbe.r.headers.get("strict-transport-security") || "";

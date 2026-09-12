@@ -7,7 +7,7 @@ import vm from "node:vm";
 // layout, dialog focus restoration and default navigation also need URL testing.
 function fixture(runtime, { modal = true, missingInput = false, hash = "", scrollY = 0 } = {}) {
   let document, serial = 0, aliasNormalizations = 0;
-  const frames = new Map(), timers = new Map(), queries = new Map();
+  const frames = new Map(), timers = new Map(), closeEvents = [], queries = new Map();
   class Element {
     constructor(tagName, id = "", classes = []) {
       this.tagName = tagName.toUpperCase();
@@ -88,7 +88,13 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
   dialog.open = false;
   if (modal) {
     dialog.showModal = () => { dialog.open = true; };
-    dialog.close = () => { dialog.open = false; emit(dialog, "close"); };
+    dialog.close = () => {
+      if (!dialog.open) return;
+      dialog.open = false;
+      // Native dialog.close() queues the close event on a separate task. It may
+      // arrive after a result's focus frame, rather than during the click.
+      closeEvents.push(() => emit(dialog, "close"));
+    };
   }
   for (const x of [dialog, opener, top, section, physician, tocLink]) body.append(x);
   for (const x of [close, input, results, status]) dialog.append(x);
@@ -160,10 +166,13 @@ function fixture(runtime, { modal = true, missingInput = false, hash = "", scrol
     timers.clear();
     pending.forEach((callback) => callback());
   }
+  function flushCloseEvents() {
+    closeEvents.splice(0).forEach((callback) => callback());
+  }
   vm.runInContext(runtime, context, { filename: "GuideNavigator.site-runtime.js" });
   return {
     document, context, dialog, input, results, status, opener, close, top, heading,
-    chunk, tocLink, body, queries, emit, flushFrames, flushTimers,
+    chunk, tocLink, body, queries, emit, flushFrames, flushTimers, flushCloseEvents,
     aliases: () => aliasNormalizations,
     windowEvent: (type) => emit(windowEvents, type),
   };
@@ -210,6 +219,10 @@ export async function guideNavigatorContract() {
     f.flushFrames();
     assert.equal(f.dialog.open, true);
     const selection = f.emit(result, "click");
+    // Exercise both native task orders: a late close event must never reclaim
+    // the heading focus, including when choosing a retained result again.
+    if (visit === 0) f.flushFrames();
+    f.flushCloseEvents();
     f.flushFrames();
     assert.equal(selection.defaultPrevented, false, "Result hash navigation remains native");
     assert.equal(f.dialog.open, false, "Repeated selection of retained result must close dialog");
@@ -223,6 +236,8 @@ export async function guideNavigatorContract() {
   assert.equal(f.results.children[0].children[0].href, "#saeed-ghezelbash");
   assert.equal(f.aliases(), 26, "Only the new query may normalize; cached aliases are reused");
   assert.equal(f.queries.get(headingQuery), 1);
+  f.emit(f.opener, "click");
+  f.flushFrames();
   for (const modifier of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }, { button: 1 }]) {
     f.dialog.open = false;
     assert.equal(f.emit(f.opener, "click", modifier).defaultPrevented, false);
@@ -233,8 +248,19 @@ export async function guideNavigatorContract() {
   }
   f.emit(f.close, "click");
   assert.equal(f.dialog.open, false);
+  f.flushCloseEvents();
   f.flushFrames();
   assert.equal(f.document.activeElement, f.opener, "Dialog close restores launcher focus");
+  f.emit(f.opener, "click");
+  f.flushFrames();
+  const missingResult = f.document.createElement("a");
+  missingResult.href = "#missing-heading";
+  f.results.append(missingResult);
+  f.emit(missingResult, "click");
+  f.flushFrames();
+  f.flushCloseEvents();
+  f.flushFrames();
+  assert.equal(f.document.activeElement, f.opener, "A missing result target must preserve opener restoration");
   f.body.focus();
   assert.equal(f.emit(f.document, "keydown", { key: "/" }).defaultPrevented, true);
   f.flushFrames();
@@ -243,6 +269,7 @@ export async function guideNavigatorContract() {
   assert.equal(f.emit(f.dialog, "cancel").defaultPrevented, false, "Native Escape/cancel must remain available");
   f.emit(f.dialog, "click");
   assert.equal(f.dialog.open, false, "Backdrop activation closes the dialog");
+  f.flushCloseEvents();
   f.context.location.hash = "#botox-heading";
   f.windowEvent("hashchange");
   assert.equal(f.chunk.classList.contains("is-target-chunk"), true);

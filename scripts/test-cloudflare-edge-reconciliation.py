@@ -4,12 +4,16 @@
 from __future__ import annotations
 
 import copy
+import contextlib
 import importlib.util
+import io
 import json
+import os
 import tempfile
 import urllib.parse
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -19,6 +23,123 @@ if SPEC is None or SPEC.loader is None:
     raise SystemExit("Unable to import Cloudflare edge reconciler")
 edge = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(edge)
+
+
+def test_read_only_preflight() -> None:
+    preflight_spec = importlib.util.spec_from_file_location(
+        "ghezelbaash_preflight_test", ROOT / "scripts" / "preflight-cloudflare-edge.py"
+    )
+    assert preflight_spec is not None and preflight_spec.loader is not None
+    preflight = importlib.util.module_from_spec(preflight_spec)
+    preflight_spec.loader.exec_module(preflight)
+    configured = {
+        "CLOUDFLARE_API_TOKEN": "offline-preflight-test-token",
+        "CLOUDFLARE_ACCOUNT_ID": preflight.edge.PLATFORM_CF["accountId"],
+        "ZONE_NAME": preflight.edge.PLATFORM_CONTRACT["zoneName"],
+        "CANONICAL_HOST": preflight.edge.PLATFORM_CONTRACT["canonicalHost"],
+    }
+
+    def run(
+        environment: dict[str, str],
+        *,
+        drift: bool = False,
+        denied: bool = False,
+        malformed: bool = False,
+        optional: bool = True,
+    ) -> tuple[int, str, str, list[tuple[str, str]], int]:
+        calls: list[tuple[str, str]] = []
+
+        def read_response(_api, method, path, body=None):
+            assert method == "GET" and body is None, "Preflight attempted an API write"
+            calls.append((method, path))
+            if path.startswith("/zones?"):
+                return 200, {
+                    "success": True,
+                    "result": [{"id": "test-zone", "name": configured["ZONE_NAME"]}],
+                }
+            prefix = "/zones/test-zone/settings/"
+            assert path.startswith(prefix), "Preflight attempted credential management"
+            if denied:
+                raise preflight.edge.CloudflareError("Read permission denied", status=403)
+            setting_id = path.removeprefix(prefix)
+            value = copy.deepcopy(preflight.edge.ZONE_SETTINGS[setting_id])
+            if drift and setting_id == "always_use_https":
+                value = "off"
+            # Additional provider fields must not create false drift for a
+            # partial contract such as strict_transport_security.
+            if isinstance(value, dict):
+                value["unmanaged_provider_field"] = True
+            return 200, {
+                "success": True,
+                "result": {
+                    "id": "wrong-setting" if malformed else setting_id,
+                    "value": value,
+                    "editable": False,
+                },
+            }
+
+        stdout, stderr = io.StringIO(), io.StringIO()
+        argv = ["preflight-cloudflare-edge.py"] + (["--if-configured"] if optional else [])
+        with (
+            mock.patch.dict(os.environ, environment, clear=True),
+            mock.patch("sys.argv", argv),
+            mock.patch.object(preflight.edge.CloudflareApi, "raw", read_response),
+            mock.patch.object(
+                preflight.edge, "issue_ephemeral_zone_api",
+                side_effect=AssertionError("Preflight created a credential"),
+            ),
+            mock.patch.object(
+                preflight.edge, "reconcile_zone_setting",
+                side_effect=AssertionError("Preflight invoked a mutating reconciler"),
+            ),
+            mock.patch.object(preflight, "check_live_apex_hsts") as hsts,
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
+            result = preflight.main()
+        assert configured["CLOUDFLARE_API_TOKEN"] not in stdout.getvalue() + stderr.getvalue()
+        return result, stdout.getvalue(), stderr.getvalue(), calls, hsts.call_count
+
+    result, stdout, stderr, calls, hsts_calls = run(configured)
+    assert result == 0 and "CLOUDFLARE_REQUIRED_PREFLIGHT_EXACT" in stdout and not stderr
+    assert len(calls) == 1 + len(preflight.edge.ZONE_SETTINGS) and hsts_calls == 1
+
+    result, _, stderr, calls, hsts_calls = run(configured, drift=True)
+    assert result == 1 and "Required zone setting drift" in stderr
+    assert len(calls) == 2 and hsts_calls == 0
+
+    result, _, stderr, calls, _ = run(configured, denied=True)
+    assert result == 1 and "CLOUDFLARE_PREFLIGHT_SCOPE_REQUIRED" in stderr
+    assert len(calls) == 2
+
+    result, _, stderr, calls, _ = run(configured, malformed=True)
+    assert result == 1 and "Invalid zone setting response" in stderr and len(calls) == 2
+
+    for environment in ({}, {"CLOUDFLARE_ACCOUNT_ID": configured["CLOUDFLARE_ACCOUNT_ID"]}):
+        result, stdout, _, calls, hsts_calls = run(environment)
+        assert result == 0 and "CLOUDFLARE_PREFLIGHT_SKIPPED" in stdout
+        assert not calls and hsts_calls == 0
+
+    result, _, stderr, calls, _ = run({}, optional=False)
+    assert result == 1 and "Missing required environment" in stderr and not calls
+    result, _, stderr, calls, _ = run({"CLOUDFLARE_API_TOKEN": configured["CLOUDFLARE_API_TOKEN"]})
+    assert result == 1 and "Missing required environment" in stderr and not calls
+    result, _, stderr, calls, _ = run({**configured, "ZONE_NAME": "unrelated.example"})
+    assert result == 1 and "Environment disagrees with platform contract" in stderr and not calls
+
+    # The transport boundary must still fail before network access if future
+    # refactoring accidentally introduces token creation, PATCH or revocation.
+    readonly_api = preflight.ReadOnlyCloudflareApi(configured["CLOUDFLARE_API_TOKEN"])
+    with mock.patch.object(
+        preflight.edge.CloudflareApi, "raw",
+        side_effect=AssertionError("Blocked request reached transport"),
+    ):
+        for method, body in (("POST", {}), ("PATCH", {}), ("PUT", {}), ("DELETE", None), ("GET", {})):
+            try:
+                readonly_api.expect(method, "/accounts/test-account/tokens", body)
+                raise AssertionError("Read-only transport allowed a mutation")
+            except preflight.edge.CloudflareError as exc:
+                assert "Read-only Cloudflare preflight refused" in str(exc)
 
 
 def existing_rule(rule_id: int, host: str, target: str) -> dict[str, Any]:
@@ -575,6 +696,7 @@ def test_machine_compression() -> None:
             assert fake.mutations == before_refusal
 
 
+test_read_only_preflight()
 test_machine_compression()
 cache_contract = edge.cache_rule("www.ghezelbaash.ir")
 assert cache_contract["action_parameters"]["respect_strong_etags"] is False
@@ -690,6 +812,9 @@ print(
             "idempotent": True,
             "machineCompressionTransaction": True,
             "machineCompressionRollback": True,
+            "readOnlyPreflight": True,
+            "preflightDriftFailsClosed": True,
+            "preflightNeverCreatesCredentials": True,
         },
         sort_keys=True,
     )
