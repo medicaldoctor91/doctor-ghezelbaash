@@ -2,7 +2,6 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { brotliCompressSync } from "node:zlib";
 import { readdir, readFile, stat } from "node:fs/promises";
-import { parse } from "parse5";
 import {
   CSS_LAYER_ORDER,
   assembleCssSource,
@@ -44,15 +43,6 @@ const descendants = (node, output = []) => {
     if (child.tagName) output.push(child);
     descendants(child, output);
   }
-  return output;
-};
-const elements = (source) => {
-  const output = [];
-  const walk = (node) => {
-    if (node.tagName) output.push(node);
-    for (const child of node.childNodes || []) walk(child);
-  };
-  walk(parse(source, { sourceCodeLocationInfo: true }));
   return output;
 };
 const routeBlock = (headers, route) => {

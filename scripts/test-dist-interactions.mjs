@@ -30,6 +30,23 @@ await withStaticSite(directory, async (url) => {
       await expectDialogState(page, true);
       assert.equal(await page.evaluate(() => document.activeElement?.id), "guide-search-input");
 
+      const accessibilitySession = await context.newCDPSession(page);
+      const accessibilityTree = await accessibilitySession.send("Accessibility.getFullAXTree");
+      const accessibleNodes = accessibilityTree.nodes || [];
+      const accessibleName = (node) => String(node?.name?.value || "");
+      const dialogNode = accessibleNodes.find((node) => node.role?.value === "dialog");
+      const searchboxNode = accessibleNodes.find(
+        (node) => ["searchbox", "textbox"].includes(node.role?.value) && /نام درمان/u.test(accessibleName(node)),
+      );
+      const closeButtonNode = accessibleNodes.find(
+        (node) => node.role?.value === "button" && accessibleName(node) === "بستن جست‌وجو",
+      );
+      assert.ok(dialogNode, "open dialog must be exposed in the browser accessibility tree");
+      assert.match(accessibleName(dialogNode), /جست‌وجوی سریع/u);
+      assert.ok(searchboxNode, "labelled search input must be exposed as a searchbox/textbox");
+      assert.ok(closeButtonNode, "close control must have an accessible name");
+      await accessibilitySession.detach();
+
       for (let index = 0; index < 5; index++) {
         await page.keyboard.press("Tab");
         assert.equal(
@@ -52,9 +69,11 @@ await withStaticSite(directory, async (url) => {
       const result = dialog.locator(".guide-search__results a").first();
       await result.waitFor();
       const targetId = await result.getAttribute("href");
+      assert.ok(targetId?.startsWith("#"), "search result must target a same-document fragment");
       await result.click();
       await expectDialogState(page, false);
-      assert.equal(await page.evaluate((id) => document.activeElement?.id, targetId.slice(1)), targetId.slice(1));
+      const targetFragment = targetId.slice(1);
+      assert.equal(await page.evaluate((id) => document.activeElement?.id, targetFragment), targetFragment);
       assert.deepEqual(errors, []);
     } finally {
       await context.close();
@@ -77,7 +96,7 @@ await withStaticSite(directory, async (url) => {
     } finally {
       await noJs.close();
     }
-    console.log(JSON.stringify({ stage: "DIST_INTERACTION_CONTRACT", modal: "PASS", keyboard: "PASS", noJavaScript: "PASS", integrity: "PASS" }, null, 2));
+    console.log(JSON.stringify({ stage: "DIST_INTERACTION_CONTRACT", modal: "PASS", keyboard: "PASS", screenReader: "PASS", noJavaScript: "PASS", integrity: "PASS" }, null, 2));
   } finally {
     await browser.close();
   }
