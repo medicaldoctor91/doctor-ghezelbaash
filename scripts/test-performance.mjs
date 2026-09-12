@@ -116,7 +116,18 @@ const measureRun = async (browser, url, width, run) => {
       const byExtension = (pattern) =>
         resources
           .filter((entry) => pattern.test(pathname(entry)))
-          .reduce((sum, entry) => sum + bytes(entry), 0);
+          .reduce((state, entry) => {
+            if (state.seen.has(entry.name)) return state;
+            state.seen.add(entry.name);
+            state.bytes += bytes(entry);
+            return state;
+          }, { seen: new Set(), bytes: 0 }).bytes;
+      const uniqueInitialAssetBytes = resources.reduce((state, entry) => {
+        if (state.seen.has(entry.name)) return state;
+        state.seen.add(entry.name);
+        state.bytes += bytes(entry);
+        return state;
+      }, { seen: new Set(), bytes: 0 }).bytes;
       const inlineJavaScript = [...document.scripts]
         .filter((script) => script.type !== "application/ld+json")
         .reduce((sum, script) => sum + new Blob([script.textContent || ""]).size, 0);
@@ -130,7 +141,7 @@ const measureRun = async (browser, url, width, run) => {
         cssBytes: byExtension(/\.css(?:$|[?#])/u),
         fontBytes: byExtension(/\.(?:woff2?|ttf|otf)(?:$|[?#])/u),
         initialImageBytes: byExtension(/\.(?:avif|webp|png|jpe?g|gif|svg)(?:$|[?#])/u),
-        initialAssetBytes: resources.reduce((sum, entry) => sum + bytes(entry), 0),
+        initialAssetBytes: uniqueInitialAssetBytes,
         fontStatus: document.fonts.status,
         fontCount: [...document.fonts].length,
       };
