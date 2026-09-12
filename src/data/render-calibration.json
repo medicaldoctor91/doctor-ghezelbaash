@@ -1,6 +1,6 @@
 {
   "360": {
-    "total": 773837,
+    "total": 773836,
     "chunks": [
       {
         "i": 0,
@@ -522,7 +522,7 @@
         "i": 86,
         "id": "rc68",
         "key": "chin-jawline-and-facial-contouring/rc68",
-        "h": 7759.9375
+        "h": 7760
       },
       {
         "i": 87,
@@ -594,7 +594,7 @@
         "i": 98,
         "id": "rc78",
         "key": "aesthetic-treatment-selection/rc78",
-        "h": 5453.0625
+        "h": 5453.125
       },
       {
         "i": 99,
@@ -612,7 +612,7 @@
         "i": 101,
         "id": "rc79",
         "key": "aesthetic-treatment-selection/rc79",
-        "h": 4030
+        "h": 4029.9375
       },
       {
         "i": 102,
@@ -624,7 +624,7 @@
         "i": 103,
         "id": "rc120",
         "key": "aesthetic-treatment-candidacy/rc120",
-        "h": 4012.0625
+        "h": 4012
       },
       {
         "i": 104,
@@ -654,7 +654,7 @@
         "i": 108,
         "id": "rc126",
         "key": "aesthetic-treatment-candidacy/rc126",
-        "h": 1898.9375
+        "h": 1899
       },
       {
         "i": 109,
@@ -666,7 +666,7 @@
         "i": 110,
         "id": "rc84",
         "key": "aesthetic-treatment-candidacy/rc84",
-        "h": 4869.625
+        "h": 4869.5625
       },
       {
         "i": 111,
@@ -744,7 +744,7 @@
         "i": 123,
         "id": "rc92",
         "key": "complications-aftercare-and-follow-up/rc92",
-        "h": 6592.5
+        "h": 6592.5625
       },
       {
         "i": 124,
@@ -774,7 +774,7 @@
         "i": 128,
         "id": "rc96",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc96",
-        "h": 752.375
+        "h": 752.3125
       },
       {
         "i": 129,
@@ -809,7 +809,7 @@
     ]
   },
   "390": {
-    "total": 723355,
+    "total": 723354,
     "chunks": [
       {
         "i": 0,
@@ -1373,7 +1373,7 @@
         "i": 93,
         "id": "rc104",
         "key": "aesthetic-treatment-selection/rc104",
-        "h": 4403.4375
+        "h": 4403.375
       },
       {
         "i": 94,
@@ -1409,7 +1409,7 @@
         "i": 99,
         "id": "rc133",
         "key": "aesthetic-treatment-selection/rc133",
-        "h": 3501.625
+        "h": 3501.5625
       },
       {
         "i": 100,
@@ -1427,13 +1427,13 @@
         "i": 102,
         "id": "rc80",
         "key": "aesthetic-treatment-candidacy/rc80",
-        "h": 4169.9375
+        "h": 4169.875
       },
       {
         "i": 103,
         "id": "rc120",
         "key": "aesthetic-treatment-candidacy/rc120",
-        "h": 3691.4375
+        "h": 3691.375
       },
       {
         "i": 104,
@@ -1481,7 +1481,7 @@
         "i": 111,
         "id": "rc128",
         "key": "aesthetic-treatment-candidacy/rc128",
-        "h": 4458.625
+        "h": 4458.5625
       },
       {
         "i": 112,
@@ -1493,7 +1493,7 @@
         "i": 113,
         "id": "rc119",
         "key": "complications-aftercare-and-follow-up/rc119",
-        "h": 3271.3125
+        "h": 3271.375
       },
       {
         "i": 114,
@@ -1553,7 +1553,7 @@
         "i": 123,
         "id": "rc92",
         "key": "complications-aftercare-and-follow-up/rc92",
-        "h": 6256
+        "h": 6255.9375
       },
       {
         "i": 124,
@@ -1565,7 +1565,7 @@
         "i": 125,
         "id": "rc94",
         "key": "complications-aftercare-and-follow-up/rc94",
-        "h": 981.1875
+        "h": 981.25
       },
       {
         "i": 126,
@@ -1577,13 +1577,13 @@
         "i": 127,
         "id": "rc108",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc108",
-        "h": 4281.4375
+        "h": 4281.375
       },
       {
         "i": 128,
         "id": "rc96",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc96",
-        "h": 693.75
+        "h": 693.6875
       },
       {
         "i": 129,
@@ -1618,7 +1618,7 @@
     ]
   },
   "430": {
-    "total": 667354,
+    "total": 667353,
     "chunks": [
       {
         "i": 0,
@@ -2338,7 +2338,7 @@
         "i": 119,
         "id": "rc89",
         "key": "complications-aftercare-and-follow-up/rc89",
-        "h": 5538.9375
+        "h": 5539
       },
       {
         "i": 120,
@@ -2374,13 +2374,13 @@
         "i": 125,
         "id": "rc94",
         "key": "complications-aftercare-and-follow-up/rc94",
-        "h": 834
+        "h": 833.9375
       },
       {
         "i": 126,
         "id": "rc95",
         "key": "saeed-ghezelbash-diagnostic-philosophy/rc95",
-        "h": 5592.125
+        "h": 5592.1875
       },
       {
         "i": 127,
@@ -2410,13 +2410,13 @@
         "i": 131,
         "id": "rc99",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc99",
-        "h": 3170.1875
+        "h": 3170.25
       },
       {
         "i": 132,
         "id": "rc129",
         "key": "dr-saeed-ghezelbash-aesthetic-clinic-kermanshah/rc129",
-        "h": 2531.1875
+        "h": 2531.125
       },
       {
         "i": 133,
@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-12T01:00:01.758Z",
-    "sourceSha256": "f5857a77b6bbbdfa48895ec423aeba3213eab842dc93b6a59d42ec1186e2a10b",
+    "measuredAt": "2026-09-12T01:16:45.282Z",
+    "sourceSha256": "4a2d5f6f3fa63cb879c755b4f83ac95ddf38d185105c3a75cb76b0973eeeb083",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4913,7 +4913,7 @@
       ],
       [
         "src/styles/global.css",
-        "b5614743603a3fea0eb1ae5973a7a716e38e0b77c224a705c030bf727495a10f"
+        "7a1413d5f73cb867e282b50d4b245bc55809cb91a71722f3fe8d2c1db2a16fd5"
       ],
       [
         "assembled-render-chunk-content",
