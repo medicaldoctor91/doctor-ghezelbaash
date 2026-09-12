@@ -69,6 +69,7 @@ const invariantKeys = [
   "maxCriticalCssBytes",
   "maxDeferredCssBrotliBytes",
   "maxDeferredCssBytes",
+  "maxFcpMs",
   "maxFontBytes",
   "maxFontLoadMs",
   "maxHtmlBytes",
