@@ -194,6 +194,35 @@ const entityAliases = [
     }
   });
   if (searchReady) {
+    const focusableSelector = [
+      "a[href]",
+      "button:not([disabled])",
+      "input:not([disabled]):not([type=hidden])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[contenteditable]",
+      "[tabindex]:not([tabindex='-1'])",
+    ].join(",");
+    dialog.addEventListener("keydown", (e) => {
+      if (e.key !== "Tab" || !dialog.open) return;
+      const focusable = [...dialog.querySelectorAll(focusableSelector)].filter(
+        (element) => !element.hidden && element.getAttribute("aria-hidden") !== "true",
+      );
+      if (!focusable.length) {
+        e.preventDefault();
+        return;
+      }
+      const activeIndex = focusable.indexOf(d.activeElement);
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (
+        (e.shiftKey && (activeIndex <= 0 || activeIndex === -1)) ||
+        (!e.shiftKey && (activeIndex === focusable.length - 1 || activeIndex === -1))
+      ) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus({ preventScroll: true });
+      }
+    });
     dialog.addEventListener("close", () => {
       const opener = lastOpener;
       lastOpener = null;
