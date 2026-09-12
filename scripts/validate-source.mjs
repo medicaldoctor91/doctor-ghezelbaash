@@ -878,8 +878,10 @@ if (
   !assembledCss.includes(
     `/*DIST_CHUNK_CALIBRATION_SHA256:${calibration.sha256}*/`,
   ) ||
-  (assembledCss.match(/#[A-Za-z][\w:-]*\{--cis:/g) || []).length !==
-    calibration.ruleCount
+  (assembledCss.match(/#[A-Za-z][\w:-]*\{--cis-0:/g) || []).length !==
+    calibration.chunkCount ||
+  (assembledCss.match(/\.render-chunk\{--cis:calc\(/g) || []).length !==
+    calibration.widths.length + 1
 )
   fail("In-memory render calibration assembly drift");
 

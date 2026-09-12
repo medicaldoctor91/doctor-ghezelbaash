@@ -12,6 +12,11 @@ const snapshot = (page) => page.evaluate(() => {
   const caption = document.querySelector(".entity-hero .caption-disclosure");
   const style = getComputedStyle(caption);
   const actions = document.querySelector(".entity-hero .hero-actions");
+  const box = (selector) => {
+    const element = document.querySelector(selector);
+    const { x, y, width, height } = element.getBoundingClientRect();
+    return { x, y, width, height };
+  };
   return {
     captionHeight: caption.getBoundingClientRect().height,
     actionsTop: actions.getBoundingClientRect().top,
@@ -19,6 +24,12 @@ const snapshot = (page) => page.evaluate(() => {
     padding: style.padding,
     borderWidth: style.borderWidth,
     titleWeight: getComputedStyle(caption.querySelector("summary")).fontWeight,
+    hero: box(".entity-hero"),
+    actions: box(".entity-hero .hero-actions"),
+    actionGap: getComputedStyle(actions).gap,
+    dock: box(".quick-actions"),
+    dockMargin: getComputedStyle(document.querySelector(".quick-actions")).margin,
+    consultationIcon: box(".quick-actions__item--consultation svg"),
   };
 });
 
@@ -26,7 +37,9 @@ await withStaticSite(directory, async (url) => {
   const browser = await chromium.launch({ headless: true });
   const runs = [];
   try {
-    for (const width of [360, 412, 430, 1440]) {
+    // Include both sides of the viewport and container-query boundaries, not
+    // only phone widths: the container can stay narrow on a desktop viewport.
+    for (const width of [360, 412, 430, 720, 721, 768, 853, 854, 1440]) {
       const mobile = width < 768;
       const context = await browser.newContext({
         viewport: { width, height: mobile ? 823 : 936 },
@@ -62,11 +75,12 @@ await withStaticSite(directory, async (url) => {
         releaseCss();
         await waitForPageLayout(page);
         const after = await snapshot(page);
-        assert.deepEqual(after, before, `Caption geometry/cascade changed when deferred CSS arrived at ${width}px`);
+        assert.deepEqual(after, before, `Critical component geometry changed when deferred CSS arrived at ${width}px`);
         assert.equal(after.margin, "0px");
         assert.equal(after.padding, "0px");
         assert.equal(after.borderWidth, "0px");
         assert.equal(after.titleWeight, "780");
+        assert.equal(after.dockMargin, "0px");
         // The unrelated article disclosure component must retain its own box.
         const article = await page.locator("details:not([class])").first()
           .evaluate((element) => {
@@ -98,5 +112,5 @@ await withStaticSite(directory, async (url) => {
   } finally {
     await browser.close();
   }
-  console.log(JSON.stringify({ valid: true, test: "critical-caption-cascade", runs }, null, 2));
+  console.log(JSON.stringify({ valid: true, test: "critical-component-cascade", runs }, null, 2));
 });

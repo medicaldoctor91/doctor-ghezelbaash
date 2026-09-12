@@ -88,6 +88,19 @@ Normal builds do not launch a browser. Source and final-DIST gates reject missin
 
 CI measures independently on Ubuntu 24.04 with the pinned Playwright Chromium, tests anchor navigation and remembered chunk geometry, and compares measured chunk heights with the committed artifact (1 CSS pixel tolerance). Its measured JSON is available as the `render-calibration-*` artifact when a geometry update is needed. The separate release job validates the committed JSON and never substitutes the CI measurement automatically. Run `npm run test:render-calibration` for invalid/stale-data regression tests and `npm run test:render-navigation` after a full build for browser navigation tests.
 
+Calibration CSS stores the six measured heights once per chunk as unitless
+`--cis-0` through `--cis-5` values. Seven shared media rules interpolate those
+values using number/length `calc()` arithmetic. Inclusive `min-width`/`max-width`
+ranges cover fractional viewport widths without 0.01px gaps; both formulas agree
+at every shared endpoint. This syntax works with the pinned minifier, and a
+delivery gate rejects silently dropped calibration rules. The original measurements,
+deferred delivery, remembered-size behavior and 2800px fallback remain intact;
+this reduces repeated CSS, not the size of the HTML document or the delay before
+the deferred calibration becomes available.
+After a full build, `npm run test:render-calibration-browser` checks all chunk
+intrinsic lengths computed from the minified stylesheet at thirteen reference,
+intermediate and out-of-range widths; this complements the arithmetic unit tests.
+
 After a full build, `npm run test:video-deeplinks` checks the published Clip links at 7, 25 and 46 seconds against the actual `dist/` HTML and media. Its dedicated server provides correct 206 responses and a gated, gradual full-body 200 response that ignores Range. The 206 cases must reach a stable, paused destination and deliver its decoded frame; the 200 cases prove that the verifier rejects an unseekable player even when it reports ready data. In the pinned Chromium, this finite HTTP stream exposes only time zero as seekable, so retrying `currentTime` or increasing preload cannot repair that transport. These negative cases do not claim 200 compatibility or a reproduced production outage. The shipped runtime and the geometry server remain unchanged.
 
 `npm run verify:video-production` requires the exact deployment's `dist/` locally. It checks a real 1024-byte Range from every published MP4/WebM against the local artifact, including 206 status, Content-Range and strong ETag, then verifies all three Clip links in Chromium against the exact deployed HTML. It runs after production convergence and fails on transport or browser drift. It performs no Cloudflare mutation; the existing full-representation digest verifier continues to reject partial responses. Neither verification command is included in the site's browser runtime.
@@ -110,10 +123,18 @@ or PSI runs against the deployed response; passing this gate does not establish
 mobile 100.
 
 `npm run test:critical-caption` holds the deferred stylesheet until the critical
-caption has rendered, then requires identical caption box metrics and hero
-action position after activation at 360, 412, 430 and 1440 pixels. Generic article
-disclosure styles exclude `.caption-disclosure`; the caption keeps its authored
-critical styles instead of acquiring a second padded card after first paint.
+components have rendered, then requires identical caption, hero, action, dock
+and consultation-icon geometry at nine phone and desktop widths, including
+viewport/container breakpoints. Generic article disclosures exclude
+`.caption-disclosure`, and generic navigation spacing excludes `.quick-actions`.
+Component geometry has one critical owner, with no corrective deferred override.
+
+`npm run test:css-accessibility` verifies keyboard focus in the scrolling search
+results and at the selected heading, mobile overflow, print and reduced-motion
+behavior. Search-result outlines stay inside their scrollport; article sections
+do not broadly clip heading focus, while wide tables keep local scrolling.
+Render chunks retain paint containment with an 8px overflow clip margin so
+nested heading focus is not cut off, including the high-contrast outline.
 
 The optional canonical-HTML compression experiment uses Cloudflare's native
 [Compression Rules](https://developers.cloudflare.com/rules/compression-rules/settings/),

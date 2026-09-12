@@ -92,8 +92,12 @@ jobs:
         run: npm run test:dist-interactions
       - name: Enforce separate local mobile and desktop performance budgets
         run: npm run test:performance-gate && npm run test:performance
-      - name: Prevent deferred CSS from changing critical caption geometry
+      - name: Prevent deferred CSS from changing critical component geometry
         run: npm run test:critical-caption
+      - name: Verify CSS focus visibility, overflow and accessibility modes
+        run: npm run test:css-accessibility
+      - name: Verify browser-computed calibration from the minified stylesheet
+        run: npm run test:render-calibration-browser
       - name: Export exact checked-out source for branch audit
         shell: bash
         run: |

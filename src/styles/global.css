@@ -50,6 +50,7 @@ body {
   line-height: 1.92;
 }
 main {
+  container: page-shell / inline-size;
   width: min(100% - 2rem, 78rem);
   margin-inline: auto;
   padding: clamp(1.2rem, 2.6vw, 2.6rem) clamp(1rem, 3vw, 3rem) 6rem;
@@ -238,6 +239,8 @@ blockquote {
   content-visibility: auto;
   contain: layout style paint;
   contain-intrinsic-size: auto var(--cis, 2800px);
+  /* Admit the 4px high-contrast focus ring plus its 3px offset. */
+  overflow-clip-margin: 8px;
 }
 .entity-hero {
   display: grid;
@@ -544,6 +547,10 @@ blockquote {
     height: 1rem;
   }
 }
+.quick-actions__item--consultation svg {
+  width: 1.12rem;
+  height: 1.12rem;
+}
 @media print {
   .quick-actions {
     display: none !important;
@@ -699,16 +706,13 @@ blockquote {
     padding: 0.72rem 1rem;
   }
 }
-/*DIST_CRITICAL_HERO_GEOMETRY_END*/
-/*DIST_CRITICAL_CSS_END*/
-main {
-  container: page-shell / inline-size;
-}
 @container page-shell (max-width: 48rem) {
   .entity-hero .hero-actions {
     gap: 0.55rem;
   }
 }
+/*DIST_CRITICAL_HERO_GEOMETRY_END*/
+/*DIST_CRITICAL_CSS_END*/
 img,
 video {
   border-radius: 0.85rem;
@@ -727,7 +731,7 @@ figure:not(.hero-figure) figcaption::before {
   height: 1px;
   background: rgb(10 107 88/0.14);
 }
-nav {
+nav:where(:not(.quick-actions)) {
   margin-block: 1.5rem;
 }
 #aesthetic-medicine-table-of-contents {
@@ -961,10 +965,6 @@ address {
 .quick-actions__item:active {
   transform: scale(0.985);
 }
-.quick-actions__item--consultation svg {
-  width: 1.12rem;
-  height: 1.12rem;
-}
 .quick-actions__top[data-visible="true"]:hover {
   transform: translateX(-50%) translateY(-1px) scale(1);
   background: #fff;
@@ -977,11 +977,6 @@ address {
   .quick-actions__item,
   .quick-actions__top {
     transition: none;
-  }
-}
-@media (max-width: 720px) {
-  .content-section {
-    overflow: clip;
   }
 }
 html {
@@ -1223,6 +1218,8 @@ html {
   border-radius: 0.65rem;
   background: var(--surface-soft);
   text-decoration: none;
+  /* Keep keyboard focus inside the independently scrolling result list. */
+  outline-offset: -4px;
 }
 .guide-search__results a:hover {
   border-color: #acd0c3;

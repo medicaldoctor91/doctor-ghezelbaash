@@ -149,6 +149,36 @@ for (const [scoped, unscoped] of disclosureSelectors) {
   assert(rejected, `Unscoped disclosure selector was not rejected: ${unscoped}`);
 }
 
+expect(criticalRules, "main", "container", "page-shell/inline-size");
+expect(criticalRules, ".render-chunk", "overflow-clip-margin", "8px");
+for (const property of ["width", "height"])
+  expect(criticalRules, ".quick-actions__item--consultation svg", property, "1.12rem");
+const deferredGeometryForbidden = [
+  ["nav", "margin-block"],
+  ["main", "container"],
+  [".entity-hero .hero-actions", "gap"],
+  [".quick-actions__item--consultation svg", "width"],
+  [".quick-actions__item--consultation svg", "height"],
+];
+const validateCriticalGeometryOwnership = (rules) => {
+  expect(rules, "nav:where(:not(.quick-actions))", "margin-block", "1.5rem");
+  for (const [selector, property] of deferredGeometryForbidden)
+    assert(!selectorRules(rules, selector).some((rule) => property in rule.declarations),
+      `Deferred geometry must not override a critical component: ${selector} ${property}`);
+};
+validateCriticalGeometryOwnership(deferredRules);
+for (const [selector, property] of deferredGeometryForbidden) {
+  let rejected = false;
+  try {
+    validateCriticalGeometryOwnership([...deferredRules,
+      { selector, conditions: [], declarations: { [property]: "1rem" } },
+    ]);
+  } catch (error) {
+    rejected = error.message.includes("must not override a critical component");
+  }
+  assert(rejected, `Deferred geometry mutation was not rejected: ${selector} ${property}`);
+}
+
 const allRules = [...criticalRules, ...deferredRules];
 expect(criticalRules, ".quick-actions__item", "display", "inline-flex");
 const telephoneLinkRules = selectorRules(allRules, 'a[href^="tel:"]');
@@ -597,11 +627,11 @@ const deferredBrotliBytes = brotliCompressSync(
   { params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 11 } },
 ).byteLength;
 assert(
-  deferredBytes <= 69000,
+  deferredBytes <= invariants.maxDeferredCssBytes,
   `Deferred CSS exceeds the raw delivery budget: ${deferredBytes}`,
 );
 assert(
-  deferredBrotliBytes <= 13900,
+  deferredBrotliBytes <= invariants.maxDeferredCssBrotliBytes,
   `Deferred CSS exceeds the Brotli delivery budget: ${deferredBrotliBytes}`,
 );
 
@@ -616,8 +646,8 @@ console.log(
       criticalBytes: Buffer.byteLength(delivery.criticalCss),
       deferredBytes,
       deferredBrotliBytes,
-      deferredRawBudget: 69000,
-      deferredBrotliBudget: 13900,
+      deferredRawBudget: invariants.maxDeferredCssBytes,
+      deferredBrotliBudget: invariants.maxDeferredCssBrotliBytes,
       functionalCssCoverageChecks: functionalCssRequirements.length,
       functionalCssOmissionMutationsRejected: functionalCssRequirements.length,
       backdropFilterCount,
@@ -625,6 +655,7 @@ console.log(
       crossBoundaryDuplicateDeclarations: 0,
       captionStyleOwnership: "PASS",
       captionSelectorMutationsRejected: disclosureSelectors.length,
+      criticalGeometryMutationsRejected: deferredGeometryForbidden.length,
       heroMobileColumns: 1,
       heroImageHintCount: imageHints.length,
       heroImageSizingStates: 6,

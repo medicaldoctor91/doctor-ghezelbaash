@@ -23,7 +23,6 @@ const finite = (value) =>
   Number.isFinite(value)
     ? value
     : fail(`Non-finite calibration value: ${value}`);
-const format = (value) => String(Number(finite(value).toFixed(2)));
 const count = (source, needle) => String(source).split(needle).length - 1;
 
 export function renderCalibrationCss(calibrationRaw) {
@@ -79,37 +78,39 @@ export function renderCalibrationCss(calibrationRaw) {
     if (sum > entry.total + 2)
       fail(`Calibration chunk heights exceed document height ${width}: ${sum}/${entry.total}`);
   }
-  const rulesFor = (values, render) =>
-    values
-      .map((chunk, index) => `#${chunk.id}{--cis:${render(chunk, index)}}`)
-      .join("");
+  // Store each measured height once; every chunk shares the same interpolation
+  // function. Values stay unitless so calc uses only number/length arithmetic.
+  // Do not round separate slope/intercept coefficients: that loses precision
+  // even at the measured reference widths.
+  const chunkRules = identity.map(({ id }, chunkIndex) =>
+    `#${id}{${RENDER_CALIBRATION_WIDTHS.map((width, index) =>
+      `--cis-${index}:${data[String(width)].chunks[chunkIndex].h}`,
+    ).join(";")}}`,
+  ).join("");
   const media = [];
   media.push(
-    `@media(max-width:360px){${rulesFor(data["360"].chunks, (chunk) => `${format(chunk.h)}px`)}}`,
+    `@media(max-width:360px){.render-chunk{--cis:calc(var(--cis-0)*1px)}}`,
   );
   for (let index = 0; index < RENDER_CALIBRATION_WIDTHS.length - 1; index++) {
     const fromWidth = RENDER_CALIBRATION_WIDTHS[index],
-      toWidth = RENDER_CALIBRATION_WIDTHS[index + 1],
-      from = data[String(fromWidth)].chunks,
-      to = data[String(toWidth)].chunks;
-    const rules = rulesFor(from, (chunk, chunkIndex) => {
-      const slope =
-          (finite(to[chunkIndex].h) - finite(chunk.h)) / (toWidth - fromWidth),
-        coefficient = slope * 100,
-        intercept = finite(chunk.h) - slope * fromWidth;
-      return `calc(${format(intercept)}px ${coefficient < 0 ? "-" : "+"} ${format(Math.abs(coefficient))}vw)`;
-    });
+      toWidth = RENDER_CALIBRATION_WIDTHS[index + 1];
+    const value = `calc(var(--cis-${index})*1px + (var(--cis-${index + 1}) - var(--cis-${index}))*((100vw - ${fromWidth}px)/${toWidth - fromWidth}))`;
+    // Inclusive endpoints cover fractional viewports without 0.01px gaps.
+    // Adjacent formulas agree exactly at each shared measured endpoint, so
+    // their value does not depend on rule order. This standard syntax also
+    // survives the project's pinned minifier, unlike MQ4 range notation.
     media.push(
-      `@media(min-width:${format(fromWidth + 0.01)}px) and (max-width:${toWidth}px){${rules}}`,
+      `@media(min-width:${fromWidth}px) and (max-width:${toWidth}px){.render-chunk{--cis:${value}}}`,
     );
   }
   media.push(
-    `@media(min-width:1440.01px){${rulesFor(data["1440"].chunks, (chunk) => `${format(chunk.h)}px`)}}`,
+    `@media(min-width:1440px){.render-chunk{--cis:calc(var(--cis-5)*1px)}}`,
   );
   const sha256 = createHash("sha256").update(Buffer.from(raw)).digest("hex");
-  const css = `/*DIST_CHUNK_CALIBRATION_SHA256:${sha256}*/${RENDER_CALIBRATION_START}${media.join("")}${RENDER_CALIBRATION_END}`;
-  const ruleCount = chunkCount * (RENDER_CALIBRATION_WIDTHS.length + 1);
-  if ((css.match(/#[A-Za-z][\w:-]*\{--cis:/g) || []).length !== ruleCount)
+  const css = `/*DIST_CHUNK_CALIBRATION_SHA256:${sha256}*/${RENDER_CALIBRATION_START}${chunkRules}${media.join("")}${RENDER_CALIBRATION_END}`;
+  const ruleCount = chunkCount + media.length;
+  if ((css.match(/#[A-Za-z][\w:-]*\{--cis-0:/g) || []).length !== chunkCount ||
+      media.length !== RENDER_CALIBRATION_WIDTHS.length + 1)
     fail("Generated render calibration rule count drift");
   return {
     css,
@@ -196,6 +197,11 @@ export function deriveCssDelivery(cssSource) {
   const externalCss = `${layerPrelude}@layer components{${minifyCss(
     source.slice(externalAt),
   )}}`;
+  // A minifier can preserve marker comments and ID data while silently dropping
+  // unsupported media syntax. Do not accept output that loses calibration rules.
+  const calibrationRuleCount = (css) => (css.match(/--cis:/g) || []).length;
+  if (calibrationRuleCount(externalCss) !== calibrationRuleCount(source.slice(externalAt)))
+    fail("Render calibration rules lost during CSS minification");
   const externalCssHash = createHash("sha256")
     .update(externalCss)
     .digest("hex")

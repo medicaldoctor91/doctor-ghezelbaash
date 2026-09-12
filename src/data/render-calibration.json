@@ -4855,8 +4855,8 @@
   },
   "_meta": {
     "schemaVersion": 1,
-    "measuredAt": "2026-09-12T19:21:12.169Z",
-    "sourceSha256": "1a1f21793844fffc795fb500e93fab6919e013d8104ff950888c2920024f6db9",
+    "measuredAt": "2026-09-12T20:34:00.638Z",
+    "sourceSha256": "bb155f35c53e575afb09fb6bd6e432cb1f8150c15cc2caaba8edb889d13144fe",
     "domSha256": "43f7cc633046c9c51a78fbdf47bac5da77660d254ef747258f90f7379fea782e",
     "inputs": [
       [
@@ -4901,7 +4901,7 @@
       ],
       [
         "src/lib/css-delivery.mjs",
-        "5e721034b7e430db164e8818ef39f33334b8236462b627e8f46af5f3a68b7ea0"
+        "3552e488146ae08b0cdc48e6a85a27f8a564935003efe2ac30634431ddf04d13"
       ],
       [
         "src/lib/hero-image-contract.mjs",
@@ -4913,7 +4913,7 @@
       ],
       [
         "src/styles/global.css",
-        "ca6d298c27e05fa3efaf0e130b36d76f384a55a2a298c91ad29beed093994e93"
+        "b253859eefb34bfa632ae82a7c15b022eaab7e8754da38a693a0ba7f422dea5c"
       ],
       [
         "assembled-render-chunk-content",
